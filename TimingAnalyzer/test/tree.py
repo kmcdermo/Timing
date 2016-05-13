@@ -226,8 +226,10 @@ process.tree = cms.EDAnalyzer("TimingAnalyzer",
    photonLooseId  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-loose"),
    photonMediumId = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-medium"),
    photonTightId  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-tight"),
-   recHitCollectionEB = cms.InputTag("alCaIsolatedElectrons", "alcaBarrelHits"),
-   recHitCollectionEE = cms.InputTag("alCaIsolatedElectrons", "alcaEndcapHits"),
+   recHitCollectionEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
+   recHitCollectionEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
+#   recHitCollectionEB = cms.InputTag("alCaIsolatedElectrons", "alcaBarrelHits"),
+#   recHitCollectionEE = cms.InputTag("alCaIsolatedElectrons", "alcaEndcapHits"),
 )
 
 # Set up the path
