@@ -4,6 +4,7 @@ __init__.py
 *.png
 *.log
 *.root
+crab_*
 *.o
 *.so
 *.d
