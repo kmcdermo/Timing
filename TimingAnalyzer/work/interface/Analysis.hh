@@ -1,20 +1,40 @@
 #ifndef _analysis_
 #define _analysis_ 
 
-#include <TROOT.h>
-#include <TChain.h>
-#include <TTree.h>
-#include <TFile.h>
-#include <TString.h>
-#include <TStyle.h>
+#include "TROOT.h"
+#include "TChain.h"
+#include "TTree.h"
+#include "TFile.h"
+#include "TString.h"
+#include "TStyle.h"
+#include "TH1F.h"
+#include "TH2F.h"
+
+#include <map>
+
+typedef std::map<TString,TH1F*> TH1Map;
+typedef TH1Map::iterator TH1MapIter;
+
+typedef std::map<TString,TH2F*> TH2Map;
+typedef TH2Map::iterator TH2MapIter;
+
+typedef std::map<TString,TString> TStrMap;
+typedef TStrMap::iterator TStrMapIter;
 
 class Analysis {
 public:
   // functions
-  Analysis(TString filename, TString outdir, TString outtype);
+  Analysis(TString filename, TString outdir, TString outtype, Float_t lumi);
   ~Analysis();
-  void     InitTree();
-  void     TimeResPlots();
+  void InitTree();
+  void TimeResPlots();
+  TH1F * MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
+  TH2F * MakeTH2Plot(TString hname, TString htitle, Int_t nbinsx, Double_t xlow, Double_t xhigh, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
+  void MakeSubDirs(TStrMap subdirmap);
+  void SaveTH1s(TH1Map th1map, TStrMap subdirmap);
+  void SaveTH2s(TH2Map th2map, TStrMap subdirmap);
+  void DeleteTH1s(TH1Map th1map);
+  void DeleteTH2s(TH2Map th2map);
 
 private:
   // I/O
@@ -27,6 +47,7 @@ private:
   
   // CMS demands this...
   TStyle* fTDRStyle;
+  Float_t fLumi;
 
 public:
   // Declaration of leaf types
@@ -129,7 +150,7 @@ public:
   TBranch        *b_el2id;   //!
   TBranch        *b_el2idl;   //!
   TBranch        *b_el1time;   //!
-  TBranch        *b_el2time;   //!
+  //  TBranch        *b_el2time;   //!
   TBranch        *b_zeemass;   //!
   TBranch        *b_zeeept;   //!
   TBranch        *b_zeeeta;   //!

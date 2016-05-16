@@ -1,9 +1,9 @@
 #ifndef _common_
 #define _common_
 
-#include <TString.h>
-#include <TCanvas.h>
-#include <TStyle.h>
+#include "TString.h"
+#include "TCanvas.h"
+#include "TStyle.h"
 
 void MakeOutDir(TString outdir);
 void MoveInput(TString infile, TString outdir);

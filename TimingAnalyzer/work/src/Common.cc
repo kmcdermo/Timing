@@ -1,10 +1,11 @@
 #include "../interface/Common.hh"
 
-#include <TSystem.h>
-#include <TString.h>
-#include <TCanvas.h>
-#include <TStyle.h>
-#include <TLatex.h>
+#include "TSystem.h"
+#include "TString.h"
+#include "TCanvas.h"
+#include "TStyle.h"
+#include "TLatex.h"
+#include "TColor.h"
 
 void MakeOutDir(TString outdir){
   FileStat_t dummyFileStat;
@@ -213,7 +214,7 @@ void SetTDRStyle(TStyle *& tdrStyle){
 
   tdrStyle->SetTitleColor(1, "XYZ");
   tdrStyle->SetTitleFont(42, "XYZ");
-  tdrStyle->SetTitleSize(0.06, "XYZ");
+  tdrStyle->SetTitleSize(0.04, "XYZ");
   tdrStyle->SetTitleXOffset(0.9);
   tdrStyle->SetTitleYOffset(1.0);
 
@@ -222,7 +223,7 @@ void SetTDRStyle(TStyle *& tdrStyle){
   tdrStyle->SetLabelColor(1, "XYZ");
   tdrStyle->SetLabelFont(42, "XYZ");
   tdrStyle->SetLabelOffset(0.007, "XYZ");
-  tdrStyle->SetLabelSize(0.05, "XYZ");
+  tdrStyle->SetLabelSize(0.04, "XYZ");
 
   // For the axis:
 
@@ -253,6 +254,17 @@ void SetTDRStyle(TStyle *& tdrStyle){
   // tdrStyle->SetTimeOffset(Double_t toffset);
   // tdrStyle->SetHistMinimumZero(kTRUE);
   
+  // for a nice color palette
+  const Int_t NRGBs = 5;
+  const Int_t NCont = 255;
+  
+  Double_t stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
+  Double_t red[NRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 };
+  Double_t green[NRGBs] = { 0.00, 0.81, 1.00, 0.20, 0.00 };
+  Double_t blue[NRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 };
+  TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
+  tdrStyle->SetNumberContours(NCont);
+
   tdrStyle->cd();
 }
 
