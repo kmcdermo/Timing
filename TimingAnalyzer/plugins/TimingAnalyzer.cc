@@ -605,7 +605,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	  }
 	}          
       }
-
+      
     }
     tree->Fill();    
 
@@ -663,7 +663,7 @@ void TimingAnalyzer::beginJob() {
 
   // Time info
   tree->Branch("el1time"              , &el1time              , "el1time/D");
-  tree->Branch("el2time"              , &el1time              , "el1time/D");
+  tree->Branch("el2time"              , &el2time              , "el2time/D");
 
   // Dilepton info
   tree->Branch("zeemass"              , &zeemass              , "zeemass/D");
@@ -680,7 +680,7 @@ void TimingAnalyzer::beginJob() {
   tree->Branch("pheta"                , &pheta                , "pheta/D");
   tree->Branch("phphi"                , &phphi                , "phphi/D");
   
-  // W/Z gen-level info: leptonic and hadronic
+  // W/Z gen-level info: leptonic 
   tree->Branch("wzid"                 , &wzid                 , "wzid/I");
   tree->Branch("wzmass"               , &wzmass               , "wzmass/D");
   tree->Branch("wzpt"                 , &wzpt                 , "wzpt/D");
