@@ -1,3 +1,5 @@
+#include "../interface/Common.hh"
+
 #include <TSystem.h>
 #include <TString.h>
 #include <TCanvas.h>
@@ -21,7 +23,7 @@ void MoveInput(TString infile, TString outdir){
   gSystem->Exec(mvin.Data());
 }
 
-void CMSLumi(TCanvas *& canv, Float_t lumi, TString extraText, Int_t iPosX = 0) {
+void CMSLumi(TCanvas *& canv, Float_t lumi, TString extraText, Int_t iPosX) {
   TString cmsText      = "CMS";
   Double_t cmsTextFont = 61;  // default is helvetic-bold
   
@@ -253,3 +255,4 @@ void SetTDRStyle(TStyle *& tdrStyle){
   
   tdrStyle->cd();
 }
+
