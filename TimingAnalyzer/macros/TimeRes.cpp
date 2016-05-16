@@ -11,33 +11,22 @@ TimeRes::TimeRes(TString filename, TString outdir, Bool_t mvinput, TString outty
   // make output directory if it does not exist
   MakeOutDir(outDir);
   
-  TTree * tree = (TTree*)file->Get("tree/tree");
+  TTree * tree = (TTree*)fInFile->Get("tree/tree");
   Init(tree);
+
+  // boilerplate tdr style
+  fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
+  SetTDRStyle(fTDRStyle);
+  gROOT->ForceStyle();
 }
 
 TimeRes::~TimeRes(){
-  if (!fChain) return;
-  delete fChain->GetCurrentFile();
+  delete fTDRStyle;
+  delete fInTree;
+  delete fInFile;
 }
 
-Int_t TimeRes::GetEntry(Long64_t entry){
-  // Read contents of entry.
-  if (!fChain) return 0;
-  return fChain->GetEntry(entry);
-}
-
-Long64_t TimeRes::LoadTree(Long64_t entry){
-  // Set the environment to read one entry
-  if (!fChain) return -5;
-  Long64_t centry = fChain->LoadTree(entry);
-  if (centry < 0) return centry;
-  if (fChain->GetTreeNumber() != fCurrent) {
-    fCurrent = fChain->GetTreeNumber();
-  }
-  return centry;
-}
-
-void TimeRes::MakePlots(){
+void TimeRes::Analysis(){
 
   // This is the loop skeleton where:
   // jentry is the global entry number in the chain
@@ -53,7 +42,16 @@ void TimeRes::MakePlots(){
     Long64_t ientry = LoadTree(jentry);
     if (ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
-    // if (Cut(ientry) < 0) continue;
+
+    if ( (nelectrons==2) && hltdoubleel && (zeemass>76. && zeemass<105.) ){ // we want di-electron z's
+      // standard "validation" plots
+      
+
+    }
+
+
+
+
   }
 
   if (mvInput) {MoveInput(inFileName,outDir);}

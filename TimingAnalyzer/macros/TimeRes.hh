@@ -151,7 +151,7 @@ public :
   Int_t    GetEntry(Long64_t entry);
   Long64_t LoadTree(Long64_t entry);
   void     Init(TTree *tree);
-  void     MakePlots();
+  void     Analysis();
 
 private:
   TString inFileName;
