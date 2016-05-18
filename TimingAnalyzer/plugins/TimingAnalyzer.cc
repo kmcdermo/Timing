@@ -55,6 +55,13 @@
 #include "TLorentzVector.h"
 #include "TPRegexp.h"
 
+typedef std::tuple<int, int, double> triple;
+typedef std::vector<triple> triplevec;
+
+inline bool minimizeByZmass(const triple& elpair1, const triple& elpair2){
+  return std::get<2>(elpair1)<std::get<2>(elpair2);
+}
+
 class TimingAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> {
 
 public:
@@ -62,7 +69,6 @@ public:
   ~TimingAnalyzer();
   
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-  
   
 private:
   virtual void beginJob() override;
@@ -239,14 +245,6 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
   tightelectronsToken  = consumes<pat::ElectronRefVector>(tightelectronsTag);
   heepelectronsToken   = consumes<pat::ElectronRefVector> (heepelectronsTag);
   electronLooseIdToken = consumes<edm::ValueMap<bool> > (electronLooseIdTag);
-
-  // photons
-  photonsToken        = consumes<pat::PhotonRefVector> (photonsTag);
-  tightphotonsToken   = consumes<pat::PhotonRefVector> (tightphotonsTag);
-  photonLooseIdToken  = consumes<edm::ValueMap<bool> > (photonLooseIdTag);
-  photonMediumIdToken = consumes<edm::ValueMap<bool> > (photonMediumIdTag);
-  photonTightIdToken  = consumes<edm::ValueMap<bool> > (photonTightIdTag);
-  photonHighPtIdToken = consumes<edm::ValueMap<bool> > (photonHighPtIdTag);
    
   // only for simulated samples
   if( isMC ){
@@ -270,13 +268,11 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     // TRIGGER and FILTERS
     Handle<TriggerResults> triggerResultsH;
     iEvent.getByToken(triggerResultsToken, triggerResultsH);
-    Handle<pat::PackedTriggerPrescales> triggerPrescalesH;
-    iEvent.getByToken(triggerPrescalesToken, triggerPrescalesH);
     Handle<TriggerResults> filterResultsH;
     iEvent.getByToken(filterResultsToken, filterResultsH);
 
     // GEN INFO    
-    Handle<vector<PileupSummaryInfo> > pileupInfoH;
+    Handle<std::vector<PileupSummaryInfo> > pileupInfoH;
     Handle<GenEventInfoProduct>        genevtInfoH;
     Handle<View<GenParticle> >         gensH;
 
@@ -287,12 +283,12 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     }
 
     // VERTEX
-    Handle<vector<Vertex> > verticesH;
+    Handle<std::vector<Vertex> > verticesH;
     iEvent.getByToken(verticesToken, verticesH);
 
     // ELECTRONS
-    Handle<pat::ElectronRefVector> electronsH;
-    iEvent.getByToken(electronsToken, electronsH);
+    Handle<pat::ElectronRefVector> vetoelectronsH;
+    iEvent.getByToken(electronsToken, vetoelectronsH);
     pat::ElectronRefVector electrons = *electronsH;
 
     Handle<pat::ElectronRefVector> tightelectronsH;
@@ -303,36 +299,12 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     iEvent.getByToken(heepelectronsToken, heepelectronsH);
     pat::ElectronRefVector heepelectrons = *heepelectronsH;
 
-    Handle<edm::ValueMap<bool> > electronLooseIdH;
-    iEvent.getByToken(electronLooseIdToken, electronLooseIdH);
-
-    // PHOTONS
-    Handle<pat::PhotonRefVector> photonsH;
-    iEvent.getByToken(photonsToken, photonsH);
-    pat::PhotonRefVector photons = *photonsH;
-
-    Handle<pat::PhotonRefVector> tightphotonsH;
-    iEvent.getByToken(tightphotonsToken, tightphotonsH);
-    pat::PhotonRefVector tightphotons = *tightphotonsH;
-
-    Handle<ValueMap<bool> > photonLooseIdH;
-    iEvent.getByToken(photonLooseIdToken, photonLooseIdH);
-    Handle<ValueMap<bool> > photonMediumIdH;
-    iEvent.getByToken(photonMediumIdToken, photonMediumIdH);
-    Handle<ValueMap<bool> > photonTightIdH;
-    iEvent.getByToken(photonTightIdToken, photonTightIdH);
-    Handle<ValueMap<bool> > photonHighPtIdH;
-    iEvent.getByToken(photonHighPtIdToken, photonHighPtIdH);
-
     // Event, lumi, run info
     event = iEvent.id().event();
     run   = iEvent.id().run();
     lumi  = iEvent.luminosityBlock();
     
     // Trigger info
-    hltphoton165    = 0;
-    hltphoton175    = 0;
-    hltphoton120    = 0;
     hltdoubleel     = 0;
     hltsingleel     = 0;
     hltelnoiso      = 0;
@@ -342,46 +314,32 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       for (size_t i = 0; i < triggerPathsVector.size(); i++) {
         if (triggerPathsMap[triggerPathsVector[i]] == -1) continue;	
 	if(triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]]))
-        if (i == 0 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltphoton165    = 1; // Photon trigger
-        if (i == 1 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltphoton175    = 1; // Photon trigger
-        if (i == 2 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltphoton120    = 1; // Photon trigger
-        if (i == 3 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel     = 1; // Double electron trigger
-        if (i == 4 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel     = 1; // Double electron trigger
+        if (i == 0 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel     = 1; // Double electron trigger
+        if (i == 1 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel     = 1; // Double electron trigger
+        if (i == 2 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel     = 1; // Single electron trigger
+        if (i == 3 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel     = 1; // Single electron trigger
+        if (i == 4 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel     = 1; // Single electron trigger
         if (i == 5 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel     = 1; // Single electron trigger
-        if (i == 6 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel    = 1; // Single electron trigger
-        if (i == 7 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel    = 1; // Single electron trigger
-        if (i == 8 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel    = 1; // Single electron trigger
-        if (i == 9 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltelnoiso     = 1; // Single electron trigger
-        if (i == 10 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltelnoiso     = 1; // Single electron trigger
+        if (i == 6 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltelnoiso      = 1; // Single electron trigger
+        if (i == 7 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltelnoiso      = 1; // Single electron trigger
       }
     }
 
+    // skim on events that pass triggers
     bool triggered = false;
-    if (hltphoton165    == 1) triggered = true;
-    if (hltphoton175    == 1) triggered = true;
-    if (hltphoton120    == 1) triggered = true;
     if (hltdoubleel     == 1) triggered = true;
     if (hltsingleel     == 1) triggered = true;
     if (hltelnoiso      == 1) triggered = true;
     if (applyHLTFilter && !triggered) return;
 
-    pswgt = 1.0;
-    const edm::TriggerNames &trignames = iEvent.triggerNames(*triggerResultsH);
-    for (size_t i = 0; i < triggerResultsH->size(); i++) {
-        if (trignames.triggerName(i).find("HLT_Photon120_v") != string::npos) pswgt = triggerPrescalesH->getPrescaleForIndex(i);
-    }
-
+    // Vertex + PU info
     if(verticesH.isValid()) nvtx = verticesH->size();
     else nvtx = 0;
 
     puobs  = 0;
     putrue = 0;
     puwgt  = 1.;
-
-    // in caase the cross section is not set from outside --> fix to 1 as dummy value
-    wgt = 1.0;
-    vector<pat::ElectronRef> electronvector;    
-
+    wgt = 1.0;  // in caase the cross section is not set from outside --> fix to 1 as dummy value
     if (pileupInfoH.isValid()) {
       for (auto pileupInfo_iter = pileupInfoH->begin(); pileupInfo_iter != pileupInfoH->end(); ++pileupInfo_iter) {
 	if (pileupInfo_iter->getBunchCrossing() == 0) {
@@ -390,89 +348,64 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	}
       }
     }
-    if(electronsH.isValid() and tightelectronsH.isValid() and heepelectronsH.isValid()){
-      
-      nelectrons      = electronsH->size();
-      ntightelectrons = tightelectronsH->size();
-      nheepelectrons  = heepelectronsH->size();
 
-      for (size_t i = 0; i < electrons.size(); i++) 
-	electronvector.push_back(electrons[i]);
-    }
-    // sort electrons
-    sort(electronvector.begin(), electronvector.end(), electronSorter);
+    // ELECTRON ANALYSIS
+    if (electronsH.isValid())      nelectrons = electronsH->size();
+    if (tightelectronsH.isValid()) ntightelectrons = tightelectronsH->size();
+    if (heepelectronsH.isValid())  nheepelectrons  = heepelectronsH->size();
+    
 
     // tree vars
     zeemass     = 0.0;  zeept       = 0.0;  zeeeta      = 0.0; zeephi      = 0.0;
-    el1pid      = 0;    el1pt       = 0.0;  el1eta      = 0.0; el1phi      = 0.0; el1id       = 0;
-    el2pid      = 0;    el2pt       = 0.0;  el2eta      = 0.0; el2phi      = 0.0; el2id       = 0;
+    el1pid      = 0;    el1pt       = 0.0;  el1eta      = 0.0; el1phi      = 0.0; 
+    el2pid      = 0;    el2pt       = 0.0;  el2eta      = 0.0; el2phi      = 0.0; 
     el1time     = -99.; el2time     = -99.; 
 
-    // ecal cluster tools
-    clustertools = new EcalClusterLazyTools (iEvent, iSetup, recHitCollectionEBTAG, recHitCollectionEETAG);
-
-    // one or two loose electrons
-    if (nelectrons == 1 || nelectrons == 2) {
-      pat::ElectronRef electron = electronvector[0];
-      el1pid = electron->pdgId();
-      el1pt  = electron->pt();
-      el1eta = electron->eta();
-      el1phi = electron->phi();
-      el1idl = ((*electronLooseIdH )[electron] ? 1 : 0);
-      
+    triplevec invmasspairs; // store i-j tight el index + invariant mass
+    if (tightelectrons.size()>1){ // need at least two tight electrons!
+      // only want pair of tight electrons that yield closest zmass diff   
       for (std::size_t i = 0; i < tightelectrons.size(); i++) {
-	if (electron == tightelectrons[i]) 
-	  el1id = 1;
+	pat::ElectronRef el1 = tightelectrons[i];
+	for (std::size_t j = i+1; j < tightelectrons.size(); j++) {
+	  pat::ElectronRef el2 = tightelectrons[j];
+	  TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1->pt(), el1->eta(), el1->phi(), el1->p());
+	  TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2->pt(), el2->eta(), el2->phi(), el2->p());
+	  el1vec += el2vec;
+	  invmasspairs.push_back(make_tuple(i,j,std::abs(el1vec.M()-91.1876))); 
+	}
       }
+      auto best = std::min_element(invmasspairs.begin(),invmasspairs.end(),minimizeByZmass); // keep the lowest! --> returns pointer to lowest element
       
-      for (std::size_t i = 0; i < heepelectrons.size(); i++) {
-	if (electron == heepelectrons[i] and el1id != 1) 
-	  el1id = 2;
-      }
+      pat::ElectronRef el1 = tightelectrons[std::get<0>(*best)];
+      pat::ElectronRef el2 = tightelectrons[std::get<1>(*best)];
+      
+      el1pid = el1->pdgId(); el2pid = el2->pdgId();
+      el1pt  = el1->pt();    el2pt  = el2->pt();
+      el1eta = el1->eta();   el2eta = el2->eta();
+      el1phi = el1->phi();   el2phi = el2->phi();
 
-      // Stolen from ECAL ELF
-      const reco::SuperClusterRef& sc = electron->superCluster().isNonnull() ? electron->superCluster() : electron->parentSuperCluster();
-      
-      if(electron->ecalDrivenSeed() && sc.isNonnull()) {
-	DetId seedDetId = sc->seed()->seed();
+      // ecal cluster tools --> stolen from ECAL ELF
+      clustertools = new EcalClusterLazyTools (iEvent, iSetup, recHitCollectionEBTAG, recHitCollectionEETAG);
+      const reco::SuperClusterRef& scel1 = el1->superCluster().isNonnull() ? el1->superCluster() : el1->parentSuperCluster();
+      if(el1->ecalDrivenSeed() && scel1.isNonnull()) {
+	DetId seedDetId = scel1->seed()->seed();
 	const EcalRecHitCollection *recHits = (seedDetId.subdetId() == EcalBarrel) ?  clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
 	EcalRecHitCollection::const_iterator seedRecHit = recHits->find(seedDetId) ;
 	if(seedRecHit != recHits->end()) {
 	  el1time = seedRecHit->time();
 	}
+	delete recHits;
       }
-    } //end check over 1/2 els
-
-    // two loose electrons
-    if (nelectrons == 2) {
-      pat::ElectronRef electron = electronvector[1];
-      el2pid = electron->pdgId();
-      el2pt  = electron->pt();
-      el2eta = electron->eta();
-      el2phi = electron->phi();
-      el2idl = ((*electronLooseIdH )[electron] ? 1 : 0);
-      
-      for (std::size_t i = 0; i < tightelectrons.size(); i++) {
-	if (electron == tightelectrons[i]) el2id = 1;
-      }
-      
-      for (std::size_t i = 0; i < heepelectrons.size(); i++) {
-	if (electron == heepelectrons[i] and el2id != 1) 
-	  el2id = 2;
-      }
-
-      // Stolen from ECAL ELF
-      const reco::SuperClusterRef& sc = electron->superCluster().isNonnull() ? electron->superCluster() : electron->parentSuperCluster();
-      
-      if(electron->ecalDrivenSeed() && sc.isNonnull()) {
-	DetId seedDetId = sc->seed()->seed();
+      if(el2->ecalDrivenSeed() && scel2.isNonnull()) {
+	DetId seedDetId = scel2->seed()->seed();
 	const EcalRecHitCollection *recHits = (seedDetId.subdetId() == EcalBarrel) ?  clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
 	EcalRecHitCollection::const_iterator seedRecHit = recHits->find(seedDetId) ;
 	if(seedRecHit != recHits->end()) {
 	  el2time = seedRecHit->time();
 	}
+	delete recHits;
       }
-      
+
       TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1pt, el1eta, el1phi, electronvector[0]->p());
       TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2pt, el2eta, el2phi, electron->p());
       
@@ -483,39 +416,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       zeept   = zvec.Pt();
       zeeeta  = zvec.Eta();
       zeephi  = zvec.Phi();
-    }
-
-    // Photon information
-    phidl    = 0; phidm    = 0; phidt    = 0; phidh    = 0;
-    phpt     = 0.0; pheta    = 0.0; phphi    = 0.0;
-
-    int hardestPhotonIndex = -1;
-    double hardestPhotonPt = 0.0;
-
-    if(photonsH.isValid() and photonLooseIdH.isValid() and photonMediumIdH.isValid() and photonTightIdH.isValid() and photonHighPtIdH.isValid()){
-      
-      for (size_t i = 0; i < tightphotons.size(); i++) {
-        if (tightphotons[i]->pt() > hardestPhotonPt) {
-	  hardestPhotonIndex = i;
-	  hardestPhotonPt = tightphotons[i]->pt();
-        }
-      }
-
-      nphotons = photonsH->size();
-      
-      if (hardestPhotonIndex >= 0) {
-	phidl   = ((*photonLooseIdH )[tightphotons[hardestPhotonIndex]] ? 1 : 0);
-	phidm   = ((*photonMediumIdH)[tightphotons[hardestPhotonIndex]] ? 1 : 0);
-	phidt   = ((*photonTightIdH )[tightphotons[hardestPhotonIndex]] ? 1 : 0);
-	phidh   = ((*photonHighPtIdH)[tightphotons[hardestPhotonIndex]] ? 1 : 0);
-	phpt    = tightphotons[hardestPhotonIndex]->pt();
-	pheta   = tightphotons[hardestPhotonIndex]->eta();
-	phphi   = tightphotons[hardestPhotonIndex]->phi();
-	phpt    = tightphotons[hardestPhotonIndex]->pt();
-	pheta   = tightphotons[hardestPhotonIndex]->eta();
-	phphi   = tightphotons[hardestPhotonIndex]->phi();
-      }
-    }
+    } // end section over tight electrons
 
     // Generator-level information
     wzid          = 0; wzmass        = 0.0; wzpt          = 0.0; wzeta         = 0.0; wzphi         = 0.0;
@@ -525,88 +426,88 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     ancid         = 0; ancpt         = 0.0; anceta        = 0.0; ancphi        = 0.0;
 
     // dump inportant gen particles
-    if(addGenParticles and gensH.isValid()){
+  //   if(addGenParticles and gensH.isValid()){
       
-      // loop on genParticles (prunedGenParticles) trying to find W/Z decying leptonically or hadronically, top and anti-top quarks
-      for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) {
-	if ( (gens_iter->pdgId() == 23 || abs(gens_iter->pdgId()) == 24) && // Z or W-boson
-	     gens_iter->numberOfDaughters() > 1 && // before the decay (more than one daughter)
-	     abs(gens_iter->daughter(0)->pdgId()) > 10 && 
-	     abs(gens_iter->daughter(0)->pdgId()) < 17)  { // decays into leptons, neutrinos 
+//       // loop on genParticles (prunedGenParticles) trying to find W/Z decying leptonically or hadronically, top and anti-top quarks
+//       for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) {
+// 	if ( (gens_iter->pdgId() == 23 || abs(gens_iter->pdgId()) == 24) && // Z or W-boson
+// 	     gens_iter->numberOfDaughters() > 1 && // before the decay (more than one daughter)
+// 	     abs(gens_iter->daughter(0)->pdgId()) > 10 && 
+// 	     abs(gens_iter->daughter(0)->pdgId()) < 17)  { // decays into leptons, neutrinos 
 	  
-	  wzid   = gens_iter->pdgId();
-	  wzmass = gens_iter->mass();
-	  wzpt   = gens_iter->pt();
-	  wzeta  = gens_iter->eta();
-	  wzphi  = gens_iter->phi();
+// 	  wzid   = gens_iter->pdgId();
+// 	  wzmass = gens_iter->mass();
+// 	  wzpt   = gens_iter->pt();
+// 	  wzeta  = gens_iter->eta();
+// 	  wzphi  = gens_iter->phi();
 	  
-	  l1id   = gens_iter->daughter(0)->pdgId();
-	  l1pt   = gens_iter->daughter(0)->pt();
-	  l1eta  = gens_iter->daughter(0)->eta();
-	  l1phi  = gens_iter->daughter(0)->phi();
+// 	  l1id   = gens_iter->daughter(0)->pdgId();
+// 	  l1pt   = gens_iter->daughter(0)->pt();
+// 	  l1eta  = gens_iter->daughter(0)->eta();
+// 	  l1phi  = gens_iter->daughter(0)->phi();
 	
-	  l2id   = gens_iter->daughter(1)->pdgId();
-	  l2pt   = gens_iter->daughter(1)->pt();
-	  l2eta  = gens_iter->daughter(1)->eta();
-	  l2phi  = gens_iter->daughter(1)->phi();
+// 	  l2id   = gens_iter->daughter(1)->pdgId();
+// 	  l2pt   = gens_iter->daughter(1)->pt();
+// 	  l2eta  = gens_iter->daughter(1)->eta();
+// 	  l2phi  = gens_iter->daughter(1)->phi();
 	
-	}
-      }
+// 	}
+//       }
     
       // if a Z/W is not found look for a pair of lepton .. this way with the pdgId is not guaranteed that you catch a Z/W boson and also recover DY production
-      if (wzid == 0) {
-	for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) {
-	  if (gens_iter->isPromptFinalState() || gens_iter->isPromptDecayed()) {
-	    if (gens_iter->pdgId() >  10 && gens_iter->pdgId() <  17) {
-	      l1id   = gens_iter->pdgId();
-	      l1pt   = gens_iter->pt();
-	      l1eta  = gens_iter->eta();
-	      l1phi  = gens_iter->phi();
-	    }
-	    if (gens_iter->pdgId() < -10 && gens_iter->pdgId() > -17) {
-	      l2id   = gens_iter->pdgId();
-	      l2pt   = gens_iter->pt();
-	      l2eta  = gens_iter->eta();
-	      l2phi  = gens_iter->phi();
-	    }
-	  }
-	}
-	if (l1id > 0) {
-	  TLorentzVector l1vec;
-	  TLorentzVector l2vec;
-	  l1vec.SetPtEtaPhiM(l1pt, l1eta, l1phi, 0.);
-	  l2vec.SetPtEtaPhiM(l2pt, l2eta, l2phi, 0.);
-	  TLorentzVector wzvec(l1vec);
-	  wzvec += l2vec;
-	  wzmass = wzvec.M();
-	  wzpt   = wzvec.Pt();
-	  wzeta  = wzvec.Eta();
-	  wzphi  = wzvec.Phi();
-	  if (l1id+l2id == 0) wzid = 23;
-	  else                wzid = 24;
-	}
-      }
+//       if (wzid == 0) {
+// 	for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) {
+// 	  if (gens_iter->isPromptFinalState() || gens_iter->isPromptDecayed()) {
+// 	    if (gens_iter->pdgId() >  10 && gens_iter->pdgId() <  17) {
+// 	      l1id   = gens_iter->pdgId();
+// 	      l1pt   = gens_iter->pt();
+// 	      l1eta  = gens_iter->eta();
+// 	      l1phi  = gens_iter->phi();
+// 	    }
+// 	    if (gens_iter->pdgId() < -10 && gens_iter->pdgId() > -17) {
+// 	      l2id   = gens_iter->pdgId();
+// 	      l2pt   = gens_iter->pt();
+// 	      l2eta  = gens_iter->eta();
+// 	      l2phi  = gens_iter->phi();
+// 	    }
+// 	  }
+// 	}
+// 	if (l1id > 0) {
+// 	  TLorentzVector l1vec;
+// 	  TLorentzVector l2vec;
+// 	  l1vec.SetPtEtaPhiM(l1pt, l1eta, l1phi, 0.);
+// 	  l2vec.SetPtEtaPhiM(l2pt, l2eta, l2phi, 0.);
+// 	  TLorentzVector wzvec(l1vec);
+// 	  wzvec += l2vec;
+// 	  wzmass = wzvec.M();
+// 	  wzpt   = wzvec.Pt();
+// 	  wzeta  = wzvec.Eta();
+// 	  wzphi  = wzvec.Phi();
+// 	  if (l1id+l2id == 0) wzid = 23;
+// 	  else                wzid = 24;
+// 	}
+//       }
       
-      // no W or Z decay leptonically
-      if (wzid == 0) {
-	for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) { // loop on prunedGenParticles
-	  if (gens_iter->pdgId() == 22 && // photons
-	      gens_iter->status() == 1 && // final state
-	      gens_iter->isPromptFinalState() &&
-	      gens_iter->pt() > wzpt) {
+//       // no W or Z decay leptonically
+//       if (wzid == 0) {
+// 	for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) { // loop on prunedGenParticles
+// 	  if (gens_iter->pdgId() == 22 && // photons
+// 	      gens_iter->status() == 1 && // final state
+// 	      gens_iter->isPromptFinalState() &&
+// 	      gens_iter->pt() > wzpt) {
 	  
-	    wzid   = gens_iter->pdgId();
-	    wzpt   = gens_iter->pt();
-	    wzeta  = gens_iter->eta();
-	    wzphi  = gens_iter->phi();
+// 	    wzid   = gens_iter->pdgId();
+// 	    wzpt   = gens_iter->pt();
+// 	    wzeta  = gens_iter->eta();
+// 	    wzphi  = gens_iter->phi();
 	  
-	    findFirstNonPhotonMother(&(*gens_iter), ancid, ancpt, anceta, ancphi);
-	    findMother(&(*gens_iter), parid, parpt, pareta, parphi);
-	  }
-	}          
-      }
+// 	    findFirstNonPhotonMother(&(*gens_iter), ancid, ancpt, anceta, ancphi);
+// 	    findMother(&(*gens_iter), parid, parpt, pareta, parphi);
+// 	  }
+// 	}          
+//       }
       
-    }
+//    }
     tree->Fill();    
 
     // Stolen from ECALELF
@@ -633,33 +534,23 @@ void TimingAnalyzer::beginJob() {
   tree->Branch("nvtx"                 , &nvtx                 , "nvtx/i");
   
   // Triggers
-  tree->Branch("hltphoton165"         , &hltphoton165         , "hltphoton165/b");
-  tree->Branch("hltphoton175"         , &hltphoton175         , "hltphoton175/b");
-  tree->Branch("hltphoton120"         , &hltphoton120         , "hltphoton120/b");
-  tree->Branch("hltdoubleel"          , &hltdoubleel          , "hltdoubleel/b");
   tree->Branch("hltsingleel"          , &hltsingleel          , "hltsingleel/b");
+  tree->Branch("hltdoubleel"          , &hltdoubleel          , "hltdoubleel/b");
 
   // Object counts
   tree->Branch("nelectrons"           , &nelectrons           , "nelectrons/i");
   tree->Branch("ntightelectrons"      , &ntightelectrons      , "ntightelectrons/i");
   tree->Branch("nheepelectrons"       , &nheepelectrons       , "nheepelectrons/i");
-  tree->Branch("nphotons"             , &nphotons             , "nphotons/i");
 
   // Lepton info
-  
   tree->Branch("el1pid"               , &el1pid               , "el1pid/I");
   tree->Branch("el1pt"                , &el1pt                , "el1pt/D");
   tree->Branch("el1eta"               , &el1eta               , "el1eta/D");
   tree->Branch("el1phi"               , &el1phi               , "el1phi/D");
-  tree->Branch("el1id"                , &el1id                , "el1id/I");
-  tree->Branch("el1idl"               , &el1idl               , "el1idl/I");
-
   tree->Branch("el2pid"               , &el2pid               , "el2pid/I");
   tree->Branch("el2pt"                , &el2pt                , "el2pt/D");
   tree->Branch("el2eta"               , &el2eta               , "el2eta/D");
   tree->Branch("el2phi"               , &el2phi               , "el2phi/D");
-  tree->Branch("el2id"                , &el2id                , "el2id/I");
-  tree->Branch("el2idl"               , &el2idl               , "el2idl/I");
 
   // Time info
   tree->Branch("el1time"              , &el1time              , "el1time/D");
@@ -670,40 +561,21 @@ void TimingAnalyzer::beginJob() {
   tree->Branch("zeept"                , &zeept                , "zeeept/D");
   tree->Branch("zeeeta"               , &zeeeta               , "zeeeta/D");
   tree->Branch("zeephi"               , &zeephi               , "zeephi/D");
-
-  // Photon info
-  tree->Branch("phidl"                , &phidl                , "phidl/I");
-  tree->Branch("phidm"                , &phidm                , "phidm/I");
-  tree->Branch("phidt"                , &phidt                , "phidt/I");
-  tree->Branch("phidh"                , &phidh                , "phidh/I");
-  tree->Branch("phpt"                 , &phpt                 , "phpt/D");
-  tree->Branch("pheta"                , &pheta                , "pheta/D");
-  tree->Branch("phphi"                , &phphi                , "phphi/D");
   
-  // W/Z gen-level info: leptonic 
-  tree->Branch("wzid"                 , &wzid                 , "wzid/I");
-  tree->Branch("wzmass"               , &wzmass               , "wzmass/D");
-  tree->Branch("wzpt"                 , &wzpt                 , "wzpt/D");
-  tree->Branch("wzeta"                , &wzeta                , "wzeta/D");
-  tree->Branch("wzphi"                , &wzphi                , "wzphi/D");
-  tree->Branch("l1id"                 , &l1id                 , "l1id/I");
-  tree->Branch("l1pt"                 , &l1pt                 , "l1pt/D");
-  tree->Branch("l1eta"                , &l1eta                , "l1eta/D");
-  tree->Branch("l1phi"                , &l1phi                , "l1phi/D");
-  tree->Branch("l2id"                 , &l2id                 , "l2id/I");
-  tree->Branch("l2pt"                 , &l2pt                 , "l2pt/D");
-  tree->Branch("l2eta"                , &l2eta                , "l2eta/D");
-  tree->Branch("l2phi"                , &l2phi                , "l2phi/D");
-
-  // photon gen info
-  tree->Branch("parid"                , &parid                , "parid/I");
-  tree->Branch("parpt"                , &parpt                , "parpt/D");
-  tree->Branch("pareta"               , &pareta               , "pareta/D");
-  tree->Branch("parphi"               , &parphi               , "parphi/D");
-  tree->Branch("ancid"                , &ancid                , "ancid/I");
-  tree->Branch("ancpt"                , &ancpt                , "ancpt/D");
-  tree->Branch("anceta"               , &anceta               , "anceta/D");
-  tree->Branch("ancphi"               , &ancphi               , "ancphi/D");
+//   // Z gen-level info: leptonic 
+//   tree->Branch("zid"                 , &wid                 , "zid/I");
+//   tree->Branch("wzmass"               , &wzmass               , "wzmass/D");
+//   tree->Branch("wzpt"                 , &wzpt                 , "wzpt/D");
+//   tree->Branch("wzeta"                , &wzeta                , "wzeta/D");
+//   tree->Branch("wzphi"                , &wzphi                , "wzphi/D");
+//   tree->Branch("l1id"                 , &l1id                 , "l1id/I");
+//   tree->Branch("l1pt"                 , &l1pt                 , "l1pt/D");
+//   tree->Branch("l1eta"                , &l1eta                , "l1eta/D");
+//   tree->Branch("l1phi"                , &l1phi                , "l1phi/D");
+//   tree->Branch("l2id"                 , &l2id                 , "l2id/I");
+//   tree->Branch("l2pt"                 , &l2pt                 , "l2pt/D");
+//   tree->Branch("l2eta"                , &l2eta                , "l2eta/D");
+//   tree->Branch("l2phi"                , &l2phi                , "l2phi/D");
 }
 
 void TimingAnalyzer::endJob() {}
@@ -711,9 +583,6 @@ void TimingAnalyzer::endJob() {}
 void TimingAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {
 
   // triggers for the Analysis
-  triggerPathsVector.push_back("HLT_Photon165_HE10");
-  triggerPathsVector.push_back("HLT_Photon175");
-  triggerPathsVector.push_back("HLT_Photon120_v");
   triggerPathsVector.push_back("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ");
   triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ");
   triggerPathsVector.push_back("HLT_Ele23_WPLoose_Gsf_v");
@@ -750,35 +619,35 @@ void TimingAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptio
     descriptions.addDefault(desc);
 }
 
-// for photons
-void TimingAnalyzer::findFirstNonPhotonMother(const reco::Candidate *particle, int& ancestorid, double& ancestorpt, double& ancestoreta, double& ancestorphi) {
+// // for photons
+// void TimingAnalyzer::findFirstNonPhotonMother(const reco::Candidate *particle, int& ancestorid, double& ancestorpt, double& ancestoreta, double& ancestorphi) {
 
-  if (particle == 0)
-    return;
+//   if (particle == 0)
+//     return;
   
-  if (abs(particle->pdgId()) == 22) 
-    findFirstNonPhotonMother(particle->mother(0), ancestorid, ancestorpt, ancestoreta, ancestorphi);
-  else {
-    ancestorid  = particle->pdgId();
-    ancestorpt  = particle->pt();
-    ancestoreta = particle->eta();
-    ancestorphi = particle->phi();
-  }
-  return;
-}
+//   if (abs(particle->pdgId()) == 22) 
+//     findFirstNonPhotonMother(particle->mother(0), ancestorid, ancestorpt, ancestoreta, ancestorphi);
+//   else {
+//     ancestorid  = particle->pdgId();
+//     ancestorpt  = particle->pt();
+//     ancestoreta = particle->eta();
+//     ancestorphi = particle->phi();
+//   }
+//   return;
+// }
 
-void TimingAnalyzer::findMother(const reco::Candidate *particle, int& ancestorid, double& ancestorpt, double& ancestoreta, double& ancestorphi) {
+// void TimingAnalyzer::findMother(const reco::Candidate *particle, int& ancestorid, double& ancestorpt, double& ancestoreta, double& ancestorphi) {
   
-  if (particle == 0) 
-    return;
+//   if (particle == 0) 
+//     return;
 
-  if (abs(particle->pdgId()) == 22) {
-    ancestorid  = particle->pdgId();
-    ancestorpt  = particle->pt();
-    ancestoreta = particle->eta();
-    ancestorphi = particle->phi();
-  }
-  return;
-}
+//   if (abs(particle->pdgId()) == 22) {
+//     ancestorid  = particle->pdgId();
+//     ancestorpt  = particle->pt();
+//     ancestoreta = particle->eta();
+//     ancestorphi = particle->phi();
+//   }
+//   return;
+// }
 
 DEFINE_FWK_MODULE(TimingAnalyzer);

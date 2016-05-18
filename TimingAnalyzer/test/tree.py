@@ -143,27 +143,14 @@ ElectronTools(process)
 from Timing.TimingAnalyzer.PhotonTools_cff import PhotonTools
 PhotonTools(process)
 
-# Create a set of objects to read from --> do i really need this??
+# Create a set of objects to read from
 process.selectedObjects = cms.EDProducer("PFCleaner",
-#     vertices  = cms.InputTag("goodVertices"),
-     vertices  = cms.InputTag("offlineSlimmedPrimaryVertices"),
-     pfcands   = cms.InputTag("packedPFCandidates"),
-     muons     = cms.InputTag("slimmedMuons"),
      electrons = cms.InputTag("slimmedElectrons"),
-     taus      = cms.InputTag("slimmedTaus"),                                    
-     photons   = cms.InputTag("slimmedPhotons"),
-     rho       = cms.InputTag("fixedGridRhoFastjetAll"),
-     jets      = cms.InputTag("slimmedJets"),
-     electronidveto  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-veto"),
-     electronidloose = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-loose"),
-     electronidtight = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-tight"),
-     electronidheep  = cms.InputTag("egmGsfElectronIDs:heepElectronID-HEEPV60"),
-     photonidloose  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-loose"),
-     photonidmedium = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-medium"),
-     photonidtight  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-tight"),
-     photonsieie = cms.InputTag("photonIDValueMapProducer", "phoFull5x5SigmaIEtaIEta"),
-     photonphiso = cms.InputTag("photonIDValueMapProducer", "phoPhotonIsolation"),
-     photonchiso = cms.InputTag("photonIDValueMapProducer", "phoChargedIsolation")
+     electronidveto   = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-veto"),
+     electronidloose  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-loose"),
+     electronidmedium = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-medium"),
+     electronidtight  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-tight"),
+     electronidheep   = cms.InputTag("egmGsfElectronIDs:heepElectronID-HEEPV60"),
 )
 
 ## Create output file
@@ -213,23 +200,15 @@ process.tree = cms.EDAnalyzer("TimingAnalyzer",
    filterResults  = cms.InputTag("TriggerResults", "", options.miniAODProcess),
    ## vertexes			    	
    vertices  = cms.InputTag("offlineSlimmedPrimaryVertices"),
-#   vertices = cms.InputTag("goodVertices"),
    ## electrons
-   electrons       = cms.InputTag("selectedObjects", "electrons"),
+   vetoelectrons   = cms.InputTag("selectedObjects", "vetoelectrons"),
+   looseelectrons  = cms.InputTag("selectedObjects", "looseelectrons"),
+   mediumelectrons = cms.InputTag("selectedObjects", "mediumelectrons"),
    tightelectrons  = cms.InputTag("selectedObjects", "tightelectrons"),
    heepelectrons   = cms.InputTag("selectedObjects", "heepelectrons"),
-   electronLooseId = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-loose"),
-   ## photons
-   photons        = cms.InputTag("selectedObjects", "photons"),
-   tightphotons   = cms.InputTag("selectedObjects", "tightphotons"),
-   photonHighPtId = cms.InputTag("selectedObjects", "photonHighPtId"),
-   photonLooseId  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-loose"),
-   photonMediumId = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-medium"),
-   photonTightId  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-tight"),
+   ## ecal recHits			      
    recHitCollectionEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitCollectionEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
-#   recHitCollectionEB = cms.InputTag("alCaIsolatedElectrons", "alcaBarrelHits"),
-#   recHitCollectionEE = cms.InputTag("alCaIsolatedElectrons", "alcaEndcapHits"),
 )
 
 # Set up the path
