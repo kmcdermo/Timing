@@ -43,6 +43,9 @@ void Analysis::TimeResPlots(){
   trTH2Map["el1time_pt"]  = Analysis::MakeTH2Plot("el1time_pt","",100,-3.0,3.0,100,0,100,"Leading Electron Seed Time [ns]","p_{T} [GeV/c]",trTH2SubMap,"timing");
   trTH2Map["el1time_phi"] = Analysis::MakeTH2Plot("el1time_phi","",100,-3.0,3.0,100,-3.2,3.2,"Leading Electron Seed Time [ns]","#phi",trTH2SubMap,"timing");
   trTH2Map["el1time_eta"] = Analysis::MakeTH2Plot("el1time_eta","",100,-3.0,3.0,100,-3.2,3.2,"Leading Electron Seed Time [ns]","#eta",trTH2SubMap,"timing");
+  trTH2Map["el2time_pt"]  = Analysis::MakeTH2Plot("el2time_pt","",100,-3.0,3.0,100,0,100,"Subleading Electron Seed Time [ns]","p_{T} [GeV/c]",trTH2SubMap,"timing");
+  trTH2Map["el2time_phi"] = Analysis::MakeTH2Plot("el2time_phi","",100,-3.0,3.0,100,-3.2,3.2,"Subleading Electron Seed Time [ns]","#phi",trTH2SubMap,"timing");
+  trTH2Map["el2time_eta"] = Analysis::MakeTH2Plot("el2time_eta","",100,-3.0,3.0,100,-3.2,3.2,"Subleading Electron Seed Time [ns]","#eta",trTH2SubMap,"timing");
 
   Analysis::MakeSubDirs(trTH1SubMap);
   Analysis::MakeSubDirs(trTH2SubMap);
@@ -53,11 +56,14 @@ void Analysis::TimeResPlots(){
       // standard "validation" plots
       trTH1Map["zeemass"]->Fill(zeemass);
       trTH1Map["el1time"]->Fill(el1time);
-      //      trTH1Map["el2time"]->Fill(el2time);
-      //      trTH1Map["timediff"]->Fill(el1time-el2time);
+      trTH1Map["el2time"]->Fill(el2time);
+      trTH1Map["timediff"]->Fill(el1time-el2time);
       trTH2Map["el1time_pt"]->Fill(el1time,el1pt);
       trTH2Map["el1time_phi"]->Fill(el1time,el1phi);
       trTH2Map["el1time_eta"]->Fill(el1time,el1eta);
+      trTH2Map["el2time_pt"]->Fill(el2time,el2pt);
+      trTH2Map["el2time_phi"]->Fill(el2time,el2phi);
+      trTH2Map["el2time_eta"]->Fill(el2time,el2eta);
     }
   }
 
@@ -195,7 +201,7 @@ void Analysis::InitTree(){
   fInTree->SetBranchAddress("el2id", &el2id, &b_el2id);
   fInTree->SetBranchAddress("el2idl", &el2idl, &b_el2idl);
   fInTree->SetBranchAddress("el1time", &el1time, &b_el1time);
-  //  fInTree->SetBranchAddress("el2time", &el2time, &b_el2time);
+  fInTree->SetBranchAddress("el2time", &el2time, &b_el2time);
   fInTree->SetBranchAddress("zeemass", &zeemass, &b_zeemass);
   fInTree->SetBranchAddress("zeept", &zeept, &b_zeeept);
   fInTree->SetBranchAddress("zeeeta", &zeeeta, &b_zeeeta);
