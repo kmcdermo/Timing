@@ -2,12 +2,15 @@
 #include <vector>
 #include <iostream>
 
+// Framework
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/stream/EDProducer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/Common/interface/ValueMap.h"
+
+// Electrons
 #include "DataFormats/PatCandidates/interface/Electron.h"
 
 class PFCleaner : public edm::stream::EDProducer<> {
@@ -56,27 +59,22 @@ PFCleaner::~PFCleaner() {
 }
 
 void PFCleaner::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
-  using namespace edm;
-  using namespace reco;
-  using namespace std;
-  using namespace pat;
-  
-  Handle<std::vector<pat::Electron> > electronsH;
+  edm::Handle<std::vector<pat::Electron> > electronsH;
   iEvent.getByToken(electronsToken, electronsH);
 
-  Handle<edm::ValueMap<bool> > electronVetoIdH;
+  edm::Handle<edm::ValueMap<bool> > electronVetoIdH;
   iEvent.getByToken(electronVetoIdMapToken, electronVetoIdH);
 
-  Handle<edm::ValueMap<bool> > electronLooseIdH;
+  edm::Handle<edm::ValueMap<bool> > electronLooseIdH;
   iEvent.getByToken(electronLooseIdMapToken, electronLooseIdH);
 
-  Handle<edm::ValueMap<bool> > electronMediumIdH;
+  edm::Handle<edm::ValueMap<bool> > electronMediumIdH;
   iEvent.getByToken(electronMediumIdMapToken, electronMediumIdH);
 
-  Handle<edm::ValueMap<bool> > electronTightIdH;
+  edm::Handle<edm::ValueMap<bool> > electronTightIdH;
   iEvent.getByToken(electronTightIdMapToken, electronTightIdH);
 
-  Handle<edm::ValueMap<bool> > electronHeepIdH;
+  edm::Handle<edm::ValueMap<bool> > electronHeepIdH;
   iEvent.getByToken(electronHeepIdMapToken, electronHeepIdH);
     
   std::auto_ptr<pat::ElectronRefVector> outputvetoelectrons(new pat::ElectronRefVector);
@@ -86,8 +84,8 @@ void PFCleaner::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   std::auto_ptr<pat::ElectronRefVector> outputheepelectrons(new pat::ElectronRefVector);
 
   //electron info https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedElectronIdentificationRun2
-  for (vector<pat::Electron>::const_iterator electrons_iter = electronsH->begin(); electrons_iter != electronsH->end(); ++electrons_iter) {
-    const Ptr<pat::Electron> electronPtr(electronsH, electrons_iter - electronsH->begin());
+  for (std::vector<pat::Electron>::const_iterator electrons_iter = electronsH->begin(); electrons_iter != electronsH->end(); ++electrons_iter) {
+    const edm::Ptr<pat::Electron> electronPtr(electronsH, electrons_iter - electronsH->begin());
 
     // cuts!
     bool passeskincuts  = (electrons_iter->pt() > 10 && fabs(electrons_iter->superCluster()->eta()) < 2.5); 

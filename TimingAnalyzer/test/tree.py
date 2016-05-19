@@ -27,28 +27,28 @@ options.register (
 ## GT to be used    
 options.register (
 	'globalTag','76X_dataRun2_16Dec2015_v0',VarParsing.multiplicity.singleton,VarParsing.varType.string,
-	'gloabl tag to be uses');
+	'gloabl tag to be used');
+
+## Skim on events that pass hlt paths
+options.register (
+	'filterOnHLT',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to indicate if apply or not trigger requirements');
 
 ## Dump Gen Level info
-
 options.register(
 	'addGenParticles',False,VarParsing.multiplicity.singleton, VarParsing.varType.bool,
-	'dump gen info for W,Z,top,photon');
+	'dump gen info for Z,leptons');
 
 options.register(
 	'isSignalSample',False,VarParsing.multiplicity.singleton, VarParsing.varType.bool,
-	'dump DM particles and read LHE header');
+	'dump signal sample info');
 
 ## input cross section in case you want to store a different value wrt to the LHE file
 options.register(
 	'crossSection',-1.,VarParsing.multiplicity.singleton, VarParsing.varType.float,
 	'external value for sample cross section, in case of data it is fixed to 0.001');
 
-## Debug options
-options.register (
-	'dropAnalyzerDumpEDM',False,VarParsing.multiplicity.singleton, VarParsing.varType.bool,
-	'not run the analyzer and store an edm file');
-
+## nThreads to run
 options.register (
 	'nThreads',4,VarParsing.multiplicity.singleton, VarParsing.varType.int,
 	'default number of threads');
@@ -76,7 +76,7 @@ print "Running with processName         = ",options.processName
 print "Running with miniAODProcess      = ",options.miniAODProcess	
 print "Running with outputFileName      = ",options.outputFileName	
 print "Running with globalTag           = ",options.globalTag	
-print "Running with dropAnalyzerDumpEDM = ",options.dropAnalyzerDumpEDM	
+print "Running with filterOnHLT         = ",options.filterOnHLT
 print "Running with isSignalSample      = ",options.isSignalSample
 print "Running with addGenParticles     = ",options.addGenParticles
 print "Running with nThreads            = ",options.nThreads
@@ -95,7 +95,7 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condD
 ## Message Logger settings
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.destinations = ['cout', 'cerr']
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 if options.inputFiles == []:
@@ -105,7 +105,7 @@ if options.inputFiles == []:
 
 	if not options.isMC :
 		process.source.fileNames.append(
-			'/store/data/Run2015D/SingleElectron/MINIAOD/16Dec2015-v1/20000/00050EF1-F9A6-E511-86B2-0025905A48D0.root'
+			'/store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/00A55FDF-74A6-E511-AD74-0CC47A4D7658.root'
 			)
 	else:
 		process.source.fileNames.append(
@@ -154,35 +154,9 @@ process.selectedObjects = cms.EDProducer("PFCleaner",
 )
 
 ## Create output file
-if options.dropAnalyzerDumpEDM == False:	
-   ## Setup the service to make a ROOT TTree
-   process.TFileService = cms.Service("TFileService", 
-		fileName = cms.string(options.outputFileName))
-else:
-   # Make edm File storing all the products from the processName (current process)
-   process.out = cms.OutputModule("PoolOutputModule",
-                                      fileName = cms.untracked.string(options.outputFileName),
-                                      outputCommands = cms.untracked.vstring(
-                                        'drop *',
-                                      	'keep *_*T1*_*_*'+options.processName+'*',
-                                      	'keep *_*metSysProducer*_*_*'+options.processName+'*',
-                                      	'drop *_*T0*_*_*'+options.processName+'*',
-                                      	'drop *_*T2*_*_*'+options.processName+'*',
-                                      	'keep *_*slimmed*_*_*'+options.processName+'*',
-					'keep *_*slimmedJets*_*_*',
-                                      	'keep *_*slimmedMETs*_*_*',
-                                      	'keep *_patJetsAK8*_*_*',
-                                      	'keep *_*Matched_*_*',
-                                      	'keep *_*Packed_*_*',
-					'keep *_*selectedObjects*_*_*',
-					'keep *_*mvaMET*_*_*',
-					'keep *_*t1mumet*_*_*',
-					'keep *_*t1elmet*_*_*',
-					'keep *_*t1phmet*_*_*',
-					'keep *_*t1taumet*_*_*',
-                                      	))
-
-   process.output = cms.EndPath(process.out)
+## Setup the service to make a ROOT TTree
+process.TFileService = cms.Service("TFileService", 
+		                   fileName = cms.string(options.outputFileName))
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("TimingAnalyzer",
@@ -194,10 +168,9 @@ process.tree = cms.EDAnalyzer("TimingAnalyzer",
    genevt     = cms.InputTag("generator"),
    gens       = cms.InputTag("prunedGenParticles"),
    xsec       = cms.double(options.crossSection),   
-   ## trigger info
+   ## trigger info + apply filter?
    triggerResults = cms.InputTag("TriggerResults", "", "HLT"),
-   prescales      = cms.InputTag("patTrigger"),    
-   filterResults  = cms.InputTag("TriggerResults", "", options.miniAODProcess),
+   applyHLTFilter = cms.bool(options.filterOnHLT),
    ## vertexes			    	
    vertices  = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## electrons
@@ -212,10 +185,9 @@ process.tree = cms.EDAnalyzer("TimingAnalyzer",
 )
 
 # Set up the path
-if options.dropAnalyzerDumpEDM == False:
-	if (options.isMC):
-		process.treePath = cms.Path(process.gentree + 					    
-					    process.tree)
-	else :
-		process.treePath = cms.Path(
-			process.tree)
+if (options.isMC):
+	process.treePath = cms.Path(process.gentree + 					    
+				    process.tree)
+else :
+	process.treePath = cms.Path(
+		process.tree)
