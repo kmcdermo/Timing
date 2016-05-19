@@ -31,6 +31,7 @@ private:
 
   const edm::EDGetTokenT<edm::ValueMap<bool> > electronVetoIdMapToken;
   const edm::EDGetTokenT<edm::ValueMap<bool> > electronLooseIdMapToken;
+  const edm::EDGetTokenT<edm::ValueMap<bool> > electronMediumIdMapToken;
   const edm::EDGetTokenT<edm::ValueMap<bool> > electronTightIdMapToken;
   const edm::EDGetTokenT<edm::ValueMap<bool> > electronHeepIdMapToken;
 };

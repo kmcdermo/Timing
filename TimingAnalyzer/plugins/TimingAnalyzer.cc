@@ -125,7 +125,7 @@ private:
   // pileup info
   int32_t puobs,putrue; 
  //  int32_t wzid,l1id,l2id;
-//   int32_t el1pid,el2pid,el1id,el1idl,el2id,el2idl;
+  int32_t el1pid,el2pid;
 //   int32_t phidl,phidm,phidt,phidh,parid,ancid; 
 
   // event info
@@ -176,6 +176,7 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
   
   ///////////// TRIGGER and filter info INFO
   triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
+  applyHLTFilter(iConfig.existsAs<bool>("applyHLTFilter") ? iConfig.getParameter<bool>("applyHLTFilter") : false),
   
   // vertexes
   verticesTag(iConfig.getParameter<edm::InputTag>("vertices")),
@@ -186,15 +187,10 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
   mediumelectronsTag(iConfig.getParameter<edm::InputTag>("mediumelectrons")),
   tightelectronsTag(iConfig.getParameter<edm::InputTag>("tightelectrons")),
   heepelectronsTag(iConfig.getParameter<edm::InputTag>("heepelectrons")),
-  electronLooseIdTag(iConfig.getParameter<edm::InputTag>("electronLooseId")),
   
   //recHits
   recHitCollectionEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEB" ))),
-  recHitCollectionEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEE" ))),
-  
-  //filter on HLT
-  applyHLTFilter(iConfig.existsAs<bool>("applyHLTFilter") ? iConfig.getParameter<bool>("applyHLTFilter") : false)
-
+  recHitCollectionEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEE" )))
 {
   usesResource();
   usesResource("TFileService");
@@ -219,7 +215,6 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
     gensToken       = consumes<edm::View<reco::GenParticle> > (iConfig.getParameter<edm::InputTag>("gens"));   
   }
 }
-
 
 TimingAnalyzer::~TimingAnalyzer() {}
 
@@ -369,6 +364,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	}
 	delete recHits;
       }
+      const reco::SuperClusterRef& scel2 = el2->superCluster().isNonnull() ? el2->superCluster() : el2->parentSuperCluster();
       if(el2->ecalDrivenSeed() && scel2.isNonnull()) {
 	DetId seedDetId = scel2->seed()->seed();
 	const EcalRecHitCollection *recHits = (seedDetId.subdetId() == EcalBarrel) ?  clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
@@ -379,8 +375,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	delete recHits;
       }
 
-      TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1pt, el1eta, el1phi, electronvector[0]->p());
-      TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2pt, el2eta, el2phi, electron->p());
+      TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1pt, el1eta, el1phi, el1->p());
+      TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2pt, el2eta, el2phi, el2->p());
       
       TLorentzVector zvec(el1vec);
       zvec += el2vec;
@@ -514,7 +510,7 @@ void TimingAnalyzer::beginJob() {
   // Object counts
   tree->Branch("nvetoelectrons"       , &nvetoelectrons       , "nvetoelectrons/i");
   tree->Branch("nlooseelectrons"      , &nlooseelectrons      , "nlooseelectrons/i");
-  tree->Branch("nmediumelectrons"     , &nmdeiumelectrons     , "nmediumelectrons/i");
+  tree->Branch("nmediumelectrons"     , &nmediumelectrons     , "nmediumelectrons/i");
   tree->Branch("ntightelectrons"      , &ntightelectrons      , "ntightelectrons/i");
   tree->Branch("nheepelectrons"       , &nheepelectrons       , "nheepelectrons/i");
 
