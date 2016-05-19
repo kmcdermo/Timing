@@ -55,6 +55,11 @@ PFCleaner::~PFCleaner() {
 }
 
 void PFCleaner::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
+  using namespace edm;
+  using namespace reco;
+  using namespace std;
+  using namespace pat;
+  
   Handle<std::vector<pat::Electron> > electronsH;
   iEvent.getByToken(electronsToken, electronsH);
 

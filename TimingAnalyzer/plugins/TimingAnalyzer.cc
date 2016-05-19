@@ -78,104 +78,78 @@ private:
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
   
-  // find photon info
-  void findMother(const reco::Candidate*, int &, double &, double &, double &);
-  void findFirstNonPhotonMother(const reco::Candidate*, int &, double &, double &, double &);
+//   // find photon info
+//   void findMother(const reco::Candidate*, int &, double &, double &, double &);
+//   void findFirstNonPhotonMother(const reco::Candidate*, int &, double &, double &, double &);
 
   // Gen Particles and MC info
   const bool isMC;
   const bool isSignalSample;
   const bool addGenParticles;
-
-  edm::EDGetTokenT<std::vector<PileupSummaryInfo> >  pileupInfoToken;
-  edm::EDGetTokenT<GenEventInfoProduct>              genevtInfoToken;
-  edm::EDGetTokenT<edm::View<reco::GenParticle> >    gensToken;
+  edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
+  edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
+  edm::EDGetTokenT<edm::View<reco::GenParticle> >   gensToken;
   double xsec;
 
-  // InputTags for triggers and met filters
+  // Trigger
   const edm::InputTag triggerResultsTag;
-  const edm::InputTag filterResultsTag;
-  const edm::InputTag prescalesTag;
-
-  // trgger and filter tokens
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
-  edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescalesToken;
-  edm::EDGetTokenT<edm::TriggerResults> filterResultsToken;
-  
+  std::vector<std::string>   triggerPathsVector;
+  std::map<std::string, int> triggerPathsMap;
+  const bool applyHLTFilter;
+
   // Vertex
   const edm::InputTag verticesTag;
   edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken;
 
   // electrons
-  const edm::InputTag  electronsTag;
-  const edm::InputTag  tightelectronsTag;
-  const edm::InputTag  heepelectronsTag;
-  const edm::InputTag  electronLooseIdTag;  
-
-  edm::EDGetTokenT<pat::ElectronRefVector>  electronsToken;
-  edm::EDGetTokenT<pat::ElectronRefVector>  tightelectronsToken;
-  edm::EDGetTokenT<pat::ElectronRefVector>  heepelectronsToken;
-  edm::EDGetTokenT<edm::ValueMap<bool> >    electronLooseIdToken;  
-
-  // Photons
-  const edm::InputTag  photonsTag;
-  const edm::InputTag  tightphotonsTag;
-  const edm::InputTag  photonLooseIdTag;
-  const edm::InputTag  photonMediumIdTag;
-  const edm::InputTag  photonTightIdTag;
-  const edm::InputTag  photonHighPtIdTag;
-
-  edm::EDGetTokenT<pat::PhotonRefVector>    photonsToken;
-  edm::EDGetTokenT<pat::PhotonRefVector>    tightphotonsToken;
-  edm::EDGetTokenT<edm::ValueMap<bool> >    photonLooseIdToken;
-  edm::EDGetTokenT<edm::ValueMap<bool> >    photonMediumIdToken;
-  edm::EDGetTokenT<edm::ValueMap<bool> >    photonTightIdToken;
-  edm::EDGetTokenT<edm::ValueMap<bool> >    photonHighPtIdToken;
-  
-  // inner vectors
-  std::vector<std::string>   triggerPathsVector;
-  std::map<std::string, int> triggerPathsMap;
-  std::vector<std::string>   filterPathsVector;
-  std::map<std::string, int> filterPathsMap;
-
-  // tree
-  TTree* tree;
+  const edm::InputTag vetoelectronsTag;
+  const edm::InputTag looseelectronsTag;
+  const edm::InputTag mediumelectronsTag;
+  const edm::InputTag tightelectronsTag;
+  const edm::InputTag heepelectronsTag;
+  edm::EDGetTokenT<pat::ElectronRefVector> vetoelectronsToken;
+  edm::EDGetTokenT<pat::ElectronRefVector> looseelectronsToken;
+  edm::EDGetTokenT<pat::ElectronRefVector> mediumelectronsToken;
+  edm::EDGetTokenT<pat::ElectronRefVector> tightelectronsToken;
+  edm::EDGetTokenT<pat::ElectronRefVector> heepelectronsToken;
 
   // ECAL RecHits
   edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEBTAG;
   edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEETAG;
 
-  // inner bools
-  const  bool applyHLTFilter;
+  // output ntuple
+  // tree
+  TTree* tree;
 
   // pileup info
   int32_t puobs,putrue; 
-  int32_t wzid,l1id,l2id;
-  int32_t el1pid,el2pid,el1id,el1idl,el2id,el2idl;
-  int32_t phidl,phidm,phidt,phidh,parid,ancid; 
+ //  int32_t wzid,l1id,l2id;
+//   int32_t el1pid,el2pid,el1id,el1idl,el2id,el2idl;
+//   int32_t phidl,phidm,phidt,phidh,parid,ancid; 
 
   // event info
   uint32_t event, run, lumi;  
   uint32_t nvtx;
-  uint32_t nelectrons,ntightelectrons,nheepelectrons;
-  uint32_t nphotons;
+  uint32_t nvetoelectrons,nlooseelectrons,nmediumelectrons,ntightelectrons,nheepelectrons;
 
   // trigger and met filters flags 
-  uint8_t hltphoton165,hltphoton175,hltphoton120,hltdoubleel,hltsingleel,hltelnoiso;
+  uint8_t hltdoubleel,hltsingleel,hltelnoiso;
 
   // muon, ele, dilepton info
-  double el1pt,el1eta,el1phi,ele1e,el2pt,ele2e,el2eta,el2phi,phpt,pheta,phphi,phe;
-  double zmass,zpt,zeta,zphi,wmt,zeemass,zeept,zeeeta,zeephi;
+  double el1pt,el1eta,el1phi,ele1e,el2pt,ele2e,el2eta,el2phi;
+  double zeemass,zeept,zeeeta,zeephi;
   // gen info leptoni W/Z boson (1 per event)
-  double wzmass,wzpt,wzeta,wzphi,l1pt,l1eta,l1phi,l2pt,l2eta,l2phi;
-  // photon info
-  double parpt,pareta,parphi,ancpt,anceta,ancphi;
+  //  double wzmass,wzpt,wzeta,wzphi,l1pt,l1eta,l1phi,l2pt,l2eta,l2phi;
 
   // timing
   double el1time, el2time;
 
   // weights
   double wgt,kfact,puwgt,pswgt;
+
+  // Stolen from ECALELF
+  EcalClusterLazyTools *clustertools;
 
   // sorting objects
   template<typename T> 
@@ -184,14 +158,8 @@ private:
     bool operator ()(const T & i, const T & j) const {
       return (i->pt() > j->pt());
     }
-
   };
-
   PatPtSorter<pat::ElectronRef> electronSorter;
-  PatPtSorter<pat::PhotonRef>   photonSorter;
-
-  // Stolen from ECALELF
-  EcalClusterLazyTools *clustertools;
 };
 
 
@@ -199,32 +167,31 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
   ///////////// GEN INFO
   // isMC or Data --> default Data
   isMC(iConfig.existsAs<bool>("isMC") ? iConfig.getParameter<bool>("isMC") : false),
+  
   // is signal sample or not
   isSignalSample(iConfig.existsAs<bool>("isSignalSample") ? iConfig.getParameter<bool>("isSignalSample") : false),
   addGenParticles(iConfig.existsAs<bool>("addGenParticles") ? iConfig.getParameter<bool>("addGenParticles") : false),
   // xsec
   xsec(iConfig.existsAs<double>("xsec") ? iConfig.getParameter<double>("xsec") * 1000.0 : -1000.),
+  
   ///////////// TRIGGER and filter info INFO
   triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
-  filterResultsTag(iConfig.getParameter<edm::InputTag>("filterResults")),
-  prescalesTag(iConfig.getParameter<edm::InputTag>("prescales")),
+  
   // vertexes
   verticesTag(iConfig.getParameter<edm::InputTag>("vertices")),
+  
   // electrons
-  electronsTag(iConfig.getParameter<edm::InputTag>("electrons")),
+  vetoelectronsTag(iConfig.getParameter<edm::InputTag>("vetoelectrons")),
+  looseelectronsTag(iConfig.getParameter<edm::InputTag>("looseelectrons")),
+  mediumelectronsTag(iConfig.getParameter<edm::InputTag>("mediumelectrons")),
   tightelectronsTag(iConfig.getParameter<edm::InputTag>("tightelectrons")),
   heepelectronsTag(iConfig.getParameter<edm::InputTag>("heepelectrons")),
   electronLooseIdTag(iConfig.getParameter<edm::InputTag>("electronLooseId")),
-  // photons
-  photonsTag(iConfig.getParameter<edm::InputTag>("photons")),
-  tightphotonsTag(iConfig.getParameter<edm::InputTag>("tightphotons")),
-  photonLooseIdTag(iConfig.getParameter<edm::InputTag>("photonLooseId")),
-  photonMediumIdTag(iConfig.getParameter<edm::InputTag>("photonMediumId")),
-  photonTightIdTag(iConfig.getParameter<edm::InputTag>("photonTightId")),
-  photonHighPtIdTag(iConfig.getParameter<edm::InputTag>("photonHighPtId")),
+  
   //recHits
   recHitCollectionEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEB" ))),
   recHitCollectionEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEE" ))),
+  
   //filter on HLT
   applyHLTFilter(iConfig.existsAs<bool>("applyHLTFilter") ? iConfig.getParameter<bool>("applyHLTFilter") : false)
 
@@ -234,17 +201,16 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
 
   // trigger tokens
   triggerResultsToken   = consumes<edm::TriggerResults> (triggerResultsTag);
-  triggerPrescalesToken = consumes<pat::PackedTriggerPrescales>(prescalesTag);
-  filterResultsToken    = consumes<edm::TriggerResults> (filterResultsTag);
-
+  
   //vertex
   verticesToken  = consumes<std::vector<reco::Vertex> > (verticesTag);
 
   // electrons
-  electronsToken       = consumes<pat::ElectronRefVector> (electronsTag);
+  vetoelectronsToken   = consumes<pat::ElectronRefVector> (vetoelectronsTag);
+  looseelectronsToken  = consumes<pat::ElectronRefVector> (looseelectronsTag);
+  mediumelectronsToken = consumes<pat::ElectronRefVector> (mediumelectronsTag);
   tightelectronsToken  = consumes<pat::ElectronRefVector>(tightelectronsTag);
   heepelectronsToken   = consumes<pat::ElectronRefVector> (heepelectronsTag);
-  electronLooseIdToken = consumes<edm::ValueMap<bool> > (electronLooseIdTag);
    
   // only for simulated samples
   if( isMC ){
@@ -258,7 +224,6 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
 TimingAnalyzer::~TimingAnalyzer() {}
 
 void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
-
     using namespace edm;
     using namespace reco;
     using namespace std;
@@ -268,8 +233,6 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     // TRIGGER and FILTERS
     Handle<TriggerResults> triggerResultsH;
     iEvent.getByToken(triggerResultsToken, triggerResultsH);
-    Handle<TriggerResults> filterResultsH;
-    iEvent.getByToken(filterResultsToken, filterResultsH);
 
     // GEN INFO    
     Handle<std::vector<PileupSummaryInfo> > pileupInfoH;
@@ -288,8 +251,16 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     // ELECTRONS
     Handle<pat::ElectronRefVector> vetoelectronsH;
-    iEvent.getByToken(electronsToken, vetoelectronsH);
-    pat::ElectronRefVector electrons = *electronsH;
+    iEvent.getByToken(vetoelectronsToken, vetoelectronsH);
+    pat::ElectronRefVector vetoelectrons = *vetoelectronsH;
+
+    Handle<pat::ElectronRefVector> looseelectronsH;
+    iEvent.getByToken(looseelectronsToken, looseelectronsH);
+    pat::ElectronRefVector looseelectrons = *looseelectronsH;
+
+    Handle<pat::ElectronRefVector> mediumelectronsH;
+    iEvent.getByToken(mediumelectronsToken, mediumelectronsH);
+    pat::ElectronRefVector mediumelectrons = *mediumelectronsH;
 
     Handle<pat::ElectronRefVector> tightelectronsH;
     iEvent.getByToken(tightelectronsToken, tightelectronsH);
@@ -350,9 +321,11 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     }
 
     // ELECTRON ANALYSIS
-    if (electronsH.isValid())      nelectrons = electronsH->size();
-    if (tightelectronsH.isValid()) ntightelectrons = tightelectronsH->size();
-    if (heepelectronsH.isValid())  nheepelectrons  = heepelectronsH->size();
+    if (vetoelectronsH.isValid())   nvetoelectrons   = vetoelectronsH->size();
+    if (looseelectronsH.isValid())  nlooseelectrons  = looseelectronsH->size();
+    if (mediumelectronsH.isValid()) nmediumelectrons = mediumelectronsH->size();
+    if (tightelectronsH.isValid())  ntightelectrons  = tightelectronsH->size();
+    if (heepelectronsH.isValid())   nheepelectrons   = heepelectronsH->size();
     
 
     // tree vars
@@ -419,11 +392,11 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     } // end section over tight electrons
 
     // Generator-level information
-    wzid          = 0; wzmass        = 0.0; wzpt          = 0.0; wzeta         = 0.0; wzphi         = 0.0;
-    l1id          = 0; l1pt          = 0.0; l1eta         = 0.0; l1phi         = 0.0;
-    l2id          = 0; l2pt          = 0.0; l2eta         = 0.0; l2phi         = 0.0;
-    parid         = 0; parpt         = 0.0; pareta        = 0.0; parphi        = 0.0;
-    ancid         = 0; ancpt         = 0.0; anceta        = 0.0; ancphi        = 0.0;
+//     wzid          = 0; wzmass        = 0.0; wzpt          = 0.0; wzeta         = 0.0; wzphi         = 0.0;
+//     l1id          = 0; l1pt          = 0.0; l1eta         = 0.0; l1phi         = 0.0;
+//     l2id          = 0; l2pt          = 0.0; l2eta         = 0.0; l2phi         = 0.0;
+//     parid         = 0; parpt         = 0.0; pareta        = 0.0; parphi        = 0.0;
+//     ancid         = 0; ancpt         = 0.0; anceta        = 0.0; ancphi        = 0.0;
 
     // dump inportant gen particles
   //   if(addGenParticles and gensH.isValid()){
@@ -536,9 +509,12 @@ void TimingAnalyzer::beginJob() {
   // Triggers
   tree->Branch("hltsingleel"          , &hltsingleel          , "hltsingleel/b");
   tree->Branch("hltdoubleel"          , &hltdoubleel          , "hltdoubleel/b");
+  tree->Branch("hltelnoiso"           , &hltelnoiso           , "hltelnoiso/b");
 
   // Object counts
-  tree->Branch("nelectrons"           , &nelectrons           , "nelectrons/i");
+  tree->Branch("nvetoelectrons"       , &nvetoelectrons       , "nvetoelectrons/i");
+  tree->Branch("nlooseelectrons"      , &nlooseelectrons      , "nlooseelectrons/i");
+  tree->Branch("nmediumelectrons"     , &nmdeiumelectrons     , "nmediumelectrons/i");
   tree->Branch("ntightelectrons"      , &ntightelectrons      , "ntightelectrons/i");
   tree->Branch("nheepelectrons"       , &nheepelectrons       , "nheepelectrons/i");
 
@@ -558,7 +534,7 @@ void TimingAnalyzer::beginJob() {
 
   // Dilepton info
   tree->Branch("zeemass"              , &zeemass              , "zeemass/D");
-  tree->Branch("zeept"                , &zeept                , "zeeept/D");
+  tree->Branch("zeept"                , &zeept                , "zeept/D");
   tree->Branch("zeeeta"               , &zeeeta               , "zeeeta/D");
   tree->Branch("zeephi"               , &zeephi               , "zeephi/D");
   
