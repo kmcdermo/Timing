@@ -105,7 +105,8 @@ if options.inputFiles == []:
 
 	if not options.isMC :
 		process.source.fileNames.append(
-			'/store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/00A55FDF-74A6-E511-AD74-0CC47A4D7658.root'
+#			'/store/data/Run2015D/SingleElectron/MINIAOD/16Dec2015-v1/20000/00AD9F75-5FA6-E511-987A-002590A4C69A.root' # singleEl 2015D 
+			'/store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/00A55FDF-74A6-E511-AD74-0CC47A4D7658.root' # doubleEG 2015D
 			)
 	else:
 		process.source.fileNames.append(
@@ -185,9 +186,4 @@ process.tree = cms.EDAnalyzer("TimingAnalyzer",
 )
 
 # Set up the path
-if (options.isMC):
-	process.treePath = cms.Path(process.gentree + 					    
-				    process.tree)
-else :
-	process.treePath = cms.Path(
-		process.tree)
+process.treePath = cms.Path(process.tree)
