@@ -8,7 +8,7 @@ config.JobType.psetName = 'tree.py'
 
 #config.Data.ignoreLocality = True
 #config.Data.inputDataset = '/DoubleEG/Run2015D-16Dec2015-v2/MINIAOD'
-config.Data.inputDataset = '/SingleElectron/Run2015D-16Dec2015-v2/MINIAOD'
+config.Data.inputDataset = '/SingleElectron/Run2015D-16Dec2015-v1/MINIAOD'
 config.Data.splitting = 'EventAwareLumiBased' #'LumiBased' 
 config.Data.unitsPerJob = 500000
 

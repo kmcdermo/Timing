@@ -140,10 +140,6 @@ process.GlobalTag.globaltag = options.globalTag
 from Timing.TimingAnalyzer.ElectronTools_cff import ElectronTools
 ElectronTools(process)
 
-# run cut-based photon ID 
-from Timing.TimingAnalyzer.PhotonTools_cff import PhotonTools
-PhotonTools(process)
-
 # Create a set of objects to read from
 process.selectedObjects = cms.EDProducer("PFCleaner",
      electrons = cms.InputTag("slimmedElectrons"),
