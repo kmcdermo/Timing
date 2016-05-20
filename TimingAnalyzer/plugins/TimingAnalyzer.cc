@@ -45,7 +45,7 @@
 #include "TLorentzVector.h"
 #include "TPRegexp.h"
 
-typedef std::tuple<int, int, double> triple;
+typedef std::tuple<int, int, float> triple;
 typedef std::vector<triple> triplevec;
 
 inline bool minimizeByZmass(const triple& elpair1, const triple& elpair2){
@@ -68,16 +68,6 @@ private:
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
   
-  //   void findMother(const reco::Candidate*, int &, double &, double &, double &);
-  //   void findFirstNonPhotonMother(const reco::Candidate*, int &, double &, double &, double &);
-
-  // Gen Particles and MC info
-  const bool isMC;
-  edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
-  edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
-  edm::EDGetTokenT<edm::View<reco::GenParticle> >   gensToken;
-  double xsec;
-
   // Trigger
   const edm::InputTag triggerResultsTag;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
@@ -89,7 +79,7 @@ private:
   const edm::InputTag verticesTag;
   edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken;
 
-  // electrons
+  // Electrons
   const edm::InputTag vetoelectronsTag;
   const edm::InputTag looseelectronsTag;
   const edm::InputTag mediumelectronsTag;
@@ -105,58 +95,56 @@ private:
   edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEBTAG;
   edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEETAG;
 
+  // Gen Particles and MC info
+  const bool isMC;
+  edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
+  edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
+  edm::EDGetTokenT<edm::View<reco::GenParticle> >   gensToken;
+  float xsec;
+
+  // ECALELF tools
+  EcalClusterLazyTools *clustertools;
+
   // output ntuple
   // tree
   TTree* tree;
 
-  // pileup info
-  int32_t puobs,putrue; 
-  //  int32_t wzid,l1id,l2id;
-  int32_t el1pid,el2pid;
-  //   int32_t phidl,phidm,phidt,phidh,parid,ancid; 
-
   // event info
-  uint32_t event, run, lumi;  
-  uint32_t nvtx;
-  uint32_t nvetoelectrons,nlooseelectrons,nmediumelectrons,ntightelectrons,nheepelectrons;
+  int event, run, lumi;  
 
-  // trigger and met filters flags 
-  uint8_t hltdoubleel,hltsingleel,hltelnoiso;
+  // triggers 
+  bool hltdoubleel,hltsingleel,hltelnoiso;
 
-  // muon, ele, dilepton info
-  double el1pt,el1eta,el1phi,ele1e,el2pt,ele2e,el2eta,el2phi;
-  double zeemass,zeept,zeeeta,zeephi;
-  // gen info leptoni W/Z boson (1 per event)
-  //  double wzmass,wzpt,wzeta,wzphi,l1pt,l1eta,l1phi,l2pt,l2eta,l2phi;
+  // vertices
+  int nvtx;
+
+  // object counts
+  int nvetoelectrons,nlooseelectrons,nmediumelectrons,ntightelectrons,nheepelectrons;
+
+  // electron info
+  float el1pid,el1pt,el1eta,el1phi,el2pid,el2pt,el2eta,el2phi;
 
   // timing
-  double el1time, el2time;
+  float el1time, el2time;
+
+  // dielectron info
+  float zmass,zpt,zeta,zphi;
+
+  // MC Info Only
+  // pileup info
+  int puobs,putrue; 
 
   // weights
-  double wgt,puwgt;
+  float wgt;
 
-  // Stolen from ECALELF
-  EcalClusterLazyTools *clustertools;
-
-  // sorting objects
-  template<typename T> 
-  class PatPtSorter{
-  public:
-    bool operator ()(const T & i, const T & j) const {
-      return (i->pt() > j->pt());
-    }
-  };
-  PatPtSorter<pat::ElectronRef> electronSorter;
+  // gen particle info
+  float genzpid,genzpt,genzeta,genzphi;
+  float genel1pid,genel1pt,genel1eta,genel1phi;
+  float genel2pid,genel2pt,genel2eta,genel2phi;
 };
 
 
 TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig): 
-  ///////////// GEN INFO
-  // isMC or Data --> default Data
-  isMC(iConfig.existsAs<bool>("isMC") ? iConfig.getParameter<bool>("isMC") : false),
-  // xsec
-  xsec(iConfig.existsAs<double>("xsec") ? iConfig.getParameter<double>("xsec") * 1000.0 : -1000.),
-  
   ///////////// TRIGGER and filter info INFO
   triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
   applyHLTFilter(iConfig.existsAs<bool>("applyHLTFilter") ? iConfig.getParameter<bool>("applyHLTFilter") : false),
@@ -174,6 +162,12 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
   //recHits
   recHitCollectionEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEB" ))),
   recHitCollectionEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEE" )))
+
+  ///////////// GEN INFO
+  // isMC or Data --> default Data
+  isMC(iConfig.existsAs<bool>("isMC") ? iConfig.getParameter<bool>("isMC") : false),
+  // xsec
+  xsec(iConfig.existsAs<float>("xsec") ? iConfig.getParameter<float>("xsec") * 1000.0 : -1000.),
 {
   usesResource();
   usesResource("TFileService");
@@ -202,8 +196,7 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
 TimingAnalyzer::~TimingAnalyzer() {}
 
 void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
-  // Get handles to all the requisite collections
-  // TRIGGER and FILTERS
+  // TRIGGER
   edm::Handle<edm::TriggerResults> triggerResultsH;
   iEvent.getByToken(triggerResultsToken, triggerResultsH);
 
@@ -238,37 +231,38 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   lumi  = iEvent.luminosityBlock();
     
   // Trigger info
-  hltdoubleel     = 0;
-  hltsingleel     = 0;
-  hltelnoiso      = 0;
+  hltdoubleel = false;
+  hltsingleel = false;
+  hltelnoiso  = false;
 
   // Which triggers fired
   if(triggerResultsH.isValid()){
     for (size_t i = 0; i < triggerPathsVector.size(); i++) {
       if (triggerPathsMap[triggerPathsVector[i]] == -1) continue;	
-      if (i == 0 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel     = 1; // Double electron trigger
-      if (i == 1 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel     = 1; // Double electron trigger
-      if (i == 2 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel     = 1; // Single electron trigger
-      if (i == 3 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel     = 1; // Single electron trigger
-      if (i == 4 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel     = 1; // Single electron trigger
-      if (i == 5 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel     = 1; // Single electron trigger
-      if (i == 6 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltelnoiso      = 1; // Single electron trigger
-      if (i == 7 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltelnoiso      = 1; // Single electron trigger
+      if (i == 0 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel = true; // Double electron trigger
+      if (i == 1 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel = true; // Double electron trigger
+      if (i == 2 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel = true; // Single electron trigger
+      if (i == 3 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel = true; // Single electron trigger
+      if (i == 4 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel = true; // Single electron trigger
+      if (i == 5 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel = true; // Single electron trigger
+      if (i == 6 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltelnoiso  = true; // Single electron trigger
+      if (i == 7 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltelnoiso  = true; // Single electron trigger
     }
   }
 
   // skim on events that pass triggers
   bool triggered = false;
-  if (hltdoubleel     == 1) triggered = true;
-  if (hltsingleel     == 1) triggered = true;
-  if (hltelnoiso      == 1) triggered = true;
+  if      (hltdoubleel) triggered = true;
+  else if (hltsingleel) triggered = true;
+  else if (hltelnoiso)  triggered = true;
   if (applyHLTFilter && !triggered) return;
 
   // Vertex info
+  nvtx = 0;
   if(verticesH.isValid()) nvtx = verticesH->size();
-  else nvtx = 0;
 
   // ELECTRON ANALYSIS
+  nvetoelectrons = 0; nlooseelectrons = 0; nmediumelectrons = 0; ntightelectrons = 0; nheepelectrons = 0;
   if (vetoelectronsH.isValid())   nvetoelectrons   = vetoelectronsH->size();
   if (looseelectronsH.isValid())  nlooseelectrons  = looseelectronsH->size();
   if (mediumelectronsH.isValid()) nmediumelectrons = mediumelectronsH->size();
@@ -276,10 +270,10 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (heepelectronsH.isValid())   nheepelectrons   = heepelectronsH->size();
 
   // tree vars
-  zeemass     = 0.0;  zeept       = 0.0;  zeeeta      = 0.0; zeephi      = 0.0;
-  el1pid      = 0;    el1pt       = 0.0;  el1eta      = 0.0; el1phi      = 0.0; 
-  el2pid      = 0;    el2pt       = 0.0;  el2eta      = 0.0; el2phi      = 0.0; 
-  el1time     = -99.; el2time     = -99.; 
+  zeemass     = -99.0; zeept       = -99.0;  zeeeta      = -99.0; zeephi      = -99.0;
+  el1pid      = -99;   el1pt       = -99.0;  el1eta      = -99.0; el1phi      = -99.0; 
+  el2pid      = -99;   el2pt       = -99.0;  el2eta      = -99.0; el2phi      = -99.0; 
+  el1time     = -99.0; el2time     = -99.0; 
 
   if (tightelectrons.size()>1){ // need at least two tight electrons!
     triplevec invmasspairs; // store i-j tight el index + invariant mass
@@ -366,95 +360,71 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     if (genevtInfoH.Valid()) {wgt = genevtInfoH->weight();}
   
     // Gen particles info
-    genzid          = 0; genzmass        = 0.0; genzpt          = 0.0; genzeta         = 0.0; genzphi         = 0.0;
-    l1id          = 0; l1pt          = 0.0; l1eta         = 0.0; l1phi         = 0.0;
-    l2id          = 0; l2pt          = 0.0; l2eta         = 0.0; l2phi         = 0.0;
+    genzpid      = -99; genzpt       = -99.0; genzeta      = -99.0; genzphi      = -99.0; genzmass     = -99.0; 
+    genel1pid    = -99; genel1pt     = -99.0; genel1eta    = -99.0; genel1phi    = -99.0;
+    genel2pid    = -99; genel2pt     = -99.0; genel2eta    = -99.0; genel2phi    = -99.0;
     
     if (gensH.isValid()){
       // try to get the final state z
       for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) {
-  	if ( (gens_iter->pdgId() == 23) && // Z 
-  	     gens_iter->numberOfDaughters() > 1 && // before the decay (more than one daughter)
-  	     abs(gens_iter->daughter(0)->pdgId()) > 10 && 
-  	     abs(gens_iter->daughter(0)->pdgId()) < 17)  { // decays into leptons, neutrinos 
+  	if (gens_iter->pdgId() == 23 && gens_iter->numberOfDaughters() == 2 && abs(gens_iter->daughter(0)->pdgId()) == 11) { // Final state Z --> ee
+	  // Z info
+	  genzpid  = gens_iter->pdgId();
+	  genzpt   = gens_iter->pt();
+	  genzeta  = gens_iter->eta();
+	  genzphi  = gens_iter->phi();
+	  genzmass = gens_iter->mass();
 	  
-  	  wzid   = gens_iter->pdgId();
-  	  wzmass = gens_iter->mass();
-  	  wzpt   = gens_iter->pt();
-  	  wzeta  = gens_iter->eta();
-  	  wzphi  = gens_iter->phi();
+	  // electron 1 info
+	  genel1pid  = gens_iter->daughter(0)->pdgId();
+	  genel1pt   = gens_iter->daughter(0)->pt();
+	  genel1eta  = gens_iter->daughter(0)->eta();
+	  genel1phi  = gens_iter->daughter(0)->phi();
 	  
-  	  l1id   = gens_iter->daughter(0)->pdgId();
-  	  l1pt   = gens_iter->daughter(0)->pt();
-  	  l1eta  = gens_iter->daughter(0)->eta();
-  	  l1phi  = gens_iter->daughter(0)->phi();
-	  
-  	  l2id   = gens_iter->daughter(1)->pdgId();
-  	  l2pt   = gens_iter->daughter(1)->pt();
-  	  l2eta  = gens_iter->daughter(1)->eta();
-  	  l2phi  = gens_iter->daughter(1)->phi();
-	  
-  	}
-      }
-      
-    }
-  }
+	  // electron 2 info
+	  genel2pid  = gens_iter->daughter(1)->pdgId();
+	  genel2pt   = gens_iter->daughter(1)->pt();
+	  genel2eta  = gens_iter->daughter(1)->eta();
+	  genel2phi  = gens_iter->daughter(1)->phi();
+	} // end check over decay
+      } // end loop over gen particles
 
-    
-  // if a Z/W is not found look for a pair of lepton .. this way with the pdgId is not guaranteed that you catch a Z/W boson and also recover DY production
-  //       if (wzid == 0) {
-  // 	for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) {
-  // 	  if (gens_iter->isPromptFinalState() || gens_iter->isPromptDecayed()) {
-  // 	    if (gens_iter->pdgId() >  10 && gens_iter->pdgId() <  17) {
-  // 	      l1id   = gens_iter->pdgId();
-  // 	      l1pt   = gens_iter->pt();
-  // 	      l1eta  = gens_iter->eta();
-  // 	      l1phi  = gens_iter->phi();
-  // 	    }
-  // 	    if (gens_iter->pdgId() < -10 && gens_iter->pdgId() > -17) {
-  // 	      l2id   = gens_iter->pdgId();
-  // 	      l2pt   = gens_iter->pt();
-  // 	      l2eta  = gens_iter->eta();
-  // 	      l2phi  = gens_iter->phi();
-  // 	    }
-  // 	  }
-  // 	}
-  // 	if (l1id > 0) {
-  // 	  TLorentzVector l1vec;
-  // 	  TLorentzVector l2vec;
-  // 	  l1vec.SetPtEtaPhiM(l1pt, l1eta, l1phi, 0.);
-  // 	  l2vec.SetPtEtaPhiM(l2pt, l2eta, l2phi, 0.);
-  // 	  TLorentzVector wzvec(l1vec);
-  // 	  wzvec += l2vec;
-  // 	  wzmass = wzvec.M();
-  // 	  wzpt   = wzvec.Pt();
-  // 	  wzeta  = wzvec.Eta();
-  // 	  wzphi  = wzvec.Phi();
-  // 	  if (l1id+l2id == 0) wzid = 23;
-  // 	  else                wzid = 24;
-  // 	}
-  //       }
-      
-  //       // no W or Z decay leptonically
-  //       if (wzid == 0) {
-  // 	for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) { // loop on prunedGenParticles
-  // 	  if (gens_iter->pdgId() == 22 && // photons
-  // 	      gens_iter->status() == 1 && // final state
-  // 	      gens_iter->isPromptFinalState() &&
-  // 	      gens_iter->pt() > wzpt) {
-	  
-  // 	    wzid   = gens_iter->pdgId();
-  // 	    wzpt   = gens_iter->pt();
-  // 	    wzeta  = gens_iter->eta();
-  // 	    wzphi  = gens_iter->phi();
-	  
-  // 	    findFirstNonPhotonMother(&(*gens_iter), ancid, ancpt, anceta, ancphi);
-  // 	    findMother(&(*gens_iter), parid, parpt, pareta, parphi);
-  // 	  }
-  // 	}          
-  //       }
-      
-  //    }
+      // if a Z is not found look for a pair of leptons ... 
+      // this way when the pdgId is not guaranteed that you catch a Z boson, you can still recover DY production
+      if (genzpid == -99) {
+  	for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) {
+  	  if (gens_iter->isPromptFinalState() || gens_iter->isPromptDecayed()) {
+  	    if (gens_iter->pdgId() == 11) {
+  	      genel1pid  = gens_iter->pdgId();
+  	      genel1pt   = gens_iter->pt();
+  	      genel1eta  = gens_iter->eta();
+  	      genel1phi  = gens_iter->phi();
+  	    }
+  	    else if (gens_iter->pdgId() == -11) {
+  	      genel2pid  = gens_iter->pdgId();
+  	      genel2pt   = gens_iter->pt();
+  	      genel2eta  = gens_iter->eta();
+  	      genel2phi  = gens_iter->phi();
+  	    }
+  	  } // end check over final state 
+	} // end loop over gen particles
+  	if (genel1pid == 11 && genel2pid == -11) {
+  	  TLorentzVector el1vec; el1vec.SetPtEtaPhiM(genel1pt, genel1eta, genel1phi, 0.);
+  	  TLorentzVector el2vec; el2vec.SetPtEtaPhiM(genel2pt, genel2eta, genel2phi, 0.);
+
+  	  TLorentzVector zvec(el1vec);
+  	  zvec    += el2vec;
+
+	  genzpid  = 23;
+  	  genzpt   = zvec.Pt();
+  	  genzeta  = zvec.Eta();
+  	  genzphi  = zvec.Phi();
+  	  genzmass = zvec.M();
+  	}
+      } // end recovery of DY check
+    } // end check over gen particles are valid
+  } // end check over isMC
+
   tree->Fill();    
 }    
 
@@ -464,65 +434,69 @@ void TimingAnalyzer::beginJob() {
   tree = fs->make<TTree>("tree"       , "tree");
 
   // Run, Lumi, Event info
-  tree->Branch("event"                , &event                , "event/i");
-  tree->Branch("run"                  , &run                  , "run/i");
-  tree->Branch("lumi"                 , &lumi                 , "lumi/i");
-  // Event weights
-  tree->Branch("xsec"                 , &xsec                 , "xsec/D");
-  tree->Branch("wgt"                  , &wgt                  , "wgt/D");
-  // Pileup info
-  tree->Branch("puwgt"                , &puwgt                , "puwgt/D");
-  tree->Branch("puobs"                , &puobs                , "puobs/I");
-  tree->Branch("putrue"               , &putrue               , "putrue/I");
-  tree->Branch("nvtx"                 , &nvtx                 , "nvtx/i");
+  tree->Branch("event"                , &event                , "event/I");
+  tree->Branch("run"                  , &run                  , "run/I");
+  tree->Branch("lumi"                 , &lumi                 , "lumi/I");
   
   // Triggers
-  tree->Branch("hltsingleel"          , &hltsingleel          , "hltsingleel/b");
-  tree->Branch("hltdoubleel"          , &hltdoubleel          , "hltdoubleel/b");
-  tree->Branch("hltelnoiso"           , &hltelnoiso           , "hltelnoiso/b");
+  tree->Branch("hltsingleel"          , &hltsingleel          , "hltsingleel/O");
+  tree->Branch("hltdoubleel"          , &hltdoubleel          , "hltdoubleel/O");
+  tree->Branch("hltelnoiso"           , &hltelnoiso           , "hltelnoiso/O");
+
+  // Vertex info
+  tree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");
 
   // Object counts
-  tree->Branch("nvetoelectrons"       , &nvetoelectrons       , "nvetoelectrons/i");
-  tree->Branch("nlooseelectrons"      , &nlooseelectrons      , "nlooseelectrons/i");
-  tree->Branch("nmediumelectrons"     , &nmediumelectrons     , "nmediumelectrons/i");
-  tree->Branch("ntightelectrons"      , &ntightelectrons      , "ntightelectrons/i");
-  tree->Branch("nheepelectrons"       , &nheepelectrons       , "nheepelectrons/i");
+  tree->Branch("nvetoelectrons"       , &nvetoelectrons       , "nvetoelectrons/I");
+  tree->Branch("nlooseelectrons"      , &nlooseelectrons      , "nlooseelectrons/I");
+  tree->Branch("nmediumelectrons"     , &nmediumelectrons     , "nmediumelectrons/I");
+  tree->Branch("ntightelectrons"      , &ntightelectrons      , "ntightelectrons/I");
+  tree->Branch("nheepelectrons"       , &nheepelectrons       , "nheepelectrons/I");
 
   // Lepton info
   tree->Branch("el1pid"               , &el1pid               , "el1pid/I");
-  tree->Branch("el1pt"                , &el1pt                , "el1pt/D");
-  tree->Branch("el1eta"               , &el1eta               , "el1eta/D");
-  tree->Branch("el1phi"               , &el1phi               , "el1phi/D");
+  tree->Branch("el1pt"                , &el1pt                , "el1pt/F");
+  tree->Branch("el1eta"               , &el1eta               , "el1eta/F");
+  tree->Branch("el1phi"               , &el1phi               , "el1phi/F");
   tree->Branch("el2pid"               , &el2pid               , "el2pid/I");
-  tree->Branch("el2pt"                , &el2pt                , "el2pt/D");
-  tree->Branch("el2eta"               , &el2eta               , "el2eta/D");
-  tree->Branch("el2phi"               , &el2phi               , "el2phi/D");
+  tree->Branch("el2pt"                , &el2pt                , "el2pt/F");
+  tree->Branch("el2eta"               , &el2eta               , "el2eta/F");
+  tree->Branch("el2phi"               , &el2phi               , "el2phi/F");
 
   // Time info
-  tree->Branch("el1time"              , &el1time              , "el1time/D");
-  tree->Branch("el2time"              , &el2time              , "el2time/D");
+  tree->Branch("el1time"              , &el1time              , "el1time/F");
+  tree->Branch("el2time"              , &el2time              , "el2time/F");
 
   // Dilepton info
-  tree->Branch("zmass"                , &zmass                , "zmass/D");
-  tree->Branch("zpt"                  , &zpt                  , "zpt/D");
-  tree->Branch("zeta"                 , &zeta                 , "zeta/D");
-  tree->Branch("zphi"                 , &zphi                 , "zphi/D");
+  tree->Branch("zmass"                , &zmass                , "zmass/F");
+  tree->Branch("zpt"                  , &zpt                  , "zpt/F");
+  tree->Branch("zeta"                 , &zeta                 , "zeta/F");
+  tree->Branch("zphi"                 , &zphi                 , "zphi/F");
   
   // Z gen-level info: leptonic 
   if (isMC) {
-    tree->Branch("genzid"                 , &genzid                 , "genzid/I");
-    tree->Branch("genzmass"               , &genzmass               , "genzmass/D");
-    tree->Branch("genzpt"                 , &genzpt                 , "genzpt/D");
-    tree->Branch("genzeta"                , &genzeta                , "genzeta/D");
-    tree->Branch("genzphi"                , &genzphi                , "genzphi/D");
-    tree->Branch("genel1id"               , &genel1id               , "genel1id/I");
-    tree->Branch("genel1pt"               , &genel1pt               , "genel1pt/D");
-    tree->Branch("genel1eta"              , &genel1eta              , "genel1eta/D");
-    tree->Branch("genel1phi"              , &genel1phi              , "genel1phi/D");
-    tree->Branch("genel2id"               , &genel2id               , "genel2id/I");
-    tree->Branch("genel2pt"               , &genel2pt               , "genel2pt/D");
-    tree->Branch("genel2eta"              , &genel2eta              , "genel2eta/D");
-    tree->Branch("genel2phi"              , &genel2phi              , "genel2phi/D");
+    // Pileup info
+    tree->Branch("puobs"                , &puobs                , "puobs/I");
+    tree->Branch("putrue"               , &putrue               , "putrue/I");
+
+    // Event weights
+    tree->Branch("xsec"                 , &xsec                 , "xsec/F");
+    tree->Branch("wgt"                  , &wgt                  , "wgt/F");
+
+    //Gen particles info
+    tree->Branch("genzpid"              , &genzpid              , "genzpid/I");
+    tree->Branch("genzpt"               , &genzpt               , "genzpt/F");
+    tree->Branch("genzeta"              , &genzeta              , "genzeta/F");
+    tree->Branch("genzphi"              , &genzphi              , "genzphi/F");
+    tree->Branch("genzmass"             , &genzmass             , "genzmass/F");
+    tree->Branch("genel1pid"            , &genel1pid            , "genel1pid/I");
+    tree->Branch("genel1pt"             , &genel1pt             , "genel1pt/F");
+    tree->Branch("genel1eta"            , &genel1eta            , "genel1eta/F");
+    tree->Branch("genel1phi"            , &genel1phi            , "genel1phi/F");
+    tree->Branch("genel2pid"            , &genel2pid            , "genel2pid/I");
+    tree->Branch("genel2pt"             , &genel2pt             , "genel2pt/F");
+    tree->Branch("genel2eta"            , &genel2eta            , "genel2eta/F");
+    tree->Branch("genel2phi"            , &genel2phi            , "genel2phi/F");
   }
 }
 
@@ -565,36 +539,5 @@ void TimingAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptio
   desc.setUnknown();
   descriptions.addDefault(desc);
 }
-
-// // for photons
-// void TimingAnalyzer::findFirstNonPhotonMother(const reco::Candidate *particle, int& ancestorid, double& ancestorpt, double& ancestoreta, double& ancestorphi) {
-
-//   if (particle == 0)
-//     return;
-  
-//   if (abs(particle->pdgId()) == 22) 
-//     findFirstNonPhotonMother(particle->mother(0), ancestorid, ancestorpt, ancestoreta, ancestorphi);
-//   else {
-//     ancestorid  = particle->pdgId();
-//     ancestorpt  = particle->pt();
-//     ancestoreta = particle->eta();
-//     ancestorphi = particle->phi();
-//   }
-//   return;
-// }
-
-// void TimingAnalyzer::findMother(const reco::Candidate *particle, int& ancestorid, double& ancestorpt, double& ancestoreta, double& ancestorphi) {
-  
-//   if (particle == 0) 
-//     return;
-
-//   if (abs(particle->pdgId()) == 22) {
-//     ancestorid  = particle->pdgId();
-//     ancestorpt  = particle->pt();
-//     ancestoreta = particle->eta();
-//     ancestorphi = particle->phi();
-//   }
-//   return;
-// }
 
 DEFINE_FWK_MODULE(TimingAnalyzer);
