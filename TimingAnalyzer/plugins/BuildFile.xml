@@ -11,7 +11,6 @@
 <use name="DataFormats/Math"/>
 <use name="DataFormats/Common"/>
 <use name="DataFormats/EgammaCandidates"/>
-<use name="DataFormats/GsfTrackReco"/>
 <use name="DataFormats/PatCandidates"/>
 <use name="DataFormats/HepMCCandidate"/>
 <use name="SimDataFormats/PileupSummaryInfo"/>

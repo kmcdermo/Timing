@@ -7,7 +7,7 @@ options = VarParsing ('python')
 
 ## data or MC options
 options.register (
-	'isMC',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'isMC',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate data or MC');
 
 ## processName
@@ -34,18 +34,9 @@ options.register (
 	'filterOnHLT',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate if apply or not trigger requirements');
 
-## Dump Gen Level info
-options.register(
-	'addGenParticles',False,VarParsing.multiplicity.singleton, VarParsing.varType.bool,
-	'dump gen info for Z,leptons');
-
-options.register(
-	'isSignalSample',False,VarParsing.multiplicity.singleton, VarParsing.varType.bool,
-	'dump signal sample info');
-
 ## input cross section in case you want to store a different value wrt to the LHE file
 options.register(
-	'crossSection',-1.,VarParsing.multiplicity.singleton, VarParsing.varType.float,
+	'crossSection',6104,VarParsing.multiplicity.singleton, VarParsing.varType.float,
 	'external value for sample cross section, in case of data it is fixed to 0.001');
 
 ## nThreads to run
@@ -53,7 +44,7 @@ options.register (
 	'nThreads',4,VarParsing.multiplicity.singleton, VarParsing.varType.int,
 	'default number of threads');
 
-## to be used when running crab jobs with local files                                                                                                                           
+## to be used when running crab jobs with local files 
 options.register ('isCrab',False,VarParsing.multiplicity.singleton, VarParsing.varType.bool,
 		  'to be used to handle local files with crab');
 
@@ -77,8 +68,6 @@ print "Running with miniAODProcess      = ",options.miniAODProcess
 print "Running with outputFileName      = ",options.outputFileName	
 print "Running with globalTag           = ",options.globalTag	
 print "Running with filterOnHLT         = ",options.filterOnHLT
-print "Running with isSignalSample      = ",options.isSignalSample
-print "Running with addGenParticles     = ",options.addGenParticles
 print "Running with nThreads            = ",options.nThreads
 print "Running with isCrab              = ",options.isCrab
 print "#####################"
@@ -110,7 +99,7 @@ if options.inputFiles == []:
 			)
 	else:
 		process.source.fileNames.append(
-			'file:pickevents.root'
+			'/store/mc/RunIIFall15MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/12D266E2-04C8-E511-8D24-047D7BD6DED2.root'
 			)    	
 else:
    process.source = cms.Source("PoolSource",
@@ -159,8 +148,6 @@ process.TFileService = cms.Service("TFileService",
 process.tree = cms.EDAnalyzer("TimingAnalyzer",
    ## gen info			     
    isMC                   = cms.bool(options.isMC),
-   isSignalSample         = cms.bool(options.isSignalSample),			      
-   addGenParticles        = cms.bool(options.addGenParticles),			      
    pileup     = cms.InputTag("slimmedAddPileupInfo"),
    genevt     = cms.InputTag("generator"),
    gens       = cms.InputTag("prunedGenParticles"),

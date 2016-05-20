@@ -122,13 +122,14 @@ private:
   int nvetoelectrons,nlooseelectrons,nmediumelectrons,ntightelectrons,nheepelectrons;
 
   // electron info
-  float el1pid,el1pt,el1eta,el1phi,el2pid,el2pt,el2eta,el2phi;
+  int   el1pid,el2pid;
+  float el1pt,el1eta,el1phi,el2pt,el2eta,el2phi;
 
   // timing
   float el1time, el2time;
 
   // dielectron info
-  float zmass,zpt,zeta,zphi;
+  float zpt,zeta,zphi,zmass;
 
   // MC Info Only
   // pileup info
@@ -138,9 +139,10 @@ private:
   float wgt;
 
   // gen particle info
-  float genzpid,genzpt,genzeta,genzphi;
-  float genel1pid,genel1pt,genel1eta,genel1phi;
-  float genel2pid,genel2pt,genel2eta,genel2phi;
+  int   genzpid,genel1pid,genel2pid;
+  float genzpt,genzeta,genzphi,genzmass;
+  float genel1pt,genel1eta,genel1phi;
+  float genel2pt,genel2eta,genel2phi;
 };
 
 
@@ -161,13 +163,13 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
   
   //recHits
   recHitCollectionEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEB" ))),
-  recHitCollectionEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEE" )))
+  recHitCollectionEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEE" ))),
 
   ///////////// GEN INFO
   // isMC or Data --> default Data
   isMC(iConfig.existsAs<bool>("isMC") ? iConfig.getParameter<bool>("isMC") : false),
   // xsec
-  xsec(iConfig.existsAs<float>("xsec") ? iConfig.getParameter<float>("xsec") * 1000.0 : -1000.),
+  xsec(iConfig.existsAs<double>("xsec") ? iConfig.getParameter<double>("xsec") * 1000.0 : -1000.)
 {
   usesResource();
   usesResource("TFileService");
@@ -270,7 +272,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (heepelectronsH.isValid())   nheepelectrons   = heepelectronsH->size();
 
   // tree vars
-  zeemass     = -99.0; zeept       = -99.0;  zeeeta      = -99.0; zeephi      = -99.0;
+  zmass       = -99.0; zpt         = -99.0;  zeta        = -99.0; zphi        = -99.0;
   el1pid      = -99;   el1pt       = -99.0;  el1eta      = -99.0; el1phi      = -99.0; 
   el2pid      = -99;   el2pt       = -99.0;  el2eta      = -99.0; el2phi      = -99.0; 
   el1time     = -99.0; el2time     = -99.0; 
@@ -326,10 +328,10 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     TLorentzVector zvec(el1vec);
     zvec += el2vec;
       
-    zeemass = zvec.M();
-    zeept   = zvec.Pt();
-    zeeeta  = zvec.Eta();
-    zeephi  = zvec.Phi();
+    zpt   = zvec.Pt();
+    zeta  = zvec.Eta();
+    zphi  = zvec.Phi();
+    zmass = zvec.M();
 
     delete clustertools;
   } // end section over tight electrons
@@ -357,7 +359,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     
     // Event weight info
     wgt = 1.0;
-    if (genevtInfoH.Valid()) {wgt = genevtInfoH->weight();}
+    if (genevtInfoH.isValid()) {wgt = genevtInfoH->weight();}
   
     // Gen particles info
     genzpid      = -99; genzpt       = -99.0; genzeta      = -99.0; genzphi      = -99.0; genzmass     = -99.0; 
