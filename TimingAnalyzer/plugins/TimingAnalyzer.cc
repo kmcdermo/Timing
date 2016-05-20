@@ -73,8 +73,6 @@ private:
 
   // Gen Particles and MC info
   const bool isMC;
-  const bool isSignalSample;
-  const bool addGenParticles;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
   edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
   edm::EDGetTokenT<edm::View<reco::GenParticle> >   gensToken;
@@ -156,10 +154,6 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
   ///////////// GEN INFO
   // isMC or Data --> default Data
   isMC(iConfig.existsAs<bool>("isMC") ? iConfig.getParameter<bool>("isMC") : false),
-  
-  // is signal sample or not
-  isSignalSample(iConfig.existsAs<bool>("isSignalSample") ? iConfig.getParameter<bool>("isSignalSample") : false),
-  addGenParticles(iConfig.existsAs<bool>("addGenParticles") ? iConfig.getParameter<bool>("addGenParticles") : false),
   // xsec
   xsec(iConfig.existsAs<double>("xsec") ? iConfig.getParameter<double>("xsec") * 1000.0 : -1000.),
   
@@ -212,17 +206,6 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // TRIGGER and FILTERS
   edm::Handle<edm::TriggerResults> triggerResultsH;
   iEvent.getByToken(triggerResultsToken, triggerResultsH);
-
-  // GEN INFO    
-  edm::Handle<std::vector<PileupSummaryInfo> > pileupInfoH;
-  edm::Handle<GenEventInfoProduct>             genevtInfoH;
-  edm::Handle<edm::View<reco::GenParticle> >         gensH;
-
-  if(isMC){
-    iEvent.getByToken(pileupInfoToken, pileupInfoH);
-    if (addGenParticles or isSignalSample)
-      iEvent.getByToken(gensToken, gensH);
-  }
 
   // VERTEX
   edm::Handle<std::vector<reco::Vertex> > verticesH;
@@ -281,22 +264,9 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (hltelnoiso      == 1) triggered = true;
   if (applyHLTFilter && !triggered) return;
 
-  // Vertex + PU info
+  // Vertex info
   if(verticesH.isValid()) nvtx = verticesH->size();
   else nvtx = 0;
-
-  puobs  = 0;
-  putrue = 0;
-  puwgt  = 1.;
-  wgt = 1.0;  // in case the cross section is not set from outside --> fix to 1 as dummy value
-  if (pileupInfoH.isValid()) {
-    for (auto pileupInfo_iter = pileupInfoH->begin(); pileupInfo_iter != pileupInfoH->end(); ++pileupInfo_iter) {
-      if (pileupInfo_iter->getBunchCrossing() == 0) {
-	puobs  = pileupInfo_iter->getPU_NumInteractions();
-	putrue = pileupInfo_iter->getTrueNumInteractions();
-      }
-    }
-  }
 
   // ELECTRON ANALYSIS
   if (vetoelectronsH.isValid())   nvetoelectrons   = vetoelectronsH->size();
@@ -370,41 +340,66 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     delete clustertools;
   } // end section over tight electrons
 
-    // Generator-level information
-  //     wzid          = 0; wzmass        = 0.0; wzpt          = 0.0; wzeta         = 0.0; wzphi         = 0.0;
-  //     l1id          = 0; l1pt          = 0.0; l1eta         = 0.0; l1phi         = 0.0;
-  //     l2id          = 0; l2pt          = 0.0; l2eta         = 0.0; l2phi         = 0.0;
-  //     parid         = 0; parpt         = 0.0; pareta        = 0.0; parphi        = 0.0;
-  //     ancid         = 0; ancpt         = 0.0; anceta        = 0.0; ancphi        = 0.0;
+  // MC INFO    
+  if (isMC) {
+    edm::Handle<std::vector<PileupSummaryInfo> > pileupInfoH;
+    edm::Handle<GenEventInfoProduct>             genevtInfoH;
+    edm::Handle<edm::View<reco::GenParticle> >         gensH;
+    iEvent.getByToken(pileupInfoToken, pileupInfoH);
+    iEvent.getByToken(genevtInfoToken, genevtInfoH);
+    iEvent.getByToken(gensToken, gensH);
 
-  // dump inportant gen particles
-  //   if(addGenParticles and gensH.isValid()){
+    // Pileup info
+    puobs  = 0;
+    putrue = 0;
+    if (pileupInfoH.isValid()) {
+      for (auto pileupInfo_iter = pileupInfoH->begin(); pileupInfo_iter != pileupInfoH->end(); ++pileupInfo_iter) {
+	if (pileupInfo_iter->getBunchCrossing() == 0) {
+	  puobs  = pileupInfo_iter->getPU_NumInteractions();
+	  putrue = pileupInfo_iter->getTrueNumInteractions();
+	}
+      }
+    }
+    
+    // Event weight info
+    wgt = 1.0;
+    if (genevtInfoH.Valid()) {wgt = genevtInfoH->weight();}
+  
+    // Gen particles info
+    genzid          = 0; genzmass        = 0.0; genzpt          = 0.0; genzeta         = 0.0; genzphi         = 0.0;
+    l1id          = 0; l1pt          = 0.0; l1eta         = 0.0; l1phi         = 0.0;
+    l2id          = 0; l2pt          = 0.0; l2eta         = 0.0; l2phi         = 0.0;
+    
+    if (gensH.isValid()){
+      // try to get the final state z
+      for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) {
+  	if ( (gens_iter->pdgId() == 23) && // Z 
+  	     gens_iter->numberOfDaughters() > 1 && // before the decay (more than one daughter)
+  	     abs(gens_iter->daughter(0)->pdgId()) > 10 && 
+  	     abs(gens_iter->daughter(0)->pdgId()) < 17)  { // decays into leptons, neutrinos 
+	  
+  	  wzid   = gens_iter->pdgId();
+  	  wzmass = gens_iter->mass();
+  	  wzpt   = gens_iter->pt();
+  	  wzeta  = gens_iter->eta();
+  	  wzphi  = gens_iter->phi();
+	  
+  	  l1id   = gens_iter->daughter(0)->pdgId();
+  	  l1pt   = gens_iter->daughter(0)->pt();
+  	  l1eta  = gens_iter->daughter(0)->eta();
+  	  l1phi  = gens_iter->daughter(0)->phi();
+	  
+  	  l2id   = gens_iter->daughter(1)->pdgId();
+  	  l2pt   = gens_iter->daughter(1)->pt();
+  	  l2eta  = gens_iter->daughter(1)->eta();
+  	  l2phi  = gens_iter->daughter(1)->phi();
+	  
+  	}
+      }
       
-  //       // loop on genParticles (prunedGenParticles) trying to find W/Z decying leptonically or hadronically, top and anti-top quarks
-  //       for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) {
-  // 	if ( (gens_iter->pdgId() == 23 || abs(gens_iter->pdgId()) == 24) && // Z or W-boson
-  // 	     gens_iter->numberOfDaughters() > 1 && // before the decay (more than one daughter)
-  // 	     abs(gens_iter->daughter(0)->pdgId()) > 10 && 
-  // 	     abs(gens_iter->daughter(0)->pdgId()) < 17)  { // decays into leptons, neutrinos 
-	  
-  // 	  wzid   = gens_iter->pdgId();
-  // 	  wzmass = gens_iter->mass();
-  // 	  wzpt   = gens_iter->pt();
-  // 	  wzeta  = gens_iter->eta();
-  // 	  wzphi  = gens_iter->phi();
-	  
-  // 	  l1id   = gens_iter->daughter(0)->pdgId();
-  // 	  l1pt   = gens_iter->daughter(0)->pt();
-  // 	  l1eta  = gens_iter->daughter(0)->eta();
-  // 	  l1phi  = gens_iter->daughter(0)->phi();
-	
-  // 	  l2id   = gens_iter->daughter(1)->pdgId();
-  // 	  l2pt   = gens_iter->daughter(1)->pt();
-  // 	  l2eta  = gens_iter->daughter(1)->eta();
-  // 	  l2phi  = gens_iter->daughter(1)->phi();
-	
-  // 	}
-  //       }
+    }
+  }
+
     
   // if a Z/W is not found look for a pair of lepton .. this way with the pdgId is not guaranteed that you catch a Z/W boson and also recover DY production
   //       if (wzid == 0) {
@@ -508,25 +503,27 @@ void TimingAnalyzer::beginJob() {
   tree->Branch("el2time"              , &el2time              , "el2time/D");
 
   // Dilepton info
-  tree->Branch("zeemass"              , &zeemass              , "zeemass/D");
-  tree->Branch("zeept"                , &zeept                , "zeept/D");
-  tree->Branch("zeeeta"               , &zeeeta               , "zeeeta/D");
-  tree->Branch("zeephi"               , &zeephi               , "zeephi/D");
+  tree->Branch("zmass"                , &zmass                , "zmass/D");
+  tree->Branch("zpt"                  , &zpt                  , "zpt/D");
+  tree->Branch("zeta"                 , &zeta                 , "zeta/D");
+  tree->Branch("zphi"                 , &zphi                 , "zphi/D");
   
-  //   // Z gen-level info: leptonic 
-  //   tree->Branch("zid"                 , &wid                 , "zid/I");
-  //   tree->Branch("wzmass"               , &wzmass               , "wzmass/D");
-  //   tree->Branch("wzpt"                 , &wzpt                 , "wzpt/D");
-  //   tree->Branch("wzeta"                , &wzeta                , "wzeta/D");
-  //   tree->Branch("wzphi"                , &wzphi                , "wzphi/D");
-  //   tree->Branch("l1id"                 , &l1id                 , "l1id/I");
-  //   tree->Branch("l1pt"                 , &l1pt                 , "l1pt/D");
-  //   tree->Branch("l1eta"                , &l1eta                , "l1eta/D");
-  //   tree->Branch("l1phi"                , &l1phi                , "l1phi/D");
-  //   tree->Branch("l2id"                 , &l2id                 , "l2id/I");
-  //   tree->Branch("l2pt"                 , &l2pt                 , "l2pt/D");
-  //   tree->Branch("l2eta"                , &l2eta                , "l2eta/D");
-  //   tree->Branch("l2phi"                , &l2phi                , "l2phi/D");
+  // Z gen-level info: leptonic 
+  if (isMC) {
+    tree->Branch("genzid"                 , &genzid                 , "genzid/I");
+    tree->Branch("genzmass"               , &genzmass               , "genzmass/D");
+    tree->Branch("genzpt"                 , &genzpt                 , "genzpt/D");
+    tree->Branch("genzeta"                , &genzeta                , "genzeta/D");
+    tree->Branch("genzphi"                , &genzphi                , "genzphi/D");
+    tree->Branch("genel1id"               , &genel1id               , "genel1id/I");
+    tree->Branch("genel1pt"               , &genel1pt               , "genel1pt/D");
+    tree->Branch("genel1eta"              , &genel1eta              , "genel1eta/D");
+    tree->Branch("genel1phi"              , &genel1phi              , "genel1phi/D");
+    tree->Branch("genel2id"               , &genel2id               , "genel2id/I");
+    tree->Branch("genel2pt"               , &genel2pt               , "genel2pt/D");
+    tree->Branch("genel2eta"              , &genel2eta              , "genel2eta/D");
+    tree->Branch("genel2phi"              , &genel2phi              , "genel2phi/D");
+  }
 }
 
 void TimingAnalyzer::endJob() {}
