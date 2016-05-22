@@ -143,6 +143,17 @@ private:
   float genzpt,genzeta,genzphi,genzmass;
   float genel1pt,genel1eta,genel1phi;
   float genel2pt,genel2eta,genel2phi;
+
+  template<typename T> 
+  class PatPtSorter{
+  public:
+    bool operator ()(const T & i, const T & j) const {
+      return (i->pt() > j->pt());
+    }
+
+  };
+
+  PatPtSorter<pat::ElectronRef>      electronSorter;
 };
 
 
@@ -278,6 +289,9 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   el1time     = -99.0; el2time     = -99.0; 
 
   if (tightelectrons.size()>1){ // need at least two tight electrons!
+    // First sort on pT --> should be redudant, as already sorted this way in miniAOD
+    std::sort(tightelectrons.begin(), tightelectrons.end(), electronSorter);
+
     triplevec invmasspairs; // store i-j tight el index + invariant mass
 
     // only want pair of tight electrons that yield closest zmass diff   

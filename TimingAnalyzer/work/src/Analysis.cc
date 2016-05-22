@@ -52,7 +52,7 @@ void Analysis::TimeResPlots(){
 
   for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
     fInTree->GetEntry(entry);
-    if ( (zeemass>76. && zeemass<105.) ){ // we want di-electron z's
+    if ( (zeemass>76. && zeemass<105.) && hltdoubleel) { // we want di-electron z's and pass hlt
       // standard "validation" plots
       trTH1Map["zeemass"]->Fill(zeemass);
       trTH1Map["el1time"]->Fill(el1time);
@@ -72,6 +72,64 @@ void Analysis::TimeResPlots(){
 
   Analysis::SaveTH2s(trTH2Map,trTH2SubMap);
   Analysis::DeleteTH2s(trTH2Map);
+}
+
+void Analysis::TriggerEffs(){
+  // Set up hists to save; 
+  TH1Map  trTH1Map;
+  TStrMap trTH1SubMap; // set inside MakeTH1Plot
+
+  // Throw away numnerator and denominator plots
+  int nBinsDEEpt = 100; float xLowDEEpt = 0.; float xHighDEEpt = 100.;
+  TH1F * n_hltdoubleel_el1pt = new TH1F("numer_hltdoubleel_el1pt","",nBinsDEEpt,xLowDEEpt,xHighDEEpt);
+  TH1F * d_hltdoubleel_el1pt = new TH1F("denom_hltdoubleel_el1pt","",nBinsDEEpt,xLowDEEpt,xHighDEEpt);
+
+  TH1F * n_hltdoubleel_el2pt = new TH1F("numer_hltdoubleel_el2pt","",nBinsDEEpt,xLowDEEpt,xHighDEEpt);
+  TH1F * d_hltdoubleel_el2pt = new TH1F("denom_hltdoubleel_el2pt","",nBinsDEEpt,xLowDEEpt,xHighDEEpt);
+
+  trTH1Map["hltdoubleel_el1pt"] = Analysis::MakeTH1Plot("hltdoubleel_el1pt","Double Electron Trigger Efficiency vs. p_{T}",nBinsDEEpt,xLowDEEpt,xHighDEEpt,"Leading Electron p_{T} [GeV/c]","Efficiency",trTH1SubMap,"trigger");
+  trTH1Map["hltdoubleel_el2pt"] = Analysis::MakeTH1Plot("hltdoubleel_el2pt","Double Electron Trigger Efficiency vs. p_{T}",nBinsDEEpt,xLowDEEpt,xHighDEEpt,"Subleading Electron p_{T} [GeV/c]","Efficiency",trTH1SubMap,"trigger");
+
+  Analysis::MakeSubDirs(trTH1SubMap);
+
+  for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
+    fInTree->GetEntry(entry);
+    if ( (zeemass>76. && zeemass<105.) ){ // we want di-electron z's
+      if ( hltdoubleel ) { // fill numer if passed
+	n_hltdoubleel_el1pt->Fill(el1pt);
+	n_hltdoubleel_el2pt->Fill(el2pt);
+      }
+      // always fill denom
+      d_hltdoubleel_el1pt->Fill(el1pt);
+      d_hltdoubleel_el2pt->Fill(el2pt);
+    }
+  }
+  
+  Analysis::ComputeRatioPlot(n_hltdoubleel_el1pt,d_hltdoubleel_el1pt,trTH1Map["hltdoubleel_el1pt"]);
+  Analysis::ComputeRatioPlot(n_hltdoubleel_el2pt,d_hltdoubleel_el2pt,trTH1Map["hltdoubleel_el2pt"]);
+  Analysis::SaveTH1s(trTH1Map,trTH1SubMap);
+  Analysis::DeleteTH1s(trTH1Map);
+
+  // delete by hand throw away plots
+  delete n_hltdoubleel_el1pt;
+  delete d_hltdoubleel_el1pt;
+  delete n_hltdoubleel_el2pt;
+  delete d_hltdoubleel_el2pt;
+}
+
+void Analysis::ComputeRatioPlot(const TH1F * numer, const TH1F * denom, TH1F *& ratioPlot){
+  Double_t value = 0;
+  Double_t err   = 0;
+  for (Int_t bin = 1; bin <= ratioPlot->GetNbinsX(); bin++){
+    if (denom->GetBinContent(bin)!=0){
+      value = numer->GetBinContent(bin) / denom->GetBinContent(bin); 
+      // Binonimal errors 
+      err = sqrt( value*(1.0-value)/denom->GetBinContent(bin) );
+      //Fill plots with correct values
+      ratioPlot->SetBinContent(bin,value);
+      ratioPlot->SetBinError(bin,err);
+    }
+  }
 }
 
 TH1F * Analysis::MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir) {
@@ -100,7 +158,7 @@ TH2F * Analysis::MakeTH2Plot(TString hname, TString htitle, Int_t nbinsx, Double
 
 void Analysis::MakeSubDirs(TStrMap subdirmap){
   for (TStrMapIter mapiter = subdirmap.begin(); mapiter != subdirmap.end(); mapiter++) { 
-    MakeOutDir(Form("%s/%s",fOutDir.Data(),(*mapiter).second.Data()));
+    MakeOutDir(Form("%s/%s/",fOutDir.Data(),(*mapiter).second.Data()));
     MakeOutDir(Form("%s/%s/lin/",fOutDir.Data(),(*mapiter).second.Data()));
     MakeOutDir(Form("%s/%s/log/",fOutDir.Data(),(*mapiter).second.Data()));
   }
@@ -168,70 +226,35 @@ void Analysis::DeleteTH2s(TH2Map th2map) {
 
 void Analysis::InitTree(){
   // Set branch addresses and branch pointers
-
   fInTree->SetBranchAddress("event", &event, &b_event);
   fInTree->SetBranchAddress("run", &run, &b_run);
   fInTree->SetBranchAddress("lumi", &lumi, &b_lumi);
   fInTree->SetBranchAddress("xsec", &xsec, &b_xsec);
   fInTree->SetBranchAddress("wgt", &wgt, &b_wgt);
-  fInTree->SetBranchAddress("pswgt", &pswgt, &b_pswgt);
   fInTree->SetBranchAddress("puwgt", &puwgt, &b_puwgt);
   fInTree->SetBranchAddress("puobs", &puobs, &b_puobs);
   fInTree->SetBranchAddress("putrue", &putrue, &b_putrue);
   fInTree->SetBranchAddress("nvtx", &nvtx, &b_nvtx);
-  fInTree->SetBranchAddress("hltphoton165", &hltphoton165, &b_hltphoton165);
-  fInTree->SetBranchAddress("hltphoton175", &hltphoton175, &b_hltphoton175);
-  fInTree->SetBranchAddress("hltphoton120", &hltphoton120, &b_hltphoton120);
-  fInTree->SetBranchAddress("hltdoubleel", &hltdoubleel, &b_hltdoubleel);
   fInTree->SetBranchAddress("hltsingleel", &hltsingleel, &b_hltsingleel);
-  fInTree->SetBranchAddress("nelectrons", &nelectrons, &b_nelectrons);
+  fInTree->SetBranchAddress("hltdoubleel", &hltdoubleel, &b_hltdoubleel);
+  fInTree->SetBranchAddress("hltelnoiso", &hltelnoiso, &b_hltelnoiso);
+  fInTree->SetBranchAddress("nvetoelectrons", &nvetoelectrons, &b_nvetoelectrons);
+  fInTree->SetBranchAddress("nlooseelectrons", &nlooseelectrons, &b_nlooseelectrons);
+  fInTree->SetBranchAddress("nmediumelectrons", &nmediumelectrons, &b_nmediumelectrons);
   fInTree->SetBranchAddress("ntightelectrons", &ntightelectrons, &b_ntightelectrons);
   fInTree->SetBranchAddress("nheepelectrons", &nheepelectrons, &b_nheepelectrons);
-  fInTree->SetBranchAddress("nphotons", &nphotons, &b_nphotons);
   fInTree->SetBranchAddress("el1pid", &el1pid, &b_el1pid);
   fInTree->SetBranchAddress("el1pt", &el1pt, &b_el1pt);
   fInTree->SetBranchAddress("el1eta", &el1eta, &b_el1eta);
   fInTree->SetBranchAddress("el1phi", &el1phi, &b_el1phi);
-  fInTree->SetBranchAddress("el1id", &el1id, &b_el1id);
-  fInTree->SetBranchAddress("el1idl", &el1idl, &b_el1idl);
   fInTree->SetBranchAddress("el2pid", &el2pid, &b_el2pid);
   fInTree->SetBranchAddress("el2pt", &el2pt, &b_el2pt);
   fInTree->SetBranchAddress("el2eta", &el2eta, &b_el2eta);
   fInTree->SetBranchAddress("el2phi", &el2phi, &b_el2phi);
-  fInTree->SetBranchAddress("el2id", &el2id, &b_el2id);
-  fInTree->SetBranchAddress("el2idl", &el2idl, &b_el2idl);
   fInTree->SetBranchAddress("el1time", &el1time, &b_el1time);
   fInTree->SetBranchAddress("el2time", &el2time, &b_el2time);
   fInTree->SetBranchAddress("zeemass", &zeemass, &b_zeemass);
-  fInTree->SetBranchAddress("zeept", &zeept, &b_zeeept);
+  fInTree->SetBranchAddress("zeept", &zeept, &b_zeept);
   fInTree->SetBranchAddress("zeeeta", &zeeeta, &b_zeeeta);
   fInTree->SetBranchAddress("zeephi", &zeephi, &b_zeephi);
-  fInTree->SetBranchAddress("phidl", &phidl, &b_phidl);
-  fInTree->SetBranchAddress("phidm", &phidm, &b_phidm);
-  fInTree->SetBranchAddress("phidt", &phidt, &b_phidt);
-  fInTree->SetBranchAddress("phidh", &phidh, &b_phidh);
-  fInTree->SetBranchAddress("phpt", &phpt, &b_phpt);
-  fInTree->SetBranchAddress("pheta", &pheta, &b_pheta);
-  fInTree->SetBranchAddress("phphi", &phphi, &b_phphi);
-  fInTree->SetBranchAddress("wzid", &wzid, &b_wzid);
-  fInTree->SetBranchAddress("wzmass", &wzmass, &b_wzmass);
-  fInTree->SetBranchAddress("wzpt", &wzpt, &b_wzpt);
-  fInTree->SetBranchAddress("wzeta", &wzeta, &b_wzeta);
-  fInTree->SetBranchAddress("wzphi", &wzphi, &b_wzphi);
-  fInTree->SetBranchAddress("l1id", &l1id, &b_l1id);
-  fInTree->SetBranchAddress("l1pt", &l1pt, &b_l1pt);
-  fInTree->SetBranchAddress("l1eta", &l1eta, &b_l1eta);
-  fInTree->SetBranchAddress("l1phi", &l1phi, &b_l1phi);
-  fInTree->SetBranchAddress("l2id", &l2id, &b_l2id);
-  fInTree->SetBranchAddress("l2pt", &l2pt, &b_l2pt);
-  fInTree->SetBranchAddress("l2eta", &l2eta, &b_l2eta);
-  fInTree->SetBranchAddress("l2phi", &l2phi, &b_l2phi);
-  fInTree->SetBranchAddress("parid", &parid, &b_parid);
-  fInTree->SetBranchAddress("parpt", &parpt, &b_parpt);
-  fInTree->SetBranchAddress("pareta", &pareta, &b_pareta);
-  fInTree->SetBranchAddress("parphi", &parphi, &b_parphi);
-  fInTree->SetBranchAddress("ancid", &ancid, &b_ancid);
-  fInTree->SetBranchAddress("ancpt", &ancpt, &b_ancpt);
-  fInTree->SetBranchAddress("anceta", &anceta, &b_anceta);
-  fInTree->SetBranchAddress("ancphi", &ancphi, &b_ancphi);
 }
