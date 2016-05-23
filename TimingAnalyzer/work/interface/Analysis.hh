@@ -11,6 +11,7 @@
 #include "TH2F.h"
 
 #include <map>
+#include <vector>
 
 typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator TH1MapIter;
@@ -27,16 +28,18 @@ public:
   Analysis(TString filename, TString outdir, TString outtype, Float_t lumi);
   ~Analysis();
   void InitTree();
+  void StandardPlots();
   void TimeResPlots();
   void TriggerEffs();
   void ComputeRatioPlot(const TH1F * numer, const TH1F * denom, TH1F *& ratioPlot);
   TH1F * MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
   TH2F * MakeTH2Plot(TString hname, TString htitle, Int_t nbinsx, Double_t xlow, Double_t xhigh, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
-  void MakeSubDirs(TStrMap subdirmap);
-  void SaveTH1s(TH1Map th1map, TStrMap subdirmap);
-  void SaveTH2s(TH2Map th2map, TStrMap subdirmap);
-  void DeleteTH1s(TH1Map th1map);
-  void DeleteTH2s(TH2Map th2map);
+  TH2F * MakeTH2Plot(TString hname, TString htitle, std::vector<Double_t> vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
+  void MakeSubDirs(const TStrMap & subdirmap);
+  void SaveTH1s(TH1Map & th1map, TStrMap & subdirmap);
+  void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
+  void DeleteTH1s(TH1Map & th1map);
+  void DeleteTH2s(TH2Map & th2map);
 
 private:
   // I/O

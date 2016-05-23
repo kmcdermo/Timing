@@ -15,8 +15,8 @@ int main(){
   
   // make analysis object for every input file
   // choose which "analysis" to do
-  TString input = "input/doubleeg/tree.root";
-  Analysis analysis(input.Data(),"dee_trig","png",lumi);
-  //  analysis.TimeResPlots();
-  analysis.TriggerEffs();
+  TString input = "input/demo/tree.root";
+  Analysis analysis(input.Data(),"demo_out","png",lumi);
+  analysis.StandardPlots();
+  //analysis.TriggerEffs();
 }
