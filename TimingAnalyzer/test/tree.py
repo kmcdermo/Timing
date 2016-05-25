@@ -31,11 +31,11 @@ options.register (
 
 ## Skim on events that pass hlt paths and tight electron kinematic requirements
 options.register (
-	'filterOnHLT',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'filterOnHLT',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate if to apply HLT requirements');
 
 options.register (
-	'filterOnKinematics',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'filterOnKinematics',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate if to apply tight electron kinematic requirements');
 
 ## input cross section in case you want to store a different value wrt to the LHE file
@@ -45,12 +45,8 @@ options.register(
 
 ## nThreads to run
 options.register (
-	'nThreads',1,VarParsing.multiplicity.singleton, VarParsing.varType.int,
+	'nThreads',4,VarParsing.multiplicity.singleton, VarParsing.varType.int,
 	'default number of threads');
-
-## to be used when running crab jobs with local files 
-options.register ('isCrab',False,VarParsing.multiplicity.singleton, VarParsing.varType.bool,
-		  'to be used to handle local files with crab');
 
 ## parsing command line arguments
 options.parseArguments()
@@ -74,7 +70,6 @@ print "Running with globalTag           = ",options.globalTag
 print "Running with filterOnHLT         = ",options.filterOnHLT
 print "Running with filterOnKinematics  = ",options.filterOnKinematics
 print "Running with nThreads            = ",options.nThreads
-print "Running with isCrab              = ",options.isCrab
 print "#####################"
 
 ## Define the CMSSW process
