@@ -11,10 +11,18 @@ inline float rad2(float x, float y){
   return x*x + y*y;
 }
 
-Analysis::Analysis(TString infilename, TString outdir, TString outtype, Float_t lumi) : 
-  fOutDir(outdir), fOutType(outtype), fLumi(lumi) {
+Analysis::Analysis(TString sample, bool isMC, TString outdir, TString outtype, Float_t lumi) : 
+  fSample(sample), fIsMC(isMC), fOutType(outtype), fLumi(lumi) {
   
-  fInFile = TFile::Open(infilename.Data());
+  if (isMC) {
+    fOutDir = Form("%s/MC/%s",outdir.Data(),fSample.Data());
+    fInFile = TFile::Open(Form("input/MC/%s/tree.root",fSample.Data()));
+  }
+  else {
+    fOutDir = Form("%s/DATA/%s",outdir.Data(),fSample.Data());
+    fInFile = TFile::Open(Form("input/DATA/%s/tree.root",fSample.Data()));
+  }
+  
   fInTree = (TTree*)fInFile->Get("tree/tree");
   InitTree();
 
@@ -39,9 +47,9 @@ void Analysis::StandardPlots(){
   // Set up hists first --> first in map is histo name, by design!
   TH1Map  trTH1Map;
   TStrMap trTH1SubMap; // set inside MakeTH1Plot
-  trTH1Map["zeemass"]  = Analysis::MakeTH1Plot("zeemass","",100,60.,120.,"Dielectron invariant mass [GeV/c^{2}]","Events",trTH1SubMap,"standard");
-  trTH1Map["zeept"]    = Analysis::MakeTH1Plot("zeept","",100,0.,750.,"Dielectron p_{T} [GeV/c^{2}]","Events",trTH1SubMap,"standard");
-  trTH1Map["zeeeta"]   = Analysis::MakeTH1Plot("zeeeta","",100,-10.0,10.0,"Dielectron #eta","Events",trTH1SubMap,"standard");
+  trTH1Map["zmass"]  = Analysis::MakeTH1Plot("zmass","",100,60.,120.,"Dielectron invariant mass [GeV/c^{2}]","Events",trTH1SubMap,"standard");
+  trTH1Map["zpt"]    = Analysis::MakeTH1Plot("zpt","",100,0.,750.,"Dielectron p_{T} [GeV/c^{2}]","Events",trTH1SubMap,"standard");
+  trTH1Map["zeta"]   = Analysis::MakeTH1Plot("zeta","",100,-10.0,10.0,"Dielectron #eta","Events",trTH1SubMap,"standard");
 
   trTH1Map["timediff"]   = Analysis::MakeTH1Plot("timediff","",100,-5.0,5.0,"Dielectron Seed Time Difference [ns]","Events",trTH1SubMap,"standard");
   trTH1Map["el1time"]    = Analysis::MakeTH1Plot("el1time","",100,-5.0,5.0,"Leading Electron Seed Time [ns]","Events",trTH1SubMap,"standard");
@@ -58,11 +66,11 @@ void Analysis::StandardPlots(){
 
   for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
     fInTree->GetEntry(entry);
-    if ( (zeemass>76. && zeemass<106.) && hltdoubleel) { // we want di-electron z's and pass hlt
+    if (zmass>76. && zmass<106.) { // extra selection over skimmed samples
       // standard "validation" plots
-      trTH1Map["zeemass"]->Fill(zeemass);
-      trTH1Map["zeept"]->Fill(zeept);
-      trTH1Map["zeeeta"]->Fill(zeeeta);
+      trTH1Map["zmass"]->Fill(zmass);
+      trTH1Map["zpt"]->Fill(zpt);
+      trTH1Map["zeta"]->Fill(zeta);
 
       trTH1Map["timediff"]->Fill(el1time-el2time);
       trTH1Map["el1time"]->Fill(el1time);
@@ -132,14 +140,15 @@ void Analysis::TimeResPlots(){
   //actually define plots
   TH2Map  runs2DMap;    
   TStrMap runs2DSubMap; 
-  runs2DMap["tdEBEB_runs"] = Analysis::MakeTH2Plot("tdEBEB_runs","",dRunNos,ntimebins,-timerange,timerange,"Run Number","Dielectron Seed Time Difference [ns] (EBEB)",runs2DSubMap,"timing/runs/EBEB");  
-  runs2DMap["tdEBEE_runs"] = Analysis::MakeTH2Plot("tdEBEE_runs","",dRunNos,ntimebins,-timerange,timerange,"Run Number","Dielectron Seed Time Difference [ns] (EBEE)",runs2DSubMap,"timing/runs/EBEE");  
-  runs2DMap["tdEEEE_runs"] = Analysis::MakeTH2Plot("tdEEEE_runs","",dRunNos,ntimebins,-timerange,timerange,"Run Number","Dielectron Seed Time Difference [ns] (EEEE)",runs2DSubMap,"timing/runs/EEEE");  
-  
-  for (UInt_t entry = 0; entry < 100000; entry++){
-    //  for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
+  if (!fIsMC) { // only do for data... declarations are small, don't bother with check
+    runs2DMap["tdEBEB_runs"] = Analysis::MakeTH2Plot("tdEBEB_runs","",dRunNos,ntimebins,-timerange,timerange,"Run Number","Dielectron Seed Time Difference [ns] (EBEB)",runs2DSubMap,"timing/runs/EBEB");  
+    runs2DMap["tdEBEE_runs"] = Analysis::MakeTH2Plot("tdEBEE_runs","",dRunNos,ntimebins,-timerange,timerange,"Run Number","Dielectron Seed Time Difference [ns] (EBEE)",runs2DSubMap,"timing/runs/EBEE");  
+    runs2DMap["tdEEEE_runs"] = Analysis::MakeTH2Plot("tdEEEE_runs","",dRunNos,ntimebins,-timerange,timerange,"Run Number","Dielectron Seed Time Difference [ns] (EEEE)",runs2DSubMap,"timing/runs/EEEE");  
+  }  
+
+  for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
     fInTree->GetEntry(entry);
-    if ( (zeemass>76. && zeemass<106.) && hltdoubleel) { // we want di-electron z's and pass hlt
+    if (zmass>76. && zmass<106.) { // extra selection over skims
       float time_diff  = el1time-el2time;
       float eff_dielpt = el1pt*el2pt/std::sqrt(rad2(el1pt,el2pt));
 
@@ -164,22 +173,22 @@ void Analysis::TimeResPlots(){
       if (el1eb && el2eb) {
 	inclu1DMap["tdEBEB_inclu"]->Fill(time_diff);
  	effpt2DMap["tdEBEB_effpt"]->Fill(eff_dielpt,time_diff);
-	runs2DMap ["tdEBEB_runs"] ->Fill(run,time_diff);
+	if (!fIsMC) {runs2DMap["tdEBEB_runs"]->Fill(run,time_diff);}
       }
       else if ( (el1eb && el2ee) || (el1ee && el2eb) ) {
 	inclu1DMap["tdEBEE_inclu"]->Fill(time_diff);
  	effpt2DMap["tdEBEE_effpt"]->Fill(eff_dielpt,time_diff);
-	runs2DMap ["tdEBEE_runs"] ->Fill(run,time_diff);
+	if (!fIsMC) {runs2DMap["tdEBEE_runs"]->Fill(run,time_diff);}
       }
       else if (el1ee && el2ee) {
 	inclu1DMap["tdEEEE_inclu"]->Fill(time_diff);
  	effpt2DMap["tdEEEE_effpt"]->Fill(eff_dielpt,time_diff);
-	runs2DMap ["tdEEEE_runs"] ->Fill(run,time_diff);
+	if (!fIsMC) {runs2DMap["tdEEEE_runs"]->Fill(run,time_diff);}
       }
     
       // Now Z based plots
-      z2DMap["td_zpt"]->Fill(zeept,time_diff);
-      z2DMap["td_zeta"]->Fill(zeeeta,time_diff);
+      z2DMap["td_zpt"]->Fill(zpt,time_diff);
+      z2DMap["td_zeta"]->Fill(zeta,time_diff);
     }
   }
 
@@ -245,32 +254,34 @@ void Analysis::TimeResPlots(){
 
   ////////////////////////////////////
   // Do run plots last
-  Analysis::MakeSubDirs(runs2DSubMap);
-  Analysis::SaveTH2s(runs2DMap,runs2DSubMap);
+  if (!fIsMC) {
+    Analysis::MakeSubDirs(runs2DSubMap);
+    Analysis::SaveTH2s(runs2DMap,runs2DSubMap);
 
-  // EBEB
-  TH1Map runsEBEB1DMap;  TStrMap runsEBEB1DSubMap;
-  Analysis::Project2Dto1D(runs2DMap["tdEBEB_runs"],runs2DSubMap,runsEBEB1DMap,runsEBEB1DSubMap);
-  Analysis::SaveTH1s(runsEBEB1DMap,runsEBEB1DSubMap);
-  Analysis::FitandExtractTH1s(runsEBEB1DMap,"tdEBEB_runs","Run Number (EBEB)",dRunNos,fitrange,runs2DSubMap["tdEBEB_runs"]);
+    // EBEB
+    TH1Map runsEBEB1DMap;  TStrMap runsEBEB1DSubMap;
+    Analysis::Project2Dto1D(runs2DMap["tdEBEB_runs"],runs2DSubMap,runsEBEB1DMap,runsEBEB1DSubMap);
+    Analysis::SaveTH1s(runsEBEB1DMap,runsEBEB1DSubMap);
+    Analysis::FitandExtractTH1s(runsEBEB1DMap,"tdEBEB_runs","Run Number (EBEB)",dRunNos,fitrange,runs2DSubMap["tdEBEB_runs"]);
 
-  // EBEE
-  TH1Map runsEBEE1DMap;  TStrMap runsEBEE1DSubMap;
-  Analysis::Project2Dto1D(runs2DMap["tdEBEE_runs"],runs2DSubMap,runsEBEE1DMap,runsEBEE1DSubMap);
-  Analysis::SaveTH1s(runsEBEE1DMap,runsEBEE1DSubMap);
-  Analysis::FitandExtractTH1s(runsEBEE1DMap,"tdEBEE_runs","Run Number (EBEE)",dRunNos,fitrange,runs2DSubMap["tdEBEE_runs"]);
+    // EBEE
+    TH1Map runsEBEE1DMap;  TStrMap runsEBEE1DSubMap;
+    Analysis::Project2Dto1D(runs2DMap["tdEBEE_runs"],runs2DSubMap,runsEBEE1DMap,runsEBEE1DSubMap);
+    Analysis::SaveTH1s(runsEBEE1DMap,runsEBEE1DSubMap);
+    Analysis::FitandExtractTH1s(runsEBEE1DMap,"tdEBEE_runs","Run Number (EBEE)",dRunNos,fitrange,runs2DSubMap["tdEBEE_runs"]);
 
-  // EEEE
-  TH1Map runsEEEE1DMap;  TStrMap runsEEEE1DSubMap;
-  Analysis::Project2Dto1D(runs2DMap["tdEEEE_runs"],runs2DSubMap,runsEEEE1DMap,runsEEEE1DSubMap);
-  Analysis::SaveTH1s(runsEEEE1DMap,runsEEEE1DSubMap);
-  Analysis::FitandExtractTH1s(runsEEEE1DMap,"tdEEEE_runs","Run Number (EEEE)",dRunNos,fitrange,runs2DSubMap["tdEEEE_runs"]);
+    // EEEE
+    TH1Map runsEEEE1DMap;  TStrMap runsEEEE1DSubMap;
+    Analysis::Project2Dto1D(runs2DMap["tdEEEE_runs"],runs2DSubMap,runsEEEE1DMap,runsEEEE1DSubMap);
+    Analysis::SaveTH1s(runsEEEE1DMap,runsEEEE1DSubMap);
+    Analysis::FitandExtractTH1s(runsEEEE1DMap,"tdEEEE_runs","Run Number (EEEE)",dRunNos,fitrange,runs2DSubMap["tdEEEE_runs"]);
 
-  // Delete effective electrons
-  Analysis::DeleteTH2s(runs2DMap);
-  Analysis::DeleteTH1s(runsEBEB1DMap);
-  Analysis::DeleteTH1s(runsEBEE1DMap);
-  Analysis::DeleteTH1s(runsEEEE1DMap);
+    // Delete effective electrons
+    Analysis::DeleteTH2s(runs2DMap);
+    Analysis::DeleteTH1s(runsEBEB1DMap);
+    Analysis::DeleteTH1s(runsEBEE1DMap);
+    Analysis::DeleteTH1s(runsEEEE1DMap);
+  }
   ////////////////////////////////////
 }
 
@@ -279,7 +290,7 @@ void Analysis::TriggerEffs(){
   TH1Map  trTH1Map;
   TStrMap trTH1SubMap; // set inside MakeTH1Plot
 
-  int nBinsDEEpt = 100; float xLowDEEpt = 15.; float xHighDEEpt = 20.;
+  int nBinsDEEpt = 100; float xLowDEEpt = 20.; float xHighDEEpt = 120.;
   TH1F * n_hltdoubleel_el1pt = new TH1F("numer_hltdoubleel_el1pt","",nBinsDEEpt,xLowDEEpt,xHighDEEpt);
   TH1F * d_hltdoubleel_el1pt = new TH1F("denom_hltdoubleel_el1pt","",nBinsDEEpt,xLowDEEpt,xHighDEEpt);
 
@@ -293,7 +304,7 @@ void Analysis::TriggerEffs(){
 
   for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
     fInTree->GetEntry(entry);
-    if ( (zeemass>76. && zeemass<105.) ){ // we want di-electron z's
+    if ( (zmass>76. && zmass<106.) ){ // we want di-electron z's
       if ( hltdoubleel ) { // fill numer if passed
 	n_hltdoubleel_el1pt->Fill(el1pt);
 	n_hltdoubleel_el2pt->Fill(el2pt);
@@ -553,15 +564,10 @@ void Analysis::InitTree(){
   fInTree->SetBranchAddress("event", &event, &b_event);
   fInTree->SetBranchAddress("run", &run, &b_run);
   fInTree->SetBranchAddress("lumi", &lumi, &b_lumi);
-  fInTree->SetBranchAddress("xsec", &xsec, &b_xsec);
-  fInTree->SetBranchAddress("wgt", &wgt, &b_wgt);
-  fInTree->SetBranchAddress("puwgt", &puwgt, &b_puwgt);
-  fInTree->SetBranchAddress("puobs", &puobs, &b_puobs);
-  fInTree->SetBranchAddress("putrue", &putrue, &b_putrue);
-  fInTree->SetBranchAddress("nvtx", &nvtx, &b_nvtx);
   fInTree->SetBranchAddress("hltsingleel", &hltsingleel, &b_hltsingleel);
   fInTree->SetBranchAddress("hltdoubleel", &hltdoubleel, &b_hltdoubleel);
   fInTree->SetBranchAddress("hltelnoiso", &hltelnoiso, &b_hltelnoiso);
+  fInTree->SetBranchAddress("nvtx", &nvtx, &b_nvtx);
   fInTree->SetBranchAddress("nvetoelectrons", &nvetoelectrons, &b_nvetoelectrons);
   fInTree->SetBranchAddress("nlooseelectrons", &nlooseelectrons, &b_nlooseelectrons);
   fInTree->SetBranchAddress("nmediumelectrons", &nmediumelectrons, &b_nmediumelectrons);
@@ -577,8 +583,28 @@ void Analysis::InitTree(){
   fInTree->SetBranchAddress("el2phi", &el2phi, &b_el2phi);
   fInTree->SetBranchAddress("el1time", &el1time, &b_el1time);
   fInTree->SetBranchAddress("el2time", &el2time, &b_el2time);
-  fInTree->SetBranchAddress("zeemass", &zeemass, &b_zeemass);
-  fInTree->SetBranchAddress("zeept", &zeept, &b_zeept);
-  fInTree->SetBranchAddress("zeeeta", &zeeeta, &b_zeeeta);
-  fInTree->SetBranchAddress("zeephi", &zeephi, &b_zeephi);
+  fInTree->SetBranchAddress("zmass", &zmass, &b_zmass);
+  fInTree->SetBranchAddress("zpt", &zpt, &b_zpt);
+  fInTree->SetBranchAddress("zeta", &zeta, &b_zeta);
+  fInTree->SetBranchAddress("zphi", &zphi, &b_zphi);
+
+  if (fIsMC){ // initialize extra branches if MC
+    fInTree->SetBranchAddress("puobs", &puobs, &b_puobs);
+    fInTree->SetBranchAddress("putrue", &putrue, &b_putrue);
+    fInTree->SetBranchAddress("xsec", &xsec, &b_xsec);
+    fInTree->SetBranchAddress("wgt", &wgt, &b_wgt);
+    fInTree->SetBranchAddress("genzpid", &genzpid, &b_genzpid);
+    fInTree->SetBranchAddress("genzpt", &genzpt, &b_genzpt);
+    fInTree->SetBranchAddress("genzeta", &genzeta, &b_genzeta);
+    fInTree->SetBranchAddress("genzphi", &genzphi, &b_genzphi);
+    fInTree->SetBranchAddress("genzmass", &genzmass, &b_genzmass);
+    fInTree->SetBranchAddress("genel1pid", &genel1pid, &b_genel1pid);
+    fInTree->SetBranchAddress("genel1pt", &genel1pt, &b_genel1pt);
+    fInTree->SetBranchAddress("genel1eta", &genel1eta, &b_genel1eta);
+    fInTree->SetBranchAddress("genel1phi", &genel1phi, &b_genel1phi);
+    fInTree->SetBranchAddress("genel2pid", &genel2pid, &b_genel2pid);
+    fInTree->SetBranchAddress("genel2pt", &genel2pt, &b_genel2pt);
+    fInTree->SetBranchAddress("genel2eta", &genel2eta, &b_genel2eta);
+    fInTree->SetBranchAddress("genel2phi", &genel2phi, &b_genel2phi);
+  }
 }

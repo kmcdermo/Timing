@@ -25,7 +25,7 @@ typedef TStrMap::iterator TStrMapIter;
 class Analysis {
 public:
   // functions
-  Analysis(TString filename, TString outdir, TString outtype, Float_t lumi);
+  Analysis(TString sample, bool isMC, TString outdir, TString outtype, Float_t lumi);
   ~Analysis();
   void InitTree();
   void StandardPlots();
@@ -45,10 +45,13 @@ public:
   void DeleteTH2s(TH2Map & th2map);
 
 private:
-  // I/O
-  TFile* fInFile;
-  TTree* fInTree;
+  // Input
+  TFile * fInFile;
+  TTree * fInTree;
+  TString fSample;
+  bool fIsMC;
 
+  // Output
   TString fOutDir;
   TFile*  fOutFile;
   TString fOutType;
@@ -59,51 +62,58 @@ private:
 
 public:
   // Declaration of leaf types
-  UInt_t          event;
-  UInt_t          run;
-  UInt_t          lumi;
-  Double_t        xsec;
-  Double_t        wgt;
-  Double_t        puwgt;
+  Int_t           event;
+  Int_t           run;
+  Int_t           lumi;
+  Bool_t          hltsingleel;
+  Bool_t          hltdoubleel;
+  Bool_t          hltelnoiso;
+  Int_t           nvtx;
+  Int_t           nvetoelectrons;
+  Int_t           nlooseelectrons;
+  Int_t           nmediumelectrons;
+  Int_t           ntightelectrons;
+  Int_t           nheepelectrons;
+  Int_t           el1pid;
+  Float_t         el1pt;
+  Float_t         el1eta;
+  Float_t         el1phi;
+  Int_t           el2pid;
+  Float_t         el2pt;
+  Float_t         el2eta;
+  Float_t         el2phi;
+  Float_t         el1time;
+  Float_t         el2time;
+  Float_t         zmass;
+  Float_t         zpt;
+  Float_t         zeta;
+  Float_t         zphi;
   Int_t           puobs;
   Int_t           putrue;
-  UInt_t          nvtx;
-  UChar_t         hltsingleel;
-  UChar_t         hltdoubleel;
-  UChar_t         hltelnoiso;
-  UInt_t          nvetoelectrons;
-  UInt_t          nlooseelectrons;
-  UInt_t          nmediumelectrons;
-  UInt_t          ntightelectrons;
-  UInt_t          nheepelectrons;
-  Int_t           el1pid;
-  Double_t        el1pt;
-  Double_t        el1eta;
-  Double_t        el1phi;
-  Int_t           el2pid;
-  Double_t        el2pt;
-  Double_t        el2eta;
-  Double_t        el2phi;
-  Double_t        el1time;
-  Double_t        el2time;
-  Double_t        zeemass;
-  Double_t        zeept;
-  Double_t        zeeeta;
-  Double_t        zeephi;
+  Float_t         xsec;
+  Float_t         wgt;
+  Int_t           genzpid;
+  Float_t         genzpt;
+  Float_t         genzeta;
+  Float_t         genzphi;
+  Float_t         genzmass;
+  Int_t           genel1pid;
+  Float_t         genel1pt;
+  Float_t         genel1eta;
+  Float_t         genel1phi;
+  Int_t           genel2pid;
+  Float_t         genel2pt;
+  Float_t         genel2eta;
+  Float_t         genel2phi;
 
   // List of branches
   TBranch        *b_event;   //!
   TBranch        *b_run;   //!
   TBranch        *b_lumi;   //!
-  TBranch        *b_xsec;   //!
-  TBranch        *b_wgt;   //!
-  TBranch        *b_puwgt;   //!
-  TBranch        *b_puobs;   //!
-  TBranch        *b_putrue;   //!
-  TBranch        *b_nvtx;   //!
   TBranch        *b_hltsingleel;   //!
   TBranch        *b_hltdoubleel;   //!
   TBranch        *b_hltelnoiso;   //!
+  TBranch        *b_nvtx;   //!
   TBranch        *b_nvetoelectrons;   //!
   TBranch        *b_nlooseelectrons;   //!
   TBranch        *b_nmediumelectrons;   //!
@@ -119,10 +129,27 @@ public:
   TBranch        *b_el2phi;   //!
   TBranch        *b_el1time;   //!
   TBranch        *b_el2time;   //!
-  TBranch        *b_zeemass;   //!
-  TBranch        *b_zeept;   //!
-  TBranch        *b_zeeeta;   //!
-  TBranch        *b_zeephi;   //!
+  TBranch        *b_zmass;   //!
+  TBranch        *b_zpt;   //!
+  TBranch        *b_zeta;   //!
+  TBranch        *b_zphi;   //!
+  TBranch        *b_puobs;   //!
+  TBranch        *b_putrue;   //!
+  TBranch        *b_xsec;   //!
+  TBranch        *b_wgt;   //!
+  TBranch        *b_genzpid;   //!
+  TBranch        *b_genzpt;   //!
+  TBranch        *b_genzeta;   //!
+  TBranch        *b_genzphi;   //!
+  TBranch        *b_genzmass;   //!
+  TBranch        *b_genel1pid;   //!
+  TBranch        *b_genel1pt;   //!
+  TBranch        *b_genel1eta;   //!
+  TBranch        *b_genel1phi;   //!
+  TBranch        *b_genel2pid;   //!
+  TBranch        *b_genel2pt;   //!
+  TBranch        *b_genel2eta;   //!
+  TBranch        *b_genel2phi;   //!
 };
 
 #endif
