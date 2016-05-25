@@ -52,6 +52,10 @@ inline bool minimizeByZmass(const triple& elpair1, const triple& elpair2){
   return std::get<2>(elpair1)<std::get<2>(elpair2);
 }
 
+inline bool sortElectronsByPt(const pat::ElectronRef& el1, const pat::ElectronRef& el2){
+  return el1->pt()>el2->pt();
+}
+
 class TimingAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> {
 
 public:
@@ -90,6 +94,7 @@ private:
   edm::EDGetTokenT<pat::ElectronRefVector> mediumelectronsToken;
   edm::EDGetTokenT<pat::ElectronRefVector> tightelectronsToken;
   edm::EDGetTokenT<pat::ElectronRefVector> heepelectronsToken;
+  const bool applyKinematicsFilter;
 
   // ECAL RecHits
   edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEBTAG;
@@ -143,17 +148,6 @@ private:
   float genzpt,genzeta,genzphi,genzmass;
   float genel1pt,genel1eta,genel1phi;
   float genel2pt,genel2eta,genel2phi;
-
-  template<typename T> 
-  class PatPtSorter{
-  public:
-    bool operator ()(const T & i, const T & j) const {
-      return (i->pt() > j->pt());
-    }
-
-  };
-
-  PatPtSorter<pat::ElectronRef>      electronSorter;
 };
 
 
@@ -171,7 +165,8 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
   mediumelectronsTag(iConfig.getParameter<edm::InputTag>("mediumelectrons")),
   tightelectronsTag(iConfig.getParameter<edm::InputTag>("tightelectrons")),
   heepelectronsTag(iConfig.getParameter<edm::InputTag>("heepelectrons")),
-  
+  applyKinematicsFilter(iConfig.existsAs<bool>("applyKinematicsFilter") ? iConfig.getParameter<bool>("applyKinematicsFilter") : false),  
+
   //recHits
   recHitCollectionEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEB" ))),
   recHitCollectionEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEE" ))),
@@ -220,23 +215,19 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // ELECTRONS
   edm::Handle<pat::ElectronRefVector> vetoelectronsH;
   iEvent.getByToken(vetoelectronsToken, vetoelectronsH);
-  pat::ElectronRefVector vetoelectrons = *vetoelectronsH;
 
   edm::Handle<pat::ElectronRefVector> looseelectronsH;
   iEvent.getByToken(looseelectronsToken, looseelectronsH);
-  pat::ElectronRefVector looseelectrons = *looseelectronsH;
 
   edm::Handle<pat::ElectronRefVector> mediumelectronsH;
   iEvent.getByToken(mediumelectronsToken, mediumelectronsH);
-  pat::ElectronRefVector mediumelectrons = *mediumelectronsH;
 
   edm::Handle<pat::ElectronRefVector> tightelectronsH;
   iEvent.getByToken(tightelectronsToken, tightelectronsH);
-  pat::ElectronRefVector tightelectrons = *tightelectronsH;
+  pat::ElectronRefVector tightelectronsvec = *tightelectronsH;
 
   edm::Handle<pat::ElectronRefVector> heepelectronsH;
   iEvent.getByToken(heepelectronsToken, heepelectronsH);
-  pat::ElectronRefVector heepelectrons = *heepelectronsH;
 
   // Event, lumi, run info
   event = iEvent.id().event();
@@ -271,29 +262,38 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (applyHLTFilter && !triggered) return;
 
   // Vertex info
-  nvtx = 0;
+  nvtx = -99;
   if(verticesH.isValid()) nvtx = verticesH->size();
 
-  // ELECTRON ANALYSIS
-  nvetoelectrons = 0; nlooseelectrons = 0; nmediumelectrons = 0; ntightelectrons = 0; nheepelectrons = 0;
+  // ELECTRON ANALYSIS 
+  // nelectrons AFTER PF cleaning (kinematic selection pT > 10, |eta| < 2.5
+  nvetoelectrons = -99; nlooseelectrons = -99; nmediumelectrons = -99; ntightelectrons = -99; nheepelectrons = -99;
   if (vetoelectronsH.isValid())   nvetoelectrons   = vetoelectronsH->size();
   if (looseelectronsH.isValid())  nlooseelectrons  = looseelectronsH->size();
   if (mediumelectronsH.isValid()) nmediumelectrons = mediumelectronsH->size();
   if (tightelectronsH.isValid())  ntightelectrons  = tightelectronsH->size();
   if (heepelectronsH.isValid())   nheepelectrons   = heepelectronsH->size();
-
+  
   // tree vars
   zmass       = -99.0; zpt         = -99.0;  zeta        = -99.0; zphi        = -99.0;
   el1pid      = -99;   el1pt       = -99.0;  el1eta      = -99.0; el1phi      = -99.0; 
   el2pid      = -99;   el2pt       = -99.0;  el2eta      = -99.0; el2phi      = -99.0; 
   el1time     = -99.0; el2time     = -99.0; 
 
-  if (tightelectrons.size()>1){ // need at least two tight electrons!
+  // save only really pure electrons
+  std::vector<pat::ElectronRef> tightelectrons;
+  for (size_t i = 0; i < tightelectronsvec.size(); i++) {
+    if (tightelectronsvec[i]->pt() > 25.){
+      tightelectrons.push_back(tightelectronsvec[i]);
+    }
+  }
+
+  // Z matching + filling of variables
+  if (tightelectrons.size()>1){   // need at least two electrons that pass id and pt cuts! 
     // First sort on pT --> should be redudant, as already sorted this way in miniAOD
-    std::sort(tightelectrons.begin(), tightelectrons.end(), electronSorter);
-
+    std::sort(tightelectrons.begin(), tightelectrons.end(), sortElectronsByPt);
+  
     triplevec invmasspairs; // store i-j tight el index + invariant mass
-
     // only want pair of tight electrons that yield closest zmass diff   
     for (std::size_t i = 0; i < tightelectrons.size(); i++) {
       pat::ElectronRef el1 = tightelectrons[i];
@@ -349,6 +349,9 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     delete clustertools;
   } // end section over tight electrons
+  else{
+    if (applyKinematicsFilter) return;
+  }
 
   // MC INFO    
   if (isMC) {
