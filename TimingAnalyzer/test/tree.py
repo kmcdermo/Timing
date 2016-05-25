@@ -7,7 +7,7 @@ options = VarParsing ('python')
 
 ## data or MC options
 options.register (
-	'isMC',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'isMC',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate data or MC');
 
 ## processName
@@ -29,24 +29,24 @@ options.register (
 	'globalTag','76X_dataRun2_16Dec2015_v0',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'gloabl tag to be used');
 
-## Skim on events that pass hlt paths
+## Skim on events that pass hlt paths and tight electron kinematic requirements
 options.register (
-	'filterOnHLT',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to indicate if apply or not trigger requirements');
+	'filterOnHLT',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to indicate if to apply HLT requirements');
+
+options.register (
+	'filterOnKinematics',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to indicate if to apply tight electron kinematic requirements');
 
 ## input cross section in case you want to store a different value wrt to the LHE file
 options.register(
-	'crossSection',6104,VarParsing.multiplicity.singleton, VarParsing.varType.float,
+	'crossSection',-1,VarParsing.multiplicity.singleton, VarParsing.varType.float,
 	'external value for sample cross section, in case of data it is fixed to 0.001');
 
 ## nThreads to run
 options.register (
 	'nThreads',4,VarParsing.multiplicity.singleton, VarParsing.varType.int,
 	'default number of threads');
-
-## to be used when running crab jobs with local files 
-options.register ('isCrab',False,VarParsing.multiplicity.singleton, VarParsing.varType.bool,
-		  'to be used to handle local files with crab');
 
 ## parsing command line arguments
 options.parseArguments()
@@ -68,8 +68,8 @@ print "Running with miniAODProcess      = ",options.miniAODProcess
 print "Running with outputFileName      = ",options.outputFileName	
 print "Running with globalTag           = ",options.globalTag	
 print "Running with filterOnHLT         = ",options.filterOnHLT
+print "Running with filterOnKinematics  = ",options.filterOnKinematics
 print "Running with nThreads            = ",options.nThreads
-print "Running with isCrab              = ",options.isCrab
 print "#####################"
 
 ## Define the CMSSW process
@@ -147,7 +147,7 @@ process.TFileService = cms.Service("TFileService",
 # Make the tree 
 process.tree = cms.EDAnalyzer("TimingAnalyzer",
    ## gen info			     
-   isMC                   = cms.bool(options.isMC),
+   isMC       = cms.bool(options.isMC),
    pileup     = cms.InputTag("slimmedAddPileupInfo"),
    genevt     = cms.InputTag("generator"),
    gens       = cms.InputTag("prunedGenParticles"),
@@ -163,6 +163,7 @@ process.tree = cms.EDAnalyzer("TimingAnalyzer",
    mediumelectrons = cms.InputTag("selectedObjects", "mediumelectrons"),
    tightelectrons  = cms.InputTag("selectedObjects", "tightelectrons"),
    heepelectrons   = cms.InputTag("selectedObjects", "heepelectrons"),
+   applyKinematicsFilter = cms.bool(options.filterOnKinematics),
    ## ecal recHits			      
    recHitCollectionEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitCollectionEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
