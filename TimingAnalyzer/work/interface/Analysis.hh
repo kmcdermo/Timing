@@ -36,7 +36,8 @@ public:
   TH2F * MakeTH2Plot(TString hname, TString htitle, Int_t nbinsx, Double_t xlow, Double_t xhigh, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
   TH2F * MakeTH2Plot(TString hname, TString htitle, const std::vector<Double_t> vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
   void Project2Dto1D(TH2F *& hist2d, TStrMap & subdir2dmap, TH1Map & th1map, TStrMap & subdir1dmap);
-  void FitandExtractTH1s(TH1Map & th1map, Float_t fitrange);
+  void FitandExtractTH1s(TH1Map & th1map, TString name, TString xtitle, const std::vector<Double_t> vxbins, Float_t fitrange, TString subdir);
+  void FitandExtractTH1s(TH1Map & th1map, TStrMap & subdirmap, Float_t fitrange, const std::vector<Double_t>);
   void MakeSubDirs(TStrMap & subdirmap);
   void SaveTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
