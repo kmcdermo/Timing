@@ -214,8 +214,8 @@ void SetTDRStyle(TStyle *& tdrStyle){
 
   tdrStyle->SetTitleColor(1, "XYZ");
   tdrStyle->SetTitleFont(42, "XYZ");
-  tdrStyle->SetTitleSize(0.04, "XYZ");
-  tdrStyle->SetTitleXOffset(0.9);
+  tdrStyle->SetTitleSize(0.035, "XYZ");
+  tdrStyle->SetTitleXOffset(1.0);
   tdrStyle->SetTitleYOffset(1.0);
 
   // For the axis labels:

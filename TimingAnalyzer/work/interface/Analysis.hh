@@ -34,8 +34,10 @@ public:
   void ComputeRatioPlot(const TH1F * numer, const TH1F * denom, TH1F *& ratioPlot);
   TH1F * MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
   TH2F * MakeTH2Plot(TString hname, TString htitle, Int_t nbinsx, Double_t xlow, Double_t xhigh, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
-  TH2F * MakeTH2Plot(TString hname, TString htitle, std::vector<Double_t> vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
-  void MakeSubDirs(const TStrMap & subdirmap);
+  TH2F * MakeTH2Plot(TString hname, TString htitle, const std::vector<Double_t> vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
+  void Project2Dto1D(TH2F *& hist2d, TStrMap & subdir2dmap, TH1Map & th1map, TStrMap & subdir1dmap);
+  void FitandExtractTH1s(TH1Map & th1map, Float_t fitrange);
+  void MakeSubDirs(TStrMap & subdirmap);
   void SaveTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
   void DeleteTH1s(TH1Map & th1map);

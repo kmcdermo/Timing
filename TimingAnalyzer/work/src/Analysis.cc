@@ -2,6 +2,7 @@
 #include "../interface/Common.hh"
 
 #include "TCanvas.h"
+#include "TF1.h"
 
 #include <iostream>
 #include <fstream>
@@ -85,7 +86,7 @@ void Analysis::StandardPlots(){
 void Analysis::TimeResPlots(){
   // read in run numbers
   ifstream input;
-  input.open("../txt/runs.txt",std::ios::in);
+  input.open("txt/runs.txt",std::ios::in);
   int runno = -1;
   std::vector<int> runNos;
   while(input >> runno){
@@ -93,28 +94,35 @@ void Analysis::TimeResPlots(){
   }
   input.close();
 
+  std::vector<Double_t> dRunNos; // need this to do the wonky binning to get means/sigmas to line up exactly with run number
+  int totalRuns = runNos.back()-runNos.front();
+  int startrun  = runNos.front();
+  for (int i = 0; i < totalRuns + 2; i++) { // +1 for subtraction, +1 for half offset
+    dRunNos.push_back(startrun + i - 0.5);
+  }
+
   // td    = time difference (el1 - el2)
   // effpt = effective pt 
   TH1Map  trTH1Map;
   TStrMap trTH1SubMap; // set inside MakeTH1Plot
-  trTH1Map["tdEBEB_allpt"] = Analysis::MakeTH1Plot("tdEBEB_allpt","",100,-5.0,5.0,"Dielectron Seed Time Difference [ns] (EBEB all p_{T})","Events",trTH1SubMap,"timing");  
-  trTH1Map["tdEBEE_allpt"] = Analysis::MakeTH1Plot("tdEBEE_allpt","",100,-5.0,5.0,"Dielectron Seed Time Difference [ns] (EBEE all p_{T})","Events",trTH1SubMap,"timing");  
-  trTH1Map["tdEEEE_allpt"] = Analysis::MakeTH1Plot("tdEEEE_allpt","",100,-5.0,5.0,"Dielectron Seed Time Difference [ns] (EEEE all p_{T})","Events",trTH1SubMap,"timing");  
+  trTH1Map["tdEBEB_allpt"] = Analysis::MakeTH1Plot("tdEBEB_allpt","",100,-5.0,5.0,"Dielectron Seed Time Difference [ns] (EBEB all p_{T})","Events",trTH1SubMap,"timing/allpt");  
+  trTH1Map["tdEBEE_allpt"] = Analysis::MakeTH1Plot("tdEBEE_allpt","",100,-5.0,5.0,"Dielectron Seed Time Difference [ns] (EBEE all p_{T})","Events",trTH1SubMap,"timing/allpt");  
+  trTH1Map["tdEEEE_allpt"] = Analysis::MakeTH1Plot("tdEEEE_allpt","",100,-5.0,5.0,"Dielectron Seed Time Difference [ns] (EEEE all p_{T})","Events",trTH1SubMap,"timing/allpt");  
 
   // pt bins
   std::vector<Double_t> elptbins = {20,25,30,35,40,50,70,100,250}; 
   // make in 2D first, then decompose them into 1D histograms (saves on inner loops over events)
   TH2Map  trTH2Map;
   TStrMap trTH2SubMap;
-  trTH2Map["tdEBEB_ptbins"] = Analysis::MakeTH2Plot("tdEBEB_ptbins","",elptbins,100,-5.0,5.0,"Effective p_{T} [GeV/c]","Dielectron Seed Time Difference [ns] (EBEB)",trTH2SubMap,"timing/elpt/eb");  
-  trTH2Map["tdEBEE_ptbins"] = Analysis::MakeTH2Plot("tdEBEE_ptbins","",elptbins,100,-5.0,5.0,"Effective p_{T} [GeV/c]","Dielectron Seed Time Difference [ns] (EBEE)",trTH2SubMap,"timing/elpt/eb");  
-  trTH2Map["tdEEEE_ptbins"] = Analysis::MakeTH2Plot("tdEEEE_ptbins","",elptbins,100,-5.0,5.0,"Effective p_{T} [GeV/c]","Dielectron Seed Time Difference [ns] (EEEE)",trTH2SubMap,"timing/elpt/ee");  
+  trTH2Map["tdEBEB_ptbins"] = Analysis::MakeTH2Plot("tdEBEB_ptbins","",elptbins,100,-5.0,5.0,"Effective p_{T} [GeV/c]","Dielectron Seed Time Difference [ns] (EBEB)",trTH2SubMap,"timing/elpt/ebeb");  
+  trTH2Map["tdEBEE_ptbins"] = Analysis::MakeTH2Plot("tdEBEE_ptbins","",elptbins,100,-5.0,5.0,"Effective p_{T} [GeV/c]","Dielectron Seed Time Difference [ns] (EBEE)",trTH2SubMap,"timing/elpt/ebee");  
+  trTH2Map["tdEEEE_ptbins"] = Analysis::MakeTH2Plot("tdEEEE_ptbins","",elptbins,100,-5.0,5.0,"Effective p_{T} [GeV/c]","Dielectron Seed Time Difference [ns] (EEEE)",trTH2SubMap,"timing/elpt/eeee");  
 
   // make a plot in EBEB, EBEE, EEEE for each run
   for (int i = 0; i < runNos.size(); i++){
-    trTH1Map[Form("tdEBEB_%i",runNos[i])] = Analysis::MakeTH1Plot(Form("tdEBEB_%i",runNos[i]),"",100,-5.0,5.0,Form("Dielectron Seed Time Difference [ns] (EBEB run %i)",runNos[i]),"Events",trTH1SubMap,"timing/runs/eb");  
-    trTH1Map[Form("tdEBEE_%i",runNos[i])] = Analysis::MakeTH1Plot(Form("tdEBEE_%i",runNos[i]),"",100,-5.0,5.0,Form("Dielectron Seed Time Difference [ns] (EBEE run %i)",runNos[i]),"Events",trTH1SubMap,"timing/runs/eb");  
-    trTH1Map[Form("tdEEEE_%i",runNos[i])] = Analysis::MakeTH1Plot(Form("tdEEEE_%i",runNos[i]),"",100,-5.0,5.0,Form("Dielectron Seed Time Difference [ns] (EEEE run %i)",runNos[i]),"Events",trTH1SubMap,"timing/runs/ee");  
+    trTH1Map[Form("tdEBEB_%i",runNos[i])] = Analysis::MakeTH1Plot(Form("tdEBEB_%i",runNos[i]),"",100,-5.0,5.0,Form("Dielectron Seed Time Difference [ns] (EBEB run %i)",runNos[i]),"Events",trTH1SubMap,"timing/runs/ebeb");  
+    trTH1Map[Form("tdEBEE_%i",runNos[i])] = Analysis::MakeTH1Plot(Form("tdEBEE_%i",runNos[i]),"",100,-5.0,5.0,Form("Dielectron Seed Time Difference [ns] (EBEE run %i)",runNos[i]),"Events",trTH1SubMap,"timing/runs/ebee");  
+    trTH1Map[Form("tdEEEE_%i",runNos[i])] = Analysis::MakeTH1Plot(Form("tdEEEE_%i",runNos[i]),"",100,-5.0,5.0,Form("Dielectron Seed Time Difference [ns] (EEEE run %i)",runNos[i]),"Events",trTH1SubMap,"timing/runs/eeee");  
   }
 
   // make 2D plots for Z variables (pT, eta)
@@ -122,7 +130,8 @@ void Analysis::TimeResPlots(){
   trTH2Map["td_zpt"]  = Analysis::MakeTH2Plot("td_zpt","",zptbins,100,-5.0,5.0,"Z p_{T} [GeV/c]","Dielectron Seed Time Difference [ns]",trTH2SubMap,"timing/zpt");  
   trTH2Map["td_zeta"] = Analysis::MakeTH2Plot("td_zeta","",100,-5.0,5.0,100,-5.0,5.0,"Z #eta","Dielectron Seed Time Difference [ns]",trTH2SubMap,"timing/zeta");  
 
-  for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
+  for (UInt_t entry = 0; entry < 100000; entry++){
+    //  for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
     fInTree->GetEntry(entry);
     if ( (zeemass>76. && zeemass<106.) && hltdoubleel) { // we want di-electron z's and pass hlt
       float time_diff  = el1time-el2time;
@@ -148,18 +157,19 @@ void Analysis::TimeResPlots(){
       // electron eta categories 
       if (el1eb && el2eb) {
 	trTH1Map["tdEBEB_allpt"]       ->Fill(time_diff);
-	trTH1Map[Form("tdEBEB_%i",run)]->Fill(time_diff);
-	trTH2Map["tdEBEB_ptbins"]      ->Fill(eff_dielpt,time_diff);
+ 	trTH1Map[Form("tdEBEB_%i",run)]->Fill(time_diff);
+ 	trTH2Map["tdEBEB_ptbins"]      ->Fill(eff_dielpt,time_diff);
       }
       else if ( (el1eb && el2ee) || (el1ee && el2eb) ) {
 	trTH1Map["tdEBEE_allpt"]       ->Fill(time_diff);
-	trTH1Map[Form("tdEBEE_%i",run)]->Fill(time_diff);
-	trTH2Map["tdEBEE_ptbins"]      ->Fill(eff_dielpt,time_diff);
+	std::cout << run << std::endl;
+ 	trTH1Map[Form("tdEBEE_%i",run)]->Fill(time_diff);
+ 	trTH2Map["tdEBEE_ptbins"]      ->Fill(eff_dielpt,time_diff);
       }
       else if (el1ee && el2ee) {
 	trTH1Map["tdEEEE_allpt"]       ->Fill(time_diff);
-	trTH1Map[Form("tdEEEE_%i",run)]->Fill(time_diff);
-	trTH2Map["tdEEEE_ptbins"]      ->Fill(eff_dielpt,time_diff);
+ 	trTH1Map[Form("tdEEEE_%i",run)]->Fill(time_diff);
+ 	trTH2Map["tdEEEE_ptbins"]      ->Fill(eff_dielpt,time_diff);
       }
     
       // Now Z based plots
@@ -169,8 +179,20 @@ void Analysis::TimeResPlots(){
   }
 
   // Now project out each of the 2D plots
-  Analysis::Project2Dto1D(trTH2Map,trTH2SubMap,trTH1Map,trTH1SubMap);
-  
+  Analysis::Project2Dto1D(trTH2Map["td_zpt"],trTH2SubMap,trTH1Map,trTH1SubMap);
+  Analysis::Project2Dto1D(trTH2Map["td_zeta"],trTH2SubMap,trTH1Map,trTH1SubMap);
+  Analysis::Project2Dto1D(trTH2Map["tdEBEB_ptbins"],trTH2SubMap,trTH1Map,trTH1SubMap);
+  Analysis::Project2Dto1D(trTH2Map["tdEBEE_ptbins"],trTH2SubMap,trTH1Map,trTH1SubMap);
+  Analysis::Project2Dto1D(trTH2Map["tdEEEE_ptbins"],trTH2SubMap,trTH1Map,trTH1SubMap);
+
+  // Fit each timing plot to a simple gaussian
+  Analysis::FitandExtractTH1s(trTH1Map,3.0);
+
+  Analysis::MakeSubDirs(trTH1SubMap);
+  Analysis::MakeSubDirs(trTH2SubMap);
+
+  Analysis::SaveTH2s(trTH2Map,trTH2SubMap);
+  Analysis::DeleteTH2s(trTH2Map);
 
   Analysis::SaveTH1s(trTH1Map,trTH1SubMap);
   Analysis::DeleteTH1s(trTH1Map);
@@ -245,7 +267,8 @@ TH1F * Analysis::MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_
   return hist;
 }
 
-TH2F * Analysis::MakeTH2Plot(TString hname, TString htitle, Int_t nbinsx, Double_t xlow, Double_t xhigh, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir) {
+TH2F * Analysis::MakeTH2Plot(TString hname, TString htitle, Int_t nbinsx, Double_t xlow, Double_t xhigh, Int_t nbinsy, Double_t ylow, Double_t yhigh,
+			     TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir) {
   TH2F * hist = new TH2F(hname.Data(),htitle.Data(),nbinsx,xlow,xhigh,nbinsy,ylow,yhigh);
   hist->GetXaxis()->SetTitle(xtitle.Data());
   hist->GetYaxis()->SetTitle(ytitle.Data());
@@ -257,9 +280,10 @@ TH2F * Analysis::MakeTH2Plot(TString hname, TString htitle, Int_t nbinsx, Double
   return hist;
 }
 
-TH2F * Analysis::MakeTH2Plot(TString hname, TString htitle, std::vector<Double_t> vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir) {
+TH2F * Analysis::MakeTH2Plot(TString hname, TString htitle, const std::vector<Double_t> vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh,
+			     TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir) {
   // need to convert vectors into arrays per ROOT
-  Double_t * axbins = &vxbins[0]; // https://stackoverflow.com/questions/2923272/how-to-convert-vector-to-array-c
+  const Double_t * axbins = &vxbins[0]; // https://stackoverflow.com/questions/2923272/how-to-convert-vector-to-array-c
 
   TH2F * hist = new TH2F(hname.Data(),htitle.Data(),vxbins.size()-1,axbins,nbinsy,ylow,yhigh);
   hist->GetXaxis()->SetTitle(xtitle.Data());
@@ -273,23 +297,70 @@ TH2F * Analysis::MakeTH2Plot(TString hname, TString htitle, std::vector<Double_t
 }
 
 void Analysis::Project2Dto1D(TH2F *& hist2d, TStrMap & subdir2dmap, TH1Map & th1map, TStrMap & subdir1dmap){
-  
-  // First create each histogram
-  for (int i = 1; i <= hist2d->GetNbinsX(); i++){  
-    th1map[]
+  // y bins same width, x bins are variable
 
-    
-    TH1F * th1p = new TH1F("th1f","th1f",th2->GetNbinsY(),th2->GetYaxis()->GetXmin(),th2->GetYaxis()->GetXmax());
-    
-    for (int i = 0; i <= th2->GetNbinsY() + 1; i++) {
-      
-      th1p->SetBinContent(i,th2->GetBinContent(1,i)); // bin 1 with -1 to 0 in X
-      th1p->Draw();
+  TString  basename = hist2d->GetName();
+  Int_t    nybins   = hist2d->GetNbinsY();
+  Double_t ylow     = hist2d->GetYaxis()->GetXmin();
+  Double_t yhigh    = hist2d->GetYaxis()->GetXmax();
+  TString  xtitle   = hist2d->GetXaxis()->GetTitle();
+  TString  ytitle   = hist2d->GetYaxis()->GetTitle();
+
+  // loop over all x bins to project out
+  for (int i = 1; i <= hist2d->GetNbinsX(); i++){  
+    Double_t xlow  = hist2d->GetXaxis()->GetBinLowEdge(i); int ixlow  = int(xlow); 
+    Double_t xhigh = hist2d->GetXaxis()->GetBinUpEdge(i);  int ixhigh = int(xhigh); 
+
+    TString histname = "";
+    // First create each histogram
+    if (!basename.Contains("zeta",TString::kExact)) { //ugh
+      histname = Form("%s_%i-%i",basename.Data(),ixlow,ixhigh);
+      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %i-%i",ytitle.Data(),xtitle.Data(),ixlow,ixhigh),
+						      "Events",subdir1dmap,subdir2dmap[basename.Data()]);
+    }
+    else {
+      histname = Form("%s_%3.1f-%3.1f",basename.Data(),xlow,xhigh);
+      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %3.1f-%3.1f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
+						      "Events",subdir1dmap,subdir2dmap[basename.Data()]);
     }
 
+    // then fill corresponding bins from y
+    for (int j = 0; j <= hist2d->GetNbinsY() + 1; j++) {
+      th1map[histname.Data()]->SetBinContent(j,hist2d->GetBinContent(i,j));
+      th1map[histname.Data()]->SetBinError(j,hist2d->GetBinError(i,j)); 
+    }
+  }
+}
+
+void Analysis::FitandExtractTH1s(TH1Map & th1map, Float_t fitrange, const std::vector<Double_t> bins){
+
+  TH1F * outhist = new TH1F;
+
+  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); mapiter++) { 
+    TF1* gausfit = new TF1("gausfit","gaus",-fitrange,fitrange);
+    (*mapiter).second->Fit("gausfit","R");
+
+    Double_t mean  = gausfit->GetParameter("Mean");
+    Double_t sigma = gausfit->GetParameter("Sigma");
+
+    delete gausfit;
   }
 
+  // write output hist to file
+  fOutFile->cd();
+  outhist->Write();
 
+  // save log/lin of each plot
+  TCanvas * canv = new TCanvas();
+  CMSLumi(canv, fLumi, "Preliminary",0);
+  canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),outhist->GetName(),fOutType.Data()));
+  
+  canv->SetLogy(1);
+  CMSLumi(canv, fLumi, "Preliminary",0);
+  canv->SaveAs(Form("%s/%s/log/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),outhist->GetName(),fOutType.Data()));
+  
+  delete canv;
+  delete outhist;
 }
 
 void Analysis::MakeSubDirs(TStrMap & subdirmap){
@@ -340,7 +411,7 @@ void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap){
     // only save as linear
     canv->SetLogy(0);
     CMSLumi(canv, fLumi, "Preliminary",0);
-    canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),fOutType.Data()));
+    canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),fOutType.Data()));
   }
 
   delete canv;
