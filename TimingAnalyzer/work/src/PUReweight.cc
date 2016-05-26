@@ -1,8 +1,8 @@
 #include "../interface/PUReweight.hh"
 
-PUReweight::PUReweight(TStrBoolMap Samples) {
+PUReweight::PUReweight() {
   // save samples for PU weighting
-  for (TStrBoolMapIter iter = Samples.begin(); iter != Samples.end(); ++iter) {
+  for (TStrBoolMapIter iter = Config::SampleMap.begin(); iter != Config::SampleMap.end(); ++iter) {
     if ((*iter).second) { // isMC == true
       fMCNames.push_back((*iter).first);
     }

@@ -16,7 +16,7 @@ typedef TH2Map::iterator TH2MapIter;
 class Analysis {
 public:
   // functions
-  Analysis(TString sample, Bool_t isMC, ColorMap colormap);
+  Analysis(TString sample, Bool_t isMC);
   ~Analysis();
   void InitTree();
   void StandardPlots();

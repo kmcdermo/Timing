@@ -4,7 +4,7 @@ inline Float_t rad2(Float_t x, Float_t y){
   return x*x + y*y;
 }
 
-Analysis::Analysis(TString sample, Bool_t isMC, ColorMap colormap) : fSample(sample), fIsMC(isMC) {
+Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC) {
   TString filename = "";
   if (fIsMC) {
     filename = Form("input/MC/%s/treewgtsum.root",fSample.Data());
@@ -29,7 +29,7 @@ Analysis::Analysis(TString sample, Bool_t isMC, ColorMap colormap) : fSample(sam
     // end getting pile-up weights
 
     fOutDir = Form("%s/MC/%s",Config::outdir.Data(),fSample.Data());
-    fColor  = colormap[fSample.Data()];
+    fColor  = Config::colorMap[fSample.Data()];
   }
   else {
     filename = Form("input/DATA/%s/tree.root",fSample.Data());
@@ -146,7 +146,7 @@ void Analysis::TimeResPlots(){
   // 2D plots for run numbers
   // read in run numbers
   ifstream input;
-  input.open("config/runs.txt",std::ios::in);
+  input.open(Form("%s",Config::runs.Data()),std::ios::in);
   Int_t runno = -1;
   IntVec runNos;
   while(input >> runno){

@@ -22,7 +22,7 @@ typedef std::vector<TPad*>    TPadVec;
 class StackPlots
 {
 public:
-  StackPlots(TStrBoolMap Samples, const ColorMap & colorMap);
+  StackPlots();
 
   void InitTH1FNamesAndSubDNames();
   void OpenInputFiles();
@@ -79,9 +79,6 @@ private:
   TString fOutDir;
   TString fOutName;
   TFile * fOutFile;
-
-  TStrMap  fSampleTitleMap;
-  ColorMap fColorMap;
 };
 
 #endif

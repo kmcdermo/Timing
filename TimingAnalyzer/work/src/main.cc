@@ -6,6 +6,49 @@
 
 #include "TROOT.h"
 
+// to do:
+// plot dump reader
+// move pt bins, eta bins to config
+// make phi bins (z and eff pt)
+
+void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
+  // set TDR Style (need to force it!)
+  tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
+  SetTDRStyle(tdrStyle);
+  gROOT->ForceStyle();
+
+  // have to do this at least once!
+  MakeOutDir(Config::outdir);
+
+  // yields 
+  yields.open(Form("%s/yields.txt",Config::outdir.Data()),std::ios_base::app);
+
+  // set sample map (use lousy demos for now)
+  if (Config::useDEG)   Config::SampleMap["doubleeg"] = false; // !isMC
+  if (Config::useDYll)  Config::SampleMap["dyll"]     = true;  //  isMC
+  if (Config::useQCD)   Config::SampleMap["qcd"]      = true;  //  isMC
+  if (Config::useGJets) Config::SampleMap["gamma"]    = true;  //  isMC
+  Config::SampleMap["demo"]   = false; // to be removed once filtered samples are finished
+  Config::SampleMap["demomc"] = true;  // to be removed once filtered samples are finished
+
+  // Color for MC Stacks
+  Config::colorMap["dyll"]   = kCyan;
+  Config::colorMap["qcd"]    = kYellow;
+  Config::colorMap["gamma"]  = kGreen;
+  Config::colorMap["demomc"] = kPink;
+
+  // define title map
+  Config::SampleTitleMap["dyll"]   = "Z #rightarrow l^{+}l^{-}";
+  Config::SampleTitleMap["qcd"]    = "QCD";
+  Config::SampleTitleMap["gamma"]  = "#gamma + Jets";
+  Config::SampleTitleMap["demomc"] = "Demo";
+}
+
+void DestroyMain(std::ofstream & yields, TStyle *& tdrStyle) {
+  yields.close();
+  delete tdrStyle;
+}
+
 int main(int argc, const char* argv[]) {
   //////////////////////////////////
   // Read in command line options //
@@ -24,13 +67,21 @@ int main(int argc, const char* argv[]) {
 	"  --do-analysis   <bool>        make analysis plots (def: %s)\n"
 	"  --do-stacks     <bool>        stack data/MC plots (def: %s)\n"
 	"  --do-demo       <bool>        demo analysis (def: %s)\n"
+	"  --use-DEG       <bool>        use doubleEG for data (def: %s)\n"
+	"  --use-DYll      <bool>        use Drell-Yan (LL+Jets) with MC (def: %s)\n"
+	"  --use-QCD       <bool>        use QCD with MC (def: %s)\n"
+	"  --use-GJets     <bool>        use Gamma+Jets with MC (def: %s)\n"
         ,
         argv[0],
         Config::outdir.Data(),
 	(Config::doPURW      ? "true" : "false"),
 	(Config::doAnalysis  ? "true" : "false"),
 	(Config::doStacks    ? "true" : "false"),
-	(Config::doDemo      ? "true" : "false")
+	(Config::doDemo      ? "true" : "false"),
+	(Config::useDEG      ? "true" : "false"),
+	(Config::useDYll     ? "true" : "false"),
+	(Config::useQCD      ? "true" : "false"),
+	(Config::useGJets    ? "true" : "false")
       );
       exit(0);
     }
@@ -39,6 +90,10 @@ int main(int argc, const char* argv[]) {
     else if (*i == "--do-analysis") { Config::doAnalysis = true; }
     else if (*i == "--do-stacks")   { Config::doStacks   = true; }
     else if (*i == "--do-demo")     { Config::doDemo     = true; Config::doAnalysis = true; }
+    else if (*i == "--use-DEG")     { Config::useDEG     = true; }
+    else if (*i == "--use-DYll")    { Config::useDYll    = true; }
+    else if (*i == "--use-QCD")     { Config::useQCD     = true; }
+    else if (*i == "--use-GJets")   { Config::useGJets   = true; }
     else    { fprintf(stderr, "Error: Unknown option/argument '%s'.\n", i->c_str()); exit(1); }
     mArgs.erase(start, ++i);
   }
@@ -47,40 +102,17 @@ int main(int argc, const char* argv[]) {
   // Initialization //
   ////////////////////
 
-  // do this at least once!
-  MakeOutDir(Config::outdir);
-
-  // yields
-  ofstream yields(Form("%s/yields.txt",Config::outdir.Data()),std::ios_base::app);
-
-  // Variables needed in all functions for plotting and the like so it is universal
-  // Color for MC Stacks
-  ColorMap colorMap;
-  colorMap["dyll"]   = kCyan;
-  colorMap["qcd"]    = kYellow;
-  colorMap["gamma"]  = kGreen;
-  colorMap["demomc"] = kPink;
-
-  ////////////////////////
-  // Set official style //
-  ////////////////////////
-
-  // set TDR Style (need to force it!)
-  TStyle * tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
-  SetTDRStyle(tdrStyle);
-  gROOT->ForceStyle();
+  // do this thing at least once!
+  ofstream yields; TStyle * tdrStyle; 
+  InitializeMain(yields,tdrStyle);
 
   /////////////////////////
   // Pile-up reweighting //
   /////////////////////////
 
   if (Config::doPURW) {
-    TStrBoolMap PUSampleMap;
-    PUSampleMap["demo"]   = false;
-    PUSampleMap["demomc"] = true;
-
     std::cout << "Calculating pile-up weights" << std::endl;
-    PUReweight reweight(PUSampleMap);
+    PUReweight reweight;
     reweight.GetPUWeights();
   }
   else {
@@ -90,15 +122,12 @@ int main(int argc, const char* argv[]) {
   ///////////////////
   // Main Analysis //
   ///////////////////
-  TStrBoolMap SampleMap;
-  SampleMap["demo"]   = false;
-  SampleMap["demomc"] = true;
-    
+
   if (Config::doAnalysis) {
-    for (TStrBoolMapIter mapiter = SampleMap.begin(); mapiter != SampleMap.end(); ++mapiter) {
-      Analysis analysis((*mapiter).first,(*mapiter).second,colorMap);
+    for (TStrBoolMapIter mapiter = Config::SampleMap.begin(); mapiter != Config::SampleMap.end(); ++mapiter) {
+      Analysis analysis((*mapiter).first,(*mapiter).second);
       analysis.StandardPlots();
-      analysis.TimeResPlots();
+      //      analysis.TimeResPlots();
     }
   }
   else {
@@ -110,7 +139,7 @@ int main(int argc, const char* argv[]) {
   ///////////////////
 
   if (Config::doStacks) {
-    StackPlots Stacker(SampleMap,colorMap);
+    StackPlots Stacker;
     Stacker.DoStacks(yields);
   }
   else {
@@ -118,6 +147,5 @@ int main(int argc, const char* argv[]) {
   }
 
   // end of the line
-  yields.close(); 
-  delete tdrStyle; 
+  DestroyMain(yields,tdrStyle);
 }

@@ -8,7 +8,7 @@ class PUReweight
 {
 public:
 
-  PUReweight(TStrBoolMap Samples);
+  PUReweight();
   void GetPUWeights();
   ~PUReweight();
 

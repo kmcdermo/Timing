@@ -1,8 +1,8 @@
 #include "../interface/StackPlots.hh"
 
-StackPlots::StackPlots(TStrBoolMap Samples, const ColorMap & colorMap) : fColorMap(colorMap) {
+StackPlots::StackPlots() {
   // input data members
-  for (TStrBoolMapIter iter = Samples.begin(); iter != Samples.end(); ++iter) {
+  for (TStrBoolMapIter iter = Config::SampleMap.begin(); iter != Config::SampleMap.end(); ++iter) {
     if ((*iter).second) { // isMC == true
       fMCNames.push_back((*iter).first);
     }
@@ -19,12 +19,6 @@ StackPlots::StackPlots(TStrBoolMap Samples, const ColorMap & colorMap) : fColorM
   fOutDir = Form("%s/stackedplots",Config::outdir.Data()); // where to put output stack plots 
   MakeOutDir(fOutDir); // make output directory 
   fOutFile = new TFile(Form("%s/stackplots_canvases.root",fOutDir.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
-
-  // define title map
-  fSampleTitleMap["dyll"]   = "Z #rightarrow l^{+}l^{-}";
-  fSampleTitleMap["qcd"]    = "QCD";
-  fSampleTitleMap["gamma"]  = "#gamma + Jets";
-  fSampleTitleMap["demomc"] = "Demo";
 
   // have to copy by hand plots to use unfortunately
   StackPlots::InitTH1FNamesAndSubDNames();
@@ -119,7 +113,7 @@ void StackPlots::MakeStackPlots(std::ofstream & yields){
       }
       //  just add input to stacks
       fOutMCTH1FStacks[th1f]->Add(fInMCTH1FHists[th1f][mc]);
-      fTH1FLegends[th1f]->AddEntry(fInMCTH1FHists[th1f][mc],fSampleTitleMap[fMCNames[mc]],"f");
+      fTH1FLegends[th1f]->AddEntry(fInMCTH1FHists[th1f][mc],Config::SampleTitleMap[fMCNames[mc]],"f");
 
       if (fTH1FNames[th1f].Contains("nvtx",TString::kExact)) { // save individual contributions for yields for MC
 	yields << fMCNames[mc].Data() << ": " << fInMCTH1FHists[th1f][mc]->Integral() << std::endl;
@@ -355,7 +349,7 @@ void StackPlots::InitInputPlots() {
     for (Int_t mc = 0; mc < fNMC; mc++) { // init mc double hists
       fInMCTH1FHists[th1f][mc] = (TH1F*)fMCFiles[mc]->Get(Form("%s",fTH1FNames[th1f].Data()));
       CheckValidTH1F(fInMCTH1FHists[th1f][mc],fTH1FNames[th1f],fMCFiles[mc]->GetName());
-      fInMCTH1FHists[th1f][mc]->SetFillColor(fColorMap[fMCNames[mc]]);
+      fInMCTH1FHists[th1f][mc]->SetFillColor(Config::colorMap[fMCNames[mc]]);
       fInMCTH1FHists[th1f][mc]->SetLineColor(kBlack);
     }
   }
