@@ -408,7 +408,7 @@ void StackPlots::InitTH1FNamesAndSubDNames(){
   // will use the integral of nvtx to derive total yields as no additional cuts are placed on ntvx --> key on name for yields
   
   std::ifstream plotstoread;
-  plotstoread.open(Form("%s/plotnames.txt",Config::outdir.Data()),std::ios::in);
+  plotstoread.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios::in);
 
   TString plotname; TString subdir;
 

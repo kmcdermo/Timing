@@ -11,16 +11,29 @@ typedef std::map<TString,TString> TStrMap;
 typedef std::map<TString,Bool_t>  TStrBoolMap;
 
 namespace Config{
+  // general config
   constexpr    Float_t PI = 3.14159265358979323846;
 
+  // output config
   constexpr    Float_t lumi      = 2.301;
   static const TString outtype   = "png";
   static const TString extraText = "Preliminary";
-  constexpr    Int_t   nvtxbins  = 50;
+
+  // pu config
+  constexpr    Int_t   nvtxbins   = 50;
+  static const TString pusubdir   = "purw";
+  static const TString pufilename = "PURW.root";
+  static const TString puplotname = "nvtx_dataOverMC";
+
+  // selection config
   constexpr    Float_t zlow      = 76.;
   constexpr    Float_t zup       = 106.;
-  static const TString runs      = "config/runs2015D.txt";
 
+  // data config
+  static const TString plotdumpname = "plotnames.txt";
+  static const TString runs         = "config/runs2015D.txt";
+
+  // if in demo mode
   constexpr    UInt_t  demoNum   = 1000;
 
   // set at command line and in main

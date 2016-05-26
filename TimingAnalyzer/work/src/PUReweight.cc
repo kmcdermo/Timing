@@ -24,15 +24,15 @@ PUReweight::PUReweight() {
   fOutMCNvtx->Sumw2();
 
   // Intialize Ratio Hist
-  fOutDataOverMCNvtx = new TH1F("nvtx_dataOverMC","",Config::nvtxbins,0.,Double_t(Config::nvtxbins));
+  fOutDataOverMCNvtx = new TH1F(Form("%s",Config::puplotname.Data()),"",Config::nvtxbins,0.,Double_t(Config::nvtxbins));
   fOutDataOverMCNvtx->Sumw2();
 
-  // Make PURW outdirs
-  TStrMap subdirmap;
-  subdirmap["purw"] = "purw";
-  MakeSubDirs(subdirmap,Config::outdir);
-  fOutDir  = Form("%s/%s",Config::outdir.Data(),subdirmap["purw"].Data());
-  fOutFile = new TFile(Form("%s/PURW.root",fOutDir.Data()),"RECREATE");
+  // Make PURW outdirs --> no need to use MakeSubDirs
+  fOutDir  = Form("%s/%s",Config::outdir.Data(),Config::pusubdir.Data());
+  MakeOutDir(fOutDir);
+  MakeOutDir(fOutDir+"/log");
+  MakeOutDir(fOutDir+"/lin");
+  fOutFile = new TFile(Form("%s/%s",fOutDir.Data(),Config::pufilename.Data()),"RECREATE");
 }
 
 PUReweight::~PUReweight() {

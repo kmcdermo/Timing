@@ -12,13 +12,12 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC) {
     CheckValidFile(fInFile,filename);
     
     // Get pile-up weights
-    TString purwfname = Form("%s/purw/PURW.root",Config::outdir.Data());   
+    TString purwfname = Form("%s/%s/%s",Config::outdir.Data(),Config::pusubdir.Data(),Config::pufilename.Data());   
     TFile * purwfile  = TFile::Open(purwfname.Data());
     CheckValidFile(purwfile,purwfname);
     
-    TString purwpname = "nvtx_dataOverMC";
-    TH1F *  purwplot  = (TH1F*)purwfile->Get(purwpname.Data());
-    CheckValidTH1F(purwplot,purwpname,purwfname);
+    TH1F * purwplot = (TH1F*)purwfile->Get(Config::puplotname.Data());
+    CheckValidTH1F(purwplot,Config::puplotname,purwfname);
     
     for (Int_t i = 1; i <= purwplot->GetNbinsX(); i++){
       fPUweights.push_back(purwplot->GetBinContent(i));
@@ -50,7 +49,7 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC) {
   fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
   
   // dump th1 names and subdirs
-  if (!fIsMC) fTH1Dump.open(Form("%s/plotnames.txt",Config::outdir.Data()),std::ios_base::trunc); // do this once, and just do it for data
+  if (!fIsMC) fTH1Dump.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios_base::trunc); // do this once, and just do it for data
 }
 
 Analysis::~Analysis(){
