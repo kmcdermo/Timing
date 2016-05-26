@@ -14,7 +14,8 @@ int main(){
   TString outdir  = "timeres0";
   TString outtype = "png";
   const Float_t lumi = 2.301; // brilcalc lumi --normtag /afs/cern.ch/user/l/lumipro/public/normtag_file/moriond16_normtag.json -i rereco2015D.txt -u /fb
-
+  TString extratext = "Preliminary";
+  
   // to do:
   // mc vs data stacking
   // mc vs data output in histos
@@ -23,7 +24,7 @@ int main(){
   SampleMap["demo"] = false;
   
   for (TStrBoolMapIter mapiter = SampleMap.begin(); mapiter != SampleMap.end(); ++mapiter) {
-    Analysis analysis((*mapiter).first,(*mapiter).second,outdir,outtype,lumi);
+    Analysis analysis((*mapiter).first,(*mapiter).second,outdir,outtype,lumi,extratext);
     analysis.TimeResPlots();
   }
   

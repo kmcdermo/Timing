@@ -9,6 +9,7 @@
 #include "TStyle.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TF1.h"
 
 #include <map>
 #include <vector>
@@ -25,21 +26,18 @@ typedef TStrMap::iterator TStrMapIter;
 class Analysis {
 public:
   // functions
-  Analysis(TString sample, bool isMC, TString outdir, TString outtype, Float_t lumi);
+  Analysis(TString sample, bool isMC, TString outdir, TString outtype, Float_t lumi, TString extratext);
   ~Analysis();
   void InitTree();
   void StandardPlots();
   void TimeResPlots();
   void TriggerEffs();
-  void ComputeRatioPlot(const TH1F * numer, const TH1F * denom, TH1F *& ratioPlot);
-  TH1F * MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
-  TH2F * MakeTH2Plot(TString hname, TString htitle, Int_t nbinsx, Double_t xlow, Double_t xhigh, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
-  TH2F * MakeTH2Plot(TString hname, TString htitle, const std::vector<Double_t> vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
   void Project2Dto1D(TH2F *& hist2d, TStrMap & subdir2dmap, TH1Map & th1map, TStrMap & subdir1dmap);
-  void FitandExtractTH1s(TH1Map & th1map, TString name, TString xtitle, const std::vector<Double_t> vxbins, Float_t fitrange, TString subdir);
-  void FitandExtractTH1s(TH1Map & th1map, TStrMap & subdirmap, Float_t fitrange, const std::vector<Double_t>);
-  void MakeSubDirs(TStrMap & subdirmap);
+  void ProduceMeanSigma(TH1Map & th1map, TString name, TString xtitle, const std::vector<Double_t> vxbins, Float_t fitrange, TString subdir);
+  TH1F * MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
+  TH2F * MakeTH2Plot(TString hname, TString htitle, const std::vector<Double_t> vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
   void SaveTH1s(TH1Map & th1map, TStrMap & subdirmap);
+  void SaveTH1andFit(TH1F * hist, TString subdir, TF1 * fit);
   void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
   void DeleteTH1s(TH1Map & th1map);
   void DeleteTH2s(TH2Map & th2map);
@@ -59,6 +57,7 @@ private:
   // CMS demands this...
   TStyle* fTDRStyle;
   Float_t fLumi;
+  TString fExtraText;
 
 public:
   // Declaration of leaf types
@@ -105,6 +104,7 @@ public:
   Float_t         genel2pt;
   Float_t         genel2eta;
   Float_t         genel2phi;
+  Float_t         wgtsum;
 
   // List of branches
   TBranch        *b_event;   //!
@@ -150,6 +150,7 @@ public:
   TBranch        *b_genel2pt;   //!
   TBranch        *b_genel2eta;   //!
   TBranch        *b_genel2phi;   //!
+  TBranch        *b_wgtsum;   //!
 };
 
 #endif

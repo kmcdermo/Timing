@@ -2,7 +2,6 @@
 #include "../interface/Common.hh"
 
 #include "TCanvas.h"
-#include "TF1.h"
 
 #include <iostream>
 #include <fstream>
@@ -11,12 +10,12 @@ inline float rad2(float x, float y){
   return x*x + y*y;
 }
 
-Analysis::Analysis(TString sample, bool isMC, TString outdir, TString outtype, Float_t lumi) : 
-  fSample(sample), fIsMC(isMC), fOutType(outtype), fLumi(lumi) {
+Analysis::Analysis(TString sample, bool isMC, TString outdir, TString outtype, Float_t lumi, TString extratext) : 
+  fSample(sample), fIsMC(isMC), fOutType(outtype), fLumi(lumi), fExtraText(extratext) {
   
   if (isMC) {
     fOutDir = Form("%s/MC/%s",outdir.Data(),fSample.Data());
-    fInFile = TFile::Open(Form("input/MC/%s/tree.root",fSample.Data()));
+    fInFile = TFile::Open(Form("input/MC/%s/treewgtsum.root",fSample.Data()));
   }
   else {
     fOutDir = Form("%s/DATA/%s",outdir.Data(),fSample.Data());
@@ -62,28 +61,32 @@ void Analysis::StandardPlots(){
   trTH1Map["el2phi"]     = Analysis::MakeTH1Plot("el2phi","",100,-3.2,3.2,"Subleading Electron #phi","Events",trTH1SubMap,"standard");
   trTH1Map["eff_dielpt"] = Analysis::MakeTH1Plot("eff_dielpt","",100,0.,250.,"Effective Dielectron p_{T} [GeV/c]","Events",trTH1SubMap,"standard");
 
-  Analysis::MakeSubDirs(trTH1SubMap);
+  MakeSubDirs(trTH1SubMap,fOutDir);
 
   for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
     fInTree->GetEntry(entry);
     if (zmass>76. && zmass<106.) { // extra selection over skimmed samples
-      // standard "validation" plots
-      trTH1Map["zmass"]->Fill(zmass);
-      trTH1Map["zpt"]->Fill(zpt);
-      trTH1Map["zeta"]->Fill(zeta);
+      float weight = -1.;
+      if   (fIsMC) {weight = (xsec * fLumi * wgt / wgtsum);}
+      else         {weight = 1.0;}
 
-      trTH1Map["timediff"]->Fill(el1time-el2time);
-      trTH1Map["el1time"]->Fill(el1time);
-      trTH1Map["el1pt"]->Fill(el1pt);
-      trTH1Map["el1eta"]->Fill(el1eta);
-      trTH1Map["el1phi"]->Fill(el1phi);
-      trTH1Map["el2time"]->Fill(el2time);
-      trTH1Map["el2pt"]->Fill(el2pt);
-      trTH1Map["el2eta"]->Fill(el2eta);
-      trTH1Map["el2phi"]->Fill(el2phi); 
+      // standard "validation" plots
+      trTH1Map["zmass"]->Fill(zmass,weight);
+      trTH1Map["zpt"]->Fill(zpt,weight);
+      trTH1Map["zeta"]->Fill(zeta,weight);
+
+      trTH1Map["timediff"]->Fill(el1time-el2time,weight);
+      trTH1Map["el1time"]->Fill(el1time,weight);
+      trTH1Map["el1pt"]->Fill(el1pt,weight);
+      trTH1Map["el1eta"]->Fill(el1eta,weight);
+      trTH1Map["el1phi"]->Fill(el1phi,weight);
+      trTH1Map["el2time"]->Fill(el2time,weight);
+      trTH1Map["el2pt"]->Fill(el2pt,weight);
+      trTH1Map["el2eta"]->Fill(el2eta,weight);
+      trTH1Map["el2phi"]->Fill(el2phi,weight); 
 
       float eff_dielpt = el1pt*el2pt/std::sqrt(rad2(el1pt,el2pt));
-      trTH1Map["eff_dielpt"]->Fill(eff_dielpt);
+      trTH1Map["eff_dielpt"]->Fill(eff_dielpt,weight);
     }
   }
 
@@ -122,7 +125,7 @@ void Analysis::TimeResPlots(){
   // 2D plots for run numbers
   // read in run numbers
   ifstream input;
-  input.open("txt/runs.txt",std::ios::in);
+  input.open("config/runs.txt",std::ios::in);
   int runno = -1;
   std::vector<int> runNos;
   while(input >> runno){
@@ -149,6 +152,10 @@ void Analysis::TimeResPlots(){
   for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
     fInTree->GetEntry(entry);
     if (zmass>76. && zmass<106.) { // extra selection over skims
+      float weight = -1.;
+      if   (fIsMC) {weight = (xsec * fLumi * wgt / wgtsum);}
+      else         {weight = 1.0;}
+
       float time_diff  = el1time-el2time;
       float eff_dielpt = el1pt*el2pt/std::sqrt(rad2(el1pt,el2pt));
 
@@ -171,50 +178,52 @@ void Analysis::TimeResPlots(){
 
       // electron eta categories 
       if (el1eb && el2eb) {
-	inclu1DMap["tdEBEB_inclu"]->Fill(time_diff);
- 	effpt2DMap["tdEBEB_effpt"]->Fill(eff_dielpt,time_diff);
-	if (!fIsMC) {runs2DMap["tdEBEB_runs"]->Fill(run,time_diff);}
+	inclu1DMap["tdEBEB_inclu"]->Fill(time_diff,weight);
+ 	effpt2DMap["tdEBEB_effpt"]->Fill(eff_dielpt,time_diff,weight);
+	if (!fIsMC) {runs2DMap["tdEBEB_runs"]->Fill(run,time_diff,weight);}
       }
       else if ( (el1eb && el2ee) || (el1ee && el2eb) ) {
-	inclu1DMap["tdEBEE_inclu"]->Fill(time_diff);
- 	effpt2DMap["tdEBEE_effpt"]->Fill(eff_dielpt,time_diff);
-	if (!fIsMC) {runs2DMap["tdEBEE_runs"]->Fill(run,time_diff);}
+	inclu1DMap["tdEBEE_inclu"]->Fill(time_diff,weight);
+ 	effpt2DMap["tdEBEE_effpt"]->Fill(eff_dielpt,time_diff,weight);
+	if (!fIsMC) {runs2DMap["tdEBEE_runs"]->Fill(run,time_diff,weight);}
       }
       else if (el1ee && el2ee) {
-	inclu1DMap["tdEEEE_inclu"]->Fill(time_diff);
- 	effpt2DMap["tdEEEE_effpt"]->Fill(eff_dielpt,time_diff);
-	if (!fIsMC) {runs2DMap["tdEEEE_runs"]->Fill(run,time_diff);}
+	inclu1DMap["tdEEEE_inclu"]->Fill(time_diff,weight);
+ 	effpt2DMap["tdEEEE_effpt"]->Fill(eff_dielpt,time_diff,weight);
+	if (!fIsMC) {runs2DMap["tdEEEE_runs"]->Fill(run,time_diff,weight);}
       }
     
       // Now Z based plots
-      z2DMap["td_zpt"]->Fill(zpt,time_diff);
-      z2DMap["td_zeta"]->Fill(zeta,time_diff);
+      z2DMap["td_zpt"]->Fill(zpt,time_diff,weight);
+      z2DMap["td_zeta"]->Fill(zeta,time_diff,weight);
     }
   }
 
   ////////////////////////////////////
   // Do inclusive "global" plots first
-  Analysis::MakeSubDirs(inclu1DSubMap);
+  MakeSubDirs(inclu1DSubMap,fOutDir);
   Analysis::SaveTH1s(inclu1DMap,inclu1DSubMap);
   Analysis::DeleteTH1s(inclu1DMap);
   ////////////////////////////////////
 
+  ////////////////////////////////////////////////////////
+  // ProduceMeanSigma implicitly saves undlerlying TH1 //
+  ///////////////////////////////////////////////////////
+
   ////////////////////////////////////
   // Do z plots second
-  Analysis::MakeSubDirs(z2DSubMap);
+  MakeSubDirs(z2DSubMap,fOutDir);
   Analysis::SaveTH2s(z2DMap,z2DSubMap);
 
   // zpt
   TH1Map zpt1DMap;  TStrMap zpt1DSubMap;
   Analysis::Project2Dto1D(z2DMap["td_zpt"],z2DSubMap,zpt1DMap,zpt1DSubMap);
-  Analysis::SaveTH1s(zpt1DMap,zpt1DSubMap);
-  Analysis::FitandExtractTH1s(zpt1DMap,"td_zpt","Z p_{T} [GeV/c]",zptbins,fitrange,z2DSubMap["td_zpt"]);
+  Analysis::ProduceMeanSigma(zpt1DMap,"td_zpt","Z p_{T} [GeV/c]",zptbins,fitrange,z2DSubMap["td_zpt"]);
 
   // zeta
   TH1Map zeta1DMap;  TStrMap zeta1DSubMap;
   Analysis::Project2Dto1D(z2DMap["td_zeta"],z2DSubMap,zeta1DMap,zeta1DSubMap);
-  Analysis::SaveTH1s(zeta1DMap,zeta1DSubMap);
-  Analysis::FitandExtractTH1s(zeta1DMap,"td_zeta","Z #eta",zetabins,fitrange,z2DSubMap["td_zeta"]);
+  Analysis::ProduceMeanSigma(zeta1DMap,"td_zeta","Z #eta",zetabins,fitrange,z2DSubMap["td_zeta"]);
 
   // Delete z's
   Analysis::DeleteTH2s(z2DMap);
@@ -224,28 +233,25 @@ void Analysis::TimeResPlots(){
 
   ////////////////////////////////////
   // Do effective electron pt plots next
-  Analysis::MakeSubDirs(effpt2DSubMap);
+  MakeSubDirs(effpt2DSubMap,fOutDir);
   Analysis::SaveTH2s(effpt2DMap,effpt2DSubMap);
 
   // EBEB
   TH1Map effptEBEB1DMap;  TStrMap effptEBEB1DSubMap;
   Analysis::Project2Dto1D(effpt2DMap["tdEBEB_effpt"],effpt2DSubMap,effptEBEB1DMap,effptEBEB1DSubMap);
-  Analysis::SaveTH1s(effptEBEB1DMap,effptEBEB1DSubMap);
-  Analysis::FitandExtractTH1s(effptEBEB1DMap,"tdEBEB_effpt","Effective Dielectron p_{T} [GeV/c] (EBEB)",effptbins,fitrange,effpt2DSubMap["tdEBEB_effpt"]);
+  Analysis::ProduceMeanSigma(effptEBEB1DMap,"tdEBEB_effpt","Effective Dielectron p_{T} [GeV/c] (EBEB)",effptbins,fitrange,effpt2DSubMap["tdEBEB_effpt"]);
 
   // EBEE
   TH1Map effptEBEE1DMap;  TStrMap effptEBEE1DSubMap;
   Analysis::Project2Dto1D(effpt2DMap["tdEBEE_effpt"],effpt2DSubMap,effptEBEE1DMap,effptEBEE1DSubMap);
-  Analysis::SaveTH1s(effptEBEE1DMap,effptEBEE1DSubMap);
-  Analysis::FitandExtractTH1s(effptEBEE1DMap,"tdEBEE_effpt","Effective Dielectron p_{T} [GeV/c] (EBEE)",effptbins,fitrange,effpt2DSubMap["tdEBEE_effpt"]);
+  Analysis::ProduceMeanSigma(effptEBEE1DMap,"tdEBEE_effpt","Effective Dielectron p_{T} [GeV/c] (EBEE)",effptbins,fitrange,effpt2DSubMap["tdEBEE_effpt"]);
 
   // EEEE
   TH1Map effptEEEE1DMap;  TStrMap effptEEEE1DSubMap;
   Analysis::Project2Dto1D(effpt2DMap["tdEEEE_effpt"],effpt2DSubMap,effptEEEE1DMap,effptEEEE1DSubMap);
-  Analysis::SaveTH1s(effptEEEE1DMap,effptEEEE1DSubMap);
-  Analysis::FitandExtractTH1s(effptEEEE1DMap,"tdEEEE_effpt","Effective Dielectron p_{T} [GeV/c] (EEEE)",effptbins,fitrange,effpt2DSubMap["tdEEEE_effpt"]);
+  Analysis::ProduceMeanSigma(effptEEEE1DMap,"tdEEEE_effpt","Effective Dielectron p_{T} [GeV/c] (EEEE)",effptbins,fitrange,effpt2DSubMap["tdEEEE_effpt"]);
 
-  // Delete effective electrons
+  // Delete effective electron pt plots
   Analysis::DeleteTH2s(effpt2DMap);
   Analysis::DeleteTH1s(effptEBEB1DMap);
   Analysis::DeleteTH1s(effptEBEE1DMap);
@@ -255,28 +261,25 @@ void Analysis::TimeResPlots(){
   ////////////////////////////////////
   // Do run plots last
   if (!fIsMC) {
-    Analysis::MakeSubDirs(runs2DSubMap);
+    MakeSubDirs(runs2DSubMap,fOutDir);
     Analysis::SaveTH2s(runs2DMap,runs2DSubMap);
 
     // EBEB
     TH1Map runsEBEB1DMap;  TStrMap runsEBEB1DSubMap;
     Analysis::Project2Dto1D(runs2DMap["tdEBEB_runs"],runs2DSubMap,runsEBEB1DMap,runsEBEB1DSubMap);
-    Analysis::SaveTH1s(runsEBEB1DMap,runsEBEB1DSubMap);
-    Analysis::FitandExtractTH1s(runsEBEB1DMap,"tdEBEB_runs","Run Number (EBEB)",dRunNos,fitrange,runs2DSubMap["tdEBEB_runs"]);
+    Analysis::ProduceMeanSigma(runsEBEB1DMap,"tdEBEB_runs","Run Number (EBEB)",dRunNos,fitrange,runs2DSubMap["tdEBEB_runs"]);
 
     // EBEE
     TH1Map runsEBEE1DMap;  TStrMap runsEBEE1DSubMap;
     Analysis::Project2Dto1D(runs2DMap["tdEBEE_runs"],runs2DSubMap,runsEBEE1DMap,runsEBEE1DSubMap);
-    Analysis::SaveTH1s(runsEBEE1DMap,runsEBEE1DSubMap);
-    Analysis::FitandExtractTH1s(runsEBEE1DMap,"tdEBEE_runs","Run Number (EBEE)",dRunNos,fitrange,runs2DSubMap["tdEBEE_runs"]);
+    Analysis::ProduceMeanSigma(runsEBEE1DMap,"tdEBEE_runs","Run Number (EBEE)",dRunNos,fitrange,runs2DSubMap["tdEBEE_runs"]);
 
     // EEEE
     TH1Map runsEEEE1DMap;  TStrMap runsEEEE1DSubMap;
     Analysis::Project2Dto1D(runs2DMap["tdEEEE_runs"],runs2DSubMap,runsEEEE1DMap,runsEEEE1DSubMap);
-    Analysis::SaveTH1s(runsEEEE1DMap,runsEEEE1DSubMap);
-    Analysis::FitandExtractTH1s(runsEEEE1DMap,"tdEEEE_runs","Run Number (EEEE)",dRunNos,fitrange,runs2DSubMap["tdEEEE_runs"]);
+    Analysis::ProduceMeanSigma(runsEEEE1DMap,"tdEEEE_runs","Run Number (EEEE)",dRunNos,fitrange,runs2DSubMap["tdEEEE_runs"]);
 
-    // Delete effective electrons
+    // Delete run plots
     Analysis::DeleteTH2s(runs2DMap);
     Analysis::DeleteTH1s(runsEBEB1DMap);
     Analysis::DeleteTH1s(runsEBEE1DMap);
@@ -300,23 +303,27 @@ void Analysis::TriggerEffs(){
   trTH1Map["hltdoubleel_el1pt"] = Analysis::MakeTH1Plot("hltdoubleel_el1pt","Double Electron Trigger Efficiency vs. p_{T}",nBinsDEEpt,xLowDEEpt,xHighDEEpt,"Leading Electron p_{T} [GeV/c]","Efficiency",trTH1SubMap,"trigger_zoomest");
   trTH1Map["hltdoubleel_el2pt"] = Analysis::MakeTH1Plot("hltdoubleel_el2pt","Double Electron Trigger Efficiency vs. p_{T}",nBinsDEEpt,xLowDEEpt,xHighDEEpt,"Subleading Electron p_{T} [GeV/c]","Efficiency",trTH1SubMap,"trigger_zoomest");
 
-  Analysis::MakeSubDirs(trTH1SubMap);
+  MakeSubDirs(trTH1SubMap,fOutDir);
 
   for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
     fInTree->GetEntry(entry);
     if ( (zmass>76. && zmass<106.) ){ // we want di-electron z's
+      float weight = -1.;
+      if   (fIsMC) {weight = (xsec * fLumi * wgt / wgtsum);}
+      else         {weight = 1.0;}
+
       if ( hltdoubleel ) { // fill numer if passed
-	n_hltdoubleel_el1pt->Fill(el1pt);
-	n_hltdoubleel_el2pt->Fill(el2pt);
+	n_hltdoubleel_el1pt->Fill(el1pt,weight);
+	n_hltdoubleel_el2pt->Fill(el2pt,weight);
       }
       // always fill denom
-      d_hltdoubleel_el1pt->Fill(el1pt);
-      d_hltdoubleel_el2pt->Fill(el2pt);
+      d_hltdoubleel_el1pt->Fill(el1pt,weight);
+      d_hltdoubleel_el2pt->Fill(el2pt,weight);
     }
   }
   
-  Analysis::ComputeRatioPlot(n_hltdoubleel_el1pt,d_hltdoubleel_el1pt,trTH1Map["hltdoubleel_el1pt"]);
-  Analysis::ComputeRatioPlot(n_hltdoubleel_el2pt,d_hltdoubleel_el2pt,trTH1Map["hltdoubleel_el2pt"]);
+  ComputeRatioPlot(n_hltdoubleel_el1pt,d_hltdoubleel_el1pt,trTH1Map["hltdoubleel_el1pt"]);
+  ComputeRatioPlot(n_hltdoubleel_el2pt,d_hltdoubleel_el2pt,trTH1Map["hltdoubleel_el2pt"]);
   Analysis::SaveTH1s(trTH1Map,trTH1SubMap);
   Analysis::DeleteTH1s(trTH1Map);
 
@@ -327,61 +334,6 @@ void Analysis::TriggerEffs(){
   delete d_hltdoubleel_el2pt;
 }
 
-void Analysis::ComputeRatioPlot(const TH1F * numer, const TH1F * denom, TH1F *& ratioPlot){
-  Double_t value = 0;
-  Double_t err   = 0;
-  for (Int_t bin = 1; bin <= ratioPlot->GetNbinsX(); bin++){
-    if (denom->GetBinContent(bin)!=0){
-      value = numer->GetBinContent(bin) / denom->GetBinContent(bin); 
-      // Binonimal errors 
-      err = sqrt( value*(1.0-value)/denom->GetBinContent(bin) );
-      //Fill plots with correct values
-      ratioPlot->SetBinContent(bin,value);
-      ratioPlot->SetBinError(bin,err);
-    }
-  }
-}
-
-TH1F * Analysis::MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir) {
-  TH1F * hist = new TH1F(hname.Data(),htitle.Data(),nbins,xlow,xhigh);
-  hist->GetXaxis()->SetTitle(xtitle.Data());
-  hist->GetYaxis()->SetTitle(ytitle.Data());
-  hist->Sumw2();
-
-  // cheat a bit and set subdir map here
-  subdirmap[hname] = subdir;
-  
-  return hist;
-}
-
-TH2F * Analysis::MakeTH2Plot(TString hname, TString htitle, Int_t nbinsx, Double_t xlow, Double_t xhigh, Int_t nbinsy, Double_t ylow, Double_t yhigh,
-			     TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir) {
-  TH2F * hist = new TH2F(hname.Data(),htitle.Data(),nbinsx,xlow,xhigh,nbinsy,ylow,yhigh);
-  hist->GetXaxis()->SetTitle(xtitle.Data());
-  hist->GetYaxis()->SetTitle(ytitle.Data());
-  hist->Sumw2();
-
-  // cheat a bit and set subdir map here
-  subdirmap[hname] = subdir;
-  
-  return hist;
-}
-
-TH2F * Analysis::MakeTH2Plot(TString hname, TString htitle, const std::vector<Double_t> vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh,
-			     TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir) {
-  // need to convert vectors into arrays per ROOT
-  const Double_t * axbins = &vxbins[0]; // https://stackoverflow.com/questions/2923272/how-to-convert-vector-to-array-c
-
-  TH2F * hist = new TH2F(hname.Data(),htitle.Data(),vxbins.size()-1,axbins,nbinsy,ylow,yhigh);
-  hist->GetXaxis()->SetTitle(xtitle.Data());
-  hist->GetYaxis()->SetTitle(ytitle.Data());
-  hist->Sumw2();
-
-  // cheat a bit and set subdir map here
-  subdirmap[hname] = subdir;
-  
-  return hist;
-}
 
 void Analysis::Project2Dto1D(TH2F *& hist2d, TStrMap & subdir2dmap, TH1Map & th1map, TStrMap & subdir1dmap){
   // y bins same width, x bins are variable
@@ -441,7 +393,7 @@ void Analysis::Project2Dto1D(TH2F *& hist2d, TStrMap & subdir2dmap, TH1Map & th1
   }
 }
 
-void Analysis::FitandExtractTH1s(TH1Map & th1map, TString name, TString xtitle, const std::vector<Double_t> vxbins, Float_t fitrange, TString subdir){
+void Analysis::ProduceMeanSigma(TH1Map & th1map, TString name, TString xtitle, const std::vector<Double_t> vxbins, Float_t fitrange, TString subdir){
   // need to convert bins into array
   const Double_t * axbins = &vxbins[0]; // https://stackoverflow.com/questions/2923272/how-to-convert-vector-to-array-c
 
@@ -458,6 +410,8 @@ void Analysis::FitandExtractTH1s(TH1Map & th1map, TString name, TString xtitle, 
   for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); mapiter++) { 
     TF1* gausfit = new TF1("gausfit","gaus",-fitrange,fitrange);
     (*mapiter).second->Fit("gausfit","R");
+
+    Analysis::SaveTH1andFit((*mapiter).second,subdir,gausfit);
 
     Int_t imean  = gausfit->GetParNumber("Mean");
     Int_t isigma = gausfit->GetParNumber("Sigma");
@@ -479,10 +433,12 @@ void Analysis::FitandExtractTH1s(TH1Map & th1map, TString name, TString xtitle, 
 
   // save log/lin of each plot
   TCanvas * canv = new TCanvas();
-  CMSLumi(canv, fLumi, "Preliminary",0);
+  CMSLumi(canv,fLumi,fExtraText.Data(),0);
   canv->cd();
+
   outhist_mean->Draw("PE");
   canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_mean->GetName(),fOutType.Data()));
+
   outhist_sigma->Draw("PE");
   canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_sigma->GetName(),fOutType.Data()));
   
@@ -491,15 +447,36 @@ void Analysis::FitandExtractTH1s(TH1Map & th1map, TString name, TString xtitle, 
   delete outhist_mean;
 }
 
-void Analysis::MakeSubDirs(TStrMap & subdirmap){
-  for (TStrMapIter mapiter = subdirmap.begin(); mapiter != subdirmap.end(); mapiter++) { 
-    MakeOutDir(Form("%s/%s/",fOutDir.Data(),(*mapiter).second.Data()));
-    MakeOutDir(Form("%s/%s/lin/",fOutDir.Data(),(*mapiter).second.Data()));
-    MakeOutDir(Form("%s/%s/log/",fOutDir.Data(),(*mapiter).second.Data()));
-  }
+TH1F * Analysis::MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh, TString xtitle,
+			     TString ytitle, TStrMap& subdirmap, TString subdir) {
+  TH1F * hist = new TH1F(hname.Data(),htitle.Data(),nbins,xlow,xhigh);
+  hist->GetXaxis()->SetTitle(xtitle.Data());
+  hist->GetYaxis()->SetTitle(ytitle.Data());
+  hist->Sumw2();
+
+  // cheat a bit and set subdir map here
+  subdirmap[hname] = subdir;
+  
+  return hist;
 }
 
-void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap){
+TH2F * Analysis::MakeTH2Plot(TString hname, TString htitle, const std::vector<Double_t> vxbins, Int_t nbinsy, Double_t ylow, 
+			     Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir) {
+  // need to convert vectors into arrays per ROOT
+  const Double_t * axbins = &vxbins[0]; // https://stackoverflow.com/questions/2923272/how-to-convert-vector-to-array-c
+
+  TH2F * hist = new TH2F(hname.Data(),htitle.Data(),vxbins.size()-1,axbins,nbinsy,ylow,yhigh);
+  hist->GetXaxis()->SetTitle(xtitle.Data());
+  hist->GetYaxis()->SetTitle(ytitle.Data());
+  hist->Sumw2();
+
+  // cheat a bit and set subdir map here
+  subdirmap[hname] = subdir;
+  
+  return hist;
+}
+
+void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) {
   fOutFile->cd();
 
   TCanvas * canv = new TCanvas();
@@ -513,18 +490,41 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap){
     
     // first save as linear, then log
     canv->SetLogy(0);
-    CMSLumi(canv, fLumi, "Preliminary",0);
+    CMSLumi(canv,fLumi,fExtraText.Data(),0);
     canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),fOutType.Data()));
 
     canv->SetLogy(1);
-    CMSLumi(canv, fLumi, "Preliminary",0);
+    CMSLumi(canv,fLumi,fExtraText.Data(),0);
     canv->SaveAs(Form("%s/%s/log/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),fOutType.Data()));
   }
 
   delete canv;
 }
 
-void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap){
+void Analysis::SaveTH1andFit(TH1F * hist, TString subdir, TF1 * fit) {
+  fOutFile->cd();
+
+  TCanvas * canv = new TCanvas();
+  hist->Write(); 
+
+  // now draw onto canvas to save as png
+  canv->cd();
+  hist->Draw("PE");
+  fit->Draw("same");
+    
+  // first save as linear, then log
+  canv->SetLogy(0);
+  CMSLumi(canv,fLumi,fExtraText.Data(),0);
+  canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fOutType.Data()));
+  
+  canv->SetLogy(1);
+  CMSLumi(canv,fLumi,fExtraText.Data(),0);
+  canv->SaveAs(Form("%s/%s/log/%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fOutType.Data()));
+
+  delete canv;
+}
+
+void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap) {
   fOutFile->cd();
 
   TCanvas * canv = new TCanvas();
@@ -538,7 +538,7 @@ void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap){
     
     // only save as linear
     canv->SetLogy(0);
-    CMSLumi(canv, fLumi, "Preliminary",0);
+    CMSLumi(canv,fLumi,fExtraText.Data(),0);
     canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),fOutType.Data()));
   }
 
@@ -559,7 +559,7 @@ void Analysis::DeleteTH2s(TH2Map & th2map) {
   th2map.clear();
 }
 
-void Analysis::InitTree(){
+void Analysis::InitTree() {
   // Set branch addresses and branch pointers
   fInTree->SetBranchAddress("event", &event, &b_event);
   fInTree->SetBranchAddress("run", &run, &b_run);
@@ -606,5 +606,6 @@ void Analysis::InitTree(){
     fInTree->SetBranchAddress("genel2pt", &genel2pt, &b_genel2pt);
     fInTree->SetBranchAddress("genel2eta", &genel2eta, &b_genel2eta);
     fInTree->SetBranchAddress("genel2phi", &genel2phi, &b_genel2phi);
+    fInTree->SetBranchAddress("wgtsum", &wgtsum, &b_wgtsum);
   }
 }

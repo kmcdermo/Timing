@@ -7,12 +7,37 @@
 #include "TLatex.h"
 #include "TColor.h"
 
+void ComputeRatioPlot(const TH1F * numer, const TH1F * denom, TH1F *& ratioPlot){
+  Double_t value = 0;
+  Double_t err   = 0;
+  for (Int_t bin = 1; bin <= ratioPlot->GetNbinsX(); bin++){
+    if (denom->GetBinContent(bin)!=0){
+      value = numer->GetBinContent(bin) / denom->GetBinContent(bin); 
+      // Binonimal errors 
+      err = sqrt( value*(1.0-value)/denom->GetBinContent(bin) );
+      //Fill plots with correct values
+      ratioPlot->SetBinContent(bin,value);
+      ratioPlot->SetBinError(bin,err);
+    }
+  }
+}
+
 void MakeOutDir(TString outdir){
   FileStat_t dummyFileStat;
   if (gSystem->GetPathInfo(outdir.Data(), dummyFileStat) == 1){
     TString mkDir = "mkdir -p ";
     mkDir += outdir.Data();
     gSystem->Exec(mkDir.Data());
+  }
+}
+
+void MakeSubDirs(TStrMap & subdirmap, TString outdir){
+  for (TStrMapIter mapiter = subdirmap.begin(); mapiter != subdirmap.end(); mapiter++) { 
+    TString path = outdir+"/";
+    path.Append((*mapiter).second);
+    MakeOutDir(Form("%s/",path.Data()));
+    MakeOutDir(Form("%s/lin/",path.Data()));
+    MakeOutDir(Form("%s/log/",path.Data()));
   }
 }
 
