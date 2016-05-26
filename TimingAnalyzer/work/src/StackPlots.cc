@@ -1,9 +1,6 @@
 #include "../interface/StackPlots.hh"
 
-StackPlots::StackPlots(TStrBoolMap Samples, const TString outdir, const TString outtype, 
-		       const ColorMap & colorMap, const Float_t lumi, const TString extratext):
-  fOutDir(outdir), fColorMap(colorMap), fOutType(outtype), fLumi(lumi), fExtraText(extratext) {
-
+StackPlots::StackPlots(TStrBoolMap Samples, const ColorMap & colorMap) : fColorMap(colorMap) {
   // input data members
   for (TStrBoolMapIter iter = Samples.begin(); iter != Samples.end(); ++iter) {
     if ((*iter).second) { // isMC == true
@@ -18,14 +15,10 @@ StackPlots::StackPlots(TStrBoolMap Samples, const TString outdir, const TString 
   fNData = fDataNames.size();
   fNMC   = fMCNames.size();
 
-  // save lumi
-  fLumi = lumi;
-
   // output data members
-  fOutName = "stackedplots"; // where to put output stack plots 
-  MakeOutDir(Form("%s/%s",fOutDir.Data(),fOutName.Data())); // make output directory 
-
-  fOutFile = new TFile(Form("%s/%s/stackplots_canvases.root",fOutDir.Data(),fOutName.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
+  fOutDir = Form("%s/stackedplots",Config::outdir.Data()); // where to put output stack plots 
+  MakeOutDir(fOutDir); // make output directory 
+  fOutFile = new TFile(Form("%s/stackplots_canvases.root",fOutDir.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
 
   // define title map
   fSampleTitleMap["dyll"]   = "Z #rightarrow l^{+}l^{-}";
@@ -38,7 +31,7 @@ StackPlots::StackPlots(TStrBoolMap Samples, const TString outdir, const TString 
   
   // store this too
   fNTH1F = fTH1FNames.size();
-  MakeSubDirs(fTH1FSubDMap,fOutDir+"/"+fOutName);
+  MakeSubDirs(fTH1FSubDMap,fOutDir);
 
   // with all that defined, initialize everything in constructor
   StackPlots::OpenInputFiles();
@@ -320,9 +313,9 @@ void StackPlots::SaveCanvas(const Int_t th1f, const Bool_t isLogY){
   fOutTH1FStackPads[th1f]->cd(); // upper pad is current pad
   fOutTH1FStackPads[th1f]->SetLogy(isLogY); //  set logy on this pad
 
-  fOutTH1FCanvases[th1f]->cd();          // Go back to the main canvas before saving
-  CMSLumi(fOutTH1FCanvases[th1f],fLumi,fExtraText,0); // write out Lumi info
-  fOutTH1FCanvases[th1f]->SaveAs(Form("%s/%s/%s/%s/%s.%s",fOutDir.Data(),fOutName.Data(),fTH1FSubDMap[fTH1FNames[th1f]].Data(),suffix.Data(),fTH1FNames[th1f].Data(),fOutType.Data()));
+  fOutTH1FCanvases[th1f]->cd();    // Go back to the main canvas before saving
+  CMSLumi(fOutTH1FCanvases[th1f]); // write out Lumi info
+  fOutTH1FCanvases[th1f]->SaveAs(Form("%s/%s/%s/%s.%s",fOutDir.Data(),fTH1FSubDMap[fTH1FNames[th1f]].Data(),suffix.Data(),fTH1FNames[th1f].Data(),Config::outtype.Data()));
   fOutFile->cd();
   if (!isLogY) fOutTH1FCanvases[th1f]->Write(Form("%s",fTH1FNames[th1f].Data()));
 }
@@ -331,7 +324,7 @@ void StackPlots::OpenInputFiles() {
   // open input files into TFileVec --> data 
   fDataFiles.resize(fNData);
   for (Int_t data = 0; data < fNData; data++) {
-    TString datafile = Form("%s/DATA/%s/plots.root",fOutDir.Data(),fDataNames[data].Data());
+    TString datafile = Form("%s/DATA/%s/plots.root",Config::outdir.Data(),fDataNames[data].Data());
     fDataFiles[data] = TFile::Open(datafile.Data());
     CheckValidFile(fDataFiles[data],datafile);
   }
@@ -339,7 +332,7 @@ void StackPlots::OpenInputFiles() {
   // open input files into TFileVec --> mc 
   fMCFiles.resize(fNMC);
   for (Int_t mc = 0; mc < fNMC; mc++) {
-    TString mcfile = Form("%s/MC/%s/plots.root",fOutDir.Data(),fMCNames[mc].Data());
+    TString mcfile = Form("%s/MC/%s/plots.root",Config::outdir.Data(),fMCNames[mc].Data());
     fMCFiles[mc] = TFile::Open(mcfile.Data());
     CheckValidFile(fMCFiles[mc],mcfile);
   }

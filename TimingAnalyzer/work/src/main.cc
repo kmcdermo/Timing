@@ -1,4 +1,4 @@
-// hname must match name string in histo map! too lazy to pass extra parameter
+#include "../interface/Config.hh"
 #include "../interface/Common.hh"
 #include "../interface/PUReweight.hh"
 #include "../interface/Analysis.hh"
@@ -6,23 +6,52 @@
 
 #include "TROOT.h"
 
-int main(){
-  // to do:
-  // add Config file/namespace
-  // use command line arguments instead -- long term
-  
+int main(int argc, const char* argv[]) {
+  //////////////////////////////////
+  // Read in command line options //
+  //////////////////////////////////
+  lStr_t mArgs; 
+  for (int i = 1; i < argc; ++i) { mArgs.push_back(argv[i]); }
+  lStr_i i  = mArgs.begin();
+  while (i != mArgs.end()) {
+    lStr_i start = i;
+    if (*i == "-h" || *i == "-help" || *i == "--help") {
+      printf(
+        "Usage: %s [options]\n"
+        "Options:\n"
+	"  --outdir        <string>      name of ouput directory (def: %s)\n"
+	"  --do-purw       <bool>        calculate pile-up weights (def: %s)\n"
+	"  --do-analysis   <bool>        make analysis plots (def: %s)\n"
+	"  --do-stacks     <bool>        stack data/MC plots (def: %s)\n"
+	"  --do-demo       <bool>        demo analysis (def: %s)\n"
+        ,
+        argv[0],
+        Config::outdir.Data(),
+	(Config::doPURW      ? "true" : "false"),
+	(Config::doAnalysis  ? "true" : "false"),
+	(Config::doStacks    ? "true" : "false"),
+	(Config::doDemo      ? "true" : "false")
+      );
+      exit(0);
+    }
+    else if (*i == "--outdir")      { next_arg_or_die(mArgs, i); Config::outdir = i->c_str(); }
+    else if (*i == "--do-purw")     { Config::doPURW     = true; }
+    else if (*i == "--do-analysis") { Config::doAnalysis = true; }
+    else if (*i == "--do-stacks")   { Config::doStacks   = true; }
+    else if (*i == "--do-demo")     { Config::doDemo     = true; Config::doAnalysis = true; }
+    else    { fprintf(stderr, "Error: Unknown option/argument '%s'.\n", i->c_str()); exit(1); }
+    mArgs.erase(start, ++i);
+  }
+
   ////////////////////
   // Initialization //
   ////////////////////
 
-  // parameters to determine analysis 
-  const TString outdir    = "timeres0";
-  const TString outtype   = "png";
-  const Float_t lumi      = 2.301; // brilcalc lumi --normtag /afs/cern.ch/user/l/lumipro/public/normtag_file/moriond16_normtag.json -i rereco2015D.txt -u /fb
-  const TString extratext = "Preliminary";
-  
+  // do this at least once!
+  MakeOutDir(Config::outdir);
+
   // yields
-  ofstream yields(Form("%s/yields.txt",outdir.Data()),std::ios_base::app);
+  ofstream yields(Form("%s/yields.txt",Config::outdir.Data()),std::ios_base::app);
 
   // Variables needed in all functions for plotting and the like so it is universal
   // Color for MC Stacks
@@ -45,17 +74,13 @@ int main(){
   // Pile-up reweighting //
   /////////////////////////
 
-  Bool_t doPURW = true;
-  
-  if (doPURW) {
+  if (Config::doPURW) {
     TStrBoolMap PUSampleMap;
     PUSampleMap["demo"]   = false;
     PUSampleMap["demomc"] = true;
 
-    const Int_t npubins = 50;
-
     std::cout << "Calculating pile-up weights" << std::endl;
-    PUReweight reweight(PUSampleMap,outdir,outtype,lumi,npubins);
+    PUReweight reweight(PUSampleMap);
     reweight.GetPUWeights();
   }
   else {
@@ -68,12 +93,10 @@ int main(){
   TStrBoolMap SampleMap;
   SampleMap["demo"]   = false;
   SampleMap["demomc"] = true;
-  
-  Bool_t doAnalysis = true;
     
-  if (doAnalysis) {
+  if (Config::doAnalysis) {
     for (TStrBoolMapIter mapiter = SampleMap.begin(); mapiter != SampleMap.end(); ++mapiter) {
-      Analysis analysis((*mapiter).first,(*mapiter).second,outdir,outtype,lumi,extratext,colorMap);
+      Analysis analysis((*mapiter).first,(*mapiter).second,colorMap);
       analysis.StandardPlots();
       analysis.TimeResPlots();
     }
@@ -86,9 +109,8 @@ int main(){
   // Stack data/mc //
   ///////////////////
 
-  Bool_t doStacks = true;
-  if (doStacks) {
-    StackPlots Stacker(SampleMap,outdir,outtype,colorMap,lumi,extratext);
+  if (Config::doStacks) {
+    StackPlots Stacker(SampleMap,colorMap);
     Stacker.DoStacks(yields);
   }
   else {

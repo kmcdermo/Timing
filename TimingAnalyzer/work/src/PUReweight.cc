@@ -1,8 +1,6 @@
 #include "../interface/PUReweight.hh"
 
-PUReweight::PUReweight(TStrBoolMap Samples, TString outdir, TString outtype, Float_t lumi, Int_t nbins):
-  fOutDir(outdir), fOutType(outtype), fLumi(lumi), fNBins(nbins) {
-
+PUReweight::PUReweight(TStrBoolMap Samples) {
   // save samples for PU weighting
   for (TStrBoolMapIter iter = Samples.begin(); iter != Samples.end(); ++iter) {
     if ((*iter).second) { // isMC == true
@@ -18,25 +16,23 @@ PUReweight::PUReweight(TStrBoolMap Samples, TString outdir, TString outtype, Flo
   fNMC   = fMCNames.size();
 
   // Initialize output TH1F's for data
-  fOutDataNvtx = new TH1F("nvtx_data","",fNBins,0.,50.);
+  fOutDataNvtx = new TH1F("nvtx_data","",Config::nvtxbins,0.,Double_t(Config::nvtxbins));
   fOutDataNvtx->Sumw2();
 
   // Initialize outputs for MC
-  fOutMCNvtx = new TH1F("nvtx_mc","",fNBins,0.,Double_t(fNBins));
+  fOutMCNvtx = new TH1F("nvtx_mc","",Config::nvtxbins,0.,Double_t(Config::nvtxbins));
   fOutMCNvtx->Sumw2();
 
   // Intialize Ratio Hist
-  fOutDataOverMCNvtx = new TH1F("nvtx_dataOverMC","",fNBins,0.,Double_t(fNBins));
+  fOutDataOverMCNvtx = new TH1F("nvtx_dataOverMC","",Config::nvtxbins,0.,Double_t(Config::nvtxbins));
   fOutDataOverMCNvtx->Sumw2();
 
-  // Make PURW subdirs
-  fSubDir = "purw";
-  MakeOutDir(fOutDir);
-  MakeOutDir(fOutDir+"/"+fSubDir);
-  MakeOutDir(fOutDir+"/"+fSubDir+"/log");
-  MakeOutDir(fOutDir+"/"+fSubDir+"/lin");
-  
-  fOutFile = new TFile(Form("%s/%s/PURW.root",fOutDir.Data(),fSubDir.Data()),"RECREATE");
+  // Make PURW outdirs
+  TStrMap subdirmap;
+  subdirmap["purw"] = "purw";
+  MakeSubDirs(subdirmap,Config::outdir);
+  fOutDir  = Form("%s/%s",Config::outdir.Data(),subdirmap["purw"].Data());
+  fOutFile = new TFile(Form("%s/PURW.root",fOutDir.Data()),"RECREATE");
 }
 
 PUReweight::~PUReweight() {
@@ -51,7 +47,7 @@ PUReweight::~PUReweight() {
 
 void PUReweight::GetPUWeights(){
   // cut to be used in tree
-  TString basecut = "zmass>76. && zmass<106.";
+  TString basecut = Form("zmass>%3.f && zmass<%3.f",Config::zlow,Config::zup);
   
   // get vtx distribution for data first
   for (Int_t data = 0; data < fNData; data++){
@@ -65,7 +61,7 @@ void PUReweight::GetPUWeights(){
     TString treename = "tree/tree";
     TTree * tree = (TTree*)file->Get(treename.Data());
     CheckValidTree(tree,treename,filename);      
-    TH1F * tmpnvtx = new TH1F("tmpnvtx","",fNBins,0.,Double_t(fNBins));
+    TH1F * tmpnvtx = new TH1F("tmpnvtx","",Config::nvtxbins,0.,Double_t(Config::nvtxbins));
     tmpnvtx->Sumw2();
 
     // fill each input data nvtx
@@ -86,7 +82,7 @@ void PUReweight::GetPUWeights(){
     // create appropriate selection cut
     TString cut = basecut;
     cut.Prepend("( ");
-    cut.Append(Form(" * (xsec * %f * wgt / wgtsum)",fLumi)); // make sure to add weights for all mc!
+    cut.Append(Form(" * (xsec * %f * wgt / wgtsum)",Config::lumi)); // make sure to add weights for all mc!
     cut.Append(" )");
 
     // files + trees for mc + tmp hists
@@ -97,7 +93,7 @@ void PUReweight::GetPUWeights(){
     TString treename = "tree/tree";
     TTree * tree = (TTree*)file->Get(treename.Data());
     CheckValidTree(tree,treename,filename);            
-    TH1F * tmpnvtx = new TH1F("tmpnvtx","",fNBins,0.,Double_t(fNBins));
+    TH1F * tmpnvtx = new TH1F("tmpnvtx","",Config::nvtxbins,0.,Double_t(Config::nvtxbins));
     tmpnvtx->Sumw2();
 
     // fill each input mc nvtx
@@ -135,10 +131,10 @@ void PUReweight::GetPUWeights(){
   fOutMCNvtx->Draw("HIST SAME");
 
   c0->SetLogy(1); // save log
-  c0->SaveAs(Form("%s/%s/log/nvtx_beforePURW_unnorm.%s",fOutDir.Data(),fSubDir.Data(),fOutType.Data()));
+  c0->SaveAs(Form("%s/log/nvtx_beforePURW_unnorm.%s",fOutDir.Data(),Config::outtype.Data()));
 
   c0->SetLogy(0); // save lin
-  c0->SaveAs(Form("%s/%s/lin/nvtx_beforePURW_unnorm.%s",fOutDir.Data(),fSubDir.Data(),fOutType.Data()));
+  c0->SaveAs(Form("%s/lin/nvtx_beforePURW_unnorm.%s",fOutDir.Data(),Config::outtype.Data()));
   
   /////////////////////////////////////////////
   //       SCALE HERE TO GET REWEIGHTING     //
@@ -157,17 +153,17 @@ void PUReweight::GetPUWeights(){
   fOutMCNvtx->Draw("HIST SAME");
 
   c1->SetLogy(1); // save log
-  c1->SaveAs(Form("%s/%s/log/nvtx_beforePURW_norm.%s",fOutDir.Data(),fSubDir.Data(),fOutType.Data()));
+  c1->SaveAs(Form("%s/log/nvtx_beforePURW_norm.%s",fOutDir.Data(),Config::outtype.Data()));
 
   c1->SetLogy(0); // save lin
-  c1->SaveAs(Form("%s/%s/lin/nvtx_beforePURW_norm.%s",fOutDir.Data(),fSubDir.Data(),fOutType.Data()));
+  c1->SaveAs(Form("%s/lin/nvtx_beforePURW_norm.%s",fOutDir.Data(),Config::outtype.Data()));
 
   /////////////////////////////////////////////
   //      DIVIDE HERE TO GET REWEIGHTING     //
   /////////////////////////////////////////////
 
   // copy fOutDataNvtx to save output of reweights properly
-  for (Int_t ibin = 1; ibin <= fNBins; ibin++) {
+  for (Int_t ibin = 1; ibin <= Config::nvtxbins; ibin++) {
     fOutDataOverMCNvtx->SetBinContent(ibin,fOutDataNvtx->GetBinContent(ibin));
   }
 
@@ -181,7 +177,7 @@ void PUReweight::GetPUWeights(){
   /////////////////////////////////////////////
 
   // scale MC to demonstrate that it works
-  for (Int_t ibin = 1; ibin <= fNBins; ibin++) {
+  for (Int_t ibin = 1; ibin <= Config::nvtxbins; ibin++) {
     Float_t tmp = fOutMCNvtx->GetBinContent(ibin);
     fOutMCNvtx->SetBinContent(ibin,fOutDataOverMCNvtx->GetBinContent(ibin)*tmp); 
   }
@@ -199,10 +195,10 @@ void PUReweight::GetPUWeights(){
   fOutMCNvtx->Draw("HIST SAME");
 
   c2->SetLogy(1); // save log
-  c2->SaveAs(Form("%s/%s/log/nvtx_afterPURW_norm.%s",fOutDir.Data(),fSubDir.Data(),fOutType.Data()));
+  c2->SaveAs(Form("%s/log/nvtx_afterPURW_norm.%s",fOutDir.Data(),Config::outtype.Data()));
 
   c2->SetLogy(0); // save lin
-  c2->SaveAs(Form("%s/%s/lin/nvtx_afterPURW_norm.%s",fOutDir.Data(),fSubDir.Data(),fOutType.Data()));
+  c2->SaveAs(Form("%s/lin/nvtx_afterPURW_norm.%s",fOutDir.Data(),Config::outtype.Data()));
 
   TCanvas * c3 = new TCanvas(); // Draw before reweighting --> unscaled
   c3->cd();
@@ -216,10 +212,10 @@ void PUReweight::GetPUWeights(){
   fOutMCNvtx->Draw("HIST SAME");
 
   c3->SetLogy(1); // save log
-  c3->SaveAs(Form("%s/%s/log/nvtx_afterPURW_unnorm.%s",fOutDir.Data(),fSubDir.Data(),fOutType.Data()));
+  c3->SaveAs(Form("%s/log/nvtx_afterPURW_unnorm.%s",fOutDir.Data(),Config::outtype.Data()));
 
   c3->SetLogy(0); // save lin
-  c3->SaveAs(Form("%s/%s/lin/nvtx_afterPURW_unnorm.%s",fOutDir.Data(),fSubDir.Data(),fOutType.Data()));
+  c3->SaveAs(Form("%s/lin/nvtx_afterPURW_unnorm.%s",fOutDir.Data(),Config::outtype.Data()));
   
   delete c0;
   delete c1;

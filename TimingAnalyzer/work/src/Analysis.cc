@@ -4,9 +4,7 @@ inline Float_t rad2(Float_t x, Float_t y){
   return x*x + y*y;
 }
 
-Analysis::Analysis(TString sample, Bool_t isMC, TString outdir, TString outtype, Float_t lumi, TString extratext, ColorMap colormap) : 
-  fSample(sample), fIsMC(isMC), fOutType(outtype), fLumi(lumi), fExtraText(extratext) {
-
+Analysis::Analysis(TString sample, Bool_t isMC, ColorMap colormap) : fSample(sample), fIsMC(isMC) {
   TString filename = "";
   if (fIsMC) {
     filename = Form("input/MC/%s/treewgtsum.root",fSample.Data());
@@ -14,7 +12,7 @@ Analysis::Analysis(TString sample, Bool_t isMC, TString outdir, TString outtype,
     CheckValidFile(fInFile,filename);
     
     // Get pile-up weights
-    TString purwfname = Form("%s/purw/PURW.root",outdir.Data());   
+    TString purwfname = Form("%s/purw/PURW.root",Config::outdir.Data());   
     TFile * purwfile  = TFile::Open(purwfname.Data());
     CheckValidFile(purwfile,purwfname);
     
@@ -30,7 +28,7 @@ Analysis::Analysis(TString sample, Bool_t isMC, TString outdir, TString outtype,
     delete purwfile;
     // end getting pile-up weights
 
-    fOutDir = Form("%s/MC/%s",outdir.Data(),fSample.Data());
+    fOutDir = Form("%s/MC/%s",Config::outdir.Data(),fSample.Data());
     fColor  = colormap[fSample.Data()];
   }
   else {
@@ -38,7 +36,7 @@ Analysis::Analysis(TString sample, Bool_t isMC, TString outdir, TString outtype,
     fInFile  = TFile::Open(filename.Data());
     CheckValidFile(fInFile,filename);
 
-    fOutDir  = Form("%s/DATA/%s",outdir.Data(),fSample.Data());
+    fOutDir  = Form("%s/DATA/%s",Config::outdir.Data(),fSample.Data());
     fColor   = kBlack;
   }
   
@@ -50,19 +48,23 @@ Analysis::Analysis(TString sample, Bool_t isMC, TString outdir, TString outtype,
   // output stuff
   MakeOutDir(fOutDir);
   fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
+  
+  // dump th1 names and subdirs
+  fTH1Dump.open(Form("%s/dumpplots.txt",fOutDir.Data()),std::ios_base::trunc);
 }
 
 Analysis::~Analysis(){
   delete fInTree;
   delete fInFile;
   delete fOutFile;
+  fTH1Dump.close();
 }
 
 void Analysis::StandardPlots(){
   // Set up hists first --> first in map is histo name, by design!
   TH1Map  trTH1Map;
   TStrMap trTH1SubMap; // set inside MakeTH1Plot
-  trTH1Map["nvtx"]   = Analysis::MakeTH1Plot("nvtx","",50,0.,50.,"nVertices","Events",trTH1SubMap,"standard");
+  trTH1Map["nvtx"]   = Analysis::MakeTH1Plot("nvtx","",Config::nvtxbins,0.,Double_t(Config::nvtxbins),"nVertices","Events",trTH1SubMap,"standard");
   trTH1Map["zmass"]  = Analysis::MakeTH1Plot("zmass","",100,60.,120.,"Dielectron invariant mass [GeV/c^{2}]","Events",trTH1SubMap,"standard");
   trTH1Map["zpt"]    = Analysis::MakeTH1Plot("zpt","",100,0.,750.,"Dielectron p_{T} [GeV/c^{2}]","Events",trTH1SubMap,"standard");
   trTH1Map["zeta"]   = Analysis::MakeTH1Plot("zeta","",100,-10.0,10.0,"Dielectron #eta","Events",trTH1SubMap,"standard");
@@ -80,11 +82,11 @@ void Analysis::StandardPlots(){
 
   MakeSubDirs(trTH1SubMap,fOutDir);
 
-  for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
+  for (UInt_t entry = 0; entry < (!Config::doDemo?fInTree->GetEntries():Config::demoNum); entry++){
     fInTree->GetEntry(entry);
-    if (zmass>76. && zmass<106.) { // extra selection over skimmed samples
+    if (zmass>Config::zlow && zmass<Config::zup) { // extra selection over skimmed samples
       Float_t weight = -1.;
-      if   (fIsMC) {weight = (xsec * fLumi * wgt / wgtsum) * fPUweights[nvtx];}
+      if   (fIsMC) {weight = (xsec * Config::lumi * wgt / wgtsum) * fPUweights[nvtx];}
       else         {weight = 1.0;}
 
       // standard "validation" plots
@@ -109,6 +111,7 @@ void Analysis::StandardPlots(){
   }
 
   Analysis::SaveTH1s(trTH1Map,trTH1SubMap);
+  Analysis::DumpTH1Names(trTH1Map,trTH1SubMap);
   Analysis::DeleteTH1s(trTH1Map);
 }
 
@@ -167,11 +170,11 @@ void Analysis::TimeResPlots(){
     runs2DMap["tdEEEE_runs"] = Analysis::MakeTH2Plot("tdEEEE_runs","",dRunNos,ntimebins,-timerange,timerange,"Run Number","Dielectron Seed Time Difference [ns] (EEEE)",runs2DSubMap,"timing/runs/EEEE");  
   }  
 
-  for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
+  for (UInt_t entry = 0; entry < (!Config::doDemo?fInTree->GetEntries():Config::demoNum); entry++){
     fInTree->GetEntry(entry);
-    if (zmass>76. && zmass<106.) { // extra selection over skims
+    if (zmass>Config::zlow && zmass<Config::zup) { // extra selection over skims
       Float_t weight = -1.;
-      if   (fIsMC) {weight = (xsec * fLumi * wgt / wgtsum) * fPUweights[nvtx];}
+      if   (fIsMC) {weight = (xsec * Config::lumi * wgt / wgtsum) * fPUweights[nvtx];}
       else         {weight = 1.0;}
 
       Float_t time_diff  = el1time-el2time;
@@ -323,11 +326,11 @@ void Analysis::TriggerEffs(){
 
   MakeSubDirs(trTH1SubMap,fOutDir);
 
-  for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++){
+  for (UInt_t entry = 0; entry < (!Config::doDemo?fInTree->GetEntries():Config::demoNum); entry++){
     fInTree->GetEntry(entry);
-    if ( (zmass>76. && zmass<106.) ){ // we want di-electron z's
+    if ( (zmass>Config::zlow && zmass<Config::zup) ){ // we want di-electron z's
       Float_t weight = -1.;
-      if   (fIsMC) {weight = (xsec * fLumi * wgt / wgtsum) * fPUweights[nvtx];}
+      if   (fIsMC) {weight = (xsec * Config::lumi * wgt / wgtsum) * fPUweights[nvtx];}
       else         {weight = 1.0;}
 
       if ( hltdoubleel ) { // fill numer if passed
@@ -343,6 +346,7 @@ void Analysis::TriggerEffs(){
   ComputeRatioPlot(n_hltdoubleel_el1pt,d_hltdoubleel_el1pt,trTH1Map["hltdoubleel_el1pt"]);
   ComputeRatioPlot(n_hltdoubleel_el2pt,d_hltdoubleel_el2pt,trTH1Map["hltdoubleel_el2pt"]);
   Analysis::SaveTH1s(trTH1Map,trTH1SubMap);
+  Analysis::DumpTH1Names(trTH1Map,trTH1SubMap);
   Analysis::DeleteTH1s(trTH1Map);
 
   // delete by hand throw away plots
@@ -389,7 +393,7 @@ void Analysis::Project2Dto1D(TH2F *& hist2d, TStrMap & subdir2dmap, TH1Map & th1
 						      "Events",subdir1dmap,subdir2dmap[basename.Data()]);
     }
     else { // "normal" filling
-      Int_t ixlow = Int_t(xlow); 
+      Int_t ixlow  = Int_t(xlow); 
       Int_t ixhigh = Int_t(xhigh); 
       histname = Form("%s_%i-%i",basename.Data(),ixlow,ixhigh);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %i-%i",ytitle.Data(),xtitle.Data(),ixlow,ixhigh),
@@ -453,14 +457,14 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TString name, TString xtitle, c
 
   // save log/lin of each plot
   TCanvas * canv = new TCanvas();
-  CMSLumi(canv,fLumi,fExtraText.Data(),0);
+  CMSLumi(canv);
   canv->cd();
 
   outhist_mean->Draw("PE");
-  canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_mean->GetName(),fOutType.Data()));
+  canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_mean->GetName(),Config::outtype.Data()));
 
   outhist_sigma->Draw("PE");
-  canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_sigma->GetName(),fOutType.Data()));
+  canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_sigma->GetName(),Config::outtype.Data()));
   
   delete canv;
   delete outhist_sigma;
@@ -512,12 +516,12 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) {
     
     // first save as linear, then log
     canv->SetLogy(0);
-    CMSLumi(canv,fLumi,fExtraText.Data(),0);
-    canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),fOutType.Data()));
+    CMSLumi(canv);
+    canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
 
     canv->SetLogy(1);
-    CMSLumi(canv,fLumi,fExtraText.Data(),0);
-    canv->SaveAs(Form("%s/%s/log/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),fOutType.Data()));
+    CMSLumi(canv);
+    canv->SaveAs(Form("%s/%s/log/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
   }
 
   delete canv;
@@ -536,12 +540,12 @@ void Analysis::SaveTH1andFit(TH1F * hist, TString subdir, TF1 * fit) {
     
   // first save as linear, then log
   canv->SetLogy(0);
-  CMSLumi(canv,fLumi,fExtraText.Data(),0);
-  canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fOutType.Data()));
+  CMSLumi(canv);
+  canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),Config::outtype.Data()));
   
   canv->SetLogy(1);
-  CMSLumi(canv,fLumi,fExtraText.Data(),0);
-  canv->SaveAs(Form("%s/%s/log/%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fOutType.Data()));
+  CMSLumi(canv);
+  canv->SaveAs(Form("%s/%s/log/%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),Config::outtype.Data()));
 
   delete canv;
 }
@@ -560,11 +564,17 @@ void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap) {
     
     // only save as linear
     canv->SetLogy(0);
-    CMSLumi(canv,fLumi,fExtraText.Data(),0);
-    canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),fOutType.Data()));
+    CMSLumi(canv);
+    canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
   }
 
   delete canv;
+}
+
+void Analysis::DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap) {
+  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); mapiter++) { 
+    fTH1Dump << (*mapiter).first.Data()  << " " <<  subdirmap[(*mapiter).first].Data() << std::endl;
+  }
 }
 
 void Analysis::DeleteTH1s(TH1Map & th1map) {

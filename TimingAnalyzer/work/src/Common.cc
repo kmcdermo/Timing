@@ -1,11 +1,19 @@
 #include "../interface/Common.hh"
 
 #include "TSystem.h"
-#include "TString.h"
-#include "TCanvas.h"
-#include "TStyle.h"
 #include "TLatex.h"
-#include "TColor.h"
+
+void next_arg_or_die(lStr_t& args, lStr_i& i, bool allow_single_minus)
+{
+  lStr_i j = i;
+  if (++j == args.end() ||
+      ((*j)[0] == '-' && ! (*j == "-" && allow_single_minus)))
+  {
+    std::cerr <<"Error: option "<< *i <<" requires an argument.\n";
+    exit(1);
+  }
+  i = j;
+}
 
 void ComputeRatioPlot(const TH1F * numer, const TH1F * denom, TH1F *& ratioPlot){
   Double_t value = 0;
@@ -79,15 +87,15 @@ void CheckValidTH1F(TH1F *& plot, TString pname, TString fname){
   }
 }
 
-void CMSLumi(TCanvas *& canv, Float_t lumi, TString extraText, Int_t iPosX) {
+void CMSLumi(TCanvas *& canv, Int_t iPosX) {
   TString cmsText      = "CMS";
   Double_t cmsTextFont = 61;  // default is helvetic-bold
   
   // extraText is either "Simulation" or "Preliminary"
-  Bool_t writeExtraText  = (!extraText.Contains("",TString::kExact)?true:false);
+  Bool_t writeExtraText  = (!Config::extraText.Contains("",TString::kExact)?true:false);
   Double_t extraTextFont = 52;  // default is helvetica-italics
 
-  TString lumiText = Form("#sqrt{s} = 13 TeV, L = %3.2f fb^{-1}", lumi); // must change this spec once we are in fb range!
+  TString lumiText = Form("#sqrt{s} = 13 TeV, L = %3.2f fb^{-1}", Config::lumi); // must change this spec once we are in fb range!
   
   // text sizes and text offsets with respect to the top frame
   // in unit of the top margin size
@@ -167,7 +175,7 @@ void CMSLumi(TCanvas *& canv, Float_t lumi, TString extraText, Int_t iPosX) {
       latex.SetTextFont(extraTextFont);
       latex.SetTextAlign(align_);
       latex.SetTextSize(extraTextSize*t);
-      latex.DrawLatex(posX_, posY_- relExtraDY*cmsTextSize*t, extraText);
+      latex.DrawLatex(posX_, posY_- relExtraDY*cmsTextSize*t, Config::extraText);
     }
   }
   
@@ -179,7 +187,7 @@ void CMSLumi(TCanvas *& canv, Float_t lumi, TString extraText, Int_t iPosX) {
     latex.SetTextFont(extraTextFont);
     latex.SetTextSize(extraTextSize*t);
     latex.SetTextAlign(align_);
-    latex.DrawLatex(posX_, posY_, extraText);      
+    latex.DrawLatex(posX_, posY_, Config::extraText);      
   }
 }
 

@@ -1,6 +1,7 @@
 #ifndef _analysis_
 #define _analysis_ 
 
+#include "Config.hh"
 #include "Common.hh"
 
 #include "TH2F.h"
@@ -15,7 +16,7 @@ typedef TH2Map::iterator TH2MapIter;
 class Analysis {
 public:
   // functions
-  Analysis(TString sample, Bool_t isMC, TString outdir, TString outtype, Float_t lumi, TString extratext, ColorMap colormap);
+  Analysis(TString sample, Bool_t isMC, ColorMap colormap);
   ~Analysis();
   void InitTree();
   void StandardPlots();
@@ -28,6 +29,7 @@ public:
   void SaveTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void SaveTH1andFit(TH1F * hist, TString subdir, TF1 * fit);
   void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
+  void DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap);
   void DeleteTH1s(TH1Map & th1map);
   void DeleteTH2s(TH2Map & th2map);
 
@@ -44,15 +46,11 @@ private:
   // Output
   TString fOutDir;
   TFile*  fOutFile;
-  TString fOutType;
+  std::ofstream fTH1Dump; 
   
   // Output colors
   Color_t fColor;
   
-  // CMS demands this...
-  Float_t fLumi;
-  TString fExtraText;
-
 public:
   // Declaration of leaf types
   Int_t           event;

@@ -1,6 +1,7 @@
 #ifndef _stackplots_
 #define _stackplots_
 
+#include "Config.hh"
 #include "Common.hh"
 
 #include "TPad.h"
@@ -21,8 +22,7 @@ typedef std::vector<TPad*>    TPadVec;
 class StackPlots
 {
 public:
-  StackPlots(TStrBoolMap Samples, const TString outdir, const TString outtype, 
-	     const ColorMap & colorMap, const Float_t lumi, const TString extratext);
+  StackPlots(TStrBoolMap Samples, const ColorMap & colorMap);
 
   void InitTH1FNamesAndSubDNames();
   void OpenInputFiles();
@@ -53,9 +53,6 @@ private:
   TStrVec fMCNames;
   TStrVec fTH1FNames;
   TStrMap fTH1FSubDMap;
-
-  Float_t fLumi;
-  TString fExtraText;
   
   Int_t fNData;
   Int_t fNMC;
@@ -82,7 +79,6 @@ private:
   TString fOutDir;
   TString fOutName;
   TFile * fOutFile;
-  TString fOutType;
 
   TStrMap  fSampleTitleMap;
   ColorMap fColorMap;
