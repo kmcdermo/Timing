@@ -23,13 +23,11 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
   // yields 
   yields.open(Form("%s/yields.txt",Config::outdir.Data()),std::ios_base::app);
 
-  // set sample map (use lousy demos for now)
+  // set sample map
   if (Config::useDEG)   Config::SampleMap["doubleeg"] = false; // !isMC
   if (Config::useDYll)  Config::SampleMap["dyll"]     = true;  //  isMC
   if (Config::useQCD)   Config::SampleMap["qcd"]      = true;  //  isMC
   if (Config::useGJets) Config::SampleMap["gamma"]    = true;  //  isMC
-  Config::SampleMap["demo"]   = false; // to be removed once filtered samples are finished
-  Config::SampleMap["demomc"] = true;  // to be removed once filtered samples are finished
 
   // Color for MC Stacks
   Config::colorMap["dyll"]   = kCyan;

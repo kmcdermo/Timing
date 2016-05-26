@@ -50,14 +50,14 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC) {
   fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
   
   // dump th1 names and subdirs
-  fTH1Dump.open(Form("%s/dumpplots.txt",fOutDir.Data()),std::ios_base::trunc);
+  if (!fIsMC) fTH1Dump.open(Form("%s/plotnames.txt",Config::outdir.Data()),std::ios_base::trunc); // do this once, and just do it for data
 }
 
 Analysis::~Analysis(){
   delete fInTree;
   delete fInFile;
   delete fOutFile;
-  fTH1Dump.close();
+  if (!fIsMC) fTH1Dump.close();
 }
 
 void Analysis::StandardPlots(){
@@ -111,7 +111,7 @@ void Analysis::StandardPlots(){
   }
 
   Analysis::SaveTH1s(trTH1Map,trTH1SubMap);
-  Analysis::DumpTH1Names(trTH1Map,trTH1SubMap);
+  if (!fIsMC) Analysis::DumpTH1Names(trTH1Map,trTH1SubMap);
   Analysis::DeleteTH1s(trTH1Map);
 }
 
@@ -224,6 +224,7 @@ void Analysis::TimeResPlots(){
   // Do inclusive "global" plots first
   MakeSubDirs(inclu1DSubMap,fOutDir);
   Analysis::SaveTH1s(inclu1DMap,inclu1DSubMap);
+  if (!fIsMC) Analysis::DumpTH1Names(inclu1DMap,inclu1DSubMap);
   Analysis::DeleteTH1s(inclu1DMap);
   ////////////////////////////////////
 
@@ -346,7 +347,7 @@ void Analysis::TriggerEffs(){
   ComputeRatioPlot(n_hltdoubleel_el1pt,d_hltdoubleel_el1pt,trTH1Map["hltdoubleel_el1pt"]);
   ComputeRatioPlot(n_hltdoubleel_el2pt,d_hltdoubleel_el2pt,trTH1Map["hltdoubleel_el2pt"]);
   Analysis::SaveTH1s(trTH1Map,trTH1SubMap);
-  Analysis::DumpTH1Names(trTH1Map,trTH1SubMap);
+  if (!fIsMC) Analysis::DumpTH1Names(trTH1Map,trTH1SubMap);
   Analysis::DeleteTH1s(trTH1Map);
 
   // delete by hand throw away plots
@@ -454,6 +455,10 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TString name, TString xtitle, c
   fOutFile->cd();
   outhist_mean->Write();
   outhist_sigma->Write();
+
+  // and want to dump them too!
+  if (!fIsMC) {fTH1Dump << outhist_mean->GetName()  << " " << subdir.Data() << std::endl;}
+  if (!fIsMC) {fTH1Dump << outhist_sigma->GetName() << " " << subdir.Data() << std::endl;}
 
   // save log/lin of each plot
   TCanvas * canv = new TCanvas();

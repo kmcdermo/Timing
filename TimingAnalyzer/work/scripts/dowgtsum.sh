@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for sample in demo
+for sample in dyll
 do
     echo "Doing sample: " ${sample}
     path="input/MC/"${sample}

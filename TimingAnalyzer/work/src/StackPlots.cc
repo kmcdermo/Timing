@@ -406,7 +406,21 @@ void StackPlots::InitOutputCanvPads() {
 
 void StackPlots::InitTH1FNamesAndSubDNames(){
   // will use the integral of nvtx to derive total yields as no additional cuts are placed on ntvx --> key on name for yields
-  fTH1FNames.push_back("nvtx");
-  fTH1FSubDMap["nvtx"] = "standard";
+  
+  std::ifstream plotstoread;
+  plotstoread.open(Form("%s/plotnames.txt",Config::outdir.Data()),std::ios::in);
+
+  TString plotname; TString subdir;
+
+  while (plotstoread >> plotname >> subdir) {
+    fTH1FNames.push_back(plotname);
+    fTH1FSubDMap[plotname] = subdir;
+  }
+  plotstoread.close();
+
+  if (fTH1FNames.size() == 0) {
+    std::cerr << "Somehow, no plots were read in for the stacker ...exiting..." << std::endl;
+    exit(1);
+  }
 }
 
