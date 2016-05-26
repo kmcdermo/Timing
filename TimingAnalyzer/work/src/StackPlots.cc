@@ -1,10 +1,11 @@
 #include "../interface/StackPlots.hh"
 
-StackPlots::StackPlots(SamplePairVec Samples, const Float_t lumi, const TString outdir, const ColorMap & colorMap, const TString outtype):
-  fLumi(lumi), fOutDir(outdir), fColorMap(colorMap), fOutType(outtype) {
+StackPlots::StackPlots(TStrBoolMap Samples, const TString outdir, const TString outtype, 
+		       const ColorMap & colorMap, const Float_t lumi, const TString extratext):
+  fOutDir(outdir), fColorMap(colorMap), fOutType(outtype), fLumi(lumi), fExtraText(extratext) {
 
   // input data members
-  for (SamplePairVecIter iter = Samples.begin(); iter != Samples.end(); ++iter) {
+  for (TStrBoolMapIter iter = Samples.begin(); iter != Samples.end(); ++iter) {
     if ((*iter).second) { // isMC == true
       fMCNames.push_back((*iter).first);
     }
@@ -28,7 +29,7 @@ StackPlots::StackPlots(SamplePairVec Samples, const Float_t lumi, const TString 
 
   // output data members
   fOutName = "stackedplots"; // where to put output stack plots 
-  MakeOutDirectory(Form("%s/%s%s/%s",fOutDir.Data(),fSelection.Data(),fNJetsStr.Data(),fOutName.Data())); // make output directory 
+  MakeOutDir(Form("%s/%s",fOutDir.Data(),fOutName.Data())); // make output directory 
 
   fOutFile = new TFile(Form("%s/%s/stackplots_canvases.root",fOutDir.Data(),fOutName.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
 
@@ -318,17 +319,10 @@ void StackPlots::SaveCanvas(const Int_t th1f, const Bool_t isLogY){
   fOutTH1FStackPads[th1f]->SetLogy(isLogY); //  set logy on this pad
 
   fOutTH1FCanvases[th1f]->cd();          // Go back to the main canvas before saving
-  CMSLumi(fOutTH1FCanvases[th1f],0); // write out Lumi info
+  CMSLumi(fOutTH1FCanvases[th1f],fLumi,fExtraText,0); // write out Lumi info
   fOutTH1FCanvases[th1f]->SaveAs(Form("%s/%s/%s/%s/%s.%s",fOutDir.Data(),fOutName.Data(),fTH1FSubDMap[fTH1FNames[th1f]].Data(),suffix.Data(),fTH1FNames[th1f].Data(),fOutType.Data()));
   fOutFile->cd();
   if (!isLogY) fOutTH1FCanvases[th1f]->Write(Form("%s",fTH1FNames[th1f].Data()));
-}
-
-void StackPlots::InitTH1FNamesAndSubDNames(){
-  // will use the integral of nvtx to derive total yields as no additional cuts are placed on ntvx --> key on name for yields
-  fTH1FNames.push_back("nvtx");
-  fTH1FSubDMap["nvtx"] = "";
-
 }
 
 void StackPlots::OpenInputFiles() {
@@ -419,5 +413,11 @@ void StackPlots::InitOutputCanvPads() {
     fOutTH1FRatioPads[th1f]->SetTopMargin(0);
     fOutTH1FRatioPads[th1f]->SetBottomMargin(0.3);
   }
+}
+
+void StackPlots::InitTH1FNamesAndSubDNames(){
+  // will use the integral of nvtx to derive total yields as no additional cuts are placed on ntvx --> key on name for yields
+  fTH1FNames.push_back("nvtx");
+  fTH1FSubDMap["nvtx"] = "standard";
 }
 

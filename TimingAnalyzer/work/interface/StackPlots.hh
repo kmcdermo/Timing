@@ -3,22 +3,11 @@
 
 #include "Common.hh"
 
-#include "TROOT.h"
-#include "TSystem.h"
 #include "TPad.h"
-#include "TCanvas.h"
 #include "THStack.h"
 #include "TLegend.h"
-#include "TColor.h"
-#include "TGaxis.h"
 #include "TLine.h"
 #include "TLatex.h"
-
-#include <utility>
-#include <vector>
-#include <map>
-#include <iostream>
-#include <fstream>
 
 typedef std::vector<TFile*>   TFileVec;
 typedef std::vector<TH1F*>    TH1FVec;
@@ -28,12 +17,12 @@ typedef std::vector<TLine*>   TLineVec;
 typedef std::vector<TLegend*> TLegVec;
 typedef std::vector<TCanvas*> TCanvVec;
 typedef std::vector<TPad*>    TPadVec;
-typedef std::vector<TGaxis*>  TGaxisVec;
 
 class StackPlots
 {
 public:
-  StackPlots(const SamplePairVec Samples, const TString selection, const Int_t njetsselection, const Double_t lumi, const TString outname, const ColorMap & colorMap, const TString outtype);
+  StackPlots(TStrBoolMap Samples, const TString outdir, const TString outtype, 
+	     const ColorMap & colorMap, const Float_t lumi, const TString extratext);
 
   void InitTH1FNamesAndSubDNames();
   void OpenInputFiles();
@@ -43,7 +32,6 @@ public:
   void InitRatioPlots();
   void InitRatioLines();
   void InitOutputCanvPads();
-  void InitUpperAxes();
 
   void DoStacks(std::ofstream & yields);
 
@@ -51,14 +39,12 @@ public:
   void MakeRatioPlots();
   void MakeOutputCanvas();
 
-  void DrawUpperPad(const UInt_t th1d, const Bool_t isLogY);
-  Double_t GetMaximum(const UInt_t th1d);
-  Double_t GetMinimum(const UInt_t th1d);
-  void SetUpperAxes(const UInt_t th1d);
-  void DrawLowerPad(const UInt_t th1d);
-  void SetLines(const UInt_t th1d);
-  void SaveCanvas(const UInt_t th1d, const Bool_t isLogY);
-  void CMSLumi(TCanvas *& pad, const Int_t iPosX);
+  void DrawUpperPad(const Int_t th1f, const Bool_t isLogY);
+  Float_t GetMaximum(const Int_t th1f);
+  Float_t GetMinimum(const Int_t th1f);
+  void DrawLowerPad(const Int_t th1f);
+  void SetLines(const Int_t th1f);
+  void SaveCanvas(const Int_t th1f, const Bool_t isLogY);
 
   ~StackPlots();
 
@@ -67,16 +53,13 @@ private:
   TStrVec fMCNames;
   TStrVec fTH1FNames;
   TStrMap fTH1FSubDMap;
-  TString fSelection;
-  Int_t   fNJetsSeln;
 
-  TString fNJetsStr;
-
-  Double_t fLumi;
+  Float_t fLumi;
+  TString fExtraText;
   
-  UInt_t fNData;
-  UInt_t fNMC;
-  UInt_t fNTH1F;
+  Int_t fNData;
+  Int_t fNMC;
+  Int_t fNTH1F;
 
   TFileVec fDataFiles;
   TFileVec fMCFiles;
@@ -91,8 +74,6 @@ private:
   TH1FVec    fOutRatioMCErrs;  
   TLegVec    fTH1FLegends;
   TLineVec   fOutTH1FRatioLines;
-
-  TGaxisVec  fOutTH1FTGaxes;
 
   TCanvVec   fOutTH1FCanvases;
   TPadVec    fOutTH1FStackPads;
