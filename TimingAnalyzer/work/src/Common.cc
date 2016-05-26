@@ -49,6 +49,36 @@ void MoveInput(TString infile, TString outdir){
   gSystem->Exec(mvin.Data());
 }
 
+void CheckValidFile(TFile *& file, TString fname){
+  if (file == (TFile*) NULL) { // check if valid file
+    std::cout << "Input file is bad pointer: " << fname.Data()
+	      << " ...exiting..." << std::endl;
+    exit(1);
+  }
+  else {
+    std::cout << "Successfully opened file: " << fname.Data() << std::endl;
+  }
+}
+
+void CheckValidTree(TTree *& tree, TString tname, TString fname){
+  if (tree == (TTree*) NULL) { // check if valid plot
+    std::cout << "Input TTree is bad pointer: " << tname.Data() << " in input file: " << fname.Data()
+	      << " ...exiting..." << std::endl;
+    exit(1);
+  }
+  else {
+    std::cout << "Successfully opened tree: " << tname.Data() << " in input file: " << fname.Data() << std::endl;
+  }
+}
+
+void CheckValidTH1F(TH1F *& plot, TString pname, TString fname){
+  if (plot == (TH1F*) NULL) { // check if valid plot
+    std::cout << "Input TH1F is bad pointer: " << pname.Data() << " in input file: " << fname.Data() 
+	      << " ...exiting..." << std::endl;
+    exit(1);
+  }
+}
+
 void CMSLumi(TCanvas *& canv, Float_t lumi, TString extraText, Int_t iPosX) {
   TString cmsText      = "CMS";
   Double_t cmsTextFont = 61;  // default is helvetic-bold
