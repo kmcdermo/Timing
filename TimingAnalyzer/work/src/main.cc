@@ -7,7 +7,6 @@
 #include "TROOT.h"
 
 // to do:
-// plot dump reader
 // move pt bins, eta bins to config
 // make phi bins (z and eff pt)
 
@@ -33,13 +32,11 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
   Config::colorMap["dyll"]   = kCyan;
   Config::colorMap["qcd"]    = kYellow;
   Config::colorMap["gamma"]  = kGreen;
-  Config::colorMap["demomc"] = kPink;
 
   // define title map
   Config::SampleTitleMap["dyll"]   = "Z #rightarrow l^{+}l^{-}";
   Config::SampleTitleMap["qcd"]    = "QCD";
   Config::SampleTitleMap["gamma"]  = "#gamma + Jets";
-  Config::SampleTitleMap["demomc"] = "Demo";
 }
 
 void DestroyMain(std::ofstream & yields, TStyle *& tdrStyle) {
