@@ -62,6 +62,7 @@ void Analysis::StandardPlots(){
   // Set up hists first --> first in map is histo name, by design!
   TH1Map  trTH1Map;
   TStrMap trTH1SubMap; // set inside MakeTH1Plot
+  trTH1Map["nvtx"]   = Analysis::MakeTH1Plot("nvtx","",50,0.,50.,"nVertices","Events",trTH1SubMap,"standard");
   trTH1Map["zmass"]  = Analysis::MakeTH1Plot("zmass","",100,60.,120.,"Dielectron invariant mass [GeV/c^{2}]","Events",trTH1SubMap,"standard");
   trTH1Map["zpt"]    = Analysis::MakeTH1Plot("zpt","",100,0.,750.,"Dielectron p_{T} [GeV/c^{2}]","Events",trTH1SubMap,"standard");
   trTH1Map["zeta"]   = Analysis::MakeTH1Plot("zeta","",100,-10.0,10.0,"Dielectron #eta","Events",trTH1SubMap,"standard");
@@ -87,6 +88,7 @@ void Analysis::StandardPlots(){
       else         {weight = 1.0;}
 
       // standard "validation" plots
+      trTH1Map["nvtx"]->Fill(nvtx,weight);
       trTH1Map["zmass"]->Fill(zmass,weight);
       trTH1Map["zpt"]->Fill(zpt,weight);
       trTH1Map["zeta"]->Fill(zeta,weight);

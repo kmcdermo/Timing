@@ -1,11 +1,15 @@
 // hname must match name string in histo map! too lazy to pass extra parameter
-#include "../interface/PUReweight.hh"
 #include "../interface/Common.hh"
+#include "../interface/PUReweight.hh"
 #include "../interface/Analysis.hh"
+#include "../interface/StackPlots.hh"
 
 #include "TROOT.h"
 
 int main(){
+  // to do:
+  // add Config file/namespace
+  // use command line arguments instead -- long term
   
   ////////////////////
   // Initialization //
@@ -16,15 +20,17 @@ int main(){
   const TString outtype   = "png";
   const Float_t lumi      = 2.301; // brilcalc lumi --normtag /afs/cern.ch/user/l/lumipro/public/normtag_file/moriond16_normtag.json -i rereco2015D.txt -u /fb
   const TString extratext = "Preliminary";
+  
+  // yields
+  ofstream yields(Form("%s/yields.txt",outdir.Data()),std::ios_base::app);
 
   // Variables needed in all functions for plotting and the like so it is universal
   // Color for MC Stacks
   ColorMap colorMap;
-  colorMap["dyll"]  = kCyan;
-  colorMap["top"]   = kMagenta;
-  colorMap["qcd"]   = kYellow;
-  colorMap["gamma"] = kGreen;
-  colorMap["demomc"]  = kPink;
+  colorMap["dyll"]   = kCyan;
+  colorMap["qcd"]    = kYellow;
+  colorMap["gamma"]  = kGreen;
+  colorMap["demomc"] = kPink;
 
   ////////////////////////
   // Set official style //
@@ -59,15 +65,16 @@ int main(){
   ///////////////////
   // Main Analysis //
   ///////////////////
+  TStrBoolMap SampleMap;
+  SampleMap["demo"]   = false;
+  SampleMap["demomc"] = true;
+  
   Bool_t doAnalysis = true;
     
   if (doAnalysis) {
-    TStrBoolMap SampleMap;
-    SampleMap["demo"]   = false;
-    SampleMap["demomc"] = true;
-    
     for (TStrBoolMapIter mapiter = SampleMap.begin(); mapiter != SampleMap.end(); ++mapiter) {
       Analysis analysis((*mapiter).first,(*mapiter).second,outdir,outtype,lumi,extratext,colorMap);
+      analysis.StandardPlots();
       analysis.TimeResPlots();
     }
   }
@@ -75,6 +82,20 @@ int main(){
     std::cout << "Skipping analysis section" << std::endl;
   }
 
-  
-  delete tdrStyle; // delete global style
+  ///////////////////
+  // Stack data/mc //
+  ///////////////////
+
+  Bool_t doStacks = true;
+  if (doStacks) {
+    StackPlots Stacker(SampleMap,outdir,outtype,colorMap,lumi,extratext);
+    Stacker.DoStacks(yields);
+  }
+  else {
+    std::cout << "Skipping stacking data over MC" << std::endl;
+  }
+
+  // end of the line
+  yields.close(); 
+  delete tdrStyle; 
 }

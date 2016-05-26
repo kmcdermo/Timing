@@ -21,12 +21,6 @@ StackPlots::StackPlots(TStrBoolMap Samples, const TString outdir, const TString 
   // save lumi
   fLumi = lumi;
 
-  // have to copy by hand plots to use unfortunately
-  StackPlots::InitTH1FNamesAndSubDNames();
-  
-  // store this too
-  fNTH1F = fTH1FNames.size();
-
   // output data members
   fOutName = "stackedplots"; // where to put output stack plots 
   MakeOutDir(Form("%s/%s",fOutDir.Data(),fOutName.Data())); // make output directory 
@@ -34,9 +28,17 @@ StackPlots::StackPlots(TStrBoolMap Samples, const TString outdir, const TString 
   fOutFile = new TFile(Form("%s/%s/stackplots_canvases.root",fOutDir.Data(),fOutName.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
 
   // define title map
-  fSampleTitleMap["dyll"]    = "Z #rightarrow l^{+}l^{-}";
-  fSampleTitleMap["qcd"]     = "QCD";
-  fSampleTitleMap["gamma"]   = "#gamma + Jets";
+  fSampleTitleMap["dyll"]   = "Z #rightarrow l^{+}l^{-}";
+  fSampleTitleMap["qcd"]    = "QCD";
+  fSampleTitleMap["gamma"]  = "#gamma + Jets";
+  fSampleTitleMap["demomc"] = "Demo";
+
+  // have to copy by hand plots to use unfortunately
+  StackPlots::InitTH1FNamesAndSubDNames();
+  
+  // store this too
+  fNTH1F = fTH1FNames.size();
+  MakeSubDirs(fTH1FSubDMap,fOutDir+"/"+fOutName);
 
   // with all that defined, initialize everything in constructor
   StackPlots::OpenInputFiles();
