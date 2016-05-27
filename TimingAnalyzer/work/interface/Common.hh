@@ -29,6 +29,10 @@ typedef std::map<TString,Bool_t> TStrBoolMap;
 typedef TStrBoolMap::iterator    TStrBoolMapIter;
 
 typedef std::map<TString,Color_t> ColorMap;
+typedef std::map<TString,Int_t>   TStrIntMap;
+
+typedef std::map<TString,Float_t> TStrFltMap;
+typedef TStrFltMap::iterator      TStrFltMapIter;
 
 typedef std::vector<TString>  TStrVec;
 typedef std::vector<Int_t>    IntVec;

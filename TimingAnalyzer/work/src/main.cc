@@ -33,6 +33,16 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
   Config::SampleTitleMap["dyll"]   = "Z #rightarrow l^{+}l^{-}";
   Config::SampleTitleMap["qcd"]    = "QCD";
   Config::SampleTitleMap["gamma"]  = "#gamma + Jets";
+
+  // sample xsec map
+  Config::SampleXsecMap["dyll"] = 6104.;
+  // multiply by 1000 to get to pb;
+  for (TStrFltMapIter mapiter = Config::SampleXsecMap.begin(); mapiter != Config::SampleXsecMap.end(); ++mapiter) {
+    (*mapiter).second *= 1000.;
+  }
+  
+  // sample wgtsum map
+  Config::SampleWgtsumMap["dyll"] = 2.337e+10;
 }
 
 void DestroyMain(std::ofstream & yields, TStyle *& tdrStyle) {

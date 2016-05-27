@@ -14,7 +14,9 @@ namespace Config {
   Bool_t  useGJets   = false;
   Bool_t  skipRuns   = false;
 
-  TStrBoolMap SampleMap;      // set in main.cc
-  ColorMap    colorMap;       // set in main.cc
-  TStrMap     SampleTitleMap; // set in main.cc
+  TStrBoolMap SampleMap;       // set in main.cc
+  ColorMap    colorMap;        // set in main.cc
+  TStrMap     SampleTitleMap;  // set in main.cc
+  TStrFltMap  SampleXsecMap;   // set in main.cc
+  TStrFltMap  SampleWgtsumMap; // set in main.cc
 }

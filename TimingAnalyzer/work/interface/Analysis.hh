@@ -12,8 +12,6 @@
 typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator        TH1MapIter;
 
-typedef std::map<TString,Int_t> TStrIntMap; // to be used as TH1BinMaps
-
 typedef std::map<TString,TH2F*> TH2Map;
 typedef TH2Map::iterator        TH2MapIter;
 
@@ -44,8 +42,10 @@ private:
   TString fSample;
   Bool_t  fIsMC;
 
-  // PU weight input
-  FltVec fPUweights;
+  // MC weight input
+  FltVec  fPUweights;
+  Float_t fXsec;
+  Float_t fWgtsum;
 
   // Output
   TString fOutDir;
@@ -85,7 +85,6 @@ public:
   Float_t         zphi;
   Int_t           puobs;
   Int_t           putrue;
-  Float_t         xsec;
   Float_t         wgt;
   Int_t           genzpid;
   Float_t         genzpt;
@@ -100,7 +99,6 @@ public:
   Float_t         genel2pt;
   Float_t         genel2eta;
   Float_t         genel2phi;
-  Float_t         wgtsum;
 
   // List of branches
   TBranch        *b_event;   //!
@@ -131,7 +129,6 @@ public:
   TBranch        *b_zphi;   //!
   TBranch        *b_puobs;   //!
   TBranch        *b_putrue;   //!
-  TBranch        *b_xsec;   //!
   TBranch        *b_wgt;   //!
   TBranch        *b_genzpid;   //!
   TBranch        *b_genzpt;   //!
@@ -146,7 +143,6 @@ public:
   TBranch        *b_genel2pt;   //!
   TBranch        *b_genel2eta;   //!
   TBranch        *b_genel2phi;   //!
-  TBranch        *b_wgtsum;   //!
 };
 
 #endif

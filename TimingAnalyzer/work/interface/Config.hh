@@ -9,13 +9,14 @@
 typedef std::map<TString,Color_t> ColorMap;
 typedef std::map<TString,TString> TStrMap;
 typedef std::map<TString,Bool_t>  TStrBoolMap;
+typedef std::map<TString,Float_t> TStrFltMap;
 
 namespace Config{
   // general config
   constexpr    Float_t PI = 3.14159265358979323846;
 
   // output config
-  constexpr    Float_t lumi      = 2.301;
+  constexpr    Float_t lumi      = 2.301; // brilcalc lumi --normtag /afs/cern.ch/user/l/lumipro/public/normtag_file/moriond16_normtag.json -i rereco2015D.txt -u /fb
   static const TString outtype   = "png";
   static const TString extraText = "Preliminary";
 
@@ -51,6 +52,8 @@ namespace Config{
   extern TStrBoolMap SampleMap;
   extern ColorMap    colorMap;
   extern TStrMap     SampleTitleMap;
+  extern TStrFltMap  SampleXsecMap;
+  extern TStrFltMap  SampleWgtsumMap;
 };
 
 #endif

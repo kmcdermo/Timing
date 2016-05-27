@@ -54,7 +54,7 @@ void PUReweight::GetPUWeights(){
     TString cut = basecut.Data();
 
     // files + trees + tmp hist for data
-    TString filename = Form("input/DATA/%s/tree.root",fDataNames[data].Data());
+    TString filename = Form("input/DATA/%s/skimmedtree.root",fDataNames[data].Data());
     TFile * file = TFile::Open(filename.Data());
     CheckValidFile(file,filename);
 
@@ -82,11 +82,11 @@ void PUReweight::GetPUWeights(){
     // create appropriate selection cut
     TString cut = basecut;
     cut.Prepend("( ");
-    cut.Append(Form(" * (xsec * %f * wgt / wgtsum)",Config::lumi)); // make sure to add weights for all mc!
+    cut.Append(Form(" * (%f * %f * wgt / %f)",Config::SampleXsecMap[fMCNames[mc]], Config::lumi, Config::SampleWgtsumMap[fMCNames[mc]])); // make sure to add weights for all mc!
     cut.Append(" )");
 
     // files + trees for mc + tmp hists
-    TString filename = Form("input/MC/%s/treewgtsum.root",fMCNames[mc].Data());
+    TString filename = Form("input/MC/%s/skimmedtree.root",fMCNames[mc].Data());
     TFile * file = TFile::Open(filename.Data());
     CheckValidFile(file,filename);
 

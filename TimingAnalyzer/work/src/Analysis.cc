@@ -7,7 +7,7 @@ inline Float_t rad2(Float_t x, Float_t y){
 Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC) {
   TString filename = "";
   if (fIsMC) {
-    filename = Form("input/MC/%s/treewgtsum.root",fSample.Data());
+    filename = Form("input/MC/%s/skimmedtree.root",fSample.Data());
     fInFile  = TFile::Open(filename.Data());
     CheckValidFile(fInFile,filename);
     
@@ -27,11 +27,15 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC) {
     delete purwfile;
     // end getting pile-up weights
 
+    // set sample xsec + wgtsum
+    fXsec   = Config::SampleXsecMap[fSample];
+    fWgtsum = Config::SampleWgtsumMap[fSample];
+
     fOutDir = Form("%s/MC/%s",Config::outdir.Data(),fSample.Data());
-    fColor  = Config::colorMap[fSample.Data()];
+    fColor  = Config::colorMap[fSample];
   }
   else {
-    filename = Form("input/DATA/%s/tree.root",fSample.Data());
+    filename = Form("input/DATA/%s/skimmedtree.root",fSample.Data());
     fInFile  = TFile::Open(filename.Data());
     CheckValidFile(fInFile,filename);
 
@@ -85,7 +89,7 @@ void Analysis::StandardPlots(){
     fInTree->GetEntry(entry);
     if (zmass>Config::zlow && zmass<Config::zup) { // extra selection over skimmed samples
       Float_t weight = -1.;
-      if   (fIsMC) {weight = (xsec * Config::lumi * wgt / wgtsum) * fPUweights[nvtx];}
+      if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[nvtx];}
       else         {weight = 1.0;}
 
       // standard "validation" plots
@@ -175,7 +179,7 @@ void Analysis::TimeResPlots(){
     fInTree->GetEntry(entry);
     if (zmass>Config::zlow && zmass<Config::zup) { // extra selection over skims
       Float_t weight = -1.;
-      if   (fIsMC) {weight = (xsec * Config::lumi * wgt / wgtsum) * fPUweights[nvtx];}
+      if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[nvtx];}
       else         {weight = 1.0;}
 
       Float_t time_diff  = el1time-el2time;
@@ -339,7 +343,7 @@ void Analysis::TriggerEffs(){
     fInTree->GetEntry(entry);
     if ( (zmass>Config::zlow && zmass<Config::zup) ){ // we want di-electron z's
       Float_t weight = -1.;
-      if   (fIsMC) {weight = (xsec * Config::lumi * wgt / wgtsum) * fPUweights[nvtx];}
+      if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[nvtx];}
       else         {weight = 1.0;}
 
       if ( hltdoubleel ) { // fill numer if passed
@@ -640,7 +644,6 @@ void Analysis::InitTree() {
   if (fIsMC){ // initialize extra branches if MC
     fInTree->SetBranchAddress("puobs", &puobs, &b_puobs);
     fInTree->SetBranchAddress("putrue", &putrue, &b_putrue);
-    fInTree->SetBranchAddress("xsec", &xsec, &b_xsec);
     fInTree->SetBranchAddress("wgt", &wgt, &b_wgt);
     fInTree->SetBranchAddress("genzpid", &genzpid, &b_genzpid);
     fInTree->SetBranchAddress("genzpt", &genzpt, &b_genzpt);
@@ -655,6 +658,5 @@ void Analysis::InitTree() {
     fInTree->SetBranchAddress("genel2pt", &genel2pt, &b_genel2pt);
     fInTree->SetBranchAddress("genel2eta", &genel2eta, &b_genel2eta);
     fInTree->SetBranchAddress("genel2phi", &genel2phi, &b_genel2phi);
-    fInTree->SetBranchAddress("wgtsum", &wgtsum, &b_wgtsum);
   }
 }
