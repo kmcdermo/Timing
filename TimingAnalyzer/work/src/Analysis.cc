@@ -133,6 +133,8 @@ void Analysis::TimeResPlots(){
   z2DMap["td_zpt"]  = Analysis::MakeTH2Plot("td_zpt","",zptbins,ntimebins,-timerange,timerange,"Z p_{T} [GeV/c]","Dielectron Seed Time Difference [ns]",z2DSubMap,"timing/zpt");  
   DblVec zetabins; for (Int_t i = 0; i < 21; i++){zetabins.push_back(i/2. - 5.0);}
   z2DMap["td_zeta"] = Analysis::MakeTH2Plot("td_zeta","",zetabins,ntimebins,-timerange,timerange,"Z #eta","Dielectron Seed Time Difference [ns]",z2DSubMap,"timing/zeta");  
+  DblVec zphibins; for (Int_t i = 0; i < 21; i++){zphibins.push_back(i*0.32 - 3.2);}
+  z2DMap["td_zphi"] = Analysis::MakeTH2Plot("td_zphi","",zphibins,ntimebins,-timerange,timerange,"Z #phi","Dielectron Seed Time Difference [ns]",z2DSubMap,"timing/zphi");  
 
   // make 2D plots for effective electron pt, for EBEB, EBEE, EEEE
   TH2Map  effpt2DMap;    
@@ -163,7 +165,7 @@ void Analysis::TimeResPlots(){
   //actually define plots
   TH2Map  runs2DMap;    
   TStrMap runs2DSubMap; 
-  if (!fIsMC) { // only do for data... declarations are small, don't bother with check
+  if (!fIsMC && !Config::skipRuns) { // only do for data... declarations are small, don't bother with check
     runs2DMap["tdEBEB_runs"] = Analysis::MakeTH2Plot("tdEBEB_runs","",dRunNos,ntimebins,-timerange,timerange,"Run Number","Dielectron Seed Time Difference [ns] (EBEB)",runs2DSubMap,"timing/runs/EBEB");  
     runs2DMap["tdEBEE_runs"] = Analysis::MakeTH2Plot("tdEBEE_runs","",dRunNos,ntimebins,-timerange,timerange,"Run Number","Dielectron Seed Time Difference [ns] (EBEE)",runs2DSubMap,"timing/runs/EBEE");  
     runs2DMap["tdEEEE_runs"] = Analysis::MakeTH2Plot("tdEEEE_runs","",dRunNos,ntimebins,-timerange,timerange,"Run Number","Dielectron Seed Time Difference [ns] (EEEE)",runs2DSubMap,"timing/runs/EEEE");  
@@ -200,22 +202,23 @@ void Analysis::TimeResPlots(){
       if (el1eb && el2eb) {
 	inclu1DMap["tdEBEB_inclu"]->Fill(time_diff,weight);
  	effpt2DMap["tdEBEB_effpt"]->Fill(eff_dielpt,time_diff,weight);
-	if (!fIsMC) {runs2DMap["tdEBEB_runs"]->Fill(run,time_diff,weight);}
+	if (!fIsMC && !Config::skipRuns) {runs2DMap["tdEBEB_runs"]->Fill(run,time_diff,weight);}
       }
       else if ( (el1eb && el2ee) || (el1ee && el2eb) ) {
 	inclu1DMap["tdEBEE_inclu"]->Fill(time_diff,weight);
  	effpt2DMap["tdEBEE_effpt"]->Fill(eff_dielpt,time_diff,weight);
-	if (!fIsMC) {runs2DMap["tdEBEE_runs"]->Fill(run,time_diff,weight);}
+	if (!fIsMC && !Config::skipRuns) {runs2DMap["tdEBEE_runs"]->Fill(run,time_diff,weight);}
       }
       else if (el1ee && el2ee) {
 	inclu1DMap["tdEEEE_inclu"]->Fill(time_diff,weight);
  	effpt2DMap["tdEEEE_effpt"]->Fill(eff_dielpt,time_diff,weight);
-	if (!fIsMC) {runs2DMap["tdEEEE_runs"]->Fill(run,time_diff,weight);}
+	if (!fIsMC && !Config::skipRuns) {runs2DMap["tdEEEE_runs"]->Fill(run,time_diff,weight);}
       }
     
       // Now Z based plots
       z2DMap["td_zpt"]->Fill(zpt,time_diff,weight);
       z2DMap["td_zeta"]->Fill(zeta,time_diff,weight);
+      z2DMap["td_zphi"]->Fill(zphi,time_diff,weight);
     }
   }
 
@@ -237,19 +240,25 @@ void Analysis::TimeResPlots(){
   Analysis::SaveTH2s(z2DMap,z2DSubMap);
 
   // zpt
-  TH1Map zpt1DMap;  TStrMap zpt1DSubMap;
-  Analysis::Project2Dto1D(z2DMap["td_zpt"],z2DSubMap,zpt1DMap,zpt1DSubMap);
-  Analysis::ProduceMeanSigma(zpt1DMap,"td_zpt","Z p_{T} [GeV/c]",zptbins,fitrange,z2DSubMap["td_zpt"]);
+  TH1Map zpt1DMap; TStrMap zpt1DSubMap; TStrIntMap zpt1DbinMap;
+  Analysis::Project2Dto1D(z2DMap["td_zpt"],z2DSubMap,zpt1DMap,zpt1DSubMap,zpt1DbinMap);
+  Analysis::ProduceMeanSigma(zpt1DMap,zpt1DbinMap,"td_zpt","Z p_{T} [GeV/c]",zptbins,fitrange,z2DSubMap["td_zpt"]);
 
   // zeta
-  TH1Map zeta1DMap;  TStrMap zeta1DSubMap;
-  Analysis::Project2Dto1D(z2DMap["td_zeta"],z2DSubMap,zeta1DMap,zeta1DSubMap);
-  Analysis::ProduceMeanSigma(zeta1DMap,"td_zeta","Z #eta",zetabins,fitrange,z2DSubMap["td_zeta"]);
+  TH1Map zeta1DMap; TStrMap zeta1DSubMap; TStrIntMap zeta1DbinMap;
+  Analysis::Project2Dto1D(z2DMap["td_zeta"],z2DSubMap,zeta1DMap,zeta1DSubMap,zeta1DbinMap);
+  Analysis::ProduceMeanSigma(zeta1DMap,zeta1DbinMap,"td_zeta","Z #eta",zetabins,fitrange,z2DSubMap["td_zeta"]);
+
+  // zphi
+  TH1Map zphi1DMap; TStrMap zphi1DSubMap; TStrIntMap zphi1DbinMap;
+  Analysis::Project2Dto1D(z2DMap["td_zphi"],z2DSubMap,zphi1DMap,zphi1DSubMap,zphi1DbinMap);
+  Analysis::ProduceMeanSigma(zphi1DMap,zphi1DbinMap,"td_zphi","Z #phi",zphibins,fitrange,z2DSubMap["td_zphi"]);
 
   // Delete z's
   Analysis::DeleteTH2s(z2DMap);
   Analysis::DeleteTH1s(zpt1DMap);
   Analysis::DeleteTH1s(zeta1DMap);
+  Analysis::DeleteTH1s(zphi1DMap);
   ////////////////////////////////////
 
   ////////////////////////////////////
@@ -258,19 +267,19 @@ void Analysis::TimeResPlots(){
   Analysis::SaveTH2s(effpt2DMap,effpt2DSubMap);
 
   // EBEB
-  TH1Map effptEBEB1DMap;  TStrMap effptEBEB1DSubMap;
-  Analysis::Project2Dto1D(effpt2DMap["tdEBEB_effpt"],effpt2DSubMap,effptEBEB1DMap,effptEBEB1DSubMap);
-  Analysis::ProduceMeanSigma(effptEBEB1DMap,"tdEBEB_effpt","Effective Dielectron p_{T} [GeV/c] (EBEB)",effptbins,fitrange,effpt2DSubMap["tdEBEB_effpt"]);
+  TH1Map effptEBEB1DMap; TStrMap effptEBEB1DSubMap; TStrIntMap effptEBEB1DbinMap;
+  Analysis::Project2Dto1D(effpt2DMap["tdEBEB_effpt"],effpt2DSubMap,effptEBEB1DMap,effptEBEB1DSubMap,effptEBEB1DbinMap);
+  Analysis::ProduceMeanSigma(effptEBEB1DMap,effptEBEB1DbinMap,"tdEBEB_effpt","Effective Dielectron p_{T} [GeV/c] (EBEB)",effptbins,fitrange,effpt2DSubMap["tdEBEB_effpt"]);
 
   // EBEE
-  TH1Map effptEBEE1DMap;  TStrMap effptEBEE1DSubMap;
-  Analysis::Project2Dto1D(effpt2DMap["tdEBEE_effpt"],effpt2DSubMap,effptEBEE1DMap,effptEBEE1DSubMap);
-  Analysis::ProduceMeanSigma(effptEBEE1DMap,"tdEBEE_effpt","Effective Dielectron p_{T} [GeV/c] (EBEE)",effptbins,fitrange,effpt2DSubMap["tdEBEE_effpt"]);
+  TH1Map effptEBEE1DMap; TStrMap effptEBEE1DSubMap; TStrIntMap effptEBEE1DbinMap;
+  Analysis::Project2Dto1D(effpt2DMap["tdEBEE_effpt"],effpt2DSubMap,effptEBEE1DMap,effptEBEE1DSubMap,effptEBEE1DbinMap);
+  Analysis::ProduceMeanSigma(effptEBEE1DMap,effptEBEE1DbinMap,"tdEBEE_effpt","Effective Dielectron p_{T} [GeV/c] (EBEE)",effptbins,fitrange,effpt2DSubMap["tdEBEE_effpt"]);
 
   // EEEE
-  TH1Map effptEEEE1DMap;  TStrMap effptEEEE1DSubMap;
-  Analysis::Project2Dto1D(effpt2DMap["tdEEEE_effpt"],effpt2DSubMap,effptEEEE1DMap,effptEEEE1DSubMap);
-  Analysis::ProduceMeanSigma(effptEEEE1DMap,"tdEEEE_effpt","Effective Dielectron p_{T} [GeV/c] (EEEE)",effptbins,fitrange,effpt2DSubMap["tdEEEE_effpt"]);
+  TH1Map effptEEEE1DMap; TStrMap effptEEEE1DSubMap; TStrIntMap effptEEEE1DbinMap;
+  Analysis::Project2Dto1D(effpt2DMap["tdEEEE_effpt"],effpt2DSubMap,effptEEEE1DMap,effptEEEE1DSubMap,effptEEEE1DbinMap);
+  Analysis::ProduceMeanSigma(effptEEEE1DMap,effptEEEE1DbinMap,"tdEEEE_effpt","Effective Dielectron p_{T} [GeV/c] (EEEE)",effptbins,fitrange,effpt2DSubMap["tdEEEE_effpt"]);
 
   // Delete effective electron pt plots
   Analysis::DeleteTH2s(effpt2DMap);
@@ -281,24 +290,24 @@ void Analysis::TimeResPlots(){
 
   ////////////////////////////////////
   // Do run plots last
-  if (!fIsMC) {
+  if (!fIsMC && !Config::skipRuns) {
     MakeSubDirs(runs2DSubMap,fOutDir);
     Analysis::SaveTH2s(runs2DMap,runs2DSubMap);
 
     // EBEB
-    TH1Map runsEBEB1DMap;  TStrMap runsEBEB1DSubMap;
-    Analysis::Project2Dto1D(runs2DMap["tdEBEB_runs"],runs2DSubMap,runsEBEB1DMap,runsEBEB1DSubMap);
-    Analysis::ProduceMeanSigma(runsEBEB1DMap,"tdEBEB_runs","Run Number (EBEB)",dRunNos,fitrange,runs2DSubMap["tdEBEB_runs"]);
+    TH1Map runsEBEB1DMap; TStrMap runsEBEB1DSubMap; TStrIntMap runsEBEB1DbinMap;
+    Analysis::Project2Dto1D(runs2DMap["tdEBEB_runs"],runs2DSubMap,runsEBEB1DMap,runsEBEB1DSubMap,runsEBEB1DbinMap);
+    Analysis::ProduceMeanSigma(runsEBEB1DMap,runsEBEB1DbinMap,"tdEBEB_runs","Run Number (EBEB)",dRunNos,fitrange,runs2DSubMap["tdEBEB_runs"]);
 
     // EBEE
-    TH1Map runsEBEE1DMap;  TStrMap runsEBEE1DSubMap;
-    Analysis::Project2Dto1D(runs2DMap["tdEBEE_runs"],runs2DSubMap,runsEBEE1DMap,runsEBEE1DSubMap);
-    Analysis::ProduceMeanSigma(runsEBEE1DMap,"tdEBEE_runs","Run Number (EBEE)",dRunNos,fitrange,runs2DSubMap["tdEBEE_runs"]);
+    TH1Map runsEBEE1DMap; TStrMap runsEBEE1DSubMap; TStrIntMap runsEBEE1DbinMap;
+    Analysis::Project2Dto1D(runs2DMap["tdEBEE_runs"],runs2DSubMap,runsEBEE1DMap,runsEBEE1DSubMap,runsEBEE1DbinMap);
+    Analysis::ProduceMeanSigma(runsEBEE1DMap,runsEBEE1DbinMap,"tdEBEE_runs","Run Number (EBEE)",dRunNos,fitrange,runs2DSubMap["tdEBEE_runs"]);
 
     // EEEE
-    TH1Map runsEEEE1DMap;  TStrMap runsEEEE1DSubMap;
-    Analysis::Project2Dto1D(runs2DMap["tdEEEE_runs"],runs2DSubMap,runsEEEE1DMap,runsEEEE1DSubMap);
-    Analysis::ProduceMeanSigma(runsEEEE1DMap,"tdEEEE_runs","Run Number (EEEE)",dRunNos,fitrange,runs2DSubMap["tdEEEE_runs"]);
+    TH1Map runsEEEE1DMap; TStrMap runsEEEE1DSubMap; TStrIntMap runsEEEE1DbinMap;
+    Analysis::Project2Dto1D(runs2DMap["tdEEEE_runs"],runs2DSubMap,runsEEEE1DMap,runsEEEE1DSubMap,runsEEEE1DbinMap);
+    Analysis::ProduceMeanSigma(runsEEEE1DMap,runsEEEE1DbinMap,"tdEEEE_runs","Run Number (EEEE)",dRunNos,fitrange,runs2DSubMap["tdEEEE_runs"]);
 
     // Delete run plots
     Analysis::DeleteTH2s(runs2DMap);
@@ -356,8 +365,7 @@ void Analysis::TriggerEffs(){
   delete d_hltdoubleel_el2pt;
 }
 
-
-void Analysis::Project2Dto1D(TH2F *& hist2d, TStrMap & subdir2dmap, TH1Map & th1map, TStrMap & subdir1dmap){
+void Analysis::Project2Dto1D(TH2F *& hist2d, TStrMap & subdir2dmap, TH1Map & th1map, TStrMap & subdir1dmap, TStrIntMap & th1binmap) {
   // y bins same width, x bins are variable
 
   TString  basename = hist2d->GetName();
@@ -381,24 +389,30 @@ void Analysis::Project2Dto1D(TH2F *& hist2d, TStrMap & subdir2dmap, TH1Map & th1
 
     TString histname = "";
     // First create each histogram
-    if (basename.Contains("zeta",TString::kExact)) { //ugh
+    if     (basename.Contains("zeta",TString::kExact)) { //ugh
       histname = Form("%s_%3.1f-%3.1f",basename.Data(),xlow,xhigh);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %3.1f-%3.1f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
-						      "Events",subdir1dmap,subdir2dmap[basename.Data()]);
+							 "Events",subdir1dmap,subdir2dmap[basename.Data()]);
+    }
+    else if (basename.Contains("zphi",TString::kExact)) { //triple ugh
+      histname = Form("%s_%4.2f-%4.2f",basename.Data(),xlow,xhigh);
+      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %4.2f-%4.2f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
+							 "Events",subdir1dmap,subdir2dmap[basename.Data()]);
     }
     else if (basename.Contains("runs",TString::kExact)) { //double ugh
       Int_t runno = (xlow+xhigh)/2;
       histname = Form("%s_%i",basename.Data(),runno);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in Run: %i",ytitle.Data(),runno),
-						      "Events",subdir1dmap,subdir2dmap[basename.Data()]);
+							 "Events",subdir1dmap,subdir2dmap[basename.Data()]);
     }
     else { // "normal" filling
       Int_t ixlow  = Int_t(xlow); 
       Int_t ixhigh = Int_t(xhigh); 
       histname = Form("%s_%i-%i",basename.Data(),ixlow,ixhigh);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %i-%i",ytitle.Data(),xtitle.Data(),ixlow,ixhigh),
-						      "Events",subdir1dmap,subdir2dmap[basename.Data()]);
+							 "Events",subdir1dmap,subdir2dmap[basename.Data()]);
     }
+    th1binmap[histname.Data()] = i; // universal pairing
 
     // then fill corresponding bins from y
     for (Int_t j = 0; j <= hist2d->GetNbinsY() + 1; j++) {
@@ -415,7 +429,7 @@ void Analysis::Project2Dto1D(TH2F *& hist2d, TStrMap & subdir2dmap, TH1Map & th1
   }
 }
 
-void Analysis::ProduceMeanSigma(TH1Map & th1map, TString name, TString xtitle, const DblVec vxbins, Float_t fitrange, TString subdir){
+void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString name, TString xtitle, const DblVec vxbins, Float_t fitrange, TString subdir){
   // need to convert bins into array
   const Double_t * axbins = &vxbins[0]; // https://stackoverflow.com/questions/2923272/how-to-convert-vector-to-array-c
 
@@ -430,7 +444,6 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TString name, TString xtitle, c
   outhist_sigma->GetYaxis()->SetTitle("Dielectron Seed Time Sigma [ns]");
   outhist_sigma->SetLineColor(fColor);
 
-  Int_t i = 1; // dummy counter (ROOT starts bins at 1)
   for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); mapiter++) { 
     TF1* gausfit = new TF1("gausfit","gaus",-fitrange,fitrange);
     (*mapiter).second->Fit("gausfit","R");
@@ -440,13 +453,14 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TString name, TString xtitle, c
     Int_t imean  = gausfit->GetParNumber("Mean");
     Int_t isigma = gausfit->GetParNumber("Sigma");
 
-    outhist_mean->SetBinContent(i,gausfit->GetParameter(imean));
-    outhist_mean->SetBinError(i,gausfit->GetParError(imean));
+    Int_t bin = th1binmap[(*mapiter).second->GetName()]; // returns which bin each th1 corresponds to one the new plot
 
-    outhist_sigma->SetBinContent(i,gausfit->GetParameter(isigma));
-    outhist_sigma->SetBinError(i,gausfit->GetParError(isigma));
+    outhist_mean->SetBinContent(bin,gausfit->GetParameter(imean));
+    outhist_mean->SetBinError(bin,gausfit->GetParError(imean));
 
-    i++; //increment after all filled
+    outhist_sigma->SetBinContent(bin,gausfit->GetParameter(isigma));
+    outhist_sigma->SetBinError(bin,gausfit->GetParError(isigma));
+
     delete gausfit;
   }
 
@@ -455,7 +469,7 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TString name, TString xtitle, c
   outhist_mean->Write();
   outhist_sigma->Write();
 
-  // and want to dump them too!
+  // and want to dump them too (for stacking)!
   if (!fIsMC && !name.Contains("runs",TString::kExact)) {fTH1Dump << outhist_mean->GetName()  << " " << subdir.Data() << std::endl;}
   if (!fIsMC && !name.Contains("runs",TString::kExact)) {fTH1Dump << outhist_sigma->GetName() << " " << subdir.Data() << std::endl;}
 
@@ -531,13 +545,12 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) {
   delete canv;
 }
 
-void Analysis::SaveTH1andFit(TH1F * hist, TString subdir, TF1 * fit) {
+void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit) {
   fOutFile->cd();
-
-  TCanvas * canv = new TCanvas();
   hist->Write(); 
 
   // now draw onto canvas to save as png
+  TCanvas * canv = new TCanvas();
   canv->cd();
   hist->Draw("PE");
   fit->Draw("same");

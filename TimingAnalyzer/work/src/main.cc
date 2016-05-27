@@ -6,10 +6,6 @@
 
 #include "TROOT.h"
 
-// to do:
-// move pt bins, eta bins to config
-// make phi bins (z and eff pt)
-
 void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
   // set TDR Style (need to force it!)
   tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
@@ -66,6 +62,7 @@ int main(int argc, const char* argv[]) {
 	"  --use-DYll      <bool>        use Drell-Yan (LL+Jets) with MC (def: %s)\n"
 	"  --use-QCD       <bool>        use QCD with MC (def: %s)\n"
 	"  --use-GJets     <bool>        use Gamma+Jets with MC (def: %s)\n"
+	"  --skip-runs     <bool>        skip timing plots vs run number (def: %s)\n"
         ,
         argv[0],
         Config::outdir.Data(),
@@ -76,7 +73,8 @@ int main(int argc, const char* argv[]) {
 	(Config::useDEG      ? "true" : "false"),
 	(Config::useDYll     ? "true" : "false"),
 	(Config::useQCD      ? "true" : "false"),
-	(Config::useGJets    ? "true" : "false")
+	(Config::useGJets    ? "true" : "false"),
+	(Config::skipRuns    ? "true" : "false")
       );
       exit(0);
     }
@@ -89,6 +87,7 @@ int main(int argc, const char* argv[]) {
     else if (*i == "--use-DYll")    { Config::useDYll    = true; }
     else if (*i == "--use-QCD")     { Config::useQCD     = true; }
     else if (*i == "--use-GJets")   { Config::useGJets   = true; }
+    else if (*i == "--skip-runs")   { Config::skipRuns   = true; Config::doAnalysis = true; }
     else    { fprintf(stderr, "Error: Unknown option/argument '%s'.\n", i->c_str()); exit(1); }
     mArgs.erase(start, ++i);
   }

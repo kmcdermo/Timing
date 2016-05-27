@@ -46,6 +46,7 @@ namespace Config{
   extern Bool_t      useDYll;
   extern Bool_t      useQCD;
   extern Bool_t      useGJets;
+  extern Bool_t      skipRuns;
 
   extern TStrBoolMap SampleMap;
   extern ColorMap    colorMap;
