@@ -122,7 +122,7 @@ int main(int argc, const char* argv[]) {
     for (TStrBoolMapIter mapiter = Config::SampleMap.begin(); mapiter != Config::SampleMap.end(); ++mapiter) {
       Analysis analysis((*mapiter).first,(*mapiter).second);
       analysis.StandardPlots();
-      //      analysis.TimeResPlots();
+      analysis.TimeResPlots();
     }
   }
   else {

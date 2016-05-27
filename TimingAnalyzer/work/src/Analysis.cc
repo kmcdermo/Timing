@@ -456,8 +456,8 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TString name, TString xtitle, c
   outhist_sigma->Write();
 
   // and want to dump them too!
-  if (!fIsMC) {fTH1Dump << outhist_mean->GetName()  << " " << subdir.Data() << std::endl;}
-  if (!fIsMC) {fTH1Dump << outhist_sigma->GetName() << " " << subdir.Data() << std::endl;}
+  if (!fIsMC && !name.Contains("runs",TString::kExact)) {fTH1Dump << outhist_mean->GetName()  << " " << subdir.Data() << std::endl;}
+  if (!fIsMC && !name.Contains("runs",TString::kExact)) {fTH1Dump << outhist_sigma->GetName() << " " << subdir.Data() << std::endl;}
 
   // save log/lin of each plot
   TCanvas * canv = new TCanvas();
