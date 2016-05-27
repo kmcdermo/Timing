@@ -7,7 +7,7 @@ options = VarParsing ('python')
 
 ## data or MC options
 options.register (
-	'isMC',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'isMC',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate data or MC');
 
 ## processName
@@ -31,17 +31,12 @@ options.register (
 
 ## Skim on events that pass hlt paths and tight electron kinematic requirements
 options.register (
-	'filterOnHLT',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'filterOnHLT',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate if to apply HLT requirements');
 
 options.register (
-	'filterOnKinematics',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'filterOnKinematics',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate if to apply tight electron kinematic requirements');
-
-## input cross section in case you want to store a different value wrt to the LHE file
-options.register(
-	'crossSection',-1,VarParsing.multiplicity.singleton, VarParsing.varType.float,
-	'external value for sample cross section, in case of data it is fixed to 0.001');
 
 ## nThreads to run
 options.register (
@@ -55,8 +50,6 @@ options.parseArguments()
 if options.isMC and 'dataRun2' in options.globalTag:
 	options.globalTag = '76X_mcRun2_asymptotic_RunIIFall15DR76_v1';
 
-if not options.isMC:
-	options.crossSection = -1.;
 
 if options.isMC and options.miniAODProcess != 'PAT':
 	options.miniAODProcess  = 'PAT'
@@ -151,7 +144,6 @@ process.tree = cms.EDAnalyzer("TimingAnalyzer",
    pileup     = cms.InputTag("slimmedAddPileupInfo"),
    genevt     = cms.InputTag("generator"),
    gens       = cms.InputTag("prunedGenParticles"),
-   xsec       = cms.double(options.crossSection),   
    ## trigger info + apply filter?
    triggerResults = cms.InputTag("TriggerResults", "", "HLT"),
    applyHLTFilter = cms.bool(options.filterOnHLT),

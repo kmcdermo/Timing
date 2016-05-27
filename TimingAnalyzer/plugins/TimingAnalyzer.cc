@@ -105,7 +105,6 @@ private:
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
   edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
   edm::EDGetTokenT<edm::View<reco::GenParticle> >   gensToken;
-  float xsec;
 
   // ECALELF tools
   EcalClusterLazyTools *clustertools;
@@ -173,9 +172,7 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
 
   ///////////// GEN INFO
   // isMC or Data --> default Data
-  isMC(iConfig.existsAs<bool>("isMC") ? iConfig.getParameter<bool>("isMC") : false),
-  // xsec
-  xsec(iConfig.existsAs<double>("xsec") ? iConfig.getParameter<double>("xsec") * 1000.0 : -1000.)
+  isMC(iConfig.existsAs<bool>("isMC") ? iConfig.getParameter<bool>("isMC") : false)
 {
   usesResource();
   usesResource("TFileService");
@@ -499,7 +496,6 @@ void TimingAnalyzer::beginJob() {
     tree->Branch("putrue"               , &putrue               , "putrue/I");
 
     // Event weights
-    tree->Branch("xsec"                 , &xsec                 , "xsec/F");
     tree->Branch("wgt"                  , &wgt                  , "wgt/F");
 
     //Gen particles info
