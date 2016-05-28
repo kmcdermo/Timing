@@ -73,6 +73,7 @@ int main(int argc, const char* argv[]) {
 	"  --use-QCD       <bool>        use QCD with MC (def: %s)\n"
 	"  --use-GJets     <bool>        use Gamma+Jets with MC (def: %s)\n"
 	"  --skip-runs     <bool>        skip timing plots vs run number (def: %s)\n"
+	"  --use-skims     <bool>        use skims in analysis (def: %s)\n"
         ,
         argv[0],
         Config::outdir.Data(),
@@ -84,7 +85,8 @@ int main(int argc, const char* argv[]) {
 	(Config::useDYll     ? "true" : "false"),
 	(Config::useQCD      ? "true" : "false"),
 	(Config::useGJets    ? "true" : "false"),
-	(Config::skipRuns    ? "true" : "false")
+	(Config::skipRuns    ? "true" : "false"),
+	(Config::useSkims    ? "true" : "false")
       );
       exit(0);
     }
@@ -98,6 +100,7 @@ int main(int argc, const char* argv[]) {
     else if (*i == "--use-QCD")     { Config::useQCD     = true; }
     else if (*i == "--use-GJets")   { Config::useGJets   = true; }
     else if (*i == "--skip-runs")   { Config::skipRuns   = true; Config::doAnalysis = true; }
+    else if (*i == "--use-skims")   { Config::useSkims   = true; Config::doAnalysis = true; }
     else    { fprintf(stderr, "Error: Unknown option/argument '%s'.\n", i->c_str()); exit(1); }
     mArgs.erase(start, ++i);
   }

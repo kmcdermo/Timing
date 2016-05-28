@@ -5,12 +5,24 @@ inline Float_t rad2(Float_t x, Float_t y){
 }
 
 Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC) {
-  TString filename = "";
-  if (fIsMC) {
-    filename = Form("input/MC/%s/skimmedtree.root",fSample.Data());
-    fInFile  = TFile::Open(filename.Data());
-    CheckValidFile(fInFile,filename);
-    
+  // Set input
+  TString filename = Form("input/%s/%s/%s", (fIsMC?"MC":"DATA"), fSample.Data(), (Config::useSkims?"skimmedtree.root":"tree.root"));
+  fInFile  = TFile::Open(filename.Data());
+  CheckValidFile(fInFile,filename);
+
+  TString treename = "tree/tree";
+  fInTree = (TTree*)fInFile->Get(treename.Data());
+  CheckValidTree(fInTree,treename,filename);
+  InitTree();
+  
+  // Set Output Stuff
+  fOutDir = Form("%s/%s/%s",Config::outdir.Data(), (fIsMC?"MC":"DATA"), fSample.Data());
+  MakeOutDir(fOutDir);
+  fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
+  fColor = (fIsMC?Config::colorMap[fSample]:kBlack);
+  
+  // extra setup for data and MC
+  if (fIsMC) { 
     // Get pile-up weights
     TString purwfname = Form("%s/%s/%s",Config::outdir.Data(),Config::pusubdir.Data(),Config::pufilename.Data());   
     TFile * purwfile  = TFile::Open(purwfname.Data());
@@ -30,30 +42,10 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC) {
     // set sample xsec + wgtsum
     fXsec   = Config::SampleXsecMap[fSample];
     fWgtsum = Config::SampleWgtsumMap[fSample];
-
-    fOutDir = Form("%s/MC/%s",Config::outdir.Data(),fSample.Data());
-    fColor  = Config::colorMap[fSample];
+  }  
+  else{
+    fTH1Dump.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios_base::trunc); // do this once, and just do it for data
   }
-  else {
-    filename = Form("input/DATA/%s/skimmedtree.root",fSample.Data());
-    fInFile  = TFile::Open(filename.Data());
-    CheckValidFile(fInFile,filename);
-
-    fOutDir  = Form("%s/DATA/%s",Config::outdir.Data(),fSample.Data());
-    fColor   = kBlack;
-  }
-  
-  TString treename = "tree/tree";
-  fInTree = (TTree*)fInFile->Get(treename.Data());
-  CheckValidTree(fInTree,treename,filename);
-  InitTree();
-
-  // output stuff
-  MakeOutDir(fOutDir);
-  fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
-  
-  // dump th1 names and subdirs
-  if (!fIsMC) fTH1Dump.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios_base::trunc); // do this once, and just do it for data
 }
 
 Analysis::~Analysis(){
@@ -87,7 +79,7 @@ void Analysis::StandardPlots(){
 
   for (UInt_t entry = 0; entry < (!Config::doDemo?fInTree->GetEntries():Config::demoNum); entry++){
     fInTree->GetEntry(entry);
-    if (zmass>Config::zlow && zmass<Config::zup) { // extra selection over skimmed samples
+    if ((zmass>Config::zlow && zmass<Config::zhigh) && hltdoubleel && (el1pid == -el2pid)) { // extra selection over skimmed samples
       Float_t weight = -1.;
       if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[nvtx];}
       else         {weight = 1.0;}
@@ -177,7 +169,7 @@ void Analysis::TimeResPlots(){
 
   for (UInt_t entry = 0; entry < (!Config::doDemo?fInTree->GetEntries():Config::demoNum); entry++){
     fInTree->GetEntry(entry);
-    if (zmass>Config::zlow && zmass<Config::zup) { // extra selection over skims
+    if ((zmass>Config::zlow && zmass<Config::zhigh) && hltdoubleel && (el1pid == -el2pid)) { // extra selection over skims
       Float_t weight = -1.;
       if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[nvtx];}
       else         {weight = 1.0;}
@@ -341,7 +333,7 @@ void Analysis::TriggerEffs(){
 
   for (UInt_t entry = 0; entry < (!Config::doDemo?fInTree->GetEntries():Config::demoNum); entry++){
     fInTree->GetEntry(entry);
-    if ( (zmass>Config::zlow && zmass<Config::zup) ){ // we want di-electron z's
+    if ( (zmass>Config::zlow && zmass<Config::zhigh) && (el1pid == -el2pid) ){ // we want di-electron z's
       Float_t weight = -1.;
       if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[nvtx];}
       else         {weight = 1.0;}

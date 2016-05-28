@@ -28,7 +28,8 @@ namespace Config{
 
   // selection config
   constexpr    Float_t zlow      = 76.;
-  constexpr    Float_t zup       = 106.;
+  constexpr    Float_t zhigh     = 106.;
+  static const TString selection = Form("(zmass>%f && zmass<%f) && hltdoubleel && (el1pid == -el2pid)",zlow,zhigh);
 
   // data config
   static const TString plotdumpname = "plotnames.txt";
@@ -48,6 +49,7 @@ namespace Config{
   extern Bool_t      useQCD;
   extern Bool_t      useGJets;
   extern Bool_t      skipRuns;
+  extern Bool_t      useSkims;
 
   extern TStrBoolMap SampleMap;
   extern ColorMap    colorMap;

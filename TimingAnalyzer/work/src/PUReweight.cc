@@ -47,7 +47,7 @@ PUReweight::~PUReweight() {
 
 void PUReweight::GetPUWeights(){
   // cut to be used in tree
-  TString basecut = Form("zmass>%3.f && zmass<%3.f",Config::zlow,Config::zup);
+  TString basecut = Config::selection;
   
   // get vtx distribution for data first
   for (Int_t data = 0; data < fNData; data++){

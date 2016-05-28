@@ -92,7 +92,7 @@ void CMSLumi(TCanvas *& canv, Int_t iPosX) {
   Double_t cmsTextFont = 61;  // default is helvetic-bold
   
   // extraText is either "Simulation" or "Preliminary"
-  Bool_t writeExtraText  = (!Config::extraText.Contains("",TString::kExact)?true:false);
+  Bool_t writeExtraText  = (Config::extraText.Contains("",TString::kExact)?false:true);
   Double_t extraTextFont = 52;  // default is helvetica-italics
 
   TString lumiText = Form("#sqrt{s} = 13 TeV, L = %3.2f fb^{-1}", Config::lumi); // must change this spec once we are in fb range!
