@@ -240,17 +240,17 @@ void Analysis::TimeResPlots(){
 
       // electron eta categories 
       if (el1eb && el2eb) {
-	inclu1DMap["tdEBEB_inclu"]->Fill(time_diff,weight);
+	inclu1DMap["tdEBEB_inclusive"]->Fill(time_diff,weight);
  	effpt2DMap["tdEBEB_effpt"]->Fill(eff_dielpt,time_diff,weight);
 	if (!fIsMC && !Config::skipRuns) {runs2DMap["tdEBEB_runs"]->Fill(run,time_diff,weight);}
       }
       else if ( (el1eb && el2ee) || (el1ee && el2eb) ) {
-	inclu1DMap["tdEBEE_inclu"]->Fill(time_diff,weight);
+	inclu1DMap["tdEBEE_inclusive"]->Fill(time_diff,weight);
  	effpt2DMap["tdEBEE_effpt"]->Fill(eff_dielpt,time_diff,weight);
 	if (!fIsMC && !Config::skipRuns) {runs2DMap["tdEBEE_runs"]->Fill(run,time_diff,weight);}
       }
       else if (el1ee && el2ee) {
-	inclu1DMap["tdEEEE_inclu"]->Fill(time_diff,weight);
+	inclu1DMap["tdEEEE_inclusive"]->Fill(time_diff,weight);
  	effpt2DMap["tdEEEE_effpt"]->Fill(eff_dielpt,time_diff,weight);
 	if (!fIsMC && !Config::skipRuns) {runs2DMap["tdEEEE_runs"]->Fill(run,time_diff,weight);}
       }
