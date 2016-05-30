@@ -126,9 +126,9 @@ void Analysis::TimeResPlots(){
   // inclusive "global" time differences by eta + single electron times
   TH1Map  inclu1DMap;
   TStrMap inclu1DSubMap; // set inside MakeTH1Plot
-  inclu1DMap["tdEBEB_inclu"] = Analysis::MakeTH1Plot("tdEBEB_inclu","",Config::ntimebins,-Config::timerange,Config::timerange,"Dielectron Seed Time Difference [ns] (EBEB Inclusive)","Events",inclu1DSubMap,"timing/inclusive");  
-  inclu1DMap["tdEBEE_inclu"] = Analysis::MakeTH1Plot("tdEBEE_inclu","",Config::ntimebins,-Config::timerange,Config::timerange,"Dielectron Seed Time Difference [ns] (EBEE Inclusive)","Events",inclu1DSubMap,"timing/inclusive");  
-  inclu1DMap["tdEEEE_inclu"] = Analysis::MakeTH1Plot("tdEEEE_inclu","",Config::ntimebins,-Config::timerange,Config::timerange,"Dielectron Seed Time Difference [ns] (EEEE Inclusive)","Events",inclu1DSubMap,"timing/inclusive");  
+  inclu1DMap["tdEBEB_inclusive"] = Analysis::MakeTH1Plot("tdEBEB_inclusive","",Config::ntimebins,-Config::timerange,Config::timerange,"Dielectron Seed Time Difference [ns] (EBEB Inclusive)","Events",inclu1DSubMap,"timing/effpt/EBEB");  
+  inclu1DMap["tdEBEE_inclusive"] = Analysis::MakeTH1Plot("tdEBEE_inclusive","",Config::ntimebins,-Config::timerange,Config::timerange,"Dielectron Seed Time Difference [ns] (EBEE Inclusive)","Events",inclu1DSubMap,"timing/effpt/EBEE");  
+  inclu1DMap["tdEEEE_inclusive"] = Analysis::MakeTH1Plot("tdEEEE_inclusive","",Config::ntimebins,-Config::timerange,Config::timerange,"Dielectron Seed Time Difference [ns] (EEEE Inclusive)","Events",inclu1DSubMap,"timing/effpt/EEEE");  
 
   // make 2D plots for Z variables (pT, eta)
   TH2Map  z2DMap;      
@@ -574,7 +574,7 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   Int_t  sumevents = 0; // also a bit hacky...
 
   for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) { 
-    Int_t bin = th1binmap[(*mapiter).second->GetName()]; // returns which bin each th1 corresponds to one the new plot
+    Int_t bin = th1binmap[(*mapiter).first]; // returns which bin each th1 corresponds to one the new plot
     
     // only do this for run number plots --> check each plot has enough entries to do fit
     if ( name.Contains("runs",TString::kExact) ) {
@@ -600,7 +600,7 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
 	// add the bad histos to the good one
 	for (TH1MapIter tempmapiter = tempmap.begin(); tempmapiter != tempmap.end(); ++tempmapiter) {
 	  (*mapiter).second->Add((*tempmapiter).second);
-	  numer = th1binmap[(*tempmapiter).second->GetName()] * (*tempmapiter).second->Integral();
+	  numer = th1binmap[(*tempmapiter).first] * (*tempmapiter).second->Integral();
 	}
 	
 	// set "effective" bin number
@@ -695,12 +695,12 @@ TH2F * Analysis::MakeTH2Plot(TString hname, TString htitle, const DblVec vxbins,
 void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) {
   fOutFile->cd();
 
-  TCanvas * canv = new TCanvas();
   for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) { 
-    
+    // save to output file
     (*mapiter).second->Write(); // map is map["hist name",TH1D*]
 
     // now draw onto canvas to save as png
+    TCanvas * canv = new TCanvas();
     canv->cd();
     (*mapiter).second->Draw( fIsMC ? "HIST" : "PE" );
     
@@ -712,9 +712,35 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) {
     canv->SetLogy(1);
     CMSLumi(canv);
     canv->SaveAs(Form("%s/%s/log/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
-  }
 
-  delete canv;
+    delete canv;
+    
+    if ((*mapiter).first.Contains("time")) { // fit th1s with time in the name --> could factor out this copy-paste...
+      // make it a "graph" with the right colors
+      (*mapiter).second->SetLineColor(fColor);
+      (*mapiter).second->SetMarkerColor(fColor);
+      
+      TF1* gausfit = new TF1("gausfit","gaus",-Config::fitrange,Config::fitrange);
+      (*mapiter).second->Fit("gausfit","R");
+      
+      TCanvas * fitcanv = new TCanvas();
+      fitcanv->cd();
+      (*mapiter).second->Draw("PE");
+      gausfit->Draw("same");
+      
+      // first save as linear, then log
+      fitcanv->SetLogy(0);
+      CMSLumi(fitcanv);
+      fitcanv->SaveAs(Form("%s/%s/lin/%s_fit.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
+      
+      fitcanv->SetLogy(1);
+      CMSLumi(fitcanv);
+      fitcanv->SaveAs(Form("%s/%s/log/%s_fit.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
+      
+      delete gausfit;
+      delete fitcanv;
+    }
+  }
 }
 
 void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit) {
@@ -754,7 +780,7 @@ void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap) {
     // only save as linear
     canv->SetLogy(0);
     CMSLumi(canv);
-    canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
+    canv->SaveAs(Form("%s/%s/%s_2D.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
   }
 
   delete canv;
