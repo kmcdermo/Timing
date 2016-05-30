@@ -148,7 +148,7 @@ void Analysis::TimeResPlots(){
   // make 2D plots for effective electron pt, for EBEB, EBEE, EEEE
   TH2Map  effpt2DMap;    
   TStrMap effpt2DSubMap; 
-  DblVec  effptbins = {20,25,30,35,40,50,70,100,250}; //effective el pt bins
+  DblVec  effptbins = {20,25,30,35,40,50,70,250}; //effective el pt bins
   effpt2DMap["tdEBEB_effpt"] = Analysis::MakeTH2Plot("tdEBEB_effpt","",effptbins,Config::ntimebins,-Config::timerange,Config::timerange,"Effective p_{T} [GeV/c]","Dielectron Seed Time Difference [ns] (EBEB)",effpt2DSubMap,"timing/effpt/EBEB");  
   effpt2DMap["tdEBEE_effpt"] = Analysis::MakeTH2Plot("tdEBEE_effpt","",effptbins,Config::ntimebins,-Config::timerange,Config::timerange,"Effective p_{T} [GeV/c]","Dielectron Seed Time Difference [ns] (EBEE)",effpt2DSubMap,"timing/effpt/EBEE");  
   effpt2DMap["tdEEEE_effpt"] = Analysis::MakeTH2Plot("tdEEEE_effpt","",effptbins,Config::ntimebins,-Config::timerange,Config::timerange,"Effective p_{T} [GeV/c]","Dielectron Seed Time Difference [ns] (EEEE)",effpt2DSubMap,"timing/effpt/EEEE");  
@@ -156,13 +156,13 @@ void Analysis::TimeResPlots(){
   // make 2D plots for single electron timing pt, for two categories
   TH2Map  el1pt2DMap;    
   TStrMap el1pt2DSubMap; 
-  DblVec  el1ptbins = {20,25,30,35,40,50,70,100,150,200,300,750}; // el1 pt bins
+  DblVec  el1ptbins = {20,25,30,35,40,50,70,100,150,200,750}; // el1 pt bins
   el1pt2DMap["el1pt_EB"] = Analysis::MakeTH2Plot("el1pt_EB","",el1ptbins,Config::ntimebins,-Config::timerange,Config::timerange,"Leading Electron p_{T} [GeV/c]","Leading Electron Seed Time [ns] (EB)",el1pt2DSubMap,"timing/el1/pt/EB");  
   el1pt2DMap["el1pt_EE"] = Analysis::MakeTH2Plot("el1pt_EE","",el1ptbins,Config::ntimebins,-Config::timerange,Config::timerange,"Leading Electron p_{T} [GeV/c]","Leading Electron Seed Time [ns] (EE)",el1pt2DSubMap,"timing/el1/pt/EE");  
 
   TH2Map  el2pt2DMap;    
   TStrMap el2pt2DSubMap; 
-  DblVec  el2ptbins = {20,25,30,35,40,50,70,100,150,300}; // el2 pt bins
+  DblVec  el2ptbins = {20,25,30,35,40,50,70,100,300}; // el2 pt bins
   el2pt2DMap["el2pt_EB"] = Analysis::MakeTH2Plot("el2pt_EB","",el2ptbins,Config::ntimebins,-Config::timerange,Config::timerange,"Subleading Electron p_{T} [GeV/c]","Leading Electron Seed Time [ns] (EB)",el2pt2DSubMap,"timing/el2/pt/EB");  
   el2pt2DMap["el2pt_EE"] = Analysis::MakeTH2Plot("el2pt_EE","",el2ptbins,Config::ntimebins,-Config::timerange,Config::timerange,"Subleading Electron p_{T} [GeV/c]","Leading Electron Seed Time [ns] (EE)",el2pt2DSubMap,"timing/el2/pt/EE");  
 
@@ -579,18 +579,15 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
     // only do this for run number plots --> check each plot has enough entries to do fit
     if ( name.Contains("runs",TString::kExact) ) {
       if ( ((*mapiter).second->Integral() + sumevents) < Config::nEventsCut ) { 
-	// get run number 
-	TString srunno = (*mapiter).second->GetName(); 
-	srunno.Remove(0,12); // remove "tdExEx_runs_", retains number
-	Int_t irunno = srunno.Atoi();
 	
 	// store the plot to be added later
-	tempmap[irunno] = (*mapiter.second); // run number
+	TString tempname  = Form("%s_tmp",(*mapiter).first.Data());
+	tempmap[tempname] = (TH1F*)(*mapiter).second->Clone(tempname.Data()); 
 
 	// record the number of events to exceed cut
-	sumevents += tempmap[irunno]->Integral();
+	sumevents += tempmap[tempname]->Integral();
 
-	continue; // don't do the fit either
+	continue; // don't do anything more, just go to next run
       } 
       
       if ( tempmap.size() > 0 ) { // since we passed the last check, see if we had any bad runs -- if so, add to this one
