@@ -35,14 +35,14 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
   Config::SampleTitleMap["gamma"]  = "#gamma + Jets";
 
   // sample xsec map
-  Config::SampleXsecMap["dyll"] = 6104.;
+  Config::SampleXsecMap["dyll"] = 6025.2; //6104.;
   // multiply by 1000 to get to pb;
   for (TStrFltMapIter mapiter = Config::SampleXsecMap.begin(); mapiter != Config::SampleXsecMap.end(); ++mapiter) {
     (*mapiter).second *= 1000.;
   }
   
   // sample wgtsum map
-  Config::SampleWgtsumMap["dyll"] = 2.337e+10;
+  Config::SampleWgtsumMap["dyll"] = 4.44757e+11;
 }
 
 void DestroyMain(std::ofstream & yields, TStyle *& tdrStyle) {
