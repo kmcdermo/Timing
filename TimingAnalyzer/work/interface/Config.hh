@@ -36,17 +36,18 @@ namespace Config{
   static const TString runs         = "config/runs2015D.txt";
 
   // plot config
-  constexpr    Int_t    ntimebins = 100;
-  constexpr    Double_t timerange = 5.0;
-  constexpr    Double_t fitrange  = 3.0;
+  constexpr    Int_t    ntimebins  = 100;
+  constexpr    Double_t timerange  = 5.0;
+  constexpr    Double_t fitrange   = 3.0;
+  constexpr    Int_t    nEventsCut = 100; // for run number plots
 
   // ECAL config
-  constexpr    Float_t  etaEB     = 1.4442;
-  constexpr    Float_t  etaEElow  = 1.566;
-  constexpr    Float_t  etaEEhigh = 2.5;
+  constexpr    Float_t etaEB     = 1.4442;
+  constexpr    Float_t etaEElow  = 1.566;
+  constexpr    Float_t etaEEhigh = 2.5;
 
   // if in demo mode
-  constexpr    UInt_t  demoNum   = 1000;
+  constexpr    UInt_t demoNum = 1000;
 
   // set at command line and in main
   extern TString     outdir;
