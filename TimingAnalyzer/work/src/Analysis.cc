@@ -6,7 +6,7 @@ inline Float_t rad2(Float_t x, Float_t y){
 
 Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC) {
   // Set input
-  TString filename = Form("input/%s/%s/%s", (fIsMC?"MC":"DATA"), fSample.Data(), (Config::useSkims?"skimmedtree.root":"tree.root"));
+  TString filename = Form("input/%s/%s/%s", (fIsMC?"MC":"DATA"), fSample.Data(), (Config::useFull?"tree.root":"skimmedtree.root"));
   fInFile  = TFile::Open(filename.Data());
   CheckValidFile(fInFile,filename);
 

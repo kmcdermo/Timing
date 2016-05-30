@@ -73,20 +73,26 @@ int main(int argc, const char* argv[]) {
 	"  --use-QCD       <bool>        use QCD with MC (def: %s)\n"
 	"  --use-GJets     <bool>        use Gamma+Jets with MC (def: %s)\n"
 	"  --skip-runs     <bool>        skip timing plots vs run number (def: %s)\n"
-	"  --use-skims     <bool>        use skims in analysis (def: %s)\n"
+	"  --use-full      <bool>        use full ntuples, not skims (def: %s)\n"
+	"  --do-standard   <bool>        make standard validation plots (def: %s)\n"
+	"  --do-timeres    <bool>        make timing bias and resolution plots (def: %s)\n"
+	"  --do-trigeff    <bool>        make trigger efficiency plots (def: %s)\n"
         ,
         argv[0],
         Config::outdir.Data(),
-	(Config::doPURW      ? "true" : "false"),
-	(Config::doAnalysis  ? "true" : "false"),
-	(Config::doStacks    ? "true" : "false"),
-	(Config::doDemo      ? "true" : "false"),
-	(Config::useDEG      ? "true" : "false"),
-	(Config::useDYll     ? "true" : "false"),
-	(Config::useQCD      ? "true" : "false"),
-	(Config::useGJets    ? "true" : "false"),
-	(Config::skipRuns    ? "true" : "false"),
-	(Config::useSkims    ? "true" : "false")
+	(Config::doPURW     ? "true" : "false"),
+	(Config::doAnalysis ? "true" : "false"),
+	(Config::doStacks   ? "true" : "false"),
+	(Config::doDemo     ? "true" : "false"),
+	(Config::useDEG     ? "true" : "false"),
+	(Config::useDYll    ? "true" : "false"),
+	(Config::useQCD     ? "true" : "false"),
+	(Config::useGJets   ? "true" : "false"),
+	(Config::skipRuns   ? "true" : "false"),
+	(Config::useFull    ? "true" : "false"),
+	(Config::doStandard ? "true" : "false"),
+	(Config::doTimeRes  ? "true" : "false"),
+	(Config::doTrigEff  ? "true" : "false")
       );
       exit(0);
     }
@@ -94,13 +100,16 @@ int main(int argc, const char* argv[]) {
     else if (*i == "--do-purw")     { Config::doPURW     = true; }
     else if (*i == "--do-analysis") { Config::doAnalysis = true; }
     else if (*i == "--do-stacks")   { Config::doStacks   = true; }
-    else if (*i == "--do-demo")     { Config::doDemo     = true; Config::doAnalysis = true; }
+    else if (*i == "--do-demo")     { Config::doDemo     = true; Config::doAnalysis = true; Config::doStandard = true; Config::doTimeRes = true; }
     else if (*i == "--use-DEG")     { Config::useDEG     = true; }
     else if (*i == "--use-DYll")    { Config::useDYll    = true; }
     else if (*i == "--use-QCD")     { Config::useQCD     = true; }
     else if (*i == "--use-GJets")   { Config::useGJets   = true; }
-    else if (*i == "--skip-runs")   { Config::skipRuns   = true; Config::doAnalysis = true; }
-    else if (*i == "--use-skims")   { Config::useSkims   = true; Config::doAnalysis = true; }
+    else if (*i == "--skip-runs")   { Config::skipRuns   = true; Config::doAnalysis = true; Config::doTimeRes = true; }
+    else if (*i == "--use-full")    { Config::useFull    = true; }
+    else if (*i == "--do-standard") { Config::doAnalysis = true; Config::doStandard = true; }
+    else if (*i == "--do-timeres")  { Config::doAnalysis = true; Config::doTimeRes  = true; }
+    else if (*i == "--do-trigeff")  { Config::doAnalysis = true; Config::doTrigEff  = true; }
     else    { fprintf(stderr, "Error: Unknown option/argument '%s'.\n", i->c_str()); exit(1); }
     mArgs.erase(start, ++i);
   }
@@ -133,8 +142,9 @@ int main(int argc, const char* argv[]) {
   if (Config::doAnalysis) {
     for (TStrBoolMapIter mapiter = Config::SampleMap.begin(); mapiter != Config::SampleMap.end(); ++mapiter) {
       Analysis analysis((*mapiter).first,(*mapiter).second);
-      analysis.StandardPlots();
-      analysis.TimeResPlots();
+      if (Config::doStandard) analysis.StandardPlots();
+      if (Config::doTimeRes)  analysis.TimeResPlots();
+      if (Config::doTrigEff)  analysis.TriggerEffs();
     }
   }
   else {

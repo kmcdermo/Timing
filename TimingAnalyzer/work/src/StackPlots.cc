@@ -124,7 +124,11 @@ void StackPlots::MakeStackPlots(std::ofstream & yields){
     fOutMCTH1FHists[th1f]->SetMarkerSize(0);
     fOutMCTH1FHists[th1f]->SetFillStyle(3254);
     fOutMCTH1FHists[th1f]->SetFillColor(kGray+3);
-    fTH1FLegends[th1f]->AddEntry(fOutMCTH1FHists[th1f],"MC Unc.","f");
+
+    TString ytitle  = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
+    Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
+
+    if (drawhist) fTH1FLegends[th1f]->AddEntry(fOutMCTH1FHists[th1f],"MC Unc.","f");
   
     // add total yield for MC here if nvtx plot
     if (fTH1FNames[th1f].Contains("nvtx",TString::kExact)) { // save total yields for MC
@@ -157,9 +161,12 @@ void StackPlots::MakeOutputCanvas() {
     
     // draw first with  log scale
     Bool_t isLogY = true;
-    StackPlots::DrawUpperPad(th1f,isLogY); // upper pad is stack
-    StackPlots::DrawLowerPad(th1f); // lower pad is ratio
-    StackPlots::SaveCanvas(th1f,isLogY);  // now save the canvas, w/ logy
+    TString ytitle = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
+    if ( !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact)) ){
+      StackPlots::DrawUpperPad(th1f,isLogY); // upper pad is stack
+      StackPlots::DrawLowerPad(th1f); // lower pad is ratio
+      StackPlots::SaveCanvas(th1f,isLogY);  // now save the canvas, w/ logy
+    }
 
     // draw second with lin scale
     isLogY = false;
@@ -185,21 +192,21 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) {
     fOutDataTH1FHists[th1f]->SetMaximum(max*1.5);
   }
   else {
-    if (max > 0){
-      fOutDataTH1FHists[th1f]->SetMaximum(max*1.05);      
-    }
-    else {
-      fOutDataTH1FHists[th1f]->SetMaximum(1.0);      
-    }
+    fOutDataTH1FHists[th1f]->SetMaximum( max > 0 ? max*1.05 : max/1.05);      
+    fOutDataTH1FHists[th1f]->SetMinimum( min > 0 ? min/1.05 : min*1.05);
   }
   
   // now draw the plots for upper pad in absurd order because ROOT is dumb
   fOutDataTH1FHists[th1f]->Draw("PE"); // draw first so labels appear
-  fOutMCTH1FStacks[th1f]->Draw("HIST SAME"); 
+
+  TString ytitle  = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
+  Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
+  
+  fOutMCTH1FStacks[th1f]->Draw( drawhist ? "HIST SAME" : "PE SAME"); 
   fOutTH1FStackPads[th1f]->RedrawAxis("SAME"); // stack kills axis
 
   //Draw MC sum total error as well on top of stack --> E2 makes error appear as rectangle
-  fOutMCTH1FHists[th1f]->Draw("E2 SAME");
+  if (drawhist) fOutMCTH1FHists[th1f]->Draw("E2 SAME");
 
   // redraw data (ROOT IS SO DUMBBBBBB)
   fOutDataTH1FHists[th1f]->Draw("PE SAME"); 

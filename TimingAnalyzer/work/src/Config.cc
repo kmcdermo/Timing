@@ -13,7 +13,10 @@ namespace Config {
   Bool_t  useQCD     = false;
   Bool_t  useGJets   = false;
   Bool_t  skipRuns   = false;
-  Bool_t  useSkims   = true;
+  Bool_t  useFull    = false;
+  Bool_t  doStandard = false;
+  Bool_t  doTimeRes  = false;
+  Bool_t  doTrigEff  = false;
 
   TStrBoolMap SampleMap;       // set in main.cc
   ColorMap    colorMap;        // set in main.cc

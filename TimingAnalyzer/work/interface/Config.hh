@@ -59,7 +59,10 @@ namespace Config{
   extern Bool_t      useQCD;
   extern Bool_t      useGJets;
   extern Bool_t      skipRuns;
-  extern Bool_t      useSkims;
+  extern Bool_t      useFull;
+  extern Bool_t      doStandard;
+  extern Bool_t      doTimeRes;
+  extern Bool_t      doTrigEff;
 
   extern TStrBoolMap SampleMap;
   extern ColorMap    colorMap;
