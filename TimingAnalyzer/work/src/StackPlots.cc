@@ -192,7 +192,7 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) {
   Float_t max = StackPlots::GetMaximum(th1f);
 
   if (isLogY) { // set min for log only... maybe consider min for linear eventually
-    fOutDataTH1FHists[th1f]->SetMinimum(0.08);
+    fOutDataTH1FHists[th1f]->SetMinimum(min/1.5);
     // set max with 2.0 scale to give enough space 
     fOutDataTH1FHists[th1f]->SetMaximum(max*1.5);
   }

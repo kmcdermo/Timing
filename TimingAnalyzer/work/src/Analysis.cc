@@ -714,8 +714,35 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) {
     canv->SaveAs(Form("%s/%s/log/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
 
     delete canv;
-    
-    if ((*mapiter).first.Contains("time")) { // fit th1s with time in the name --> could factor out this copy-paste...
+
+    // Draw and save normalized clone; then take original and fit it with some copy/past code
+    TString xtitle = (*mapiter).second->GetXaxis()->GetTitle();
+    if (xtitle.Contains("Time",TString::kExact)) {
+      // first clone th1, then normalize it, then draw + save it
+      TH1F * normhist = (TH1F*)(*mapiter).second->Clone(Form("%s_norm",(*mapiter).first.Data()));
+      normhist->Scale(1./normhist->Integral());
+      fOutFile->cd();
+      normhist->Write();
+
+      TCanvas * normcanv = new TCanvas();
+      normcanv->cd();
+      normhist->Draw( fIsMC ? "HIST" : "PE" );
+      
+      normcanv->SetLogy(0);
+      CMSLumi(normcanv);
+      normcanv->SaveAs(Form("%s/%s/lin/%s_norm.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
+      
+      normcanv->SetLogy(1);
+      CMSLumi(normcanv);
+      normcanv->SaveAs(Form("%s/%s/log/%s_norm.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
+
+      if (!fIsMC) {fTH1Dump << normhist->GetName()  << " " << subdirmap[(*mapiter).first].Data() << std::endl;}
+
+      delete normhist;
+      delete normcanv;
+
+      // fit th1s with time in the name --> could factor out this copy-paste...
+
       // make it a "graph" with the right colors
       (*mapiter).second->SetLineColor(fColor);
       (*mapiter).second->SetMarkerColor(fColor);
