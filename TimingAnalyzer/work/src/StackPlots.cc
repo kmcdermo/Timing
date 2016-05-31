@@ -204,6 +204,11 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) {
   // now draw the plots for upper pad in absurd order because ROOT is dumb
   fOutDataTH1FHists[th1f]->Draw("PE"); // draw first so labels appear
 
+  // again, have to scale TDR style values by height of upper pad
+  fOutDataTH1FHists[th1f]->GetYaxis()->SetLabelSize  (Config::LabelSize    / Config::height_up); 
+  fOutDataTH1FHists[th1f]->GetYaxis()->SetTitleSize  (Config::TitleSize    / Config::height_up);
+  fOutDataTH1FHists[th1f]->GetYaxis()->SetTitleOffset(Config::TitleYOffset * Config::height_up);
+
   TString ytitle  = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
   Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
   
@@ -290,23 +295,29 @@ void StackPlots::DrawLowerPad(const Int_t th1f) {
   // some style since apparently TDR Style is crapping out --> would really not like this here
   fOutRatioTH1FHists[th1f]->GetYaxis()->SetNdivisions(505);
 
-  fOutRatioTH1FHists[th1f]->GetXaxis()->SetLabelSize(0.11);
-  fOutRatioTH1FHists[th1f]->GetXaxis()->SetTitleSize(0.15);
-  fOutRatioTH1FHists[th1f]->GetXaxis()->SetTickSize(0.11);
-
-  fOutRatioTH1FHists[th1f]->GetYaxis()->SetLabelSize(0.11);
-  fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitleSize(0.15);
-  fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitleOffset(0.4); 
+  // sizes of titles is percent of height of pad --> want a constant size ... so take TDRStyle value, which is evaulated at unity pad height, and divide by height of pad
+  fOutRatioTH1FHists[th1f]->GetXaxis()->SetLabelSize  (Config::LabelSize    / Config::height_lp); 
+  fOutRatioTH1FHists[th1f]->GetXaxis()->SetLabelOffset(Config::LabelOffset  / Config::height_lp); 
+  fOutRatioTH1FHists[th1f]->GetXaxis()->SetTitleSize  (Config::TitleSize    / Config::height_lp);
+  fOutRatioTH1FHists[th1f]->GetXaxis()->SetTickLength (Config::TickLength   / Config::height_lp);
+  
+  fOutRatioTH1FHists[th1f]->GetYaxis()->SetLabelSize  (Config::LabelSize    / Config::height_lp); 
+  fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitleSize  (Config::TitleSize    / Config::height_lp);
+  fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitleOffset(Config::TitleYOffset * Config::height_lp);
 
   // redraw to go over line
   fOutRatioTH1FHists[th1f]->Draw("EP SAME"); 
   
   // plots MC error copy
-
   TString ytitle  = fOutRatioMCErrs[th1f]->GetYaxis()->GetTitle();
   Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
 
-  if (drawhist) fOutRatioMCErrs[th1f]->Draw("E2 SAME");
+  if (drawhist) {
+    for (Int_t bin = 1; bin <= fOutRatioMCErrs[th1f]->GetNbinsX(); bin++) {
+      if (fOutRatioMCErrs[th1f]->GetBinContent(bin) == 0) { fOutRatioMCErrs[th1f]->SetBinContent(bin,-1); } // don't display empty bins
+    }
+    fOutRatioMCErrs[th1f]->Draw("E2 SAME");
+  }
 }
 
 void StackPlots::SetLines(const Int_t th1f){
@@ -424,10 +435,10 @@ void StackPlots::InitOutputCanvPads() {
     fOutTH1FCanvases[th1f] = new TCanvas(Form("%s_canv",fTH1FNames[th1f].Data()),"");
     fOutTH1FCanvases[th1f]->cd();
     
-    fOutTH1FStackPads[th1f] = new TPad(Form("%s_upad",fTH1FNames[th1f].Data()),"", 0, 0.3, 1.0, 0.99);
+    fOutTH1FStackPads[th1f] = new TPad(Form("%s_upad",fTH1FNames[th1f].Data()),"", Config::left_up, Config::bottom_up, Config::right_up, Config::top_up);
     fOutTH1FStackPads[th1f]->SetBottomMargin(0); // Upper and lower plot are joined
     
-    fOutTH1FRatioPads[th1f] = new TPad(Form("%s_lpad",fTH1FNames[th1f].Data()), "", 0, 0.05, 1.0, 0.3);
+    fOutTH1FRatioPads[th1f] = new TPad(Form("%s_lpad",fTH1FNames[th1f].Data()), "", Config::left_lp, Config::bottom_lp, Config::right_lp, Config::top_lp);
     fOutTH1FRatioPads[th1f]->SetTopMargin(0);
     fOutTH1FRatioPads[th1f]->SetBottomMargin(0.3);
   }

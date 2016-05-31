@@ -49,7 +49,7 @@ void MoveInput(TString infile, TString outdir);
 void CheckValidFile(TFile *& file, TString fname);
 void CheckValidTree(TTree *& tree, TString tname, TString fname);
 void CheckValidTH1F(TH1F *& plot, TString pname, TString fname);
-void CMSLumi(TCanvas *& canv, Int_t iPosX = 0);
+void CMSLumi(TCanvas *& canv, Int_t iPosX = 10);
 void SetTDRStyle(TStyle *& tdrStyle);
 
 #endif

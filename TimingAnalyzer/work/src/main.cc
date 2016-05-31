@@ -148,7 +148,7 @@ int main(int argc, const char* argv[]) {
     std::cout << "Starting analyis section" << std::endl;
     for (TStrBoolMapIter mapiter = Config::SampleMap.begin(); mapiter != Config::SampleMap.end(); ++mapiter) {
       Analysis analysis((*mapiter).first,(*mapiter).second);
-      std::cout << "Analyzing: " << ((*mapiter).second?"MC":"DATA") << " Sample: " << (*mapiter).first << std::endl;
+      std::cout << "Analyzing: " << ((*mapiter).second?"MC":"DATA") << " sample: " << (*mapiter).first << std::endl;
       if (Config::doStandard) {
 	std::cout << "Doing standard plots" << std::endl;
 	analysis.StandardPlots();
@@ -161,6 +161,7 @@ int main(int argc, const char* argv[]) {
 	std::cout << "Doing trigger efficiencies" << std::endl;
 	analysis.TriggerEffs();
       }
+      std::cout << "Done analyzing: " << ((*mapiter).second?"MC":"DATA") << " sample: " << (*mapiter).first << std::endl;
     }
     std::cout << "Finished analysis section" << std::endl;
   }

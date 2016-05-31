@@ -41,6 +41,29 @@ namespace Config{
   constexpr    Double_t fitrange   = 3.0;
   constexpr    Int_t    nEventsCut = 100; // for run number plots
 
+  // TDRStyle Config --> needed by stacker
+  constexpr    Float_t  TitleSize    = 0.035;
+  constexpr    Float_t  TitleXOffset = 1.1;
+  constexpr    Float_t  TitleYOffset = 1.1;
+
+  constexpr    Float_t  LabelOffset = 0.007;
+  constexpr    Float_t  LabelSize   = 0.03;
+
+  constexpr    Float_t  TickLength  = 0.03;
+
+  // stacker config: lp = lower pad, up = upper pad
+  constexpr    Float_t  left_up   = 0.0;
+  constexpr    Float_t  bottom_up = 0.3;
+  constexpr    Float_t  right_up  = 1.0;
+  constexpr    Float_t  top_up    = 0.99;
+  constexpr    Float_t  height_up = top_up - bottom_up;
+
+  constexpr    Float_t  left_lp   = left_up;
+  constexpr    Float_t  bottom_lp = 0.05;
+  constexpr    Float_t  right_lp  = right_up;
+  constexpr    Float_t  top_lp    = bottom_up;
+  constexpr    Float_t  height_lp = top_lp - bottom_lp;
+
   // ECAL config
   constexpr    Float_t etaEB     = 1.4442;
   constexpr    Float_t etaEElow  = 1.566;

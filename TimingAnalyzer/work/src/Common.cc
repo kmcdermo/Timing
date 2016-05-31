@@ -88,14 +88,14 @@ void CheckValidTH1F(TH1F *& plot, TString pname, TString fname){
 }
 
 void CMSLumi(TCanvas *& canv, Int_t iPosX) {
-  TString cmsText      = "CMS";
+  TString  cmsText     = "CMS";
   Double_t cmsTextFont = 61;  // default is helvetic-bold
   
   // extraText is either "Simulation" or "Preliminary"
-  Bool_t writeExtraText  = (Config::extraText.EqualTo("",TString::kExact)?false:true);
-  Double_t extraTextFont = 52;  // default is helvetica-italics
+  Bool_t   writeExtraText  = (Config::extraText.EqualTo("",TString::kExact)?false:true);
+  Double_t extraTextFont   = 52;  // default is helvetica-italics
 
-  TString lumiText = Form("#sqrt{s} = 13 TeV, L = %3.2f fb^{-1}", Config::lumi); // must change this spec once we are in fb range!
+  TString lumiText = Form("%3.2f fb^{-1} (13 TeV)", Config::lumi); // must change this spec once we are in fb range!
   
   // text sizes and text offsets with respect to the top frame
   // in unit of the top margin size
@@ -277,22 +277,22 @@ void SetTDRStyle(TStyle *& tdrStyle){
 
   tdrStyle->SetTitleColor(1, "XYZ");
   tdrStyle->SetTitleFont(42, "XYZ");
-  tdrStyle->SetTitleSize(0.035, "XYZ");
-  tdrStyle->SetTitleXOffset(1.0);
-  tdrStyle->SetTitleYOffset(1.0);
+  tdrStyle->SetTitleSize(Config::TitleSize, "XYZ");
+  tdrStyle->SetTitleXOffset(Config::TitleXOffset);
+  tdrStyle->SetTitleYOffset(Config::TitleYOffset);
 
   // For the axis labels:
 
   tdrStyle->SetLabelColor(1, "XYZ");
   tdrStyle->SetLabelFont(42, "XYZ");
-  tdrStyle->SetLabelOffset(0.007, "XYZ");
-  tdrStyle->SetLabelSize(0.04, "XYZ");
+  tdrStyle->SetLabelOffset(Config::LabelOffset, "XYZ");
+  tdrStyle->SetLabelSize(Config::LabelSize, "XYZ");
 
   // For the axis:
 
   tdrStyle->SetAxisColor(1, "XYZ");
   tdrStyle->SetStripDecimals(kTRUE);
-  tdrStyle->SetTickLength(0.03, "XYZ");
+  tdrStyle->SetTickLength(Config::TickLength, "XYZ");
   //  tdrStyle->SetNdivisions(510, "XYZ");
   tdrStyle->SetNdivisions(505, "X");
   tdrStyle->SetPadTickX(1);  // To get tick marks on the opposite side of the frame
