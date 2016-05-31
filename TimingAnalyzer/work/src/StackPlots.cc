@@ -240,8 +240,15 @@ Float_t StackPlots::GetMinimum(const Int_t th1f) {
   Bool_t newdatamin = false;
 
   for (Int_t bin = 1; bin <= fOutDataTH1FHists[th1f]->GetNbinsX(); bin++){
+    TString ytitle  = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
+    Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact)); // only bias can be negative, resolution should always be positive
+    
     Float_t tmpmin = fOutDataTH1FHists[th1f]->GetBinContent(bin);
-    if ((tmpmin < datamin) && (tmpmin > 0)) {
+    if ((tmpmin < datamin) && (tmpmin > 0) && drawhist) {
+      datamin    = tmpmin;
+      newdatamin = true;
+    }
+    else if ((tmpmin < datamin) && !drawhist) {
       datamin    = tmpmin;
       newdatamin = true;
     }

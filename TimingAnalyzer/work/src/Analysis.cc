@@ -133,7 +133,7 @@ void Analysis::TimeResPlots(){
   // make 2D plots for Z variables (pT, eta)
   TH2Map  z2DMap;      
   TStrMap z2DSubMap;
-  DblVec zptbins = {0,10,20,30,50,70,100,150,200,250,300,400,750};
+  DblVec zptbins = {0,10,20,30,50,70,100,150,200,250,300,750};
   z2DMap["td_zpt"]  = Analysis::MakeTH2Plot("td_zpt","",zptbins,Config::ntimebins,-Config::timerange,Config::timerange,"Z p_{T} [GeV/c]","Dielectron Seed Time Difference [ns]",z2DSubMap,"timing/z/pt");  
 
   DblVec zetabins; for (Int_t i = 0; i < 21; i++){zetabins.push_back(i/2. - 5.0);}
