@@ -113,7 +113,12 @@ void StackPlots::MakeStackPlots(std::ofstream & yields){
       }
       //  just add input to stacks
       fOutMCTH1FStacks[th1f]->Add(fInMCTH1FHists[th1f][mc]);
-      fTH1FLegends[th1f]->AddEntry(fInMCTH1FHists[th1f][mc],Config::SampleTitleMap[fMCNames[mc]],"f");
+
+      TString ytitle  = fInMCTH1FHists[th1f][mc]->GetYaxis()->GetTitle();
+      Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
+    
+      if   (drawhist) {fTH1FLegends[th1f]->AddEntry(fInMCTH1FHists[th1f][mc],Config::SampleTitleMap[fMCNames[mc]],"f");}
+      else            {fTH1FLegends[th1f]->AddEntry(fInMCTH1FHists[th1f][mc],Config::SampleTitleMap[fMCNames[mc]],"epl");}
 
       if (fTH1FNames[th1f].Contains("nvtx",TString::kExact)) { // save individual contributions for yields for MC
 	yields << fMCNames[mc].Data() << ": " << fInMCTH1FHists[th1f][mc]->Integral() << std::endl;
@@ -125,7 +130,7 @@ void StackPlots::MakeStackPlots(std::ofstream & yields){
     fOutMCTH1FHists[th1f]->SetFillStyle(3254);
     fOutMCTH1FHists[th1f]->SetFillColor(kGray+3);
 
-    TString ytitle  = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
+    TString ytitle  = fOutMCTH1FHists[th1f]->GetYaxis()->GetTitle();
     Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
 
     if (drawhist) fTH1FLegends[th1f]->AddEntry(fOutMCTH1FHists[th1f],"MC Unc.","f");
@@ -192,8 +197,8 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) {
     fOutDataTH1FHists[th1f]->SetMaximum(max*1.5);
   }
   else {
-    fOutDataTH1FHists[th1f]->SetMaximum( max > 0 ? max*1.05 : max/1.05);      
-    fOutDataTH1FHists[th1f]->SetMinimum( min > 0 ? min/1.05 : min*1.05);
+    fOutDataTH1FHists[th1f]->SetMaximum( max > 0 ? max*1.05 : max/1.05 );      
+    fOutDataTH1FHists[th1f]->SetMinimum( min > 0 ? min/1.05 : min*1.05 );
   }
   
   // now draw the plots for upper pad in absurd order because ROOT is dumb
@@ -214,7 +219,7 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) {
 }
 
 Float_t StackPlots::GetMaximum(const Int_t th1f) {
-  Float_t max = -100;
+  Float_t max = -1e9;
   if (fOutDataTH1FHists[th1f]->GetBinContent(fOutDataTH1FHists[th1f]->GetMaximumBin()) > fOutMCTH1FHists[th1f]->GetBinContent(fOutMCTH1FHists[th1f]->GetMaximumBin())) {
     max = fOutDataTH1FHists[th1f]->GetBinContent(fOutDataTH1FHists[th1f]->GetMaximumBin());
   }
@@ -228,6 +233,7 @@ Float_t StackPlots::GetMinimum(const Int_t th1f) {
   // need to loop through to check bin != 0
   Float_t datamin  = 1e9;
   Bool_t newdatamin = false;
+
   for (Int_t bin = 1; bin <= fOutDataTH1FHists[th1f]->GetNbinsX(); bin++){
     Float_t tmpmin = fOutDataTH1FHists[th1f]->GetBinContent(bin);
     if ((tmpmin < datamin) && (tmpmin > 0)) {
@@ -240,8 +246,15 @@ Float_t StackPlots::GetMinimum(const Int_t th1f) {
   Bool_t newmcmin = false;
   for (Int_t mc = 0; mc < fNMC; mc++) {
     for (Int_t bin = 1; bin <= fInMCTH1FHists[th1f][mc]->GetNbinsX(); bin++){
+      TString ytitle  = fInMCTH1FHists[th1f][mc]->GetYaxis()->GetTitle();
+      Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact)); // only bias can be negative, resolution should always be positive
+
       Float_t tmpmin = fInMCTH1FHists[th1f][mc]->GetBinContent(bin);
-      if ((tmpmin < mcmin) && (tmpmin > 0)) {
+      if ((tmpmin < mcmin) && (tmpmin > 0) && drawhist) {
+	mcmin    = tmpmin;
+	newmcmin = true;
+      }
+      else if ((tmpmin < mcmin) && !drawhist) {
 	mcmin    = tmpmin;
 	newmcmin = true;
       }
@@ -289,7 +302,11 @@ void StackPlots::DrawLowerPad(const Int_t th1f) {
   fOutRatioTH1FHists[th1f]->Draw("EP SAME"); 
   
   // plots MC error copy
-  fOutRatioMCErrs[th1f]->Draw("E2 SAME");
+
+  TString ytitle  = fOutRatioMCErrs[th1f]->GetYaxis()->GetTitle();
+  Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
+
+  if (drawhist) fOutRatioMCErrs[th1f]->Draw("E2 SAME");
 }
 
 void StackPlots::SetLines(const Int_t th1f){
@@ -357,7 +374,12 @@ void StackPlots::InitInputPlots() {
       fInMCTH1FHists[th1f][mc] = (TH1F*)fMCFiles[mc]->Get(Form("%s",fTH1FNames[th1f].Data()));
       CheckValidTH1F(fInMCTH1FHists[th1f][mc],fTH1FNames[th1f],fMCFiles[mc]->GetName());
       fInMCTH1FHists[th1f][mc]->SetFillColor(Config::colorMap[fMCNames[mc]]);
-      fInMCTH1FHists[th1f][mc]->SetLineColor(kBlack);
+
+      TString ytitle  = fInMCTH1FHists[th1f][mc]->GetYaxis()->GetTitle();
+      Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
+
+      if   (drawhist) {fInMCTH1FHists[th1f][mc]->SetLineColor(kBlack);}
+      else            {fInMCTH1FHists[th1f][mc]->SetLineColor(Config::colorMap[fMCNames[mc]]); fInMCTH1FHists[th1f][mc]->SetMarkerColor(Config::colorMap[fMCNames[mc]]);}
     }
   }
 }
@@ -375,7 +397,7 @@ void StackPlots::InitOutputLegends() {
   fTH1FLegends.resize(fNTH1F);
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++){
     fTH1FLegends[th1f] = new TLegend(0.682,0.7,0.825,0.92);
-    fTH1FLegends[th1f]->SetBorderSize(4);
+    fTH1FLegends[th1f]->SetBorderSize(1);
     fTH1FLegends[th1f]->SetLineColor(kBlack);
   }
 }

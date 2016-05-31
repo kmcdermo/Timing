@@ -6,6 +6,10 @@
 
 #include "TROOT.h"
 
+// to do:
+// if doing time res plots with multiple samples, hadd them before processing in analysis 
+// stacker only does stacked histograms... doesn't make sense anyway with so few events for the lesser MC samples
+
 void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
   // set TDR Style (need to force it!)
   tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
@@ -130,6 +134,7 @@ int main(int argc, const char* argv[]) {
     std::cout << "Calculating pile-up weights" << std::endl;
     PUReweight reweight;
     reweight.GetPUWeights();
+    std::cout << "Finished calculating pile-up weights" << std::endl;
   }
   else {
     std::cout << "Skipping calculating pile-up weights" << std::endl;
@@ -140,12 +145,24 @@ int main(int argc, const char* argv[]) {
   ///////////////////
 
   if (Config::doAnalysis) {
+    std::cout << "Starting analyis section" << std::endl;
     for (TStrBoolMapIter mapiter = Config::SampleMap.begin(); mapiter != Config::SampleMap.end(); ++mapiter) {
       Analysis analysis((*mapiter).first,(*mapiter).second);
-      if (Config::doStandard) analysis.StandardPlots();
-      if (Config::doTimeRes)  analysis.TimeResPlots();
-      if (Config::doTrigEff)  analysis.TriggerEffs();
+      std::cout << "Analyzing: " << ((*mapiter).second?"MC":"DATA") << " Sample: " << (*mapiter).first << std::endl;
+      if (Config::doStandard) {
+	std::cout << "Doing standard plots" << std::endl;
+	analysis.StandardPlots();
+      }
+      if (Config::doTimeRes) {
+	std::cout << "Doing timing resolution plots" << std::endl;
+	analysis.TimeResPlots();
+      }
+      if (Config::doTrigEff) {
+	std::cout << "Doing trigger efficiencies" << std::endl;
+	analysis.TriggerEffs();
+      }
     }
+    std::cout << "Finished analysis section" << std::endl;
   }
   else {
     std::cout << "Skipping analysis section" << std::endl;
@@ -156,8 +173,10 @@ int main(int argc, const char* argv[]) {
   ///////////////////
 
   if (Config::doStacks) {
+    std::cout << "Starting stacker" << std::endl;
     StackPlots Stacker;
     Stacker.DoStacks(yields);
+    std::cout << "Finished stacking plots" << std::endl;
   }
   else {
     std::cout << "Skipping stacking data over MC" << std::endl;
