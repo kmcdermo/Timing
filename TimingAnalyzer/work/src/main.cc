@@ -5,6 +5,7 @@
 #include "../interface/StackPlots.hh"
 
 #include "TROOT.h"
+#include "TVirtualFitter.h"
 
 // to do:
 // if doing time res plots with multiple samples, hadd them before processing in analysis 
@@ -15,6 +16,9 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
   tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
   SetTDRStyle(tdrStyle);
   gROOT->ForceStyle();
+
+  // set the minimizer
+  TVirtualFitter::SetDefaultFitter("Minuit2");
 
   // have to do this at least once!
   MakeOutDir(Config::outdir);
@@ -114,7 +118,7 @@ int main(int argc, const char* argv[]) {
     else if (*i == "--do-standard") { Config::doAnalysis = true; Config::doStandard = true; }
     else if (*i == "--do-timeres")  { Config::doAnalysis = true; Config::doTimeRes  = true; }
     else if (*i == "--do-trigeff")  { Config::doAnalysis = true; Config::doTrigEff  = true; }
-    else    { fprintf(stderr, "Error: Unknown option/argument '%s'.\n", i->c_str()); exit(1); }
+    else    { std::cerr << "Error: Unknown option/argument: " << i->c_str() << " ...exiting..." << std::endl; exit(1); }
     mArgs.erase(start, ++i);
   }
 

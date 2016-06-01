@@ -3,13 +3,11 @@
 #include "TSystem.h"
 #include "TLatex.h"
 
-void next_arg_or_die(lStr_t& args, lStr_i& i, bool allow_single_minus)
-{
+void next_arg_or_die(lStr_t& args, lStr_i& i, bool allow_single_minus) {
   lStr_i j = i;
   if (++j == args.end() ||
-      ((*j)[0] == '-' && ! (*j == "-" && allow_single_minus)))
-  {
-    std::cerr <<"Error: option "<< *i <<" requires an argument.\n";
+      ((*j)[0] == '-' && ! (*j == "-" && allow_single_minus))) {
+    std::cerr << "Error: option " << *i << " requires an argument ...exiting..." << std::endl;
     exit(1);
   }
   i = j;
@@ -59,7 +57,7 @@ void MoveInput(TString infile, TString outdir){
 
 void CheckValidFile(TFile *& file, TString fname){
   if (file == (TFile*) NULL) { // check if valid file
-    std::cout << "Input file is bad pointer: " << fname.Data()
+    std::cerr << "Input file is bad pointer: " << fname.Data()
 	      << " ...exiting..." << std::endl;
     exit(1);
   }
@@ -70,7 +68,7 @@ void CheckValidFile(TFile *& file, TString fname){
 
 void CheckValidTree(TTree *& tree, TString tname, TString fname){
   if (tree == (TTree*) NULL) { // check if valid plot
-    std::cout << "Input TTree is bad pointer: " << tname.Data() << " in input file: " << fname.Data()
+    std::cerr << "Input TTree is bad pointer: " << tname.Data() << " in input file: " << fname.Data()
 	      << " ...exiting..." << std::endl;
     exit(1);
   }
@@ -81,7 +79,7 @@ void CheckValidTree(TTree *& tree, TString tname, TString fname){
 
 void CheckValidTH1F(TH1F *& plot, TString pname, TString fname){
   if (plot == (TH1F*) NULL) { // check if valid plot
-    std::cout << "Input TH1F is bad pointer: " << pname.Data() << " in input file: " << fname.Data() 
+    std::cerr << "Input TH1F is bad pointer: " << pname.Data() << " in input file: " << fname.Data() 
 	      << " ...exiting..." << std::endl;
     exit(1);
   }
