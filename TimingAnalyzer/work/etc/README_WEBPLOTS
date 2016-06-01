@@ -1,0 +1,20 @@
+to get CERN website up and running:
+
+request CERN website from websites.cern.ch
+--> set to afs directory
+--> make website match username
+--> set address to /afs/cern.ch/user/k/kmcdermo/{dir}
+--> make sure {dir} exists!
+
+while waiting for request, do the follow commands in one directory above {dir}
+
+1) fs setacl {dir} webserver:afs read
+2) afind {dir} -t d -e "fs setacl -dir {} -acl webserver:afs read"
+3) cd {dir}
+4) touch .htaccess
+5) open .htaccess and paste this: "Options +Indexes" (without quotes)
+
+then copy in really useful index.php into {dir}
+
+once set up, copy plots and directories into {dir}
+use the sh script copyphp.sh to copy recursively index.php into all subdirs
