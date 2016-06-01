@@ -41,9 +41,6 @@ namespace Config{
   constexpr    Double_t fitrange   = 3.0;
   constexpr    Int_t    nEventsCut = 100; // for run number plots
 
-  // fitting config
-  static const TString  formname = "gaus2"; // gaus1, gaus2, gauslin
-
   // TDRStyle Config --> needed by stacker
   constexpr    Float_t  TitleSize    = 0.035;
   constexpr    Float_t  TitleXOffset = 1.1;
@@ -90,6 +87,7 @@ namespace Config{
   extern Bool_t      doStandard;
   extern Bool_t      doTimeRes;
   extern Bool_t      doTrigEff;
+  extern TString     formname; // fitting function to be used
 
   extern TStrBoolMap SampleMap;
   extern ColorMap    colorMap;

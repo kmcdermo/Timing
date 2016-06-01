@@ -17,6 +17,7 @@ namespace Config {
   Bool_t  doStandard = false;
   Bool_t  doTimeRes  = false;
   Bool_t  doTrigEff  = false;
+  TString formname   = "gaus1"; // gaus1, gaus2, gaus2fm, gauslin
 
   TStrBoolMap SampleMap;       // set in main.cc
   ColorMap    colorMap;        // set in main.cc

@@ -85,6 +85,7 @@ int main(int argc, const char* argv[]) {
 	"  --do-standard   <bool>        make standard validation plots (def: %s)\n"
 	"  --do-timeres    <bool>        make timing bias and resolution plots (def: %s)\n"
 	"  --do-trigeff    <bool>        make trigger efficiency plots (def: %s)\n"
+	"  --fit-form      <string>      name of formula used for fitting time plots (def: %s)\n"
         ,
         argv[0],
         Config::outdir.Data(),
@@ -100,7 +101,8 @@ int main(int argc, const char* argv[]) {
 	(Config::useFull    ? "true" : "false"),
 	(Config::doStandard ? "true" : "false"),
 	(Config::doTimeRes  ? "true" : "false"),
-	(Config::doTrigEff  ? "true" : "false")
+	(Config::doTrigEff  ? "true" : "false"),
+        Config::formname.Data()
       );
       exit(0);
     }
@@ -118,6 +120,7 @@ int main(int argc, const char* argv[]) {
     else if (*i == "--do-standard") { Config::doAnalysis = true; Config::doStandard = true; }
     else if (*i == "--do-timeres")  { Config::doAnalysis = true; Config::doTimeRes  = true; }
     else if (*i == "--do-trigeff")  { Config::doAnalysis = true; Config::doTrigEff  = true; }
+    else if (*i == "--fit-form")    { next_arg_or_die(mArgs, i); Config::formname = i->c_str(); }
     else    { std::cerr << "Error: Unknown option/argument: " << i->c_str() << " ...exiting..." << std::endl; exit(1); }
     mArgs.erase(start, ++i);
   }
