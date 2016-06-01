@@ -746,10 +746,14 @@ void Analysis::DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2
 
   canv->cd();
 
-  sub1->SetLineColor(kBlue);
+  sub1->SetLineColor(kBlue+1);
+  sub1->SetLineWidth(1);
+  sub1->SetLineStyle(7);
   sub1->Draw("same");
 
-  sub2->SetLineColor(kGreen);
+  sub2->SetLineColor(kGreen+2);
+  sub2->SetLineWidth(1);
+  sub2->SetLineStyle(7);
   sub2->Draw("same");
 }
 
@@ -850,11 +854,12 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) {
       TCanvas * fitcanv = new TCanvas();
       fitcanv->cd();
       (*mapiter).second->Draw("PE");
+      fit->SetLineWidth(2);
       fit->Draw("same");
       
       // draw sub components of fit it applies
       TF1 * sub1; TF1 * sub2;
-      Analysis::DrawSubComp(fit,canv,sub1,sub2);
+      Analysis::DrawSubComp(fit,fitcanv,sub1,sub2);
 
       // first save as linear, then log
       fitcanv->SetLogy(0);
@@ -879,6 +884,7 @@ void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit) {
   TCanvas * canv = new TCanvas();
   canv->cd();
   hist->Draw("PE");
+  fit->SetLineWidth(2);
   fit->Draw("same");
 
   // draw subcomponents, too, if they apply
