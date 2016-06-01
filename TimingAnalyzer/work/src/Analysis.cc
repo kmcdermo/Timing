@@ -705,7 +705,6 @@ void Analysis::GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t
     esigma = fit->GetParError (2);
   }
   else if (Config::formname.EqualTo("gaus2",TString::kExact)) {
-    // https://en.wikipedia.org/wiki/Sum_of_normally_distributed_random_variables
     const Float_t const1 = fit->GetParameter(0); 
     const Float_t const2 = fit->GetParameter(3);
     const Float_t denom =  const1 + const2;
@@ -717,6 +716,19 @@ void Analysis::GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t
     esigma = rad2(const1*fit->GetParError(2),const2*fit->GetParError(5));
 
     emean  = std::sqrt(emean) /denom;
+    esigma = std::sqrt(esigma)/denom;
+  }
+  else if (Config::formname.EqualTo("gaus2fm",TString::kExact)) {
+    const Float_t const1 = fit->GetParameter(0); 
+    const Float_t const2 = fit->GetParameter(3);
+    const Float_t denom =  const1 + const2;
+
+    mean   = fit->GetParameter(1);
+    sigma  = (const1*fit->GetParameter(2) + const2*fit->GetParameter(4))/denom;
+
+    emean  = fit->GetParError(1);
+    esigma = rad2(const1*fit->GetParError(2),const2*fit->GetParError(4));
+
     esigma = std::sqrt(esigma)/denom;
   }
   else if (Config::formname.EqualTo("gauslin",TString::kExact)) {
