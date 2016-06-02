@@ -945,8 +945,8 @@ void Analysis::DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap) {
 
 void Analysis::DeleteFit(TF1 *& fit, TF1 *& sub1, TF1 *& sub2) {
   delete fit;
-  if (sub1 != (TF1*) NULL) { delete sub1; }
-  if (sub2 != (TF1*) NULL) { delete sub2; }
+  if (!Config::formname.EqualTo("gaus1",TString::kExact)) { delete sub1; }
+  if (!Config::formname.EqualTo("gaus1",TString::kExact)) { delete sub2; }
 }
 
 void Analysis::DeleteTH1s(TH1Map & th1map) {
