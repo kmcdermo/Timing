@@ -177,7 +177,7 @@ void Analysis::TimeResPlots(){
 
   // 2D plots for run numbers
   // read in run numbers
-  ifstream input;
+  std::ifstream input;
   input.open(Config::runs.Data(),std::ios::in);
   Int_t runno = -1;
   IntVec runNos;
