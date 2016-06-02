@@ -130,7 +130,7 @@ int main(int argc, const char* argv[]) {
   ////////////////////
 
   // do this thing at least once!
-  ofstream yields; TStyle * tdrStyle; 
+  std::ofstream yields; TStyle * tdrStyle; 
   InitializeMain(yields,tdrStyle);
 
   /////////////////////////
