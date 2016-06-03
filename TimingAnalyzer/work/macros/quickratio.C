@@ -1,6 +1,6 @@
 void quickratio() {
 
-  TString hname = "zeta";
+  TString hname = "zmass";
   Bool_t  scale = true;
 
   TFile * mcfile   = TFile::Open("output/MC/dyll/plots.root");

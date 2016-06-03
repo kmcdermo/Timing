@@ -7,7 +7,7 @@ options = VarParsing ('python')
 
 ## data or MC options
 options.register (
-	'isMC',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'isMC',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate data or MC');
 
 ## processName
@@ -43,6 +43,11 @@ options.register (
 	'nThreads',4,VarParsing.multiplicity.singleton, VarParsing.varType.int,
 	'default number of threads');
 
+## do a demo run over only 100k events
+options.register (
+	'demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to run over only 100k events as a demo');
+
 ## parsing command line arguments
 options.parseArguments()
 
@@ -63,6 +68,7 @@ print "Running with globalTag           = ",options.globalTag
 print "Running with filterOnHLT         = ",options.filterOnHLT
 print "Running with filterOnKinematics  = ",options.filterOnKinematics
 print "Running with nThreads            = ",options.nThreads
+print "Running with demoMode            = ",options.demoMode
 print "#####################"
 
 ## Define the CMSSW process
@@ -80,23 +86,21 @@ process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
-if options.inputFiles == []:
-
-	process.source = cms.Source("PoolSource", 
-   		 fileNames = cms.untracked.vstring())
-
-	if not options.isMC :
-		process.source.fileNames.append(
-#			'/store/data/Run2015D/SingleElectron/MINIAOD/16Dec2015-v1/20000/00AD9F75-5FA6-E511-987A-002590A4C69A.root' # singleEl 2015D 
-			'/store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/00A55FDF-74A6-E511-AD74-0CC47A4D7658.root' # doubleEG 2015D
-			)
-	else:
-		process.source.fileNames.append(
-			'/store/mc/RunIIFall15MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/12D266E2-04C8-E511-8D24-047D7BD6DED2.root'
-			)    	
+if not options.isMC :
+	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+			
+			'/store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/00A55FDF-74A6-E511-AD74-0CC47A4D7658.root',
+			'/store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/043D5E4A-83A6-E511-B159-0CC47A4D76D6.root',
+			'/store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/000298CD-87A6-E511-9E56-002590593878.root'
+			) #doubleEG 2015D
+				    )
 else:
-   process.source = cms.Source("PoolSource",
-   	  fileNames = cms.untracked.vstring(options.inputFiles))
+	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+			'/store/mc/RunIIFall15MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/12D266E2-04C8-E511-8D24-047D7BD6DED2.root',
+			'/store/mc/RunIIFall15MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/4C15C8E0-04C8-E511-9406-0025907FD40C.root',
+			'/store/mc/RunIIFall15MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/6656A6E3-04C8-E511-B8EF-FACADE000113.root'
+			)    	
+)
 
 ## Set the process options -- Display summary at the end, enable unscheduled execution
 if options.nThreads == 1 or options.nThreads == 0:
@@ -111,8 +115,12 @@ else:
 		numberOfStreams = cms.untracked.uint32(options.nThreads))
 
 ## How many events to process
-process.maxEvents = cms.untracked.PSet( 
-    input = cms.untracked.int32(options.maxEvents))
+if not options.demoMode:
+	process.maxEvents = cms.untracked.PSet( 
+		input = cms.untracked.int32(options.maxEvents))
+else:
+	process.maxEvents = cms.untracked.PSet( 
+		input = cms.untracked.int32(100000))
 
 # Set the global tag depending on the sample type
 from Configuration.AlCa.GlobalTag import GlobalTag
