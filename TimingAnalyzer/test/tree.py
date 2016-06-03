@@ -128,11 +128,11 @@ process.GlobalTag.globaltag = options.globalTag
 
 # run cut-based electron ID https://twiki.cern.ch/twiki/bin/viewauth/CMS/CutBasedElectronIdentificationRun2
 from Timing.TimingAnalyzer.ElectronTools_cff import ElectronTools
-ElectronTools(process)
+ElectronTools(process,options.isMC)
 
 # Create a set of objects to read from
 process.selectedObjects = cms.EDProducer("PFCleaner",
-     electrons = cms.InputTag("slimmedElectrons"),
+     electrons = cms.InputTag("calibratedElectrons"), # from ElectronTools (now smeared)
      electronidveto   = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-veto"),
      electronidloose  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-loose"),
      electronidmedium = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-medium"),

@@ -40,7 +40,7 @@ private:
 };
 
 PFCleaner::PFCleaner(const edm::ParameterSet& iConfig): 
-  electronsToken           (consumes<std::vector<pat::Electron> > (iConfig.getParameter<edm::InputTag>("electrons"))),
+  electronsToken           (consumes<std::vector<pat::Electron> > (iConfig.getParameter<edm::InputTag>("calibratedElectrons"))),
   electronVetoIdMapToken   (consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electronidveto"))),
   electronLooseIdMapToken  (consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electronidloose"))),
   electronMediumIdMapToken (consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electronidmedium"))),
@@ -54,9 +54,7 @@ PFCleaner::PFCleaner(const edm::ParameterSet& iConfig):
   produces<pat::ElectronRefVector>("heepelectrons");
 }
 
-
-PFCleaner::~PFCleaner() {
-}
+PFCleaner::~PFCleaner() {}
 
 void PFCleaner::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   edm::Handle<std::vector<pat::Electron> > electronsH;
@@ -118,23 +116,17 @@ void PFCleaner::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   iEvent.put(outputheepelectrons,   "heepelectrons");
 }
 
-void PFCleaner::beginJob() {
-}
+void PFCleaner::beginJob() {}
 
-void PFCleaner::endJob() {
-}
+void PFCleaner::endJob() {}
 
-void PFCleaner::beginRun(edm::Run const&, edm::EventSetup const&) {
-}
+void PFCleaner::beginRun(edm::Run const&, edm::EventSetup const&) {}
 
-void PFCleaner::endRun(edm::Run const&, edm::EventSetup const&) {
-}
+void PFCleaner::endRun(edm::Run const&, edm::EventSetup const&) {}
 
-void PFCleaner::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) {
-}
+void PFCleaner::beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) {}
 
-void PFCleaner::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) {
-}
+void PFCleaner::endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) {}
 
 void PFCleaner::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
