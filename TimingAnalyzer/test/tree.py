@@ -40,7 +40,7 @@ options.register (
 
 ## nThreads to run
 options.register (
-	'nThreads',4,VarParsing.multiplicity.singleton, VarParsing.varType.int,
+	'nThreads',1,VarParsing.multiplicity.singleton, VarParsing.varType.int,
 	'default number of threads');
 
 ## do a demo run over only 100k events
@@ -132,7 +132,8 @@ ElectronTools(process,options.isMC)
 
 # Create a set of objects to read from
 process.selectedObjects = cms.EDProducer("PFCleaner",
-     electrons = cms.InputTag("calibratedElectrons"), # from ElectronTools (now smeared)
+     electrons        = cms.InputTag("slimmedElectrons"), 
+     calibelectrons   = cms.InputTag("calibratedElectrons"), # from ElectronTools (now smeared)
      electronidveto   = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-veto"),
      electronidloose  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-loose"),
      electronidmedium = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-medium"),

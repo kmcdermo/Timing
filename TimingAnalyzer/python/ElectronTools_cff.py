@@ -15,7 +15,6 @@ def ElectronTools(process,isMC):
         setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
 
     # https://twiki.cern.ch/twiki/bin/viewauth/CMS/EGMSmearer    
-    # add EGM smearing to eLeCtRoNs
     process.selectedElectrons = cms.EDFilter("PATElectronSelector",
                                              src = cms.InputTag("slimmedElectrons"),
                                              cut = cms.string("pt > 5 && abs(eta)<2.5")
