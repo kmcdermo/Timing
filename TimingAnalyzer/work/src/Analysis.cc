@@ -1,5 +1,7 @@
 #include "../interface/Analysis.hh"
 
+#include "TH1D.h"
+
 inline Float_t rad2(Float_t x, Float_t y){
   return x*x + y*y;
 }
@@ -24,18 +26,28 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC) {
   // extra setup for data and MC
   if (fIsMC) { 
     // Get pile-up weights
-    TString purwfname = Form("%s/%s/%s",Config::outdir.Data(),Config::pusubdir.Data(),Config::pufilename.Data());   
+    TString purwfname = "input/PU/pileupWeights.root";
     TFile * purwfile  = TFile::Open(purwfname.Data());
     CheckValidFile(purwfile,purwfname);
-    
-    TH1F * purwplot = (TH1F*)purwfile->Get(Config::puplotname.Data());
-    CheckValidTH1F(purwplot,Config::puplotname,purwfname);
-    
-    for (Int_t i = 1; i <= purwplot->GetNbinsX(); i++){
-      fPUweights.push_back(purwplot->GetBinContent(i));
+
+    TH1D * gen_pu    = (TH1D*) purwfile->Get("generated_pu");
+    CheckValidTH1D(gen_pu,"generated_pu",purwfname);
+    TH1D * puweights = (TH1D*) purwfile->Get("weights");
+    CheckValidTH1D(puweights,"weights",purwfname);
+
+    TH1D* weightedPU= (TH1D*)gen_pu->Clone("weightedPU");
+    weightedPU->Multiply(puweights);
+    TH1D* weights = (TH1D*)puweights->Clone("rescaledWeights");
+    weights->Scale( gen_pu->Integral(1,Config::nvtxbins) / weightedPU->Integral(1,Config::nvtxbins) );
+
+    for (Int_t i = 1; i <= Config::nvtxbins; i++){
+      fPUweights.push_back(weights->GetBinContent(i));
     }
 
-    delete purwplot;
+    delete gen_pu;
+    delete puweights;
+    delete weightedPU;
+    delete weights;
     delete purwfile;
     // end getting pile-up weights
 
@@ -61,6 +73,9 @@ void Analysis::StandardPlots(){
   TStrMap trTH1SubMap; // set inside MakeTH1Plot
   trTH1Map["nvtx"]   = Analysis::MakeTH1Plot("nvtx","",Config::nvtxbins,0.,Double_t(Config::nvtxbins),"nVertices","Events",trTH1SubMap,"standard");
   trTH1Map["zmass"]  = Analysis::MakeTH1Plot("zmass","",100,Config::zlow,Config::zhigh,"Dielectron invariant mass [GeV/c^{2}]","Events",trTH1SubMap,"standard");
+  trTH1Map["zmass_EBEB"]  = Analysis::MakeTH1Plot("zmass_EBEB","",100,Config::zlow,Config::zhigh,"Dielectron invariant mass [GeV/c^{2}] (EBEB)","Events",trTH1SubMap,"standard");
+  trTH1Map["zmass_EEEE"]  = Analysis::MakeTH1Plot("zmass_EEEE","",100,Config::zlow,Config::zhigh,"Dielectron invariant mass [GeV/c^{2}] (EEEE)","Events",trTH1SubMap,"standard");
+  trTH1Map["zmass_EBEE"]  = Analysis::MakeTH1Plot("zmass_EBEE","",100,Config::zlow,Config::zhigh,"Dielectron invariant mass [GeV/c^{2}] (EBEE)","Events",trTH1SubMap,"standard");
   trTH1Map["zpt"]    = Analysis::MakeTH1Plot("zpt","",100,0.,750.,"Dielectron p_{T} [GeV/c^{2}]","Events",trTH1SubMap,"standard");
   trTH1Map["zeta"]   = Analysis::MakeTH1Plot("zeta","",100,-10.0,10.0,"Dielectron #eta","Events",trTH1SubMap,"standard");
   trTH1Map["zphi"]   = Analysis::MakeTH1Plot("zphi","",100,-3.2,3.2,"Dielectron #phi","Events",trTH1SubMap,"standard");
@@ -89,8 +104,16 @@ void Analysis::StandardPlots(){
     fInTree->GetEntry(entry);
     if ((zmass>Config::zlow && zmass<Config::zhigh) && hltdoubleel && (el1pid == -el2pid)) { // extra selection over skimmed samples
       Float_t weight = -1.;
-      if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[nvtx];}
+      if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[putrue];}
       else         {weight = 1.0;}
+
+      Bool_t el1eb = false; Bool_t el1ee = false;
+      if      (std::abs(el1eta) < Config::etaEB)                                            { el1eb = true; }
+      else if (std::abs(el1eta) > Config::etaEElow && std::abs(el1eta) < Config::etaEEhigh) { el1ee = true; }
+
+      Bool_t el2eb = false; Bool_t el2ee = false;
+      if      (std::abs(el2eta) < Config::etaEB)                                            { el2eb = true; }
+      else if (std::abs(el2eta) > Config::etaEElow && std::abs(el2eta) < Config::etaEEhigh) { el2ee = true; }
 
       // standard "validation" plots
       trTH1Map["nvtx"]->Fill(nvtx,weight);
@@ -111,11 +134,16 @@ void Analysis::StandardPlots(){
       trTH1Map["el2phi"]->Fill(el2phi,weight); 
 
       trTH1Map["el1time"]->Fill(el1time,weight);
-      if      (std::abs(el1eta) < Config::etaEB)                                            trTH1Map["el1time_EB"]->Fill(el1time,weight);
-      else if (std::abs(el1eta) > Config::etaEElow && std::abs(el1eta) < Config::etaEEhigh) trTH1Map["el1time_EE"]->Fill(el1time,weight);
+      if      (el1eb) trTH1Map["el1time_EB"]->Fill(el1time,weight);
+      else if (el1ee) trTH1Map["el1time_EE"]->Fill(el1time,weight);
       trTH1Map["el2time"]->Fill(el2time,weight);
-      if      (std::abs(el2eta) < Config::etaEB)                                            trTH1Map["el2time_EB"]->Fill(el2time,weight);
-      else if (std::abs(el2eta) > Config::etaEElow && std::abs(el2eta) < Config::etaEEhigh) trTH1Map["el2time_EE"]->Fill(el2time,weight);
+      if      (el2eb) trTH1Map["el2time_EB"]->Fill(el2time,weight);
+      else if (el2ee) trTH1Map["el2time_EE"]->Fill(el2time,weight);
+
+
+      if      (el1eb && el2eb)                       { trTH1Map["zmass_EBEB"]->Fill(zmass,weight); }
+      else if (el1ee && el2ee)                       { trTH1Map["zmass_EEEE"]->Fill(zmass,weight); }
+      else if ((el1eb && el2ee) || (el1ee && el2eb)) { trTH1Map["zmass_EBEE"]->Fill(zmass,weight); }
     }
   }
 
@@ -206,7 +234,7 @@ void Analysis::TimeResPlots(){
     fInTree->GetEntry(entry);
     if ((zmass>Config::zlow && zmass<Config::zhigh) && hltdoubleel && (el1pid == -el2pid)) { // extra selection over skims
       Float_t weight = -1.;
-      if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[nvtx];}
+      if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[putrue];}
       else         {weight = 1.0;}
 
       Float_t time_diff  = el1time-el2time;
@@ -447,7 +475,7 @@ void Analysis::TriggerEffs(){
     fInTree->GetEntry(entry);
     if ( (zmass>Config::zlow && zmass<Config::zhigh) && (el1pid == -el2pid) ){ // we want di-electron z's
       Float_t weight = -1.;
-      if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[nvtx];}
+      if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[putrue];}
       else         {weight = 1.0;}
 
       if ( hltdoubleel ) { // fill numer if passed

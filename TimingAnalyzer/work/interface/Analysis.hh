@@ -15,6 +15,8 @@ typedef TH1Map::iterator        TH1MapIter;
 typedef std::map<TString,TH2F*> TH2Map;
 typedef TH2Map::iterator        TH2MapIter;
 
+typedef std::vector<Double_t> DblVec;
+
 class Analysis {
 public:
   // functions
@@ -47,7 +49,8 @@ private:
   Bool_t  fIsMC;
 
   // MC weight input
-  FltVec  fPUweights;
+  //  FltVec  fPUweights;
+  DblVec  fPUweights;
   Float_t fXsec;
   Float_t fWgtsum;
 

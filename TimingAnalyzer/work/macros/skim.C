@@ -1,6 +1,6 @@
 void skim(TString path){
   // get input full trees
-  TFile * infile = TFile::Open(Form("%s/tree.root",path.Data()));
+  TFile * infile = TFile::Open(Form("%s/smearedtree.root",path.Data()));
   TTree * intree = (TTree*)infile->Get("tree/tree");
 
   // set branch addresses of input for skimming

@@ -85,6 +85,14 @@ void CheckValidTH1F(TH1F *& plot, TString pname, TString fname){
   }
 }
 
+void CheckValidTH1D(TH1D *& plot, TString pname, TString fname){
+  if (plot == (TH1D*) NULL) { // check if valid plot
+    std::cerr << "Input TH1D is bad pointer: " << pname.Data() << " in input file: " << fname.Data() 
+	      << " ...exiting..." << std::endl;
+    exit(1);
+  }
+}
+
 void CMSLumi(TCanvas *& canv, Int_t iPosX) {
   TString  cmsText     = "CMS";
   Double_t cmsTextFont = 61;  // default is helvetic-bold

@@ -103,7 +103,7 @@ void StackPlots::MakeStackPlots(std::ofstream & yields){
       yields << "Data Total: " << fOutDataTH1FHists[th1f]->Integral() << std::endl << std::endl;
     }
 
-    // mc, copy + add to hists, add to tstack
+    // mc, copy + add to hists
     for (Int_t mc = 0; mc < fNMC; mc++) {
       if (mc == 0){ // add first for ratio
 	fOutMCTH1FHists[th1f] = (TH1F*)fInMCTH1FHists[th1f][mc]->Clone();
@@ -111,8 +111,6 @@ void StackPlots::MakeStackPlots(std::ofstream & yields){
       else{ // add first for ratio
 	fOutMCTH1FHists[th1f]->Add(fInMCTH1FHists[th1f][mc]);
       }
-      //  just add input to stacks
-      fOutMCTH1FStacks[th1f]->Add(fInMCTH1FHists[th1f][mc]);
 
       TString ytitle  = fInMCTH1FHists[th1f][mc]->GetYaxis()->GetTitle();
       Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
@@ -124,6 +122,22 @@ void StackPlots::MakeStackPlots(std::ofstream & yields){
 	yields << fMCNames[mc].Data() << ": " << fInMCTH1FHists[th1f][mc]->Integral() << std::endl;
       }
     } // end loop over mc samples
+
+    // rescale MC hists to Data for specific plots --> zmass only for now
+    if (fTH1FNames[th1f].Contains("zmass",TString::kExact)) {
+      // First scale added MC hists, then individual hists
+      Double_t scale = fOutDataTH1FHists[th1f]->Integral() / fOutMCTH1FHists[th1f]->Integral();
+      fOutMCTH1FHists[th1f]->Scale(scale);
+      for (Int_t mc = 0; mc < fNMC; mc++) {
+	fInMCTH1FHists[th1f][mc]->Scale(scale);
+      }
+    }
+
+    // add stacks once renormalized
+    for (Int_t mc = 0; mc < fNMC; mc++) {
+      //  just add input to stacks
+      fOutMCTH1FStacks[th1f]->Add(fInMCTH1FHists[th1f][mc]);
+    }
 
     // will use the output MC added Hists for plotting uncertainties and add it to legend once
     fOutMCTH1FHists[th1f]->SetMarkerSize(0);

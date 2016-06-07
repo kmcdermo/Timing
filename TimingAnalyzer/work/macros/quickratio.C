@@ -1,10 +1,11 @@
 void quickratio() {
 
-  TString hname = "zmass";
-  Bool_t  scale = true;
+  TString hname  = "zmass_EEEE";
+  Bool_t  scale  = true;
+  Bool_t  isLogY = false;
 
-  TFile * mcfile   = TFile::Open("output/MC/dyll/plots.root");
-  TFile * datafile = TFile::Open("output/DATA/doubleeg/plots.root");
+  TFile * mcfile   = TFile::Open("smeared_output/MC/dyll/plots.root");
+  TFile * datafile = TFile::Open("smeared_output/DATA/doubleeg/plots.root");
 
   TH1F * hdata = (TH1F*)datafile->Get(hname.Data());
   TH1F * hmc   = (TH1F*)mcfile->Get(hname.Data());
@@ -18,6 +19,7 @@ void quickratio() {
 
   TCanvas * c1 = new TCanvas();
   c1->cd();
+  c1->SetLogy(isLogY);
 
   TPad * uppad  = new TPad("uppad","",0,0.3,1.0,1.0);
   uppad->SetBottomMargin(0); // Upper and lower plot are joined
@@ -61,5 +63,5 @@ void quickratio() {
   hdataclone->Draw("EP");
 
   c1->cd();
-  c1->SaveAs(Form("%s_%s.png",hname.Data(), (scale?"scaled":"unscaled") ));
+  c1->SaveAs(Form("%s_%s_%s.png",hname.Data(), (scale?"scaled":"unscaled"), (isLogY?"log":"lin") ));
 }
