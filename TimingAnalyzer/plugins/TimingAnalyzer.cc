@@ -127,7 +127,8 @@ private:
 
   // electron info
   int   el1pid,el2pid;
-  float el1pt,el1eta,el1phi,el2pt,el2eta,el2phi;
+  float el1pt,el1eta,el1phi,el1E;
+  float el2pt,el2eta,el2phi,el2E;
 
   // timing
   float el1time, el2time;
@@ -145,8 +146,8 @@ private:
   // gen particle info
   int   genzpid,genel1pid,genel2pid;
   float genzpt,genzeta,genzphi,genzmass;
-  float genel1pt,genel1eta,genel1phi;
-  float genel2pt,genel2eta,genel2phi;
+  float genel1pt,genel1eta,genel1phi,genel1E;
+  float genel2pt,genel2eta,genel2phi,genel2E;
 };
 
 
@@ -272,10 +273,10 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (heepelectronsH.isValid())   nheepelectrons   = heepelectronsH->size();
   
   // tree vars
-  zmass       = -99.0; zpt         = -99.0;  zeta        = -99.0; zphi        = -99.0;
-  el1pid      = -99;   el1pt       = -99.0;  el1eta      = -99.0; el1phi      = -99.0; 
-  el2pid      = -99;   el2pt       = -99.0;  el2eta      = -99.0; el2phi      = -99.0; 
-  el1time     = -99.0; el2time     = -99.0; 
+  zmass  = -99.0; zpt   = -99.0; zeta    = -99.0; zphi    = -99.0;
+  el1pid = -99;   el1pt = -99.0; el1eta  = -99.0; el1phi  = -99.0; 
+  el2pid = -99;   el2pt = -99.0; el2eta  = -99.0; el2phi  = -99.0; 
+  el1E   = -99.0; el2E  = -99.0; el1time = -99.0; el2time = -99.0; 
 
   // save only really pure electrons
   std::vector<pat::ElectronRef> tightelectrons;
@@ -296,8 +297,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       pat::ElectronRef el1 = tightelectrons[i];
       for (std::size_t j = i+1; j < tightelectrons.size(); j++) {
   	pat::ElectronRef el2 = tightelectrons[j];
-  	TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1->pt(), el1->eta(), el1->phi(), el1->p());
-  	TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2->pt(), el2->eta(), el2->phi(), el2->p());
+  	TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1->pt(), el1->eta(), el1->phi(), el1->energy());
+  	TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2->pt(), el2->eta(), el2->phi(), el2->energy());
   	el1vec += el2vec;
   	invmasspairs.push_back(std::make_tuple(i,j,std::abs(el1vec.M()-91.1876))); 
       }
@@ -306,11 +307,13 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       
     pat::ElectronRef el1 = tightelectrons[std::get<0>(*best)];
     pat::ElectronRef el2 = tightelectrons[std::get<1>(*best)];
-      
-    el1pid = el1->pdgId(); el2pid = el2->pdgId();
-    el1pt  = el1->pt();    el2pt  = el2->pt();
-    el1eta = el1->eta();   el2eta = el2->eta();
-    el1phi = el1->phi();   el2phi = el2->phi();
+
+    // set the individual electron variables
+    el1pid = el1->pdgId();  el2pid = el2->pdgId();
+    el1pt  = el1->pt();     el2pt  = el2->pt();
+    el1eta = el1->eta();    el2eta = el2->eta();
+    el1phi = el1->phi();    el2phi = el2->phi();
+    el1E   = el1->energy(); el2E   = el2->energy();
 
     // ecal cluster tools --> stolen from ECAL ELF
     clustertools = new EcalClusterLazyTools (iEvent, iSetup, recHitCollectionEBTAG, recHitCollectionEETAG);
@@ -333,8 +336,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       }
     }
 
-    TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1pt, el1eta, el1phi, el1->p());
-    TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2pt, el2eta, el2phi, el2->p());
+    TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1pt, el1eta, el1phi, el1E);
+    TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2pt, el2eta, el2phi, el2E);
       
     TLorentzVector zvec(el1vec);
     zvec += el2vec;
@@ -376,10 +379,11 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     if (genevtInfoH.isValid()) {wgt = genevtInfoH->weight();}
   
     // Gen particles info
-    genzpid      = -99; genzpt       = -99.0; genzeta      = -99.0; genzphi      = -99.0; genzmass     = -99.0; 
-    genel1pid    = -99; genel1pt     = -99.0; genel1eta    = -99.0; genel1phi    = -99.0;
-    genel2pid    = -99; genel2pt     = -99.0; genel2eta    = -99.0; genel2phi    = -99.0;
-    
+    genzpid   = -99;   genzpt   = -99.0; genzeta   = -99.0; genzphi   = -99.0; genzmass = -99.0; 
+    genel1pid = -99;   genel1pt = -99.0; genel1eta = -99.0; genel1phi = -99.0;
+    genel2pid = -99;   genel2pt = -99.0; genel2eta = -99.0; genel2phi = -99.0;
+    genel1E   = -99.0; genel2E  = -99.0;
+
     if (gensH.isValid()){
       // try to get the final state z
       for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) {
@@ -396,37 +400,42 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	  genel1pt   = gens_iter->daughter(0)->pt();
 	  genel1eta  = gens_iter->daughter(0)->eta();
 	  genel1phi  = gens_iter->daughter(0)->phi();
+	  genel1E    = gens_iter->daughter(0)->energy();
 	  
 	  // electron 2 info
 	  genel2pid  = gens_iter->daughter(1)->pdgId();
 	  genel2pt   = gens_iter->daughter(1)->pt();
 	  genel2eta  = gens_iter->daughter(1)->eta();
 	  genel2phi  = gens_iter->daughter(1)->phi();
+	  genel2E    = gens_iter->daughter(1)->energy();
+
 	} // end check over decay
       } // end loop over gen particles
-
+    
       // if a Z is not found look for a pair of leptons ... 
       // this way when the pdgId is not guaranteed that you catch a Z boson, you can still recover DY production
       if (genzpid == -99) {
   	for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) {
   	  if (gens_iter->isPromptFinalState() || gens_iter->isPromptDecayed()) {
   	    if (gens_iter->pdgId() == 11) {
-  	      genel1pid  = gens_iter->pdgId();
-  	      genel1pt   = gens_iter->pt();
-  	      genel1eta  = gens_iter->eta();
-  	      genel1phi  = gens_iter->phi();
+  	      genel1pid = gens_iter->pdgId();
+  	      genel1pt  = gens_iter->pt();
+  	      genel1eta = gens_iter->eta();
+  	      genel1phi = gens_iter->phi();
+  	      genel1E   = gens_iter->energy();
   	    }
   	    else if (gens_iter->pdgId() == -11) {
-  	      genel2pid  = gens_iter->pdgId();
-  	      genel2pt   = gens_iter->pt();
-  	      genel2eta  = gens_iter->eta();
-  	      genel2phi  = gens_iter->phi();
+  	      genel2pid = gens_iter->pdgId();
+  	      genel2pt  = gens_iter->pt();
+  	      genel2eta = gens_iter->eta();
+  	      genel2phi = gens_iter->phi();
+  	      genel2E   = gens_iter->energy();
   	    }
   	  } // end check over final state 
 	} // end loop over gen particles
   	if (genel1pid == 11 && genel2pid == -11) {
-  	  TLorentzVector el1vec; el1vec.SetPtEtaPhiM(genel1pt, genel1eta, genel1phi, 0.);
-  	  TLorentzVector el2vec; el2vec.SetPtEtaPhiM(genel2pt, genel2eta, genel2phi, 0.);
+  	  TLorentzVector el1vec; el1vec.SetPtEtaPhiE(genel1pt, genel1eta, genel1phi, genel1E);
+  	  TLorentzVector el2vec; el2vec.SetPtEtaPhiE(genel2pt, genel2eta, genel2phi, genel2E);
 
   	  TLorentzVector zvec(el1vec);
   	  zvec    += el2vec;
@@ -474,10 +483,12 @@ void TimingAnalyzer::beginJob() {
   tree->Branch("el1pt"                , &el1pt                , "el1pt/F");
   tree->Branch("el1eta"               , &el1eta               , "el1eta/F");
   tree->Branch("el1phi"               , &el1phi               , "el1phi/F");
+  tree->Branch("el1E"                 , &el1E                 , "el1E/F");
   tree->Branch("el2pid"               , &el2pid               , "el2pid/I");
   tree->Branch("el2pt"                , &el2pt                , "el2pt/F");
   tree->Branch("el2eta"               , &el2eta               , "el2eta/F");
   tree->Branch("el2phi"               , &el2phi               , "el2phi/F");
+  tree->Branch("el2E"                 , &el2E                 , "el2E/F");
 
   // Time info
   tree->Branch("el1time"              , &el1time              , "el1time/F");
@@ -508,10 +519,12 @@ void TimingAnalyzer::beginJob() {
     tree->Branch("genel1pt"             , &genel1pt             , "genel1pt/F");
     tree->Branch("genel1eta"            , &genel1eta            , "genel1eta/F");
     tree->Branch("genel1phi"            , &genel1phi            , "genel1phi/F");
+    tree->Branch("genel1E"              , &genel1E              , "genel1E/F");
     tree->Branch("genel2pid"            , &genel2pid            , "genel2pid/I");
     tree->Branch("genel2pt"             , &genel2pt             , "genel2pt/F");
     tree->Branch("genel2eta"            , &genel2eta            , "genel2eta/F");
     tree->Branch("genel2phi"            , &genel2phi            , "genel2phi/F");
+    tree->Branch("genel2E"              , &genel2E              , "genel2E/F");
   }
 }
 

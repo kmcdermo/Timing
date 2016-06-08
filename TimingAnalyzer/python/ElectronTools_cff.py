@@ -1,6 +1,7 @@
 import os
 import FWCore.ParameterSet.Config as cms
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
+import random
 
 def ElectronTools(process,isMC):
 
@@ -27,3 +28,7 @@ def ElectronTools(process,isMC):
             correctionFile = cms.string(files["76XReReco"])
             ))
 
+    process.RandomNumberGeneratorService.calibratedElectrons = cms.PSet(
+        initialSeed = cms.untracked.uint32(int(random.uniform(0,1000000))),
+        engineName = cms.untracked.string('TRandom3')
+        )
