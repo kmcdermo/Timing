@@ -8,8 +8,8 @@ namespace Config {
   Bool_t  doAnalysis = false;
   Bool_t  doStacks   = false;
   Bool_t  doDemo     = false;
-  Bool_t  useDEG     = true; 
-  Bool_t  useDYll    = true; 
+  Bool_t  useDEG     = false; 
+  Bool_t  useDYll    = false; 
   Bool_t  useQCD     = false;
   Bool_t  useGJets   = false;
   Bool_t  skipRuns   = false;

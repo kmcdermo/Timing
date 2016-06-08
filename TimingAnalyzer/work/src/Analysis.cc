@@ -584,6 +584,7 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   }
   outhist_mean->SetLineColor(fColor);
   outhist_mean->SetMarkerColor(fColor);
+  outhist_mean->GetYaxis()->SetTitleOffset(outhist_mean->GetYaxis()->GetTitleOffset() * Config::TitleFF);
   outhist_mean->Sumw2();
 
   TH1F * outhist_sigma  = new TH1F(Form("%s_sigma_%s",name.Data(),Config::formname.Data()),"",vxbins.size()-1,axbins);
@@ -599,6 +600,7 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   }
   outhist_sigma->SetLineColor(fColor);
   outhist_sigma->SetMarkerColor(fColor);
+  outhist_sigma->GetYaxis()->SetTitleOffset(outhist_sigma->GetYaxis()->GetTitleOffset() * Config::TitleFF);
   outhist_sigma->Sumw2();
 
   // use this to store runs that by themselves produce bad fits
@@ -664,6 +666,15 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
     // save a copy of the fitted histogram with the fit
     Analysis::SaveTH1andFit((*mapiter).second,subdir,fit);
   } // end loop over th1s
+
+  TString xruntitle = outhist_mean->GetXaxis()->GetTitle();
+  if (name.Contains("runs",TString::kExact) && xruntitle.Contains("EBEB",TString::kExact)) {
+    outhist_mean->SetMaximum(  0.04 );
+    outhist_mean->SetMinimum( -0.04 );
+
+    outhist_sigma->SetMaximum( 0.50 );
+    outhist_sigma->SetMinimum( 0.25 );
+  }
 
   // write output hist to file
   fOutFile->cd();
@@ -735,6 +746,7 @@ void Analysis::PrepFit(TF1 *& fit, TH1F *& hist) {
     exit(1);
   }
 
+  fit->SetLineColor(kMagenta-3); //kViolet-6
   delete tempfit;
 }
 
@@ -799,13 +811,13 @@ void Analysis::DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2
 
   canv->cd();
 
-  sub1->SetLineColor(kBlue+1);
-  sub1->SetLineWidth(1);
+  sub1->SetLineColor(kRed) ;  // kgreen-3
+  sub1->SetLineWidth(2);
   sub1->SetLineStyle(7);
   sub1->Draw("same");
 
-  sub2->SetLineColor(kGreen+2);
-  sub2->SetLineWidth(1);
+  sub2->SetLineColor(kBlue); // kViolet-3
+  sub2->SetLineWidth(2);
   sub2->SetLineStyle(7);
   sub2->Draw("same");
 }
@@ -820,6 +832,7 @@ TH1F * Analysis::MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_
   }
   hist->GetXaxis()->SetTitle(xtitle.Data());
   hist->GetYaxis()->SetTitle(ytitle.Data());
+  hist->GetYaxis()->SetTitleOffset(hist->GetYaxis()->GetTitleOffset() * Config::TitleFF);
   hist->Sumw2();
 
   // cheat a bit and set subdir map here
@@ -907,12 +920,13 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) {
       TCanvas * fitcanv = new TCanvas("fitcanv","fitcanv");
       fitcanv->cd();
       (*mapiter).second->Draw("PE");
-      fit->SetLineWidth(2);
+      fit->SetLineWidth(3);
       fit->Draw("same");
       
       // draw sub components of fit it applies
       TF1 * sub1; TF1 * sub2;
       Analysis::DrawSubComp(fit,fitcanv,sub1,sub2);
+      (*mapiter).second->Draw("PE SAME"); // redraw to put points on top
 
       // first save as linear, then log
       fitcanv->SetLogy(0);
@@ -937,13 +951,14 @@ void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit) {
   TCanvas * canv = new TCanvas("canv","canv");
   canv->cd();
   hist->Draw("PE");
-  fit->SetLineWidth(2);
+  fit->SetLineWidth(3);
   fit->Draw("same");
 
   // draw subcomponents, too, if they apply
   TF1 * sub1; TF1 * sub2;
   Analysis::DrawSubComp(fit,canv,sub1,sub2);
-    
+  hist->Draw("PE SAME"); // redraw to get data points on top
+
   // first save as linear, then log
   canv->SetLogy(0);
   CMSLumi(canv);

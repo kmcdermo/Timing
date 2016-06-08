@@ -51,6 +51,8 @@ namespace Config{
 
   constexpr    Float_t  TickLength  = 0.03;
 
+  constexpr    Float_t  TitleFF     = 1.4; // offset fudge factor
+  
   // stacker config: lp = lower pad, up = upper pad
   constexpr    Float_t  left_up   = 0.0;
   constexpr    Float_t  bottom_up = 0.3;

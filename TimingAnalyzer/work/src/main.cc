@@ -33,9 +33,9 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
   if (Config::useGJets) Config::SampleMap["gamma"]    = true;  //  isMC
 
   // Color for MC Stacks
-  Config::colorMap["dyll"]   = kCyan;
+  Config::colorMap["dyll"]   = kGreen-6;
   Config::colorMap["qcd"]    = kYellow;
-  Config::colorMap["gamma"]  = kGreen;
+  Config::colorMap["gamma"]  = kOrange+10;
 
   // define title map
   Config::SampleTitleMap["dyll"]   = "Z #rightarrow l^{+}l^{-}";

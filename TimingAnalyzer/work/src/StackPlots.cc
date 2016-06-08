@@ -214,14 +214,38 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) {
     fOutDataTH1FHists[th1f]->SetMaximum( max > 0 ? max*1.05 : max/1.05 );      
     fOutDataTH1FHists[th1f]->SetMinimum( min > 0 ? min/1.05 : min*1.05 );
   }
+
+  TString ytitle_tmp  = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
+  TString hname_tmp   = fOutDataTH1FHists[th1f]->GetName();
+  Bool_t  zetares_tmp  = (ytitle_tmp.Contains("Resolution",TString::kExact) && hname_tmp.Contains("abszeta",TString::kExact));
+  Bool_t  zetabias_tmp = (ytitle_tmp.Contains("Bias",TString::kExact) && hname_tmp.Contains("abszeta",TString::kExact));
+  Bool_t  zptres_tmp  = (ytitle_tmp.Contains("Resolution",TString::kExact) && hname_tmp.Contains("zpt",TString::kExact));
+  Bool_t  effptres_tmp  = (ytitle_tmp.Contains("Resolution",TString::kExact) && hname_tmp.Contains("EBEB_effpt",TString::kExact));
+  if (zetares_tmp) {
+    fOutDataTH1FHists[th1f]->SetMaximum( 0.5 );
+    fOutDataTH1FHists[th1f]->SetMinimum( 0.2 );
+  }
+  if (zetabias_tmp) {
+    fOutDataTH1FHists[th1f]->SetMaximum(  0.02 );
+    fOutDataTH1FHists[th1f]->SetMinimum( -0.01 );
+  }
+  if (zptres_tmp) {
+    fOutDataTH1FHists[th1f]->SetMaximum( 0.6 );
+    fOutDataTH1FHists[th1f]->SetMinimum( 0.1 );
+  }
+  if (effptres_tmp) {
+    fOutDataTH1FHists[th1f]->SetMaximum( 0.6 );
+    fOutDataTH1FHists[th1f]->SetMinimum( 0.1 );
+  }
+
   
   // now draw the plots for upper pad in absurd order because ROOT is dumb
   fOutDataTH1FHists[th1f]->Draw("PE"); // draw first so labels appear
 
   // again, have to scale TDR style values by height of upper pad
-  fOutDataTH1FHists[th1f]->GetYaxis()->SetLabelSize  (Config::LabelSize    / Config::height_up); 
-  fOutDataTH1FHists[th1f]->GetYaxis()->SetTitleSize  (Config::TitleSize    / Config::height_up);
-  fOutDataTH1FHists[th1f]->GetYaxis()->SetTitleOffset(Config::TitleYOffset * Config::height_up);
+  fOutDataTH1FHists[th1f]->GetYaxis()->SetLabelSize  (Config::LabelSize / Config::height_up); 
+  fOutDataTH1FHists[th1f]->GetYaxis()->SetTitleSize  (Config::TitleSize / Config::height_up);
+  fOutDataTH1FHists[th1f]->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_up);
 
   TString ytitle  = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
   Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
@@ -317,14 +341,14 @@ void StackPlots::DrawLowerPad(const Int_t th1f) {
   fOutRatioTH1FHists[th1f]->GetYaxis()->SetNdivisions(505);
 
   // sizes of titles is percent of height of pad --> want a constant size ... so take TDRStyle value, which is evaulated at unity pad height, and divide by height of pad
-  fOutRatioTH1FHists[th1f]->GetXaxis()->SetLabelSize  (Config::LabelSize    / Config::height_lp); 
-  fOutRatioTH1FHists[th1f]->GetXaxis()->SetLabelOffset(Config::LabelOffset  / Config::height_lp); 
-  fOutRatioTH1FHists[th1f]->GetXaxis()->SetTitleSize  (Config::TitleSize    / Config::height_lp);
-  fOutRatioTH1FHists[th1f]->GetXaxis()->SetTickLength (Config::TickLength   / Config::height_lp);
+  fOutRatioTH1FHists[th1f]->GetXaxis()->SetLabelSize  (Config::LabelSize   / Config::height_lp); 
+  fOutRatioTH1FHists[th1f]->GetXaxis()->SetLabelOffset(Config::LabelOffset / Config::height_lp); 
+  fOutRatioTH1FHists[th1f]->GetXaxis()->SetTitleSize  (Config::TitleSize   / Config::height_lp);
+  fOutRatioTH1FHists[th1f]->GetXaxis()->SetTickLength (Config::TickLength  / Config::height_lp);
   
-  fOutRatioTH1FHists[th1f]->GetYaxis()->SetLabelSize  (Config::LabelSize    / Config::height_lp); 
-  fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitleSize  (Config::TitleSize    / Config::height_lp);
-  fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitleOffset(Config::TitleYOffset * Config::height_lp);
+  fOutRatioTH1FHists[th1f]->GetYaxis()->SetLabelSize  (Config::LabelSize   / Config::height_lp); 
+  fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitleSize  (Config::TitleSize   / Config::height_lp);
+  fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_lp);
 
   // redraw to go over line
   fOutRatioTH1FHists[th1f]->Draw("EP SAME"); 
