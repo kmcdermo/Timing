@@ -698,11 +698,12 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
 }
 
 void Analysis::PrepFit(TF1 *& fit, TH1F *& hist) {
-  TF1 * tempfit = new TF1("temp","gaus",-Config::fitrange,Config::fitrange);
-  hist->Fit("temp","RQ0");
-  const Float_t tempp0 = tempfit->GetParameter("Constant");
-  const Float_t tempp1 = tempfit->GetParameter("Mean");
-  const Float_t tempp2 = tempfit->GetParameter("Sigma");
+  TF1 * tempfit = new TF1("temp","gaus(0)",-Config::fitrange,Config::fitrange);
+  tempfit->SetParLimits(2,0,10);
+  hist->Fit("temp","RQ0B");
+  const Float_t tempp0 = tempfit->GetParameter(0); // constant
+  const Float_t tempp1 = tempfit->GetParameter(1); // mean
+  const Float_t tempp2 = tempfit->GetParameter(2); // sigma
 
   if (Config::formname.EqualTo("gaus1",TString::kExact)) {
     TFormula form(Config::formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
