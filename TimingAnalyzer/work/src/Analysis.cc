@@ -584,6 +584,7 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   }
   outhist_mean->SetLineColor(fColor);
   outhist_mean->SetMarkerColor(fColor);
+  outhist_mean->Sumw2();
 
   TH1F * outhist_sigma  = new TH1F(Form("%s_sigma_%s",name.Data(),Config::formname.Data()),"",vxbins.size()-1,axbins);
   outhist_sigma->GetXaxis()->SetTitle(xtitle.Data());
@@ -598,6 +599,7 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   }
   outhist_sigma->SetLineColor(fColor);
   outhist_sigma->SetMarkerColor(fColor);
+  outhist_sigma->Sumw2();
 
   // use this to store runs that by themselves produce bad fits
   TH1Map tempmap; // a bit hacky I admit...
@@ -611,12 +613,10 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
       if ( ((*mapiter).second->Integral() + sumevents) < Config::nEventsCut ) { 
 	
 	// store the plot to be added later
-	TString tempname  = Form("%s_tmp",(*mapiter).first.Data());
-	tempmap[tempname] = (TH1F*)(*mapiter).second->Clone(tempname.Data()); 
+	tempmap[(*mapiter).first] = (TH1F*)(*mapiter).second->Clone(Form("%s_tmp",(*mapiter).first.Data()));
 
 	// record the number of events to exceed cut
-	sumevents += tempmap[tempname]->Integral();
-
+	sumevents += tempmap[(*mapiter).first]->Integral();
 	continue; // don't do anything more, just go to next run
       } 
       
@@ -630,7 +630,7 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
 	// add the bad histos to the good one
 	for (TH1MapIter tempmapiter = tempmap.begin(); tempmapiter != tempmap.end(); ++tempmapiter) {
 	  (*mapiter).second->Add((*tempmapiter).second);
-	  numer = th1binmap[(*tempmapiter).first] * (*tempmapiter).second->Integral();
+	  numer += th1binmap[(*tempmapiter).first] * (*tempmapiter).second->Integral();
 	}
 	
 	// set "effective" bin number
@@ -648,7 +648,7 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
     // declare fit, prep it, then use it for binned plots
     TF1 * fit; 
     Analysis::PrepFit(fit,(*mapiter).second);
-    (*mapiter).second->Fit(fit->GetName(),"R");
+    (*mapiter).second->Fit(fit->GetName(),"RBQ0");
 
     // need to capture the mean and sigma
     Float_t mean,  emean;
@@ -663,7 +663,7 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
 
     // save a copy of the fitted histogram with the fit
     Analysis::SaveTH1andFit((*mapiter).second,subdir,fit);
-  }
+  } // end loop over th1s
 
   // write output hist to file
   fOutFile->cd();
@@ -675,14 +675,21 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   if (!fIsMC && !name.Contains("runs",TString::kExact)) {fTH1Dump << outhist_sigma->GetName() << " " << subdir.Data() << std::endl;}
 
   // save log/lin of each plot
-  TCanvas * canv = new TCanvas();
-  CMSLumi(canv);
+  TCanvas * canv = new TCanvas("canv","canv");
   canv->cd();
 
   outhist_mean->Draw("PE");
+  CMSLumi(canv);
   canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_mean->GetName(),Config::outtype.Data()));
 
+  Float_t min = 1e9;
+  for (Int_t i = 1; i <= outhist_sigma->GetNbinsX(); i++){
+    Float_t tmpmin = outhist_sigma->GetBinContent(i);
+    if (tmpmin < min && tmpmin != 0){ min = tmpmin; }
+  }
+  outhist_sigma->SetMinimum( min / 1.1 );
   outhist_sigma->Draw("PE");
+  CMSLumi(canv);
   canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_sigma->GetName(),Config::outtype.Data()));
   
   delete canv;
@@ -692,7 +699,7 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
 
 void Analysis::PrepFit(TF1 *& fit, TH1F *& hist) {
   TF1 * tempfit = new TF1("temp","gaus",-Config::fitrange,Config::fitrange);
-  hist->Fit("temp","R");
+  hist->Fit("temp","RQ0");
   const Float_t tempp0 = tempfit->GetParameter("Constant");
   const Float_t tempp1 = tempfit->GetParameter("Mean");
   const Float_t tempp2 = tempfit->GetParameter("Sigma");
@@ -701,16 +708,21 @@ void Analysis::PrepFit(TF1 *& fit, TH1F *& hist) {
     TFormula form(Config::formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
     fit  = new TF1(Form("%s_fit",Config::formname.Data()),Config::formname.Data(),-Config::fitrange,Config::fitrange);
     fit->SetParameters(tempp0,tempp1,tempp2);
+    fit->SetParLimits(2,0,10);
   }
   else if (Config::formname.EqualTo("gaus2",TString::kExact)) {
     TFormula form(Config::formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[4])/[5])**2)");
     fit  = new TF1(Form("%s_fit",Config::formname.Data()),Config::formname.Data(),-Config::fitrange,Config::fitrange);
     fit->SetParameters(tempp0,tempp1,tempp2,tempp0/10,0,tempp2*4);
+    fit->SetParLimits(2,0,10);
+    fit->SetParLimits(5,0,10);
   }
   else if (Config::formname.EqualTo("gaus2fm",TString::kExact)) {
     TFormula form(Config::formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)");
     fit  = new TF1(Form("%s_fit",Config::formname.Data()),Config::formname.Data(),-Config::fitrange,Config::fitrange);
     fit->SetParameters(tempp0,tempp1,tempp2,tempp0/10,tempp2*4);
+    fit->SetParLimits(2,0,10);
+    fit->SetParLimits(4,0,10);
   }
   else if (Config::formname.EqualTo("gauslin",TString::kExact)) {
     TFormula form(Config::formname.Data(),"[0]*exp(-(abs(x)-[1])/[2])");
@@ -839,7 +851,7 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) {
     (*mapiter).second->Write(); // map is map["hist name",TH1D*]
 
     // now draw onto canvas to save as png
-    TCanvas * canv = new TCanvas();
+    TCanvas * canv = new TCanvas("canv","canv");
     canv->cd();
     (*mapiter).second->Draw( fIsMC ? "HIST" : "PE" );
     
@@ -863,7 +875,7 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) {
       fOutFile->cd();
       normhist->Write();
 
-      TCanvas * normcanv = new TCanvas();
+      TCanvas * normcanv = new TCanvas("normcanv","normcanv");
       normcanv->cd();
       normhist->Draw( fIsMC ? "HIST" : "PE" );
       
@@ -888,10 +900,10 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) {
       
       // declare fit, then pass it to prepper along with hist for prefitting
       TF1 * fit; 
-      Analysis::PrepFit(fit,(*mapiter).second);
-      (*mapiter).second->Fit(fit->GetName(),"R");
-      
-      TCanvas * fitcanv = new TCanvas();
+      Analysis::PrepFit(fit,(*mapiter).second);      
+      (*mapiter).second->Fit(fit->GetName(),"RBQ0");
+
+      TCanvas * fitcanv = new TCanvas("fitcanv","fitcanv");
       fitcanv->cd();
       (*mapiter).second->Draw("PE");
       fit->SetLineWidth(2);
@@ -921,7 +933,7 @@ void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit) {
   hist->Write(); 
 
   // now draw onto canvas to save as png
-  TCanvas * canv = new TCanvas();
+  TCanvas * canv = new TCanvas("canv","canv");
   canv->cd();
   hist->Draw("PE");
   fit->SetLineWidth(2);
@@ -947,7 +959,7 @@ void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit) {
 void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap) {
   fOutFile->cd();
 
-  TCanvas * canv = new TCanvas();
+  TCanvas * canv = new TCanvas("canv","canv");
   for (TH2MapIter mapiter = th2map.begin(); mapiter != th2map.end(); ++mapiter) { 
     
     (*mapiter).second->Write(); // map is map["hist name",TH1D*]

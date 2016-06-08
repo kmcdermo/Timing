@@ -39,7 +39,7 @@ namespace Config{
   constexpr    Int_t    ntimebins  = 100;
   constexpr    Double_t timerange  = 5.0;
   constexpr    Double_t fitrange   = 3.0;
-  constexpr    Int_t    nEventsCut = 100; // for run number plots
+  constexpr    Int_t    nEventsCut = 1000; // for run number plots
 
   // TDRStyle Config --> needed by stacker
   constexpr    Float_t  TitleSize    = 0.035;
