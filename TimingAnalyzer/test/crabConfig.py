@@ -1,7 +1,7 @@
 from CRABClient.UserUtilities import config
 config = config()
 
-config.General.requestName = 'dyll_full'
+config.General.requestName = 'dyll_smear'
 
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'tree.py'
