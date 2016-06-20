@@ -120,7 +120,7 @@ private:
   bool hltdoubleel,hltsingleel,hltelnoiso;
 
   // vertices
-  int nvtx;
+  int nvtx, vtxX, vtxY, vtxZ;
 
   // object counts
   int nvetoelectrons,nlooseelectrons,nmediumelectrons,ntightelectrons,nheepelectrons;
@@ -132,6 +132,15 @@ private:
 
   // timing
   float el1time, el2time;
+  float el1timec, el2timec; // TOF correction
+  std::vector<float> rhel1times;
+  std::vector<float> rhel2times;
+  
+  // rechits + superclusters
+  int nrhel1;
+  float scel1X, scel1Y, scel1Z;
+  int nrhel2;
+  float scel2X, scel2Y, scel2Z;
 
   // dielectron info
   float zpt,zeta,zphi,zmass,zE,zp;
@@ -148,8 +157,10 @@ private:
   float genzpt,genzeta,genzphi,genzmass,genzE,genzp;
   float genel1pt,genel1eta,genel1phi,genel1E,genel1p;
   float genel2pt,genel2eta,genel2phi,genel2E,genel2p;
-};
 
+  // constants
+  const float sol = 29.9792458; // speed of light in cm/ns
+};
 
 TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig): 
   ///////////// TRIGGER and filter info INFO
@@ -260,8 +271,14 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (applyHLTFilter && !triggered) return;
 
   // Vertex info
-  nvtx = -99;
-  if(verticesH.isValid()) nvtx = verticesH->size();
+  nvtx = -99; vtxX = -999.0; vtxY = -999.0; vtxZ = -999.0;
+  if(verticesH.isValid()) {
+    nvtx = verticesH->size();
+    const reco::Vertex primevtx = (*verticesH)[0];
+    vtxX = primevtx.position().x();
+    vtxY = primevtx.position().y();
+    vtxZ = primevtx.position().z();
+  }
 
   // ELECTRON ANALYSIS 
   // nelectrons AFTER PF cleaning (kinematic selection pT > 10, |eta| < 2.5
@@ -279,6 +296,10 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   el1E    = -99.0; el2E    = -99.0; el1p   = -99.0; el2p   = -99.0;
   el1time = -99.0; el2time = -99.0; 
   
+  // rechits and such
+  scel1X = -999.0; scel1Y = -999.0; scel1Z = -999.0; nrhel1 = -99; 
+  scel2X = -999.0; scel2Y = -999.0; scel2Z = -999.0; nrhel2 = -99; 
+  rhel1times.clear(); rhel2times.clear();
 
   // save only really pure electrons
   std::vector<pat::ElectronRef> tightelectrons;
@@ -318,38 +339,60 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     el1E   = el1->energy(); el2E   = el2->energy();
     el1p   = el1->p();      el2p   = el2->p();
 
-    int nclust = 0;
-
     // ecal cluster tools --> stolen from ECAL ELF
     clustertools = new EcalClusterLazyTools (iEvent, iSetup, recHitCollectionEBTAG, recHitCollectionEETAG);
     const reco::SuperClusterRef& scel1 = el1->superCluster().isNonnull() ? el1->superCluster() : el1->parentSuperCluster();
     if(el1->ecalDrivenSeed() && scel1.isNonnull()) {
+      scel1X = scel1->position().x();
+      scel1Y = scel1->position().y();
+      scel1Z = scel1->position().z();
+      const float scel1S = std::sqrt(scel1X*scel1X + scel1Y*scel1Y + scel1Z*scel1Z);
+      const float diff1X = scel1X - vtxX;
+      const float diff1Y = scel1Y - vtxY;
+      const float diff1Z = scel1Z - vtxZ;
+
       DetId seedDetId = scel1->seed()->seed();
       const EcalRecHitCollection *recHits = (seedDetId.subdetId() == EcalBarrel) ?  clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
       EcalRecHitCollection::const_iterator seedRecHit = recHits->find(seedDetId) ;
       if(seedRecHit != recHits->end()) {
-      	el1time = seedRecHit->time();
+      	el1time  = seedRecHit->time();
+	el1timec = el1time + ((scel1S - std::sqrt(diff1X*diff1X + diff1Y*diff1Y + diff1Z*diff1Z)) / sol);
       }
       for (reco::CaloCluster_iterator caloiter = scel1->clustersBegin(); caloiter != scel1->clustersEnd(); ++caloiter){ // assume electron candidate is contained in supercluster entirely within EB or EE
 	DetId caloDetId = (*caloiter)->seed();
 	EcalRecHitCollection::const_iterator caloRecHit = recHits->find(caloDetId) ;
 	if(caloRecHit != recHits->end()) {
-	  nclust++;
+	  rhel1times.push_back(caloRecHit->time());
 	}
       }
+      nrhel1 = rhel1times.size();
     }
-
-    std::cout << nclust << std::endl;
-
 
     const reco::SuperClusterRef& scel2 = el2->superCluster().isNonnull() ? el2->superCluster() : el2->parentSuperCluster();
     if(el2->ecalDrivenSeed() && scel2.isNonnull()) {
+      scel2X = scel2->position().x();
+      scel2Y = scel2->position().y();
+      scel2Z = scel2->position().z();
+      const float scel2S = std::sqrt(scel2X*scel2X + scel2Y*scel2Y + scel2Z*scel2Z);
+      const float diff2X = scel2X - vtxX;
+      const float diff2Y = scel2Y - vtxY;
+      const float diff2Z = scel2Z - vtxZ;
+
       DetId seedDetId = scel2->seed()->seed();
       const EcalRecHitCollection *recHits = (seedDetId.subdetId() == EcalBarrel) ?  clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
       EcalRecHitCollection::const_iterator seedRecHit = recHits->find(seedDetId) ;
       if(seedRecHit != recHits->end()) {
-    	el2time = seedRecHit->time();
+      	el2time  = seedRecHit->time();
+	el2timec = el2time + ((scel2S - std::sqrt(diff2X*diff2X + diff2Y*diff2Y + diff2Z*diff2Z)) / sol);
       }
+      for (reco::CaloCluster_iterator caloiter = scel2->clustersBegin(); caloiter != scel2->clustersEnd(); ++caloiter){ // assume electron candidate is contained in supercluster entirely within EB or EE
+	DetId caloDetId = (*caloiter)->seed();
+	EcalRecHitCollection::const_iterator caloRecHit = recHits->find(caloDetId) ;
+	if(caloRecHit != recHits->end()) {
+	  rhel2times.push_back(caloRecHit->time());
+	}
+      }
+      nrhel2 = rhel2times.size();
     }
 
     TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1pt, el1eta, el1phi, el1E);
@@ -496,6 +539,9 @@ void TimingAnalyzer::beginJob() {
 
   // Vertex info
   tree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");
+  tree->Branch("vtxX"                 , &vtxX                 , "vtxX/F");
+  tree->Branch("vtxY"                 , &vtxY                 , "vtxY/F");
+  tree->Branch("vtxZ"                 , &vtxZ                 , "vtxZ/F");
 
   // Object counts
   tree->Branch("nvetoelectrons"       , &nvetoelectrons       , "nvetoelectrons/I");
@@ -522,6 +568,22 @@ void TimingAnalyzer::beginJob() {
   // Time info
   tree->Branch("el1time"              , &el1time              , "el1time/F");
   tree->Branch("el2time"              , &el2time              , "el2time/F");
+  tree->Branch("el1timec"             , &el1timec             , "el1timec/F");
+  tree->Branch("el2timec"             , &el2timec             , "el2timec/F");
+
+  tree->Branch("rhel1times"           , "std::vector<float>"  , &rhel1times);
+  tree->Branch("rhel2times"           , "std::vector<float>"  , &rhel2times);
+
+  // supercluster stuff
+  tree->Branch("scel1X"               , &scel1X               , "scel1X/F");
+  tree->Branch("scel1Y"               , &scel1Y               , "scel1Y/F");
+  tree->Branch("scel1Z"               , &scel1Z               , "scel1Z/F");
+  tree->Branch("nrhel1"               , &nrhel1               , "nrhel1/I");  
+
+  tree->Branch("scel2X"               , &scel2X               , "scel2X/F");
+  tree->Branch("scel2Y"               , &scel2Y               , "scel2Y/F");
+  tree->Branch("scel2Z"               , &scel2Z               , "scel2Z/F");
+  tree->Branch("nrhel2"               , &nrhel2               , "nrhel2/I");  
 
   // Dilepton info
   tree->Branch("zmass"                , &zmass                , "zmass/F");

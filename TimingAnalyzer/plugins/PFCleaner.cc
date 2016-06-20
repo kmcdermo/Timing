@@ -31,7 +31,6 @@ private:
   virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
 
   const edm::EDGetTokenT<std::vector<pat::Electron> > electronsToken;
-  const edm::EDGetTokenT<std::vector<pat::Electron> > calibelectronsToken;
 
   const edm::EDGetTokenT<edm::ValueMap<bool> > electronVetoIdMapToken;
   const edm::EDGetTokenT<edm::ValueMap<bool> > electronLooseIdMapToken;
@@ -42,7 +41,6 @@ private:
 
 PFCleaner::PFCleaner(const edm::ParameterSet& iConfig): 
   electronsToken           (consumes<std::vector<pat::Electron> > (iConfig.getParameter<edm::InputTag>("electrons"))),
-  calibelectronsToken      (consumes<std::vector<pat::Electron> > (iConfig.getParameter<edm::InputTag>("calibelectrons"))),
   electronVetoIdMapToken   (consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electronidveto"))),
   electronLooseIdMapToken  (consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electronidloose"))),
   electronMediumIdMapToken (consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electronidmedium"))),
@@ -61,9 +59,6 @@ PFCleaner::~PFCleaner() {}
 void PFCleaner::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   edm::Handle<std::vector<pat::Electron> > electronsH;
   iEvent.getByToken(electronsToken, electronsH);
-
-  edm::Handle<std::vector<pat::Electron> > calibelectronsH;
-  iEvent.getByToken(calibelectronsToken, calibelectronsH);
 
   edm::Handle<edm::ValueMap<bool> > electronVetoIdH;
   iEvent.getByToken(electronVetoIdMapToken, electronVetoIdH);
@@ -90,38 +85,28 @@ void PFCleaner::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   for (std::vector<pat::Electron>::const_iterator electrons_iter = electronsH->begin(); electrons_iter != electronsH->end(); ++electrons_iter) {
     const edm::Ptr<pat::Electron> electronPtr(electronsH, electrons_iter - electronsH->begin());
 
-    // see if slimmed matches calib by reference, otherwise skip
-    if (calibelectronsH.isValid()){
-      for (std::vector<pat::Electron>::const_iterator calibelectrons_iter = calibelectronsH->begin(); calibelectrons_iter != calibelectronsH->end(); ++calibelectrons_iter) {
-	if (calibelectrons_iter->pfCandidateRef()    == electrons_iter->pfCandidateRef() ||
-	    calibelectrons_iter->core()              == electrons_iter->core()           ||
-	    calibelectrons_iter->originalObjectRef() == electrons_iter->originalObjectRef() ) {
-	  
-	  // cuts!
-	  bool passeskincuts  = (calibelectrons_iter->pt() > 10 && fabs(calibelectrons_iter->superCluster()->eta()) < 2.5); 
-	  bool passesvetoid   = (*electronVetoIdH)[electronPtr];
-	  bool passeslooseid  = (*electronLooseIdH)[electronPtr];
-	  bool passesmediumid = (*electronMediumIdH)[electronPtr];
-	  bool passestightid  = (*electronTightIdH)[electronPtr];
-	  bool passesheepid   = (*electronHeepIdH)[electronPtr];
-
-	  if (passeskincuts && passesvetoid) 
-	    outputvetoelectrons->push_back(pat::ElectronRef(calibelectronsH, calibelectrons_iter - calibelectronsH->begin()));
-
-	  if (passeskincuts && passeslooseid) 
-	    outputlooseelectrons->push_back(pat::ElectronRef(calibelectronsH, calibelectrons_iter - calibelectronsH->begin()));
-
-	  if (passeskincuts && passesmediumid) 
-	    outputmediumelectrons->push_back(pat::ElectronRef(calibelectronsH, calibelectrons_iter - calibelectronsH->begin()));
-
-	  if (passeskincuts && passestightid) 
-	    outputtightelectrons->push_back(pat::ElectronRef(calibelectronsH, calibelectrons_iter - calibelectronsH->begin()));
-
-	  if (passeskincuts && passesheepid)
-	    outputheepelectrons->push_back(pat::ElectronRef(calibelectronsH, calibelectrons_iter - calibelectronsH->begin()));
-	}
-      }
-    }
+    // cuts!
+    bool passeskincuts  = (electrons_iter->pt() > 10 && fabs(electrons_iter->superCluster()->eta()) < 2.5); 
+    bool passesvetoid   = (*electronVetoIdH)[electronPtr];
+    bool passeslooseid  = (*electronLooseIdH)[electronPtr];
+    bool passesmediumid = (*electronMediumIdH)[electronPtr];
+    bool passestightid  = (*electronTightIdH)[electronPtr];
+    bool passesheepid   = (*electronHeepIdH)[electronPtr];
+    
+    if (passeskincuts && passesvetoid) 
+      outputvetoelectrons->push_back(pat::ElectronRef(electronsH, electrons_iter - electronsH->begin()));
+    
+    if (passeskincuts && passeslooseid) 
+      outputlooseelectrons->push_back(pat::ElectronRef(electronsH, electrons_iter - electronsH->begin()));
+    
+    if (passeskincuts && passesmediumid) 
+	outputmediumelectrons->push_back(pat::ElectronRef(electronsH, electrons_iter - electronsH->begin()));
+    
+    if (passeskincuts && passestightid) 
+      outputtightelectrons->push_back(pat::ElectronRef(electronsH, electrons_iter - electronsH->begin()));
+    
+    if (passeskincuts && passesheepid)
+	outputheepelectrons->push_back(pat::ElectronRef(electronsH, electrons_iter - electronsH->begin()));
   }
 
   iEvent.put(outputvetoelectrons,   "vetoelectrons");

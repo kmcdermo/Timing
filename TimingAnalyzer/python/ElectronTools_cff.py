@@ -5,20 +5,11 @@ import random
 
 def ElectronTools(process,isMC):
 
-    # Electron ValueMaps for identification
-    dataFormat = DataFormat.MiniAOD
-    switchOnVIDElectronIdProducer(process, dataFormat);
-    ele_id_modules = [];
-    ele_id_modules.append('RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Spring15_25ns_V1_cff');
-    ele_id_modules.append('RecoEgamma.ElectronIdentification.Identification.heepElectronID_HEEPV60_cff');
-    
-    for idmod in ele_id_modules:
-        setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
-
+    # smear first, then egmID
     # https://twiki.cern.ch/twiki/bin/viewauth/CMS/EGMSmearer    
     process.selectedElectrons = cms.EDFilter("PATElectronSelector",
                                              src = cms.InputTag("slimmedElectrons"),
-                                             cut = cms.string("pt > 5 && abs(eta)<2.5")
+                                             cut = cms.string("pt > 10 && abs(eta)<2.5")
                                              )
 		
     from EgammaAnalysis.ElectronTools.calibratedElectronsRun2_cfi import calibratedPatElectrons,files
@@ -32,3 +23,18 @@ def ElectronTools(process,isMC):
         initialSeed = cms.untracked.uint32(int(random.uniform(0,1000000))),
         engineName = cms.untracked.string('TRandom3')
         )
+
+    # Electron ValueMaps for identification
+    dataFormat = DataFormat.MiniAOD
+    switchOnVIDElectronIdProducer(process, dataFormat);
+    ele_id_modules = [];
+    ele_id_modules.append('RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Spring15_25ns_V1_cff');
+    ele_id_modules.append('RecoEgamma.ElectronIdentification.Identification.heepElectronID_HEEPV60_cff');
+    
+    for idmod in ele_id_modules:
+        setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
+
+    process.egmGsfElectronIDs.physicsObjectSrc = cms.InputTag('calibratedElectrons')
+
+
+
