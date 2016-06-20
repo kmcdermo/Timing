@@ -2,14 +2,17 @@ void treeplot(){
   
   gStyle->SetOptStat(0);
 
-  TFile * file = TFile::Open("../tree.root");
+  TFile * file = TFile::Open("tree.root");
   TTree * tree = (TTree*)file->Get("tree/tree");
 
   TCanvas * c1 = new TCanvas();
   c1->cd();
 
-  tree->Draw("nrhel1>>h1(20,0,20)","","goff");
-  tree->Draw("nrhel2>>h2(20,0,20)","","goff");
+  TH1F * h1 = new TH1F("h1","",20,0,20);
+  TH1F * h2 = new TH1F("h2","",20,0,20);
+
+  tree->Draw("nrhel1>>h1","","goff");
+  tree->Draw("nrhel2>>h2","","goff");
 
   h1->Scale(1.0/h1->Integral());
   h1->GetXaxis()->SetTitle("nRecHits");
@@ -30,5 +33,7 @@ void treeplot(){
   c1->SetLogy(1);
   c1->SaveAs("nrechits.png");
 
+  std::cout << "h1 mean: " << h1->GetMean() << std::endl;
+  std::cout << "h2 mean: " << h2->GetMean() << std::endl;
 }
 
