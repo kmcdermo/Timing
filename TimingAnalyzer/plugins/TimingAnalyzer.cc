@@ -112,6 +112,9 @@ private:
   edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
   edm::EDGetTokenT<edm::View<reco::GenParticle> >   gensToken;
 
+  // how to select electrons
+  const bool doZmassSort;
+
   // ECALELF tools
   EcalClusterLazyTools *clustertools;
 
@@ -192,7 +195,8 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
 
   ///////////// GEN INFO
   // isMC or Data --> default Data
-  isMC(iConfig.existsAs<bool>("isMC") ? iConfig.getParameter<bool>("isMC") : false)
+  isMC(iConfig.existsAs<bool>("isMC") ? iConfig.getParameter<bool>("isMC") : false),
+  doZmassSort(iConfig.existsAs<bool>("doZmassSort") ? iConfig.getParameter<bool>("doZmassSort") : false)
 {
   usesResource();
   usesResource("TFileService");
@@ -335,23 +339,31 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (tightelectrons.size()>1){   // need at least two electrons that pass id and pt cuts! 
     // First sort on pT --> should be redudant, as already sorted this way in miniAOD
     std::sort(tightelectrons.begin(), tightelectrons.end(), sortElectronsByPt);
-  
-    triplevec invmasspairs; // store i-j tight el index + invariant mass
-    // only want pair of tight electrons that yield closest zmass diff   
-    for (std::size_t i = 0; i < tightelectrons.size(); i++) {
-      pat::ElectronRef el1 = tightelectrons[i];
-      for (std::size_t j = i+1; j < tightelectrons.size(); j++) {
-  	pat::ElectronRef el2 = tightelectrons[j];
-  	TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1->pt(), el1->eta(), el1->phi(), el1->energy());
-  	TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2->pt(), el2->eta(), el2->phi(), el2->energy());
-  	el1vec += el2vec;
-  	invmasspairs.push_back(std::make_tuple(i,j,std::abs(el1vec.M()-91.1876))); 
+
+    pat::ElectronRef el1;
+    pat::ElectronRef el2;
+
+    if (doZmassSort) {
+      triplevec invmasspairs; // store i-j tight el index + invariant mass
+      // only want pair of tight electrons that yield closest zmass diff   
+      for (std::size_t i = 0; i < tightelectrons.size(); i++) {
+	pat::ElectronRef el1 = tightelectrons[i];
+	for (std::size_t j = i+1; j < tightelectrons.size(); j++) {
+	  pat::ElectronRef el2 = tightelectrons[j];
+	  TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1->pt(), el1->eta(), el1->phi(), el1->energy());
+	  TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2->pt(), el2->eta(), el2->phi(), el2->energy());
+	  el1vec += el2vec;
+	  invmasspairs.push_back(std::make_tuple(i,j,std::abs(el1vec.M()-91.1876))); 
+	}
       }
+      auto best = std::min_element(invmasspairs.begin(),invmasspairs.end(),minimizeByZmass); // keep the lowest! --> returns pointer to lowest element
+      el1 = tightelectrons[std::get<0>(*best)];
+      el2 = tightelectrons[std::get<1>(*best)];
     }
-    auto best = std::min_element(invmasspairs.begin(),invmasspairs.end(),minimizeByZmass); // keep the lowest! --> returns pointer to lowest element
-      
-    pat::ElectronRef el1 = tightelectrons[std::get<0>(*best)];
-    pat::ElectronRef el2 = tightelectrons[std::get<1>(*best)];
+    else { // just take highest pt electrons in event
+      el1 = tightelectrons[0];
+      el2 = tightelectrons[1];
+    }
 
     // set the individual electron variables
     el1pid = el1->pdgId();  el2pid = el2->pdgId();

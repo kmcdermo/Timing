@@ -48,13 +48,16 @@ options.register (
 	'demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to run over only 100k events as a demo');
 
+options.register (
+	'doZmassSort',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to pick electrons based on dilepton mass');
+
 ## parsing command line arguments
 options.parseArguments()
 
 ### check consistentcy of basic options
 if options.isMC and 'dataRun2' in options.globalTag:
 	options.globalTag = '76X_mcRun2_asymptotic_RunIIFall15DR76_v1';
-
 
 if options.isMC and options.miniAODProcess != 'PAT':
 	options.miniAODProcess  = 'PAT'
@@ -69,6 +72,7 @@ print "Running with filterOnHLT         = ",options.filterOnHLT
 print "Running with filterOnKinematics  = ",options.filterOnKinematics
 print "Running with nThreads            = ",options.nThreads
 print "Running with demoMode            = ",options.demoMode
+print "Running with doZmassSort         = ",options.doZmassSort
 print "#####################"
 
 ## Define the CMSSW process
@@ -167,6 +171,8 @@ process.tree = cms.EDAnalyzer("TimingAnalyzer",
    ## ecal recHits			      
    recHitCollectionEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitCollectionEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
+   ## turn on dilepton selection based on mass
+   doZmassSort = cms.bool(options.doZmassSort)
 )
 
 # Set up the path
