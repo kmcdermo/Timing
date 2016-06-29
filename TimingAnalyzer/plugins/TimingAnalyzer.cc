@@ -1,5 +1,6 @@
 // basic C++ headers
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <vector>
 #include <utility>
@@ -38,6 +39,10 @@
 // EGamma Tools
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
+
+// More DetIds
+#include "DataFormats/EcalDetId/interface/EBDetId.h"
+#include "DataFormats/EcalDetId/interface/EEDetId.h"
 
 // Geometry
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
@@ -255,6 +260,38 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iSetup.get<CaloGeometryRecord>().get(geoHandle);
   const CaloSubdetectorGeometry *barrelGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
   const CaloSubdetectorGeometry *endcapGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
+
+  
+  
+  std::ifstream input;
+  input.open("detids.txt",std::ios::in);
+  uint32_t detid = 0;
+  
+  std::ofstream output;
+  output.open("detidsietaiphi.txt",std::ios::app);
+  while (input >> detid){
+    
+    DetId detId(detid);
+    if (detId.subdetId() == EcalBarrel){
+      EBDetId ebdetId(detid);
+      output << detid << " " << ebdetId.ieta() << " " << ebdetId.iphi() << " " << "EB" << std::endl;
+    }
+    else if (detId.subdetId() == EcalEndcap){
+      EEDetId eedetId(detid);
+      output << detid << " " << eedetId.ix() << " " << eedetId.iy() << " " << "EE" << std::endl;
+    }
+    else {
+      continue;
+    }
+  }
+  
+  input.close();
+  output.close();
+
+  exit(1);
+
+
+
 
   // Event, lumi, run info
   event = iEvent.id().event();
