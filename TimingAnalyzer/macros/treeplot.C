@@ -8,8 +8,8 @@ void treeplot(){
   TCanvas * c1 = new TCanvas();
   c1->cd();
 
-  TH1F * h1 = new TH1F("h1","",20,0,20);
-  TH1F * h2 = new TH1F("h2","",20,0,20);
+  TH1F * h1 = new TH1F("h1","",100,0,100);
+  TH1F * h2 = new TH1F("h2","",100,0,100);
 
   tree->Draw("nrhel1>>h1","","goff");
   tree->Draw("nrhel2>>h2","","goff");

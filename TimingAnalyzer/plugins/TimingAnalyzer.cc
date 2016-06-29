@@ -2,6 +2,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <utility>
 #include <map>
 #include <string>
 #include <cmath>
@@ -32,13 +33,17 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/Common/interface/ValueMap.h"
-
-// Stolen from ECALELF dumper
 #include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
-#include "DataFormats/EcalDetId/interface/EBDetId.h"
-#include "DataFormats/EcalDetId/interface/EEDetId.h"
+
+// EGamma Tools
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
+
+// Geometry
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
+#include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
 
 // ROOT
 #include "TTree.h"
@@ -47,6 +52,7 @@
 
 typedef std::tuple<int, int, float> triple;
 typedef std::vector<triple> triplevec;
+typedef std::vector<std::pair<DetId,float> > DetIdPairVec;
 
 inline bool minimizeByZmass(const triple& elpair1, const triple& elpair2){
   return std::get<2>(elpair1)<std::get<2>(elpair2);
@@ -120,7 +126,8 @@ private:
   bool hltdoubleel,hltsingleel,hltelnoiso;
 
   // vertices
-  int nvtx, vtxX, vtxY, vtxZ;
+  int nvtx; 
+  float vtxX, vtxY, vtxZ;
 
   // object counts
   int nvetoelectrons,nlooseelectrons,nmediumelectrons,ntightelectrons,nheepelectrons;
@@ -130,17 +137,18 @@ private:
   float el1pt,el1eta,el1phi,el1E,el1p;
   float el2pt,el2eta,el2phi,el2E,el2p;
 
-  // timing
-  float el1time, el2time;
-  float el1timec, el2timec; // TOF correction
-  std::vector<float> rhel1times;
-  std::vector<float> rhel2times;
-  
-  // rechits + superclusters
-  int nrhel1;
-  float scel1X, scel1Y, scel1Z;
-  int nrhel2;
-  float scel2X, scel2Y, scel2Z;
+  // supercluster info 
+  float el1scX, el1scY, el1scZ, el1scE;
+  float el2scX, el2scY, el2scZ, el2scE;
+  int   el1nrh, el2nrh;
+
+  // all rec hit info
+  std::vector<float> el1rhXs, el1rhYs, el1rhZs, el1rhEs, el1rhtimes;
+  std::vector<float> el2rhXs, el2rhYs, el2rhZs, el2rhEs, el2rhtimes;
+
+  // seed info
+  float el1seedX, el1seedY, el1seedZ, el1seedE, el1seedtime;
+  float el2seedX, el2seedY, el2seedZ, el2seedE, el2seedtime;
 
   // dielectron info
   float zpt,zeta,zphi,zmass,zE,zp;
@@ -159,7 +167,7 @@ private:
   float genel2pt,genel2eta,genel2phi,genel2E,genel2p;
 
   // constants
-  const float sol = 29.9792458; // speed of light in cm/ns
+  //  const float sol = 29.9792458; // speed of light in cm/ns
 };
 
 TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig): 
@@ -238,6 +246,12 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   edm::Handle<pat::ElectronRefVector> heepelectronsH;
   iEvent.getByToken(heepelectronsToken, heepelectronsH);
 
+  // geometry (from ECAL ELF)
+  edm::ESHandle<CaloGeometry> geoHandle;
+  iSetup.get<CaloGeometryRecord>().get(geoHandle);
+  const CaloSubdetectorGeometry *barrelGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
+  const CaloSubdetectorGeometry *endcapGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
+
   // Event, lumi, run info
   event = iEvent.id().event();
   run   = iEvent.id().run();
@@ -289,17 +303,25 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (tightelectronsH.isValid())  ntightelectrons  = tightelectronsH->size();
   if (heepelectronsH.isValid())   nheepelectrons   = heepelectronsH->size();
   
-  // tree vars
-  zmass   = -99.0; zpt     = -99.0; zeta   = -99.0; zphi   = -99.0; zE = -99.0; zp = -99.0;
+  // electron tree vars (initialize)
   el1pid  = -99;   el1pt   = -99.0; el1eta = -99.0; el1phi = -99.0; 
   el2pid  = -99;   el2pt   = -99.0; el2eta = -99.0; el2phi = -99.0; 
   el1E    = -99.0; el2E    = -99.0; el1p   = -99.0; el2p   = -99.0;
-  el1time = -99.0; el2time = -99.0; 
-  
-  // rechits and such
-  scel1X = -999.0; scel1Y = -999.0; scel1Z = -999.0; nrhel1 = -99; 
-  scel2X = -999.0; scel2Y = -999.0; scel2Z = -999.0; nrhel2 = -99; 
-  rhel1times.clear(); rhel2times.clear();
+
+  // supercluster, rec hits, and seed info
+  el1scX = -999.0; el1scY = -999.0; el1scZ = -999.0; el1scE = -999.0;
+  el2scX = -999.0; el2scY = -999.0; el2scZ = -999.0; el2scE = -999.0;
+
+  el1rhXs.clear(); el1rhYs.clear(); el1rhZs.clear(); el1rhEs.clear(); el1rhtimes.clear();
+  el2rhXs.clear(); el2rhYs.clear(); el2rhZs.clear(); el2rhEs.clear(); el2rhtimes.clear();
+
+  el1seedX = -999.0; el1seedY = -999.0; el1seedZ = -999.0; el1seedE = -999.0; el1seedtime = -999.0;
+  el2seedX = -999.0; el2seedY = -999.0; el2seedZ = -999.0; el2seedE = -999.0; el2seedtime = -999.0;
+
+  el1nrh = -99; el2nrh = -99;
+
+  // z variables
+  zmass = -99.0; zpt = -99.0; zeta = -99.0; zphi = -99.0; zE = -99.0; zp = -99.0;
 
   // save only really pure electrons
   std::vector<pat::ElectronRef> tightelectrons;
@@ -341,60 +363,96 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     // ecal cluster tools --> stolen from ECAL ELF
     clustertools = new EcalClusterLazyTools (iEvent, iSetup, recHitCollectionEBTAG, recHitCollectionEETAG);
-    const reco::SuperClusterRef& scel1 = el1->superCluster().isNonnull() ? el1->superCluster() : el1->parentSuperCluster();
-    if(el1->ecalDrivenSeed() && scel1.isNonnull()) {
-      scel1X = scel1->position().x();
-      scel1Y = scel1->position().y();
-      scel1Z = scel1->position().z();
-      const float scel1S = std::sqrt(scel1X*scel1X + scel1Y*scel1Y + scel1Z*scel1Z);
-      const float diff1X = scel1X - vtxX;
-      const float diff1Y = scel1Y - vtxY;
-      const float diff1Z = scel1Z - vtxZ;
 
-      DetId seedDetId = scel1->seed()->seed();
-      const EcalRecHitCollection *recHits = (seedDetId.subdetId() == EcalBarrel) ?  clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
-      EcalRecHitCollection::const_iterator seedRecHit = recHits->find(seedDetId) ;
-      if(seedRecHit != recHits->end()) {
-      	el1time  = seedRecHit->time();
-	el1timec = el1time + ((scel1S - std::sqrt(diff1X*diff1X + diff1Y*diff1Y + diff1Z*diff1Z)) / sol);
-      }
-      for (reco::CaloCluster_iterator caloiter = scel1->clustersBegin(); caloiter != scel1->clustersEnd(); ++caloiter){ // assume electron candidate is contained in supercluster entirely within EB or EE
-	DetId caloDetId = (*caloiter)->seed();
-	EcalRecHitCollection::const_iterator caloRecHit = recHits->find(caloDetId) ;
-	if(caloRecHit != recHits->end()) {
-	  rhel1times.push_back(caloRecHit->time());
+    // super cluster from electron 1
+    const reco::SuperClusterRef& el1sc = el1->superCluster().isNonnull() ? el1->superCluster() : el1->parentSuperCluster();
+    if(el1->ecalDrivenSeed() && el1sc.isNonnull()) {
+
+      // save some supercluster info
+      el1scX = el1sc->position().x();
+      el1scY = el1sc->position().y();
+      el1scZ = el1sc->position().z();
+      el1scE = el1sc->energy();
+
+      // use seed to get geometry and recHits
+      DetId seedDetId = el1sc->seed()->seed(); //seed detid
+      const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
+      const EcalRecHitCollection *recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
+
+      // loop over all crystals
+      DetIdPairVec hitsAndFractions = el1sc->hitsAndFractions(); // all crystals in SC
+      for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) {
+
+	DetId recHitId = hafitr->first; // get detid of crystal
+	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
+
+	if (recHit != recHits->end()) { // standard check
+	  // save position, energy, and time of each crystal to a vector
+	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
+	  el1rhXs.push_back(recHitPos.x());
+	  el1rhYs.push_back(recHitPos.y());
+	  el1rhZs.push_back(recHitPos.z());
+	  el1rhEs.push_back(recHit->energy());
+	  el1rhtimes.push_back(recHit->time());	 
+
+	  // save seed info in a flat branch
+	  if (seedDetId == recHitId) { 
+	    el1seedX = el1rhXs.back();
+	    el1seedY = el1rhYs.back();
+	    el1seedZ = el1rhZs.back();
+	    el1seedE = el1rhEs.back();
+	    el1seedtime = el1rhtimes.back();
+	  }
 	}
-      }
-      nrhel1 = rhel1times.size();
-    }
+      } // end loop over all crystals
+      el1nrh = el1rhtimes.size(); // save the number of valid rechits
+    } // end check over supercluster
 
-    const reco::SuperClusterRef& scel2 = el2->superCluster().isNonnull() ? el2->superCluster() : el2->parentSuperCluster();
-    if(el2->ecalDrivenSeed() && scel2.isNonnull()) {
-      scel2X = scel2->position().x();
-      scel2Y = scel2->position().y();
-      scel2Z = scel2->position().z();
-      const float scel2S = std::sqrt(scel2X*scel2X + scel2Y*scel2Y + scel2Z*scel2Z);
-      const float diff2X = scel2X - vtxX;
-      const float diff2Y = scel2Y - vtxY;
-      const float diff2Z = scel2Z - vtxZ;
+    // super cluster from electron 2
+    const reco::SuperClusterRef& el2sc = el2->superCluster().isNonnull() ? el2->superCluster() : el2->parentSuperCluster();
+    if(el2->ecalDrivenSeed() && el2sc.isNonnull()) {
 
-      DetId seedDetId = scel2->seed()->seed();
-      const EcalRecHitCollection *recHits = (seedDetId.subdetId() == EcalBarrel) ?  clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
-      EcalRecHitCollection::const_iterator seedRecHit = recHits->find(seedDetId) ;
-      if(seedRecHit != recHits->end()) {
-      	el2time  = seedRecHit->time();
-	el2timec = el2time + ((scel2S - std::sqrt(diff2X*diff2X + diff2Y*diff2Y + diff2Z*diff2Z)) / sol);
-      }
-      for (reco::CaloCluster_iterator caloiter = scel2->clustersBegin(); caloiter != scel2->clustersEnd(); ++caloiter){ // assume electron candidate is contained in supercluster entirely within EB or EE
-	DetId caloDetId = (*caloiter)->seed();
-	EcalRecHitCollection::const_iterator caloRecHit = recHits->find(caloDetId) ;
-	if(caloRecHit != recHits->end()) {
-	  rhel2times.push_back(caloRecHit->time());
+      // save some supercluster info
+      el2scX = el2sc->position().x();
+      el2scY = el2sc->position().y();
+      el2scZ = el2sc->position().z();
+      el2scE = el2sc->energy();
+
+      // use seed to get geometry and recHits
+      DetId seedDetId = el2sc->seed()->seed(); //seed detid
+      const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
+      const EcalRecHitCollection *recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
+
+      // loop over all crystals
+      DetIdPairVec hitsAndFractions = el2sc->hitsAndFractions(); // all crystals in SC
+      for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) {
+
+	DetId recHitId = hafitr->first; // get detid of crystal
+	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
+
+	if (recHit != recHits->end()) { // standard check
+	  // save position, energy, and time of each crystal to a vector
+	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
+	  el2rhXs.push_back(recHitPos.x());
+	  el2rhYs.push_back(recHitPos.y());
+	  el2rhZs.push_back(recHitPos.z());
+	  el2rhEs.push_back(recHit->energy());
+	  el2rhtimes.push_back(recHit->time());	 
+
+	  // save seed info in a flat branch
+	  if (seedDetId == recHitId) { 
+	    el2seedX = el2rhXs.back();
+	    el2seedY = el2rhYs.back();
+	    el2seedZ = el2rhZs.back();
+	    el2seedE = el2rhEs.back();
+	    el2seedtime = el2rhtimes.back();
+	  }
 	}
-      }
-      nrhel2 = rhel2times.size();
-    }
+      } // end loop over all crystals
+      el2nrh = el2rhtimes.size(); // save the number of valid rechits
+    } // end check over supercluster
 
+    // store Z information
     TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1pt, el1eta, el1phi, el1E);
     TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2pt, el2eta, el2phi, el2E);
       
@@ -565,25 +623,43 @@ void TimingAnalyzer::beginJob() {
   tree->Branch("el2E"                 , &el2E                 , "el2E/F");
   tree->Branch("el2p"                 , &el2p                 , "el2p/F");
 
-  // Time info
-  tree->Branch("el1time"              , &el1time              , "el1time/F");
-  tree->Branch("el2time"              , &el2time              , "el2time/F");
-  tree->Branch("el1timec"             , &el1timec             , "el1timec/F");
-  tree->Branch("el2timec"             , &el2timec             , "el2timec/F");
-
-  tree->Branch("rhel1times"           , "std::vector<float>"  , &rhel1times);
-  tree->Branch("rhel2times"           , "std::vector<float>"  , &rhel2times);
-
   // supercluster stuff
-  tree->Branch("scel1X"               , &scel1X               , "scel1X/F");
-  tree->Branch("scel1Y"               , &scel1Y               , "scel1Y/F");
-  tree->Branch("scel1Z"               , &scel1Z               , "scel1Z/F");
-  tree->Branch("nrhel1"               , &nrhel1               , "nrhel1/I");  
+  tree->Branch("el1scX"               , &el1scX               , "el1scX/F");
+  tree->Branch("el1scY"               , &el1scY               , "el1scY/F");
+  tree->Branch("el1scZ"               , &el1scZ               , "el1scZ/F");
+  tree->Branch("el1scE"               , &el1scE               , "el1scE/F");
 
-  tree->Branch("scel2X"               , &scel2X               , "scel2X/F");
-  tree->Branch("scel2Y"               , &scel2Y               , "scel2Y/F");
-  tree->Branch("scel2Z"               , &scel2Z               , "scel2Z/F");
-  tree->Branch("nrhel2"               , &nrhel2               , "nrhel2/I");  
+  tree->Branch("el2scX"               , &el2scX               , "el2scX/F");
+  tree->Branch("el2scY"               , &el2scY               , "el2scY/F");
+  tree->Branch("el2scZ"               , &el2scZ               , "el2scZ/F");
+  tree->Branch("el2scE"               , &el2scE               , "el2scE/F");
+
+  // all rechits
+  tree->Branch("el1rhXs"              , "std::vector<float>"  , &el1rhXs);
+  tree->Branch("el1rhYs"              , "std::vector<float>"  , &el1rhYs);
+  tree->Branch("el1rhZs"              , "std::vector<float>"  , &el1rhZs);
+  tree->Branch("el1rhtimes"           , "std::vector<float>"  , &el1rhtimes);
+
+  tree->Branch("el2rhXs"              , "std::vector<float>"  , &el2rhXs);
+  tree->Branch("el2rhYs"              , "std::vector<float>"  , &el2rhYs);
+  tree->Branch("el2rhZs"              , "std::vector<float>"  , &el2rhZs);
+  tree->Branch("el2rhtimes"           , "std::vector<float>"  , &el2rhtimes);
+
+  // seed crystal info
+  tree->Branch("el1seedX"             , &el1seedX             , "el1seedX/F");
+  tree->Branch("el1seedY"             , &el1seedY             , "el1seedY/F");
+  tree->Branch("el1seedZ"             , &el1seedZ             , "el1seedZ/F");
+  tree->Branch("el1seedE"             , &el1seedE             , "el1seedE/F");
+  tree->Branch("el1seedtime"          , &el1seedtime          , "el1seedtime/F");
+
+  tree->Branch("el2seedX"             , &el2seedX             , "el2seedX/F");
+  tree->Branch("el2seedY"             , &el2seedY             , "el2seedY/F");
+  tree->Branch("el2seedZ"             , &el2seedZ             , "el2seedZ/F");
+  tree->Branch("el2seedE"             , &el2seedE             , "el2seedE/F");
+  tree->Branch("el2seedtime"          , &el2seedtime          , "el2seedtime/F");
+
+  tree->Branch("el1nrh"               , &el1nrh               , "el1nrh/I");  
+  tree->Branch("el2nrh"               , &el2nrh               , "el2nrh/I");  
 
   // Dilepton info
   tree->Branch("zmass"                , &zmass                , "zmass/F");
