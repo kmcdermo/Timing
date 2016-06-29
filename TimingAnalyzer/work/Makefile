@@ -14,14 +14,24 @@ SRCS := $(wildcard ${SRCDIR}/*.cc)
 OBJS := $(addprefix ${OBJDIR}/,$(notdir $(SRCS:.cc=.o)))
 DEPS := $(addprefix ${DEPDIR}/,$(notdir $(SRCS:.cc=.d)))
 
+${OBJDIR}/%.o: ${SRCDIR}/%.cc ${DEPDIR}/%.d
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} -o $@ -c $<
+
+${DEPDIR}/%.d: ${SRCDIR}/%.cc
+	${CXX} ${CPPFLAGS} ${CXXFLAGS} -MM -MT $(patsubst ${SRCDIR}/%.cc,${OBJDIR}/%.o,$<) $< -MF $@
+
 main: ${OBJS} 
 	${CXX} ${CXXFLAGS} -o $@ ${OBJS} ${LDFLAGS}
 
-${OBJS}: ${OBJDIR}/%.o: ${SRCDIR}/%.cc ${DEPDIR}/%.d
-	${CXX} ${CPPFLAGS} ${CXXFLAGS} -o $@ -c $<
+${OBJS}: | ${OBJDIR}
 
-${DEPS}: ${DEPDIR}/%.d: ${SRCDIR}/%.cc
-	${CXX} ${CPPFLAGS} ${CXXFLAGS} -MM -MT $(patsubst ${SRCDIR}/%.cc,${OBJDIR}/%.o,$<) $< -MF $@
+${DEPS}: | ${DEPDIR}
+
+${OBJDIR}:
+	mkdir -p ${OBJDIR}
+
+${DEPDIR}:
+	mkdir -p ${DEPDIR}
 
 # ROOT6
 HEADDIR := interface
@@ -32,4 +42,3 @@ ${SRCDIR}/dict.cc: ${HEADERS}
 
 clean:
 	-rm -f ${EXES} ${DEPDIR}/*.d ${OBJDIR}/*.o ${SRCDIR}/*.pcm ./*/*~
-
