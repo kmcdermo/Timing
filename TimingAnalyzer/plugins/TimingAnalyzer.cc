@@ -260,8 +260,6 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iSetup.get<CaloGeometryRecord>().get(geoHandle);
   const CaloSubdetectorGeometry *barrelGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
   const CaloSubdetectorGeometry *endcapGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
-
-  
   
   std::ifstream input;
   input.open("detids.txt",std::ios::in);
@@ -274,11 +272,11 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     DetId detId(detid);
     if (detId.subdetId() == EcalBarrel){
       EBDetId ebdetId(detid);
-      output << detid << " " << ebdetId.ieta() << " " << ebdetId.iphi() << " " << "EB" << std::endl;
+      output << detid << " " << ebdetId.iphi() << " " << ebdetId.ieta() << " " << "EB" << std::endl;
     }
     else if (detId.subdetId() == EcalEndcap){
       EEDetId eedetId(detid);
-      output << detid << " " << eedetId.ix() << " " << eedetId.iy() << " " << "EE" << std::endl;
+      output << detid << " " << eedetId.ix() << " " << eedetId.iy() << " " << (eedetId.zside()>0?"EE+":"EE-") << std::endl;
     }
     else {
       continue;
@@ -289,9 +287,6 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   output.close();
 
   exit(1);
-
-
-
 
   // Event, lumi, run info
   event = iEvent.id().event();
