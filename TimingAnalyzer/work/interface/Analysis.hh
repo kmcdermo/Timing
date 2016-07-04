@@ -22,15 +22,18 @@ public:
   ~Analysis();
   void InitTree();
   void StandardPlots();
+  void SetUpStandardPlots();
   void TimeResPlots();
+  void SetUpTimeResPlots();
   void TriggerEffs();
-  void Project2Dto1D(TH2F *& hist2d, TStrMap & subdir2dmap, TH1Map & th1map, TStrMap & subdir1dmap, TStrIntMap & th1binmap);
+  void Make1DTimingPlots(TH2F *& hist2D, const TString subdir2D, const DblVec& bins2D, TString name);
+  void Project2Dto1D(TH2F *& hist2d, TString subdir2d, TH1Map & th1map, TStrMap & subdir1dmap, TStrIntMap & th1binmap);
   void ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString name, TString xtitle, const DblVec vxbins, TString subdir);
   void PrepFit(TF1 *& fit, TH1F *& hist);
   void GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t & sigma, Float_t & esigma); 
   void DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2);
   TH1F * MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
-  TH2F * MakeTH2Plot(TString hname, TString htitle, const DblVec vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
+  TH2F * MakeTH2Plot(TString hname, TString htitle, const DblVec& vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
   void SaveTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit);
   void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
@@ -60,6 +63,42 @@ private:
   // Output colors
   Color_t fColor;
   
+  // save on passing crap around (Standard Plots)
+  TH1Map standardTH1Map; TStrMap standardTH1SubMap;
+  TH1Map timingMap;      TStrMap timingSubMap;
+
+  ///////////////////
+  // time res maps
+  ///////////////////
+  // z variables
+  TH2Map z2DMap; TStrMap z2DSubMap; TStrDblVMap zbins;
+
+  // effective energy plots
+  TH2Map effpt2DMap;    TStrMap effpt2DSubMap;    DblVec effptbins;
+  TH2Map effE2DMap;     TStrMap effE2DSubMap;     DblVec effEbins;
+  TH2Map effseedE2DMap; TStrMap effseedE2DSubMap; DblVec effseedEbins;
+
+  // nvtx plots
+  TH2Map nvtx2DMap; TStrMap nvtx2DSubMap; DblVec nvtxbins;
+  
+  // single el eta plots
+  TH2Map eleta2DMap; TStrMap eleta2DSubMap; DblVec eletabins;
+
+  // vtxZ plots
+  TH2Map vtxZ2DMap; TStrMap vtxZ2DSubMap; DblVec vtxZbins;
+
+  // single el energy plots
+  TH2Map el1pt2DMap;    TStrMap el1pt2DSubMap;    DblVec el1ptbins;
+  TH2Map el1E2DMap;     TStrMap el1E2DSubMap;     DblVec el1Ebins;
+  TH2Map el1seedE2DMap; TStrMap el1seedE2DSubMap; DblVec el1seedEbins;
+
+  TH2Map el2pt2DMap;    TStrMap el2pt2DSubMap;    DblVec el2ptbins;
+  TH2Map el2E2DMap;     TStrMap el2E2DSubMap;     DblVec el2Ebins;
+  TH2Map el2seedE2DMap; TStrMap el2seedE2DSubMap; DblVec el2seedEbins;
+
+  // run numbers (data only)
+  TH2Map runs2DMap; TStrMap runs2DSubMap; DblVec dRunNos; 
+
 public:
   // Declaration of leaf types
   Int_t           event;
