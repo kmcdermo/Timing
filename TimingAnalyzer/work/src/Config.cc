@@ -9,6 +9,7 @@ namespace Config {
   Bool_t  doStacks   = false;
   Bool_t  doDemo     = false;
   Bool_t  useDEG     = false; 
+  Bool_t  useSEL     = false; 
   Bool_t  useDYll    = false; 
   Bool_t  useQCD     = false;
   Bool_t  useGJets   = false;
@@ -17,6 +18,9 @@ namespace Config {
   Bool_t  doStandard = false;
   Bool_t  doTimeRes  = false;
   Bool_t  doTrigEff  = false;
+  Bool_t  applyTOF   = false;
+  Bool_t  wgtedtime  = false;
+  Bool_t  normE      = false;
   TString formname   = "gaus1"; // gaus1, gaus2, gaus2fm, gauslin
 
   TStrBoolMap SampleMap;       // set in main.cc

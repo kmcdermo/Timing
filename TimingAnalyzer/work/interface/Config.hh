@@ -13,7 +13,9 @@ typedef std::map<TString,Float_t> TStrFltMap;
 
 namespace Config{
   // general config
-  constexpr    Float_t PI = 3.14159265358979323846;
+  constexpr    Float_t PI  = 3.14159265358979323846;
+  constexpr    Float_t sol = 29.9792458; // speed of light in cm / ns
+  constexpr    Float_t nE  = 0.2; // 200 MeV
 
   // output config
   constexpr    Float_t lumi      = 2.301; // brilcalc lumi --normtag /afs/cern.ch/user/l/lumipro/public/normtag_file/moriond16_normtag.json -i rereco2015D.txt -u /fb
@@ -21,7 +23,7 @@ namespace Config{
   static const TString extraText = "Preliminary";
 
   // pu config
-  constexpr    Int_t   nvtxbins   = 50;
+  constexpr    Int_t   nbinsvtx   = 50;
   static const TString pusubdir   = "purw";
   static const TString pufilename = "PURW.root";
   static const TString puplotname = "nvtx_dataOverMC";
@@ -81,6 +83,7 @@ namespace Config{
   extern Bool_t      doStacks;
   extern Bool_t      doDemo;
   extern Bool_t      useDEG;
+  extern Bool_t      useSEL;
   extern Bool_t      useDYll;
   extern Bool_t      useQCD;
   extern Bool_t      useGJets;
@@ -89,6 +92,9 @@ namespace Config{
   extern Bool_t      doStandard;
   extern Bool_t      doTimeRes;
   extern Bool_t      doTrigEff;
+  extern Bool_t      applyTOF;
+  extern Bool_t      wgtedtime;
+  extern Bool_t      normE;
   extern TString     formname; // fitting function to be used
 
   extern TStrBoolMap SampleMap;

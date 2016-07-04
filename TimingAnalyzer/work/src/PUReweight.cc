@@ -16,15 +16,15 @@ PUReweight::PUReweight() {
   fNMC   = fMCNames.size();
 
   // Initialize output TH1F's for data
-  fOutDataNvtx = new TH1F("nvtx_data","",Config::nvtxbins,0.,Double_t(Config::nvtxbins));
+  fOutDataNvtx = new TH1F("nvtx_data","",Config::nbinsvtx,0.,Double_t(Config::nbinsvtx));
   fOutDataNvtx->Sumw2();
 
   // Initialize outputs for MC
-  fOutMCNvtx = new TH1F("nvtx_mc","",Config::nvtxbins,0.,Double_t(Config::nvtxbins));
+  fOutMCNvtx = new TH1F("nvtx_mc","",Config::nbinsvtx,0.,Double_t(Config::nbinsvtx));
   fOutMCNvtx->Sumw2();
 
   // Intialize Ratio Hist
-  fOutDataOverMCNvtx = new TH1F(Form("%s",Config::puplotname.Data()),"",Config::nvtxbins,0.,Double_t(Config::nvtxbins));
+  fOutDataOverMCNvtx = new TH1F(Form("%s",Config::puplotname.Data()),"",Config::nbinsvtx,0.,Double_t(Config::nbinsvtx));
   fOutDataOverMCNvtx->Sumw2();
 
   // Make PURW outdirs --> no need to use MakeSubDirs
@@ -61,7 +61,7 @@ void PUReweight::GetPUWeights(){
     TString treename = "tree/tree";
     TTree * tree = (TTree*)file->Get(treename.Data());
     CheckValidTree(tree,treename,filename);      
-    TH1F * tmpnvtx = new TH1F("tmpnvtx","",Config::nvtxbins,0.,Double_t(Config::nvtxbins));
+    TH1F * tmpnvtx = new TH1F("tmpnvtx","",Config::nbinsvtx,0.,Double_t(Config::nbinsvtx));
     tmpnvtx->Sumw2();
 
     // fill each input data nvtx
@@ -93,7 +93,7 @@ void PUReweight::GetPUWeights(){
     TString treename = "tree/tree";
     TTree * tree = (TTree*)file->Get(treename.Data());
     CheckValidTree(tree,treename,filename);            
-    TH1F * tmpnvtx = new TH1F("tmpnvtx","",Config::nvtxbins,0.,Double_t(Config::nvtxbins));
+    TH1F * tmpnvtx = new TH1F("tmpnvtx","",Config::nbinsvtx,0.,Double_t(Config::nbinsvtx));
     tmpnvtx->Sumw2();
 
     // fill each input mc nvtx
@@ -163,7 +163,7 @@ void PUReweight::GetPUWeights(){
   /////////////////////////////////////////////
 
   // copy fOutDataNvtx to save output of reweights properly
-  for (Int_t ibin = 1; ibin <= Config::nvtxbins; ibin++) {
+  for (Int_t ibin = 1; ibin <= Config::nbinsvtx; ibin++) {
     fOutDataOverMCNvtx->SetBinContent(ibin,fOutDataNvtx->GetBinContent(ibin));
   }
 
@@ -177,7 +177,7 @@ void PUReweight::GetPUWeights(){
   /////////////////////////////////////////////
 
   // scale MC to demonstrate that it works
-  for (Int_t ibin = 1; ibin <= Config::nvtxbins; ibin++) {
+  for (Int_t ibin = 1; ibin <= Config::nbinsvtx; ibin++) {
     Float_t tmp = fOutMCNvtx->GetBinContent(ibin);
     fOutMCNvtx->SetBinContent(ibin,fOutDataOverMCNvtx->GetBinContent(ibin)*tmp); 
   }
