@@ -15,8 +15,6 @@ typedef TH1Map::iterator        TH1MapIter;
 typedef std::map<TString,TH2F*> TH2Map;
 typedef TH2Map::iterator        TH2MapIter;
 
-typedef std::vector<Double_t> DblVec;
-
 class Analysis {
 public:
   // functions

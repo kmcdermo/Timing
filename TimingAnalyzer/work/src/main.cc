@@ -9,8 +9,8 @@
 
 // to do:
 // if doing time res plots with multiple samples, hadd them before processing in analysis 
-// stacker only does stacked histograms... doesn't make sense anyway with so few events for the lesser MC samples
 
+void setUpPlotMaps();
 void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
   // set TDR Style (need to force it!)
   tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
@@ -52,6 +52,9 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
   
   // sample wgtsum map
   Config::SampleWgtsumMap["dyll"] = 4.44757e+11;
+
+  // X axis title stuff for dividing by sigma_n (assume p+E have same magnitude)
+  setUpPlotMaps();
 }
 
 void DestroyMain(std::ofstream & yields, TStyle *& tdrStyle) {
@@ -89,7 +92,7 @@ int main(int argc, const char* argv[]) {
 	"  --do-trigeff    <bool>        make trigger efficiency plots (def: %s)\n"
 	"  --apply-TOF     <bool>        apply TOF correction to times (def: %s)\n"
 	"  --wgt-time      <bool>        use full SC weighted time (def: %s)\n"
-	"  --normE         <bool>        divide by sigma_n in E/pT plots (def: %s)\n"
+	"  --use-sigman    <bool>        divide by sigma_n in E/pT plots (def: %s)\n"
 	"  --fit-form      <string>      name of formula used for fitting time plots (def: %s)\n"
         ,
         argv[0],
@@ -110,7 +113,7 @@ int main(int argc, const char* argv[]) {
 	(Config::doTrigEff  ? "true" : "false"),
 	(Config::applyTOF   ? "true" : "false"),
 	(Config::wgtedtime  ? "true" : "false"),
-	(Config::normE      ? "true" : "false"),
+	(Config::useSigma_n ? "true" : "false"),
         Config::formname.Data()
       );
       exit(0);
@@ -132,7 +135,7 @@ int main(int argc, const char* argv[]) {
     else if (*i == "--do-trigeff")  { Config::doAnalysis = true; Config::doTrigEff  = true; }
     else if (*i == "--apply-TOF")   { Config::doAnalysis = true; Config::applyTOF   = true; }
     else if (*i == "--wgted-time")  { Config::doAnalysis = true; Config::wgtedtime  = true; }
-    else if (*i == "--normE")       { Config::doAnalysis = true; Config::normE      = true; }
+    else if (*i == "--useSigma_n")  { Config::doAnalysis = true; Config::useSigma_n = true; }
     else if (*i == "--fit-form")    { next_arg_or_die(mArgs, i); Config::formname = i->c_str(); }
     else    { std::cerr << "Error: Unknown option/argument: " << i->c_str() << " ...exiting..." << std::endl; exit(1); }
     mArgs.erase(start, ++i);
@@ -205,4 +208,67 @@ int main(int argc, const char* argv[]) {
 
   // end of the line
   DestroyMain(yields,tdrStyle);
+}
+
+void setUpPlotMaps(){
+  // assume E/superclusterE/p the same
+
+  Config::XHighMap["el1E"]     = Config::el1E_high;
+  Config::XHighMap["el1pt"]    = Config::XHighMap["el1E"] / Config::EtoPt;
+  Config::XHighMap["el1seedE"] = Config::XHighMap["el1E"] / Config::EtoSeedE;
+
+  Config::XHighMap["el2E"]     = Config::el2E_high;
+  Config::XHighMap["el2pt"]    = Config::XHighMap["el2E"] / Config::EtoPt;
+  Config::XHighMap["el2seedE"] = Config::XHighMap["el2E"] / Config::EtoSeedE;
+
+  Config::XHighMap["effE"]     = Config::effE_high;
+  Config::XHighMap["effpt"]    = Config::XHighMap["effE"] / Config::EtoPt;
+  Config::XHighMap["effseedE"] = Config::XHighMap["effE"] / Config::EtoSeedE;
+  
+  Config::XBinsMap["el1E"] = {25.0,35.0,40.0,45.0,50.0,55.0,60.0,65.0,70.0,75.0,80.0,85.0,90.0,100.0,110.0,120.0,130.0,140.0,150.0,175.0,200.0,225.0.250.0,300.0,400.0,500.0,Config::XHighMap["el1E"]};
+  Config::XBinsMap["el1pt"].resize(Config::XBinsMap["el1E"].size());
+  Config::XBinsMap["el1seedE"].resize(Config::XBinsMap["el1E"].size());
+  Config::XBinsMap["el2E"].resize(Config::XBins["el1E"].size());
+  Config::XBinsMap["el2pt"].resize(Config::XBins["el1E"].size());
+  Config::XBinsMap["el2seedE"].resize(Config::XBins["el1E"].size());
+  Config::XBinsMap["effE"].resize(Config::XBins["el1E"].size());
+  Config::XBinsMap["effpt"].resize(Config::XBins["el1E"].size());
+  Config::XBinsMap["effseedE"].resize(Config::XBins["el1E"].size());
+
+  for (int i = 0; i < XBinsMap["el1E"].size(); i++){
+    Config::XBinsMap["el1pt"][i] = Config::XBinsMap["el1E"][i] / Config::EtoPt;
+    Config::XBinsMap["el1seedE"][i] = Config::XBinsMap["el1E"][i] / Config::EtoSeedE;
+
+    Config::XBinsMap["el2E"][i] = Config::XBins["el1E"][i] * (Config::XHighMap["el2E"] / Config::XHighMap["el1E"]);
+    Config::XBinsMap["el2pt"][i] = Config::XBins["el1pt"][i] * (Config::XHighMap["el2pt"] / Config::XHighMap["el1pt"]);
+    Config::XBinsMap["el2seedE"][i] = Config::XBins["el1seedE"][i] * (Config::XHighMap["el2seedE"] / Config::XHighMap["el1seedE"]);
+
+    Config::XBinsMap["effE"][i] = Config::XBins["el1E"][i] * (Config::XHighMap["effE"] / Config::XHighMap["el1E"]);
+    Config::XBinsMap["effpt"][i] = Config::XBins["el1pt"][i] * (Config::XHighMap["effpt"] / Config::XHighMap["el1pt"]);
+    Config::XBinsMap["effseedE"][i] = Config::XBins["el1seedE"][i] * (Config::XHighMap["effseedE"] / Config::XHighMap["el1seedE"]);
+  }
+
+  Config::XTitleMap["E"]  = "Energy [GeV]";
+  Config::XTitleMap["p"]  = "p [GeV/c]";
+  Config::XTitleMap["pt"] = "p_{T} [GeV/c]";
+
+  if (Config::useSigma_n) {
+    for (int i = 0; i < Config::XHighMap["el1E"].size(); i++) {
+      Config::XHighMap["el1E"][i] /= Config::sigma_n;
+      Config::XHighMap["el1pt"][i] /= Config::sigma_n;
+      Config::XHighMap["el1seedE"][i] /= Config::sigma_n;
+
+      Config::XHighMap["el2E"][i] /= Config::sigma_n;
+      Config::XHighMap["el2pt"][i] /= Config::sigma_n;
+      Config::XHighMap["el2seedE"][i] /= Config::sigma_n;
+
+      Config::XHighMap["effE"][i] /= Config::sigma_n;
+      Config::XHighMap["effpt"][i] /= Config::sigma_n;
+      Config::XHighMap["effseedE"][i] /= Config::sigma_n;
+    }
+
+    Config::XTitleMap["E"]  = "Energy/#sigma_{n}";
+    Config::XTitleMap["p"]  = "p/#sigma_{n}";
+    Config::XTitleMap["pt"] = "p_{T}/#sigma_{n}";
+  }
 }

@@ -5,17 +5,21 @@
 #include "TColor.h"
 
 #include <map>
+#include <vector>
 
-typedef std::map<TString,Color_t> ColorMap;
-typedef std::map<TString,TString> TStrMap;
-typedef std::map<TString,Bool_t>  TStrBoolMap;
-typedef std::map<TString,Float_t> TStrFltMap;
+typedef std::vector<Double_t>      DblVec;
+typedef std::map<TString,Color_t>  ColorMap;
+typedef std::map<TString,TString>  TStrMap;
+typedef std::map<TString,Bool_t>   TStrBoolMap;
+typedef std::map<TString,Float_t>  TStrFltMap;
+typedef std::map<TString,Double_t> TStrDblMap;
+typedef std::map<TString,DblVec>   TStrDblVMap;
 
 namespace Config{
   // general config
   constexpr    Float_t PI  = 3.14159265358979323846;
   constexpr    Float_t sol = 29.9792458; // speed of light in cm / ns
-  constexpr    Float_t nE  = 0.2; // 200 MeV
+  constexpr    Float_t sigma_n = 0.2; // 200 MeV
 
   // output config
   constexpr    Float_t lumi      = 2.301; // brilcalc lumi --normtag /afs/cern.ch/user/l/lumipro/public/normtag_file/moriond16_normtag.json -i rereco2015D.txt -u /fb
@@ -42,6 +46,14 @@ namespace Config{
   constexpr    Double_t timerange  = 5.0;
   constexpr    Double_t fitrange   = 3.0;
   constexpr    Int_t    nEventsCut = 1000; // for run number plots
+
+  // E/pt el1/e2/eff stuff
+  constexpr    Double_t el1E_high = 2100.0;
+  constexpr    Double_t el2E_high = 910.0;
+  constexpr    Double_t effE_high = 725.0;
+
+  constexpr    Double_t EtoPt    = 3.0;
+  constexpr    Double_t EtoSeedE = 4.0 / 3.0;
 
   // TDRStyle Config --> needed by stacker
   constexpr    Float_t  TitleSize    = 0.035;
@@ -94,7 +106,7 @@ namespace Config{
   extern Bool_t      doTrigEff;
   extern Bool_t      applyTOF;
   extern Bool_t      wgtedtime;
-  extern Bool_t      normE;
+  extern Bool_t      useSigma_n;
   extern TString     formname; // fitting function to be used
 
   extern TStrBoolMap SampleMap;
@@ -102,6 +114,9 @@ namespace Config{
   extern TStrMap     SampleTitleMap;
   extern TStrFltMap  SampleXsecMap;
   extern TStrFltMap  SampleWgtsumMap;
+  extern TStrMap     XTitleMap;
+  extern TStrDblMap  XHighMap;
+  extern TStrDblVMap XBinsMap;
 };
 
 #endif
