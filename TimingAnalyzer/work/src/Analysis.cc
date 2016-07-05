@@ -302,21 +302,18 @@ void Analysis::TimeResPlots(){
       effE2DMap["td_effE_inclusive"]->Fill(eff_dielE,time_diff,weight);
       effseedE2DMap["td_effseedE_inclusive"]->Fill(eff_diseedE,time_diff,weight);
       nvtx2DMap["td_nvtx_inclusive"]->Fill(nvtx,time_diff,weight);
-      if (!fIsMC && !Config::skipRuns) {runs2DMap["td_runs_inclusive"]->Fill(run,time_diff,weight);}
 
       if (el1eb && el2eb) {
  	effpt2DMap["td_effpt_EBEB"]->Fill(eff_dielpt,time_diff,weight);
  	effE2DMap["td_effE_EBEB"]->Fill(eff_dielE,time_diff,weight);
  	effseedE2DMap["td_effseedE_EBEB"]->Fill(eff_diseedE,time_diff,weight);
 	nvtx2DMap["td_nvtx_EBEB"]->Fill(nvtx,time_diff,weight);
-	if (!fIsMC && !Config::skipRuns) {runs2DMap["td_runs_EBEB"]->Fill(run,time_diff,weight);}
       }
       else if (el1ee && el2ee) {
  	effpt2DMap["td_effpt_EEEE"]->Fill(eff_dielpt,time_diff,weight);
  	effE2DMap["td_effE_EEEE"]->Fill(eff_dielE,time_diff,weight);
  	effseedE2DMap["td_effseedE_EEEE"]->Fill(eff_diseedE,time_diff,weight);
 	nvtx2DMap["td_nvtx_EEEE"]->Fill(nvtx,time_diff,weight);
-	if (!fIsMC && !Config::skipRuns) {runs2DMap["td_runs_EEEE"]->Fill(run,time_diff,weight);}
 
 	// do same endcap events
 	if      (el1eep && el2eep) { // EE+EE+
@@ -337,7 +334,6 @@ void Analysis::TimeResPlots(){
  	effE2DMap["td_effE_EBEE"]->Fill(eff_dielE,time_diff,weight);
  	effseedE2DMap["td_effseedE_EBEE"]->Fill(eff_diseedE,time_diff,weight);
 	nvtx2DMap["td_nvtx_EBEE"]->Fill(nvtx,time_diff,weight);
-	if (!fIsMC && !Config::skipRuns) {runs2DMap["td_runs_EBEE"]->Fill(run,time_diff,weight);}
       }
     
       // do single el eta plots now
@@ -420,6 +416,98 @@ void Analysis::TimeResPlots(){
   // Output all TimeResPlots
   Analysis::OutputTimeResPlots();
 }
+
+void Analysis::TimeVsRuns() {
+  ////////////////////////////////////////// 
+  // 2D plots for Run Numbers (Data only) //
+  //////////////////////////////////////////
+  
+  // read in run numbers
+  std::ifstream inputruns;
+  inputruns.open(Config::runs.Data(),std::ios::in);
+  Int_t runno = -1;
+  IntVec runNos;
+  while(inputruns >> runno){
+    runNos.push_back(runno);
+  }
+  inputruns.close();
+  
+  // need this to do the wonky binning to get means/sigmas to line up exactly with run number
+  Int_t totalRuns = runNos.back()-runNos.front();
+  Int_t startrun  = runNos.front();
+  for (Int_t i = 0; i < totalRuns + 2; i++) { // +1 for subtraction, +1 for half offset
+    dRunNos.push_back(startrun + i - 0.5);
+  }
+  
+  // declare hists
+  runs2DMap["td_runs_inclusive"] = Analysis::MakeTH2Plot("td_runs_inclusive","",dRunNos,Config::ntimebins,-Config::timerange,Config::timerange,"Run Number (inclusive)","Dielectron Seed Time Difference [ns]",runs2DSubMap,"timing/runs/inclusive");  
+  runs2DMap["td_runs_EBEB"] = Analysis::MakeTH2Plot("td_runs_EBEB","",dRunNos,Config::ntimebins,-Config::timerange,Config::timerange,"Run Number (EBEB)","Dielectron Seed Time Difference [ns]",runs2DSubMap,"timing/runs/EBEB");  
+  runs2DMap["td_runs_EBEE"] = Analysis::MakeTH2Plot("td_runs_EBEE","",dRunNos,Config::ntimebins,-Config::timerange,Config::timerange,"Run Number (EBEE)","Dielectron Seed Time Difference [ns]",runs2DSubMap,"timing/runs/EBEE");  
+  runs2DMap["td_runs_EEEE"] = Analysis::MakeTH2Plot("td_runs_EEEE","",dRunNos,Config::ntimebins,-Config::timerange,Config::timerange,"Run Number (EEEE)","Dielectron Seed Time Difference [ns]",runs2DSubMap,"timing/runs/EEEE");  
+    
+  for (UInt_t entry = 0; entry < (!Config::doDemo?fInTree->GetEntries():Config::demoNum); entry++){
+    fInTree->GetEntry(entry);
+    if ((zmass>Config::zlow && zmass<Config::zhigh) && hltdoubleel && (el1pid == -el2pid)) { // extra selection over skims
+
+      // get event weights
+      Float_t weight = -1.;
+      if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[putrue];}
+      else         {weight = 1.0;}
+
+      // get the proper times
+      Float_t el1time = -99.0;
+      if   (Config::applyTOF && !Config::wgtedtime) {el1time = TOF(el1seedX,el1seedY,el1seedZ,vtxX,vtxY,vtxZ,el1seedtime);}
+      else                                          {el1time = el1seedtime;}
+
+      Float_t el2time = -99.0;
+      if   (Config::applyTOF && !Config::wgtedtime) {el2time = TOF(el2seedX,el2seedY,el2seedZ,vtxX,vtxY,vtxZ,el2seedtime);}
+      else                                          {el2time = el2seedtime;}
+
+      // scale by sigma_n
+      if (Config::useSigma_n) {
+	el1pt    /= Config::sigma_n; el2pt    /= Config::sigma_n;
+	el1E     /= Config::sigma_n; el2E     /= Config::sigma_n;
+	el1seedE /= Config::sigma_n; el2seedE /= Config::sigma_n;
+      }
+
+      // calculate constants
+      const Float_t time_diff   = el1time-el2time;
+      const Float_t eff_dielpt  = el1pt*el2pt/std::sqrt(rad2(el1pt,el2pt));
+      const Float_t eff_dielE   = el1E*el2E/std::sqrt(rad2(el1E,el2E));
+      const Float_t eff_diseedE = el1seedE*el2seedE/std::sqrt(rad2(el1seedE,el2seedE));
+      const Float_t el1seedeta = eta(el1seedX,el1seedY,el1seedZ);
+      const Float_t el2seedeta = eta(el2seedX,el2seedY,el2seedZ);
+
+      // determine ecal partitions
+      Bool_t el1eb = false; Bool_t el1ee = false;
+      if      (std::abs(el1seedeta) < Config::etaEB)                                                { el1eb = true; }
+      else if (std::abs(el1seedeta) > Config::etaEElow && std::abs(el1seedeta) < Config::etaEEhigh) { el1ee = true; }
+  
+      Bool_t el2eb = false; Bool_t el2ee = false;
+      if      (std::abs(el2seedeta) < Config::etaEB)                                                { el2eb = true; }
+      else if (std::abs(el2seedeta) > Config::etaEElow && std::abs(el2seedeta) < Config::etaEEhigh) { el2ee = true; }
+  
+      runs2DMap["td_runs_inclusive"]->Fill(run,time_diff,weight);
+      if      (el1eb && el2eb)                       { runs2DMap["td_runs_EBEB"]->Fill(run,time_diff,weight); }
+      else if (el1ee && el2ee)                       { runs2DMap["td_runs_EEEE"]->Fill(run,time_diff,weight); }
+      else if ((el1eb && el2ee) || (el1ee && el2eb)) { runs2DMap["td_runs_EBEE"]->Fill(run,time_diff,weight); }
+    }
+  }// end loop over events
+      
+  ////////////////////////////////////
+  // Output Run Number plots
+  if (!fIsMC && Config::doRuns) { 
+    MakeSubDirs(runs2DSubMap,fOutDir);
+    Analysis::SaveTH2s(runs2DMap,runs2DSubMap);
+    for (TH2MapIter mapiter = runs2DMap.begin(); mapiter != runs2DMap.end(); ++mapiter){
+      TString name = (*mapiter).first;
+    Analysis::Make1DTimingPlots((*mapiter).second,runs2DSubMap[name],dRunNos,name);
+    }
+    Analysis::DeleteTH2s(runs2DMap);  
+  }
+  ////////////////////////////////////
+}
+
 
 void Analysis::TriggerEffs(){
   // Set up hists to save; 
@@ -545,7 +633,7 @@ void Analysis::OutputTimeResPlots() {
   ////////////////////////////////////
 
   ////////////////////////////////////
-  // Do single el energy plots sixth
+  // Do single el energy plots last
 
   // el1pt
   MakeSubDirs(el1pt2DSubMap,fOutDir);
@@ -600,19 +688,6 @@ void Analysis::OutputTimeResPlots() {
     Analysis::Make1DTimingPlots((*mapiter).second,el2seedE2DSubMap[name],el2seedEbins,name);
   }
   Analysis::DeleteTH2s(el2seedE2DMap);  
-  ////////////////////////////////////
-
-  ////////////////////////////////////
-  // Do runs energy plots last (if applicable)
-  if (!fIsMC && !Config::skipRuns) { 
-    MakeSubDirs(runs2DSubMap,fOutDir);
-    Analysis::SaveTH2s(runs2DMap,runs2DSubMap);
-    for (TH2MapIter mapiter = runs2DMap.begin(); mapiter != runs2DMap.end(); ++mapiter){
-      TString name = (*mapiter).first;
-    Analysis::Make1DTimingPlots((*mapiter).second,runs2DSubMap[name],dRunNos,name);
-    }
-    Analysis::DeleteTH2s(runs2DMap);  
-  }
   ////////////////////////////////////
 }
 
@@ -1368,34 +1443,6 @@ void Analysis::SetUpTimeResPlots() {
   el2seedE2DMap["el2seedE_EE"] = Analysis::MakeTH2Plot("el2seedE_EE","",el2seedEbins,Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron %s (EE)",Config::XTitleMap["seedE"].Data()),"Leading Electron Seed Time [ns]",el2seedE2DSubMap,"timing/el2/seedE/EE");  
   el2seedE2DMap["el2seedE_EEP"] = Analysis::MakeTH2Plot("el2seedE_EEP","",el2seedEbins,Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron %s (EE+)",Config::XTitleMap["seedE"].Data()),"Leading Electron Seed Time [ns]",el2seedE2DSubMap,"timing/el2/seedE/EEP");  
   el2seedE2DMap["el2seedE_EEM"] = Analysis::MakeTH2Plot("el2seedE_EEM","",el2seedEbins,Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron %s (EE-)",Config::XTitleMap["seedE"].Data()),"Leading Electron Seed Time [ns]",el2seedE2DSubMap,"timing/el2/seedE/EEM");  
-  
-  ////////////////////////////////////////// 
-  // 2D plots for Run Numbers (Data only) //
-  //////////////////////////////////////////
-  if (!fIsMC && !Config::skipRuns) { 
-    // read in run numbers
-    std::ifstream input;
-    input.open(Config::runs.Data(),std::ios::in);
-    Int_t runno = -1;
-    IntVec runNos;
-    while(input >> runno){
-      runNos.push_back(runno);
-    }
-    input.close();
-    
-    // need this to do the wonky binning to get means/sigmas to line up exactly with run number
-    Int_t totalRuns = runNos.back()-runNos.front();
-    Int_t startrun  = runNos.front();
-    for (Int_t i = 0; i < totalRuns + 2; i++) { // +1 for subtraction, +1 for half offset
-      dRunNos.push_back(startrun + i - 0.5);
-    }
-
-    // declare hists
-    runs2DMap["td_runs_inclusive"] = Analysis::MakeTH2Plot("td_runs_inclusive","",dRunNos,Config::ntimebins,-Config::timerange,Config::timerange,"Run Number (inclusive)","Dielectron Seed Time Difference [ns]",runs2DSubMap,"timing/runs/inclusive");  
-    runs2DMap["td_runs_EBEB"] = Analysis::MakeTH2Plot("td_runs_EBEB","",dRunNos,Config::ntimebins,-Config::timerange,Config::timerange,"Run Number (EBEB)","Dielectron Seed Time Difference [ns]",runs2DSubMap,"timing/runs/EBEB");  
-    runs2DMap["td_runs_EBEE"] = Analysis::MakeTH2Plot("td_runs_EBEE","",dRunNos,Config::ntimebins,-Config::timerange,Config::timerange,"Run Number (EBEE)","Dielectron Seed Time Difference [ns]",runs2DSubMap,"timing/runs/EBEE");  
-    runs2DMap["td_runs_EEEE"] = Analysis::MakeTH2Plot("td_runs_EEEE","",dRunNos,Config::ntimebins,-Config::timerange,Config::timerange,"Run Number (EEEE)","Dielectron Seed Time Difference [ns]",runs2DSubMap,"timing/runs/EEEE");  
-  }  
 }
 
 void Analysis::InitTree() {

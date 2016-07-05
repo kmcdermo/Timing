@@ -26,6 +26,7 @@ public:
   void TimeResPlots();
   void SetUpTimeResPlots();
   void OutputTimeResPlots();
+  void TimeVsRuns();
   void TriggerEffs();
   void Make1DTimingPlots(TH2F *& hist2D, const TString subdir2D, const DblVec& bins2D, TString name);
   void Project2Dto1D(TH2F *& hist2d, TString subdir2d, TH1Map & th1map, TStrMap & subdir1dmap, TStrIntMap & th1binmap);

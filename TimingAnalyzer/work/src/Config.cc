@@ -13,7 +13,7 @@ namespace Config {
   Bool_t  useDYll    = false; 
   Bool_t  useQCD     = false;
   Bool_t  useGJets   = false;
-  Bool_t  skipRuns   = false;
+  Bool_t  doRuns     = false;
   Bool_t  useFull    = false;
   Bool_t  doStandard = false;
   Bool_t  doTimeRes  = false;

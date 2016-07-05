@@ -85,7 +85,7 @@ int main(int argc, const char* argv[]) {
 	"  --use-DYll      <bool>        use Drell-Yan (LL+Jets) with MC (def: %s)\n"
 	"  --use-QCD       <bool>        use QCD with MC (def: %s)\n"
 	"  --use-GJets     <bool>        use Gamma+Jets with MC (def: %s)\n"
-	"  --skip-runs     <bool>        skip timing plots vs run number (def: %s)\n"
+	"  --do-runs       <bool>        do timing plots vs run number [data only] (def: %s)\n"
 	"  --use-full      <bool>        use full ntuples, not skims (def: %s)\n"
 	"  --do-standard   <bool>        make standard validation plots (def: %s)\n"
 	"  --do-timeres    <bool>        make timing bias and resolution plots (def: %s)\n"
@@ -106,7 +106,7 @@ int main(int argc, const char* argv[]) {
 	(Config::useDYll    ? "true" : "false"),
 	(Config::useQCD     ? "true" : "false"),
 	(Config::useGJets   ? "true" : "false"),
-	(Config::skipRuns   ? "true" : "false"),
+	(Config::doRuns     ? "true" : "false"),
 	(Config::useFull    ? "true" : "false"),
 	(Config::doStandard ? "true" : "false"),
 	(Config::doTimeRes  ? "true" : "false"),
@@ -128,7 +128,7 @@ int main(int argc, const char* argv[]) {
     else if (*i == "--use-DYll")    { Config::useDYll    = true; }
     else if (*i == "--use-QCD")     { Config::useQCD     = true; }
     else if (*i == "--use-GJets")   { Config::useGJets   = true; }
-    else if (*i == "--skip-runs")   { Config::skipRuns   = true; Config::doAnalysis = true; Config::doTimeRes = true; }
+    else if (*i == "--do-runs")     { Config::doRuns     = true; Config::doAnalysis = true; }
     else if (*i == "--use-full")    { Config::useFull    = true; }
     else if (*i == "--do-standard") { Config::doAnalysis = true; Config::doStandard = true; }
     else if (*i == "--do-timeres")  { Config::doAnalysis = true; Config::doTimeRes  = true; }
@@ -179,6 +179,10 @@ int main(int argc, const char* argv[]) {
       if (Config::doTimeRes) {
 	std::cout << "Doing timing resolution plots" << std::endl;
 	analysis.TimeResPlots();
+      }
+      if (!(*mapiter).second && Config::doRuns) { // data only
+	std::cout << "Doing time resolution plots vs run number [data only]" << std::endl;
+	analysis.TimeVsRuns();
       }
       if (Config::doTrigEff) {
 	std::cout << "Doing trigger efficiencies" << std::endl;
