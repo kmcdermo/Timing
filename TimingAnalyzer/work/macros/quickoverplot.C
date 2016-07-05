@@ -3,11 +3,11 @@
 void quickoverplot() {
   gStyle->SetOptStat(0);
 
-  TString label1 = "zmasssorted";
-  TString label2 = "ptsorted";
-  Bool_t  isData = false;  
+  TString label1 = "notof";
+  TString label2 = "tof";
+  Bool_t  isData = true;
 
-  TString hname  = "zmass";
+  TString hname  = "el1_vtxZ_mean_gaus2";
   Bool_t  isLogY = false;
   
   TString indir = isData?"DATA/doubleeg":"MC/dyll";
@@ -63,13 +63,13 @@ void quickoverplot() {
   h1clone->GetXaxis()->SetTitleSize(.11);
   h1clone->GetYaxis()->SetTitleSize(.08);
   h1clone->GetYaxis()->SetTitleOffset(.3);
-  h1clone->GetYaxis()->SetTitle(Form("%s/%s",label1.Data(),label2.Data()));
+  h1clone->GetYaxis()->SetTitle(Form("%s-%s",label1.Data(),label2.Data()));
   h1clone->GetXaxis()->SetLabelSize(.11);
   h1clone->GetYaxis()->SetLabelSize(.11);
   h1clone->SetMinimum(-0.1);
   h1clone->SetMaximum( 2.1);
   h1clone->SetStats(0);
-  h1clone->Divide(h2clone);
+  h1clone->Add(h2clone,-1.0);
   h1clone->Draw("EP");
 
   c1->cd();

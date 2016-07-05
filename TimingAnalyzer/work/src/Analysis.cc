@@ -723,20 +723,20 @@ void Analysis::Project2Dto1D(TH2F *& hist2d, TString subdir2d, TH1Map & th1map, 
     TString histname = "";
     // First create each histogram
     if     (basename.Contains("td_zeta",TString::kExact)) { //ugh
-      histname = Form("%s_%3.1f-%3.1f",basename.Data(),xlow,xhigh);
-      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %3.1f-%3.1f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
+      histname = Form("%s_%3.1f_%3.1f",basename.Data(),xlow,xhigh);
+      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %3.1f to %3.1f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
 						      "Events",subdir1dmap,subdir2d);
     }
     else if ((basename.Contains("zphi",TString::kExact))       || (basename.Contains("abszeta",TString::kExact))     ||
 	     (basename.Contains("el1eta",TString::kExact))     || (basename.Contains("el2eta",TString::kExact))      || 
 	     (basename.Contains("el1seedeta",TString::kExact)) || (basename.Contains("el2seedeta",TString::kExact))) { //triple ugh
-      histname = Form("%s_%4.2f-%4.2f",basename.Data(),xlow,xhigh);
-      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %4.2f-%4.2f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
+      histname = Form("%s_%4.2f_%4.2f",basename.Data(),xlow,xhigh);
+      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %4.2f to %4.2f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
 						      "Events",subdir1dmap,subdir2d);
     }
     else if (basename.Contains("vtxZ",TString::kExact)) { //quintuple ugh
-      histname = Form("%s_%5.2f-%5.2f",basename.Data(),xlow,xhigh);
-      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %5.2f-%5.2f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
+      histname = Form("%s_%5.2f_%5.2f",basename.Data(),xlow,xhigh);
+      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %5.2f to %5.2f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
 						      "Events",subdir1dmap,subdir2d);
     }
     else if (basename.Contains("runs",TString::kExact)) { //double ugh
@@ -754,8 +754,8 @@ void Analysis::Project2Dto1D(TH2F *& hist2d, TString subdir2d, TH1Map & th1map, 
     else { // "normal" filling
       Int_t ixlow  = Int_t(xlow); 
       Int_t ixhigh = Int_t(xhigh); 
-      histname = Form("%s_%i-%i",basename.Data(),ixlow,ixhigh);
-      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %i-%i",ytitle.Data(),xtitle.Data(),ixlow,ixhigh),
+      histname = Form("%s_%i_%i",basename.Data(),ixlow,ixhigh);
+      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %i to %i",ytitle.Data(),xtitle.Data(),ixlow,ixhigh),
 						      "Events",subdir1dmap,subdir2d);
     }
     th1binmap[histname.Data()] = i; // universal pairing
@@ -1387,7 +1387,7 @@ void Analysis::SetUpTimeResPlots() {
   // 2D plots for td vs vtxZ //
   /////////////////////////////
   vtxZbins = {-15.0,-12.0,-11.0,-10.0,-9.0,-8.0,-7.0,-6.0,-5.0,-4.5,-4.0,-3.5,-3.0,-2.5,-2.0,-1.5,-1.25,-1.0,-0.75,-0.5,-0.25,0.0};
-  for (int i = vtxZbins.size()-2; i < 0; i--){vtxZbins.push_back(-1.0*vtxZbins[i]);}
+  for (int i = vtxZbins.size()-2; i >= 0; i--){vtxZbins.push_back(-1.0*vtxZbins[i]);}
   
   // time difference
   vtxZ2DMap["td_vtxZ"]  = Analysis::MakeTH2Plot("td_vtxZ","",vtxZbins,Config::ntimebins,-Config::timerange,Config::timerange,"PV z position [cm]","Dielectron Seed Time Difference [ns]",vtxZ2DSubMap,"timing/vtxZ");  
