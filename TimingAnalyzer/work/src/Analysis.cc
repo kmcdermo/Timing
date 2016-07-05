@@ -342,10 +342,10 @@ void Analysis::TimeResPlots(){
       eleta2DMap["td_el2eta"]->Fill(el2eta,time_diff,weight);
       eleta2DMap["td_el2seedeta"]->Fill(el2seedeta,time_diff,weight);
 
-      eleta2DMap["el1eta"]->Fill(el1eta,el1time,weight);
-      eleta2DMap["el1seedeta"]->Fill(el1seedeta,el1time,weight);
-      eleta2DMap["el2eta"]->Fill(el2eta,el2time,weight);
-      eleta2DMap["el2seedeta"]->Fill(el2seedeta,el2time,weight);
+      eleta2DMap["el1_el1eta"]->Fill(el1eta,el1time,weight);
+      eleta2DMap["el1_el1seedeta"]->Fill(el1seedeta,el1time,weight);
+      eleta2DMap["el2_el2eta"]->Fill(el2eta,el2time,weight);
+      eleta2DMap["el2_el2seedeta"]->Fill(el2seedeta,el2time,weight);
 
       // now do the vtxZ plots
       vtxZ2DMap["td_vtxZ"]->Fill(vtxZ,time_diff,weight);
@@ -1377,11 +1377,11 @@ void Analysis::SetUpTimeResPlots() {
   //////////////////////////////
   // Single El timing vs etas //
   //////////////////////////////
-  eleta2DMap["el1eta"]     = Analysis::MakeTH2Plot("el1eta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Leading Electron #eta","Leading Electron Seed Time [ns]",eleta2DSubMap,"timing/el1/eta");  
-  eleta2DMap["el1seedeta"] = Analysis::MakeTH2Plot("el1seedeta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Leading Electron Seed #eta","Leading Electron Seed Time [ns]",eleta2DSubMap,"timing/el1/seedeta");  
+  eleta2DMap["el1_el1eta"]     = Analysis::MakeTH2Plot("el1_el1eta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Leading Electron #eta","Leading Electron Seed Time [ns]",eleta2DSubMap,"timing/el1/eta");  
+  eleta2DMap["el1_el1seedeta"] = Analysis::MakeTH2Plot("el1_el1seedeta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Leading Electron Seed #eta","Leading Electron Seed Time [ns]",eleta2DSubMap,"timing/el1/seedeta");  
 
-  eleta2DMap["el2eta"]     = Analysis::MakeTH2Plot("el2eta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Subleading Electron #eta","Subleading Electron Seed Time [ns]",eleta2DSubMap,"timing/el2/eta");  
-  eleta2DMap["el2seedeta"] = Analysis::MakeTH2Plot("el2seedeta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Subleading Electron Seed #eta","Subleading Electron Seed Time [ns]",eleta2DSubMap,"timing/el2/seedeta");  
+  eleta2DMap["el2_el2eta"]     = Analysis::MakeTH2Plot("el2_el2eta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Subleading Electron #eta","Subleading Electron Seed Time [ns]",eleta2DSubMap,"timing/el2/eta");  
+  eleta2DMap["el2_el2seedeta"] = Analysis::MakeTH2Plot("el2_el2seedeta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Subleading Electron Seed #eta","Subleading Electron Seed Time [ns]",eleta2DSubMap,"timing/el2/seedeta");  
 
   /////////////////////////////
   // 2D plots for td vs vtxZ //
