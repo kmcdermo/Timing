@@ -134,8 +134,8 @@ int main(int argc, const char* argv[]) {
     else if (*i == "--do-timeres")  { Config::doAnalysis = true; Config::doTimeRes  = true; }
     else if (*i == "--do-trigeff")  { Config::doAnalysis = true; Config::doTrigEff  = true; }
     else if (*i == "--apply-TOF")   { Config::doAnalysis = true; Config::applyTOF   = true; }
-    else if (*i == "--wgted-time")  { Config::doAnalysis = true; Config::wgtedtime  = true; }
-    else if (*i == "--useSigma_n")  { Config::doAnalysis = true; Config::useSigma_n = true; }
+    else if (*i == "--wgt-time")    { Config::doAnalysis = true; Config::wgtedtime  = true; }
+    else if (*i == "--use-sigman")  { Config::doAnalysis = true; Config::useSigma_n = true; }
     else if (*i == "--fit-form")    { next_arg_or_die(mArgs, i); Config::formname = i->c_str(); }
     else    { std::cerr << "Error: Unknown option/argument: " << i->c_str() << " ...exiting..." << std::endl; exit(1); }
     mArgs.erase(start, ++i);
