@@ -475,8 +475,8 @@ void Analysis::TimeVsRuns() {
       const Float_t eff_dielpt  = el1pt*el2pt/std::sqrt(rad2(el1pt,el2pt));
       const Float_t eff_dielE   = el1E*el2E/std::sqrt(rad2(el1E,el2E));
       const Float_t eff_diseedE = el1seedE*el2seedE/std::sqrt(rad2(el1seedE,el2seedE));
-      const Float_t el1seedeta = eta(el1seedX,el1seedY,el1seedZ);
-      const Float_t el2seedeta = eta(el2seedX,el2seedY,el2seedZ);
+      const Float_t el1seedeta  = eta(el1seedX,el1seedY,el1seedZ);
+      const Float_t el2seedeta  = eta(el2seedX,el2seedY,el2seedZ);
 
       // determine ecal partitions
       Bool_t el1eb = false; Bool_t el1ee = false;

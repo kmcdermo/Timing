@@ -113,7 +113,7 @@ void StackPlots::MakeStackPlots(std::ofstream & yields){
       }
 
       TString ytitle  = fInMCTH1FHists[th1f][mc]->GetYaxis()->GetTitle();
-      Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
+      Bool_t drawhist = !(ytitle.Contains("#mu",TString::kExact) || ytitle.Contains("#sigma",TString::kExact));
     
       if   (drawhist) {fTH1FLegends[th1f]->AddEntry(fInMCTH1FHists[th1f][mc],Config::SampleTitleMap[fMCNames[mc]],"f");}
       else            {fTH1FLegends[th1f]->AddEntry(fInMCTH1FHists[th1f][mc],Config::SampleTitleMap[fMCNames[mc]],"epl");}
@@ -145,7 +145,7 @@ void StackPlots::MakeStackPlots(std::ofstream & yields){
     fOutMCTH1FHists[th1f]->SetFillColor(kGray+3);
 
     TString ytitle  = fOutMCTH1FHists[th1f]->GetYaxis()->GetTitle();
-    Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
+    Bool_t drawhist = !(ytitle.Contains("#mu",TString::kExact) || ytitle.Contains("#sigma",TString::kExact));
 
     if (drawhist) fTH1FLegends[th1f]->AddEntry(fOutMCTH1FHists[th1f],"MC Unc.","f");
   
@@ -181,7 +181,7 @@ void StackPlots::MakeOutputCanvas() {
     // draw first with  log scale
     Bool_t isLogY = true;
     TString ytitle = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
-    if ( !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact)) ){
+    if ( !(ytitle.Contains("#mu",TString::kExact) || ytitle.Contains("#sigma",TString::kExact)) ){
       StackPlots::DrawUpperPad(th1f,isLogY); // upper pad is stack
       StackPlots::DrawLowerPad(th1f); // lower pad is ratio
       StackPlots::SaveCanvas(th1f,isLogY);  // now save the canvas, w/ logy
@@ -217,10 +217,15 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) {
 
   TString ytitle_tmp  = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
   TString hname_tmp   = fOutDataTH1FHists[th1f]->GetName();
-  Bool_t  zetares_tmp  = (ytitle_tmp.Contains("Resolution",TString::kExact) && hname_tmp.Contains("abszeta",TString::kExact));
-  Bool_t  zetabias_tmp = (ytitle_tmp.Contains("Bias",TString::kExact) && hname_tmp.Contains("abszeta",TString::kExact));
-  Bool_t  zptres_tmp  = (ytitle_tmp.Contains("Resolution",TString::kExact) && hname_tmp.Contains("zpt",TString::kExact));
-  Bool_t  effptres_tmp  = (ytitle_tmp.Contains("Resolution",TString::kExact) && hname_tmp.Contains("EBEB_effpt",TString::kExact));
+  Bool_t  zetares_tmp  = (ytitle_tmp.Contains("#sigma",TString::kExact) && hname_tmp.Contains("abszeta",TString::kExact));
+  Bool_t  zetabias_tmp = (ytitle_tmp.Contains("#mu",TString::kExact) && hname_tmp.Contains("abszeta",TString::kExact));
+  Bool_t  zptres_tmp  = (ytitle_tmp.Contains("#sigma",TString::kExact) && hname_tmp.Contains("zpt",TString::kExact));
+  Bool_t  effptres_tmp  = (ytitle_tmp.Contains("#sigma",TString::kExact) && hname_tmp.Contains("EBEB_effpt",TString::kExact));
+
+  Bool_t  npvres_tmp  = (ytitle_tmp.Contains("#sigma",TString::kExact) && hname_tmp.Contains("nvtx",TString::kExact));
+  Bool_t  npvmean_tmp = (ytitle_tmp.Contains("#mu",TString::kExact) && hname_tmp.Contains("nvtx",TString::kExact));
+
+
   if (zetares_tmp) {
     fOutDataTH1FHists[th1f]->SetMaximum( 0.5 );
     fOutDataTH1FHists[th1f]->SetMinimum( 0.2 );
@@ -237,6 +242,15 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) {
     fOutDataTH1FHists[th1f]->SetMaximum( 0.6 );
     fOutDataTH1FHists[th1f]->SetMinimum( 0.1 );
   }
+  if (npvres_tmp) {
+    fOutDataTH1FHists[th1f]->SetMaximum( 0.5 );
+    fOutDataTH1FHists[th1f]->SetMinimum( 0.0 );
+  }
+  if (npvmean_tmp) {
+    fOutDataTH1FHists[th1f]->SetMaximum( 0.5 );
+    fOutDataTH1FHists[th1f]->SetMinimum( -0.5 );
+  }
+
 
   
   // now draw the plots for upper pad in absurd order because ROOT is dumb
@@ -248,7 +262,7 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) {
   fOutDataTH1FHists[th1f]->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_up);
 
   TString ytitle  = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
-  Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
+  Bool_t drawhist = !(ytitle.Contains("#mu",TString::kExact) || ytitle.Contains("#sigma",TString::kExact));
   
   fOutMCTH1FStacks[th1f]->Draw( drawhist ? "HIST SAME" : "PE SAME"); 
   fOutTH1FStackPads[th1f]->RedrawAxis("SAME"); // stack kills axis
@@ -279,7 +293,7 @@ Float_t StackPlots::GetMinimum(const Int_t th1f) {
 
   for (Int_t bin = 1; bin <= fOutDataTH1FHists[th1f]->GetNbinsX(); bin++){
     TString ytitle  = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
-    Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact)); // only bias can be negative, resolution should always be positive
+    Bool_t drawhist = !(ytitle.Contains("#mu",TString::kExact)); // only bias can be negative, resolution should always be positive
     
     Float_t tmpmin = fOutDataTH1FHists[th1f]->GetBinContent(bin);
     if ((tmpmin < datamin) && (tmpmin > 0) && drawhist) {
@@ -297,7 +311,7 @@ Float_t StackPlots::GetMinimum(const Int_t th1f) {
   for (Int_t mc = 0; mc < fNMC; mc++) {
     for (Int_t bin = 1; bin <= fInMCTH1FHists[th1f][mc]->GetNbinsX(); bin++){
       TString ytitle  = fInMCTH1FHists[th1f][mc]->GetYaxis()->GetTitle();
-      Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact)); // only bias can be negative, resolution should always be positive
+      Bool_t drawhist = !(ytitle.Contains("#mu",TString::kExact)); // only bias can be negative, resolution should always be positive
 
       Float_t tmpmin = fInMCTH1FHists[th1f][mc]->GetBinContent(bin);
       if ((tmpmin < mcmin) && (tmpmin > 0) && drawhist) {
@@ -346,6 +360,20 @@ void StackPlots::DrawLowerPad(const Int_t th1f) {
   fOutRatioTH1FHists[th1f]->GetXaxis()->SetTitleSize  (Config::TitleSize   / Config::height_lp);
   fOutRatioTH1FHists[th1f]->GetXaxis()->SetTickLength (Config::TickLength  / Config::height_lp);
   
+  TString tmpfix = fOutRatioTH1FHists[th1f]->GetName();
+  
+  if (tmpfix.Contains("td_effseedE",TString::kExact)) {
+    TString replacestr  = "Effective";
+    Ssiz_t  length      = replacestr.Length();
+    TString xtitle      = fOutRatioTH1FHists[th1f]->GetXaxis()->GetTitle();
+    Ssiz_t  xtitlepos   = xtitle.Index(replacestr.Data());
+    
+    TString toreplace = "Effective Seed Energy";
+    xtitle.Replace(xtitlepos,length,toreplace);
+    fOutRatioTH1FHists[th1f]->GetXaxis()->SetTitle(xtitle.Data());
+  }
+
+
   fOutRatioTH1FHists[th1f]->GetYaxis()->SetLabelSize  (Config::LabelSize   / Config::height_lp); 
   fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitleSize  (Config::TitleSize   / Config::height_lp);
   fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_lp);
@@ -355,7 +383,7 @@ void StackPlots::DrawLowerPad(const Int_t th1f) {
   
   // plots MC error copy
   TString ytitle  = fOutRatioMCErrs[th1f]->GetYaxis()->GetTitle();
-  Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
+  Bool_t drawhist = !(ytitle.Contains("#mu",TString::kExact) || ytitle.Contains("#sigma",TString::kExact));
 
   if (drawhist) {
     for (Int_t bin = 1; bin <= fOutRatioMCErrs[th1f]->GetNbinsX(); bin++) {
@@ -398,7 +426,8 @@ void StackPlots::OpenInputFiles() {
   // open input files into TFileVec --> data 
   fDataFiles.resize(fNData);
   for (Int_t data = 0; data < fNData; data++) {
-    TString datafile = Form("%s/DATA/%s/plots.root",Config::outdir.Data(),fDataNames[data].Data());
+    TString datafile = Form("gaus2_sigman/DATA/%s/plots.root",fDataNames[data].Data());
+// TString datafile = Form("%s/DATA/%s/plots.root",Config::outdir.Data(),fDataNames[data].Data());
     fDataFiles[data] = TFile::Open(datafile.Data());
     CheckValidFile(fDataFiles[data],datafile);
   }
@@ -406,7 +435,8 @@ void StackPlots::OpenInputFiles() {
   // open input files into TFileVec --> mc 
   fMCFiles.resize(fNMC);
   for (Int_t mc = 0; mc < fNMC; mc++) {
-    TString mcfile = Form("%s/MC/%s/plots.root",Config::outdir.Data(),fMCNames[mc].Data());
+    //    TString mcfile = Form("%s/MC/%s/plots.root",Config::outdir.Data(),fMCNames[mc].Data());
+    TString mcfile = Form("gaus1_sigman/MC/%s/plots.root",fMCNames[mc].Data());
     fMCFiles[mc] = TFile::Open(mcfile.Data());
     CheckValidFile(fMCFiles[mc],mcfile);
   }
@@ -420,8 +450,22 @@ void StackPlots::InitInputPlots() {
     // data first
     fInDataTH1FHists[th1f].resize(fNData); 
     for (Int_t data = 0; data < fNData; data++) { // init data double hists
-      fInDataTH1FHists[th1f][data] = (TH1F*)fDataFiles[data]->Get(Form("%s",fTH1FNames[th1f].Data()));
-      CheckValidTH1F(fInDataTH1FHists[th1f][data],fTH1FNames[th1f],fDataFiles[data]->GetName());
+      if (fTH1FNames[th1f].Contains("gaus1")){
+	TString replacestr  = "gaus1";
+	Ssiz_t  length      = replacestr.Length();
+	TString title      = fTH1FNames[th1f];
+	Ssiz_t  titlepos   = title.Index(replacestr.Data());
+	
+	TString toreplace = "gaus2";
+	title.Replace(titlepos,length,toreplace);
+	fInDataTH1FHists[th1f][data] = (TH1F*)fDataFiles[data]->Get(Form("%s",title.Data()));
+	
+	CheckValidTH1F(fInDataTH1FHists[th1f][data],fTH1FNames[th1f],fDataFiles[data]->GetName());
+      }
+      else {
+	fInDataTH1FHists[th1f][data] = (TH1F*)fDataFiles[data]->Get(Form("%s",fTH1FNames[th1f].Data()));
+	CheckValidTH1F(fInDataTH1FHists[th1f][data],fTH1FNames[th1f],fDataFiles[data]->GetName());
+      }
     }
 
     // mc second
@@ -432,7 +476,7 @@ void StackPlots::InitInputPlots() {
       fInMCTH1FHists[th1f][mc]->SetFillColor(Config::colorMap[fMCNames[mc]]);
 
       TString ytitle  = fInMCTH1FHists[th1f][mc]->GetYaxis()->GetTitle();
-      Bool_t drawhist = !(ytitle.Contains("Bias",TString::kExact) || ytitle.Contains("Resolution",TString::kExact));
+      Bool_t drawhist = !(ytitle.Contains("#mu",TString::kExact) || ytitle.Contains("#sigma",TString::kExact));
 
       if   (drawhist) {fInMCTH1FHists[th1f][mc]->SetLineColor(kBlack);}
       else            {fInMCTH1FHists[th1f][mc]->SetLineColor(Config::colorMap[fMCNames[mc]]); fInMCTH1FHists[th1f][mc]->SetMarkerColor(Config::colorMap[fMCNames[mc]]);}
@@ -493,7 +537,8 @@ void StackPlots::InitTH1FNamesAndSubDNames(){
   // will use the integral of nvtx to derive total yields as no additional cuts are placed on ntvx --> key on name for yields
   
   std::ifstream plotstoread;
-  plotstoread.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios::in);
+  //  plotstoread.open(Form("%s/%s",Config::outdir,Config::plotdumpname.Data()),std::ios::in);
+  plotstoread.open(Form("gaus1_sigman/%s",Config::plotdumpname.Data()),std::ios::in);
 
   TString plotname; TString subdir;
 

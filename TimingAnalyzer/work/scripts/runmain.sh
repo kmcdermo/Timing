@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for fit in gaus1 gaus2
+for fit in gaus2 #gaus2
 do
     ./main --apply-TOF --do-standard --do-timeres --use-DEG --use-DYll --do-stacks --outdir ${fit} --fit-form ${fit}
 done

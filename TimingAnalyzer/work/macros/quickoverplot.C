@@ -7,7 +7,7 @@ void quickoverplot() {
   TString label2 = "tof";
   Bool_t  isData = true;
 
-  TString hname  = "el1_vtxZ_mean_gaus2";
+  TString hname  = "el2_vtxZ_mean_gaus2";
   Bool_t  isLogY = false;
   
   TString indir = isData?"DATA/doubleeg":"MC/dyll";
