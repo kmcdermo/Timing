@@ -447,13 +447,8 @@ void StackPlots::InitInputPlots() {
     // data first
     fInDataTH1FHists[th1f].resize(fNData); 
     for (Int_t data = 0; data < fNData; data++) { // init data double hists
-	fInDataTH1FHists[th1f][data] = (TH1F*)fDataFiles[data]->Get(Form("%s",title.Data()));	
+	fInDataTH1FHists[th1f][data] = (TH1F*)fDataFiles[data]->Get(Form("%s",fTH1FNames[th1f].Data()));	
 	CheckValidTH1F(fInDataTH1FHists[th1f][data],fTH1FNames[th1f],fDataFiles[data]->GetName());
-      }
-      else {
-	fInDataTH1FHists[th1f][data] = (TH1F*)fDataFiles[data]->Get(Form("%s",fTH1FNames[th1f].Data()));
-	CheckValidTH1F(fInDataTH1FHists[th1f][data],fTH1FNames[th1f],fDataFiles[data]->GetName());
-      }
     }
 
     // mc second
