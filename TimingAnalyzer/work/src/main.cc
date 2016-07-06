@@ -7,9 +7,6 @@
 #include "TROOT.h"
 #include "TVirtualFitter.h"
 
-// to do:
-// if doing time res plots with multiple samples, hadd them before processing in analysis 
-
 void setUpPlotMaps();
 void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
   // set TDR Style (need to force it!)
@@ -55,6 +52,15 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
 
   // X axis title stuff for dividing by sigma_n (assume p+E have same magnitude)
   setUpPlotMaps();
+
+  // set up time res config
+  if (Config::doTimeRes) {
+    Config::doZvars   = true;
+    Config::doEffE    = true;
+    Config::doNvtx    = true;
+    Config::doVtxZ    = true;
+    Config::doSingleE = true;
+  }
 }
 
 void DestroyMain(std::ofstream & yields, TStyle *& tdrStyle) {
@@ -85,10 +91,16 @@ int main(int argc, const char* argv[]) {
 	"  --use-DYll      <bool>        use Drell-Yan (LL+Jets) with MC (def: %s)\n"
 	"  --use-QCD       <bool>        use QCD with MC (def: %s)\n"
 	"  --use-GJets     <bool>        use Gamma+Jets with MC (def: %s)\n"
-	"  --do-runs       <bool>        do timing plots vs run number [data only] (def: %s)\n"
 	"  --use-full      <bool>        use full ntuples, not skims (def: %s)\n"
 	"  --do-standard   <bool>        make standard validation plots (def: %s)\n"
-	"  --do-timeres    <bool>        make timing bias and resolution plots (def: %s)\n"
+	"  --do-timeres    <bool>        make timing bias and resolution plots [all, except runs] (def: %s)\n"
+	"  --do-Zvars      <bool>        make timing bias and resolution plots vs Z variables (def: %s)\n"
+	"  --do-effE       <bool>        make timing bias and resolution plots vs effective energy variables (def: %s)\n"
+	"  --do-nvtx       <bool>        make timing bias and resolution plots vs nVertices (def: %s)\n"
+	"  --do-eta        <bool>        make timing bias and resolution plots vs single electron eta (def: %s)\n"
+	"  --do-vtxZ       <bool>        make timing bias and resolution plots vs z vertex position (def: %s)\n"
+	"  --do-singleE    <bool>        make timing bias and resolution plots vs single electron energy variables (def: %s)\n"
+	"  --do-runs       <bool>        make timing bias and resolution plots vs run number [data only] (def: %s)\n"
 	"  --do-trigeff    <bool>        make trigger efficiency plots (def: %s)\n"
 	"  --apply-TOF     <bool>        apply TOF correction to times (def: %s)\n"
 	"  --wgt-time      <bool>        use full SC weighted time (def: %s)\n"
@@ -107,10 +119,16 @@ int main(int argc, const char* argv[]) {
 	(Config::useDYll    ? "true" : "false"),
 	(Config::useQCD     ? "true" : "false"),
 	(Config::useGJets   ? "true" : "false"),
-	(Config::doRuns     ? "true" : "false"),
 	(Config::useFull    ? "true" : "false"),
-	(Config::doStandard ? "true" : "false"),
+	(Config::doStandar  ? "true" : "false"),
 	(Config::doTimeRes  ? "true" : "false"),
+	(Config::doZvars    ? "true" : "false"),
+	(Config::doEffE     ? "true" : "false"),
+	(Config::doNvtx     ? "true" : "false"),
+	(Config::doEta      ? "true" : "false"),
+	(Config::doVtxZ     ? "true" : "false"),
+	(Config::doSingleE  ? "true" : "false",)
+	(Config::doRuns     ? "true" : "false"),
 	(Config::doTrigEff  ? "true" : "false"),
 	(Config::applyTOF   ? "true" : "false"),
 	(Config::wgtedtime  ? "true" : "false"),
@@ -130,10 +148,16 @@ int main(int argc, const char* argv[]) {
     else if (*i == "--use-DYll")    { Config::useDYll    = true; }
     else if (*i == "--use-QCD")     { Config::useQCD     = true; }
     else if (*i == "--use-GJets")   { Config::useGJets   = true; }
-    else if (*i == "--do-runs")     { Config::doRuns     = true; Config::doAnalysis = true; }
     else if (*i == "--use-full")    { Config::useFull    = true; }
     else if (*i == "--do-standard") { Config::doAnalysis = true; Config::doStandard = true; }
     else if (*i == "--do-timeres")  { Config::doAnalysis = true; Config::doTimeRes  = true; }
+    else if (*i == "--do-Zvars")    { Config::doAnalysis = true; Config::doZvars    = true; }
+    else if (*i == "--do-effE")     { Config::doAnalysis = true; Config::doEffE     = true; }
+    else if (*i == "--do-nvtx")     { Config::doAnalysis = true; Config::doNvtx     = true; }
+    else if (*i == "--do-eta")      { Config::doAnalysis = true; Config::doEta      = true; }
+    else if (*i == "--do-vtxZ")     { Config::doAnalysis = true; Config::doVtxZ     = true; }
+    else if (*i == "--do-singleE")  { Config::doAnalysis = true; Config::doSingleE  = true; }
+    else if (*i == "--do-runs")     { Config::doAnalysis = true; Config::doRuns     = true; }
     else if (*i == "--do-trigeff")  { Config::doAnalysis = true; Config::doTrigEff  = true; }
     else if (*i == "--apply-TOF")   { Config::doAnalysis = true; Config::applyTOF   = true; }
     else if (*i == "--wgt-time")    { Config::doAnalysis = true; Config::wgtedtime  = true; }
@@ -175,22 +199,7 @@ int main(int argc, const char* argv[]) {
     for (TStrBoolMapIter mapiter = Config::SampleMap.begin(); mapiter != Config::SampleMap.end(); ++mapiter) {
       Analysis analysis((*mapiter).first,(*mapiter).second);
       std::cout << "Analyzing: " << ((*mapiter).second?"MC":"DATA") << " sample: " << (*mapiter).first << std::endl;
-      if (Config::doStandard) {
-	std::cout << "Doing standard plots" << std::endl;
-	analysis.StandardPlots();
-      }
-      if (Config::doTimeRes) {
-	std::cout << "Doing timing resolution plots" << std::endl;
-	analysis.TimeResPlots();
-      }
-      if (!(*mapiter).second && Config::doRuns) { // data only
-	std::cout << "Doing time resolution plots vs run number [data only]" << std::endl;
-	analysis.TimeVsRuns();
-      }
-      if (Config::doTrigEff) {
-	std::cout << "Doing trigger efficiencies" << std::endl;
-	analysis.TriggerEffs();
-      }
+      analysis.EventLoop();
       std::cout << "Done analyzing: " << ((*mapiter).second?"MC":"DATA") << " sample: " << (*mapiter).first << std::endl;
     }
     std::cout << "Finished analysis section" << std::endl;

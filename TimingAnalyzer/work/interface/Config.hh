@@ -99,10 +99,16 @@ namespace Config{
   extern Bool_t      useDYll;
   extern Bool_t      useQCD;
   extern Bool_t      useGJets;
-  extern Bool_t      doRuns;
   extern Bool_t      useFull;
   extern Bool_t      doStandard;
   extern Bool_t      doTimeRes;
+  extern Bool_t      doZvars;
+  extern Bool_t      doEffE;
+  extern Bool_t      doNvtx;
+  extern Bool_t      doEta;
+  extern Bool_t      doVtxZ;
+  extern Bool_t      doSingleE;
+  extern Bool_t      doRuns;
   extern Bool_t      doTrigEff;
   extern Bool_t      applyTOF;
   extern Bool_t      wgtedtime;

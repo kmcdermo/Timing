@@ -5,18 +5,23 @@ void quickoverplot() {
 
   TString label1 = "notof";
   TString label2 = "tof";
-  Bool_t  isData = true;
+  Bool_t  isData = false;
 
-  TString hname  = "el2_vtxZ_mean_gaus2";
+  TString hname  = "el2_vtxZ_mean_gaus1";
   Bool_t  isLogY = false;
   
   TString indir = isData?"DATA/doubleeg":"MC/dyll";
 
-  TFile * file1 = TFile::Open(Form("%s/%s/plots.root",label1.Data(),indir.Data()));
-  TFile * file2 = TFile::Open(Form("%s/%s/plots.root",label2.Data(),indir.Data()));
+  TFile * file1 = TFile::Open(Form("test/%s/%s/plots.root",label1.Data(),indir.Data()));
+  TFile * file2 = TFile::Open(Form("test/%s/%s/plots.root",label2.Data(),indir.Data()));
 
   TH1F * h1 = (TH1F*)file1->Get(hname.Data());
   TH1F * h2 = (TH1F*)file2->Get(hname.Data());
+
+  Float_t min = h1->GetMinimum()<h2->GetMinimum()?h1->GetMinimum():h2->GetMinimum();
+  Float_t max = h1->GetMaximum()>h2->GetMaximum()?h1->GetMaximum():h2->GetMaximum();
+  h1->SetMinimum(min>0?min/1.1:min*1.1);
+  h1->SetMaximum(max>0?max*1.1:max/1.1);
 
   TCanvas * c1 = new TCanvas();
   c1->cd();

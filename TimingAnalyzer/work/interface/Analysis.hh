@@ -21,13 +21,39 @@ public:
   Analysis(TString sample, Bool_t isMC);
   ~Analysis();
   void InitTree();
-  void StandardPlots();
-  void SetUpStandardPlots();
-  void TimeResPlots();
-  void SetUpTimeResPlots();
-  void OutputTimeResPlots();
-  void TimeVsRuns();
-  void TriggerEffs();
+  void EventLoop();
+  void SetupStandardPlots();
+  void SetupZPlots();
+  void SetupEffEPlots();
+  void SetupNvtxPlots();
+  void SetupEtaPlots();
+  void SetupVtxZPlots();
+  void SetupSingleEPlots();
+  void SetupRunPlots();
+  void SetupTrigEffPlots();
+  void FillStandardPlots(const Float_t weight, const Float_t timediff, const Float_t effpt, const Float_t effE, const Float_t effseedE, 
+			 const Float_t el1time, const Float_t el1seedeta, Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em,
+			 const Float_t el2time, const Float_t el2seedeta, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
+  void FillZPlots(const Float_t weight, const Float_t timediff);
+  void FillEffEPlots(const Float_t weight, const Float_t timediff, const Float_t effpt, const Float_t effE, const Float_t effseedE, 
+		     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
+  void FillNvtxPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time,
+		     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
+  void FillEtaPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time);
+  void FillVtxZPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time);
+  void FillSingleEPlots(const Float_t weight, const Float_t el1time, const Float_t el2time,
+			Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
+  void FillRunPlots(const Float_t weight, const Float_t timediff, Bool_t el1eb, Bool_t el1ee, Bool_t el2eb, Bool_t el2ee);
+  void FillTrigEffPlots(const Float_t weight);
+  void OutputStandardPlots();
+  void OutputZPlots();
+  void OutputEffEPlots();
+  void OutputNvtxPlots();
+  void OutputEtaPlots();
+  void OutputVtxZPlots();
+  void OutputSingleEPlots();
+  void OutputRunPlots();
+  void OutputTrigEffPlots();
   void Make1DTimingPlots(TH2F *& hist2D, const TString subdir2D, const DblVec& bins2D, TString name);
   void Project2Dto1D(TH2F *& hist2d, TString subdir2d, TH1Map & th1map, TStrMap & subdir1dmap, TStrIntMap & th1binmap);
   void ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString name, TString xtitle, const DblVec vxbins, TString subdir);
@@ -64,13 +90,15 @@ private:
   
   // Output colors
   Color_t fColor;
-  
-  // save on passing crap around (Standard Plots)
+
+  ////////////////////////
+  // Standard plot maps //
+  ////////////////////////
   TH1Map standardTH1Map; TStrMap standardTH1SubMap;
   TH1Map timingMap;      TStrMap timingSubMap;
 
   ///////////////////
-  // time res maps
+  // time res maps //
   ///////////////////
   // z variables
   TH2Map z2DMap; TStrMap z2DSubMap; TStrDblVMap zbins;
@@ -100,6 +128,13 @@ private:
 
   // run numbers (data only)
   TH2Map runs2DMap; TStrMap runs2DSubMap; DblVec dRunNos; 
+
+  //////////////////////
+  // trigger eff maps //
+  //////////////////////
+  TH1Map  trTH1Map; TStrMap trTH1SubMap;
+  TH1F * n_hltdoubleel_el1pt; TH1F * d_hltdoubleel_el1pt;
+  TH1F * n_hltdoubleel_el2pt; TH1F * d_hltdoubleel_el2pt;
 
 public:
   // Declaration of leaf types
