@@ -21,6 +21,7 @@ namespace Config {
   Bool_t  applyTOF   = false;
   Bool_t  wgtedtime  = false;
   Bool_t  useSigma_n = false;
+  Bool_t  saveFits   = false;
   TString formname   = "gaus1"; // gaus1, gaus2, gaus2fm, gauslin
 
   TStrBoolMap SampleMap;       // set in main.cc

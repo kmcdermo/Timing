@@ -107,6 +107,7 @@ namespace Config{
   extern Bool_t      applyTOF;
   extern Bool_t      wgtedtime;
   extern Bool_t      useSigma_n;
+  extern Bool_t      saveFits;
   extern TString     formname; // fitting function to be used
 
   extern TStrBoolMap SampleMap;

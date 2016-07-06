@@ -23,8 +23,7 @@ StackPlots::StackPlots() {
   // have to copy by hand plots to use unfortunately
   StackPlots::InitTH1FNamesAndSubDNames();
   
-  // store this too
-  fNTH1F = fTH1FNames.size();
+  // make stack outputs
   MakeSubDirs(fTH1FSubDMap,fOutDir);
 
   // with all that defined, initialize everything in constructor
@@ -426,8 +425,7 @@ void StackPlots::OpenInputFiles() {
   // open input files into TFileVec --> data 
   fDataFiles.resize(fNData);
   for (Int_t data = 0; data < fNData; data++) {
-    TString datafile = Form("gaus2_sigman/DATA/%s/plots.root",fDataNames[data].Data());
-// TString datafile = Form("%s/DATA/%s/plots.root",Config::outdir.Data(),fDataNames[data].Data());
+    TString datafile = Form("%s/DATA/%s/plots.root",Config::outdir.Data(),fDataNames[data].Data());
     fDataFiles[data] = TFile::Open(datafile.Data());
     CheckValidFile(fDataFiles[data],datafile);
   }
@@ -435,8 +433,7 @@ void StackPlots::OpenInputFiles() {
   // open input files into TFileVec --> mc 
   fMCFiles.resize(fNMC);
   for (Int_t mc = 0; mc < fNMC; mc++) {
-    //    TString mcfile = Form("%s/MC/%s/plots.root",Config::outdir.Data(),fMCNames[mc].Data());
-    TString mcfile = Form("gaus1_sigman/MC/%s/plots.root",fMCNames[mc].Data());
+    TString mcfile = Form("%s/MC/%s/plots.root",Config::outdir.Data(),fMCNames[mc].Data());
     fMCFiles[mc] = TFile::Open(mcfile.Data());
     CheckValidFile(fMCFiles[mc],mcfile);
   }
@@ -450,16 +447,7 @@ void StackPlots::InitInputPlots() {
     // data first
     fInDataTH1FHists[th1f].resize(fNData); 
     for (Int_t data = 0; data < fNData; data++) { // init data double hists
-      if (fTH1FNames[th1f].Contains("gaus1")){
-	TString replacestr  = "gaus1";
-	Ssiz_t  length      = replacestr.Length();
-	TString title      = fTH1FNames[th1f];
-	Ssiz_t  titlepos   = title.Index(replacestr.Data());
-	
-	TString toreplace = "gaus2";
-	title.Replace(titlepos,length,toreplace);
-	fInDataTH1FHists[th1f][data] = (TH1F*)fDataFiles[data]->Get(Form("%s",title.Data()));
-	
+	fInDataTH1FHists[th1f][data] = (TH1F*)fDataFiles[data]->Get(Form("%s",title.Data()));	
 	CheckValidTH1F(fInDataTH1FHists[th1f][data],fTH1FNames[th1f],fDataFiles[data]->GetName());
       }
       else {
@@ -537,8 +525,7 @@ void StackPlots::InitTH1FNamesAndSubDNames(){
   // will use the integral of nvtx to derive total yields as no additional cuts are placed on ntvx --> key on name for yields
   
   std::ifstream plotstoread;
-  //  plotstoread.open(Form("%s/%s",Config::outdir,Config::plotdumpname.Data()),std::ios::in);
-  plotstoread.open(Form("gaus1_sigman/%s",Config::plotdumpname.Data()),std::ios::in);
+  plotstoread.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios::in);
 
   TString plotname; TString subdir;
 
@@ -547,6 +534,9 @@ void StackPlots::InitTH1FNamesAndSubDNames(){
     fTH1FSubDMap[plotname] = subdir;
   }
   plotstoread.close();
+
+  // store the size of the number of plots
+  fNTH1F = fTH1FNames.size();
 
   if (fTH1FNames.size() == 0) {
     std::cerr << "Somehow, no plots were read in for the stacker ...exiting..." << std::endl;

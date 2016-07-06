@@ -266,8 +266,8 @@ void Analysis::TimeResPlots(){
       const Float_t eff_dielpt  = el1pt*el2pt/std::sqrt(rad2(el1pt,el2pt));
       const Float_t eff_dielE   = el1E*el2E/std::sqrt(rad2(el1E,el2E));
       const Float_t eff_diseedE = el1seedE*el2seedE/std::sqrt(rad2(el1seedE,el2seedE));
-      const Float_t el1seedeta = eta(el1seedX,el1seedY,el1seedZ);
-      const Float_t el2seedeta = eta(el2seedX,el2seedY,el2seedZ);
+      const Float_t el1seedeta  = eta(el1seedX,el1seedY,el1seedZ);
+      const Float_t el2seedeta  = eta(el2seedX,el2seedY,el2seedZ);
 
       // determine ecal partitions
       Bool_t el1eb = false; Bool_t el1ee = false;
@@ -1153,9 +1153,6 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) {
 }
 
 void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit) {
-  fOutFile->cd();
-  hist->Write(); 
-
   // now draw onto canvas to save as png
   TCanvas * canv = new TCanvas("canv","canv");
   canv->cd();
@@ -1168,16 +1165,21 @@ void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit) {
   Analysis::DrawSubComp(fit,canv,sub1,sub2);
   hist->Draw("PE SAME"); // redraw to get data points on top
 
-  // first save as linear, then log
-  canv->SetLogy(0);
-  CMSLumi(canv);
-  canv->SaveAs(Form("%s/%s/lin/%s_%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fit->GetName(),Config::outtype.Data()));
-  
-  canv->SetLogy(1);
-  CMSLumi(canv);
-  canv->SaveAs(Form("%s/%s/log/%s_%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fit->GetName(),Config::outtype.Data()));
+  fOutFile->cd();
+  hist->Write(); 
 
-  delete canv;
+  if (Config::saveFits) {
+    // first save as linear, then log
+    canv->SetLogy(0);
+    CMSLumi(canv);
+    canv->SaveAs(Form("%s/%s/lin/%s_%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fit->GetName(),Config::outtype.Data()));
+    
+    canv->SetLogy(1);
+    CMSLumi(canv);
+    canv->SaveAs(Form("%s/%s/log/%s_%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fit->GetName(),Config::outtype.Data()));
+    
+    delete canv;
+  }
   Analysis::DeleteFit(fit,sub1,sub2); // now that the fitting is done being used, delete it (as well as sub component gaussians)
 }
 
