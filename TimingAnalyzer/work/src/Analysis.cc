@@ -13,7 +13,7 @@ inline Float_t TOF  (Float_t x, Float_t y, Float_t z, Float_t vx, Float_t vy, Fl
 {
   return time + (std::sqrt(z*z+rad2(x,y))-std::sqrt((z-vz)*(z-vz)+rad2((x-vx),(y-vy))))/Config::sol;
 }
-inline Float_t effA (Float_t e1, Float e2){return e1*e2/std::sqrt(rad2(e1,e2));}
+inline Float_t effA (Float_t e1, Float_t e2){return e1*e2/std::sqrt(rad2(e1,e2));}
 
 Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC) 
 {
@@ -153,10 +153,10 @@ void Analysis::EventLoop()
       if (Config::doStandard) Analysis::FillStandardPlots(weight,timediff,effpt,effE,effseedE,el1time,el1seedeta,el1eb,el1ee,el1ep,el1em,el2time,el2seedeta,el2eb,el2ee,el2ep,el2em);
       if (Config::doZvars)    Analysis::FillZPlots(weight,timediff);
       if (Config::doEffE)     Analysis::FillEffEPlots(weight,timediff,effpt,effE,effseedE,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
-      if (Config::doNvtx)     Analysis::FillNvtxPlots(weight,timediff,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
-      if (Config::doEta)      Analysis::FillEtaPlots(weight,timediff,el1time,el2time);
+      if (Config::doNvtx)     Analysis::FillNvtxPlots(weight,timediff,el1time,el2time,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
+      if (Config::doEta)      Analysis::FillEtaPlots(weight,timediff,el1time,el2time,el1seedeta,el2seedeta);
       if (Config::doVtxZ)     Analysis::FillVtxZPlots(weight,timediff,el1time,el2time);
-      if (Config::doSingleE)  Analysis::FillSingleEPlots(weight,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
+      if (Config::doSingleE)  Analysis::FillSingleEPlots(weight,el1time,el2time,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
       if (Config::doRuns)     Analysis::FillRunPlots(weight,timediff,el1eb,el1ee,el2eb,el2ee);
       if (Config::doTrigEff)  Analysis::FillTrigEffPlots(weight);
     } // end check over selection
@@ -588,7 +588,7 @@ void Analysis::FillNvtxPlots(const Float_t weight, const Float_t timediff, const
   }
 }
    
-void Analysis::FillEtaPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time)
+void Analysis::FillEtaPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time, const Float_t el1seedeta, const Float_t el2seedeta)
 {
   eleta2DMap["td_el1eta"]->Fill(el1eta,timediff,weight);
   eleta2DMap["td_el1seedeta"]->Fill(el1seedeta,timediff,weight);
@@ -834,7 +834,7 @@ void Analysis::OutputRunPlots()
   Analysis::DeleteTH2s(runs2DMap);  
 }
 
-void Analyis::OutputTrigEffPlots()
+void Analysis::OutputTrigEffPlots()
 {
   MakeSubDirs(trTH1SubMap,fOutDir);
   ComputeRatioPlot(n_hltdoubleel_el1pt,d_hltdoubleel_el1pt,trTH1Map["hltdoubleel_el1pt"]);
