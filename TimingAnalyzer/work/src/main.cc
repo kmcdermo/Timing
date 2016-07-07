@@ -7,8 +7,68 @@
 #include "TROOT.h"
 #include "TVirtualFitter.h"
 
-void setUpPlotMaps();
-void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
+void setUpPlotMaps()
+{
+  // assume E/superclusterE/p the same
+
+  Config::XHighMap["el1E"]     = Config::el1E_high;
+  Config::XHighMap["el1pt"]    = Config::XHighMap["el1E"] / Config::EtoPt;
+  Config::XHighMap["el1seedE"] = Config::XHighMap["el1E"] / Config::EtoSeedE;
+
+  Config::XHighMap["el2E"]     = Config::el2E_high;
+  Config::XHighMap["el2pt"]    = Config::XHighMap["el2E"] / Config::EtoPt;
+  Config::XHighMap["el2seedE"] = Config::XHighMap["el2E"] / Config::EtoSeedE;
+
+  Config::XHighMap["effE"]     = Config::effE_high;
+  Config::XHighMap["effpt"]    = Config::XHighMap["effE"] / Config::EtoPt;
+  Config::XHighMap["effseedE"] = Config::XHighMap["effE"] / Config::EtoSeedE;
+  
+  Config::XBinsMap["el1E"] = {25.0,35.0,40.0,45.0,50.0,55.0,60.0,65.0,70.0,75.0,80.0,85.0,90.0,100.0,110.0,120.0,130.0,140.0,150.0,175.0,200.0,225.0,250.0,300.0,400.0,500.0,Config::XHighMap["el1E"]};
+  Config::XBinsMap["el1pt"].resize(Config::XBinsMap["el1E"].size());
+  Config::XBinsMap["el1seedE"].resize(Config::XBinsMap["el1E"].size());
+  Config::XBinsMap["el2E"].resize(Config::XBinsMap["el1E"].size());
+  Config::XBinsMap["el2pt"].resize(Config::XBinsMap["el1E"].size());
+  Config::XBinsMap["el2seedE"].resize(Config::XBinsMap["el1E"].size());
+  Config::XBinsMap["effE"].resize(Config::XBinsMap["el1E"].size());
+  Config::XBinsMap["effpt"].resize(Config::XBinsMap["el1E"].size());
+  Config::XBinsMap["effseedE"].resize(Config::XBinsMap["el1E"].size());
+
+  for (int i = 0; i < Config::XBinsMap["el1E"].size(); i++){
+    Config::XBinsMap["el1pt"][i] = Config::XBinsMap["el1E"][i] / Config::EtoPt;
+    Config::XBinsMap["el1seedE"][i] = Config::XBinsMap["el1E"][i] / Config::EtoSeedE;
+
+    Config::XBinsMap["el2E"][i] = Config::XBinsMap["el1E"][i] * (Config::XHighMap["el2E"] / Config::XHighMap["el1E"]);
+    Config::XBinsMap["el2pt"][i] = Config::XBinsMap["el1pt"][i] * (Config::XHighMap["el2pt"] / Config::XHighMap["el1pt"]);
+    Config::XBinsMap["el2seedE"][i] = Config::XBinsMap["el1seedE"][i] * (Config::XHighMap["el2seedE"] / Config::XHighMap["el1seedE"]);
+
+    Config::XBinsMap["effE"][i] = Config::XBinsMap["el1E"][i] * (Config::XHighMap["effE"] / Config::XHighMap["el1E"]);
+    Config::XBinsMap["effpt"][i] = Config::XBinsMap["el1pt"][i] * (Config::XHighMap["effpt"] / Config::XHighMap["el1pt"]);
+    Config::XBinsMap["effseedE"][i] = Config::XBinsMap["el1seedE"][i] * (Config::XHighMap["effseedE"] / Config::XHighMap["el1seedE"]);
+  }
+
+  Config::XTitleMap["E"]  = "Energy [GeV]";
+  Config::XTitleMap["p"]  = "p [GeV/c]";
+  Config::XTitleMap["pt"] = "p_{T} [GeV/c]";
+
+  if (Config::useSigma_n) {
+    for (TStrDblMap::iterator diter = Config::XHighMap.begin(); diter != Config::XHighMap.end(); ++diter){ 
+      (*diter).second /= Config::sigma_n;
+    }
+
+    for (TStrDblVMap::iterator viter = Config::XBinsMap.begin(); viter != Config::XBinsMap.end(); ++viter){
+      for (int i = 0; i < (*viter).second.size(); i++) {
+	(*viter).second[i] /= Config::sigma_n;
+      }
+    }
+
+    Config::XTitleMap["E"]  = "Energy/#sigma_{n}";
+    Config::XTitleMap["p"]  = "p/#sigma_{n}";
+    Config::XTitleMap["pt"] = "p_{T}/#sigma_{n}";
+  }
+}
+
+void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) 
+{
   // set TDR Style (need to force it!)
   tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
   SetTDRStyle(tdrStyle);
@@ -63,12 +123,14 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) {
   }
 }
 
-void DestroyMain(std::ofstream & yields, TStyle *& tdrStyle) {
+void DestroyMain(std::ofstream & yields, TStyle *& tdrStyle) 
+{
   yields.close();
   delete tdrStyle;
 }
 
-int main(int argc, const char* argv[]) {
+int main(int argc, const char* argv[]) 
+{
   //////////////////////////////////
   // Read in command line options //
   //////////////////////////////////
@@ -181,7 +243,7 @@ int main(int argc, const char* argv[]) {
   /////////////////////////
 
   if (Config::doPURW) {
-    std::cout << "Calculating pile-up weights" << std::endl;
+    std::cout << "Calculating private pile-up weights" << std::endl;
     PUReweight reweight;
     reweight.GetPUWeights();
     std::cout << "Finished calculating pile-up weights" << std::endl;
@@ -224,63 +286,4 @@ int main(int argc, const char* argv[]) {
 
   // end of the line
   DestroyMain(yields,tdrStyle);
-}
-
-void setUpPlotMaps(){
-  // assume E/superclusterE/p the same
-
-  Config::XHighMap["el1E"]     = Config::el1E_high;
-  Config::XHighMap["el1pt"]    = Config::XHighMap["el1E"] / Config::EtoPt;
-  Config::XHighMap["el1seedE"] = Config::XHighMap["el1E"] / Config::EtoSeedE;
-
-  Config::XHighMap["el2E"]     = Config::el2E_high;
-  Config::XHighMap["el2pt"]    = Config::XHighMap["el2E"] / Config::EtoPt;
-  Config::XHighMap["el2seedE"] = Config::XHighMap["el2E"] / Config::EtoSeedE;
-
-  Config::XHighMap["effE"]     = Config::effE_high;
-  Config::XHighMap["effpt"]    = Config::XHighMap["effE"] / Config::EtoPt;
-  Config::XHighMap["effseedE"] = Config::XHighMap["effE"] / Config::EtoSeedE;
-  
-  Config::XBinsMap["el1E"] = {25.0,35.0,40.0,45.0,50.0,55.0,60.0,65.0,70.0,75.0,80.0,85.0,90.0,100.0,110.0,120.0,130.0,140.0,150.0,175.0,200.0,225.0,250.0,300.0,400.0,500.0,Config::XHighMap["el1E"]};
-  Config::XBinsMap["el1pt"].resize(Config::XBinsMap["el1E"].size());
-  Config::XBinsMap["el1seedE"].resize(Config::XBinsMap["el1E"].size());
-  Config::XBinsMap["el2E"].resize(Config::XBinsMap["el1E"].size());
-  Config::XBinsMap["el2pt"].resize(Config::XBinsMap["el1E"].size());
-  Config::XBinsMap["el2seedE"].resize(Config::XBinsMap["el1E"].size());
-  Config::XBinsMap["effE"].resize(Config::XBinsMap["el1E"].size());
-  Config::XBinsMap["effpt"].resize(Config::XBinsMap["el1E"].size());
-  Config::XBinsMap["effseedE"].resize(Config::XBinsMap["el1E"].size());
-
-  for (int i = 0; i < Config::XBinsMap["el1E"].size(); i++){
-    Config::XBinsMap["el1pt"][i] = Config::XBinsMap["el1E"][i] / Config::EtoPt;
-    Config::XBinsMap["el1seedE"][i] = Config::XBinsMap["el1E"][i] / Config::EtoSeedE;
-
-    Config::XBinsMap["el2E"][i] = Config::XBinsMap["el1E"][i] * (Config::XHighMap["el2E"] / Config::XHighMap["el1E"]);
-    Config::XBinsMap["el2pt"][i] = Config::XBinsMap["el1pt"][i] * (Config::XHighMap["el2pt"] / Config::XHighMap["el1pt"]);
-    Config::XBinsMap["el2seedE"][i] = Config::XBinsMap["el1seedE"][i] * (Config::XHighMap["el2seedE"] / Config::XHighMap["el1seedE"]);
-
-    Config::XBinsMap["effE"][i] = Config::XBinsMap["el1E"][i] * (Config::XHighMap["effE"] / Config::XHighMap["el1E"]);
-    Config::XBinsMap["effpt"][i] = Config::XBinsMap["el1pt"][i] * (Config::XHighMap["effpt"] / Config::XHighMap["el1pt"]);
-    Config::XBinsMap["effseedE"][i] = Config::XBinsMap["el1seedE"][i] * (Config::XHighMap["effseedE"] / Config::XHighMap["el1seedE"]);
-  }
-
-  Config::XTitleMap["E"]  = "Energy [GeV]";
-  Config::XTitleMap["p"]  = "p [GeV/c]";
-  Config::XTitleMap["pt"] = "p_{T} [GeV/c]";
-
-  if (Config::useSigma_n) {
-    for (TStrDblMap::iterator diter = Config::XHighMap.begin(); diter != Config::XHighMap.end(); ++diter){ 
-      (*diter).second /= Config::sigma_n;
-    }
-
-    for (TStrDblVMap::iterator viter = Config::XBinsMap.begin(); viter != Config::XBinsMap.end(); ++viter){
-      for (int i = 0; i < (*viter).second.size(); i++) {
-	(*viter).second[i] /= Config::sigma_n;
-      }
-    }
-
-    Config::XTitleMap["E"]  = "Energy/#sigma_{n}";
-    Config::XTitleMap["p"]  = "p/#sigma_{n}";
-    Config::XTitleMap["pt"] = "p_{T}/#sigma_{n}";
-  }
 }

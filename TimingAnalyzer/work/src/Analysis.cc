@@ -1047,7 +1047,7 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
     outhist_sigma->SetMinimum( 0.25 );
   }
 
-  // write output hist to file
+  // write output mean/sigma hists to file
   fOutFile->cd();
   outhist_mean->Write();
   outhist_sigma->Write();
@@ -1255,7 +1255,7 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap)
       TH1F * normhist = (TH1F*)(*mapiter).second->Clone(Form("%s_norm",(*mapiter).first.Data()));
       normhist->Scale(1./normhist->Integral());
       fOutFile->cd();
-      normhist->Write();
+      //      normhist->Write();
 
       TCanvas * normcanv = new TCanvas("normcanv","normcanv");
       normcanv->cd();
@@ -1314,7 +1314,7 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap)
 void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit) 
 {
   // now draw onto canvas to save as png
-  TCanvas * canv = new TCanvas("canv","canv");
+  TCanvas * canv = new TCanvas(Form("%s_%s",hist->GetName(),fit->GetName()),Form("%s_%s",hist->GetName(),fit->GetName()));
   canv->cd();
   hist->Draw("PE");
   fit->SetLineWidth(3);
@@ -1326,17 +1326,17 @@ void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit)
   hist->Draw("PE SAME"); // redraw to get data points on top
 
   fOutFile->cd();
-  hist->Write(); 
 
+  // write out the canvas, but only print canvases if specfied
+  canv->SetLogy(0);
+  CMSLumi(canv);
+  canv->Write();
   if (Config::saveFits) {
-    // first save as linear, then log
-    canv->SetLogy(0);
-    CMSLumi(canv);
     canv->SaveAs(Form("%s/%s/lin/%s_%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fit->GetName(),Config::outtype.Data()));
     
     canv->SetLogy(1);
     CMSLumi(canv);
-    canv->SaveAs(Form("%s/%s/log/%s_%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fit->GetName(),Config::outtype.Data()));    
+    canv->SaveAs(Form("%s/%s/log/%s_%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fit->GetName(),Config::outtype.Data()));
   }
   delete canv;
   Analysis::DeleteFit(fit,sub1,sub2); // now that the fitting is done being used, delete it (as well as sub component gaussians)
