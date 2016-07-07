@@ -29,13 +29,13 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC)
   fInTree = (TTree*)fInFile->Get(treename.Data());
   CheckValidTree(fInTree,treename,filename);
   InitTree();
-  
+
   // Set Output Stuff
   fOutDir = Form("%s/%s/%s",Config::outdir.Data(), (fIsMC?"MC":"DATA"), fSample.Data());
   MakeOutDir(fOutDir);
   fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
   fColor = (fIsMC?Config::colorMap[fSample]:kBlack);
-  
+
   // extra setup for data and MC
   if (fIsMC) { 
     // Get pile-up weights
@@ -68,7 +68,7 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC)
     fXsec   = Config::SampleXsecMap[fSample];
     fWgtsum = Config::SampleWgtsumMap[fSample];
   }  
-  else{
+  else {
     fTH1Dump.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios_base::trunc); // do this once, and just do it for data
   }
 }
@@ -103,7 +103,7 @@ void Analysis::EventLoop()
       Float_t weight = -1.;
       if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[putrue];}
       else         {weight = 1.0;}
-
+      
       // determine ecal partitions
       const Float_t el1seedeta = eta(el1seedX,el1seedY,el1seedZ);
       Bool_t el1eb = false; Bool_t el1ee = false;
@@ -195,9 +195,9 @@ void Analysis::SetupStandardPlots()
   standardTH1Map["zmass_EBEE"] = Analysis::MakeTH1Plot("zmass_EBEE","",100,Config::zlow,Config::zhigh,"Dielectron invariant mass [GeV/c^{2}] (EBEE)","Events",standardTH1SubMap,"standard");
 
   // effective energies
-  standardTH1Map["eff_dielpt"]  = Analysis::MakeTH1Plot("eff_dielpt","",100,0.,Config::XHighMap["effpt"],Form("Effective Dielectron %s",Config::XTitleMap["pt"].Data()),"Events",standardTH1SubMap,"standard");
-  standardTH1Map["eff_dielE"]   = Analysis::MakeTH1Plot("eff_dielE","",100,0.,Config::XHighMap["effE"],Form("Effective Dielectron %s",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard");
-  standardTH1Map["eff_diseedE"] = Analysis::MakeTH1Plot("eff_diseedE","",100,0.,Config::XHighMap["effseedE"],Form("Effective Dielectron Seed %s",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard");
+  standardTH1Map["effpt"]  = Analysis::MakeTH1Plot("effpt","",100,0.,Config::XHighMap["effpt"],Form("Effective Dielectron %s",Config::XTitleMap["pt"].Data()),"Events",standardTH1SubMap,"standard");
+  standardTH1Map["effE"]   = Analysis::MakeTH1Plot("effE","",100,0.,Config::XHighMap["effE"],Form("Effective Dielectron %s",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard");
+  standardTH1Map["effseedE"] = Analysis::MakeTH1Plot("effseedE","",100,0.,Config::XHighMap["effseedE"],Form("Effective Dielectron Seed %s",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard");
 
   // el1 and el2 variables
   standardTH1Map["el1phi"]     = Analysis::MakeTH1Plot("el1phi","",100,-Config::PI,Config::PI,"Leading Electron #phi","Events",standardTH1SubMap,"standard");
@@ -1021,7 +1021,8 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
     // declare fit, prep it, then use it for binned plots
     TF1 * fit; 
     Analysis::PrepFit(fit,(*mapiter).second);
-    (*mapiter).second->Fit(fit->GetName(),"RBQ0");
+    Int_t status = (*mapiter).second->Fit(fit->GetName(),"RBQ0");
+    if (status!=0) {std::cout << "BAD FIT " << (*mapiter).first.Data() << " " << bin << " " << subdir.Data() << " " << Config::formname.Data() << std::endl;}
 
     // need to capture the mean and sigma
     Float_t mean,  emean;

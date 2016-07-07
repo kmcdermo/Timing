@@ -4,6 +4,7 @@ namespace Config {
 
   // default parameters for Config
   TString outdir     = "output";
+  Bool_t  dumpRanges = false;
   Bool_t  doPURW     = false;
   Bool_t  doAnalysis = false;
   Bool_t  doStacks   = false;

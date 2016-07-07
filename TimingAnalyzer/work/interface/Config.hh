@@ -90,6 +90,7 @@ namespace Config{
 
   // set at command line and in main
   extern TString     outdir;
+  extern Bool_t      dumpRanges;
   extern Bool_t      doPURW;
   extern Bool_t      doAnalysis;
   extern Bool_t      doStacks;

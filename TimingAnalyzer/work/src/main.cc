@@ -65,6 +65,19 @@ void setUpPlotMaps()
     Config::XTitleMap["p"]  = "p/#sigma_{n}";
     Config::XTitleMap["pt"] = "p_{T}/#sigma_{n}";
   }
+
+  if (Config::dumpRanges) {
+    std::ofstream range;
+    range.open(Form("%s/ranges.txt",Config::outdir.Data()),std::ios_base::trunc);
+    for (TStrDblVMap::iterator viter = Config::XBinsMap.begin(); viter != Config::XBinsMap.end(); ++viter) {
+      range << (*viter).first << std::endl;
+      for (int i = 0; i < (*viter).second.size()-1; i++) {
+	range << "  " << (*viter).second[i] << "-" << (*viter).second[i+1] << std::endl;
+      }
+      range << "------------------------------------" << std::endl;
+    }
+    range.close();
+  }
 }
 
 void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) 
@@ -144,6 +157,7 @@ int main(int argc, const char* argv[])
         "Usage: %s [options]\n"
         "Options:\n"
 	"  --outdir        <string>      name of ouput directory (def: %s)\n"
+	"  --dump-ranges   <bool>        dump energy bin ranges (def: %s)\n"
 	"  --do-purw       <bool>        calculate pile-up weights (def: %s)\n"
 	"  --do-analysis   <bool>        make analysis plots (def: %s)\n"
 	"  --do-stacks     <bool>        stack data/MC plots (def: %s)\n"
@@ -172,6 +186,7 @@ int main(int argc, const char* argv[])
         ,
         argv[0],
         Config::outdir.Data(),
+	(Config::dumpRanges ? "true" : "false"),
 	(Config::doPURW     ? "true" : "false"),
 	(Config::doAnalysis ? "true" : "false"),
 	(Config::doStacks   ? "true" : "false"),
@@ -201,6 +216,7 @@ int main(int argc, const char* argv[])
       exit(0);
     }
     else if (*i == "--outdir")      { next_arg_or_die(mArgs, i); Config::outdir = i->c_str(); }
+    else if (*i == "--dump-ranges") { Config::dumpRanges = true; }
     else if (*i == "--do-purw")     { Config::doPURW     = true; }
     else if (*i == "--do-analysis") { Config::doAnalysis = true; }
     else if (*i == "--do-stacks")   { Config::doStacks   = true; }
