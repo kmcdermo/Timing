@@ -38,6 +38,7 @@ void minrange()
   size_t    ndiff = 1000;
 
   TString outtxt = Form("config/%s_%s_bins.txt",outvar.Data(),ecpart.Data());
+  std::cout << "File: " << outtxt.Data() << std::endl;
   ofstream outfile;
   outfile.open(outtxt.Data(),std::ios_base::trunc);
 			
@@ -104,7 +105,7 @@ void minrange()
       reset  = false; 
     }
 
-    if ( ((i-ilow) >= ndiff) && (values[i]-values[ilow] >= diffval) && (values[i]>minval) ) { 
+    if ( ((i-ilow) >= ndiff) && (values[i]-values[ilow] >= diffval) && (values[i] > minval) ) { 
       std::cout << i-ilow << " : " << values[ilow] << " - " << values[i] << " = " << values[i] - values[ilow] << std::endl;
       reset  = true;
       outfile << int(values[i]) << std::endl;
