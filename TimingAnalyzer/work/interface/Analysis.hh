@@ -31,11 +31,11 @@ public:
   void SetupSingleEPlots();
   void SetupRunPlots();
   void SetupTrigEffPlots();
-  void FillStandardPlots(const Float_t weight, const Float_t timediff, const Float_t effpt, const Float_t effE, const Float_t effseedE, 
+  void FillStandardPlots(const Float_t weight, const Float_t timediff, const Float_t effE, const Float_t effseedE, 
 			 const Float_t el1time, const Float_t el1seedeta, Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em,
 			 const Float_t el2time, const Float_t el2seedeta, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
   void FillZPlots(const Float_t weight, const Float_t timediff);
-  void FillEffEPlots(const Float_t weight, const Float_t timediff, const Float_t effpt, const Float_t effE, const Float_t effseedE, 
+  void FillEffEPlots(const Float_t weight, const Float_t timediff, const Float_t effE, const Float_t effseedE, 
 		     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
   void FillNvtxPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time,
 		     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
@@ -104,7 +104,6 @@ private:
   TH2Map z2DMap; TStrMap z2DSubMap; TStrDblVMap zbins;
 
   // effective energy plots
-  TH2Map effpt2DMap;    TStrMap effpt2DSubMap;    DblVec effptbins;
   TH2Map effE2DMap;     TStrMap effE2DSubMap;     DblVec effEbins;
   TH2Map effseedE2DMap; TStrMap effseedE2DSubMap; DblVec effseedEbins;
 
@@ -118,11 +117,9 @@ private:
   TH2Map vtxZ2DMap; TStrMap vtxZ2DSubMap; DblVec vtxZbins;
 
   // single el energy plots
-  TH2Map el1pt2DMap;    TStrMap el1pt2DSubMap;    DblVec el1ptbins;
   TH2Map el1E2DMap;     TStrMap el1E2DSubMap;     DblVec el1Ebins;
   TH2Map el1seedE2DMap; TStrMap el1seedE2DSubMap; DblVec el1seedEbins;
 
-  TH2Map el2pt2DMap;    TStrMap el2pt2DSubMap;    DblVec el2ptbins;
   TH2Map el2E2DMap;     TStrMap el2E2DSubMap;     DblVec el2Ebins;
   TH2Map el2seedE2DMap; TStrMap el2seedE2DSubMap; DblVec el2seedEbins;
 

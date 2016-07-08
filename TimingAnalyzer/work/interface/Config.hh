@@ -47,14 +47,6 @@ namespace Config{
   constexpr    Double_t fitrange   = 3.0;
   constexpr    Int_t    nEventsCut = 1000; // for run number plots
 
-  // E/pt el1/e2/eff stuff
-  constexpr    Double_t el1E_high = 2100.0;
-  constexpr    Double_t el2E_high = 910.0;
-  constexpr    Double_t effE_high = 725.0;
-
-  constexpr    Double_t EtoPt    = 3.0;
-  constexpr    Double_t EtoSeedE = 4.0 / 3.0;
-
   // TDRStyle Config --> needed by stacker
   constexpr    Float_t  TitleSize    = 0.035;
   constexpr    Float_t  TitleXOffset = 1.1;
