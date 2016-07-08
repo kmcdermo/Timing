@@ -29,14 +29,15 @@ void minrange()
   TString   indir = Form("input/%s", (isMC?"MC/dyll":"DATA/doubleeg") );
   TFile   *  file = TFile::Open(Form("%s/skimmedtree.root",indir.Data())); 
   TTree   *  tree = (TTree*)file->Get("tree/tree");
-  TString  invar1 = "el1seedE";
-  TString  invar2 = "el2seedE";
-  TString outvar  = "effseedE";
-  Int_t    minval = 20;
+  TString  invar1 = "el1E";
+  TString  invar2 = "el2E";
+  TString  outvar = "effE";
+  TString  ecpart = "inclusive";
+  Int_t    minval = 10;
   Float_t diffval = 5.0;
-  size_t  ndiff   = 1000;
+  size_t    ndiff = 1000;
 
-  TString outtxt = Form("config/%s_EBEB_bins.txt",outvar.Data());
+  TString outtxt = Form("config/%s_%s_bins.txt",outvar.Data(),ecpart.Data());
   ofstream outfile;
   outfile.open(outtxt.Data(),std::ios_base::trunc);
 			
@@ -57,25 +58,33 @@ void minrange()
     b_x1->GetEvent(entry); b_y1->GetEvent(entry); b_z1->GetEvent(entry);
     Float_t eta1 = eta(x1,y1,z1);
     Bool_t el1eb = false, el1ee = false, el1ep = false, el1em = false;
-    if      (std::abs(eta1)<Parition::etaEB)        {el1eb = true;}
-    else if (std::abs(eta1)<Parition::etaEEhigh 
-	     && std::abs(eta1)>Partition::etaEElow) {el1ee = true;
-      if      (z1>0)                                {el1ep = true;}
-      else if (z1<0)                                {el1em = true;}
+    if      (std::abs(eta1)<Partition::etaEB)    {el1eb = true;}
+    else if (std::abs(eta1)<Partition::etaEEhigh &&
+	     std::abs(eta1)>Partition::etaEElow) {el1ee = true;
+      if      (z1>0)                             {el1ep = true;}
+      else if (z1<0)                             {el1em = true;}
     }      
 
     b_var2->GetEvent(entry);
     b_x2->GetEvent(entry); b_y2->GetEvent(entry); b_z2->GetEvent(entry);
     Float_t eta2 = eta(x2,y2,z2);
     Bool_t el2eb = false, el2ee = false, el2ep = false, el2em = false;
-    if      (std::abs(eta2)<Parition::etaEB)        {el2eb = true;}
-    else if (std::abs(eta2)<Parition::etaEEhigh 
-	     && std::abs(eta2)>Partition::etaEElow) {el2ee = true;
-      if      (z2>0)                                {el2ep = true;}
-      else if (z2<0)                                {el2em = true;}
+    if      (std::abs(eta2)<Partition::etaEB)    {el2eb = true;}
+    else if (std::abs(eta2)<Partition::etaEEhigh &&
+	     std::abs(eta2)>Partition::etaEElow) {el2ee = true;
+      if      (z2>0)                             {el2ep = true;}
+      else if (z2<0)                             {el2em = true;}    
     }      
 
-    if (el1eb && el2eb) {
+    Bool_t fill = false;
+    if      (ecpart.Contains("inclusive",TString::kExact))                                      { fill = true; }
+    else if (ecpart.Contains("EBEB",TString::kExact) && (el1eb && el2eb))                       { fill = true; }
+    else if (ecpart.Contains("EEEE",TString::kExact) && (el1ee && el2ee))                       { fill = true; }
+    else if (ecpart.Contains("EPEP",TString::kExact) && (el1ep && el2ep))                       { fill = true; }
+    else if (ecpart.Contains("EMEM",TString::kExact) && (el1em && el2em))                       { fill = true; }
+    else if (ecpart.Contains("EBEE",TString::kExact) && ((el1eb && el2ee) || (el1ee && el2eb))) { fill = true; }
+
+    if (fill) {
       if (var1>0 && var2>0) values.push_back(effA(var1,var2));
     }
   }
@@ -87,13 +96,15 @@ void minrange()
   Int_t  lowval = (minval<front?minval:front);
   outfile << lowval << std::endl;
   Bool_t reset  = false;
+
+  std::cout << "first bin: " << lowval << " front: " << values.front() << " minval: " << minval << std::endl;
   for (size_t i = 0; i < values.size(); i++) {
     if (reset) { 
       ilow   = i;
       reset  = false; 
     }
 
-    if ( ((i-ilow) >= ndiff) && (values[i]-values[ilow] >= diffval) && (values[i]>10) ) { 
+    if ( ((i-ilow) >= ndiff) && (values[i]-values[ilow] >= diffval) && (values[i]>minval) ) { 
       std::cout << i-ilow << " : " << values[ilow] << " - " << values[i] << " = " << values[i] - values[ilow] << std::endl;
       reset  = true;
       outfile << int(values[i]) << std::endl;
