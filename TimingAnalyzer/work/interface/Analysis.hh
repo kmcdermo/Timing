@@ -104,8 +104,8 @@ private:
   TH2Map z2DMap; TStrMap z2DSubMap; TStrDblVMap zbins;
 
   // effective energy plots
-  TH2Map effE2DMap;     TStrMap effE2DSubMap;     DblVec effEbins;
-  TH2Map effseedE2DMap; TStrMap effseedE2DSubMap; DblVec effseedEbins;
+  TH2Map effE2DMap;     TStrMap effE2DSubMap;     TStrDblVMap effEbins;
+  TH2Map effseedE2DMap; TStrMap effseedE2DSubMap; TStrDblVMap effseedEbins;
 
   // nvtx plots
   TH2Map nvtx2DMap; TStrMap nvtx2DSubMap; DblVec nvtxbins;
@@ -117,11 +117,11 @@ private:
   TH2Map vtxZ2DMap; TStrMap vtxZ2DSubMap; DblVec vtxZbins;
 
   // single el energy plots
-  TH2Map el1E2DMap;     TStrMap el1E2DSubMap;     DblVec el1Ebins;
-  TH2Map el1seedE2DMap; TStrMap el1seedE2DSubMap; DblVec el1seedEbins;
+  TH2Map el1E2DMap;     TStrMap el1E2DSubMap;     TStrDblVMap el1Ebins;
+  TH2Map el1seedE2DMap; TStrMap el1seedE2DSubMap; TStrDblVMap el1seedEbins;
 
-  TH2Map el2E2DMap;     TStrMap el2E2DSubMap;     DblVec el2Ebins;
-  TH2Map el2seedE2DMap; TStrMap el2seedE2DSubMap; DblVec el2seedEbins;
+  TH2Map el2E2DMap;     TStrMap el2E2DSubMap;     TStrDblVMap el2Ebins;
+  TH2Map el2seedE2DMap; TStrMap el2seedE2DSubMap; TStrDblVMap el2seedEbins;
 
   // run numbers (data only)
   TH2Map runs2DMap; TStrMap runs2DSubMap; DblVec dRunNos; 

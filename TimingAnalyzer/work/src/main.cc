@@ -9,24 +9,70 @@
 
 void setUpPlotMaps()
 {
-  // assume E/superclusterE/p the same
+  // read in from config all the appropriate bins
 
-  Config::XHighMap["el1E"]     = Config::el1E_high;
-  Config::XHighMap["el1seedE"] = Config::XHighMap["el1E"] / Config::EtoSeedE;
-
-  Config::XHighMap["el2E"]     = Config::el2E_high;
-  Config::XHighMap["el2seedE"] = Config::XHighMap["el2E"] / Config::EtoSeedE;
-
-  Config::XHighMap["effE"]     = Config::effE_high;
-  Config::XHighMap["effseedE"] = Config::XHighMap["effE"] / Config::EtoSeedE;
-  
-  Config::XTitleMap["E"]  = "Energy [GeV]";
-    
-  if (Config::useSigma_n) {
-    for (TStrDblMap::iterator diter = Config::XHighMap.begin(); diter != Config::XHighMap.end(); ++diter){ 
-      (*diter).second /= Config::sigma_n;
+  // effective first
+  TStrVec effstrings = {"inclusive","EBEB","EBEE","EEEE","EPEP","EMEM"};
+  for (int i = 0; i < effstrings.size(); i++) {
+    std::ifstream ineffE;
+    ineffE.open(Form("config/effE_%s_bins.txt",effstrings[i].Data()),std::ios::in);
+    Int_t  effE = -1;
+    while(ineffE >> effE){
+      Config::XBinsMap[Form("effE_%s",effstrings[i].Data())].push_back(effE);
     }
+    ineffE.close();
 
+    std::ifstream ineffseedE;
+    ineffseedE.open(Form("config/effseedE_%s_bins.txt",effstrings[i].Data()),std::ios::in);
+    Int_t  effseedE = -1;
+    while(ineffseedE >> effseedE){
+      Config::XBinsMap[Form("effseedE_%s",effstrings[i].Data())].push_back(effseedE);
+    }
+    ineffseedE.close();
+  }
+
+  // single electron next
+  TStrVec elstrings = {"inclusive","EB","EE","EP","EM"};
+  for (int i = 0; i < effstrings.size(); i++) {
+    // el1 first
+    std::ifstream inel1E;
+    inel1E.open(Form("config/el1E_%s_bins.txt",elstrings[i].Data()),std::ios::in);
+    Int_t  el1E = -1;
+    while(inel1E >> el1E){
+      Config::XBinsMap[Form("el1E_%s",elstrings[i].Data())].push_back(el1E);
+    }
+    inel1E.close();
+
+    std::ifstream inel1seedE;
+    inel1seedE.open(Form("config/el1seedE_%s_bins.txt",elstrings[i].Data()),std::ios::in);
+    Int_t  el1seedE = -1;
+    while(inel1seedE >> el1seedE){
+      Config::XBinsMap[Form("el1seedE_%s",elstrings[i].Data())].push_back(el1seedE);
+    }
+    inel1seedE.close();
+
+    // el2 first
+    std::ifstream inel2E;
+    inel2E.open(Form("config/el2E_%s_bins.txt",elstrings[i].Data()),std::ios::in);
+    Int_t  el2E = -1;
+    while(inel2E >> el2E){
+      Config::XBinsMap[Form("el2E_%s",elstrings[i].Data())].push_back(el2E);
+    }
+    inel2E.close();
+
+    std::ifstream inel2seedE;
+    inel2seedE.open(Form("config/el2seedE_%s_bins.txt",elstrings[i].Data()),std::ios::in);
+    Int_t  el2seedE = -1;
+    while(inel2seedE >> el2seedE){
+      Config::XBinsMap[Form("el2seedE_%s",elstrings[i].Data())].push_back(el2seedE);
+    }
+    inel2seedE.close();
+  }
+
+  Config::XTitleMap["E"]  = "Energy [GeV]";
+  
+  // sigma_n corrections!
+  if (Config::useSigma_n) {
     for (TStrDblVMap::iterator viter = Config::XBinsMap.begin(); viter != Config::XBinsMap.end(); ++viter){
       for (int i = 0; i < (*viter).second.size(); i++) {
 	(*viter).second[i] /= Config::sigma_n;

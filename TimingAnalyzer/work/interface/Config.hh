@@ -115,7 +115,6 @@ namespace Config{
   extern TStrFltMap  SampleXsecMap;
   extern TStrFltMap  SampleWgtsumMap;
   extern TStrMap     XTitleMap;
-  extern TStrDblMap  XHighMap;
   extern TStrDblVMap XBinsMap;
 };
 

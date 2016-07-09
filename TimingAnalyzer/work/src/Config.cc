@@ -37,6 +37,5 @@ namespace Config {
   TStrFltMap  SampleXsecMap;   // set in main.cc
   TStrFltMap  SampleWgtsumMap; // set in main.cc
   TStrMap     XTitleMap;       // set in main.cc
-  TStrDblMap  XHighMap;        // set in main.cc
   TStrDblVMap XBinsMap;        // set in main.cc
 }
