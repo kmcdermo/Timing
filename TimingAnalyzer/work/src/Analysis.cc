@@ -302,17 +302,17 @@ void Analysis::SetupEffEPlots()
   effE2DMap["td_effE_EMEM"] = Analysis::MakeTH2Plot("td_effE_EMEM","",effEbins["td_effE_EMEM"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective %s (EE-EE-)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effE2DSubMap,"timing/effective/E/EMEM");  
 
   effseedEbins["td_effseedE_inclusive"] = Config::XBinsMap["effseedE_inclusive"];
-  effseedE2DMap["td_effseedE_inclusive"] = Analysis::MakeTH2Plot("td_effseedE_inclusive","",effseedEbins["td_effseedE_inclusive"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (inclusive)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/E/inclusive");  
+  effseedE2DMap["td_effseedE_inclusive"] = Analysis::MakeTH2Plot("td_effseedE_inclusive","",effseedEbins["td_effseedE_inclusive"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (inclusive)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/seedE/inclusive");  
   effseedEbins["td_effseedE_EBEB"] = Config::XBinsMap["effseedE_EBEB"];
-  effseedE2DMap["td_effseedE_EBEB"] = Analysis::MakeTH2Plot("td_effseedE_EBEB","",effseedEbins["td_effseedE_EBEB"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (EBEB)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/E/EBEB");  
+  effseedE2DMap["td_effseedE_EBEB"] = Analysis::MakeTH2Plot("td_effseedE_EBEB","",effseedEbins["td_effseedE_EBEB"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (EBEB)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/seedE/EBEB");  
   effseedEbins["td_effseedE_EBEE"] = Config::XBinsMap["effseedE_EBEE"];
-  effseedE2DMap["td_effseedE_EBEE"] = Analysis::MakeTH2Plot("td_effseedE_EBEE","",effseedEbins["td_effseedE_EBEE"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (EBEE)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/E/EBEE");  
+  effseedE2DMap["td_effseedE_EBEE"] = Analysis::MakeTH2Plot("td_effseedE_EBEE","",effseedEbins["td_effseedE_EBEE"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (EBEE)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/seedE/EBEE");  
   effseedEbins["td_effseedE_EEEE"] = Config::XBinsMap["effseedE_EEEE"];
-  effseedE2DMap["td_effseedE_EEEE"] = Analysis::MakeTH2Plot("td_effseedE_EEEE","",effseedEbins["td_effseedE_EEEE"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (EEEE)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/E/EEEE");  
+  effseedE2DMap["td_effseedE_EEEE"] = Analysis::MakeTH2Plot("td_effseedE_EEEE","",effseedEbins["td_effseedE_EEEE"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (EEEE)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/seedE/EEEE");  
   effseedEbins["td_effseedE_EPEP"] = Config::XBinsMap["effseedE_EPEP"];
-  effseedE2DMap["td_effseedE_EPEP"] = Analysis::MakeTH2Plot("td_effseedE_EPEP","",effseedEbins["td_effseedE_EPEP"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (EE+EE+)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/E/EPEP");  
+  effseedE2DMap["td_effseedE_EPEP"] = Analysis::MakeTH2Plot("td_effseedE_EPEP","",effseedEbins["td_effseedE_EPEP"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (EE+EE+)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/seedE/EPEP");  
   effseedEbins["td_effseedE_EMEM"] = Config::XBinsMap["effseedE_EMEM"];
-  effseedE2DMap["td_effseedE_EMEM"] = Analysis::MakeTH2Plot("td_effseedE_EMEM","",effseedEbins["td_effseedE_EMEM"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (EE-EE-)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/E/EMEM");  
+  effseedE2DMap["td_effseedE_EMEM"] = Analysis::MakeTH2Plot("td_effseedE_EMEM","",effseedEbins["td_effseedE_EMEM"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (EE-EE-)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/seedE/EMEM");  
 }
 
 void Analysis::SetupNvtxPlots()
@@ -397,15 +397,15 @@ void Analysis::SetupSingleEPlots()
   el1E2DMap["el1time_el1E_EM"] = Analysis::MakeTH2Plot("el1time_el1E_EM","",el1Ebins["el1time_el1E_EM"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron %s (EE-)",Config::XTitleMap["E"].Data()),"Leading Electron Seed Time [ns]",el1E2DSubMap,"timing/el1/E/EM");  
 
   el1seedEbins["el1time_el1seedE_inclusive"] = Config::XBinsMap["el1seedE_inclusive"];
-  el1seedE2DMap["el1time_el1seedE_inclusive"] = Analysis::MakeTH2Plot("el1time_el1seedE_inclusive","",el1seedEbins["el1time_el1seedE_inclusive"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron Seed %s (inclusive)",Config::XTitleMap["E"].Data()),"Leading Electron Seed Time [ns]",el1seedE2DSubMap,"timing/el1/E/inclusive");  
+  el1seedE2DMap["el1time_el1seedE_inclusive"] = Analysis::MakeTH2Plot("el1time_el1seedE_inclusive","",el1seedEbins["el1time_el1seedE_inclusive"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron Seed %s (inclusive)",Config::XTitleMap["E"].Data()),"Leading Electron Seed Time [ns]",el1seedE2DSubMap,"timing/el1/seedE/inclusive");  
   el1seedEbins["el1time_el1seedE_EB"] = Config::XBinsMap["el1seedE_EB"];
-  el1seedE2DMap["el1time_el1seedE_EB"] = Analysis::MakeTH2Plot("el1time_el1seedE_EB","",el1seedEbins["el1time_el1seedE_EB"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron Seed %s (EB)",Config::XTitleMap["E"].Data()),"Leading Electron Seed Time [ns]",el1seedE2DSubMap,"timing/el1/E/EB");  
+  el1seedE2DMap["el1time_el1seedE_EB"] = Analysis::MakeTH2Plot("el1time_el1seedE_EB","",el1seedEbins["el1time_el1seedE_EB"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron Seed %s (EB)",Config::XTitleMap["E"].Data()),"Leading Electron Seed Time [ns]",el1seedE2DSubMap,"timing/el1/seedE/EB");  
   el1seedEbins["el1time_el1seedE_EE"] = Config::XBinsMap["el1seedE_EE"];
-  el1seedE2DMap["el1time_el1seedE_EE"] = Analysis::MakeTH2Plot("el1time_el1seedE_EE","",el1seedEbins["el1time_el1seedE_EE"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron Seed %s (EE)",Config::XTitleMap["E"].Data()),"Leading Electron Seed Time [ns]",el1seedE2DSubMap,"timing/el1/E/EE");  
+  el1seedE2DMap["el1time_el1seedE_EE"] = Analysis::MakeTH2Plot("el1time_el1seedE_EE","",el1seedEbins["el1time_el1seedE_EE"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron Seed %s (EE)",Config::XTitleMap["E"].Data()),"Leading Electron Seed Time [ns]",el1seedE2DSubMap,"timing/el1/seedE/EE");  
   el1seedEbins["el1time_el1seedE_EP"] = Config::XBinsMap["el1seedE_EP"];
-  el1seedE2DMap["el1time_el1seedE_EP"] = Analysis::MakeTH2Plot("el1time_el1seedE_EP","",el1seedEbins["el1time_el1seedE_EP"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron Seed %s (EE+)",Config::XTitleMap["E"].Data()),"Leading Electron Seed Time [ns]",el1seedE2DSubMap,"timing/el1/E/EP");  
+  el1seedE2DMap["el1time_el1seedE_EP"] = Analysis::MakeTH2Plot("el1time_el1seedE_EP","",el1seedEbins["el1time_el1seedE_EP"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron Seed %s (EE+)",Config::XTitleMap["E"].Data()),"Leading Electron Seed Time [ns]",el1seedE2DSubMap,"timing/el1/seedE/EP");  
   el1seedEbins["el1time_el1seedE_EM"] = Config::XBinsMap["el1seedE_EM"];
-  el1seedE2DMap["el1time_el1seedE_EM"] = Analysis::MakeTH2Plot("el1time_el1seedE_EM","",el1seedEbins["el1time_el1seedE_EM"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron Seed %s (EE-)",Config::XTitleMap["E"].Data()),"Leading Electron Seed Time [ns]",el1seedE2DSubMap,"timing/el1/E/EM");  
+  el1seedE2DMap["el1time_el1seedE_EM"] = Analysis::MakeTH2Plot("el1time_el1seedE_EM","",el1seedEbins["el1time_el1seedE_EM"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Leading Electron Seed %s (EE-)",Config::XTitleMap["E"].Data()),"Leading Electron Seed Time [ns]",el1seedE2DSubMap,"timing/el1/seedE/EM");  
 
   ////////////////////////////////////////////////////////////////
   // make 2D plots for single electron timing vs energies (el2) // 
@@ -422,15 +422,15 @@ void Analysis::SetupSingleEPlots()
   el2E2DMap["el2time_el2E_EM"] = Analysis::MakeTH2Plot("el2time_el2E_EM","",el2Ebins["el2time_el2E_EM"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Subleading Electron %s (EE-)",Config::XTitleMap["E"].Data()),"Subleading Electron Seed Time [ns]",el2E2DSubMap,"timing/el2/E/EM");  
 
   el2seedEbins["el2time_el2seedE_inclusive"] = Config::XBinsMap["el2seedE_inclusive"];
-  el2seedE2DMap["el2time_el2seedE_inclusive"] = Analysis::MakeTH2Plot("el2time_el2seedE_inclusive","",el2seedEbins["el2time_el2seedE_inclusive"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Subleading Electron Seed %s (inclusive)",Config::XTitleMap["E"].Data()),"Subleading Electron Seed Time [ns]",el2seedE2DSubMap,"timing/el2/E/inclusive");  
+  el2seedE2DMap["el2time_el2seedE_inclusive"] = Analysis::MakeTH2Plot("el2time_el2seedE_inclusive","",el2seedEbins["el2time_el2seedE_inclusive"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Subleading Electron Seed %s (inclusive)",Config::XTitleMap["E"].Data()),"Subleading Electron Seed Time [ns]",el2seedE2DSubMap,"timing/el2/seedE/inclusive");  
   el2seedEbins["el2time_el2seedE_EB"] = Config::XBinsMap["el2seedE_EB"];
-  el2seedE2DMap["el2time_el2seedE_EB"] = Analysis::MakeTH2Plot("el2time_el2seedE_EB","",el2seedEbins["el2time_el2seedE_EB"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Subleading Electron Seed %s (EB)",Config::XTitleMap["E"].Data()),"Subleading Electron Seed Time [ns]",el2seedE2DSubMap,"timing/el2/E/EB");  
+  el2seedE2DMap["el2time_el2seedE_EB"] = Analysis::MakeTH2Plot("el2time_el2seedE_EB","",el2seedEbins["el2time_el2seedE_EB"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Subleading Electron Seed %s (EB)",Config::XTitleMap["E"].Data()),"Subleading Electron Seed Time [ns]",el2seedE2DSubMap,"timing/el2/seedE/EB");  
   el2seedEbins["el2time_el2seedE_EE"] = Config::XBinsMap["el2seedE_EE"];
-  el2seedE2DMap["el2time_el2seedE_EE"] = Analysis::MakeTH2Plot("el2time_el2seedE_EE","",el2seedEbins["el2time_el2seedE_EE"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Subleading Electron Seed %s (EE)",Config::XTitleMap["E"].Data()),"Subleading Electron Seed Time [ns]",el2seedE2DSubMap,"timing/el2/E/EE");  
+  el2seedE2DMap["el2time_el2seedE_EE"] = Analysis::MakeTH2Plot("el2time_el2seedE_EE","",el2seedEbins["el2time_el2seedE_EE"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Subleading Electron Seed %s (EE)",Config::XTitleMap["E"].Data()),"Subleading Electron Seed Time [ns]",el2seedE2DSubMap,"timing/el2/seedE/EE");  
   el2seedEbins["el2time_el2seedE_EP"] = Config::XBinsMap["el2seedE_EP"];
-  el2seedE2DMap["el2time_el2seedE_EP"] = Analysis::MakeTH2Plot("el2time_el2seedE_EP","",el2seedEbins["el2time_el2seedE_EP"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Subleading Electron Seed %s (EE+)",Config::XTitleMap["E"].Data()),"Subleading Electron Seed Time [ns]",el2seedE2DSubMap,"timing/el2/E/EP");  
+  el2seedE2DMap["el2time_el2seedE_EP"] = Analysis::MakeTH2Plot("el2time_el2seedE_EP","",el2seedEbins["el2time_el2seedE_EP"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Subleading Electron Seed %s (EE+)",Config::XTitleMap["E"].Data()),"Subleading Electron Seed Time [ns]",el2seedE2DSubMap,"timing/el2/seedE/EP");  
   el2seedEbins["el2time_el2seedE_EM"] = Config::XBinsMap["el2seedE_EM"];
-  el2seedE2DMap["el2time_el2seedE_EM"] = Analysis::MakeTH2Plot("el2time_el2seedE_EM","",el2seedEbins["el2time_el2seedE_EM"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Subleading Electron Seed %s (EE-)",Config::XTitleMap["E"].Data()),"Subleading Electron Seed Time [ns]",el2seedE2DSubMap,"timing/el2/E/EM");  
+  el2seedE2DMap["el2time_el2seedE_EM"] = Analysis::MakeTH2Plot("el2time_el2seedE_EM","",el2seedEbins["el2time_el2seedE_EM"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Subleading Electron Seed %s (EE-)",Config::XTitleMap["E"].Data()),"Subleading Electron Seed Time [ns]",el2seedE2DSubMap,"timing/el2/seedE/EM");  
 }
 
 void Analysis::SetupRunPlots()
@@ -1007,7 +1007,7 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
     Int_t bin = th1binmap[(*mapiter).first]; // returns which bin each th1 corresponds to one the new plot
     
     // only do this for run number plots --> check each plot has enough entries to do fit
-    if ( name.Contains("runs",TString::kExact) ) {
+    if ( name.Contains("runs",TString::kExact) || name.Contains("nvtx",TString::kExact) ) {
       if ( ((*mapiter).second->Integral() + sumevents) < Config::nEventsCut ) { 
 	
 	// store the plot to be added later
@@ -1281,7 +1281,7 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap)
       TH1F * normhist = (TH1F*)(*mapiter).second->Clone(Form("%s_norm",(*mapiter).first.Data()));
       normhist->Scale(1./normhist->Integral());
       fOutFile->cd();
-      //      normhist->Write();
+      normhist->Write();
 
       TCanvas * normcanv = new TCanvas("normcanv","normcanv");
       normcanv->cd();
