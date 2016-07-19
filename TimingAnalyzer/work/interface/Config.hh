@@ -5,15 +5,21 @@
 #include "TColor.h"
 
 #include <map>
+#include <vector>
 
-typedef std::map<TString,Color_t> ColorMap;
-typedef std::map<TString,TString> TStrMap;
-typedef std::map<TString,Bool_t>  TStrBoolMap;
-typedef std::map<TString,Float_t> TStrFltMap;
+typedef std::vector<Double_t>      DblVec;
+typedef std::map<TString,Color_t>  ColorMap;
+typedef std::map<TString,TString>  TStrMap;
+typedef std::map<TString,Bool_t>   TStrBoolMap;
+typedef std::map<TString,Float_t>  TStrFltMap;
+typedef std::map<TString,Double_t> TStrDblMap;
+typedef std::map<TString,DblVec>   TStrDblVMap;
 
 namespace Config{
   // general config
-  constexpr    Float_t PI = 3.14159265358979323846;
+  constexpr    Float_t PI  = 3.14159265358979323846;
+  constexpr    Float_t sol = 29.9792458; // speed of light in cm / ns
+  constexpr    Float_t sigma_n = 0.2; // 200 MeV
 
   // output config
   constexpr    Float_t lumi      = 2.301; // brilcalc lumi --normtag /afs/cern.ch/user/l/lumipro/public/normtag_file/moriond16_normtag.json -i rereco2015D.txt -u /fb
@@ -21,7 +27,7 @@ namespace Config{
   static const TString extraText = "Preliminary";
 
   // pu config
-  constexpr    Int_t   nvtxbins   = 50;
+  constexpr    Int_t   nbinsvtx   = 50;
   static const TString pusubdir   = "purw";
   static const TString pufilename = "PURW.root";
   static const TString puplotname = "nvtx_dataOverMC";
@@ -76,19 +82,31 @@ namespace Config{
 
   // set at command line and in main
   extern TString     outdir;
+  extern Bool_t      dumpRanges;
   extern Bool_t      doPURW;
   extern Bool_t      doAnalysis;
   extern Bool_t      doStacks;
   extern Bool_t      doDemo;
   extern Bool_t      useDEG;
+  extern Bool_t      useSEL;
   extern Bool_t      useDYll;
   extern Bool_t      useQCD;
   extern Bool_t      useGJets;
-  extern Bool_t      skipRuns;
   extern Bool_t      useFull;
   extern Bool_t      doStandard;
   extern Bool_t      doTimeRes;
+  extern Bool_t      doZvars;
+  extern Bool_t      doEffE;
+  extern Bool_t      doNvtx;
+  extern Bool_t      doEta;
+  extern Bool_t      doVtxZ;
+  extern Bool_t      doSingleE;
+  extern Bool_t      doRuns;
   extern Bool_t      doTrigEff;
+  extern Bool_t      applyTOF;
+  extern Bool_t      wgtedtime;
+  extern Bool_t      useSigma_n;
+  extern Bool_t      saveFits;
   extern TString     formname; // fitting function to be used
 
   extern TStrBoolMap SampleMap;
@@ -96,6 +114,9 @@ namespace Config{
   extern TStrMap     SampleTitleMap;
   extern TStrFltMap  SampleXsecMap;
   extern TStrFltMap  SampleWgtsumMap;
+  extern TStrMap     XTitleMap;
+  extern TStrDblMap  XHighMap;
+  extern TStrDblVMap XBinsMap;
 };
 
 #endif

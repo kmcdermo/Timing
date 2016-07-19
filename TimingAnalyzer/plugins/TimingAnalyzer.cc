@@ -319,8 +319,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   el1rhXs.clear(); el1rhYs.clear(); el1rhZs.clear(); el1rhEs.clear(); el1rhtimes.clear();
   el2rhXs.clear(); el2rhYs.clear(); el2rhZs.clear(); el2rhEs.clear(); el2rhtimes.clear();
 
-  el1seedX = -999.0; el1seedY = -999.0; el1seedZ = -999.0; el1seedE = -999.0; el1seedtime = -999.0;
-  el2seedX = -999.0; el2seedY = -999.0; el2seedZ = -999.0; el2seedE = -999.0; el2seedtime = -999.0;
+  el1seedX = -999.0; el1seedY = -999.0; el1seedZ = -999.0; el1seedE = -999.0; el1seedtime = -99.0;
+  el2seedX = -999.0; el2seedY = -999.0; el2seedZ = -999.0; el2seedE = -999.0; el2seedtime = -99.0;
 
   el1nrh = -99; el2nrh = -99;
 
@@ -650,11 +650,13 @@ void TimingAnalyzer::beginJob() {
   tree->Branch("el1rhXs"              , "std::vector<float>"  , &el1rhXs);
   tree->Branch("el1rhYs"              , "std::vector<float>"  , &el1rhYs);
   tree->Branch("el1rhZs"              , "std::vector<float>"  , &el1rhZs);
+  tree->Branch("el1rhEs"              , "std::vector<float>"  , &el1rhEs);
   tree->Branch("el1rhtimes"           , "std::vector<float>"  , &el1rhtimes);
 
   tree->Branch("el2rhXs"              , "std::vector<float>"  , &el2rhXs);
   tree->Branch("el2rhYs"              , "std::vector<float>"  , &el2rhYs);
   tree->Branch("el2rhZs"              , "std::vector<float>"  , &el2rhZs);
+  tree->Branch("el2rhEs"              , "std::vector<float>"  , &el2rhEs);
   tree->Branch("el2rhtimes"           , "std::vector<float>"  , &el2rhtimes);
 
   // seed crystal info

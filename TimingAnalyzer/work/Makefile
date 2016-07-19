@@ -1,5 +1,5 @@
 CPPFLAGS := $(shell root-config --cflags)
-CXXFLAGS := -std=c++11 -g
+CXXFLAGS := -std=c++11 -g -O3
 LDFLAGS  := $(shell root-config --libs)
 
 TGTS := main
@@ -41,4 +41,4 @@ ${SRCDIR}/dict.cc: ${HEADERS}
 	rootcling -f $@ -c -p $^
 
 clean:
-	-rm -f ${EXES} ${DEPDIR}/*.d ${OBJDIR}/*.o ${SRCDIR}/*.pcm ./*/*~
+	-rm -f ${EXES} ${DEPDIR}/*.d ${OBJDIR}/*.o ${SRCDIR}/*.pcm ./*~ ./*/*~ macros/*.so macros/*.d
