@@ -6,21 +6,27 @@
 #include "TF1.h"
 #include "TFormula.h"
 
+Float_t rad2(Float_t x, Float_t y){return x*x + y*y;}
 void prepFit(TH1F *& hist, TF1 *& fit, TString formname, Double_t fitrange);
 void drawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2, TString formname, Double_t fitrange); 
+void getMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t & sigma, Float_t & esigma, TString formname);
 
-void printcanv()
+void refitcanv()
 {
   Bool_t  isMC     = false;
   TString indir    = "output";
   TString fitdir   = "timing/effective/E/inclusive";
-  TString name     = "td_effE_inclusive_22_24";
+  TString name     = "td_effE_inclusive";
+  TString bins     = "130_135";
+  Int_t   bin      = 23;
   TString formname = "gaus2fm";
 
   TString outdir = Form("%s/%s",indir.Data(), (isMC?"MC/dyll":"DATA/doubleeg") );
-  TFile   * file = TFile::Open(Form("%s/plots.root",outdir.Data()));
-  TCanvas * canv = (TCanvas*)file->Get(Form("%s_%s_fit",name.Data(),formname.Data()));
-  TH1F    * hist = (TH1F*)canv->GetPrimitive(name.Data());
+  TFile   * file = TFile::Open(Form("%s/plots.root",outdir.Data()),"UPDATE");
+  TCanvas * canv = (TCanvas*)file->Get(Form("%s_%s_%s_fit",name.Data(),bins.Data(),formname.Data()));
+  TH1F    * hist = (TH1F*)   canv->GetPrimitive(Form("%s_%s",name.Data(),bins.Data()));
+  TH1F   * hmean = (TH1F*)   file->Get(Form("%s_mean_%s",name.Data(),formname.Data()));
+  TH1F  * hsigma = (TH1F*)   file->Get(Form("%s_sigma_%s",name.Data(),formname.Data()));
 
   // first prep the fit
   TVirtualFitter::SetDefaultFitter("Minuit2");
@@ -32,13 +38,32 @@ void printcanv()
   hist->Fit(Form("%s_fit",formname.Data()));
   
   // draw the new fit
-  TCanvas * outcanv = new TCanvas();
+  TCanvas * outcanv = new TCanvas("outcanv","outcanv");
   outcanv->cd();
   
   hist->Draw();
   
   TF1 * sub1; TF1 * sub2;
   drawSubComp(fit,outcanv,sub1,sub2,formname,fitrange);
+
+  // now save the new fit as a png
+  outcanv->SaveAs(Form("%s/%s_refit.png",fitdir.Data(),outcanv->GetName()));
+  
+  // now compute mean + sigma of new fit, print out and save it in appropriate histogram
+  Float_t mean, sigma, emean, esigma;
+  getMeanSigma(fit,mean,emean,sigma,esigma,formname);
+
+  std::cout << "New mean: " << mean << "+/-" << emean << " and sigma: " << sigma << "+/-" << esigma << std::endl;
+  
+  hmean ->SetBinContent(bin,mean);
+  hmean ->SetBinError(bin,emean);
+  hsigma->SetBinContent(bin,sigma);
+  hsigma->SetBinError(bin,esigma);
+
+  hmean->Write(hmean->GetName(),TObject::kWriteDelete);
+  hsigma->Write(hsigma->GetName(),TObject::kWriteDelete);
+
+  hmean->Draw();
 }
 
 void prepFit(TH1F *& hist, TF1 *& fit, TString formname, Double_t fitrange)
@@ -67,7 +92,7 @@ void prepFit(TH1F *& hist, TF1 *& fit, TString formname, Double_t fitrange)
   else if (formname.EqualTo("gaus2fm",TString::kExact)) {
     TFormula form(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)");
     fit  = new TF1(Form("%s_fit",formname.Data()),formname.Data(),-fitrange,fitrange);
-    fit->SetParameters(tempp0,tempp1,tempp2,tempp0/10,tempp2*4);
+    fit->SetParameters(tempp0,tempp1,tempp2,tempp0/2,tempp2*4);
     fit->SetParLimits(2,0,10);
     fit->SetParLimits(4,0,10);
   }
@@ -106,4 +131,41 @@ void drawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2, TString 
   sub2->SetLineWidth(2);
   sub2->SetLineStyle(7);
   sub2->Draw("same");
+}
+
+void getMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t & sigma, Float_t & esigma, TString formname) 
+{
+  if (formname.EqualTo("gaus1",TString::kExact)) {
+    mean   = fit->GetParameter(1);
+    emean  = fit->GetParError (1);
+    sigma  = fit->GetParameter(2);
+    esigma = fit->GetParError (2);
+  }
+  else if (formname.EqualTo("gaus2",TString::kExact)) {
+    const Float_t const1 = fit->GetParameter(0); 
+    const Float_t const2 = fit->GetParameter(3);
+    const Float_t denom =  const1 + const2;
+
+    mean   = (const1*fit->GetParameter(1) + const2*fit->GetParameter(4))/denom;
+    sigma  = (const1*fit->GetParameter(2) + const2*fit->GetParameter(5))/denom;
+
+    emean  = rad2(const1*fit->GetParError(1),const2*fit->GetParError(4));
+    esigma = rad2(const1*fit->GetParError(2),const2*fit->GetParError(5));
+
+    emean  = std::sqrt(emean) /denom;
+    esigma = std::sqrt(esigma)/denom;
+  }
+  else if (formname.EqualTo("gaus2fm",TString::kExact)) {
+    const Float_t const1 = fit->GetParameter(0); 
+    const Float_t const2 = fit->GetParameter(3);
+    const Float_t denom =  const1 + const2;
+
+    mean   = fit->GetParameter(1);
+    sigma  = (const1*fit->GetParameter(2) + const2*fit->GetParameter(4))/denom;
+
+    emean  = fit->GetParError(1);
+    esigma = rad2(const1*fit->GetParError(2),const2*fit->GetParError(4));
+
+    esigma = std::sqrt(esigma)/denom;
+  }
 }

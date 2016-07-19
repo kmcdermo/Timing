@@ -42,7 +42,7 @@ namespace Config{
   static const TString runs         = "config/runs2015D.txt";
 
   // plot config
-  constexpr    Int_t    ntimebins  = 100;
+  constexpr    Int_t    ntimebins  = 40;
   constexpr    Double_t timerange  = 5.0;
   constexpr    Double_t fitrange   = 3.0;
   constexpr    Int_t    nEventsCut = 1000; // for run number plots
