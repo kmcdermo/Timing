@@ -77,6 +77,12 @@ namespace Config{
   constexpr    Float_t etaEElow  = 1.566;
   constexpr    Float_t etaEEhigh = 2.5;
 
+  // time calib
+  constexpr    Float_t el1data = 0.00314862;
+  constexpr    Float_t el2data = 0.00255739;
+  constexpr    Float_t el1mc   = -0.227598;
+  constexpr    Float_t el2mc   = -0.234269;
+
   // if in demo mode
   constexpr    UInt_t demoNum = 1000;
 
