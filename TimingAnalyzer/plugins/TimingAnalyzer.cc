@@ -148,10 +148,12 @@ private:
   // all rec hit info
   std::vector<float> el1rhXs, el1rhYs, el1rhZs, el1rhEs, el1rhtimes;
   std::vector<float> el2rhXs, el2rhYs, el2rhZs, el2rhEs, el2rhtimes;
+  std::vector<int> el1rhids, el2rhids;
 
   // seed info
   float el1seedX, el1seedY, el1seedZ, el1seedE, el1seedtime;
   float el2seedX, el2seedY, el2seedZ, el2seedE, el2seedtime;
+  int el1seedid, el2seedid;
 
   // dielectron info
   float zpt,zeta,zphi,zmass,zE,zp;
@@ -316,11 +318,11 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   el1scX = -999.0; el1scY = -999.0; el1scZ = -999.0; el1scE = -999.0;
   el2scX = -999.0; el2scY = -999.0; el2scZ = -999.0; el2scE = -999.0;
 
-  el1rhXs.clear(); el1rhYs.clear(); el1rhZs.clear(); el1rhEs.clear(); el1rhtimes.clear();
-  el2rhXs.clear(); el2rhYs.clear(); el2rhZs.clear(); el2rhEs.clear(); el2rhtimes.clear();
+  el1rhXs.clear(); el1rhYs.clear(); el1rhZs.clear(); el1rhEs.clear(); el1rhtimes.clear(); el1rhids.clear();
+  el2rhXs.clear(); el2rhYs.clear(); el2rhZs.clear(); el2rhEs.clear(); el2rhtimes.clear(); el2rhids.clear();
 
-  el1seedX = -999.0; el1seedY = -999.0; el1seedZ = -999.0; el1seedE = -999.0; el1seedtime = -99.0;
-  el2seedX = -999.0; el2seedY = -999.0; el2seedZ = -999.0; el2seedE = -999.0; el2seedtime = -99.0;
+  el1seedX = -999.0; el1seedY = -999.0; el1seedZ = -999.0; el1seedE = -999.0; el1seedtime = -99.0; el1seedid = -99;
+  el2seedX = -999.0; el2seedY = -999.0; el2seedZ = -999.0; el2seedE = -999.0; el2seedtime = -99.0; el2seedid = -99;
 
   el1nrh = -99; el2nrh = -99;
 
@@ -396,6 +398,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) {
 
 	DetId recHitId = hafitr->first; // get detid of crystal
+
 	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
 
 	if (recHit != recHits->end()) { // standard check
@@ -406,6 +409,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	  el1rhZs.push_back(recHitPos.z());
 	  el1rhEs.push_back(recHit->energy());
 	  el1rhtimes.push_back(recHit->time());	 
+	  el1rhids.push_back(int(recHitId.rawId()));
 
 	  // save seed info in a flat branch
 	  if (seedDetId == recHitId) { 
@@ -414,6 +418,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	    el1seedZ = el1rhZs.back();
 	    el1seedE = el1rhEs.back();
 	    el1seedtime = el1rhtimes.back();
+	    el1seedid = el1rhids.back();
 	  }
 	}
       } // end loop over all crystals
@@ -450,6 +455,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	  el2rhZs.push_back(recHitPos.z());
 	  el2rhEs.push_back(recHit->energy());
 	  el2rhtimes.push_back(recHit->time());	 
+	  el2rhids.push_back(int(recHitId.rawId()));
 
 	  // save seed info in a flat branch
 	  if (seedDetId == recHitId) { 
@@ -458,6 +464,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	    el2seedZ = el2rhZs.back();
 	    el2seedE = el2rhEs.back();
 	    el2seedtime = el2rhtimes.back();
+	    el2seedid = el2rhids.back();
 	  }
 	}
       } // end loop over all crystals
@@ -659,6 +666,9 @@ void TimingAnalyzer::beginJob() {
   tree->Branch("el2rhEs"              , "std::vector<float>"  , &el2rhEs);
   tree->Branch("el2rhtimes"           , "std::vector<float>"  , &el2rhtimes);
 
+  tree->Branch("el1rhids"             , "std::vector<int>"    , &el1rhids);
+  tree->Branch("el2rhids"             , "std::vector<int>"    , &el2rhids);
+
   // seed crystal info
   tree->Branch("el1seedX"             , &el1seedX             , "el1seedX/F");
   tree->Branch("el1seedY"             , &el1seedY             , "el1seedY/F");
@@ -671,6 +681,9 @@ void TimingAnalyzer::beginJob() {
   tree->Branch("el2seedZ"             , &el2seedZ             , "el2seedZ/F");
   tree->Branch("el2seedE"             , &el2seedE             , "el2seedE/F");
   tree->Branch("el2seedtime"          , &el2seedtime          , "el2seedtime/F");
+
+  tree->Branch("el1seedid"            , &el1seedid            , "el1seedid/I");
+  tree->Branch("el2seedid"            , &el2seedid            , "el2seedid/I");
 
   tree->Branch("el1nrh"               , &el1nrh               , "el1nrh/I");  
   tree->Branch("el2nrh"               , &el2nrh               , "el2nrh/I");  
