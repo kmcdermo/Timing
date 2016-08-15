@@ -173,21 +173,27 @@ public:
   std::vector<float>   *el1rhXs;
   std::vector<float>   *el1rhYs;
   std::vector<float>   *el1rhZs;
+  std::vector<float>   *el1rhEs;
   std::vector<float>   *el1rhtimes;
+  std::vector<int>     *el1rhids;
   std::vector<float>   *el2rhXs;
   std::vector<float>   *el2rhYs;
   std::vector<float>   *el2rhZs;
+  std::vector<float>   *el2rhEs;
   std::vector<float>   *el2rhtimes;
+  std::vector<int>     *el2rhids;
   Float_t         el1seedX;
   Float_t         el1seedY;
   Float_t         el1seedZ;
   Float_t         el1seedE;
   Float_t         el1seedtime;
+  Float_t         el1seedid;
   Float_t         el2seedX;
   Float_t         el2seedY;
   Float_t         el2seedZ;
   Float_t         el2seedE;
   Float_t         el2seedtime;
+  Float_t         el2seedid;
   Int_t           el1nrh;
   Int_t           el2nrh;
   Float_t         zmass;
@@ -214,7 +220,6 @@ public:
   Float_t         genel2pt;
   Float_t         genel2eta;
   Float_t         genel2phi;
-
 
   // List of branches
   TBranch        *b_event;   //!
@@ -255,21 +260,27 @@ public:
   TBranch        *b_el1rhXs;   //!
   TBranch        *b_el1rhYs;   //!
   TBranch        *b_el1rhZs;   //!
+  TBranch        *b_el1rhEs;   //!
   TBranch        *b_el1rhtimes;   //!
+  TBranch        *b_el1rhids;   //!
   TBranch        *b_el2rhXs;   //!
   TBranch        *b_el2rhYs;   //!
   TBranch        *b_el2rhZs;   //!
+  TBranch        *b_el2rhEs;   //!
   TBranch        *b_el2rhtimes;   //!
+  TBranch        *b_el2rhids;   //!
   TBranch        *b_el1seedX;   //!
   TBranch        *b_el1seedY;   //!
   TBranch        *b_el1seedZ;   //!
   TBranch        *b_el1seedE;   //!
   TBranch        *b_el1seedtime;   //!
+  TBranch        *b_el1seedid;   //!
   TBranch        *b_el2seedX;   //!
   TBranch        *b_el2seedY;   //!
   TBranch        *b_el2seedZ;   //!
   TBranch        *b_el2seedE;   //!
   TBranch        *b_el2seedtime;   //!
+  TBranch        *b_el2seedid;   //!
   TBranch        *b_el1nrh;   //!
   TBranch        *b_el2nrh;   //!
   TBranch        *b_zmass;   //!

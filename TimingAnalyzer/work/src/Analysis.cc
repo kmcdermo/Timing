@@ -127,14 +127,19 @@ void Analysis::EventLoop()
       
       // correct for sigma_n
       if (Config::useSigma_n) {
-	el1E     /= Config::sigma_n; el2E     /= Config::sigma_n;
-	el1seedE /= Config::sigma_n; el2seedE /= Config::sigma_n;
+	if (el1eb) {
+	  el1E     /= Config::pednoiseEB; 
+	  el1seedE /= Config::pednoiseEB;
+	  for
+	}
+	el2E     /= Config::sigma_n;
+	el2seedE /= Config::sigma_n;
       }
 
       // get the proper times
       Float_t el1time = -99.0;
-      if   (Config::applyTOF && !Config::wgtedtime) {el1time = TOF(el1seedX,el1seedY,el1seedZ,vtxX,vtxY,vtxZ,el1seedtime)-(fIsMC?Config::el1mc:Config::el1data);}
-      else                                          {el1time = el1seedtime;}
+      if      (!Config::wgtedtime) {el1time = (Config::applyTOF ? TOF(el1seedX,el1seedY,el1seedZ,vtxX,vtxY,vtxZ,el1seedtime)-(fIsMC?Config::el1mc:Config::el1data) : el1seedtime);}
+      else if ( Config::wgtedtime) {el1time = WeightedTime(el1rhXs,el1rhYs,el1rhZs,vtxX,vtxY,vtxZ,el1rhtimes);} // weightedTime includes option for TOF
 
       Float_t el2time = -99.0;
       if   (Config::applyTOF && !Config::wgtedtime) {el2time = TOF(el2seedX,el2seedY,el2seedZ,vtxX,vtxY,vtxZ,el2seedtime)-(fIsMC?Config::el2mc:Config::el2data);}
@@ -168,6 +173,12 @@ void Analysis::EventLoop()
   if (Config::doSingleE)  Analysis::OutputSingleEPlots();
   if (Config::doRuns)     Analysis::OutputRunPlots();
   if (Config::doTrigEff)  Analysis::OutputTrigEffPlots();
+}
+
+inline Float_t WeightedTime(std::vector<>)
+{
+  
+
 }
 
 void Analysis::SetupStandardPlots()
@@ -1460,21 +1471,27 @@ void Analysis::InitTree() {
   fInTree->SetBranchAddress("el1rhXs", &el1rhXs, &b_el1rhXs);
   fInTree->SetBranchAddress("el1rhYs", &el1rhYs, &b_el1rhYs);
   fInTree->SetBranchAddress("el1rhZs", &el1rhZs, &b_el1rhZs);
+  fInTree->SetBranchAddress("el1rhEs", &el1rhEs, &b_el1rhEs);
   fInTree->SetBranchAddress("el1rhtimes", &el1rhtimes, &b_el1rhtimes);
+  fInTree->SetBranchAddress("el1rhids", &el1rhids, &b_el1rhids);
   fInTree->SetBranchAddress("el2rhXs", &el2rhXs, &b_el2rhXs);
   fInTree->SetBranchAddress("el2rhYs", &el2rhYs, &b_el2rhYs);
   fInTree->SetBranchAddress("el2rhZs", &el2rhZs, &b_el2rhZs);
+  fInTree->SetBranchAddress("el2rhEs", &el2rhEs, &b_el2rhEs);
   fInTree->SetBranchAddress("el2rhtimes", &el2rhtimes, &b_el2rhtimes);
+  fInTree->SetBranchAddress("el2rhids", &el2rhids, &b_el2rhids);
   fInTree->SetBranchAddress("el1seedX", &el1seedX, &b_el1seedX);
   fInTree->SetBranchAddress("el1seedY", &el1seedY, &b_el1seedY);
   fInTree->SetBranchAddress("el1seedZ", &el1seedZ, &b_el1seedZ);
   fInTree->SetBranchAddress("el1seedE", &el1seedE, &b_el1seedE);
   fInTree->SetBranchAddress("el1seedtime", &el1seedtime, &b_el1seedtime);
+  fInTree->SetBranchAddress("el1seedid", &el1seedid, &b_el1seedid);
   fInTree->SetBranchAddress("el2seedX", &el2seedX, &b_el2seedX);
   fInTree->SetBranchAddress("el2seedY", &el2seedY, &b_el2seedY);
   fInTree->SetBranchAddress("el2seedZ", &el2seedZ, &b_el2seedZ);
   fInTree->SetBranchAddress("el2seedE", &el2seedE, &b_el2seedE);
   fInTree->SetBranchAddress("el2seedtime", &el2seedtime, &b_el2seedtime);
+  fInTree->SetBranchAddress("el2seedid", &el2seedid, &b_el2seedid);
   fInTree->SetBranchAddress("el1nrh", &el1nrh, &b_el1nrh);
   fInTree->SetBranchAddress("el2nrh", &el2nrh, &b_el2nrh);
   fInTree->SetBranchAddress("zmass", &zmass, &b_zmass);
