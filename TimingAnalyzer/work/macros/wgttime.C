@@ -3,77 +3,144 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TBranch.h"
+#include "TH1F.h"
+#include "TObject.h"
 
 #include <iostream>
 #include <vector>
 #include <utility>
 #include <algorithm>
 
-typedef std::pair<Float_t,Float_t> ETpair;
+static const Float_t N     = 33.2; // ns
+static const Float_t C     = 0.154; // ns
+static const Float_t sn    = 0.0513; // GeV
+static const Float_t sol   = 29.9792458; // cm / ns
+static const Float_t etaEB = 1.4442; // eta boundary of EB
 
-inline bool sortByE(const ETpair & pair1, const ETpair & pair2)
+inline Float_t rad2 (Float_t x, Float_t y){return x*x + y*y;}
+inline Float_t theta(Float_t r, Float_t z){return std::atan2(r,z);}
+inline Float_t eta  (Float_t x, Float_t y, Float_t z)
 {
-  return pair1.first > pair2.first;
+  return -1.0f*std::log(std::tan(theta(std::sqrt(rad2(x,y)),z)/2.f));
+}
+inline Float_t TOF  (Float_t x, Float_t y, Float_t z, Float_t vx, Float_t vy, Float_t vz, Float_t time)
+{
+  return time + (std::sqrt(z*z+rad2(x,y))-std::sqrt((z-vz)*(z-vz)+rad2((x-vx),(y-vy))))/sol;
 }
 
-static const Float_t N  = 33.2; // ns
-static const Float_t C  = 0.154; // ns
-static const Float_t sn = 0.0513; // GeV
+Float_t WeightTime(const std::vector<Float_t> * rhtimes, const std::vector<Float_t> * rhEs, Int_t nrh)
+{
+  Float_t wgtT = 0.0f;
+  Float_t sumS = 0.0f;
+  for (Int_t rh = 0; rh < nrh; rh++)
+  {
+    const Float_t tmpS = (N / ( (*rhEs)[rh] / sn)) + (std::sqrt(2.0f)*C);
+    sumS += 1.0f / (tmpS*tmpS);
+    wgtT += (*rhtimes)[rh] / (tmpS*tmpS);
+  }
+  return wgtT / sumS;
+}
 
 void wgttime()
 {
+  // initialize tree and file + options
   TFile * file = TFile::Open("input/DATA/doubleeg/skimmedtree.root");
   TTree * tree = (TTree*)file->Get("tree/tree");
 
-  std::vector<Float_t> * el1rhEs; TBranch * b_el1rhEs;   
-  tree->SetBranchAddress("el1rhEs", &el1rhEs, &b_el1rhEs);
+  TString el = "el1";
 
-  std::vector<Float_t> * el1rhtimes; TBranch * b_el1rhtimes;   
-  tree->SetBranchAddress("el1rhtimes", &el1rhtimes, &b_el1rhtimes);
+  // initialize branches
+  std::vector<Float_t> * rhtimes; tree->SetBranchAddress(Form("%srhtimes",el.Data()), &rhtimes);
+  std::vector<Float_t> * rhEs; tree->SetBranchAddress(Form("%srhEs",el.Data()), &rhEs);
+  std::vector<Float_t> * rhXs; tree->SetBranchAddress(Form("%srhXs",el.Data()), &rhXs);
+  std::vector<Float_t> * rhYs; tree->SetBranchAddress(Form("%srhYs",el.Data()), &rhYs);
+  std::vector<Float_t> * rhZs; tree->SetBranchAddress(Form("%srhZs",el.Data()), &rhZs);
+
+  Int_t nrh; tree->SetBranchAddress(Form("%snrh",el.Data()),&nrh);
+
+  Float_t seedtime; tree->SetBranchAddress(Form("%sseedtime",el.Data()), &seedtime);
+  Float_t seedE; tree->SetBranchAddress(Form("%sseedE",el.Data()), &seedE);
+  Float_t seedX; tree->SetBranchAddress(Form("%sseedX",el.Data()), &seedX);
+  Float_t seedY; tree->SetBranchAddress(Form("%sseedY",el.Data()), &seedY);
+  Float_t seedZ; tree->SetBranchAddress(Form("%sseedZ",el.Data()), &seedZ);
+
+  Float_t vtxX; tree->SetBranchAddress("vtxX", &vtxX);
+  Float_t vtxY; tree->SetBranchAddress("vtxY", &vtxY);
+  Float_t vtxZ; tree->SetBranchAddress("vtxZ", &vtxZ);
+  
+  // output histograms
+  TH1F * h_seedtime    = new TH1F("h_seedtime",Form("%s seed",el.Data()),200,-25.0,25.0);
+  TH1F * h_seedtimeTOF = new TH1F("h_seedtimeTOF",Form("%s seed TOF",el.Data()),200,-25.0,25.0);
+  TH1F * h_maxtimeTOF  = new TH1F("h_maxEdiff",Form("%s maxE - seedE",el.Data()),40,0,20.0);
+  TH1F * h_rhtimes     = new TH1F("h_rhtimes",Form("%s rhs",el.Data()),200,-25.0,25.0);
+  TH1F * h_rhtimesTOF  = new TH1F("h_rhtimesTOF",Form("%s rhs TOF",el.Data()),200,-25.0,25.0);
+  TH1F * h_weighttime  = new TH1F("h_weighttime",Form("%s weight",el.Data()),40,-5.0,5.0);
+  TH1F * h_difftime    = new TH1F("h_difftime",Form("%s diff",el.Data()),120,-15.0,15.0);
+
+  h_weighttime->Sumw2();
+  h_seedtimeTOF->Sumw2();
 
   for (UInt_t entry = 0; entry < tree->GetEntries(); entry++)
   {
-    if (entry > 10) break;
     tree->GetEntry(entry);
-    //    std::cout << "Entry: " << entry << std::endl;
+    
+    const Float_t seedeta = eta(seedX,seedY,seedZ);
+    if (std::abs(seedeta) > etaEB || nrh < 0) continue;
 
-    // sort first, then calculate
-    std::vector<ETpair> ETpairsVec;
-    for (UInt_t rh = 0; rh < el1rhtimes->size(); rh++)
+    h_seedtime->Fill(seedtime);
+    const Float_t elseedtime = TOF(seedX,seedY,seedZ,vtxX,vtxY,vtxZ,seedtime);
+    h_seedtimeTOF->Fill(elseedtime);
+
+    std::vector<Float_t> elrhtimes(nrh);
+    Float_t maxE = 0.f, maxT = 0.f;
+    for (Int_t rh = 0; rh < nrh; rh++)
     {
-      Float_t tmpE = (*el1rhEs)[rh];
-      Float_t tmpT = (*el1rhtimes)[rh];
-      ETpairsVec.push_back(std::make_pair(tmpE,tmpT));
+      if ((*rhEs)[rh] < 1.f) continue;
+
+      h_rhtimes->Fill((*rhtimes)[rh]);
+      elrhtimes[rh] = TOF( (*rhXs)[rh], (*rhYs)[rh], (*rhZs)[rh], vtxX, vtxY, vtxZ, (*rhtimes)[rh] );
+      h_rhtimesTOF->Fill(elrhtimes[rh]); 
+
+      if ( (*rhEs)[rh] > maxE ) { maxE = (*rhEs)[rh]; maxT = (*rhtimes)[rh]; } //elrhtimes[rh]; }
     }
-    std::sort(ETpairsVec.begin(),ETpairsVec.end(),sortByE);
 
-    Float_t maxE = -999.0f;
-    Float_t maxT = -999.0f;
-    Float_t wgtT = 0.0f;
-    Float_t sumS = 0.0f;
+    if (seedtime != maxT) h_maxtimeTOF->Fill(maxE - seedE);
+    //    if (seedE != maxE) h_maxtimeTOF->Fill(maxT);
+    //    if (std::abs(maxT - elseedtime) > 0.1) h_maxtimeTOF->Fill(maxT);
 
-//     Float_t wgtT_noC = 0.0f;
-//     Float_t sumS_noC = 0.0f;
-    for (UInt_t rh = 0; rh < ETpairsVec.size(); rh++)
-    {
-      const ETpair & pair = ETpairsVec[rh];
-      Float_t tmpE = pair.first;
-      Float_t tmpT = pair.second;
-      Float_t tmpS = (N / (tmpE / sn)) + (std::sqrt(2.0f)*C);
 
-      sumS += 1.0f / (tmpS*tmpS);
-      wgtT += tmpT / (tmpS*tmpS);
-      
-      if (tmpE > maxE) { maxT = tmpT; maxE = tmpE; }
 
-//      std::cout << "tmpT: " << tmpT << " tmpE: " << tmpE << " tmpS: " << tmpS << std::endl;
-//       Float_t tmpS_noC = (N / (tmpE / sn));
-//       sumS_noC += 1.0f / (tmpS_noC * tmpS_noC);
-//       wgtT_noC += tmpT / (tmpS_noC * tmpS_noC);
-    }
-//     std::cout << "==========================" << std::endl << std::endl;
-//     std::cout << "maxE: " << maxE << " maxT: " << maxT << " wgT: " << wgtT/sumS << std::endl;
-//     //" wgT_noC: " << wgtT_noC/sumS_noC << std::endl;
-//     std::cout << "==========================" << std::endl << std::endl;
+
+    //    if (std::abs(maxT - elseedtime) > 0.1) std::cout << maxT << ":" << elseedtime << std::endl;
+//     if (std::abs(maxT - seedtime) > 0.1){
+//       std::cout << "Entry: " << entry << std::endl
+// 		<< " maxT: " << maxT << " seedT: " << seedtime << std::endl
+// 		<< " maxE: " << maxE << " seedE: " << seedE << std::endl;
+//     }
+
+    const Float_t elweighttime = WeightTime(rhtimes, rhEs, nrh);
+    h_weighttime->Fill(elweighttime);
+    h_difftime->Fill(elweighttime-elseedtime);
   }
+
+  TFile * outfile = new TFile("outtimes.root","UPDATE");
+  outfile->cd();
+
+  h_seedtime->Write(h_seedtime->GetName(),TObject::kWriteDelete);
+  h_seedtimeTOF->Write(h_seedtimeTOF->GetName(),TObject::kWriteDelete);
+  h_maxtimeTOF->Write(h_maxtimeTOF->GetName(),TObject::kWriteDelete);
+  h_rhtimes->Write(h_rhtimes->GetName(),TObject::kWriteDelete);
+  h_rhtimesTOF->Write(h_rhtimesTOF->GetName(),TObject::kWriteDelete);
+  h_weighttime->Write(h_weighttime->GetName(),TObject::kWriteDelete);
+  h_difftime->Write(h_difftime->GetName(),TObject::kWriteDelete);
+
+
+
+  
+
+
+
+
+
+
 }
