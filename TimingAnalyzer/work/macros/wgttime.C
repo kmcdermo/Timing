@@ -5,11 +5,15 @@
 #include "TBranch.h"
 #include "TH1F.h"
 #include "TObject.h"
+#include "TStyle.h"
 
 #include <iostream>
 #include <vector>
 #include <utility>
 #include <algorithm>
+
+typedef std::pair<Float_t,Float_t> ETPair; // time, energy
+typedef std::vector<ETPair> ETPairVec;
 
 static const Float_t N     = 33.2; // ns
 static const Float_t C     = 0.154; // ns
@@ -28,21 +32,24 @@ inline Float_t TOF  (Float_t x, Float_t y, Float_t z, Float_t vx, Float_t vy, Fl
   return time + (std::sqrt(z*z+rad2(x,y))-std::sqrt((z-vz)*(z-vz)+rad2((x-vx),(y-vy))))/sol;
 }
 
-Float_t WeightTime(const std::vector<Float_t> * rhtimes, const std::vector<Float_t> * rhEs, Int_t nrh)
+Float_t WeightTime(const ETPairVec & etrhpairs)
 {
   Float_t wgtT = 0.0f;
   Float_t sumS = 0.0f;
-  for (Int_t rh = 0; rh < nrh; rh++)
+  for (UInt_t rh = 0; rh < etrhpairs.size(); rh++)
   {
-    const Float_t tmpS = (N / ( (*rhEs)[rh] / sn)) + (std::sqrt(2.0f)*C);
+    const ETPair & etrhpair = etrhpairs[rh];
+    const Float_t tmpS = (N / ( etrhpair.second / sn)) + (std::sqrt(2.0f)*C);
     sumS += 1.0f / (tmpS*tmpS);
-    wgtT += (*rhtimes)[rh] / (tmpS*tmpS);
+    wgtT += etrhpair.first / (tmpS*tmpS);
   }
   return wgtT / sumS;
 }
 
 void wgttime()
 {
+  gStyle->SetOptStat("emou");
+
   // initialize tree and file + options
   TFile * file = TFile::Open("input/DATA/doubleeg/skimmedtree.root");
   TTree * tree = (TTree*)file->Get("tree/tree");
@@ -58,6 +65,8 @@ void wgttime()
 
   Int_t nrh; tree->SetBranchAddress(Form("%snrh",el.Data()),&nrh);
 
+  Float_t scE; tree->SetBranchAddress(Form("%sscE",el.Data()), &scE);
+
   Float_t seedtime; tree->SetBranchAddress(Form("%sseedtime",el.Data()), &seedtime);
   Float_t seedE; tree->SetBranchAddress(Form("%sseedE",el.Data()), &seedE);
   Float_t seedX; tree->SetBranchAddress(Form("%sseedX",el.Data()), &seedX);
@@ -69,16 +78,27 @@ void wgttime()
   Float_t vtxZ; tree->SetBranchAddress("vtxZ", &vtxZ);
   
   // output histograms
-  TH1F * h_seedtime    = new TH1F("h_seedtime",Form("%s seed",el.Data()),200,-25.0,25.0);
-  TH1F * h_seedtimeTOF = new TH1F("h_seedtimeTOF",Form("%s seed TOF",el.Data()),200,-25.0,25.0);
-  TH1F * h_maxtimeTOF  = new TH1F("h_maxEdiff",Form("%s maxE - seedE",el.Data()),40,0,20.0);
-  TH1F * h_rhtimes     = new TH1F("h_rhtimes",Form("%s rhs",el.Data()),200,-25.0,25.0);
-  TH1F * h_rhtimesTOF  = new TH1F("h_rhtimesTOF",Form("%s rhs TOF",el.Data()),200,-25.0,25.0);
-  TH1F * h_weighttime  = new TH1F("h_weighttime",Form("%s weight",el.Data()),40,-5.0,5.0);
-  TH1F * h_difftime    = new TH1F("h_difftime",Form("%s diff",el.Data()),120,-15.0,15.0);
+  TH1F * h_seedtime    = new TH1F("h_seedtime",Form("%s seed time",el.Data()),200,-25.0,25.0);
+  TH1F * h_seedtimeTOF = new TH1F("h_seedtimeTOF",Form("%s seed time [TOF]",el.Data()),200,-25.0,25.0);
+  TH1F * h_rhtimes     = new TH1F("h_rhtimes",Form("%s recHits (E > 1 GeV) time",el.Data()),200,-25.0,25.0);
+  TH1F * h_rhtimesTOF  = new TH1F("h_rhtimesTOF",Form("%s recHits (E > 1 GeV) time [TOF]",el.Data()),200,-25.0,25.0);
+  TH1F * h_diffE       = new TH1F("h_diffE",Form("%s maxE - seedE",el.Data()),100,0.0,20.0);
+  TH1F * h_weighttime  = new TH1F("h_weighttime",Form("%s weighted time",el.Data()),200,-25.0,25.0);
+  TH1F * h_difftime    = new TH1F("h_difftime",Form("%s weighted time - seed time [TOF]",el.Data()),200,-25.0,25.0);
 
-  h_weighttime->Sumw2();
+  TH1F * h_nrh_sc30     = new TH1F("h_nrh_sc30",Form("%s nRecHits (SCE > 30 GeV)",el.Data()),200,0,200);
+  TH1F * h_nrh_sc30_rh1 = new TH1F("h_nrh_sc30_rh1",Form("%s nRecHits (SCE > 30 GeV, rhE > 1 GeV)",el.Data()),200,0,200);
+
+  h_seedtime->Sumw2();
   h_seedtimeTOF->Sumw2();
+  h_rhtimes->Sumw2();
+  h_rhtimesTOF->Sumw2();
+  h_diffE->Sumw2();
+  h_weighttime->Sumw2();
+  h_difftime->Sumw2();
+  
+  h_nrh_sc30->Sumw2();
+  h_nrh_sc30_rh1->Sumw2();
 
   for (UInt_t entry = 0; entry < tree->GetEntries(); entry++)
   {
@@ -88,39 +108,34 @@ void wgttime()
     if (std::abs(seedeta) > etaEB || nrh < 0) continue;
 
     h_seedtime->Fill(seedtime);
-    const Float_t elseedtime = TOF(seedX,seedY,seedZ,vtxX,vtxY,vtxZ,seedtime);
-    h_seedtimeTOF->Fill(elseedtime);
+    const Float_t seedtimeTOF = TOF(seedX,seedY,seedZ,vtxX,vtxY,vtxZ,seedtime);
+    h_seedtimeTOF->Fill(seedtimeTOF);
 
-    std::vector<Float_t> elrhtimes(nrh);
-    Float_t maxE = 0.f, maxT = 0.f;
+    ETPairVec etrhpairs;
+    Float_t maxE = 0, maxtime = 0;
+    Int_t nrh_gt1 = 0;
     for (Int_t rh = 0; rh < nrh; rh++)
     {
-      if ((*rhEs)[rh] < 1.f) continue;
+      if ((*rhEs)[rh] < 1.f) continue; // 1 GeV cut on recHit times
+      nrh_gt1++;
 
       h_rhtimes->Fill((*rhtimes)[rh]);
-      elrhtimes[rh] = TOF( (*rhXs)[rh], (*rhYs)[rh], (*rhZs)[rh], vtxX, vtxY, vtxZ, (*rhtimes)[rh] );
-      h_rhtimesTOF->Fill(elrhtimes[rh]); 
+      etrhpairs.push_back( std::make_pair( TOF( (*rhXs)[rh], (*rhYs)[rh], (*rhZs)[rh], vtxX, vtxY, vtxZ, (*rhtimes)[rh] ) , (*rhEs)[rh] ) );
+      h_rhtimesTOF->Fill(etrhpairs.back().first); 
 
-      if ( (*rhEs)[rh] > maxE ) { maxE = (*rhEs)[rh]; maxT = (*rhtimes)[rh]; } //elrhtimes[rh]; }
+      if (etrhpairs.back().second > maxE) { maxE = etrhpairs.back().second; maxtime = etrhpairs.back().first; } 
     }
+    if (maxE != seedE) { h_diffE->Fill(maxE - seedE); std::cout << entry << std::endl; }
 
-    if (seedtime != maxT) h_maxtimeTOF->Fill(maxE - seedE);
-    //    if (seedE != maxE) h_maxtimeTOF->Fill(maxT);
-    //    if (std::abs(maxT - elseedtime) > 0.1) h_maxtimeTOF->Fill(maxT);
+    const Float_t weighttime = WeightTime(etrhpairs);
+    h_weighttime->Fill(weighttime);
+    h_difftime->Fill(weighttime-seedtimeTOF);
 
-
-
-
-    //    if (std::abs(maxT - elseedtime) > 0.1) std::cout << maxT << ":" << elseedtime << std::endl;
-//     if (std::abs(maxT - seedtime) > 0.1){
-//       std::cout << "Entry: " << entry << std::endl
-// 		<< " maxT: " << maxT << " seedT: " << seedtime << std::endl
-// 		<< " maxE: " << maxE << " seedE: " << seedE << std::endl;
-//     }
-
-    const Float_t elweighttime = WeightTime(rhtimes, rhEs, nrh);
-    h_weighttime->Fill(elweighttime);
-    h_difftime->Fill(elweighttime-elseedtime);
+    if (scE > 30.0) 
+    {
+      h_nrh_sc30->Fill(nrh);
+      h_nrh_sc30_rh1->Fill(nrh_gt1);
+    }
   }
 
   TFile * outfile = new TFile("outtimes.root","UPDATE");
@@ -128,19 +143,12 @@ void wgttime()
 
   h_seedtime->Write(h_seedtime->GetName(),TObject::kWriteDelete);
   h_seedtimeTOF->Write(h_seedtimeTOF->GetName(),TObject::kWriteDelete);
-  h_maxtimeTOF->Write(h_maxtimeTOF->GetName(),TObject::kWriteDelete);
   h_rhtimes->Write(h_rhtimes->GetName(),TObject::kWriteDelete);
   h_rhtimesTOF->Write(h_rhtimesTOF->GetName(),TObject::kWriteDelete);
+  h_diffE->Write(h_diffE->GetName(),TObject::kWriteDelete);
   h_weighttime->Write(h_weighttime->GetName(),TObject::kWriteDelete);
   h_difftime->Write(h_difftime->GetName(),TObject::kWriteDelete);
 
-
-
-  
-
-
-
-
-
-
+  h_nrh_sc30->Write(h_nrh_sc30->GetName(),TObject::kWriteDelete);
+  h_nrh_sc30_rh1->Write(h_nrh_sc30_rh1->GetName(),TObject::kWriteDelete);
 }
