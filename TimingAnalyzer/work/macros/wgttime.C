@@ -132,7 +132,7 @@ void wgttime()
 
       if (etrhpairs.back().second > maxE) { maxE = etrhpairs.back().second; maxtime = etrhpairs.back().first; } 
     }
-    if (maxE != seedE) { h_diffE->Fill(maxE - seedE); }
+    if (maxE != seedE) { h_diffE->Fill(maxE - seedE); std::cout << entry << std::endl;}
 
     const Float_t weighttime = WeightTime(etrhpairs);
     h_weighttime->Fill(weighttime);

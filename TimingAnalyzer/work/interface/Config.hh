@@ -19,7 +19,8 @@ namespace Config{
   // general config
   constexpr    Float_t PI  = 3.14159265358979323846;
   constexpr    Float_t sol = 29.9792458; // speed of light in cm / ns
-  constexpr    Float_t sigma_n = 0.2; // 200 MeV
+  constexpr    Float_t sigma_nEB = 0.0513466; // 51 MeV
+  constexpr    Float_t sigma_nEE = 0.126938; // 127 MeV
 
   // output config
   constexpr    Float_t lumi      = 2.301; // brilcalc lumi --normtag /afs/cern.ch/user/l/lumipro/public/normtag_file/moriond16_normtag.json -i rereco2015D.txt -u /fb
@@ -78,10 +79,10 @@ namespace Config{
   constexpr    Float_t etaEEhigh = 2.5;
 
   // time calib
-  constexpr    Float_t el1data = 0.00314862;
-  constexpr    Float_t el2data = 0.00255739;
-  constexpr    Float_t el1mc   = -0.227598;
-  constexpr    Float_t el2mc   = -0.234269;
+  constexpr    Float_t el1data = 0.00169548; // 0.00314862;  
+  constexpr    Float_t el2data = 0.00070326; // 0.00255739; 
+  constexpr    Float_t el1mc   = -0.227449; // -0.227598;
+  constexpr    Float_t el2mc   = -0.234309; // -0.234269; 
 
   // if in demo mode
   constexpr    UInt_t demoNum = 1000;

@@ -12,7 +12,7 @@ void setUpPlotMaps()
   // read in from config all the appropriate bins
 
   // effective first
-  TStrVec effstrings = {"inclusive","EBEB","EBEE","EEEE","EPEP","EMEM"};
+  TStrVec effstrings = {"inclusive","EBEB","EEEE","EPEP","EMEM"};
   for (int i = 0; i < effstrings.size(); i++) {
     std::ifstream ineffE;
     ineffE.open(Form("config/effE_%s_bins.txt",effstrings[i].Data()),std::ios::in);
@@ -75,7 +75,11 @@ void setUpPlotMaps()
   if (Config::useSigma_n) {
     for (TStrDblVMap::iterator viter = Config::XBinsMap.begin(); viter != Config::XBinsMap.end(); ++viter){
       for (int i = 0; i < (*viter).second.size(); i++) {
-	(*viter).second[i] /= Config::sigma_n;
+	TString label = (*viter).first;
+	if      (label.Contains("EB",TString::kExact)) {(*viter).second[i] /= Config::sigma_nEB;}
+	else if (label.Contains("EE",TString::kExact)) {(*viter).second[i] /= Config::sigma_nEE;}
+	else if (label.Contains("EM",TString::kExact)) {(*viter).second[i] /= Config::sigma_nEE;}
+	else if (label.Contains("EP",TString::kExact)) {(*viter).second[i] /= Config::sigma_nEE;}
       }
     }
 

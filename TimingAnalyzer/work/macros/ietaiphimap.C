@@ -55,7 +55,7 @@ void ietaiphimap()
   Float_t seedE;    tree->SetBranchAddress(Form("%sseedE",el.Data()), &seedE);
 
   // output histograms
-  UInt_t entry = 1213;
+  UInt_t entry = 601; //49, 601, 833, 1213, 1675, 1809, 1857, 1979, 2308
   tree->GetEntry(entry);
 
   Int_t minphi = 1000, maxphi = -1;
@@ -63,10 +63,13 @@ void ietaiphimap()
   Float_t maxE = -1.f;
   for (Int_t rh = 0; rh < nrh; rh++)
   {
+    const Float_t tmpE = (*rhEs)[rh];    
+
+    if (tmpE < 1) continue;
+
     const Int_t detid = (*rhids)[rh]; 
     const Int_t tmpphi = epids[detid].i1_; 
     const Int_t tmpeta = epids[detid].i2_;
-    const Float_t tmpE = (*rhEs)[rh];
 
     if (tmpphi > maxphi) maxphi = tmpphi;
     if (tmpphi < minphi) minphi = tmpphi;
@@ -93,15 +96,26 @@ void ietaiphimap()
     h_map->GetYaxis()->SetBinLabel(ybin,Form("%i",label));
   }
 
+  std::ofstream output;
+  output.open("scdump.txt",std::ios_base::app);
+  output << "Event: " << entry << std::endl;
+  output << "----------------" << std::endl;
   for (Int_t rh = 0; rh < nrh; rh++)
   {
+    const Float_t tmpE = (*rhEs)[rh];    
+
+    if (tmpE < 1) continue;
+
     const Int_t detid = (*rhids)[rh]; 
     const Int_t tmpphi = epids[detid].i1_; 
     const Int_t tmpeta = epids[detid].i2_;
-    const Float_t tmpE = (*rhEs)[rh];
 
     h_map->Fill(tmpeta,tmpphi,tmpE);
-  }
 
+    output << "Detid " << detid << " ieta " << tmpeta << " iphi " << tmpphi << " energy " << tmpE << " time " << (*rhtimes)[rh] << std::endl;
+  }
+  output << "----------------" << std::endl << std::endl;
+  output.close();
+  
   h_map->Draw("colz");
 }

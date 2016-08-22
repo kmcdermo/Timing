@@ -525,8 +525,11 @@ void StackPlots::InitTH1FNamesAndSubDNames(){
   TString plotname; TString subdir;
 
   while (plotstoread >> plotname >> subdir) {
-    fTH1FNames.push_back(plotname);
-    fTH1FSubDMap[plotname] = subdir;
+    if (!plotname.Contains("runs",TString::kExact)
+    {
+      fTH1FNames.push_back(plotname);
+      fTH1FSubDMap[plotname] = subdir;
+    }
   }
   plotstoread.close();
 

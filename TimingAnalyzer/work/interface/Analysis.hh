@@ -187,13 +187,13 @@ public:
   Float_t         el1seedZ;
   Float_t         el1seedE;
   Float_t         el1seedtime;
-  Float_t         el1seedid;
+  Int_t           el1seedid;
   Float_t         el2seedX;
   Float_t         el2seedY;
   Float_t         el2seedZ;
   Float_t         el2seedE;
   Float_t         el2seedtime;
-  Float_t         el2seedid;
+  Int_t           el2seedid;
   Int_t           el1nrh;
   Int_t           el2nrh;
   Float_t         zmass;
