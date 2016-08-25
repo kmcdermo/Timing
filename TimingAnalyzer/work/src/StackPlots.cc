@@ -20,7 +20,7 @@ StackPlots::StackPlots() {
   MakeOutDir(fOutDir); // make output directory 
   fOutFile = new TFile(Form("%s/stackplots_canvases.root",fOutDir.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
 
-  // have to copy by hand plots to use unfortunately
+  // Read in names of plots to be stacked
   StackPlots::InitTH1FNamesAndSubDNames();
   
   // make stack outputs
@@ -484,6 +484,7 @@ void StackPlots::InitOutputLegends() {
     fTH1FLegends[th1f]->SetLineColor(kBlack);
   }
 }
+
 void StackPlots::InitRatioPlots() {
   // th1f hists
   fOutRatioTH1FHists.resize(fNTH1F);
@@ -525,11 +526,8 @@ void StackPlots::InitTH1FNamesAndSubDNames(){
   TString plotname; TString subdir;
 
   while (plotstoread >> plotname >> subdir) {
-    if (!plotname.Contains("runs",TString::kExact)
-    {
-      fTH1FNames.push_back(plotname);
-      fTH1FSubDMap[plotname] = subdir;
-    }
+    fTH1FNames.push_back(plotname);
+    fTH1FSubDMap[plotname] = subdir;
   }
   plotstoread.close();
 

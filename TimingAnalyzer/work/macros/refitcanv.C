@@ -12,13 +12,13 @@ void prepFit(TH1F *& hist, TF1 *& fit, TString formname, Double_t fitrange, Doub
 void drawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2, TString formname, Double_t fitrange); 
 void getMeanSigma(TF1 *& fit, Double_t & mean, Double_t & emean, Double_t & sigma, Double_t & esigma, TString formname);
 
-void refitcanv(TString tisMC, TString fitdir, TString name, TString bins, TString tbin, TString tg1, TString tg2)
+void refitcanv(TString tisMC, TString fitdir, TString name, TString bins, TString tbin, TString tg1 = 1, TString tg2 = 1)
 {
   Bool_t  isMC = tisMC.Atoi();
   Int_t    bin = tbin.Atoi();
   Double_t  g1 = tg1.Atof();
   Double_t  g2 = tg2.Atof();
-  TString indir    = "output";
+  TString indir    = "gaus2fm";
   TString formname = "gaus2fm";
 
   TString outdir = Form("%s/%s",indir.Data(), (isMC?"MC/dyll":"DATA/doubleeg") );
@@ -47,7 +47,7 @@ void refitcanv(TString tisMC, TString fitdir, TString name, TString bins, TStrin
   drawSubComp(fit,outcanv,sub1,sub2,formname,fitrange);
 
   // now save the new fit as a png
-  outcanv->SaveAs(Form("%s/%s_refit.png",fitdir.Data(),outcanv->GetName()));
+  //  outcanv->SaveAs(Form("%s/%s_refit.png",fitdir.Data(),outcanv->GetName()));
   
   // now compute mean + sigma of new fit, print out and save it in appropriate histogram
   Double_t mean, sigma, emean, esigma;
@@ -102,13 +102,13 @@ void prepFit(TH1F *& hist, TF1 *& fit, TString formname, Double_t fitrange, Doub
   else if (formname.EqualTo("gaus2fm",TString::kExact)) {
     TFormula form(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)");
     fit  = new TF1(Form("%s_fit",formname.Data()),formname.Data(),-fitrange,fitrange);
-//     fit->SetParameters(tempp0,tempp1,tempp2,tempp0/g1,tempp2*g2);
-//     fit->SetParLimits(2,0,10);
-//     fit->SetParLimits(4,0,10);
+    fit->SetParameters(tempp0,tempp1,tempp2,tempp0/g1,tempp2*g2);
+    fit->SetParLimits(2,0,10);
+    fit->SetParLimits(4,0,10);
 
-     fit->SetParameters(tempp0,tempp1,tempp2,0,1);
-     fit->SetParLimits(3,0,5);
-     fit->SetParLimits(4,0,5);
+//      fit->SetParameters(tempp0,tempp1,tempp2,0,1);
+//      fit->SetParLimits(3,0,4);
+//      fit->SetParLimits(4,0,4);
   }
 
   fit->SetLineColor(kMagenta-3); 
