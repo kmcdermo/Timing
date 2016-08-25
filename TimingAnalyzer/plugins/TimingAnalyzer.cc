@@ -4,6 +4,7 @@
 #include <vector>
 #include <utility>
 #include <map>
+#include <unordered_map>
 #include <string>
 #include <cmath>
 #include <algorithm>
@@ -395,6 +396,10 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
       // loop over all crystals
       DetIdPairVec hitsAndFractions = el1sc->hitsAndFractions(); // all crystals in SC
+
+      std::cout << "run: " << run << " event: " << event << std::endl; 
+      //      std::unordered_map<int,int> detcounts;
+	  
       for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) {
 
 	DetId recHitId = hafitr->first; // get detid of crystal
@@ -402,6 +407,10 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
 
 	if (recHit != recHits->end()) { // standard check
+	  //	  int id = int(recHitId.rawId());
+	  // if (detcounts.count(id) > 0) std::cout << "UH OH MULTIPLE IDS: " << id << std::endl;
+	  // detcounts[id]++;
+
 	  // save position, energy, and time of each crystal to a vector
 	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
 	  el1rhXs.push_back(recHitPos.x());
@@ -420,8 +429,18 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	    el1seedtime = el1rhtimes.back();
 	    el1seedid = el1rhids.back();
 	  }
+	  if (recHit->energy() > 1.0) 
+	    std::cout << "Detid: " << recHitId.rawId() << " x: " << recHitPos.x() << " y: " << recHitPos.y() << " z: " << recHitPos.z() 
+	   	      << " E: " << recHit->energy() << " time: " << recHit->time() << std::endl;
 	}
       } // end loop over all crystals
+
+      // for (std::unordered_map<int,int>::iterator siter = detcounts.begin(); siter != detcounts.end(); ++siter)
+      // {
+      // 	std::cout << (*siter).first << " " << (*siter).second << std::endl;
+      // }
+
+      std::cout << std::endl;
       el1nrh = el1rhtimes.size(); // save the number of valid rechits
     } // end check over supercluster
 
