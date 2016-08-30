@@ -148,7 +148,7 @@ void Analysis::EventLoop()
       if (Config::doZvars)    Analysis::FillZPlots(weight,timediff);
       if (Config::doEffE)     Analysis::FillEffEPlots(weight,timediff,effE,effseedE,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
       if (Config::doNvtx)     Analysis::FillNvtxPlots(weight,timediff,el1time,el2time,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
-      if (Config::doEta)      Analysis::FillEtaPlots(weight,timediff,el1time,el2time,el1seedeta,el2seedeta);
+      if (Config::doEta)      Analysis::FillEtaPlots(weight,timediff,el1time,el2time,el1seedeta,el2seedeta,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
       if (Config::doVtxZ)     Analysis::FillVtxZPlots(weight,timediff,el1time,el2time);
       if (Config::doSingleE)  Analysis::FillSingleEPlots(weight,el1time,el2time,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
       if (Config::doRuns)     Analysis::FillRunPlots(weight,timediff,el1eb,el1ee,el2eb,el2ee);
@@ -213,6 +213,9 @@ void Analysis::SetupStandardPlots()
   standardTH1Map["el2pt"]      = Analysis::MakeTH1Plot("el2pt","",100,0.,300.,"Subleading Electron p_{T} [GeV/c]","Events",standardTH1SubMap,"standard/el2");
   standardTH1Map["el2p"]       = Analysis::MakeTH1Plot("el2p","",100,0.,1000.,"Subleading Electron p [GeV/c]","Events",standardTH1SubMap,"standard/el2");
   standardTH1Map["el2scE"]     = Analysis::MakeTH1Plot("el2scE","",100,0.,1000.,"Subleading Electron SuperCluster Energy [GeV]","Events",standardTH1SubMap,"standard/el2");
+
+  standardTH1Map["deta"]     = Analysis::MakeTH1Plot("deta","",100,0.0,3.0,"|#Delta(#eta_{1}-#eta_{2})|","Events",standardTH1SubMap,"standard/deta");
+  standardTH1Map["dseedeta"] = Analysis::MakeTH1Plot("dseedeta","",100,0.0,3.0,"|#Delta(seed#eta_{1}-seed#eta_{2})|","Events",standardTH1SubMap,"standard/deta");
 
   // el1 E
   if (!Config::useSigma_n) standardTH1Map["el1E_inclusive"] = Analysis::MakeTH1Plot("el1E_inclusive","",100,0.,Config::XBinsMap["el1E_inclusive"].back(),Form("Leading Electron %s (inclusive)",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard/el1/E");
@@ -340,15 +343,33 @@ void Analysis::SetupNvtxPlots()
 
 void Analysis::SetupEtaPlots()
 {
+  /////////////////////////////////////
+  // 2D plots for td vs diff in etas //
+  /////////////////////////////////////
+  for (Int_t i = 0; i < 26; i++){detabins.push_back(i/10.);}
+  deta2DMap["td_deta"]     = Analysis::MakeTH2Plot("td_deta","",detabins,Config::ntimebins,-Config::timerange,Config::timerange,"|#Delta(#eta_{1}-#eta_{2})|","Dielectron Seed Time Difference [ns]",deta2DSubMap,"timing/eta/deta");  
+  deta2DMap["td_dseedeta_inclusive"] = Analysis::MakeTH2Plot("td_dseedeta_inclusive","",detabins,Config::ntimebins,-Config::timerange,Config::timerange,"|#Delta(seed#eta_{1}-seed#eta_{2})|","Dielectron Seed Time Difference [ns]",deta2DSubMap,"timing/eta/dseedeta/inclusive");  
+  deta2DMap["td_dseedeta_EBEB"] = Analysis::MakeTH2Plot("td_dseedeta_EBEB","",detabins,Config::ntimebins,-Config::timerange,Config::timerange,"|#Delta(seed#eta_{1}-seed#eta_{2})| (EBEB)","Dielectron Seed Time Difference [ns]",deta2DSubMap,"timing/eta/dseedeta/EBEB");  
+  deta2DMap["td_dseedeta_EEEE"] = Analysis::MakeTH2Plot("td_dseedeta_EEEE","",detabins,Config::ntimebins,-Config::timerange,Config::timerange,"|#Delta(seed#eta_{1}-seed#eta_{2})| (EEEE)","Dielectron Seed Time Difference [ns]",deta2DSubMap,"timing/eta/dseedeta/EEEE");  
+  deta2DMap["td_dseedeta_EPEP"] = Analysis::MakeTH2Plot("td_dseedeta_EPEP","",detabins,Config::ntimebins,-Config::timerange,Config::timerange,"|#Delta(seed#eta_{1}-seed#eta_{2})| (EPEP)","Dielectron Seed Time Difference [ns]",deta2DSubMap,"timing/eta/dseedeta/EPEP");  
+  deta2DMap["td_dseedeta_EMEM"] = Analysis::MakeTH2Plot("td_dseedeta_EMEM","",detabins,Config::ntimebins,-Config::timerange,Config::timerange,"|#Delta(seed#eta_{1}-seed#eta_{2})| (EMEM)","Dielectron Seed Time Difference [ns]",deta2DSubMap,"timing/eta/dseedeta/EMEM");  
+  deta2DMap["td_dseedeta_EPEM"] = Analysis::MakeTH2Plot("td_dseedeta_EPEM","",detabins,Config::ntimebins,-Config::timerange,Config::timerange,"|#Delta(seed#eta_{1}-seed#eta_{2})| (EPEM)","Dielectron Seed Time Difference [ns]",deta2DSubMap,"timing/eta/dseedeta/EPEM");  
+  deta2DMap["td_dseedeta_EBEE"] = Analysis::MakeTH2Plot("td_dseedeta_EBEE","",detabins,Config::ntimebins,-Config::timerange,Config::timerange,"|#Delta(seed#eta_{1}-seed#eta_{2})| (EBEE)","Dielectron Seed Time Difference [ns]",deta2DSubMap,"timing/eta/dseedeta/EBEE/inclusive");  
+  deta2DMap["td_dseedeta_EBEE_slice0"] = Analysis::MakeTH2Plot("td_dseedeta_EBEE_slice0","",detabins,Config::ntimebins,-Config::timerange,Config::timerange,"|#Delta(seed#eta_{1}-seed#eta_{2})| (EBEE: EB < 0.36)","Dielectron Seed Time Difference [ns]",deta2DSubMap,"timing/eta/dseedeta/EBEE/slice0");  
+  deta2DMap["td_dseedeta_EBEE_slice1"] = Analysis::MakeTH2Plot("td_dseedeta_EBEE_slice1","",detabins,Config::ntimebins,-Config::timerange,Config::timerange,"|#Delta(seed#eta_{1}-seed#eta_{2})| (EBEE: 0.36 #leq EB < 0.72)","Dielectron Seed Time Difference [ns]",deta2DSubMap,"timing/eta/dseedeta/EBEE/slice1");  
+  deta2DMap["td_dseedeta_EBEE_slice2"] = Analysis::MakeTH2Plot("td_dseedeta_EBEE_slice2","",detabins,Config::ntimebins,-Config::timerange,Config::timerange,"|#Delta(seed#eta_{1}-seed#eta_{2})| (EBEE: 0.72 #leq EB < 1.08)","Dielectron Seed Time Difference [ns]",deta2DSubMap,"timing/eta/dseedeta/EBEE/slice2");  
+  deta2DMap["td_dseedeta_EBEE_slice3"] = Analysis::MakeTH2Plot("td_dseedeta_EBEE_slice3","",detabins,Config::ntimebins,-Config::timerange,Config::timerange,"|#Delta(seed#eta_{1}-seed#eta_{2})| (EBEE: 1.08 #leq EB < 1.4442)","Dielectron Seed Time Difference [ns]",deta2DSubMap,"timing/eta/dseedeta/EBEE/slice3");  
+
+
   ///////////////////////////////////////
   // 2D plots for td vs single el etas //
   ///////////////////////////////////////
   for (Int_t i = 0; i < 21; i++){eletabins.push_back(i/4. - 2.5);}
-  eleta2DMap["td_el1eta"]     = Analysis::MakeTH2Plot("td_el1eta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Leading Electron #eta","Dielectron Seed Time Difference [ns]",eleta2DSubMap,"timing/singleeta/el1eta");  
-  eleta2DMap["td_el1seedeta"] = Analysis::MakeTH2Plot("td_el1seedeta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Leading Electron Seed #eta","Dielectron Seed Time Difference [ns]",eleta2DSubMap,"timing/singleeta/el1seedeta");  
+  eleta2DMap["td_el1eta"]     = Analysis::MakeTH2Plot("td_el1eta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Leading Electron #eta","Dielectron Seed Time Difference [ns]",eleta2DSubMap,"timing/eta/el1eta");  
+  eleta2DMap["td_el1seedeta"] = Analysis::MakeTH2Plot("td_el1seedeta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Leading Electron Seed #eta","Dielectron Seed Time Difference [ns]",eleta2DSubMap,"timing/eta/el1seedeta");  
 
-  eleta2DMap["td_el2eta"]     = Analysis::MakeTH2Plot("td_el2eta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Subleading Electron #eta","Dielectron Seed Time Difference [ns]",eleta2DSubMap,"timing/singleeta/el2eta");  
-  eleta2DMap["td_el2seedeta"] = Analysis::MakeTH2Plot("td_el2seedeta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Subleading Electron Seed #eta","Dielectron Seed Time Difference [ns]",eleta2DSubMap,"timing/singleeta/el2seedeta");  
+  eleta2DMap["td_el2eta"]     = Analysis::MakeTH2Plot("td_el2eta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Subleading Electron #eta","Dielectron Seed Time Difference [ns]",eleta2DSubMap,"timing/eta/el2eta");  
+  eleta2DMap["td_el2seedeta"] = Analysis::MakeTH2Plot("td_el2seedeta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Subleading Electron Seed #eta","Dielectron Seed Time Difference [ns]",eleta2DSubMap,"timing/eta/el2seedeta");  
 
   //////////////////////////////
   // Single El timing vs etas //
@@ -499,6 +520,9 @@ void Analysis::FillStandardPlots(const Float_t weight, const Float_t timediff, c
   standardTH1Map["el2p"]->Fill(el2p,weight);
   standardTH1Map["el2scE"]->Fill(el2scE,weight);
 
+  standardTH1Map["deta"]->Fill(std::abs(el1eta-el2eta),weight);
+  standardTH1Map["dseedeta"]->Fill(std::abs(el1seedeta-el2seedeta),weight);
+ 
   // inclusive single electron timing and energy
   // el1
   if (!Config::useSigma_n) {
@@ -624,6 +648,8 @@ void Analysis::FillEffEPlots(const Float_t weight, const Float_t timediff, const
 void Analysis::FillNvtxPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time,
 			     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em)
 {
+  if (el1seedE < 25.0 || el2seedE < 25.0) return;
+  
   nvtx2DMap["td_nvtx_inclusive"]->Fill(nvtx,timediff,weight);
   if        (el1eb && el2eb) {nvtx2DMap["td_nvtx_EBEB"]->Fill(nvtx,timediff,weight);}
   else if   (el1ee && el2ee) {nvtx2DMap["td_nvtx_EEEE"]->Fill(nvtx,timediff,weight);
@@ -646,8 +672,36 @@ void Analysis::FillNvtxPlots(const Float_t weight, const Float_t timediff, const
   }
 }
    
-void Analysis::FillEtaPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time, const Float_t el1seedeta, const Float_t el2seedeta)
+void Analysis::FillEtaPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time, const Float_t el1seedeta, const Float_t el2seedeta,
+			    Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em)
 {
+  //  if (std::abs(vtxZ) > 0.5) return;
+  
+  deta2DMap["td_deta"]->Fill(std::abs(el1eta-el2eta),timediff,weight);
+  deta2DMap["td_dseedeta_inclusive"]->Fill(std::abs(el1seedeta-el2seedeta),timediff,weight);
+
+  if        (el1eb && el2eb) {deta2DMap["td_dseedeta_EBEB"]->Fill(std::abs(el1seedeta-el2seedeta),timediff,weight);}
+  else if   (el1ee && el2ee) {deta2DMap["td_dseedeta_EEEE"]->Fill(std::abs(el1seedeta-el2seedeta),timediff,weight);
+    if      (el1ep && el2ep) {deta2DMap["td_dseedeta_EPEP"]->Fill(std::abs(el1seedeta-el2seedeta),timediff,weight);}
+    else if (el1em && el2em) {deta2DMap["td_dseedeta_EMEM"]->Fill(std::abs(el1seedeta-el2seedeta),timediff,weight);}
+    else if ((el1ep && el2em) || (el1em && el2ep)) {deta2DMap["td_dseedeta_EPEM"]->Fill(std::abs(el1seedeta-el2seedeta),timediff,weight);}
+  }
+  else if ((el1eb && el2ee) || (el1ee && el2eb)) {
+    deta2DMap["td_dseedeta_EBEE"]->Fill(std::abs(el1seedeta-el2seedeta),timediff,weight);
+    if      ( (std::abs(el1seedeta) < 0.36) || (std::abs(el2seedeta) < 0.36) ) {
+      deta2DMap["td_dseedeta_EBEE_slice0"]->Fill(std::abs(el1seedeta-el2seedeta),timediff,weight);
+    }
+    else if ( ((std::abs(el1seedeta) >= 0.36) && (std::abs(el1seedeta) < 0.72)) || ((std::abs(el2seedeta) >= 0.36) && (std::abs(el2seedeta) < 0.72)) ) {
+      deta2DMap["td_dseedeta_EBEE_slice1"]->Fill(std::abs(el1seedeta-el2seedeta),timediff,weight);
+    }
+    else if ( ((std::abs(el1seedeta) >= 0.72) && (std::abs(el1seedeta) < 1.08)) || ((std::abs(el2seedeta) >= 0.72) && (std::abs(el2seedeta) < 1.08)) ) {
+      deta2DMap["td_dseedeta_EBEE_slice2"]->Fill(std::abs(el1seedeta-el2seedeta),timediff,weight);
+    }
+    else if ( ((std::abs(el1seedeta) >= 1.08) && (std::abs(el1seedeta) < 1.4442)) || ((std::abs(el2seedeta) >= 1.08) && (std::abs(el2seedeta) < 1.4442)) ) {
+      deta2DMap["td_dseedeta_EBEE_slice3"]->Fill(std::abs(el1seedeta-el2seedeta),timediff,weight);
+    }
+  }
+
   eleta2DMap["td_el1eta"]->Fill(el1eta,timediff,weight);
   eleta2DMap["td_el1seedeta"]->Fill(el1seedeta,timediff,weight);
   eleta2DMap["td_el2eta"]->Fill(el2eta,timediff,weight);
@@ -788,6 +842,16 @@ void Analysis::OutputNvtxPlots()
 
 void Analysis::OutputEtaPlots()
 {
+  // delta eta plots
+  MakeSubDirs(deta2DSubMap,fOutDir);
+  Analysis::SaveTH2s(deta2DMap,deta2DSubMap);
+  for (TH2MapIter mapiter = deta2DMap.begin(); mapiter != deta2DMap.end(); ++mapiter){
+    TString name = (*mapiter).first;
+    Analysis::Make1DTimingPlots((*mapiter).second,deta2DSubMap[name],detabins,name);
+  }
+  Analysis::DeleteTH2s(deta2DMap);  
+
+  // single el eta plots
   MakeSubDirs(eleta2DSubMap,fOutDir);
   Analysis::SaveTH2s(eleta2DMap,eleta2DSubMap);
   for (TH2MapIter mapiter = eleta2DMap.begin(); mapiter != eleta2DMap.end(); ++mapiter){
@@ -907,7 +971,8 @@ void Analysis::Project2Dto1D(TH2F *& hist2d, TString subdir2d, TH1Map & th1map, 
 
     TString histname = "";
     // First create each histogram
-    if     (basename.Contains("td_zeta",TString::kExact)) { //ugh
+    if     ((basename.Contains("td_zeta",TString::kExact))     || (basename.Contains("td_deta",TString::kExact)) ||
+	    (basename.Contains("td_dseedeta",TString::kExact)) ) { //ugh
       histname = Form("%s_%3.1f_%3.1f",basename.Data(),xlow,xhigh);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %3.1f to %3.1f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
 						      "Events",subdir1dmap,subdir2d);

@@ -1,8 +1,9 @@
+static const Float_t fitrange = 3.0;
+
 inline Float_t rad2 (Float_t x, Float_t y){return x*x + y*y;}
 
 void doFit(TH1F *& hist, TF1 *& fit, Float_t & mean, Float_t & emean, Float_t & sigma, Float_t & esigma) 
 {
-  Float_t fitrange = 3.0;
   TF1 * tempfit = new TF1("temp","gaus(0)",-fitrange,fitrange);
   tempfit->SetParLimits(2,0,10);
   hist->Fit("temp","RQ0B");
@@ -24,13 +25,39 @@ void doFit(TH1F *& hist, TF1 *& fit, Float_t & mean, Float_t & emean, Float_t & 
   const Float_t const2 = fit->GetParameter(3);
   const Float_t denom =  const1 + const2;
   
+  //  mean   = (const1*fit->GetParameter(1) + const2*fit->GetParameter(4))/denom;
+  //  sigma  = (const1*fit->GetParameter(2) + const2*fit->GetParameter(5))/denom;
   mean   = fit->GetParameter(1);
   sigma  = (const1*fit->GetParameter(2) + const2*fit->GetParameter(4))/denom;
   
+  //  emean  = rad2(const1*fit->GetParError(1),const2*fit->GetParError(4));
+  //  esigma = rad2(const1*fit->GetParError(2),const2*fit->GetParError(5));
   emean  = fit->GetParError(1);
   esigma = rad2(const1*fit->GetParError(2),const2*fit->GetParError(4));
   
+  //  emean  = std::sqrt(emean) /denom;
   esigma = std::sqrt(esigma)/denom;
+}
+
+void DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2) 
+{
+  sub1 = new TF1("sub1","gaus(0)",-fitrange,fitrange);
+  sub1->SetParameters(fit->GetParameter(0),fit->GetParameter(1),fit->GetParameter(2));
+  
+  sub2 = new TF1("sub2","gaus(0)",-fitrange,fitrange);
+  sub2->SetParameters(fit->GetParameter(3),fit->GetParameter(1),fit->GetParameter(4));
+  
+  canv->cd();
+
+  sub1->SetLineColor(kRed) ;  // kgreen-3
+  sub1->SetLineWidth(2);
+  sub1->SetLineStyle(7);
+  sub1->Draw("same");
+
+  sub2->SetLineColor(kBlue); // kViolet-3
+  sub2->SetLineWidth(2);
+  sub2->SetLineStyle(7);
+  sub2->Draw("same");
 }
 
 void quickoverplot2() {

@@ -161,12 +161,22 @@ void StackPlots::MakeRatioPlots() {
     // ratio value plot
     
     fOutRatioTH1FHists[th1f] = (TH1F*)fOutDataTH1FHists[th1f]->Clone();
-    fOutRatioTH1FHists[th1f]->Divide(fOutMCTH1FHists[th1f]);  
+    TString ytitle  = fOutMCTH1FHists[th1f]->GetYaxis()->GetTitle();
+    Bool_t subdiv = !(ytitle.Contains("#mu",TString::kExact));
+    if (subdiv) {
+      fOutRatioTH1FHists[th1f]->Divide(fOutMCTH1FHists[th1f]);  
+      fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitle("Data/MC");
+      fOutRatioTH1FHists[th1f]->SetMinimum(-0.1);  // Define Y ..
+      fOutRatioTH1FHists[th1f]->SetMaximum(2.1); // .. range
+    }
+    else {
+      fOutRatioTH1FHists[th1f]->Add(fOutMCTH1FHists[th1f],-1.0);  
+      fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitle("Data-MC");
+      fOutRatioTH1FHists[th1f]->SetMinimum(-0.1);  // Define Y ..
+      fOutRatioTH1FHists[th1f]->SetMaximum( 0.1); // .. range
+    }
     fOutRatioTH1FHists[th1f]->SetLineColor(kBlack);
-    fOutRatioTH1FHists[th1f]->SetMinimum(-0.1);  // Define Y ..
-    fOutRatioTH1FHists[th1f]->SetMaximum(2.1); // .. range
     fOutRatioTH1FHists[th1f]->SetStats(0);      // No statistics on lower plot
-    fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitle("Data/MC");
 
     // ratio MC error plot
     fOutRatioMCErrs[th1f] = (TH1F*)fOutMCTH1FHists[th1f]->Clone();
@@ -246,8 +256,8 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) {
     fOutDataTH1FHists[th1f]->SetMinimum( 0.0 );
   }
   if (npvmean_tmp) {
-    fOutDataTH1FHists[th1f]->SetMaximum( 0.5 );
-    fOutDataTH1FHists[th1f]->SetMinimum( -0.5 );
+    fOutDataTH1FHists[th1f]->SetMaximum( 0.1 );
+    fOutDataTH1FHists[th1f]->SetMinimum( -0.1 );
   }
 
 
@@ -394,10 +404,20 @@ void StackPlots::DrawLowerPad(const Int_t th1f) {
 
 void StackPlots::SetLines(const Int_t th1f){
   // have line held at ratio of 1.0 over whole x range
+
+  TString ytitle  = fOutRatioMCErrs[th1f]->GetYaxis()->GetTitle();
+  Bool_t subdiv   = !(ytitle.Contains("#mu",TString::kExact));
+
   fOutTH1FRatioLines[th1f]->SetX1(fOutRatioTH1FHists[th1f]->GetXaxis()->GetXmin());
-  fOutTH1FRatioLines[th1f]->SetY1(1.0);
   fOutTH1FRatioLines[th1f]->SetX2(fOutRatioTH1FHists[th1f]->GetXaxis()->GetXmax());
-  fOutTH1FRatioLines[th1f]->SetY2(1.0);
+  if (subdiv) {
+    fOutTH1FRatioLines[th1f]->SetY1(1.0);
+    fOutTH1FRatioLines[th1f]->SetY2(1.0);
+  }
+  else {
+    fOutTH1FRatioLines[th1f]->SetY1(0.0);
+    fOutTH1FRatioLines[th1f]->SetY2(0.0);
+  }
 
   // customize appearance
   fOutTH1FRatioLines[th1f]->SetLineColor(kRed);

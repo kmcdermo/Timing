@@ -39,7 +39,8 @@ public:
 		     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
   void FillNvtxPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time,
 		     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
-  void FillEtaPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time, const Float_t el1seedeta, const Float_t el2seedeta);
+  void FillEtaPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time, const Float_t el1seedeta, const Float_t el2seedeta,
+		    Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
   void FillVtxZPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time);
   void FillSingleEPlots(const Float_t weight, const Float_t el1time, const Float_t el2time,
 			Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
@@ -109,6 +110,9 @@ private:
 
   // nvtx plots
   TH2Map nvtx2DMap; TStrMap nvtx2DSubMap; DblVec nvtxbins;
+
+  // delta eta plots
+  TH2Map deta2DMap; TStrMap deta2DSubMap; DblVec detabins;
   
   // single el eta plots
   TH2Map eleta2DMap; TStrMap eleta2DSubMap; DblVec eletabins;

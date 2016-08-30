@@ -40,10 +40,11 @@ void timefit()
   fit->SetParLimits(1,0,1.0);
   fit->SetLineColor(kBlue);
 
-  hist->Fit(Form("%s_fit",formname.Data()));
-  
   TCanvas * canv = new TCanvas();
   canv->cd();
+ 
+  hist->Fit(Form("%s_fit",formname.Data()));
+  
   canv->SetLogx(1);
   canv->SetLogy(1);
   canv->SetGridx(1);
