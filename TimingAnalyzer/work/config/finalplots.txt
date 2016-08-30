@@ -5,6 +5,11 @@ td_runs_EEEE_sigma_gaus2fm timing/runs/EEEE
 td_runs_inclusive_mean_gaus2fm timing/runs/inclusive
 td_runs_inclusive_sigma_gaus2fm timing/runs/inclusive
 
+td_el1seedeta_mean_gaus2fm timing/el1/seedeta/td
+td_el1seedeta_sigma_gaus2fm timing/el1/seedeta/td
+td_el2seedeta_mean_gaus2fm timing/el2/seedeta/td
+td_el2seedeta_sigma_gaus2fm timing/el2/seedeta/td
+
 effseedE_EBEB standard/effseedE 
 effseedE_EEEE standard/effseedE
 effseedE_EMEM standard/effseedE
