@@ -19,8 +19,8 @@ void timefit()
   gROOT->ForceStyle();
 
   Bool_t isMC = false;
-  Bool_t isEB = false;
-  TString outdir = "plots";
+  Bool_t isEB = true;
+  TString outdir = "output";
 
   TFile * file = TFile::Open(Form("%s/%s/plots.root",outdir.Data(),isMC?"MC/dyll":"DATA/doubleeg"));
   TH1F  * hist = (TH1F*)file->Get(Form("td_effseedE_%s_sigma_gaus2fm",isEB?"EBEB":"EEEE"));

@@ -40,13 +40,18 @@ void doFit(TH1F *& hist, TF1 *& fit)
     fit->SetParLimits(3,0.02,0.05);
     fit->SetParLimits(5,0.02,0.05);
   }
+  else if (formname.EqualTo("crystalball",TString::kExact)) {
+    //  use directly the functionin ROOT::MATH note that the parameters definition is different is (alpha, n sigma, mu)
+    fit = new TF1("fit",formname.Data(),-fitrange,fitrange);
+    fit->SetParameters(0.08, 0.0, 1.0, 1.0, 0.5);     // N, mean, sigma, alpha, n
+  }
 
   Int_t status = hist->Fit(fit->GetName(),"RB0");
 }
 
-void meansigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t & sigma, Float_t & esigma) 
+void getFitParams(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t & sigma, Float_t & esigma) 
 {
-  if (formname.EqualTo("gaus1",TString::kExact)) {
+  if (formname.EqualTo("gaus1",TString::kExact) || formname.EqualTo("crystalball",TString::kExact)) {
     mean   = fit->GetParameter(1);
     sigma  = fit->GetParameter(2);
 
@@ -96,11 +101,15 @@ void meansigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t & sigma, Flo
   }
 }
 
-void subcomps(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3) 
+void drawFit(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3) 
 {
   canv->cd();
 
-  if (formname.EqualTo("gaus1",TString::kExact)) {
+  fit->SetLineWidth(3);
+  fit->SetLineColor(kMagenta-3); //kViolet-6
+  fit->Draw("same");
+
+  if (formname.EqualTo("gaus1",TString::kExact) || formname.EqualTo("crystalball",TString::kExact)) {
     return;
   }
   else if (formname.EqualTo("gaus2",TString::kExact)) {
@@ -144,7 +153,7 @@ void subcomps(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3
   sub2->Draw("same");
 }
 
-void drawsubcomp() 
+void testTimeFitter() 
 {
   gStyle->SetOptStat(0);
   TVirtualFitter::SetDefaultFitter("Minuit2");
@@ -165,36 +174,26 @@ void drawsubcomp()
   hist->GetYaxis()->SetTitle("Events");
   hist->Draw("ep");
 
-  
-  // use directly the functionin ROOT::MATH note that the parameters definition is different is (alpha, n sigma, mu)
-//   TF1 * fit = new TF1("fit","crystalball",-fitrange,fitrange);
-//   // N, mean, sigma, alpha, n
-//   fit->SetParameters(0.08, 0.0, 1.0, 1.0, 0.5);
-//   hist->Fit(fit->GetName(),"RB0");
-//   fit->Draw("same");
-
-   Float_t mean, emean, sigma, esigma;
-   TF1 * fit;
+  Float_t mean, emean, sigma, esigma;
+  TF1 * fit;
 
   doFit(hist,fit);
-  meansigma(fit,mean,emean,sigma,esigma);
-//   fit->SetLineWidth(3);
-//   fit->SetLineColor(kMagenta-3); //kViolet-6
-//   fit->Draw("same");
 
-  TFormula form(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
-  TF1 * fitfull = new TF1(Form("%s_fit_full",formname.Data()),formname.Data(),-3.0,3.0);
-  fitfull->SetParameters(fit->GetParameter(0),fit->GetParameter(1),fit->GetParameter(2));
-  fitfull->SetLineWidth(3);
-  fitfull->SetLineColor(kMagenta-3); //kViolet-6
-  fitfull->Draw("same");
-  
   TF1 * sub1; TF1 * sub2; TF1 * sub3;
-  subcomps(fit,canv,sub1,sub2,sub3);
+  drawFit(fit,canv,sub1,sub2,sub3);
+
+  getFitParams(fit,mean,emean,sigma,esigma);
 
   TPaveText * text = new TPaveText(0.6,0.68,0.9,0.78,"NDC");
   text->AddText(Form("#mu = %f #pm %f, #sigma = %f #pm %f",mean,emean,sigma,esigma));
   text->AddText(Form("#chi^{2} = %f",fit->GetChisquare()));
   text->SetTextSize(0.03);
   text->Draw("same");
+
+//   TFormula form(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
+//   TF1 * fitfull = new TF1(Form("%s_fit_full",formname.Data()),formname.Data(),-3.0,3.0);
+//   fitfull->SetParameters(fit->GetParameter(0),fit->GetParameter(1),fit->GetParameter(2));
+//   fitfull->SetLineWidth(3);
+//   fitfull->SetLineColor(kMagenta-3); //kViolet-6
+//   fitfull->Draw("same");
 }

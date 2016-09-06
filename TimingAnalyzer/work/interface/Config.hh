@@ -30,7 +30,6 @@ namespace Config{
 
   // output config
   constexpr    Float_t lumi      = 2.301; // brilcalc lumi --normtag /afs/cern.ch/user/l/lumipro/public/normtag_file/moriond16_normtag.json -i rereco2015D.txt -u /fb
-  static const TString outtype   = "png";
   static const TString extraText = "Preliminary";
 
   // pu config
@@ -121,6 +120,7 @@ namespace Config{
   extern Bool_t      useSigma_n;
   extern Bool_t      saveFits;
   extern TString     formname; // fitting function to be used
+  extern TString     outtype;
 
   extern TStrBoolMap SampleMap;
   extern ColorMap    colorMap;

@@ -18,7 +18,7 @@ void refitcanv(TString tisMC, TString fitdir, TString name, TString bins, TStrin
   Int_t    bin = tbin.Atoi(); // in overall plot, bins == number(s) on canvas fit plot
   Double_t  g1 = tg1.Atof();
   Double_t  g2 = tg2.Atof();
-  TString indir    = "tof_novtxzcut";
+  TString indir = "output";
   //  TString formtitle = "gaus2fm";
   TString formname  = "gaus2fm";
 
@@ -113,13 +113,13 @@ void prepFit(TH1F *& hist, TF1 *& fit, TString formname, Double_t fitrange, Doub
   else if (formname.EqualTo("gaus2fm",TString::kExact)) {
     TFormula form(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)");
     fit  = new TF1(Form("%s_fit",formname.Data()),formname.Data(),-fitrange,fitrange);
-     fit->SetParameters(tempp0,tempp1,tempp2,tempp0/g1,tempp2*g2);
-     fit->SetParLimits(2,0,10);
-    fit->SetParLimits(4,0,10);
+//     fit->SetParameters(tempp0,tempp1,tempp2,tempp0/g1,tempp2*g2);
+//     fit->SetParLimits(2,0,10);
+//     fit->SetParLimits(4,0,10);
 
-//     fit->SetParameters(tempp0,tempp1,tempp2,0,1);
-//     fit->SetParLimits(3,0,0.5);
-//     fit->SetParLimits(4,0,4);
+     fit->SetParameters(tempp0,tempp1,tempp2,0,1);
+     fit->SetParLimits(3,0,30);
+     fit->SetParLimits(4,0,4);
   }
 
   fit->SetLineColor(kMagenta-3); 

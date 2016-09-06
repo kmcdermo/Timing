@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <fstream>
 
 static const Float_t zlow   = 76.0;
 static const Float_t zhigh  = 106.0;
@@ -35,14 +36,14 @@ void nrechits()
   TFile * file = TFile::Open("input/DATA/doubleeg/skimmedtree.root");
   TTree * tree = (TTree*)file->Get("tree/tree");
 
-  TString el = "el2";
+  TString el = "el1";
 
   // initialize branches
-  std::vector<Float_t> * rhEs; tree->SetBranchAddress(Form("%srhEs",el.Data()), &rhEs);
-  std::vector<Float_t> * rhXs; tree->SetBranchAddress(Form("%srhXs",el.Data()), &rhXs);
-  std::vector<Float_t> * rhYs; tree->SetBranchAddress(Form("%srhYs",el.Data()), &rhYs);
-  std::vector<Float_t> * rhZs; tree->SetBranchAddress(Form("%srhZs",el.Data()), &rhZs);
-  std::vector<Int_t>   * rhids;tree->SetBranchAddress(Form("%srhids",el.Data()), &rhids);
+  std::vector<Float_t> * rhEs = 0; tree->SetBranchAddress(Form("%srhEs",el.Data()), &rhEs);
+  std::vector<Float_t> * rhXs = 0; tree->SetBranchAddress(Form("%srhXs",el.Data()), &rhXs);
+  std::vector<Float_t> * rhYs = 0; tree->SetBranchAddress(Form("%srhYs",el.Data()), &rhYs);
+  std::vector<Float_t> * rhZs = 0; tree->SetBranchAddress(Form("%srhZs",el.Data()), &rhZs);
+  std::vector<Int_t>   * rhids= 0; tree->SetBranchAddress(Form("%srhids",el.Data()), &rhids);
 
   Int_t nrh; tree->SetBranchAddress(Form("%snrh",el.Data()),&nrh);
   Float_t scE; tree->SetBranchAddress(Form("%sscE",el.Data()), &scE);
@@ -67,11 +68,15 @@ void nrechits()
   TH1F * h_nrhs       = new TH1F(Form("h_%snrhs",el.Data()),Form("%s nRecHits",el.Data()),500,0.,500.); h_nrhs->Sumw2();
   TH1F * h_nprunedrhs = new TH1F(Form("h_%snprunedrhs",el.Data()),Form("%s nRecHits (pruned)",el.Data()),100,0.,100.); h_nprunedrhs->Sumw2();
   TH1F * h_ratio      = new TH1F(Form("h_%sratio",el.Data()),Form("%s ratio of nRH (pruned) / nRH (total)",el.Data()),100,0.,1.); h_ratio->Sumw2();
+
+  ofstream outputids;
+  outputids.open("config/el1_rhids_20.txt",std::ios_base::app);
  
-  for (UInt_t entry = 0; entry < tree->GetEntries(); entry++)
+  //  for (UInt_t entry = 0; entry < tree->GetEntries(); entry++)
+  for (UInt_t entry = 2549; entry < 2550; entry++)
   {
     tree->GetEntry(entry);
-
+    
     if (zmass < zlow || zmass > zhigh || !hltdoubleel || (el1pid != -el2pid)) continue;
 
     const Float_t seedeta = eta(seedX,seedY,seedZ);
@@ -91,12 +96,14 @@ void nrechits()
       if (deltaR(eleta,rheta,elphi,rhphi) > dRcut) continue; 
 
       nprunedrh++;
+      outputids << (*rhids)[rh] << std::endl;
     }
 
     h_nrhs->Fill(nrh);
     h_nprunedrhs->Fill(nprunedrh);
     h_ratio->Fill(Float_t(nprunedrh)/Float_t(nrh));
   }
+  outputids.close();
 
   TFile * outfile = new TFile(Form("%soutrhs.root",el.Data()),"UPDATE");
   outfile->cd();

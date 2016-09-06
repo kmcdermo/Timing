@@ -203,6 +203,7 @@ int main(int argc, const char* argv[])
 	"  --use-sigman    <bool>        divide by sigma_n in E/pT plots (def: %s)\n"
 	"  --save-fits     <bool>        save copies of fits as pngs (def: %s)\n"
 	"  --fit-form      <string>      name of formula used for fitting time plots (def: %s)\n"
+	"  --out-image     <string>      extension of file to save plots (def: %s)\n"
         ,
         argv[0],
         Config::outdir.Data(),
@@ -231,7 +232,8 @@ int main(int argc, const char* argv[])
 	(Config::wgtedTime  ? "true" : "false"),
 	(Config::useSigma_n ? "true" : "false"),
 	(Config::saveFits   ? "true" : "false"),
-        Config::formname.Data()
+        Config::formname.Data(),
+	Config::outtype.Data()
       );
       exit(0);
     }
@@ -262,6 +264,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--use-sigman")  { Config::doAnalysis = true; Config::useSigma_n = true; }
     else if (*i == "--save-fits")   { Config::doAnalysis = true; Config::saveFits   = true; }
     else if (*i == "--fit-form")    { next_arg_or_die(mArgs, i); Config::formname = i->c_str(); }
+    else if (*i == "--out-image")   { next_arg_or_die(mArgs, i); Config::outtype  = i->c_str(); }
     else    { std::cerr << "Error: Unknown option/argument: " << i->c_str() << " ...exiting..." << std::endl; exit(1); }
     mArgs.erase(start, ++i);
   }

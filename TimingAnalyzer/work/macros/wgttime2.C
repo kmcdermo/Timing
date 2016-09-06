@@ -17,12 +17,16 @@ typedef std::map<int,int> rhIdMap;
 typedef std::pair<Float_t,Float_t> ETPair; // time, energy
 typedef std::vector<ETPair> ETPairVec;
 
+static const Float_t zlow   = 76.0;
+static const Float_t zhigh  = 106.0;
+static const Float_t shift = 0.00169548; //ns (EB data)
 static const Float_t N     = 38.1; // ns
 static const Float_t C     = 0.2439; // ns
 static const Float_t sn    = 0.0513; // GeV
 static const Float_t sol   = 29.9792458; // cm / ns
 static const Float_t etaEB = 1.4442; // eta boundary of EB
 static const Float_t rhEcut = 1.0; // rh Energy cut
+static const Float_t scEcut = 0.0; // rh Energy cut
 static const Float_t dRcut  = 0.3; // isolation value -- deltaR cut on rh
 static const UInt_t  nrhcut = 10; // n good rec hits cut
 
@@ -91,6 +95,11 @@ void wgttime2()
   Float_t eleta; tree->SetBranchAddress(Form("%seta",el.Data()), &eleta);
   Float_t elphi; tree->SetBranchAddress(Form("%sphi",el.Data()), &elphi);
   
+  Float_t zmass; tree->SetBranchAddress("zmass", &zmass);
+  Bool_t hltdoubleel; tree->SetBranchAddress("hltdoubleel", &hltdoubleel);
+  Int_t el1pid; tree->SetBranchAddress("el1pid", &el1pid);
+  Int_t el2pid; tree->SetBranchAddress("el2pid", &el2pid);
+
   // output histograms
   TH1F * h_seedtimeTOF = new TH1F("h_seedtimeTOF",Form("%s seed time [TOF]",el.Data()),100,-5.0,5.0); h_seedtimeTOF->Sumw2();
   TH1F * h_weighttime  = new TH1F("h_weighttime",Form("%s weighted time",el.Data()),100,-5.0,5.0); h_weighttime->Sumw2();
@@ -99,9 +108,11 @@ void wgttime2()
   for (UInt_t entry = 0; entry < tree->GetEntries(); entry++)
   {
     tree->GetEntry(entry);
+
+    if (zmass < zlow || zmass > zhigh || !hltdoubleel || (el1pid != -el2pid)) continue;
     
     const Float_t seedeta = eta(seedX,seedY,seedZ);
-    if (std::abs(seedeta) > etaEB || nrh < 0 || scE < 30.0f) continue;
+    if (std::abs(seedeta) > etaEB || nrh < 0 || scE < scEcut) continue;
 
     ETPairVec etrhpairs;
     rhIdMap rhIds;
@@ -116,12 +127,12 @@ void wgttime2()
       const Float_t rhphi = phi(rhX,rhY); const Float_t rheta = eta(rhX, rhY, rhZ);
       if (deltaR(eleta,rheta,elphi,rhphi) > dRcut) continue; 
       
-      etrhpairs.push_back( std::make_pair( TOF( rhX, rhY, rhZ, vtxX, vtxY, vtxZ, (*rhtimes)[rh] ) , (*rhEs)[rh] ) );
+      etrhpairs.push_back( std::make_pair( TOF( rhX, rhY, rhZ, vtxX, vtxY, vtxZ, (*rhtimes)[rh] ) - shift , (*rhEs)[rh] ) );
     }
 
     //    if (etrhpairs.size() < nrhcut) continue;
 
-    const Float_t seedtimeTOF = TOF(seedX,seedY,seedZ,vtxX,vtxY,vtxZ,seedtime);
+    const Float_t seedtimeTOF = TOF(seedX,seedY,seedZ,vtxX,vtxY,vtxZ,seedtime) - shift;
     h_seedtimeTOF->Fill(seedtimeTOF);
 
     const Float_t weighttime = WeightTime(etrhpairs);
