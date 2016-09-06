@@ -12,6 +12,7 @@
 #include "TColor.h"
 
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -38,6 +39,11 @@ typedef std::vector<TString>  TStrVec;
 typedef std::vector<Int_t>    IntVec;
 typedef std::vector<Float_t>  FltVec;
 typedef std::vector<Double_t> DblVec;
+
+typedef std::pair<Float_t,Float_t> FFPair;
+typedef std::vector<FFPair> FFPairVec;
+
+typedef std::unordered_map<Int_t,Int_t> IntMap;
 
 // global functions
 
