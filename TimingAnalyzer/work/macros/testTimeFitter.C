@@ -3,6 +3,7 @@
 void testTimeFitter()
 {
   gStyle->SetOptStat(0);
+  gStyle->SetOptFit(0);
   TVirtualFitter::SetDefaultFitter("Minuit2");
 
   Config::outdir = "testFits";
@@ -13,10 +14,10 @@ void testTimeFitter()
     gSystem->Exec(mkDir.Data());
   }
   
-  std::vector<TString>  formnames = {"gaus1","gaus2","gaus2fm","gaus3fm","crystalball"};
+  std::vector<TString>  formnames = {"gaus1","gaus2","gaus2fm","gaus3fm"};
   std::vector<TString>  histnames = {"h_tdweighttime","h_tdseedtimeTOF"};
   std::vector<TString>  nbinses   = {"40","100"};
-  std::vector<Double_t> fitranges = {0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.25,1.5,1.75,2.0,2.5,3.0,4.0,5.0};
+  std::vector<Double_t> fitranges = {0.5,1.0,3.0,5.0};
   
   for (UInt_t inbins = 0; inbins < nbinses.size(); inbins++) 
   {
@@ -51,8 +52,6 @@ void testTimeFitter()
 
 void fittingCore(TH1F *& hist)
 {
-  gStyle->SetOptFit(0);
-
   TCanvas * lincanv = new TCanvas();
   lincanv->SetLogy(0);
   lincanv->cd();
@@ -62,7 +61,7 @@ void fittingCore(TH1F *& hist)
   arr3 temps;
 
   doFit(hist,fit,temps);
-  getFitParams(fit,mean,emean,sigma,esigma,temps);
+  getFitParams(fit,mean,emean,sigma,esigma);
 
   // Now draw everything (linear first, then log with params)
   hist->SetMaximum(fit->GetMaximum()*1.05);
@@ -71,27 +70,32 @@ void fittingCore(TH1F *& hist)
   TF1 * sub1; TF1 * sub2; TF1 * sub3;
   drawFit(fit,lincanv,sub1,sub2,sub3);
 
-  TPaveText * text = new TPaveText(0.6,0.68,0.9,0.78,"NDC");
-  text->AddText(Form("#mu = %f #pm %f, #sigma = %f #pm %f",mean,emean,sigma,esigma));
+  TPaveText * text = new TPaveText(0.6,0.78,0.9,0.88,"NDC");
+  text->AddText(Form("#mu = %f #pm %f",mean,emean));
+  text->AddText(Form("#sigma = %f #pm %f",sigma,esigma));
   text->AddText(Form("#chi^{2} / ndf = %6.2f / %i",fit->GetChisquare(),fit->GetNDF()));
   text->SetTextSize(0.03);
   text->SetFillColorAlpha(kWhite,0.f);
   text->Draw("same");
   
-  lincanv->SaveAs(Form("%s/%s_%sbins_%f_%s_lin.pdf",Config::outdir.Data(),Config::histname.Data(),Config::nbins.Data(),Config::fitrange,Config::formname.Data()));
+  lincanv->SaveAs(Form("%s/%s_%sbins_%3.1f_%s_lin.pdf",Config::outdir.Data(),Config::histname.Data(),Config::nbins.Data(),Config::fitrange,Config::formname.Data()));
 
+  // log canvas saves individ. params
   TCanvas * logcanv = new TCanvas();
   logcanv->SetLogy(1);
   logcanv->cd();
 
-  gStyle->SetOptFit(1);
-
   hist->Draw("ep");
   hist->SetMaximum(fit->GetMaximum()*1.2);
   drawFit(fit,logcanv,sub1,sub2,sub3);
-  logcanv->SaveAs(Form("%s/%s_%sbins_%f_%s_log.pdf",Config::outdir.Data(),Config::histname.Data(),Config::nbins.Data(),Config::fitrange,Config::formname.Data()));
 
-  deleteAll(fit,sub1,sub2,sub3,text,lincanv,logcanv);
+  TPaveText * stats;
+  drawStats(fit,stats,logcanv);
+
+  logcanv->SaveAs(Form("%s/%s_%sbins_%3.1f_%s_log.pdf",Config::outdir.Data(),Config::histname.Data(),Config::nbins.Data(),Config::fitrange,Config::formname.Data()));
+
+  // delete everything
+  deleteAll(fit,sub1,sub2,sub3,text,lincanv,stats,logcanv);
 
 //   TFormula form(Config::formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
 //   TF1 * fitfull = new TF1(Form("%s_fit_full",Config::formname.Data()),Config::formname.Data(),-3.0,3.0);
@@ -105,7 +109,7 @@ void doFit(TH1F *& hist, TF1 *& fit, arr3 & temps)
 {
   TF1 * tempfit = new TF1("temp","gaus(0)",-Config::fitrange,Config::fitrange);
   tempfit->SetParLimits(2,0,10);
-  hist->Fit("temp","R0B");
+  hist->Fit("temp","RB0Q"); // for real testing, do not suppress output --> drop q
   const Double_t norm  = tempfit->GetParameter(0); // constant
   const Double_t mean  = tempfit->GetParameter(1); // mean
   const Double_t sigma = tempfit->GetParameter(2); // sigma
@@ -155,10 +159,10 @@ void doFit(TH1F *& hist, TF1 *& fit, arr3 & temps)
     fit->SetParameters(norm, mean, sigma, 1.0, 0.5);     // N, mean, sigma, alpha, n
   }
 
-  Int_t status = hist->Fit(fit->GetName(),"RB0");
+  Int_t status = hist->Fit(fit->GetName(),"RB0Q");
 }
 
-void getFitParams(TF1 *& fit, Double_t & mean, Double_t & emean, Double_t & sigma, Double_t & esigma, arr3 & temps) 
+void getFitParams(TF1 *& fit, Double_t & mean, Double_t & emean, Double_t & sigma, Double_t & esigma) 
 {
   if (Config::formname.EqualTo("gaus1",TString::kExact) || Config::formname.EqualTo("crystalball",TString::kExact)) {
     mean   = fit->GetParameter(1);
@@ -207,7 +211,12 @@ void getFitParams(TF1 *& fit, Double_t & mean, Double_t & emean, Double_t & sigm
     esigma = rad2(const1*fit->GetParError(2),const2*fit->GetParError(4))+std::pow(const3*fit->GetParError(6),2);
 
     esigma = std::sqrt(esigma)/denom;
+  }
+}
 
+void dumpFit(TF1 *& fit, arr3 & temps)
+{
+  if (Config::formname.EqualTo("gaus3fm",TString::kExact)) {
     std::cout << std::endl
 	      << " n1/n0: " << fit->GetParameter(0) / temps[0] << std::endl
 	      << " n2/n0: " << fit->GetParameter(3) / temps[0] << std::endl
@@ -272,7 +281,58 @@ void drawFit(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3)
   sub2->Draw("same");
 }
 
-void deleteAll(TF1 *& fit, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3, TPaveText *& text, TCanvas *& lincanv, TCanvas *& logcanv) 
+void drawStats(TF1 *& fit, TPaveText *& stats, TCanvas *& canv)
+{
+  canv->cd();
+  if (Config::formname.EqualTo("gaus1",TString::kExact)) 
+  {
+    stats = new TPaveText(0.6,0.78,0.9,0.88,"NDC");
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(0),fit->GetParameter(0),fit->GetParError(0)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(1),fit->GetParameter(1),fit->GetParError(1)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(2),fit->GetParameter(2),fit->GetParError(2)));
+    stats->SetTextSize(0.03);
+    stats->SetFillColorAlpha(kWhite,0.f);
+    stats->Draw("same");
+  }
+  else if (Config::formname.EqualTo("gaus2",TString::kExact)) {
+    stats = new TPaveText(0.6,0.68,0.9,0.88,"NDC");
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(0),fit->GetParameter(0),fit->GetParError(0)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(1),fit->GetParameter(1),fit->GetParError(1)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(2),fit->GetParameter(2),fit->GetParError(2)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(3),fit->GetParameter(3),fit->GetParError(3)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(4),fit->GetParameter(4),fit->GetParError(4)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(5),fit->GetParameter(5),fit->GetParError(5)));
+    stats->SetTextSize(0.03);
+    stats->SetFillColorAlpha(kWhite,0.f);
+    stats->Draw("same");
+  } 
+  else if (Config::formname.EqualTo("gaus2fm",TString::kExact)) {
+    stats = new TPaveText(0.6,0.68,0.9,0.88,"NDC");
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(0),fit->GetParameter(0),fit->GetParError(0)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(1),fit->GetParameter(1),fit->GetParError(1)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(2),fit->GetParameter(2),fit->GetParError(2)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(3),fit->GetParameter(3),fit->GetParError(3)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(4),fit->GetParameter(4),fit->GetParError(4)));
+    stats->SetTextSize(0.03);
+    stats->SetFillColorAlpha(kWhite,0.f);
+    stats->Draw("same");
+  } 
+  else if (Config::formname.EqualTo("gaus3fm",TString::kExact)) {
+    stats = new TPaveText(0.6,0.68,0.9,0.88,"NDC");
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(0),fit->GetParameter(0),fit->GetParError(0)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(1),fit->GetParameter(1),fit->GetParError(1)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(2),fit->GetParameter(2),fit->GetParError(2)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(3),fit->GetParameter(3),fit->GetParError(3)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(4),fit->GetParameter(4),fit->GetParError(4)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(5),fit->GetParameter(5),fit->GetParError(5)));
+    stats->AddText(Form("%s: %f #pm %f",fit->GetParName(6),fit->GetParameter(6),fit->GetParError(6)));
+    stats->SetTextSize(0.03);
+    stats->SetFillColorAlpha(kWhite,0.f);
+    stats->Draw("same");
+  } 
+}
+
+void deleteAll(TF1 *& fit, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3, TPaveText *& text, TCanvas *& lincanv, TPaveText *& stats, TCanvas *& logcanv) 
 {
   delete fit;
   if (Config::formname.EqualTo("gaus2",TString::kExact) || Config::formname.EqualTo("gaus2fm",TString::kExact) || Config::formname.EqualTo("gaus3fm",TString::kExact))
@@ -286,5 +346,6 @@ void deleteAll(TF1 *& fit, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3, TPaveText *& t
   }
   delete text;
   delete lincanv;
+  delete stats;
   delete logcanv;
 }
