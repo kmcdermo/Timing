@@ -70,13 +70,13 @@ void quickoverplot2() {
 
   Bool_t  isLogY = false;
   
-  TFile * file = TFile::Open("outtimes.root");
+  TFile * file = TFile::Open("tdouttimes.root");
 
   TCanvas * canv = new TCanvas();
   canv->cd();
   canv->SetLogy(isLogY);
 
-  TH1F * h1 = (TH1F*)file->Get("h_seedtimeTOF");
+  TH1F * h1 = (TH1F*)file->Get("h_tdseedtimeTOF");
   h1->SetLineColor(kRed);
   h1->SetMarkerColor(kRed);
   h1->SetMarkerStyle(1);
@@ -90,7 +90,7 @@ void quickoverplot2() {
   f1->SetLineColor(kRed);
   f1->SetLineWidth(0.5);
 
-  TH1F * h2 = (TH1F*)file->Get("h_weighttime");
+  TH1F * h2 = (TH1F*)file->Get("h_tdweighttime");
   h2->SetLineColor(kBlue);
   h2->SetMarkerColor(kBlue);
   h2->SetMarkerStyle(1);
@@ -112,6 +112,7 @@ void quickoverplot2() {
   leg->Draw("same");
 
   TPaveText * text = new TPaveText(0.6,0.68,0.9,0.78,"NDC");
+  text->SetFillColorAlpha(kWhite,0.f);
   text->AddText(Form("#mu_{s} = %f #pm %f, #sigma_{s} = %f #pm %f",m1,em1,s1,es1));
   text->AddText(Form("#mu_{w} = %f #pm %f, #sigma_{w} = %f #pm %f",m2,em2,s2,es2));
   text->SetTextSize(0.03);
