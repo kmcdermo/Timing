@@ -85,6 +85,9 @@ void ietaiphimap()
   Float_t scE;      tree->SetBranchAddress(Form("%sscE",el.Data()), &scE);
   Float_t seedtime; tree->SetBranchAddress(Form("%sseedtime",el.Data()), &seedtime);
   Float_t seedE;    tree->SetBranchAddress(Form("%sseedE",el.Data()), &seedE);
+  Float_t elE;      tree->SetBranchAddress(Form("%sE",el.Data()), &elE);
+  Float_t elphi;    tree->SetBranchAddress(Form("%sphi",el.Data()), &elphi);
+  Float_t eleta;    tree->SetBranchAddress(Form("%seta",el.Data()), &eleta);
 
   std::vector<Float_t> * rhXs = 0; tree->SetBranchAddress(Form("%srhXs",el.Data()), &rhXs);
   std::vector<Float_t> * rhYs = 0; tree->SetBranchAddress(Form("%srhYs",el.Data()), &rhYs);
@@ -104,6 +107,8 @@ void ietaiphimap()
   // 601; //49, 601, 833, 1213, 1675, 1809, 1857, 1979, 2308 // entries for seedE != maxE in el1
   UInt_t entry = 2549; // 2579, 3480, 3492, 3955 --> 20 pruned rec hit events in el1
   tree->GetEntry(entry);
+
+  std::cout << elE << " " << elphi << " " << eleta << std::endl;
 
   Int_t minphi = 1000, maxphi = -1000;
   Int_t mineta = 1000, maxeta = -1000;

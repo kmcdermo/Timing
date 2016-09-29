@@ -14,10 +14,16 @@ void testTimeFitter()
     gSystem->Exec(mkDir.Data());
   }
   
-  std::vector<TString>  formnames = {"gaus1","gaus2","gaus2fm","gaus3fm"};
+  std::vector<TString>  formnames = {"gaus2fm","gaus3fm"};
+  std::vector<Double_t> fitranges = {5.0};
+  std::vector<TString>  nbinses   = {"40"};
   std::vector<TString>  histnames = {"h_tdweighttime","h_tdseedtimeTOF"};
-  std::vector<TString>  nbinses   = {"40","100"};
-  std::vector<Double_t> fitranges = {0.5,1.0,3.0,5.0};
+
+  //  std::vector<TString>  histnames = {"h_tdweighttime","h_tdseedtimeTOF"};
+  //  std::vector<TString>  nbinses   = {"40","100"};
+
+//   std::vector<TString>  formnames = {"gaus1"};
+//   std::vector<Double_t> fitranges = {0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.5,2.0,3.0,5.0};
   
   for (UInt_t inbins = 0; inbins < nbinses.size(); inbins++) 
   {
@@ -62,9 +68,8 @@ void fittingCore(TH1F *& hist)
 
   doFit(hist,fit,temps);
   getFitParams(fit,mean,emean,sigma,esigma);
-
-  // Now draw everything (linear first, then log with params)
-  hist->SetMaximum(fit->GetMaximum()*1.05);
+  hist->SetMaximum(Config::nbins == 100 ? 0.12 : 0.3); 
+  hist->SetMinimum(0.0);
   hist->Draw("ep");
 
   TF1 * sub1; TF1 * sub2; TF1 * sub3;
@@ -85,8 +90,9 @@ void fittingCore(TH1F *& hist)
   logcanv->SetLogy(1);
   logcanv->cd();
 
+  hist->SetMaximum(Config::nbins == 100 ? 0.2 : 0.45);
+  hist->SetMinimum(0.000001);
   hist->Draw("ep");
-  hist->SetMaximum(fit->GetMaximum()*1.2);
   drawFit(fit,logcanv,sub1,sub2,sub3);
 
   TPaveText * stats;

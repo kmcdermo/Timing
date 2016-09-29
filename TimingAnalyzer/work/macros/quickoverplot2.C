@@ -70,13 +70,16 @@ void quickoverplot2() {
 
   Bool_t  isLogY = false;
   
-  TFile * file = TFile::Open("tdouttimes.root");
+  TFile * file = TFile::Open("tdouttimes40.root");
 
   TCanvas * canv = new TCanvas();
   canv->cd();
   canv->SetLogy(isLogY);
 
   TH1F * h1 = (TH1F*)file->Get("h_tdseedtimeTOF");
+  h1->Scale(1.0/h1->Integral());
+  h1->SetMaximum(0.3);
+  h1->SetMinimum(0.0);
   h1->SetLineColor(kRed);
   h1->SetMarkerColor(kRed);
   h1->SetMarkerStyle(1);
@@ -88,9 +91,10 @@ void quickoverplot2() {
   TF1 * f1;
   doFit(h1,f1,m1,em1,s1,es1);
   f1->SetLineColor(kRed);
-  f1->SetLineWidth(0.5);
+  f1->SetLineWidth(2);
 
   TH1F * h2 = (TH1F*)file->Get("h_tdweighttime");
+  h2->Scale(1.0/h2->Integral());
   h2->SetLineColor(kBlue);
   h2->SetMarkerColor(kBlue);
   h2->SetMarkerStyle(1);
@@ -99,24 +103,27 @@ void quickoverplot2() {
   TF1 * f2;
   doFit(h2,f2,m2,em2,s2,es2);
   f2->SetLineColor(kBlue);
-  f2->SetLineWidth(0.5);
+  f2->SetLineWidth(2);
 
   h1->Draw("epl");
   f1->Draw("same");
   h2->Draw("epl SAME");
   f2->Draw("same");
 
-  TLegend * leg = new TLegend(0.8,0.8,0.95,0.95);
+  TLegend * leg = new TLegend(0.15,0.7,0.35,0.85);
   leg->AddEntry(h1,label1.Data(),"epl");
   leg->AddEntry(h2,label2.Data(),"epl");
   leg->Draw("same");
 
-  TPaveText * text = new TPaveText(0.6,0.68,0.9,0.78,"NDC");
+  TPaveText * text = new TPaveText(0.65,0.65,0.85,0.85,"NDC");
   text->SetFillColorAlpha(kWhite,0.f);
-  text->AddText(Form("#mu_{s} = %f #pm %f, #sigma_{s} = %f #pm %f",m1,em1,s1,es1));
-  text->AddText(Form("#mu_{w} = %f #pm %f, #sigma_{w} = %f #pm %f",m2,em2,s2,es2));
+  text->AddText(Form("#mu_{s} = %f #pm %f",m1,em1));
+  text->AddText(Form("#sigma_{s} = %f #pm %f",s1,es1));
+  text->AddLine(0.0,0.5,1.0,0.5);
+  text->AddText(Form("#mu_{w} = %f #pm %f",m2,em2));
+  text->AddText(Form("#sigma_{w} = %f #pm %f",s2,es2));
   text->SetTextSize(0.03);
   text->Draw("same");
   
-  canv->SaveAs(Form("%s_vs_%s_%s.png", label1.Data(), label2.Data(), (isLogY?"log":"lin") ));
+  canv->SaveAs(Form("%s_vs_%s_%s.pdf", label1.Data(), label2.Data(), (isLogY?"log":"lin") ));
 }
