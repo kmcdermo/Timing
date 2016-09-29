@@ -164,16 +164,18 @@ void StackPlots::MakeRatioPlots() {
     TString ytitle  = fOutMCTH1FHists[th1f]->GetYaxis()->GetTitle();
     Bool_t subdiv = !(ytitle.Contains("#mu",TString::kExact));
     if (subdiv) {
+      fOutRatioTH1FHists[th1f]->Add(fOutMCTH1FHists[th1f],-1.0);  
       fOutRatioTH1FHists[th1f]->Divide(fOutMCTH1FHists[th1f]);  
-      fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitle("Data/MC");
-      fOutRatioTH1FHists[th1f]->SetMinimum(-0.1);  // Define Y ..
-      fOutRatioTH1FHists[th1f]->SetMaximum(2.1); // .. range
+      fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitle("#frac{#sigma_{Data}-#sigma_{MC}}{#sigma_{MC}}");
+      fOutRatioTH1FHists[th1f]->SetMinimum(-1.6);  // Define Y ..
+      fOutRatioTH1FHists[th1f]->SetMaximum( 1.6); // .. range
     }
     else {
       fOutRatioTH1FHists[th1f]->Add(fOutMCTH1FHists[th1f],-1.0);  
-      fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitle("Data-MC");
-      fOutRatioTH1FHists[th1f]->SetMinimum(-0.1);  // Define Y ..
-      fOutRatioTH1FHists[th1f]->SetMaximum( 0.1); // .. range
+      fOutRatioTH1FHists[th1f]->Divide(fOutMCTH1FHists[th1f]);  
+      fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitle("#frac{#mu_{Data}-#mu_{MC}}{#mu_{MC}}");
+      fOutRatioTH1FHists[th1f]->SetMinimum(-16.1);  // Define Y ..
+      fOutRatioTH1FHists[th1f]->SetMaximum( 16.1); // .. range
     }
     fOutRatioTH1FHists[th1f]->SetLineColor(kBlack);
     fOutRatioTH1FHists[th1f]->SetStats(0);      // No statistics on lower plot
@@ -226,22 +228,21 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) {
 
   TString ytitle_tmp  = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
   TString hname_tmp   = fOutDataTH1FHists[th1f]->GetName();
-  Bool_t  zetares_tmp  = (ytitle_tmp.Contains("#sigma",TString::kExact) && hname_tmp.Contains("abszeta",TString::kExact));
-  Bool_t  zetabias_tmp = (ytitle_tmp.Contains("#mu",TString::kExact) && hname_tmp.Contains("abszeta",TString::kExact));
+  Bool_t  etares_tmp  = (ytitle_tmp.Contains("#sigma",TString::kExact) && hname_tmp.Contains("eta",TString::kExact));
+  Bool_t  etabias_tmp = (ytitle_tmp.Contains("#mu",TString::kExact) && hname_tmp.Contains("eta",TString::kExact));
   Bool_t  zptres_tmp  = (ytitle_tmp.Contains("#sigma",TString::kExact) && hname_tmp.Contains("zpt",TString::kExact));
   Bool_t  effptres_tmp  = (ytitle_tmp.Contains("#sigma",TString::kExact) && hname_tmp.Contains("EBEB_effpt",TString::kExact));
 
   Bool_t  npvres_tmp  = (ytitle_tmp.Contains("#sigma",TString::kExact) && hname_tmp.Contains("nvtx",TString::kExact));
   Bool_t  npvmean_tmp = (ytitle_tmp.Contains("#mu",TString::kExact) && hname_tmp.Contains("nvtx",TString::kExact));
 
-
-  if (zetares_tmp) {
-    fOutDataTH1FHists[th1f]->SetMaximum( 0.5 );
-    fOutDataTH1FHists[th1f]->SetMinimum( 0.2 );
+  if (etares_tmp) {
+    fOutDataTH1FHists[th1f]->SetMaximum( 0.54 );
+    fOutDataTH1FHists[th1f]->SetMinimum( 0.16 );
   }
-  if (zetabias_tmp) {
-    fOutDataTH1FHists[th1f]->SetMaximum(  0.02 );
-    fOutDataTH1FHists[th1f]->SetMinimum( -0.01 );
+  if (etabias_tmp) {
+    fOutDataTH1FHists[th1f]->SetMaximum(  0.16 );
+    fOutDataTH1FHists[th1f]->SetMinimum( -0.16 );
   }
   if (zptres_tmp) {
     fOutDataTH1FHists[th1f]->SetMaximum( 0.6 );
@@ -411,8 +412,8 @@ void StackPlots::SetLines(const Int_t th1f){
   fOutTH1FRatioLines[th1f]->SetX1(fOutRatioTH1FHists[th1f]->GetXaxis()->GetXmin());
   fOutTH1FRatioLines[th1f]->SetX2(fOutRatioTH1FHists[th1f]->GetXaxis()->GetXmax());
   if (subdiv) {
-    fOutTH1FRatioLines[th1f]->SetY1(1.0);
-    fOutTH1FRatioLines[th1f]->SetY2(1.0);
+    fOutTH1FRatioLines[th1f]->SetY1(0.0);
+    fOutTH1FRatioLines[th1f]->SetY2(0.0);
   }
   else {
     fOutTH1FRatioLines[th1f]->SetY1(0.0);
