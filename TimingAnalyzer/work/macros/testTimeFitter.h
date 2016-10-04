@@ -20,12 +20,13 @@ namespace Config{
   TString  nbins;
   TString  histname;
   TString  outdir;
+  Double_t ncore;
 };
 
 inline Double_t rad2 (Double_t x, Double_t y){return x*x + y*y;}
 void testTimeFitter();
 void fittingCore(TH1F *& hist);
-void doFit(TH1F *& hist, TF1 *& fit, arr3 & temps);
+Int_t doFit(TH1F *& hist, TF1 *& fit, arr3 & temps);
 void getFitParams(TF1 *& fit, Double_t & mean, Double_t & emean, Double_t & sigma, Double_t & esigma);
 void dumpFit(TF1*& fit, arr3 & temps);
 void drawFit(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3);

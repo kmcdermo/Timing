@@ -28,6 +28,9 @@ namespace Config{
   constexpr    Float_t dRcut  = 0.3; // isolation value -- deltaR cut on rh
   constexpr    UInt_t  nrhcut = 10; // n good rec hits cut
 
+  // fitting config
+  constexpr    Float_t ncore = 1.5;
+
   // output config
   constexpr    Float_t lumi      = 2.301; // brilcalc lumi --normtag /afs/cern.ch/user/l/lumipro/public/normtag_file/moriond16_normtag.json -i rereco2015D.txt -u /fb
   static const TString extraText = "Preliminary";

@@ -3,22 +3,27 @@
 
 #include "TH1D.h"
 
-inline Float_t rad2 (Float_t x, Float_t y){return x*x + y*y;}
-inline Float_t theta(Float_t r, Float_t z){return std::atan2(r,z);}
-inline Float_t eta  (Float_t x, Float_t y, Float_t z)
+inline Float_t rad2  (const Float_t x, const Float_t y){return x*x + y*y;}
+inline Float_t theta (const Float_t r, const Float_t z){return std::atan2(r,z);}
+inline Float_t eta   (const Float_t x, const Float_t y, const Float_t z)
 {
   return -1.0f*std::log(std::tan(theta(std::sqrt(rad2(x,y)),z)/2.f));
 }
-inline Float_t phi   (Float_t x, Float_t y){return std::atan2(y,x);}
-inline Float_t deltaR(Float_t eta1, Float_t eta2, Float_t phi1, Float_t phi2)
+inline Float_t rad2_3(const Float_t x, const Float_t y, const Float_t z)
+{
+  return x*x + y*y + z*z;
+}
+inline Float_t phi   (const Float_t x, const Float_t y){return std::atan2(y,x);}
+inline Float_t deltaR(const Float_t eta1, const Float_t eta2, const Float_t phi1, const Float_t phi2)
 {
   return std::sqrt(rad2(eta2-eta1,phi1-phi2));
 }
-inline Float_t TOF  (Float_t x, Float_t y, Float_t z, Float_t vx, Float_t vy, Float_t vz, Float_t time)
+inline Float_t TOF   (const Float_t x,  const Float_t y,  const Float_t z, 
+		      const Float_t vx, const Float_t vy, const Float_t vz, const Float_t time)
 {
   return time + (std::sqrt(z*z+rad2(x,y))-std::sqrt((z-vz)*(z-vz)+rad2((x-vx),(y-vy))))/Config::sol;
 }
-inline Float_t effA (Float_t e1, Float_t e2){return e1*e2/std::sqrt(rad2(e1,e2));}
+inline Float_t effA  (const Float_t e1, const Float_t e2){return e1*e2/std::sqrt(rad2(e1,e2));}
 inline Float_t WeightedTime(const FFPairVec & etrhpairs, Bool_t isEB)
 {
   Float_t wgtT = 0.0f;
@@ -807,10 +812,13 @@ void Analysis::FillEtaPlots(const Float_t weight, const Float_t timediff, const 
     }
   }
 
-  eleta2DMap["td_el1eta"]->Fill(el1eta,timediff,weight);
-  eleta2DMap["td_el1seedeta"]->Fill(el1seedeta,timediff,weight);
-  eleta2DMap["td_el2eta"]->Fill(el2eta,timediff,weight);
-  eleta2DMap["td_el2seedeta"]->Fill(el2seedeta,timediff,weight);
+  if ((el1eb && el2eb) || (el1ee && el2ee)) // restrict this to only events with ebeb and eeee
+  {
+    eleta2DMap["td_el1eta"]->Fill(el1eta,timediff,weight);
+    eleta2DMap["td_el1seedeta"]->Fill(el1seedeta,timediff,weight);
+    eleta2DMap["td_el2eta"]->Fill(el2eta,timediff,weight);
+    eleta2DMap["td_el2seedeta"]->Fill(el2seedeta,timediff,weight);
+  }
 
   eleta2DMap["el1time_el1eta"]->Fill(el1eta,el1time,weight);
   eleta2DMap["el1time_el1seedeta"]->Fill(el1seedeta,el1time,weight);
@@ -1168,6 +1176,22 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   outhist_sigma->GetYaxis()->SetTitleOffset(outhist_sigma->GetYaxis()->GetTitleOffset() * Config::TitleFF);
   outhist_sigma->Sumw2();
 
+  TH1F * outhist_chi2  = new TH1F(Form("%s_chi2_%s",name.Data(),Config::formname.Data()),"",vxbins.size()-1,axbins);
+  outhist_chi2->GetXaxis()->SetTitle(xtitle.Data());
+  if (name.Contains("td_",TString::kExact)) {
+    outhist_chi2->GetYaxis()->SetTitle("Dielectron Seed Time Difference Fit #chi^{2} / NDF");
+  }
+  else if (name.Contains("el1",TString::kExact)) {
+    outhist_chi2->GetYaxis()->SetTitle("Leading Electron Seed Time Fit #chi^{2} / NDF");
+  }
+  else if (name.Contains("el2",TString::kExact)) {
+    outhist_chi2->GetYaxis()->SetTitle("Subleading Electron Seed Time Fit #chi^{2} / NDF");
+  }
+  outhist_chi2->SetLineColor(fColor);
+  outhist_chi2->SetMarkerColor(fColor);
+  outhist_chi2->GetYaxis()->SetTitleOffset(outhist_chi2->GetYaxis()->GetTitleOffset() * Config::TitleFF);
+  outhist_chi2->Sumw2();
+
   // use this to store runs that by themselves produce bad fits
   TH1Map tempmap; // a bit hacky I admit...
   Int_t  sumevents = 0; // also a bit hacky...
@@ -1229,6 +1253,9 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
     outhist_sigma->SetBinContent(bin,sigma);
     outhist_sigma->SetBinError(bin,esigma);
 
+    const Float_t chi2ndf = fit->GetChisquare() / fit->GetNDF();
+    outhist_chi2->SetBinContent(bin,chi2ndf);
+
     // save a copy of the fitted histogram with the fit
     Analysis::SaveTH1andFit((*mapiter).second,subdir,fit);
   } // end loop over th1s
@@ -1246,10 +1273,12 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   fOutFile->cd();
   outhist_mean->Write();
   outhist_sigma->Write();
+  outhist_chi2->Write();
 
   // and want to dump them too (for stacking)!
   if (!fIsMC && !name.Contains("runs",TString::kExact)) {fTH1Dump << outhist_mean->GetName()  << " " << subdir.Data() << std::endl;}
   if (!fIsMC && !name.Contains("runs",TString::kExact)) {fTH1Dump << outhist_sigma->GetName() << " " << subdir.Data() << std::endl;}
+  if (!fIsMC && !name.Contains("runs",TString::kExact)) {fTH1Dump << outhist_chi2->GetName()  << " " << subdir.Data() << std::endl;}
 
   // save log/lin of each plot
   TCanvas * canv = new TCanvas("canv","canv");
@@ -1268,8 +1297,13 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   outhist_sigma->Draw("PE");
   CMSLumi(canv);
   canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_sigma->GetName(),Config::outtype.Data()));
+
+  outhist_chi2->Draw("PE");
+  CMSLumi(canv);
+  canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_chi2->GetName(),Config::outtype.Data()));
   
   delete canv;
+  delete outhist_chi2;
   delete outhist_sigma;
   delete outhist_mean;
 }
@@ -1279,29 +1313,55 @@ void Analysis::PrepFit(TF1 *& fit, TH1F *& hist)
   TF1 * tempfit = new TF1("temp","gaus(0)",-Config::fitrange,Config::fitrange);
   tempfit->SetParLimits(2,0,10);
   hist->Fit("temp","RQ0B");
-  const Float_t tempp0 = tempfit->GetParameter(0); // constant
-  const Float_t tempp1 = tempfit->GetParameter(1); // mean
-  const Float_t tempp2 = tempfit->GetParameter(2); // sigma
-
-  if (Config::formname.EqualTo("gaus1",TString::kExact)) {
+  const Float_t norm  = tempfit->GetParameter(0); // constant
+  const Float_t mean  = tempfit->GetParameter(1); // mean
+  const Float_t sigma = tempfit->GetParameter(2); // sigma
+  delete tempfit;
+  
+  if (Config::formname.EqualTo("gaus1",TString::kExact)) 
+  {
     TFormula form(Config::formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
     fit  = new TF1(Form("%s_fit",Config::formname.Data()),Config::formname.Data(),-Config::fitrange,Config::fitrange);
-    fit->SetParameters(tempp0,tempp1,tempp2);
+    fit->SetParameters(norm,mean,sigma);
     fit->SetParLimits(2,0,10);
   }
-  else if (Config::formname.EqualTo("gaus2",TString::kExact)) {
+  else if (Config::formname.EqualTo("gaus1core",TString::kExact)) 
+  {
+    TFormula form(Config::formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
+    const Float_t hmean  = hist->GetMean();
+    const Float_t hsigma = hist->GetStdDev(); 
+        
+    fit  = new TF1(Form("%s_fit",Config::formname.Data()),Config::formname.Data(),hmean-Config::ncore*hsigma,hmean+Config::ncore*hsigma);
+    fit->SetParameters(norm,mean,sigma);
+    fit->SetParLimits(2,0,10);
+  }
+  else if (Config::formname.EqualTo("gaus2",TString::kExact)) 
+  {
     TFormula form(Config::formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[4])/[5])**2)");
     fit  = new TF1(Form("%s_fit",Config::formname.Data()),Config::formname.Data(),-Config::fitrange,Config::fitrange);
-    fit->SetParameters(tempp0,tempp1,tempp2,tempp0/10,0,tempp2*4);
+    fit->SetParameters(norm,mean,sigma,norm/10,0,sigma*4);
     fit->SetParLimits(2,0,10);
-    fit->SetParLimits(5,0,10);
+      fit->SetParLimits(5,0,10);
   }
-  else if (Config::formname.EqualTo("gaus2fm",TString::kExact)) {
+  else if (Config::formname.EqualTo("gaus2fm",TString::kExact)) 
+  {
     TFormula form(Config::formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)");
     fit  = new TF1(Form("%s_fit",Config::formname.Data()),Config::formname.Data(),-Config::fitrange,Config::fitrange);
-    fit->SetParameters(tempp0,tempp1,tempp2,tempp0/10,tempp2*4);
+    fit->SetParameters(norm,mean,sigma,norm/10,sigma*4);
     fit->SetParLimits(2,0,10);
     fit->SetParLimits(4,0,10);
+  }
+  else if (Config::formname.EqualTo("gaus3fm",TString::kExact)) 
+  {
+    TFormula form(Config::formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)+[5]*exp(-0.5*((x-[1])/[6])**2)");
+    fit  = new TF1(Form("%s_fit",Config::formname.Data()),Config::formname.Data(),-Config::fitrange,Config::fitrange);
+    fit->SetParName(0,"norm1");  fit->SetParameter(0,norm*0.8);  fit->SetParLimits(0,norm*0.5,norm);
+    fit->SetParName(1,"mean");   fit->SetParameter(1,mean);
+    fit->SetParName(2,"sigma1"); fit->SetParameter(2,sigma*0.7); fit->SetParLimits(2,sigma*0.5,sigma);
+    fit->SetParName(3,"norm2");  fit->SetParameter(3,norm*0.3);  fit->SetParLimits(3,norm*0.1,norm*0.5);
+    fit->SetParName(4,"sigma2"); fit->SetParameter(4,sigma*1.4); fit->SetParLimits(4,sigma,sigma*1.5);
+    fit->SetParName(5,"norm3");  fit->SetParameter(5,norm*0.01); fit->SetParLimits(5,norm*0.005,norm*0.1);
+    fit->SetParName(6,"sigma3"); fit->SetParameter(6,sigma*2.5); fit->SetParLimits(6,sigma*1.5,sigma*5.0);
   }
   else {
     std::cerr << "Yikes, you picked a function that we made that does not even exist ...exiting... " << std::endl;
@@ -1309,7 +1369,6 @@ void Analysis::PrepFit(TF1 *& fit, TH1F *& hist)
   }
 
   fit->SetLineColor(kMagenta-3); //kViolet-6
-  delete tempfit;
 }
 
 void Analysis::GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t & sigma, Float_t & esigma) 
@@ -1320,10 +1379,16 @@ void Analysis::GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t
     sigma  = fit->GetParameter(2);
     esigma = fit->GetParError (2);
   }
+  else if (Config::formname.EqualTo("gaus1core",TString::kExact)) {
+    mean   = fit->GetParameter(1);
+    emean  = fit->GetParError (1);
+    sigma  = fit->GetParameter(2);
+    esigma = fit->GetParError (2);
+  }
   else if (Config::formname.EqualTo("gaus2",TString::kExact)) {
     const Float_t const1 = fit->GetParameter(0); 
     const Float_t const2 = fit->GetParameter(3);
-    const Float_t denom =  const1 + const2;
+    const Float_t denom  = const1 + const2;
 
     mean   = (const1*fit->GetParameter(1) + const2*fit->GetParameter(4))/denom;
     sigma  = (const1*fit->GetParameter(2) + const2*fit->GetParameter(5))/denom;
@@ -1337,7 +1402,7 @@ void Analysis::GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t
   else if (Config::formname.EqualTo("gaus2fm",TString::kExact)) {
     const Float_t const1 = fit->GetParameter(0); 
     const Float_t const2 = fit->GetParameter(3);
-    const Float_t denom =  const1 + const2;
+    const Float_t denom  = const1 + const2;
 
     mean   = fit->GetParameter(1);
     sigma  = (const1*fit->GetParameter(2) + const2*fit->GetParameter(4))/denom;
@@ -1347,10 +1412,26 @@ void Analysis::GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t
 
     esigma = std::sqrt(esigma)/denom;
   }
+  else if (Config::formname.EqualTo("gaus3fm",TString::kExact)) {
+    const Double_t const1 = fit->GetParameter(0); 
+    const Double_t const2 = fit->GetParameter(3);
+    const Double_t const3 = fit->GetParameter(5);
+    const Double_t denom  = const1 + const2 + const3;
+
+    mean   = fit->GetParameter(1);
+    sigma  = (const1*fit->GetParameter(2) + const2*fit->GetParameter(4) + const3*fit->GetParameter(6))/denom;
+
+    emean  = fit->GetParError(1);
+    esigma = rad2_3(const1*fit->GetParError(2),const2*fit->GetParError(4),const3*fit->GetParError(6));
+
+    esigma = std::sqrt(esigma)/denom;
+  }
 }
 
-void Analysis::DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2) 
+void Analysis::DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3) 
 {
+  canv->cd();
+
   if (Config::formname.EqualTo("gaus2",TString::kExact)) {
     sub1 = new TF1("sub1","gaus(0)",-Config::fitrange,Config::fitrange);
     sub1->SetParameters(fit->GetParameter(0),fit->GetParameter(1),fit->GetParameter(2));
@@ -1365,11 +1446,24 @@ void Analysis::DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2
     sub2 = new TF1("sub2","gaus(0)",-Config::fitrange,Config::fitrange);
     sub2->SetParameters(fit->GetParameter(3),fit->GetParameter(1),fit->GetParameter(4));
   } 
+  else if (Config::formname.EqualTo("gaus3fm",TString::kExact)) {
+    sub1 = new TF1("sub1","gaus(0)",-Config::fitrange,Config::fitrange);
+    sub1->SetParameters(fit->GetParameter(0),fit->GetParameter(1),fit->GetParameter(2));
+  
+    sub2 = new TF1("sub2","gaus(0)",-Config::fitrange,Config::fitrange);
+    sub2->SetParameters(fit->GetParameter(3),fit->GetParameter(1),fit->GetParameter(4));
+
+    sub3 = new TF1("sub3","gaus(0)",-Config::fitrange,Config::fitrange);
+    sub3->SetParameters(fit->GetParameter(5),fit->GetParameter(1),fit->GetParameter(6));
+
+    sub3->SetLineColor(kGreen-3); // kViolet-3
+    sub3->SetLineWidth(2);
+    sub3->SetLineStyle(7);
+    sub3->Draw("same");
+  } 
   else { // do not do anything in this function
     return;
   }
-
-  canv->cd();
 
   sub1->SetLineColor(kRed) ;  // kgreen-3
   sub1->SetLineWidth(2);
@@ -1503,8 +1597,8 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap)
       fit->Draw("same");
       
       // draw sub components of fit it applies
-      TF1 * sub1; TF1 * sub2;
-      Analysis::DrawSubComp(fit,fitcanv,sub1,sub2);
+      TF1 * sub1; TF1 * sub2; TF1 * sub3;
+      Analysis::DrawSubComp(fit,fitcanv,sub1,sub2,sub3);
       (*mapiter).second->Draw("PE SAME"); // redraw to put points on top
 
       // first save as linear, then log
@@ -1517,7 +1611,7 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap)
       fitcanv->SaveAs(Form("%s/%s/log/%s_%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),fit->GetName(),Config::outtype.Data()));
       
       delete fitcanv;
-      Analysis::DeleteFit(fit,sub1,sub2);
+      Analysis::DeleteFit(fit,sub1,sub2,sub3);
     }
   }
 }
@@ -1532,8 +1626,8 @@ void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit)
   fit->Draw("same");
 
   // draw subcomponents, too, if they apply
-  TF1 * sub1; TF1 * sub2;
-  Analysis::DrawSubComp(fit,canv,sub1,sub2);
+  TF1 * sub1; TF1 * sub2; TF1 * sub3;
+  Analysis::DrawSubComp(fit,canv,sub1,sub2,sub3);
   hist->Draw("PE SAME"); // redraw to get data points on top
 
   fOutFile->cd();
@@ -1550,7 +1644,8 @@ void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit)
     canv->SaveAs(Form("%s/%s/log/%s_%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fit->GetName(),Config::outtype.Data()));
   }
   delete canv;
-  Analysis::DeleteFit(fit,sub1,sub2); // now that the fitting is done being used, delete it (as well as sub component gaussians)
+
+  Analysis::DeleteFit(fit,sub1,sub2,sub3); // now that the fitting is done being used, delete it (as well as sub component gaussians)
 }
 
 void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap) 
@@ -1582,11 +1677,12 @@ void Analysis::DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap)
   }
 }
 
-void Analysis::DeleteFit(TF1 *& fit, TF1 *& sub1, TF1 *& sub2) 
+void Analysis::DeleteFit(TF1 *& fit, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3) 
 {
   delete fit;
-  if (!Config::formname.EqualTo("gaus1",TString::kExact)) { delete sub1; }
-  if (!Config::formname.EqualTo("gaus1",TString::kExact)) { delete sub2; }
+  if (!(Config::formname.EqualTo("gaus1",    TString::kExact) ||
+	Config::formname.EqualTo("gaus1core",TString::kExact))) { delete sub1; delete sub2; }
+  if (Config::formname.EqualTo("gaus3fm",TString::kExact)) { delete sub3; }
 }
 
 void Analysis::DeleteTH1s(TH1Map & th1map)

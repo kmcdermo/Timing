@@ -22,8 +22,10 @@ void timefit()
   Bool_t isEB = true;
   TString outdir = "output";
 
+  TString fitname = "gaus1core";
+
   TFile * file = TFile::Open(Form("%s/%s/plots.root",outdir.Data(),isMC?"MC/dyll":"DATA/doubleeg"));
-  TH1F  * hist = (TH1F*)file->Get(Form("td_effseedE_%s_sigma_gaus2fm",isEB?"EBEB":"EEEE"));
+  TH1F  * hist = (TH1F*)file->Get(Form("td_effseedE_%s_sigma_%s",isEB?"EBEB":"EEEE",fitname.Data()));
   hist->GetXaxis()->SetTitle("E_{eff}/#sigma_{n}");
   hist->GetYaxis()->SetTitle("#sigma(t_{1}-t_{2}) [ns]");
 

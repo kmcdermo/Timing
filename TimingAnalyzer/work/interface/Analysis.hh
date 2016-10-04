@@ -60,7 +60,7 @@ public:
   void ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString name, TString xtitle, const DblVec vxbins, TString subdir);
   void PrepFit(TF1 *& fit, TH1F *& hist);
   void GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t & sigma, Float_t & esigma); 
-  void DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2);
+  void DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3);
   TH1F * MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
   TH2F * MakeTH2Plot(TString hname, TString htitle, const DblVec& vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
   void FillHistFromPairVecFirst (TH1F *& hist, const FFPairVec & pairvec);
@@ -69,7 +69,7 @@ public:
   void SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit);
   void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
   void DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap);
-  void DeleteFit(TF1 *& fit, TF1 *& sub1, TF1 *& sub2);
+  void DeleteFit(TF1 *& fit, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3);
   void DeleteTH1s(TH1Map & th1map);
   void DeleteTH2s(TH2Map & th2map);
 
