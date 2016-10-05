@@ -26,7 +26,7 @@ options.register (
 
 ## GT to be used    
 options.register (
-	'globalTag','76X_dataRun2_16Dec2015_v0',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'globalTag','80X_dataRun2_Prompt_ICHEP16JEC_v0',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'gloabl tag to be used');
 
 ## Skim on events that pass hlt paths and tight electron kinematic requirements
@@ -57,7 +57,7 @@ options.parseArguments()
 
 ### check consistentcy of basic options
 if options.isMC and 'dataRun2' in options.globalTag:
-	options.globalTag = '76X_mcRun2_asymptotic_RunIIFall15DR76_v1';
+	options.globalTag = '80X_mcRun2_asymptotic_2016_miniAODv2_v1';
 
 if options.isMC and options.miniAODProcess != 'PAT':
 	options.miniAODProcess  = 'PAT'
@@ -92,17 +92,20 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 ## Define the input source
 if not options.isMC :
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-			
-			'/store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/00A55FDF-74A6-E511-AD74-0CC47A4D7658.root',
-			'/store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/043D5E4A-83A6-E511-B159-0CC47A4D76D6.root',
-			'/store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/000298CD-87A6-E511-9E56-002590593878.root'
-			) #doubleEG 2015D
+			'/store/data/Run2016B/DoubleEG/MINIAOD/PromptReco-v2/000/273/158/00000/308C0A95-E819-E611-9413-02163E01386F.root', #2016B			
+			'/store/data/Run2016C/DoubleEG/MINIAOD/PromptReco-v2/000/275/658/00000/36A8FE5F-813B-E611-82A0-02163E014365.root', #2016C
+			'/store/data/Run2016D/DoubleEG/MINIAOD/PromptReco-v2/000/276/318/00000/349ADEDB-2145-E611-B8B6-02163E012598.root', #2016D
+			'/store/data/Run2016E/DoubleEG/MINIAOD/PromptReco-v2/000/276/831/00000/56C5F0A6-034D-E611-A6F3-02163E0141F1.root', #2016E
+			'/store/data/Run2016F/DoubleEG/MINIAOD/PromptReco-v1/000/278/018/00000/2AAB6E8C-885A-E611-829C-02163E0128B6.root', #2016F
+			'/store/data/Run2016G/DoubleEG/MINIAOD/PromptReco-v1/000/278/820/00000/CC0E121C-7D64-E611-AA12-FA163ED4D6E2.root', #2016G
+			'/store/data/Run2016H/DoubleEG/MINIAOD/PromptReco-v2/000/281/693/00000/04D532E5-7786-E611-B126-02163E014682.root'  #2016H
+			) 
 				    )
 else:
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-			'/store/mc/RunIIFall15MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/12D266E2-04C8-E511-8D24-047D7BD6DED2.root',
-			'/store/mc/RunIIFall15MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/4C15C8E0-04C8-E511-9406-0025907FD40C.root',
-			'/store/mc/RunIIFall15MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/6656A6E3-04C8-E511-B8EF-FACADE000113.root'
+			'/store/mc/RunIISpring16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/40000/00A42394-FA5C-E611-9E01-0025905C96E8.root',
+			'/store/mc/RunIISpring16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/40000/0C109D17-0D5D-E611-9D5B-A0000420FE80.root',
+			'/store/mc/RunIISpring16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/40000/1686540B-055D-E611-AC79-0002C94CD0D8.root'
 			)    	
 )
 

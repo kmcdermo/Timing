@@ -33,6 +33,9 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/Common/interface/ValueMap.h"
+#include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/EcalDetId/interface/EBDetId.h"
+#include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
 
 // EGamma Tools
@@ -126,7 +129,7 @@ private:
   int event, run, lumi;  
 
   // triggers 
-  bool hltdoubleel,hltsingleel,hltelnoiso;
+  bool hltdoubleel;
 
   // vertices
   int nvtx; 
@@ -265,29 +268,18 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     
   // Trigger info
   hltdoubleel = false;
-  hltsingleel = false;
-  hltelnoiso  = false;
 
   // Which triggers fired
   if(triggerResultsH.isValid()){
     for (size_t i = 0; i < triggerPathsVector.size(); i++) {
       if (triggerPathsMap[triggerPathsVector[i]] == -1) continue;	
       if (i == 0 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel = true; // Double electron trigger
-      if (i == 1 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel = true; // Double electron trigger
-      if (i == 2 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel = true; // Single electron trigger
-      if (i == 3 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel = true; // Single electron trigger
-      if (i == 4 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel = true; // Single electron trigger
-      if (i == 5 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltsingleel = true; // Single electron trigger
-      if (i == 6 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltelnoiso  = true; // Single electron trigger
-      if (i == 7 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltelnoiso  = true; // Single electron trigger
     }
   }
 
   // skim on events that pass triggers
   bool triggered = false;
   if      (hltdoubleel) triggered = true;
-  else if (hltsingleel) triggered = true;
-  else if (hltelnoiso)  triggered = true;
   if (applyHLTFilter && !triggered) return;
 
   // Vertex info
@@ -610,9 +602,7 @@ void TimingAnalyzer::beginJob() {
   tree->Branch("lumi"                 , &lumi                 , "lumi/I");
   
   // Triggers
-  tree->Branch("hltsingleel"          , &hltsingleel          , "hltsingleel/O");
   tree->Branch("hltdoubleel"          , &hltdoubleel          , "hltdoubleel/O");
-  tree->Branch("hltelnoiso"           , &hltelnoiso           , "hltelnoiso/O");
 
   // Vertex info
   tree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");
@@ -734,14 +724,7 @@ void TimingAnalyzer::endJob() {}
 
 void TimingAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {
   // triggers for the Analysis
-  triggerPathsVector.push_back("HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ");
   triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ");
-  triggerPathsVector.push_back("HLT_Ele23_WPLoose_Gsf_v");
-  triggerPathsVector.push_back("HLT_Ele27_WPLoose_Gsf_v");
-  triggerPathsVector.push_back("HLT_Ele23_CaloIdL_TrackIdL_IsoVL_v");
-  triggerPathsVector.push_back("HLT_Ele27_WP85_Gsf_v");
-  triggerPathsVector.push_back("HLT_Ele105_CaloIdVT_GsfTrkIdT_v");
-  triggerPathsVector.push_back("HLT_Ele115_CaloIdVT_GsfTrkIdT_v");
   
   HLTConfigProvider hltConfig;
   bool changedConfig = false;
