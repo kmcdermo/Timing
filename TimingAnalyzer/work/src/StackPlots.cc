@@ -167,15 +167,15 @@ void StackPlots::MakeRatioPlots() {
       fOutRatioTH1FHists[th1f]->Add(fOutMCTH1FHists[th1f],-1.0);  
       fOutRatioTH1FHists[th1f]->Divide(fOutMCTH1FHists[th1f]);  
       fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitle("#frac{#sigma_{Data}-#sigma_{MC}}{#sigma_{MC}}");
-      fOutRatioTH1FHists[th1f]->SetMinimum(-1.6);  // Define Y ..
-      fOutRatioTH1FHists[th1f]->SetMaximum( 1.6); // .. range
+      fOutRatioTH1FHists[th1f]->SetMinimum(-2.6);  // Define Y ..
+      fOutRatioTH1FHists[th1f]->SetMaximum( 2.6); // .. range
     }
     else {
       fOutRatioTH1FHists[th1f]->Add(fOutMCTH1FHists[th1f],-1.0);  
       fOutRatioTH1FHists[th1f]->Divide(fOutMCTH1FHists[th1f]);  
       fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitle("#frac{#mu_{Data}-#mu_{MC}}{#mu_{MC}}");
-      fOutRatioTH1FHists[th1f]->SetMinimum(-16.1);  // Define Y ..
-      fOutRatioTH1FHists[th1f]->SetMaximum( 16.1); // .. range
+      fOutRatioTH1FHists[th1f]->SetMinimum(-11.1);  // Define Y ..
+      fOutRatioTH1FHists[th1f]->SetMaximum( 11.1); // .. range
     }
     fOutRatioTH1FHists[th1f]->SetLineColor(kBlack);
     fOutRatioTH1FHists[th1f]->SetStats(0);      // No statistics on lower plot
@@ -225,43 +225,6 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) {
     fOutDataTH1FHists[th1f]->SetMaximum( max > 0 ? max*1.05 : max/1.05 );      
     fOutDataTH1FHists[th1f]->SetMinimum( min > 0 ? min/1.05 : min*1.05 );
   }
-
-  TString ytitle_tmp  = fOutDataTH1FHists[th1f]->GetYaxis()->GetTitle();
-  TString hname_tmp   = fOutDataTH1FHists[th1f]->GetName();
-  Bool_t  etares_tmp  = (ytitle_tmp.Contains("#sigma",TString::kExact) && hname_tmp.Contains("eta",TString::kExact));
-  Bool_t  etabias_tmp = (ytitle_tmp.Contains("#mu",TString::kExact) && hname_tmp.Contains("eta",TString::kExact));
-  Bool_t  zptres_tmp  = (ytitle_tmp.Contains("#sigma",TString::kExact) && hname_tmp.Contains("zpt",TString::kExact));
-  Bool_t  effptres_tmp  = (ytitle_tmp.Contains("#sigma",TString::kExact) && hname_tmp.Contains("EBEB_effpt",TString::kExact));
-
-  Bool_t  npvres_tmp  = (ytitle_tmp.Contains("#sigma",TString::kExact) && hname_tmp.Contains("nvtx",TString::kExact));
-  Bool_t  npvmean_tmp = (ytitle_tmp.Contains("#mu",TString::kExact) && hname_tmp.Contains("nvtx",TString::kExact));
-
-  if (etares_tmp) {
-    fOutDataTH1FHists[th1f]->SetMaximum( 0.54 );
-    fOutDataTH1FHists[th1f]->SetMinimum( 0.16 );
-  }
-  if (etabias_tmp) {
-    fOutDataTH1FHists[th1f]->SetMaximum(  0.16 );
-    fOutDataTH1FHists[th1f]->SetMinimum( -0.16 );
-  }
-  if (zptres_tmp) {
-    fOutDataTH1FHists[th1f]->SetMaximum( 0.6 );
-    fOutDataTH1FHists[th1f]->SetMinimum( 0.1 );
-  }
-  if (effptres_tmp) {
-    fOutDataTH1FHists[th1f]->SetMaximum( 0.6 );
-    fOutDataTH1FHists[th1f]->SetMinimum( 0.1 );
-  }
-  if (npvres_tmp) {
-    fOutDataTH1FHists[th1f]->SetMaximum( 0.5 );
-    fOutDataTH1FHists[th1f]->SetMinimum( 0.0 );
-  }
-  if (npvmean_tmp) {
-    fOutDataTH1FHists[th1f]->SetMaximum( 0.1 );
-    fOutDataTH1FHists[th1f]->SetMinimum( -0.1 );
-  }
-
-
   
   // now draw the plots for upper pad in absurd order because ROOT is dumb
   fOutDataTH1FHists[th1f]->Draw("PE"); // draw first so labels appear
@@ -369,21 +332,6 @@ void StackPlots::DrawLowerPad(const Int_t th1f) {
   fOutRatioTH1FHists[th1f]->GetXaxis()->SetLabelOffset(Config::LabelOffset / Config::height_lp); 
   fOutRatioTH1FHists[th1f]->GetXaxis()->SetTitleSize  (Config::TitleSize   / Config::height_lp);
   fOutRatioTH1FHists[th1f]->GetXaxis()->SetTickLength (Config::TickLength  / Config::height_lp);
-  
-  TString tmpfix = fOutRatioTH1FHists[th1f]->GetName();
-  
-  if (tmpfix.Contains("td_effseedE",TString::kExact)) {
-    TString replacestr  = "Effective";
-    Ssiz_t  length      = replacestr.Length();
-    TString xtitle      = fOutRatioTH1FHists[th1f]->GetXaxis()->GetTitle();
-    Ssiz_t  xtitlepos   = xtitle.Index(replacestr.Data());
-    
-    TString toreplace = "Effective Seed Energy";
-    xtitle.Replace(xtitlepos,length,toreplace);
-    fOutRatioTH1FHists[th1f]->GetXaxis()->SetTitle(xtitle.Data());
-  }
-
-
   fOutRatioTH1FHists[th1f]->GetYaxis()->SetLabelSize  (Config::LabelSize   / Config::height_lp); 
   fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitleSize  (Config::TitleSize   / Config::height_lp);
   fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_lp);
