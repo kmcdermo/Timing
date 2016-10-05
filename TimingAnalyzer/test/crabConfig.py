@@ -1,14 +1,14 @@
 from CRABClient.UserUtilities import config
 config = config()
 
-config.General.requestName = 'PR2016H_DoubleEG'
+config.General.requestName = 'DYll_Spring16'
 
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'tree.py'
 
 # MC samples
-#config.Data.inputDataset = /DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM
-#config.Data.unitsPerJob = 100000
+config.Data.inputDataset = '/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM'
+config.Data.unitsPerJob = 100000
 
 ############################################
 #                Data samples              #
@@ -22,9 +22,9 @@ config.JobType.psetName = 'tree.py'
 # /DoubleEG/Run2016G-PromptReco-v1/MINIAOD
 # /DoubleEG/Run2016H-PromptReco-v2/MINIAOD
 
-config.Data.inputDataset = '/DoubleEG/Run2016H-PromptReco-v2/MINIAOD'
-config.Data.lumiMask = 'reco2016_noL1T-27p22ifb.txt'
-config.Data.unitsPerJob = 500000
+#config.Data.inputDataset = '/DoubleEG/Run2016H-PromptReco-v2/MINIAOD'
+#config.Data.lumiMask = 'reco2016_noL1T-27p22ifb.txt'
+#config.Data.unitsPerJob = 500000
 
 #config.Data.ignoreLocality = True
 config.Data.splitting = 'EventAwareLumiBased' #'LumiBased' 
