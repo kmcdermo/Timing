@@ -411,6 +411,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	  // if (detcounts.count(id) > 0) std::cout << "UH OH MULTIPLE IDS: " << id << std::endl;
 	  // detcounts[id]++;
 
+	  //	  std::cout << recHit->checkFlag(EcalRecHit::kOutOfTime) << std::endl;
+
 	  // save position, energy, and time of each crystal to a vector
 	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
 	  el1rhXs.push_back(recHitPos.x());
