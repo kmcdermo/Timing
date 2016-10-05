@@ -12,14 +12,15 @@ void prepFit(TH1F *& hist, TF1 *& fit, TString formname, Double_t fitrange, Doub
 void drawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2, TString formname, Double_t fitrange); 
 void getMeanSigma(TF1 *& fit, Double_t & mean, Double_t & emean, Double_t & sigma, Double_t & esigma, TString formname);
 
-void refitcanv(TString tisMC, TString fitdir, TString name, TString bins, TString tbin, TString tg1 = 1, TString tg2 = 1)
+void refitcanv(TString tisMC, TString fitdir, TString name, TString bins, TString tbin, TString tg1 = 10, TString tg2 = 4)
 {
   Bool_t  isMC = tisMC.Atoi();
-  Int_t    bin = tbin.Atoi();
+  Int_t    bin = tbin.Atoi(); // in overall plot, bins == number(s) on canvas fit plot
   Double_t  g1 = tg1.Atof();
   Double_t  g2 = tg2.Atof();
-  TString indir    = "gaus2fm";
-  TString formname = "gaus2fm";
+  TString indir = "output";
+  //  TString formtitle = "gaus2fm";
+  TString formname  = "gaus2fm";
 
   TString outdir = Form("%s/%s",indir.Data(), (isMC?"MC/dyll":"DATA/doubleeg") );
   TFile   * file = TFile::Open(Form("%s/plots.root",outdir.Data()),"UPDATE");
@@ -37,14 +38,17 @@ void refitcanv(TString tisMC, TString fitdir, TString name, TString bins, TStrin
   // do the fit
   hist->Fit(Form("%s_fit",formname.Data()));
   
-  // draw the new fit
+  //  draw the new fit
   TCanvas * outcanv = new TCanvas("outcanv","outcanv");
   outcanv->cd();
-  
+  outcanv->SetLogy(1);
+
   hist->Draw();
   
   TF1 * sub1; TF1 * sub2;
   drawSubComp(fit,outcanv,sub1,sub2,formname,fitrange);
+
+  //  outcanv->Write(canv->GetName(),TObject::kWriteDelete);
 
   // now save the new fit as a png
   //  outcanv->SaveAs(Form("%s/%s_refit.png",fitdir.Data(),outcanv->GetName()));
@@ -55,6 +59,13 @@ void refitcanv(TString tisMC, TString fitdir, TString name, TString bins, TStrin
 
   std::cout << "New mean: " << mean << "+/-" << emean << " and sigma: " << sigma << "+/-" << esigma << std::endl;
   
+  //  rms only
+
+//   Double_t mean   = hist->GetMean();
+//   Double_t emean  = hist->GetMeanError();
+//   Double_t sigma  = hist->GetRMS();
+//   Double_t esigma = hist->GetRMSError();
+
   hmean ->SetBinContent(bin,mean);
   hmean ->SetBinError(bin,emean);
   hsigma->SetBinContent(bin,sigma);
@@ -66,7 +77,7 @@ void refitcanv(TString tisMC, TString fitdir, TString name, TString bins, TStrin
   TCanvas * canv = new TCanvas();
   canv->cd();
 
-  //  canv->SetLogy(1);
+  //canv->SetLogy(1);
   //  canv->SetLogx(1);
   //  canv->SetGridy(1);
   //  canv->SetGridx(1);
@@ -102,13 +113,13 @@ void prepFit(TH1F *& hist, TF1 *& fit, TString formname, Double_t fitrange, Doub
   else if (formname.EqualTo("gaus2fm",TString::kExact)) {
     TFormula form(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)");
     fit  = new TF1(Form("%s_fit",formname.Data()),formname.Data(),-fitrange,fitrange);
-    fit->SetParameters(tempp0,tempp1,tempp2,tempp0/g1,tempp2*g2);
-    fit->SetParLimits(2,0,10);
-    fit->SetParLimits(4,0,10);
+//     fit->SetParameters(tempp0,tempp1,tempp2,tempp0/g1,tempp2*g2);
+//     fit->SetParLimits(2,0,10);
+//     fit->SetParLimits(4,0,10);
 
-//      fit->SetParameters(tempp0,tempp1,tempp2,0,1);
-//      fit->SetParLimits(3,0,4);
-//      fit->SetParLimits(4,0,4);
+     fit->SetParameters(tempp0,tempp1,tempp2,0,1);
+     fit->SetParLimits(3,0,30);
+     fit->SetParLimits(4,0,4);
   }
 
   fit->SetLineColor(kMagenta-3); 

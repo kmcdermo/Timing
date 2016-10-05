@@ -21,8 +21,10 @@ void copyplots()
   }
   inputplots.close();
 
-  TFile * infile  = TFile::Open("output/MC/dyll/plots.root");
-  TFile * outfile = new TFile("plots/MC/dyll/plots.root","RECREATE");
+  TString pd =  "DATA/doubleeg"; // "MC/dyll" ; // 
+
+  TFile * infile  = TFile::Open(Form("gaus2fm/%s/plots.root",pd.Data()));
+  TFile * outfile = new TFile(Form("plots/%s/plots.root",pd.Data()),"RECREATE");
 
   for (UInt_t iplot = 0; iplot < plotnames.size(); iplot++)
   {

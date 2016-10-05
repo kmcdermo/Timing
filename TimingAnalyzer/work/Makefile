@@ -41,4 +41,4 @@ ${SRCDIR}/dict.cc: ${HEADERS}
 	rootcling -f $@ -c -p $^
 
 clean:
-	-rm -f ${EXES} ${DEPDIR}/*.d ${OBJDIR}/*.o ${SRCDIR}/*.pcm ./*~ ./*/*~ macros/*.so macros/*.d
+	-rm -f ${EXES} ${DEPDIR}/*.d ${OBJDIR}/*.o *.o ${SRCDIR}/*.pcm ./*~ ./*/*~ macros/*.so macros/*.d macros/*.pcm

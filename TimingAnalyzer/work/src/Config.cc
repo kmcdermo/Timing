@@ -26,10 +26,11 @@ namespace Config {
   Bool_t  doRuns     = false;
   Bool_t  doTrigEff  = false;
   Bool_t  applyTOF   = false;
-  Bool_t  wgtedtime  = false;
+  Bool_t  wgtedTime  = false;
   Bool_t  useSigma_n = false;
   Bool_t  saveFits   = false;
   TString formname   = "gaus2fm"; // gaus1, gaus2, gaus2fm, gauslin
+  TString outtype    = "png";
 
   TStrBoolMap SampleMap;       // set in main.cc
   ColorMap    colorMap;        // set in main.cc

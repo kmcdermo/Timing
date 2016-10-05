@@ -32,14 +32,15 @@ public:
   void SetupRunPlots();
   void SetupTrigEffPlots();
   void FillStandardPlots(const Float_t weight, const Float_t timediff, const Float_t effE, const Float_t effseedE, 
-			 const Float_t el1time, const Float_t el1seedeta, Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em,
-			 const Float_t el2time, const Float_t el2seedeta, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
+			 const Float_t el1time, const Float_t el1seedeta, Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, const FFPairVec & el1rhetpairs,
+			 const Float_t el2time, const Float_t el2seedeta, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em, const FFPairVec & el2rhetpairs);
   void FillZPlots(const Float_t weight, const Float_t timediff);
   void FillEffEPlots(const Float_t weight, const Float_t timediff, const Float_t effE, const Float_t effseedE, 
 		     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
   void FillNvtxPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time,
 		     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
-  void FillEtaPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time, const Float_t el1seedeta, const Float_t el2seedeta);
+  void FillEtaPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time, const Float_t el1seedeta, const Float_t el2seedeta,
+		    Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
   void FillVtxZPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time);
   void FillSingleEPlots(const Float_t weight, const Float_t el1time, const Float_t el2time,
 			Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
@@ -59,14 +60,16 @@ public:
   void ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString name, TString xtitle, const DblVec vxbins, TString subdir);
   void PrepFit(TF1 *& fit, TH1F *& hist);
   void GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t & sigma, Float_t & esigma); 
-  void DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2);
+  void DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3);
   TH1F * MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
   TH2F * MakeTH2Plot(TString hname, TString htitle, const DblVec& vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
+  void FillHistFromPairVecFirst (TH1F *& hist, const FFPairVec & pairvec);
+  void FillHistFromPairVecSecond(TH1F *& hist, const FFPairVec & pairvec);
   void SaveTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit);
   void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
   void DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap);
-  void DeleteFit(TF1 *& fit, TF1 *& sub1, TF1 *& sub2);
+  void DeleteFit(TF1 *& fit, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3);
   void DeleteTH1s(TH1Map & th1map);
   void DeleteTH2s(TH2Map & th2map);
 
@@ -109,6 +112,9 @@ private:
 
   // nvtx plots
   TH2Map nvtx2DMap; TStrMap nvtx2DSubMap; DblVec nvtxbins;
+
+  // delta eta plots
+  TH2Map deta2DMap; TStrMap deta2DSubMap; DblVec detabins;
   
   // single el eta plots
   TH2Map eleta2DMap; TStrMap eleta2DSubMap; DblVec eletabins;

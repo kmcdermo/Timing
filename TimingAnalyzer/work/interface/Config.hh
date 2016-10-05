@@ -17,14 +17,22 @@ typedef std::map<TString,DblVec>   TStrDblVMap;
 
 namespace Config{
   // general config
-  constexpr    Float_t PI  = 3.14159265358979323846;
-  constexpr    Float_t sol = 29.9792458; // speed of light in cm / ns
+  constexpr    Float_t Sqrt2 = 1.4121356237; 
+  constexpr    Float_t PI    = 3.14159265358979323846;
+  constexpr    Float_t sol   = 29.9792458; // speed of light in cm / ns
   constexpr    Float_t sigma_nEB = 0.0513466; // 51 MeV
   constexpr    Float_t sigma_nEE = 0.126938; // 127 MeV
+  constexpr    Float_t N_EB   = 38.1; // ns
+  constexpr    Float_t C_EB   = 0.2439; // ns
+  constexpr    Float_t rhEcut = 1.0; // rh Energy cut
+  constexpr    Float_t dRcut  = 0.3; // isolation value -- deltaR cut on rh
+  constexpr    UInt_t  nrhcut = 10; // n good rec hits cut
+
+  // fitting config
+  constexpr    Float_t ncore = 1.5;
 
   // output config
   constexpr    Float_t lumi      = 2.301; // brilcalc lumi --normtag /afs/cern.ch/user/l/lumipro/public/normtag_file/moriond16_normtag.json -i rereco2015D.txt -u /fb
-  static const TString outtype   = "png";
   static const TString extraText = "Preliminary";
 
   // pu config
@@ -111,10 +119,11 @@ namespace Config{
   extern Bool_t      doRuns;
   extern Bool_t      doTrigEff;
   extern Bool_t      applyTOF;
-  extern Bool_t      wgtedtime;
+  extern Bool_t      wgtedTime;
   extern Bool_t      useSigma_n;
   extern Bool_t      saveFits;
   extern TString     formname; // fitting function to be used
+  extern TString     outtype;
 
   extern TStrBoolMap SampleMap;
   extern ColorMap    colorMap;

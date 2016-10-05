@@ -19,11 +19,13 @@ void timefit()
   gROOT->ForceStyle();
 
   Bool_t isMC = false;
-  Bool_t isEB = false;
-  TString outdir = "plots";
+  Bool_t isEB = true;
+  TString outdir = "output";
+
+  TString fitname = "gaus1core";
 
   TFile * file = TFile::Open(Form("%s/%s/plots.root",outdir.Data(),isMC?"MC/dyll":"DATA/doubleeg"));
-  TH1F  * hist = (TH1F*)file->Get(Form("td_effseedE_%s_sigma_gaus2fm",isEB?"EBEB":"EEEE"));
+  TH1F  * hist = (TH1F*)file->Get(Form("td_effseedE_%s_sigma_%s",isEB?"EBEB":"EEEE",fitname.Data()));
   hist->GetXaxis()->SetTitle("E_{eff}/#sigma_{n}");
   hist->GetYaxis()->SetTitle("#sigma(t_{1}-t_{2}) [ns]");
 
@@ -40,10 +42,11 @@ void timefit()
   fit->SetParLimits(1,0,1.0);
   fit->SetLineColor(kBlue);
 
-  hist->Fit(Form("%s_fit",formname.Data()));
-  
   TCanvas * canv = new TCanvas();
   canv->cd();
+ 
+  hist->Fit(Form("%s_fit",formname.Data()));
+  
   canv->SetLogx(1);
   canv->SetLogy(1);
   canv->SetGridx(1);
