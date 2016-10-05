@@ -1,7 +1,7 @@
 from CRABClient.UserUtilities import config
 config = config()
 
-config.General.requestName = 'PR2016_DoubleEG'
+config.General.requestName = 'PR2016H_DoubleEG'
 
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'tree.py'
@@ -22,7 +22,7 @@ config.JobType.psetName = 'tree.py'
 # /DoubleEG/Run2016G-PromptReco-v1/MINIAOD
 # /DoubleEG/Run2016H-PromptReco-v2/MINIAOD
 
-config.Data.inputDataset = '/DoubleEG/Run2016B-PromptReco-v2/MINIAOD'
+config.Data.inputDataset = '/DoubleEG/Run2016H-PromptReco-v2/MINIAOD'
 config.Data.lumiMask = 'reco2016_noL1T-27p22ifb.txt'
 config.Data.unitsPerJob = 500000
 
