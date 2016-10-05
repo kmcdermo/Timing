@@ -1092,23 +1092,23 @@ void Analysis::Project2Dto1D(TH2F *& hist2d, TString subdir2d, TH1Map & th1map, 
     }
     else if ((basename.Contains("zphi",TString::kExact))       || (basename.Contains("abszeta",TString::kExact))     ||
 	     (basename.Contains("el1eta",TString::kExact))     || (basename.Contains("el2eta",TString::kExact))      || 
-	     (basename.Contains("el1seedeta",TString::kExact)) || (basename.Contains("el2seedeta",TString::kExact))) { //triple ugh
+	     (basename.Contains("el1seedeta",TString::kExact)) || (basename.Contains("el2seedeta",TString::kExact))) { //double ugh
       histname = Form("%s_%4.2f_%4.2f",basename.Data(),xlow,xhigh);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %4.2f to %4.2f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
 						      "Events",subdir1dmap,subdir2d);
     }
-    else if (basename.Contains("vtxZ",TString::kExact)) { //quintuple ugh
+    else if (basename.Contains("vtxZ",TString::kExact)) { //triple ugh
       histname = Form("%s_%5.2f_%5.2f",basename.Data(),xlow,xhigh);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %5.2f to %5.2f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
 						      "Events",subdir1dmap,subdir2d);
     }
-    else if (basename.Contains("runs",TString::kExact)) { //double ugh
+    else if (basename.Contains("runs",TString::kExact)) { //quadruple ugh
       Int_t runno = (xlow+xhigh)/2;
       histname = Form("%s_%i",basename.Data(),runno);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in Run: %i",ytitle.Data(),runno),
 						      "Events",subdir1dmap,subdir2d);
     }
-    else if (basename.Contains("nvtx",TString::kExact)) { //quadruple ugh
+    else if (basename.Contains("nvtx",TString::kExact)) { //quintuple ugh
       Int_t ivtx = (xlow+xhigh)/2;
       histname = Form("%s_%i",basename.Data(),ivtx);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in nPV: %i",ytitle.Data(),ivtx),
@@ -1176,21 +1176,37 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   outhist_sigma->GetYaxis()->SetTitleOffset(outhist_sigma->GetYaxis()->GetTitleOffset() * Config::TitleFF);
   outhist_sigma->Sumw2();
 
-  TH1F * outhist_chi2  = new TH1F(Form("%s_chi2_%s",name.Data(),Config::formname.Data()),"",vxbins.size()-1,axbins);
-  outhist_chi2->GetXaxis()->SetTitle(xtitle.Data());
+  TH1F * outhist_chi2ndf = new TH1F(Form("%s_chi2ndf_%s",name.Data(),Config::formname.Data()),"",vxbins.size()-1,axbins);
+  outhist_chi2ndf->GetXaxis()->SetTitle(xtitle.Data());
   if (name.Contains("td_",TString::kExact)) {
-    outhist_chi2->GetYaxis()->SetTitle("Dielectron Seed Time Difference Fit #chi^{2} / NDF");
+    outhist_chi2ndf->GetYaxis()->SetTitle("Dielectron Seed Time Difference Fit #chi^{2} Prob.");
   }
   else if (name.Contains("el1",TString::kExact)) {
-    outhist_chi2->GetYaxis()->SetTitle("Leading Electron Seed Time Fit #chi^{2} / NDF");
+    outhist_chi2ndf->GetYaxis()->SetTitle("Leading Electron Seed Time Fit #chi^{2} Prob.");
   }
   else if (name.Contains("el2",TString::kExact)) {
-    outhist_chi2->GetYaxis()->SetTitle("Subleading Electron Seed Time Fit #chi^{2} / NDF");
+    outhist_chi2ndf->GetYaxis()->SetTitle("Subleading Electron Seed Time Fit #chi^{2} Prob.");
   }
-  outhist_chi2->SetLineColor(fColor);
-  outhist_chi2->SetMarkerColor(fColor);
-  outhist_chi2->GetYaxis()->SetTitleOffset(outhist_chi2->GetYaxis()->GetTitleOffset() * Config::TitleFF);
-  outhist_chi2->Sumw2();
+  outhist_chi2ndf->SetLineColor(fColor);
+  outhist_chi2ndf->SetMarkerColor(fColor);
+  outhist_chi2ndf->GetYaxis()->SetTitleOffset(outhist_chi2ndf->GetYaxis()->GetTitleOffset() * Config::TitleFF);
+  outhist_chi2ndf->Sumw2();
+
+  TH1F * outhist_chi2prob = new TH1F(Form("%s_chi2prob_%s",name.Data(),Config::formname.Data()),"",vxbins.size()-1,axbins);
+  outhist_chi2prob->GetXaxis()->SetTitle(xtitle.Data());
+  if (name.Contains("td_",TString::kExact)) {
+    outhist_chi2prob->GetYaxis()->SetTitle("Dielectron Seed Time Difference Fit #chi^{2} / NDF");
+  }
+  else if (name.Contains("el1",TString::kExact)) {
+    outhist_chi2prob->GetYaxis()->SetTitle("Leading Electron Seed Time Fit #chi^{2} / NDF");
+  }
+  else if (name.Contains("el2",TString::kExact)) {
+    outhist_chi2prob->GetYaxis()->SetTitle("Subleading Electron Seed Time Fit #chi^{2} / NDF");
+  }
+  outhist_chi2prob->SetLineColor(fColor);
+  outhist_chi2prob->SetMarkerColor(fColor);
+  outhist_chi2prob->GetYaxis()->SetTitleOffset(outhist_chi2prob->GetYaxis()->GetTitleOffset() * Config::TitleFF);
+  outhist_chi2prob->Sumw2();
 
   // use this to store runs that by themselves produce bad fits
   TH1Map tempmap; // a bit hacky I admit...
@@ -1254,31 +1270,25 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
     outhist_sigma->SetBinError(bin,esigma);
 
     const Float_t chi2ndf = fit->GetChisquare() / fit->GetNDF();
-    outhist_chi2->SetBinContent(bin,chi2ndf);
+    outhist_chi2ndf->SetBinContent(bin,chi2ndf);
+
+    const Float_t chi2prob = fit->GetProb();
+    outhist_chi2prob->SetBinContent(bin,chi2prob);
 
     // save a copy of the fitted histogram with the fit
     Analysis::SaveTH1andFit((*mapiter).second,subdir,fit);
   } // end loop over th1s
 
-  TString xruntitle = outhist_mean->GetXaxis()->GetTitle();
-  if (name.Contains("runs",TString::kExact) && xruntitle.Contains("EBEB",TString::kExact)) {
-    outhist_mean->SetMaximum(  0.04 );
-    outhist_mean->SetMinimum( -0.04 );
-
-    outhist_sigma->SetMaximum( 0.50 );
-    outhist_sigma->SetMinimum( 0.25 );
-  }
-
   // write output mean/sigma hists to file
   fOutFile->cd();
   outhist_mean->Write();
   outhist_sigma->Write();
-  outhist_chi2->Write();
+  outhist_chi2ndf->Write();
+  outhist_chi2prob->Write();
 
   // and want to dump them too (for stacking)!
   if (!fIsMC && !name.Contains("runs",TString::kExact)) {fTH1Dump << outhist_mean->GetName()  << " " << subdir.Data() << std::endl;}
   if (!fIsMC && !name.Contains("runs",TString::kExact)) {fTH1Dump << outhist_sigma->GetName() << " " << subdir.Data() << std::endl;}
-  if (!fIsMC && !name.Contains("runs",TString::kExact)) {fTH1Dump << outhist_chi2->GetName()  << " " << subdir.Data() << std::endl;}
 
   // save log/lin of each plot
   TCanvas * canv = new TCanvas("canv","canv");
@@ -1298,12 +1308,17 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   CMSLumi(canv);
   canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_sigma->GetName(),Config::outtype.Data()));
 
-  outhist_chi2->Draw("PE");
+  outhist_chi2ndf->Draw("PE");
   CMSLumi(canv);
-  canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_chi2->GetName(),Config::outtype.Data()));
+  canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_chi2ndf->GetName(),Config::outtype.Data()));
+
+  outhist_chi2prob->Draw("PE");
+  CMSLumi(canv);
+  canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_chi2prob->GetName(),Config::outtype.Data()));
   
   delete canv;
-  delete outhist_chi2;
+  delete outhist_chi2prob;
+  delete outhist_chi2ndf;
   delete outhist_sigma;
   delete outhist_mean;
 }
