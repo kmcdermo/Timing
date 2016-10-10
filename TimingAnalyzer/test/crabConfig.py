@@ -8,7 +8,7 @@ config.JobType.psetName = 'tree.py'
 
 # MC samples
 config.Data.inputDataset = '/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM'
-config.Data.unitsPerJob = 100000
+config.Data.unitsPerJob = 250000
 
 ############################################
 #                Data samples              #
