@@ -7,7 +7,7 @@ options = VarParsing ('python')
 
 ## data or MC options
 options.register (
-	'isMC',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'isMC',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate data or MC');
 
 ## processName
@@ -140,10 +140,10 @@ ElectronTools(process,options.isMC)
 # Create a set of objects to read from
 process.selectedObjects = cms.EDProducer("PFCleaner",
      electrons        = cms.InputTag("calibratedElectrons"), 
-     electronidveto   = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-veto"),
-     electronidloose  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-loose"),
-     electronidmedium = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-medium"),
-     electronidtight  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Spring15-25ns-V1-standalone-tight"),
+     electronidveto   = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-veto"),
+     electronidloose  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-loose"),
+     electronidmedium = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"),
+     electronidtight  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"),
      electronidheep   = cms.InputTag("egmGsfElectronIDs:heepElectronID-HEEPV60"),
 )
 
