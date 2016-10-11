@@ -52,9 +52,10 @@ void PUReweight::GetPUWeights(){
   // get vtx distribution for data first
   for (Int_t data = 0; data < fNData; data++){
     TString cut = basecut.Data();
+    cut.Append(" && (hltdoubleel33 || hltdoubleel37)");
 
     // files + trees + tmp hist for data
-    TString filename = Form("input/DATA/%s/%s",fDataNames[data].Data(),(Config::useFull?"tree.root":"skimmedtree.root"));
+    TString filename = Form("input/DATA/%s/%s/%s",fDataNames[data].Data(),Config::year.Data(),(Config::useFull?"tree.root":"skimmedtree.root"));
     TFile * file = TFile::Open(filename.Data());
     CheckValidFile(file,filename);
 
@@ -86,7 +87,7 @@ void PUReweight::GetPUWeights(){
     cut.Append(" )");
 
     // files + trees for mc + tmp hists
-    TString filename = Form("input/MC/%s/%s",fMCNames[mc].Data(),(Config::useFull?"tree.root":"skimmedtree.root"));
+    TString filename = Form("input/MC/%s/%s/%s",fMCNames[mc].Data(),Config::year.Data(),(Config::useFull?"tree.root":"skimmedtree.root"));
     TFile * file = TFile::Open(filename.Data());
     CheckValidFile(file,filename);
 
@@ -176,14 +177,14 @@ void PUReweight::GetPUWeights(){
   //      STORE HERE TO USE REWEIGHTING      //
   /////////////////////////////////////////////
 
+  fOutFile->cd();
+  fOutDataOverMCNvtx->Write();
+
   // scale MC to demonstrate that it works
   for (Int_t ibin = 1; ibin <= Config::nbinsvtx; ibin++) {
     Float_t tmp = fOutMCNvtx->GetBinContent(ibin);
     fOutMCNvtx->SetBinContent(ibin,fOutDataOverMCNvtx->GetBinContent(ibin)*tmp); 
   }
-
-  fOutFile->cd();
-  fOutDataOverMCNvtx->Write();
 
   // Draw after reweighting 
   TCanvas * c2 = new TCanvas();

@@ -1,8 +1,6 @@
 #include "../interface/Analysis.hh"
 #include "TROOT.h"
 
-#include "TH1D.h"
-
 inline Float_t rad2  (const Float_t x, const Float_t y){return x*x + y*y;}
 inline Float_t theta (const Float_t r, const Float_t z){return std::atan2(r,z);}
 inline Float_t eta   (const Float_t x, const Float_t y, const Float_t z)
@@ -38,13 +36,13 @@ inline Float_t WeightedTime(const FFPairVec & etrhpairs, Bool_t isEB)
   return wgtT / sumS;
 }
 
-Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC) 
+Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC)
 {
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
 
   // Set input
-  TString filename = Form("input/%s/%s/%s", (fIsMC?"MC":"DATA"), fSample.Data(), (Config::useFull?"tree.root":"skimmedtree.root"));
+  TString filename = Form("input/%s/%s/%s/%s", (fIsMC?"MC":"DATA"), Config::year.Data(), fSample.Data(), (Config::useFull?"tree.root":"skimmedtree.root"));
   fInFile  = TFile::Open(filename.Data());
   CheckValidFile(fInFile,filename);
 
@@ -62,28 +60,18 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC)
   // extra setup for data and MC
   if (fIsMC) { 
     // Get pile-up weights
-    TString purwfname = "input/PU/pileupWeights.root";
+    TString purwfname = Form("%s/%s/%s.root",Config::outdir.Data(),Config::pusubdir.Data(),Config::pufilename.Data());
     TFile * purwfile  = TFile::Open(purwfname.Data());
     CheckValidFile(purwfile,purwfname);
 
-    TH1D * gen_pu    = (TH1D*) purwfile->Get("generated_pu");
-    CheckValidTH1D(gen_pu,"generated_pu",purwfname);
-    TH1D * puweights = (TH1D*) purwfile->Get("weights");
-    CheckValidTH1D(puweights,"weights",purwfname);
-
-    TH1D* weightedPU= (TH1D*)gen_pu->Clone("weightedPU");
-    weightedPU->Multiply(puweights);
-    TH1D* weights = (TH1D*)puweights->Clone("rescaledWeights");
-    weights->Scale( gen_pu->Integral(1,Config::nbinsvtx) / weightedPU->Integral(1,Config::nbinsvtx) );
+    TH1F  * purwplot  = (TH1F*) purwfile->Get(Config::puplotname.Data());
+    CheckValidTH1F(purwplot,Config::puplotname.Data(),purwfname);
 
     for (Int_t i = 1; i <= Config::nbinsvtx; i++){
-      fPUweights.push_back(weights->GetBinContent(i));
+      fPUweights.push_back(purwplot->GetBinContent(i));
     }
 
-    delete gen_pu;
-    delete puweights;
-    delete weightedPU;
-    delete weights;
+    delete purwplot;
     delete purwfile;
     // end getting pile-up weights
 
@@ -121,7 +109,8 @@ void Analysis::EventLoop()
   // do loop over events, filling histos
   for (UInt_t entry = 0; entry < (!Config::doDemo?fInTree->GetEntries():Config::demoNum); entry++){
     fInTree->GetEntry(entry);
-    if ((zmass>Config::zlow && zmass<Config::zhigh) && hltdoubleel && (el1pid == -el2pid) && (el1nrh>0) && (el2nrh > 0)) { // extra selection over skimmed samples
+    const Bool_t triggered = (fIsMC)?true:(hltdoubleel33||hltdoubleel37);
+    if ((zmass>Config::zlow && zmass<Config::zhigh) && triggered && (el1pid == -el2pid) && (el1nrh>0) && (el2nrh > 0)) { // extra selection over skimmed samples
       // determine event weight
       Float_t weight = -1.;
       if   (fIsMC) {weight = (fXsec * Config::lumi * wgt / fWgtsum) * fPUweights[putrue];}
@@ -888,7 +877,7 @@ void Analysis::FillRunPlots(const Float_t weight, const Float_t timediff, Bool_t
 
 void Analysis::FillTrigEffPlots(const Float_t weight)
 {
-  if ( hltdoubleel ) { // fill number if passed
+  if ( hltdoubleel33 || hltdoubleel37 ) { // fill number if passed
     n_hltdoubleel_el1pt->Fill(el1pt,weight);
     n_hltdoubleel_el2pt->Fill(el2pt,weight);
   }
@@ -1721,9 +1710,8 @@ void Analysis::InitTree() {
   fInTree->SetBranchAddress("event", &event, &b_event);
   fInTree->SetBranchAddress("run", &run, &b_run);
   fInTree->SetBranchAddress("lumi", &lumi, &b_lumi);
-  fInTree->SetBranchAddress("hltsingleel", &hltsingleel, &b_hltsingleel);
-  fInTree->SetBranchAddress("hltdoubleel", &hltdoubleel, &b_hltdoubleel);
-  fInTree->SetBranchAddress("hltelnoiso", &hltelnoiso, &b_hltelnoiso);
+  fInTree->SetBranchAddress("hltdoubleel33", &hltdoubleel33, &b_hltdoubleel33);
+  fInTree->SetBranchAddress("hltdoubleel37", &hltdoubleel37, &b_hltdoubleel37);
   fInTree->SetBranchAddress("nvtx", &nvtx, &b_nvtx);
   fInTree->SetBranchAddress("vtxX", &vtxX, &b_vtxX);
   fInTree->SetBranchAddress("vtxY", &vtxY, &b_vtxY);

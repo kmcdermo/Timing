@@ -29,6 +29,7 @@ namespace Config {
   Bool_t  wgtedTime  = false;
   Bool_t  useSigma_n = false;
   Bool_t  saveFits   = false;
+  TString year       = "2016";
   TString formname   = "gaus2fm"; // gaus1, gaus2, gaus2fm, gauslin
   TString outtype    = "png";
 

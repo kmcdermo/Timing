@@ -79,7 +79,7 @@ private:
   TTree * fInTree;
   TString fSample;
   Bool_t  fIsMC;
-
+  
   // MC weight input
   //  FltVec  fPUweights;
   DblVec  fPUweights;
@@ -144,9 +144,8 @@ public:
   Int_t           event;
   Int_t           run;
   Int_t           lumi;
-  Bool_t          hltsingleel;
-  Bool_t          hltdoubleel;
-  Bool_t          hltelnoiso;
+  Bool_t          hltdoubleel33;
+  Bool_t          hltdoubleel37;
   Int_t           nvtx;
   Float_t         vtxX;
   Float_t         vtxY;
@@ -231,9 +230,8 @@ public:
   TBranch        *b_event;   //!
   TBranch        *b_run;   //!
   TBranch        *b_lumi;   //!
-  TBranch        *b_hltsingleel;   //!
-  TBranch        *b_hltdoubleel;   //!
-  TBranch        *b_hltelnoiso;   //!
+  TBranch        *b_hltdoubleel33;   //!
+  TBranch        *b_hltdoubleel37;   //!
   TBranch        *b_nvtx;   //!
   TBranch        *b_vtxX;   //!
   TBranch        *b_vtxY;   //!

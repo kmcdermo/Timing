@@ -44,7 +44,7 @@ namespace Config{
   // selection config
   constexpr    Float_t zlow      = 76.;
   constexpr    Float_t zhigh     = 106.;
-  static const TString selection = Form("(zmass>%f && zmass<%f) && hltdoubleel && (el1pid == -el2pid)",zlow,zhigh);
+  static const TString selection = Form("(zmass>%f && zmass<%f) && (el1pid == -el2pid)",zlow,zhigh);
 
   // data config
   static const TString plotdumpname = "plotnames.txt";
@@ -122,6 +122,7 @@ namespace Config{
   extern Bool_t      wgtedTime;
   extern Bool_t      useSigma_n;
   extern Bool_t      saveFits;
+  extern TString     year;
   extern TString     formname; // fitting function to be used
   extern TString     outtype;
 
