@@ -20,9 +20,9 @@ config.Data.unitsPerJob = 250000
 # /DoubleEG/Run2016E-PromptReco-v2/MINIAOD
 # /DoubleEG/Run2016F-PromptReco-v1/MINIAOD
 # /DoubleEG/Run2016G-PromptReco-v1/MINIAOD
-# /DoubleEG/Run2016H-PromptReco-v2/MINIAOD
+# /DoubleEG/Run2016H-PromptReco-v2/MINIAOD # no json yet!
 
-#config.Data.inputDataset = '/DoubleEG/Run2016H-PromptReco-v2/MINIAOD'
+#config.Data.inputDataset = '/DoubleEG/Run2016G-PromptReco-v1/MINIAOD'
 #config.Data.lumiMask = 'reco2016_noL1T-27p22ifb.txt'
 #config.Data.unitsPerJob = 500000
 
