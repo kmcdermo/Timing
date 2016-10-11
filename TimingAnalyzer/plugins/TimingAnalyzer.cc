@@ -129,7 +129,7 @@ private:
   int event, run, lumi;  
 
   // triggers 
-  bool hltdoubleel;
+  bool hltdoubleel33,hltdoubleel37;
 
   // vertices
   int nvtx; 
@@ -267,19 +267,21 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   lumi  = iEvent.luminosityBlock();
     
   // Trigger info
-  hltdoubleel = false;
+  hltdoubleel33 = false;
+  hltdoubleel37 = false;
 
   // Which triggers fired
   if(triggerResultsH.isValid()){
     for (size_t i = 0; i < triggerPathsVector.size(); i++) {
       if (triggerPathsMap[triggerPathsVector[i]] == -1) continue;	
-      if (i == 0 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel = true; // Double electron trigger
+      if (i == 0 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel33 = true; // Double electron trigger (33-33)
+      if (i == 1 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel37 = true; // Double electron trigger (37-27)
     }
   }
 
   // skim on events that pass triggers
   bool triggered = false;
-  if      (hltdoubleel) triggered = true;
+  if (hltdoubleel33 || hltdoubleel37) triggered = true;
   if (applyHLTFilter && !triggered) return;
 
   // Vertex info
@@ -324,7 +326,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // save only really pure electrons
   std::vector<pat::ElectronRef> tightelectrons;
   for (size_t i = 0; i < tightelectronsvec.size(); i++) {
-    if (tightelectronsvec[i]->pt() > 25.){
+    if (tightelectronsvec[i]->pt() > 35.){
       tightelectrons.push_back(tightelectronsvec[i]);
     }
   }
@@ -602,7 +604,8 @@ void TimingAnalyzer::beginJob() {
   tree->Branch("lumi"                 , &lumi                 , "lumi/I");
   
   // Triggers
-  tree->Branch("hltdoubleel"          , &hltdoubleel          , "hltdoubleel/O");
+  tree->Branch("hltdoubleel37"        , &hltdoubleel37        , "hltdoubleel37/O");
+  tree->Branch("hltdoubleel33"        , &hltdoubleel33        , "hltdoubleel33/O");
 
   // Vertex info
   tree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");
@@ -725,6 +728,12 @@ void TimingAnalyzer::endJob() {}
 void TimingAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {
   // triggers for the Analysis
   triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ");
+  triggerPathsVector.push_back("HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_v");
+  triggerPathsVector.push_back("HLT_DoubleEle37_Ele27_CaloIdL_GsfTrkIdVL");
+
+  triggerPathsVector.push_back("HLT_Diphoton30_18_R9Id_OR_IsoCaloId_AND_HE_R9Id_Mass90");
+  triggerPathsVector.push_back("HLT_Diphoton30_18_R9Id_OR_IsoCaloId_AND_HE_R9Id_DoublePixelSeedMatch_Mass70");
+  triggerPathsVector.push_back("HLT_Diphoton30PV_18PV_R9Id_AND_IsoCaloId_AND_HE_R9Id_DoublePixelVeto_Mass55");
   
   HLTConfigProvider hltConfig;
   bool changedConfig = false;
