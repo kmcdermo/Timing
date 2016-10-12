@@ -134,14 +134,14 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
   Config::SampleTitleMap["gamma"]  = "#gamma + Jets";
 
   // sample xsec map
-  Config::SampleXsecMap["dyll"] = 6025.2; //6104.;
+  Config::SampleXsecMap["dyll"] = 5943.2; //6025.2; //6104. -- still do not understand how monoj got this number
   // multiply by 1000 to get to pb;
   for (TStrFltMapIter mapiter = Config::SampleXsecMap.begin(); mapiter != Config::SampleXsecMap.end(); ++mapiter) {
     (*mapiter).second *= 1000.;
   }
   
   // sample wgtsum map
-  Config::SampleWgtsumMap["dyll"] = 4.44757e+11;
+  Config::SampleWgtsumMap["dyll"] = 1.59464e+12;
 
   // X axis title stuff for dividing by sigma_n (assume p+E have same magnitude)
   setUpPlotMaps();

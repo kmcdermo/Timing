@@ -101,7 +101,7 @@ void CMSLumi(TCanvas *& canv, Int_t iPosX) {
   Bool_t   writeExtraText  = (Config::extraText.EqualTo("",TString::kExact)?false:true);
   Double_t extraTextFont   = 52;  // default is helvetica-italics
 
-  TString lumiText = Form("%3.2f fb^{-1} (13 TeV)", Config::lumi); // must change this spec once we are in fb range!
+  TString lumiText = Form("%5.2f fb^{-1} (13 TeV)", Config::lumi);
   
   // text sizes and text offsets with respect to the top frame
   // in unit of the top margin size
