@@ -1,3 +1,4 @@
+#include "../interface/CommonTypes.hh"
 #include "../interface/Config.hh"
 #include "../interface/Common.hh"
 #include "../interface/PUReweight.hh"
@@ -213,7 +214,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--do-runs")     { Config::doAnalysis = true; Config::doRuns     = true; }
     else if (*i == "--do-trigeff")  { Config::doAnalysis = true; Config::doTrigEff  = true; }
     else if (*i == "--apply-TOF")   { Config::doAnalysis = true; Config::applyTOF   = true; }
-    else if (*i == "--wgt-time")    { Config::doAnalysis = true; Config::wgtedTime  = true; }
+    else if (*i == "--wgt-time")    { Config::doAnalysis = true; Config::wgtedTime  = true; Config::useSigma_n = true; }
     else if (*i == "--use-sigman")  { Config::doAnalysis = true; Config::useSigma_n = true; }
     else if (*i == "--save-fits")   { Config::doAnalysis = true; Config::saveFits   = true; }
     else if (*i == "--in-year")     { next_arg_or_die(mArgs, i); Config::year     = i->c_str(); }

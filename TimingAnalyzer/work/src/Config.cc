@@ -27,7 +27,7 @@ namespace Config {
   Bool_t  useSigma_n = false;
   Bool_t  saveFits   = false;
   TString year       = "2016";
-  TString formname   = "gaus2fm"; // gaus1, gaus2, gaus2fm, gauslin
+  TString formname   = "gaus2fm"; // gaus1, gaus1core, gaus2, gaus2fm, gaus3fm
   TString outtype    = "pdf";
 
   TStrBoolMap SampleMap;       // set in main.cc

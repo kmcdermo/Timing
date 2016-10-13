@@ -1,49 +1,17 @@
 #ifndef _common_
 #define _common_
 
+#include "CommonTypes.hh"
 #include "Config.hh"
 
 #include "TFile.h"
 #include "TTree.h"
-#include "TH1F.h"
-#include "TCanvas.h"
-#include "TString.h"
 #include "TStyle.h"
-#include "TColor.h"
+#include "TCanvas.h"
+#include "TH1F.h"
 
-#include <map>
-#include <unordered_map>
-#include <vector>
 #include <iostream>
 #include <fstream>
-#include <list>
-
-// global typedefs
-
-typedef std::list<std::string> lStr_t;
-typedef lStr_t::iterator       lStr_i;
-
-typedef std::map<TString,TString> TStrMap;
-typedef TStrMap::iterator         TStrMapIter;
-
-typedef std::map<TString,Bool_t> TStrBoolMap;
-typedef TStrBoolMap::iterator    TStrBoolMapIter;
-
-typedef std::map<TString,Color_t> ColorMap;
-typedef std::map<TString,Int_t>   TStrIntMap;
-
-typedef std::map<TString,Float_t> TStrFltMap;
-typedef TStrFltMap::iterator      TStrFltMapIter;
-
-typedef std::vector<TString>  TStrVec;
-typedef std::vector<Int_t>    IntVec;
-typedef std::vector<Float_t>  FltVec;
-typedef std::vector<Double_t> DblVec;
-
-typedef std::pair<Float_t,Float_t> FFPair;
-typedef std::vector<FFPair> FFPairVec;
-
-typedef std::unordered_map<Int_t,Int_t> IntMap;
 
 // global functions
 

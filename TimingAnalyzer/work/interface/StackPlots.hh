@@ -1,6 +1,7 @@
 #ifndef _stackplots_
 #define _stackplots_
 
+#include "CommonTypes.hh"
 #include "Config.hh"
 #include "Common.hh"
 

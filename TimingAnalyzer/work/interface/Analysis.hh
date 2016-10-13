@@ -1,13 +1,46 @@
 #ifndef _analysis_
 #define _analysis_ 
 
+#include "CommonTypes.hh"
 #include "Config.hh"
 #include "Common.hh"
 
 #include "TH2F.h"
 #include "TF1.h"
 
-#include <utility>
+#include <array>
+
+struct EcalID
+{
+  EcalID(){}
+  EcalID(Int_t i1, Int_t i2, TString name) : i1_(i1), i2_(i2), name_(name) {}
+  Int_t i1_; // iphi (EB) or ix (EE)
+  Int_t i2_; // ieta (EB) or iy (EE)
+  TString name_;
+};
+typedef std::unordered_map<Int_t,EcalID> EcalIDMap;
+
+struct IOVPair // Interval of Validty object --> run beginning through run end
+{
+  IOVPair(Int_t beg, Int_t end) : beg_(beg), end_(end) {}
+  Int_t beg_;
+  Int_t end_;
+};
+typedef std::vector<IOVPair> IOVPairVec;
+
+struct ADC2GeVPair // Interval of Validty object --> run beginning through run end
+{
+  ADC2GeVPair(float EB, float EE) : EB_(EB), EE_(EE) {}
+  float EB_;
+  float EE_;
+};
+typedef std::vector<ADC2GeVPair> ADC2GeVPairVec;
+
+typedef std::array<Float_t,3> FltArr3;
+typedef std::vector<FltArr3>  FltArr3Vec;
+
+typedef std::unordered_map<Int_t,Float_t> IDNoiseMap;
+typedef std::vector<IDNoiseMap>           IDNoiseMapVec;
 
 typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator        TH1MapIter;
@@ -20,6 +53,9 @@ public:
   // functions
   Analysis(TString sample, Bool_t isMC);
   ~Analysis();
+  void GetDetIDs();
+  void GetPedestalNoise();
+  void GetADC2GeVConvs();
   void InitTree();
   void EventLoop();
   void SetupStandardPlots();
@@ -30,8 +66,8 @@ public:
   void SetupRunPlots();
   void SetupTrigEffPlots();
   void FillStandardPlots(const Float_t weight, const Float_t timediff, const Float_t effseedE, 
-			 const Float_t el1time, const Float_t el1seedeta, Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, const FFPairVec & el1rhetpairs,
-			 const Float_t el2time, const Float_t el2seedeta, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em, const FFPairVec & el2rhetpairs);
+			 const Float_t el1time, const Float_t el1seedeta, Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, const FltArr3Vec & el1rhetps,
+			 const Float_t el2time, const Float_t el2seedeta, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em, const FltArr3Vec & el2rhetps);
   void FillEffEPlots(const Float_t weight, const Float_t timediff, const Float_t effseedE, 
 		     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
   void FillNvtxPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time,
@@ -55,9 +91,10 @@ public:
   void GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t & sigma, Float_t & esigma); 
   void DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3);
   TH1F * MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
-  TH2F * MakeTH2Plot(TString hname, TString htitle, const DblVec& vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
-  void FillHistFromPairVecFirst (TH1F *& hist, const FFPairVec & pairvec);
-  void FillHistFromPairVecSecond(TH1F *& hist, const FFPairVec & pairvec);
+  TH2F * MakeTH2Plot(TString hname, TString htitle, const DblVec& vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, 
+		     TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
+  void FillHistFromArr3Vec0(TH1F *& hist, const FltArr3Vec & arr3vec);
+  void FillHistFromArr3Vec1(TH1F *& hist, const FltArr3Vec & arr3vec);
   void SaveTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit);
   void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
@@ -72,6 +109,13 @@ private:
   TTree * fInTree;
   TString fSample;
   Bool_t  fIsMC;
+
+  // Ecal ids, pedestals, and ADC conversion
+  EcalIDMap      fEcalIDMap;
+  IOVPairVec     fPedNoiseRuns;
+  IDNoiseMapVec  fPedNoises;
+  IOVPairVec     fADC2GeVRuns;
+  ADC2GeVPairVec fADC2GeVs;
   
   // MC weight input
   //  FltVec  fPUweights;

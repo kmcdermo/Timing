@@ -1,19 +1,7 @@
 #ifndef _config_
 #define _config_
 
-#include "TString.h"
-#include "TColor.h"
-
-#include <map>
-#include <vector>
-
-typedef std::vector<Double_t>      DblVec;
-typedef std::map<TString,Color_t>  ColorMap;
-typedef std::map<TString,TString>  TStrMap;
-typedef std::map<TString,Bool_t>   TStrBoolMap;
-typedef std::map<TString,Float_t>  TStrFltMap;
-typedef std::map<TString,Double_t> TStrDblMap;
-typedef std::map<TString,DblVec>   TStrDblVMap;
+#include "CommonTypes.hh"
 
 namespace Config{
   // general config
@@ -34,6 +22,12 @@ namespace Config{
   // output config
   constexpr    Float_t lumi      = 27.22; // inv fb for current 2016
   static const TString extraText = "Preliminary";
+
+  // nEvents
+  constexpr    Int_t   nEvDataTot  = 386990940; // just GetEntries() of original trees;
+  constexpr    Int_t   nEvDataSkim = 3439542;
+  constexpr    Int_t   nEvMCTot    = 104113466;
+  constexpr    Int_t   nEvMCSkim   = 3303390;
 
   // pu config
   constexpr    Int_t   nbinsvtx   = 50;
@@ -87,10 +81,10 @@ namespace Config{
   constexpr    Float_t etaEEhigh = 2.5;
 
   // time calib
-  constexpr    Float_t el1data = 0.00169548; // 0.00314862;  
-  constexpr    Float_t el2data = 0.00070326; // 0.00255739; 
-  constexpr    Float_t el1mc   = -0.227449; // -0.227598;
-  constexpr    Float_t el2mc   = -0.234309; // -0.234269; 
+  constexpr    Float_t el1data = -0.5188; //0.00169548; -->2015
+  constexpr    Float_t el2data = -0.5195; //0.00070326; -->2015
+  constexpr    Float_t el1mc   = -0.2249; //-0.227449; -->2015
+  constexpr    Float_t el2mc   = -0.2037; //-0.234309; -->2015
 
   // if in demo mode
   constexpr    UInt_t demoNum = 1000;

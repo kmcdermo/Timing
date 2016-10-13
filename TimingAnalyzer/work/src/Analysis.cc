@@ -22,16 +22,16 @@ inline Float_t TOF   (const Float_t x,  const Float_t y,  const Float_t z,
   return time + (std::sqrt(z*z+rad2(x,y))-std::sqrt((z-vz)*(z-vz)+rad2((x-vx),(y-vy))))/Config::sol;
 }
 inline Float_t effA  (const Float_t e1, const Float_t e2){return e1*e2/std::sqrt(rad2(e1,e2));}
-inline Float_t WeightedTime(const FFPairVec & etrhpairs, Bool_t isEB)
+inline Float_t WeightedTime(const FltArr3Vec & rhetps, Bool_t isEB)
 {
   Float_t wgtT = 0.0f;
   Float_t sumS = 0.0f;
-  for (UInt_t rh = 0; rh < etrhpairs.size(); rh++)
+  for (UInt_t rh = 0; rh < rhetps.size(); rh++)
   {
-    const FFPair & etrhpair = etrhpairs[rh];
-    const Float_t tmpS = (isEB?(Config::N_EB / ( etrhpair.second / Config::sigma_nEB)) + (Config::Sqrt2*Config::C_EB) : 1.0f); // replace 0.0f with EE constants when ready
+    const FltArr3 & rhetp = rhetps[rh];
+    const Float_t tmpS = (isEB?(Config::N_EB/(rhetp[1]/rhetp[2])) + (Config::Sqrt2*Config::C_EB) : 1.0f); // replace 0.0f with EE constants when ready
     sumS += 1.0f / (tmpS*tmpS);
-    wgtT += etrhpair.first / (tmpS*tmpS);
+    wgtT += rhetp[0] / (tmpS*tmpS);
   }
   return wgtT / sumS;
 }
@@ -41,6 +41,11 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC)
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
 
+  // Get pedestals and adc conversions
+  Analysis::GetDetIDs();
+  Analysis::GetPedestalNoise();
+  Analysis::GetADC2GeVConvs();
+
   // Set input
   TString filename = Form("input/%s/%s/%s/%s", (fIsMC?"MC":"DATA"), Config::year.Data(), fSample.Data(), "skimmedtree.root");
   fInFile  = TFile::Open(filename.Data());
@@ -49,7 +54,7 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC)
   TString treename = "tree/tree";
   fInTree = (TTree*)fInFile->Get(treename.Data());
   CheckValidTree(fInTree,treename,filename);
-  InitTree();
+  Analysis::InitTree();
 
   // Set Output Stuff
   fOutDir = Form("%s/%s/%s",Config::outdir.Data(), (fIsMC?"MC":"DATA"), fSample.Data());
@@ -58,7 +63,8 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC)
   fColor = (fIsMC?Config::colorMap[fSample]:kBlack);
 
   // extra setup for data and MC
-  if (fIsMC) { 
+  if (fIsMC) 
+  { 
     // Get pile-up weights
     TString purwfname = Form("%s/%s/%s.root",Config::outdir.Data(),Config::pusubdir.Data(),Config::pufilename.Data());
     TFile * purwfile  = TFile::Open(purwfname.Data());
@@ -67,10 +73,10 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC)
     TH1F  * purwplot  = (TH1F*) purwfile->Get(Config::puplotname.Data());
     CheckValidTH1F(purwplot,Config::puplotname.Data(),purwfname);
 
-    for (Int_t i = 1; i <= Config::nbinsvtx; i++){
+    for (Int_t i = 1; i <= Config::nbinsvtx; i++)
+    {
       fPUweights.push_back(purwplot->GetBinContent(i));
     }
-
     delete purwplot;
     delete purwfile;
     // end getting pile-up weights
@@ -79,7 +85,8 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC)
     fXsec   = Config::SampleXsecMap[fSample];
     fWgtsum = Config::SampleWgtsumMap[fSample];
   }  
-  else {
+  else 
+  {
     fTH1Dump.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios_base::trunc); // do this once, and just do it for data
   }
 }
@@ -95,7 +102,6 @@ Analysis::~Analysis()
 void Analysis::EventLoop()
 {
   // Set up hists first --> first in map is histo name, by design!
-
   if (Config::doStandard) Analysis::SetupStandardPlots();
   if (Config::doEffE)     Analysis::SetupEffEPlots();
   if (Config::doNvtx)     Analysis::SetupNvtxPlots();
@@ -104,9 +110,32 @@ void Analysis::EventLoop()
   if (Config::doRuns)     Analysis::SetupRunPlots();
   if (Config::doTrigEff)  Analysis::SetupTrigEffPlots();
 
-  // do loop over events, filling histos
+  // do loop over events, filling histos --> store current run
+  Int_t currentRun  = -1;
+  Int_t PedNoiseIOV = (fIsMC)?0:-1;
+  Int_t ADC2GeVIOV  = (fIsMC)?0:-1;
   for (UInt_t entry = 0; entry < (!Config::doDemo?fInTree->GetEntries():Config::demoNum); entry++){
     fInTree->GetEntry(entry);
+
+    ////////////////////
+    //                // 
+    // Determine IOVs //
+    //                // 
+    ////////////////////
+    if (!fIsMC && Config::useSigma_n) 
+    {
+      if (run != currentRun)
+      {
+	for (Int_t iov = 0; iov < fPedNoiseRuns.size(); iov++)
+	{
+	  if ((run >= fPedNoiseRuns[iov].beg_) && (run <= fPedNoiseRuns[iov].end_)) { PedNoiseIOV = iov; }
+	}
+	for (Int_t iov = 0; iov < fADC2GeVRuns.size(); iov++)
+	{
+	  if ((run >= fADC2GeVRuns[iov].beg_) && (run <= fADC2GeVRuns[iov].end_)) { ADC2GeVIOV = iov; }
+	}
+      }
+    }
         
     ////////////////////////////
     //                        // 
@@ -153,11 +182,11 @@ void Analysis::EventLoop()
     //////////////////////////////
     if (Config::useSigma_n) 
     {
-      if      (el1eb) { el1seedE /= Config::sigma_nEB; }
-      else if (el1ee) { el1seedE /= Config::sigma_nEE; }  
+      if      (el1eb) { el1seedE /= (fPedNoises[PedNoiseIOV][el1seedid] * fADC2GeVs[ADC2GeVIOV].EB_); }
+      else if (el1ee) { el1seedE /= (fPedNoises[PedNoiseIOV][el1seedid] * fADC2GeVs[ADC2GeVIOV].EE_); }
 
-      if      (el2eb) { el2seedE /= Config::sigma_nEB; }
-      else if (el2ee) { el2seedE /= Config::sigma_nEE; }  
+      if      (el2eb) { el2seedE /= (fPedNoises[PedNoiseIOV][el2seedid] * fADC2GeVs[ADC2GeVIOV].EB_); }
+      else if (el2ee) { el2seedE /= (fPedNoises[PedNoiseIOV][el2seedid] * fADC2GeVs[ADC2GeVIOV].EE_); }
     }
 
     ////////////////////////////////////////////
@@ -166,36 +195,50 @@ void Analysis::EventLoop()
     // (Vector of pairs <time,energy>         //
     //                                        // 
     ////////////////////////////////////////////
-    FFPairVec el1rhetpairs; el1rhetpairs.reserve(el1nrh * 0.25f);
-    IntMap el1rhIDMap;
-    for (Int_t rh = 0; rh < el1nrh; rh++)
+    FltArr3Vec el1rhetps; FltArr3Vec el2rhetps; 
+    if (Config::doStandard || Config::wgtedTime) 
     {
-      if (el1rhIDMap.count((*el1rhids)[rh]) > 0) continue; // do not double count rechits which can be saved more than once
-      el1rhIDMap[(*el1rhids)[rh]]++;
-      
-      if ((*el1rhEs)[rh] < Config::rhEcut) continue; // 1 GeV cut on recHit times
-      
-      const Float_t rhX = (*el1rhXs)[rh]; const Float_t rhY = (*el1rhYs)[rh]; const Float_t rhZ = (*el1rhZs)[rh];  
-      const Float_t rhphi = phi(rhX,rhY); const Float_t rheta = eta(rhX, rhY, rhZ);
-      if (deltaR(el1eta,rheta,el1phi,rhphi) > Config::dRcut) continue; 
-      
-      el1rhetpairs.push_back(std::make_pair(TOF(rhX,rhY,rhZ,vtxX,vtxY,vtxZ,(*el1rhtimes)[rh])-(fIsMC?Config::el1mc:Config::el1data),(*el1rhEs)[rh]));
-    }
+      // el1 
+      el1rhetps.reserve(el1nrh * 0.25f); IntMap el1rhIDMap;
+      for (Int_t rh = 0; rh < el1nrh; rh++)
+      {
+	const Int_t rhid = (*el1rhids)[rh]; 
+	if (el1rhIDMap.count(rhid) > 0) continue; // do not double count rechits which can be saved more than once
+	el1rhIDMap[rhid]++;
 
-    FFPairVec el2rhetpairs; el2rhetpairs.reserve(el2nrh * 0.25f);
-    IntMap el2rhIDMap;
-    for (Int_t rh = 0; rh < el2nrh; rh++)
-    {
-      if (el2rhIDMap.count((*el2rhids)[rh]) > 0) continue;
-      el2rhIDMap[(*el2rhids)[rh]]++;
-      
-      if ((*el2rhEs)[rh] < Config::rhEcut) continue; // 1 GeV cut on recHit times
-      
-      const Float_t rhX = (*el2rhXs)[rh]; const Float_t rhY = (*el2rhYs)[rh]; const Float_t rhZ = (*el2rhZs)[rh];  
-      const Float_t rhphi = phi(rhX,rhY); const Float_t rheta = eta(rhX, rhY, rhZ);
-      if (deltaR(el2eta,rheta,el2phi,rhphi) > Config::dRcut) continue; 
-      
-      el2rhetpairs.push_back(std::make_pair(TOF(rhX,rhY,rhZ,vtxX,vtxY,vtxZ,(*el2rhtimes)[rh])-(fIsMC?Config::el2mc:Config::el2data),(*el2rhEs)[rh]));
+	const Float_t rhE = (*el1rhEs)[rh];
+	if (rhE < Config::rhEcut) continue; // 1 GeV cut on recHit times
+	
+	const Float_t rhX = (*el1rhXs)[rh]; const Float_t rhY = (*el1rhYs)[rh]; const Float_t rhZ = (*el1rhZs)[rh];  
+	const Float_t rhphi = phi(rhX,rhY); const Float_t rheta = eta(rhX, rhY, rhZ);
+	if (deltaR(el1eta,rheta,el1phi,rhphi) > Config::dRcut) continue; 
+	
+	Float_t rhSigma_n = 0.0;
+	if      (el1eb) rhSigma_n = fPedNoises[PedNoiseIOV][rhid] * fADC2GeVs[ADC2GeVIOV].EB_;
+	else if (el1ee) rhSigma_n = fPedNoises[PedNoiseIOV][rhid] * fADC2GeVs[ADC2GeVIOV].EE_;
+	el1rhetps.push_back(FltArr3{{(TOF(rhX,rhY,rhZ,vtxX,vtxY,vtxZ,(*el1rhtimes)[rh])-(fIsMC?Config::el1mc:Config::el1data)),rhE,rhSigma_n}});
+      }
+
+      // el2
+      el2rhetps.reserve(el2nrh * 0.25f); IntMap el2rhIDMap;
+      for (Int_t rh = 0; rh < el2nrh; rh++)
+      {
+	const Int_t rhid = (*el2rhids)[rh]; 
+	if (el2rhIDMap.count(rhid) > 0) continue; // do not double count rechits which can be saved more than once
+	el2rhIDMap[rhid]++;
+
+	const Float_t rhE = (*el2rhEs)[rh];
+	if (rhE < Config::rhEcut) continue; // 1 GeV cut on recHit times
+	
+	const Float_t rhX = (*el2rhXs)[rh]; const Float_t rhY = (*el2rhYs)[rh]; const Float_t rhZ = (*el2rhZs)[rh];  
+	const Float_t rhphi = phi(rhX,rhY); const Float_t rheta = eta(rhX, rhY, rhZ);
+	if (deltaR(el2eta,rheta,el2phi,rhphi) > Config::dRcut) continue; 
+	
+	Float_t rhSigma_n = 0.0;
+	if      (el2eb) rhSigma_n = fPedNoises[PedNoiseIOV][rhid] * fADC2GeVs[ADC2GeVIOV].EB_;
+	else if (el2ee) rhSigma_n = fPedNoises[PedNoiseIOV][rhid] * fADC2GeVs[ADC2GeVIOV].EE_;
+	el2rhetps.push_back(FltArr3{{(TOF(rhX,rhY,rhZ,vtxX,vtxY,vtxZ,(*el2rhtimes)[rh])-(fIsMC?Config::el2mc:Config::el2data)),rhE,rhSigma_n}});
+      }
     }
 
     //////////////////////////////
@@ -207,8 +250,8 @@ void Analysis::EventLoop()
     Float_t el2time = 0.0f;
     if (Config::wgtedTime) // use weighted times
     {
-      el1time = ((el1rhetpairs.size() > 0 && el1eb) ? WeightedTime(el1rhetpairs, el1eb) : -1000.0f);
-      el2time = ((el2rhetpairs.size() > 0 && el2eb) ? WeightedTime(el2rhetpairs, el2eb) : -2000.0f);
+      el1time = ((el1rhetps.size() > 0 && el1eb) ? WeightedTime(el1rhetps, el1eb) : -1000.0f);
+      el2time = ((el2rhetps.size() > 0 && el2eb) ? WeightedTime(el2rhetps, el2eb) : -2000.0f);
     }
     else
     {
@@ -225,7 +268,7 @@ void Analysis::EventLoop()
     const Float_t effseedE = effA(el1seedE,el2seedE);
 
     // fill the plots
-    if (Config::doStandard) Analysis::FillStandardPlots(weight,timediff,effseedE,el1time,el1seedeta,el1eb,el1ee,el1ep,el1em,el1rhetpairs,el2time,el2seedeta,el2eb,el2ee,el2ep,el2em,el1rhetpairs);
+    if (Config::doStandard) Analysis::FillStandardPlots(weight,timediff,effseedE,el1time,el1seedeta,el1eb,el1ee,el1ep,el1em,el1rhetps,el2time,el2seedeta,el2eb,el2ee,el2ep,el2em,el1rhetps);
     if (Config::doEffE)     Analysis::FillEffEPlots(weight,timediff,effseedE,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
     if (Config::doNvtx)     Analysis::FillNvtxPlots(weight,timediff,el1time,el2time,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
     if (Config::doEta)      Analysis::FillEtaPlots(weight,timediff,el1time,el2time,el1seedeta,el2seedeta,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
@@ -471,8 +514,8 @@ void Analysis::SetupTrigEffPlots()
 }
 
 void Analysis::FillStandardPlots(const Float_t weight, const Float_t timediff, const Float_t effseedE, 
-				 const Float_t el1time, const Float_t el1seedeta, Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, const FFPairVec & el1rhetpairs,
-				 const Float_t el2time, const Float_t el2seedeta, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em, const FFPairVec & el2rhetpairs)
+				 const Float_t el1time, const Float_t el1seedeta, Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, const FltArr3Vec & el1rhetps,
+				 const Float_t el2time, const Float_t el2seedeta, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em, const FltArr3Vec & el2rhetps)
 {
   // standard "validation" and Z mass plots
   standardTH1Map["nvtx"]->Fill(nvtx,weight);
@@ -505,37 +548,37 @@ void Analysis::FillStandardPlots(const Float_t weight, const Float_t timediff, c
   standardTH1Map["el1E_inclusive"]->Fill(el1E,weight);
   standardTH1Map["el1seedE_inclusive"]->Fill(el1seedE,weight);
   timingMap["el1time_inclusive"]->Fill(el1time,weight);
-  Analysis::FillHistFromPairVecFirst(timingMap["el1rhtimes_inclusive"],el1rhetpairs);
+  Analysis::FillHistFromArr3Vec0(timingMap["el1rhtimes_inclusive"],el1rhetps);
   if        (el1eb) 
   {
     standardTH1Map["el1E_EB"]->Fill(el1E,weight);
     standardTH1Map["el1seedE_EB"]->Fill(el1seedE,weight);
     timingMap["el1time_EB"]->Fill(el1time,weight);
-    Analysis::FillHistFromPairVecFirst (timingMap["el1rhtimes_EB"],el1rhetpairs);
-    Analysis::FillHistFromPairVecSecond(standardTH1Map["el1rhEs_EB"],el1rhetpairs);
+    Analysis::FillHistFromArr3Vec0(timingMap["el1rhtimes_EB"],el1rhetps);
+    Analysis::FillHistFromArr3Vec1(standardTH1Map["el1rhEs_EB"],el1rhetps);
   }
   else if   (el1ee) 
   {
     standardTH1Map["el1E_EE"]->Fill(el1E,weight);
     standardTH1Map["el1seedE_EE"]->Fill(el1seedE,weight);
     timingMap["el1time_EE"]->Fill(el1time,weight);
-    Analysis::FillHistFromPairVecFirst (timingMap["el1rhtimes_EE"],el1rhetpairs);
-    Analysis::FillHistFromPairVecSecond(standardTH1Map["el1rhEs_EE"],el1rhetpairs);
+    Analysis::FillHistFromArr3Vec0(timingMap["el1rhtimes_EE"],el1rhetps);
+    Analysis::FillHistFromArr3Vec1(standardTH1Map["el1rhEs_EE"],el1rhetps);
     if      (el1ep) 
     {
       standardTH1Map["el1E_EP"]->Fill(el1E,weight);
       standardTH1Map["el1seedE_EP"]->Fill(el1seedE,weight);
       timingMap["el1time_EP"]->Fill(el1time,weight);
-      Analysis::FillHistFromPairVecFirst (timingMap["el1rhtimes_EP"],el1rhetpairs);
-      Analysis::FillHistFromPairVecSecond(standardTH1Map["el1rhEs_EP"],el1rhetpairs);
+      Analysis::FillHistFromArr3Vec0(timingMap["el1rhtimes_EP"],el1rhetps);
+      Analysis::FillHistFromArr3Vec1(standardTH1Map["el1rhEs_EP"],el1rhetps);
     }
     else if (el1em) 
     {
       standardTH1Map["el1E_EM"]->Fill(el1E,weight);
       standardTH1Map["el1seedE_EM"]->Fill(el1seedE,weight);
       timingMap["el1time_EM"]->Fill(el1time,weight);
-      Analysis::FillHistFromPairVecFirst (timingMap["el1rhtimes_EM"],el1rhetpairs);
-      Analysis::FillHistFromPairVecSecond(standardTH1Map["el1rhEs_EM"],el1rhetpairs);
+      Analysis::FillHistFromArr3Vec0(timingMap["el1rhtimes_EM"],el1rhetps);
+      Analysis::FillHistFromArr3Vec1(standardTH1Map["el1rhEs_EM"],el1rhetps);
     }
   }
 
@@ -543,37 +586,37 @@ void Analysis::FillStandardPlots(const Float_t weight, const Float_t timediff, c
   standardTH1Map["el2E_inclusive"]->Fill(el2E,weight);
   standardTH1Map["el2seedE_inclusive"]->Fill(el2seedE,weight);
   timingMap["el2time_inclusive"]->Fill(el2time,weight);
-  Analysis::FillHistFromPairVecFirst(timingMap["el2rhtimes_inclusive"],el2rhetpairs);
+  Analysis::FillHistFromArr3Vec0(timingMap["el2rhtimes_inclusive"],el2rhetps);
   if        (el2eb) 
   {
     standardTH1Map["el2E_EB"]->Fill(el2E,weight);
     standardTH1Map["el2seedE_EB"]->Fill(el2seedE,weight);
     timingMap["el2time_EB"]->Fill(el2time,weight);
-    Analysis::FillHistFromPairVecFirst (timingMap["el2rhtimes_EB"],el2rhetpairs);
-    Analysis::FillHistFromPairVecSecond(standardTH1Map["el2rhEs_EB"],el2rhetpairs);
+    Analysis::FillHistFromArr3Vec0(timingMap["el2rhtimes_EB"],el2rhetps);
+    Analysis::FillHistFromArr3Vec1(standardTH1Map["el2rhEs_EB"],el2rhetps);
   }
   else if   (el2ee) 
   {
     standardTH1Map["el2E_EE"]->Fill(el2E,weight);
     standardTH1Map["el2seedE_EE"]->Fill(el2seedE,weight);
     timingMap["el2time_EE"]->Fill(el2time,weight);
-    Analysis::FillHistFromPairVecFirst (timingMap["el2rhtimes_EE"],el2rhetpairs);
-    Analysis::FillHistFromPairVecSecond(standardTH1Map["el2rhEs_EE"],el2rhetpairs);
+    Analysis::FillHistFromArr3Vec0(timingMap["el2rhtimes_EE"],el2rhetps);
+    Analysis::FillHistFromArr3Vec1(standardTH1Map["el2rhEs_EE"],el2rhetps);
     if      (el2ep) 
     {
       standardTH1Map["el2E_EP"]->Fill(el2E,weight);
       standardTH1Map["el2seedE_EP"]->Fill(el2seedE,weight);
       timingMap["el2time_EP"]->Fill(el2time,weight);
-      Analysis::FillHistFromPairVecFirst (timingMap["el2rhtimes_EP"],el2rhetpairs);
-      Analysis::FillHistFromPairVecSecond(standardTH1Map["el2rhEs_EP"],el2rhetpairs);
+      Analysis::FillHistFromArr3Vec0(timingMap["el2rhtimes_EP"],el2rhetps);
+      Analysis::FillHistFromArr3Vec1(standardTH1Map["el2rhEs_EP"],el2rhetps);
     }
     else if (el2em) 
     {
       standardTH1Map["el2E_EM"]->Fill(el2E,weight);
       standardTH1Map["el2seedE_EM"]->Fill(el2seedE,weight);
       timingMap["el2time_EM"]->Fill(el2time,weight);
-      Analysis::FillHistFromPairVecFirst (timingMap["el2rhtimes_EM"],el2rhetpairs);
-      Analysis::FillHistFromPairVecSecond(standardTH1Map["el2rhEs_EM"],el2rhetpairs);
+      Analysis::FillHistFromArr3Vec0(timingMap["el2rhtimes_EM"],el2rhetps);
+      Analysis::FillHistFromArr3Vec1(standardTH1Map["el2rhEs_EM"],el2rhetps);
     }
   }
 
@@ -1227,19 +1270,19 @@ void Analysis::DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2
   sub2->Draw("same");
 }
 
-void Analysis::FillHistFromPairVecFirst(TH1F *& hist, const FFPairVec & pairvec)
+void Analysis::FillHistFromArr3Vec0(TH1F *& hist, const FltArr3Vec & arr3vec)
 {
-  for (auto&& pair : pairvec)
+  for (auto&& arr3 : arr3vec)
   {
-    hist->Fill(pair.first);
+    hist->Fill(arr3[0]);
   }
 }
 
-void Analysis::FillHistFromPairVecSecond(TH1F *& hist, const FFPairVec & pairvec)
+void Analysis::FillHistFromArr3Vec1(TH1F *& hist, const FltArr3Vec & arr3vec)
 {
-  for (auto&& pair : pairvec)
+  for (auto&& arr3 : arr3vec)
   {
-    hist->Fill(pair.second);
+    hist->Fill(arr3[1]);
   }
 }
 
@@ -1451,6 +1494,105 @@ void Analysis::DeleteTH2s(TH2Map & th2map)
   }
   th2map.clear();
 }
+
+void Analysis::GetDetIDs()
+{
+  // read in ix/iy, ieta/iphi for ecal detids
+  std::ifstream inputids;
+  inputids.open("config/detids.txt",std::ios::in);
+  Int_t ID;
+  Int_t i1, i2;
+  TString name;
+  while (inputids >> ID >> i1 >> i2 >> name)
+  {
+    fEcalIDMap[ID] = EcalID(i1,i2,name);
+  }
+  inputids.close();
+}
+
+void Analysis::GetPedestalNoise()
+{
+  if (fIsMC)
+  {
+    std::ifstream inputpeds;
+    inputpeds.open("config/pedestals/pednoise_MC.txt",std::ios::in);
+    Float_t t_adc2gev_eb, t_adc2gev_ee;
+    while (inputpeds >> t_adc2gev_eb >> t_adc2gev_ee) 
+    {
+      fADC2GeVs.push_back(ADC2GeVPair(t_adc2gev_eb,t_adc2gev_ee));
+    }
+    inputpeds.close();
+  }
+  else 
+  {
+    // input runs
+    std::ifstream pedruns;
+    pedruns.open("config/pedestals/pedruns.txt",std::ios::in);
+    Int_t t_ped_r1, t_ped_r2; // t is for temp
+    while (pedruns >> t_ped_r1 >> t_ped_r2)
+    {
+      fPedNoiseRuns.push_back(IOVPair(t_ped_r1,t_ped_r2));
+    }
+    pedruns.close();
+    
+    // input ped to gev conversion factors
+    fPedNoises.resize(fPedNoiseRuns.size()); // one map per IOV
+    for (UInt_t iov = 0; iov < fPedNoiseRuns.size(); iov++)
+    {
+      std::ifstream inputpeds;
+      inputpeds.open(Form("config/pedestals/pednoise_%i-%i.txt",fADC2GeVRuns[iov].beg_,fADC2GeVRuns[iov].end_),std::ios::in);
+      IDNoiseMap t_noise_map;
+      Int_t ID;
+      Float_t noise;
+      while (inputpeds >> ID >> noise) 
+      {
+	t_noise_map[ID] = noise;
+      }
+      fPedNoises[iov] = t_noise_map;
+      inputpeds.close();
+    }
+  }
+}
+
+void Analysis::GetADC2GeVConvs()
+{
+  if (fIsMC)
+  {
+    std::ifstream inputadcs;
+    inputadcs.open("config/pedestals/adc2gev_MC.txt",std::ios::in);
+    Float_t t_adc2gev_eb, t_adc2gev_ee;
+    while (inputadcs >> t_adc2gev_eb >> t_adc2gev_ee) 
+    {
+      fADC2GeVs.push_back(ADC2GeVPair(t_adc2gev_eb,t_adc2gev_ee));
+    }
+    inputadcs.close();
+  }  
+  else
+  {
+    // input runs
+    std::ifstream adcruns;
+    adcruns.open("config/pedestals/adcruns.txt",std::ios::in);
+    Int_t t_adc_r1, t_adc_r2; // t is for temp
+    while (adcruns >> t_adc_r1 >> t_adc_r2)
+    {
+      fADC2GeVRuns.push_back(IOVPair(t_adc_r1,t_adc_r2));
+    }
+    adcruns.close();
+    
+    // input adc to gev conversion factors
+    for (UInt_t iov = 0; iov < fADC2GeVRuns.size(); iov++)
+    {
+      std::ifstream inputadcs;
+      inputadcs.open(Form("config/pedestals/adc2gev_%i-%i.txt",fADC2GeVRuns[iov].beg_,fADC2GeVRuns[iov].end_),std::ios::in);
+      Float_t t_adc2gev_eb, t_adc2gev_ee;
+      while (inputadcs >> t_adc2gev_eb >> t_adc2gev_ee) // one line per file, so can push directly back
+      {
+	fADC2GeVs.push_back(ADC2GeVPair(t_adc2gev_eb,t_adc2gev_ee)); 
+      }
+      inputadcs.close();
+    }
+  }
+}
   
 void Analysis::InitTree() {
   // Set branch addresses and branch pointers
@@ -1521,7 +1663,8 @@ void Analysis::InitTree() {
   fInTree->SetBranchAddress("zE", &zE, &b_zE);
   fInTree->SetBranchAddress("zp", &zp, &b_zp);
   
-  if (fIsMC){ // initialize extra branches if MC
+  if (fIsMC) // initialize extra branches if MC
+  {
     fInTree->SetBranchAddress("puobs", &puobs, &b_puobs);
     fInTree->SetBranchAddress("putrue", &putrue, &b_putrue);
     fInTree->SetBranchAddress("wgt", &wgt, &b_wgt);
