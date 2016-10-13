@@ -10,16 +10,6 @@ effseedE_EEEE standard/effseedE
 effseedE_EMEM standard/effseedE
 effseedE_EPEP standard/effseedE
 
-el1seedE_EB standard/el1/seedE 
-el1seedE_EE standard/el1/seedE 
-el1seedE_EM standard/el1/seedE 
-el1seedE_EP standard/el1/seedE 
-
-el2seedE_EB standard/el2/seedE 
-el2seedE_EE standard/el2/seedE 
-el2seedE_EM standard/el2/seedE 
-el2seedE_EP standard/el2/seedE 
-
 el1time_EB_norm timing/inclusive/el1time
 el1time_EE_norm timing/inclusive/el1time
 el1time_EP_norm timing/inclusive/el1time
@@ -55,8 +45,3 @@ td_nvtx_inclusive_sigma_gaus2fm timing/nvtx/inclusive
 
 el1time_vtxZ_mean_gaus2fm timing/el1/vtxZ
 el2time_vtxZ_mean_gaus2fm timing/el2/vtxZ
-
-el1time_el1seedeta_mean_gaus2fm timing/el1/seedeta
-el1time_el1seedeta_sigma_gaus2fm timing/el1/seedeta
-el2time_el2seedeta_mean_gaus2fm timing/el2/seedeta
-el2time_el2seedeta_sigma_gaus2fm timing/el2/seedeta

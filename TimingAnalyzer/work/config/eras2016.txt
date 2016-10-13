@@ -1,0 +1,10 @@
+DAS: run dataset=/JetHT/Run2016?-PromptReco-v?/MINIAOD  | sort run.run_number
+
+2016
+
+B: 272674-275376
+C: 275420-276283
+D: 276315-276811
+E: 276824-277420
+F: 277816-278808
+G: 278816-
