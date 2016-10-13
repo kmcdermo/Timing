@@ -20,8 +20,8 @@ namespace Config{
   constexpr    Float_t Sqrt2 = 1.4121356237; 
   constexpr    Float_t PI    = 3.14159265358979323846;
   constexpr    Float_t sol   = 29.9792458; // speed of light in cm / ns
-  constexpr    Float_t sigma_nEB = 0.0513466; // 51 MeV
-  constexpr    Float_t sigma_nEE = 0.126938; // 127 MeV
+  constexpr    Float_t sigma_nEB = 0.05701; // 57 MeV
+  constexpr    Float_t sigma_nEE = 0.13610; // 136 MeV
   constexpr    Float_t N_EB   = 38.1; // ns
   constexpr    Float_t C_EB   = 0.2439; // ns
   constexpr    Float_t rhEcut = 1.0; // rh Energy cut
@@ -107,15 +107,12 @@ namespace Config{
   extern Bool_t      useDYll;
   extern Bool_t      useQCD;
   extern Bool_t      useGJets;
-  extern Bool_t      useFull;
   extern Bool_t      doStandard;
   extern Bool_t      doTimeRes;
-  extern Bool_t      doZvars;
   extern Bool_t      doEffE;
   extern Bool_t      doNvtx;
   extern Bool_t      doEta;
   extern Bool_t      doVtxZ;
-  extern Bool_t      doSingleE;
   extern Bool_t      doRuns;
   extern Bool_t      doTrigEff;
   extern Bool_t      applyTOF;

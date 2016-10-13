@@ -31,44 +31,6 @@ void setUpPlotMaps()
     ineffseedE.close();
   }
 
-  // single electron next
-  TStrVec elstrings = {"inclusive","EB","EE","EP","EM"};
-  for (int i = 0; i < effstrings.size(); i++) {
-    // el1 first
-    std::ifstream inel1E;
-    inel1E.open(Form("config/el1E_%s_bins.txt",elstrings[i].Data()),std::ios::in);
-    Int_t  el1E = -1;
-    while(inel1E >> el1E){
-      Config::XBinsMap[Form("el1E_%s",elstrings[i].Data())].push_back(el1E);
-    }
-    inel1E.close();
-
-    std::ifstream inel1seedE;
-    inel1seedE.open(Form("config/el1seedE_%s_bins.txt",elstrings[i].Data()),std::ios::in);
-    Int_t  el1seedE = -1;
-    while(inel1seedE >> el1seedE){
-      Config::XBinsMap[Form("el1seedE_%s",elstrings[i].Data())].push_back(el1seedE);
-    }
-    inel1seedE.close();
-
-    // el2 first
-    std::ifstream inel2E;
-    inel2E.open(Form("config/el2E_%s_bins.txt",elstrings[i].Data()),std::ios::in);
-    Int_t  el2E = -1;
-    while(inel2E >> el2E){
-      Config::XBinsMap[Form("el2E_%s",elstrings[i].Data())].push_back(el2E);
-    }
-    inel2E.close();
-
-    std::ifstream inel2seedE;
-    inel2seedE.open(Form("config/el2seedE_%s_bins.txt",elstrings[i].Data()),std::ios::in);
-    Int_t  el2seedE = -1;
-    while(inel2seedE >> el2seedE){
-      Config::XBinsMap[Form("el2seedE_%s",elstrings[i].Data())].push_back(el2seedE);
-    }
-    inel2seedE.close();
-  }
-
   Config::XTitleMap["E"]  = "Energy [GeV]";
   
   // sigma_n corrections!
@@ -148,11 +110,9 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
 
   // set up time res config
   if (Config::doTimeRes) {
-    Config::doZvars   = true;
     Config::doEffE    = true;
     Config::doNvtx    = true;
     Config::doVtxZ    = true;
-    Config::doSingleE = true;
   }
 }
 
@@ -187,15 +147,12 @@ int main(int argc, const char* argv[])
 	"  --use-DYll      <bool>        use Drell-Yan (LL+Jets) with MC (def: %s)\n"
 	"  --use-QCD       <bool>        use QCD with MC (def: %s)\n"
 	"  --use-GJets     <bool>        use Gamma+Jets with MC (def: %s)\n"
-	"  --use-full      <bool>        use full ntuples, not skims (def: %s)\n"
 	"  --do-standard   <bool>        make standard validation plots (def: %s)\n"
 	"  --do-timeres    <bool>        make timing bias and resolution plots [all, except runs] (def: %s)\n"
-	"  --do-Zvars      <bool>        make timing bias and resolution plots vs Z variables (def: %s)\n"
 	"  --do-effE       <bool>        make timing bias and resolution plots vs effective energy variables (def: %s)\n"
 	"  --do-nvtx       <bool>        make timing bias and resolution plots vs nVertices (def: %s)\n"
 	"  --do-eta        <bool>        make timing bias and resolution plots vs single electron eta (def: %s)\n"
 	"  --do-vtxZ       <bool>        make timing bias and resolution plots vs z vertex position (def: %s)\n"
-	"  --do-singleE    <bool>        make timing bias and resolution plots vs single electron energy variables (def: %s)\n"
 	"  --do-runs       <bool>        make timing bias and resolution plots vs run number [data only] (def: %s)\n"
 	"  --do-trigeff    <bool>        make trigger efficiency plots (def: %s)\n"
 	"  --apply-TOF     <bool>        apply TOF correction to times (def: %s)\n"
@@ -218,15 +175,12 @@ int main(int argc, const char* argv[])
 	(Config::useDYll    ? "true" : "false"),
 	(Config::useQCD     ? "true" : "false"),
 	(Config::useGJets   ? "true" : "false"),
-	(Config::useFull    ? "true" : "false"),
 	(Config::doStandard ? "true" : "false"),
 	(Config::doTimeRes  ? "true" : "false"),
-	(Config::doZvars    ? "true" : "false"),
 	(Config::doEffE     ? "true" : "false"),
 	(Config::doNvtx     ? "true" : "false"),
 	(Config::doEta      ? "true" : "false"),
 	(Config::doVtxZ     ? "true" : "false"),
-	(Config::doSingleE  ? "true" : "false"),
 	(Config::doRuns     ? "true" : "false"),
 	(Config::doTrigEff  ? "true" : "false"),
 	(Config::applyTOF   ? "true" : "false"),
@@ -250,15 +204,12 @@ int main(int argc, const char* argv[])
     else if (*i == "--use-DYll")    { Config::useDYll    = true; }
     else if (*i == "--use-QCD")     { Config::useQCD     = true; }
     else if (*i == "--use-GJets")   { Config::useGJets   = true; }
-    else if (*i == "--use-full")    { Config::useFull    = true; }
     else if (*i == "--do-standard") { Config::doAnalysis = true; Config::doStandard = true; }
     else if (*i == "--do-timeres")  { Config::doAnalysis = true; Config::doTimeRes  = true; }
-    else if (*i == "--do-Zvars")    { Config::doAnalysis = true; Config::doZvars    = true; }
     else if (*i == "--do-effE")     { Config::doAnalysis = true; Config::doEffE     = true; }
     else if (*i == "--do-nvtx")     { Config::doAnalysis = true; Config::doNvtx     = true; }
     else if (*i == "--do-eta")      { Config::doAnalysis = true; Config::doEta      = true; }
     else if (*i == "--do-vtxZ")     { Config::doAnalysis = true; Config::doVtxZ     = true; }
-    else if (*i == "--do-singleE")  { Config::doAnalysis = true; Config::doSingleE  = true; }
     else if (*i == "--do-runs")     { Config::doAnalysis = true; Config::doRuns     = true; }
     else if (*i == "--do-trigeff")  { Config::doAnalysis = true; Config::doTrigEff  = true; }
     else if (*i == "--apply-TOF")   { Config::doAnalysis = true; Config::applyTOF   = true; }

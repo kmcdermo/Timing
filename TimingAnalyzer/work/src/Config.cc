@@ -14,15 +14,12 @@ namespace Config {
   Bool_t  useDYll    = false; 
   Bool_t  useQCD     = false;
   Bool_t  useGJets   = false;
-  Bool_t  useFull    = false;
   Bool_t  doStandard = false;
   Bool_t  doTimeRes  = false;
-  Bool_t  doZvars    = false;
   Bool_t  doEffE     = false;
   Bool_t  doNvtx     = false;
   Bool_t  doEta      = false;
   Bool_t  doVtxZ     = false;
-  Bool_t  doSingleE  = false;
   Bool_t  doRuns     = false;
   Bool_t  doTrigEff  = false;
   Bool_t  applyTOF   = false;
@@ -31,7 +28,7 @@ namespace Config {
   Bool_t  saveFits   = false;
   TString year       = "2016";
   TString formname   = "gaus2fm"; // gaus1, gaus2, gaus2fm, gauslin
-  TString outtype    = "png";
+  TString outtype    = "pdf";
 
   TStrBoolMap SampleMap;       // set in main.cc
   ColorMap    colorMap;        // set in main.cc

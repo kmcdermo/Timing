@@ -23,36 +23,29 @@ public:
   void InitTree();
   void EventLoop();
   void SetupStandardPlots();
-  void SetupZPlots();
   void SetupEffEPlots();
   void SetupNvtxPlots();
   void SetupEtaPlots();
   void SetupVtxZPlots();
-  void SetupSingleEPlots();
   void SetupRunPlots();
   void SetupTrigEffPlots();
-  void FillStandardPlots(const Float_t weight, const Float_t timediff, const Float_t effE, const Float_t effseedE, 
+  void FillStandardPlots(const Float_t weight, const Float_t timediff, const Float_t effseedE, 
 			 const Float_t el1time, const Float_t el1seedeta, Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, const FFPairVec & el1rhetpairs,
 			 const Float_t el2time, const Float_t el2seedeta, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em, const FFPairVec & el2rhetpairs);
-  void FillZPlots(const Float_t weight, const Float_t timediff);
-  void FillEffEPlots(const Float_t weight, const Float_t timediff, const Float_t effE, const Float_t effseedE, 
+  void FillEffEPlots(const Float_t weight, const Float_t timediff, const Float_t effseedE, 
 		     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
   void FillNvtxPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time,
 		     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
   void FillEtaPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time, const Float_t el1seedeta, const Float_t el2seedeta,
 		    Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
   void FillVtxZPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time);
-  void FillSingleEPlots(const Float_t weight, const Float_t el1time, const Float_t el2time,
-			Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
   void FillRunPlots(const Float_t weight, const Float_t timediff, Bool_t el1eb, Bool_t el1ee, Bool_t el2eb, Bool_t el2ee);
   void FillTrigEffPlots(const Float_t weight);
   void OutputStandardPlots();
-  void OutputZPlots();
   void OutputEffEPlots();
   void OutputNvtxPlots();
   void OutputEtaPlots();
   void OutputVtxZPlots();
-  void OutputSingleEPlots();
   void OutputRunPlots();
   void OutputTrigEffPlots();
   void Make1DTimingPlots(TH2F *& hist2D, const TString subdir2D, const DblVec& bins2D, TString name);
@@ -103,11 +96,8 @@ private:
   ///////////////////
   // time res maps //
   ///////////////////
-  // z variables
-  TH2Map z2DMap; TStrMap z2DSubMap; TStrDblVMap zbins;
 
   // effective energy plots
-  TH2Map effE2DMap;     TStrMap effE2DSubMap;     TStrDblVMap effEbins;
   TH2Map effseedE2DMap; TStrMap effseedE2DSubMap; TStrDblVMap effseedEbins;
 
   // nvtx plots
@@ -121,13 +111,6 @@ private:
 
   // vtxZ plots
   TH2Map vtxZ2DMap; TStrMap vtxZ2DSubMap; DblVec vtxZbins;
-
-  // single el energy plots
-  TH2Map el1E2DMap;     TStrMap el1E2DSubMap;     TStrDblVMap el1Ebins;
-  TH2Map el1seedE2DMap; TStrMap el1seedE2DSubMap; TStrDblVMap el1seedEbins;
-
-  TH2Map el2E2DMap;     TStrMap el2E2DSubMap;     TStrDblVMap el2Ebins;
-  TH2Map el2seedE2DMap; TStrMap el2seedE2DSubMap; TStrDblVMap el2seedEbins;
 
   // run numbers (data only)
   TH2Map runs2DMap; TStrMap runs2DSubMap; DblVec dRunNos; 
