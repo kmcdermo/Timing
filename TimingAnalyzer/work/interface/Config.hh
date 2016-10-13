@@ -48,7 +48,7 @@ namespace Config{
 
   // data config
   static const TString plotdumpname = "plotnames.txt";
-  static const TString runs         = "config/runs2015D.txt";
+  static const TString runs         = "config/runs2016.txt";
 
   // plot config
   constexpr    Int_t    ntimebins  = 40;
