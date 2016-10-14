@@ -66,7 +66,7 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC)
   if (fIsMC) 
   { 
     // Get pile-up weights
-    TString purwfname = Form("%s/%s/%s.root",Config::outdir.Data(),Config::pusubdir.Data(),Config::pufilename.Data());
+    TString purwfname = Form("%s/%s/%s",Config::outdir.Data(),Config::pusubdir.Data(),Config::pufilename.Data());
     TFile * purwfile  = TFile::Open(purwfname.Data());
     CheckValidFile(purwfile,purwfname);
 
@@ -268,34 +268,13 @@ void Analysis::EventLoop()
     const Float_t timediff = el1time-el2time;
     const Float_t effseedE = effA(el1seedE,el2seedE);
 
-    std::cout << entry << std::endl;
-
-
     // fill the plots
     if (Config::doStandard) Analysis::FillStandardPlots(weight,timediff,effseedE,el1time,el1seedeta,el1eb,el1ee,el1ep,el1em,el1rhetps,el2time,el2seedeta,el2eb,el2ee,el2ep,el2em,el1rhetps);
-
-    std::cout << entry << std::endl;
-
     if (Config::doEffE)     Analysis::FillEffEPlots(weight,timediff,effseedE,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
-
-    std::cout << entry << std::endl;
-
     if (Config::doNvtx)     Analysis::FillNvtxPlots(weight,timediff,el1time,el2time,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
-
-    std::cout << entry << std::endl;
-
     if (Config::doEta)      Analysis::FillEtaPlots(weight,timediff,el1time,el2time,el1seedeta,el2seedeta,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
-
-    std::cout << entry << std::endl;
-
     if (Config::doVtxZ)     Analysis::FillVtxZPlots(weight,timediff,el1time,el2time);
-
-    std::cout << entry << std::endl;
-
     if (Config::doRuns)     Analysis::FillRunPlots(weight,timediff,el1eb,el1ee,el2eb,el2ee);
-
-    std::cout << entry << std::endl;
-
     if (Config::doTrigEff)  Analysis::FillTrigEffPlots(weight);
   } // end loop over events
 
@@ -327,7 +306,7 @@ void Analysis::SetupStandardPlots()
   standardTH1Map["zmass_EMEM"] = Analysis::MakeTH1Plot("zmass_EMEM","",100,Config::zlow,Config::zhigh,"Dielectron invariant mass [GeV/c^{2}] (EE-EE-)","Events",standardTH1SubMap,"standard/Z/mass");
 
   // effective seedE
-  if (!Config::useSigma_n) standardTH1Map["effseedE_inclusive"] = Analysis::MakeTH1Plot("effseedE_inclusive","",100,0.,Config::XBinsMap["effseedE_inclusive"].back(),Form("Effective Dielectron Seed %s (inclusive)",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard/effseedE");
+  standardTH1Map["effseedE_inclusive"] = Analysis::MakeTH1Plot("effseedE_inclusive","",100,0.,Config::XBinsMap["effseedE_inclusive"].back(),Form("Effective Dielectron Seed %s (inclusive)",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard/effseedE");
   standardTH1Map["effseedE_EBEB"] = Analysis::MakeTH1Plot("effseedE_EBEB","",100,0.,Config::XBinsMap["effseedE_EBEB"].back(),Form("Effective Dielectron Seed %s (EBEB)",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard/effseedE");
   standardTH1Map["effseedE_EEEE"] = Analysis::MakeTH1Plot("effseedE_EEEE","",100,0.,Config::XBinsMap["effseedE_EEEE"].back(),Form("Effective Dielectron Seed %s (EEEE)",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard/effseedE");
   standardTH1Map["effseedE_EPEP"] = Analysis::MakeTH1Plot("effseedE_EPEP","",100,0.,Config::XBinsMap["effseedE_EPEP"].back(),Form("Effective Dielectron Seed %s (EE+EE+)",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard/effseedE");
@@ -564,7 +543,7 @@ void Analysis::FillStandardPlots(const Float_t weight, const Float_t timediff, c
 
   standardTH1Map["deta"]->Fill(std::abs(el1eta-el2eta),weight);
   standardTH1Map["dseedeta"]->Fill(std::abs(el1seedeta-el2seedeta),weight);
- 
+
   // inclusive single electron timing and energy
   // el1
   standardTH1Map["el1E_inclusive"]->Fill(el1E,weight);
