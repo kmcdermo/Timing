@@ -11,7 +11,7 @@
 void setUpPlotMaps()
 {
   // read in from config all the appropriate bins
-  TStrVec effstrings = {"inclusive","EBEB","EEEE","EPEP","EMEM"};
+  TStrVec effstrings = {"inclusive","EBEB","EEEE","EPEP","EMEM","EBEE"};
   for (int i = 0; i < effstrings.size(); i++) 
   {
     std::ifstream ineffseedE;
