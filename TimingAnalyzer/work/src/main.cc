@@ -11,22 +11,14 @@
 void setUpPlotMaps()
 {
   // read in from config all the appropriate bins
-
-  // effective first
   TStrVec effstrings = {"inclusive","EBEB","EEEE","EPEP","EMEM"};
-  for (int i = 0; i < effstrings.size(); i++) {
-    std::ifstream ineffE;
-    ineffE.open(Form("config/effE_%s_bins.txt",effstrings[i].Data()),std::ios::in);
-    Int_t  effE = -1;
-    while(ineffE >> effE){
-      Config::XBinsMap[Form("effE_%s",effstrings[i].Data())].push_back(effE);
-    }
-    ineffE.close();
-
+  for (int i = 0; i < effstrings.size(); i++) 
+  {
     std::ifstream ineffseedE;
     ineffseedE.open(Form("config/effseedE_%s_bins.txt",effstrings[i].Data()),std::ios::in);
     Int_t  effseedE = -1;
-    while(ineffseedE >> effseedE){
+    while(ineffseedE >> effseedE)
+    {
       Config::XBinsMap[Form("effseedE_%s",effstrings[i].Data())].push_back(effseedE);
     }
     ineffseedE.close();
@@ -35,9 +27,12 @@ void setUpPlotMaps()
   Config::XTitleMap["E"]  = "Energy [GeV]";
   
   // sigma_n corrections!
-  if (Config::useSigma_n) {
-    for (TStrDblVMap::iterator viter = Config::XBinsMap.begin(); viter != Config::XBinsMap.end(); ++viter){
-      for (int i = 0; i < (*viter).second.size(); i++) {
+  if (Config::useSigma_n) 
+  {
+    for (TStrDblVMap::iterator viter = Config::XBinsMap.begin(); viter != Config::XBinsMap.end(); ++viter)
+    {
+      for (int i = 0; i < (*viter).second.size(); i++) 
+      {
 	TString label = (*viter).first;
 	if      (label.Contains("EB",TString::kExact)) {(*viter).second[i] /= Config::sigma_nEB;}
 	else if (label.Contains("EE",TString::kExact)) {(*viter).second[i] /= Config::sigma_nEE;}
@@ -45,16 +40,18 @@ void setUpPlotMaps()
 	else if (label.Contains("EP",TString::kExact)) {(*viter).second[i] /= Config::sigma_nEE;}
       }
     }
-
     Config::XTitleMap["E"]  = "Energy/#sigma_{n}";
   }
 
-  if (Config::dumpRanges) {
+  if (Config::dumpRanges) 
+  {
     std::ofstream range;
     range.open(Form("%s/ranges.txt",Config::outdir.Data()),std::ios_base::trunc);
-    for (TStrDblVMap::iterator viter = Config::XBinsMap.begin(); viter != Config::XBinsMap.end(); ++viter) {
+    for (TStrDblVMap::iterator viter = Config::XBinsMap.begin(); viter != Config::XBinsMap.end(); ++viter) 
+    {
       range << (*viter).first << std::endl;
-      for (int i = 0; i < (*viter).second.size()-1; i++) {
+      for (int i = 0; i < (*viter).second.size()-1; i++) 
+      {
 	range << "  " << (*viter).second[i] << "-" << (*viter).second[i+1] << std::endl;
       }
       range << "------------------------------------" << std::endl;
@@ -87,19 +84,20 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
   if (Config::useGJets) Config::SampleMap["gamma"]    = true;  //  isMC
 
   // Color for MC Stacks
-  Config::colorMap["dyll"]   = kGreen-6;
-  Config::colorMap["qcd"]    = kYellow;
-  Config::colorMap["gamma"]  = kOrange+10;
+  Config::colorMap["dyll"]  = kGreen-6;
+  Config::colorMap["qcd"]   = kYellow;
+  Config::colorMap["gamma"] = kOrange+10;
 
   // define title map
-  Config::SampleTitleMap["dyll"]   = "Z #rightarrow l^{+}l^{-}";
-  Config::SampleTitleMap["qcd"]    = "QCD";
-  Config::SampleTitleMap["gamma"]  = "#gamma + Jets";
+  Config::SampleTitleMap["dyll"]  = "Z #rightarrow l^{+}l^{-}";
+  Config::SampleTitleMap["qcd"]   = "QCD";
+  Config::SampleTitleMap["gamma"] = "#gamma + Jets";
 
   // sample xsec map
   Config::SampleXsecMap["dyll"] = 5943.2; //6025.2; //6104. -- still do not understand how monoj got this number
   // multiply by 1000 to get to pb;
-  for (TStrFltMapIter mapiter = Config::SampleXsecMap.begin(); mapiter != Config::SampleXsecMap.end(); ++mapiter) {
+  for (TStrFltMapIter mapiter = Config::SampleXsecMap.begin(); mapiter != Config::SampleXsecMap.end(); ++mapiter) 
+  {
     (*mapiter).second *= 1000.;
   }
   
@@ -110,7 +108,8 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
   setUpPlotMaps();
 
   // set up time res config
-  if (Config::doTimeRes) {
+  if (Config::doTimeRes) 
+  {
     Config::doEffE    = true;
     Config::doNvtx    = true;
     Config::doVtxZ    = true;
@@ -131,9 +130,11 @@ int main(int argc, const char* argv[])
   lStr_t mArgs; 
   for (int i = 1; i < argc; ++i) { mArgs.push_back(argv[i]); }
   lStr_i i  = mArgs.begin();
-  while (i != mArgs.end()) {
+  while (i != mArgs.end()) 
+  {
     lStr_i start = i;
-    if (*i == "-h" || *i == "-help" || *i == "--help") {
+    if (*i == "-h" || *i == "-help" || *i == "--help") 
+    {
       printf(
         "Usage: %s [options]\n"
         "Options:\n"
@@ -236,13 +237,15 @@ int main(int argc, const char* argv[])
   // Pile-up reweighting //
   /////////////////////////
 
-  if (Config::doPURW) {
+  if (Config::doPURW) 
+  {
     std::cout << "Calculating private pile-up weights" << std::endl;
     PUReweight reweight;
     reweight.GetPUWeights();
     std::cout << "Finished calculating pile-up weights" << std::endl;
   }
-  else {
+  else 
+  {
     std::cout << "Skipping calculating pile-up weights" << std::endl;
   }
   
@@ -250,9 +253,11 @@ int main(int argc, const char* argv[])
   // Main Analysis //
   ///////////////////
 
-  if (Config::doAnalysis) {
+  if (Config::doAnalysis) 
+  {
     std::cout << "Starting analyis section" << std::endl;
-    for (TStrBoolMapIter mapiter = Config::SampleMap.begin(); mapiter != Config::SampleMap.end(); ++mapiter) {
+    for (TStrBoolMapIter mapiter = Config::SampleMap.begin(); mapiter != Config::SampleMap.end(); ++mapiter) 
+    {
       Analysis analysis((*mapiter).first,(*mapiter).second);
       std::cout << "Analyzing: " << ((*mapiter).second?"MC":"DATA") << " sample: " << (*mapiter).first << std::endl;
       analysis.EventLoop();
@@ -260,7 +265,8 @@ int main(int argc, const char* argv[])
     }
     std::cout << "Finished analysis section" << std::endl;
   }
-  else {
+  else 
+  {
     std::cout << "Skipping analysis section" << std::endl;
   }
 
@@ -268,13 +274,15 @@ int main(int argc, const char* argv[])
   // Stack data/mc //
   ///////////////////
 
-  if (Config::doStacks) {
+  if (Config::doStacks) 
+  {
     std::cout << "Starting stacker" << std::endl;
     StackPlots Stacker;
     Stacker.DoStacks(yields);
     std::cout << "Finished stacking plots" << std::endl;
   }
-  else {
+  else 
+  {
     std::cout << "Skipping stacking data over MC" << std::endl;
   }
 

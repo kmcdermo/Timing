@@ -30,7 +30,7 @@ namespace Config{
   constexpr    Int_t   nEvMCSkim   = 3303390;
 
   // pu config
-  constexpr    Int_t   nbinsvtx   = 50;
+  constexpr    Int_t   nbinsvtx   = 75;
   static const TString pusubdir   = "purw";
   static const TString pufilename = "PURW.root";
   static const TString puplotname = "nvtx_dataOverMC";
@@ -38,7 +38,7 @@ namespace Config{
   // selection config
   constexpr    Float_t zlow      = 76.;
   constexpr    Float_t zhigh     = 106.;
-  static const TString selection = Form("(zmass>%f && zmass<%f) && (el1pid == -el2pid)",zlow,zhigh);
+  static const TString selection = Form("(zmass>%f && zmass<%f) && (el1pid == -el2pid) && (el1nrh > 0) && (el2nrh > 0)",zlow,zhigh);
 
   // data config
   static const TString plotdumpname = "plotnames.txt";

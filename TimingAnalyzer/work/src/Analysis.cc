@@ -114,7 +114,8 @@ void Analysis::EventLoop()
   Int_t currentRun  = -1;
   Int_t PedNoiseIOV = (fIsMC)?0:-1;
   Int_t ADC2GeVIOV  = (fIsMC)?0:-1;
-  for (UInt_t entry = 0; entry < (!Config::doDemo?fInTree->GetEntries():Config::demoNum); entry++){
+  for (UInt_t entry = 0; entry < (!Config::doDemo?fInTree->GetEntries():Config::demoNum); entry++)
+  {
     fInTree->GetEntry(entry);
 
     ////////////////////
@@ -136,7 +137,7 @@ void Analysis::EventLoop()
 	}
       }
     }
-        
+
     ////////////////////////////
     //                        // 
     // Determine Event Weight //
@@ -267,13 +268,34 @@ void Analysis::EventLoop()
     const Float_t timediff = el1time-el2time;
     const Float_t effseedE = effA(el1seedE,el2seedE);
 
+    std::cout << entry << std::endl;
+
+
     // fill the plots
     if (Config::doStandard) Analysis::FillStandardPlots(weight,timediff,effseedE,el1time,el1seedeta,el1eb,el1ee,el1ep,el1em,el1rhetps,el2time,el2seedeta,el2eb,el2ee,el2ep,el2em,el1rhetps);
+
+    std::cout << entry << std::endl;
+
     if (Config::doEffE)     Analysis::FillEffEPlots(weight,timediff,effseedE,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
+
+    std::cout << entry << std::endl;
+
     if (Config::doNvtx)     Analysis::FillNvtxPlots(weight,timediff,el1time,el2time,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
+
+    std::cout << entry << std::endl;
+
     if (Config::doEta)      Analysis::FillEtaPlots(weight,timediff,el1time,el2time,el1seedeta,el2seedeta,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
+
+    std::cout << entry << std::endl;
+
     if (Config::doVtxZ)     Analysis::FillVtxZPlots(weight,timediff,el1time,el2time);
+
+    std::cout << entry << std::endl;
+
     if (Config::doRuns)     Analysis::FillRunPlots(weight,timediff,el1eb,el1ee,el2eb,el2ee);
+
+    std::cout << entry << std::endl;
+
     if (Config::doTrigEff)  Analysis::FillTrigEffPlots(weight);
   } // end loop over events
 
@@ -729,7 +751,8 @@ void Analysis::FillRunPlots(const Float_t weight, const Float_t timediff, Bool_t
 
 void Analysis::FillTrigEffPlots(const Float_t weight)
 {
-  if ( hltdoubleel33 || hltdoubleel37 ) { // fill number if passed
+  if ( hltdoubleel33 || hltdoubleel37 ) // fill number if passed
+  {
     n_hltdoubleel_el1pt->Fill(el1pt,weight);
     n_hltdoubleel_el2pt->Fill(el2pt,weight);
   }
@@ -755,7 +778,8 @@ void Analysis::OutputEffEPlots()
 {
   MakeSubDirs(effseedE2DSubMap,fOutDir);
   Analysis::SaveTH2s(effseedE2DMap,effseedE2DSubMap);
-  for (TH2MapIter mapiter = effseedE2DMap.begin(); mapiter != effseedE2DMap.end(); ++mapiter){
+  for (TH2MapIter mapiter = effseedE2DMap.begin(); mapiter != effseedE2DMap.end(); ++mapiter)
+  {
     TString name = (*mapiter).first;
     Analysis::Make1DTimingPlots((*mapiter).second,effseedE2DSubMap[name],effseedEbins[name],name);
   }
@@ -766,7 +790,8 @@ void Analysis::OutputNvtxPlots()
 {
   MakeSubDirs(nvtx2DSubMap,fOutDir);
   Analysis::SaveTH2s(nvtx2DMap,nvtx2DSubMap);
-  for (TH2MapIter mapiter = nvtx2DMap.begin(); mapiter != nvtx2DMap.end(); ++mapiter){
+  for (TH2MapIter mapiter = nvtx2DMap.begin(); mapiter != nvtx2DMap.end(); ++mapiter) 
+  {
     TString name = (*mapiter).first;
     Analysis::Make1DTimingPlots((*mapiter).second,nvtx2DSubMap[name],nvtxbins,name);
   }
@@ -778,7 +803,8 @@ void Analysis::OutputEtaPlots()
   // delta eta plots
   MakeSubDirs(deta2DSubMap,fOutDir);
   Analysis::SaveTH2s(deta2DMap,deta2DSubMap);
-  for (TH2MapIter mapiter = deta2DMap.begin(); mapiter != deta2DMap.end(); ++mapiter){
+  for (TH2MapIter mapiter = deta2DMap.begin(); mapiter != deta2DMap.end(); ++mapiter)
+  {
     TString name = (*mapiter).first;
     Analysis::Make1DTimingPlots((*mapiter).second,deta2DSubMap[name],detabins,name);
   }
@@ -787,7 +813,8 @@ void Analysis::OutputEtaPlots()
   // single el eta plots
   MakeSubDirs(eleta2DSubMap,fOutDir);
   Analysis::SaveTH2s(eleta2DMap,eleta2DSubMap);
-  for (TH2MapIter mapiter = eleta2DMap.begin(); mapiter != eleta2DMap.end(); ++mapiter){
+  for (TH2MapIter mapiter = eleta2DMap.begin(); mapiter != eleta2DMap.end(); ++mapiter)
+  {
     TString name = (*mapiter).first;
     Analysis::Make1DTimingPlots((*mapiter).second,eleta2DSubMap[name],eletabins,name);
   }
@@ -798,7 +825,8 @@ void Analysis::OutputVtxZPlots()
 {
   MakeSubDirs(vtxZ2DSubMap,fOutDir);
   Analysis::SaveTH2s(vtxZ2DMap,vtxZ2DSubMap);
-  for (TH2MapIter mapiter = vtxZ2DMap.begin(); mapiter != vtxZ2DMap.end(); ++mapiter){
+  for (TH2MapIter mapiter = vtxZ2DMap.begin(); mapiter != vtxZ2DMap.end(); ++mapiter)
+  {
     TString name = (*mapiter).first;
     Analysis::Make1DTimingPlots((*mapiter).second,vtxZ2DSubMap[name],vtxZbins,name);
   }
@@ -809,7 +837,8 @@ void Analysis::OutputRunPlots()
 {      
   MakeSubDirs(runs2DSubMap,fOutDir);
   Analysis::SaveTH2s(runs2DMap,runs2DSubMap);
-  for (TH2MapIter mapiter = runs2DMap.begin(); mapiter != runs2DMap.end(); ++mapiter){
+  for (TH2MapIter mapiter = runs2DMap.begin(); mapiter != runs2DMap.end(); ++mapiter)
+  {
     TString name = (*mapiter).first;
     Analysis::Make1DTimingPlots((*mapiter).second,runs2DSubMap[name],dRunNos,name);
   }
@@ -852,10 +881,12 @@ void Analysis::Project2Dto1D(TH2F *& hist2d, TString subdir2d, TH1Map & th1map, 
   TString  ytitle   = hist2d->GetYaxis()->GetTitle();
 
   // loop over all x bins to project out
-  for (Int_t i = 1; i <= hist2d->GetNbinsX(); i++){  
+  for (Int_t i = 1; i <= hist2d->GetNbinsX(); i++)
+  {  
     // if no bins are filled, then continue to next plot
     Bool_t isFilled = false;
-    for (Int_t j = 1; j <= hist2d->GetNbinsY(); j++) {
+    for (Int_t j = 1; j <= hist2d->GetNbinsY(); j++) 
+    {
       if (hist2d->GetBinContent(i,j) > 0) {isFilled = true; break;}
     }
     if (!isFilled) continue;
@@ -865,35 +896,41 @@ void Analysis::Project2Dto1D(TH2F *& hist2d, TString subdir2d, TH1Map & th1map, 
 
     TString histname = "";
     // First create each histogram
-    if     (basename.Contains("td_dseedeta",TString::kExact)) { //ugh
+    if     (basename.Contains("td_dseedeta",TString::kExact)) //ugh
+    {
       histname = Form("%s_%3.1f_%3.1f",basename.Data(),xlow,xhigh);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %3.1f to %3.1f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
 						      "Events",subdir1dmap,subdir2d);
     }
     else if ((basename.Contains("zphi",TString::kExact))       || (basename.Contains("abszeta",TString::kExact))     ||
-	     (basename.Contains("el1seedeta",TString::kExact)) || (basename.Contains("el2seedeta",TString::kExact))) { //double ugh
+	     (basename.Contains("el1seedeta",TString::kExact)) || (basename.Contains("el2seedeta",TString::kExact))) //double ugh
+    { 
       histname = Form("%s_%4.2f_%4.2f",basename.Data(),xlow,xhigh);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %4.2f to %4.2f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
 						      "Events",subdir1dmap,subdir2d);
     }
-    else if (basename.Contains("vtxZ",TString::kExact)) { //triple ugh
+    else if (basename.Contains("vtxZ",TString::kExact)) //triple ugh
+    {
       histname = Form("%s_%5.2f_%5.2f",basename.Data(),xlow,xhigh);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %5.2f to %5.2f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
 						      "Events",subdir1dmap,subdir2d);
     }
-    else if (basename.Contains("runs",TString::kExact)) { //quadruple ugh
+    else if (basename.Contains("runs",TString::kExact)) //quadruple ugh
+    {
       Int_t runno = (xlow+xhigh)/2;
       histname = Form("%s_%i",basename.Data(),runno);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in Run: %i",ytitle.Data(),runno),
 						      "Events",subdir1dmap,subdir2d);
     }
-    else if (basename.Contains("nvtx",TString::kExact)) { //quintuple ugh
+    else if (basename.Contains("nvtx",TString::kExact)) //quintuple ugh
+    {      
       Int_t ivtx = (xlow+xhigh)/2;
       histname = Form("%s_%i",basename.Data(),ivtx);
       th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in nPV: %i",ytitle.Data(),ivtx),
 						      "Events",subdir1dmap,subdir2d);
     }
-    else { // "normal" filling
+    else // "normal" filling
+    { 
       Int_t ixlow  = Int_t(xlow); 
       Int_t ixhigh = Int_t(xhigh); 
       histname = Form("%s_%i_%i",basename.Data(),ixlow,ixhigh);
@@ -903,13 +940,16 @@ void Analysis::Project2Dto1D(TH2F *& hist2d, TString subdir2d, TH1Map & th1map, 
     th1binmap[histname.Data()] = i; // universal pairing
 
     // then fill corresponding bins from y
-    for (Int_t j = 0; j <= hist2d->GetNbinsY() + 1; j++) {
+    for (Int_t j = 0; j <= hist2d->GetNbinsY() + 1; j++) 
+    {
       // check to make sure not zero though...
-      if ( !(hist2d->GetBinContent(i,j) < 0) ) {
+      if ( !(hist2d->GetBinContent(i,j) < 0) ) 
+      {
 	th1map[histname.Data()]->SetBinContent(j,hist2d->GetBinContent(i,j));
 	th1map[histname.Data()]->SetBinError(j,hist2d->GetBinError(i,j)); 
       }
-      else{
+      else
+      {
 	th1map[histname.Data()]->SetBinContent(i,0);
 	th1map[histname.Data()]->SetBinError(i,0);
       }
@@ -925,13 +965,16 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   // initialize new mean/sigma histograms
   TH1F * outhist_mean  = new TH1F(Form("%s_mean_%s",name.Data(),Config::formname.Data()),"",vxbins.size()-1,axbins);
   outhist_mean->GetXaxis()->SetTitle(xtitle.Data());
-  if (name.Contains("td_",TString::kExact)) {
+  if (name.Contains("td_",TString::kExact)) 
+  {
     outhist_mean->GetYaxis()->SetTitle("Dielectron Seed Time Difference Fit #mu [ns]");
   }
-  else if (name.Contains("el1",TString::kExact)) {
+  else if (name.Contains("el1",TString::kExact)) 
+  {
     outhist_mean->GetYaxis()->SetTitle("Leading Electron Seed Time Fit #mu [ns]");
   }
-  else if (name.Contains("el2",TString::kExact)) {
+  else if (name.Contains("el2",TString::kExact)) 
+  {
     outhist_mean->GetYaxis()->SetTitle("Subleading Electron Seed Time Fit #mu [ns]");
   }
   outhist_mean->SetLineColor(fColor);
@@ -941,13 +984,16 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
 
   TH1F * outhist_sigma  = new TH1F(Form("%s_sigma_%s",name.Data(),Config::formname.Data()),"",vxbins.size()-1,axbins);
   outhist_sigma->GetXaxis()->SetTitle(xtitle.Data());
-  if (name.Contains("td_",TString::kExact)) {
+  if (name.Contains("td_",TString::kExact)) 
+  {
     outhist_sigma->GetYaxis()->SetTitle("Dielectron Seed Time Difference Fit #sigma [ns]");
   }
-  else if (name.Contains("el1",TString::kExact)) {
+  else if (name.Contains("el1",TString::kExact)) 
+  {
     outhist_sigma->GetYaxis()->SetTitle("Leading Electron Seed Time Fit #sigma [ns]");
   }
-  else if (name.Contains("el2",TString::kExact)) {
+  else if (name.Contains("el2",TString::kExact)) 
+  {
     outhist_sigma->GetYaxis()->SetTitle("Subleading Electron Seed Time Fit #sigma [ns]");
   }
   outhist_sigma->SetLineColor(fColor);
@@ -957,13 +1003,16 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
 
   TH1F * outhist_chi2ndf = new TH1F(Form("%s_chi2ndf_%s",name.Data(),Config::formname.Data()),"",vxbins.size()-1,axbins);
   outhist_chi2ndf->GetXaxis()->SetTitle(xtitle.Data());
-  if (name.Contains("td_",TString::kExact)) {
+  if (name.Contains("td_",TString::kExact)) 
+  {
     outhist_chi2ndf->GetYaxis()->SetTitle("Dielectron Seed Time Difference Fit #chi^{2} / NDF");
   }
-  else if (name.Contains("el1",TString::kExact)) {
+  else if (name.Contains("el1",TString::kExact)) 
+  {
     outhist_chi2ndf->GetYaxis()->SetTitle("Leading Electron Seed Time Fit #chi^{2} / NDF");
   }
-  else if (name.Contains("el2",TString::kExact)) {
+  else if (name.Contains("el2",TString::kExact)) 
+  {
     outhist_chi2ndf->GetYaxis()->SetTitle("Subleading Electron Seed Time Fit #chi^{2} / NDF");
   }
   outhist_chi2ndf->SetLineColor(fColor);
@@ -973,13 +1022,16 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
 
   TH1F * outhist_chi2prob = new TH1F(Form("%s_chi2prob_%s",name.Data(),Config::formname.Data()),"",vxbins.size()-1,axbins);
   outhist_chi2prob->GetXaxis()->SetTitle(xtitle.Data());
-  if (name.Contains("td_",TString::kExact)) {
+  if (name.Contains("td_",TString::kExact)) 
+  {
     outhist_chi2prob->GetYaxis()->SetTitle("Dielectron Seed Time Difference Fit #chi^{2} probability");
   }
-  else if (name.Contains("el1",TString::kExact)) {
+  else if (name.Contains("el1",TString::kExact)) 
+  {
     outhist_chi2prob->GetYaxis()->SetTitle("Leading Electron Seed Time Fit #chi^{2} probability");
   }
-  else if (name.Contains("el2",TString::kExact)) {
+  else if (name.Contains("el2",TString::kExact))  
+  {
     outhist_chi2prob->GetYaxis()->SetTitle("Subleading Electron Seed Time Fit #chi^{2} probability");
   }
   outhist_chi2prob->SetLineColor(fColor);
@@ -991,13 +1043,15 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   TH1Map tempmap; // a bit hacky I admit...
   Int_t  sumevents = 0; // also a bit hacky...
 
-  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) { 
+  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
+  { 
     Int_t bin = th1binmap[(*mapiter).first]; // returns which bin each th1 corresponds to one the new plot
     
     // only do this for run number plots --> check each plot has enough entries to do fit
-    if ( name.Contains("runs",TString::kExact) || name.Contains("nvtx",TString::kExact) ) {
-      if ( ((*mapiter).second->Integral() + sumevents) < Config::nEventsCut ) { 
-	
+    if ( name.Contains("runs",TString::kExact) || name.Contains("nvtx",TString::kExact) ) 
+    {
+      if ( ((*mapiter).second->Integral() + sumevents) < Config::nEventsCut ) 
+      { 
 	// store the plot to be added later
 	tempmap[(*mapiter).first] = (TH1F*)(*mapiter).second->Clone(Form("%s_tmp",(*mapiter).first.Data()));
 
@@ -1006,15 +1060,17 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
 	continue; // don't do anything more, just go to next run
       } 
       
-      if ( tempmap.size() > 0 ) { // since we passed the last check, see if we had any bad runs -- if so, add to this one
-
+      // since we passed the last check, see if we had any bad runs -- if so, add to this one
+      if ( tempmap.size() > 0 ) 
+      { 
 	// set bin to weighted average of events
 	Int_t numer = 0;
 	numer += bin * (*mapiter).second->Integral();
 	Int_t denom = sumevents + (*mapiter).second->Integral();
 
 	// add the bad histos to the good one
-	for (TH1MapIter tempmapiter = tempmap.begin(); tempmapiter != tempmap.end(); ++tempmapiter) {
+	for (TH1MapIter tempmapiter = tempmap.begin(); tempmapiter != tempmap.end(); ++tempmapiter) 
+        {
 	  (*mapiter).second->Add((*tempmapiter).second);
 	  numer += th1binmap[(*tempmapiter).first] * (*tempmapiter).second->Integral();
 	}
@@ -1023,7 +1079,8 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
 	bin = numer / denom; 
 
 	// now delete everything in temp map to avoid leaking
-	for (TH1MapIter tempmapiter = tempmap.begin(); tempmapiter != tempmap.end(); ++tempmapiter) {
+	for (TH1MapIter tempmapiter = tempmap.begin(); tempmapiter != tempmap.end(); ++tempmapiter) 
+	{
 	  delete ((*tempmapiter).second);
 	}
 	tempmap.clear();
@@ -1078,7 +1135,8 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
   canv->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),subdir.Data(),outhist_mean->GetName(),Config::outtype.Data()));
 
   Float_t min = 1e9;
-  for (Int_t i = 1; i <= outhist_sigma->GetNbinsX(); i++){
+  for (Int_t i = 1; i <= outhist_sigma->GetNbinsX(); i++)
+  {
     Float_t tmpmin = outhist_sigma->GetBinContent(i);
     if (tmpmin < min && tmpmin != 0){ min = tmpmin; }
   }
@@ -1157,7 +1215,8 @@ void Analysis::PrepFit(TF1 *& fit, TH1F *& hist)
     fit->SetParName(5,"norm3");  fit->SetParameter(5,norm*0.01); fit->SetParLimits(5,norm*0.005,norm*0.1);
     fit->SetParName(6,"sigma3"); fit->SetParameter(6,sigma*2.5); fit->SetParLimits(6,sigma*1.5,sigma*5.0);
   }
-  else {
+  else 
+  {
     std::cerr << "Yikes, you picked a function that we made that does not even exist ...exiting... " << std::endl;
     exit(1);
   }
@@ -1167,19 +1226,22 @@ void Analysis::PrepFit(TF1 *& fit, TH1F *& hist)
 
 void Analysis::GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t & sigma, Float_t & esigma) 
 {
-  if (Config::formname.EqualTo("gaus1",TString::kExact)) {
+  if (Config::formname.EqualTo("gaus1",TString::kExact)) 
+  {
     mean   = fit->GetParameter(1);
     emean  = fit->GetParError (1);
     sigma  = fit->GetParameter(2);
     esigma = fit->GetParError (2);
   }
-  else if (Config::formname.EqualTo("gaus1core",TString::kExact)) {
+  else if (Config::formname.EqualTo("gaus1core",TString::kExact)) 
+  {
     mean   = fit->GetParameter(1);
     emean  = fit->GetParError (1);
     sigma  = fit->GetParameter(2);
     esigma = fit->GetParError (2);
   }
-  else if (Config::formname.EqualTo("gaus2",TString::kExact)) {
+  else if (Config::formname.EqualTo("gaus2",TString::kExact)) 
+  {
     const Float_t const1 = fit->GetParameter(0); 
     const Float_t const2 = fit->GetParameter(3);
     const Float_t denom  = const1 + const2;
@@ -1193,7 +1255,8 @@ void Analysis::GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t
     emean  = std::sqrt(emean) /denom;
     esigma = std::sqrt(esigma)/denom;
   }
-  else if (Config::formname.EqualTo("gaus2fm",TString::kExact)) {
+  else if (Config::formname.EqualTo("gaus2fm",TString::kExact)) 
+  {
     const Float_t const1 = fit->GetParameter(0); 
     const Float_t const2 = fit->GetParameter(3);
     const Float_t denom  = const1 + const2;
@@ -1206,7 +1269,8 @@ void Analysis::GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t
 
     esigma = std::sqrt(esigma)/denom;
   }
-  else if (Config::formname.EqualTo("gaus3fm",TString::kExact)) {
+  else if (Config::formname.EqualTo("gaus3fm",TString::kExact)) 
+  {
     const Double_t const1 = fit->GetParameter(0); 
     const Double_t const2 = fit->GetParameter(3);
     const Double_t const3 = fit->GetParameter(5);
@@ -1226,21 +1290,24 @@ void Analysis::DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2
 {
   canv->cd();
 
-  if (Config::formname.EqualTo("gaus2",TString::kExact)) {
+  if (Config::formname.EqualTo("gaus2",TString::kExact)) 
+  {
     sub1 = new TF1("sub1","gaus(0)",-Config::fitrange,Config::fitrange);
     sub1->SetParameters(fit->GetParameter(0),fit->GetParameter(1),fit->GetParameter(2));
   
     sub2 = new TF1("sub2","gaus(0)",-Config::fitrange,Config::fitrange);
     sub2->SetParameters(fit->GetParameter(3),fit->GetParameter(4),fit->GetParameter(5));
   } 
-  else if (Config::formname.EqualTo("gaus2fm",TString::kExact)) {
+  else if (Config::formname.EqualTo("gaus2fm",TString::kExact)) 
+  {
     sub1 = new TF1("sub1","gaus(0)",-Config::fitrange,Config::fitrange);
     sub1->SetParameters(fit->GetParameter(0),fit->GetParameter(1),fit->GetParameter(2));
   
     sub2 = new TF1("sub2","gaus(0)",-Config::fitrange,Config::fitrange);
     sub2->SetParameters(fit->GetParameter(3),fit->GetParameter(1),fit->GetParameter(4));
   } 
-  else if (Config::formname.EqualTo("gaus3fm",TString::kExact)) {
+  else if (Config::formname.EqualTo("gaus3fm",TString::kExact)) 
+  {
     sub1 = new TF1("sub1","gaus(0)",-Config::fitrange,Config::fitrange);
     sub1->SetParameters(fit->GetParameter(0),fit->GetParameter(1),fit->GetParameter(2));
   
@@ -1255,7 +1322,8 @@ void Analysis::DrawSubComp(TF1 *& fit, TCanvas *& canv, TF1 *& sub1, TF1 *& sub2
     sub3->SetLineStyle(7);
     sub3->Draw("same");
   } 
-  else { // do not do anything in this function
+  else // do not do anything in this function
+  {
     return;
   }
 
@@ -1291,7 +1359,8 @@ TH1F * Analysis::MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_
 {
   TH1F * hist = new TH1F(hname.Data(),htitle.Data(),nbins,xlow,xhigh);
   hist->SetLineColor(kBlack);
-  if (fIsMC) {
+  if (fIsMC)
+  {
     hist->SetFillColor(fColor);
     hist->SetMarkerColor(fColor);
   }
@@ -1327,7 +1396,8 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap)
 {
   fOutFile->cd();
 
-  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) { 
+  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
+  { 
     // save to output file
     (*mapiter).second->Write(); // map is map["hist name",TH1D*]
 
@@ -1349,7 +1419,8 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap)
 
     // Draw and save normalized clone; then take original and fit it with some copy/past code
     TString xtitle = (*mapiter).second->GetXaxis()->GetTitle();
-    if (xtitle.Contains("Time",TString::kExact)) {
+    if (xtitle.Contains("Time",TString::kExact)) 
+    {
       // first clone th1, then normalize it, then draw + save it
       TH1F * normhist = (TH1F*)(*mapiter).second->Clone(Form("%s_norm",(*mapiter).first.Data()));
       normhist->Scale(1./normhist->Integral());
@@ -1430,7 +1501,8 @@ void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit)
   canv->SetLogy(0);
   CMSLumi(canv);
   canv->Write();
-  if (Config::saveFits) {
+  if (Config::saveFits) 
+  {
     canv->SaveAs(Form("%s/%s/lin/%s_%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fit->GetName(),Config::outtype.Data()));
     
     canv->SetLogy(1);
@@ -1447,8 +1519,8 @@ void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap)
   fOutFile->cd();
 
   TCanvas * canv = new TCanvas("canv","canv");
-  for (TH2MapIter mapiter = th2map.begin(); mapiter != th2map.end(); ++mapiter) { 
-    
+  for (TH2MapIter mapiter = th2map.begin(); mapiter != th2map.end(); ++mapiter) 
+  { 
     (*mapiter).second->Write(); // map is map["hist name",TH1D*]
 
     // now draw onto canvas to save as png
@@ -1466,7 +1538,8 @@ void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap)
 
 void Analysis::DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap) 
 {
-  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) { 
+  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
+  { 
     fTH1Dump << (*mapiter).first.Data()  << " " <<  subdirmap[(*mapiter).first].Data() << std::endl;
   }
 }
@@ -1481,7 +1554,8 @@ void Analysis::DeleteFit(TF1 *& fit, TF1 *& sub1, TF1 *& sub2, TF1 *& sub3)
 
 void Analysis::DeleteTH1s(TH1Map & th1map)
 {
-  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) { 
+  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
+  { 
     delete ((*mapiter).second);
   }
   th1map.clear();
@@ -1489,7 +1563,8 @@ void Analysis::DeleteTH1s(TH1Map & th1map)
 
 void Analysis::DeleteTH2s(TH2Map & th2map) 
 {
-  for (TH2MapIter mapiter = th2map.begin(); mapiter != th2map.end(); ++mapiter) { 
+  for (TH2MapIter mapiter = th2map.begin(); mapiter != th2map.end(); ++mapiter) 
+  { 
     delete ((*mapiter).second);
   }
   th2map.clear();
@@ -1516,10 +1591,12 @@ void Analysis::GetPedestalNoise()
   {
     std::ifstream inputpeds;
     inputpeds.open("config/pedestals/pednoise_MC.txt",std::ios::in);
-    Float_t t_adc2gev_eb, t_adc2gev_ee;
-    while (inputpeds >> t_adc2gev_eb >> t_adc2gev_ee) 
+    Int_t ID;
+    Float_t noise;
+    fPedNoises.resize(1); // since only MC has one IOV, only one map, direct copy
+    while (inputpeds >> ID >> noise) 
     {
-      fADC2GeVs.push_back(ADC2GeVPair(t_adc2gev_eb,t_adc2gev_ee));
+      fPedNoises[0][ID] = noise; 
     }
     inputpeds.close();
   }
@@ -1540,7 +1617,7 @@ void Analysis::GetPedestalNoise()
     for (UInt_t iov = 0; iov < fPedNoiseRuns.size(); iov++)
     {
       std::ifstream inputpeds;
-      inputpeds.open(Form("config/pedestals/pednoise_%i-%i.txt",fADC2GeVRuns[iov].beg_,fADC2GeVRuns[iov].end_),std::ios::in);
+      inputpeds.open(Form("config/pedestals/pednoise_%i-%i.txt",fPedNoiseRuns[iov].beg_,fPedNoiseRuns[iov].end_),std::ios::in);
       IDNoiseMap t_noise_map;
       Int_t ID;
       Float_t noise;
@@ -1594,7 +1671,8 @@ void Analysis::GetADC2GeVConvs()
   }
 }
   
-void Analysis::InitTree() {
+void Analysis::InitTree() 
+{
   // Set branch addresses and branch pointers
   fInTree->SetBranchAddress("event", &event, &b_event);
   fInTree->SetBranchAddress("run", &run, &b_run);

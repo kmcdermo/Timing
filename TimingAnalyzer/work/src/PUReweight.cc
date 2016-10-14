@@ -55,7 +55,7 @@ void PUReweight::GetPUWeights(){
     cut.Append(" && (hltdoubleel33 || hltdoubleel37)");
 
     // files + trees + tmp hist for data
-    TString filename = Form("input/DATA/%s/%s/%s",fDataNames[data].Data(),Config::year.Data(),"skimmedtree.root");
+    TString filename = Form("input/DATA/%s/%s/%s",Config::year.Data(),fDataNames[data].Data(),"skimmedtree.root");
     TFile * file = TFile::Open(filename.Data());
     CheckValidFile(file,filename);
 
@@ -87,7 +87,7 @@ void PUReweight::GetPUWeights(){
     cut.Append(" )");
 
     // files + trees for mc + tmp hists
-    TString filename = Form("input/MC/%s/%s/%s",fMCNames[mc].Data(),Config::year.Data(),"skimmedtree.root");
+    TString filename = Form("input/MC/%s/%s/%s",Config::year.Data(),fMCNames[mc].Data(),"skimmedtree.root");
     TFile * file = TFile::Open(filename.Data());
     CheckValidFile(file,filename);
 
