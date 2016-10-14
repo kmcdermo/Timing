@@ -26,18 +26,18 @@ inline Float_t eta  (const Float_t x,  const Float_t y, const Float_t z){return 
 void minrange()
 {
   Bool_t     isMC = false;
-  TString   indir = Form("input/%s", (isMC?"MC/dyll":"DATA/doubleeg") );
+  TString   indir = Form("input/%s", (isMC?"MC/2016/dyll":"DATA/2016/doubleeg") );
   TFile   *  file = TFile::Open(Form("%s/skimmedtree.root",indir.Data())); 
   TTree   *  tree = (TTree*)file->Get("tree/tree");
-  TString  invar1 = "el1E";
-  TString  invar2 = "el2E";
-  TString  outvar = "effE";
-  TString  ecpart = "inclusive";
-  Int_t    minval = 10;
+  TString  invar1 = "el1seedE";
+  TString  invar2 = "el2seedE";
+  TString  outvar = "effseedE";
+  TString  ecpart = "EMEM";
+  Int_t    minval = 15.0;
   Float_t diffval = 5.0;
   size_t    ndiff = 1000;
 
-  TString outtxt = Form("config/%s_%s_bins.txt",outvar.Data(),ecpart.Data());
+  TString outtxt = Form("testconfig/%s_%s_bins.txt",outvar.Data(),ecpart.Data());
   std::cout << "File: " << outtxt.Data() << std::endl;
   ofstream outfile;
   outfile.open(outtxt.Data(),std::ios_base::trunc);

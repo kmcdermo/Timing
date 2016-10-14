@@ -304,6 +304,7 @@ void Analysis::SetupStandardPlots()
   standardTH1Map["zmass_EEEE"] = Analysis::MakeTH1Plot("zmass_EEEE","",100,Config::zlow,Config::zhigh,"Dielectron invariant mass [GeV/c^{2}] (EEEE)","Events",standardTH1SubMap,"standard/Z/mass");
   standardTH1Map["zmass_EPEP"] = Analysis::MakeTH1Plot("zmass_EPEP","",100,Config::zlow,Config::zhigh,"Dielectron invariant mass [GeV/c^{2}] (EE+EE+)","Events",standardTH1SubMap,"standard/Z/mass");
   standardTH1Map["zmass_EMEM"] = Analysis::MakeTH1Plot("zmass_EMEM","",100,Config::zlow,Config::zhigh,"Dielectron invariant mass [GeV/c^{2}] (EE-EE-)","Events",standardTH1SubMap,"standard/Z/mass");
+  standardTH1Map["zmass_EBEE"] = Analysis::MakeTH1Plot("zmass_EBEE","",100,Config::zlow,Config::zhigh,"Dielectron invariant mass [GeV/c^{2}] (EBEE)","Events",standardTH1SubMap,"standard/Z/mass");
 
   // effective seedE
   standardTH1Map["effseedE_inclusive"] = Analysis::MakeTH1Plot("effseedE_inclusive","",100,0.,Config::XBinsMap["effseedE_inclusive"].back(),Form("Effective Dielectron Seed %s (inclusive)",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard/effseedE");
@@ -311,6 +312,7 @@ void Analysis::SetupStandardPlots()
   standardTH1Map["effseedE_EEEE"] = Analysis::MakeTH1Plot("effseedE_EEEE","",100,0.,Config::XBinsMap["effseedE_EEEE"].back(),Form("Effective Dielectron Seed %s (EEEE)",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard/effseedE");
   standardTH1Map["effseedE_EPEP"] = Analysis::MakeTH1Plot("effseedE_EPEP","",100,0.,Config::XBinsMap["effseedE_EPEP"].back(),Form("Effective Dielectron Seed %s (EE+EE+)",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard/effseedE");
   standardTH1Map["effseedE_EMEM"] = Analysis::MakeTH1Plot("effseedE_EMEM","",100,0.,Config::XBinsMap["effseedE_EMEM"].back(),Form("Effective Dielectron Seed %s (EE-EE-)",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard/effseedE");
+  standardTH1Map["effseedE_EBEE"] = Analysis::MakeTH1Plot("effseedE_EBEE","",100,0.,Config::XBinsMap["effseedE_EBEE"].back(),Form("Effective Dielectron Seed %s (EBEE)",Config::XTitleMap["E"].Data()),"Events",standardTH1SubMap,"standard/effseedE");
 
   // el1 and el2 variables
   standardTH1Map["el1phi"]     = Analysis::MakeTH1Plot("el1phi","",100,-Config::PI,Config::PI,"Leading Electron #phi","Events",standardTH1SubMap,"standard/el1");
@@ -383,6 +385,7 @@ void Analysis::SetupStandardPlots()
   timingMap["td_EEEE"] = Analysis::MakeTH1Plot("td_EEEE","",Config::ntimebins,-Config::timerange,Config::timerange,"Dielectron Seed Time Difference [ns] (EEEE Inclusive)","Events",timingSubMap,"timing/inclusive/timediff");  
   timingMap["td_EPEP"] = Analysis::MakeTH1Plot("td_EPEP","",Config::ntimebins,-Config::timerange,Config::timerange,"Dielectron Seed Time Difference [ns] (EE+EE+ Inclusive)","Events",timingSubMap,"timing/inclusive/timediff");  
   timingMap["td_EMEM"] = Analysis::MakeTH1Plot("td_EMEM","",Config::ntimebins,-Config::timerange,Config::timerange,"Dielectron Seed Time Difference [ns] (EE-EE- Inclusive)","Events",timingSubMap,"timing/inclusive/timediff");  
+  timingMap["td_EBEE"] = Analysis::MakeTH1Plot("td_EBEE","",Config::ntimebins,-Config::timerange,Config::timerange,"Dielectron Seed Time Difference [ns] (EBEE Inclusive)","Events",timingSubMap,"timing/inclusive/timediff");  
 
   // single seed time
   timingMap["el1time_inclusive"] = Analysis::MakeTH1Plot("el1time_inclusive","",Config::ntimebins,-Config::timerange,Config::timerange,"Leading Electron Seed Time [ns] (Inclusive)","Events",timingSubMap,"timing/inclusive/el1time");
@@ -426,6 +429,8 @@ void Analysis::SetupEffEPlots()
   effseedE2DMap["td_effseedE_EPEP"] = Analysis::MakeTH2Plot("td_effseedE_EPEP","",effseedEbins["td_effseedE_EPEP"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (EE+EE+)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/seedE/EPEP");  
   effseedEbins["td_effseedE_EMEM"] = Config::XBinsMap["effseedE_EMEM"];
   effseedE2DMap["td_effseedE_EMEM"] = Analysis::MakeTH2Plot("td_effseedE_EMEM","",effseedEbins["td_effseedE_EMEM"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (EE-EE-)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/seedE/EMEM");  
+  effseedEbins["td_effseedE_EBEE"] = Config::XBinsMap["effseedE_EBEE"];
+  effseedE2DMap["td_effseedE_EBEE"] = Analysis::MakeTH2Plot("td_effseedE_EBEE","",effseedEbins["td_effseedE_EBEE"],Config::ntimebins,-Config::timerange,Config::timerange,Form("Effective Seed %s (EBEE)",Config::XTitleMap["E"].Data()),"Dielectron Seed Time Difference [ns]",effseedE2DSubMap,"timing/effective/seedE/EBEE");  
 }
 
 void Analysis::SetupNvtxPlots()
@@ -649,6 +654,12 @@ void Analysis::FillStandardPlots(const Float_t weight, const Float_t timediff, c
       timingMap["td_EMEM"]->Fill(timediff,weight); 
     }
   }
+  else if   ((el1eb && el2ee) || (el1ee && el2eb)) //EBEE
+  {
+    standardTH1Map["zmass_EBEE"]->Fill(zmass,weight); 
+    standardTH1Map["effseedE_EBEE"]->Fill(effseedE,weight);
+    timingMap["td_EBEE"]->Fill(timediff,weight); 
+  }
 }
 
 void Analysis::FillEffEPlots(const Float_t weight, const Float_t timediff, const Float_t effseedE, 
@@ -671,6 +682,10 @@ void Analysis::FillEffEPlots(const Float_t weight, const Float_t timediff, const
     {
       effseedE2DMap["td_effseedE_EMEM"]->Fill(effseedE,timediff,weight);
     }
+  }
+  else if   ((el1eb && el2ee) || (el1ee && el2eb)) //EBEE
+  {
+    effseedE2DMap["td_effseedE_EBEE"]->Fill(effseedE,timediff,weight);
   }
 }
 
