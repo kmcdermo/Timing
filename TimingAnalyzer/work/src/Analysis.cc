@@ -118,6 +118,11 @@ void Analysis::EventLoop()
   {
     fInTree->GetEntry(entry);
 
+    if (Config::dumpStatus) 
+    {
+      if (entry%Config::nEvCheck == 0) std::cout << "Processing Entry: " << entry << std::endl;
+    } 
+
     ////////////////////
     //                // 
     // Determine IOVs //

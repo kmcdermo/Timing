@@ -28,6 +28,7 @@ namespace Config{
   constexpr    Int_t   nEvDataSkim = 3439542;
   constexpr    Int_t   nEvMCTot    = 104113466;
   constexpr    Int_t   nEvMCSkim   = 3303390;
+  constexpr    Int_t   nEvCheck    = 30000;
 
   // pu config
   constexpr    Int_t   nbinsvtx   = 75;
@@ -113,6 +114,7 @@ namespace Config{
   extern Bool_t      wgtedTime;
   extern Bool_t      useSigma_n;
   extern Bool_t      saveFits;
+  extern Bool_t      dumpStatus;
   extern TString     year;
   extern TString     formname; // fitting function to be used
   extern TString     outtype;
