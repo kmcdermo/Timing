@@ -1,82 +1,77 @@
 #include <cmath>
 
-void tof(){
+void tof()
+{
+  gStyle->SetOptStat(0);
 
-  TFile * file = TFile::Open("input/DATA/doubleeg/skimmedtree.root");
+  TFile * file = TFile::Open("input/DATA/2016/doubleeg/skimmedtree.root");
   TTree * tree = (TTree*)file->Get("tree/tree");
 
-  Float_t time;
-  tree->SetBranchAddress("el1seedtime",&time);
+  TH1F * histseed1 = new TH1F("histseed1","el1seed time",100,-10,10);
+  TH1F * histseed2 = new TH1F("histseed2","el2seed time",100,-10,10);
 
-  Float_t x, y, z;
-  tree->SetBranchAddress("el1seedX",&x);
-  tree->SetBranchAddress("el1seedY",&y);
-  tree->SetBranchAddress("el1seedZ",&z);
+  std::cout << "Begin of seedtime filling" << std::endl;
 
-  Float_t vx, vy, vz;
-  tree->SetBranchAddress("vtxX",&vx);
-  tree->SetBranchAddress("vtxY",&vy);
-  tree->SetBranchAddress("vtxZ",&vz);
+  tree->Draw("el1seedtime>>histseed1","","goff");
+  tree->Draw("el2seedtime>>histseed2","","goff");
+
+  std::cout << "End of seedtime filling" << std::endl;
 
   const Float_t sol = 29.9792;
+  const Float_t el1shift = -0.520395; //-0.518782;
+  const Float_t el2shift = -0.521207; //-0.519583;
 
-  TH1F * hist1 = new TH1F("hist1","corr",100,-10,10);
-  TH1F * hist2 = new TH1F("hist2","uncorr",100,-10,10);
+  TH1F * histtof1 = new TH1F("histtof1","el1seed TOF",100,-10,10);
+  TH1F * histtof2 = new TH1F("histtof2","el2seed TOF",100,-10,10);
 
-  TH1F * histz = new TH1F("histz","vz",100,-20,20);
+  std::cout << "Begin of TOF filling" << std::endl;
 
-  Float_t best = -99.0;
+  tree->Draw(Form("el1seedtime+sqrt((el1seedX*el1seedX)+(el1seedY*el1seedY)+(el1seedZ*el1seedZ))/%f-sqrt((vtxX-el1seedX)*(vtxX-el1seedX)+(vtxY-el1seedY)*(vtxY-el1seedY)+(vtxZ-el1seedZ)*(vtxZ-el1seedZ))/%f-%f>>histtof1",sol,sol,el1shift));
+  tree->Draw(Form("el2seedtime+sqrt((el2seedX*el2seedX)+(el2seedY*el2seedY)+(el2seedZ*el2seedZ))/%f-sqrt((vtxX-el2seedX)*(vtxX-el2seedX)+(vtxY-el2seedY)*(vtxY-el2seedY)+(vtxZ-el2seedZ)*(vtxZ-el2seedZ))/%f-%f>>histtof2",sol,sol,el2shift));
 
-  for (int i = 0; i < 10000; i++) {
-    tree->GetEntry(i);
-    hist2->Fill(time);
-    
-    Float_t tp  = std::sqrt(z*z + x*x + y*y)/sol;
-    Float_t tpv = std::sqrt((z-vz)*(z-vz) + (x-vx)*(x-vx) + (y-vy)*(y-vy))/sol;
-
-    z += 10;
-
-    if (std::abs(vz) > best) {best = std::abs(vz);}
-
-    hist1->Fill(time+tp-tpv);
-    
-
-    histz->Fill(vz);
-
-  //   if (time+tpv-tpv<-10){
-      
-//       std::cout << time << " " << tpv << " " << tp << std::endl;
-//     }
-  }
-  
-
-  //  std::cout << best << std::endl;
+  std::cout << "End of TOF filling" << std::endl;
 
   TCanvas *c1 = new TCanvas();
   c1->cd();
-  c1->SetLogy(1);
+  //  c1->SetLogy(1);
 
-  histz->Draw();
+  histseed1->SetLineColor(kRed);
+  histtof1 ->SetLineColor(kBlue);
 
-//   hist1->SetLineColor(kRed);
-//   hist2->SetLineColor(kBlack);
-
-//   hist1->Scale(1.0/hist1->Integral());
-//   hist2->Scale(1.0/hist2->Integral());
+  histseed1->SetMaximum((histseed1->GetMaximum()>histtof1->GetMaximum()?histseed1->GetMaximum():histtof1->GetMaximum())*1.05);
   
-//   hist1->Draw();
-//   hist2->Draw("same");
+  histseed1->Draw();
+  histtof1 ->Draw("same");
 
-  
-//   TCanvas *c2 = new TCanvas();
-//   c2->cd();
-//   c2->SetLogy(1);
+  std::cout << "el1seedtime: " << histseed1->GetMean() << "+/-" << histseed1->GetStdDev() << std::endl;
+  std::cout << "el1TOFtime:  " << histtof1 ->GetMean() << "+/-" << histtof1 ->GetStdDev() << std::endl;
 
-//   hist1->Add(hist2,-1.0);
-  
-//   hist1->Draw();
-  
+  TLegend * leg1 = new TLegend(0.7,0.85,1.0,1.0);
+  leg1->AddEntry(histseed1,"el1 seed","l");
+  leg1->AddEntry(histtof1 ,"el1 tof", "l");
+  leg1->Draw("same");
 
-  
+  c1->SaveAs("el1_seedtime_vs_tof_noprompt.png");
 
+  TCanvas *c2 = new TCanvas();
+  c2->cd();
+  //  c2->SetLogy(1);
+
+  histseed2->SetLineColor(kRed);
+  histtof2 ->SetLineColor(kBlue);
+
+  histseed2->SetMaximum((histseed2->GetMaximum()>histtof2->GetMaximum()?histseed2->GetMaximum():histtof2->GetMaximum())*1.05);
+
+  histseed2->Draw();
+  histtof2 ->Draw("same");
+
+  std::cout << "el2seedtime: " << histseed2->GetMean() << "+/-" << histseed2->GetStdDev() << std::endl;
+  std::cout << "el2TOFtime:  " << histtof2 ->GetMean() << "+/-" << histtof2 ->GetStdDev() << std::endl;
+
+  TLegend * leg2 = new TLegend(0.7,0.85,1.0,1.0);
+  leg2->AddEntry(histseed2,"el2 seed","l");
+  leg2->AddEntry(histtof2 ,"el2 tof", "l");
+  leg2->Draw("same");
+
+  c2->SaveAs("el2_seedtime_vs_tof_noprompt.png");
 }
