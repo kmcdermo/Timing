@@ -19,7 +19,7 @@ inline Float_t deltaR(const Float_t eta1, const Float_t eta2, const Float_t phi1
 inline Float_t TOF   (const Float_t x,  const Float_t y,  const Float_t z, 
 		      const Float_t vx, const Float_t vy, const Float_t vz, const Float_t time)
 {
-  return time + (std::sqrt(z*z+rad2(x,y))-std::sqrt((z-vz)*(z-vz)+rad2((x-vx),(y-vy))))/Config::sol;
+  return time + (std::sqrt(rad2_3(x,y,z))-std::sqrt(rad2_3((x-vx),(y-vy),(z-vz))))/Config::sol;
 }
 inline Float_t effA  (const Float_t e1, const Float_t e2){return e1*e2/std::sqrt(rad2(e1,e2));}
 inline Float_t WeightedTime(const FltArr3Vec & rhetps, Bool_t isEB)
@@ -120,7 +120,7 @@ void Analysis::EventLoop()
 
     if (Config::dumpStatus) 
     {
-      if (entry%Config::nEvCheck == 0) std::cout << "Processing Entry: " << entry << std::endl;
+      if (entry%Config::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << fInTree->GetEntries() << std::endl;
     } 
 
     ////////////////////
@@ -132,13 +132,14 @@ void Analysis::EventLoop()
     {
       if (run != currentRun)
       {
+	currentRun = run;
 	for (Int_t iov = 0; iov < fPedNoiseRuns.size(); iov++)
 	{
-	  if ((run >= fPedNoiseRuns[iov].beg_) && (run <= fPedNoiseRuns[iov].end_)) { PedNoiseIOV = iov; }
+	  if ((currentRun >= fPedNoiseRuns[iov].beg_) && (currentRun <= fPedNoiseRuns[iov].end_)) { PedNoiseIOV = iov; }
 	}
 	for (Int_t iov = 0; iov < fADC2GeVRuns.size(); iov++)
 	{
-	  if ((run >= fADC2GeVRuns[iov].beg_) && (run <= fADC2GeVRuns[iov].end_)) { ADC2GeVIOV = iov; }
+	  if ((currentRun >= fADC2GeVRuns[iov].beg_) && (currentRun <= fADC2GeVRuns[iov].end_)) { ADC2GeVIOV = iov; }
 	}
       }
     }
@@ -471,6 +472,12 @@ void Analysis::SetupEtaPlots()
   for (Int_t i = 0; i < 21; i++){eletabins.push_back(i/4. - 2.5);}
   eleta2DMap["td_el1seedeta"] = Analysis::MakeTH2Plot("td_el1seedeta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Leading Electron Seed #eta","Dielectron Seed Time Difference [ns]",eleta2DSubMap,"timing/eta/el1seedeta");  
   eleta2DMap["td_el2seedeta"] = Analysis::MakeTH2Plot("td_el2seedeta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Subleading Electron Seed #eta","Dielectron Seed Time Difference [ns]",eleta2DSubMap,"timing/eta/el2seedeta");  
+
+  //////////////////////////////
+  // Single El timing vs etas //
+  //////////////////////////////
+   eleta2DMap["el1time_el1seedeta"] = Analysis::MakeTH2Plot("el1time_el1seedeta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Leading Electron Seed #eta","Leading Electron Seed Time [ns]",eleta2DSubMap,"timing/el1/seedeta");  
+   eleta2DMap["el2time_el2seedeta"] = Analysis::MakeTH2Plot("el2time_el2seedeta","",eletabins,Config::ntimebins,-Config::timerange,Config::timerange,"Subleading Electron Seed #eta","Subleading Electron Seed Time [ns]",eleta2DSubMap,"timing/el2/seedeta");  
 }
 
 void Analysis::SetupVtxZPlots()
@@ -722,15 +729,11 @@ void Analysis::FillEtaPlots(const Float_t weight, const Float_t timediff, const 
 
   if ((el1eb && el2eb) || (el1ee && el2ee)) // restrict this to only events with ebeb and eeee
   {
-    eleta2DMap["td_el1eta"]->Fill(el1eta,timediff,weight);
     eleta2DMap["td_el1seedeta"]->Fill(el1seedeta,timediff,weight);
-    eleta2DMap["td_el2eta"]->Fill(el2eta,timediff,weight);
     eleta2DMap["td_el2seedeta"]->Fill(el2seedeta,timediff,weight);
   }
 
-  eleta2DMap["el1time_el1eta"]->Fill(el1eta,el1time,weight);
   eleta2DMap["el1time_el1seedeta"]->Fill(el1seedeta,el1time,weight);
-  eleta2DMap["el2time_el2eta"]->Fill(el2eta,el2time,weight);
   eleta2DMap["el2time_el2seedeta"]->Fill(el2seedeta,el2time,weight);
 }
 
@@ -897,44 +900,38 @@ void Analysis::Project2Dto1D(TH2F *& hist2d, TString subdir2d, TH1Map & th1map, 
     // First create each histogram
     if     (basename.Contains("td_dseedeta",TString::kExact)) //ugh
     {
-      histname = Form("%s_%3.1f_%3.1f",basename.Data(),xlow,xhigh);
-      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %3.1f to %3.1f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
-						      "Events",subdir1dmap,subdir2d);
+      histname = Form("%s_%3.1f_%3.1f_bin%i",basename.Data(),xlow,xhigh,i);
+      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %3.1f to %3.1f",ytitle.Data(),xtitle.Data(),xlow,xhigh),"Events",subdir1dmap,subdir2d);
     }
     else if ((basename.Contains("zphi",TString::kExact))       || (basename.Contains("abszeta",TString::kExact))     ||
 	     (basename.Contains("el1seedeta",TString::kExact)) || (basename.Contains("el2seedeta",TString::kExact))) //double ugh
     { 
-      histname = Form("%s_%4.2f_%4.2f",basename.Data(),xlow,xhigh);
-      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %4.2f to %4.2f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
-						      "Events",subdir1dmap,subdir2d);
+      histname = Form("%s_%4.2f_%4.2f_bin%i",basename.Data(),xlow,xhigh,i);
+      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %4.2f to %4.2f",ytitle.Data(),xtitle.Data(),xlow,xhigh),"Events",subdir1dmap,subdir2d);
     }
     else if (basename.Contains("vtxZ",TString::kExact)) //triple ugh
     {
       histname = Form("%s_%5.2f_%5.2f",basename.Data(),xlow,xhigh);
-      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %5.2f to %5.2f",ytitle.Data(),xtitle.Data(),xlow,xhigh),
-						      "Events",subdir1dmap,subdir2d);
+      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %5.2f to %5.2f",ytitle.Data(),xtitle.Data(),xlow,xhigh),"Events",subdir1dmap,subdir2d);
     }
     else if (basename.Contains("runs",TString::kExact)) //quadruple ugh
     {
       Int_t runno = (xlow+xhigh)/2;
-      histname = Form("%s_%i",basename.Data(),runno);
-      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in Run: %i",ytitle.Data(),runno),
-						      "Events",subdir1dmap,subdir2d);
+      histname = Form("%s_%i_bin%i",basename.Data(),runno,i);
+      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in Run: %i",ytitle.Data(),runno),"Events",subdir1dmap,subdir2d);
     }
     else if (basename.Contains("nvtx",TString::kExact)) //quintuple ugh
     {      
       Int_t ivtx = (xlow+xhigh)/2;
-      histname = Form("%s_%i",basename.Data(),ivtx);
-      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in nPV: %i",ytitle.Data(),ivtx),
-						      "Events",subdir1dmap,subdir2d);
+      histname = Form("%s_%i_bin%i",basename.Data(),ivtx,i);
+      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in nPV: %i",ytitle.Data(),ivtx),"Events",subdir1dmap,subdir2d);
     }
     else // "normal" filling
     { 
       Int_t ixlow  = Int_t(xlow); 
       Int_t ixhigh = Int_t(xhigh); 
-      histname = Form("%s_%i_%i",basename.Data(),ixlow,ixhigh);
-      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %i to %i",ytitle.Data(),xtitle.Data(),ixlow,ixhigh),
-						      "Events",subdir1dmap,subdir2d);
+      histname = Form("%s_%i_%i_bin%i",basename.Data(),ixlow,ixhigh,i);
+      th1map[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nybins,ylow,yhigh,Form("%s in %s bin: %i to %i",ytitle.Data(),xtitle.Data(),ixlow,ixhigh),"Events",subdir1dmap,subdir2d);
     }
     th1binmap[histname.Data()] = i; // universal pairing
 
