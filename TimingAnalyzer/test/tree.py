@@ -7,7 +7,7 @@ options = VarParsing ('python')
 
 ## data or MC options
 options.register (
-	'isMC',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'isMC',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate data or MC');
 
 ## processName

@@ -57,16 +57,18 @@ typedef std::tuple<int, int, float> triple;
 typedef std::vector<triple> triplevec;
 typedef std::vector<std::pair<DetId,float> > DetIdPairVec;
 
-inline bool minimizeByZmass(const triple& elpair1, const triple& elpair2){
+inline bool minimizeByZmass(const triple& elpair1, const triple& elpair2)
+{
   return std::get<2>(elpair1)<std::get<2>(elpair2);
 }
 
-inline bool sortElectronsByPt(const pat::ElectronRef& el1, const pat::ElectronRef& el2){
+inline bool sortElectronsByPt(const pat::ElectronRef& el1, const pat::ElectronRef& el2)
+{
   return el1->pt()>el2->pt();
 }
 
-class TimingAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> {
-
+class TimingAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
+{
 public:
   explicit TimingAnalyzer(const edm::ParameterSet&);
   ~TimingAnalyzer();
@@ -192,6 +194,8 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
   mediumelectronsTag(iConfig.getParameter<edm::InputTag>("mediumelectrons")),
   tightelectronsTag(iConfig.getParameter<edm::InputTag>("tightelectrons")),
   heepelectronsTag(iConfig.getParameter<edm::InputTag>("heepelectrons")),
+
+  // more filters
   applyKinematicsFilter(iConfig.existsAs<bool>("applyKinematicsFilter") ? iConfig.getParameter<bool>("applyKinematicsFilter") : false),  
 
   //recHits
@@ -207,10 +211,10 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
   usesResource("TFileService");
 
   // trigger tokens
-  triggerResultsToken   = consumes<edm::TriggerResults> (triggerResultsTag);
+  triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
   
   //vertex
-  verticesToken  = consumes<std::vector<reco::Vertex> > (verticesTag);
+  verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
 
   // electrons
   vetoelectronsToken   = consumes<pat::ElectronRefVector> (vetoelectronsTag);
@@ -218,9 +222,10 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
   mediumelectronsToken = consumes<pat::ElectronRefVector> (mediumelectronsTag);
   tightelectronsToken  = consumes<pat::ElectronRefVector> (tightelectronsTag);
   heepelectronsToken   = consumes<pat::ElectronRefVector> (heepelectronsTag);
-   
+
   // only for simulated samples
-  if( isMC ){
+  if (isMC)
+  {
     pileupInfoToken = consumes<std::vector<PileupSummaryInfo> > (iConfig.getParameter<edm::InputTag>("pileup"));
     genevtInfoToken = consumes<GenEventInfoProduct> (iConfig.getParameter<edm::InputTag>("genevt"));
     gensToken       = consumes<edm::View<reco::GenParticle> > (iConfig.getParameter<edm::InputTag>("gens"));   
@@ -229,7 +234,8 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
 
 TimingAnalyzer::~TimingAnalyzer() {}
 
-void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
+{
   // TRIGGER
   edm::Handle<edm::TriggerResults> triggerResultsH;
   iEvent.getByToken(triggerResultsToken, triggerResultsH);
@@ -271,8 +277,10 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   hltdoubleel37 = false;
 
   // Which triggers fired
-  if(triggerResultsH.isValid()){
-    for (size_t i = 0; i < triggerPathsVector.size(); i++) {
+  if (triggerResultsH.isValid())
+  {
+    for (std::size_t i = 0; i < triggerPathsVector.size(); i++) 
+    {
       if (triggerPathsMap[triggerPathsVector[i]] == -1) continue;	
       if (i == 0 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel33 = true; // Double electron trigger (33-33)
       if (i == 1 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel37 = true; // Double electron trigger (37-27)
@@ -286,7 +294,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   // Vertex info
   nvtx = -99; vtxX = -999.0; vtxY = -999.0; vtxZ = -999.0;
-  if(verticesH.isValid()) {
+  if (verticesH.isValid()) 
+  {
     nvtx = verticesH->size();
     const reco::Vertex primevtx = (*verticesH)[0];
     vtxX = primevtx.position().x();
@@ -323,29 +332,35 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // z variables
   zmass = -99.0; zpt = -99.0; zeta = -99.0; zphi = -99.0; zE = -99.0; zp = -99.0;
 
-  // save only really pure electrons
+       // save only really pure electrons
   std::vector<pat::ElectronRef> tightelectrons;
-  for (size_t i = 0; i < tightelectronsvec.size(); i++) {
-    if (tightelectronsvec[i]->pt() > 35.){
-      tightelectrons.push_back(tightelectronsvec[i]);
+  for (std::size_t i = 0; i < tightelectronsvec.size(); i++) 
+  {
+    if (tightelectronsvec[i]->pt() > 35.) 
+    {
+      tightelectrons.push_back(tightelectronsvec[i]); 
     }
   }
 
   // Z matching + filling of variables
-  if (tightelectrons.size()>1){   // need at least two electrons that pass id and pt cuts! 
+  if (tightelectrons.size()>1)  // need at least two electrons that pass id and pt cuts! 
+  {
     // First sort on pT --> should be redudant, as already sorted this way in miniAOD
     std::sort(tightelectrons.begin(), tightelectrons.end(), sortElectronsByPt);
 
     pat::ElectronRef el1;
     pat::ElectronRef el2;
 
-    if (doZmassSort) {
+    if (doZmassSort) 
+    {
       triplevec invmasspairs; // store i-j tight el index + invariant mass
       // only want pair of tight electrons that yield closest zmass diff   
-      for (std::size_t i = 0; i < tightelectrons.size(); i++) {
-	pat::ElectronRef el1 = tightelectrons[i];
-	for (std::size_t j = i+1; j < tightelectrons.size(); j++) {
-	  pat::ElectronRef el2 = tightelectrons[j];
+      for (std::size_t i = 0; i < tightelectrons.size(); i++) 
+      {
+	const pat::ElectronRef el1 = tightelectrons[i];
+	for (std::size_t j = i+1; j < tightelectrons.size(); j++) 
+	{
+	  const pat::ElectronRef el2 = tightelectrons[j];
 	  TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1->pt(), el1->eta(), el1->phi(), el1->energy());
 	  TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2->pt(), el2->eta(), el2->phi(), el2->energy());
 	  el1vec += el2vec;
@@ -356,7 +371,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       el1 = tightelectrons[std::get<0>(*best)];
       el2 = tightelectrons[std::get<1>(*best)];
     }
-    else { // just take highest pt electrons in event
+    else
+    { // just take highest pt electrons in event
       el1 = tightelectrons[0];
       el2 = tightelectrons[1];
     }
@@ -374,8 +390,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     // super cluster from electron 1
     const reco::SuperClusterRef& el1sc = el1->superCluster().isNonnull() ? el1->superCluster() : el1->parentSuperCluster();
-    if(el1->ecalDrivenSeed() && el1sc.isNonnull()) {
-
+    if (el1->ecalDrivenSeed() && el1sc.isNonnull()) 
+    {
       // save some supercluster info
       el1scX = el1sc->position().x();
       el1scY = el1sc->position().y();
@@ -383,19 +399,19 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       el1scE = el1sc->energy();
 
       // use seed to get geometry and recHits
-      DetId seedDetId = el1sc->seed()->seed(); //seed detid
+      const DetId seedDetId = el1sc->seed()->seed(); //seed detid
       const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
       const EcalRecHitCollection *recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
 
       // loop over all crystals
-      DetIdPairVec hitsAndFractions = el1sc->hitsAndFractions(); // all crystals in SC
-      for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) {
-
-	DetId recHitId = hafitr->first; // get detid of crystal
-
+      const DetIdPairVec hitsAndFractions = el1sc->hitsAndFractions(); // all crystals in SC
+      for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) 
+      {
+	const DetId recHitId = hafitr->first; // get detid of crystal
 	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
 
-	if (recHit != recHits->end()) { // standard check
+	if (recHit != recHits->end()) // standard check
+        { 
 	  // save position, energy, and time of each crystal to a vector
 	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
 	  el1rhXs.push_back(recHitPos.x());
@@ -406,7 +422,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	  el1rhids.push_back(int(recHitId.rawId()));
 
 	  // save seed info in a flat branch
-	  if (seedDetId == recHitId) { 
+	  if (seedDetId == recHitId) 
+          { 
 	    el1seedX = el1rhXs.back();
 	    el1seedY = el1rhYs.back();
 	    el1seedZ = el1rhZs.back();
@@ -421,8 +438,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     // super cluster from electron 2
     const reco::SuperClusterRef& el2sc = el2->superCluster().isNonnull() ? el2->superCluster() : el2->parentSuperCluster();
-    if(el2->ecalDrivenSeed() && el2sc.isNonnull()) {
-
+    if (el2->ecalDrivenSeed() && el2sc.isNonnull()) 
+    {
       // save some supercluster info
       el2scX = el2sc->position().x();
       el2scY = el2sc->position().y();
@@ -430,18 +447,19 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       el2scE = el2sc->energy();
 
       // use seed to get geometry and recHits
-      DetId seedDetId = el2sc->seed()->seed(); //seed detid
+      const DetId seedDetId = el2sc->seed()->seed(); //seed detid
       const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
       const EcalRecHitCollection *recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
 
       // loop over all crystals
-      DetIdPairVec hitsAndFractions = el2sc->hitsAndFractions(); // all crystals in SC
-      for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) {
-
-	DetId recHitId = hafitr->first; // get detid of crystal
+      const DetIdPairVec hitsAndFractions = el2sc->hitsAndFractions(); // all crystals in SC
+      for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr)
+      {
+	const DetId recHitId = hafitr->first; // get detid of crystal
 	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
 
-	if (recHit != recHits->end()) { // standard check
+	if (recHit != recHits->end()) // standard check
+	{
 	  // save position, energy, and time of each crystal to a vector
 	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
 	  el2rhXs.push_back(recHitPos.x());
@@ -452,7 +470,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	  el2rhids.push_back(int(recHitId.rawId()));
 
 	  // save seed info in a flat branch
-	  if (seedDetId == recHitId) { 
+	  if (seedDetId == recHitId) 
+          { 
 	    el2seedX = el2rhXs.back();
 	    el2seedY = el2rhYs.back();
 	    el2seedZ = el2rhZs.back();
@@ -481,12 +500,14 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     delete clustertools;
   } // end section over tight electrons
-  else{
+  else
+  {
     if (applyKinematicsFilter) return;
   }
 
   // MC INFO    
-  if (isMC) {
+  if (isMC) 
+  {
     edm::Handle<std::vector<PileupSummaryInfo> > pileupInfoH;
     edm::Handle<GenEventInfoProduct>             genevtInfoH;
     edm::Handle<edm::View<reco::GenParticle> >         gensH;
@@ -497,9 +518,12 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     // Pileup info
     puobs  = 0;
     putrue = 0;
-    if (pileupInfoH.isValid()) {
-      for (auto pileupInfo_iter = pileupInfoH->begin(); pileupInfo_iter != pileupInfoH->end(); ++pileupInfo_iter) {
-	if (pileupInfo_iter->getBunchCrossing() == 0) {
+    if (pileupInfoH.isValid()) 
+    {
+      for (auto pileupInfo_iter = pileupInfoH->begin(); pileupInfo_iter != pileupInfoH->end(); ++pileupInfo_iter) 
+      {
+	if (pileupInfo_iter->getBunchCrossing() == 0) 
+        {
 	  puobs  = pileupInfo_iter->getPU_NumInteractions();
 	  putrue = pileupInfo_iter->getTrueNumInteractions();
 	}
@@ -516,10 +540,13 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     genel2pid = -99;   genel2pt = -99.0; genel2eta = -99.0; genel2phi = -99.0;
     genel1E   = -99.0; genel2E  = -99.0; genel1p   = -99.0; genel2p   = -99.0;
 
-    if (gensH.isValid()){
+    if (gensH.isValid())
+    {
       // try to get the final state z
-      for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) {
-  	if (gens_iter->pdgId() == 23 && gens_iter->numberOfDaughters() == 2 && abs(gens_iter->daughter(0)->pdgId()) == 11) { // Final state Z --> ee
+      for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) 
+      {
+  	if (gens_iter->pdgId() == 23 && gens_iter->numberOfDaughters() == 2 && abs(gens_iter->daughter(0)->pdgId()) == 11) // Final state Z --> ee
+	{ 
 	  // Z info
 	  genzpid  = gens_iter->pdgId();
 	  genzpt   = gens_iter->pt();
@@ -550,10 +577,14 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     
       // if a Z is not found look for a pair of leptons ... 
       // this way when the pdgId is not guaranteed that you catch a Z boson, you can still recover DY production
-      if (genzpid == -99) {
-  	for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) {
-  	  if (gens_iter->isPromptFinalState() || gens_iter->isPromptDecayed()) {
-  	    if (gens_iter->pdgId() == 11) {
+      if (genzpid == -99) 
+      {
+  	for (auto gens_iter = gensH->begin(); gens_iter != gensH->end(); ++gens_iter) 
+        {
+  	  if (gens_iter->isPromptFinalState() || gens_iter->isPromptDecayed()) 
+          {
+  	    if (gens_iter->pdgId() == 11) 
+            {
   	      genel1pid = gens_iter->pdgId();
   	      genel1pt  = gens_iter->pt();
   	      genel1eta = gens_iter->eta();
@@ -561,7 +592,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   	      genel1E   = gens_iter->energy();
   	      genel1p   = gens_iter->p();
   	    }
-  	    else if (gens_iter->pdgId() == -11) {
+  	    else if (gens_iter->pdgId() == -11) 
+            {
   	      genel2pid = gens_iter->pdgId();
   	      genel2pt  = gens_iter->pt();
   	      genel2eta = gens_iter->eta();
@@ -571,7 +603,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   	    }
   	  } // end check over final state 
 	} // end loop over gen particles
-  	if (genel1pid == 11 && genel2pid == -11) {
+  	if (genel1pid == 11 && genel2pid == -11) 
+        {
   	  TLorentzVector el1vec; el1vec.SetPtEtaPhiE(genel1pt, genel1eta, genel1phi, genel1E);
   	  TLorentzVector el2vec; el2vec.SetPtEtaPhiE(genel2pt, genel2eta, genel2phi, genel2E);
 
@@ -593,8 +626,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   tree->Fill();    
 }    
 
-void TimingAnalyzer::beginJob() {
-
+void TimingAnalyzer::beginJob() 
+{
   edm::Service<TFileService> fs;
   tree = fs->make<TTree>("tree"       , "tree");
 
@@ -690,7 +723,8 @@ void TimingAnalyzer::beginJob() {
   tree->Branch("zp"                   , &zp                   , "zp/F");
   
   // Z gen-level info: leptonic 
-  if (isMC) {
+  if (isMC) 
+  {
     // Pileup info
     tree->Branch("puobs"                , &puobs                , "puobs/I");
     tree->Branch("putrue"               , &putrue               , "putrue/I");
@@ -725,7 +759,8 @@ void TimingAnalyzer::beginJob() {
 
 void TimingAnalyzer::endJob() {}
 
-void TimingAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {
+void TimingAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
+{
   // triggers for the Analysis
   triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ");
   triggerPathsVector.push_back("HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_v");
@@ -739,15 +774,19 @@ void TimingAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetu
   bool changedConfig = false;
   hltConfig.init(iRun, iSetup, triggerResultsTag.process(), changedConfig);
   
-  for (size_t i = 0; i < triggerPathsVector.size(); i++) {
+  for (size_t i = 0; i < triggerPathsVector.size(); i++) 
+  {
     triggerPathsMap[triggerPathsVector[i]] = -1;
   }
   
-  for(size_t i = 0; i < triggerPathsVector.size(); i++){
+  for(size_t i = 0; i < triggerPathsVector.size(); i++)
+  {
     TPRegexp pattern(triggerPathsVector[i]);
-    for(size_t j = 0; j < hltConfig.triggerNames().size(); j++){
+    for(size_t j = 0; j < hltConfig.triggerNames().size(); j++)
+    {
       std::string pathName = hltConfig.triggerNames()[j];
-      if(TString(pathName).Contains(pattern)){
+      if(TString(pathName).Contains(pattern))
+      {
 	triggerPathsMap[triggerPathsVector[i]] = j;
       }
     }
@@ -756,7 +795,8 @@ void TimingAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetu
 
 void TimingAnalyzer::endRun(edm::Run const&, edm::EventSetup const&) {}
 
-void TimingAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+void TimingAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
+{
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addDefault(desc);
