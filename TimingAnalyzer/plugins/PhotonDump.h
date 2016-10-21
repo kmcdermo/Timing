@@ -24,6 +24,7 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
 // DataFormats
+#include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
@@ -98,7 +99,14 @@ private:
   const edm::InputTag jetsTag;
   edm::EDGetTokenT<std::vector<pat::Jet> > jetsToken;
 
-  // photons
+  // photons + ids
+  const edm::InputTag photonLooseIdMapTag;
+  edm::EDGetTokenT<edm::ValueMap<bool> > photonLooseIdMapToken;
+  const edm::InputTag photonMediumIdMapTag;
+  edm::EDGetTokenT<edm::ValueMap<bool> > photonMediumIdMapToken;
+  const edm::InputTag photonTightIdMapTag;
+  edm::EDGetTokenT<edm::ValueMap<bool> > photonTightIdMapToken;
+
   const edm::InputTag photonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > photonsToken;
 
@@ -118,6 +126,10 @@ private:
 
   // event info
   int event, run, lumi;  
+
+  // MC Info
+  float genwgt;
+  int genpuobs, genputrue;
 
   // object counts
   int nvtx, njets, nphotons;
@@ -145,11 +157,4 @@ private:
   std::vector<std::vector<float> > phrhXs, phrhYs, phrhZs, phrhEs, phrhtimes;
   std::vector<std::vector<int> > phrhIDs;
   std::vector<std::vector<int> > phrhOOTs;
-
-  // gen particle info
-  // int   genphpid,genphmotherpid;
-  // float genphpt,genpheta,genphphi,genphE;
-  // event weights
-  //  float wgt;
 };
-

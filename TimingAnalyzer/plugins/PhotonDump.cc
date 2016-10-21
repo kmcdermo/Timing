@@ -10,7 +10,10 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   // jets
   jetsTag(iConfig.getParameter<edm::InputTag>("jets")),  
 
-  // photons
+  // photons + ids
+  photonLooseIdMapTag (iConfig.getParameter<edm::InputTag>("loosePhotonID")),  
+  photonMediumIdMapTag(iConfig.getParameter<edm::InputTag>("mediumPhotonID")),  
+  photonTightIdMapTag (iConfig.getParameter<edm::InputTag>("tightPhotonID")),  
   photonsTag(iConfig.getParameter<edm::InputTag>("photons")),  
 
   //recHits
@@ -33,8 +36,11 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   // jets
   jetsToken = consumes<std::vector<pat::Jet> > (jetsTag);
 
-  // photons
-  photonsToken = consumes<std::vector<pat::Photon> > (photonsTag);
+  // photons + ids
+  photonLooseIdMapToken  = consumes<edm::ValueMap<bool> > (photonLooseIdMapTag);
+  photonMediumIdMapToken = consumes<edm::ValueMap<bool> > (photonMediumIdMapTag);
+  photonTightIdMapToken  = consumes<edm::ValueMap<bool> > (photonTightIdMapTag);
+  photonsToken           = consumes<std::vector<pat::Photon> > (photonsTag);
 
   // only for simulated samples
   if (isMC)
@@ -65,7 +71,19 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   iEvent.getByToken(jetsToken, jetsH);
   std::vector<pat::Jet> jets = *jetsH;
 
-  // PHOTONS
+  // PHOTONS + IDS
+  edm::Handle<edm::ValueMap<bool> > photonLooseIdMapH;
+  iEvent.getByToken(photonLooseIdMapToken, photonLooseIdMapH);
+  edm::ValueMap<bool> photonLooseIdMap = *photonLooseIdMapH;
+
+  edm::Handle<edm::ValueMap<bool> > photonMediumIdMapH;
+  iEvent.getByToken(photonMediumIdMapToken, photonMediumIdMapH);
+  edm::ValueMap<bool> photonMediumIdMap = *photonMediumIdMapH;
+
+  edm::Handle<edm::ValueMap<bool> > photonTightIdMapH;
+  iEvent.getByToken(photonTightIdMapToken, photonTightIdMapH);
+  edm::ValueMap<bool> photonTightIdMap = *photonTightIdMapH;
+
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
   std::vector<pat::Photon> photons = *photonsH;
@@ -76,12 +94,71 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   const CaloSubdetectorGeometry *barrelGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
   const CaloSubdetectorGeometry *endcapGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
-  // Event, lumi, run info
+  ///////////////////////////
+  //                       //
+  // Event, lumi, run info //
+  //                       //
+  ///////////////////////////
   event = iEvent.id().event();
   run   = iEvent.id().run();
   lumi  = iEvent.luminosityBlock();
 
-  // Vertex info
+  /////////////
+  //         //
+  // MC INFO //
+  //         //
+  /////////////
+  if (isMC) 
+  {
+    edm::Handle<GenEventInfoProduct> genevtInfoH;
+    iEvent.getByToken(genevtInfoToken, genevtInfoH);
+    GenEventInfoProduct genevtInfo = *genevtInfoH;
+
+    edm::Handle<std::vector<PileupSummaryInfo> > pileupInfoH;
+    iEvent.getByToken(pileupInfoToken, pileupInfoH);
+    std::vector<PileupSummaryInfo> pileupInfo = *pileupInfoH;
+
+    edm::Handle<std::vector<reco::GenParticle> > genparticlesH;
+    iEvent.getByToken(genpartsToken, genparticlesH);
+    std::vector<reco::GenParticle> genparticles = *genparticlesH;
+
+    edm::Handle<std::vector<reco::GenJet> > genjetsH;
+    iEvent.getByToken(genjetsToken, genjetsH);
+    std::vector<reco::GenJet> genjets = *genjetsH;
+    
+    ///////////////////////
+    //                   //
+    // Event weight info //
+    //                   //
+    ///////////////////////
+    genwgt = -9999.f; 
+    if (genevtInfoH.isValid()) {genwgt = genevtInfo.weight();}
+
+    /////////////////////
+    //                 //
+    // Gen pileup info //
+    //                 //
+    /////////////////////
+    genpuobs  = -9999;
+    genputrue = -9999;
+    if (pileupInfoH.isValid()) // standard check for pileup
+    {
+      for (std::vector<PileupSummaryInfo>::const_iterator puiter = pileupInfo.begin(); puiter != pileupInfo.end(); ++puiter) 
+      {
+	if (puiter->getBunchCrossing() == 0) 
+	{
+	  genpuobs  = puiter->getPU_NumInteractions();
+	  genputrue = puiter->getTrueNumInteractions();
+	} // end check over correct BX
+      } // end loop over PU
+    } // end check over pileup
+  } // end block over isMC
+
+  /////////////////
+  //             //   
+  // Vertex info //
+  //             //
+  /////////////////
   nvtx = -9999; 
   vtxX = -9999.f; vtxY = -9999.f; vtxZ = -9999.f;
   if (verticesH.isValid()) 
@@ -93,7 +170,11 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     vtxZ = primevtx.position().z();
   }
   
-  // Type1 PF Met
+  //////////////////
+  //              //
+  // Type1 PF Met //
+  //              //
+  //////////////////
   t1pfmet      = -9999.f;
   t1pfmetphi   = -9999.f;
   t1pfmeteta   = -9999.f;
@@ -107,7 +188,11 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     t1pfmetsumEt = t1pfMET.sumEt();
   }
 
-  // Jets (AK4 standard)
+  /////////////////////////
+  //                     //
+  // Jets (AK4 standard) //
+  //                     //
+  /////////////////////////
   njets = -9999;
   PhotonDump::ClearJetBranches();
   if (jetsH.isValid()) // check to make sure it is valid
@@ -127,7 +212,11 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     }      
   }
   
-  // photons
+  //////////////////
+  //              //
+  // Reco Photons //
+  //              //
+  //////////////////
   nphotons = -9999;
   PhotonDump::ClearRecoPhotonBranches();
   if (photonsH.isValid()) // standard handle check
@@ -142,6 +231,8 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     int iph = 0;
     for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
     {
+      // Get the id of the photon
+      
       // photon branches
       phE  [iph] = phiter->energy();
       phpt [iph] = phiter->pt();
@@ -201,7 +292,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  phrhOOTs[iph][irh]  = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
 	  
 	  // save the position in the vector of the seed 
-	  if (seedDetId.rawId() == recHitId) { phseedpos[iph] = phrhIDs.size() - 1; }
+	  if (seedDetId.rawId() == recHitId) { phseedpos[iph] = iph; }
 
 	  irh++; // increment rechit counter
 	} // end loop over rec hit id map
@@ -211,6 +302,11 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     delete clustertools; // delete cluster tools once done with loop over photons
   } // end check over photon handle valid
 
+  ///////////////
+  //           //
+  // Fill Tree //
+  //           //
+  ///////////////
   tree->Fill();      
 }    
 
@@ -337,6 +433,11 @@ void PhotonDump::beginJob()
   tree->Branch("run"                  , &run                  , "run/I");
   tree->Branch("lumi"                 , &lumi                 , "lumi/I");
   
+  // MC info
+  tree->Branch("genwgt"               , &genwgt               , "genwgt/F");
+  tree->Branch("genpuobs"             , &genpuobs             , "genpuobs/I");
+  tree->Branch("genputrue"            , &genputrue            , "genputrue/I");
+
   // Vertex info
   tree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");
   tree->Branch("vtxX"                 , &vtxX                 , "vtxX/F");
