@@ -175,9 +175,6 @@ private:
   float genzpt,genzeta,genzphi,genzmass,genzE,genzp;
   float genel1pt,genel1eta,genel1phi,genel1E,genel1p;
   float genel2pt,genel2eta,genel2phi,genel2E,genel2p;
-
-  // constants
-  //  const float sol = 29.9792458; // speed of light in cm/ns
 };
 
 TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig): 
@@ -302,7 +299,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     vtxY = primevtx.position().y();
     vtxZ = primevtx.position().z();
   }
-
+  
   // ELECTRON ANALYSIS 
   // nelectrons AFTER PF cleaning (kinematic selection pT > 10, |eta| < 2.5
   nvetoelectrons = -99; nlooseelectrons = -99; nmediumelectrons = -99; ntightelectrons = -99; nheepelectrons = -99;
