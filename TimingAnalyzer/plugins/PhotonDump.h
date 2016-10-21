@@ -90,6 +90,10 @@ private:
   const edm::InputTag verticesTag;
   edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken;
 
+  // mets
+  const edm::InputTag metsTag;
+  edm::EDGetTokenT<std::vector<pat::MET> > metsToken;
+
   // jets
   const edm::InputTag jetsTag;
   edm::EDGetTokenT<std::vector<pat::Jet> > jetsToken;
@@ -104,22 +108,25 @@ private:
 
   // Gen Particles and MC info
   const bool isMC;
-  edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
   edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
-  edm::EDGetTokenT<edm::View<reco::GenParticle> >   gensToken;
+  edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
+  edm::EDGetTokenT<std::vector<reco::GenParticle> > genpartsToken;
+  edm::EDGetTokenT<std::vector<reco::GenJet> >      genjetsToken;
 
   // output event level ntuple
-  // evtree
-  TTree* evtree;
+  TTree* tree;
 
   // event info
   int event, run, lumi;  
 
   // object counts
-  int nvtx,njets,nphotons;
+  int nvtx, njets, nphotons;
 
   // vertices
   float vtxX, vtxY, vtxZ;
+
+  // MET
+  float t1pfmet, t1pfmetphi, t1pfmeteta, t1pfmetsumEt;
 
   // jets
   std::vector<float> jetE, jetpt, jetphi, jeteta;

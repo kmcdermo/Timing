@@ -4,6 +4,9 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   // vertexes
   verticesTag(iConfig.getParameter<edm::InputTag>("vertices")),
 
+  // mets
+  metsTag(iConfig.getParameter<edm::InputTag>("mets")),  
+
   // jets
   jetsTag(iConfig.getParameter<edm::InputTag>("jets")),  
 
@@ -24,6 +27,9 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   //vertex
   verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
 
+  // mets
+  metsToken = consumes<std::vector<pat::MET> > (metsTag);
+
   // jets
   jetsToken = consumes<std::vector<pat::Jet> > (jetsTag);
 
@@ -33,9 +39,10 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   // only for simulated samples
   if (isMC)
   {
+    genevtInfoToken = consumes<GenEventInfoProduct>             (iConfig.getParameter<edm::InputTag>("genevt"));
     pileupInfoToken = consumes<std::vector<PileupSummaryInfo> > (iConfig.getParameter<edm::InputTag>("pileup"));
-    genevtInfoToken = consumes<GenEventInfoProduct> (iConfig.getParameter<edm::InputTag>("genevt"));
-    gensToken       = consumes<edm::View<reco::GenParticle> > (iConfig.getParameter<edm::InputTag>("gens"));   
+    genpartsToken   = consumes<std::vector<reco::GenParticle> > (iConfig.getParameter<edm::InputTag>("genparts"));   
+    genjetsToken    = consumes<std::vector<reco::GenJet> >      (iConfig.getParameter<edm::InputTag>("genjets"));   
   }
 }
 
@@ -47,6 +54,11 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   edm::Handle<std::vector<reco::Vertex> > verticesH;
   iEvent.getByToken(verticesToken, verticesH);
   std::vector<reco::Vertex> vertices = *verticesH;
+  
+  // MET
+  edm::Handle<std::vector<pat::MET> > metsH;
+  iEvent.getByToken(metsToken, metsH);
+  std::vector<pat::MET> mets = *metsH;
 
   // JETS
   edm::Handle<std::vector<pat::Jet> > jetsH;
@@ -75,12 +87,27 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   if (verticesH.isValid()) 
   {
     nvtx = vertices.size();
-    vtxX = vertices[0].position().x();
-    vtxY = vertices[0].position().y();
-    vtxZ = vertices[0].position().z();
+    const reco::Vertex & primevtx = vertices[0];
+    vtxX = primevtx.position().x();
+    vtxY = primevtx.position().y();
+    vtxZ = primevtx.position().z();
+  }
+  
+  // Type1 PF Met
+  t1pfmet      = -9999.f;
+  t1pfmetphi   = -9999.f;
+  t1pfmeteta   = -9999.f;
+  t1pfmetsumEt = -9999.f;
+  if (metsH.isValid())
+  {
+    const pat::MET & t1pfMET = mets[0];
+    t1pfmet      = t1pfMET.pt();
+    t1pfmetphi   = t1pfMET.phi();
+    t1pfmeteta   = t1pfMET.eta();
+    t1pfmetsumEt = t1pfMET.sumEt();
   }
 
-  // Jets
+  // Jets (AK4 standard)
   njets = -9999;
   PhotonDump::ClearJetBranches();
   if (jetsH.isValid()) // check to make sure it is valid
@@ -115,15 +142,12 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     int iph = 0;
     for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
     {
-      // initialize photon branches!
-      PhotonDump::InitializeRecoPhotonBranches();
-
       // photon branches
       phE  [iph] = phiter->energy();
       phpt [iph] = phiter->pt();
       phphi[iph] = phiter->phi();
       pheta[iph] = phiter->eta();
-      
+
       // super cluster from photon
       const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
       if (phsc.isNonnull()) // check to make sure supercluster is good
@@ -187,7 +211,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     delete clustertools; // delete cluster tools once done with loop over photons
   } // end check over photon handle valid
 
-  evtree->Fill();      
+  tree->Fill();      
 }    
 
 void PhotonDump::ClearJetBranches()
@@ -200,6 +224,11 @@ void PhotonDump::ClearJetBranches()
 
 void PhotonDump::InitializeJetBranches()
 {
+  jetE.resize(njets);
+  jetpt.resize(njets);
+  jetphi.resize(njets);
+  jeteta.resize(njets);
+
   for (int ijet = 0; ijet < njets; ijet++)
   {
     jetE  [ijet] = -9999.f;
@@ -301,47 +330,53 @@ void PhotonDump::InitializeRecoRecHitBranches(int iph)
 void PhotonDump::beginJob() 
 {
   edm::Service<TFileService> fs;
-  evtree = fs->make<TTree>("evtree"     , "tree");
+  tree = fs->make<TTree>("tree"     , "tree");
 
   // Run, Lumi, Event info
-  evtree->Branch("event"                , &event                , "event/I");
-  evtree->Branch("run"                  , &run                  , "run/I");
-  evtree->Branch("lumi"                 , &lumi                 , "lumi/I");
+  tree->Branch("event"                , &event                , "event/I");
+  tree->Branch("run"                  , &run                  , "run/I");
+  tree->Branch("lumi"                 , &lumi                 , "lumi/I");
   
   // Vertex info
-  evtree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");
-  evtree->Branch("vtxX"                 , &vtxX                 , "vtxX/F");
-  evtree->Branch("vtxY"                 , &vtxY                 , "vtxY/F");
-  evtree->Branch("vtxZ"                 , &vtxZ                 , "vtxZ/F");
+  tree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");
+  tree->Branch("vtxX"                 , &vtxX                 , "vtxX/F");
+  tree->Branch("vtxY"                 , &vtxY                 , "vtxY/F");
+  tree->Branch("vtxZ"                 , &vtxZ                 , "vtxZ/F");
+
+  // MET info
+  tree->Branch("t1pfmet"              , &t1pfmet              , "t1pfmet/F");
+  tree->Branch("t1pfmetphi"           , &t1pfmetphi           , "t1pfmetphi/F");
+  tree->Branch("t1pfmeteta"           , &t1pfmeteta           , "t1pfmeteta/F");
+  tree->Branch("t1pfmetsumEt"         , &t1pfmetsumEt         , "t1pfmetsumEt/F");
   
   // Jet Info
-  evtree->Branch("njets"                , &njets                , "njets/I");
-  evtree->Branch("jetE"                 , &jetE);
-  evtree->Branch("jetpt"                , &jetpt);
-  evtree->Branch("jetphi"               , &jetphi);
-  evtree->Branch("jeteta"               , &jeteta);
+  tree->Branch("njets"                , &njets                , "njets/I");
+  tree->Branch("jetE"                 , &jetE);
+  tree->Branch("jetpt"                , &jetpt);
+  tree->Branch("jetphi"               , &jetphi);
+  tree->Branch("jeteta"               , &jeteta);
   
   // Photon Info
-  evtree->Branch("nphotons"             , &nphotons             , "nhotons/I");
-  evtree->Branch("phE"                  , &phE);
-  evtree->Branch("phpt"                 , &phpt);
-  evtree->Branch("phphi"                , &phphi);
-  evtree->Branch("pheta"                , &pheta);
-  evtree->Branch("phscX"                , &phscX);
-  evtree->Branch("phscY"                , &phscY);
-  evtree->Branch("phscZ"                , &phscZ);
-  evtree->Branch("phscE"                , &phscE);
-  evtree->Branch("phnrhs"               , &phnrhs);
+  tree->Branch("nphotons"             , &nphotons             , "nhotons/I");
+  tree->Branch("phE"                  , &phE);
+  tree->Branch("phpt"                 , &phpt);
+  tree->Branch("phphi"                , &phphi);
+  tree->Branch("pheta"                , &pheta);
+  tree->Branch("phscX"                , &phscX);
+  tree->Branch("phscY"                , &phscY);
+  tree->Branch("phscZ"                , &phscZ);
+  tree->Branch("phscE"                , &phscE);
+  tree->Branch("phnrhs"               , &phnrhs);
 
-  evtree->Branch("phrhXs"               , &phrhXs);
-  evtree->Branch("phrhYs"               , &phrhYs);
-  evtree->Branch("phrhZs"               , &phrhZs);
-  evtree->Branch("phrhEs"               , &phrhEs);
+  tree->Branch("phseedpos"            , &phseedpos);
 
-  evtree->Branch("phrhtimes"            , &phrhtimes);
-  evtree->Branch("phrhIDs"              , &phrhIDs);
-  evtree->Branch("phrhOOTs"             , &phrhOOTs);
-  evtree->Branch("phseedpos"            , &phseedpos);
+  tree->Branch("phrhXs"               , &phrhXs);
+  tree->Branch("phrhYs"               , &phrhYs);
+  tree->Branch("phrhZs"               , &phrhZs);
+  tree->Branch("phrhEs"               , &phrhEs);
+  tree->Branch("phrhtimes"            , &phrhtimes);
+  tree->Branch("phrhIDs"              , &phrhIDs);
+  tree->Branch("phrhOOTs"             , &phrhOOTs);
 }
 
 void PhotonDump::endJob() {}

@@ -64,14 +64,56 @@ if not options.isMC :
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 			'/store/data/Run2016D/SinglePhoton/MINIAOD/PromptReco-v2/000/276/317/00000/DE9EC1AE-1745-E611-AF8F-02163E014413.root' #2016D (276317)
 			) 
-				    )
+)
 else:
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-			'/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_1.root'
+			'file:/afs/cern.ch/user/s/soffi/public/4Kevin/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_wTIMING.root'
+#			'/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_1.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_10.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_11.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_12.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_13.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_14.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_15.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_16.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_17.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_18.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_19.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_20.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_21.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_22.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_23.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_24.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_25.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_26.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_27.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_28.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_29.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_3.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_30.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_31.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_32.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_33.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_34.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_35.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_36.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_37.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_38.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_39.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_4.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_40.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_41.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_42.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_43.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_44.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_5.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_6.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_7.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_8.root',
+			# '/store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2010_step3/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3/161020_114037/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_9.root'
 			)    	
 )
-
-
 
 ## How many events to process
 if not options.demoMode:
@@ -94,18 +136,21 @@ process.TFileService = cms.Service("TFileService",
 process.tree = cms.EDAnalyzer("PhotonDump",
    ## gen info			     
    isMC       = cms.bool(options.isMC),
-   pileup     = cms.InputTag("slimmedAddPileupInfo"),
    genevt     = cms.InputTag("generator"),
-   gens       = cms.InputTag("prunedGenParticles"),
+   pileup     = cms.InputTag("slimmedAddPileupInfo"),
+   genparts   = cms.InputTag("prunedGenParticles"),
+   genjets    = cms.InputTag("slimmedGenJets"),
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
+   ## MET
+   mets = cms.InputTag("slimmedMETs"),
    ## jets			    	
    jets = cms.InputTag("slimmedJets"),
    ## photons			    	
    photons = cms.InputTag("slimmedPhotons"),
    ## ecal recHits			      
    recHitCollectionEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
-   recHitCollectionEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
+   recHitCollectionEE = cms.InputTag("reducedEgamma", "reducedEERecHits")
 )
 
 # Set up the path
