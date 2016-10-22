@@ -29,7 +29,6 @@ def PhotonTools(process,isMC):
     switchOnVIDPhotonIdProducer(process, dataFormat);
     ph_id_modules = [];
     ph_id_modules.append('RecoEgamma.PhotonIdentification.Identification.cutBasedPhotonID_Spring15_25ns_V1_cff');
-    
     for idmod in ph_id_modules:
         setupAllVIDIdsInModule(process,idmod,setupVIDPhotonSelection)
 

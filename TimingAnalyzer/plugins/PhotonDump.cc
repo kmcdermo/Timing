@@ -59,17 +59,14 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // VERTEX
   edm::Handle<std::vector<reco::Vertex> > verticesH;
   iEvent.getByToken(verticesToken, verticesH);
-  std::vector<reco::Vertex> vertices = *verticesH;
   
   // MET
   edm::Handle<std::vector<pat::MET> > metsH;
   iEvent.getByToken(metsToken, metsH);
-  std::vector<pat::MET> mets = *metsH;
 
   // JETS
   edm::Handle<std::vector<pat::Jet> > jetsH;
   iEvent.getByToken(jetsToken, jetsH);
-  std::vector<pat::Jet> jets = *jetsH;
 
   // PHOTONS + IDS
   edm::Handle<edm::ValueMap<bool> > photonLooseIdMapH;
@@ -86,13 +83,12 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
-  std::vector<pat::Photon> photons = *photonsH;
 
   // geometry (from ECAL ELF)
-  edm::ESHandle<CaloGeometry> geoHandle;
-  iSetup.get<CaloGeometryRecord>().get(geoHandle);
-  const CaloSubdetectorGeometry *barrelGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
-  const CaloSubdetectorGeometry *endcapGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
+  edm::ESHandle<CaloGeometry> calogeoH;
+  iSetup.get<CaloGeometryRecord>().get(calogeoH);
+  const CaloSubdetectorGeometry * barrelGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
+  const CaloSubdetectorGeometry * endcapGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
   ///////////////////////////
   //                       //
@@ -112,19 +108,15 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   {
     edm::Handle<GenEventInfoProduct> genevtInfoH;
     iEvent.getByToken(genevtInfoToken, genevtInfoH);
-    GenEventInfoProduct genevtInfo = *genevtInfoH;
 
     edm::Handle<std::vector<PileupSummaryInfo> > pileupInfoH;
     iEvent.getByToken(pileupInfoToken, pileupInfoH);
-    std::vector<PileupSummaryInfo> pileupInfo = *pileupInfoH;
 
     edm::Handle<std::vector<reco::GenParticle> > genparticlesH;
     iEvent.getByToken(genpartsToken, genparticlesH);
-    std::vector<reco::GenParticle> genparticles = *genparticlesH;
 
     edm::Handle<std::vector<reco::GenJet> > genjetsH;
     iEvent.getByToken(genjetsToken, genjetsH);
-    std::vector<reco::GenJet> genjets = *genjetsH;
     
     ///////////////////////
     //                   //
@@ -132,7 +124,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     //                   //
     ///////////////////////
     genwgt = -9999.f; 
-    if (genevtInfoH.isValid()) {genwgt = genevtInfo.weight();}
+    if (genevtInfoH.isValid()) {genwgt = genevtInfoH->weight();}
 
     /////////////////////
     //                 //
@@ -143,7 +135,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     genputrue = -9999;
     if (pileupInfoH.isValid()) // standard check for pileup
     {
-      for (std::vector<PileupSummaryInfo>::const_iterator puiter = pileupInfo.begin(); puiter != pileupInfo.end(); ++puiter) 
+      for (std::vector<PileupSummaryInfo>::const_iterator puiter = pileupInfoH->begin(); puiter != pileupInfoH->end(); ++puiter) 
       {
 	if (puiter->getBunchCrossing() == 0) 
 	{
@@ -163,8 +155,8 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   vtxX = -9999.f; vtxY = -9999.f; vtxZ = -9999.f;
   if (verticesH.isValid()) 
   {
-    nvtx = vertices.size();
-    const reco::Vertex & primevtx = vertices[0];
+    nvtx = verticesH->size();
+    const reco::Vertex & primevtx = (*verticesH)[0];
     vtxX = primevtx.position().x();
     vtxY = primevtx.position().y();
     vtxZ = primevtx.position().z();
@@ -181,7 +173,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   t1pfmetsumEt = -9999.f;
   if (metsH.isValid())
   {
-    const pat::MET & t1pfMET = mets[0];
+    const pat::MET & t1pfMET = (*metsH)[0];
     t1pfmet      = t1pfMET.pt();
     t1pfmetphi   = t1pfMET.phi();
     t1pfmeteta   = t1pfMET.eta();
@@ -197,11 +189,10 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   PhotonDump::ClearJetBranches();
   if (jetsH.isValid()) // check to make sure it is valid
   {
-    std::sort(jets.begin(),jets.end(),sortJetsByPt); // sort jets
-    njets = jets.size();
+    njets = jetsH->size();
     if (njets > 0) PhotonDump::InitializeJetBranches();
     int ijet = 0;
-    for (std::vector<pat::Jet>::const_iterator jetiter = jets.begin(); jetiter != jets.end(); ++jetiter)
+    for (std::vector<pat::Jet>::const_iterator jetiter = jetsH->begin(); jetiter != jetsH->end(); ++jetiter)
     {
       jetE  [ijet] = jetiter->energy();
       jetpt [ijet] = jetiter->pt();
@@ -224,16 +215,21 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     // ECALELF tools
     EcalClusterLazyTools * clustertools = new EcalClusterLazyTools (iEvent, iSetup, recHitCollectionEBTAG, recHitCollectionEETAG);
 
-    std::sort(photons.begin(),photons.end(),sortPhotonsByPt);
-    nphotons = photons.size();
+    nphotons = photonsH->size();
     if (nphotons > 0) PhotonDump::InitializeRecoPhotonBranches();
 
     int iph = 0;
-    for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
+    for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector
     {
       // Get the id of the photon
-      
-      // photon branches
+      const edm::Ptr<pat::Photon> photonPtr(photonsH, phiter - photonsH->begin());
+
+      // loose > medium > tight
+      if (photonLooseIdMap [photonPtr]) {phVID[iph] = 1;}
+      if (photonMediumIdMap[photonPtr]) {phVID[iph] = 2;}
+      if (photonTightIdMap [photonPtr]) {phVID[iph] = 3;}
+
+      // standard photon branches
       phE  [iph] = phiter->energy();
       phpt [iph] = phiter->pt();
       phphi[iph] = phiter->phi();
@@ -361,6 +357,8 @@ void PhotonDump::ClearRecoPhotonBranches()
 
 void PhotonDump::InitializeRecoPhotonBranches()
 {
+  phVID.resize(nphotons);
+
   phE.resize(nphotons);
   phpt.resize(nphotons);
   phphi.resize(nphotons);
@@ -385,6 +383,8 @@ void PhotonDump::InitializeRecoPhotonBranches()
 
   for (int iph = 0; iph < nphotons; iph++)
   {
+    phVID[iph] = 0;
+
     phE  [iph] = -9999.f; 
     phpt [iph] = -9999.f; 
     phphi[iph] = -9999.f; 
@@ -459,10 +459,12 @@ void PhotonDump::beginJob()
   
   // Photon Info
   tree->Branch("nphotons"             , &nphotons             , "nhotons/I");
+  tree->Branch("phVID"                , &phVID);
   tree->Branch("phE"                  , &phE);
   tree->Branch("phpt"                 , &phpt);
   tree->Branch("phphi"                , &phphi);
   tree->Branch("pheta"                , &pheta);
+
   tree->Branch("phscX"                , &phscX);
   tree->Branch("phscY"                , &phscY);
   tree->Branch("phscZ"                , &phscZ);

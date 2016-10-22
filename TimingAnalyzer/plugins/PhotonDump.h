@@ -55,16 +55,6 @@
 typedef std::vector<std::pair<DetId,float> > DetIdPairVec;
 typedef std::unordered_map<uint32_t,int> uiiumap;
 
-inline bool sortJetsByPt (const pat::Jet& jet1, const pat::Jet& jet2)  
-{
-  return jet1.pt()>jet2.pt();
-}
-
-inline bool sortPhotonsByPt (const pat::Photon& ph1, const pat::Photon& ph2)  
-{
-  return ph1.pt()>ph2.pt();
-}
-
 class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
 public:
@@ -144,6 +134,7 @@ private:
   std::vector<float> jetE, jetpt, jetphi, jeteta;
 
   // photon info
+  std::vector<int> phVID;
   std::vector<float> phE, phpt, phphi, pheta;
 
   // supercluster info 

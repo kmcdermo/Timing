@@ -161,4 +161,4 @@ process.tree = cms.EDAnalyzer("PhotonDump",
 )
 
 # Set up the path
-process.treePath = cms.Path(process.selectedPhotons * process.calibratedPhotons * process.tree)
+process.treePath = cms.Path(process.selectedPhotons * process.calibratedPhotons * process.egmPhotonIDs * process.tree)
