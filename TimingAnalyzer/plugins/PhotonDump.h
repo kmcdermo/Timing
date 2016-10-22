@@ -55,11 +55,20 @@
 typedef std::vector<std::pair<DetId,float> > DetIdPairVec;
 typedef std::unordered_map<uint32_t,int> uiiumap;
 
+inline float rad2  (const float x, const float y){return x*x + y*y;}
+inline float deltaR(const float phi1, const float eta1, const float phi2, const float eta2)
+{
+  return std::sqrt(rad2(eta2-eta1,phi2-phi1));
+}
+
 class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
 public:
   explicit PhotonDump(const edm::ParameterSet&);
   ~PhotonDump();
+
+  void DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &);
+  void InitializeMCBranches();
 
   void ClearJetBranches();
   void InitializeJetBranches();
@@ -106,6 +115,7 @@ private:
 
   // Gen Particles and MC info
   const bool isMC;
+  const bool dumpIds;
   edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
   edm::EDGetTokenT<std::vector<reco::GenParticle> > genpartsToken;
@@ -117,9 +127,20 @@ private:
   // event info
   int event, run, lumi;  
 
-  // MC Info
+  // Generator level info
   float genwgt;
   int genpuobs, genputrue;
+
+  // Gen particle info
+  float genN1mass, genN1E, genN1pt, genN1phi, genN1eta;
+  float genph1E, genph1pt, genph1phi, genph1eta;
+  int genph1match;
+  float gengl1E, gengl1pt, gengl1phi, gengl1eta;
+
+  float genN2mass, genN2E, genN2pt, genN2phi, genN2eta;
+  float genph2E, genph2pt, genph2phi, genph2eta;
+  int genph2match;
+  float gengl2E, gengl2pt, gengl2phi, gengl2eta;
 
   // object counts
   int nvtx, njets, nphotons;
@@ -134,7 +155,7 @@ private:
   std::vector<float> jetE, jetpt, jetphi, jeteta;
 
   // photon info
-  std::vector<int> phVID;
+  std::vector<int> phmatch, phVID;
   std::vector<float> phE, phpt, phphi, pheta;
 
   // supercluster info 
