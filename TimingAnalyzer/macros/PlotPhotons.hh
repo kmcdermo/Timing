@@ -67,10 +67,10 @@ private :
   Float_t genph1phi;
   Float_t genph1eta;
   Int_t   genph1match;
-  Float_t gengl1E;
-  Float_t gengl1pt;
-  Float_t gengl1phi;
-  Float_t gengl1eta;
+  Float_t gengr1E;
+  Float_t gengr1pt;
+  Float_t gengr1phi;
+  Float_t gengr1eta;
   Float_t genN2mass;
   Float_t genN2E;
   Float_t genN2pt;
@@ -81,10 +81,16 @@ private :
   Float_t genph2phi;
   Float_t genph2eta;
   Int_t   genph2match;
-  Float_t gengl2E;
-  Float_t gengl2pt;
-  Float_t gengl2phi;
-  Float_t gengl2eta;
+  Float_t gengr2E;
+  Float_t gengr2pt;
+  Float_t gengr2phi;
+  Float_t gengr2eta;
+  Int_t   ngenjets;
+  vector<float> * genjetE;
+  vector<float> * genjetpt;
+  vector<float> * genjetphi;
+  vector<float> * genjeteta;
+  vector<int>   * genjetmatch;
   Int_t   nvtx;
   Float_t vtxX;
   Float_t vtxY;
@@ -99,6 +105,7 @@ private :
   vector<float> * jetpt;
   vector<float> * jetphi;
   vector<float> * jeteta;
+  vector<int>   * jetmatch;
   vector<int>   * phmatch;
   vector<int>   * phVID;
   vector<float> * phE;
@@ -136,10 +143,10 @@ private :
   TBranch * b_genph1phi;   //!
   TBranch * b_genph1eta;   //!
   TBranch * b_genph1match;   //!
-  TBranch * b_gengl1E;   //!
-  TBranch * b_gengl1pt;   //!
-  TBranch * b_gengl1phi;   //!
-  TBranch * b_gengl1eta;   //!
+  TBranch * b_gengr1E;   //!
+  TBranch * b_gengr1pt;   //!
+  TBranch * b_gengr1phi;   //!
+  TBranch * b_gengr1eta;   //!
   TBranch * b_genN2mass;   //!
   TBranch * b_genN2E;   //!
   TBranch * b_genN2pt;   //!
@@ -150,10 +157,16 @@ private :
   TBranch * b_genph2phi;   //!
   TBranch * b_genph2eta;   //!
   TBranch * b_genph2match;   //!
-  TBranch * b_gengl2E;   //!
-  TBranch * b_gengl2pt;   //!
-  TBranch * b_gengl2phi;   //!
-  TBranch * b_gengl2eta;   //!
+  TBranch * b_gengr2E;   //!
+  TBranch * b_gengr2pt;   //!
+  TBranch * b_gengr2phi;   //!
+  TBranch * b_gengr2eta;   //!
+  TBranch * b_ngenjets;   //!
+  TBranch * b_genjetE;   //!
+  TBranch * b_genjetpt;   //!
+  TBranch * b_genjetphi;   //!
+  TBranch * b_genjeteta;   //!
+  TBranch * b_genjetmatch;   //!
   TBranch * b_nvtx;   //!
   TBranch * b_vtxX;   //!
   TBranch * b_vtxY;   //!
@@ -167,6 +180,7 @@ private :
   TBranch * b_jetpt;   //!
   TBranch * b_jetphi;   //!
   TBranch * b_jeteta;   //!
+  TBranch * b_jetmatch;   //!
   TBranch * b_nhotons;   //!
   TBranch * b_phmatch;   //!
   TBranch * b_phVID;   //!

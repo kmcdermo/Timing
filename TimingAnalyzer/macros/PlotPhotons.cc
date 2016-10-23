@@ -78,10 +78,10 @@ void PlotPhotons::FillGenParticles()
   fPlots["genph1pt"]->Fill(genph1pt);
   fPlots["genph1phi"]->Fill(genph1phi);
   fPlots["genph1eta"]->Fill(genph1eta);
-  fPlots["gengl1E"]->Fill(gengl1E);
-  fPlots["gengl1pt"]->Fill(gengl1pt);
-  fPlots["gengl1phi"]->Fill(gengl1phi);
-  fPlots["gengl1eta"]->Fill(gengl1eta);
+  fPlots["gengr1E"]->Fill(gengr1E);
+  fPlots["gengr1pt"]->Fill(gengr1pt);
+  fPlots["gengr1phi"]->Fill(gengr1phi);
+  fPlots["gengr1eta"]->Fill(gengr1eta);
 
   fPlots["genN2mass"]->Fill(genN2mass);
   fPlots["genN2E"]->Fill(genN2E);
@@ -92,10 +92,10 @@ void PlotPhotons::FillGenParticles()
   fPlots["genph2pt"]->Fill(genph2pt);
   fPlots["genph2phi"]->Fill(genph2phi);
   fPlots["genph2eta"]->Fill(genph2eta);
-  fPlots["gengl2E"]->Fill(gengl2E);
-  fPlots["gengl2pt"]->Fill(gengl2pt);
-  fPlots["gengl2phi"]->Fill(gengl2phi);
-  fPlots["gengl2eta"]->Fill(gengl2eta);
+  fPlots["gengr2E"]->Fill(gengr2E);
+  fPlots["gengr2pt"]->Fill(gengr2pt);
+  fPlots["gengr2phi"]->Fill(gengr2phi);
+  fPlots["gengr2eta"]->Fill(gengr2eta);
 }
 
 void PlotPhotons::FillObjectCounts()
@@ -210,10 +210,10 @@ void PlotPhotons::SetupGenParticlesTH1Fs()
   fPlots["genph1pt"] = PlotPhotons::MakeTH1F("genph1pt","Generator Leading p_{T} [GeV/c]",100,0.f,2000.f,"p_{T} [GeV/c]","Photons");
   fPlots["genph1phi"] = PlotPhotons::MakeTH1F("genph1phi","Generator Leading Photon #phi",100,-3.2,3.2,"#phi","Photons");
   fPlots["genph1eta"] = PlotPhotons::MakeTH1F("genph1eta","Generator Leading Photon #eta",100,-5.0,5.0,"#eta","Photons");
-  fPlots["gengl1E"] = PlotPhotons::MakeTH1F("gengl1E","Generator Leading Gravitino E [GeV]",100,0.f,2000.f,"Energy [GeV]","Gravitinos");
-  fPlots["gengl1pt"] = PlotPhotons::MakeTH1F("gengl1pt","Generator Leading p_{T} [GeV/c]",100,0.f,2000.f,"p_{T} [GeV/c]","Gravitinos");
-  fPlots["gengl1phi"] = PlotPhotons::MakeTH1F("gengl1phi","Generator Leading Gravitino #phi",100,-3.2,3.2,"#phi","Gravitinos");
-  fPlots["gengl1eta"] = PlotPhotons::MakeTH1F("gengl1eta","Generator Leading Gravitino #eta",100,-5.0,5.0,"#eta","Gravitinos");
+  fPlots["gengr1E"] = PlotPhotons::MakeTH1F("gengr1E","Generator Leading Gravitino E [GeV]",100,0.f,2000.f,"Energy [GeV]","Gravitinos");
+  fPlots["gengr1pt"] = PlotPhotons::MakeTH1F("gengr1pt","Generator Leading p_{T} [GeV/c]",100,0.f,2000.f,"p_{T} [GeV/c]","Gravitinos");
+  fPlots["gengr1phi"] = PlotPhotons::MakeTH1F("gengr1phi","Generator Leading Gravitino #phi",100,-3.2,3.2,"#phi","Gravitinos");
+  fPlots["gengr1eta"] = PlotPhotons::MakeTH1F("gengr1eta","Generator Leading Gravitino #eta",100,-5.0,5.0,"#eta","Gravitinos");
 
   fPlots["genN2mass"] = PlotPhotons::MakeTH1F("genN2mass","Generator Subleading Neutralino Mass [GeV]",100,0.f,500.f,"Mass [GeV/c^{2}]","Neutralinos");
   fPlots["genN2E"] = PlotPhotons::MakeTH1F("genN2E","Generator Subleading Neutralino E [GeV]",100,0.f,2000.f,"Energy [GeV]","Neutralinos");
@@ -224,10 +224,10 @@ void PlotPhotons::SetupGenParticlesTH1Fs()
   fPlots["genph2pt"] = PlotPhotons::MakeTH1F("genph2pt","Generator Subleading p_{T} [GeV/c]",100,0.f,2000.f,"p_{T} [GeV/c]","Photons");
   fPlots["genph2phi"] = PlotPhotons::MakeTH1F("genph2phi","Generator Subleading Photon #phi",100,-3.2,3.2,"#phi","Photons");
   fPlots["genph2eta"] = PlotPhotons::MakeTH1F("genph2eta","Generator Subleading Photon #eta",100,-5.0,5.0,"#eta","Photons");
-  fPlots["gengl2E"] = PlotPhotons::MakeTH1F("gengl2E","Generator Subleading Gravitino E [GeV]",100,0.f,2000.f,"Energy [GeV]","Gravitinos");
-  fPlots["gengl2pt"] = PlotPhotons::MakeTH1F("gengl2pt","Generator Subleading p_{T} [GeV/c]",100,0.f,2000.f,"p_{T} [GeV/c]","Gravitinos");
-  fPlots["gengl2phi"] = PlotPhotons::MakeTH1F("gengl2phi","Generator Subleading Gravitino #phi",100,-3.2,3.2,"#phi","Gravitinos");
-  fPlots["gengl2eta"] = PlotPhotons::MakeTH1F("gengl2eta","Generator Subleading Gravitino #eta",100,-5.0,5.0,"#eta","Gravitinos");
+  fPlots["gengr2E"] = PlotPhotons::MakeTH1F("gengr2E","Generator Subleading Gravitino E [GeV]",100,0.f,2000.f,"Energy [GeV]","Gravitinos");
+  fPlots["gengr2pt"] = PlotPhotons::MakeTH1F("gengr2pt","Generator Subleading p_{T} [GeV/c]",100,0.f,2000.f,"p_{T} [GeV/c]","Gravitinos");
+  fPlots["gengr2phi"] = PlotPhotons::MakeTH1F("gengr2phi","Generator Subleading Gravitino #phi",100,-3.2,3.2,"#phi","Gravitinos");
+  fPlots["gengr2eta"] = PlotPhotons::MakeTH1F("gengr2eta","Generator Subleading Gravitino #eta",100,-5.0,5.0,"#eta","Gravitinos");
 }
 
 void PlotPhotons::SetupObjectCountsTH1Fs()
@@ -328,10 +328,16 @@ void PlotPhotons::OutputTH1Fs()
 void PlotPhotons::InitTree()
 {
   // Set object pointer
+  genjetE = 0;
+  genjetpt = 0;
+  genjetphi = 0;
+  genjeteta = 0;
+  genjetmatch = 0;
   jetE = 0;
   jetpt = 0;
   jetphi = 0;
   jeteta = 0;
+  jetmatch = 0;
   phmatch = 0;
   phVID = 0;
   phE = 0;
@@ -369,10 +375,10 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("genph1phi", &genph1phi, &b_genph1phi);
   fInTree->SetBranchAddress("genph1eta", &genph1eta, &b_genph1eta);
   fInTree->SetBranchAddress("genph1match", &genph1match, &b_genph1match);
-  fInTree->SetBranchAddress("gengl1E", &gengl1E, &b_gengl1E);
-  fInTree->SetBranchAddress("gengl1pt", &gengl1pt, &b_gengl1pt);
-  fInTree->SetBranchAddress("gengl1phi", &gengl1phi, &b_gengl1phi);
-  fInTree->SetBranchAddress("gengl1eta", &gengl1eta, &b_gengl1eta);
+  fInTree->SetBranchAddress("gengr1E", &gengr1E, &b_gengr1E);
+  fInTree->SetBranchAddress("gengr1pt", &gengr1pt, &b_gengr1pt);
+  fInTree->SetBranchAddress("gengr1phi", &gengr1phi, &b_gengr1phi);
+  fInTree->SetBranchAddress("gengr1eta", &gengr1eta, &b_gengr1eta);
   fInTree->SetBranchAddress("genN2mass", &genN2mass, &b_genN2mass);
   fInTree->SetBranchAddress("genN2E", &genN2E, &b_genN2E);
   fInTree->SetBranchAddress("genN2pt", &genN2pt, &b_genN2pt);
@@ -383,10 +389,16 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("genph2phi", &genph2phi, &b_genph2phi);
   fInTree->SetBranchAddress("genph2eta", &genph2eta, &b_genph2eta);
   fInTree->SetBranchAddress("genph2match", &genph2match, &b_genph2match);
-  fInTree->SetBranchAddress("gengl2E", &gengl2E, &b_gengl2E);
-  fInTree->SetBranchAddress("gengl2pt", &gengl2pt, &b_gengl2pt);
-  fInTree->SetBranchAddress("gengl2phi", &gengl2phi, &b_gengl2phi);
-  fInTree->SetBranchAddress("gengl2eta", &gengl2eta, &b_gengl2eta);
+  fInTree->SetBranchAddress("gengr2E", &gengr2E, &b_gengr2E);
+  fInTree->SetBranchAddress("gengr2pt", &gengr2pt, &b_gengr2pt);
+  fInTree->SetBranchAddress("gengr2phi", &gengr2phi, &b_gengr2phi);
+  fInTree->SetBranchAddress("gengr2eta", &gengr2eta, &b_gengr2eta);
+  fInTree->SetBranchAddress("ngenjets", &ngenjets, &b_ngenjets);
+  fInTree->SetBranchAddress("genjetE", &genjetE, &b_genjetE);
+  fInTree->SetBranchAddress("genjetpt", &genjetpt, &b_genjetpt);
+  fInTree->SetBranchAddress("genjetphi", &genjetphi, &b_genjetphi);
+  fInTree->SetBranchAddress("genjeteta", &genjeteta, &b_genjeteta);
+  fInTree->SetBranchAddress("genjetmatch", &genjetmatch, &b_genjetmatch);
   fInTree->SetBranchAddress("nvtx", &nvtx, &b_nvtx);
   fInTree->SetBranchAddress("vtxX", &vtxX, &b_vtxX);
   fInTree->SetBranchAddress("vtxY", &vtxY, &b_vtxY);
@@ -400,6 +412,7 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("jetpt", &jetpt, &b_jetpt);
   fInTree->SetBranchAddress("jetphi", &jetphi, &b_jetphi);
   fInTree->SetBranchAddress("jeteta", &jeteta, &b_jeteta);
+  fInTree->SetBranchAddress("jetmatch", &jetmatch, &b_jetmatch);
   fInTree->SetBranchAddress("nphotons", &nphotons, &b_nhotons);
   fInTree->SetBranchAddress("phmatch", &phmatch, &b_phmatch);
   fInTree->SetBranchAddress("phVID", &phVID, &b_phVID);

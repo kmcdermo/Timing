@@ -21,6 +21,6 @@ void runPhotonPlots()
 
   gROOT->LoadMacro("PlotPhotons.cc++g");
 
-  PlotPhotons photonPlots("input/fullphoton.root","output");
+  PlotPhotons photonPlots("input/photondump.root","output");
   photonPlots.DoPlots();
 }
