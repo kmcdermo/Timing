@@ -135,12 +135,12 @@ private:
   float genN1mass, genN1E, genN1pt, genN1phi, genN1eta;
   float genph1E, genph1pt, genph1phi, genph1eta;
   int genph1match;
-  float gengl1E, gengl1pt, gengl1phi, gengl1eta;
+  float gengr1E, gengr1pt, gengr1phi, gengr1eta;
 
   float genN2mass, genN2E, genN2pt, genN2phi, genN2eta;
   float genph2E, genph2pt, genph2phi, genph2eta;
   int genph2match;
-  float gengl2E, gengl2pt, gengl2phi, gengl2eta;
+  float gengr2E, gengr2pt, gengr2phi, gengr2eta;
 
   // object counts
   int nvtx, njets, nphotons;

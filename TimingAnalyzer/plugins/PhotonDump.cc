@@ -200,14 +200,14 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	      } // end loop over reco photons
 	    } // end check for reco match
 	    
-	    int gldaughter = -1; // determine which one is the gluino
-	    if      (gpiter->daughter(0)->pdgId() == 1000039) {gldaughter = 0;}
-	    else if (gpiter->daughter(1)->pdgId() == 1000039) {gldaughter = 1;}
+	    int grdaughter = -1; // determine which one is the gravitino
+	    if      (gpiter->daughter(0)->pdgId() == 1000039) {grdaughter = 0;}
+	    else if (gpiter->daughter(1)->pdgId() == 1000039) {grdaughter = 1;}
 
-	    gengl1E    = gpiter->daughter(gldaughter)->energy();
-	    gengl1pt   = gpiter->daughter(gldaughter)->pt();
-	    gengl1phi  = gpiter->daughter(gldaughter)->phi();
-	    gengl1eta  = gpiter->daughter(gldaughter)->eta();
+	    gengr1E    = gpiter->daughter(grdaughter)->energy();
+	    gengr1pt   = gpiter->daughter(grdaughter)->pt();
+	    gengr1phi  = gpiter->daughter(grdaughter)->phi();
+	    gengr1eta  = gpiter->daughter(grdaughter)->eta();
 
 	    // set this to ensure not to overwrite first mother info
 	    firstMother = true;
@@ -246,14 +246,14 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	      } // end loop over reco photons
 	    } // end check for reco match
 	    
-	    int gldaughter = -1; // determine which one is the gluino
-	    if      (gpiter->daughter(0)->pdgId() == 1000039) {gldaughter = 0;}
-	    else if (gpiter->daughter(1)->pdgId() == 1000039) {gldaughter = 1;}
+	    int grdaughter = -1; // determine which one is the gravitino
+	    if      (gpiter->daughter(0)->pdgId() == 1000039) {grdaughter = 0;}
+	    else if (gpiter->daughter(1)->pdgId() == 1000039) {grdaughter = 1;}
 
-	    gengl2E    = gpiter->daughter(gldaughter)->energy();
-	    gengl2pt   = gpiter->daughter(gldaughter)->pt();
-	    gengl2phi  = gpiter->daughter(gldaughter)->phi();
-	    gengl2eta  = gpiter->daughter(gldaughter)->eta();
+	    gengr2E    = gpiter->daughter(grdaughter)->energy();
+	    gengr2pt   = gpiter->daughter(grdaughter)->pt();
+	    gengr2phi  = gpiter->daughter(grdaughter)->phi();
+	    gengr2eta  = gpiter->daughter(grdaughter)->eta();
 
 	    // set this to ensure not to overwrite first mother info
 	    secondMother = true;
@@ -464,12 +464,12 @@ void PhotonDump::InitializeMCBranches()
   genN1mass = -9999.f; genN1E = -9999.f; genN1pt = -9999.f; genN1phi = -9999.f; genN1eta = -9999.f;
   genph1E = -9999.f; genph1pt = -9999.f; genph1phi = -9999.f; genph1eta = -9999.f;
   genph1match = -9999;
-  gengl1E = -9999.f; gengl1pt = -9999.f; gengl1phi = -9999.f; gengl1eta = -9999.f;
+  gengr1E = -9999.f; gengr1pt = -9999.f; gengr1phi = -9999.f; gengr1eta = -9999.f;
 
   genN2mass = -9999.f; genN2E = -9999.f; genN2pt = -9999.f; genN2phi = -9999.f; genN2eta = -9999.f;
   genph2E = -9999.f; genph2pt = -9999.f; genph2phi = -9999.f; genph2eta = -9999.f;
   genph2match = -9999;
-  gengl2E = -9999.f; gengl2pt = -9999.f; gengl2phi = -9999.f; gengl2eta = -9999.f;
+  gengr2E = -9999.f; gengr2pt = -9999.f; gengr2phi = -9999.f; gengr2eta = -9999.f;
 }
 
 void PhotonDump::ClearJetBranches()
@@ -620,10 +620,10 @@ void PhotonDump::beginJob()
   tree->Branch("genph1phi"            , &genph1phi            , "genph1phi/F");
   tree->Branch("genph1eta"            , &genph1eta            , "genph1eta/F");
   tree->Branch("genph1match"          , &genph1match          , "genph1match/I");
-  tree->Branch("gengl1E"              , &gengl1E              , "gengl1E/F");
-  tree->Branch("gengl1pt"             , &gengl1pt             , "gengl1pt/F");
-  tree->Branch("gengl1phi"            , &gengl1phi            , "gengl1phi/F");
-  tree->Branch("gengl1eta"            , &gengl1eta            , "gengl1eta/F");
+  tree->Branch("gengr1E"              , &gengr1E              , "gengr1E/F");
+  tree->Branch("gengr1pt"             , &gengr1pt             , "gengr1pt/F");
+  tree->Branch("gengr1phi"            , &gengr1phi            , "gengr1phi/F");
+  tree->Branch("gengr1eta"            , &gengr1eta            , "gengr1eta/F");
 
   tree->Branch("genN2mass"            , &genN2mass            , "genN2mass/F");
   tree->Branch("genN2E"               , &genN2E               , "genN2E/F");
@@ -635,10 +635,10 @@ void PhotonDump::beginJob()
   tree->Branch("genph2phi"            , &genph2phi            , "genph2phi/F");
   tree->Branch("genph2eta"            , &genph2eta            , "genph2eta/F");
   tree->Branch("genph2match"          , &genph2match          , "genph2match/I");
-  tree->Branch("gengl2E"              , &gengl2E              , "gengl2E/F");
-  tree->Branch("gengl2pt"             , &gengl2pt             , "gengl2pt/F");
-  tree->Branch("gengl2phi"            , &gengl2phi            , "gengl2phi/F");
-  tree->Branch("gengl2eta"            , &gengl2eta            , "gengl2eta/F");
+  tree->Branch("gengr2E"              , &gengr2E              , "gengr2E/F");
+  tree->Branch("gengr2pt"             , &gengr2pt             , "gengr2pt/F");
+  tree->Branch("gengr2phi"            , &gengr2phi            , "gengr2phi/F");
+  tree->Branch("gengr2eta"            , &gengr2eta            , "gengr2eta/F");
 
   // Vertex info
   tree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");

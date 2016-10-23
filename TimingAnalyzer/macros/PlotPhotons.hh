@@ -21,8 +21,20 @@ public :
   void InitTree();
   void DoPlots();
   void SetupTH1Fs();
+  void SetupGenInfoTH1Fs();
+  void SetupGenParticlesTH1Fs();
+  void SetupObjectCountsTH1Fs();
+  void SetupMETTH1Fs();
+  void SetupJetsTH1Fs();
+  void SetupRecoPhotonsTH1Fs();
   TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle);
   void EventLoop();
+  void FillGenInfo();
+  void FillGenParticles();
+  void FillObjectCounts();
+  void FillMET();
+  void FillJets();
+  void FillRecoPhotons();
   void OutputTH1Fs();
 
 private :
