@@ -119,14 +119,12 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     edm::Handle<std::vector<reco::GenJet> > genjetsH;
     iEvent.getByToken(genjetsToken, genjetsH);
   
-    // First initialize all branch variables
-    PhotonDump::InitializeMCBranches();
-  
     ///////////////////////
     //                   //
     // Event weight info //
     //                   //
     ///////////////////////
+    genwgt = -9999.f;
     if (genevtInfoH.isValid()) {genwgt = genevtInfoH->weight();}
 
     /////////////////////
@@ -134,6 +132,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     // Gen pileup info //
     //                 //
     /////////////////////
+    genpuobs = -9999; genputrue = -9999;
     if (pileupInfoH.isValid()) // standard check for pileup
     {
       for (std::vector<PileupSummaryInfo>::const_iterator puiter = pileupInfoH->begin(); puiter != pileupInfoH->end(); ++puiter) 
@@ -151,6 +150,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     // Gen particle info //
     //                   //
     ///////////////////////
+    PhotonDump::InitializeGenParticleBranches();
     if (genparticlesH.isValid()) // make sure gen particles exist
     {
       // Dump gen particle pdgIds
@@ -261,6 +261,42 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	} // end conditional over matching
       } // end loop over gen particles
     } // end check for gen particles
+
+    ///////////////////
+    //               //
+    // Gen Jets info //
+    //               //
+    ///////////////////
+    ngenjets = -9999;
+    PhotonDump::ClearGenJetBranches();
+    if (genjetsH.isValid()) // make sure gen particles exist
+    {
+      ngenjets = genjetsH->size();
+      if (ngenjets > 0) PhotonDump::InitializeGenJetBranches();
+      int igjet = 0;
+      for (std::vector<reco::GenJet>::const_iterator gjetiter = genjetsH->begin(); gjetiter != genjetsH->end(); ++gjetiter) // loop over genjets
+      {
+	genjetE  [igjet] = gjetiter->energy();
+	genjetpt [igjet] = gjetiter->pt();
+	genjetphi[igjet] = gjetiter->phi();
+	genjeteta[igjet] = gjetiter->eta();
+
+	if (jetsH.isValid()) // check to make sure reco (AK4) jets exist
+	{
+	  int ijet = 0;
+	  for (std::vector<pat::Jet>::const_iterator jetiter = jetsH->begin(); jetiter != jetsH->end(); ++jetiter) // loop over reco jets for match
+	  {
+	    if (deltaR(gjetiter->phi(),gjetiter->eta(),jetiter->phi(),jetiter->eta()) < 0.3) // deltaR matching conditional
+	    {
+	      genjetmatch[igjet] = ijet;
+	      break;
+	    }
+	    ijet++;
+	  } // end loop over reco jets
+	} // end check over reco jets 
+	igjet++;
+      } // end loop over genjets
+    } // end check over genjets
   } // end block over isMC
 
   /////////////////
@@ -304,7 +340,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   /////////////////////////
   njets = -9999;
   PhotonDump::ClearJetBranches();
-  if (jetsH.isValid()) // check to make sure it is valid
+  if (jetsH.isValid()) // check to make sure reco jets exist
   {
     njets = jetsH->size();
     if (njets > 0) PhotonDump::InitializeJetBranches();
@@ -316,9 +352,19 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       jetphi[ijet] = jetiter->phi();
       jeteta[ijet] = jetiter->eta();
 
+      // check if reco jet is matched to gen jet
+      for (size_t igjet = 0; igjet < genjetmatch.size(); igjet++) // loop over gen jet matches
+      {
+	if (genjetmatch[igjet] == ijet) 
+	{
+	  jetmatch[ijet] = int(igjet);
+	  break;
+	} // end conditional over check
+      } // end loop over gen jets matches
+
       ijet++;
-    }      
-  }
+    } // end loop over reco jets
+  } // end check over reco jets
   
   //////////////////
   //              //
@@ -455,11 +501,8 @@ void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &
   std::cout << "---------------------------------" << std::endl << std::endl;
 }
 
-void PhotonDump::InitializeMCBranches()
+void PhotonDump::InitializeGenParticleBranches()
 {
-  genwgt = -9999.f;
-  genpuobs = -9999; genputrue = -9999;
-
   // Gen particle info
   genN1mass = -9999.f; genN1E = -9999.f; genN1pt = -9999.f; genN1phi = -9999.f; genN1eta = -9999.f;
   genph1E = -9999.f; genph1pt = -9999.f; genph1phi = -9999.f; genph1eta = -9999.f;
@@ -472,12 +515,43 @@ void PhotonDump::InitializeMCBranches()
   gengr2E = -9999.f; gengr2pt = -9999.f; gengr2phi = -9999.f; gengr2eta = -9999.f;
 }
 
+void PhotonDump::ClearGenJetBranches()
+{
+  genjetE.clear();
+  genjetpt.clear();
+  genjetphi.clear();
+  genjeteta.clear();
+
+  genjetmatch.clear();
+}
+
+void PhotonDump::InitializeGenJetBranches()
+{
+  genjetE.resize(ngenjets);
+  genjetpt.resize(ngenjets);
+  genjetphi.resize(ngenjets);
+  genjeteta.resize(ngenjets);
+
+  genjetmatch.resize(ngenjets);
+
+  for (int igjet = 0; igjet < ngenjets; igjet++)
+  {
+    genjetE  [igjet] = -9999.f;
+    genjetpt [igjet] = -9999.f;
+    genjetphi[igjet] = -9999.f;
+    genjeteta[igjet] = -9999.f;
+
+    genjetmatch[igjet] = -9999;
+  }
+}
+
 void PhotonDump::ClearJetBranches()
 {
   jetE.clear();
   jetpt.clear();
   jetphi.clear();
   jeteta.clear();
+  jetmatch.clear();
 }
 
 void PhotonDump::InitializeJetBranches()
@@ -486,6 +560,7 @@ void PhotonDump::InitializeJetBranches()
   jetpt.resize(njets);
   jetphi.resize(njets);
   jeteta.resize(njets);
+  jetmatch.resize(njets);
 
   for (int ijet = 0; ijet < njets; ijet++)
   {
@@ -493,6 +568,8 @@ void PhotonDump::InitializeJetBranches()
     jetpt [ijet] = -9999.f;
     jetphi[ijet] = -9999.f;
     jeteta[ijet] = -9999.f;
+
+    jetmatch[ijet] = -9999;
   }
 }
 
@@ -639,6 +716,14 @@ void PhotonDump::beginJob()
   tree->Branch("gengr2pt"             , &gengr2pt             , "gengr2pt/F");
   tree->Branch("gengr2phi"            , &gengr2phi            , "gengr2phi/F");
   tree->Branch("gengr2eta"            , &gengr2eta            , "gengr2eta/F");
+  
+  // GenJet Info
+  tree->Branch("ngenjets"             , &ngenjets             , "ngenjets/I");
+  tree->Branch("genjetE"              , &genjetE);
+  tree->Branch("genjetpt"             , &genjetpt);
+  tree->Branch("genjetphi"            , &genjetphi);
+  tree->Branch("genjeteta"            , &genjeteta);
+  tree->Branch("genjetmatch"          , &genjetmatch);
 
   // Vertex info
   tree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");
@@ -658,6 +743,7 @@ void PhotonDump::beginJob()
   tree->Branch("jetpt"                , &jetpt);
   tree->Branch("jetphi"               , &jetphi);
   tree->Branch("jeteta"               , &jeteta);
+  tree->Branch("jetmatch"             , &jetmatch);
   
   // Photon Info
   tree->Branch("nphotons"             , &nphotons             , "nhotons/I");

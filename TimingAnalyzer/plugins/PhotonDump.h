@@ -63,12 +63,15 @@ inline float deltaR(const float phi1, const float eta1, const float phi2, const 
 
 class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
-public:
+ public:
   explicit PhotonDump(const edm::ParameterSet&);
   ~PhotonDump();
 
   void DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &);
-  void InitializeMCBranches();
+  void InitializeGenParticleBranches();
+
+  void ClearGenJetBranches();
+  void InitializeGenJetBranches();
 
   void ClearJetBranches();
   void InitializeJetBranches();
@@ -78,7 +81,7 @@ public:
   void InitializeRecoRecHitBranches(int iph);
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
   
-private:
+ private:
   virtual void beginJob() override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
@@ -142,8 +145,12 @@ private:
   int genph2match;
   float gengr2E, gengr2pt, gengr2phi, gengr2eta;
 
+  // jets
+  std::vector<int> genjetmatch;
+  std::vector<float> genjetE, genjetpt, genjetphi, genjeteta;
+
   // object counts
-  int nvtx, njets, nphotons;
+  int ngenjets, nvtx, njets, nphotons;
 
   // vertices
   float vtxX, vtxY, vtxZ;
@@ -152,6 +159,7 @@ private:
   float t1pfmet, t1pfmetphi, t1pfmeteta, t1pfmetsumEt;
 
   // jets
+  std::vector<int> jetmatch;
   std::vector<float> jetE, jetpt, jetphi, jeteta;
 
   // photon info
