@@ -23,6 +23,7 @@ public :
   void SetupTH1Fs();
   void SetupGenInfoTH1Fs();
   void SetupGenParticlesTH1Fs();
+  void SetupGenJetsTH1Fs();
   void SetupObjectCountsTH1Fs();
   void SetupMETTH1Fs();
   void SetupJetsTH1Fs();
@@ -31,6 +32,7 @@ public :
   void EventLoop();
   void FillGenInfo();
   void FillGenParticles();
+  void FillGenJets();
   void FillObjectCounts();
   void FillMET();
   void FillJets();

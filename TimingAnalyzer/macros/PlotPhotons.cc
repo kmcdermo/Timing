@@ -45,6 +45,18 @@ void PlotPhotons::DoPlots()
   PlotPhotons::OutputTH1Fs();
 }
 
+
+void PlotPhotons::SetupTH1Fs()
+{
+  PlotPhotons::SetupGenInfoTH1Fs();
+  PlotPhotons::SetupGenParticlesTH1Fs();
+  PlotPhotons::SetupGenJetsTH1Fs();
+  PlotPhotons::SetupObjectCountsTH1Fs();
+  PlotPhotons::SetupMETTH1Fs();
+  PlotPhotons::SetupJetsTH1Fs();
+  PlotPhotons::SetupRecoPhotonsTH1Fs();
+}
+
 void PlotPhotons::EventLoop()
 {
   for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++)
@@ -54,6 +66,7 @@ void PlotPhotons::EventLoop()
 
     PlotPhotons::FillGenInfo();
     PlotPhotons::FillGenParticles();
+    PlotPhotons::FillGenJets();
     PlotPhotons::FillObjectCounts();
     PlotPhotons::FillMET();
     PlotPhotons::FillJets();
@@ -98,12 +111,32 @@ void PlotPhotons::FillGenParticles()
   fPlots["gengr2eta"]->Fill(gengr2eta);
 }
 
+void PlotPhotons::FillGenJets()
+{
+  fPlots["ngenjets"]->Fill(ngenjets);
+  
+  for (int igjet = 0; igjet < ngenjets; igjet++)
+  {
+    fPlots["genjetE"]->Fill((*genjetE)[igjet]);
+    fPlots["genjetpt"]->Fill((*genjetpt)[igjet]);
+    fPlots["genjetphi"]->Fill((*genjetphi)[igjet]);
+    fPlots["genjeteta"]->Fill((*genjeteta)[igjet]);
+  }
+}
+
 void PlotPhotons::FillObjectCounts()
 {
   fPlots["nvtx"]->Fill(nvtx);
+ 
   fPlots["njets"]->Fill(njets);
-  fPlots["nphotons"]->Fill(nphotons);  
+  int nmatchedjets = 0;
+  for (int ijet = 0; ijet < njets; ijet++)
+  {
+    if ( (*jetmatch)[ijet] >= 0 ) nmatchedjets++; 
+  }
+  fPlots["nmatchedjets"]->Fill(nmatchedjets);  
 
+  fPlots["nphotons"]->Fill(nphotons);  
   int nlooseph = 0;
   int nmediumph = 0;
   int ntightph = 0;
@@ -134,6 +167,14 @@ void PlotPhotons::FillJets()
     fPlots["jetpt"]->Fill((*jetpt)[ijet]);
     fPlots["jetphi"]->Fill((*jetphi)[ijet]);
     fPlots["jeteta"]->Fill((*jeteta)[ijet]);
+  
+    if ( (*jetmatch)[ijet] >= 0 ) 
+    {
+      fPlots["jetE_gen"]->Fill((*jetE)[ijet]);
+      fPlots["jetpt_gen"]->Fill((*jetpt)[ijet]);
+      fPlots["jetphi_gen"]->Fill((*jetphi)[ijet]);
+      fPlots["jeteta_gen"]->Fill((*jeteta)[ijet]);
+    }
   }
 }
 
@@ -163,34 +204,28 @@ void PlotPhotons::FillRecoPhotons()
     {
       fPlots["phrhEs"]->Fill((*phrhEs)[iph][irh]);
       fPlots["phrhtimes"]->Fill((*phrhtimes)[iph][irh]);
+      fPlots["phrhOOTs"]->Fill((*phrhOOTs)[iph][irh]);
       if ( (*phseedpos)[iph] == irh ) // seed info
       {
 	fPlots["phseedE"]->Fill((*phrhEs)[iph][irh]);
 	fPlots["phseedtime"]->Fill((*phrhtimes)[iph][irh]);
+	fPlots["phseedOOT"]->Fill((*phrhOOTs)[iph][irh]);
       }
       
       if ( (*phmatch)[iph] > 0 ) // gen matched photons
       {
 	fPlots["phrhEs_gen"]->Fill((*phrhEs)[iph][irh]);
 	fPlots["phrhtimes_gen"]->Fill((*phrhtimes)[iph][irh]);
+	fPlots["phrhOOTs_gen"]->Fill((*phrhOOTs)[iph][irh]);
 	if ( (*phseedpos)[iph] == irh ) // seed info
         {
 	  fPlots["phseedE_gen"]->Fill((*phrhEs)[iph][irh]);
 	  fPlots["phseedtime_gen"]->Fill((*phrhtimes)[iph][irh]);
+	  fPlots["phseedOOT_gen"]->Fill((*phrhOOTs)[iph][irh]);
 	}
       }
     }
   }
-}
-
-void PlotPhotons::SetupTH1Fs()
-{
-  PlotPhotons::SetupGenInfoTH1Fs();
-  PlotPhotons::SetupGenParticlesTH1Fs();
-  PlotPhotons::SetupObjectCountsTH1Fs();
-  PlotPhotons::SetupMETTH1Fs();
-  PlotPhotons::SetupJetsTH1Fs();
-  PlotPhotons::SetupRecoPhotonsTH1Fs();
 }
 
 void PlotPhotons::SetupGenInfoTH1Fs()
@@ -230,10 +265,20 @@ void PlotPhotons::SetupGenParticlesTH1Fs()
   fPlots["gengr2eta"] = PlotPhotons::MakeTH1F("gengr2eta","Generator Subleading Gravitino #eta",100,-5.0,5.0,"#eta","Gravitinos");
 }
 
+void PlotPhotons::SetupGenJetsTH1Fs()
+{
+  fPlots["ngenjets"] = PlotPhotons::MakeTH1F("ngenjets","nGenJets",40,0.f,40.f,"nGenJets","Events");
+  fPlots["genjetE"] = PlotPhotons::MakeTH1F("genjetE","Generator Jets Energy [GeV]",100,0.f,2000.f,"Energy [GeV]","Generator Jets");
+  fPlots["genjetpt"] = PlotPhotons::MakeTH1F("genjetpt","Generator Jets p_{T} [GeV/c]",100,0.f,2000.f,"p_{T} [GeV/c]","Generator Jets");
+  fPlots["genjetphi"] = PlotPhotons::MakeTH1F("genjetphi","Generator Jets #phi",100,-3.2,3.2,"#phi","Generator Jets");
+  fPlots["genjeteta"] = PlotPhotons::MakeTH1F("genjeteta","Generator Jets #eta",100,-5.0,5.0,"#eta","Generator Jets");
+}
+
 void PlotPhotons::SetupObjectCountsTH1Fs()
 {
   fPlots["nvtx"] = PlotPhotons::MakeTH1F("nvtx","nVertices (reco)",100,0.f,100.f,"nPV","Events");
   fPlots["njets"] = PlotPhotons::MakeTH1F("njets","nJets (reco)",40,0.f,40.f,"nJets","Events");
+  fPlots["nmatchedjets"] = PlotPhotons::MakeTH1F("nmatchedjets","nMatchedJets (reco to gen)",40,0.f,40.f,"nMatchedJets","Events");
   fPlots["nphotons"] = PlotPhotons::MakeTH1F("nphotons","nPhotons (reco)",20,0.f,20.f,"nPhotons","Events");
   fPlots["nlooseph"] = PlotPhotons::MakeTH1F("nlooseph","nLoosePhotons",20,0.f,20.f,"nLoosePhotons","Events");
   fPlots["nmediumph"] = PlotPhotons::MakeTH1F("nmediumph","nMediumPhotons",20,0.f,20.f,"nMediumPhotons","Events");
@@ -254,6 +299,11 @@ void PlotPhotons::SetupJetsTH1Fs()
   fPlots["jetpt"] = PlotPhotons::MakeTH1F("jetpt","Jets p_{T} [GeV/c] (reco)",100,0.f,2000.f,"p_{T} [GeV/c]","Jets");
   fPlots["jetphi"] = PlotPhotons::MakeTH1F("jetphi","Jets #phi (reco)",100,-3.2,3.2,"#phi","Jets");
   fPlots["jeteta"] = PlotPhotons::MakeTH1F("jeteta","Jets #eta (reco)",100,-5.0,5.0,"#eta","Jets");
+
+  fPlots["jetE_gen"] = PlotPhotons::MakeTH1F("jetE_gen","Jets Energy [GeV] (reco: gen matched)",100,0.f,2000.f,"Energy [GeV]","Jets");
+  fPlots["jetpt_gen"] = PlotPhotons::MakeTH1F("jetpt_gen","Jets p_{T} [GeV/c] (reco: gen matched)",100,0.f,2000.f,"p_{T} [GeV/c]","Jets");
+  fPlots["jetphi_gen"] = PlotPhotons::MakeTH1F("jetphi_gen","Jets #phi (reco: gen matched)",100,-3.2,3.2,"#phi","Jets");
+  fPlots["jeteta_gen"] = PlotPhotons::MakeTH1F("jeteta_gen","Jets #eta (reco: gen matched)",100,-5.0,5.0,"#eta","Jets");
 }
 
 void PlotPhotons::SetupRecoPhotonsTH1Fs()
@@ -269,9 +319,11 @@ void PlotPhotons::SetupRecoPhotonsTH1Fs()
   // all rec hits + seed info
   fPlots["phrhEs"] = PlotPhotons::MakeTH1F("phrhEs","Photons RecHits Energy [GeV] (reco)",100,0.f,2000.f,"Energy [GeV]","RecHits");
   fPlots["phrhtimes"] = PlotPhotons::MakeTH1F("phrhtimes","Photons RecHits Time [ns] (reco)",200,-100.f,100.f,"Time [ns]","RecHits");
+  fPlots["phrhOOTs"] = PlotPhotons::MakeTH1F("phrhOOTs","Photons RecHits OoT Flag (reco)",2,0.f,2.f,"OoT Flag","RecHits");
   fPlots["phseedE"] = PlotPhotons::MakeTH1F("phseedE","Photons Seed RecHit Energy [GeV] (reco)",100,0.f,2000.f,"Energy [GeV]","Seed RecHits");
   fPlots["phseedtime"] = PlotPhotons::MakeTH1F("phseedtime","Photons Seed RecHit Time [ns] (reco)",200,-100.f,100.f,"Time [ns]","Seed RecHits");
-  
+  fPlots["phseedOOT"] = PlotPhotons::MakeTH1F("phseedOOT","Photons Seed RecHit OoT Flag (reco)",2,0.f,2.f,"OoT Flag","Seed RecHits");  
+
   // Gen matched reco quantities
   fPlots["phE_gen"] = PlotPhotons::MakeTH1F("phE_gen","Photons Energy [GeV] (reco: gen matched)",100,0.f,2000.f,"Energy [GeV]","Photons");
   fPlots["phpt_gen"] = PlotPhotons::MakeTH1F("phpt_gen","Photons p_{T} [GeV/c] (reco: gen matched)",100,0.f,2000.f,"p_{T} [GeV/c]","Photons");
@@ -283,8 +335,10 @@ void PlotPhotons::SetupRecoPhotonsTH1Fs()
   // all rec hits + seed info for gen matched photons
   fPlots["phrhEs_gen"] = PlotPhotons::MakeTH1F("phrhEs_gen","Photons RecHits Energy [GeV] (reco: gen matched)",100,0.f,2000.f,"Energy [GeV]","RecHits");
   fPlots["phrhtimes_gen"] = PlotPhotons::MakeTH1F("phrhtimes_gen","Photons RecHits Time [ns] (reco: gen matched)",200,-100.f,100.f,"Time [ns]","RecHits");
+  fPlots["phrhOOTs_gen"] = PlotPhotons::MakeTH1F("phrhOOTs_gen","Photons RecHits OoT Flag (reco: gen matched)",2,0.f,2.f,"OoT Flag","RecHits");
   fPlots["phseedE_gen"] = PlotPhotons::MakeTH1F("phseedE_gen","Photons Seed RecHit Energy [GeV] (reco: gen matched)",100,0.f,2000.f,"Energy [GeV]","Seed RecHits");
   fPlots["phseedtime_gen"] = PlotPhotons::MakeTH1F("phseedtime_gen","Photons Seed RecHit Time [ns] (reco: gen matched)",200,-100.f,100.f,"Time [ns]","Seed RecHits");
+  fPlots["phseedOOT_gen"] = PlotPhotons::MakeTH1F("phseedOOT_gen","Photons Seed RecHit OoT Flag (reco: gen matched)",2,0.f,2.f,"OoT Flag","Seed RecHits");  
 }
 
 TH1F * PlotPhotons::MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle)
