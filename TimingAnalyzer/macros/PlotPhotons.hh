@@ -13,10 +13,18 @@
 typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator        TH1MapIter;
 
+typedef std::map<TString,TString> TStrMap;
+typedef TStrMap::iterator         TStrMapIter;
+
+typedef std::map<TString,Int_t>   VIDMap;
+
 class PlotPhotons 
 {
 public :
-  PlotPhotons(TString filename, TString outdir);
+  PlotPhotons(TString filename, TString outdir = "output", 
+	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
+	      Bool_t applyphvidcut = false, TString phvid = "medium", Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
+	      Bool_t applyecalacceptcut = false);
   ~PlotPhotons();
   void InitTree();
   void DoPlots();
@@ -28,7 +36,7 @@ public :
   void SetupMETTH1Fs();
   void SetupJetsTH1Fs();
   void SetupRecoPhotonsTH1Fs();
-  TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle);
+  TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
   void EventLoop();
   void FillGenInfo();
   void FillGenParticles();
@@ -37,6 +45,7 @@ public :
   void FillMET();
   void FillJets();
   void FillRecoPhotons();
+  void MakeSubDirs();
   void OutputTH1Fs();
 
 private :
@@ -47,6 +56,19 @@ private :
   // In routine vars
   UInt_t  fNEvCheck;
   TH1Map  fPlots;
+  TStrMap fSubDirs;
+
+  // Config
+  Bool_t  fApplyJetPtCut;
+  Float_t fJetPtCut;
+  Bool_t  fApplyPhPtCut;
+  Float_t fPhPtCut;
+  Bool_t  fApplyPhVIDCut;
+  TString fPhVID;
+  VIDMap  fPhVIDMap;
+  Bool_t  fApplyrhECut;
+  Float_t frhECut;
+  Bool_t  fApplyECALAcceptCut;
 
   // Output vars
   TString fOutDir;
