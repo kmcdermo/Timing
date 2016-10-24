@@ -152,30 +152,34 @@ void PlotPhotons::FillObjectCounts()
 {
   fPlots["nvtx"]->Fill(nvtx);
  
-  fPlots["njets"]->Fill(njets);
-  int nmatchedjets = 0;
+  int nMatchedJets = 0;
+  int nJets = 0;
   for (int ijet = 0; ijet < njets; ijet++)
   {
     if (fApplyJetPtCut && (*jetE)[ijet] < fJetPtCut) continue;
-    if ( (*jetmatch)[ijet] >= 0 ) nmatchedjets++; 
+    nJets++;
+    if ( (*jetmatch)[ijet] >= 0 ) nMatchedJets++; 
   }
-  fPlots["nmatchedjets"]->Fill(nmatchedjets);  
+  fPlots["njets"]->Fill(nJets);  
+  fPlots["nmatchedjets"]->Fill(nMatchedJets);  
 
-  fPlots["nphotons"]->Fill(nphotons);  
-  int nlooseph = 0;
-  int nmediumph = 0;
-  int ntightph = 0;
+  int nPhotons = 0;
+  int nLoosePh = 0;
+  int nMediumPh = 0;
+  int nTightPh = 0;
   for (int iph = 0; iph < nphotons; iph++)
   { 
     if (fApplyPhPtCut && (*phE)[iph] < fPhPtCut) continue;
     if (fApplyECALAcceptCut && ((*pheta)[iph] > 2.5 || ((*pheta)[iph]>1.4442 && (*pheta)[iph]<1.566))) continue;
-    if ( (*phVID)[iph] >= 1 ) nlooseph++;
-    if ( (*phVID)[iph] >= 2 ) nmediumph++;
-    if ( (*phVID)[iph] >= 3 ) ntightph++;
+    nPhotons++;
+    if ( (*phVID)[iph] >= 1 ) nLoosePh++;
+    if ( (*phVID)[iph] >= 2 ) nMediumPh++;
+    if ( (*phVID)[iph] >= 3 ) nTightPh++;
   }
-  fPlots["nlooseph"]->Fill(nlooseph);
-  fPlots["nmediumph"]->Fill(nmediumph);
-  fPlots["ntightph"]->Fill(ntightph);
+  fPlots["nphotons"]->Fill(nPhotons);  
+  fPlots["nlooseph"]->Fill(nLoosePh);
+  fPlots["nmediumph"]->Fill(nMediumPh);
+  fPlots["ntightph"]->Fill(nTightPh);
 }
 
 void PlotPhotons::FillMET()
@@ -219,7 +223,6 @@ void PlotPhotons::FillRecoPhotons()
     fPlots["phphi"]->Fill((*phphi)[iph]);
     fPlots["pheta"]->Fill((*pheta)[iph]);
     fPlots["phscE"]->Fill((*phscE)[iph]);
-    fPlots["phnrhs"]->Fill((*phnrhs)[iph]);
 
     if ( (*phmatch)[iph] > 0 ) // gen matched photons
     {
@@ -228,13 +231,15 @@ void PlotPhotons::FillRecoPhotons()
       fPlots["phphi_gen"]->Fill((*phphi)[iph]);
       fPlots["pheta_gen"]->Fill((*pheta)[iph]);
       fPlots["phscE_gen"]->Fill((*phscE)[iph]);
-      fPlots["phnrhs_gen"]->Fill((*phnrhs)[iph]);
     }
-
+  
     // loop over rechits (+ seed info)
+    int nRecHits = 0;
+    int nRecHits_gen = 0;
     for (int irh = 0; irh < (*phnrhs)[iph]; irh++)
     {
       if (fApplyrhECut && (*phrhEs)[iph][irh] < frhECut) continue;
+      nRecHits++;
 
       fPlots["phrhEs"]->Fill((*phrhEs)[iph][irh]);
       fPlots["phrhtimes"]->Fill((*phrhtimes)[iph][irh]);
@@ -248,6 +253,7 @@ void PlotPhotons::FillRecoPhotons()
       
       if ( (*phmatch)[iph] > 0 ) // gen matched photons
       {
+	nRecHits_gen++;
 	fPlots["phrhEs_gen"]->Fill((*phrhEs)[iph][irh]);
 	fPlots["phrhtimes_gen"]->Fill((*phrhtimes)[iph][irh]);
 	fPlots["phrhOOTs_gen"]->Fill((*phrhOOTs)[iph][irh]);
@@ -258,8 +264,10 @@ void PlotPhotons::FillRecoPhotons()
 	  fPlots["phseedOOT_gen"]->Fill((*phrhOOTs)[iph][irh]);
 	}
       }
-    }
-  }
+    } // end loop over nrechits
+    fPlots["phnrhs"]->Fill(nRecHits);
+    fPlots["phnrhs_gen"]->Fill(nRecHits_gen);
+  } // end loop over nphotons
 }
 
 void PlotPhotons::SetupGenInfoTH1Fs()
