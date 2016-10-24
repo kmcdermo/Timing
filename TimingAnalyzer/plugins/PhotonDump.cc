@@ -124,7 +124,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     // Event weight info //
     //                   //
     ///////////////////////
-    genwgt = -9999.f;
+    PhotonDump::InitializeGenEvtBranches();
     if (genevtInfoH.isValid()) {genwgt = genevtInfoH->weight();}
 
     /////////////////////
@@ -132,7 +132,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     // Gen pileup info //
     //                 //
     /////////////////////
-    genpuobs = -9999; genputrue = -9999;
+    PhotonDump::InitializeGenPUBranches();
     if (pileupInfoH.isValid()) // standard check for pileup
     {
       for (std::vector<PileupSummaryInfo>::const_iterator puiter = pileupInfoH->begin(); puiter != pileupInfoH->end(); ++puiter) 
@@ -156,109 +156,119 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       // Dump gen particle pdgIds
       if (dumpIds) PhotonDump::DumpGenIds(genparticlesH); 
       
+      nNeutralino = 0;
+      nNeutoPhGr  = 0;
       bool firstMother  = false; // bool for first neutralino found
       bool secondMother = false; // bool for second neutralino found
       for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter) // loop over gen particles
       {
 	if (firstMother && secondMother) break; // have two matches!
 
-	if ((gpiter->pdgId() == 1000022 && gpiter->numberOfDaughters() == 2) &&
-	    ((gpiter->daughter(0)->pdgId() == 22 && gpiter->daughter(1)->pdgId() == 1000039) ||
-	     (gpiter->daughter(1)->pdgId() == 22 && gpiter->daughter(0)->pdgId() == 1000039)))
+	if (gpiter->pdgId() == 1000022 && gpiter->numberOfDaughters() == 2)
 	{
-	  if (!firstMother && !secondMother)
+	  nNeutralino++;
+
+	  if ((gpiter->daughter(0)->pdgId() == 22 && gpiter->daughter(1)->pdgId() == 1000039) ||
+	      (gpiter->daughter(1)->pdgId() == 22 && gpiter->daughter(0)->pdgId() == 1000039)) 
 	  {
-	    // set neutralino parameters
-	    genN1mass = gpiter->mass();
-	    genN1E    = gpiter->energy();
-	    genN1pt   = gpiter->pt();
-	    genN1phi  = gpiter->phi();
-	    genN1eta  = gpiter->eta();
-	    
-	    // set photon daughter stuff
-	    int phdaughter = -1; // determine which one is the photon daughter
-	    if      (gpiter->daughter(0)->pdgId() == 22) {phdaughter = 0;}
-	    else if (gpiter->daughter(1)->pdgId() == 22) {phdaughter = 1;}
-
-	    genph1E    = gpiter->daughter(phdaughter)->energy();
-	    genph1pt   = gpiter->daughter(phdaughter)->pt();
-	    genph1phi  = gpiter->daughter(phdaughter)->phi();
-	    genph1eta  = gpiter->daughter(phdaughter)->eta();
-
-	    // check for a reco match!
-	    if (photonsH.isValid()) // standard check
+	    if (!firstMother && !secondMother)
 	    {
-	      int iph = 0;
-	      for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector 
-	      {
-		const float tmpphi = phiter->phi();
-		const float tmpeta = phiter->eta();
-		
-		if (deltaR(genph1phi,genph1eta,tmpphi,tmpeta) < 0.3) {genph1match = iph; break;}
+	      nNeutoPhGr++;
 
-		iph++;
-	      } // end loop over reco photons
-	    } // end check for reco match
+	      // set neutralino parameters
+	      genN1mass = gpiter->mass();
+	      genN1E    = gpiter->energy();
+	      genN1pt   = gpiter->pt();
+	      genN1phi  = gpiter->phi();
+	      genN1eta  = gpiter->eta();
 	    
-	    int grdaughter = -1; // determine which one is the gravitino
-	    if      (gpiter->daughter(0)->pdgId() == 1000039) {grdaughter = 0;}
-	    else if (gpiter->daughter(1)->pdgId() == 1000039) {grdaughter = 1;}
+	      // set photon daughter stuff
+	      int phdaughter = -1; // determine which one is the photon daughter
+	      if      (gpiter->daughter(0)->pdgId() == 22) {phdaughter = 0;}
+	      else if (gpiter->daughter(1)->pdgId() == 22) {phdaughter = 1;}
 
-	    gengr1E    = gpiter->daughter(grdaughter)->energy();
-	    gengr1pt   = gpiter->daughter(grdaughter)->pt();
-	    gengr1phi  = gpiter->daughter(grdaughter)->phi();
-	    gengr1eta  = gpiter->daughter(grdaughter)->eta();
+	      genph1E    = gpiter->daughter(phdaughter)->energy();
+	      genph1pt   = gpiter->daughter(phdaughter)->pt();
+	      genph1phi  = gpiter->daughter(phdaughter)->phi();
+	      genph1eta  = gpiter->daughter(phdaughter)->eta();
 
-	    // set this to ensure not to overwrite first mother info
-	    firstMother = true;
-	  } // end block over first matched neutralino
-	  else if (firstMother && !secondMother)
-	  {
-	    // set neutralino parameters
-	    genN2mass = gpiter->mass();
-	    genN2E    = gpiter->energy();
-	    genN2pt   = gpiter->pt();
-	    genN2phi  = gpiter->phi();
-	    genN2eta  = gpiter->eta();
+	      // check for a reco match!
+	      if (photonsH.isValid()) // standard check
+              {
+		int iph = 0;
+		for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector 
+	        {
+		  const float tmpphi = phiter->phi();
+		  const float tmpeta = phiter->eta();
+		  
+		  if (deltaR(genph1phi,genph1eta,tmpphi,tmpeta) < 0.3) {genph1match = iph; break;}
+		  
+		  iph++;
+		} // end loop over reco photons
+	      } // end check for reco match
 	    
-	    // set photon daughter stuff
-	    int phdaughter = -1; // determine which one is the photon daughter
-	    if      (gpiter->daughter(0)->pdgId() == 22) {phdaughter = 0;}
-	    else if (gpiter->daughter(1)->pdgId() == 22) {phdaughter = 1;}
-
-	    genph2E    = gpiter->daughter(phdaughter)->energy();
-	    genph2pt   = gpiter->daughter(phdaughter)->pt();
-	    genph2phi  = gpiter->daughter(phdaughter)->phi();
-	    genph2eta  = gpiter->daughter(phdaughter)->eta();
-
-	    // check for a reco match!
-	    if (photonsH.isValid()) // standard check
+	      int grdaughter = -1; // determine which one is the gravitino
+	      if      (gpiter->daughter(0)->pdgId() == 1000039) {grdaughter = 0;}
+	      else if (gpiter->daughter(1)->pdgId() == 1000039) {grdaughter = 1;}
+	      
+	      gengr1E    = gpiter->daughter(grdaughter)->energy();
+	      gengr1pt   = gpiter->daughter(grdaughter)->pt();
+	      gengr1phi  = gpiter->daughter(grdaughter)->phi();
+	      gengr1eta  = gpiter->daughter(grdaughter)->eta();
+	      
+	      // set this to ensure not to overwrite first mother info
+	      firstMother = true;
+	    } // end block over first matched neutralino -> photon + gravitino
+	    else if (firstMother && !secondMother)
 	    {
-	      int iph = 0;
-	      for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector 
+	      nNeutoPhGr++;
+
+	      // set neutralino parameters
+	      genN2mass = gpiter->mass();
+	      genN2E    = gpiter->energy();
+	      genN2pt   = gpiter->pt();
+	      genN2phi  = gpiter->phi();
+	      genN2eta  = gpiter->eta();
+	      
+	      // set photon daughter stuff
+	      int phdaughter = -1; // determine which one is the photon daughter
+	      if      (gpiter->daughter(0)->pdgId() == 22) {phdaughter = 0;}
+	      else if (gpiter->daughter(1)->pdgId() == 22) {phdaughter = 1;}
+	      
+	      genph2E    = gpiter->daughter(phdaughter)->energy();
+	      genph2pt   = gpiter->daughter(phdaughter)->pt();
+	      genph2phi  = gpiter->daughter(phdaughter)->phi();
+	      genph2eta  = gpiter->daughter(phdaughter)->eta();
+	      
+	      // check for a reco match!
+	      if (photonsH.isValid()) // standard check
 	      {
-		const float tmpphi = phiter->phi();
-		const float tmpeta = phiter->eta();
-		
-		if (deltaR(genph2phi,genph2eta,tmpphi,tmpeta) < 0.3) {genph2match = iph; break;}
-
-		iph++;
-	      } // end loop over reco photons
-	    } // end check for reco match
-	    
-	    int grdaughter = -1; // determine which one is the gravitino
-	    if      (gpiter->daughter(0)->pdgId() == 1000039) {grdaughter = 0;}
-	    else if (gpiter->daughter(1)->pdgId() == 1000039) {grdaughter = 1;}
-
-	    gengr2E    = gpiter->daughter(grdaughter)->energy();
-	    gengr2pt   = gpiter->daughter(grdaughter)->pt();
-	    gengr2phi  = gpiter->daughter(grdaughter)->phi();
-	    gengr2eta  = gpiter->daughter(grdaughter)->eta();
-
-	    // set this to ensure not to overwrite first mother info
-	    secondMother = true;
-	  } // end block over second matched neutralino
-	} // end conditional over matching
+		int iph = 0;
+		for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector 
+		{
+		  const float tmpphi = phiter->phi();
+		  const float tmpeta = phiter->eta();
+		  
+		  if (deltaR(genph2phi,genph2eta,tmpphi,tmpeta) < 0.3) {genph2match = iph; break;}
+		  
+		  iph++;
+		} // end loop over reco photons
+	      } // end check for reco match
+	      
+	      int grdaughter = -1; // determine which one is the gravitino
+	      if      (gpiter->daughter(0)->pdgId() == 1000039) {grdaughter = 0;}
+	      else if (gpiter->daughter(1)->pdgId() == 1000039) {grdaughter = 1;}
+	      
+	      gengr2E    = gpiter->daughter(grdaughter)->energy();
+	      gengr2pt   = gpiter->daughter(grdaughter)->pt();
+	      gengr2phi  = gpiter->daughter(grdaughter)->phi();
+	      gengr2eta  = gpiter->daughter(grdaughter)->eta();
+	      
+	      // set this to ensure not to overwrite first mother info
+	      secondMother = true;
+	    } // end block over second matched neutralino -> photon + gravitino
+	  } // end conditional over matching daughter ids
+	} // end conditional over neutralino id
       } // end loop over gen particles
     } // end check for gen particles
 
@@ -267,7 +277,6 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     // Gen Jets info //
     //               //
     ///////////////////
-    ngenjets = -9999;
     PhotonDump::ClearGenJetBranches();
     if (genjetsH.isValid()) // make sure gen particles exist
     {
@@ -286,7 +295,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  int ijet = 0;
 	  for (std::vector<pat::Jet>::const_iterator jetiter = jetsH->begin(); jetiter != jetsH->end(); ++jetiter) // loop over reco jets for match
 	  {
-	    if (deltaR(gjetiter->phi(),gjetiter->eta(),jetiter->phi(),jetiter->eta()) < 0.3) // deltaR matching conditional
+	    if (deltaR(gjetiter->phi(),gjetiter->eta(),jetiter->phi(),jetiter->eta()) < 0.4) // deltaR matching conditional
 	    {
 	      genjetmatch[igjet] = ijet;
 	      break;
@@ -299,13 +308,12 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     } // end check over genjets
   } // end block over isMC
 
-  /////////////////
-  //             //   
-  // Vertex info //
-  //             //
-  /////////////////
-  nvtx = -9999; 
-  vtxX = -9999.f; vtxY = -9999.f; vtxZ = -9999.f;
+  /////////////////////////
+  //                     //   
+  // Primary Vertex info //
+  //                     //
+  /////////////////////////
+  PhotonDump::InitializePVBranches();
   if (verticesH.isValid()) 
   {
     nvtx = verticesH->size();
@@ -320,17 +328,33 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // Type1 PF Met //
   //              //
   //////////////////
-  t1pfmet      = -9999.f;
-  t1pfmetphi   = -9999.f;
-  t1pfmeteta   = -9999.f;
-  t1pfmetsumEt = -9999.f;
+  PhotonDump::InitializeMETBranches();
   if (metsH.isValid())
   {
     const pat::MET & t1pfMET = (*metsH)[0];
-    t1pfmet      = t1pfMET.pt();
-    t1pfmetphi   = t1pfMET.phi();
-    t1pfmeteta   = t1pfMET.eta();
-    t1pfmetsumEt = t1pfMET.sumEt();
+
+    // Type1 PF MET (corrected)
+    t1pfMETpt    = t1pfMET.pt();
+    t1pfMETphi   = t1pfMET.phi();
+    t1pfMETsumEt = t1pfMET.sumEt();
+
+    // T1PF MET Uncorrected
+    t1pfMETuncorpt    = t1pfMET.pt();
+    t1pfMETuncorphi   = t1pfMET.phi();
+    t1pfMETuncorsumEt = t1pfMET.sumEt();
+
+    // T1PF MET CaloMET
+    t1pfMETcalopt    = t1pfMET.pt();
+    t1pfMETcalophi   = t1pfMET.phi();
+    t1pfMETcalosumEt = t1pfMET.sumEt();
+
+    if (isMC)
+    {
+      // GEN MET 
+      t1pfMETgenMETpt    = t1pfMET.genMET()->pt();
+      t1pfMETgenMETphi   = t1pfMET.genMET()->phi();
+      t1pfMETgenMETsumEt = t1pfMET.genMET()->sumEt();
+    }
   }
 
   /////////////////////////
@@ -338,7 +362,6 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // Jets (AK4 standard) //
   //                     //
   /////////////////////////
-  njets = -9999;
   PhotonDump::ClearJetBranches();
   if (jetsH.isValid()) // check to make sure reco jets exist
   {
@@ -371,7 +394,6 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // Reco Photons //
   //              //
   //////////////////
-  nphotons = -9999;
   PhotonDump::ClearRecoPhotonBranches();
   if (photonsH.isValid()) // standard handle check
   {
@@ -479,6 +501,8 @@ void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &
   
   for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter) // loop over gen particles
   {
+    if (gpiter->pdgId() != 1000022) continue;
+
     std::cout << "particle id: " << gpiter->pdgId() << " (" << gpiter->status() << ")" << std::endl;
     
     // dump mothers first
@@ -501,9 +525,22 @@ void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &
   std::cout << "---------------------------------" << std::endl << std::endl;
 }
 
+void PhotonDump::InitializeGenEvtBranches()
+{
+  genwgt = -9999.f;
+}
+
+void PhotonDump::InitializeGenPUBranches()
+{
+  genpuobs = -9999; genputrue = -9999;
+}
+
 void PhotonDump::InitializeGenParticleBranches()
 {
   // Gen particle info
+  nNeutralino = -9999;
+  nNeutoPhGr  = -9999;
+
   genN1mass = -9999.f; genN1E = -9999.f; genN1pt = -9999.f; genN1phi = -9999.f; genN1eta = -9999.f;
   genph1E = -9999.f; genph1pt = -9999.f; genph1phi = -9999.f; genph1eta = -9999.f;
   genph1match = -9999;
@@ -517,6 +554,8 @@ void PhotonDump::InitializeGenParticleBranches()
 
 void PhotonDump::ClearGenJetBranches()
 {
+  ngenjets = -9999;
+
   genjetE.clear();
   genjetpt.clear();
   genjetphi.clear();
@@ -545,8 +584,28 @@ void PhotonDump::InitializeGenJetBranches()
   }
 }
 
+void PhotonDump::InitializePVBranches()
+{
+  nvtx = -9999; 
+  vtxX = -9999.f; vtxY = -9999.f; vtxZ = -9999.f;
+}
+
+void PhotonDump::InitializeMETBranches()
+{
+  t1pfMETpt      = -9999.f; t1pfMETphi      = -9999.f; t1pfMETsumEt      = -9999.f;
+  t1pfMETuncorpt = -9999.f; t1pfMETuncorphi = -9999.f; t1pfMETuncorsumEt = -9999.f;
+  t1pfMETcalopt  = -9999.f; t1pfMETcalophi  = -9999.f; t1pfMETcalosumEt  = -9999.f;
+ 
+  if (isMC)
+  {
+    t1pfMETgenMETpt = -9999.f; t1pfMETgenMETphi = -9999.f; t1pfMETgenMETsumEt = -9999.f;
+  }
+}
+
 void PhotonDump::ClearJetBranches()
 {
+  njets = -9999;
+
   jetE.clear();
   jetpt.clear();
   jetphi.clear();
@@ -575,6 +634,8 @@ void PhotonDump::InitializeJetBranches()
 
 void PhotonDump::ClearRecoPhotonBranches()
 {
+  nphotons = -9999;
+
   phmatch.clear();
   phVID.clear();
 
@@ -681,49 +742,55 @@ void PhotonDump::beginJob()
   tree->Branch("run"                  , &run                  , "run/I");
   tree->Branch("lumi"                 , &lumi                 , "lumi/I");
   
-  // Generator inf
-  tree->Branch("genwgt"               , &genwgt               , "genwgt/F");
-  tree->Branch("genpuobs"             , &genpuobs             , "genpuobs/I");
-  tree->Branch("genputrue"            , &genputrue            , "genputrue/I");
+  if (isMC)
+  {
+    // Generator inf
+    tree->Branch("genwgt"               , &genwgt               , "genwgt/F");
+    tree->Branch("genpuobs"             , &genpuobs             , "genpuobs/I");
+    tree->Branch("genputrue"            , &genputrue            , "genputrue/I");
 
-  // Gen particle info
-  tree->Branch("genN1mass"            , &genN1mass            , "genN1mass/F");
-  tree->Branch("genN1E"               , &genN1E               , "genN1E/F");
-  tree->Branch("genN1pt"              , &genN1pt              , "genN1pt/F");
-  tree->Branch("genN1phi"             , &genN1phi             , "genN1phi/F");
-  tree->Branch("genN1eta"             , &genN1eta             , "genN1eta/F");
-  tree->Branch("genph1E"              , &genph1E              , "genph1E/F");
-  tree->Branch("genph1pt"             , &genph1pt             , "genph1pt/F");
-  tree->Branch("genph1phi"            , &genph1phi            , "genph1phi/F");
-  tree->Branch("genph1eta"            , &genph1eta            , "genph1eta/F");
-  tree->Branch("genph1match"          , &genph1match          , "genph1match/I");
-  tree->Branch("gengr1E"              , &gengr1E              , "gengr1E/F");
-  tree->Branch("gengr1pt"             , &gengr1pt             , "gengr1pt/F");
-  tree->Branch("gengr1phi"            , &gengr1phi            , "gengr1phi/F");
-  tree->Branch("gengr1eta"            , &gengr1eta            , "gengr1eta/F");
+    // Gen particle info
+    tree->Branch("nNeutralino"          , &nNeutralino          , "nNeutralino/I");
+    tree->Branch("nNeutoPhGr"           , &nNeutoPhGr           , "nNeutoPhGr/I");
 
-  tree->Branch("genN2mass"            , &genN2mass            , "genN2mass/F");
-  tree->Branch("genN2E"               , &genN2E               , "genN2E/F");
-  tree->Branch("genN2pt"              , &genN2pt              , "genN2pt/F");
-  tree->Branch("genN2phi"             , &genN2phi             , "genN2phi/F");
-  tree->Branch("genN2eta"             , &genN2eta             , "genN2eta/F");
-  tree->Branch("genph2E"              , &genph2E              , "genph2E/F");
-  tree->Branch("genph2pt"             , &genph2pt             , "genph2pt/F");
-  tree->Branch("genph2phi"            , &genph2phi            , "genph2phi/F");
-  tree->Branch("genph2eta"            , &genph2eta            , "genph2eta/F");
-  tree->Branch("genph2match"          , &genph2match          , "genph2match/I");
-  tree->Branch("gengr2E"              , &gengr2E              , "gengr2E/F");
-  tree->Branch("gengr2pt"             , &gengr2pt             , "gengr2pt/F");
-  tree->Branch("gengr2phi"            , &gengr2phi            , "gengr2phi/F");
-  tree->Branch("gengr2eta"            , &gengr2eta            , "gengr2eta/F");
+    tree->Branch("genN1mass"            , &genN1mass            , "genN1mass/F");
+    tree->Branch("genN1E"               , &genN1E               , "genN1E/F");
+    tree->Branch("genN1pt"              , &genN1pt              , "genN1pt/F");
+    tree->Branch("genN1phi"             , &genN1phi             , "genN1phi/F");
+    tree->Branch("genN1eta"             , &genN1eta             , "genN1eta/F");
+    tree->Branch("genph1E"              , &genph1E              , "genph1E/F");
+    tree->Branch("genph1pt"             , &genph1pt             , "genph1pt/F");
+    tree->Branch("genph1phi"            , &genph1phi            , "genph1phi/F");
+    tree->Branch("genph1eta"            , &genph1eta            , "genph1eta/F");
+    tree->Branch("genph1match"          , &genph1match          , "genph1match/I");
+    tree->Branch("gengr1E"              , &gengr1E              , "gengr1E/F");
+    tree->Branch("gengr1pt"             , &gengr1pt             , "gengr1pt/F");
+    tree->Branch("gengr1phi"            , &gengr1phi            , "gengr1phi/F");
+    tree->Branch("gengr1eta"            , &gengr1eta            , "gengr1eta/F");
+
+    tree->Branch("genN2mass"            , &genN2mass            , "genN2mass/F");
+    tree->Branch("genN2E"               , &genN2E               , "genN2E/F");
+    tree->Branch("genN2pt"              , &genN2pt              , "genN2pt/F");
+    tree->Branch("genN2phi"             , &genN2phi             , "genN2phi/F");
+    tree->Branch("genN2eta"             , &genN2eta             , "genN2eta/F");
+    tree->Branch("genph2E"              , &genph2E              , "genph2E/F");
+    tree->Branch("genph2pt"             , &genph2pt             , "genph2pt/F");
+    tree->Branch("genph2phi"            , &genph2phi            , "genph2phi/F");
+    tree->Branch("genph2eta"            , &genph2eta            , "genph2eta/F");
+    tree->Branch("genph2match"          , &genph2match          , "genph2match/I");
+    tree->Branch("gengr2E"              , &gengr2E              , "gengr2E/F");
+    tree->Branch("gengr2pt"             , &gengr2pt             , "gengr2pt/F");
+    tree->Branch("gengr2phi"            , &gengr2phi            , "gengr2phi/F");
+    tree->Branch("gengr2eta"            , &gengr2eta            , "gengr2eta/F");
   
-  // GenJet Info
-  tree->Branch("ngenjets"             , &ngenjets             , "ngenjets/I");
-  tree->Branch("genjetE"              , &genjetE);
-  tree->Branch("genjetpt"             , &genjetpt);
-  tree->Branch("genjetphi"            , &genjetphi);
-  tree->Branch("genjeteta"            , &genjeteta);
-  tree->Branch("genjetmatch"          , &genjetmatch);
+    // GenJet Info
+    tree->Branch("ngenjets"             , &ngenjets             , "ngenjets/I");
+    tree->Branch("genjetE"              , &genjetE);
+    tree->Branch("genjetpt"             , &genjetpt);
+    tree->Branch("genjetphi"            , &genjetphi);
+    tree->Branch("genjeteta"            , &genjeteta);
+    tree->Branch("genjetmatch"          , &genjetmatch);
+  }
 
   // Vertex info
   tree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");
@@ -732,11 +799,23 @@ void PhotonDump::beginJob()
   tree->Branch("vtxZ"                 , &vtxZ                 , "vtxZ/F");
 
   // MET info
-  tree->Branch("t1pfmet"              , &t1pfmet              , "t1pfmet/F");
-  tree->Branch("t1pfmetphi"           , &t1pfmetphi           , "t1pfmetphi/F");
-  tree->Branch("t1pfmeteta"           , &t1pfmeteta           , "t1pfmeteta/F");
-  tree->Branch("t1pfmetsumEt"         , &t1pfmetsumEt         , "t1pfmetsumEt/F");
+  tree->Branch("t1pfMETpt"            , &t1pfMETpt            , "t1pfMETpt/F");
+  tree->Branch("t1pfMETphi"           , &t1pfMETphi           , "t1pfMETphi/F");
+  tree->Branch("t1pfMETsumEt"         , &t1pfMETsumEt         , "t1pfMETsumEt/F");
+  tree->Branch("t1pfMETuncorpt"       , &t1pfMETuncorpt       , "t1pfMETuncorpt/F");
+  tree->Branch("t1pfMETuncorphi"      , &t1pfMETuncorphi      , "t1pfMETuncorphi/F");
+  tree->Branch("t1pfMETuncorsumEt"    , &t1pfMETuncorsumEt    , "t1pfMETuncorsumEt/F");
+  tree->Branch("t1pfMETcalopt"        , &t1pfMETcalopt        , "t1pfMETcalopt/F");
+  tree->Branch("t1pfMETcalophi"       , &t1pfMETcalophi       , "t1pfMETcalophi/F");
+  tree->Branch("t1pfMETcalosumEt"     , &t1pfMETcalosumEt     , "t1pfMETcalosumEt/F");
   
+  if (isMC)
+  {
+    tree->Branch("t1pfMETgenMETpt"      , &t1pfMETgenMETpt      , "t1pfMETgenMETpt/F");
+    tree->Branch("t1pfMETgenMETphi"     , &t1pfMETgenMETphi     , "t1pfMETgenMETphi/F");
+    tree->Branch("t1pfMETgenMETsumEt"   , &t1pfMETgenMETsumEt   , "t1pfMETgenMETsumEt/F");
+  }
+
   // Jet Info
   tree->Branch("njets"                , &njets                , "njets/I");
   tree->Branch("jetE"                 , &jetE);

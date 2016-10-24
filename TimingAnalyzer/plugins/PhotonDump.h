@@ -67,8 +67,16 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   explicit PhotonDump(const edm::ParameterSet&);
   ~PhotonDump();
 
+  void InitializeGenEvtBranches();
+
+  void InitializeGenPUBranches();
+
   void DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &);
   void InitializeGenParticleBranches();
+
+  void InitializePVBranches();
+
+  void InitializeMETBranches();
 
   void ClearGenJetBranches();
   void InitializeGenJetBranches();
@@ -135,6 +143,8 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   int genpuobs, genputrue;
 
   // Gen particle info
+  int nNeutralino, nNeutoPhGr;
+
   float genN1mass, genN1E, genN1pt, genN1phi, genN1eta;
   float genph1E, genph1pt, genph1phi, genph1eta;
   int genph1match;
@@ -145,24 +155,28 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   int genph2match;
   float gengr2E, gengr2pt, gengr2phi, gengr2eta;
 
-  // jets
+  // gen jets
+  int ngenjets;
   std::vector<int> genjetmatch;
   std::vector<float> genjetE, genjetpt, genjetphi, genjeteta;
 
-  // object counts
-  int ngenjets, nvtx, njets, nphotons;
-
   // vertices
+  int nvtx;
   float vtxX, vtxY, vtxZ;
 
   // MET
-  float t1pfmet, t1pfmetphi, t1pfmeteta, t1pfmetsumEt;
+  float t1pfMETpt,       t1pfMETphi,       t1pfMETsumEt;
+  float t1pfMETuncorpt,  t1pfMETuncorphi,  t1pfMETuncorsumEt;
+  float t1pfMETcalopt,   t1pfMETcalophi,   t1pfMETcalosumEt;
+  float t1pfMETgenMETpt, t1pfMETgenMETphi, t1pfMETgenMETsumEt;
 
   // jets
+  int njets;
   std::vector<int> jetmatch;
   std::vector<float> jetE, jetpt, jetphi, jeteta;
 
   // photon info
+  int nphotons;
   std::vector<int> phmatch, phVID;
   std::vector<float> phE, phpt, phphi, pheta;
 

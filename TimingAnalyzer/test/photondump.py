@@ -74,6 +74,7 @@ if not options.isMC :
 else:
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 #			'file:/afs/cern.ch/user/k/kmcdermo/private/dispho/CMSSW_8_0_20/src/Timing/TimingAnalyzer/tmp/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_wTIMING.root'
+#			'file:/afs/cern.ch/user/k/kmcdermo/private/dispho/CMSSW_8_0_20/src/Timing/TimingAnalyzer/tmp/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD.root'
 			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2210_step3_wTIMING/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161021_204634/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_1.root',
 			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2210_step3_wTIMING/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161021_204634/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_10.root',
 			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2210_step3_wTIMING/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161021_204634/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_11.root',
