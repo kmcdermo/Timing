@@ -21,6 +21,12 @@ void runPhotonPlots()
 
   gROOT->LoadMacro("PlotPhotons.cc++g");
 
-  PlotPhotons photonPlots("input/photondump.root","output",false,35.f,true,100.f,true,"medium",true,1.f,true);
+  // config is:
+  // filename, isMC, outdir, 
+  // applyjetptcut, jetptcut, applyphptcut, phptcut,
+  // applyphvidcut, phvid, applyrhecut, 
+  // applyecalacceptcut
+  
+  PlotPhotons photonPlots("input/photondump.root",true,"output",false,35.f,true,100.f,true,"medium",true,1.f,true);
   photonPlots.DoPlots();
 }

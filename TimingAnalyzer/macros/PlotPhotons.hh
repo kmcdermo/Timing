@@ -21,7 +21,7 @@ typedef std::map<TString,Int_t>   VIDMap;
 class PlotPhotons 
 {
 public :
-  PlotPhotons(TString filename, TString outdir = "output", 
+  PlotPhotons(TString filename, Bool_t isMC, TString outdir = "output", 
 	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
 	      Bool_t applyphvidcut = false, TString phvid = "medium", Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
 	      Bool_t applyecalacceptcut = false);
@@ -52,6 +52,7 @@ private :
   // Input vars
   TFile * fInFile; //!pointer to file
   TTree * fInTree; //!pointer to the analyzed TTree
+  Bool_t  fIsMC;
 
   // In routine vars
   UInt_t  fNEvCheck;
@@ -110,26 +111,34 @@ private :
   Float_t gengr2phi;
   Float_t gengr2eta;
   Int_t   ngenjets;
+  vector<int>   * genjetmatch;
   vector<float> * genjetE;
   vector<float> * genjetpt;
   vector<float> * genjetphi;
   vector<float> * genjeteta;
-  vector<int>   * genjetmatch;
   Int_t   nvtx;
   Float_t vtxX;
   Float_t vtxY;
   Float_t vtxZ;
-  Float_t t1pfmet;
-  Float_t t1pfmetphi;
-  Float_t t1pfmeteta;
-  Float_t t1pfmetsumEt;
+  Float_t t1pfMETpt;
+  Float_t t1pfMETphi;
+  Float_t t1pfMETsumEt;
+  Float_t t1pfMETuncorpt;
+  Float_t t1pfMETuncorphi;
+  Float_t t1pfMETuncorsumEt;
+  Float_t t1pfMETcalopt;
+  Float_t t1pfMETcalophi;
+  Float_t t1pfMETcalosumEt;
+  Float_t t1pfMETgenMETpt;
+  Float_t t1pfMETgenMETphi;
+  Float_t t1pfMETgenMETsumEt;
   Int_t   njets;
-  Int_t   nphotons;
+  vector<int>   * jetmatch;
   vector<float> * jetE;
   vector<float> * jetpt;
   vector<float> * jetphi;
   vector<float> * jeteta;
-  vector<int>   * jetmatch;
+  Int_t   nphotons;
   vector<int>   * phmatch;
   vector<int>   * phVID;
   vector<float> * phE;
@@ -186,25 +195,33 @@ private :
   TBranch * b_gengr2phi;   //!
   TBranch * b_gengr2eta;   //!
   TBranch * b_ngenjets;   //!
+  TBranch * b_genjetmatch;   //!
   TBranch * b_genjetE;   //!
   TBranch * b_genjetpt;   //!
   TBranch * b_genjetphi;   //!
   TBranch * b_genjeteta;   //!
-  TBranch * b_genjetmatch;   //!
   TBranch * b_nvtx;   //!
   TBranch * b_vtxX;   //!
   TBranch * b_vtxY;   //!
   TBranch * b_vtxZ;   //!
-  TBranch * b_t1pfmet;   //!
-  TBranch * b_t1pfmetphi;   //!
-  TBranch * b_t1pfmeteta;   //!
-  TBranch * b_t1pfmetsumEt;   //!
+  TBranch * b_t1pfMETpt;   //!
+  TBranch * b_t1pfMETphi;   //!
+  TBranch * b_t1pfMETsumEt;   //!
+  TBranch * b_t1pfMETuncorpt;   //!
+  TBranch * b_t1pfMETuncorphi;   //!
+  TBranch * b_t1pfMETuncorsumEt;   //!
+  TBranch * b_t1pfMETcalopt;   //!
+  TBranch * b_t1pfMETcalophi;   //!
+  TBranch * b_t1pfMETcalosumEt;   //!
+  TBranch * b_t1pfMETgenMETpt;   //!
+  TBranch * b_t1pfMETgenMETphi;   //!
+  TBranch * b_t1pfMETgenMETsumEt;   //!
   TBranch * b_njets;   //!
+  TBranch * b_jetmatch;   //!
   TBranch * b_jetE;   //!
   TBranch * b_jetpt;   //!
   TBranch * b_jetphi;   //!
   TBranch * b_jeteta;   //!
-  TBranch * b_jetmatch;   //!
   TBranch * b_nhotons;   //!
   TBranch * b_phmatch;   //!
   TBranch * b_phVID;   //!
