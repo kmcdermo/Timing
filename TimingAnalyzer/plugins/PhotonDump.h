@@ -36,6 +36,7 @@
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
+#include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 
 // EGamma Tools
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
@@ -188,7 +189,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   
   // all rec hit info
   std::vector<int> phnrhs;
-  std::vector<std::vector<float> > phrhXs, phrhYs, phrhZs, phrhEs, phrhtimes;
+  std::vector<std::vector<float> > phrhXs, phrhYs, phrhZs, phrhEs, phrhdelRs, phrhtimes;
   std::vector<std::vector<int> > phrhIDs;
   std::vector<std::vector<int> > phrhOOTs;
 };
