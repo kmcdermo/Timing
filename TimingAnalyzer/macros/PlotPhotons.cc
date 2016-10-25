@@ -76,6 +76,7 @@ void PlotPhotons::SetupTH1Fs()
   {
     PlotPhotons::SetupGenInfoTH1Fs();
     PlotPhotons::SetupGenParticlesTH1Fs();
+    PlotPhotons::SetupGenParticlesTH2Fs();
     PlotPhotons::SetupGenJetsTH1Fs();
   }
   PlotPhotons::SetupObjectCountsTH1Fs();
@@ -112,6 +113,9 @@ void PlotPhotons::FillGenInfo()
 
 void PlotPhotons::FillGenParticles()
 {
+  fPlots["nNeutralino"]->Fill(nNeutralino);
+  fPlots["nNeutoPhGr"]->Fill(nNeutoPhGr);
+
   fPlots["genN1mass"]->Fill(genN1mass);
   fPlots["genN1E"]->Fill(genN1E);
   fPlots["genN1pt"]->Fill(genN1pt);
@@ -139,6 +143,8 @@ void PlotPhotons::FillGenParticles()
   fPlots["gengr2pt"]->Fill(gengr2pt);
   fPlots["gengr2phi"]->Fill(gengr2phi);
   fPlots["gengr2eta"]->Fill(gengr2eta);
+
+  fPlots2D["genN1EvsN2E"]->Fill(genN1E,genN2E);
 }
 
 void PlotPhotons::FillGenJets()
@@ -307,6 +313,9 @@ void PlotPhotons::SetupGenInfoTH1Fs()
 
 void PlotPhotons::SetupGenParticlesTH1Fs()
 {
+  fPlots["nNeutralino"] = PlotPhotons::MakeTH1F("nNeutralino","Generator nNeutralino [Max of 2]",3,0.f,3.f,"nNeutralinos","Events","GenParticles");
+  fPlots["nNeutoPhGr"]  = PlotPhotons::MakeTH1F("nNeutoPhGr","Generator n(Neutralino -> Photon + Gravitino) [Max of 2]",3,0.f,3.f,"nNeutoPhGr","Events","GenParticles");
+
   fPlots["genN1mass"] = PlotPhotons::MakeTH1F("genN1mass","Generator Leading Neutralino Mass [GeV]",100,0.f,500.f,"Mass [GeV/c^{2}]","Neutralinos","GenParticles");
   fPlots["genN1E"] = PlotPhotons::MakeTH1F("genN1E","Generator Leading Neutralino E [GeV]",100,0.f,2000.f,"Energy [GeV]","Neutralinos","GenParticles");
   fPlots["genN1pt"] = PlotPhotons::MakeTH1F("genN1pt","Generator Leading p_{T} [GeV/c]",100,0.f,2000.f,"p_{T} [GeV/c]","Neutralinos","GenParticles");
@@ -334,6 +343,11 @@ void PlotPhotons::SetupGenParticlesTH1Fs()
   fPlots["gengr2pt"] = PlotPhotons::MakeTH1F("gengr2pt","Generator Subleading p_{T} [GeV/c]",100,0.f,2000.f,"p_{T} [GeV/c]","Gravitinos","GenParticles");
   fPlots["gengr2phi"] = PlotPhotons::MakeTH1F("gengr2phi","Generator Subleading Gravitino #phi",100,-3.2,3.2,"#phi","Gravitinos","GenParticles");
   fPlots["gengr2eta"] = PlotPhotons::MakeTH1F("gengr2eta","Generator Subleading Gravitino #eta",100,-5.0,5.0,"#eta","Gravitinos","GenParticles");
+}
+
+void PlotPhotons::SetupGenParticlesTH2Fs()
+{
+  fPlots2D["genN1EvsN2E"] = PlotPhotons::MakeTH2F("genN1EvsN2E","Generator Neutralino1 E vs Neutralino2 E [GeV]",100,0.f,2000.f,100,0.f,2000.f,"Neutralino1 Energy [GeV]","Neutralino2 Energy [GeV]","GenParticles");
 }
 
 void PlotPhotons::SetupGenJetsTH1Fs()
@@ -442,6 +456,19 @@ TH1F * PlotPhotons::MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_
   return hist;
 }
 
+TH2F * PlotPhotons::MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString xtitle, TString ytitle, TString subdir)
+{
+  TH2F * hist = new TH2F(hname.Data(),htitle.Data(),nbinsx,xlow,xhigh);
+  hist->SetLineColor(kBlack);
+  hist->GetXaxis()->SetTitle(xtitle.Data());
+  hist->GetYaxis()->SetTitle(ytitle.Data());
+  hist->Sumw2();
+
+  fSubDirs[hname] = subdir;
+
+  return hist;
+}
+
 void PlotPhotons::MakeSubDirs()
 {
   for (TStrMapIter mapiter = fSubDirs.begin(); mapiter != fSubDirs.end(); ++mapiter)
@@ -528,6 +555,8 @@ void PlotPhotons::InitTree()
     fInTree->SetBranchAddress("genwgt", &genwgt, &b_genwgt);
     fInTree->SetBranchAddress("genpuobs", &genpuobs, &b_genpuobs);
     fInTree->SetBranchAddress("genputrue", &genputrue, &b_genputrue);
+    fInTree->SetBranchAddress("nNeutralino", &nNeutralino, &b_nNeutralino);
+    fInTree->SetBranchAddress("nNeutoPhGr", &nNeutoPhGr, &b_nNeutoPhGr);
     fInTree->SetBranchAddress("genN1mass", &genN1mass, &b_genN1mass);
     fInTree->SetBranchAddress("genN1E", &genN1E, &b_genN1E);
     fInTree->SetBranchAddress("genN1pt", &genN1pt, &b_genN1pt);

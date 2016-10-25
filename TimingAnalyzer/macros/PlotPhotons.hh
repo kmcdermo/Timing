@@ -82,6 +82,8 @@ private :
   Float_t genwgt;
   Int_t   genpuobs;
   Int_t   genputrue;
+  Int_t   nNeutralino;
+  Int_t   nNeutoPhGr;
   Float_t genN1mass;
   Float_t genN1E;
   Float_t genN1pt;
@@ -166,6 +168,8 @@ private :
   TBranch * b_genwgt;   //!
   TBranch * b_genpuobs;   //!
   TBranch * b_genputrue;   //!
+  TBranch * b_nNeutralino;
+  TBranch * b_nNeutoPhGr;
   TBranch * b_genN1mass;   //!
   TBranch * b_genN1E;   //!
   TBranch * b_genN1pt;   //!
