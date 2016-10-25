@@ -42,9 +42,6 @@ void OOTRecHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   EcalClusterLazyTools * reducedtools = new EcalClusterLazyTools (iEvent, iSetup, recHitsReducedEBTAG, recHitsReducedEETAG);
   EcalClusterLazyTools * fulltools    = new EcalClusterLazyTools (iEvent, iSetup, recHitsFullEBTAG   , recHitsFullEETAG   );
 
-  // check the photon recHits
-  OOTRecHits::PhotonRecHits(photons,fulltools,reducedtools,barrelGeometry,endcapGeometry);
-
   // Do all the counting!
   OOTRecHits::ReducedToFullEB(reducedtools,fulltools);
   OOTRecHits::ReducedToFullEE(reducedtools,fulltools);
@@ -56,64 +53,6 @@ void OOTRecHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
   delete reducedtools;
   delete fulltools;
-}
-
-void OOTRecHits::PhotonRecHits(std::vector<reco::Photon> & photons, EcalClusterLazyTools *& fulltools, EcalClusterLazyTools *& reducedtools,
-			       const CaloSubdetectorGeometry *& barrelGeometry, const CaloSubdetectorGeometry *& endcapGeometry)
-{  
-  for (std::vector<reco::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter)
-  {
-    if (phiter->pt() < 5.0) continue;
-    
-    phE   = phiter->energy();
-    phpT  = phiter->pt();
-    pheta = phiter->eta();
-    phphi = phiter->phi();
-
-    const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
-    if (phiter->isNonnull())
-    {
-      // save some supercluster info
-      phsceta = el1sc->eta();
-      phscphi = el1sc->phi();
-      phscE   = el1sc->energy();
-      
-      // use seed to get geometry and recHits
-      DetId seedDetId = phsc->seed()->seed(); //seed detid
-      const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
-      const EcalRecHitCollection *recHits = isEB ? reducedtools->getEcalEBRecHitCollection() : reducedtools->getEcalEERecHitCollection();
-      
-      std::unordered_map<uint32_t,int> reducedrhIDMap;
-
-      // loop over all crystals
-      DetIdPairVec hitsAndFractions = phsc->hitsAndFractions(); // all crystals in SC
-      for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) 
-      {
-	DetId recHitId = hafitr->first; // get detid of crystal
-	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
-	if (recHit != recHits->end()) // standard check
-        {
-	  reducedrhIDmap[recHitId.rawId()]++;
-	}
-      }
-
-
-
-      {
-	{
-	  if (seedDetId == recHitId) 
-	  { 
-	    const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
-	    
-	    phrhE = recHit->energy();
-	    float el1rhT = recHit->time();
-	    int  el1rhid = int(recHitId.rawId());
-	  } // check if seed xtal
-	} // make sure recHit id is not the last entry
-      } // end loop over all crystals
-    } // end check over supercluster
-  }
-    
 }
 
 void OOTRecHits::ReducedToFullEB(EcalClusterLazyTools *& reducedtools, EcalClusterLazyTools *& fulltools)
@@ -279,12 +218,6 @@ void OOTRecHits::FullToReducedEE(EcalClusterLazyTools *& fulltools, EcalClusterL
     nFullEE++;
   }
 }
-
-void OOTRecHits::PhotonFullRecHitsEB(EcalClusterLazyTools *& fulltools)
-{  
-  
-} 
-
 
 void OOTRecHits::beginJob() 
 {

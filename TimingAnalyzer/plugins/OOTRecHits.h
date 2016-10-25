@@ -30,7 +30,7 @@
 // DataFormats
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/CaloRecHit/interface/CaloCluster.h"
-#include "DataFormats/CaloRecHit/interface/SuperCluster.h"
+#include "DataFormats/EgammaReco/interface/SuperCluster.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
@@ -66,9 +66,6 @@ public:
   void ReducedToFullEE(EcalClusterLazyTools *&, EcalClusterLazyTools *&);
   void FullToReducedEB(EcalClusterLazyTools *&, EcalClusterLazyTools *&);
   void FullToReducedEE(EcalClusterLazyTools *&, EcalClusterLazyTools *&);
-
-  void PhotonReducedRecHitsEB(EcalClusterLazyTools *&);
-  void PhotonFullRecHitsEB(EcalClusterLazyTools *&);
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
   
