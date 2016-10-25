@@ -480,6 +480,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  phrhYs[iph][irh]    = recHitPos.y();
 	  phrhZs[iph][irh]    = recHitPos.z();
 	  phrhEs[iph][irh]    = recHit->energy();
+	  phrhdelRs[iph][irh] = deltaR(recHitPos.phi(),recHitPos.eta(),phphi[iph],pheta[iph]);
 	  phrhtimes[iph][irh] = recHit->time();
 	  phrhIDs[iph][irh]   = int(rhID);
 	  phrhOOTs[iph][irh]  = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
@@ -509,7 +510,7 @@ void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &
   
   for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter) // loop over gen particles
   {
-    if (gpiter->pdgId() != 1000022) continue;
+    //    if (gpiter->pdgId() != 1000022) continue;
 
     std::cout << "particle id: " << gpiter->pdgId() << " (" << gpiter->status() << ")" << std::endl;
     
@@ -665,6 +666,7 @@ void PhotonDump::ClearRecoPhotonBranches()
   phrhYs.clear(); 
   phrhZs.clear(); 
   phrhEs.clear(); 
+  phrhdelRs.clear(); 
   phrhtimes.clear();
   phrhIDs.clear();
   phrhOOTs.clear();
@@ -693,6 +695,7 @@ void PhotonDump::InitializeRecoPhotonBranches()
   phrhYs.resize(nphotons);
   phrhZs.resize(nphotons);
   phrhEs.resize(nphotons);
+  phrhdelRs.resize(nphotons);
   phrhtimes.resize(nphotons);
   phrhIDs.resize(nphotons);
   phrhOOTs.resize(nphotons);
@@ -726,6 +729,7 @@ void PhotonDump::InitializeRecoRecHitBranches(int iph)
   phrhYs[iph].resize(phnrhs[iph]);
   phrhZs[iph].resize(phnrhs[iph]);
   phrhEs[iph].resize(phnrhs[iph]);
+  phrhdelRs[iph].resize(phnrhs[iph]);
   phrhtimes[iph].resize(phnrhs[iph]);
   phrhIDs[iph].resize(phnrhs[iph]);
   phrhOOTs[iph].resize(phnrhs[iph]);
@@ -736,6 +740,7 @@ void PhotonDump::InitializeRecoRecHitBranches(int iph)
     phrhYs   [iph][irh] = -9999.f;
     phrhZs   [iph][irh] = -9999.f;
     phrhEs   [iph][irh] = -9999.f;
+    phrhdelRs[iph][irh] = -9999.f;
     phrhtimes[iph][irh] = -9999.f;
     phrhIDs  [iph][irh] = -9999;
     phrhOOTs [iph][irh] = -9999;
@@ -855,6 +860,7 @@ void PhotonDump::beginJob()
   tree->Branch("phrhYs"               , &phrhYs);
   tree->Branch("phrhZs"               , &phrhZs);
   tree->Branch("phrhEs"               , &phrhEs);
+  tree->Branch("phrhdelRs"            , &phrhdelRs);
   tree->Branch("phrhtimes"            , &phrhtimes);
   tree->Branch("phrhIDs"              , &phrhIDs);
   tree->Branch("phrhOOTs"             , &phrhOOTs);

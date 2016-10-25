@@ -6,12 +6,16 @@
 #include "TTree.h"
 #include "TString.h"
 #include "TH1F.h"
+#include "TH2F.h"
 
 #include <vector>
 #include <map>
 
 typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator        TH1MapIter;
+
+typedef std::map<TString,TH2F*> TH2Map;
+typedef TH1Map::iterator        TH2MapIter;
 
 typedef std::map<TString,TString> TStrMap;
 typedef TStrMap::iterator         TStrMapIter;
@@ -28,15 +32,16 @@ public :
   ~PlotPhotons();
   void InitTree();
   void DoPlots();
-  void SetupTH1Fs();
-  void SetupGenInfoTH1Fs();
-  void SetupGenParticlesTH1Fs();
-  void SetupGenJetsTH1Fs();
-  void SetupObjectCountsTH1Fs();
-  void SetupMETTH1Fs();
-  void SetupJetsTH1Fs();
-  void SetupRecoPhotonsTH1Fs();
+  void SetupPlots();
+  void SetupGenInfo();
+  void SetupGenParticles();
+  void SetupGenJets();
+  void SetupObjectCounts();
+  void SetupMET();
+  void SetupJets();
+  void SetupRecoPhotons();
   TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
+  TH1F * MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString subdir);
   void EventLoop();
   void FillGenInfo();
   void FillGenParticles();
@@ -47,6 +52,7 @@ public :
   void FillRecoPhotons();
   void MakeSubDirs();
   void OutputTH1Fs();
+  void OutputTH2Fs();
 
 private :
   // Input vars
@@ -57,6 +63,7 @@ private :
   // In routine vars
   UInt_t  fNEvCheck;
   TH1Map  fPlots;
+  TH2Map  fPlots2D;
   TStrMap fSubDirs;
 
   // Config
