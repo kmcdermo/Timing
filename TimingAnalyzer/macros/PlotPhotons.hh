@@ -58,7 +58,7 @@ private :
   // Input vars
   TFile * fInFile; //!pointer to file
   TTree * fInTree; //!pointer to the analyzed TTree
-  Bool_t  fIsMC;
+  const Bool_t  fIsMC;
 
   // In routine vars
   UInt_t  fNEvCheck;
@@ -66,16 +66,16 @@ private :
   TH2Map  fPlots2D;
 
   // Config
-  Bool_t  fApplyJetPtCut;
-  Float_t fJetPtCut;
-  Bool_t  fApplyPhPtCut;
-  Float_t fPhPtCut;
-  Bool_t  fApplyPhVIDCut;
-  TString fPhVID;
-  VIDMap  fPhVIDMap;
-  Bool_t  fApplyrhECut;
-  Float_t frhECut;
-  Bool_t  fApplyECALAcceptCut;
+  const Bool_t  fApplyJetPtCut;
+  const Float_t fJetPtCut;
+  const Bool_t  fApplyPhPtCut;
+  const Float_t fPhPtCut;
+  const Bool_t  fApplyPhVIDCut;
+  const TString fPhVID;
+        VIDMap  fPhVIDMap;
+  const Bool_t  fApplyrhECut;
+  const Float_t frhECut;
+  const Bool_t  fApplyECALAcceptCut;
 
   // Output vars
   TString fOutDir;
