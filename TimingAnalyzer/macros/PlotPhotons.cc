@@ -30,6 +30,8 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isMC, TString outdir,
 
   // output
   // setup outdir name
+  fOutDump = fOutDir; // --> simple directory for dump of plots
+
   if (!fApplyJetPtCut && !applyphptcut && !applyphvidcut && !applyrhecut)
   { 
     fOutDir += "/Inclusive";
@@ -71,11 +73,11 @@ void PlotPhotons::DoPlots()
   PlotPhotons::OutputTH2Fs();
 }
 
-void PlotPhotons::SetupTH1Fs()
+void PlotPhotons::SetupPlots()
 {
   if (fIsMC)
   {
-    PlotPhotons::SetupGenInfo;
+    PlotPhotons::SetupGenInfo();
     PlotPhotons::SetupGenParticles();
     PlotPhotons::SetupGenJets();
   }
@@ -201,13 +203,13 @@ void PlotPhotons::FillMET()
 {
   fPlots["t1pfMETpt"]->Fill(t1pfMETpt);
   fPlots["t1pfMETphi"]->Fill(t1pfMETphi);
-  fPlots["t1pfMETsumEt"]->Fill(t1pfMETuncorsumEt);
+  fPlots["t1pfMETsumEt"]->Fill(t1pfMETsumEt);
   fPlots["t1pfMETuncorpt"]->Fill(t1pfMETuncorpt);
   fPlots["t1pfMETuncorphi"]->Fill(t1pfMETuncorphi);
-  fPlots["t1pfMETcalosumEt"]->Fill(t1pfMETcalosumEt);
+  fPlots["t1pfMETuncorsumEt"]->Fill(t1pfMETuncorsumEt);
   fPlots["t1pfMETcalopt"]->Fill(t1pfMETcalopt);
   fPlots["t1pfMETcalophi"]->Fill(t1pfMETcalophi);
-  fPlots["t1pfMETcalosumEt"]->Fill(t1pfMETsumEt);
+  fPlots["t1pfMETcalosumEt"]->Fill(t1pfMETcalosumEt);
   if (fIsMC)
   {
     fPlots["t1pfMETgenMETpt"]->Fill(t1pfMETgenMETpt);
@@ -379,7 +381,7 @@ void PlotPhotons::SetupMET()
   fPlots["t1pfMETsumEt"] = PlotPhotons::MakeTH1F("t1pfMETsumEt","Type1 PF MET #Sigma E_{T} [GeV]",100,0.f,2000.f,"#Sigma E_{T} [GeV]","Events","MET");
   fPlots["t1pfMETuncorpt"] = PlotPhotons::MakeTH1F("t1pfMETuncorpt","Type1 PF MET (Raw) [GeV]",100,0.f,2000.f,"MET [GeV]","Events","MET");
   fPlots["t1pfMETuncorphi"] = PlotPhotons::MakeTH1F("t1pfMETuncorphi","Type1 PF MET (Raw) #phi",100,-3.2,3.2,"#phi","Events","MET");
-  fPlots["t1pfMETuncorsumEt"] = PlotPhotons::MakeTH1F("t1pfMETsumEt","Type1 PF MET (Raw) #Sigma E_{T} [GeV]",100,0.f,2000.f,"#Sigma E_{T} [GeV]","Events","MET");
+  fPlots["t1pfMETuncorsumEt"] = PlotPhotons::MakeTH1F("t1pfMETuncorsumEt","Type1 PF MET (Raw) #Sigma E_{T} [GeV]",100,0.f,2000.f,"#Sigma E_{T} [GeV]","Events","MET");
   fPlots["t1pfMETcalopt"] = PlotPhotons::MakeTH1F("t1pfMETcalopt","Type1 PF MET (Calo) [GeV]",100,0.f,2000.f,"MET [GeV]","Events","MET");
   fPlots["t1pfMETcalophi"] = PlotPhotons::MakeTH1F("t1pfMETcalophi","Type1 PF MET (Calo) #phi",100,-3.2,3.2,"#phi","Events","MET");
   fPlots["t1pfMETcalosumEt"] = PlotPhotons::MakeTH1F("t1pfMETcalosumEt","Type1 PF MET (Calo) #Sigma E_{T} [GeV]",100,0.f,2000.f,"#Sigma E_{T} [GeV]","Events","MET");
@@ -508,9 +510,11 @@ void PlotPhotons::OutputTH1Fs()
     // first save as linear, then log
     canv->SetLogy(0);
     canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+    canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
 
     canv->SetLogy(1);
     canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+    canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->first.Data()));
 
     delete canv;
     delete mapiter->second;
@@ -535,11 +539,12 @@ void PlotPhotons::OutputTH2Fs()
     // first save as linear, then log
     canv->SetLogy(0);
     canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+    canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
 
     delete canv;
     delete mapiter->second;
   }
-  fPlots.clear();
+  fPlots2D.clear();
 }
 
 void PlotPhotons::InitTree()
@@ -571,6 +576,7 @@ void PlotPhotons::InitTree()
   phrhYs = 0;
   phrhZs = 0;
   phrhEs = 0;
+  phrhdelRs = 0;
   phrhtimes = 0;
   phrhIDs = 0;
   phrhOOTs = 0;

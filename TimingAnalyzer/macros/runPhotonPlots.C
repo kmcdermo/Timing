@@ -27,6 +27,6 @@ void runPhotonPlots()
   // applyphvidcut, phvid, applyrhecut, 
   // applyecalacceptcut
   
-  PlotPhotons photonPlots("input/photondump.root",true,"output",false,35.f,true,100.f,true,"medium",true,1.f,true);
+  PlotPhotons photonPlots("input/withReReco.root",true,"output/withReReco",true,35.f,true,100.f,true,"medium",true,1.f,true);
   photonPlots.DoPlots();
 }

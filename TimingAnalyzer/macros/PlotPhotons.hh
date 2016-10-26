@@ -15,7 +15,7 @@ typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator        TH1MapIter;
 
 typedef std::map<TString,TH2F*> TH2Map;
-typedef TH1Map::iterator        TH2MapIter;
+typedef TH2Map::iterator        TH2MapIter;
 
 typedef std::map<TString,TString> TStrMap;
 typedef TStrMap::iterator         TStrMapIter;
@@ -41,7 +41,7 @@ public :
   void SetupJets();
   void SetupRecoPhotons();
   TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
-  TH1F * MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString subdir);
+  TH2F * MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString subdir);
   void EventLoop();
   void FillGenInfo();
   void FillGenParticles();
@@ -64,7 +64,6 @@ private :
   UInt_t  fNEvCheck;
   TH1Map  fPlots;
   TH2Map  fPlots2D;
-  TStrMap fSubDirs;
 
   // Config
   Bool_t  fApplyJetPtCut;
@@ -80,6 +79,8 @@ private :
 
   // Output vars
   TString fOutDir;
+  TString fOutDump;
+  TStrMap fSubDirs;
   TFile * fOutFile;
 
   // Declaration of leaf types
