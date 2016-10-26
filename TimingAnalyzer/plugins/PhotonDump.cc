@@ -17,6 +17,7 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   photonsTag(iConfig.getParameter<edm::InputTag>("photons")),  
 
   //recHits
+  dumpRHs(iConfig.existsAs<bool>("dumpRHs") ? iConfig.getParameter<bool>("dumpRHs") : false),
   recHitCollectionEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEB" ))),
   recHitCollectionEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEE" ))),
 
@@ -451,6 +452,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
 	// all rechits in superclusters
 	const DetIdPairVec hitsAndFractions = phsc->hitsAndFractions();
+	if (dumpRHs) PhotonDump::DumpRecHitInfo(iph,hitsAndFractions,recHits);
 
 	for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) // loop over all rec hits in SC
 	{
@@ -464,7 +466,6 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       
 	phnrhs[iph] = phrhIDmap.size();
 	if (phnrhs[iph] > 0) PhotonDump::InitializeRecoRecHitBranches(iph);
-
 	int irh = 0;
 	for (uiiumap::const_iterator rhiter = phrhIDmap.begin(); rhiter != phrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
         {
@@ -480,7 +481,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  phrhYs[iph][irh]    = recHitPos.y();
 	  phrhZs[iph][irh]    = recHitPos.z();
 	  phrhEs[iph][irh]    = recHit->energy();
-	  phrhdelRs[iph][irh] = deltaR(recHitPos.phi(),recHitPos.eta(),phphi[iph],pheta[iph]);
+	  phrhdelRs[iph][irh] = deltaR(float(recHitPos.phi()),recHitPos.eta(),phphi[iph],pheta[iph]);
 	  phrhtimes[iph][irh] = recHit->time();
 	  phrhIDs[iph][irh]   = int(rhID);
 	  phrhOOTs[iph][irh]  = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
@@ -531,6 +532,39 @@ void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &
     if (gpiter->numberOfDaughters() != 0) std::cout << std::endl;
   } // end loop over gen particles
 
+  std::cout << "---------------------------------" << std::endl << std::endl;
+}
+
+void PhotonDump::DumpRecHitInfo(int iph, const DetIdPairVec & hitsAndFractions,	const EcalRecHitCollection *& recHits)
+{
+  std::cout << "event: " << event << std::endl;
+  if (phE[iph] > 100.f && phmatch[iph] > 0 && phVID[iph] >= 2)
+  { 
+    if (std::abs(pheta[iph]) < 2.5 && !(std::abs(pheta[iph]) > 1.4442 && std::abs(pheta[iph]) < 1.566))  
+    {
+      if (phnrhs[iph] == 0)
+      {
+	const int hafsize = hitsAndFractions.size();
+	const float scphi = phi(phscX[iph],phscY[iph]);
+	const float sceta = eta(phscX[iph],phscY[iph],phscZ[iph]);
+	std::cout <<  "phE: " << phE[iph]   << " phphi: " << phphi[iph] << " pheta: " << pheta[iph] << std::endl;
+	std::cout << " scE: " << phscE[iph] << " scphi: " << scphi      << " sceta: " << sceta      << " haf.size()= " << hafsize << std::endl;
+	if (hafsize > 0) std::cout << " ids: ";
+	uiiumap tmpmap;
+	for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) // loop over all rec hits in SC
+        {
+	  const DetId recHitId = hafitr->first; // get detid of crystal
+	  std::cout << recHitId.rawId() << " ";
+	  EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
+	  if (recHit != recHits->end()) // standard check
+          { 
+	    tmpmap[recHitId.rawId()]++;
+	  } // end standard check recHit
+	} // end loop over hits and fractions
+	if (hafsize > 0) std::cout << " ids: ";
+      } // end check for nrhs == 0
+    } // ensure within confines of ECAL
+  } // gen matched photon (pt > 100, medium)
   std::cout << "---------------------------------" << std::endl << std::endl;
 }
 

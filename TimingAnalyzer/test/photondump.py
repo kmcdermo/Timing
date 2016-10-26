@@ -5,6 +5,11 @@ import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
+## dump rec hit info
+options.register (
+	'dumpRHs',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to dump rec hits info');
+
 ## data or MC options
 options.register (
 	'isMC',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
@@ -42,6 +47,7 @@ if options.isMC and 'dataRun2' in options.globalTag:
 	options.globalTag = '80X_mcRun2_asymptotic_2016_miniAODv2_v1'; #otherwise this craps out claiming no calo geometry...
 
 print "##### Settings ######"
+print "Running with dumpRHs             = ",options.dumpRHs
 print "Running with isMC                = ",options.isMC	
 if options.isMC:
 	print "Running with dumpIds             = ",options.dumpIds
@@ -182,6 +188,7 @@ process.tree = cms.EDAnalyzer("PhotonDump",
    tightPhotonID  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-tight"),
    photons        = cms.InputTag("calibratedPhotons"),
    ## ecal recHits			      
+   dumpRHs            = cms.bool(options.dumpRHs),
    recHitCollectionEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitCollectionEE = cms.InputTag("reducedEgamma", "reducedEERecHits")
 )

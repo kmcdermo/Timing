@@ -185,7 +185,7 @@ void PlotPhotons::FillObjectCounts()
   for (int iph = 0; iph < nphotons; iph++)
   { 
     if (fApplyPhPtCut && (*phE)[iph] < fPhPtCut) continue;
-    if (fApplyECALAcceptCut && ((*pheta)[iph] > 2.5 || ((*pheta)[iph]>1.4442 && (*pheta)[iph]<1.566))) continue;
+    if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
     nPhotons++;
     if ( (*phVID)[iph] >= 1 ) nLoosePh++;
     if ( (*phVID)[iph] >= 2 ) nMediumPh++;
@@ -245,7 +245,7 @@ void PlotPhotons::FillRecoPhotons()
   {
     if (fApplyPhPtCut && (*phE)[iph] < fPhPtCut) continue;
     if (fApplyPhVIDCut && (fPhVIDMap[fPhVID] < (*phVID)[iph])) continue;
-    if (fApplyECALAcceptCut && ((*pheta)[iph] > 2.5 || ((*pheta)[iph]>1.4442 && (*pheta)[iph]<1.566))) continue;
+    if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
 
     fPlots["phE"]->Fill((*phE)[iph]);
     fPlots["phpt"]->Fill((*phpt)[iph]);
@@ -663,6 +663,7 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("phrhYs", &phrhYs, &b_phrhYs);
   fInTree->SetBranchAddress("phrhZs", &phrhZs, &b_phrhZs);
   fInTree->SetBranchAddress("phrhEs", &phrhEs, &b_phrhEs);
+  fInTree->SetBranchAddress("phrhdelRs", &phrhdelRs, &b_phrhdelRs);
   fInTree->SetBranchAddress("phrhtimes", &phrhtimes, &b_phrhtimes);
   fInTree->SetBranchAddress("phrhIDs", &phrhIDs, &b_phrhIDs);
   fInTree->SetBranchAddress("phrhOOTs", &phrhOOTs, &b_phrhOOTs);

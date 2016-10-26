@@ -164,6 +164,7 @@ private :
   vector<vector<float> > * phrhYs;
   vector<vector<float> > * phrhZs;
   vector<vector<float> > * phrhEs;
+  vector<vector<float> > * phrhdelRs;
   vector<vector<float> > * phrhtimes;
   vector<vector<int> > * phrhIDs;
   vector<vector<int> > * phrhOOTs;
@@ -250,6 +251,7 @@ private :
   TBranch * b_phrhYs;   //!
   TBranch * b_phrhZs;   //!
   TBranch * b_phrhEs;   //!
+  TBranch * b_phrhdelRs;   //!
   TBranch * b_phrhtimes;   //!
   TBranch * b_phrhIDs;   //!
   TBranch * b_phrhOOTs;   //!
