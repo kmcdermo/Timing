@@ -118,7 +118,7 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	    phfrhIDmap[recHitId.rawId()]++;
   	  } // end standard check recHit
   	} // end loop over hits and fractions
-      
+
   	phnfrhs = phfrhIDmap.size();
   	if (phnfrhs > 0) OOTRecHits::InitializeFullRecHitBranches();
   	int ifrh = 0;
@@ -240,6 +240,14 @@ void OOTRecHits::InitializePhotonBranches()
 
 void OOTRecHits::InitializeFullRecHitBranches()
 {
+  phfrhEs   .resize(phnfrhs);
+  phfrhphis .resize(phnfrhs);
+  phfrhetas .resize(phnfrhs);
+  phfrhdelRs.resize(phnfrhs);
+  phfrhtimes.resize(phnfrhs);
+  phfrhIDs  .resize(phnfrhs);
+  phfrhOOTs .resize(phnfrhs);
+
   for (int irh = 0; irh < phnfrhs; irh++)
   {
     phfrhEs   [irh] = -9999.f;
@@ -254,6 +262,14 @@ void OOTRecHits::InitializeFullRecHitBranches()
 
 void OOTRecHits::InitializeReducedRecHitBranches()
 {
+  phrrhEs   .resize(phnrrhs);
+  phrrhphis .resize(phnrrhs);
+  phrrhetas .resize(phnrrhs);
+  phrrhdelRs.resize(phnrrhs);
+  phrrhtimes.resize(phnrrhs);
+  phrrhIDs  .resize(phnrrhs);
+  phrrhOOTs .resize(phnrrhs);
+
   for (int irh = 0; irh < phnrrhs; irh++)
   {
     phrrhEs   [irh] = -9999.f;
