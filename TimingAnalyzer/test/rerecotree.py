@@ -32,22 +32,6 @@ options.register (
 	'rhEcut',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,
 	'value of recHit energy cut [GeV]');
 
-## make default output filename
-if options.doPhRhs:
-	filename = 'phrhtree'
-	if options.appldelRcut:
-		filename += '_delR'+options.delRcut+'cut'
-elif options.doCount:
-	filename = 'counting'
-	if options.applrhEcut:
-		filename += '_rhE'+options.rhEcut+'cut'
-else:
-	filename = 'rerecotree'
-
-filename += '.root'
-
-print filename
-
 ## processName
 options.register (
 	'processName','TREE',VarParsing.multiplicity.singleton,VarParsing.varType.string,
@@ -65,7 +49,7 @@ options.register (
 
 ## outputFile Name
 options.register (
-	'outputFileName',filename,VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'outputFileName','rerecotree.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
 ## parsing command line arguments
