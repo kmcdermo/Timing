@@ -1,10 +1,14 @@
 #include "OOTRecHits.h"
 
 OOTRecHits::OOTRecHits(const edm::ParameterSet& iConfig): 
-  // which analysis to do
+  // photon rec hit analyis
   doPhRhs(iConfig.existsAs<bool>("doPhRhs") ? iConfig.getParameter<bool>("doPhRhs") : false),
-  doCount(iConfig.existsAs<bool>("doCount") ? iConfig.getParameter<bool>("doCount") : false),
+  // rec hit energy cut
+  applydelRcut(iConfig.existsAs<bool>("applydelRcut") ? iConfig.getParameter<bool>("applydelRcut") : false),
+  delRcut     (iConfig.existsAs<double>("delRcut")    ? iConfig.getParameter<double>("delRcut")    : 1.0),
 
+  // counting analysis
+  doCount(iConfig.existsAs<bool>("doCount") ? iConfig.getParameter<bool>("doCount") : false),
   // rec hit energy cut
   applyrhEcut(iConfig.existsAs<bool>("applyrhEcut") ? iConfig.getParameter<bool>("applyrhEcut") : false),
   rhEcut     (iConfig.existsAs<double>("rhEcut")    ? iConfig.getParameter<double>("rhEcut")    : 1.0),
@@ -114,8 +118,21 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	  const DetId recHitId = hafitr->first; // get detid of crystal
   	  EcalRecHitCollection::const_iterator recHit = frecHits->find(recHitId); // get the underlying rechit
   	  if (recHit != frecHits->end()) // standard check
-          { 
-  	    phfrhIDmap[recHitId.rawId()]++;
+	  {
+	    if (applydelRcut)
+	    {
+	      const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
+	      const float rhphi = recHitPos.phi();
+	      const float rheta = recHitPos.eta();
+	      if (deltaR(rhphi,rheta,phphi,pheta) < delRcut) 
+	      {
+		phfrhIDmap[recHitId.rawId()]++;	    
+	      } // save only if within delR cut
+	    } // applydelRcut block
+	    else
+	    {
+	      phfrhIDmap[recHitId.rawId()]++;	    
+	    } // end block over no check on delR
   	  } // end standard check recHit
   	} // end loop over hits and fractions
 
@@ -164,8 +181,21 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	  EcalRecHitCollection::const_iterator recHit = rrecHits->find(recHitId); // get the underlying rechit
   	  if (recHit != rrecHits->end()) // standard check
           { 
-  	    phrrhIDmap[recHitId.rawId()]++;
-  	  } // end standard check recHit
+	    if (applydelRcut)
+	    {
+	      const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
+	      const float rhphi = recHitPos.phi();
+	      const float rheta = recHitPos.eta();
+	      if (deltaR(rhphi,rheta,phphi,pheta) < delRcut) 
+	      {
+		phrrhIDmap[recHitId.rawId()]++;	    
+	      } // save only if within delR cut
+	    } // applydelRcut block
+	    else
+	    {
+	      phrrhIDmap[recHitId.rawId()]++;	    
+	    } // end block over no check on delR
+	  } // end standard check recHit
   	} // end loop over hits and fractions
       
   	phnrrhs = phrrhIDmap.size();

@@ -10,9 +10,43 @@ options.register (
 	'doPhRhs',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to run photon rec hits analysis');
 
+## apply deltaR cut in photon rechit analysis
+options.register (
+	'applydelRcut',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to apply deltaR cut on rechits to associate to photon');
+
+options.register (
+	'delRcut',0.3,VarParsing.multiplicity.singleton,VarParsing.varType.float,
+	'value of deltaR cut');
+
 options.register (
 	'doCount',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to run rec hit counting between different collections analysis');
+
+## apply rhE cut in couting analysis
+options.register (
+	'applyrhEcut',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to apply energy cut on outer loop over rechits');
+
+options.register (
+	'rhEcut',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,
+	'value of recHit energy cut [GeV]');
+
+## make default output filename
+if options.doPhRhs:
+	filename = 'phrhtree'
+	if options.appldelRcut:
+		filename += '_delR'+options.delRcut+'cut'
+elif options.doCount:
+	filename = 'counting'
+	if options.applrhEcut:
+		filename += '_rhE'+options.rhEcut+'cut'
+else:
+	filename = 'rerecotree'
+
+filename += '.root'
+
+print filename
 
 ## processName
 options.register (
@@ -29,31 +63,25 @@ options.register (
 	'demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to run over only 100k events as a demo');
 
-## apply rhE cut
-options.register (
-	'applyrhEcut',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to apply energy cut on outer loop over rechits');
-
-options.register (
-	'rhEcut',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,
-	'value of recHit energy cut [GeV]');
-
 ## outputFile Name
 options.register (
-	'outputFileName','rerecotree.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'outputFileName',filename,VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
 ## parsing command line arguments
 options.parseArguments()
 
 print "################# Settings ##################"
-print "Running with doPhRhs              = ",options.doPhRhs	
-print "Running with doCount              = ",options.doCount
-print "Running with processName          = ",options.processName	
-print "Running with globalTag            = ",options.globalTag	
-print "Running with demoMode             = ",options.demoMode
-print "Running with applyrhEcut (rhEcut) = ",options.applyrhEcut," (",options.rhEcut,")"
-print "Running with outputFileName       = ",options.outputFileName	
+print "Running with doPhRhs                = ",options.doPhRhs	
+if options.doPhRhs:
+	print "Running with applydelRcut (delRcut) = ",options.applydelRcut," (",options.delRcut,")"
+print "Running with doCount                = ",options.doCount
+if options.doCount:
+	print "Running with applyrhEcut (rhEcut)   = ",options.applyrhEcut," (",options.rhEcut,")"
+print "Running with processName            = ",options.processName	
+print "Running with globalTag              = ",options.globalTag	
+print "Running with demoMode               = ",options.demoMode
+print "Running with outputFileName         = ",options.outputFileName	
 print "#############################################"
 
 ## Define the CMSSW process
@@ -101,13 +129,16 @@ process.TFileService = cms.Service("TFileService",
 # Make the tree 
 process.tree = cms.EDAnalyzer("OOTRecHits",
    ## analysis bools
-   doPhRhs     = cms.bool(options.doPhRhs),
-   doCount     = cms.bool(options.doCount),
+   doPhRhs      = cms.bool(options.doPhRhs),
+   doCount      = cms.bool(options.doCount),
+   ## delta R cut
+   applydelRcut = cms.bool(options.applydelRcut),
+   delRcut      = cms.double(options.delRcut),
    ## rh energy cut
-   applyrhEcut = cms.bool(options.applyrhEcut),
-   rhEcut      = cms.double(options.rhEcut),
+   applyrhEcut  = cms.bool(options.applyrhEcut),
+   rhEcut       = cms.double(options.rhEcut),
    ## photons
-   photons     = cms.InputTag("gedPhotons"),
+   photons      = cms.InputTag("gedPhotons"),
    ## ecal recHits			      
    recHitsReducedEB = cms.InputTag("reducedEcalRecHitsEB"),
    recHitsReducedEE = cms.InputTag("reducedEcalRecHitsEE"),

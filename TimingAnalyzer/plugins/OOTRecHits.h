@@ -85,10 +85,14 @@ private:
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
   
-  // bools for which analysis to do
+  // photon rec hit analysis
   const bool doPhRhs;
-  const bool doCount;
+  // delta R cuts
+  const bool applydelRcut;
+  const double delRcut;
 
+  // counting analysis
+  const bool doCount;
   // recHit cuts
   const bool applyrhEcut;
   const double rhEcut;
