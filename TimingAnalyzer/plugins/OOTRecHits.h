@@ -33,6 +33,8 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 // DetIds and Ecal stuff
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
@@ -88,7 +90,7 @@ private:
   // photon rec hit analysis
   const bool doPhRhs;
   // delta R cuts
-  const bool applydelRcut;
+  const bool addrhsInDelR;
   const double delRcut;
 
   // counting analysis
@@ -114,13 +116,13 @@ private:
   float phscE, phscphi, phsceta;
 
   // full hits
-  int phnfrhs;
+  int phnfrhs, phnfrhs_add;
   std::vector<float> phfrhEs, phfrhphis, phfrhetas, phfrhdelRs, phfrhtimes;
   std::vector<int>   phfrhIDs, phfrhOOTs;
   int phfseedpos;
 
   // reduced hits
-  int phnrrhs;
+  int phnrrhs, phnrrhs_add;
   std::vector<float> phrrhEs, phrrhphis, phrrhetas, phrrhdelRs, phrrhtimes;
   std::vector<int>   phrrhIDs, phrrhOOTs;
   int phrseedpos;

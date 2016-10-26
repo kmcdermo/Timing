@@ -4,7 +4,7 @@ OOTRecHits::OOTRecHits(const edm::ParameterSet& iConfig):
   // photon rec hit analyis
   doPhRhs(iConfig.existsAs<bool>("doPhRhs") ? iConfig.getParameter<bool>("doPhRhs") : false),
   // rec hit energy cut
-  applydelRcut(iConfig.existsAs<bool>("applydelRcut") ? iConfig.getParameter<bool>("applydelRcut") : false),
+  addrhsInDelR(iConfig.existsAs<bool>("addrhsInDelR") ? iConfig.getParameter<bool>("addrhsInDelR") : false),
   delRcut     (iConfig.existsAs<double>("delRcut")    ? iConfig.getParameter<double>("delRcut")    : 1.0),
 
   // counting analysis
@@ -98,7 +98,7 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	phsceta = phsc->position().eta();
 
   	// use seed to get geometry and recHits
-  	const DetId seedDetId = phsc->seed()->seed(); //seed detid
+  	const uint32_t seedId = phsc->seed()->seed().rawId();   //seed detid
   	const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
 
 	//////////////////
@@ -119,20 +119,7 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	  EcalRecHitCollection::const_iterator recHit = frecHits->find(recHitId); // get the underlying rechit
   	  if (recHit != frecHits->end()) // standard check
 	  {
-	    if (applydelRcut)
-	    {
-	      const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
-	      const float rhphi = recHitPos.phi();
-	      const float rheta = recHitPos.eta();
-	      if (deltaR(rhphi,rheta,phphi,pheta) < delRcut) 
-	      {
-		phfrhIDmap[recHitId.rawId()]++;	    
-	      } // save only if within delR cut
-	    } // applydelRcut block
-	    else
-	    {
-	      phfrhIDmap[recHitId.rawId()]++;	    
-	    } // end block over no check on delR
+	    phfrhIDmap[recHitId.rawId()]++;	    
   	  } // end standard check recHit
   	} // end loop over hits and fractions
 
@@ -141,9 +128,8 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	int ifrh = 0;
   	for (uiiumap::const_iterator rhiter = phfrhIDmap.begin(); rhiter != phfrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
         {
-  	  const uint32_t rhID = rhiter->first;
-
-  	  const DetId recHitId(rhID);
+  	  const uint32_t rhId = rhiter->first;
+  	  const DetId recHitId(rhId);
   	  EcalRecHitCollection::const_iterator recHit = frecHits->find(recHitId); // get the underlying rechit
 	  
   	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
@@ -154,14 +140,50 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	  phfrhetas [ifrh] = recHitPos.eta();
   	  phfrhdelRs[ifrh] = deltaR(phfrhphis[ifrh],phfrhetas[ifrh],phphi,pheta);
   	  phfrhtimes[ifrh] = recHit->time();
-  	  phfrhIDs  [ifrh] = int(rhID);
+  	  phfrhIDs  [ifrh] = int(rhId);
   	  phfrhOOTs [ifrh] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
 	  
   	  // save the position in the vector of the seed 
-  	  if (seedDetId.rawId() == recHitId) { phfseedpos = ifrh; }
+  	  if (seedId == rhId) { phfseedpos = ifrh; }
 
   	  ifrh++; // increment rechit counter
   	} // end loop over rec hit id map
+      
+	// add extra hits if possible from full collection
+	if (addrhsInDelR)
+	{
+	  int add = 0;
+	  for (EcalRecHitCollection::const_iterator recHit = frecHits.begin(); recHit != frecHits.end(); ++recHit)
+	  {
+	    // first get detector id
+	    const DetId recHitId = recHit->detid();
+	    const uint32_t rhId  = recHit.rawId();
+
+	    // check previous map to make sure to not double count recHit ids!
+	    if (phfrhIDmap.count(rhId)) continue; 
+		
+	    // get position to see if it is within delR <= cut_value of photon
+	    const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
+	    const float rhphi  = recHitPos.phi();
+	    const float rheta  = recHitPos.eta();
+	    const float rhdelR = deltaR(phphi,pheta,rhphi,rheta);
+	    if (rhdelR < delRcut) 
+	    {
+	      // can add directly to the end of the phrh vector (seed pos already determined)
+	      phfrhEs   .push_back(recHit->energy());
+	      phfrhphis .push_back(rhphi);
+	      phfrhetas .push_back(rheta);
+	      phfrhdelRs.push_back(rhdelR);
+	      phfrhtimes.push_back(recHit->time());
+	      phfrhIDs  .push_back(int(rhId));
+	      phfrhOOTs .push_back(int(recHit->checkFlag(EcalRecHit::kOutOfTime)));
+
+	      // increment counter for total number of additional hits
+	      add++;
+	    } // end check over matching delR 
+	    phnfrhs_add = add;
+	  } // end loop over all rec hits in collection, woof!
+	} // end block over looking at additional rec hits in full collection
 
 	/////////////////////
 	//                 //
@@ -181,20 +203,7 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	  EcalRecHitCollection::const_iterator recHit = rrecHits->find(recHitId); // get the underlying rechit
   	  if (recHit != rrecHits->end()) // standard check
           { 
-	    if (applydelRcut)
-	    {
-	      const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
-	      const float rhphi = recHitPos.phi();
-	      const float rheta = recHitPos.eta();
-	      if (deltaR(rhphi,rheta,phphi,pheta) < delRcut) 
-	      {
-		phrrhIDmap[recHitId.rawId()]++;	    
-	      } // save only if within delR cut
-	    } // applydelRcut block
-	    else
-	    {
-	      phrrhIDmap[recHitId.rawId()]++;	    
-	    } // end block over no check on delR
+	    phrrhIDmap[recHitId.rawId()]++;	    
 	  } // end standard check recHit
   	} // end loop over hits and fractions
       
@@ -203,9 +212,8 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	int irrh = 0;
   	for (uiiumap::const_iterator rhiter = phrrhIDmap.begin(); rhiter != phrrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
         {
-  	  const uint32_t rhID = rhiter->first;
-
-  	  const DetId recHitId(rhID);
+  	  const uint32_t rhId = rhiter->first;
+  	  const DetId recHitId(rhId);
   	  EcalRecHitCollection::const_iterator recHit = rrecHits->find(recHitId); // get the underlying rechit
 	  
   	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
@@ -216,14 +224,50 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	  phrrhetas [irrh] = recHitPos.eta();
   	  phrrhdelRs[irrh] = deltaR(phrrhphis[irrh],phrrhetas[irrh],phphi,pheta);
   	  phrrhtimes[irrh] = recHit->time();
-  	  phrrhIDs  [irrh] = int(rhID);
+  	  phrrhIDs  [irrh] = int(rhId);
   	  phrrhOOTs [irrh] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
 	  
   	  // save the position in the vector of the seed 
-  	  if (seedDetId.rawId() == recHitId) { phrseedpos = irrh; }
+  	  if (seedId == rhId) { phrseedpos = irrh; }
 
   	  irrh++; // increment rechit counter
   	} // end loop over rec hit id map
+
+	// add extra hits if possible from full collection
+	if (addrhsInDelR)
+	{
+	  int add = 0;
+	  for (EcalRecHitCollection::const_iterator recHit = rrecHits.begin(); recHit != rrecHits.end(); ++recHit)
+	  {
+	    // first get detector id
+	    const DetId recHitId = recHit->detid();
+	    const uint32_t rhId  = recHit.rawId();
+
+	    // check previous map to make sure to not double count recHit ids!
+	    if (phfrhIDmap.count(rhId)) continue; 
+		
+	    // get position to see if it is within delR <= cut_value of photon
+	    const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
+	    const float rhphi  = recHitPos.phi();
+	    const float rheta  = recHitPos.eta();
+	    const float rhdelR = deltaR(phphi,pheta,rhphi,rheta);
+	    if (rhdelR < delRcut) 
+	    {
+	      // can add directly to the end of the phrh vector (seed pos already determined)
+	      phrrhEs   .push_back(recHit->energy());
+	      phrrhphis .push_back(rhphi);
+	      phrrhetas .push_back(rheta);
+	      phrrhdelRs.push_back(rhdelR);
+	      phrrhtimes.push_back(recHit->time());
+	      phrrhIDs  .push_back(int(rhId));
+	      phrrhOOTs .push_back(int(recHit->checkFlag(EcalRecHit::kOutOfTime)));
+
+	      // increment counter for total number of additional hits
+	      add++;
+	    } // end check over matching delR 
+	    phnrrhs_add = add;
+	  } // end loop over all rec hits in collection, woof!
+	} // end block over looking at additional rec hits in reduced collection
       } // end check over super cluster
       phrhtree->Fill();
     } // end loop over photon vector
@@ -242,7 +286,8 @@ void OOTRecHits::InitializePhotonBranches()
   phscE   = -9999.f;
 
   // full hits
-  phnfrhs = -9999;
+  phnfrhs     = -9999;
+  phnfrhs_add = -9999;
   
   phfrhEs   .clear();
   phfrhphis .clear();
@@ -255,7 +300,8 @@ void OOTRecHits::InitializePhotonBranches()
   phfseedpos = -9999;
 
   // reduced hits
-  phnrrhs = -9999;
+  phnrrhs     = -9999;
+  phnfrhs_add = -9999;
   
   phrrhEs   .clear();
   phrrhphis .clear();

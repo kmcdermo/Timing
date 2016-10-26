@@ -12,8 +12,8 @@ options.register (
 
 ## apply deltaR cut in photon rechit analysis
 options.register (
-	'applydelRcut',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to apply deltaR cut on rechits to associate to photon');
+	'addrhsInDelR',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to add potentially more recHits to photon within deltaR cone'
 
 options.register (
 	'delRcut',0.3,VarParsing.multiplicity.singleton,VarParsing.varType.float,
@@ -58,7 +58,7 @@ options.parseArguments()
 print "################# Settings ##################"
 print "Running with doPhRhs                = ",options.doPhRhs	
 if options.doPhRhs:
-	print "Running with applydelRcut (delRcut) = ",options.applydelRcut," (",options.delRcut,")"
+	print "Running with addrhsInDelR (delRcut) = ",options.addrhsInDelR," (",options.delRcut,")"
 print "Running with doCount                = ",options.doCount
 if options.doCount:
 	print "Running with applyrhEcut (rhEcut)   = ",options.applyrhEcut," (",options.rhEcut,")"
@@ -116,7 +116,7 @@ process.tree = cms.EDAnalyzer("OOTRecHits",
    doPhRhs      = cms.bool(options.doPhRhs),
    doCount      = cms.bool(options.doCount),
    ## delta R cut
-   applydelRcut = cms.bool(options.applydelRcut),
+   addrhsInDelR = cms.bool(options.addrhsInDelR),
    delRcut      = cms.double(options.delRcut),
    ## rh energy cut
    applyrhEcut  = cms.bool(options.applyrhEcut),
