@@ -543,6 +543,7 @@ void OOTRecHits::beginJob()
   phrhtree->Branch("phsceta"              , &phsceta              , "phsceta/F");
 
   phrhtree->Branch("phnfrhs"              , &phnfrhs              , "phnfrhs/I");
+  phrhtree->Branch("phnfrhs_add"          , &phnfrhs_add          , "phnfrhs_add/I");
   phrhtree->Branch("phfrhEs"              , &phfrhEs);
   phrhtree->Branch("phfrhphis"            , &phfrhphis);
   phrhtree->Branch("phfrhetas"            , &phfrhetas);
@@ -553,6 +554,7 @@ void OOTRecHits::beginJob()
   phrhtree->Branch("phfseedpos"           , &phfseedpos           , "phfseedpos/I");
 
   phrhtree->Branch("phnrrhs"              , &phnrrhs              , "phnrrhs/I");
+  phrhtree->Branch("phnrrhs_add"          , &phnrrhs_add          , "phnrrhs_add/I");
   phrhtree->Branch("phrrhEs"              , &phrrhEs);
   phrhtree->Branch("phrrhphis"            , &phrrhphis);
   phrhtree->Branch("phrrhetas"            , &phrrhetas);
