@@ -5,6 +5,15 @@ import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
+## which analysis
+options.register (
+	'doPhRhs',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to run photon rec hits analysis');
+
+options.register (
+	'doCount',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to run rec hit counting between different collections analysis');
+
 ## processName
 options.register (
 	'processName','TREE',VarParsing.multiplicity.singleton,VarParsing.varType.string,
@@ -38,6 +47,8 @@ options.register (
 options.parseArguments()
 
 print "################# Settings ##################"
+print "Running with doPhRhs              = ",options.doPhRhs	
+print "Running with doCount              = ",options.doCount
 print "Running with processName          = ",options.processName	
 print "Running with globalTag            = ",options.globalTag	
 print "Running with demoMode             = ",options.demoMode
@@ -89,6 +100,9 @@ process.TFileService = cms.Service("TFileService",
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("OOTRecHits",
+   ## analysis bools
+   doPhRhs     = cms.bool(options.doPhRhs),
+   doCount     = cms.bool(options.doCount),
    ## rh energy cut
    applyrhEcut = cms.bool(options.applyrhEcut),
    rhEcut      = cms.double(options.rhEcut),

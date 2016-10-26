@@ -1,13 +1,14 @@
 // basic C++ headers
 #include <iostream>
 #include <memory>
+#include <string>
 #include <vector>
+#include <tuple>
 #include <utility>
 #include <map>
-#include <string>
+#include <unordered_map>
 #include <cmath>
 #include <algorithm>
-#include <tuple>
 
 // FWCore
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -17,27 +18,26 @@
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
-#include "FWCore/Common/interface/TriggerNames.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h" 
-
-// HLT info
-#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
 // Gen Info
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
 // DataFormats
-#include "DataFormats/PatCandidates/interface/Photon.h"
-#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
-#include "DataFormats/EgammaReco/interface/SuperCluster.h"
 #include "DataFormats/Common/interface/ValueMap.h"
-#include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
-#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/PatCandidates/interface/Photon.h"
+#include "DataFormats/PatCandidates/interface/MET.h"
+#include "DataFormats/PatCandidates/interface/Jet.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+
+// DetIds and Ecal stuff
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
+#include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 
 // EGamma Tools
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
@@ -54,7 +54,8 @@
 #include "TLorentzVector.h"
 #include "TPRegexp.h"
 
-typedef std::vector<std::pair<DetId,float> > DetIdPairVec;
+// Common types
+#include "CommonTypes.h"
 
 class OOTRecHits : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
@@ -62,6 +63,13 @@ public:
   explicit OOTRecHits(const edm::ParameterSet&);
   ~OOTRecHits();
   
+  void PhotonRecHits(edm::Handle<std::vector<reco::Photon> > &, 
+		     EcalClusterLazyTools *&, EcalClusterLazyTools *&,
+		     const CaloSubdetectorGeometry *&, const CaloSubdetectorGeometry *&);
+  void InitializePhotonBranches();
+  void InitializeFullRecHitBranches();
+  void InitializeReducedRecHitBranches();
+
   void ReducedToFullEB(EcalClusterLazyTools *&, EcalClusterLazyTools *&);
   void ReducedToFullEE(EcalClusterLazyTools *&, EcalClusterLazyTools *&);
   void FullToReducedEB(EcalClusterLazyTools *&, EcalClusterLazyTools *&);
@@ -77,9 +85,13 @@ private:
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
   
+  // bools for which analysis to do
+  const bool doPhRhs;
+  const bool doCount;
+
   // recHit cuts
-  bool   applyrhEcut;
-  double rhEcut;
+  const bool applyrhEcut;
+  const double rhEcut;
 
   // Photons
   const edm::InputTag photonsTag;
@@ -91,13 +103,32 @@ private:
   edm::EDGetTokenT<EcalRecHitCollection> recHitsFullEBTAG;
   edm::EDGetTokenT<EcalRecHitCollection> recHitsFullEETAG;
 
+  // photon ntuple
+  // phrhtree;
+  TTree * phrhtree;
+  float phE, phpt, phphi, pheta;
+  float phscE, phscphi, phsceta;
+
+  // full hits
+  int phnfrhs;
+  std::vector<float> phfrhEs, phfrhphis, phfrhetas, phfrhdelRs, phfrhtimes;
+  std::vector<int>   phfrhIDs, phfrhOOTs;
+  int phfseedpos;
+
+  // reduced hits
+  int phnrrhs;
+  std::vector<float> phrrhEs, phrrhphis, phrrhetas, phrrhdelRs, phrrhtimes;
+  std::vector<int>   phrrhIDs, phrrhOOTs;
+  int phrseedpos;
+
   // output ntuple
-  // tree
-  TTree* countingtree;
+  // countingtree
+  TTree * countingtree;
 
   // event info
   int event, run, lumi;  
-
+  int nphotons;
+  
   // rec hit info EB
   int nReducedEB, nR2FMatchedEB, nReducedOOTEB, nR2FMatchedOOTEB;
   int nFullEB   , nF2RMatchedEB, nFullOOTEB   , nF2RMatchedOOTEB;
