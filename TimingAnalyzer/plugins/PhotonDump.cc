@@ -487,7 +487,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  phrhOOTs[iph][irh]  = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
 	  
 	  // save the position in the vector of the seed 
-	  if (seedDetId.rawId() == recHitId) { phseedpos[iph] = iph; }
+	  if (seedDetId.rawId() == recHitId) { phseedpos[iph] = irh; }
 
 	  irh++; // increment rechit counter
 	} // end loop over rec hit id map
