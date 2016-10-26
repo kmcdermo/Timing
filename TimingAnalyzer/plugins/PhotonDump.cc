@@ -477,14 +477,14 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
 
 	  // save position, energy, and time of each rechit to a vector
-	  phrhXs[iph][irh]    = recHitPos.x();
-	  phrhYs[iph][irh]    = recHitPos.y();
-	  phrhZs[iph][irh]    = recHitPos.z();
-	  phrhEs[iph][irh]    = recHit->energy();
+	  phrhXs   [iph][irh] = recHitPos.x();
+	  phrhYs   [iph][irh] = recHitPos.y();
+	  phrhZs   [iph][irh] = recHitPos.z();
+	  phrhEs   [iph][irh] = recHit->energy();
 	  phrhdelRs[iph][irh] = deltaR(float(recHitPos.phi()),recHitPos.eta(),phphi[iph],pheta[iph]);
 	  phrhtimes[iph][irh] = recHit->time();
-	  phrhIDs[iph][irh]   = int(rhID);
-	  phrhOOTs[iph][irh]  = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
+	  phrhIDs  [iph][irh] = int(rhID);
+	  phrhOOTs [iph][irh] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
 	  
 	  // save the position in the vector of the seed 
 	  if (seedDetId.rawId() == recHitId) { phseedpos[iph] = irh; }
@@ -739,7 +739,7 @@ void PhotonDump::InitializeRecoPhotonBranches()
   for (int iph = 0; iph < nphotons; iph++)
   {
     if (isMC) phmatch[iph] = 0;
-    phVID  [iph] = 0;
+    phVID[iph] = 0;
 
     phE  [iph] = -9999.f; 
     phpt [iph] = -9999.f; 
@@ -759,14 +759,14 @@ void PhotonDump::InitializeRecoPhotonBranches()
 
 void PhotonDump::InitializeRecoRecHitBranches(int iph)
 {
-  phrhXs[iph].resize(phnrhs[iph]);
-  phrhYs[iph].resize(phnrhs[iph]);
-  phrhZs[iph].resize(phnrhs[iph]);
-  phrhEs[iph].resize(phnrhs[iph]);
+  phrhXs   [iph].resize(phnrhs[iph]);
+  phrhYs   [iph].resize(phnrhs[iph]);
+  phrhZs   [iph].resize(phnrhs[iph]);
+  phrhEs   [iph].resize(phnrhs[iph]);
   phrhdelRs[iph].resize(phnrhs[iph]);
   phrhtimes[iph].resize(phnrhs[iph]);
-  phrhIDs[iph].resize(phnrhs[iph]);
-  phrhOOTs[iph].resize(phnrhs[iph]);
+  phrhIDs  [iph].resize(phnrhs[iph]);
+  phrhOOTs [iph].resize(phnrhs[iph]);
 
   for (int irh = 0; irh < phnrhs[iph]; irh++)
   {
