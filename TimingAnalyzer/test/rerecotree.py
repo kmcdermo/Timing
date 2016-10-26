@@ -13,7 +13,7 @@ options.register (
 ## apply deltaR cut in photon rechit analysis
 options.register (
 	'addrhsInDelR',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to add potentially more recHits to photon within deltaR cone'
+	'flag to add potentially more recHits to photon within deltaR cone');
 
 options.register (
 	'delRcut',0.3,VarParsing.multiplicity.singleton,VarParsing.varType.float,

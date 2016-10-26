@@ -98,7 +98,7 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	phsceta = phsc->position().eta();
 
   	// use seed to get geometry and recHits
-  	const uint32_t seedId = phsc->seed()->seed().rawId();   //seed detid
+  	const DetId seedDetId = phsc->seed()->seed(); //seed detid
   	const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
 
 	//////////////////
@@ -144,7 +144,7 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	  phfrhOOTs [ifrh] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
 	  
   	  // save the position in the vector of the seed 
-  	  if (seedId == rhId) { phfseedpos = ifrh; }
+  	  if (seedDetId.rawId() == rhId) { phfseedpos = ifrh; }
 
   	  ifrh++; // increment rechit counter
   	} // end loop over rec hit id map
@@ -153,11 +153,11 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
 	if (addrhsInDelR)
 	{
 	  int add = 0;
-	  for (EcalRecHitCollection::const_iterator recHit = frecHits.begin(); recHit != frecHits.end(); ++recHit)
+	  for (EcalRecHitCollection::const_iterator recHit = frecHits->begin(); recHit != frecHits->end(); ++recHit)
 	  {
 	    // first get detector id
 	    const DetId recHitId = recHit->detid();
-	    const uint32_t rhId  = recHit.rawId();
+	    const uint32_t rhId  = recHitId.rawId();
 
 	    // check previous map to make sure to not double count recHit ids!
 	    if (phfrhIDmap.count(rhId)) continue; 
@@ -228,7 +228,7 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	  phrrhOOTs [irrh] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
 	  
   	  // save the position in the vector of the seed 
-  	  if (seedId == rhId) { phrseedpos = irrh; }
+  	  if (seedDetId.rawId() == rhId) { phrseedpos = irrh; }
 
   	  irrh++; // increment rechit counter
   	} // end loop over rec hit id map
@@ -237,11 +237,11 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
 	if (addrhsInDelR)
 	{
 	  int add = 0;
-	  for (EcalRecHitCollection::const_iterator recHit = rrecHits.begin(); recHit != rrecHits.end(); ++recHit)
+	  for (EcalRecHitCollection::const_iterator recHit = rrecHits->begin(); recHit != rrecHits->end(); ++recHit)
 	  {
 	    // first get detector id
 	    const DetId recHitId = recHit->detid();
-	    const uint32_t rhId  = recHit.rawId();
+	    const uint32_t rhId  = recHitId.rawId();
 
 	    // check previous map to make sure to not double count recHit ids!
 	    if (phfrhIDmap.count(rhId)) continue; 
