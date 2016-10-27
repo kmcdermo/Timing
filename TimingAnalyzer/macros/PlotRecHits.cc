@@ -326,8 +326,10 @@ void PlotRecHits::OutputTH1Fs()
 
 void PlotRecHits::OutputTotalTH1Fs()
 {
-  for (auto&& hname : fTotalNames)
+  for (UInt_t iplot = 0; iplot < fTotalNames.size(); iplot++)
   {
+    TString hname = fTotalNames[iplot];
+
     // make a copy of previous plot
     TH1F * htotal = (TH1F*)fPlots[hname]->Clone(Form("%s_total",hname.Data()));
     htotal->SetTitle(Form("%s [totals]",fPlots[hname]->GetTitle()));
@@ -349,11 +351,11 @@ void PlotRecHits::OutputTotalTH1Fs()
     canv->SetLogy(0);
     canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[hname].Data(),htotal->GetName()));
     canv->SaveAs(Form("%s/%s_lin.png",fOutDir.Data(),htotal->GetName()));
-
+    
     canv->SetLogy(1);
     canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDirs[hname].Data(),htotal->GetName()));
     canv->SaveAs(Form("%s/%s_log.png",fOutDir.Data(),htotal->GetName()));
-
+    
     delete canv;
     delete htotal;
   }
