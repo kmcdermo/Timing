@@ -74,8 +74,7 @@ void PlotRecHits::SetupPlots()
 
 void PlotRecHits::PhotonLoop()
 {
-  //  for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++)
-  for (UInt_t entry = 0; entry < 10; entry++)
+  for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++)
   {
     fInTree->GetEntry(entry);
     if (entry%fNPhCheck == 0 || entry == 0) std::cout << "Entry " << entry << " out of " << fInTree->GetEntries() << std::endl;
