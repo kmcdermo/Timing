@@ -63,7 +63,6 @@ private :
 
   // Output vars
   TString fOutDir;
-  TString fOutDump;
   TStrMap fSubDirs;
   TFile * fOutFile;
 

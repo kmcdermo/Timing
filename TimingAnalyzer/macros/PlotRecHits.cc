@@ -24,8 +24,7 @@ PlotRecHits::PlotRecHits(TString filename, TString outdir, Bool_t applyphptcut, 
   
   // output
   // setup outdir name
-  fOutDump = fOutDir; // --> simple directory for dump of plots
-
+  
   if (!fApplyPhPtCut && !fApplyrhECut && ! fApplyECALAcceptCut)
   { 
     fOutDir += "/Inclusive";
@@ -303,11 +302,11 @@ void PlotRecHits::OutputTH1Fs()
     // first save as linear, then log
     canv->SetLogy(0);
     canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
-    canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
+    canv->SaveAs(Form("%s/%s_lin.png",fOutDir.Data(),mapiter->first.Data()));
 
     canv->SetLogy(1);
     canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
-    canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->first.Data()));
+    canv->SaveAs(Form("%s/%s_log.png",fOutDir.Data(),mapiter->first.Data()));
 
     delete canv;
   }
@@ -337,11 +336,11 @@ void PlotRecHits::OutputTotalTH1Fs()
     // first save as linear, then log
     canv->SetLogy(0);
     canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[hname].Data(),htotal->GetName()));
-    canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),htotal->GetName()));
+    canv->SaveAs(Form("%s/%s_lin.png",fOutDir.Data(),htotal->GetName()));
 
     canv->SetLogy(1);
     canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDirs[hname].Data(),htotal->GetName()));
-    canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),htotal->GetName()));
+    canv->SaveAs(Form("%s/%s_log.png",fOutDir.Data(),htotal->GetName()));
 
     delete canv;
     delete htotal;
@@ -374,7 +373,7 @@ void PlotRecHits::OutputTH2Fs()
     // first save as linear, then log
     canv->SetLogy(0);
     canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
-    canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
+    canv->SaveAs(Form("%s/%s_lin.png",fOutDir.Data(),mapiter->first.Data()));
 
     delete canv;
   }
