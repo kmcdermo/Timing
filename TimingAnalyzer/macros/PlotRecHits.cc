@@ -138,6 +138,9 @@ void PlotRecHits::FillRecoPhotons()
   } // end loop over "core" rechits
   fPlots["phnfrhs_add"]->Fill(nfRecHits_add);
 
+  // total rechits now per photon
+  fPlots["phnfrhs_total"]->Fill(nfRecHits+nfRecHits_add);
+  
   //////////////////////
   //                  //
   // Reduced Rec Hits //
@@ -178,6 +181,9 @@ void PlotRecHits::FillRecoPhotons()
     fPlots["phrrhOOTs_add"]->Fill((*phrrhOOTs)[irh]);
   } // end loop over "core" rechits
   fPlots["phnrrhs_add"]->Fill(nrRecHits_add);
+
+  // total rechits now per photon
+  fPlots["phnrrhs_total"]->Fill(nfRecHits+nrRecHits_add);
 }
 
 void PlotRecHits::SetupRecoPhotons()
@@ -194,39 +200,45 @@ void PlotRecHits::SetupRecoPhotons()
   
   // full rec hit collections: "core rechits"
   fPlots["phnfrhs"] = PlotRecHits::MakeTH1F("phnfrhs","nfRecHits from Photons (reco)",100,0.f,100.f,"nfRecHits","Photons","RecoPhotons/FullRHs");
-  fPlots["phfrhEs"] = PlotRecHits::MakeTH1F("phfrhEs","Photons fRecHits Energy [GeV] (reco)",100,0.f,2000.f,"Energy [GeV]","fRecHits","RecoPhotons/FullRHs");
-  fPlots["phfrhdelRs"] = PlotRecHits::MakeTH1F("phfrhdelRs","#DeltaR of fRecHits to Photon (reco)",100,0.f,6.5f,"Time [ns]","fRecHits","RecoPhotons/FullRHs");
+  fPlots["phfrhEs"] = PlotRecHits::MakeTH1F("phfrhEs","Photons fRecHits Energy [GeV] (reco)",100,0.f,1000.f,"Energy [GeV]","fRecHits","RecoPhotons/FullRHs");
+  fPlots["phfrhdelRs"] = PlotRecHits::MakeTH1F("phfrhdelRs","#DeltaR of fRecHits to Photon (reco)",100,0.f,1.0f,"Time [ns]","fRecHits","RecoPhotons/FullRHs");
   fPlots["phfrhtimes"] = PlotRecHits::MakeTH1F("phfrhtimes","Photons fRecHits Time [ns] (reco)",200,-100.f,100.f,"Time [ns]","fRecHits","RecoPhotons/FullRHs");
   fPlots["phfrhOOTs"] = PlotRecHits::MakeTH1F("phfrhOOTs","Photons fRecHits OoT Flag (reco)",2,0.f,2.f,"OoT Flag","fRecHits","RecoPhotons/FullRHs");
-  fPlots["phfseedE"] = PlotRecHits::MakeTH1F("phfseedE","Photons Seed fRecHit Energy [GeV] (reco)",100,0.f,2000.f,"Energy [GeV]","Seed fRecHits","RecoPhotons/FullRHs");
-  fPlots["phfseeddelR"] = PlotRecHits::MakeTH1F("phfseeddelR","#DeltaR of Seed fRecHit to Photon (reco)",100,0.f,6.5f,"Time [ns]","Seed fRecHits","RecoPhotons/FullRHs");
+  fPlots["phfseedE"] = PlotRecHits::MakeTH1F("phfseedE","Photons Seed fRecHit Energy [GeV] (reco)",100,0.f,1000.f,"Energy [GeV]","Seed fRecHits","RecoPhotons/FullRHs");
+  fPlots["phfseeddelR"] = PlotRecHits::MakeTH1F("phfseeddelR","#DeltaR of Seed fRecHit to Photon (reco)",100,0.f,1.0f,"Time [ns]","Seed fRecHits","RecoPhotons/FullRHs");
   fPlots["phfseedtime"] = PlotRecHits::MakeTH1F("phfseedtime","Photons Seed fRecHit Time [ns] (reco)",200,-100.f,100.f,"Time [ns]","Seed fRecHits","RecoPhotons/FullRHs");
   fPlots["phfseedOOT"] = PlotRecHits::MakeTH1F("phfseedOOT","Photons Seed fRecHit OoT Flag (reco)",2,0.f,2.f,"OoT Flag","Seed fRecHits","RecoPhotons/FullRHs");  
 
   // full rec hit collections: "add-on recHits"
   fPlots["phnfrhs_add"] = PlotRecHits::MakeTH1F("phnfrhs_add","nfRecHits from Photons (reco) [add-ons]",100,0.f,100.f,"nfRecHits_add","Photons","RecoPhotons/FullRHs");
-  fPlots["phfrhEs_add"] = PlotRecHits::MakeTH1F("phfrhEs_add","Photons fRecHits Energy [GeV] (reco) [add-ons]",100,0.f,2000.f,"Energy [GeV]","fRecHits_add","RecoPhotons/FullRHs");
-  fPlots["phfrhdelRs_add"] = PlotRecHits::MakeTH1F("phfrhdelRs_add","#DeltaR of fRecHits to Photon (reco) [add-ons]",100,0.f,6.5f,"Time [ns]","fRecHits_add","RecoPhotons/FullRHs");
+  fPlots["phfrhEs_add"] = PlotRecHits::MakeTH1F("phfrhEs_add","Photons fRecHits Energy [GeV] (reco) [add-ons]",100,0.f,1000.f,"Energy [GeV]","fRecHits_add","RecoPhotons/FullRHs");
+  fPlots["phfrhdelRs_add"] = PlotRecHits::MakeTH1F("phfrhdelRs_add","#DeltaR of fRecHits to Photon (reco) [add-ons]",100,0.f,1.0f,"Time [ns]","fRecHits_add","RecoPhotons/FullRHs");
   fPlots["phfrhtimes_add"] = PlotRecHits::MakeTH1F("phfrhtimes_add","Photons fRecHits Time [ns] (reco) [add-ons]",200,-100.f,100.f,"Time [ns]","fRecHits_add","RecoPhotons/FullRHs");
   fPlots["phfrhOOTs_add"] = PlotRecHits::MakeTH1F("phfrhOOTs_add","Photons fRecHits OoT Flag (reco) [add-ons]",2,0.f,2.f,"OoT Flag","fRecHits_add","RecoPhotons/FullRHs");
 
+  // totals for rull rec hit collections
+  fPlots["phnfrhs_total"] = PlotRecHits::MakeTH1F("phnfrhs_total","nfRecHits from Photons (reco) [core+add-ons]",100,0.f,100.f,"nfRecHits_total","Photons","RecoPhotons/FullRHs");
+
   // reduced rec hit collections: "core rechits"
   fPlots["phnrrhs"] = PlotRecHits::MakeTH1F("phnrrhs","nrRecHits from Photons (reco)",100,0.f,100.f,"nrRecHits","Photons","RecoPhotons/ReducedRHs");
-  fPlots["phrrhEs"] = PlotRecHits::MakeTH1F("phrrhEs","Photons rRecHits Energy [GeV] (reco)",100,0.f,2000.f,"Energy [GeV]","rRecHits","RecoPhotons/ReducedRHs");
-  fPlots["phrrhdelRs"] = PlotRecHits::MakeTH1F("phrrhdelRs","#DeltaR of rRecHits to Photon (reco)",100,0.f,6.5f,"Time [ns]","rRecHits","RecoPhotons/ReducedRHs");
+  fPlots["phrrhEs"] = PlotRecHits::MakeTH1F("phrrhEs","Photons rRecHits Energy [GeV] (reco)",100,0.f,1000.f,"Energy [GeV]","rRecHits","RecoPhotons/ReducedRHs");
+  fPlots["phrrhdelRs"] = PlotRecHits::MakeTH1F("phrrhdelRs","#DeltaR of rRecHits to Photon (reco)",100,0.f,1.0f,"Time [ns]","rRecHits","RecoPhotons/ReducedRHs");
   fPlots["phrrhtimes"] = PlotRecHits::MakeTH1F("phrrhtimes","Photons rRecHits Time [ns] (reco)",200,-100.f,100.f,"Time [ns]","rRecHits","RecoPhotons/ReducedRHs");
   fPlots["phrrhOOTs"] = PlotRecHits::MakeTH1F("phrrhOOTs","Photons rRecHits OoT Flag (reco)",2,0.f,2.f,"OoT Flag","rRecHits","RecoPhotons/ReducedRHs");
-  fPlots["phrseedE"] = PlotRecHits::MakeTH1F("phrseedE","Photons Seed rRecHit Energy [GeV] (reco)",100,0.f,2000.f,"Energy [GeV]","Seed rRecHits","RecoPhotons/ReducedRHs");
-  fPlots["phrseeddelR"] = PlotRecHits::MakeTH1F("phrseeddelR","#DeltaR of Seed rRecHit to Photon (reco)",100,0.f,6.5f,"Time [ns]","Seed rRecHits","RecoPhotons/ReducedRHs");
+  fPlots["phrseedE"] = PlotRecHits::MakeTH1F("phrseedE","Photons Seed rRecHit Energy [GeV] (reco)",100,0.f,1000.f,"Energy [GeV]","Seed rRecHits","RecoPhotons/ReducedRHs");
+  fPlots["phrseeddelR"] = PlotRecHits::MakeTH1F("phrseeddelR","#DeltaR of Seed rRecHit to Photon (reco)",100,0.f,1.0f,"Time [ns]","Seed rRecHits","RecoPhotons/ReducedRHs");
   fPlots["phrseedtime"] = PlotRecHits::MakeTH1F("phrseedtime","Photons Seed rRecHit Time [ns] (reco)",200,-100.f,100.f,"Time [ns]","Seed rRecHits","RecoPhotons/ReducedRHs");
   fPlots["phrseedOOT"] = PlotRecHits::MakeTH1F("phrseedOOT","Photons Seed rRecHit OoT Flag (reco)",2,0.f,2.f,"OoT Flag","Seed rRecHits","RecoPhotons/ReducedRHs");  
 
   // reduced rec hit collections: "add-on recHits"
   fPlots["phnrrhs_add"] = PlotRecHits::MakeTH1F("phnrrhs_add","nrRecHits from Photons (reco) [add-ons]",100,0.f,100.f,"nrRecHits_add","Photons","RecoPhotons/ReducedRHs");
-  fPlots["phrrhEs_add"] = PlotRecHits::MakeTH1F("phrrhEs_add","Photons rRecHits Energy [GeV] (reco) [add-ons]",100,0.f,2000.f,"Energy [GeV]","rRecHits_add","RecoPhotons/ReducedRHs");
-  fPlots["phrrhdelRs_add"] = PlotRecHits::MakeTH1F("phrrhdelRs_add","#DeltaR of rRecHits to Photon (reco) [add-ons]",100,0.f,6.5f,"Time [ns]","rRecHits_add","RecoPhotons/ReducedRHs");
+  fPlots["phrrhEs_add"] = PlotRecHits::MakeTH1F("phrrhEs_add","Photons rRecHits Energy [GeV] (reco) [add-ons]",100,0.f,1000.f,"Energy [GeV]","rRecHits_add","RecoPhotons/ReducedRHs");
+  fPlots["phrrhdelRs_add"] = PlotRecHits::MakeTH1F("phrrhdelRs_add","#DeltaR of rRecHits to Photon (reco) [add-ons]",100,0.f,1.0f,"Time [ns]","rRecHits_add","RecoPhotons/ReducedRHs");
   fPlots["phrrhtimes_add"] = PlotRecHits::MakeTH1F("phrrhtimes_add","Photons rRecHits Time [ns] (reco) [add-ons]",200,-100.f,100.f,"Time [ns]","rRecHits_add","RecoPhotons/ReducedRHs");
   fPlots["phrrhOOTs_add"] = PlotRecHits::MakeTH1F("phrrhOOTs_add","Photons rRecHits OoT Flag (reco) [add-ons]",2,0.f,2.f,"OoT Flag","rRecHits_add","RecoPhotons/ReducedRHs");
+
+  // totals for rull rec hit collections
+  fPlots["phnrrhs_total"] = PlotRecHits::MakeTH1F("phnrrhs_total","nrRecHits from Photons (reco) [core+add-ons]",100,0.f,100.f,"nrRecHits_total","Photons","RecoPhotons/ReducedRHs");
 }
 
 TH1F * PlotRecHits::MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir)
