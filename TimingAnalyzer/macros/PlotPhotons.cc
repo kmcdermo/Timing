@@ -304,8 +304,8 @@ void PlotPhotons::FillRecoPhotons()
 	    fPlots["phseedOOT_gen"]->Fill((*phrhOOTs)[iph][irh]);
 	  }
 	}
-      } // end loop over nrechits
-    } // end conditional over isMC
+      } // end conditional over isMC
+    } // end loop over nrechits
     fPlots["phnrhs"]->Fill(nRecHits);
     if (fIsMC) fPlots["phnrhs_gen"]->Fill(nRecHits_gen);
   } // end loop over nphotons
