@@ -77,14 +77,14 @@ void PlotPhotons::SetupPlots()
 {
   if (fIsMC)
   {
-    PlotPhotons::SetupGenInfo();
+    //    PlotPhotons::SetupGenInfo();
     PlotPhotons::SetupGenParticles();
-    PlotPhotons::SetupGenJets();
+    //    PlotPhotons::SetupGenJets();
   }
-  PlotPhotons::SetupObjectCounts();
-  PlotPhotons::SetupMET();
-  PlotPhotons::SetupJets();
-  PlotPhotons::SetupRecoPhotons();
+  // PlotPhotons::SetupObjectCounts();
+  // PlotPhotons::SetupMET();
+  // PlotPhotons::SetupJets();
+  // PlotPhotons::SetupRecoPhotons();
 }
 
 void PlotPhotons::EventLoop()
@@ -96,14 +96,14 @@ void PlotPhotons::EventLoop()
 
     if (fIsMC)
     {
-      PlotPhotons::FillGenInfo();
+      //      PlotPhotons::FillGenInfo();
       PlotPhotons::FillGenParticles();
-      PlotPhotons::FillGenJets();
+      //      PlotPhotons::FillGenJets();
     }
-    PlotPhotons::FillObjectCounts();
-    PlotPhotons::FillMET();
-    PlotPhotons::FillJets();
-    PlotPhotons::FillRecoPhotons();
+    // PlotPhotons::FillObjectCounts();
+    // PlotPhotons::FillMET();
+    // PlotPhotons::FillJets();
+    // PlotPhotons::FillRecoPhotons();
   }
 }
 
@@ -147,6 +147,23 @@ void PlotPhotons::FillGenParticles()
   fPlots["gengr2eta"]->Fill(gengr2eta);
 
   fPlots2D["genN2EvsN1E"]->Fill(genN1E,genN2E);
+
+  if (nNeutoPhGr == 2)
+  {
+    TLorentzVector genN1_lorvec; genN1_lorvec.SetPtEtaPhiE(genN1pt,genN1eta,genN1phi,genN1E);
+    TLorentzVector genN2_lorvec; genN2_lorvec.SetPtEtaPhiE(genN2pt,genN2eta,genN2phi,genN2E);
+
+    Float_t N1bgx = bg(genN1_lorvec.Px(),genN1mass);
+    Float_t N1bgy = bg(genN1_lorvec.Py(),genN1mass);
+    Float_t N1bgz = bg(genN1_lorvec.Pz(),genN1mass);
+
+    Float_t N1dx = genN1decayvx - genN1prodvx;
+    Float_t N1dy = genN1decayvy - genN1prodvy;
+    Float_t N1dz = genN1decayvz - genN1prodvz;
+
+    std::cout << rad2_3(N1dx/N1bgx,N1dy/N1bgy,N1dz/N1bgz) << std::endl;
+
+  }
 }
 
 void PlotPhotons::FillGenJets()
@@ -597,6 +614,12 @@ void PlotPhotons::InitTree()
     fInTree->SetBranchAddress("genN1pt", &genN1pt, &b_genN1pt);
     fInTree->SetBranchAddress("genN1phi", &genN1phi, &b_genN1phi);
     fInTree->SetBranchAddress("genN1eta", &genN1eta, &b_genN1eta);
+    fInTree->SetBranchAddress("genN1prodvx", &genN1prodvx, &b_genN1prodvx);
+    fInTree->SetBranchAddress("genN1prodvy", &genN1prodvy, &b_genN1prodvy);
+    fInTree->SetBranchAddress("genN1prodvz", &genN1prodvz, &b_genN1prodvz);
+    fInTree->SetBranchAddress("genN1decayvx", &genN1decayvx, &b_genN1decayvx);
+    fInTree->SetBranchAddress("genN1decayvy", &genN1decayvy, &b_genN1decayvy);
+    fInTree->SetBranchAddress("genN1decayvz", &genN1decayvz, &b_genN1decayvz);
     fInTree->SetBranchAddress("genph1E", &genph1E, &b_genph1E);
     fInTree->SetBranchAddress("genph1pt", &genph1pt, &b_genph1pt);
     fInTree->SetBranchAddress("genph1phi", &genph1phi, &b_genph1phi);
@@ -611,6 +634,12 @@ void PlotPhotons::InitTree()
     fInTree->SetBranchAddress("genN2pt", &genN2pt, &b_genN2pt);
     fInTree->SetBranchAddress("genN2phi", &genN2phi, &b_genN2phi);
     fInTree->SetBranchAddress("genN2eta", &genN2eta, &b_genN2eta);
+    fInTree->SetBranchAddress("genN2prodvx", &genN2prodvx, &b_genN2prodvx);
+    fInTree->SetBranchAddress("genN2prodvy", &genN2prodvy, &b_genN2prodvy);
+    fInTree->SetBranchAddress("genN2prodvz", &genN2prodvz, &b_genN2prodvz);
+    fInTree->SetBranchAddress("genN2decayvx", &genN2decayvx, &b_genN2decayvx);
+    fInTree->SetBranchAddress("genN2decayvy", &genN2decayvy, &b_genN2decayvy);
+    fInTree->SetBranchAddress("genN2decayvz", &genN2decayvz, &b_genN2decayvz);
     fInTree->SetBranchAddress("genph2E", &genph2E, &b_genph2E);
     fInTree->SetBranchAddress("genph2pt", &genph2pt, &b_genph2pt);
     fInTree->SetBranchAddress("genph2phi", &genph2phi, &b_genph2phi);

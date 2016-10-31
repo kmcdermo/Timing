@@ -7,9 +7,19 @@
 #include "TString.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TLorentzVector.h"
+#include "TVector3.h"
 
 #include <vector>
 #include <map>
+
+static const Float_t sol = 2.99792458e10; // cm/s
+
+inline Float_t rad2  (const Float_t x, const Float_t y){return x*x + y*y;}
+inline Float_t rad2_3(const Float_t x, const Float_t y, const Float_t z){return x*x + y*y + z*z;}
+inline Float_t gamma (const Float_t p, const Float_t m){return std::sqrt(1.f+std::pow(p/m,2));}
+inline Float_t beta  (const Float_t p, const Float_t m){return std::sqrt(1.f/(1.f+std::pow(m/p,2)));}
+inline Float_t bg    (const Float_t p, const Float_t m){return std::abs(p/m);}
 
 typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator        TH1MapIter;
@@ -97,6 +107,12 @@ private :
   Float_t genN1pt;
   Float_t genN1phi;
   Float_t genN1eta;
+  Float_t genN1prodvx;
+  Float_t genN1prodvy;
+  Float_t genN1prodvz;
+  Float_t genN1decayvx;
+  Float_t genN1decayvy;
+  Float_t genN1decayvz;
   Float_t genph1E;
   Float_t genph1pt;
   Float_t genph1phi;
@@ -111,6 +127,12 @@ private :
   Float_t genN2pt;
   Float_t genN2phi;
   Float_t genN2eta;
+  Float_t genN2prodvx;
+  Float_t genN2prodvy;
+  Float_t genN2prodvz;
+  Float_t genN2decayvx;
+  Float_t genN2decayvy;
+  Float_t genN2decayvz;
   Float_t genph2E;
   Float_t genph2pt;
   Float_t genph2phi;
@@ -184,6 +206,12 @@ private :
   TBranch * b_genN1pt;   //!
   TBranch * b_genN1phi;   //!
   TBranch * b_genN1eta;   //!
+  TBranch * b_genN1prodvx;   //!
+  TBranch * b_genN1prodvy;   //!
+  TBranch * b_genN1prodvz;   //!
+  TBranch * b_genN1decayvx;   //!
+  TBranch * b_genN1decayvy;   //!
+  TBranch * b_genN1decayvz;   //!
   TBranch * b_genph1E;   //!
   TBranch * b_genph1pt;   //!
   TBranch * b_genph1phi;   //!
@@ -198,6 +226,12 @@ private :
   TBranch * b_genN2pt;   //!
   TBranch * b_genN2phi;   //!
   TBranch * b_genN2eta;   //!
+  TBranch * b_genN2prodvx;   //!
+  TBranch * b_genN2prodvy;   //!
+  TBranch * b_genN2prodvz;   //!
+  TBranch * b_genN2decayvx;   //!
+  TBranch * b_genN2decayvy;   //!
+  TBranch * b_genN2decayvz;   //!
   TBranch * b_genph2E;   //!
   TBranch * b_genph2pt;   //!
   TBranch * b_genph2phi;   //!

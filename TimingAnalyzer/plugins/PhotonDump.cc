@@ -182,7 +182,17 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	      genN1pt   = gpiter->pt();
 	      genN1phi  = gpiter->phi();
 	      genN1eta  = gpiter->eta();
-	    
+
+	      // neutralino production vertex
+	      genN1prodvx = gpiter->vx();
+	      genN1prodvy = gpiter->vy();
+	      genN1prodvz = gpiter->vz();
+	      
+	      // neutralino decay vertex (same for both daughters unless really screwed up)
+	      genN1decayvx = gpiter->daughter(0)->vx();
+	      genN1decayvy = gpiter->daughter(0)->vy();
+	      genN1decayvz = gpiter->daughter(0)->vz();
+
 	      // set photon daughter stuff
 	      int phdaughter = -1; // determine which one is the photon daughter
 	      if      (gpiter->daughter(0)->pdgId() == 22) {phdaughter = 0;}
@@ -231,6 +241,16 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	      genN2phi  = gpiter->phi();
 	      genN2eta  = gpiter->eta();
 	      
+	      // neutralino production vertex
+	      genN2prodvx = gpiter->vx();
+	      genN2prodvy = gpiter->vy();
+	      genN2prodvz = gpiter->vz();
+	      
+	      // neutralino decay vertex (same for both daughters unless really screwed up)
+	      genN2decayvx = gpiter->daughter(0)->vx();
+	      genN2decayvy = gpiter->daughter(0)->vy();
+	      genN2decayvz = gpiter->daughter(0)->vz();
+
 	      // set photon daughter stuff
 	      int phdaughter = -1; // determine which one is the photon daughter
 	      if      (gpiter->daughter(0)->pdgId() == 22) {phdaughter = 0;}
@@ -511,15 +531,15 @@ void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &
   
   for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter) // loop over gen particles
   {
-    //    if (gpiter->pdgId() != 1000022) continue;
+    if (gpiter->pdgId() != 1000022) continue;
 
-    std::cout << "particle id: " << gpiter->pdgId() << " (" << gpiter->status() << ")" << std::endl;
+    std::cout << "particle id: " << gpiter->pdgId() << " (" << gpiter->vx() << " " << gpiter->vy() << " " << gpiter->vz() << ")" << std::endl;
     
     // dump mothers first
     if (gpiter->numberOfMothers() != 0) std::cout << " mothers: ";
     for (auto mgpiter = gpiter->motherRefVector().begin(); mgpiter != gpiter->motherRefVector().end(); ++mgpiter)
     {
-      std::cout << (*mgpiter)->pdgId() << " (" << (*mgpiter)->status() << ") ";
+      std::cout << (*mgpiter)->pdgId() << " (" << (*mgpiter)->vx() << " " << (*mgpiter)->vy() << " " << (*mgpiter)->vz()  << ") ";
     }
     if (gpiter->numberOfMothers() != 0) std::cout << std::endl;
 
@@ -527,7 +547,7 @@ void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &
     if (gpiter->numberOfDaughters() != 0) std::cout << " daughters: ";
     for (auto dgpiter = gpiter->daughterRefVector().begin(); dgpiter != gpiter->daughterRefVector().end(); ++dgpiter)
     {
-      std::cout << (*dgpiter)->pdgId() << " (" << (*dgpiter)->status() << ") ";
+      std::cout << (*dgpiter)->pdgId() << " (" << (*dgpiter)->vx() << " " << (*dgpiter)->vy() << " " << (*dgpiter)->vz()  << ") ";
     }
     if (gpiter->numberOfDaughters() != 0) std::cout << std::endl;
   } // end loop over gen particles
@@ -585,11 +605,15 @@ void PhotonDump::InitializeGenParticleBranches()
   nNeutoPhGr  = -9999;
 
   genN1mass = -9999.f; genN1E = -9999.f; genN1pt = -9999.f; genN1phi = -9999.f; genN1eta = -9999.f;
+  genN1prodvx = -9999.f; genN1prodvy = -9999.f; genN1prodvz = -9999.f;
+  genN1decayvx = -9999.f; genN1decayvy = -9999.f; genN1decayvz = -9999.f;
   genph1E = -9999.f; genph1pt = -9999.f; genph1phi = -9999.f; genph1eta = -9999.f;
   genph1match = -9999;
   gengr1E = -9999.f; gengr1pt = -9999.f; gengr1phi = -9999.f; gengr1eta = -9999.f;
 
   genN2mass = -9999.f; genN2E = -9999.f; genN2pt = -9999.f; genN2phi = -9999.f; genN2eta = -9999.f;
+  genN2prodvx = -9999.f; genN2prodvy = -9999.f; genN2prodvz = -9999.f;
+  genN2decayvx = -9999.f; genN2decayvy = -9999.f; genN2decayvz = -9999.f;
   genph2E = -9999.f; genph2pt = -9999.f; genph2phi = -9999.f; genph2eta = -9999.f;
   genph2match = -9999;
   gengr2E = -9999.f; gengr2pt = -9999.f; gengr2phi = -9999.f; gengr2eta = -9999.f;
@@ -807,6 +831,12 @@ void PhotonDump::beginJob()
     tree->Branch("genN1pt"              , &genN1pt              , "genN1pt/F");
     tree->Branch("genN1phi"             , &genN1phi             , "genN1phi/F");
     tree->Branch("genN1eta"             , &genN1eta             , "genN1eta/F");
+    tree->Branch("genN1prodvx"          , &genN1prodvx          , "genN1prodvx/F");
+    tree->Branch("genN1prodvy"          , &genN1prodvy          , "genN1prodvy/F");
+    tree->Branch("genN1prodvz"          , &genN1prodvz          , "genN1prodvz/F");
+    tree->Branch("genN1decayvx"         , &genN1decayvx         , "genN1decayvx/F");
+    tree->Branch("genN1decayvy"         , &genN1decayvy         , "genN1decayvy/F");
+    tree->Branch("genN1decayvz"         , &genN1decayvz         , "genN1decayvz/F");
     tree->Branch("genph1E"              , &genph1E              , "genph1E/F");
     tree->Branch("genph1pt"             , &genph1pt             , "genph1pt/F");
     tree->Branch("genph1phi"            , &genph1phi            , "genph1phi/F");
@@ -822,6 +852,12 @@ void PhotonDump::beginJob()
     tree->Branch("genN2pt"              , &genN2pt              , "genN2pt/F");
     tree->Branch("genN2phi"             , &genN2phi             , "genN2phi/F");
     tree->Branch("genN2eta"             , &genN2eta             , "genN2eta/F");
+    tree->Branch("genN2prodvx"          , &genN2prodvx          , "genN2prodvx/F");
+    tree->Branch("genN2prodvy"          , &genN2prodvy          , "genN2prodvy/F");
+    tree->Branch("genN2prodvz"          , &genN2prodvz          , "genN2prodvz/F");
+    tree->Branch("genN2decayvx"         , &genN2decayvx         , "genN2decayvx/F");
+    tree->Branch("genN2decayvy"         , &genN2decayvy         , "genN2decayvy/F");
+    tree->Branch("genN2decayvz"         , &genN2decayvz         , "genN2decayvz/F");
     tree->Branch("genph2E"              , &genph2E              , "genph2E/F");
     tree->Branch("genph2pt"             , &genph2pt             , "genph2pt/F");
     tree->Branch("genph2phi"            , &genph2phi            , "genph2phi/F");

@@ -147,11 +147,15 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   int nNeutralino, nNeutoPhGr;
 
   float genN1mass, genN1E, genN1pt, genN1phi, genN1eta;
+  float genN1prodvx, genN1prodvy, genN1prodvz;
+  float genN1decayvx, genN1decayvy, genN1decayvz;
   float genph1E, genph1pt, genph1phi, genph1eta;
   int genph1match;
   float gengr1E, gengr1pt, gengr1phi, gengr1eta;
 
   float genN2mass, genN2E, genN2pt, genN2phi, genN2eta;
+  float genN2prodvx, genN2prodvy, genN2prodvz;
+  float genN2decayvx, genN2decayvy, genN2decayvz;
   float genph2E, genph2pt, genph2phi, genph2eta;
   int genph2match;
   float gengr2E, gengr2pt, gengr2phi, gengr2eta;
