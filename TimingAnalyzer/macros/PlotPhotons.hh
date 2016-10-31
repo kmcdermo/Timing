@@ -13,7 +13,7 @@
 #include <vector>
 #include <map>
 
-static const Float_t sol = 2.99792458e10; // cm/s
+static const Float_t sol = 2.99792458e8; // cm/s
 
 inline Float_t rad2  (const Float_t x, const Float_t y){return x*x + y*y;}
 inline Float_t rad2_3(const Float_t x, const Float_t y, const Float_t z){return x*x + y*y + z*z;}

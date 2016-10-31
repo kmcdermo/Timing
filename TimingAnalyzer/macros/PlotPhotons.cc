@@ -146,24 +146,27 @@ void PlotPhotons::FillGenParticles()
   fPlots["gengr2phi"]->Fill(gengr2phi);
   fPlots["gengr2eta"]->Fill(gengr2eta);
 
-  fPlots2D["genN2EvsN1E"]->Fill(genN1E,genN2E);
-
-  if (nNeutoPhGr == 2)
+  // fill proper distance plots
+  if (nNeutoPhGr >= 1)
   {
+    // calculate proper distance for the first neutralino
     TLorentzVector genN1_lorvec; genN1_lorvec.SetPtEtaPhiE(genN1pt,genN1eta,genN1phi,genN1E);
-    TLorentzVector genN2_lorvec; genN2_lorvec.SetPtEtaPhiE(genN2pt,genN2eta,genN2phi,genN2E);
-
-    Float_t N1bgx = bg(genN1_lorvec.Px(),genN1mass);
-    Float_t N1bgy = bg(genN1_lorvec.Py(),genN1mass);
-    Float_t N1bgz = bg(genN1_lorvec.Pz(),genN1mass);
-
-    Float_t N1dx = genN1decayvx - genN1prodvx;
-    Float_t N1dy = genN1decayvy - genN1prodvy;
-    Float_t N1dz = genN1decayvz - genN1prodvz;
-
-    std::cout << rad2_3(N1dx/N1bgx,N1dy/N1bgy,N1dz/N1bgz) << std::endl;
-
+    const Float_t N1dx = genN1decayvx - genN1prodvx; const Float_t N1bgx = bg(genN1_lorvec.Px(),genN1mass); 
+    const Float_t N1dy = genN1decayvy - genN1prodvy; const Float_t N1bgy = bg(genN1_lorvec.Py(),genN1mass); 
+    const Float_t N1dz = genN1decayvz - genN1prodvz; const Float_t N1bgz = bg(genN1_lorvec.Pz(),genN1mass); 
+    fPlots["genN1ctau"]->Fill(std::sqrt(rad2_3(N1dx/N1bgx,N1dy/N1bgy,N1dz/N1bgz)));
   }
+  if (nNeutoPhGr >= 2)
+  {
+    // calculate proper distance for the second neutralino
+    TLorentzVector genN2_lorvec; genN2_lorvec.SetPtEtaPhiE(genN2pt,genN2eta,genN2phi,genN2E);
+    const Float_t N2dx = genN2decayvx - genN2prodvx; const Float_t N2bgx = bg(genN2_lorvec.Px(),genN2mass); 
+    const Float_t N2dy = genN2decayvy - genN2prodvy; const Float_t N2bgy = bg(genN2_lorvec.Py(),genN2mass); 
+    const Float_t N2dz = genN2decayvz - genN2prodvz; const Float_t N2bgz = bg(genN2_lorvec.Pz(),genN2mass); 
+    fPlots["genN2ctau"]->Fill(std::sqrt(rad2_3(N2dx/N2bgx,N2dy/N2bgy,N2dz/N2bgz)));
+  }
+
+  fPlots2D["genN2EvsN1E"]->Fill(genN1E,genN2E);
 }
 
 void PlotPhotons::FillGenJets()
@@ -366,6 +369,9 @@ void PlotPhotons::SetupGenParticles()
   fPlots["gengr2pt"] = PlotPhotons::MakeTH1F("gengr2pt","Generator Subleading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Gravitinos","GenParticles");
   fPlots["gengr2phi"] = PlotPhotons::MakeTH1F("gengr2phi","Generator Subleading Gravitino #phi",100,-3.2,3.2,"#phi","Gravitinos","GenParticles");
   fPlots["gengr2eta"] = PlotPhotons::MakeTH1F("gengr2eta","Generator Subleading Gravitino #eta",100,-6.0,6.0,"#eta","Gravitinos","GenParticles");
+
+  fPlots["genN1ctau"] = PlotPhotons::MakeTH1F("genN1ctau","Generator Leading Neutralino c#tau [cm]",200,0.f,100.f,"c#tau [cm]","Neutralinos","GenParticles");
+  fPlots["genN2ctau"] = PlotPhotons::MakeTH1F("genN2ctau","Generator Subleading Neutralino c#tau [cm]",200,0.f,100.f,"c#tau [cm]","Neutralinos","GenParticles");
   
   // 2D Histogram
   fPlots2D["genN2EvsN1E"] = PlotPhotons::MakeTH2F("genN2EvsN1E","Generator Neutralino2 E vs Neutralino1 E [GeV]",100,0.f,2500.f,"Neutralino1 Energy [GeV]",100,0.f,2500.f,"Neutralino2 Energy [GeV]","GenParticles");
