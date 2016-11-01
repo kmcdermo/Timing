@@ -759,7 +759,7 @@ void TimingAnalyzer::endJob() {}
 void TimingAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
 {
   // triggers for the Analysis
-  triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ");
+  //  triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ");
   triggerPathsVector.push_back("HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_v");
   triggerPathsVector.push_back("HLT_DoubleEle37_Ele27_CaloIdL_GsfTrkIdVL");
 
