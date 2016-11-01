@@ -15,18 +15,18 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runRecHitPlots() 
+void runRECORecHitPlots() 
 {
   setupcpp11(); 
 
-  gROOT->LoadMacro("PlotRecHits.cc++g");
+  gROOT->LoadMacro("PlotRECORecHits.cc++g");
 
   // config is:
-  // filename, isMC, outdir, 
-  // applyjetptcut, jetptcut, applyphptcut, phptcut,
-  // applyphvidcut, phvid, applyrhecut, 
-  // applyecalacceptcut
+  // applyHLTcut
+  // applyPhPtcut, phptcut,
+  // applyrhEcut, rhEcut 
+  // applyEcalAcceptcut
   
-  PlotRecHits recHitPlots("input/rereco/phrhs-addrhs.root","output/rhaddons",true,100.f,true,1.f,true);
+  PlotRECORecHits recHitPlots("input/ootrecotree.root","output/reco",false,true,100.f,true,1.f,true);
   recHitPlots.DoPlots();
 }

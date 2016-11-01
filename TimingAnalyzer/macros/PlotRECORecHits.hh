@@ -1,5 +1,5 @@
-#ifndef _plotrechits_
-#define _plotrechits_
+#ifndef _plotrecorechits_
+#define _plotrecorechits_
 
 #include "TROOT.h"
 #include "TFile.h"
@@ -22,12 +22,13 @@ typedef TStrMap::iterator         TStrMapIter;
 
 typedef std::vector<TString> TStrVec;
 
-class PlotRecHits 
+class PlotRECORecHits 
 {
 public :
-  PlotRecHits(TString filename, TString outdir = "output", Bool_t applyphptcut = false, Float_t phptcut = 100.f,
-	      Bool_t applyrhecut = false, Float_t rhEcut = 1.f, Bool_t applyecalacceptcut = false);
-  ~PlotRecHits();
+  PlotRECORecHits(TString filename, TString outdir = "output", 
+		  Bool_t applhltcut = false, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
+		  Bool_t applyrhecut = false, Float_t rhEcut = 1.f, Bool_t applyecalacceptcut = false);
+  ~PlotRECORecHits();
   void InitTree();
   void DoPlots();
   void SetupPlots();
@@ -55,6 +56,7 @@ private :
   TStrVec fTotalNames;
 
   // Config
+  const Bool_t  fApplyHLTCut;
   const Bool_t  fApplyPhPtCut;
   const Float_t fPhPtCut;
   const Bool_t  fApplyrhECut;
@@ -69,6 +71,7 @@ private :
   Int_t   event;
   Int_t   run;
   Int_t   lumi;
+  Bool_t  hltdoubleph60;
   Float_t phE;
   Float_t phpt;
   Float_t phphi;
@@ -101,6 +104,7 @@ private :
   TBranch * b_event;   //!
   TBranch * b_run;   //!
   TBranch * b_lumi;   //!
+  TBranch * b_hltdoubleph60;   //!
   TBranch * b_phE;   //!
   TBranch * b_phpt;   //!
   TBranch * b_phphi;   //!
