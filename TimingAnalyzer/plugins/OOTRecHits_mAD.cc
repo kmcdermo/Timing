@@ -65,6 +65,8 @@ void OOTRecHits_mAD::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   lumi  = iEvent.luminosityBlock();
   event = iEvent.id().event();
 
+  if (lumi != 135 && lumi != 136 && lumi != 406 && lumi != 407) return;
+
   // Trigger info
   hltdoubleph60 = false;
 

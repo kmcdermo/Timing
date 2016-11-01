@@ -49,7 +49,7 @@ options.register (
 
 ## outputFile Name
 options.register (
-	'outputFileName','rerecotree.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'outputFileName','ootrecotree.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
 ## parsing command line arguments
@@ -84,8 +84,8 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-		'file:/afs/cern.ch/work/k/kmcdermo/private/dispho/CMSSW_8_0_20/src/Timing/TimingAnalyzer/tmp_rereco/rerecoOOT0.root',
-		'file:/afs/cern.ch/work/k/kmcdermo/private/dispho/CMSSW_8_0_20/src/Timing/TimingAnalyzer/tmp_rereco/rerecoOOT1.root'
+		'file:/afs/cern.ch/work/k/kmcdermo/files/OOT/recoOOT0.root',
+		'file:/afs/cern.ch/work/k/kmcdermo/files/OOT/recoOOT1.root'
 		) 
 )
 

@@ -31,7 +31,7 @@ options.register (
 
 ## outputFile Name
 options.register (
-	'outputFileName','rechits.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'outputFileName','ootmADtree.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
 ## parsing command line arguments
@@ -61,6 +61,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+		'file:/afs/cern.ch/work/k/kmcdermo/files/OOT/miniaodOOT0.root'
 		) 
 )
 
@@ -104,4 +105,4 @@ process.tree = cms.EDAnalyzer("OOTRecHits_mAD",
 )
 
 # Set up the path
-process.treePath = cms.Path(process.tree)
+process.treePath = cms.Path(process.selectedPhotons * process.calibratedPhotons * process.egmPhotonIDs * process.tree)
