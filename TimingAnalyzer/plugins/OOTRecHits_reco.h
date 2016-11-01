@@ -114,7 +114,7 @@ private:
 
   // event info
   int event, run, lumi;  
-  bool hltdouble33, hltdouble37;
+  bool hltdoubleph60;
 
   // photon ntuple
   // phrhtree;

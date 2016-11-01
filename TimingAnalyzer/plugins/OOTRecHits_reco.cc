@@ -62,8 +62,7 @@ void OOTRecHits_reco::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   event = iEvent.id().event();
 
   // Trigger info
-  hltdoubleel33 = false;
-  hltdoubleel37 = false;
+  hltdoubleph60 = false;
 
   // Which triggers fired
   if (triggerResultsH.isValid())
@@ -71,8 +70,7 @@ void OOTRecHits_reco::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     for (std::size_t i = 0; i < triggerPathsVector.size(); i++) 
     {
       if (triggerPathsMap[triggerPathsVector[i]] == -1) continue;	
-      if (i == 0 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel33 = true; // Double electron trigger (33-33)
-      if (i == 1 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel37 = true; // Double electron trigger (37-27)
+      if (i == 0 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleph60 = true; // Double photon trigger (60-60)
     }
   }
 
@@ -560,8 +558,7 @@ void OOTRecHits_reco::beginJob()
   phrhtree->Branch("event"                , &event                , "event/I");
   phrhtree->Branch("run"                  , &run                  , "run/I");
   phrhtree->Branch("lumi"                 , &lumi                 , "lumi/I");
-  phrhtree->Branch("hltdouble33"          , &hltdouble33          , "hltdouble33/O");
-  phrhtree->Branch("hltdouble37"          , &hltdouble37          , "hltdouble37/O");
+  phrhtree->Branch("hltdoubleph60"        , &hltdoubleph60        , "hltdoubleph60/O");
 
   phrhtree->Branch("phE"                  , &phE                  , "phE/F");
   phrhtree->Branch("phpt"                 , &phpt                 , "phpt/F");
@@ -600,8 +597,7 @@ void OOTRecHits_reco::beginJob()
   countingtree->Branch("event"                , &event                , "event/I");
   countingtree->Branch("run"                  , &run                  , "run/I");
   countingtree->Branch("lumi"                 , &lumi                 , "lumi/I");
-  countingtree->Branch("hltdouble33"          , &hltdouble33          , "hltdouble33/O");
-  countingtree->Branch("hltdouble37"          , &hltdouble37          , "hltdouble37/O");
+  countingtree->Branch("hltdoubleph60"        , &hltdoubleph60        , "hltdoubleph60/O");
   countingtree->Branch("nphotons"             , &nphotons             , "nphotons/I");
 
   countingtree->Branch("nReducedEB"           , &nReducedEB           , "nReducedEB/I");
@@ -631,8 +627,7 @@ void OOTRecHits_reco::beginRun(edm::Run const& iRun, edm::EventSetup const& iSet
 
 void OOTRecHits_reco::endRun(edm::Run const&, edm::EventSetup const&) 
 {
-  triggerPathsVector.push_back("HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_v");
-  triggerPathsVector.push_back("HLT_DoubleEle37_Ele27_CaloIdL_GsfTrkIdVL");
+  triggerPathsVector.push_back("HLT_DoublePhoton60_v");
   
   HLTConfigProvider hltConfig;
   bool changedConfig = false;
