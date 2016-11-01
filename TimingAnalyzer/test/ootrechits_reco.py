@@ -111,7 +111,7 @@ process.TFileService = cms.Service("TFileService",
 		                   fileName = cms.string(options.outputFileName))
 
 # Make the tree 
-process.tree = cms.EDAnalyzer("OOTRecHits",
+process.tree = cms.EDAnalyzer("OOTRecHits_reco",
    ## analysis bools
    doPhRhs      = cms.bool(options.doPhRhs),
    doCount      = cms.bool(options.doCount),

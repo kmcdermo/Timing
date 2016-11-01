@@ -59,11 +59,11 @@
 // Common types
 #include "CommonTypes.h"
 
-class OOTRecHits : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
+class OOTRecHits_reco : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
 public:
-  explicit OOTRecHits(const edm::ParameterSet&);
-  ~OOTRecHits();
+  explicit OOTRecHits_reco(const edm::ParameterSet&);
+  ~OOTRecHits_reco();
   
   void PhotonRecHits(edm::Handle<std::vector<reco::Photon> > &, 
 		     EcalClusterLazyTools *&, EcalClusterLazyTools *&,

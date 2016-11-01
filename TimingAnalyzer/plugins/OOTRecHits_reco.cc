@@ -1,6 +1,6 @@
-#include "OOTRecHits.h"
+#include "OOTRecHits_reco.h"
 
-OOTRecHits::OOTRecHits(const edm::ParameterSet& iConfig): 
+OOTRecHits_reco::OOTRecHits_reco(const edm::ParameterSet& iConfig): 
   // photon rec hit analyis
   doPhRhs(iConfig.existsAs<bool>("doPhRhs") ? iConfig.getParameter<bool>("doPhRhs") : false),
   // rec hit energy cut
@@ -27,9 +27,9 @@ OOTRecHits::OOTRecHits(const edm::ParameterSet& iConfig):
   photonsToken = consumes<std::vector<reco::Photon> > (photonsTag);
 }
 
-OOTRecHits::~OOTRecHits() {}
+OOTRecHits_reco::~OOTRecHits_reco() {}
 
-void OOTRecHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
+void OOTRecHits_reco::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 {
   edm::Handle<std::vector<reco::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
@@ -51,7 +51,7 @@ void OOTRecHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
   if (doPhRhs)
   {
-    OOTRecHits::PhotonRecHits(photonsH,fulltools,reducedtools,barrelGeometry,endcapGeometry);
+    OOTRecHits_reco::PhotonRecHits(photonsH,fulltools,reducedtools,barrelGeometry,endcapGeometry);
   }  
 
   // Do all the counting!
@@ -60,11 +60,11 @@ void OOTRecHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     nphotons = -9999;
     if (photonsH.isValid()) nphotons = photonsH->size();
 
-    OOTRecHits::ReducedToFullEB(reducedtools,fulltools);
-    OOTRecHits::ReducedToFullEE(reducedtools,fulltools);
+    OOTRecHits_reco::ReducedToFullEB(reducedtools,fulltools);
+    OOTRecHits_reco::ReducedToFullEE(reducedtools,fulltools);
 
-    OOTRecHits::FullToReducedEB(fulltools,reducedtools);
-    OOTRecHits::FullToReducedEE(fulltools,reducedtools);
+    OOTRecHits_reco::FullToReducedEB(fulltools,reducedtools);
+    OOTRecHits_reco::FullToReducedEE(fulltools,reducedtools);
 
     // fill the counting tree
     countingtree->Fill();    
@@ -74,7 +74,7 @@ void OOTRecHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   delete fulltools;
 }
 
-void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photonsH, 
+void OOTRecHits_reco::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photonsH, 
 			       EcalClusterLazyTools *& fulltools, EcalClusterLazyTools *& reducedtools,
 			       const CaloSubdetectorGeometry *& barrelGeometry, const CaloSubdetectorGeometry *& endcapGeometry)
 {
@@ -82,7 +82,7 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   {
     for (std::vector<reco::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector
     {
-      OOTRecHits::InitializePhotonBranches();
+      OOTRecHits_reco::InitializePhotonBranches();
       // standard photon branches
       phE   = phiter->energy();
       phpt  = phiter->pt();
@@ -124,7 +124,7 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	} // end loop over hits and fractions
 
   	phnfrhs = phfrhIDmap.size();
-  	if (phnfrhs > 0) OOTRecHits::InitializeFullRecHitBranches();
+  	if (phnfrhs > 0) OOTRecHits_reco::InitializeFullRecHitBranches();
   	int ifrh = 0;
   	for (uiiumap::const_iterator rhiter = phfrhIDmap.begin(); rhiter != phfrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
         {
@@ -208,7 +208,7 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   	} // end loop over hits and fractions
       
   	phnrrhs = phrrhIDmap.size();
-  	if (phnrrhs > 0) OOTRecHits::InitializeReducedRecHitBranches();
+  	if (phnrrhs > 0) OOTRecHits_reco::InitializeReducedRecHitBranches();
   	int irrh = 0;
   	for (uiiumap::const_iterator rhiter = phrrhIDmap.begin(); rhiter != phrrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
         {
@@ -244,7 +244,7 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
 	    const uint32_t rhId  = recHitId.rawId();
 
 	    // check previous map to make sure to not double count recHit ids!
-	    if (phfrhIDmap.count(rhId)) continue; 
+	    if (phrrhIDmap.count(rhId)) continue; 
 		
 	    // get position to see if it is within delR <= cut_value of photon
 	    const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
@@ -274,7 +274,7 @@ void OOTRecHits::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photons
   } // end check over photon handle valid
 }
 
-void OOTRecHits::InitializePhotonBranches()
+void OOTRecHits_reco::InitializePhotonBranches()
 {
   phE   = -9999.f;
   phpt  = -9999.f;
@@ -301,7 +301,7 @@ void OOTRecHits::InitializePhotonBranches()
 
   // reduced hits
   phnrrhs     = -9999;
-  phnfrhs_add = -9999;
+  phnrrhs_add = -9999;
   
   phrrhEs   .clear();
   phrrhphis .clear();
@@ -314,7 +314,7 @@ void OOTRecHits::InitializePhotonBranches()
   phrseedpos = -9999;
 }
 
-void OOTRecHits::InitializeFullRecHitBranches()
+void OOTRecHits_reco::InitializeFullRecHitBranches()
 {
   phfrhEs   .resize(phnfrhs);
   phfrhphis .resize(phnfrhs);
@@ -336,7 +336,7 @@ void OOTRecHits::InitializeFullRecHitBranches()
   }
 }
 
-void OOTRecHits::InitializeReducedRecHitBranches()
+void OOTRecHits_reco::InitializeReducedRecHitBranches()
 {
   phrrhEs   .resize(phnrrhs);
   phrrhphis .resize(phnrrhs);
@@ -358,7 +358,7 @@ void OOTRecHits::InitializeReducedRecHitBranches()
   }
 }
 
-void OOTRecHits::ReducedToFullEB(EcalClusterLazyTools *& reducedtools, EcalClusterLazyTools *& fulltools)
+void OOTRecHits_reco::ReducedToFullEB(EcalClusterLazyTools *& reducedtools, EcalClusterLazyTools *& fulltools)
 {
   nReducedEB = 0; nR2FMatchedEB = 0; nReducedOOTEB = 0; nR2FMatchedOOTEB = 0;
 
@@ -399,7 +399,7 @@ void OOTRecHits::ReducedToFullEB(EcalClusterLazyTools *& reducedtools, EcalClust
   }
 }
 
-void OOTRecHits::ReducedToFullEE(EcalClusterLazyTools *& reducedtools, EcalClusterLazyTools *& fulltools)
+void OOTRecHits_reco::ReducedToFullEE(EcalClusterLazyTools *& reducedtools, EcalClusterLazyTools *& fulltools)
 {
   nReducedEE = 0; nR2FMatchedEE = 0; nReducedOOTEE = 0; nR2FMatchedOOTEE = 0;
   
@@ -440,7 +440,7 @@ void OOTRecHits::ReducedToFullEE(EcalClusterLazyTools *& reducedtools, EcalClust
   }
 }
 
-void OOTRecHits::FullToReducedEB(EcalClusterLazyTools *& fulltools, EcalClusterLazyTools *& reducedtools)
+void OOTRecHits_reco::FullToReducedEB(EcalClusterLazyTools *& fulltools, EcalClusterLazyTools *& reducedtools)
 {
   nFullEB = 0; nF2RMatchedEB = 0; nFullOOTEB = 0; nF2RMatchedOOTEB = 0;
 
@@ -481,7 +481,7 @@ void OOTRecHits::FullToReducedEB(EcalClusterLazyTools *& fulltools, EcalClusterL
   }
 }
 
-void OOTRecHits::FullToReducedEE(EcalClusterLazyTools *& fulltools, EcalClusterLazyTools *& reducedtools)
+void OOTRecHits_reco::FullToReducedEE(EcalClusterLazyTools *& fulltools, EcalClusterLazyTools *& reducedtools)
 {
   nFullEE = 0; nF2RMatchedEE = 0; nFullOOTEE = 0; nF2RMatchedOOTEE = 0;
 
@@ -522,7 +522,7 @@ void OOTRecHits::FullToReducedEE(EcalClusterLazyTools *& fulltools, EcalClusterL
   }
 }
 
-void OOTRecHits::beginJob() 
+void OOTRecHits_reco::beginJob() 
 {
   edm::Service<TFileService> fs;
 
@@ -593,17 +593,17 @@ void OOTRecHits::beginJob()
   countingtree->Branch("nF2RMatchedOOTEE"     , &nF2RMatchedOOTEE     , "nF2RMatchedOOTEE/I");
 }
 
-void OOTRecHits::endJob() {}
+void OOTRecHits_reco::endJob() {}
 
-void OOTRecHits::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
+void OOTRecHits_reco::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
 
-void OOTRecHits::endRun(edm::Run const&, edm::EventSetup const&) {}
+void OOTRecHits_reco::endRun(edm::Run const&, edm::EventSetup const&) {}
 
-void OOTRecHits::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
+void OOTRecHits_reco::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
 {
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addDefault(desc);
 }
 
-DEFINE_FWK_MODULE(OOTRecHits);
+DEFINE_FWK_MODULE(OOTRecHits_reco);
