@@ -26,13 +26,14 @@ PlotRECORecHits::PlotRECORecHits(TString filename, TString outdir,
   // output
   // setup outdir name
   
-  if (!fApplyPhPtCut && !fApplyrhECut && ! fApplyECALAcceptCut)
+  if (!fApplyHLTCut && !fApplyPhPtCut && !fApplyrhECut && ! fApplyECALAcceptCut)
   { 
     fOutDir += "/Inclusive";
   }
   else 
   {
     fOutDir += "/cuts";
+    if (fApplyHLTCut)        fOutDir += Form("_hlt");
     if (fApplyPhPtCut)       fOutDir += Form("_phpt%3.1f" ,fPhPtCut);
     if (fApplyrhECut)        fOutDir += Form("_rhE%2.1f"  ,frhECut);
     if (fApplyECALAcceptCut) fOutDir += Form("_ecalaccept");
@@ -251,7 +252,7 @@ void PlotRECORecHits::FillRecoPhotons()
   fPlots["phnrrhs_add"]->Fill(nrRecHits_add);
 
   // --> Total Rec Hits <-- //
-  fPlots["phnrrhs_total"]->Fill(nfRecHits+nrRecHits_add);
+  fPlots["phnrrhs_total"]->Fill(nrRecHits+nrRecHits_add);
 }
 
 void PlotRECORecHits::SetupRecoPhotons()
