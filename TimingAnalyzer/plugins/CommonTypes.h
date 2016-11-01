@@ -1,9 +1,15 @@
 // basic C++ types
+#include <memory>
+#include <iostream>
+#include <fstream>
 #include <vector>
 #include <utility>
+#include <map>
 #include <unordered_map>
+#include <tuple>
 #include <cmath>
 #include <algorithm>
+#include <string>
 
 // DataFormats
 #include "DataFormats/DetId/interface/DetId.h"

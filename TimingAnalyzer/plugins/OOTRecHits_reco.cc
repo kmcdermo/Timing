@@ -1,6 +1,9 @@
 #include "OOTRecHits_reco.h"
 
 OOTRecHits_reco::OOTRecHits_reco(const edm::ParameterSet& iConfig): 
+  // trigger info
+  triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
+
   // photon rec hit analyis
   doPhRhs(iConfig.existsAs<bool>("doPhRhs") ? iConfig.getParameter<bool>("doPhRhs") : false),
   // rec hit energy cut
@@ -24,6 +27,10 @@ OOTRecHits_reco::OOTRecHits_reco(const edm::ParameterSet& iConfig):
   usesResource();
   usesResource("TFileService");
 
+  // trigger token
+  triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
+
+  // photon token
   photonsToken = consumes<std::vector<reco::Photon> > (photonsTag);
 }
 
@@ -31,6 +38,11 @@ OOTRecHits_reco::~OOTRecHits_reco() {}
 
 void OOTRecHits_reco::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 {
+  // TRIGGER
+  edm::Handle<edm::TriggerResults> triggerResultsH;
+  iEvent.getByToken(triggerResultsToken, triggerResultsH);
+
+  // PHOTONS
   edm::Handle<std::vector<reco::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
 
@@ -48,6 +60,21 @@ void OOTRecHits_reco::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   run   = iEvent.id().run();
   lumi  = iEvent.luminosityBlock();
   event = iEvent.id().event();
+
+  // Trigger info
+  hltdoubleel33 = false;
+  hltdoubleel37 = false;
+
+  // Which triggers fired
+  if (triggerResultsH.isValid())
+  {
+    for (std::size_t i = 0; i < triggerPathsVector.size(); i++) 
+    {
+      if (triggerPathsMap[triggerPathsVector[i]] == -1) continue;	
+      if (i == 0 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel33 = true; // Double electron trigger (33-33)
+      if (i == 1 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel37 = true; // Double electron trigger (37-27)
+    }
+  }
 
   if (doPhRhs)
   {
@@ -75,8 +102,8 @@ void OOTRecHits_reco::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 }
 
 void OOTRecHits_reco::PhotonRecHits(edm::Handle<std::vector<reco::Photon> > & photonsH, 
-			       EcalClusterLazyTools *& fulltools, EcalClusterLazyTools *& reducedtools,
-			       const CaloSubdetectorGeometry *& barrelGeometry, const CaloSubdetectorGeometry *& endcapGeometry)
+				    EcalClusterLazyTools *& fulltools, EcalClusterLazyTools *& reducedtools,
+				    const CaloSubdetectorGeometry *& barrelGeometry, const CaloSubdetectorGeometry *& endcapGeometry)
 {
   if (photonsH.isValid()) // standard handle check
   {
@@ -529,9 +556,12 @@ void OOTRecHits_reco::beginJob()
   // phrh tree
   phrhtree = fs->make<TTree>("phrhtree", "tree");
 
+  // event level info
   phrhtree->Branch("event"                , &event                , "event/I");
   phrhtree->Branch("run"                  , &run                  , "run/I");
   phrhtree->Branch("lumi"                 , &lumi                 , "lumi/I");
+  phrhtree->Branch("hltdouble33"          , &hltdouble33          , "hltdouble33/O");
+  phrhtree->Branch("hltdouble37"          , &hltdouble37          , "hltdouble37/O");
 
   phrhtree->Branch("phE"                  , &phE                  , "phE/F");
   phrhtree->Branch("phpt"                 , &phpt                 , "phpt/F");
@@ -570,6 +600,8 @@ void OOTRecHits_reco::beginJob()
   countingtree->Branch("event"                , &event                , "event/I");
   countingtree->Branch("run"                  , &run                  , "run/I");
   countingtree->Branch("lumi"                 , &lumi                 , "lumi/I");
+  countingtree->Branch("hltdouble33"          , &hltdouble33          , "hltdouble33/O");
+  countingtree->Branch("hltdouble37"          , &hltdouble37          , "hltdouble37/O");
   countingtree->Branch("nphotons"             , &nphotons             , "nphotons/I");
 
   countingtree->Branch("nReducedEB"           , &nReducedEB           , "nReducedEB/I");
@@ -597,7 +629,33 @@ void OOTRecHits_reco::endJob() {}
 
 void OOTRecHits_reco::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
 
-void OOTRecHits_reco::endRun(edm::Run const&, edm::EventSetup const&) {}
+void OOTRecHits_reco::endRun(edm::Run const&, edm::EventSetup const&) 
+{
+  triggerPathsVector.push_back("HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_v");
+  triggerPathsVector.push_back("HLT_DoubleEle37_Ele27_CaloIdL_GsfTrkIdVL");
+  
+  HLTConfigProvider hltConfig;
+  bool changedConfig = false;
+  hltConfig.init(iRun, iSetup, triggerResultsTag.process(), changedConfig);
+  
+  for (size_t i = 0; i < triggerPathsVector.size(); i++) 
+  {
+    triggerPathsMap[triggerPathsVector[i]] = -1;
+  }
+  
+  for(size_t i = 0; i < triggerPathsVector.size(); i++)
+  {
+    TPRegexp pattern(triggerPathsVector[i]);
+    for(size_t j = 0; j < hltConfig.triggerNames().size(); j++)
+    {
+      std::string pathName = hltConfig.triggerNames()[j];
+      if(TString(pathName).Contains(pattern))
+      {
+	triggerPathsMap[triggerPathsVector[i]] = j;
+      }
+    }
+  }
+}
 
 void OOTRecHits_reco::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
 {

@@ -1,14 +1,13 @@
 // basic C++ headers
 #include <iostream>
-#include <memory>
 #include <string>
 #include <vector>
-#include <tuple>
 #include <utility>
 #include <map>
-#include <unordered_map>
 #include <cmath>
-#include <algorithm>
+
+// Common types
+#include "CommonTypes.h"
 
 // FWCore
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -18,6 +17,7 @@
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
+#include "FWCore/Common/interface/TriggerNames.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h" 
 
 // Gen Info
@@ -56,9 +56,6 @@
 #include "TLorentzVector.h"
 #include "TPRegexp.h"
 
-// Common types
-#include "CommonTypes.h"
-
 class OOTRecHits_reco : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
 public:
@@ -86,7 +83,7 @@ private:
   
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
-  
+
   // photon rec hit analysis
   const bool doPhRhs;
   // delta R cuts
@@ -99,6 +96,12 @@ private:
   const bool applyrhEcut;
   const double rhEcut;
 
+  // Trigger
+  const edm::InputTag triggerResultsTag;
+  edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
+  std::vector<std::string>   triggerPathsVector;
+  std::map<std::string, int> triggerPathsMap;
+
   // Photons
   const edm::InputTag photonsTag;
   edm::EDGetTokenT<std::vector<reco::Photon> > photonsToken;
@@ -108,6 +111,10 @@ private:
   edm::EDGetTokenT<EcalRecHitCollection> recHitsReducedEETAG;
   edm::EDGetTokenT<EcalRecHitCollection> recHitsFullEBTAG;
   edm::EDGetTokenT<EcalRecHitCollection> recHitsFullEETAG;
+
+  // event info
+  int event, run, lumi;  
+  bool hltdouble33, hltdouble37;
 
   // photon ntuple
   // phrhtree;
@@ -131,8 +138,6 @@ private:
   // countingtree
   TTree * countingtree;
 
-  // event info
-  int event, run, lumi;  
   int nphotons;
   
   // rec hit info EB

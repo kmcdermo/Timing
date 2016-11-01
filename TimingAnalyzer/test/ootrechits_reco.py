@@ -121,6 +121,8 @@ process.tree = cms.EDAnalyzer("OOTRecHits_reco",
    ## rh energy cut
    applyrhEcut  = cms.bool(options.applyrhEcut),
    rhEcut       = cms.double(options.rhEcut),
+   ## trigger
+   triggerResults = cms.InputTag("TriggerResults", "", "HLT"),
    ## photons
    photons      = cms.InputTag("gedPhotons"),
    ## ecal recHits			      
