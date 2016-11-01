@@ -87,7 +87,14 @@ private:
   std::vector<std::string>   triggerPathsVector;
   std::map<std::string, int> triggerPathsMap;
 
-  // Photons
+  // Photons + IDS
+  const edm::InputTag photonLooseIdMapTag;
+  edm::EDGetTokenT<edm::ValueMap<bool> > photonLooseIdMapToken;
+  const edm::InputTag photonMediumIdMapTag;
+  edm::EDGetTokenT<edm::ValueMap<bool> > photonMediumIdMapToken;
+  const edm::InputTag photonTightIdMapTag;
+  edm::EDGetTokenT<edm::ValueMap<bool> > photonTightIdMapToken;
+
   const edm::InputTag photonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > photonsToken;
 

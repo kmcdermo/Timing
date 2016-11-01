@@ -1,22 +1,29 @@
 #include "OOTRecHits_mAD.h"
 
 OOTRecHits_mAD::OOTRecHits_mAD(const edm::ParameterSet& iConfig): 
-  // trigger info
-  triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
-
   // rec hit energy cut
   addrhsInDelR(iConfig.existsAs<bool>("addrhsInDelR") ? iConfig.getParameter<bool>("addrhsInDelR") : false),
   delRcut     (iConfig.existsAs<double>("delRcut")    ? iConfig.getParameter<double>("delRcut")    : 1.0),
 
+  // trigger info
+  triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
+
+  // photons
+  photonLooseIdMapTag (iConfig.getParameter<edm::InputTag>("loosePhotonID")),  
+  photonMediumIdMapTag(iConfig.getParameter<edm::InputTag>("mediumPhotonID")),  
+  photonTightIdMapTag (iConfig.getParameter<edm::InputTag>("tightPhotonID")),  
   photonsTag(iConfig.getParameter<edm::InputTag>("photons")),
 
   //recHits
   recHitsReducedEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitsReducedEB" ))),
-  recHitsReducedEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitsReducedEE" ))),
+  recHitsReducedEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitsReducedEE" )))
 {
   usesResource();
   usesResource("TFileService");
 
+  photonLooseIdMapToken  = consumes<edm::ValueMap<bool> > (photonLooseIdMapTag);
+  photonMediumIdMapToken = consumes<edm::ValueMap<bool> > (photonMediumIdMapTag);
+  photonTightIdMapToken  = consumes<edm::ValueMap<bool> > (photonTightIdMapTag);
   photonsToken = consumes<std::vector<pat::Photon> > (photonsTag);
 }
 
@@ -27,6 +34,19 @@ void OOTRecHits_mAD::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // TRIGGER
   edm::Handle<edm::TriggerResults> triggerResultsH;
   iEvent.getByToken(triggerResultsToken, triggerResultsH);
+
+  // PHOTONS + IDS
+  edm::Handle<edm::ValueMap<bool> > photonLooseIdMapH;
+  iEvent.getByToken(photonLooseIdMapToken, photonLooseIdMapH);
+  edm::ValueMap<bool> photonLooseIdMap = *photonLooseIdMapH;
+
+  edm::Handle<edm::ValueMap<bool> > photonMediumIdMapH;
+  iEvent.getByToken(photonMediumIdMapToken, photonMediumIdMapH);
+  edm::ValueMap<bool> photonMediumIdMap = *photonMediumIdMapH;
+
+  edm::Handle<edm::ValueMap<bool> > photonTightIdMapH;
+  iEvent.getByToken(photonTightIdMapToken, photonTightIdMapH);
+  edm::ValueMap<bool> photonTightIdMap = *photonTightIdMapH;
 
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
@@ -199,7 +219,7 @@ void OOTRecHits_mAD::InitializePhotonBranches()
   phrhIDs  .clear();
   phrhOOTs .clear();
 	  
-  phrseedpos = -9999;
+  phseedpos = -9999;
 }
 
 void OOTRecHits_mAD::InitializeRecHitBranches()
@@ -260,7 +280,32 @@ void OOTRecHits_mAD::beginJob()
 
 void OOTRecHits_mAD::endJob() {}
 
-void OOTRecHits_mAD::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
+void OOTRecHits_mAD::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
+{
+  triggerPathsVector.push_back("HLT_DoublePhoton60_v");
+  
+  HLTConfigProvider hltConfig;
+  bool changedConfig = false;
+  hltConfig.init(iRun, iSetup, triggerResultsTag.process(), changedConfig);
+  
+  for (size_t i = 0; i < triggerPathsVector.size(); i++) 
+  {
+    triggerPathsMap[triggerPathsVector[i]] = -1;
+  }
+  
+  for(size_t i = 0; i < triggerPathsVector.size(); i++)
+  {
+    TPRegexp pattern(triggerPathsVector[i]);
+    for(size_t j = 0; j < hltConfig.triggerNames().size(); j++)
+    {
+      std::string pathName = hltConfig.triggerNames()[j];
+      if(TString(pathName).Contains(pattern))
+      {
+	triggerPathsMap[triggerPathsVector[i]] = j;
+      }
+    }
+  }
+}
 
 void OOTRecHits_mAD::endRun(edm::Run const&, edm::EventSetup const&) {}
 

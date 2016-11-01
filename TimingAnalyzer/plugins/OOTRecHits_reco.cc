@@ -1,9 +1,6 @@
 #include "OOTRecHits_reco.h"
 
 OOTRecHits_reco::OOTRecHits_reco(const edm::ParameterSet& iConfig): 
-  // trigger info
-  triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
-
   // photon rec hit analyis
   doPhRhs(iConfig.existsAs<bool>("doPhRhs") ? iConfig.getParameter<bool>("doPhRhs") : false),
   // rec hit energy cut
@@ -16,6 +13,10 @@ OOTRecHits_reco::OOTRecHits_reco(const edm::ParameterSet& iConfig):
   applyrhEcut(iConfig.existsAs<bool>("applyrhEcut") ? iConfig.getParameter<bool>("applyrhEcut") : false),
   rhEcut     (iConfig.existsAs<double>("rhEcut")    ? iConfig.getParameter<double>("rhEcut")    : 1.0),
 
+  // trigger info
+  triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
+
+  // photons
   photonsTag(iConfig.getParameter<edm::InputTag>("photons")),
 
   //recHits
@@ -623,9 +624,7 @@ void OOTRecHits_reco::beginJob()
 
 void OOTRecHits_reco::endJob() {}
 
-void OOTRecHits_reco::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
-
-void OOTRecHits_reco::endRun(edm::Run const&, edm::EventSetup const&) 
+void OOTRecHits_reco::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
 {
   triggerPathsVector.push_back("HLT_DoublePhoton60_v");
   
@@ -651,6 +650,8 @@ void OOTRecHits_reco::endRun(edm::Run const&, edm::EventSetup const&)
     }
   }
 }
+
+void OOTRecHits_reco::endRun(edm::Run const&, edm::EventSetup const&) {}
 
 void OOTRecHits_reco::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
 {
