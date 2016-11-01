@@ -21,6 +21,10 @@ OOTRecHits_mAD::OOTRecHits_mAD(const edm::ParameterSet& iConfig):
   usesResource();
   usesResource("TFileService");
 
+  // trigger token
+  triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
+  
+  // photon tokens
   photonLooseIdMapToken  = consumes<edm::ValueMap<bool> > (photonLooseIdMapTag);
   photonMediumIdMapToken = consumes<edm::ValueMap<bool> > (photonMediumIdMapTag);
   photonTightIdMapToken  = consumes<edm::ValueMap<bool> > (photonTightIdMapTag);

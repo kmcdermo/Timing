@@ -2,26 +2,26 @@
 
 void lumitest()
 {
-  TFile * file = TFile::Open("ootrecotree.root");
-  TTree * tree = (TTree*)file->Get("tree/countingtree");
+  TFile * file = TFile::Open("input/ootrecotree.root");
+  TTree * tree = (TTree*)file->Get("tree/phrhtree");
 
-  Int_t run;  tree->SetBranchAddress("run",&run);
-  Int_t lumi; tree->SetBranchAddress("lumi",&lumi);
+  Int_t run;   tree->SetBranchAddress("run",&run);
+  Int_t lumi;  tree->SetBranchAddress("lumi",&lumi);
   Int_t event; tree->SetBranchAddress("event",&event);
 
-  Int_t nphotons; tree->SetBranchAddress("nphotons",&nphotons);
+  Bool_t hltdoubleph60; tree->SetBranchAddress("hltdoubleph60",&hltdoubleph60);
+  //  Int_t nphotons;       tree->SetBranchAddress("nphotons",&nphotons);
 
-  Int_t trun = 0, tlumi = 0, nevents = 0, nbadevs = 0;
+  Int_t trun = 0, tlumi = 0, nevents = 0, nhlt = 0; // nbadevs = 0;
   std::map<int,int> tevent;
   for (UInt_t i = 0; i < tree->GetEntries(); i++)
   {
     tree->GetEntry(i);
 
-    if (nphotons < 1)
-    {
-      nbadevs++;
-      //std::cout << event << " : " << nphotons << std::endl;
-    }
+    // if (nphotons < 1)
+    // {
+    //   nbadevs++;
+    // }
 
     if (run > trun)
     { 
@@ -30,8 +30,9 @@ void lumitest()
     }
     if (lumi > tlumi)
     { 
-      if (nevents != 0) std::cout << " nevents: " << nevents << std::endl;
+      if (nevents != 0) std::cout << " nevents: " << nevents << " nhlt: " << nhlt << std::endl;
       nevents = 0;
+      nhlt = 0;
       tlumi = lumi;
       std::cout << "lumi: " << tlumi << std::endl;
     }
@@ -39,7 +40,8 @@ void lumitest()
     {
       nevents++;
       tevent[event]++;
+      if (hltdoubleph60) nhlt++;
     }
   }
-  std::cout << " nevents: " << nevents << " nbadevs: " << nbadevs << std::endl;
+  std::cout << " nevents: " << nevents << " nhlt: " << nhlt << std::endl; //" nbadevs: " << nbadevs << std::endl;
 }

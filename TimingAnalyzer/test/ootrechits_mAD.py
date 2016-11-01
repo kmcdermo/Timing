@@ -65,10 +65,6 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		) 
 )
 
-process.options = cms.untracked.PSet( 
-	allowUnscheduled = cms.untracked.bool(True),
-	wantSummary = cms.untracked.bool(True))
-
 # Set the global tag depending on the sample type
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag.globaltag = options.globalTag  
@@ -83,7 +79,7 @@ else:
 
 # EGM Smearing and VID
 from Timing.TimingAnalyzer.PhotonTools_cff import PhotonTools
-PhotonTools(process,True)
+PhotonTools(process,False) # isMC = false
 
 ## Create output file
 ## Setup the service to make a ROOT TTree
@@ -98,10 +94,13 @@ process.tree = cms.EDAnalyzer("OOTRecHits_mAD",
    ## trigger
    triggerResults = cms.InputTag("TriggerResults", "", "HLT"),
    ## photons
-   photons      = cms.InputTag("calibratedPhotons"),
+   loosePhotonID  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-loose"),
+   mediumPhotonID = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-medium"),
+   tightPhotonID  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-tight"),
+   photons        = cms.InputTag("calibratedPhotons"),
    ## ecal recHits			      
    recHitsReducedEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
-   recHitsReducedEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
+   recHitsReducedEE = cms.InputTag("reducedEgamma", "reducedEERecHits")
 )
 
 # Set up the path
