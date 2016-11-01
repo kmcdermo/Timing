@@ -20,6 +20,9 @@
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h" 
 
+// HLT info
+#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+
 // Gen Info
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
