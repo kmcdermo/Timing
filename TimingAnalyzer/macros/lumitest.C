@@ -2,7 +2,7 @@
 
 void lumitest()
 {
-  TFile * file = TFile::Open("input/ootrecotree.root");
+  TFile * file = TFile::Open("input/ootmADtree.root");
   TTree * tree = (TTree*)file->Get("tree/phrhtree");
 
   Int_t run;   tree->SetBranchAddress("run",&run);
