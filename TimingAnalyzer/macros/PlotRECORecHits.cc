@@ -1,4 +1,5 @@
 #include "PlotRECORecHits.hh"
+#include "TStyle.h"
 #include "TSystem.h"
 #include "TCanvas.h"
 #include "TObject.h" 
@@ -13,6 +14,9 @@ PlotRECORecHits::PlotRECORecHits(TString filename, TString outdir,
   fApplyrhECut(applyrhecut), frhECut(rhEcut),
   fApplyECALAcceptCut(applyecalacceptcut)
 {
+  // overall setup
+  gStyle->SetOptStat("emrou");
+
   // input
   fInFile = TFile::Open(filename.Data());
   fInTree = (TTree*)fInFile->Get("tree/phrhtree");
@@ -93,10 +97,13 @@ void PlotRECORecHits::FillRecoPhotons()
 {
   fPlots["phE"]->Fill(phE);
   fPlots["phpt"]->Fill(phpt);
+  fPlots["phE_zoom"]->Fill(phE);
+  fPlots["phpt_zoom"]->Fill(phpt);
   fPlots["phphi"]->Fill(phphi);
   fPlots["pheta"]->Fill(pheta);
 
   fPlots["phscE"]->Fill(phscE);
+  fPlots["phscE_zoom"]->Fill(phscE);
   fPlots["phscphi"]->Fill(phscphi);
   fPlots["phsceta"]->Fill(phsceta);
   
@@ -114,6 +121,7 @@ void PlotRECORecHits::FillRecoPhotons()
     nfRecHits++;
 
     fPlots["phfrhEs"]->Fill((*phfrhEs)[irh]);
+    fPlots["phfrhEs_zoom"]->Fill((*phfrhEs)[irh]);
     fPlots["phfrhdelRs"]->Fill((*phfrhdelRs)[irh]);
     fPlots["phfrhtimes"]->Fill((*phfrhtimes)[irh]);
     fPlots["phfrhOOTs"]->Fill((*phfrhOOTs)[irh]);
@@ -121,6 +129,7 @@ void PlotRECORecHits::FillRecoPhotons()
     if ( (*phfrhOOTs)[irh] ) // make plots for only OOT True
     {
       fPlots["phfrhEs_OOTT"]->Fill((*phfrhEs)[irh]);
+      fPlots["phfrhEs_OOTT_zoom"]->Fill((*phfrhEs)[irh]);
       fPlots["phfrhdelRs_OOTT"]->Fill((*phfrhdelRs)[irh]);
       fPlots["phfrhtimes_OOTT"]->Fill((*phfrhtimes)[irh]);
       fPlots["phfrhtimes_OOTT_zoom"]->Fill((*phfrhtimes)[irh]);
@@ -128,6 +137,7 @@ void PlotRECORecHits::FillRecoPhotons()
     else // make plots for only OOT False
     {
       fPlots["phfrhEs_OOTF"]->Fill((*phfrhEs)[irh]);
+      fPlots["phfrhEs_OOTF_zoom"]->Fill((*phfrhEs)[irh]);
       fPlots["phfrhdelRs_OOTF"]->Fill((*phfrhdelRs)[irh]);
       fPlots["phfrhtimes_OOTF"]->Fill((*phfrhtimes)[irh]);
       fPlots["phfrhtimes_OOTF"]->Fill((*phfrhtimes)[irh]);
@@ -143,6 +153,7 @@ void PlotRECORecHits::FillRecoPhotons()
     nfRecHits_add++;
     
     fPlots["phfrhEs_add"]->Fill((*phfrhEs)[irh]);
+    fPlots["phfrhEs_zoom_add"]->Fill((*phfrhEs)[irh]);
     fPlots["phfrhdelRs_add"]->Fill((*phfrhdelRs)[irh]);
     fPlots["phfrhtimes_add"]->Fill((*phfrhtimes)[irh]);
     fPlots["phfrhOOTs_add"]->Fill((*phfrhOOTs)[irh]);
@@ -150,6 +161,7 @@ void PlotRECORecHits::FillRecoPhotons()
     if ( (*phfrhOOTs)[irh] ) // make plots for only OOT True
     {
       fPlots["phfrhEs_OOTT_add"]->Fill((*phfrhEs)[irh]);
+      fPlots["phfrhEs_OOTT_zoom_add"]->Fill((*phfrhEs)[irh]);
       fPlots["phfrhdelRs_OOTT_add"]->Fill((*phfrhdelRs)[irh]);
       fPlots["phfrhtimes_OOTT_add"]->Fill((*phfrhtimes)[irh]);
       fPlots["phfrhtimes_OOTT_zoom_add"]->Fill((*phfrhtimes)[irh]);
@@ -157,6 +169,7 @@ void PlotRECORecHits::FillRecoPhotons()
     else // make plots for only OOT False
     {
       fPlots["phfrhEs_OOTF_add"]->Fill((*phfrhEs)[irh]);
+      fPlots["phfrhEs_OOTF_zoom_add"]->Fill((*phfrhEs)[irh]);
       fPlots["phfrhdelRs_OOTF_add"]->Fill((*phfrhdelRs)[irh]);
       fPlots["phfrhtimes_OOTF_add"]->Fill((*phfrhtimes)[irh]);
     }// end block over OOT only plots
@@ -180,6 +193,7 @@ void PlotRECORecHits::FillRecoPhotons()
     nrRecHits++;
 
     fPlots["phrrhEs"]->Fill((*phrrhEs)[irh]);
+    fPlots["phrrhEs_zoom"]->Fill((*phrrhEs)[irh]);
     fPlots["phrrhdelRs"]->Fill((*phrrhdelRs)[irh]);
     fPlots["phrrhtimes"]->Fill((*phrrhtimes)[irh]);
     fPlots["phrrhOOTs"]->Fill((*phrrhOOTs)[irh]);
@@ -187,6 +201,7 @@ void PlotRECORecHits::FillRecoPhotons()
     if ( (*phrrhOOTs)[irh] ) // make plots for only OOT True
     {
       fPlots["phrrhEs_OOTT"]->Fill((*phrrhEs)[irh]);
+      fPlots["phrrhEs_OOTT_zoom"]->Fill((*phrrhEs)[irh]);
       fPlots["phrrhdelRs_OOTT"]->Fill((*phrrhdelRs)[irh]);
       fPlots["phrrhtimes_OOTT"]->Fill((*phrrhtimes)[irh]);
       fPlots["phrrhtimes_OOTT_zoom"]->Fill((*phrrhtimes)[irh]);
@@ -194,6 +209,7 @@ void PlotRECORecHits::FillRecoPhotons()
     else // make plots for only OOT False
     {
       fPlots["phrrhEs_OOTF"]->Fill((*phrrhEs)[irh]);
+      fPlots["phrrhEs_OOTF_zoom"]->Fill((*phrrhEs)[irh]);
       fPlots["phrrhdelRs_OOTF"]->Fill((*phrrhdelRs)[irh]);
       fPlots["phrrhtimes_OOTF"]->Fill((*phrrhtimes)[irh]);
     }// end block over OOT only plots
@@ -202,13 +218,15 @@ void PlotRECORecHits::FillRecoPhotons()
     if ( phrseedpos == irh ) // seed info
     {
       fPlots["phrseedE"]->Fill((*phrrhEs)[irh]);
+      fPlots["phrseedE_zoom"]->Fill((*phrrhEs)[irh]);
       fPlots["phrseeddelR"]->Fill((*phrrhdelRs)[irh]);
       fPlots["phrseedtime"]->Fill((*phrrhtimes)[irh]);
       fPlots["phrseedOOT"]->Fill((*phrrhOOTs)[irh]);
 
       if ( (*phrrhOOTs)[irh] ) // make plots for only OOT True
       {
-	fPlots["phrseedE_OOTT"]->Fill((*phrrhEs)[irh]);
+	fPlots["phrseedE_OOTT"]->Fill((*phrrhEs)[irh]);	
+	fPlots["phrseedE_OOTT_zoom"]->Fill((*phrrhEs)[irh]);
 	fPlots["phrseeddelR_OOTT"]->Fill((*phrrhdelRs)[irh]);
 	fPlots["phrseedtime_OOTT"]->Fill((*phrrhtimes)[irh]);
 	fPlots["phrseedtime_OOTT_zoom"]->Fill((*phrrhtimes)[irh]);
@@ -216,6 +234,7 @@ void PlotRECORecHits::FillRecoPhotons()
       else // make plots for only OOT False
       {
 	fPlots["phrseedE_OOTF"]->Fill((*phrrhEs)[irh]);
+	fPlots["phrseedE_OOTF_zoom"]->Fill((*phrrhEs)[irh]);
 	fPlots["phrseeddelR_OOTF"]->Fill((*phrrhdelRs)[irh]);
 	fPlots["phrseedtime_OOTF"]->Fill((*phrrhtimes)[irh]);
       }// end block over OOT only plots
@@ -231,6 +250,7 @@ void PlotRECORecHits::FillRecoPhotons()
     nrRecHits_add++;
     
     fPlots["phrrhEs_add"]->Fill((*phrrhEs)[irh]);
+    fPlots["phrrhEs_zoom_add"]->Fill((*phrrhEs)[irh]);
     fPlots["phrrhdelRs_add"]->Fill((*phrrhdelRs)[irh]);
     fPlots["phrrhtimes_add"]->Fill((*phrrhtimes)[irh]);
     fPlots["phrrhOOTs_add"]->Fill((*phrrhOOTs)[irh]);
@@ -238,6 +258,7 @@ void PlotRECORecHits::FillRecoPhotons()
     if ( (*phrrhOOTs)[irh] ) // make plots for only OOT True
     {
       fPlots["phrrhEs_OOTT_add"]->Fill((*phrrhEs)[irh]);
+      fPlots["phrrhEs_OOTT_zoom_add"]->Fill((*phrrhEs)[irh]);
       fPlots["phrrhdelRs_OOTT_add"]->Fill((*phrrhdelRs)[irh]);
       fPlots["phrrhtimes_OOTT_add"]->Fill((*phrrhtimes)[irh]);
       fPlots["phrrhtimes_OOTT_zoom_add"]->Fill((*phrrhtimes)[irh]);
@@ -245,6 +266,7 @@ void PlotRECORecHits::FillRecoPhotons()
     else // make plots for only OOT False
     {
       fPlots["phrrhEs_OOTF_add"]->Fill((*phrrhEs)[irh]);
+      fPlots["phrrhEs_OOTF_zoom_add"]->Fill((*phrrhEs)[irh]);
       fPlots["phrrhdelRs_OOTF_add"]->Fill((*phrrhdelRs)[irh]);
       fPlots["phrrhtimes_OOTF_add"]->Fill((*phrrhtimes)[irh]);
     }// end block over OOT only plots
@@ -260,10 +282,13 @@ void PlotRECORecHits::SetupRecoPhotons()
   // All reco photons + associated supercluster
   fPlots["phE"] = PlotRECORecHits::MakeTH1F("phE","Photons Energy [GeV] (reco)",100,0.f,2000.f,"Energy [GeV]","Photons","gedPhotons/GeneralProps");
   fPlots["phpt"] = PlotRECORecHits::MakeTH1F("phpt","Photons p_{T} [GeV/c] (reco)",100,0.f,2000.f,"p_{T} [GeV/c]","Photons","gedPhotons/GeneralProps");
+  fPlots["phE_zoom"] = PlotRECORecHits::MakeTH1F("phE_zoom","Photons Energy [GeV] (reco)",100,0.f,100.f,"Energy [GeV]","Photons","gedPhotons/GeneralProps");
+  fPlots["phpt_zoom"] = PlotRECORecHits::MakeTH1F("phpt_zoom","Photons p_{T} [GeV/c] (reco)",100,0.f,100.f,"p_{T} [GeV/c]","Photons","gedPhotons/GeneralProps");
   fPlots["phphi"] = PlotRECORecHits::MakeTH1F("phphi","Photons #phi (reco)",100,-3.2,3.2,"#phi","Photons","gedPhotons/GeneralProps");
   fPlots["pheta"] = PlotRECORecHits::MakeTH1F("pheta","Photons #eta (reco)",100,-3.0,3.0,"#eta","Photons","gedPhotons/GeneralProps");
 
   fPlots["phscE"] = PlotRECORecHits::MakeTH1F("phscE","Photons SuperCluster Energy [GeV] (reco)",100,0.f,2000.f,"Energy [GeV]","Photons","gedPhotons/GeneralProps");
+  fPlots["phscE_zoom"] = PlotRECORecHits::MakeTH1F("phscE_zoom","Photons SuperCluster Energy [GeV] (reco)",100,0.f,100.f,"Energy [GeV]","Photons","gedPhotons/GeneralProps");
   fPlots["phscphi"] = PlotRECORecHits::MakeTH1F("phscphi","Photons SuperCluster #phi (reco)",100,-3.2,3.2,"#phi","Photons","gedPhotons/GeneralProps");
   fPlots["phsceta"] = PlotRECORecHits::MakeTH1F("phsceta","Photons SuperCluster #eta (reco)",100,-3.0,3.0,"#eta","Photons","gedPhotons/GeneralProps");
   
@@ -275,30 +300,36 @@ void PlotRECORecHits::SetupRecoPhotons()
   // --> "core rechits" <--
   fPlots["phnfrhs"] = PlotRECORecHits::MakeTH1F("phnfrhs","nfRecHits from Photons (reco)",100,0.f,100.f,"nfRecHits","Photons","gedPhotons/FullRHs/CoreRHs");
   fPlots["phfrhEs"] = PlotRECORecHits::MakeTH1F("phfrhEs","Photons fRecHits Energy [GeV] (reco)",100,0.f,1000.f,"Energy [GeV]","fRecHits","gedPhotons/FullRHs/CoreRHs");
+  fPlots["phfrhEs_zoom"] = PlotRECORecHits::MakeTH1F("phfrhEs_zoom","Photons fRecHits Energy [GeV] (reco)",100,0.f,100.f,"Energy [GeV]","fRecHits","gedPhotons/FullRHs/CoreRHs");
   fPlots["phfrhdelRs"] = PlotRECORecHits::MakeTH1F("phfrhdelRs","#DeltaR of fRecHits to Photon (reco)",100,0.f,1.0f,"Time [ns]","fRecHits","gedPhotons/FullRHs/CoreRHs");
   fPlots["phfrhtimes"] = PlotRECORecHits::MakeTH1F("phfrhtimes","Photons fRecHits Time [ns] (reco)",200,-100.f,100.f,"Time [ns]","fRecHits","gedPhotons/FullRHs/CoreRHs");
   fPlots["phfrhOOTs"] = PlotRECORecHits::MakeTH1F("phfrhOOTs","Photons fRecHits OoT Flag (reco)",2,0.f,2.f,"OoT Flag","fRecHits","gedPhotons/FullRHs/CoreRHs");
   // OOT T+F plots
   fPlots["phfrhEs_OOTT"] = PlotRECORecHits::MakeTH1F("phfrhEs_OOTT","Photons fRecHits Energy [GeV] (reco) - OoT:T",100,0.f,1000.f,"Energy [GeV]","fRecHits","gedPhotons/FullRHs/CoreRHs");
+  fPlots["phfrhEs_OOTT_zoom"] = PlotRECORecHits::MakeTH1F("phfrhEs_OOTT_zoom","Photons fRecHits Energy [GeV] (reco) - OoT:T",100,0.f,100.f,"Energy [GeV]","fRecHits","gedPhotons/FullRHs/CoreRHs");
   fPlots["phfrhdelRs_OOTT"] = PlotRECORecHits::MakeTH1F("phfrhdelRs_OOTT","#DeltaR of fRecHits to Photon (reco) - OoT:T",100,0.f,1.0f,"Time [ns]","fRecHits","gedPhotons/FullRHs/CoreRHs");
   fPlots["phfrhtimes_OOTT"] = PlotRECORecHits::MakeTH1F("phfrhtimes_OOTT","Photons fRecHits Time [ns] (reco) - OoT:T",200,-100.f,100.f,"Time [ns]","fRecHits","gedPhotons/FullRHs/CoreRHs");
   fPlots["phfrhtimes_OOTT_zoom"] = PlotRECORecHits::MakeTH1F("phfrhtimes_OOTT_zoom","Photons fRecHits Time [ns] (reco) - OoT:T",200,-10.f,10.f,"Time [ns]","fRecHits","gedPhotons/FullRHs/CoreRHs");
   fPlots["phfrhEs_OOTF"] = PlotRECORecHits::MakeTH1F("phfrhEs_OOTF","Photons fRecHits Energy [GeV] (reco) - OoT:F",100,0.f,1000.f,"Energy [GeV]","fRecHits","gedPhotons/FullRHs/CoreRHs");
+  fPlots["phfrhEs_OOTF_zoom"] = PlotRECORecHits::MakeTH1F("phfrhEs_OOTF_zoom","Photons fRecHits Energy [GeV] (reco) - OoT:F",100,0.f,100.f,"Energy [GeV]","fRecHits","gedPhotons/FullRHs/CoreRHs");
   fPlots["phfrhdelRs_OOTF"] = PlotRECORecHits::MakeTH1F("phfrhdelRs_OOTF","#DeltaR of fRecHits to Photon (reco) - OoT:F",100,0.f,1.0f,"Time [ns]","fRecHits","gedPhotons/FullRHs/CoreRHs");
   fPlots["phfrhtimes_OOTF"] = PlotRECORecHits::MakeTH1F("phfrhtimes_OOTF","Photons fRecHits Time [ns] (reco) - OoT:F",200,-100.f,100.f,"Time [ns]","fRecHits","gedPhotons/FullRHs/CoreRHs");
 
   // --> "add-on recHits" <--
   fPlots["phnfrhs_add"] = PlotRECORecHits::MakeTH1F("phnfrhs_add","nfRecHits from Photons (reco) [add-ons]",100,0.f,100.f,"nfRecHits_add","Photons","gedPhotons/FullRHs/AddonRHs");
   fPlots["phfrhEs_add"] = PlotRECORecHits::MakeTH1F("phfrhEs_add","Photons fRecHits Energy [GeV] (reco) [add-ons]",100,0.f,1000.f,"Energy [GeV]","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
+  fPlots["phfrhEs_zoom_add"] = PlotRECORecHits::MakeTH1F("phfrhEs_zoom_add","Photons fRecHits Energy [GeV] (reco) [add-ons]",100,0.f,100.f,"Energy [GeV]","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
   fPlots["phfrhdelRs_add"] = PlotRECORecHits::MakeTH1F("phfrhdelRs_add","#DeltaR of fRecHits to Photon (reco) [add-ons]",100,0.f,1.0f,"Time [ns]","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
   fPlots["phfrhtimes_add"] = PlotRECORecHits::MakeTH1F("phfrhtimes_add","Photons fRecHits Time [ns] (reco) [add-ons]",200,-100.f,100.f,"Time [ns]","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
   fPlots["phfrhOOTs_add"] = PlotRECORecHits::MakeTH1F("phfrhOOTs_add","Photons fRecHits OoT Flag (reco) [add-ons]",2,0.f,2.f,"OoT Flag","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
   // OOT T+F plots
   fPlots["phfrhEs_OOTT_add"] = PlotRECORecHits::MakeTH1F("phfrhEs_OOTT_add","Photons fRecHits Energy [GeV] (reco) [add-ons] - OoT:T",100,0.f,1000.f,"Energy [GeV]","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
+  fPlots["phfrhEs_OOTT_zoom_add"] = PlotRECORecHits::MakeTH1F("phfrhEs_OOTT_zoom_add","Photons fRecHits Energy [GeV] (reco) [add-ons] - OoT:T",100,0.f,100.f,"Energy [GeV]","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
   fPlots["phfrhdelRs_OOTT_add"] = PlotRECORecHits::MakeTH1F("phfrhdelRs_OOTT_add","#DeltaR of fRecHits to Photon (reco) [add-ons] - OoT:T",100,0.f,1.0f,"Time [ns]","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
   fPlots["phfrhtimes_OOTT_add"] = PlotRECORecHits::MakeTH1F("phfrhtimes_OOTT_add","Photons fRecHits Time [ns] (reco) [add-ons] - OoT:T",200,-100.f,100.f,"Time [ns]","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
   fPlots["phfrhtimes_OOTT_zoom_add"] = PlotRECORecHits::MakeTH1F("phfrhtimes_OOTT_zoom_add","Photons fRecHits Time [ns] (reco) [add-ons] - OoT:T",200,-10.f,10.f,"Time [ns]","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
   fPlots["phfrhEs_OOTF_add"] = PlotRECORecHits::MakeTH1F("phfrhEs_OOTF_add","Photons fRecHits Energy [GeV] (reco) [add-ons] - OoT:F",100,0.f,1000.f,"Energy [GeV]","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
+  fPlots["phfrhEs_OOTF_zoom_add"] = PlotRECORecHits::MakeTH1F("phfrhEs_OOTF_zoom_add","Photons fRecHits Energy [GeV] (reco) [add-ons] - OoT:F",100,0.f,100.f,"Energy [GeV]","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
   fPlots["phfrhdelRs_OOTF_add"] = PlotRECORecHits::MakeTH1F("phfrhdelRs_OOTF_add","#DeltaR of fRecHits to Photon (reco) [add-ons] - OoT:F",100,0.f,1.0f,"Time [ns]","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
   fPlots["phfrhtimes_OOTF_add"] = PlotRECORecHits::MakeTH1F("phfrhtimes_OOTF_add","Photons fRecHits Time [ns] (reco) [add-ons] - OoT:F",200,-100.f,100.f,"Time [ns]","fRecHits_add","gedPhotons/FullRHs/AddonRHs");
 
@@ -313,44 +344,53 @@ void PlotRECORecHits::SetupRecoPhotons()
   // --> "core rechits" <--
   fPlots["phnrrhs"] = PlotRECORecHits::MakeTH1F("phnrrhs","nrRecHits from Photons (reco)",100,0.f,100.f,"nrRecHits","Photons","gedPhotons/ReducedRHs/CoreRHs");
   fPlots["phrrhEs"] = PlotRECORecHits::MakeTH1F("phrrhEs","Photons rRecHits Energy [GeV] (reco)",100,0.f,1000.f,"Energy [GeV]","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
+  fPlots["phrrhEs_zoom"] = PlotRECORecHits::MakeTH1F("phrrhEs_zoom","Photons rRecHits Energy [GeV] (reco)",100,0.f,100.f,"Energy [GeV]","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
   fPlots["phrrhdelRs"] = PlotRECORecHits::MakeTH1F("phrrhdelRs","#DeltaR of rRecHits to Photon (reco)",100,0.f,1.0f,"Time [ns]","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
   fPlots["phrrhtimes"] = PlotRECORecHits::MakeTH1F("phrrhtimes","Photons rRecHits Time [ns] (reco)",200,-100.f,100.f,"Time [ns]","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
   fPlots["phrrhOOTs"] = PlotRECORecHits::MakeTH1F("phrrhOOTs","Photons rRecHits OoT Flag (reco)",2,0.f,2.f,"OoT Flag","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
   // OOT T+F plots
   fPlots["phrrhEs_OOTT"] = PlotRECORecHits::MakeTH1F("phrrhEs_OOTT","Photons rRecHits Energy [GeV] (reco) - OoT:T",100,0.f,1000.f,"Energy [GeV]","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
+  fPlots["phrrhEs_OOTT_zoom"] = PlotRECORecHits::MakeTH1F("phrrhEs_OOTT_zoom","Photons rRecHits Energy [GeV] (reco) - OoT:T",100,0.f,100.f,"Energy [GeV]","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
   fPlots["phrrhdelRs_OOTT"] = PlotRECORecHits::MakeTH1F("phrrhdelRs_OOTT","#DeltaR of rRecHits to Photon (reco) - OoT:T",100,0.f,1.0f,"Time [ns]","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
   fPlots["phrrhtimes_OOTT"] = PlotRECORecHits::MakeTH1F("phrrhtimes_OOTT","Photons rRecHits Time [ns] (reco) - OoT:T",200,-100.f,100.f,"Time [ns]","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
   fPlots["phrrhtimes_OOTT_zoom"] = PlotRECORecHits::MakeTH1F("phrrhtimes_OOTT_zoom","Photons rRecHits Time [ns] (reco) - OoT:T",200,-10.f,10.f,"Time [ns]","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
   fPlots["phrrhEs_OOTF"] = PlotRECORecHits::MakeTH1F("phrrhEs_OOTF","Photons rRecHits Energy [GeV] (reco) - OoT:F",100,0.f,1000.f,"Energy [GeV]","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
+  fPlots["phrrhEs_OOTF_zoom"] = PlotRECORecHits::MakeTH1F("phrrhEs_OOTF_zoom","Photons rRecHits Energy [GeV] (reco) - OoT:F",100,0.f,100.f,"Energy [GeV]","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
   fPlots["phrrhdelRs_OOTF"] = PlotRECORecHits::MakeTH1F("phrrhdelRs_OOTF","#DeltaR of rRecHits to Photon (reco) - OoT:F",100,0.f,1.0f,"Time [ns]","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
   fPlots["phrrhtimes_OOTF"] = PlotRECORecHits::MakeTH1F("phrrhtimes_OOTF","Photons rRecHits Time [ns] (reco) - OoT:F",200,-100.f,100.f,"Time [ns]","rRecHits","gedPhotons/ReducedRHs/CoreRHs");
 
   // --> seed plots <--
   fPlots["phrseedE"] = PlotRECORecHits::MakeTH1F("phrseedE","Photons Seed rRecHit Energy [GeV] (reco)",100,0.f,1000.f,"Energy [GeV]","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");
+  fPlots["phrseedE_zoom"] = PlotRECORecHits::MakeTH1F("phrseedE_zoom","Photons Seed rRecHit Energy [GeV] (reco)",100,0.f,100.f,"Energy [GeV]","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");
   fPlots["phrseeddelR"] = PlotRECORecHits::MakeTH1F("phrseeddelR","#DeltaR of Seed rRecHit to Photon (reco)",100,0.f,1.0f,"Time [ns]","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");
   fPlots["phrseedtime"] = PlotRECORecHits::MakeTH1F("phrseedtime","Photons Seed rRecHit Time [ns] (reco)",200,-100.f,100.f,"Time [ns]","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");
   fPlots["phrseedOOT"] = PlotRECORecHits::MakeTH1F("phrseedOOT","Photons Seed rRecHit OoT Flag (reco)",2,0.f,2.f,"OoT Flag","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");  
   // OOT T+F plots
   fPlots["phrseedE_OOTT"] = PlotRECORecHits::MakeTH1F("phrseedE_OOTT","Photons Seed rRecHit Energy [GeV] (reco) - OoT:T",100,0.f,1000.f,"Energy [GeV]","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");
+  fPlots["phrseedE_OOTT_zoom"] = PlotRECORecHits::MakeTH1F("phrseedE_OOTT_zoom","Photons Seed rRecHit Energy [GeV] (reco) - OoT:T",100,0.f,100.f,"Energy [GeV]","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");
   fPlots["phrseeddelR_OOTT"] = PlotRECORecHits::MakeTH1F("phrseeddelR_OOTT","#DeltaR of Seed rRecHit to Photon (reco) - OoT:T",100,0.f,1.0f,"Time [ns]","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");
   fPlots["phrseedtime_OOTT"] = PlotRECORecHits::MakeTH1F("phrseedtime_OOTT","Photons Seed rRecHit Time [ns] (reco) - OoT:T",200,-100.f,100.f,"Time [ns]","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");
   fPlots["phrseedtime_OOTT_zoom"] = PlotRECORecHits::MakeTH1F("phrseedtime_OOTT_zoom","Photons Seed rRecHit Time [ns] (reco) - OoT:T",200,-10.f,10.f,"Time [ns]","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");
   fPlots["phrseedE_OOTF"] = PlotRECORecHits::MakeTH1F("phrseedE_OOTF","Photons Seed rRecHit Energy [GeV] (reco) - OoT:F",100,0.f,1000.f,"Energy [GeV]","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");
+  fPlots["phrseedE_OOTF_zoom"] = PlotRECORecHits::MakeTH1F("phrseedE_OOTF_zoom","Photons Seed rRecHit Energy [GeV] (reco) - OoT:F",100,0.f,100.f,"Energy [GeV]","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");
   fPlots["phrseeddelR_OOTF"] = PlotRECORecHits::MakeTH1F("phrseeddelR_OOTF","#DeltaR of Seed rRecHit to Photon (reco) - OoT:F",100,0.f,1.0f,"Time [ns]","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");
   fPlots["phrseedtime_OOTF"] = PlotRECORecHits::MakeTH1F("phrseedtime_OOTF","Photons Seed rRecHit Time [ns] (reco) - OoT:F",200,-100.f,100.f,"Time [ns]","Seed rRecHits","gedPhotons/ReducedRHs/SeedRHs");
 
   // --> "add-on recHits" <--
   fPlots["phnrrhs_add"] = PlotRECORecHits::MakeTH1F("phnrrhs_add","nrRecHits from Photons (reco) [add-ons]",100,0.f,100.f,"nrRecHits_add","Photons","gedPhotons/ReducedRHs/AddonRHs");
   fPlots["phrrhEs_add"] = PlotRECORecHits::MakeTH1F("phrrhEs_add","Photons rRecHits Energy [GeV] (reco) [add-ons]",100,0.f,1000.f,"Energy [GeV]","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
+  fPlots["phrrhEs_zoom_add"] = PlotRECORecHits::MakeTH1F("phrrhEs_zoom_add","Photons rRecHits Energy [GeV] (reco) [add-ons]",100,0.f,100.f,"Energy [GeV]","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
   fPlots["phrrhdelRs_add"] = PlotRECORecHits::MakeTH1F("phrrhdelRs_add","#DeltaR of rRecHits to Photon (reco) [add-ons]",100,0.f,1.0f,"Time [ns]","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
   fPlots["phrrhtimes_add"] = PlotRECORecHits::MakeTH1F("phrrhtimes_add","Photons rRecHits Time [ns] (reco) [add-ons]",200,-100.f,100.f,"Time [ns]","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
   fPlots["phrrhOOTs_add"] = PlotRECORecHits::MakeTH1F("phrrhOOTs_add","Photons rRecHits OoT Flag (reco) [add-ons]",2,0.f,2.f,"OoT Flag","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
   // OOT T+F plots
   fPlots["phrrhEs_OOTT_add"] = PlotRECORecHits::MakeTH1F("phrrhEs_OOTT_add","Photons rRecHits Energy [GeV] (reco) [add-ons] - OoT:T",100,0.f,1000.f,"Energy [GeV]","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
+  fPlots["phrrhEs_OOTT_zoom_add"] = PlotRECORecHits::MakeTH1F("phrrhEs_OOTT_zoom_add","Photons rRecHits Energy [GeV] (reco) [add-ons] - OoT:T",100,0.f,100.f,"Energy [GeV]","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
   fPlots["phrrhdelRs_OOTT_add"] = PlotRECORecHits::MakeTH1F("phrrhdelRs_OOTT_add","#DeltaR of rRecHits to Photon (reco) [add-ons] - OoT:T",100,0.f,1.0f,"Time [ns]","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
   fPlots["phrrhtimes_OOTT_add"] = PlotRECORecHits::MakeTH1F("phrrhtimes_OOTT_add","Photons rRecHits Time [ns] (reco) [add-ons] - OoT:T",200,-100.f,100.f,"Time [ns]","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
   fPlots["phrrhtimes_OOTT_zoom_add"] = PlotRECORecHits::MakeTH1F("phrrhtimes_OOTT_zoom_add","Photons rRecHits Time [ns] (reco) [add-ons] - OoT:T",200,-10.f,10.f,"Time [ns]","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
   fPlots["phrrhEs_OOTF_add"] = PlotRECORecHits::MakeTH1F("phrrhEs_OOTF_add","Photons rRecHits Energy [GeV] (reco) [add-ons] - OoT:F",100,0.f,1000.f,"Energy [GeV]","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
+  fPlots["phrrhEs_OOTF_zoom_add"] = PlotRECORecHits::MakeTH1F("phrrhEs_OOTF_zoom_add","Photons rRecHits Energy [GeV] (reco) [add-ons] - OoT:F",100,0.f,100.f,"Energy [GeV]","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
   fPlots["phrrhdelRs_OOTF_add"] = PlotRECORecHits::MakeTH1F("phrrhdelRs_OOTF_add","#DeltaR of rRecHits to Photon (reco) [add-ons] - OoT:F",100,0.f,1.0f,"Time [ns]","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
   fPlots["phrrhtimes_OOTF_add"] = PlotRECORecHits::MakeTH1F("phrrhtimes_OOTF_add","Photons rRecHits Time [ns] (reco) [add-ons] - OoT:F",200,-100.f,100.f,"Time [ns]","rRecHits_add","gedPhotons/ReducedRHs/AddonRHs");
 
