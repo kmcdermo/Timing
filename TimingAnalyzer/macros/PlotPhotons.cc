@@ -77,14 +77,14 @@ void PlotPhotons::SetupPlots()
 {
   if (fIsMC)
   {
-    //    PlotPhotons::SetupGenInfo();
+    PlotPhotons::SetupGenInfo();
     PlotPhotons::SetupGenParticles();
-    //    PlotPhotons::SetupGenJets();
+    PlotPhotons::SetupGenJets();
   }
-  // PlotPhotons::SetupObjectCounts();
-  // PlotPhotons::SetupMET();
-  // PlotPhotons::SetupJets();
-  // PlotPhotons::SetupRecoPhotons();
+  PlotPhotons::SetupObjectCounts();
+  PlotPhotons::SetupMET();
+  PlotPhotons::SetupJets();
+  PlotPhotons::SetupRecoPhotons();
 }
 
 void PlotPhotons::EventLoop()
@@ -96,14 +96,14 @@ void PlotPhotons::EventLoop()
 
     if (fIsMC)
     {
-      //      PlotPhotons::FillGenInfo();
+      PlotPhotons::FillGenInfo();
       PlotPhotons::FillGenParticles();
-      //      PlotPhotons::FillGenJets();
+      PlotPhotons::FillGenJets();
     }
-    // PlotPhotons::FillObjectCounts();
-    // PlotPhotons::FillMET();
-    // PlotPhotons::FillJets();
-    // PlotPhotons::FillRecoPhotons();
+    PlotPhotons::FillObjectCounts();
+    PlotPhotons::FillMET();
+    PlotPhotons::FillJets();
+    PlotPhotons::FillRecoPhotons();
   }
 }
 
@@ -327,7 +327,7 @@ void PlotPhotons::FillRecoPhotons()
       } // end conditional over isMC
     } // end loop over nrechits
     fPlots["phnrhs"]->Fill(nRecHits);
-    if (fIsMC) fPlots["phnrhs_gen"]->Fill(nRecHits_gen);
+    if (fIsMC && (*phmatch)[iph] > 0) fPlots["phnrhs_gen"]->Fill(nRecHits_gen);
   } // end loop over nphotons
 }
 
