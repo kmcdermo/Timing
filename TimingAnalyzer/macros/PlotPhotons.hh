@@ -5,6 +5,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
+#include "TEfficiency.h"
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TLorentzVector.h"
@@ -20,6 +21,9 @@ inline Float_t rad2_3(const Float_t x, const Float_t y, const Float_t z){return 
 inline Float_t gamma (const Float_t p, const Float_t m){return std::sqrt(1.f+std::pow(p/m,2));}
 inline Float_t beta  (const Float_t p, const Float_t m){return std::sqrt(1.f/(1.f+std::pow(m/p,2)));}
 inline Float_t bg    (const Float_t p, const Float_t m){return std::abs(p/m);}
+
+typedef std::map<TString,TEfficiency*> TEffMap;
+typedef TEffMap::iterator              TEffMapIter;
 
 typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator        TH1MapIter;
@@ -43,6 +47,7 @@ public :
   void InitTree();
   void DoPlots();
   void SetupPlots();
+  void SetupEffs();
   void SetupGenInfo();
   void SetupGenParticles();
   void SetupGenJets();
@@ -50,9 +55,11 @@ public :
   void SetupMET();
   void SetupJets();
   void SetupRecoPhotons();
+  TEfficiency * MakeTEff(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
   TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
   TH2F * MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString subdir);
   void EventLoop();
+  void FillEffs();
   void FillGenInfo();
   void FillGenParticles();
   void FillGenJets();
@@ -61,6 +68,7 @@ public :
   void FillJets();
   void FillRecoPhotons();
   void MakeSubDirs();
+  void OutputTEffs();
   void OutputTH1Fs();
   void OutputTH2Fs();
 
@@ -72,6 +80,7 @@ private :
 
   // In routine vars
   UInt_t  fNEvCheck;
+  TEffMap fEffs;
   TH1Map  fPlots;
   TH2Map  fPlots2D;
 
