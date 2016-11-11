@@ -22,11 +22,12 @@ void runRECORecHitPlots()
   gROOT->LoadMacro("PlotRECORecHits.cc++g");
 
   // config is:
+  // appendRHList
   // applyHLTcut
   // applyPhPtcut, phptcut,
   // applyrhEcut, rhEcut 
   // applyEcalAcceptcut
   
-  PlotRECORecHits recHitPlots("input/ootrecotree.root","output/reco",false,true,50.f,true,1.f,true);
+  PlotRECORecHits recHitPlots("input/ootrecotree.root","output/reco",true,false,true,50.f,true,1.f,true);
   recHitPlots.DoPlots();
 }

@@ -8,6 +8,7 @@
 #include "TH1F.h"
 #include "TH2F.h"
 
+#include <fstream>
 #include <vector>
 #include <map>
 
@@ -25,7 +26,7 @@ typedef std::vector<TString> TStrVec;
 class PlotRECORecHits 
 {
 public :
-  PlotRECORecHits(TString filename, TString outdir = "output", 
+  PlotRECORecHits(TString filename, TString outdir = "output", Bool_t appendrhlist = false,
 		  Bool_t applhltcut = false, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
 		  Bool_t applyrhecut = false, Float_t rhEcut = 1.f, Bool_t applyecalacceptcut = false);
   ~PlotRECORecHits();
@@ -53,9 +54,11 @@ private :
   UInt_t  fNPhCheck;
   TH1Map  fPlots;
   TH2Map  fPlots2D;
+  std::ofstream fRHList;
   TStrVec fTotalNames;
-
+  
   // Config
+  const Bool_t  fAppendRHList;
   const Bool_t  fApplyHLTCut;
   const Bool_t  fApplyPhPtCut;
   const Float_t fPhPtCut;

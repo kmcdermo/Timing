@@ -4,11 +4,14 @@
 #include "TCanvas.h"
 #include "TObject.h" 
 
+#include <fstream>
 #include <iostream>
 
 PlotRecHits::PlotRecHits(TString filename, TString outdir, 
+			 Bool_t applyrhidcut, TString rhlistfile,
 			 Bool_t applyrhecut, Float_t rhEcut, Bool_t applyecalacceptcut) :
   fOutDir(outdir),
+  fApplyrhIDCut(applyrhidcut), fRHListFile(rhlistfile),
   fApplyrhECut(applyrhecut), frhECut(rhEcut),
   fApplyECALAcceptCut(applyecalacceptcut)
 {
@@ -19,6 +22,18 @@ PlotRecHits::PlotRecHits(TString filename, TString outdir,
   fInFile = TFile::Open(filename.Data());
   fInTree = (TTree*)fInFile->Get("tree/rhtree");
 
+  if (fApplyrhIDCut)
+  { 
+    std::ifstream rhlist;
+    rhlist.open(fRHListFile.Data(),std::ios::in);
+    Int_t evt = 0, rhid = 0;
+    while (rhlist >> evt >> rhid)
+    {    
+      fEvRhMapMap[evt][rhid]++;
+    }
+    rhlist.close();
+  }
+
   // initialize tree
   PlotRecHits::InitTree();
 
@@ -27,13 +42,14 @@ PlotRecHits::PlotRecHits(TString filename, TString outdir,
   
   // output
   // setup outdir name
-  if (!fApplyrhECut && ! fApplyECALAcceptCut)
+  if (!fApplyrhIDCut && !fApplyrhECut && ! fApplyECALAcceptCut)
   { 
     fOutDir += "/Inclusive";
   }
   else 
   {
     fOutDir += "/cuts";
+    if (fApplyrhIDCut)       fOutDir += Form("_rhID");
     if (fApplyrhECut)        fOutDir += Form("_rhE%2.1f",frhECut);
     if (fApplyECALAcceptCut) fOutDir += Form("_ecalaccept");
   }
@@ -78,7 +94,7 @@ void PlotRecHits::RecHitsLoop()
   {
     fInTree->GetEntry(entry);
     if (entry%fNEvCheck == 0 || entry == 0) std::cout << "Entry " << entry << " out of " << fInTree->GetEntries() << std::endl;
-  
+    
     PlotRecHits::FillRecHits();
   }
 }
@@ -88,6 +104,7 @@ void PlotRecHits::FillRecHits()
   int nRecHits = 0;
   for (int irh = 0; irh < nrhEB+nrhEE; irh++)
   {
+    if (fApplyrhIDCut && fEvRhMapMap[event].count((*rhIDs)[irh])) continue; 
     if (fApplyECALAcceptCut && (std::abs((*rhetas)[irh]) > 2.5 || (std::abs((*rhetas)[irh]) > 1.4442 && std::abs((*rhetas)[irh]) < 1.566))) continue;
     if (fApplyrhECut && (*rhEs)[irh] < frhECut) continue;
     nRecHits++;

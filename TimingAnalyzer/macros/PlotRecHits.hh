@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <map>
+//#include <unordered_map>
 
 typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator        TH1MapIter;
@@ -26,6 +27,7 @@ class PlotRecHits
 {
 public :
   PlotRecHits(TString filename, TString outdir = "output", 
+	      Bool_t applyrhidcut = false, TString rhlistfile = "output/rhlist.txt",
 	      Bool_t applyrhecut = false, Float_t rhEcut = 1.f, Bool_t applyecalacceptcut = false);
   ~PlotRecHits();
   void InitTree();
@@ -48,12 +50,15 @@ private :
   TTree * fInTree; //!pointer to the analyzed TTree
 
   // In routine vars
+  std::map<int,std::map<int,int> > fEvRhMapMap;  
   UInt_t  fNEvCheck;
   TH1Map  fPlots;
   TH2Map  fPlots2D;
   TStrVec fTotalNames;
 
   // Config
+  const Bool_t  fApplyrhIDCut;
+  const TString fRHListFile;
   const Bool_t  fApplyrhECut;
   const Float_t frhECut;
   const Bool_t  fApplyECALAcceptCut;
