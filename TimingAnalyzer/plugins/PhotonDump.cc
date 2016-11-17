@@ -222,6 +222,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	      if      (gpiter->daughter(0)->pdgId() == 1000039) {grdaughter = 0;}
 	      else if (gpiter->daughter(1)->pdgId() == 1000039) {grdaughter = 1;}
 	      
+	      gengr1mass = gpiter->daughter(grdaughter)->mass();
 	      gengr1E    = gpiter->daughter(grdaughter)->energy();
 	      gengr1pt   = gpiter->daughter(grdaughter)->pt();
 	      gengr1phi  = gpiter->daughter(grdaughter)->phi();
@@ -280,6 +281,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	      if      (gpiter->daughter(0)->pdgId() == 1000039) {grdaughter = 0;}
 	      else if (gpiter->daughter(1)->pdgId() == 1000039) {grdaughter = 1;}
 	      
+	      gengr2mass = gpiter->daughter(grdaughter)->mass();
 	      gengr2E    = gpiter->daughter(grdaughter)->energy();
 	      gengr2pt   = gpiter->daughter(grdaughter)->pt();
 	      gengr2phi  = gpiter->daughter(grdaughter)->phi();
@@ -609,14 +611,14 @@ void PhotonDump::InitializeGenParticleBranches()
   genN1decayvx = -9999.f; genN1decayvy = -9999.f; genN1decayvz = -9999.f;
   genph1E = -9999.f; genph1pt = -9999.f; genph1phi = -9999.f; genph1eta = -9999.f;
   genph1match = -9999;
-  gengr1E = -9999.f; gengr1pt = -9999.f; gengr1phi = -9999.f; gengr1eta = -9999.f;
+  gengr1mass = -9999.f; gengr1E = -9999.f; gengr1pt = -9999.f; gengr1phi = -9999.f; gengr1eta = -9999.f;
 
   genN2mass = -9999.f; genN2E = -9999.f; genN2pt = -9999.f; genN2phi = -9999.f; genN2eta = -9999.f;
   genN2prodvx = -9999.f; genN2prodvy = -9999.f; genN2prodvz = -9999.f;
   genN2decayvx = -9999.f; genN2decayvy = -9999.f; genN2decayvz = -9999.f;
   genph2E = -9999.f; genph2pt = -9999.f; genph2phi = -9999.f; genph2eta = -9999.f;
   genph2match = -9999;
-  gengr2E = -9999.f; gengr2pt = -9999.f; gengr2phi = -9999.f; gengr2eta = -9999.f;
+  gengr2mass = -9999.f; gengr2E = -9999.f; gengr2pt = -9999.f; gengr2phi = -9999.f; gengr2eta = -9999.f;
 }
 
 void PhotonDump::ClearGenJetBranches()
@@ -842,6 +844,7 @@ void PhotonDump::beginJob()
     tree->Branch("genph1phi"            , &genph1phi            , "genph1phi/F");
     tree->Branch("genph1eta"            , &genph1eta            , "genph1eta/F");
     tree->Branch("genph1match"          , &genph1match          , "genph1match/I");
+    tree->Branch("gengr1mass"           , &gengr1mass           , "gengr1mass/F");
     tree->Branch("gengr1E"              , &gengr1E              , "gengr1E/F");
     tree->Branch("gengr1pt"             , &gengr1pt             , "gengr1pt/F");
     tree->Branch("gengr1phi"            , &gengr1phi            , "gengr1phi/F");
@@ -863,6 +866,7 @@ void PhotonDump::beginJob()
     tree->Branch("genph2phi"            , &genph2phi            , "genph2phi/F");
     tree->Branch("genph2eta"            , &genph2eta            , "genph2eta/F");
     tree->Branch("genph2match"          , &genph2match          , "genph2match/I");
+    tree->Branch("gengr2mass"           , &gengr2mass           , "gengr2mass/F");
     tree->Branch("gengr2E"              , &gengr2E              , "gengr2E/F");
     tree->Branch("gengr2pt"             , &gengr2pt             , "gengr2pt/F");
     tree->Branch("gengr2phi"            , &gengr2phi            , "gengr2phi/F");
