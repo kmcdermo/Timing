@@ -533,13 +533,13 @@ void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &
   {
     if (gpiter->pdgId() != 1000022) continue;
 
-    std::cout << "particle id: " << gpiter->pdgId() << " (" << gpiter->vx() << " " << gpiter->vy() << " " << gpiter->vz() << ")" << std::endl;
+    std::cout << "particle id: " << gpiter->pdgId() << " (" << gpiter->mass() << ")" << std::endl;
     
     // dump mothers first
     if (gpiter->numberOfMothers() != 0) std::cout << " mothers: ";
     for (auto mgpiter = gpiter->motherRefVector().begin(); mgpiter != gpiter->motherRefVector().end(); ++mgpiter)
     {
-      std::cout << (*mgpiter)->pdgId() << " (" << (*mgpiter)->vx() << " " << (*mgpiter)->vy() << " " << (*mgpiter)->vz()  << ") ";
+      std::cout << (*mgpiter)->pdgId() << " (" << (*mgpiter)->mass() << ") ";
     }
     if (gpiter->numberOfMothers() != 0) std::cout << std::endl;
 
@@ -547,7 +547,7 @@ void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &
     if (gpiter->numberOfDaughters() != 0) std::cout << " daughters: ";
     for (auto dgpiter = gpiter->daughterRefVector().begin(); dgpiter != gpiter->daughterRefVector().end(); ++dgpiter)
     {
-      std::cout << (*dgpiter)->pdgId() << " (" << (*dgpiter)->vx() << " " << (*dgpiter)->vy() << " " << (*dgpiter)->vz()  << ") ";
+      std::cout << (*dgpiter)->pdgId() << " (" << (*dgpiter)->mass() << ") ";
     }
     if (gpiter->numberOfDaughters() != 0) std::cout << std::endl;
   } // end loop over gen particles
