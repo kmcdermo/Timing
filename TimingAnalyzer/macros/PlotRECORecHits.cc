@@ -6,10 +6,11 @@
 
 #include <iostream>
 
-PlotRECORecHits::PlotRECORecHits(TString filename, TString outdir, 
+PlotRECORecHits::PlotRECORecHits(TString filename, TString outdir, Bool_t appendrhlist,
 				 Bool_t applyhltcut, Bool_t applyphptcut, Float_t phptcut,
 				 Bool_t applyrhecut, Float_t rhEcut, Bool_t applyecalacceptcut) :
-  fOutDir(outdir), fApplyHLTCut(applyhltcut),
+  fOutDir(outdir), 
+  fAppendRHList(appendrhlist), fApplyHLTCut(applyhltcut),
   fApplyPhPtCut(applyphptcut), fPhPtCut(phptcut),
   fApplyrhECut(applyrhecut), frhECut(rhEcut),
   fApplyECALAcceptCut(applyecalacceptcut)
@@ -51,6 +52,9 @@ PlotRECORecHits::PlotRECORecHits(TString filename, TString outdir,
   }
 
   fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
+
+  // rhlist
+  if (fAppendRHList) fRHList.open(Form("%s/rhlist.txt",fOutDir.Data()),std::ios_base::trunc);
 }
 
 PlotRECORecHits::~PlotRECORecHits()
@@ -59,6 +63,7 @@ PlotRECORecHits::~PlotRECORecHits()
   delete fInFile;
 
   delete fOutFile;
+  if (fAppendRHList) fRHList.close();
 }
 
 void PlotRECORecHits::DoPlots()
@@ -118,8 +123,9 @@ void PlotRECORecHits::FillRecoPhotons()
   for (int irh = 0; irh < phnfrhs; irh++)
   {
     if (fApplyrhECut && (*phfrhEs)[irh] < frhECut) continue;
+    if (fAppendRHList) fRHList << event << " " << (*phfrhIDs)[irh] << std::endl;
     nfRecHits++;
-
+    
     fPlots["phfrhEs"]->Fill((*phfrhEs)[irh]);
     fPlots["phfrhEs_zoom"]->Fill((*phfrhEs)[irh]);
     fPlots["phfrhdelRs"]->Fill((*phfrhdelRs)[irh]);

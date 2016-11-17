@@ -15,19 +15,17 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runRECORecHitPlots() 
+void runRecHitPlots() 
 {
   setupcpp11(); 
 
-  gROOT->LoadMacro("PlotRECORecHits.cc++g");
+  gROOT->LoadMacro("PlotRecHits.cc++g");
 
   // config is:
-  // appendRHList
-  // applyHLTcut
-  // applyPhPtcut, phptcut,
+  // applyrhidcut, rhlistfile
   // applyrhEcut, rhEcut 
   // applyEcalAcceptcut
   
-  PlotRECORecHits recHitPlots("input/ootrecotree.root","output/reco",true,false,true,50.f,true,1.f,true);
+  PlotRecHits recHitPlots("input/recorechits.root","output/full",true,"output/reco/cuts_phpt50.0_rhE1.0_ecalaccept/rhlist.txt",true,1.f,false);
   recHitPlots.DoPlots();
 }
