@@ -26,7 +26,7 @@ options.register (
 
 ## GT to be used    
 options.register (
-	'globalTag','80X_dataRun2_Prompt_ICHEP16JEC_v0',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'globalTag','80X_dataRun2_2016SeptRepro_v4',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'gloabl tag to be used');
 
 ## Skim on events that pass hlt paths and tight electron kinematic requirements
