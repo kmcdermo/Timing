@@ -465,7 +465,7 @@ void PlotPhotons::FillJets()
     fPlots["jetpt"]->Fill((*jetpt)[ijet]);
     fPlots["jetphi"]->Fill((*jetphi)[ijet]);
     fPlots["jeteta"]->Fill((*jeteta)[ijet]);
-  
+    
     if (fIsMC)
     {
       if ( (*jetmatch)[ijet] >= 0 ) 
@@ -492,6 +492,11 @@ void PlotPhotons::FillRecoPhotons()
     fPlots["phphi"]->Fill((*phphi)[iph]);
     fPlots["pheta"]->Fill((*pheta)[iph]);
     fPlots["phscE"]->Fill((*phscE)[iph]);
+
+    if (iph == 0)
+    {
+      fPlots["ph1pt"]->Fill((*phpt)[iph]);
+    }
 
     if (fIsMC) 
     {
@@ -675,7 +680,7 @@ void PlotPhotons::SetupGenJets()
 void PlotPhotons::SetupObjectCounts()
 {
   fPlots["nvtx"] = PlotPhotons::MakeTH1F("nvtx","nVertices (reco)",100,0.f,100.f,"nPV","Events","nReco");
-  fPlots["njets"] = PlotPhotons::MakeTH1F("njets","nJets (reco)",40,0.f,40.f,"nJets","Events","nReco");
+  fPlots["njets"] = PlotPhotons::MakeTH1F("njets",Form("nJets, pT > %4.1f GeV/c",fJetPtCut),40,0.f,40.f,"nJets","Events","nReco");
   if (fIsMC) fPlots["nmatchedjets"] = PlotPhotons::MakeTH1F("nmatchedjets","nMatchedJets (reco to gen)",40,0.f,40.f,"nMatchedJets","Events","nReco");
   fPlots["nphotons"] = PlotPhotons::MakeTH1F("nphotons","nPhotons (reco)",20,0.f,20.f,"nPhotons","Events","nReco");
   fPlots["nlooseph"] = PlotPhotons::MakeTH1F("nlooseph","nLoosePhotons",20,0.f,20.f,"nLoosePhotons","Events","nReco");
@@ -739,7 +744,8 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["phseedOOT"] = PlotPhotons::MakeTH1F("phseedOOT","Photons Seed RecHit OoT Flag (reco)",2,0.f,2.f,"OoT Flag","Seed RecHits","RecoPhotons");  
 
   // Leading photon info
-  fPlots["ph1seedtime"] = PlotPhotons::MakeTH1F("ph1seedtime","Leading Photon Seed RecHit Time [ns] (reco)",120,-15.f,15.f,"Time [ns]","Seed RecHits","RecoPhotons");
+  fPlots["ph1pt"]       = PlotPhotons::MakeTH1F("ph1pt","Leading Photon p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","RecoPhotons");
+  fPlots["ph1seedtime"] = PlotPhotons::MakeTH1F("ph1seedtime","Leading Photon Seed RecHit Time [ns]",80,-5.f,15.f,"Time [ns]","Seed RecHits","RecoPhotons");
 
   if (fIsMC)
   {

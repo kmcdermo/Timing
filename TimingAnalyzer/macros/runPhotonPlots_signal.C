@@ -15,7 +15,7 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runPhotonPlots() 
+void runPhotonPlots_signal(TString cuts, TString ctau, TString reco) 
 {
   setupcpp11(); 
 
@@ -27,7 +27,7 @@ void runPhotonPlots()
   // applyphvidcut, phvid, applyrhecut, 
   // applyecalacceptcut
   
-  PlotPhotons photonPlots("input/photondump6000.root",true,true,false,"output/ctau6000/nocuts",true,35.f,true,100.f,true,"medium",true,1.f,true);
+  PlotPhotons photonPlots(Form("input/signal/%s/photondump%s.root",reco.Data(),ctau.Data()),true,true,(cuts.EqualTo("cuts",TString::kExact)?true:false),Form("output/%s/%s/ctau%s",reco.Data(),cuts.Data(),ctau.Data()),true,35.f,true,100.f,true,"medium",true,1.f,true);
 
   // which plots to do
   // first bool = generic plots
