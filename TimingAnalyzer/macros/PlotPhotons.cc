@@ -5,11 +5,11 @@
 
 #include <iostream>
 
-PlotPhotons::PlotPhotons(TString filename, Bool_t isMC, TString outdir,
+PlotPhotons::PlotPhotons(TString filename, Bool_t isMC, Bool_t applyevnocut, Bool_t applyevcut, TString outdir,
 			 Bool_t applyjetptcut, Float_t jetptcut, Bool_t applyphptcut, Float_t phptcut,
 			 Bool_t applyphvidcut, TString phvid, Bool_t applyrhecut, Float_t rhEcut,
 			 Bool_t applyecalacceptcut) :
-  fOutDir(outdir), fIsMC(isMC),
+  fOutDir(outdir), fIsMC(isMC), fApplyEvNoCut(applyevnocut), fApplyEvCut(applyevcut),
   fApplyJetPtCut(applyjetptcut), fJetPtCut(jetptcut), fApplyPhPtCut(applyphptcut), fPhPtCut(phptcut),
   fApplyPhVIDCut(applyphvidcut), fPhVID(phvid), fApplyrhECut(applyrhecut), frhECut(rhEcut),
   fApplyECALAcceptCut(applyecalacceptcut)
@@ -27,6 +27,12 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isMC, TString outdir,
   fPhVIDMap["loose"]  = 1;
   fPhVIDMap["medium"] = 2;
   fPhVIDMap["tight"]  = 3;
+
+  // initialize efficiency map
+  fEfficiency["Photons"] = 0;
+  fEfficiency["RecHits"] = 0;
+  fEfficiency["Jets"]    = 0;
+  fEfficiency["Events"]  = 0;
 
   // output
   // setup outdir name
@@ -63,48 +69,183 @@ PlotPhotons::~PlotPhotons()
   delete fOutFile;
 }
 
-void PlotPhotons::DoPlots()
+void PlotPhotons::DoPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
 {
-  PlotPhotons::SetupPlots();
-  PlotPhotons::EventLoop();
+  PlotPhotons::SetupPlots(generic, eff, analysis);
+  PlotPhotons::EventLoop(generic, eff, analysis);
   PlotPhotons::MakeSubDirs();
   PlotPhotons::OutputTEffs();
   PlotPhotons::OutputTH1Fs();
   PlotPhotons::OutputTH2Fs();
+  PlotPhotons::DumpEventCounts();
 }
 
-void PlotPhotons::SetupPlots()
+void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
 {
-  if (fIsMC)
+  if (generic) 
   {
-    PlotPhotons::SetupEffs();
-    PlotPhotons::SetupGenInfo();
-    PlotPhotons::SetupGenParticles();
-    PlotPhotons::SetupGenJets();
+    if (fIsMC)
+    {
+      PlotPhotons::SetupGenInfo();
+      PlotPhotons::SetupGenParticles();
+      PlotPhotons::SetupGenJets();
+    }
+    PlotPhotons::SetupObjectCounts();
+    PlotPhotons::SetupMET();
+    PlotPhotons::SetupJets();
+    PlotPhotons::SetupRecoPhotons();
   }
-  PlotPhotons::SetupObjectCounts();
-  PlotPhotons::SetupMET();
-  PlotPhotons::SetupJets();
-  PlotPhotons::SetupRecoPhotons();
+
+  if (eff)
+  {
+    if (fIsMC)
+    {
+      PlotPhotons::SetupEffs();
+    }
+  }
+
+  if (analysis)
+  {
+    PlotPhotons::SetupAnalysis();
+  }
 }
 
-void PlotPhotons::EventLoop()
+void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis)
 {
   for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++)
   {
     fInTree->GetEntry(entry);
+
+    // protect against double counting events
+    if (fApplyEvNoCut && fEvents.count(event) > 0) continue; 
+    fEvents[event]++;
+    
+    // standard printout
     if (entry%fNEvCheck == 0 || entry == 0) std::cout << "Entry " << entry << " out of " << fInTree->GetEntries() << std::endl;
-    if (fIsMC)
+
+    // N-1 efficiency couting
+    Bool_t event_b = false;
+    PlotPhotons::CountEvents(event_b);
+    if (fApplyEvCut && !event_b) continue;
+
+    // plots!
+    if (generic)
     {
-      PlotPhotons::FillEffs();
-      PlotPhotons::FillGenInfo();
-      PlotPhotons::FillGenParticles();
-      PlotPhotons::FillGenJets();
+      if (fIsMC)
+      {
+	PlotPhotons::FillGenInfo();
+	PlotPhotons::FillGenParticles();
+	PlotPhotons::FillGenJets();
+      }
+      PlotPhotons::FillObjectCounts();
+      PlotPhotons::FillMET();
+
+      PlotPhotons::FillJets();
+      PlotPhotons::FillRecoPhotons();
     }
-    PlotPhotons::FillObjectCounts();
-    PlotPhotons::FillMET();
-    PlotPhotons::FillJets();
-    PlotPhotons::FillRecoPhotons();
+
+    if (eff)
+    {
+      if (fIsMC)
+      {
+	PlotPhotons::FillEffs();
+      }
+    }
+
+    if (analysis)
+    {
+      PlotPhotons::FillAnalysis();
+    }
+  }
+}
+
+void PlotPhotons::CountEvents(Bool_t & event_b)
+{
+  // photon selection efficiency --> check leading photon only
+  Bool_t phpt_b  = false;
+  Bool_t phvid_b = false;
+  Bool_t pheta_b = false;
+
+  int nph = (nphotons>=1)?1:0;
+
+  for (Int_t iph = 0; iph < nph; iph++)
+  {
+    if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
+    phpt_b = true;
+    if (fApplyPhVIDCut && (fPhVIDMap[fPhVID] < (*phVID)[iph])) continue;
+    phvid_b = true;
+    if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
+    pheta_b = true;
+  }
+  if (phpt_b && phvid_b && pheta_b) fEfficiency["Photons"]++;
+
+  // check leading seed rec hit exists and is above E cut
+  Bool_t seedrh_b = false;
+  Bool_t seedE_b = false;
+  for (Int_t iph = 0; iph < nph; iph++)
+  {
+    if ((*phseedpos)[iph] == -9999) continue;
+    seedrh_b = true;
+    if (fApplyrhECut && (*phrhEs)[iph][(*phseedpos)[iph]] < frhECut) continue;
+    seedE_b = true;  
+  }
+  if (seedrh_b && seedE_b) fEfficiency["RecHits"]++;
+
+  // jet selection efficiency
+  Int_t njets_ptcut = 0;
+  for (Int_t ijet = 0; ijet < njets; ijet++)
+  {
+    if (fApplyJetPtCut && (*jetpt)[ijet] < fJetPtCut) continue;
+    njets_ptcut++;
+  }
+  if (njets_ptcut >= 2) fEfficiency["Jets"]++;
+
+  // total efficiency
+  if (njets_ptcut >= 2 && phpt_b && phvid_b && pheta_b && seedrh_b && seedE_b) 
+  {
+    fEfficiency["Events"]++;
+    event_b = true;
+  }
+}
+
+void PlotPhotons::FillAnalysis()
+{
+  Bool_t photon_b = false;
+  Bool_t rh_b     = false;
+  Bool_t jets_b   = false;
+
+  int nph = (nphotons>=1)?1:0;
+
+  // check leading photon only
+  for (Int_t iph = 0; iph < nph; iph++)
+  {
+    if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
+    if (fApplyPhVIDCut && (fPhVIDMap[fPhVID] < (*phVID)[iph])) continue;
+    if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
+    photon_b = true;
+  }
+
+  // check leading seed rec hit exists and is above E cut
+  for (Int_t iph = 0; iph < nph; iph++)
+  {
+    if ((*phseedpos)[iph] == -9999) continue;
+    if (fApplyrhECut && (*phrhEs)[iph][(*phseedpos)[iph]] < frhECut) continue;
+    rh_b = true;    
+  }
+
+  // jet selection efficiency
+  Int_t njets_ptcut = 0;
+  for (Int_t ijet = 0; ijet < njets; ijet++)
+  {
+    if (fApplyJetPtCut && (*jetpt)[ijet] < fJetPtCut) continue;
+    njets_ptcut++;
+  }
+  if (njets_ptcut >= 2) jets_b = true;
+  
+  if (photon_b && jets_b && rh_b) 
+  {
+    Float_t seed1time = (*phrhtimes)[0][(*phseedpos)[0]];
+    fPlots2D["MET_vs_seed1time"]->Fill(seed1time,t1pfMETpt);
   }
 }
 
@@ -139,8 +280,6 @@ void PlotPhotons::FillGenParticles()
   fPlots["nNeutralino"]->Fill(nNeutralino);
   fPlots["nNeutoPhGr"]->Fill(nNeutoPhGr);
 
-  std::cout << genN1mass << std::endl;
-  
   fPlots["genN1mass"]->Fill(genN1mass);
   fPlots["genN1E"]->Fill(genN1E);
   fPlots["genN1pt"]->Fill(genN1pt);
@@ -252,7 +391,7 @@ void PlotPhotons::FillGenJets()
 {
   fPlots["ngenjets"]->Fill(ngenjets);
   
-  for (int igjet = 0; igjet < ngenjets; igjet++)
+  for (Int_t igjet = 0; igjet < ngenjets; igjet++)
   {
     fPlots["genjetE"]->Fill((*genjetE)[igjet]);
     fPlots["genjetpt"]->Fill((*genjetpt)[igjet]);
@@ -265,11 +404,11 @@ void PlotPhotons::FillObjectCounts()
 {
   fPlots["nvtx"]->Fill(nvtx);
  
-  int nMatchedJets = 0;
-  int nJets = 0;
-  for (int ijet = 0; ijet < njets; ijet++)
+  Int_t nMatchedJets = 0;
+  Int_t nJets = 0;
+  for (Int_t ijet = 0; ijet < njets; ijet++)
   {
-    if (fApplyJetPtCut && (*jetE)[ijet] < fJetPtCut) continue;
+    if (fApplyJetPtCut && (*jetpt)[ijet] < fJetPtCut) continue;
     nJets++;
     if (fIsMC)
     {
@@ -279,13 +418,13 @@ void PlotPhotons::FillObjectCounts()
   fPlots["njets"]->Fill(nJets);  
   if (fIsMC) fPlots["nmatchedjets"]->Fill(nMatchedJets);  
 
-  int nPhotons = 0;
-  int nLoosePh = 0;
-  int nMediumPh = 0;
-  int nTightPh = 0;
-  for (int iph = 0; iph < nphotons; iph++)
+  Int_t nPhotons = 0;
+  Int_t nLoosePh = 0;
+  Int_t nMediumPh = 0;
+  Int_t nTightPh = 0;
+  for (Int_t iph = 0; iph < nphotons; iph++)
   { 
-    if (fApplyPhPtCut && (*phE)[iph] < fPhPtCut) continue;
+    if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
     if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
     nPhotons++;
     if ( (*phVID)[iph] >= 1 ) nLoosePh++;
@@ -319,9 +458,9 @@ void PlotPhotons::FillMET()
 
 void PlotPhotons::FillJets()
 {
-  for (int ijet = 0; ijet < njets; ijet++)
+  for (Int_t ijet = 0; ijet < njets; ijet++)
   {
-    if (fApplyJetPtCut && (*jetE)[ijet] < fJetPtCut) continue;
+    if (fApplyJetPtCut && (*jetpt)[ijet] < fJetPtCut) continue;
     fPlots["jetE"]->Fill((*jetE)[ijet]);
     fPlots["jetpt"]->Fill((*jetpt)[ijet]);
     fPlots["jetphi"]->Fill((*jetphi)[ijet]);
@@ -342,9 +481,9 @@ void PlotPhotons::FillJets()
 
 void PlotPhotons::FillRecoPhotons()
 {
-  for (int iph = 0; iph < nphotons; iph++)
+  for (Int_t iph = 0; iph < nphotons; iph++)
   {
-    if (fApplyPhPtCut && (*phE)[iph] < fPhPtCut) continue;
+    if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
     if (fApplyPhVIDCut && (fPhVIDMap[fPhVID] < (*phVID)[iph])) continue;
     if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
 
@@ -367,9 +506,9 @@ void PlotPhotons::FillRecoPhotons()
     }
   
     // loop over rechits (+ seed info)
-    int nRecHits = 0;
-    int nRecHits_gen = 0;
-    for (int irh = 0; irh < (*phnrhs)[iph]; irh++)
+    Int_t nRecHits = 0;
+    Int_t nRecHits_gen = 0;
+    for (Int_t irh = 0; irh < (*phnrhs)[iph]; irh++)
     {
       if (fApplyrhECut && (*phrhEs)[iph][irh] < frhECut) continue;
       nRecHits++;
@@ -384,6 +523,8 @@ void PlotPhotons::FillRecoPhotons()
 	fPlots["phseeddelR"]->Fill((*phrhdelRs)[iph][irh]);
 	fPlots["phseedtime"]->Fill((*phrhtimes)[iph][irh]);
 	fPlots["phseedOOT"]->Fill((*phrhOOTs)[iph][irh]);
+      
+	if (iph == 0) fPlots["ph1seedtime"]->Fill((*phrhtimes)[iph][irh]);
       }
       
       if (fIsMC)
@@ -408,6 +549,11 @@ void PlotPhotons::FillRecoPhotons()
     fPlots["phnrhs"]->Fill(nRecHits);
     if (fIsMC && (*phmatch)[iph] > 0) fPlots["phnrhs_gen"]->Fill(nRecHits_gen);
   } // end loop over nphotons
+}
+
+void PlotPhotons::SetupAnalysis()
+{
+  fPlots2D["MET_vs_seed1time"] = PlotPhotons::MakeTH2F("MET_vs_seed1time","MET vs Leading Photon Seed RecHit Time",80,-2.f,14.f,"Leading Photon Seed RecHit Time [ns]",100,0.f,2000.f,"MET","Analysis");
 }
 
 void PlotPhotons::SetupEffs()
@@ -461,7 +607,7 @@ void PlotPhotons::SetupGenParticles()
   fPlots["genN1bgz"] = PlotPhotons::MakeTH1F("genN1bgz","Generator Leading #beta#gamma_{z}",100,0.f,20.f,"#beta#gamma_{z}","Neutralinos","GenParticles");
   fPlots["genN1dbgz"] = PlotPhotons::MakeTH1F("genN1dbgz","Generator Leading Neutralino Travel z-Distance/#beta#gamma_{z} [cm]",100,0.f,200.f,"Travel z-Distance/#beta#gamma_{z} [cm]","Neutralinos","GenParticles");
   fPlots["genN1d"] = PlotPhotons::MakeTH1F("genN1d","Generator Leading Neutralino Travel Distance [cm]",400,0.f,200.f,"Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN1ctau"] = PlotPhotons::MakeTH1F("genN1ctau","Generator Leading Neutralino c#tau [cm]",200,0.f,100.f,"c#tau [cm]","Neutralinos","GenParticles");
+  fPlots["genN1ctau"] = PlotPhotons::MakeTH1F("genN1ctau","Generator Leading Neutralino c#tau [cm]",200,0.f,2000.f,"c#tau [cm]","Neutralinos","GenParticles");
   fPlots["genph1E"] = PlotPhotons::MakeTH1F("genph1E","Generator Leading Photon E [GeV]",100,0.f,2500.f,"Energy [GeV]","Photons","GenParticles");
   fPlots["genph1pt"] = PlotPhotons::MakeTH1F("genph1pt","Generator Leading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","GenParticles");
   fPlots["genph1phi"] = PlotPhotons::MakeTH1F("genph1phi","Generator Leading Photon #phi",100,-3.2,3.2,"#phi","Photons","GenParticles");
@@ -503,7 +649,7 @@ void PlotPhotons::SetupGenParticles()
   fPlots["genN2bgz"] = PlotPhotons::MakeTH1F("genN2bgz","Generator Subleading #beta#gamma_{z}",100,0.f,20.f,"#beta#gamma_{z}","Neutralinos","GenParticles");
   fPlots["genN2dbgz"] = PlotPhotons::MakeTH1F("genN2dbgz","Generator Subleading Neutralino Travel z-Distance/#beta#gamma_{z} [cm]",100,0.f,200.f,"Travel z-Distance/#beta#gamma_{z} [cm]","Neutralinos","GenParticles");
   fPlots["genN2d"] = PlotPhotons::MakeTH1F("genN2d","Generator Subleading Neutralino Travel Distance [cm]",400,0.f,200.f,"Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN2ctau"] = PlotPhotons::MakeTH1F("genN2ctau","Generator Subleading Neutralino c#tau [cm]",200,0.f,100.f,"c#tau [cm]","Neutralinos","GenParticles");
+  fPlots["genN2ctau"] = PlotPhotons::MakeTH1F("genN2ctau","Generator Subleading Neutralino c#tau [cm]",200,0.f,2000.f,"c#tau [cm]","Neutralinos","GenParticles");
   fPlots["genph2E"] = PlotPhotons::MakeTH1F("genph2E","Generator Subleading Photon E [GeV]",100,0.f,2500.f,"Energy [GeV]","Photons","GenParticles");
   fPlots["genph2pt"] = PlotPhotons::MakeTH1F("genph2pt","Generator Subleading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","GenParticles");
   fPlots["genph2phi"] = PlotPhotons::MakeTH1F("genph2phi","Generator Subleading Photon #phi",100,-3.2,3.2,"#phi","Photons","GenParticles");
@@ -592,6 +738,9 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["phseedtime"] = PlotPhotons::MakeTH1F("phseedtime","Photons Seed RecHit Time [ns] (reco)",200,-10.f,10.f,"Time [ns]","Seed RecHits","RecoPhotons");
   fPlots["phseedOOT"] = PlotPhotons::MakeTH1F("phseedOOT","Photons Seed RecHit OoT Flag (reco)",2,0.f,2.f,"OoT Flag","Seed RecHits","RecoPhotons");  
 
+  // Leading photon info
+  fPlots["ph1seedtime"] = PlotPhotons::MakeTH1F("ph1seedtime","Leading Photon Seed RecHit Time [ns] (reco)",120,-15.f,15.f,"Time [ns]","Seed RecHits","RecoPhotons");
+
   if (fIsMC)
   {
     // Gen matched reco quantities
@@ -647,6 +796,23 @@ TH2F * PlotPhotons::MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_
   fSubDirs[hname] = subdir;
 
   return hist;
+}
+
+void PlotPhotons::DumpEventCounts()
+{
+  std::cout << std::endl << "-----------------" << std::endl << std::endl;
+  Int_t total = 0;
+  for (IntMapIter mapiter = fEvents.begin(); mapiter != fEvents.end(); ++mapiter)
+  {
+    total++;
+  }
+  std::cout << "Total Events: " << total << std::endl;
+
+  for (TStrIntMapIter mapiter = fEfficiency.begin(); mapiter != fEfficiency.end(); ++mapiter)
+  {
+    std::cout << "nEvents Passing " << (*mapiter).first.Data() << " Selection: " << (*mapiter).second <<std::endl;
+  }
+  std::cout << std::endl << "-----------------" << std::endl << std::endl;
 }
 
 void PlotPhotons::MakeSubDirs()

@@ -15,19 +15,19 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runPhotonPlots() 
+void runPhotonPlots_HT(TString cuts, TString sample, TString bin) 
 {
   setupcpp11(); 
 
   gROOT->LoadMacro("PlotPhotons.cc++g");
 
   // config is:
-  // filename, isMC, applyevnocut, outdir, 
+  // filename, isMC, applyevnocut, applyevcut, outdir, 
   // applyjetptcut, jetptcut, applyphptcut, phptcut,
   // applyphvidcut, phvid, applyrhecut, 
   // applyecalacceptcut
   
-  PlotPhotons photonPlots("input/qcd/QCD-HT2000ToInf.root",false,false,"output/qcd/cuts/2000ToInf",true,35.f,true,100.f,true,"medium",true,1.f,true);
+  PlotPhotons photonPlots(Form("input/%s/%s-HT%s.root",sample.Data(),sample.Data(),bin.Data()),false,false,(cuts.EqualTo("cuts",TString::kExact)?true:false),Form("output/%s/%s/%s",sample.Data(),cuts.Data(),bin.Data()),true,35.f,true,100.f,true,"medium",true,1.f,true);
 
   // which plots to do
   // first bool = generic plots

@@ -34,19 +34,23 @@ typedef TH2Map::iterator        TH2MapIter;
 typedef std::map<TString,TString> TStrMap;
 typedef TStrMap::iterator         TStrMapIter;
 
-typedef std::map<TString,Int_t>   VIDMap;
+typedef std::map<TString,Int_t> TStrIntMap;
+typedef TStrIntMap::iterator    TStrIntMapIter;
+
+typedef std::map<Int_t,Int_t> IntMap;
+typedef IntMap::iterator      IntMapIter;
 
 class PlotPhotons 
 {
 public :
-  PlotPhotons(TString filename, Bool_t isMC, TString outdir = "output", 
+  PlotPhotons(TString filename, Bool_t isMC, Bool_t applyevnocut = false, Bool_t applyevcut = false, TString outdir = "output", 
 	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
 	      Bool_t applyphvidcut = false, TString phvid = "medium", Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
 	      Bool_t applyecalacceptcut = false);
   ~PlotPhotons();
   void InitTree();
-  void DoPlots();
-  void SetupPlots();
+  void DoPlots(Bool_t generic, Bool_t eff, Bool_t analysis);
+  void SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis);
   void SetupEffs();
   void SetupGenInfo();
   void SetupGenParticles();
@@ -55,10 +59,12 @@ public :
   void SetupMET();
   void SetupJets();
   void SetupRecoPhotons();
+  void SetupAnalysis();
   TEfficiency * MakeTEff(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
   TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
   TH2F * MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString subdir);
-  void EventLoop();
+  void EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis);
+  void CountEvents(Bool_t & event_b);
   void FillEffs();
   void FillGenInfo();
   void FillGenParticles();
@@ -67,6 +73,8 @@ public :
   void FillMET();
   void FillJets();
   void FillRecoPhotons();
+  void FillAnalysis();
+  void DumpEventCounts();
   void MakeSubDirs();
   void OutputTEffs();
   void OutputTH1Fs();
@@ -83,15 +91,19 @@ private :
   TEffMap fEffs;
   TH1Map  fPlots;
   TH2Map  fPlots2D;
+  TStrIntMap fEfficiency;
+  IntMap  fEvents;
 
   // Config
+  const Bool_t  fApplyEvNoCut;
+  const Bool_t  fApplyEvCut;
   const Bool_t  fApplyJetPtCut;
   const Float_t fJetPtCut;
   const Bool_t  fApplyPhPtCut;
   const Float_t fPhPtCut;
   const Bool_t  fApplyPhVIDCut;
   const TString fPhVID;
-        VIDMap  fPhVIDMap;
+  TStrIntMap    fPhVIDMap;
   const Bool_t  fApplyrhECut;
   const Float_t frhECut;
   const Bool_t  fApplyECALAcceptCut;
