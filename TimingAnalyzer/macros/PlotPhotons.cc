@@ -680,7 +680,7 @@ void PlotPhotons::SetupGenJets()
 void PlotPhotons::SetupObjectCounts()
 {
   fPlots["nvtx"] = PlotPhotons::MakeTH1F("nvtx","nVertices (reco)",100,0.f,100.f,"nPV","Events","nReco");
-  fPlots["njets"] = PlotPhotons::MakeTH1F("njets",Form("nJets, p_{T} > %4.1f GeV/c",fJetPtCut),40,0.f,40.f,Form("nJets, p_{T} > %4.1f GeV/c",fJetPtCut),"Events","nReco");
+  fPlots["njets"] = PlotPhotons::MakeTH1F("njets",Form("nJets, p_{T} > %4.1f GeV/c",fJetPtCut),40,0.f,40.f,Form("nJets [p_{T} > %4.1f GeV/c]",fJetPtCut),"Events","nReco");
   if (fIsMC) fPlots["nmatchedjets"] = PlotPhotons::MakeTH1F("nmatchedjets","nMatchedJets (reco to gen)",40,0.f,40.f,"nMatchedJets","Events","nReco");
   fPlots["nphotons"] = PlotPhotons::MakeTH1F("nphotons","nPhotons (reco)",20,0.f,20.f,"nPhotons","Events","nReco");
   fPlots["nlooseph"] = PlotPhotons::MakeTH1F("nlooseph","nLoosePhotons",20,0.f,20.f,"nLoosePhotons","Events","nReco");
@@ -744,8 +744,8 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["phseedOOT"] = PlotPhotons::MakeTH1F("phseedOOT","Photons Seed RecHit OoT Flag (reco)",2,0.f,2.f,"OoT Flag","Seed RecHits","RecoPhotons");  
 
   // Leading photon info
-  fPlots["ph1pt"]       = PlotPhotons::MakeTH1F("ph1pt","Leading Photon p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","RecoPhotons");
-  fPlots["ph1seedtime"] = PlotPhotons::MakeTH1F("ph1seedtime","Leading Photon Seed RecHit Time [ns]",80,-5.f,15.f,"Time [ns]","Seed RecHits","RecoPhotons");
+  fPlots["ph1pt"]       = PlotPhotons::MakeTH1F("ph1pt","Leading Photon p_{T} [GeV/c]",100,0.f,2500.f,"Leading Photon p_{T} [GeV/c]","Events","RecoPhotons");
+  fPlots["ph1seedtime"] = PlotPhotons::MakeTH1F("ph1seedtime","Leading Photon Seed RecHit Time [ns]",80,-5.f,15.f,"Leading Photon Seed RecHit Time [ns]","Events","RecoPhotons");
 
   if (fIsMC)
   {
@@ -854,7 +854,7 @@ void PlotPhotons::OutputTEffs()
     
     // first save as linear, then log
     canv->SetLogy(0);
-    canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+    //canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
     canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
 
     delete canv;
@@ -879,11 +879,11 @@ void PlotPhotons::OutputTH1Fs()
     
     // first save as linear, then log
     canv->SetLogy(0);
-    canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+    //canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
     canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
 
     canv->SetLogy(1);
-    canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+    //canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
     canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->first.Data()));
 
     delete canv;
@@ -908,7 +908,7 @@ void PlotPhotons::OutputTH2Fs()
     
     // first save as linear, then log
     canv->SetLogy(0);
-    canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+    //canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
     canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
 
     delete canv;

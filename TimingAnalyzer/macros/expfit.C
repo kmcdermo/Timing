@@ -1,6 +1,6 @@
 void expfit()
 {
-  TFile * file = TFile::Open("output/moreplots/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * file = TFile::Open("output/withReReco/nocuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F * hist = (TH1F*)file->Get("genN1ctau");
   hist->Scale(1.0/hist->Integral());
   hist->GetYaxis()->SetTitle("Neutralinos/nNeutralinos");

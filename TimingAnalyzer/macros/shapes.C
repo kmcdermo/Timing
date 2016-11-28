@@ -1,4 +1,14 @@
+#include "TStyle.h"
+#include "TROOT.h"
+#include "TFile.h"
+#include "TH1F.h"
+#include "THStack.h"
+#include "TCanvas.h"
+#include "TLegend.h"
+
 #include "common/common.C"
+
+#include <vector>
 
 static const Float_t lumi = 36.56 * 1000; // pb
 
@@ -51,8 +61,8 @@ void shapes()
 
   // Signals
   TFile * file100 = TFile::Open("output/withReReco/cuts/ctau100/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
-  ctau100t1pfMETpt   = (TH1F*)file100->Get("t1pfMETpt"); 
-  ctau100ph1seedtime = (TH1F*)file100->Get("ph1seedtime"); 
+  TH1F  * ctau100t1pfMETpt   = (TH1F*)file100->Get("t1pfMETpt"); 
+  TH1F  * ctau100ph1seedtime = (TH1F*)file100->Get("ph1seedtime"); 
 
   ctau100t1pfMETpt  ->Scale(1.0/ctau100t1pfMETpt->Integral());
   ctau100ph1seedtime->Scale(1.0/ctau100ph1seedtime->Integral());
@@ -60,8 +70,8 @@ void shapes()
   ctau100ph1seedtime->SetLineColor(kViolet-1);
 
   TFile * file2000 = TFile::Open("output/withReReco/cuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
-  ctau2000t1pfMETpt   = (TH1F*)file2000->Get("t1pfMETpt"); 
-  ctau2000ph1seedtime = (TH1F*)file2000->Get("ph1seedtime"); 
+  TH1F  * ctau2000t1pfMETpt   = (TH1F*)file2000->Get("t1pfMETpt"); 
+  TH1F  * ctau2000ph1seedtime = (TH1F*)file2000->Get("ph1seedtime"); 
 
   ctau2000t1pfMETpt  ->Scale(1.0/ctau2000t1pfMETpt->Integral());
   ctau2000ph1seedtime->Scale(1.0/ctau2000ph1seedtime->Integral());
@@ -69,8 +79,8 @@ void shapes()
   ctau2000ph1seedtime->SetLineColor(kRed+1);
 
   TFile * file6000 = TFile::Open("output/withReReco/cuts/ctau6000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
-  ctau6000t1pfMETpt = (TH1F*)file6000->Get("t1pfMETpt"); 
-  ctau6000ph1seedtime = (TH1F*)file6000->Get("ph1seedtime"); 
+  TH1F  * ctau6000t1pfMETpt = (TH1F*)file6000->Get("t1pfMETpt"); 
+  TH1F  * ctau6000ph1seedtime = (TH1F*)file6000->Get("ph1seedtime"); 
 
   ctau6000t1pfMETpt  ->Scale(1.0/ctau6000t1pfMETpt->Integral());
   ctau6000ph1seedtime->Scale(1.0/ctau6000ph1seedtime->Integral());
@@ -78,41 +88,51 @@ void shapes()
   ctau6000ph1seedtime->SetLineColor(kBlue+1);
 
   // Draw it all
-  TCanvas * t1pfMETptcanv = new TCanvas();
+  TCanvas * t1pfMETptcanv = new TCanvas("t1pfMETptcanv","t1pfMETptcanv");
   t1pfMETptcanv->cd();
-  CMSLumi(t1pfMETptcanv,"Simulation");
+  t1pfMETptcanv->SetLogy();
   //  t1pfMETptstack   ->Draw("HIST");
+  bkgt1pfMETpt     ->GetYaxis()->SetRangeUser(5e-5,3);
   bkgt1pfMETpt     ->Draw("HIST");
   ctau100t1pfMETpt ->Draw("HIST same");
   ctau2000t1pfMETpt->Draw("HIST same");
   ctau6000t1pfMETpt->Draw("HIST same");
 
-  TLegend * t1pfMETptleg = new TLegend(0.7,0.65,0.9,0.9);
+  TLegend * t1pfMETptleg = new TLegend(0.6,0.7,0.8,0.9);
 //   t1pfMETptleg->AddEntry(gjett1pfMETpt,"#gamma+Jets","f");
 //   t1pfMETptleg->AddEntry(qcdt1pfMETpt ,"QCD","f");
   t1pfMETptleg->AddEntry(bkgt1pfMETpt,"Background","f");
-  t1pfMETptleg->AddEntry(ctau100t1pfMETpt ,"c#tau = 100" ,"l");
-  t1pfMETptleg->AddEntry(ctau2000t1pfMETpt,"c#tau = 2000","l");
-  t1pfMETptleg->AddEntry(ctau6000t1pfMETpt,"c#tau = 6000","l");
+  t1pfMETptleg->AddEntry(ctau100t1pfMETpt ,"c#tau = 36.5 mm" ,"l");
+  t1pfMETptleg->AddEntry(ctau2000t1pfMETpt,"c#tau = 730.5 mm","l");
+  t1pfMETptleg->AddEntry(ctau6000t1pfMETpt,"c#tau = 2192 mm","l");
   t1pfMETptleg->Draw("same");
 
-  TCanvas * ph1seedtimecanv = new TCanvas();
+  CMSLumi(t1pfMETptcanv,"Simulation");
+  t1pfMETptcanv->SaveAs("t1pfMETpt.png");
+
+  TCanvas * ph1seedtimecanv = new TCanvas("ph1seedtimecanv","ph1seedtimecanv");
   ph1seedtimecanv->cd();
-  CMSLumi(ph1seedtimecanv,"Simulation",10);
+  ph1seedtimecanv->SetLogy();
   //  ph1seedtimestack   ->Draw("HIST");
+  bkgph1seedtime     ->GetXaxis()->SetTitle("Leading Photon RecHit Seed Time [ns]");
+  bkgph1seedtime     ->GetYaxis()->SetRangeUser(1e-5,3);
+  bkgph1seedtime     ->GetYaxis()->SetTitle("Events");
   bkgph1seedtime     ->Draw("HIST");
   ctau100ph1seedtime ->Draw("HIST same");
   ctau2000ph1seedtime->Draw("HIST same");
   ctau6000ph1seedtime->Draw("HIST same");
 
-  TLegend * ph1seedtimeleg = new TLegend(0.7,0.65,0.9,0.9);
+  TLegend * ph1seedtimeleg = new TLegend(0.6,0.7,0.8,0.9);
 //   ph1seedtimeleg->AddEntry(gjetph1seedtime,"#gamma+Jets","f");
 //   ph1seedtimeleg->AddEntry(qcdph1seedtime ,"QCD","f");
   ph1seedtimeleg->AddEntry(bkgph1seedtime,"Background","f");
-  ph1seedtimeleg->AddEntry(ctau100ph1seedtime ,"c#tau = 100" ,"l");
-  ph1seedtimeleg->AddEntry(ctau2000ph1seedtime,"c#tau = 2000","l");
-  ph1seedtimeleg->AddEntry(ctau6000ph1seedtime,"c#tau = 6000","l");
+  ph1seedtimeleg->AddEntry(ctau100ph1seedtime ,"c#tau = 36.5 mm" ,"l");
+  ph1seedtimeleg->AddEntry(ctau2000ph1seedtime,"c#tau = 730.5 mm","l");
+  ph1seedtimeleg->AddEntry(ctau6000ph1seedtime,"c#tau = 2192 mm","l");
   ph1seedtimeleg->Draw("same");
+
+  CMSLumi(ph1seedtimecanv,"Simulation");
+  ph1seedtimecanv->SaveAs("ph1seedtime.png");
 }
 
 void getQCD(TH1F*& qcdt1pfMETpt, TH1F *& qcdph1seedtime)
@@ -147,9 +167,9 @@ void getQCD(TH1F*& qcdt1pfMETpt, TH1F *& qcdph1seedtime)
     }
   }
 
-  qcdt1pfMETpt->SetLineColor(kGreen+2);
+  qcdt1pfMETpt->SetLineColor(kBlack);
   qcdt1pfMETpt->SetFillColor(kGreen+2);
-  qcdph1seedtime->SetLineColor(kGreen+2);
+  qcdph1seedtime->SetLineColor(kBlack);
   qcdph1seedtime->SetFillColor(kGreen+2);
 }
 
@@ -185,8 +205,8 @@ void getGJets(TH1F*& gjett1pfMETpt, TH1F *& gjetph1seedtime)
     }
   }
 
-  gjett1pfMETpt->SetLineColor(kYellow-7);
+  gjett1pfMETpt->SetLineColor(kBlack);
   gjett1pfMETpt->SetFillColor(kYellow-7);
-  gjetph1seedtime->SetLineColor(kYellow-7);
+  gjetph1seedtime->SetLineColor(kBlack);
   gjetph1seedtime->SetFillColor(kYellow-7);
 }

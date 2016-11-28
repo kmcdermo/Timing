@@ -1,11 +1,21 @@
+#include "TStyle.h"
+#include "TROOT.h"
+#include "TFile.h"
+#include "TH1F.h"
+#include "THStack.h"
+#include "TCanvas.h"
+#include "TLegend.h"
+
 #include "common/common.C"
+
+#include <vector>
 
 static const Float_t lumi = 36.56 * 1000; // pb
 
 void getQCD(TH1F*&, TH1F *&);
 void getGJets(TH1F*&, TH1F *&);
 
-void shapes()
+void precutshapes()
 {
   // set TDR Style (need to force it!)
   TStyle * tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
@@ -51,8 +61,8 @@ void shapes()
 
   // Signals
   TFile * file100 = TFile::Open("output/withReReco/nocuts/ctau100/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
-  ctau100njets = (TH1F*)file100->Get("njets"); 
-  ctau100ph1pt = (TH1F*)file100->Get("ph1pt"); 
+  TH1F  * ctau100njets = (TH1F*)file100->Get("njets"); 
+  TH1F  * ctau100ph1pt = (TH1F*)file100->Get("ph1pt"); 
 
   ctau100njets->Scale(1.0/ctau100njets->Integral());
   ctau100ph1pt->Scale(1.0/ctau100ph1pt->Integral());
@@ -60,8 +70,8 @@ void shapes()
   ctau100ph1pt->SetLineColor(kViolet-1);
 
   TFile * file2000 = TFile::Open("output/withReReco/nocuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
-  ctau2000njets = (TH1F*)file2000->Get("njets"); 
-  ctau2000ph1pt = (TH1F*)file2000->Get("ph1pt"); 
+  TH1F  * ctau2000njets = (TH1F*)file2000->Get("njets"); 
+  TH1F  * ctau2000ph1pt = (TH1F*)file2000->Get("ph1pt"); 
 
   ctau2000njets->Scale(1.0/ctau2000njets->Integral());
   ctau2000ph1pt->Scale(1.0/ctau2000ph1pt->Integral());
@@ -69,8 +79,8 @@ void shapes()
   ctau2000ph1pt->SetLineColor(kRed+1);
 
   TFile * file6000 = TFile::Open("output/withReReco/nocuts/ctau6000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
-  ctau6000njets = (TH1F*)file6000->Get("njets"); 
-  ctau6000ph1pt = (TH1F*)file6000->Get("ph1pt"); 
+  TH1F  * ctau6000njets = (TH1F*)file6000->Get("njets"); 
+  TH1F  * ctau6000ph1pt = (TH1F*)file6000->Get("ph1pt"); 
 
   ctau6000njets->Scale(1.0/ctau6000njets->Integral());
   ctau6000ph1pt->Scale(1.0/ctau6000ph1pt->Integral());
@@ -78,35 +88,48 @@ void shapes()
   ctau6000ph1pt->SetLineColor(kBlue+1);
 
   // Draw it all
-  TCanvas * njetscanv = new TCanvas();
+  TCanvas * njetscanv = new TCanvas("njetscanv","njetscanv");
   njetscanv->cd();
-  CMSLumi(njetscanv,"Simulation");
+  njetscanv->SetLogy();
+  bkgnjets     ->GetXaxis()->SetRangeUser(0,25);
+  bkgnjets     ->GetXaxis()->SetTitle("nJets [p_{T} > 35 GeV/c]");
+  bkgnjets     ->GetYaxis()->SetRangeUser(5e-5,3);
   bkgnjets     ->Draw("HIST");
   ctau100njets ->Draw("HIST same");
   ctau2000njets->Draw("HIST same");
   ctau6000njets->Draw("HIST same");
 
-  TLegend * njetsleg = new TLegend(0.7,0.65,0.9,0.9);
+  TLegend * njetsleg = new TLegend(0.6,0.7,0.8,0.9);
   njetsleg->AddEntry(bkgnjets,"Background","f");
-  njetsleg->AddEntry(ctau100njets ,"c#tau = 100" ,"l");
-  njetsleg->AddEntry(ctau2000njets,"c#tau = 2000","l");
-  njetsleg->AddEntry(ctau6000njets,"c#tau = 6000","l");
+  njetsleg->AddEntry(ctau100njets ,"c#tau = 36.5 mm" ,"l");
+  njetsleg->AddEntry(ctau2000njets,"c#tau = 730.5 mm","l");
+  njetsleg->AddEntry(ctau6000njets,"c#tau = 2192 mm","l");
   njetsleg->Draw("same");
 
-  TCanvas * ph1ptcanv = new TCanvas();
+  CMSLumi(njetscanv,"Simulation");
+  njetscanv->SaveAs("njets.png");
+    
+  TCanvas * ph1ptcanv = new TCanvas("ph1ptcanv","ph1ptcanv");
   ph1ptcanv->cd();
-  CMSLumi(ph1ptcanv,"Simulation",10);
+  ph1ptcanv->SetLogy();
+  bkgph1pt     ->GetXaxis()->SetRangeUser(0,1500);
+  bkgph1pt     ->GetXaxis()->SetTitle("Leading Photon p_{T} [GeV/c]");
+  bkgph1pt     ->GetYaxis()->SetRangeUser(5e-5,3);
+  bkgph1pt     ->GetYaxis()->SetTitle("Events");
   bkgph1pt     ->Draw("HIST");
   ctau100ph1pt ->Draw("HIST same");
   ctau2000ph1pt->Draw("HIST same");
   ctau6000ph1pt->Draw("HIST same");
 
-  TLegend * ph1ptleg = new TLegend(0.7,0.65,0.9,0.9);
+  TLegend * ph1ptleg = new TLegend(0.6,0.7,0.8,0.9);
   ph1ptleg->AddEntry(bkgph1pt,"Background","f");
-  ph1ptleg->AddEntry(ctau100ph1pt ,"c#tau = 100" ,"l");
-  ph1ptleg->AddEntry(ctau2000ph1pt,"c#tau = 2000","l");
-  ph1ptleg->AddEntry(ctau6000ph1pt,"c#tau = 6000","l");
+  ph1ptleg->AddEntry(ctau100ph1pt ,"c#tau = 36.5 mm" ,"l");
+  ph1ptleg->AddEntry(ctau2000ph1pt,"c#tau = 730.5 mm" ,"l");
+  ph1ptleg->AddEntry(ctau6000ph1pt,"c#tau = 2192 mm" ,"l");
   ph1ptleg->Draw("same");
+
+  CMSLumi(ph1ptcanv,"Simulation");
+  ph1ptcanv->SaveAs("ph1pt.png");
 }
 
 void getQCD(TH1F*& qcdnjets, TH1F *& qcdph1pt)
@@ -141,9 +164,9 @@ void getQCD(TH1F*& qcdnjets, TH1F *& qcdph1pt)
     }
   }
 
-  qcdnjets->SetLineColor(kGreen+2);
+  qcdnjets->SetLineColor(kBlack);
   qcdnjets->SetFillColor(kGreen+2);
-  qcdph1pt->SetLineColor(kGreen+2);
+  qcdph1pt->SetLineColor(kBlack);
   qcdph1pt->SetFillColor(kGreen+2);
 }
 
@@ -179,8 +202,8 @@ void getGJets(TH1F*& gjetnjets, TH1F *& gjetph1pt)
     }
   }
 
-  gjetnjets->SetLineColor(kYellow-7);
+  gjetnjets->SetLineColor(kBlack);
   gjetnjets->SetFillColor(kYellow-7);
-  gjetph1pt->SetLineColor(kYellow-7);
+  gjetph1pt->SetLineColor(kBlack);
   gjetph1pt->SetFillColor(kYellow-7);
 }
