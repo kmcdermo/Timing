@@ -680,7 +680,7 @@ void PlotPhotons::SetupGenJets()
 void PlotPhotons::SetupObjectCounts()
 {
   fPlots["nvtx"] = PlotPhotons::MakeTH1F("nvtx","nVertices (reco)",100,0.f,100.f,"nPV","Events","nReco");
-  fPlots["njets"] = PlotPhotons::MakeTH1F("njets",Form("nJets, pT > %4.1f GeV/c",fJetPtCut),40,0.f,40.f,"nJets","Events","nReco");
+  fPlots["njets"] = PlotPhotons::MakeTH1F("njets",Form("nJets, p_{T} > %4.1f GeV/c",fJetPtCut),40,0.f,40.f,Form("nJets, p_{T} > %4.1f GeV/c",fJetPtCut),"Events","nReco");
   if (fIsMC) fPlots["nmatchedjets"] = PlotPhotons::MakeTH1F("nmatchedjets","nMatchedJets (reco to gen)",40,0.f,40.f,"nMatchedJets","Events","nReco");
   fPlots["nphotons"] = PlotPhotons::MakeTH1F("nphotons","nPhotons (reco)",20,0.f,20.f,"nPhotons","Events","nReco");
   fPlots["nlooseph"] = PlotPhotons::MakeTH1F("nlooseph","nLoosePhotons",20,0.f,20.f,"nLoosePhotons","Events","nReco");
