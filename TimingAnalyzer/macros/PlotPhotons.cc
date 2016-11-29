@@ -749,6 +749,13 @@ void PlotPhotons::DumpEventCounts()
   {
     std::cout << "nEvents Passing " << (*mapiter).first.Data() << " Selection: " << (*mapiter).second <<std::endl;
   }
+
+  // Compute event level efficiency + binomial error
+  Int_t   passed      = fEfficiency["Events"];
+  Float_t efficiency  = float(passed)/float(total);
+  Float_t uncertainty = stq::sqrt((efficiency*(1.f-efficiency))/float(total));
+  std::cout << "Event level efficiency: " << efficiency << " +/- " << uncertainty << std::endl;
+
   std::cout << std::endl << "-----------------" << std::endl << std::endl;
 }
 

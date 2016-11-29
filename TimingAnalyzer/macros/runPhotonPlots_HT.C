@@ -30,7 +30,7 @@ void runPhotonPlots_HT(TString cuts, TString sample, TString bin)
   // apply analysis cuts to individual plots?
   bool apply = (cuts.EqualTo("cuts",TString::kExact)?true:false);
 
-  PlotPhotons photonPlots(Form("input/%s/%s-HT%s.root",sample.Data(),sample.Data(),bin.Data()),false,false,apply,Form("output/%s/%s/%s",sample.Data(),cuts.Data(),bin.Data()),true,35.f,apply,100.f,true,"medium",true,1.f,true);
+  PlotPhotons photonPlots(Form("input/MC/bkg/%s/%s-HT%s.root",sample.Data(),sample.Data(),bin.Data()),false,false,apply,Form("output/MC/bkg/%s/%s/%s",sample.Data(),cuts.Data(),bin.Data()),true,35.f,apply,100.f,true,"medium",true,1.f,true);
 
   // which plots to do
   // first bool = generic plots
