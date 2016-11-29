@@ -1,10 +1,13 @@
 void expfit()
 {
+  TString reco = "noReReco";
+  TString ctau = "100";
+
   TCanvas * canv = new TCanvas();
   canv->cd();
   canv->SetLogy();
 
-  TFile * file = TFile::Open("output/withReReco/nocuts/ctau100/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * file = TFile::Open(Form("output/MC/signal/%s/nocuts/ctau%s/cuts_jetpt35.0_phVIDmedium_rhE1.0_ecalaccept/plots.root",reco.Data(),ctau.Data()));
   TH1F * hist = (TH1F*)file->Get("genN1ctau");
   hist->Scale(1.0/hist->Integral());
   hist->GetYaxis()->SetTitle("nNeutralinos");
@@ -15,5 +18,5 @@ void expfit()
   fit->SetParName(1,"d");    fit->SetParameter(1,hist->GetMean());
   hist->Fit(fit->GetName());
   
-  canv->SaveAs("lifetime-100.png");
+  canv->SaveAs(Form("lifetime-%s_%s.png",reco.Data(),ctau.Data()));
 }

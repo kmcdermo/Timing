@@ -60,7 +60,7 @@ void shapes()
   ph1seedtimestack->Add(qcdph1seedtime);
 
   // Signals
-  TFile * file100 = TFile::Open("output/withReReco/cuts/ctau100/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * file100 = TFile::Open("output/MC/signal/withReReco/cuts/ctau100/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F  * ctau100t1pfMETpt   = (TH1F*)file100->Get("t1pfMETpt"); 
   TH1F  * ctau100ph1seedtime = (TH1F*)file100->Get("ph1seedtime"); 
 
@@ -69,7 +69,7 @@ void shapes()
   ctau100t1pfMETpt  ->SetLineColor(kViolet-1);
   ctau100ph1seedtime->SetLineColor(kViolet-1);
 
-  TFile * file2000 = TFile::Open("output/withReReco/cuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * file2000 = TFile::Open("output/MC/signal/withReReco/cuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F  * ctau2000t1pfMETpt   = (TH1F*)file2000->Get("t1pfMETpt"); 
   TH1F  * ctau2000ph1seedtime = (TH1F*)file2000->Get("ph1seedtime"); 
 
@@ -78,7 +78,7 @@ void shapes()
   ctau2000t1pfMETpt  ->SetLineColor(kRed+1);
   ctau2000ph1seedtime->SetLineColor(kRed+1);
 
-  TFile * file6000 = TFile::Open("output/withReReco/cuts/ctau6000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * file6000 = TFile::Open("output/MC/signal/withReReco/cuts/ctau6000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F  * ctau6000t1pfMETpt = (TH1F*)file6000->Get("t1pfMETpt"); 
   TH1F  * ctau6000ph1seedtime = (TH1F*)file6000->Get("ph1seedtime"); 
 
@@ -140,7 +140,7 @@ void getQCD(TH1F*& qcdt1pfMETpt, TH1F *& qcdph1seedtime)
   std::vector<TH1F*> qcdph1seedtimes(qcdHTs.size());
   for (UInt_t iqcd = 0; iqcd < qcdHTs.size(); iqcd++)
   {
-    qcdfiles[iqcd] = TFile::Open(Form("output/QCD/cuts/%s/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root",qcdHTs[iqcd].Data()));
+    qcdfiles[iqcd] = TFile::Open(Form("output/MC/bkg/QCD/cuts/%s/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root",qcdHTs[iqcd].Data()));
     qcdt1pfMETpts[iqcd]   = (TH1F*)qcdfiles[iqcd]->Get("t1pfMETpt"); 
     qcdph1seedtimes[iqcd] = (TH1F*)qcdfiles[iqcd]->Get("ph1seedtime"); 
     qcdt1pfMETpts[iqcd]   ->Scale((1.0/qcdnes[iqcd])*(qcdxss[iqcd]*lumi));
@@ -178,7 +178,7 @@ void getGJets(TH1F*& gjett1pfMETpt, TH1F *& gjetph1seedtime)
   std::vector<TH1F*> gjetph1seedtimes(gjetHTs.size());
   for (UInt_t igjet = 0; igjet < gjetHTs.size(); igjet++)
   {
-    gjetfiles[igjet] = TFile::Open(Form("output/GJets/cuts/%s/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root",gjetHTs[igjet].Data()));
+    gjetfiles[igjet] = TFile::Open(Form("output/MC/bkg/GJets/cuts/%s/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root",gjetHTs[igjet].Data()));
     gjett1pfMETpts[igjet]   = (TH1F*)gjetfiles[igjet]->Get("t1pfMETpt"); 
     gjetph1seedtimes[igjet] = (TH1F*)gjetfiles[igjet]->Get("ph1seedtime"); 
     gjett1pfMETpts[igjet]   ->Scale((1.0/gjetnes[igjet])*(gjetxss[igjet]*lumi));

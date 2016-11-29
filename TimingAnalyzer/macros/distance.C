@@ -14,7 +14,7 @@ static const Float_t lumi = 36.56 * 1000; // pb
 
 void distance()
 {
-  TString hist = "genN1decayr_zoom";
+  TString hist = "genN2decayz_zoom";
 
   // set TDR Style (need to force it!)
   TStyle * tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
