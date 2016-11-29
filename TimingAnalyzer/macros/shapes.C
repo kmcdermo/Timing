@@ -91,7 +91,6 @@ void shapes()
   TCanvas * t1pfMETptcanv = new TCanvas("t1pfMETptcanv","t1pfMETptcanv");
   t1pfMETptcanv->cd();
   t1pfMETptcanv->SetLogy();
-  //  t1pfMETptstack   ->Draw("HIST");
   bkgt1pfMETpt     ->GetYaxis()->SetRangeUser(5e-5,3);
   bkgt1pfMETpt     ->Draw("HIST");
   ctau100t1pfMETpt ->Draw("HIST same");
@@ -99,8 +98,6 @@ void shapes()
   ctau6000t1pfMETpt->Draw("HIST same");
 
   TLegend * t1pfMETptleg = new TLegend(0.6,0.7,0.8,0.9);
-//   t1pfMETptleg->AddEntry(gjett1pfMETpt,"#gamma+Jets","f");
-//   t1pfMETptleg->AddEntry(qcdt1pfMETpt ,"QCD","f");
   t1pfMETptleg->AddEntry(bkgt1pfMETpt,"Background","f");
   t1pfMETptleg->AddEntry(ctau100t1pfMETpt ,"c#tau = 36.5 mm" ,"l");
   t1pfMETptleg->AddEntry(ctau2000t1pfMETpt,"c#tau = 730.5 mm","l");
@@ -113,7 +110,6 @@ void shapes()
   TCanvas * ph1seedtimecanv = new TCanvas("ph1seedtimecanv","ph1seedtimecanv");
   ph1seedtimecanv->cd();
   ph1seedtimecanv->SetLogy();
-  //  ph1seedtimestack   ->Draw("HIST");
   bkgph1seedtime     ->GetXaxis()->SetTitle("Leading Photon RecHit Seed Time [ns]");
   bkgph1seedtime     ->GetYaxis()->SetRangeUser(1e-5,3);
   bkgph1seedtime     ->GetYaxis()->SetTitle("Events");
@@ -123,8 +119,6 @@ void shapes()
   ctau6000ph1seedtime->Draw("HIST same");
 
   TLegend * ph1seedtimeleg = new TLegend(0.6,0.7,0.8,0.9);
-//   ph1seedtimeleg->AddEntry(gjetph1seedtime,"#gamma+Jets","f");
-//   ph1seedtimeleg->AddEntry(qcdph1seedtime ,"QCD","f");
   ph1seedtimeleg->AddEntry(bkgph1seedtime,"Background","f");
   ph1seedtimeleg->AddEntry(ctau100ph1seedtime ,"c#tau = 36.5 mm" ,"l");
   ph1seedtimeleg->AddEntry(ctau2000ph1seedtime,"c#tau = 730.5 mm","l");

@@ -481,6 +481,7 @@ void PlotPhotons::FillJets()
 
 void PlotPhotons::FillRecoPhotons()
 {
+  int passed = 0;
   for (Int_t iph = 0; iph < nphotons; iph++)
   {
     if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
@@ -493,7 +494,7 @@ void PlotPhotons::FillRecoPhotons()
     fPlots["pheta"]->Fill((*pheta)[iph]);
     fPlots["phscE"]->Fill((*phscE)[iph]);
 
-    if (iph == 0)
+    if (passed == 0)
     {
       fPlots["ph1pt"]->Fill((*phpt)[iph]);
     }
@@ -553,7 +554,13 @@ void PlotPhotons::FillRecoPhotons()
     } // end loop over nrechits
     fPlots["phnrhs"]->Fill(nRecHits);
     if (fIsMC && (*phmatch)[iph] > 0) fPlots["phnrhs_gen"]->Fill(nRecHits_gen);
+    passed++;
   } // end loop over nphotons
+
+  if (passed == 0)
+  {
+    fPlots["ph1pt"]->Fill(0);
+  }
 }
 
 void PlotPhotons::SetupAnalysis()
@@ -612,7 +619,7 @@ void PlotPhotons::SetupGenParticles()
   fPlots["genN1bgz"] = PlotPhotons::MakeTH1F("genN1bgz","Generator Leading #beta#gamma_{z}",100,0.f,20.f,"#beta#gamma_{z}","Neutralinos","GenParticles");
   fPlots["genN1dbgz"] = PlotPhotons::MakeTH1F("genN1dbgz","Generator Leading Neutralino Travel z-Distance/#beta#gamma_{z} [cm]",100,0.f,200.f,"Travel z-Distance/#beta#gamma_{z} [cm]","Neutralinos","GenParticles");
   fPlots["genN1d"] = PlotPhotons::MakeTH1F("genN1d","Generator Leading Neutralino Travel Distance [cm]",400,0.f,200.f,"Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN1ctau"] = PlotPhotons::MakeTH1F("genN1ctau","Generator Leading Neutralino c#tau [cm]",200,0.f,2000.f,"c#tau [cm]","Neutralinos","GenParticles");
+  fPlots["genN1ctau"] = PlotPhotons::MakeTH1F("genN1ctau","Generator Leading Neutralino c#tau [cm]",200,0.f,100.f,"c#tau [cm]","Neutralinos","GenParticles");
   fPlots["genph1E"] = PlotPhotons::MakeTH1F("genph1E","Generator Leading Photon E [GeV]",100,0.f,2500.f,"Energy [GeV]","Photons","GenParticles");
   fPlots["genph1pt"] = PlotPhotons::MakeTH1F("genph1pt","Generator Leading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","GenParticles");
   fPlots["genph1phi"] = PlotPhotons::MakeTH1F("genph1phi","Generator Leading Photon #phi",100,-3.2,3.2,"#phi","Photons","GenParticles");
@@ -654,7 +661,7 @@ void PlotPhotons::SetupGenParticles()
   fPlots["genN2bgz"] = PlotPhotons::MakeTH1F("genN2bgz","Generator Subleading #beta#gamma_{z}",100,0.f,20.f,"#beta#gamma_{z}","Neutralinos","GenParticles");
   fPlots["genN2dbgz"] = PlotPhotons::MakeTH1F("genN2dbgz","Generator Subleading Neutralino Travel z-Distance/#beta#gamma_{z} [cm]",100,0.f,200.f,"Travel z-Distance/#beta#gamma_{z} [cm]","Neutralinos","GenParticles");
   fPlots["genN2d"] = PlotPhotons::MakeTH1F("genN2d","Generator Subleading Neutralino Travel Distance [cm]",400,0.f,200.f,"Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN2ctau"] = PlotPhotons::MakeTH1F("genN2ctau","Generator Subleading Neutralino c#tau [cm]",200,0.f,2000.f,"c#tau [cm]","Neutralinos","GenParticles");
+  fPlots["genN2ctau"] = PlotPhotons::MakeTH1F("genN2ctau","Generator Subleading Neutralino c#tau [cm]",200,0.f,100.f,"c#tau [cm]","Neutralinos","GenParticles");
   fPlots["genph2E"] = PlotPhotons::MakeTH1F("genph2E","Generator Subleading Photon E [GeV]",100,0.f,2500.f,"Energy [GeV]","Photons","GenParticles");
   fPlots["genph2pt"] = PlotPhotons::MakeTH1F("genph2pt","Generator Subleading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","GenParticles");
   fPlots["genph2phi"] = PlotPhotons::MakeTH1F("genph2phi","Generator Subleading Photon #phi",100,-3.2,3.2,"#phi","Photons","GenParticles");
@@ -744,7 +751,7 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["phseedOOT"] = PlotPhotons::MakeTH1F("phseedOOT","Photons Seed RecHit OoT Flag (reco)",2,0.f,2.f,"OoT Flag","Seed RecHits","RecoPhotons");  
 
   // Leading photon info
-  fPlots["ph1pt"]       = PlotPhotons::MakeTH1F("ph1pt","Leading Photon p_{T} [GeV/c]",100,0.f,2500.f,"Leading Photon p_{T} [GeV/c]","Events","RecoPhotons");
+  fPlots["ph1pt"]       = PlotPhotons::MakeTH1F("ph1pt","Leading Photon p_{T} [GeV/c]",100,0.f,2500.f,"Leading Medium ID Photon p_{T} [GeV/c]","Events","RecoPhotons");
   fPlots["ph1seedtime"] = PlotPhotons::MakeTH1F("ph1seedtime","Leading Photon Seed RecHit Time [ns]",80,-5.f,15.f,"Leading Photon Seed RecHit Time [ns]","Events","RecoPhotons");
 
   if (fIsMC)

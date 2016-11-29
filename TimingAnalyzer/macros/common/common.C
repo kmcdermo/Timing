@@ -69,7 +69,7 @@ void CMSLumi(TCanvas *& canv, TString extraText, Int_t iPosX) {
     latex.DrawLatex(l,1-t+lumiTextOffset*t,cmsText);
   }
   
-  Double_t posX_;
+  Double_t posX_ = 0;
   if (iPosX%10 <= 1) {
     posX_ =   l + relPosX*(1-l-r);
   }

@@ -60,7 +60,7 @@ void precutshapes()
   ph1ptstack->Add(qcdph1pt);
 
   // Signals
-  TFile * file100 = TFile::Open("output/withReReco/nocuts/ctau100/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * file100 = TFile::Open("output/withReReco/nocuts/ctau100/cuts_jetpt35.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F  * ctau100njets = (TH1F*)file100->Get("njets"); 
   TH1F  * ctau100ph1pt = (TH1F*)file100->Get("ph1pt"); 
 
@@ -69,7 +69,7 @@ void precutshapes()
   ctau100njets->SetLineColor(kViolet-1);
   ctau100ph1pt->SetLineColor(kViolet-1);
 
-  TFile * file2000 = TFile::Open("output/withReReco/nocuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * file2000 = TFile::Open("output/withReReco/nocuts/ctau2000/cuts_jetpt35.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F  * ctau2000njets = (TH1F*)file2000->Get("njets"); 
   TH1F  * ctau2000ph1pt = (TH1F*)file2000->Get("ph1pt"); 
 
@@ -78,7 +78,7 @@ void precutshapes()
   ctau2000njets->SetLineColor(kRed+1);
   ctau2000ph1pt->SetLineColor(kRed+1);
 
-  TFile * file6000 = TFile::Open("output/withReReco/nocuts/ctau6000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * file6000 = TFile::Open("output/withReReco/nocuts/ctau6000/cuts_jetpt35.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F  * ctau6000njets = (TH1F*)file6000->Get("njets"); 
   TH1F  * ctau6000ph1pt = (TH1F*)file6000->Get("ph1pt"); 
 
@@ -113,8 +113,8 @@ void precutshapes()
   ph1ptcanv->cd();
   ph1ptcanv->SetLogy();
   bkgph1pt     ->GetXaxis()->SetRangeUser(0,1500);
-  bkgph1pt     ->GetXaxis()->SetTitle("Leading Photon p_{T} [GeV/c]");
-  bkgph1pt     ->GetYaxis()->SetRangeUser(5e-5,3);
+  bkgph1pt     ->GetXaxis()->SetTitle("Leading Medium ID Photon p_{T} [GeV/c]");
+  bkgph1pt     ->GetYaxis()->SetRangeUser(1e-5,3);
   bkgph1pt     ->GetYaxis()->SetTitle("Events");
   bkgph1pt     ->Draw("HIST");
   ctau100ph1pt ->Draw("HIST same");
@@ -123,9 +123,9 @@ void precutshapes()
 
   TLegend * ph1ptleg = new TLegend(0.6,0.7,0.8,0.9);
   ph1ptleg->AddEntry(bkgph1pt,"Background","f");
-  ph1ptleg->AddEntry(ctau100ph1pt ,"c#tau = 36.5 mm" ,"l");
-  ph1ptleg->AddEntry(ctau2000ph1pt,"c#tau = 730.5 mm" ,"l");
-  ph1ptleg->AddEntry(ctau6000ph1pt,"c#tau = 2192 mm" ,"l");
+  ph1ptleg->AddEntry(ctau100ph1pt ,"c#tau = 36.5 mm","l");
+  ph1ptleg->AddEntry(ctau2000ph1pt,"c#tau = 730.5 mm","l");
+  ph1ptleg->AddEntry(ctau6000ph1pt,"c#tau = 2192 mm","l");
   ph1ptleg->Draw("same");
 
   CMSLumi(ph1ptcanv,"Simulation");
@@ -143,7 +143,7 @@ void getQCD(TH1F*& qcdnjets, TH1F *& qcdph1pt)
   std::vector<TH1F*> qcdph1pts(qcdHTs.size());
   for (UInt_t iqcd = 0; iqcd < qcdHTs.size(); iqcd++)
   {
-    qcdfiles[iqcd]  = TFile::Open(Form("output/QCD/nocuts/%s/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root",qcdHTs[iqcd].Data()));
+    qcdfiles[iqcd]  = TFile::Open(Form("output/QCD/nocuts/%s/cuts_jetpt35.0_phVIDmedium_rhE1.0_ecalaccept/plots.root",qcdHTs[iqcd].Data()));
     qcdnjetss[iqcd] = (TH1F*)qcdfiles[iqcd]->Get("njets"); 
     qcdph1pts[iqcd] = (TH1F*)qcdfiles[iqcd]->Get("ph1pt"); 
     qcdnjetss[iqcd] ->Scale((1.0/qcdnes[iqcd])*(qcdxss[iqcd]*lumi));
@@ -181,7 +181,7 @@ void getGJets(TH1F*& gjetnjets, TH1F *& gjetph1pt)
   std::vector<TH1F*> gjetph1pts(gjetHTs.size());
   for (UInt_t igjet = 0; igjet < gjetHTs.size(); igjet++)
   {
-    gjetfiles[igjet]  = TFile::Open(Form("output/GJets/nocuts/%s/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root",gjetHTs[igjet].Data()));
+    gjetfiles[igjet]  = TFile::Open(Form("output/GJets/nocuts/%s/cuts_jetpt35.0_phVIDmedium_rhE1.0_ecalaccept/plots.root",gjetHTs[igjet].Data()));
     gjetnjetss[igjet] = (TH1F*)gjetfiles[igjet]->Get("njets"); 
     gjetph1pts[igjet] = (TH1F*)gjetfiles[igjet]->Get("ph1pt"); 
     gjetnjetss[igjet] ->Scale((1.0/gjetnes[igjet])*(gjetxss[igjet]*lumi));
