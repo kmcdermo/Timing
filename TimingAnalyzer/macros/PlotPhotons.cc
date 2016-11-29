@@ -28,6 +28,12 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isMC, Bool_t applyevnocut, Boo
   fPhVIDMap["medium"] = 2;
   fPhVIDMap["tight"]  = 3;
 
+  //ctau for plots
+  fCTau = 1000;
+  if (filename.Contains("ctau100" ,TString::kExact)) fCTau = 3.65;  // 100  mm --> 36.5  mm == 3.65  cm
+  if (filename.Contains("ctau2000",TString::kExact)) fCTau = 73.5;  // 2000 mm --> 730.5 mm == 73.5  cm
+  if (filename.Contains("ctau6000",TString::kExact)) fCTau = 219.2; // 6000 mm --> 2192  mm == 219.2 cm  
+
   // initialize efficiency map
   fEfficiency["Photons"] = 0;
   fEfficiency["RecHits"] = 0;
@@ -161,14 +167,14 @@ void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis)
 
 void PlotPhotons::CountEvents(Bool_t & event_b)
 {
-  // photon selection efficiency --> check leading photon only
+  // photon selection efficiency
   Bool_t phpt_b  = false;
   Bool_t phvid_b = false;
   Bool_t pheta_b = false;
+  Bool_t seedrh_b = false;
+  Bool_t seedE_b = false;
 
-  int nph = (nphotons>=1)?1:0;
-
-  for (Int_t iph = 0; iph < nph; iph++)
+  for (Int_t iph = 0; iph < nphotons; iph++)
   {
     if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
     phpt_b = true;
@@ -176,32 +182,34 @@ void PlotPhotons::CountEvents(Bool_t & event_b)
     phvid_b = true;
     if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
     pheta_b = true;
-  }
-  if (phpt_b && phvid_b && pheta_b) fEfficiency["Photons"]++;
-
-  // check leading seed rec hit exists and is above E cut
-  Bool_t seedrh_b = false;
-  Bool_t seedE_b = false;
-  for (Int_t iph = 0; iph < nph; iph++)
-  {
     if ((*phseedpos)[iph] == -9999) continue;
     seedrh_b = true;
     if (fApplyrhECut && (*phrhEs)[iph][(*phseedpos)[iph]] < frhECut) continue;
     seedE_b = true;  
+
+    // leading photon passing all the selection as required
+    break;
   }
+  if (phpt_b && phvid_b && pheta_b) fEfficiency["Photons"]++;
   if (seedrh_b && seedE_b) fEfficiency["RecHits"]++;
 
   // jet selection efficiency
   Int_t njets_ptcut = 0;
+  Bool_t njets_ptcut_b = false;
   for (Int_t ijet = 0; ijet < njets; ijet++)
   {
     if (fApplyJetPtCut && (*jetpt)[ijet] < fJetPtCut) continue;
     njets_ptcut++;
+    if (njets_ptcut == 3) 
+    {
+      njets_ptcut_b = true; 
+      break;
+    }
   }
-  if (njets_ptcut >= 2) fEfficiency["Jets"]++;
+  if (njets_ptcut_b) fEfficiency["Jets"]++;
 
   // total efficiency
-  if (njets_ptcut >= 2 && phpt_b && phvid_b && pheta_b && seedrh_b && seedE_b) 
+  if (njets_ptcut_b && phpt_b && phvid_b && pheta_b && seedrh_b && seedE_b) 
   {
     fEfficiency["Events"]++;
     event_b = true;
@@ -214,23 +222,20 @@ void PlotPhotons::FillAnalysis()
   Bool_t rh_b     = false;
   Bool_t jets_b   = false;
 
-  int nph = (nphotons>=1)?1:0;
-
-  // check leading photon only
-  for (Int_t iph = 0; iph < nph; iph++)
+  // check for one good photon with an associated seed
+  Int_t ph1 = -1;
+  for (Int_t iph = 0; iph < nphotons; iph++)
   {
     if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
     if (fApplyPhVIDCut && (fPhVIDMap[fPhVID] < (*phVID)[iph])) continue;
     if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
     photon_b = true;
-  }
-
-  // check leading seed rec hit exists and is above E cut
-  for (Int_t iph = 0; iph < nph; iph++)
-  {
     if ((*phseedpos)[iph] == -9999) continue;
     if (fApplyrhECut && (*phrhEs)[iph][(*phseedpos)[iph]] < frhECut) continue;
     rh_b = true;    
+    
+    ph1 = iph; // save the good photon
+    break;
   }
 
   // jet selection efficiency
@@ -239,12 +244,16 @@ void PlotPhotons::FillAnalysis()
   {
     if (fApplyJetPtCut && (*jetpt)[ijet] < fJetPtCut) continue;
     njets_ptcut++;
+    if (njets_ptcut == 3) 
+    {
+      jets_b = true;
+      break;
+    }
   }
-  if (njets_ptcut >= 2) jets_b = true;
   
   if (photon_b && jets_b && rh_b) 
   {
-    Float_t seed1time = (*phrhtimes)[0][(*phseedpos)[0]];
+    Float_t seed1time = (*phrhtimes)[ph1][(*phseedpos)[ph1]];
     fPlots2D["MET_vs_seed1time"]->Fill(seed1time,t1pfMETpt);
   }
 }
@@ -257,14 +266,14 @@ void PlotPhotons::FillEffs()
     fEffs["effMatchVsGenPhPt"]->Fill(ph1match,genph1pt);
     fEffs["effMatchVsGenPhPhi"]->Fill(ph1match,genph1phi);
     fEffs["effMatchVsGenPhEta"]->Fill(ph1match,genph1eta);
-    fEffs["effMatchVsGenPhVtx"]->Fill(ph1match,std::sqrt(rad2_3(genN1decayvx,genN1decayvy,genN1decayvz)));
+    fEffs["effMatchVsGenPhVtx"]->Fill(ph1match,std::sqrt(rad2(genN1decayvx,genN1decayvy,genN1decayvz)));
     if (nNeutoPhGr >= 2)
     {
       const Bool_t ph2match = (genph2match>0);
       fEffs["effMatchVsGenPhPt"]->Fill(ph2match,genph2pt);
       fEffs["effMatchVsGenPhPhi"]->Fill(ph2match,genph2phi);
       fEffs["effMatchVsGenPhEta"]->Fill(ph2match,genph2eta);
-      fEffs["effMatchVsGenPhVtx"]->Fill(ph2match,std::sqrt(rad2_3(genN2decayvx,genN2decayvy,genN2decayvz)));
+      fEffs["effMatchVsGenPhVtx"]->Fill(ph2match,std::sqrt(rad2(genN2decayvx,genN2decayvy,genN2decayvz)));
     }
   }
 }
@@ -311,79 +320,42 @@ void PlotPhotons::FillGenParticles()
   // fill proper distance plots
   if (nNeutoPhGr >= 1)
   {
-    fPlots["genN1prodvx"]->Fill(std::abs(genN1prodvx));
-    fPlots["genN1prodvy"]->Fill(std::abs(genN1prodvy));
-    fPlots["genN1prodvz"]->Fill(std::abs(genN1prodvz));
-    fPlots["genN1prodvtx"]->Fill(std::sqrt(rad2_3(genN1prodvx,genN1prodvy,genN1prodvz)));
-    fPlots["genN1decayvx"]->Fill(std::abs(genN1decayvx));
-    fPlots["genN1decayvy"]->Fill(std::abs(genN1decayvy));
-    fPlots["genN1decayvz"]->Fill(std::abs(genN1decayvz));
-    fPlots["genN1decayvtx"]->Fill(std::sqrt(rad2_3(genN1decayvx,genN1decayvy,genN1decayvz)));
+    // distances in lab frame
+    fPlots["genN1prodvtx"]->Fill(std::sqrt(rad2(genN1prodvx,genN1prodvy,genN1prodvz)));
+    fPlots["genN1decayvtx"]->Fill(std::sqrt(rad2(genN1decayvx,genN1decayvy,genN1decayvz)));
 
     // calculate proper distance for the first neutralino
+    const Float_t genN1d  = std::sqrt(rad2(genN1decayvx-genN1prodvx,genN1decayvy-genN1prodvy,genN1decayvz-genN1prodvz)); 
+    fPlots["genN1d"]->Fill(genN1d);
+
+    // calculate total momentum for the first neutralino
     TLorentzVector genN1_lorvec; genN1_lorvec.SetPtEtaPhiE(genN1pt,genN1eta,genN1phi,genN1E);
-    const Float_t N1dx = genN1decayvx - genN1prodvx; const Float_t N1bgx = bg(genN1_lorvec.Px(),genN1mass); 
-    const Float_t N1dy = genN1decayvy - genN1prodvy; const Float_t N1bgy = bg(genN1_lorvec.Py(),genN1mass);
-    const Float_t N1dz = genN1decayvz - genN1prodvz; const Float_t N1bgz = bg(genN1_lorvec.Pz(),genN1mass);
-    fPlots["genN1dx"]->Fill(std::abs(N1dx));
-    fPlots["genN1px"]->Fill(std::abs(genN1_lorvec.Px()));
-    fPlots["genN1betax"]->Fill(beta(genN1_lorvec.Px(),genN1mass)); 
-    fPlots["genN1gammax"]->Fill(gamma(genN1_lorvec.Px(),genN1mass)); 
-    fPlots["genN1bgx"]->Fill(std::abs(N1bgx));
-    fPlots["genN1dbgx"]->Fill(std::abs(N1dx/N1bgx));
-    fPlots["genN1dy"]->Fill(std::abs(N1dy));
-    fPlots["genN1py"]->Fill(std::abs(genN1_lorvec.Py()));
-    fPlots["genN1betay"]->Fill(beta(genN1_lorvec.Py(),genN1mass)); 
-    fPlots["genN1gammay"]->Fill(gamma(genN1_lorvec.Py(),genN1mass)); 
-    fPlots["genN1bgy"]->Fill(std::abs(N1bgy));
-    fPlots["genN1dbgy"]->Fill(std::abs(N1dy/N1bgy));
-    fPlots["genN1dz"]->Fill(std::abs(N1dz));
-    fPlots["genN1pz"]->Fill(std::abs(genN1_lorvec.Pz()));
-    fPlots["genN1betaz"]->Fill(beta(genN1_lorvec.Pz(),genN1mass)); 
-    fPlots["genN1gammaz"]->Fill(gamma(genN1_lorvec.Pz(),genN1mass)); 
-    fPlots["genN1bgz"]->Fill(std::abs(N1bgz));
-    fPlots["genN1dbgz"]->Fill(std::abs(N1dz/N1bgz));
-    fPlots["genN1d"]->Fill(std::sqrt(rad2_3(N1dx,N1dy,N1dz)));
-    fPlots["genN1ctau"]->Fill(std::sqrt(rad2_3(N1dx/N1bgx,N1dy/N1bgy,N1dz/N1bgz)));
+    const Float_t genN1p  = std::sqrt(rad2(genN1_lorvec.Px(),genN1_lorvec.Py(),genN1_lorvec.Pz()));
+    const Float_t genN1bg = bg(genN1p,genN1mass);
+
+    // ctau is distance / beta*gamma
+    fPlots["genN1ctau"]->Fill(genN1d/genN1bg);
   }
   if (nNeutoPhGr >= 2)
   {
-    fPlots["genN2prodvx"]->Fill(std::abs(genN2prodvx));
-    fPlots["genN2prodvy"]->Fill(std::abs(genN2prodvy));
-    fPlots["genN2prodvz"]->Fill(std::abs(genN2prodvz));
-    fPlots["genN2prodvtx"]->Fill(std::sqrt(rad2_3(genN2prodvx,genN2prodvy,genN2prodvz)));
-    fPlots["genN2decayvx"]->Fill(std::abs(genN2decayvx));
-    fPlots["genN2decayvy"]->Fill(std::abs(genN2decayvy));
-    fPlots["genN2decayvz"]->Fill(std::abs(genN2decayvz));
-    fPlots["genN2decayvtx"]->Fill(std::sqrt(rad2_3(genN2decayvx,genN2decayvy,genN2decayvz)));
-    
-    // calculate proper distance for the second neutralino
+    // distances in lab frame
+    fPlots["genN2prodvtx"]->Fill(std::sqrt(rad2(genN2prodvx,genN2prodvy,genN2prodvz)));
+    fPlots["genN2decayvtx"]->Fill(std::sqrt(rad2(genN2decayvx,genN2decayvy,genN2decayvz)));
+
+    // calculate proper distance for the first neutralino
+    const Float_t genN2d  = std::sqrt(rad2(genN2decayvx-genN2prodvx,genN2decayvy-genN2prodvy,genN2decayvz-genN2prodvz)); 
+    fPlots["genN2d"]->Fill(genN2d);
+
+    // calculate total momentum for the first neutralino
     TLorentzVector genN2_lorvec; genN2_lorvec.SetPtEtaPhiE(genN2pt,genN2eta,genN2phi,genN2E);
-    const Float_t N2dx = genN2decayvx - genN2prodvx; const Float_t N2bgx = bg(genN2_lorvec.Px(),genN2mass); 
-    const Float_t N2dy = genN2decayvy - genN2prodvy; const Float_t N2bgy = bg(genN2_lorvec.Py(),genN2mass); 
-    const Float_t N2dz = genN2decayvz - genN2prodvz; const Float_t N2bgz = bg(genN2_lorvec.Pz(),genN2mass); 
-    fPlots["genN2dx"]->Fill(std::abs(N2dx));
-    fPlots["genN2px"]->Fill(std::abs(genN2_lorvec.Px()));
-    fPlots["genN2betax"]->Fill(beta(genN2_lorvec.Px(),genN2mass)); 
-    fPlots["genN2gammax"]->Fill(gamma(genN2_lorvec.Px(),genN2mass)); 
-    fPlots["genN2bgx"]->Fill(std::abs(N2bgx));
-    fPlots["genN2dbgx"]->Fill(std::abs(N2dx/N2bgx));
-    fPlots["genN2dy"]->Fill(std::abs(N2dy));
-    fPlots["genN2py"]->Fill(std::abs(genN2_lorvec.Py()));
-    fPlots["genN2betay"]->Fill(beta(genN2_lorvec.Py(),genN2mass)); 
-    fPlots["genN2gammay"]->Fill(gamma(genN2_lorvec.Py(),genN2mass)); 
-    fPlots["genN2bgy"]->Fill(std::abs(N2bgy));
-    fPlots["genN2dbgy"]->Fill(std::abs(N2dy/N2bgy));
-    fPlots["genN2dz"]->Fill(std::abs(N2dz));
-    fPlots["genN2pz"]->Fill(std::abs(genN2_lorvec.Pz()));
-    fPlots["genN2betaz"]->Fill(beta(genN2_lorvec.Pz(),genN2mass)); 
-    fPlots["genN2gammaz"]->Fill(gamma(genN2_lorvec.Pz(),genN2mass)); 
-    fPlots["genN2bgz"]->Fill(std::abs(N2bgz));
-    fPlots["genN2dbgz"]->Fill(std::abs(N2dz/N2bgz));
-    fPlots["genN2d"]->Fill(std::sqrt(rad2_3(N2dx,N2dy,N2dz)));
-    fPlots["genN2ctau"]->Fill(std::sqrt(rad2_3(N2dx/N2bgx,N2dy/N2bgy,N2dz/N2bgz)));
+    const Float_t genN2p  = std::sqrt(rad2(genN2_lorvec.Px(),genN2_lorvec.Py(),genN2_lorvec.Pz()));
+    const Float_t genN2bg = bg(genN2p,genN2mass);
+
+    // ctau is distance / beta*gamma
+    fPlots["genN2ctau"]->Fill(genN2d/genN2bg);
   }
 
+  // 2D plots
   fPlots2D["genN2EvsN1E"]->Fill(genN1E,genN2E);
 }
 
@@ -481,7 +453,7 @@ void PlotPhotons::FillJets()
 
 void PlotPhotons::FillRecoPhotons()
 {
-  int passed = 0;
+  Int_t passed = 0;
   for (Int_t iph = 0; iph < nphotons; iph++)
   {
     if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
@@ -592,34 +564,10 @@ void PlotPhotons::SetupGenParticles()
   fPlots["genN1pt"] = PlotPhotons::MakeTH1F("genN1pt","Generator Leading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Neutralinos","GenParticles");
   fPlots["genN1phi"] = PlotPhotons::MakeTH1F("genN1phi","Generator Leading Neutralino #phi",100,-3.2,3.2,"#phi","Neutralinos","GenParticles");
   fPlots["genN1eta"] = PlotPhotons::MakeTH1F("genN1eta","Generator Leading Neutralino #eta",100,-6.0,6.0,"#eta","Neutralinos","GenParticles");
-  fPlots["genN1prodvx"] = PlotPhotons::MakeTH1F("genN1prodvx","Generator Leading Neutralino Production Vertex x-Distance [cm]",100,0.09,0.12,"Production Vertex x-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN1prodvy"] = PlotPhotons::MakeTH1F("genN1prodvy","Generator Leading Neutralino Production Vertex y-Distance [cm]",100,0.15,0.18,"Production Vertex y-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN1prodvz"] = PlotPhotons::MakeTH1F("genN1prodvz","Generator Leading Neutralino Production Vertex z-Distance [cm]",100,0.f,20.f,"Production Vertex z-Distance [cm]","Neutralinos","GenParticles");
   fPlots["genN1prodvtx"] = PlotPhotons::MakeTH1F("genN1prodvtx","Generator Leading Neutralino Production Vertex Distance [cm]",100,0.f,20.f,"Production Vertex Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN1decayvx"] = PlotPhotons::MakeTH1F("genN1decayvx","Generator Leading Neutralino Decay Vertex x-Distance [cm]",100,0.f,200.f,"Decay Vertex x-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN1decayvy"] = PlotPhotons::MakeTH1F("genN1decayvy","Generator Leading Neutralino Decay Vertex y-Distance [cm]",100,0.f,200.f,"Decay Vertex y-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN1decayvz"] = PlotPhotons::MakeTH1F("genN1decayvz","Generator Leading Neutralino Decay Vertex z-Distance [cm]",100,0.f,200.f,"Decay Vertex z-Distance [cm]","Neutralinos","GenParticles");
   fPlots["genN1decayvtx"] = PlotPhotons::MakeTH1F("genN1decayvtx","Generator Leading Neutralino Decay Vertex Distance [cm]",100,0.f,200.f,"Decay Vertex Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN1dx"] = PlotPhotons::MakeTH1F("genN1dx","Generator Leading Neutralino Travel x-Distance [cm]",100,0.f,200.f,"Travel x-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN1px"] = PlotPhotons::MakeTH1F("genN1px","Generator Leading p_{x} [GeV/c]",100,0.f,2500.f,"p_{x} [GeV/c]","Neutralinos","GenParticles");
-  fPlots["genN1betax"] = PlotPhotons::MakeTH1F("genN1betax","Generator Leading #beta_{x}",100,0.f,2.f,"#beta_{x}","Neutralinos","GenParticles");
-  fPlots["genN1gammax"] = PlotPhotons::MakeTH1F("genN1gammax","Generator Leading #gamma_{x}",100,0.f,20.f,"#gamma_{x}","Neutralinos","GenParticles");
-  fPlots["genN1bgx"] = PlotPhotons::MakeTH1F("genN1bgx","Generator Leading #beta#gamma_{x}",100,0.f,20.f,"#beta#gamma_{x}","Neutralinos","GenParticles");
-  fPlots["genN1dbgx"] = PlotPhotons::MakeTH1F("genN1dbgx","Generator Leading Neutralino Travel x-Distance/#beta#gamma_{x} [cm]",100,0.f,200.f,"Travel x-Distance/#beta#gamma_{x} [cm]","Neutralinos","GenParticles");
-  fPlots["genN1dy"] = PlotPhotons::MakeTH1F("genN1dy","Generator Leading Neutralino Travel y-Distance [cm]",100,0.f,200.f,"Travel y-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN1py"] = PlotPhotons::MakeTH1F("genN1py","Generator Leading p_{y} [GeV/c]",100,0.f,2500.f,"p_{y} [GeV/c]","Neutralinos","GenParticles");
-  fPlots["genN1betay"] = PlotPhotons::MakeTH1F("genN1betay","Generator Leading #beta_{y}",100,0.f,2.f,"#beta_{y}","Neutralinos","GenParticles");
-  fPlots["genN1gammay"] = PlotPhotons::MakeTH1F("genN1gammay","Generator Leading #gamma_{y}",100,0.f,20.f,"#gamma_{y}","Neutralinos","GenParticles");
-  fPlots["genN1bgy"] = PlotPhotons::MakeTH1F("genN1bgy","Generator Leading #beta#gamma_{y}",100,0.f,20.f,"#beta#gamma_{y}","Neutralinos","GenParticles");
-  fPlots["genN1dbgy"] = PlotPhotons::MakeTH1F("genN1dbgy","Generator Leading Neutralino Travel y-Distance/#beta#gamma_{y} [cm]",100,0.f,200.f,"Travel y-Distance/#beta#gamma_{y} [cm]","Neutralinos","GenParticles");
-  fPlots["genN1dz"] = PlotPhotons::MakeTH1F("genN1dz","Generator Leading Neutralino Travel z-Distance [cm]",100,0.f,200.f,"Travel z-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN1pz"] = PlotPhotons::MakeTH1F("genN1pz","Generator Leading p_{z} [GeV/c]",100,0.f,2500.f,"p_{z} [GeV/c]","Neutralinos","GenParticles");
-  fPlots["genN1betaz"] = PlotPhotons::MakeTH1F("genN1betaz","Generator Leading #beta_{z}",100,0.f,2.f,"#beta_{z}","Neutralinos","GenParticles");
-  fPlots["genN1gammaz"] = PlotPhotons::MakeTH1F("genN1gammaz","Generator Leading #gamma_{z}",100,0.f,20.f,"#gamma_{z}","Neutralinos","GenParticles");
-  fPlots["genN1bgz"] = PlotPhotons::MakeTH1F("genN1bgz","Generator Leading #beta#gamma_{z}",100,0.f,20.f,"#beta#gamma_{z}","Neutralinos","GenParticles");
-  fPlots["genN1dbgz"] = PlotPhotons::MakeTH1F("genN1dbgz","Generator Leading Neutralino Travel z-Distance/#beta#gamma_{z} [cm]",100,0.f,200.f,"Travel z-Distance/#beta#gamma_{z} [cm]","Neutralinos","GenParticles");
   fPlots["genN1d"] = PlotPhotons::MakeTH1F("genN1d","Generator Leading Neutralino Travel Distance [cm]",400,0.f,200.f,"Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN1ctau"] = PlotPhotons::MakeTH1F("genN1ctau","Generator Leading Neutralino c#tau [cm]",200,0.f,100.f,"c#tau [cm]","Neutralinos","GenParticles");
+  fPlots["genN1ctau"] = PlotPhotons::MakeTH1F("genN1ctau","Generator Leading Neutralino c#tau [cm]",200,0.f,fCTau*20.f,"c#tau [cm]","Neutralinos","GenParticles");
   fPlots["genph1E"] = PlotPhotons::MakeTH1F("genph1E","Generator Leading Photon E [GeV]",100,0.f,2500.f,"Energy [GeV]","Photons","GenParticles");
   fPlots["genph1pt"] = PlotPhotons::MakeTH1F("genph1pt","Generator Leading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","GenParticles");
   fPlots["genph1phi"] = PlotPhotons::MakeTH1F("genph1phi","Generator Leading Photon #phi",100,-3.2,3.2,"#phi","Photons","GenParticles");
@@ -634,34 +582,10 @@ void PlotPhotons::SetupGenParticles()
   fPlots["genN2pt"] = PlotPhotons::MakeTH1F("genN2pt","Generator Subleading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Neutralinos","GenParticles");
   fPlots["genN2phi"] = PlotPhotons::MakeTH1F("genN2phi","Generator Subleading Neutralino #phi",100,-3.2,3.2,"#phi","Neutralinos","GenParticles");
   fPlots["genN2eta"] = PlotPhotons::MakeTH1F("genN2eta","Generator Subleading Neutralino #eta",100,-6.0,6.0,"#eta","Neutralinos","GenParticles");
-  fPlots["genN2prodvx"] = PlotPhotons::MakeTH1F("genN2prodvx","Generator Subleading Neutralino Production Vertex x-Distance [cm]",100,0.09,0.12,"Production Vertex x-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN2prodvy"] = PlotPhotons::MakeTH1F("genN2prodvy","Generator Subleading Neutralino Production Vertex y-Distance [cm]",100,0.15,0.18,"Production Vertex y-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN2prodvz"] = PlotPhotons::MakeTH1F("genN2prodvz","Generator Subleading Neutralino Production Vertex z-Distance [cm]",100,0.f,20.f,"Production Vertex z-Distance [cm]","Neutralinos","GenParticles");
   fPlots["genN2prodvtx"] = PlotPhotons::MakeTH1F("genN2prodvtx","Generator Subleading Neutralino Production Vertex Distance [cm]",100,0.f,20.f,"Production Vertex Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN2decayvx"] = PlotPhotons::MakeTH1F("genN2decayvx","Generator Subleading Neutralino Decay Vertex x-Distance [cm]",100,0.f,200.f,"Decay Vertex x-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN2decayvy"] = PlotPhotons::MakeTH1F("genN2decayvy","Generator Subleading Neutralino Decay Vertex y-Distance [cm]",100,0.f,200.f,"Decay Vertex y-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN2decayvz"] = PlotPhotons::MakeTH1F("genN2decayvz","Generator Subleading Neutralino Decay Vertex z-Distance [cm]",100,0.f,200.f,"Decay Vertex z-Distance [cm]","Neutralinos","GenParticles");
   fPlots["genN2decayvtx"] = PlotPhotons::MakeTH1F("genN2decayvtx","Generator Subleading Neutralino Decay Vertex Distance [cm]",100,0.f,200.f,"Decay Vertex Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN2dx"] = PlotPhotons::MakeTH1F("genN2dx","Generator Subleading Neutralino Travel x-Distance [cm]",100,0.f,200.f,"Travel x-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN2px"] = PlotPhotons::MakeTH1F("genN2px","Generator Subleading p_{x} [GeV/c]",100,0.f,2500.f,"p_{x} [GeV/c]","Neutralinos","GenParticles");
-  fPlots["genN2betax"] = PlotPhotons::MakeTH1F("genN2betax","Generator Subleading #beta_{x}",100,0.f,2.f,"#beta_{x}","Neutralinos","GenParticles");
-  fPlots["genN2gammax"] = PlotPhotons::MakeTH1F("genN2gammax","Generator Subleading #gamma_{x}",100,0.f,20.f,"#gamma_{x}","Neutralinos","GenParticles");
-  fPlots["genN2bgx"] = PlotPhotons::MakeTH1F("genN2bgx","Generator Subleading #beta#gamma_{x}",100,0.f,20.f,"#beta#gamma_{x}","Neutralinos","GenParticles");
-  fPlots["genN2dbgx"] = PlotPhotons::MakeTH1F("genN2dbgx","Generator Subleading Neutralino Travel x-Distance/#beta#gamma_{x} [cm]",100,0.f,200.f,"Travel x-Distance/#beta#gamma_{x} [cm]","Neutralinos","GenParticles");
-  fPlots["genN2dy"] = PlotPhotons::MakeTH1F("genN2dy","Generator Subleading Neutralino Travel y-Distance [cm]",100,0.f,200.f,"Travel y-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN2py"] = PlotPhotons::MakeTH1F("genN2py","Generator Subleading p_{y} [GeV/c]",100,0.f,2500.f,"p_{y} [GeV/c]","Neutralinos","GenParticles");
-  fPlots["genN2betay"] = PlotPhotons::MakeTH1F("genN2betay","Generator Subleading #beta_{y}",100,0.f,2.f,"#beta_{y}","Neutralinos","GenParticles");
-  fPlots["genN2gammay"] = PlotPhotons::MakeTH1F("genN2gammay","Generator Subleading #gamma_{y}",100,0.f,20.f,"#gamma_{y}","Neutralinos","GenParticles");
-  fPlots["genN2bgy"] = PlotPhotons::MakeTH1F("genN2bgy","Generator Subleading #beta#gamma_{y}",100,0.f,20.f,"#beta#gamma_{y}","Neutralinos","GenParticles");
-  fPlots["genN2dbgy"] = PlotPhotons::MakeTH1F("genN2dbgy","Generator Subleading Neutralino Travel y-Distance/#beta#gamma_{y} [cm]",100,0.f,200.f,"Travel y-Distance/#beta#gamma_{y} [cm]","Neutralinos","GenParticles");
-  fPlots["genN2dz"] = PlotPhotons::MakeTH1F("genN2dz","Generator Subleading Neutralino Travel z-Distance [cm]",100,0.f,200.f,"Travel z-Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN2pz"] = PlotPhotons::MakeTH1F("genN2pz","Generator Subleading p_{z} [GeV/c]",100,0.f,2500.f,"p_{z} [GeV/c]","Neutralinos","GenParticles");
-  fPlots["genN2betaz"] = PlotPhotons::MakeTH1F("genN2betaz","Generator Subleading #beta_{z}",100,0.f,2.f,"#beta_{z}","Neutralinos","GenParticles");
-  fPlots["genN2gammaz"] = PlotPhotons::MakeTH1F("genN2gammaz","Generator Subleading #gamma_{z}",100,0.f,20.f,"#gamma_{z}","Neutralinos","GenParticles");
-  fPlots["genN2bgz"] = PlotPhotons::MakeTH1F("genN2bgz","Generator Subleading #beta#gamma_{z}",100,0.f,20.f,"#beta#gamma_{z}","Neutralinos","GenParticles");
-  fPlots["genN2dbgz"] = PlotPhotons::MakeTH1F("genN2dbgz","Generator Subleading Neutralino Travel z-Distance/#beta#gamma_{z} [cm]",100,0.f,200.f,"Travel z-Distance/#beta#gamma_{z} [cm]","Neutralinos","GenParticles");
   fPlots["genN2d"] = PlotPhotons::MakeTH1F("genN2d","Generator Subleading Neutralino Travel Distance [cm]",400,0.f,200.f,"Distance [cm]","Neutralinos","GenParticles");
-  fPlots["genN2ctau"] = PlotPhotons::MakeTH1F("genN2ctau","Generator Subleading Neutralino c#tau [cm]",200,0.f,100.f,"c#tau [cm]","Neutralinos","GenParticles");
+  fPlots["genN2ctau"] = PlotPhotons::MakeTH1F("genN2ctau","Generator Subleading Neutralino c#tau [cm]",200,0.f,fCTau*20.f,"c#tau [cm]","Neutralinos","GenParticles");
   fPlots["genph2E"] = PlotPhotons::MakeTH1F("genph2E","Generator Subleading Photon E [GeV]",100,0.f,2500.f,"Energy [GeV]","Photons","GenParticles");
   fPlots["genph2pt"] = PlotPhotons::MakeTH1F("genph2pt","Generator Subleading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","GenParticles");
   fPlots["genph2phi"] = PlotPhotons::MakeTH1F("genph2phi","Generator Subleading Photon #phi",100,-3.2,3.2,"#phi","Photons","GenParticles");

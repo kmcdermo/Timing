@@ -17,7 +17,7 @@
 static const Float_t sol = 2.99792458e8; // cm/s
 
 inline Float_t rad2  (const Float_t x, const Float_t y){return x*x + y*y;}
-inline Float_t rad2_3(const Float_t x, const Float_t y, const Float_t z){return x*x + y*y + z*z;}
+inline Float_t rad2  (const Float_t x, const Float_t y, const Float_t z){return x*x + y*y + z*z;}
 inline Float_t gamma (const Float_t p, const Float_t m){return std::sqrt(1.f+std::pow(p/m,2));}
 inline Float_t beta  (const Float_t p, const Float_t m){return std::sqrt(1.f/(1.f+std::pow(m/p,2)));}
 inline Float_t bg    (const Float_t p, const Float_t m){return std::abs(p/m);}
@@ -93,6 +93,7 @@ private :
   TH2Map  fPlots2D;
   TStrIntMap fEfficiency;
   IntMap  fEvents;
+  Float_t fCTau;
 
   // Config
   const Bool_t  fApplyEvNoCut;
