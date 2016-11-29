@@ -10,7 +10,7 @@
 
 #include <vector>
 
-static const Float_t lumi = 36.56 * 1000; // pb
+static const Float_t lumi = 36.46 * 1000; // pb
 
 void timerereco()
 {
@@ -19,10 +19,10 @@ void timerereco()
   SetTDRStyle(tdrStyle);
   gROOT->ForceStyle();
 
-  TFile * wReReco = TFile::Open("output/withReReco/cuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * wReReco = TFile::Open("output/MC/signal/withReReco/cuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F  * ph1seedtime_wReReco = (TH1F*)wReReco->Get("ph1seedtime"); 
 
-  TFile * noReReco = TFile::Open("output/noReReco/cuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * noReReco = TFile::Open("output/MC/signal/noReReco/cuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F  * ph1seedtime_noReReco = (TH1F*)noReReco->Get("ph1seedtime"); 
 
   ph1seedtime_wReReco ->Scale(1.0/ph1seedtime_wReReco ->Integral());

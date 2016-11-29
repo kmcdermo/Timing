@@ -10,7 +10,7 @@
 
 #include <vector>
 
-static const Float_t lumi = 36.56 * 1000; // pb
+static const Float_t lumi = 36.46 * 1000; // pb
 
 void ndisp()
 {
@@ -20,19 +20,19 @@ void ndisp()
   gROOT->ForceStyle();
 
   // Signals
-  TFile * file100 = TFile::Open("output/withReReco/nocuts/ctau100/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * file100 = TFile::Open("output/MC/signal/withReReco/nocuts/ctau100/cuts_jetpt35.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F  * ctau100nNeutoPhGr = (TH1F*)file100->Get("nNeutoPhGr"); 
 
   ctau100nNeutoPhGr->Scale(1.0/ctau100nNeutoPhGr->Integral());
   ctau100nNeutoPhGr->SetLineColor(kViolet-1);
 
-  TFile * file2000 = TFile::Open("output/withReReco/nocuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * file2000 = TFile::Open("output/MC/signal/withReReco/nocuts/ctau2000/cuts_jetpt35.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F  * ctau2000nNeutoPhGr = (TH1F*)file2000->Get("nNeutoPhGr"); 
 
   ctau2000nNeutoPhGr->Scale(1.0/ctau2000nNeutoPhGr->Integral());
   ctau2000nNeutoPhGr->SetLineColor(kRed+1);
 
-  TFile * file6000 = TFile::Open("output/withReReco/nocuts/ctau6000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * file6000 = TFile::Open("output/MC/signal/withReReco/nocuts/ctau6000/cuts_jetpt35.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F  * ctau6000nNeutoPhGr = (TH1F*)file6000->Get("nNeutoPhGr"); 
 
   ctau6000nNeutoPhGr->Scale(1.0/ctau6000nNeutoPhGr->Integral());

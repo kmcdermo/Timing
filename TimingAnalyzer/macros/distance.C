@@ -8,13 +8,14 @@
 
 #include "common/common.C"
 
+#include <iostream>
 #include <vector>
 
-static const Float_t lumi = 36.56 * 1000; // pb
+static const Float_t lumi = 36.46 * 1000; // pb
 
 void distance()
 {
-  TString hist = "genN2decayz_zoom";
+  TString hist = "genN1decayz_zoom";
 
   // set TDR Style (need to force it!)
   TStyle * tdrStyle = new TStyle("tdrStyle","Style for P-TDR");

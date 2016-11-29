@@ -10,7 +10,7 @@
 
 #include <vector>
 
-static const Float_t lumi = 36.56 * 1000; // pb
+static const Float_t lumi = 36.46 * 1000; // pb
 
 void getQCD(TH1F*&, TH1F *&);
 void getGJets(TH1F*&, TH1F *&);

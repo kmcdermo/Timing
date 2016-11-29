@@ -10,7 +10,7 @@ void CMSLumi(TCanvas *& canv, TString extraText, Int_t iPosX) {
   Bool_t   writeExtraText  = (extraText.EqualTo("",TString::kExact)?false:true);
   Double_t extraTextFont   = 52;  // default is helvetica-italics
 
-  Double_t lumi = 36.56;
+  Double_t lumi = 36.46;
 
   TString lumiText = Form("%5.2f fb^{-1} (13 TeV)", lumi);
   
