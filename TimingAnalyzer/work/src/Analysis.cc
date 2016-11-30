@@ -7,7 +7,7 @@ inline Float_t eta   (const Float_t x, const Float_t y, const Float_t z)
 {
   return -1.0f*std::log(std::tan(theta(std::sqrt(rad2(x,y)),z)/2.f));
 }
-inline Float_t rad2_3(const Float_t x, const Float_t y, const Float_t z)
+inline Float_t rad2  (const Float_t x, const Float_t y, const Float_t z)
 {
   return x*x + y*y + z*z;
 }
@@ -19,7 +19,7 @@ inline Float_t deltaR(const Float_t eta1, const Float_t eta2, const Float_t phi1
 inline Float_t TOF   (const Float_t x,  const Float_t y,  const Float_t z, 
 		      const Float_t vx, const Float_t vy, const Float_t vz, const Float_t time)
 {
-  return time + (std::sqrt(rad2_3(x,y,z))-std::sqrt(rad2_3((x-vx),(y-vy),(z-vz))))/Config::sol;
+  return time + (std::sqrt(rad2(x,y,z))-std::sqrt(rad2((x-vx),(y-vy),(z-vz))))/Config::sol;
 }
 inline Float_t effA  (const Float_t e1, const Float_t e2){return e1*e2/std::sqrt(rad2(e1,e2));}
 inline Float_t WeightedTime(const FltArr3Vec & rhetps, Bool_t isEB)
@@ -42,9 +42,12 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC)
   gROOT->ProcessLine("#include <vector>");
 
   // Get pedestals and adc conversions
-  Analysis::GetDetIDs();
-  Analysis::GetPedestalNoise();
-  Analysis::GetADC2GeVConvs();
+  if (Config::useSigma_n)
+  {
+    Analysis::GetDetIDs();
+    Analysis::GetPedestalNoise();
+    Analysis::GetADC2GeVConvs();
+  }
 
   // Set input
   TString filename = Form("input/%s/%s/%s/%s", (fIsMC?"MC":"DATA"), Config::year.Data(), fSample.Data(), "skimmedtree.root");
@@ -1276,7 +1279,7 @@ void Analysis::GetMeanSigma(TF1 *& fit, Float_t & mean, Float_t & emean, Float_t
     sigma  = (const1*fit->GetParameter(2) + const2*fit->GetParameter(4) + const3*fit->GetParameter(6))/denom;
 
     emean  = fit->GetParError(1);
-    esigma = rad2_3(const1*fit->GetParError(2),const2*fit->GetParError(4),const3*fit->GetParError(6));
+    esigma = rad2(const1*fit->GetParError(2),const2*fit->GetParError(4),const3*fit->GetParError(6));
 
     esigma = std::sqrt(esigma)/denom;
   }
