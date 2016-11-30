@@ -22,7 +22,7 @@ void timefit()
   Bool_t isEB = true;
   TString outdir = "output";
 
-  TString fitname = "gaus1core";
+  TString fitname = "gaus2fm";
 
   TFile * file = TFile::Open(Form("%s/%s/plots.root",outdir.Data(),isMC?"MC/dyll":"DATA/doubleeg"));
   TH1F  * hist = (TH1F*)file->Get(Form("td_effseedE_%s_sigma_%s",isEB?"EBEB":"EEEE",fitname.Data()));

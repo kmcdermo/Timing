@@ -10,9 +10,9 @@ void CMSLumi(TCanvas *& canv, TString extraText, Int_t iPosX) {
   Bool_t   writeExtraText  = (extraText.EqualTo("",TString::kExact)?false:true);
   Double_t extraTextFont   = 52;  // default is helvetica-italics
 
-  Double_t lumi = 2.301;
+  Double_t lumi = 36.46;
 
-  TString lumiText = Form("%3.2f fb^{-1} (13 TeV)", lumi); // must change this spec once we are in fb range!
+  TString lumiText = Form("%5.2f fb^{-1} (13 TeV)", lumi); // must change this spec once we are in fb range!
   
   // text sizes and text offsets with respect to the top frame
   // in unit of the top margin size
@@ -69,7 +69,7 @@ void CMSLumi(TCanvas *& canv, TString extraText, Int_t iPosX) {
     latex.DrawLatex(l,1-t+lumiTextOffset*t,cmsText);
   }
   
-  Double_t posX_;
+  Double_t posX_ = 0;
   if (iPosX%10 <= 1) {
     posX_ =   l + relPosX*(1-l-r);
   }

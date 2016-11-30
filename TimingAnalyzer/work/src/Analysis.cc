@@ -785,8 +785,8 @@ void Analysis::OutputEffEPlots()
   Analysis::SaveTH2s(effseedE2DMap,effseedE2DSubMap);
   for (TH2MapIter mapiter = effseedE2DMap.begin(); mapiter != effseedE2DMap.end(); ++mapiter)
   {
-    TString name = (*mapiter).first;
-    Analysis::Make1DTimingPlots((*mapiter).second,effseedE2DSubMap[name],effseedEbins[name],name);
+    TString name = mapiter->first;
+    Analysis::Make1DTimingPlots(mapiter->second,effseedE2DSubMap[name],effseedEbins[name],name);
   }
   Analysis::DeleteTH2s(effseedE2DMap);  
 }
@@ -797,8 +797,8 @@ void Analysis::OutputNvtxPlots()
   Analysis::SaveTH2s(nvtx2DMap,nvtx2DSubMap);
   for (TH2MapIter mapiter = nvtx2DMap.begin(); mapiter != nvtx2DMap.end(); ++mapiter) 
   {
-    TString name = (*mapiter).first;
-    Analysis::Make1DTimingPlots((*mapiter).second,nvtx2DSubMap[name],nvtxbins,name);
+    TString name = mapiter->first;
+    Analysis::Make1DTimingPlots(mapiter->second,nvtx2DSubMap[name],nvtxbins,name);
   }
   Analysis::DeleteTH2s(nvtx2DMap);  
 }
@@ -810,8 +810,8 @@ void Analysis::OutputEtaPlots()
   Analysis::SaveTH2s(deta2DMap,deta2DSubMap);
   for (TH2MapIter mapiter = deta2DMap.begin(); mapiter != deta2DMap.end(); ++mapiter)
   {
-    TString name = (*mapiter).first;
-    Analysis::Make1DTimingPlots((*mapiter).second,deta2DSubMap[name],detabins,name);
+    TString name = mapiter->first;
+    Analysis::Make1DTimingPlots(mapiter->second,deta2DSubMap[name],detabins,name);
   }
   Analysis::DeleteTH2s(deta2DMap);  
 
@@ -820,8 +820,8 @@ void Analysis::OutputEtaPlots()
   Analysis::SaveTH2s(eleta2DMap,eleta2DSubMap);
   for (TH2MapIter mapiter = eleta2DMap.begin(); mapiter != eleta2DMap.end(); ++mapiter)
   {
-    TString name = (*mapiter).first;
-    Analysis::Make1DTimingPlots((*mapiter).second,eleta2DSubMap[name],eletabins,name);
+    TString name = mapiter->first;
+    Analysis::Make1DTimingPlots(mapiter->second,eleta2DSubMap[name],eletabins,name);
   }
   Analysis::DeleteTH2s(eleta2DMap);  
 }
@@ -832,8 +832,8 @@ void Analysis::OutputVtxZPlots()
   Analysis::SaveTH2s(vtxZ2DMap,vtxZ2DSubMap);
   for (TH2MapIter mapiter = vtxZ2DMap.begin(); mapiter != vtxZ2DMap.end(); ++mapiter)
   {
-    TString name = (*mapiter).first;
-    Analysis::Make1DTimingPlots((*mapiter).second,vtxZ2DSubMap[name],vtxZbins,name);
+    TString name = mapiter->first;
+    Analysis::Make1DTimingPlots(mapiter->second,vtxZ2DSubMap[name],vtxZbins,name);
   }
   Analysis::DeleteTH2s(vtxZ2DMap);  
 }
@@ -844,8 +844,8 @@ void Analysis::OutputRunPlots()
   Analysis::SaveTH2s(runs2DMap,runs2DSubMap);
   for (TH2MapIter mapiter = runs2DMap.begin(); mapiter != runs2DMap.end(); ++mapiter)
   {
-    TString name = (*mapiter).first;
-    Analysis::Make1DTimingPlots((*mapiter).second,runs2DSubMap[name],dRunNos,name);
+    TString name = mapiter->first;
+    Analysis::Make1DTimingPlots(mapiter->second,runs2DSubMap[name],dRunNos,name);
   }
   Analysis::DeleteTH2s(runs2DMap);  
 }
@@ -1044,18 +1044,18 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
 
   for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
   { 
-    Int_t bin = th1binmap[(*mapiter).first]; // returns which bin each th1 corresponds to one the new plot
+    Int_t bin = th1binmap[mapiter->first]; // returns which bin each th1 corresponds to one the new plot
     
     // only do this for run number plots --> check each plot has enough entries to do fit
     if ( name.Contains("runs",TString::kExact) || name.Contains("nvtx",TString::kExact) ) 
     {
-      if ( ((*mapiter).second->Integral() + sumevents) < Config::nEventsCut ) 
+      if ( (mapiter->second->Integral() + sumevents) < Config::nEventsCut ) 
       { 
 	// store the plot to be added later
-	tempmap[(*mapiter).first] = (TH1F*)(*mapiter).second->Clone(Form("%s_tmp",(*mapiter).first.Data()));
+	tempmap[mapiter->first] = (TH1F*)mapiter->second->Clone(Form("%s_tmp",mapiter->first.Data()));
 
 	// record the number of events to exceed cut
-	sumevents += tempmap[(*mapiter).first]->Integral();
+	sumevents += tempmap[mapiter->first]->Integral();
 	continue; // don't do anything more, just go to next run
       } 
       
@@ -1064,13 +1064,13 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
       { 
 	// set bin to weighted average of events
 	Int_t numer = 0;
-	numer += bin * (*mapiter).second->Integral();
-	Int_t denom = sumevents + (*mapiter).second->Integral();
+	numer += bin * mapiter->second->Integral();
+	Int_t denom = sumevents + mapiter->second->Integral();
 
 	// add the bad histos to the good one
 	for (TH1MapIter tempmapiter = tempmap.begin(); tempmapiter != tempmap.end(); ++tempmapiter) 
         {
-	  (*mapiter).second->Add((*tempmapiter).second);
+	  mapiter->second->Add((*tempmapiter).second);
 	  numer += th1binmap[(*tempmapiter).first] * (*tempmapiter).second->Integral();
 	}
 	
@@ -1089,9 +1089,9 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
 
     // declare fit, prep it, then use it for binned plots
     TF1 * fit; 
-    Analysis::PrepFit(fit,(*mapiter).second);
-    Int_t status = (*mapiter).second->Fit(fit->GetName(),"RBQ0");
-    if (status!=0) {std::cout << "BAD FIT " << (*mapiter).first.Data() << " " << bin << " " << subdir.Data() << " " << Config::formname.Data() << std::endl;}
+    Analysis::PrepFit(fit,mapiter->second);
+    Int_t status = mapiter->second->Fit(fit->GetName(),"RBQ0");
+    if (status!=0) {std::cout << "BAD FIT " << mapiter->first.Data() << " " << bin << " " << subdir.Data() << " " << Config::formname.Data() << std::endl;}
 
     // need to capture the mean and sigma
     Float_t mean,  emean;
@@ -1111,15 +1111,15 @@ void Analysis::ProduceMeanSigma(TH1Map & th1map, TStrIntMap & th1binmap, TString
     outhist_chi2prob->SetBinContent(bin,chi2prob);
 
     // save a copy of the fitted histogram with the fit
-    Analysis::SaveTH1andFit((*mapiter).second,subdir,fit);
+    Analysis::SaveTH1andFit(mapiter->second,subdir,fit);
   } // end loop over th1s
 
   // write output mean/sigma hists to file
   fOutFile->cd();
-  outhist_mean->Write();
-  outhist_sigma->Write();
-  outhist_chi2ndf->Write();
-  outhist_chi2prob->Write();
+  outhist_mean->Write(outhist_mean->GetName(),TObject::kWriteDelete);
+  outhist_sigma->Write(outhist_sigma->GetName(),TObject::kWriteDelete);
+  outhist_chi2ndf->Write(outhist_chi2ndf->GetName(),TObject::kWriteDelete);
+  outhist_chi2prob->Write(outhist_chi2prob->GetName(),TObject::kWriteDelete);
 
   // and want to dump them too (for stacking)!
   if (!fIsMC && !name.Contains("runs",TString::kExact)) {fTH1Dump << outhist_mean->GetName()  << " " << subdir.Data() << std::endl;}
@@ -1398,33 +1398,33 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap)
   for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
   { 
     // save to output file
-    (*mapiter).second->Write(); // map is map["hist name",TH1D*]
+    mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); // map is map["hist name",TH1D*]
 
     // now draw onto canvas to save as png
     TCanvas * canv = new TCanvas("canv","canv");
     canv->cd();
-    (*mapiter).second->Draw( fIsMC ? "HIST" : "PE" );
+    mapiter->second->Draw( fIsMC ? "HIST" : "PE" );
     
     // first save as linear, then log
     canv->SetLogy(0);
     CMSLumi(canv);
-    canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
+    canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),Config::outtype.Data()));
 
     canv->SetLogy(1);
     CMSLumi(canv);
-    canv->SaveAs(Form("%s/%s/log/%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
+    canv->SaveAs(Form("%s/%s/log/%s.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),Config::outtype.Data()));
 
     delete canv;
 
     // Draw and save normalized clone; then take original and fit it with some copy/past code
-    TString xtitle = (*mapiter).second->GetXaxis()->GetTitle();
+    TString xtitle = mapiter->second->GetXaxis()->GetTitle();
     if (xtitle.Contains("Time",TString::kExact)) 
     {
       // first clone th1, then normalize it, then draw + save it
-      TH1F * normhist = (TH1F*)(*mapiter).second->Clone(Form("%s_norm",(*mapiter).first.Data()));
+      TH1F * normhist = (TH1F*)mapiter->second->Clone(Form("%s_norm",mapiter->first.Data()));
       normhist->Scale(1./normhist->Integral());
       fOutFile->cd();
-      normhist->Write();
+      normhist->Write(normhist->GetName(),TObject::kWriteDelete);
 
       TCanvas * normcanv = new TCanvas("normcanv","normcanv");
       normcanv->cd();
@@ -1432,13 +1432,13 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap)
       
       normcanv->SetLogy(0);
       CMSLumi(normcanv);
-      normcanv->SaveAs(Form("%s/%s/lin/%s_norm.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
+      normcanv->SaveAs(Form("%s/%s/lin/%s_norm.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),Config::outtype.Data()));
       
       normcanv->SetLogy(1);
       CMSLumi(normcanv);
-      normcanv->SaveAs(Form("%s/%s/log/%s_norm.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
+      normcanv->SaveAs(Form("%s/%s/log/%s_norm.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),Config::outtype.Data()));
 
-      if (!fIsMC) {fTH1Dump << normhist->GetName()  << " " << subdirmap[(*mapiter).first].Data() << std::endl;}
+      if (!fIsMC) {fTH1Dump << normhist->GetName()  << " " << subdirmap[mapiter->first].Data() << std::endl;}
 
       delete normhist;
       delete normcanv;
@@ -1446,33 +1446,33 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap)
       // fit th1s with time in the name --> could factor out this copy-paste...
 
       // make it a "graph" with the right colors
-      (*mapiter).second->SetLineColor(fColor);
-      (*mapiter).second->SetMarkerColor(fColor);
+      mapiter->second->SetLineColor(fColor);
+      mapiter->second->SetMarkerColor(fColor);
       
       // declare fit, then pass it to prepper along with hist for prefitting
       TF1 * fit; 
-      Analysis::PrepFit(fit,(*mapiter).second);      
-      (*mapiter).second->Fit(fit->GetName(),"RBQ0");
+      Analysis::PrepFit(fit,mapiter->second);      
+      mapiter->second->Fit(fit->GetName(),"RBQ0");
 
       TCanvas * fitcanv = new TCanvas("fitcanv","fitcanv");
       fitcanv->cd();
-      (*mapiter).second->Draw("PE");
+      mapiter->second->Draw("PE");
       fit->SetLineWidth(3);
       fit->Draw("same");
       
       // draw sub components of fit it applies
       TF1 * sub1; TF1 * sub2; TF1 * sub3;
       Analysis::DrawSubComp(fit,fitcanv,sub1,sub2,sub3);
-      (*mapiter).second->Draw("PE SAME"); // redraw to put points on top
+      mapiter->second->Draw("PE SAME"); // redraw to put points on top
 
       // first save as linear, then log
       fitcanv->SetLogy(0);
       CMSLumi(fitcanv);
-      fitcanv->SaveAs(Form("%s/%s/lin/%s_%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),fit->GetName(),Config::outtype.Data()));
+      fitcanv->SaveAs(Form("%s/%s/lin/%s_%s.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),fit->GetName(),Config::outtype.Data()));
       
       fitcanv->SetLogy(1);
       CMSLumi(fitcanv);
-      fitcanv->SaveAs(Form("%s/%s/log/%s_%s.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),fit->GetName(),Config::outtype.Data()));
+      fitcanv->SaveAs(Form("%s/%s/log/%s_%s.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),fit->GetName(),Config::outtype.Data()));
       
       delete fitcanv;
       Analysis::DeleteFit(fit,sub1,sub2,sub3);
@@ -1499,7 +1499,7 @@ void Analysis::SaveTH1andFit(TH1F *& hist, TString subdir, TF1 *& fit)
   // write out the canvas, but only print canvases if specfied
   canv->SetLogy(0);
   CMSLumi(canv);
-  canv->Write();
+  canv->Write(canv->GetName(),TObject::kWriteDelete);
   if (Config::saveFits) 
   {
     canv->SaveAs(Form("%s/%s/lin/%s_%s.%s",fOutDir.Data(),subdir.Data(),hist->GetName(),fit->GetName(),Config::outtype.Data()));
@@ -1520,16 +1520,16 @@ void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap)
   TCanvas * canv = new TCanvas("canv","canv");
   for (TH2MapIter mapiter = th2map.begin(); mapiter != th2map.end(); ++mapiter) 
   { 
-    (*mapiter).second->Write(); // map is map["hist name",TH1D*]
+    mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete);; // map is map["hist name",TH1D*]
 
     // now draw onto canvas to save as png
     canv->cd();
-    (*mapiter).second->Draw("colz");
+    mapiter->second->Draw("colz");
     
     // only save as linear
     canv->SetLogy(0);
     CMSLumi(canv);
-    canv->SaveAs(Form("%s/%s/%s_2D.%s",fOutDir.Data(),subdirmap[(*mapiter).first].Data(),(*mapiter).first.Data(),Config::outtype.Data()));
+    canv->SaveAs(Form("%s/%s/%s_2D.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),Config::outtype.Data()));
   }
 
   delete canv;
@@ -1539,7 +1539,7 @@ void Analysis::DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap)
 {
   for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
   { 
-    fTH1Dump << (*mapiter).first.Data()  << " " <<  subdirmap[(*mapiter).first].Data() << std::endl;
+    fTH1Dump << mapiter->first.Data()  << " " <<  subdirmap[mapiter->first].Data() << std::endl;
   }
 }
 
@@ -1555,7 +1555,7 @@ void Analysis::DeleteTH1s(TH1Map & th1map)
 {
   for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
   { 
-    delete ((*mapiter).second);
+    delete (mapiter->second);
   }
   th1map.clear();
 }
@@ -1564,7 +1564,7 @@ void Analysis::DeleteTH2s(TH2Map & th2map)
 {
   for (TH2MapIter mapiter = th2map.begin(); mapiter != th2map.end(); ++mapiter) 
   { 
-    delete ((*mapiter).second);
+    delete (mapiter->second);
   }
   th2map.clear();
 }
@@ -1659,7 +1659,7 @@ void Analysis::GetADC2GeVConvs()
     std::ifstream inputadcs; // only one file!
     inputadcs.open(Form("config/pedestals/adc2gev_%i-%i.txt",fADC2GeVRuns[0].beg_,fADC2GeVRuns[fADC2GeVRuns.size()-1].end_),std::ios::in);
     Float_t t_adc2gev_eb, t_adc2gev_ee;
-    while (inputadcs >> t_adc2gev_eb >> t_adc2gev_ee) // one line per file, so can push directly back
+    while (inputadcs >> t_adc_r1 >> t_adc_r2 >> t_adc2gev_eb >> t_adc2gev_ee) // one line per file, so can push directly back
     {
       fADC2GeVs.push_back(ADC2GeVPair(t_adc2gev_eb,t_adc2gev_ee)); 
     }
