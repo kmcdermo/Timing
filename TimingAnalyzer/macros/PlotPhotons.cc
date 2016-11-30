@@ -594,8 +594,8 @@ void PlotPhotons::SetupGenParticles()
   fPlots["genN1prodr"] = PlotPhotons::MakeTH1F("genN1prodr","Generator Leading Neutralino Production Vertex r-Position [cm]",100,0.f,2.f,"Production Vertex r-Position [cm]","Neutralinos","GenParticles");
   fPlots["genN1prodd"] = PlotPhotons::MakeTH1F("genN1prodd","Generator Leading Neutralino Production Vertex Distance [cm]",100,0.f,20.f,"Production Vertex Distance [cm]","Neutralinos","GenParticles");
   fPlots2D["genN1prodr_vs_z"] = PlotPhotons::MakeTH2F("genN1prodr_vs_z","Generator Leading Neutralino Production Vertex r vs. z Position [cm]",100,0.f,20.f,"Production Vertex z-Position [cm]",100,0.f,2.f,"Production Vertex r-Position [cm]","GenParticles");
-  fPlots["genN1decayz"] = PlotPhotons::MakeTH1F("genN1decayz","Generator Leading Neutralino Decay Vertex z-Position [cm]",100,0.f,10000.f,"Decay Vertex z-Position [cm]","Neutralinos","GenParticles");
-  fPlots["genN1decayr"] = PlotPhotons::MakeTH1F("genN1decayr","Generator Leading Neutralino Decay Vertex r-Position [cm]",100,0.f,10000.f,"Decay Vertex r-Position [cm]","Neutralinos","GenParticles");
+  fPlots["genN1decayz"] = PlotPhotons::MakeTH1F("genN1decayz","Generator Leading Neutralino Decay Vertex z-Position [cm]",143,0.f,10000.f,"Decay Vertex z-Position [cm]","Neutralinos","GenParticles");
+  fPlots["genN1decayr"] = PlotPhotons::MakeTH1F("genN1decayr","Generator Leading Neutralino Decay Vertex r-Position [cm]",125,0.f,10000.f,"Decay Vertex r-Position [cm]","Neutralinos","GenParticles");
   fPlots["genN1decayd"] = PlotPhotons::MakeTH1F("genN1decayd","Generator Leading Neutralino Decay Vertex Distance [cm]",100,0.f,10000.f,"Decay Vertex Distance [cm]","Neutralinos","GenParticles");
   fPlots2D["genN1decayr_vs_z"] = PlotPhotons::MakeTH2F("genN1decayr_vs_z","Generator Leading Neutralino Decay Vertex r vs. z Position [cm]",100,0.f,10000.f,"Decay Vertex z-Position [cm]",100,0.f,10000.f,"Decay Vertex r-Position [cm]","GenParticles");
   fPlots["genN1decayz_zoom"] = PlotPhotons::MakeTH1F("genN1decayz_zoom","Generator Leading Neutralino Decay Vertex z-Position [cm]",100,0.f,350.f,"Decay Vertex z-Position [cm]","Neutralinos","GenParticles");
@@ -623,8 +623,8 @@ void PlotPhotons::SetupGenParticles()
   fPlots["genN2prodr"] = PlotPhotons::MakeTH1F("genN2prodr","Generator Subleading Neutralino Production Vertex r-Position [cm]",100,0.f,2.f,"Production Vertex r-Position [cm]","Neutralinos","GenParticles");
   fPlots["genN2prodd"] = PlotPhotons::MakeTH1F("genN2prodd","Generator Subleading Neutralino Production Vertex Distance [cm]",100,0.f,20.f,"Production Vertex Distance [cm]","Neutralinos","GenParticles");
   fPlots2D["genN2prodr_vs_z"] = PlotPhotons::MakeTH2F("genN2prodr_vs_z","Generator Subleading Neutralino Production Vertex r vs. z Position [cm]",100,0.f,20.f,"Production Vertex z-Position [cm]",100,0.f,2.f,"Production Vertex r-Position [cm]","GenParticles");
-  fPlots["genN2decayz"] = PlotPhotons::MakeTH1F("genN2decayz","Generator Leading Neutralino Decay Vertex z-Position [cm]",100,0.f,10000.f,"Decay Vertex z-Position [cm]","Neutralinos","GenParticles");
-  fPlots["genN2decayr"] = PlotPhotons::MakeTH1F("genN2decayr","Generator Leading Neutralino Decay Vertex r-Position [cm]",100,0.f,10000.f,"Decay Vertex r-Position [cm]","Neutralinos","GenParticles");
+  fPlots["genN2decayz"] = PlotPhotons::MakeTH1F("genN2decayz","Generator Leading Neutralino Decay Vertex z-Position [cm]",143,0.f,10000.f,"Decay Vertex z-Position [cm]","Neutralinos","GenParticles");
+  fPlots["genN2decayr"] = PlotPhotons::MakeTH1F("genN2decayr","Generator Leading Neutralino Decay Vertex r-Position [cm]",125,0.f,10000.f,"Decay Vertex r-Position [cm]","Neutralinos","GenParticles");
   fPlots["genN2decayd"] = PlotPhotons::MakeTH1F("genN2decayd","Generator Leading Neutralino Decay Vertex Distance [cm]",100,0.f,10000.f,"Decay Vertex Distance [cm]","Neutralinos","GenParticles");
   fPlots2D["genN2decayr_vs_z"] = PlotPhotons::MakeTH2F("genN2decayr_vs_z","Generator Leading Neutralino Decay Vertex r vs. z Position [cm]",100,0.f,10000.f,"Decay Vertex z-Position [cm]",100,0.f,10000.f,"Decay Vertex r-Position [cm]","GenParticles");
   fPlots["genN2decayz_zoom"] = PlotPhotons::MakeTH1F("genN2decayz_zoom","Generator Leading Neutralino Decay Vertex z-Position [cm]",100,0.f,350.f,"Decay Vertex z-Position [cm]","Neutralinos","GenParticles");

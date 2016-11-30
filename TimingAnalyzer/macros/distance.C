@@ -15,7 +15,7 @@ static const Float_t lumi = 36.46 * 1000; // pb
 
 void distance()
 {
-  TString hist = "genN1decayz_zoom";
+  TString hist = "genN2decayr";
 
   // set TDR Style (need to force it!)
   TStyle * tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
@@ -42,7 +42,8 @@ void distance()
   TCanvas * canv = new TCanvas("canv","canv");
   canv->cd();
   canv->SetLogy();
-  //  ctau100 ->GetYaxis()->SetRangeUser(5e-5,3);
+  ctau100 ->GetXaxis()->SetTitle("Subleading #tilde{#chi}^{0}_{1} Decay Vertex r-Position [cm]");
+  ctau100 ->GetYaxis()->SetRangeUser(1e-5,2);
   ctau100 ->GetYaxis()->SetTitle("Events");
   ctau100 ->Draw("HIST");
   ctau100 ->Draw("HIST same");
