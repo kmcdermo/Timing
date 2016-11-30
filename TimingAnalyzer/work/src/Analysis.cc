@@ -184,7 +184,7 @@ void Analysis::EventLoop()
       if      (el2seedZ>0) {el2ep = true;}
       else if (el2seedZ<0) {el2em = true;}
     }
-      
+
     //////////////////////////////
     //                          // 
     // Divide by pedestal noise //
@@ -1656,17 +1656,14 @@ void Analysis::GetADC2GeVConvs()
     adcruns.close();
     
     // input adc to gev conversion factors
-    for (UInt_t iov = 0; iov < fADC2GeVRuns.size(); iov++)
+    std::ifstream inputadcs; // only one file!
+    inputadcs.open(Form("config/pedestals/adc2gev_%i-%i.txt",fADC2GeVRuns[0].beg_,fADC2GeVRuns[fADC2GeVRuns.size()-1].end_),std::ios::in);
+    Float_t t_adc2gev_eb, t_adc2gev_ee;
+    while (inputadcs >> t_adc2gev_eb >> t_adc2gev_ee) // one line per file, so can push directly back
     {
-      std::ifstream inputadcs;
-      inputadcs.open(Form("config/pedestals/adc2gev_%i-%i.txt",fADC2GeVRuns[iov].beg_,fADC2GeVRuns[iov].end_),std::ios::in);
-      Float_t t_adc2gev_eb, t_adc2gev_ee;
-      while (inputadcs >> t_adc2gev_eb >> t_adc2gev_ee) // one line per file, so can push directly back
-      {
-	fADC2GeVs.push_back(ADC2GeVPair(t_adc2gev_eb,t_adc2gev_ee)); 
-      }
-      inputadcs.close();
+      fADC2GeVs.push_back(ADC2GeVPair(t_adc2gev_eb,t_adc2gev_ee)); 
     }
+    inputadcs.close();
   }
 }
   
