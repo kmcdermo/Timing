@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <fstream>
+#include <unordered_map>
 
 void getruns()
 {
@@ -11,29 +12,20 @@ void getruns()
   
   Int_t run = 0;
   tree->SetBranchAddress("run",&run);
+  std::unordered_map<Int_t,Int_t> runs;
 
-  Int_t tmprun = 0;
-  std::vector<Int_t> runs;
-  
   ofstream output;
   output.open("runs2016.txt",std::ios_base::trunc);
 
   for (UInt_t entry = 0; entry < tree->GetEntries(); entry++)
   {
     tree->GetEntry(entry);
-    if (run != tmprun) {
-      tmprun = run; //runs.push_back(run);
+    if (runs.count(run) == 0)
+    {
+      runs[run]++;
       output << run << std::endl;
     }
   }
 
   output.close();
-
-//   for (int i = 0; i < runs.size(); i++)
-//   {
-//     for (int j = i+1; j < runs.size(); j++)
-//     {
-//       if (runs[i] == runs[j]) std::cout << runs[i] << std::endl;
-//     }
-//   }
 }

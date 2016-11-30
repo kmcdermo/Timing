@@ -20,15 +20,11 @@ namespace Config{
   constexpr    Float_t ncore = 1.5;
 
   // output config
-  constexpr    Float_t lumi      = 27.22; // inv fb for current 2016
+  constexpr    Float_t lumi      = 36.46; // inv fb for current 2016
   static const TString extraText = "Preliminary";
 
   // nEvents
-  constexpr    Int_t   nEvDataTot  = 386990940; // just GetEntries() of original trees;
-  constexpr    Int_t   nEvDataSkim = 3439542;
-  constexpr    Int_t   nEvMCTot    = 104113466;
-  constexpr    Int_t   nEvMCSkim   = 3303390;
-  constexpr    Int_t   nEvCheck    = 30000;
+  constexpr    Int_t   nEvCheck    = 50000;
 
   // pu config
   constexpr    Int_t   nbinsvtx   = 75;
