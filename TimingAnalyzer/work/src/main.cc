@@ -24,6 +24,32 @@ void setUpPlotMaps()
     ineffseedE.close();
   }
 
+  TStrVec el1strings = {"EBEB","EEEE"};
+  for (int i = 0; i < el1strings.size(); i++) 
+  {
+    std::ifstream inel1seedE;
+    inel1seedE.open(Form("config/el1seedE_%s_bins.txt",el1strings[i].Data()),std::ios::in);
+    Int_t  el1seedE = -1;
+    while(inel1seedE >> el1seedE)
+    {
+      Config::XBinsMap[Form("el1seedE_%s",el1strings[i].Data())].push_back(el1seedE);
+    }
+    inel1seedE.close();
+  }
+
+  TStrVec el2strings = {"EBEB","EEEE"};
+  for (int i = 0; i < el2strings.size(); i++) 
+  {
+    std::ifstream inel2seedE;
+    inel2seedE.open(Form("config/el2seedE_%s_bins.txt",el2strings[i].Data()),std::ios::in);
+    Int_t  el2seedE = -1;
+    while(inel2seedE >> el2seedE)
+    {
+      Config::XBinsMap[Form("el2seedE_%s",el2strings[i].Data())].push_back(el2seedE);
+    }
+    inel2seedE.close();
+  }
+
   Config::XTitleMap["E"]  = "Energy [GeV]";
   
   // sigma_n corrections!
@@ -110,6 +136,7 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
   // set up time res config
   if (Config::doTimeRes) 
   {
+    Config::doSingleE = true;
     Config::doEffE    = true;
     Config::doNvtx    = true;
     Config::doVtxZ    = true;
@@ -151,7 +178,8 @@ int main(int argc, const char* argv[])
 	"  --use-GJets     <bool>        use Gamma+Jets with MC (def: %s)\n"
 	"  --do-standard   <bool>        make standard validation plots (def: %s)\n"
 	"  --do-timeres    <bool>        make timing bias and resolution plots [all, except runs] (def: %s)\n"
-	"  --do-effE       <bool>        make timing bias and resolution plots vs effective energy variables (def: %s)\n"
+	"  --do-singleE    <bool>        make timing bias and resolution plots vs single electron energy (def: %s)\n"
+	"  --do-effE       <bool>        make timing bias and resolution plots vs effective energy (def: %s)\n"
 	"  --do-nvtx       <bool>        make timing bias and resolution plots vs nVertices (def: %s)\n"
 	"  --do-eta        <bool>        make timing bias and resolution plots vs single electron eta (def: %s)\n"
 	"  --do-vtxZ       <bool>        make timing bias and resolution plots vs z vertex position (def: %s)\n"
@@ -180,6 +208,7 @@ int main(int argc, const char* argv[])
 	(Config::useGJets   ? "true" : "false"),
 	(Config::doStandard ? "true" : "false"),
 	(Config::doTimeRes  ? "true" : "false"),
+	(Config::doSingleE  ? "true" : "false"),
 	(Config::doEffE     ? "true" : "false"),
 	(Config::doNvtx     ? "true" : "false"),
 	(Config::doEta      ? "true" : "false"),
@@ -210,6 +239,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--use-GJets")   { Config::useGJets   = true; }
     else if (*i == "--do-standard") { Config::doAnalysis = true; Config::doStandard = true; }
     else if (*i == "--do-timeres")  { Config::doAnalysis = true; Config::doTimeRes  = true; }
+    else if (*i == "--do-singleE")  { Config::doAnalysis = true; Config::doSingleE  = true; }
     else if (*i == "--do-effE")     { Config::doAnalysis = true; Config::doEffE     = true; }
     else if (*i == "--do-nvtx")     { Config::doAnalysis = true; Config::doNvtx     = true; }
     else if (*i == "--do-eta")      { Config::doAnalysis = true; Config::doEta      = true; }

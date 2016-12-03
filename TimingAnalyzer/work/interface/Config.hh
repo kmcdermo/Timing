@@ -7,6 +7,7 @@ namespace Config{
   // general config
   constexpr    Float_t Sqrt2 = 1.4121356237; 
   constexpr    Float_t PI    = 3.14159265358979323846;
+  constexpr    Float_t TWOPI = 2.f*3.14159265358979323846;
   constexpr    Float_t sol   = 29.9792458; // speed of light in cm / ns
   constexpr    Float_t sigma_nEB = 0.05701; // 57 MeV
   constexpr    Float_t sigma_nEE = 0.13610; // 136 MeV
@@ -25,6 +26,22 @@ namespace Config{
 
   // nEvents
   constexpr    Int_t   nEvCheck    = 50000;
+
+  // data era runs
+  constexpr    Int_t   eraBlow  = 272007;
+  constexpr    Int_t   eraBhigh = 275376;
+  constexpr    Int_t   eraClow  = 275657;
+  constexpr    Int_t   eraChigh = 276283;
+  constexpr    Int_t   eraDlow  = 276315;
+  constexpr    Int_t   eraDhigh = 276711;
+  constexpr    Int_t   eraElow  = 276831;
+  constexpr    Int_t   eraEhigh = 277420;
+  constexpr    Int_t   eraFlow  = 277772;
+  constexpr    Int_t   eraFhigh = 278808;
+  constexpr    Int_t   eraGlow  = 278820;
+  constexpr    Int_t   eraGhigh = 280385;
+  constexpr    Int_t   eraHlow  = 280919;
+  constexpr    Int_t   eraHhigh = 284044;
 
   // pu config
   constexpr    Int_t   nbinsvtx   = 75;
@@ -100,6 +117,7 @@ namespace Config{
   extern Bool_t      useGJets;
   extern Bool_t      doStandard;
   extern Bool_t      doTimeRes;
+  extern Bool_t      doSingleE;
   extern Bool_t      doEffE;
   extern Bool_t      doNvtx;
   extern Bool_t      doEta;

@@ -65,65 +65,65 @@ void quickoverplot2() {
   //  gStyle->SetOptFit(0);
   TVirtualFitter::SetDefaultFitter("Minuit2");
 
-  TString label1 = "seedtime";
-  TString label2 = "weighted";
+  TString label1 = "gaus1core";
+  TString label2 = "gaus2fm";
 
   Bool_t  isLogY = false;
   
-  TFile * file = TFile::Open("tdouttimes40.root");
+  TFile * file = TFile::Open("nosigman/DATA/doubleeg/plots.root");
 
   TCanvas * canv = new TCanvas();
   canv->cd();
-  canv->SetLogy(isLogY);
+  //  canv->SetLogy(isLogY);
 
-  TH1F * h1 = (TH1F*)file->Get("h_tdseedtimeTOF");
-  h1->Scale(1.0/h1->Integral());
-  h1->SetMaximum(0.3);
-  h1->SetMinimum(0.0);
+  TH1F * h1 = (TH1F*)file->Get("td_el2seedE_EEEE_sigma_gaus1core");
+  //  h1->Scale(1.0/h1->Integral());
   h1->SetLineColor(kRed);
   h1->SetMarkerColor(kRed);
   h1->SetMarkerStyle(1);
-  h1->SetTitle("Seed Time (TOF) vs Weighted Time");
-  h1->GetXaxis()->SetTitle("Time [ns]");
-  h1->GetYaxis()->SetTitle("Events");
+//   h1->SetTitle("Resolution vs ");
+//   h1->GetXaxis()->SetTitle("Time [ns]");
+//   h1->GetYaxis()->SetTitle("Events");
 
-  Float_t m1, em1, s1, es1;
-  TF1 * f1;
-  doFit(h1,f1,m1,em1,s1,es1);
-  f1->SetLineColor(kRed);
-  f1->SetLineWidth(2);
+//   Float_t m1, em1, s1, es1;
+//   TF1 * f1;
+//   doFit(h1,f1,m1,em1,s1,es1);
+//   f1->SetLineColor(kRed);
+//   f1->SetLineWidth(2);
 
-  TH1F * h2 = (TH1F*)file->Get("h_tdweighttime");
-  h2->Scale(1.0/h2->Integral());
+  TH1F * h2 = (TH1F*)file->Get("td_el2seedE_EEEE_sigma_gaus2fm");
+  //  h2->Scale(1.0/h2->Integral());
+  h2->SetMaximum(0.8);
+  h2->SetMinimum(0.5);
   h2->SetLineColor(kBlue);
   h2->SetMarkerColor(kBlue);
   h2->SetMarkerStyle(1);
 
-  Float_t m2, em2, s2, es2;
-  TF1 * f2;
-  doFit(h2,f2,m2,em2,s2,es2);
-  f2->SetLineColor(kBlue);
-  f2->SetLineWidth(2);
+//   Float_t m2, em2, s2, es2;
+//   TF1 * f2;
+//   doFit(h2,f2,m2,em2,s2,es2);
+//   f2->SetLineColor(kBlue);
+//  f2->SetLineWidth(2);
 
-  h1->Draw("epl");
-  f1->Draw("same");
-  h2->Draw("epl SAME");
-  f2->Draw("same");
+  //  f1->Draw("same");
+  h2->Draw("ep");
+  h1->Draw("ep SAME");
+  //  f2->Draw("same");
 
   TLegend * leg = new TLegend(0.15,0.7,0.35,0.85);
   leg->AddEntry(h1,label1.Data(),"epl");
   leg->AddEntry(h2,label2.Data(),"epl");
   leg->Draw("same");
 
-  TPaveText * text = new TPaveText(0.65,0.65,0.85,0.85,"NDC");
-  text->SetFillColorAlpha(kWhite,0.f);
-  text->AddText(Form("#mu_{s} = %f #pm %f",m1,em1));
-  text->AddText(Form("#sigma_{s} = %f #pm %f",s1,es1));
-  text->AddLine(0.0,0.5,1.0,0.5);
-  text->AddText(Form("#mu_{w} = %f #pm %f",m2,em2));
-  text->AddText(Form("#sigma_{w} = %f #pm %f",s2,es2));
-  text->SetTextSize(0.03);
-  text->Draw("same");
+//   TPaveText * text = new TPaveText(0.65,0.65,0.85,0.85,"NDC");
+//   text->SetFillColorAlpha(kWhite,0.f);
+//   text->AddText(Form("#mu_{s} = %f #pm %f",m1,em1));
+//   text->AddText(Form("#sigma_{s} = %f #pm %f",s1,es1));
+//   text->AddLine(0.0,0.5,1.0,0.5);
+//   text->AddText(Form("#mu_{w} = %f #pm %f",m2,em2));
+//   text->AddText(Form("#sigma_{w} = %f #pm %f",s2,es2));
+//   text->SetTextSize(0.03);
+//   text->Draw("same");
   
-  canv->SaveAs(Form("%s_vs_%s_%s.pdf", label1.Data(), label2.Data(), (isLogY?"log":"lin") ));
+  canv->SaveAs(Form("%s_vs_%s_%s_EEEE_el2seedE.pdf", label1.Data(), label2.Data(), (isLogY?"log":"lin") ));
 }

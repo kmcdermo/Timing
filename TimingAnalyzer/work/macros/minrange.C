@@ -31,8 +31,8 @@ void minrange()
   TTree   *  tree = (TTree*)file->Get("tree/tree");
   TString  invar1 = "el1seedE";
   TString  invar2 = "el2seedE";
-  TString  outvar = "effseedE";
-  TString  ecpart = "EMEM";
+  TString  outvar = "el2seedE";
+  TString  ecpart = "EEEE";
   Int_t    minval = 15.0;
   Float_t diffval = 5.0;
   size_t    ndiff = 1000;
@@ -54,7 +54,8 @@ void minrange()
   Float_t z2 = 0; TBranch * b_z2 = tree->GetBranch("el2seedZ"); b_z2->SetAddress(&z2);
 
   std::vector<Float_t> values;
-  for (UInt_t entry = 0; entry < tree->GetEntries(); entry++){
+  for (UInt_t entry = 0; entry < tree->GetEntries(); entry++)
+  {
     b_var1->GetEvent(entry); 
     b_x1->GetEvent(entry); b_y1->GetEvent(entry); b_z1->GetEvent(entry);
     Float_t eta1 = eta(x1,y1,z1);
@@ -85,8 +86,20 @@ void minrange()
     else if (ecpart.Contains("EMEM",TString::kExact) && (el1em && el2em))                       { fill = true; }
     else if (ecpart.Contains("EBEE",TString::kExact) && ((el1eb && el2ee) || (el1ee && el2eb))) { fill = true; }
 
-    if (fill) {
-      if (var1>0 && var2>0) values.push_back(effA(var1,var2));
+    if (fill) 
+    {
+      if (outvar.EqualTo("effseedE"))
+      {
+	if (var1>0 && var2>0) values.push_back(effA(var1,var2));
+      }
+      else if (outvar.EqualTo("el1seedE"))
+      {
+	if (var1>0) values.push_back(var1);
+      }
+      else if (outvar.EqualTo("el2seedE"))
+      {
+	if (var2>0) values.push_back(var2);
+      }
     }
   }
 
@@ -99,13 +112,16 @@ void minrange()
   Bool_t reset  = false;
 
   std::cout << "first bin: " << lowval << " front: " << values.front() << " minval: " << minval << std::endl;
-  for (size_t i = 0; i < values.size(); i++) {
-    if (reset) { 
+  for (size_t i = 0; i < values.size(); i++) 
+  {
+    if (reset) 
+    { 
       ilow   = i;
       reset  = false; 
     }
 
-    if ( ((i-ilow) >= ndiff) && (values[i]-values[ilow] >= diffval) && (values[i] > minval) ) { 
+    if ( ((i-ilow) >= ndiff) && (values[i]-values[ilow] >= diffval) && (values[i] > minval) ) 
+    { 
       std::cout << i-ilow << " : " << values[ilow] << " - " << values[i] << " = " << values[i] - values[ilow] << std::endl;
       reset  = true;
       outfile << int(values[i]) << std::endl;

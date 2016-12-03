@@ -16,6 +16,7 @@ namespace Config {
   Bool_t  useGJets   = false;
   Bool_t  doStandard = false;
   Bool_t  doTimeRes  = false;
+  Bool_t  doSingleE  = false;
   Bool_t  doEffE     = false;
   Bool_t  doNvtx     = false;
   Bool_t  doEta      = false;
