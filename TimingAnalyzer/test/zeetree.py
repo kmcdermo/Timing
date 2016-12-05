@@ -92,12 +92,8 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 ## Define the input source
 if not options.isMC :
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-			'/store/data/Run2016B/DoubleEG/MINIAOD/PromptReco-v2/000/273/158/00000/308C0A95-E819-E611-9413-02163E01386F.root', #2016B (273158)
-			'/store/data/Run2016C/DoubleEG/MINIAOD/PromptReco-v2/000/275/658/00000/36A8FE5F-813B-E611-82A0-02163E014365.root', #2016C (275658)
-			'/store/data/Run2016D/DoubleEG/MINIAOD/PromptReco-v2/000/276/318/00000/349ADEDB-2145-E611-B8B6-02163E012598.root', #2016D (276318)
-			'/store/data/Run2016E/DoubleEG/MINIAOD/PromptReco-v2/000/276/831/00000/56C5F0A6-034D-E611-A6F3-02163E0141F1.root', #2016E (276831)
-			'/store/data/Run2016F/DoubleEG/MINIAOD/PromptReco-v1/000/278/018/00000/2AAB6E8C-885A-E611-829C-02163E0128B6.root', #2016F (278018)
-			'/store/data/Run2016G/DoubleEG/MINIAOD/PromptReco-v1/000/278/820/00000/CC0E121C-7D64-E611-AA12-FA163ED4D6E2.root'  #2016G (278820)
+			# run 2016B
+			'/store/data/Run2016B/DoubleEG/MINIAOD/23Sep2016-v3/00000/0060C751-C097-E611-9FE6-FA163EFD4308.root'
 			) 
 				    )
 else:

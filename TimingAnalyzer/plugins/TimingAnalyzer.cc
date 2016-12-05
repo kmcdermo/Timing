@@ -1,181 +1,4 @@
-// basic C++ headers
-#include <iostream>
-#include <memory>
-#include <vector>
-#include <utility>
-#include <map>
-#include <string>
-#include <cmath>
-#include <algorithm>
-#include <tuple>
-
-// FWCore
-#include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/one/EDAnalyzer.h"
-#include "FWCore/Framework/interface/Event.h"
-#include "FWCore/Framework/interface/MakerMacros.h"
-#include "FWCore/Framework/interface/ESHandle.h"
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "FWCore/ServiceRegistry/interface/Service.h"
-#include "FWCore/Common/interface/TriggerNames.h"
-#include "CommonTools/UtilAlgos/interface/TFileService.h" 
-
-// HLT info
-#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
-
-// Gen Info
-#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
-#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
-
-// DataFormats
-#include "DataFormats/VertexReco/interface/Vertex.h"
-#include "DataFormats/PatCandidates/interface/Electron.h"
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-#include "DataFormats/Common/interface/TriggerResults.h"
-#include "DataFormats/Common/interface/ValueMap.h"
-#include "DataFormats/DetId/interface/DetId.h"
-#include "DataFormats/EcalDetId/interface/EBDetId.h"
-#include "DataFormats/EcalDetId/interface/EEDetId.h"
-#include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
-
-// EGamma Tools
-#include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
-#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
-
-// Geometry
-#include "Geometry/Records/interface/CaloGeometryRecord.h"
-#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
-#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
-#include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
-
-// ROOT
-#include "TTree.h"
-#include "TLorentzVector.h"
-#include "TPRegexp.h"
-
-typedef std::tuple<int, int, float> triple;
-typedef std::vector<triple> triplevec;
-typedef std::vector<std::pair<DetId,float> > DetIdPairVec;
-
-inline bool minimizeByZmass(const triple& elpair1, const triple& elpair2)
-{
-  return std::get<2>(elpair1)<std::get<2>(elpair2);
-}
-
-inline bool sortElectronsByPt(const pat::ElectronRef& el1, const pat::ElectronRef& el2)
-{
-  return el1->pt()>el2->pt();
-}
-
-class TimingAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
-{
-public:
-  explicit TimingAnalyzer(const edm::ParameterSet&);
-  ~TimingAnalyzer();
-  
-  static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-  
-private:
-  virtual void beginJob() override;
-  virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
-  virtual void endJob() override;
-  
-  virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
-  virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
-  
-  // Trigger
-  const edm::InputTag triggerResultsTag;
-  edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
-  std::vector<std::string>   triggerPathsVector;
-  std::map<std::string, int> triggerPathsMap;
-  const bool applyHLTFilter;
-
-  // Vertex
-  const edm::InputTag verticesTag;
-  edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken;
-
-  // Electrons
-  const edm::InputTag vetoelectronsTag;
-  const edm::InputTag looseelectronsTag;
-  const edm::InputTag mediumelectronsTag;
-  const edm::InputTag tightelectronsTag;
-  const edm::InputTag heepelectronsTag;
-  edm::EDGetTokenT<pat::ElectronRefVector> vetoelectronsToken;
-  edm::EDGetTokenT<pat::ElectronRefVector> looseelectronsToken;
-  edm::EDGetTokenT<pat::ElectronRefVector> mediumelectronsToken;
-  edm::EDGetTokenT<pat::ElectronRefVector> tightelectronsToken;
-  edm::EDGetTokenT<pat::ElectronRefVector> heepelectronsToken;
-  const bool applyKinematicsFilter;
-
-  // ECAL RecHits
-  edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEBTAG;
-  edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEETAG;
-
-  // Gen Particles and MC info
-  const bool isMC;
-  edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
-  edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
-  edm::EDGetTokenT<edm::View<reco::GenParticle> >   gensToken;
-
-  // how to select electrons
-  const bool doZmassSort;
-
-  // ECALELF tools
-  EcalClusterLazyTools *clustertools;
-
-  // output ntuple
-  // tree
-  TTree* tree;
-
-  // event info
-  int event, run, lumi;  
-
-  // triggers 
-  bool hltdoubleel33,hltdoubleel37;
-
-  // vertices
-  int nvtx; 
-  float vtxX, vtxY, vtxZ;
-
-  // object counts
-  int nvetoelectrons,nlooseelectrons,nmediumelectrons,ntightelectrons,nheepelectrons;
-
-  // electron info
-  int   el1pid,el2pid;
-  float el1pt,el1eta,el1phi,el1E,el1p;
-  float el2pt,el2eta,el2phi,el2E,el2p;
-
-  // supercluster info 
-  float el1scX, el1scY, el1scZ, el1scE;
-  float el2scX, el2scY, el2scZ, el2scE;
-  int   el1nrh, el2nrh;
-
-  // all rec hit info
-  std::vector<float> el1rhXs, el1rhYs, el1rhZs, el1rhEs, el1rhtimes;
-  std::vector<float> el2rhXs, el2rhYs, el2rhZs, el2rhEs, el2rhtimes;
-  std::vector<int> el1rhids, el2rhids;
-
-  // seed info
-  float el1seedX, el1seedY, el1seedZ, el1seedE, el1seedtime;
-  float el2seedX, el2seedY, el2seedZ, el2seedE, el2seedtime;
-  int el1seedid, el2seedid;
-
-  // dielectron info
-  float zpt,zeta,zphi,zmass,zE,zp;
-
-  // MC Info Only
-  // pileup info
-  int puobs,putrue; 
-
-  // weights
-  float wgt;
-
-  // gen particle info
-  int   genzpid,genel1pid,genel2pid;
-  float genzpt,genzeta,genzphi,genzmass,genzE,genzp;
-  float genel1pt,genel1eta,genel1phi,genel1E,genel1p;
-  float genel2pt,genel2eta,genel2phi,genel2E,genel2p;
-};
+#include "TimingAnalyzer.h"
 
 TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig): 
   ///////////// TRIGGER and filter info INFO
@@ -318,11 +141,17 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   el1scX = -999.0; el1scY = -999.0; el1scZ = -999.0; el1scE = -999.0;
   el2scX = -999.0; el2scY = -999.0; el2scZ = -999.0; el2scE = -999.0;
 
-  el1rhXs.clear(); el1rhYs.clear(); el1rhZs.clear(); el1rhEs.clear(); el1rhtimes.clear(); el1rhids.clear();
-  el2rhXs.clear(); el2rhYs.clear(); el2rhZs.clear(); el2rhEs.clear(); el2rhtimes.clear(); el2rhids.clear();
+  el1rhXs.clear(); el1rhYs.clear(); el1rhZs.clear(); el1rhEs.clear(); el1rhtimes.clear(); 
+  el2rhXs.clear(); el2rhYs.clear(); el2rhZs.clear(); el2rhEs.clear(); el2rhtimes.clear(); 
 
-  el1seedX = -999.0; el1seedY = -999.0; el1seedZ = -999.0; el1seedE = -999.0; el1seedtime = -99.0; el1seedid = -99;
-  el2seedX = -999.0; el2seedY = -999.0; el2seedZ = -999.0; el2seedE = -999.0; el2seedtime = -99.0; el2seedid = -99;
+  el1rhids.clear(); el1rhgain1s.clear(); el1rhgain6s.clear();
+  el2rhids.clear(); el2rhgain1s.clear(); el2rhgain6s.clear();
+
+  el1seedX = -999.0; el1seedY = -999.0; el1seedZ = -999.0; el1seedE = -999.0; el1seedtime = -999.0; 
+  el2seedX = -999.0; el2seedY = -999.0; el2seedZ = -999.0; el2seedE = -999.0; el2seedtime = -999.0; 
+
+  el1seedid = -99; el1seedgain1 = -99; el1seedgain6 = -99;
+  el2seedid = -99; el2seedgain1 = -99; el2seedgain6 = -99;
 
   el1nrh = -99; el2nrh = -99;
 
@@ -417,6 +246,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	  el1rhEs.push_back(recHit->energy());
 	  el1rhtimes.push_back(recHit->time());	 
 	  el1rhids.push_back(int(recHitId.rawId()));
+	  el1rhgain1s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
+	  el1rhgain6s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
 
 	  // save seed info in a flat branch
 	  if (seedDetId == recHitId) 
@@ -427,6 +258,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	    el1seedE = el1rhEs.back();
 	    el1seedtime = el1rhtimes.back();
 	    el1seedid = el1rhids.back();
+	    el1seedgain1 = el1rhgain1s.back();
+	    el1seedgain6 = el1rhgain6s.back();
 	  }
 	}
       } // end loop over all crystals
@@ -465,6 +298,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	  el2rhEs.push_back(recHit->energy());
 	  el2rhtimes.push_back(recHit->time());	 
 	  el2rhids.push_back(int(recHitId.rawId()));
+	  el2rhgain1s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
+	  el2rhgain6s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
 
 	  // save seed info in a flat branch
 	  if (seedDetId == recHitId) 
@@ -475,6 +310,8 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	    el2seedE = el2rhEs.back();
 	    el2seedtime = el2rhtimes.back();
 	    el2seedid = el2rhids.back();
+	    el2seedgain1 = el2rhgain1s.back();
+	    el2seedgain6 = el2rhgain6s.back();
 	  }
 	}
       } // end loop over all crystals
@@ -690,7 +527,12 @@ void TimingAnalyzer::beginJob()
   tree->Branch("el2rhtimes"           , "std::vector<float>"  , &el2rhtimes);
 
   tree->Branch("el1rhids"             , "std::vector<int>"    , &el1rhids);
+  tree->Branch("el1rhgain1s"          , "std::vector<int>"    , &el1rhgain1s);
+  tree->Branch("el1rhgain6s"          , "std::vector<int>"    , &el1rhgain6s);
+
   tree->Branch("el2rhids"             , "std::vector<int>"    , &el2rhids);
+  tree->Branch("el2rhgain1s"          , "std::vector<int>"    , &el2rhgain1s);
+  tree->Branch("el2rhgain6s"          , "std::vector<int>"    , &el2rhgain6s);
 
   // seed crystal info
   tree->Branch("el1seedX"             , &el1seedX             , "el1seedX/F");
@@ -706,7 +548,11 @@ void TimingAnalyzer::beginJob()
   tree->Branch("el2seedtime"          , &el2seedtime          , "el2seedtime/F");
 
   tree->Branch("el1seedid"            , &el1seedid            , "el1seedid/I");
+  tree->Branch("el1seedgain1"         , &el1seedgain1         , "el1seedgain1/I");
+  tree->Branch("el1seedgain6"         , &el1seedgain6         , "el1seedgain6/I");
   tree->Branch("el2seedid"            , &el2seedid            , "el2seedid/I");
+  tree->Branch("el2seedgain1"         , &el2seedgain1         , "el2seedgain1/I");
+  tree->Branch("el2seedgain6"         , &el2seedgain6         , "el2seedgain6/I");
 
   tree->Branch("el1nrh"               , &el1nrh               , "el1nrh/I");  
   tree->Branch("el2nrh"               , &el2nrh               , "el2nrh/I");  
