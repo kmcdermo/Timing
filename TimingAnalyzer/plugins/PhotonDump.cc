@@ -97,9 +97,13 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // Event, lumi, run info //
   //                       //
   ///////////////////////////
-  event = iEvent.id().event();
   run   = iEvent.id().run();
   lumi  = iEvent.luminosityBlock();
+  event = iEvent.id().event();
+
+  // temporary hack for MC since CRAB f'ed up my sample and produced everything twice
+  if (runevmap[run].count(event) > 0) return;
+  runevmap[run][event]++;
 
   /////////////
   //         //
@@ -455,6 +459,14 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       phphi[iph] = phiter->phi();
       pheta[iph] = phiter->eta();
 
+      // cluster shape variables
+      const float see = phiter->see();
+      const float spp = phiter->spp();
+      const float sep = phiter->sep();
+      const float disc = std::sqrt((spp-see)*(spp-see)+4.f*sep*sep);
+      phsmaj[iph] = (spp+see+disc)/2.f;
+      phsmin[iph] = (spp+see-disc)/2.f;
+	
       // super cluster from photon
       const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
       if (phsc.isNonnull()) // check to make sure supercluster is good
@@ -486,8 +498,8 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  } // end standard check recHit
 	} // end loop over hits and fractions
       
-	phnrhs[iph] = phrhIDmap.size();
-	if (phnrhs[iph] > 0) PhotonDump::InitializeRecoRecHitBranches(iph);
+	phnrh[iph] = phrhIDmap.size();
+	if (phnrh[iph] > 0) PhotonDump::InitializeRecoRecHitBranches(iph);
 	int irh = 0;
 	for (uiiumap::const_iterator rhiter = phrhIDmap.begin(); rhiter != phrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
         {
@@ -499,14 +511,14 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
 
 	  // save position, energy, and time of each rechit to a vector
-	  phrhXs   [iph][irh] = recHitPos.x();
-	  phrhYs   [iph][irh] = recHitPos.y();
-	  phrhZs   [iph][irh] = recHitPos.z();
-	  phrhEs   [iph][irh] = recHit->energy();
-	  phrhdelRs[iph][irh] = deltaR(float(recHitPos.phi()),recHitPos.eta(),phphi[iph],pheta[iph]);
-	  phrhtimes[iph][irh] = recHit->time();
-	  phrhIDs  [iph][irh] = int(rhID);
-	  phrhOOTs [iph][irh] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
+	  phrhX   [iph][irh] = recHitPos.x();
+	  phrhY   [iph][irh] = recHitPos.y();
+	  phrhZ   [iph][irh] = recHitPos.z();
+	  phrhE   [iph][irh] = recHit->energy();
+	  phrhdelR[iph][irh] = deltaR(float(recHitPos.phi()),recHitPos.eta(),phphi[iph],pheta[iph]);
+	  phrhtime[iph][irh] = recHit->time();
+	  phrhID  [iph][irh] = int(rhID);
+	  phrhOOT [iph][irh] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
 	  
 	  // save the position in the vector of the seed 
 	  if (seedDetId.rawId() == recHitId) { phseedpos[iph] = irh; }
@@ -564,7 +576,7 @@ void PhotonDump::DumpRecHitInfo(int iph, const DetIdPairVec & hitsAndFractions,	
   { 
     if (std::abs(pheta[iph]) < 2.5 && !(std::abs(pheta[iph]) > 1.4442 && std::abs(pheta[iph]) < 1.566))  
     {
-      if (phnrhs[iph] == 0)
+      if (phnrh[iph] == 0)
       {
 	const int hafsize = hitsAndFractions.size();
 	const float scphi = phi(phscX[iph],phscY[iph]);
@@ -714,22 +726,24 @@ void PhotonDump::ClearRecoPhotonBranches()
   phpt.clear();
   phphi.clear(); 
   pheta.clear(); 
+  phsmaj.clear();
+  phsmin.clear();
   
   phscX.clear(); 
   phscY.clear(); 
   phscZ.clear(); 
   phscE.clear(); 
 
-  phnrhs.clear();
+  phnrh.clear();
 
-  phrhXs.clear(); 
-  phrhYs.clear(); 
-  phrhZs.clear(); 
-  phrhEs.clear(); 
-  phrhdelRs.clear(); 
-  phrhtimes.clear();
-  phrhIDs.clear();
-  phrhOOTs.clear();
+  phrhX.clear(); 
+  phrhY.clear(); 
+  phrhZ.clear(); 
+  phrhE.clear(); 
+  phrhdelR.clear(); 
+  phrhtime.clear();
+  phrhID.clear();
+  phrhOOT.clear();
 
   phseedpos.clear();
 }
@@ -743,22 +757,24 @@ void PhotonDump::InitializeRecoPhotonBranches()
   phpt.resize(nphotons);
   phphi.resize(nphotons);
   pheta.resize(nphotons);
-
+  phsmaj.resize(nphotons);
+  phsmin.resize(nphotons);
+  
   phscX.resize(nphotons);
   phscY.resize(nphotons);
   phscZ.resize(nphotons);
   phscE.resize(nphotons);
 
-  phnrhs.resize(nphotons);
+  phnrh.resize(nphotons);
 
-  phrhXs.resize(nphotons);
-  phrhYs.resize(nphotons);
-  phrhZs.resize(nphotons);
-  phrhEs.resize(nphotons);
-  phrhdelRs.resize(nphotons);
-  phrhtimes.resize(nphotons);
-  phrhIDs.resize(nphotons);
-  phrhOOTs.resize(nphotons);
+  phrhX.resize(nphotons);
+  phrhY.resize(nphotons);
+  phrhZ.resize(nphotons);
+  phrhE.resize(nphotons);
+  phrhdelR.resize(nphotons);
+  phrhtime.resize(nphotons);
+  phrhID.resize(nphotons);
+  phrhOOT.resize(nphotons);
 
   phseedpos.resize(nphotons);
 
@@ -767,17 +783,19 @@ void PhotonDump::InitializeRecoPhotonBranches()
     if (isMC) phmatch[iph] = 0;
     phVID[iph] = 0;
 
-    phE  [iph] = -9999.f; 
-    phpt [iph] = -9999.f; 
-    phphi[iph] = -9999.f; 
-    pheta[iph] = -9999.f; 
+    phE   [iph] = -9999.f; 
+    phpt  [iph] = -9999.f; 
+    phphi [iph] = -9999.f; 
+    pheta [iph] = -9999.f; 
+    phsmaj[iph] = -9999.f;
+    phsmin[iph] = -9999.f;
 
-    phscX[iph] = -9999.f; 
-    phscY[iph] = -9999.f; 
-    phscZ[iph] = -9999.f; 
-    phscE[iph] = -9999.f; 
+    phscX [iph] = -9999.f; 
+    phscY [iph] = -9999.f; 
+    phscZ [iph] = -9999.f; 
+    phscE [iph] = -9999.f; 
 
-    phnrhs[iph] = -9999;
+    phnrh [iph] = -9999;
 
     phseedpos[iph] = -9999;
   }
@@ -785,25 +803,25 @@ void PhotonDump::InitializeRecoPhotonBranches()
 
 void PhotonDump::InitializeRecoRecHitBranches(int iph)
 {
-  phrhXs   [iph].resize(phnrhs[iph]);
-  phrhYs   [iph].resize(phnrhs[iph]);
-  phrhZs   [iph].resize(phnrhs[iph]);
-  phrhEs   [iph].resize(phnrhs[iph]);
-  phrhdelRs[iph].resize(phnrhs[iph]);
-  phrhtimes[iph].resize(phnrhs[iph]);
-  phrhIDs  [iph].resize(phnrhs[iph]);
-  phrhOOTs [iph].resize(phnrhs[iph]);
+  phrhX   [iph].resize(phnrh[iph]);
+  phrhY   [iph].resize(phnrh[iph]);
+  phrhZ   [iph].resize(phnrh[iph]);
+  phrhE   [iph].resize(phnrh[iph]);
+  phrhdelR[iph].resize(phnrh[iph]);
+  phrhtime[iph].resize(phnrh[iph]);
+  phrhID  [iph].resize(phnrh[iph]);
+  phrhOOT [iph].resize(phnrh[iph]);
 
-  for (int irh = 0; irh < phnrhs[iph]; irh++)
+  for (int irh = 0; irh < phnrh[iph]; irh++)
   {
-    phrhXs   [iph][irh] = -9999.f;
-    phrhYs   [iph][irh] = -9999.f;
-    phrhZs   [iph][irh] = -9999.f;
-    phrhEs   [iph][irh] = -9999.f;
-    phrhdelRs[iph][irh] = -9999.f;
-    phrhtimes[iph][irh] = -9999.f;
-    phrhIDs  [iph][irh] = -9999;
-    phrhOOTs [iph][irh] = -9999;
+    phrhX   [iph][irh] = -9999.f;
+    phrhY   [iph][irh] = -9999.f;
+    phrhZ   [iph][irh] = -9999.f;
+    phrhE   [iph][irh] = -9999.f;
+    phrhdelR[iph][irh] = -9999.f;
+    phrhtime[iph][irh] = -9999.f;
+    phrhID  [iph][irh] = -9999;
+    phrhOOT [iph][irh] = -9999;
   }
 }
 
@@ -914,30 +932,32 @@ void PhotonDump::beginJob()
   tree->Branch("jeteta"               , &jeteta);
    
   // Photon Info
-  tree->Branch("nphotons"             , &nphotons             , "nhotons/I");
+  tree->Branch("nphotons"             , &nphotons             , "nphotons/I");
   if (isMC) tree->Branch("phmatch"    , &phmatch);
   tree->Branch("phVID"                , &phVID);
   tree->Branch("phE"                  , &phE);
   tree->Branch("phpt"                 , &phpt);
   tree->Branch("phphi"                , &phphi);
   tree->Branch("pheta"                , &pheta);
+  tree->Branch("phsmaj"               , &phsmaj);
+  tree->Branch("phsmin"               , &phsmin);
 
   tree->Branch("phscX"                , &phscX);
   tree->Branch("phscY"                , &phscY);
   tree->Branch("phscZ"                , &phscZ);
   tree->Branch("phscE"                , &phscE);
-  tree->Branch("phnrhs"               , &phnrhs);
+  tree->Branch("phnrh"                , &phnrh);
 
   tree->Branch("phseedpos"            , &phseedpos);
 
-  tree->Branch("phrhXs"               , &phrhXs);
-  tree->Branch("phrhYs"               , &phrhYs);
-  tree->Branch("phrhZs"               , &phrhZs);
-  tree->Branch("phrhEs"               , &phrhEs);
-  tree->Branch("phrhdelRs"            , &phrhdelRs);
-  tree->Branch("phrhtimes"            , &phrhtimes);
-  tree->Branch("phrhIDs"              , &phrhIDs);
-  tree->Branch("phrhOOTs"             , &phrhOOTs);
+  tree->Branch("phrhX"                , &phrhX);
+  tree->Branch("phrhY"                , &phrhY);
+  tree->Branch("phrhZ"                , &phrhZ);
+  tree->Branch("phrhE"                , &phrhE);
+  tree->Branch("phrhdelR"             , &phrhdelR);
+  tree->Branch("phrhtime"             , &phrhtime);
+  tree->Branch("phrhID"               , &phrhID);
+  tree->Branch("phrhOOT"              , &phrhOOT);
 }
 
 void PhotonDump::endJob() {}

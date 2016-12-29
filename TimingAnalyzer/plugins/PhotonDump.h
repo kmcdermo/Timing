@@ -41,6 +41,10 @@
 #include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 
+// Supercluster info
+#include "DataFormats/EgammaReco/interface/SuperCluster.h"
+#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
+
 // EGamma Tools
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
@@ -137,6 +141,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   TTree* tree;
 
   // event info
+  std::unordered_map<int,std::unordered_map<int,int > > runevmap;
   int event, run, lumi;  
 
   // Generator level info
@@ -183,7 +188,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   // photon info
   int nphotons;
   std::vector<int> phmatch, phVID;
-  std::vector<float> phE, phpt, phphi, pheta;
+  std::vector<float> phE, phpt, phphi, pheta, phsmaj, phsmin;
 
   // supercluster info 
   std::vector<float> phscX, phscY, phscZ, phscE;
@@ -192,8 +197,8 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   std::vector<int> phseedpos;
   
   // all rec hit info
-  std::vector<int> phnrhs;
-  std::vector<std::vector<float> > phrhXs, phrhYs, phrhZs, phrhEs, phrhdelRs, phrhtimes;
-  std::vector<std::vector<int> > phrhIDs;
-  std::vector<std::vector<int> > phrhOOTs;
+  std::vector<int> phnrh;
+  std::vector<std::vector<float> > phrhX, phrhY, phrhZ, phrhE, phrhdelR, phrhtime;
+  std::vector<std::vector<int> > phrhID;
+  std::vector<std::vector<int> > phrhOOT;
 };
