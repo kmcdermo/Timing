@@ -101,10 +101,6 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   lumi  = iEvent.luminosityBlock();
   event = iEvent.id().event();
 
-  // temporary hack for MC since CRAB f'ed up my sample and produced everything twice
-  if (runevmap[run].count(event) > 0) return;
-  runevmap[run][event]++;
-
   /////////////
   //         //
   // MC INFO //

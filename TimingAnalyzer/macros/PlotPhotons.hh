@@ -16,11 +16,11 @@
 
 static const Float_t sol = 2.99792458e8; // cm/s
 
-inline Float_t rad2  (const Float_t x, const Float_t y){return x*x + y*y;}
-inline Float_t rad2  (const Float_t x, const Float_t y, const Float_t z){return x*x + y*y + z*z;}
-inline Float_t gamma (const Float_t p, const Float_t m){return std::sqrt(1.f+std::pow(p/m,2));}
-inline Float_t beta  (const Float_t p, const Float_t m){return std::sqrt(1.f/(1.f+std::pow(m/p,2)));}
-inline Float_t bg    (const Float_t p, const Float_t m){return std::abs(p/m);}
+inline Float_t rad2 (const Float_t x, const Float_t y){return x*x + y*y;}
+inline Float_t rad2 (const Float_t x, const Float_t y, const Float_t z){return x*x + y*y + z*z;}
+inline Float_t gamma(const Float_t p, const Float_t m){return std::sqrt(1.f+std::pow(p/m,2));}
+inline Float_t beta (const Float_t p, const Float_t m){return std::sqrt(1.f/(1.f+std::pow(m/p,2)));}
+inline Float_t bg   (const Float_t p, const Float_t m){return std::abs(p/m);}
 
 typedef std::map<TString,TEfficiency*> TEffMap;
 typedef TEffMap::iterator              TEffMapIter;
@@ -43,7 +43,7 @@ typedef IntMap::iterator      IntMapIter;
 class PlotPhotons 
 {
 public :
-  PlotPhotons(TString filename, Bool_t isMC, Bool_t applyevnocut = false, Bool_t applyevcut = false, TString outdir = "output", 
+  PlotPhotons(TString filename, Bool_t isMC, Bool_t applyevcut = false, TString outdir = "output", 
 	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
 	      Bool_t applyphvidcut = false, TString phvid = "medium", Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
 	      Bool_t applyecalacceptcut = false);
@@ -92,11 +92,9 @@ private :
   TH1Map  fPlots;
   TH2Map  fPlots2D;
   TStrIntMap fEfficiency;
-  IntMap  fEvents;
   Float_t fCTau;
 
   // Config
-  const Bool_t  fApplyEvNoCut;
   const Bool_t  fApplyEvCut;
   const Bool_t  fApplyJetPtCut;
   const Float_t fJetPtCut;
@@ -165,11 +163,11 @@ private :
   Float_t gengr2phi;
   Float_t gengr2eta;
   Int_t   ngenjets;
-  vector<int>   * genjetmatch;
-  vector<float> * genjetE;
-  vector<float> * genjetpt;
-  vector<float> * genjetphi;
-  vector<float> * genjeteta;
+  std::vector<Int_t>   * genjetmatch;
+  std::vector<Float_t> * genjetE;
+  std::vector<Float_t> * genjetpt;
+  std::vector<Float_t> * genjetphi;
+  std::vector<Float_t> * genjeteta;
   Int_t   nvtx;
   Float_t vtxX;
   Float_t vtxY;
@@ -187,32 +185,34 @@ private :
   Float_t t1pfMETgenMETphi;
   Float_t t1pfMETgenMETsumEt;
   Int_t   njets;
-  vector<int>   * jetmatch;
-  vector<float> * jetE;
-  vector<float> * jetpt;
-  vector<float> * jetphi;
-  vector<float> * jeteta;
+  std::vector<Int_t>   * jetmatch;
+  std::vector<Float_t> * jetE;
+  std::vector<Float_t> * jetpt;
+  std::vector<Float_t> * jetphi;
+  std::vector<Float_t> * jeteta;
   Int_t   nphotons;
-  vector<int>   * phmatch;
-  vector<int>   * phVID;
-  vector<float> * phE;
-  vector<float> * phpt;
-  vector<float> * phphi;
-  vector<float> * pheta;
-  vector<float> * phscX;
-  vector<float> * phscY;
-  vector<float> * phscZ;
-  vector<float> * phscE;
-  vector<int>   * phnrhs;
-  vector<int>   * phseedpos;
-  vector<vector<float> > * phrhXs;
-  vector<vector<float> > * phrhYs;
-  vector<vector<float> > * phrhZs;
-  vector<vector<float> > * phrhEs;
-  vector<vector<float> > * phrhdelRs;
-  vector<vector<float> > * phrhtimes;
-  vector<vector<int> > * phrhIDs;
-  vector<vector<int> > * phrhOOTs;
+  std::vector<Int_t>   * phmatch;
+  std::vector<Int_t>   * phVID;
+  std::vector<Float_t> * phE;
+  std::vector<Float_t> * phpt;
+  std::vector<Float_t> * phphi;
+  std::vector<Float_t> * pheta;
+  std::vector<Float_t> * phsmaj;
+  std::vector<Float_t> * phsmin;
+  std::vector<Float_t> * phscX;
+  std::vector<Float_t> * phscY;
+  std::vector<Float_t> * phscZ;
+  std::vector<Float_t> * phscE;
+  std::vector<Int_t>   * phnrh;
+  std::vector<Int_t>   * phseedpos;
+  std::vector<std::vector<Float_t> > * phrhX;
+  std::vector<std::vector<Float_t> > * phrhY;
+  std::vector<std::vector<Float_t> > * phrhZ;
+  std::vector<std::vector<Float_t> > * phrhE;
+  std::vector<std::vector<Float_t> > * phrhdelR;
+  std::vector<std::vector<Float_t> > * phrhtime;
+  std::vector<std::vector<Int_t> >   * phrhID;
+  std::vector<std::vector<Int_t> >   * phrhOOT;
 
   // List of branches
   TBranch * b_event;   //!
@@ -291,26 +291,28 @@ private :
   TBranch * b_jetpt;   //!
   TBranch * b_jetphi;   //!
   TBranch * b_jeteta;   //!
-  TBranch * b_nhotons;   //!
+  TBranch * b_nphotons;   //!
   TBranch * b_phmatch;   //!
   TBranch * b_phVID;   //!
   TBranch * b_phE;   //!
   TBranch * b_phpt;   //!
   TBranch * b_phphi;   //!
   TBranch * b_pheta;   //!
+  TBranch * b_phsmaj;   //!
+  TBranch * b_phsmin;   //!
   TBranch * b_phscX;   //!
   TBranch * b_phscY;   //!
   TBranch * b_phscZ;   //!
   TBranch * b_phscE;   //!
-  TBranch * b_phnrhs;   //!
+  TBranch * b_phnrh;   //!
   TBranch * b_phseedpos;   //!
-  TBranch * b_phrhXs;   //!
-  TBranch * b_phrhYs;   //!
-  TBranch * b_phrhZs;   //!
-  TBranch * b_phrhEs;   //!
-  TBranch * b_phrhdelRs;   //!
-  TBranch * b_phrhtimes;   //!
-  TBranch * b_phrhIDs;   //!
-  TBranch * b_phrhOOTs;   //!
+  TBranch * b_phrhX;   //!
+  TBranch * b_phrhY;   //!
+  TBranch * b_phrhZ;   //!
+  TBranch * b_phrhE;   //!
+  TBranch * b_phrhdelR;   //!
+  TBranch * b_phrhtime;   //!
+  TBranch * b_phrhID;   //!
+  TBranch * b_phrhOOT;   //!
 };
 #endif

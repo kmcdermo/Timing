@@ -141,7 +141,6 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   TTree* tree;
 
   // event info
-  std::unordered_map<int,std::unordered_map<int,int > > runevmap;
   int event, run, lumi;  
 
   // Generator level info

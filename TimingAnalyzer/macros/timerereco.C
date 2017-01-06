@@ -19,10 +19,10 @@ void timerereco()
   SetTDRStyle(tdrStyle);
   gROOT->ForceStyle();
 
-  TFile * wReReco = TFile::Open("output/MC/signal/withReReco/cuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * wReReco = TFile::Open("output/ctau6000_wTiming-test/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F  * ph1seedtime_wReReco = (TH1F*)wReReco->Get("ph1seedtime"); 
 
-  TFile * noReReco = TFile::Open("output/MC/signal/noReReco/cuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * noReReco = TFile::Open("output/ctau6000-test/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
   TH1F  * ph1seedtime_noReReco = (TH1F*)noReReco->Get("ph1seedtime"); 
 
   ph1seedtime_wReReco ->Scale(1.0/ph1seedtime_wReReco ->Integral());
