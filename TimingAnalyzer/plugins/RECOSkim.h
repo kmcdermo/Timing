@@ -25,6 +25,7 @@
 #include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/EgammaCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
@@ -89,6 +90,10 @@ class RECOSkim : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
   const edm::InputTag verticesTag;
   edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken;
 
+  // rhos
+  const edm::InputTag rhosTag;
+  edm::EDGetTokenT<double> rhoToken_;
+
   // mets
   const edm::InputTag metsTag;
   edm::EDGetTokenT<std::vector<reco::MET> > metsToken;
@@ -102,8 +107,8 @@ class RECOSkim : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
   edm::EDGetTokenT<std::vector<reco::Photon> > photonsToken;
 
   // ECAL RecHits
-  edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEBTAG;
-  edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEETAG;
+  edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEBToken;
+  edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEEToken;
 
   // output event level ntuple
   TTree* tree;
@@ -124,8 +129,8 @@ class RECOSkim : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
 
   // photon info
   int nphotons;
-  std::vector<float> phE, phpt, phphi, pheta; // phsmaj, phsmin;
-  std::vector<float> phhOe, phsieie, phr9;
+  std::vector<float> phE, phpt, phphi, pheta; 
+  std::vector<float> phHoE, phsieie, phr9, phsmaj, phsmin;
 
   // supercluster info 
   std::vector<float> phscE;

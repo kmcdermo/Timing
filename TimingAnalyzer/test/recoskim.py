@@ -126,6 +126,8 @@ process.TFileService = cms.Service("TFileService",
 process.tree = cms.EDAnalyzer("RECOSkim",
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
+   ## rho
+   rhos = cms.InputTag("fixedGridRhoAll"),
    ## MET
    mets = cms.InputTag("slimmedMETs"),
    ## jets			    	

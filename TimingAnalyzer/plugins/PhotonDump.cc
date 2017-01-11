@@ -430,7 +430,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
     nphotons = photonsH->size();
     if (nphotons > 0) PhotonDump::InitializeRecoPhotonBranches();
-
+    std::cout << event << std::endl;
     int iph = 0;
     for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector
     {
@@ -456,9 +456,15 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       pheta[iph] = phiter->eta();
 
       // cluster shape variables
-      const float see = phiter->see();
-      const float spp = phiter->spp();
-      const float sep = phiter->sep();
+      std::cout << "photon: " << iph << std::endl;
+      std::cout << " " << phiter->showerShapeVariables().e3x3 << " " << phiter->full5x5_showerShapeVariables().e3x3 << std::endl; 
+      std::cout << " " << phiter->showerShapeVariables().e5x5 << " " << phiter->full5x5_showerShapeVariables().e5x5 << std::endl; 
+
+
+      // cluster shape variables
+      const float see = phiter->full5x5_showerShapeVariables().sigmaIetaIeta;
+      const float spp = phiter->full5x5_showerShapeVariables().sigmaIphiIphi;
+      const float sep = phiter->full5x5_showerShapeVariables().sigmaIetaIphi;
       const float disc = std::sqrt((spp-see)*(spp-see)+4.f*sep*sep);
       phsmaj[iph] = (spp+see+disc)/2.f;
       phsmin[iph] = (spp+see-disc)/2.f;

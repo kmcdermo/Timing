@@ -4,6 +4,9 @@ RECOSkim::RECOSkim(const edm::ParameterSet& iConfig):
   // vertexes
   verticesTag(iConfig.getParameter<edm::InputTag>("vertices")),
 
+  // rhos
+  rhosTag(iConfig.getParameter<edm::InputTag>("rhos")),
+
   // mets
   metsTag(iConfig.getParameter<edm::InputTag>("mets")),  
 
@@ -14,14 +17,17 @@ RECOSkim::RECOSkim(const edm::ParameterSet& iConfig):
   photonsTag(iConfig.getParameter<edm::InputTag>("photons")),  
 
   //recHits
-  recHitCollectionEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEB" ))),
-  recHitCollectionEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEE" )))
+  recHitCollectionEBToken(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("recHitCollectionEB"))),
+  recHitCollectionEEToken(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("recHitCollectionEE")))
 {
   usesResource();
   usesResource("TFileService");
 
-  //vertex
+  // vertices
   verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
+
+  // rhos
+  rhosToken = consumes<double> (rhosTag);
 
   // mets
   metsToken = consumes<std::vector<reco::MET> > (metsTag);
@@ -37,10 +43,14 @@ RECOSkim::~RECOSkim() {}
 
 void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 {
-  // VERTEX
+  // VERTICES
   edm::Handle<std::vector<reco::Vertex> > verticesH;
   iEvent.getByToken(verticesToken, verticesH);
   
+  // RHOS
+  edm::Handle<double> rhosH;
+  iEvent.getByToken(rhosToken, rhosH);
+
   // MET
   edm::Handle<std::vector<reco::MET> > metsH;
   iEvent.getByToken(metsToken, metsH);
@@ -83,6 +93,14 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     vtxZ = primevtx.position().z();
   }
   
+  ///////////////////
+  //               //
+  // FixedGrid Rho //
+  //               //
+  ///////////////////
+
+  const float rho = rhosH->product();
+
   //////////////////
   //              //
   // Type1 PF Met //
@@ -130,7 +148,7 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (photonsH.isValid()) // standard handle check
   {
     // ECALELF tools
-    EcalClusterLazyTools * clustertools = new EcalClusterLazyTools (iEvent, iSetup, recHitCollectionEBTAG, recHitCollectionEETAG);
+    EcalClusterLazyTools * clustertools = new EcalClusterLazyTools (iEvent, iSetup, recHitCollectionEBToken, recHitCollectionEEToken);
 
     nphotons = photonsH->size();
     if (nphotons > 0) RECOSkim::InitializeRecoPhotonBranches();
@@ -138,26 +156,32 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     int iph = 0;
     for (std::vector<reco::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector
     {
+      // super cluster from photon
+      const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
+
+      // Shower Shape Objects
+      const ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
+
       // standard photon branches
       phE  [iph] = phiter->energy();
       phpt [iph] = phiter->pt();
       phphi[iph] = phiter->phi();
       pheta[iph] = phiter->eta();
 
-      phhOe  [iph] = phiter->hadronicOverEm();
-      phsieie[iph] = phiter->sigmaIetaIeta();
-      phr9   [iph] = phiter->r9();
+      // ID-like variables
+      phHoE  [iph] = phiter->hadronicOverEm(); // phiter->hadTowOverEm();
+      phsieie[iph] = phshape.sigmaIetaIeta;
+      phr9   [iph] = phshape.e3x3/phsc->rawEnergy();
+
       
       // cluster shape variables
-      //      const float see = phiter->see();
-      // const float spp = phiter->spp();
-      // const float sep = phiter->sep();
-      // const float disc = std::sqrt((spp-see)*(spp-see)+4.f*sep*sep);
-      // phsmaj[iph] = (spp+see+disc)/2.f;
-      // phsmin[iph] = (spp+see-disc)/2.f;
+      const float see = phshape.sigmaIetaIeta;
+      const float spp = phshape.sigmaIphiIphi;
+      const float sep = phshape.sigmaIetaIphi;
+      const float disc = std::sqrt((spp-see)*(spp-see)+4.f*sep*sep);
+      phsmaj[iph] = (spp+see+disc)/2.f;
+      phsmin[iph] = (spp+see-disc)/2.f;
 	
-      // super cluster from photon
-      const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
       if (phsc.isNonnull()) // check to make sure supercluster is good
       {
 	phscE[iph] = phsc->energy();
@@ -259,17 +283,15 @@ void RECOSkim::ClearRecoPhotonBranches()
   phphi.clear(); 
   pheta.clear(); 
   
-  phhOe.clear();
+  phHoE.clear();
   phsieie.clear();
   phr9.clear();
-
-  // phsmaj.clear();
-  // phsmin.clear();
+  phsmaj.clear();
+  phsmin.clear();
   
   phscE.clear(); 
 
   phnrh.clear();
-
   phseedphi.clear();
   phseedeta.clear(); 
   phseedE.clear(); 
@@ -284,12 +306,11 @@ void RECOSkim::InitializeRecoPhotonBranches()
   phphi.resize(nphotons);
   pheta.resize(nphotons);
 
-  phhOe.resize(nphotons);
+  phHoE.resize(nphotons);
   phsieie.resize(nphotons);
   phr9.resize(nphotons);
-
-  // phsmaj.resize(nphotons);
-  // phsmin.resize(nphotons);
+  phsmaj.resize(nphotons);
+  phsmin.resize(nphotons);
   
   phscE.resize(nphotons);
 
@@ -310,10 +331,10 @@ void RECOSkim::InitializeRecoPhotonBranches()
     phhOe  [iph] = -9999.f;
     phsieie[iph] = -9999.f;
     phr9   [iph] = -9999.f;
-
-    // phsmaj[iph] = -9999.f;
-    // phsmin[iph] = -9999.f;
-    phscE [iph] = -9999.f; 
+    phsmaj [iph] = -9999.f;
+    phsmin [iph] = -9999.f;
+    
+    phscE[iph] = -9999.f; 
 
     phnrh     [iph] = -9999;
     phseedphi [iph] = -9999.f;
@@ -359,13 +380,11 @@ void RECOSkim::beginJob()
   tree->Branch("phphi"                , &phphi);
   tree->Branch("pheta"                , &pheta);
 
-  tree->Branch("phhOe"                , &phhOe);
+  tree->Branch("phHoE"                , &phHoE);
   tree->Branch("phsieie"              , &phsieie);
   tree->Branch("phr9"                 , &phr9);
-  
-
-  // tree->Branch("phsmaj"               , &phsmaj);
-  // tree->Branch("phsmin"               , &phsmin);
+  tree->Branch("phsmaj"               , &phsmaj);
+  tree->Branch("phsmin"               , &phsmin);
 
   tree->Branch("phscE"                , &phscE);
 
