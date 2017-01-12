@@ -7,11 +7,17 @@ import FWCore.ParameterSet.Types as CfgTypes
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
-## processName
+## do a demo run over only 1k events
+options.register (
+	'demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to run over only 1k events as a demo');
+
+## use ReRECO files flag
 options.register (
 	'isReRECO',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to use ReRECO files');
 
+## processName
 options.register (
 	'processName','TREE',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'process name to be considered');
@@ -30,9 +36,10 @@ options.register (
 options.parseArguments()
 
 if options.isReRECO: 
-	options.outputFileName = 'recosim-rereco.root'
+	options.outputFileName = 'recoskim-rereco.root'
 
 print "##### Settings ######"
+print "Running with demoMode            = ",options.demoMode
 print "Running with isReRECO            = ",options.isReRECO
 print "Running with processName         = ",options.processName	
 print "Running with outputFileName      = ",options.outputFileName	
@@ -78,9 +85,8 @@ if options.isReRECO:
 			'/store/user/kmcdermo/DoubleEG/ReRECO_UncleanedECALRecHits-v1/170105_210848/0000/rereco_test_20.root',
 			'/store/user/kmcdermo/DoubleEG/ReRECO_UncleanedECALRecHits-v1/170105_210848/0000/rereco_test_21.root',
 			'/store/user/kmcdermo/DoubleEG/ReRECO_UncleanedECALRecHits-v1/170105_210848/0000/rereco_test_22.root'
-			)
-				    )
-else:
+			))
+else: 
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/273/409/00000/12FC6874-5C1B-E611-8C9C-02163E01436C.root',
 			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/273/409/00000/26A716AE-561B-E611-B478-02163E014614.root',
@@ -104,14 +110,17 @@ else:
 			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/275/371/00000/B6F051E8-2039-E611-A5BD-02163E01367A.root',
 			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/275/371/00000/B88F3F6A-2439-E611-8BBD-02163E0137B2.root',
 			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/275/371/00000/C6E4A786-0F39-E611-AE8F-02163E0140DE.root'
-			)
-				    )
-	
+			))
+
 # Set the json locally because the ReRECO gets f'ed
 process.source.lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange())  
 JSONfile = '/afs/cern.ch/user/k/kmcdermo/private/dispho/CMSSW_8_0_21/src/Timing/TimingAnalyzer/test/common.json'
 myLumis = LumiList.LumiList(filename = JSONfile).getCMSSWString().split(',')  
 process.source.lumisToProcess.extend(myLumis)                              
+
+## How many events to process
+if   options.demoMode : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
+else                  : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(options.maxEvents))
 
 # Set the global tag depending on the sample type
 from Configuration.AlCa.GlobalTag import GlobalTag
@@ -125,18 +134,18 @@ process.TFileService = cms.Service("TFileService",
 # Make the tree 
 process.tree = cms.EDAnalyzer("RECOSkim",
    ## vertices
-   vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
+   vertices = cms.InputTag("offlinePrimaryVertices"),
    ## rho
    rhos = cms.InputTag("fixedGridRhoAll"),
    ## MET
-   mets = cms.InputTag("slimmedMETs"),
+   mets = cms.InputTag("pfMet"),
    ## jets			    	
-   jets = cms.InputTag("slimmedJets"),
+   jets = cms.InputTag("ak4PFJetsCHS"),
    ## photons		
-   photons        = cms.InputTag("calibratedPhotons"),
+   photons        = cms.InputTag("gedPhotons"),
    ## ecal recHits			      
-   recHitCollectionEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
-   recHitCollectionEE = cms.InputTag("reducedEgamma", "reducedEERecHits")
+   recHitCollectionEB = cms.InputTag("ecalRecHit","EcalRecHitsEB"),
+   recHitCollectionEE = cms.InputTag("ecalRecHit","EcalRecHitsEE")
 )
 
 # Set up the path

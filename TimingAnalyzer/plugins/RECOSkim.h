@@ -26,9 +26,8 @@
 #include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
-#include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
-#include "DataFormats/PatCandidates/interface/Jet.h"
+#include "DataFormats/JetReco/interface/PFJet.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 // DetIds and Ecal stuff
@@ -66,6 +65,10 @@ class RECOSkim : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
   explicit RECOSkim(const edm::ParameterSet&);
   ~RECOSkim();
 
+  float GetChargedHadronEA(const float eta);
+  float GetNeutralHadronEA(const float eta);
+  float GetGammaEA        (const float eta);
+
   void InitializePVBranches();
 
   void InitializeMETBranches();
@@ -92,15 +95,15 @@ class RECOSkim : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
 
   // rhos
   const edm::InputTag rhosTag;
-  edm::EDGetTokenT<double> rhoToken_;
+  edm::EDGetTokenT<double> rhosToken;
 
   // mets
   const edm::InputTag metsTag;
-  edm::EDGetTokenT<std::vector<reco::MET> > metsToken;
+  edm::EDGetTokenT<std::vector<reco::PFMET> > metsToken;
 
   // jets
   const edm::InputTag jetsTag;
-  edm::EDGetTokenT<std::vector<reco::Jet> > jetsToken;
+  edm::EDGetTokenT<std::vector<reco::PFJet> > jetsToken;
 
   // photons
   const edm::InputTag photonsTag;
@@ -129,14 +132,17 @@ class RECOSkim : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
 
   // photon info
   int nphotons;
-  std::vector<float> phE, phpt, phphi, pheta; 
-  std::vector<float> phHoE, phsieie, phr9, phsmaj, phsmin;
 
   // supercluster info 
   std::vector<float> phscE;
 
+  // photon info + ID-like variables
+  std::vector<float> phE, phpt, phphi, pheta; 
+  std::vector<float> phHoE, phsieie, phr9, phChgIso, phNeuIso, phIso;
+  std::vector<float> phsmaj, phsmin;
+
   // all rec hit info
-  std::vector<int> phnrh;
+  std::vector<int> phnrh, phnrhEcut, phnrhOOT;
   std::vector<float> phseedphi, phseedeta, phseedE, phseedtime;
   std::vector<int> phseedOOT;
 };

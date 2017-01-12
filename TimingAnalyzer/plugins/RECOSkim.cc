@@ -30,10 +30,10 @@ RECOSkim::RECOSkim(const edm::ParameterSet& iConfig):
   rhosToken = consumes<double> (rhosTag);
 
   // mets
-  metsToken = consumes<std::vector<reco::MET> > (metsTag);
+  metsToken = consumes<std::vector<reco::PFMET> > (metsTag);
 
   // jets
-  jetsToken = consumes<std::vector<reco::Jet> > (jetsTag);
+  jetsToken = consumes<std::vector<reco::PFJet> > (jetsTag);
 
   // photons 
   photonsToken = consumes<std::vector<reco::Photon> > (photonsTag);
@@ -52,11 +52,11 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByToken(rhosToken, rhosH);
 
   // MET
-  edm::Handle<std::vector<reco::MET> > metsH;
+  edm::Handle<std::vector<reco::PFMET> > metsH;
   iEvent.getByToken(metsToken, metsH);
 
   // JETS
-  edm::Handle<std::vector<reco::Jet> > jetsH;
+  edm::Handle<std::vector<reco::PFJet> > jetsH;
   iEvent.getByToken(jetsToken, jetsH);
 
   // PHOTONS
@@ -99,7 +99,7 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //               //
   ///////////////////
 
-  const float rho = rhosH->product();
+  const float rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
 
   //////////////////
   //              //
@@ -109,7 +109,7 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   RECOSkim::InitializeMETBranches();
   if (metsH.isValid())
   {
-    const reco::MET & t1pfMET = (*metsH)[0];
+    const reco::PFMET & t1pfMET = (*metsH)[0];
 
     // Type1 PF MET (corrected)
     t1pfMETpt    = t1pfMET.pt();
@@ -117,19 +117,21 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     t1pfMETsumEt = t1pfMET.sumEt();
   }
 
-  /////////////////////////
-  //                     //
-  // Jets (AK4 standard) //
-  //                     //
-  /////////////////////////
+  ////////////////////
+  //                //
+  // Jets (AK4 CHS) //
+  //                //
+  ////////////////////
   RECOSkim::ClearJetBranches();
   if (jetsH.isValid()) // check to make sure reco jets exist
   {
-    njets = jetsH->size();
+    njets = jetsH->size() >= 5 ? 5 : jetsH->size(); // save a max of 5 jets
     if (njets > 0) RECOSkim::InitializeJetBranches();
     int ijet = 0;
-    for (std::vector<reco::Jet>::const_iterator jetiter = jetsH->begin(); jetiter != jetsH->end(); ++jetiter)
+    for (std::vector<reco::PFJet>::const_iterator jetiter = jetsH->begin(); jetiter != jetsH->end(); ++jetiter)
     {
+      if (ijet == njets) break;
+
       jetE  [ijet] = jetiter->energy();
       jetpt [ijet] = jetiter->pt();
       jetphi[ijet] = jetiter->phi();
@@ -158,9 +160,11 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     {
       // super cluster from photon
       const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
+      const float phsceta = std::abs(phsc->eta());
+      phscE[iph] = phsc->energy();
 
       // Shower Shape Objects
-      const ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
+      const reco::Photon::ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
 
       // standard photon branches
       phE  [iph] = phiter->energy();
@@ -169,66 +173,82 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       pheta[iph] = phiter->eta();
 
       // ID-like variables
-      phHoE  [iph] = phiter->hadronicOverEm(); // phiter->hadTowOverEm();
-      phsieie[iph] = phshape.sigmaIetaIeta;
-      phr9   [iph] = phshape.e3x3/phsc->rawEnergy();
+      phHoE   [iph] = phiter->hadronicOverEm(); // phiter->hadTowOverEm();
+      phsieie [iph] = phshape.sigmaIetaIeta;
+      phr9    [iph] = phshape.e3x3/phsc->rawEnergy();
+      phChgIso[iph] = phiter->chargedHadronIso() - (rho * RECOSkim::GetChargedHadronEA(phsceta));
+      phNeuIso[iph] = phiter->neutralHadronIso() - (rho * RECOSkim::GetNeutralHadronEA(phsceta));
+      phIso   [iph] = phiter->photonIso()        - (rho * RECOSkim::GetGammaEA        (phsceta));
 
-      
       // cluster shape variables
-      const float see = phshape.sigmaIetaIeta;
-      const float spp = phshape.sigmaIphiIphi;
-      const float sep = phshape.sigmaIetaIphi;
+      const float see  = phshape.sigmaIetaIeta;
+      const float spp  = phshape.sigmaIphiIphi;
+      const float sep  = phshape.sigmaIetaIphi;
       const float disc = std::sqrt((spp-see)*(spp-see)+4.f*sep*sep);
       phsmaj[iph] = (spp+see+disc)/2.f;
       phsmin[iph] = (spp+see-disc)/2.f;
 	
-      if (phsc.isNonnull()) // check to make sure supercluster is good
-      {
-	phscE[iph] = phsc->energy();
-
-	// use seed to get geometry and recHits
-	const DetId seedDetId = phsc->seed()->seed(); //seed detid
-	const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
-	const EcalRecHitCollection * recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
-
-	// map of rec hit ids
-	uiiumap phrhIDmap;
-
-	// all rechits in superclusters
-	const DetIdPairVec hitsAndFractions = phsc->hitsAndFractions();
-
-	for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) // loop over all rec hits in SC
-	{
-	  const DetId recHitId = hafitr->first; // get detid of crystal
-	  EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
-	  if (recHit != recHits->end()) // standard check
-          { 
-	    phrhIDmap[recHitId.rawId()]++;
-	  } // end standard check recHit
-	} // end loop over hits and fractions
+      /////////////////
+      //             //
+      // RecHit Info //
+      //             //
+      /////////////////
+      // use seed to get geometry and recHits
+      const DetId seedDetId = phsc->seed()->seed(); //seed detid
+      const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
+      const EcalRecHitCollection * recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
       
-	phnrh[iph] = phrhIDmap.size();
-	for (uiiumap::const_iterator rhiter = phrhIDmap.begin(); rhiter != phrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
-        {
-	  const DetId recHitId(rhiter->first);
-	  // seed rechit info 
-	  if (seedDetId.rawId() == recHitId) 
+      // map of rec hit ids
+      uiiumap phrhIDmap;
+      
+      // all rechits in superclusters
+      const DetIdPairVec hitsAndFractions = phsc->hitsAndFractions();
+      
+      for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) // loop over all rec hits in SC
+      {
+	const DetId recHitId = hafitr->first; // get detid of crystal
+	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
+	if (recHit != recHits->end()) // standard check
+        { 
+	  phrhIDmap[recHitId.rawId()]++;
+	} // end standard check recHit
+      } // end loop over hits and fractions
+      
+      phnrh    [iph] = phrhIDmap.size();
+      phnrhEcut[iph] = 0;
+      phnrhOOT [iph] = 0;
+      for (uiiumap::const_iterator rhiter = phrhIDmap.begin(); rhiter != phrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
+      {
+	const DetId recHitId(rhiter->first);
+	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
+
+	// count rec hits in photon passing E cut and OOT flag
+	if (recHit->energy() < 1.f)
+	{
+	  phnrhEcut[iph]++;
+	  if (recHit->checkFlag(EcalRecHit::kOutOfTime))
 	  { 
-	    EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
-	    const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
-	    phseedphi [iph] = recHitPos.phi();
-	    phseedeta [iph] = recHitPos.eta();
-	    phseedE   [iph] = recHit->energy();
-	    phseedtime[iph] = recHit->time();
-	    phseedOOT [iph] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
-	  } // end check over seed rechit
-	} // end loop over rec hit id map
-      } // end check over super cluster
+	    phnrhOOT[iph]++;
+	  }
+	}
+
+	// seed rechit info 
+	if (seedDetId.rawId() == recHitId) 
+	{ 
+	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
+	  phseedphi [iph] = recHitPos.phi();
+	  phseedeta [iph] = recHitPos.eta();
+	  phseedE   [iph] = recHit->energy();
+	  phseedtime[iph] = recHit->time();
+	  phseedOOT [iph] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
+	} // end check over seed rechit
+      } // end loop over rec hit id map
+
       iph++; // increment photon counter
     } // end loop over photon vector
     delete clustertools; // delete cluster tools once done with loop over photons
   } // end check over photon handle valid
-
+    
   ///////////////
   //           //
   // Fill Tree //
@@ -236,6 +256,42 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   ///////////////
   tree->Fill();      
 }    
+
+float RECOSkim::GetChargedHadronEA(const float eta)
+{
+  if      (eta <  1.0)                  return 0.0360;
+  else if (eta >= 1.0   && eta < 1.479) return 0.0377;
+  else if (eta >= 1.479 && eta < 2.0  ) return 0.0306;
+  else if (eta >= 2.0   && eta < 2.2  ) return 0.0283;
+  else if (eta >= 2.2   && eta < 2.3  ) return 0.0254;
+  else if (eta >= 2.3   && eta < 2.4  ) return 0.0217;
+  else if (eta >= 2.4)                  return 0.0167;
+  else                                  return 0.;
+}
+
+float RECOSkim::GetNeutralHadronEA(const float eta) 
+{
+  if      (eta <  1.0)                  return 0.0597;
+  else if (eta >= 1.0   && eta < 1.479) return 0.0807;
+  else if (eta >= 1.479 && eta < 2.0  ) return 0.0629;
+  else if (eta >= 2.0   && eta < 2.2  ) return 0.0197;
+  else if (eta >= 2.2   && eta < 2.3  ) return 0.0184;
+  else if (eta >= 2.3   && eta < 2.4  ) return 0.0284;
+  else if (eta >= 2.4)                  return 0.0591;
+  else                                  return 0.;
+}
+
+float RECOSkim::GetGammaEA(const float eta) 
+{
+  if      (eta <  1.0)                  return 0.1210;
+  else if (eta >= 1.0   && eta < 1.479) return 0.1107;
+  else if (eta >= 1.479 && eta < 2.0  ) return 0.0699;
+  else if (eta >= 2.0   && eta < 2.2  ) return 0.1056;
+  else if (eta >= 2.2   && eta < 2.3  ) return 0.1457;
+  else if (eta >= 2.3   && eta < 2.4  ) return 0.1719;
+  else if (eta >= 2.4)                  return 0.1998;
+  else                                  return 0.;
+}
 
 void RECOSkim::InitializePVBranches()
 {
@@ -278,6 +334,8 @@ void RECOSkim::ClearRecoPhotonBranches()
 {
   nphotons = -9999;
 
+  phscE.clear(); 
+
   phE.clear();
   phpt.clear();
   phphi.clear(); 
@@ -286,12 +344,16 @@ void RECOSkim::ClearRecoPhotonBranches()
   phHoE.clear();
   phsieie.clear();
   phr9.clear();
+  phChgIso.clear();
+  phNeuIso.clear();
+  phIso.clear();
+
   phsmaj.clear();
   phsmin.clear();
   
-  phscE.clear(); 
-
   phnrh.clear();
+  phnrhEcut.clear();
+  phnrhOOT.clear();
   phseedphi.clear();
   phseedeta.clear(); 
   phseedE.clear(); 
@@ -301,6 +363,8 @@ void RECOSkim::ClearRecoPhotonBranches()
 
 void RECOSkim::InitializeRecoPhotonBranches()
 {
+  phscE.resize(nphotons);
+
   phE.resize(nphotons);
   phpt.resize(nphotons);
   phphi.resize(nphotons);
@@ -309,12 +373,16 @@ void RECOSkim::InitializeRecoPhotonBranches()
   phHoE.resize(nphotons);
   phsieie.resize(nphotons);
   phr9.resize(nphotons);
+  phChgIso.resize(nphotons);
+  phNeuIso.resize(nphotons);
+  phIso.resize(nphotons);
+
   phsmaj.resize(nphotons);
   phsmin.resize(nphotons);
   
-  phscE.resize(nphotons);
-
   phnrh.resize(nphotons);
+  phnrhEcut.resize(nphotons);
+  phnrhOOT.resize(nphotons);
   phseedphi.resize(nphotons);
   phseedeta.resize(nphotons);
   phseedE.resize(nphotons);
@@ -323,20 +391,26 @@ void RECOSkim::InitializeRecoPhotonBranches()
 
   for (int iph = 0; iph < nphotons; iph++)
   {
+    phscE[iph] = -9999.f; 
+
     phE   [iph] = -9999.f; 
     phpt  [iph] = -9999.f; 
     phphi [iph] = -9999.f; 
     pheta [iph] = -9999.f; 
     
-    phhOe  [iph] = -9999.f;
-    phsieie[iph] = -9999.f;
-    phr9   [iph] = -9999.f;
-    phsmaj [iph] = -9999.f;
-    phsmin [iph] = -9999.f;
-    
-    phscE[iph] = -9999.f; 
+    phHoE   [iph] = -9999.f;
+    phsieie [iph] = -9999.f;
+    phr9    [iph] = -9999.f;
+    phChgIso[iph] = -9999.f;
+    phNeuIso[iph] = -9999.f;
+    phIso   [iph] = -9999.f;
 
+    phsmaj[iph] = -9999.f;
+    phsmin[iph] = -9999.f;
+    
     phnrh     [iph] = -9999;
+    phnrhEcut [iph] = -9999;
+    phnrhOOT  [iph] = -9999;
     phseedphi [iph] = -9999.f;
     phseedeta [iph] = -9999.f;
     phseedE   [iph] = -9999.f;
@@ -375,6 +449,9 @@ void RECOSkim::beginJob()
    
   // Photon Info
   tree->Branch("nphotons"             , &nphotons             , "nphotons/I");
+
+  tree->Branch("phscE"                , &phscE);
+
   tree->Branch("phE"                  , &phE);
   tree->Branch("phpt"                 , &phpt);
   tree->Branch("phphi"                , &phphi);
@@ -383,12 +460,16 @@ void RECOSkim::beginJob()
   tree->Branch("phHoE"                , &phHoE);
   tree->Branch("phsieie"              , &phsieie);
   tree->Branch("phr9"                 , &phr9);
+  tree->Branch("phChgIso"             , &phChgIso);
+  tree->Branch("phNeuIso"             , &phNeuIso);
+  tree->Branch("phIso"                , &phIso);
+
   tree->Branch("phsmaj"               , &phsmaj);
   tree->Branch("phsmin"               , &phsmin);
 
-  tree->Branch("phscE"                , &phscE);
-
   tree->Branch("phnrh"                , &phnrh);
+  tree->Branch("phnrhEcut"            , &phnrhEcut);
+  tree->Branch("phnrhOOT"             , &phnrhOOT);
   tree->Branch("phseedphi"            , &phseedphi);
   tree->Branch("phseedeta"            , &phseedeta);
   tree->Branch("phseedE"              , &phseedE);

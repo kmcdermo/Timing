@@ -456,12 +456,6 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       pheta[iph] = phiter->eta();
 
       // cluster shape variables
-      std::cout << "photon: " << iph << std::endl;
-      std::cout << " " << phiter->showerShapeVariables().e3x3 << " " << phiter->full5x5_showerShapeVariables().e3x3 << std::endl; 
-      std::cout << " " << phiter->showerShapeVariables().e5x5 << " " << phiter->full5x5_showerShapeVariables().e5x5 << std::endl; 
-
-
-      // cluster shape variables
       const float see = phiter->full5x5_showerShapeVariables().sigmaIetaIeta;
       const float spp = phiter->full5x5_showerShapeVariables().sigmaIphiIphi;
       const float sep = phiter->full5x5_showerShapeVariables().sigmaIetaIphi;
