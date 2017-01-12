@@ -26,7 +26,7 @@ options.register (
 
 ## outputFile Name
 options.register (
-	'outputFileName','photondump.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'outputFileName','ctau6000_wTiming.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
 ## GT to be used    
