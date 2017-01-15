@@ -262,7 +262,7 @@ void rhEmap::DoPlotNatural(const Int_t ientry, const Int_t iph, const Bool_t app
   TString label = (ientry == 6494 || ientry == 17664)?"prompt":"delay";
   Int_t ngood;
   if (label.Contains("prompt",TString::kExact)) { ngood = (ientry==6494) ?1:2; }
-  if (label.Contains("delday",TString::kExact)) { ngood = (ientry==31665)?1:2; }
+  if (label.Contains("delay",TString::kExact )) { ngood = (ientry==31665)?1:2; }
 
   TH2F * h_map = new TH2F(Form("rhE_natural_%s%i%s",label.Data(),ngood,(applyrhEcut?"_rhEcut":"")),
 			  Form("RecHit Energy in SC (GeV) %s",(applyrhEcut?Form(" [rhEcut: %3.1f",rhEcut):"")),
