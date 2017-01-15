@@ -185,8 +185,8 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       const float spp  = phshape.sigmaIphiIphi;
       const float sep  = phshape.sigmaIetaIphi;
       const float disc = std::sqrt((spp-see)*(spp-see)+4.f*sep*sep);
-      phsmaj[iph] = (spp+see+disc)/2.f;
-      phsmin[iph] = (spp+see-disc)/2.f;
+      phsmaj[iph] = std::sqrt(2.f/(spp+see-disc));
+      phsmin[iph] = std::sqrt(2.f/(spp+see+disc));
 	
       /////////////////
       //             //
@@ -232,7 +232,7 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  }
 	}
 
-	// seed rechit info 
+	// seed rechit info + swiss crossssss
 	if (seedDetId.rawId() == recHitId) 
 	{ 
 	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
@@ -241,6 +241,9 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  phseedE   [iph] = recHit->energy();
 	  phseedtime[iph] = recHit->time();
 	  phseedOOT [iph] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
+
+	  // swiss cross
+	  phsuisseX [iph] = ECALTools(recHitId,recHits,0.f);
 	} // end check over seed rechit
       } // end loop over rec hit id map
 
@@ -348,6 +351,7 @@ void RECOSkim::ClearRecoPhotonBranches()
   phNeuIso.clear();
   phIso.clear();
 
+  phsuisseX.clear();
   phsmaj.clear();
   phsmin.clear();
   
@@ -377,6 +381,7 @@ void RECOSkim::InitializeRecoPhotonBranches()
   phNeuIso.resize(nphotons);
   phIso.resize(nphotons);
 
+  phsuisseX.resize(nphotons);
   phsmaj.resize(nphotons);
   phsmin.resize(nphotons);
   
@@ -405,8 +410,9 @@ void RECOSkim::InitializeRecoPhotonBranches()
     phNeuIso[iph] = -9999.f;
     phIso   [iph] = -9999.f;
 
-    phsmaj[iph] = -9999.f;
-    phsmin[iph] = -9999.f;
+    phsuisseX[iph] = -9999.f;
+    phsmaj[iph]    = -9999.f;
+    phsmin[iph]    = -9999.f;
     
     phnrh     [iph] = -9999;
     phnrhEcut [iph] = -9999;

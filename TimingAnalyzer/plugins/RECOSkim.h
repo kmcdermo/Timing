@@ -42,6 +42,7 @@
 #include "DataFormats/CaloRecHit/interface/CaloCluster.h"
 
 // EGamma Tools
+#include "RecoEcal/EgammaCoreTools/interface/EcalTools.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 
@@ -139,7 +140,7 @@ class RECOSkim : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
   // photon info + ID-like variables
   std::vector<float> phE, phpt, phphi, pheta; 
   std::vector<float> phHoE, phsieie, phr9, phChgIso, phNeuIso, phIso;
-  std::vector<float> phsmaj, phsmin;
+  std::vector<float> phsuisseX, phsmaj, phsmin;
 
   // all rec hit info
   std::vector<int> phnrh, phnrhEcut, phnrhOOT;

@@ -519,8 +519,12 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  phrhID  [iph][irh] = int(rhID);
 	  phrhOOT [iph][irh] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
 	  
-	  // save the position in the vector of the seed 
-	  if (seedDetId.rawId() == recHitId) { phseedpos[iph] = irh; }
+	  // extra info from the SEED
+	  if (seedDetId.rawId() == recHitId) 
+	  { 
+	    phseedpos[iph] = irh; // save the position in the vector of the seed 
+	    phsuisseX[iph] = ECALTools::swissCross(recHitId,recHits,0.f); // http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalTools.h
+	  }
 
 	  irh++; // increment rechit counter
 	} // end loop over rec hit id map
@@ -745,6 +749,7 @@ void PhotonDump::ClearRecoPhotonBranches()
   phrhOOT.clear();
 
   phseedpos.clear();
+  phsuisseX.clear();
 }
 
 void PhotonDump::InitializeRecoPhotonBranches()
@@ -776,6 +781,7 @@ void PhotonDump::InitializeRecoPhotonBranches()
   phrhOOT.resize(nphotons);
 
   phseedpos.resize(nphotons);
+  phsuisseX.resize(nphotons);
 
   for (int iph = 0; iph < nphotons; iph++)
   {
@@ -797,6 +803,7 @@ void PhotonDump::InitializeRecoPhotonBranches()
     phnrh [iph] = -9999;
 
     phseedpos[iph] = -9999;
+    phsuisseX[iph] = -9999;
   }
 }
 

@@ -46,6 +46,7 @@
 #include "DataFormats/CaloRecHit/interface/CaloCluster.h"
 
 // EGamma Tools
+#include "RecoEcal/EgammaCoreTools/interface/EcalTools.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 
@@ -187,7 +188,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   // photon info
   int nphotons;
   std::vector<int> phmatch, phVID;
-  std::vector<float> phE, phpt, phphi, pheta, phsmaj, phsmin;
+  std::vector<float> phE, phpt, phphi, pheta, phsmaj, phsmin, phsuisseX;
 
   // supercluster info 
   std::vector<float> phscX, phscY, phscZ, phscE;
