@@ -243,7 +243,7 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  phseedOOT [iph] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
 
 	  // swiss cross
-	  phsuisseX [iph] = ECALTools(recHitId,recHits,0.f);
+	  phsuisseX [iph] = EcalTools::swissCross(recHitId,(*recHits),0.f);
 	} // end check over seed rechit
       } // end loop over rec hit id map
 

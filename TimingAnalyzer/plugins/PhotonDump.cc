@@ -523,7 +523,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  if (seedDetId.rawId() == recHitId) 
 	  { 
 	    phseedpos[iph] = irh; // save the position in the vector of the seed 
-	    phsuisseX[iph] = ECALTools::swissCross(recHitId,recHits,0.f); // http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalTools.h
+	    phsuisseX[iph] = EcalTools::swissCross(recHitId,(*recHits),0.f); // http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalTools.h
 	  }
 
 	  irh++; // increment rechit counter
