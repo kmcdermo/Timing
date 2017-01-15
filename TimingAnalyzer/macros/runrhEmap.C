@@ -22,7 +22,13 @@ void runrhEmap()
   gROOT->LoadMacro("rhEmap.cc++g");
 
   rhEmap obj;
-  obj.CheckForGoodPhotons();
+  //obj.CheckForGoodPhotons();
   //obj.DumpGoodPhotonRHIDs();
-  //obj.DoPlotNatural();
+
+  // For plots, these are the "good entries", with iph == 0
+  // 6494 --> prompt1, 17664 --> prompt2, 31665 --> delayed1, 35300 --> delayed2
+  // bool is applyrhEcut ... last float is value
+  //obj.DoPlotNatural(0,0,true,1.f);
+  
+  obj.DoAllPlotNatural(1.f);
 }

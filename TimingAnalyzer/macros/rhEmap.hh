@@ -42,7 +42,8 @@ public:
   void CheckForGoodPhotons();
   void DumpGoodPhotonRHIDs();
   void DoPlotIndices();
-  void DoPlotNatural();
+  void DoPlotNatural(const Int_t ientry = -1, const Int_t iph = -1, const Bool_t applyrhEcut = false, const Float_t rhEcut = 0.f);
+  void DoAllPlotNatural(const Float_t rhEcut = 0.f);
 
 private:
   TFile * fInFile;

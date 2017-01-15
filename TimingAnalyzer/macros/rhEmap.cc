@@ -129,11 +129,10 @@ void rhEmap::CheckForGoodPhotons()
 
 void rhEmap::DumpGoodPhotonRHIDs()
 {
-  fInTree->GetEntry(17664); 
+  fInTree->GetEntry(35300); 
   Int_t iph = 0;
   for (Int_t irh = 0; irh < (*phnrh)[iph]; irh++)
   {
-    if ((*phrhE)[iph][irh] < 1.f) continue;
     Int_t rhID = (*phrhID)[iph][irh];
     std::cout << rhID << std::endl;
   }
@@ -221,13 +220,26 @@ void rhEmap::DoPlotIndices()
   //  delete h_map;
 }
 
-void rhEmap::DoPlotNatural()
+void rhEmap::DoPlotNatural(const Int_t ientry, const Int_t iph, const Bool_t applyrhEcut, const Float_t rhEcut)
 {
+  if (ientry < 0 || ientry >= fInTree->GetEntries()) 
+  {
+    std::cerr << "BAD ientry: " << ientry << std::endl;
+    return;
+  }
+  else 
+  {
+    fInTree->GetEntry(ientry); 
+  }
+
+  if (iph < 0 || iph >= nphotons)
+  {
+    std::cerr << "BAD iph: " << iph << std::endl;
+    return;
+  }
+
   Float_t midphi = 0.f, mideta = 0.f;
   Float_t maxE   = -1.f;
-
-  fInTree->GetEntry(31665); // 6494 --> prompt1, 17664 --> prompt2, 31665 --> delayed1
-  Int_t iph = 0;
 
   for (Int_t irh = 0; irh < (*phnrh)[iph]; irh++)
   {
@@ -243,13 +255,20 @@ void rhEmap::DoPlotNatural()
   std::cout << "maxE: "   << maxE   << " seedE: "  << (*phrhE)[iph][(*phseedpos)[iph]] << std::endl;
   std::cout << "midphi: " << midphi << " mideta: " << mideta << std::endl;
   
-  TH2F * h_map = new TH2F("rhE_natural_delay1","RecHit Energy in SC (GeV)",20,mideta-0.1,mideta+0.1,20,midphi-0.1,midphi+0.1);
+  TString label = (ientry == 6494 || ientry == 17664)?"prompt":"delay";
+  Int_t ngood;
+  if (label.Contains("prompt",TString::kExact)) { ngood = (ientry==6494) ?1:2; }
+  if (label.Contains("delday",TString::kExact)) { ngood = (ientry==31665)?1:2; }
+
+  TH2F * h_map = new TH2F(Form("rhE_natural_%s%i%s",label.Data(),ngood,(applyrhEcut?"_rhEcut":"")),
+			  Form("RecHit Energy in SC (GeV) %s",(applyrhEcut?Form(" [rhEcut: %3.1f",rhEcut):"")),
+			  20,mideta-0.1,mideta+0.1,20,midphi-0.1,midphi+0.1);
   h_map->SetXTitle("#eta"); h_map->SetYTitle("#phi"); h_map->SetMinimum(0.0);
 
   for (Int_t irh = 0; irh < (*phnrh)[iph]; irh++)
   {
     const Float_t tmpE   = (*phrhE)[iph][irh];    
-    //    if (tmpE < 1.f) continue;
+    if (applyrhEcut && (tmpE < rhEcut)) continue;
     const Float_t tmpphi = phi((*phrhX)[iph][irh],(*phrhY)[iph][irh]);
     const Float_t tmpeta = eta((*phrhX)[iph][irh],(*phrhY)[iph][irh],(*phrhZ)[iph][irh]);
   
@@ -262,11 +281,20 @@ void rhEmap::DoPlotNatural()
   canv->SetGridy(1);
   h_map->Draw("box"); //h_map->Draw("colz");
   canv->SaveAs(Form("%s.png",h_map->GetName()));
-  //  delete canv;
-  //  delete h_map;
+  delete canv;
+  delete h_map;
 }
 
-
+void rhEmap::DoAllPlotNatural(const Float_t rhEcut)
+{
+  // 6494 --> prompt1, 17664 --> prompt2, 31665 --> delayed1, 35300 --> delayed2
+  std::vector<Int_t> entries = {6494,17664,31665,35300};
+  for (auto&& ientry : entries)
+  {
+    rhEmap::DoPlotNatural(ientry,0,false,rhEcut);
+    rhEmap::DoPlotNatural(ientry,0,true ,rhEcut);
+  }
+}
 
 
 
