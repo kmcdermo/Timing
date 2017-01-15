@@ -15,14 +15,14 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runIetaIphiE()
+void runrhEmapE()
 {
   setupcpp11(); 
 
-  gROOT->LoadMacro("ietaiphiE.cc++g");
+  gROOT->LoadMacro("rhEmap.cc++g");
 
-  ietaiphiE ieipE;
-  //  ieipE.CheckForGoodPhotons();
-  //ieipE.DumpGoodPhotonRHIDs();
-  ieipE.DoPlotNatural();
+  rhEmap obj;
+  //obj.CheckForGoodPhotons();
+  //obj.DumpGoodPhotonRHIDs();
+  obj.DoPlotNatural();
 }

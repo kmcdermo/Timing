@@ -1,5 +1,5 @@
-#ifndef _ietaiphiE_
-#define _ietaiphiE_
+#ifndef _rhEmap_
+#define _rhEmap_
 
 #include "TFile.h"
 #include "TTree.h"
@@ -31,11 +31,11 @@ typedef std::map<Int_t,epid> epidMap;
 typedef std::map<TString,Int_t> TStrIntMap;
 typedef TStrIntMap::iterator    TStrIntMapIter;
 
-class ietaiphiE
+class rhEmap
 {
 public:
-  ietaiphiE();
-  ~ietaiphiE();
+  rhEmap();
+  ~rhEmap();
 
   void InitTree();
   void MakeIetaIphiMap();

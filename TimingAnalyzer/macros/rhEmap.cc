@@ -1,4 +1,4 @@
-#include "ietaiphiE.hh"
+#include "rhEmap.hh"
 
 #include "TStyle.h"
 #include "TColor.h"
@@ -10,13 +10,13 @@
 #include <fstream>
 #include <iostream>
 
-ietaiphiE::ietaiphiE()
+rhEmap::rhEmap()
 {
   fInFile = TFile::Open("input/MC/signal/withReReco/ctau6000.root");
   fInTree = (TTree*)fInFile->Get("tree/tree");
 
-  ietaiphiE::InitTree();
-  ietaiphiE::MakeIetaIphiMap();
+  rhEmap::InitTree();
+  rhEmap::MakeIetaIphiMap();
 
   // make the vid maps!
   fPhVIDMap["loose"]  = 1;
@@ -40,13 +40,13 @@ ietaiphiE::ietaiphiE()
   gROOT->ForceStyle();
 }
 
-ietaiphiE::~ietaiphiE()
+rhEmap::~rhEmap()
 {
   delete fInTree;
   delete fInFile;
 }
 
-void ietaiphiE::InitTree()
+void rhEmap::InitTree()
 {
   nphotons  = 0;
   phnrh     = 0;
@@ -81,7 +81,7 @@ void ietaiphiE::InitTree()
   fInTree->SetBranchAddress("phrhtime" , &phrhtime , &b_phrhtime);
 }
 
-void ietaiphiE::MakeIetaIphiMap()
+void rhEmap::MakeIetaIphiMap()
 {
   //  initialize map of detector ids of iphi/ieta
   std::ifstream inputids;
@@ -98,7 +98,7 @@ void ietaiphiE::MakeIetaIphiMap()
   inputids.close();
 }
 
-void ietaiphiE::CheckForGoodPhotons()
+void rhEmap::CheckForGoodPhotons()
 {
   for (UInt_t ientry = 0; ientry < fInTree->GetEntries(); ientry++)
   {  
@@ -123,7 +123,7 @@ void ietaiphiE::CheckForGoodPhotons()
   }
 }
 
-void ietaiphiE::DumpGoodPhotonRHIDs()
+void rhEmap::DumpGoodPhotonRHIDs()
 {
   fInTree->GetEntry(17664); //31665 --> delayed
   Int_t iph = 0;
@@ -135,7 +135,7 @@ void ietaiphiE::DumpGoodPhotonRHIDs()
   }
 }
 
-void ietaiphiE::DoPlotIndices()
+void rhEmap::DoPlotIndices()
 {
   Int_t minphi = 1000, maxphi = -1000;
   Int_t mineta = 1000, maxeta = -1000;
@@ -217,7 +217,7 @@ void ietaiphiE::DoPlotIndices()
   //  delete h_map;
 }
 
-void ietaiphiE::DoPlotNatural()
+void rhEmap::DoPlotNatural()
 {
   Float_t midphi = 0.f, mideta = 0.f;
   Float_t maxE   = -1.f;
