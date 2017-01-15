@@ -136,7 +136,7 @@ process.tree = cms.EDAnalyzer("RECOSkim",
    ## vertices
    vertices = cms.InputTag("offlinePrimaryVertices"),
    ## rho
-   rhos = cms.InputTag("fixedGridRhoAll"),
+   rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## MET
    mets = cms.InputTag("pfMet"),
    ## jets			    	
