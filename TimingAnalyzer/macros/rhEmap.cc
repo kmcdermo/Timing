@@ -100,6 +100,8 @@ void rhEmap::MakeIetaIphiMap()
 
 void rhEmap::CheckForGoodPhotons()
 {
+  std::ofstream goodphos;
+  goodphos.open("prompt.txt",std::ios_base::trunc);
   for (UInt_t ientry = 0; ientry < fInTree->GetEntries(); ientry++)
   {  
     fInTree->GetEntry(ientry);
@@ -112,20 +114,22 @@ void rhEmap::CheckForGoodPhotons()
 
       const Float_t time = (*phrhtime)[iph][(*phseedpos)[iph]];
       const Float_t ph_E = (*phE)[iph];
-      const Float_t smaj = (*phsmaj)[iph];
-      const Float_t smin = (*phsmin)[iph];
+      const Float_t smaj = 1.f/std::sqrt((*phsmin)[iph]);
+      const Float_t smin = 1.f/std::sqrt((*phsmaj)[iph]);
       
-      if (std::abs(time) < 0.001 ) std::cout << "Entry: " << ientry << " iph: " << iph 
-					     << " time: " << time << " phE: " << ph_E 
-					     << " smaj: " << smaj << " smin: " << smin << std::endl;
-      
+      if (std::abs(time) < 0.001) 
+      { 
+	std::cout << "Entry: " << ientry << " iph: " << iph << " time: " << time << " phE: " << ph_E << " smaj: " << smaj << " smin: " << smin << std::endl;
+	goodphos << ientry << " " << iph << " " << time << " " << ph_E << " " << smaj << " " << smin << std::endl;
+      }
     }
   }
+  goodphos.close();
 }
 
 void rhEmap::DumpGoodPhotonRHIDs()
 {
-  fInTree->GetEntry(17664); //31665 --> delayed
+  fInTree->GetEntry(17664); 
   Int_t iph = 0;
   for (Int_t irh = 0; irh < (*phnrh)[iph]; irh++)
   {
@@ -239,7 +243,7 @@ void rhEmap::DoPlotNatural()
   std::cout << "maxE: "   << maxE   << " seedE: "  << (*phrhE)[iph][(*phseedpos)[iph]] << std::endl;
   std::cout << "midphi: " << midphi << " mideta: " << mideta << std::endl;
   
-  TH2F * h_map = new TH2F("rhE_natural_delay1","RecHit Energy in SC (GeV)",20,mideta-0.2,mideta+0.2,20,midphi-0.2,midphi+0.2);
+  TH2F * h_map = new TH2F("rhE_natural_delay1","RecHit Energy in SC (GeV)",20,mideta-0.1,mideta+0.1,20,midphi-0.1,midphi+0.1);
   h_map->SetXTitle("#eta"); h_map->SetYTitle("#phi"); h_map->SetMinimum(0.0);
 
   for (Int_t irh = 0; irh < (*phnrh)[iph]; irh++)

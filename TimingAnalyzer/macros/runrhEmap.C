@@ -15,14 +15,14 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runrhEmapE()
+void runrhEmap()
 {
   setupcpp11(); 
 
   gROOT->LoadMacro("rhEmap.cc++g");
 
   rhEmap obj;
-  //obj.CheckForGoodPhotons();
+  obj.CheckForGoodPhotons();
   //obj.DumpGoodPhotonRHIDs();
-  obj.DoPlotNatural();
+  //obj.DoPlotNatural();
 }
