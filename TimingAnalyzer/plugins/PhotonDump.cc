@@ -430,7 +430,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
     nphotons = photonsH->size();
     if (nphotons > 0) PhotonDump::InitializeRecoPhotonBranches();
-    std::cout << event << std::endl;
+
     int iph = 0;
     for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector
     {

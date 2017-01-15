@@ -114,7 +114,7 @@ else:
 
 # Set the json locally because the ReRECO gets f'ed
 process.source.lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange())  
-JSONfile = '/afs/cern.ch/user/k/kmcdermo/private/dispho/CMSSW_8_0_21/src/Timing/TimingAnalyzer/test/common.json'
+JSONfile = '/afs/cern.ch/user/k/kmcdermo/private/dispho/CMSSW_8_0_21/src/Timing/TimingAnalyzer/test/data_rereco.json'
 myLumis = LumiList.LumiList(filename = JSONfile).getCMSSWString().split(',')  
 process.source.lumisToProcess.extend(myLumis)                              
 
@@ -136,7 +136,7 @@ process.tree = cms.EDAnalyzer("RECOSkim",
    ## vertices
    vertices = cms.InputTag("offlinePrimaryVertices"),
    ## rho
-   rhos = cms.InputTag("fixedGridRhoAll"),
+   rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## MET
    mets = cms.InputTag("pfMet"),
    ## jets			    	
