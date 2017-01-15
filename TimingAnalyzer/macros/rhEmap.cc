@@ -101,7 +101,10 @@ void rhEmap::MakeIetaIphiMap()
 void rhEmap::CheckForGoodPhotons()
 {
   std::ofstream goodphos;
-  goodphos.open("prompt.txt",std::ios_base::trunc);
+  TString name = "delay";
+  goodphos.open(Form("%s.txt",name.Data()),std::ios_base::trunc);
+  const Float_t tcut = (name.Contains("delay",TString::kExact))?10.f:0.001;
+
   for (UInt_t ientry = 0; ientry < fInTree->GetEntries(); ientry++)
   {  
     fInTree->GetEntry(ientry);
@@ -112,15 +115,16 @@ void rhEmap::CheckForGoodPhotons()
       if (((std::abs((*pheta)[iph]) > 2.5) || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
       if ((*phseedpos)[iph] == -9999) continue;
 
-      const Float_t time = (*phrhtime)[iph][(*phseedpos)[iph]];
-      const Float_t ph_E = (*phE)[iph];
-      const Float_t smaj = 1.f/std::sqrt((*phsmin)[iph]);
-      const Float_t smin = 1.f/std::sqrt((*phsmaj)[iph]);
+      const Float_t time  = (*phrhtime)[iph][(*phseedpos)[iph]];
+      const Float_t ph_E  = (*phE)[iph];
+      const Float_t seedE = (*phrhE)[iph][(*phseedpos)[iph]];
+      const Float_t smaj  = 1.f/std::sqrt((*phsmin)[iph]);
+      const Float_t smin  = 1.f/std::sqrt((*phsmaj)[iph]);
       
-      if (std::abs(time) < 0.001) 
+      if (std::abs(time) > tcut) 
       { 
-	std::cout << "Entry: " << ientry << " iph: " << iph << " time: " << time << " phE: " << ph_E << " smaj: " << smaj << " smin: " << smin << std::endl;
-	goodphos << ientry << " " << iph << " " << time << " " << ph_E << " " << smaj << " " << smin << std::endl;
+	std::cout << "Entry: " << ientry << " iph: " << iph << " time: " << time << " phE: " << ph_E << " seedE:" << seedE << " smaj: " << smaj << " smin: " << smin << std::endl;
+	goodphos << ientry << " " << iph << " " << time << " " << ph_E << " " << seedE << " " << smaj << " " << smin << std::endl;
       }
     }
   }
