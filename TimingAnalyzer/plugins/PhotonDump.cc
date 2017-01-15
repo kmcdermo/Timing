@@ -460,8 +460,11 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       const float spp = phiter->full5x5_showerShapeVariables().sigmaIphiIphi;
       const float sep = phiter->full5x5_showerShapeVariables().sigmaIetaIphi;
       const float disc = std::sqrt((spp-see)*(spp-see)+4.f*sep*sep);
-      phsmaj[iph] = (spp+see+disc)/2.f;
-      phsmin[iph] = (spp+see-disc)/2.f;
+
+      // lamba_1/2 = (spp+see-/+disc)/2
+      
+      phsmaj[iph] = std::sqrt(2.f/(spp+see-disc));
+      phsmin[iph] = std::sqrt(2.f/(spp+see+disc));
 	
       // super cluster from photon
       const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
