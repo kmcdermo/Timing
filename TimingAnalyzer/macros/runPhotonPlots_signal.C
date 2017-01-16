@@ -22,7 +22,7 @@ void runPhotonPlots_signal(TString cuts, TString ctau, TString reco)
   gROOT->LoadMacro("PlotPhotons.cc++g");
 
   // config is:
-  // filename, isMC, applyevnocut, applyevcut, outdir, 
+  // filename, isMC, applyevcut, outdir, 
   // applyjetptcut, jetptcut, applyphptcut, phptcut,
   // applyphvidcut, phvid, applyrhecut, 
   // applyecalacceptcut
@@ -30,7 +30,7 @@ void runPhotonPlots_signal(TString cuts, TString ctau, TString reco)
   // apply analysis cuts to individual plots?
   bool apply = (cuts.EqualTo("cuts",TString::kExact)?true:false);
   
-  PlotPhotons photonPlots(Form("input/MC/signal/%s/ctau%s.root",reco.Data(),ctau.Data()),true,true,apply,Form("output/MC/signal/%s/%s/ctau%s",reco.Data(),cuts.Data(),ctau.Data()),true,35.f,apply,100.f,true,"medium",true,1.f,true);
+  PlotPhotons photonPlots(Form("input/MC/signal/%s/ctau%s.root",reco.Data(),ctau.Data()),true,apply,Form("output/MC/signal/%s/%s/ctau%s",reco.Data(),cuts.Data(),ctau.Data()),true,35.f,apply,100.f,true,"medium",true,1.f,true);
 
   // which plots to do
   // first bool = generic plots
