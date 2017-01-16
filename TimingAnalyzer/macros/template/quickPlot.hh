@@ -25,11 +25,13 @@ private:
 
   // input variables
   Int_t                                nphotons;
+  std::vector<Float_t>               * phsuisseX;
   std::vector<Int_t>                 * phnrh;
   std::vector<Int_t>                 * phseedpos;
   std::vector<std::vector<Float_t> > * phrhE;
   
   TBranch * b_nphotons;  
+  TBranch * b_phsuisseX;
   TBranch * b_phnrh;     
   TBranch * b_phseedpos; 
   TBranch * b_phrhE;

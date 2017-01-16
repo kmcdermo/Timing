@@ -21,6 +21,11 @@ inline Float_t rad2 (const Float_t x, const Float_t y, const Float_t z){return x
 inline Float_t gamma(const Float_t p, const Float_t m){return std::sqrt(1.f+std::pow(p/m,2));}
 inline Float_t beta (const Float_t p, const Float_t m){return std::sqrt(1.f/(1.f+std::pow(m/p,2)));}
 inline Float_t bg   (const Float_t p, const Float_t m){return std::abs(p/m);}
+inline void    semiR(const Float_t insmaj, const Float_t insmin, Float_t & smaj, Float_t & smin)
+{
+  smaj = 1.f/std::sqrt(insmin);
+  smin = 1.f/std::sqrt(insmaj);
+}
 
 typedef std::map<TString,TEfficiency*> TEffMap;
 typedef TEffMap::iterator              TEffMapIter;
@@ -193,16 +198,25 @@ private :
   Int_t   nphotons;
   std::vector<Int_t>   * phmatch;
   std::vector<Int_t>   * phVID;
-  std::vector<Float_t> * phE;
-  std::vector<Float_t> * phpt;
-  std::vector<Float_t> * phphi;
-  std::vector<Float_t> * pheta;
-  std::vector<Float_t> * phsmaj;
-  std::vector<Float_t> * phsmin;
   std::vector<Float_t> * phscX;
   std::vector<Float_t> * phscY;
   std::vector<Float_t> * phscZ;
   std::vector<Float_t> * phscE;
+  std::vector<Float_t> * phE;
+  std::vector<Float_t> * phpt;
+  std::vector<Float_t> * phphi;
+  std::vector<Float_t> * pheta;
+  std::vector<Float_t> * phHoE;
+  std::vector<Float_t> * phr9;
+  std::vector<Float_t> * phChgIso;
+  std::vector<Float_t> * phNeuIso;
+  std::vector<Float_t> * phIso;
+  std::vector<Float_t> * phsuisseX;
+  std::vector<Float_t> * phsieie;
+  std::vector<Float_t> * phsipip;
+  std::vector<Float_t> * phsieip;  
+  std::vector<Float_t> * phsmaj;
+  std::vector<Float_t> * phsmin;
   std::vector<Int_t>   * phnrh;
   std::vector<Int_t>   * phseedpos;
   std::vector<std::vector<Float_t> > * phrhX;
@@ -294,16 +308,25 @@ private :
   TBranch * b_nphotons;   //!
   TBranch * b_phmatch;   //!
   TBranch * b_phVID;   //!
-  TBranch * b_phE;   //!
-  TBranch * b_phpt;   //!
-  TBranch * b_phphi;   //!
-  TBranch * b_pheta;   //!
-  TBranch * b_phsmaj;   //!
-  TBranch * b_phsmin;   //!
   TBranch * b_phscX;   //!
   TBranch * b_phscY;   //!
   TBranch * b_phscZ;   //!
   TBranch * b_phscE;   //!
+  TBranch * b_phE;   //!
+  TBranch * b_phpt;   //!
+  TBranch * b_phphi;   //!
+  TBranch * b_pheta;   //!
+  TBranch * b_phHoE;   //!
+  TBranch * b_phr9;   //!
+  TBranch * b_phChgIso;   //!
+  TBranch * b_phNeuIso;   //!
+  TBranch * b_phIso;   //!
+  TBranch * b_phsuisseX;   //!
+  TBranch * b_phsieie;   //!
+  TBranch * b_phsipip;   //!
+  TBranch * b_phsieip;   //!
+  TBranch * b_phsmaj;   //!
+  TBranch * b_phsmin;   //!
   TBranch * b_phnrh;   //!
   TBranch * b_phseedpos;   //!
   TBranch * b_phrhX;   //!
