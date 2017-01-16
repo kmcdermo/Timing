@@ -4,6 +4,9 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   // vertexes
   verticesTag(iConfig.getParameter<edm::InputTag>("vertices")),
 
+  // rhos
+  rhosTag(iConfig.getParameter<edm::InputTag>("rhos")),
+
   // mets
   metsTag(iConfig.getParameter<edm::InputTag>("mets")),  
 
@@ -31,6 +34,9 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
 
   //vertex
   verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
+
+  // rhos
+  rhosToken = consumes<double> (rhosTag);
 
   // mets
   metsToken = consumes<std::vector<pat::MET> > (metsTag);
@@ -65,6 +71,10 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // MET
   edm::Handle<std::vector<pat::MET> > metsH;
   iEvent.getByToken(metsToken, metsH);
+
+  // RHOS
+  edm::Handle<double> rhosH;
+  iEvent.getByToken(rhosToken, rhosH);
 
   // JETS
   edm::Handle<std::vector<pat::Jet> > jetsH;
@@ -347,7 +357,15 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     vtxY = primevtx.position().y();
     vtxZ = primevtx.position().z();
   }
-  
+
+  ///////////////////
+  //               //
+  // FixedGrid Rho //
+  //               //
+  ///////////////////
+
+  const float rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
+
   //////////////////
   //              //
   // Type1 PF Met //
@@ -449,86 +467,93 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       if (photonMediumIdMap[photonPtr]) {phVID[iph] = 2;}
       if (photonTightIdMap [photonPtr]) {phVID[iph] = 3;}
 
+      // super cluster from photon
+      const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
+      const float phsceta = std::abs(phsc->eta());
+      phscX[iph] = phsc->position().x();
+      phscY[iph] = phsc->position().y();
+      phscZ[iph] = phsc->position().z();
+      phscE[iph] = phsc->energy();
+
+      // Shower Shape Objects
+      const reco::Photon::ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
+
       // standard photon branches
       phE  [iph] = phiter->energy();
       phpt [iph] = phiter->pt();
       phphi[iph] = phiter->phi();
       pheta[iph] = phiter->eta();
 
+      // ID-like variables
+      phHoE   [iph] = phiter->hadronicOverEm(); // phiter->hadTowOverEm();
+      phr9    [iph] = phshape.e3x3/phsc->rawEnergy(); // http://cmslxr.fnal.gov/source/DataFormats/EgammaCandidates/interface/Photon.h#0239
+      phChgIso[iph] = phiter->chargedHadronIso() - (rho * PhotonDump::GetChargedHadronEA(phsceta));
+      phNeuIso[iph] = phiter->neutralHadronIso() - (rho * PhotonDump::GetNeutralHadronEA(phsceta));
+      phIso   [iph] = phiter->photonIso()        - (rho * PhotonDump::GetGammaEA        (phsceta));
+
       // cluster shape variables
-      const float see = phiter->full5x5_showerShapeVariables().sigmaIetaIeta;
-      const float spp = phiter->full5x5_showerShapeVariables().sigmaIphiIphi;
-      const float sep = phiter->full5x5_showerShapeVariables().sigmaIetaIphi;
-      const float disc = std::sqrt((spp-see)*(spp-see)+4.f*sep*sep);
+      phsieie[iph] = phshape.sigmaIetaIeta;
+      phsipip[iph] = phshape.sigmaIphiIphi;
+      phsieip[iph] = phshape.sigmaIetaIphi;
+      const float disc = std::sqrt(std::pow(phsipip[iph]-phsieie[iph],2)+4.f*std::pow(phsieip[iph],2));
 
-      // lamba_1/2 = (spp+see-/+disc)/2
-      
-      phsmaj[iph] = std::sqrt(2.f/(spp+see-disc));
-      phsmin[iph] = std::sqrt(2.f/(spp+see+disc));
+      // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
+      phsmaj[iph] = (phsipip[iph]+phsieie[iph]+disc)/2.f;
+      phsmin[iph] = (phsipip[iph]+phsieie[iph]-disc)/2.f;
 	
-      // super cluster from photon
-      const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
-      if (phsc.isNonnull()) // check to make sure supercluster is good
-      {
-	phscX[iph] = phsc->position().x();
-	phscY[iph] = phsc->position().y();
-	phscZ[iph] = phsc->position().z();
-	phscE[iph] = phsc->energy();
+      // use seed to get geometry and recHits
+      const DetId seedDetId = phsc->seed()->seed(); //seed detid
+      const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
+      const EcalRecHitCollection * recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
 
-	// use seed to get geometry and recHits
-	const DetId seedDetId = phsc->seed()->seed(); //seed detid
-	const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
-	const EcalRecHitCollection * recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
-
-	// map of rec hit ids
-	uiiumap phrhIDmap;
-
-	// all rechits in superclusters
-	const DetIdPairVec hitsAndFractions = phsc->hitsAndFractions();
-	if (dumpRHs) PhotonDump::DumpRecHitInfo(iph,hitsAndFractions,recHits);
-
-	for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) // loop over all rec hits in SC
-	{
-	  const DetId recHitId = hafitr->first; // get detid of crystal
-	  EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
-	  if (recHit != recHits->end()) // standard check
-          { 
-	    phrhIDmap[recHitId.rawId()]++;
-	  } // end standard check recHit
-	} // end loop over hits and fractions
+      // map of rec hit ids
+      uiiumap phrhIDmap;
       
-	phnrh[iph] = phrhIDmap.size();
-	if (phnrh[iph] > 0) PhotonDump::InitializeRecoRecHitBranches(iph);
-	int irh = 0;
-	for (uiiumap::const_iterator rhiter = phrhIDmap.begin(); rhiter != phrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
-        {
-	  const uint32_t rhID = rhiter->first;
+      // all rechits in superclusters
+      const DetIdPairVec hitsAndFractions = phsc->hitsAndFractions();
+      if (dumpRHs) PhotonDump::DumpRecHitInfo(iph,hitsAndFractions,recHits);
 
-	  const DetId recHitId(rhID);
-	  EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
-	  
-	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
-
-	  // save position, energy, and time of each rechit to a vector
-	  phrhX   [iph][irh] = recHitPos.x();
-	  phrhY   [iph][irh] = recHitPos.y();
-	  phrhZ   [iph][irh] = recHitPos.z();
-	  phrhE   [iph][irh] = recHit->energy();
-	  phrhdelR[iph][irh] = deltaR(float(recHitPos.phi()),recHitPos.eta(),phphi[iph],pheta[iph]);
-	  phrhtime[iph][irh] = recHit->time();
-	  phrhID  [iph][irh] = int(rhID);
-	  phrhOOT [iph][irh] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
-	  
-	  // extra info from the SEED
-	  if (seedDetId.rawId() == recHitId) 
-	  { 
-	    phseedpos[iph] = irh; // save the position in the vector of the seed 
-	    phsuisseX[iph] = EcalTools::swissCross(recHitId,(*recHits),0.f); // http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalTools.h
-	  }
-
-	  irh++; // increment rechit counter
-	} // end loop over rec hit id map
-      } // end check over super cluster
+      for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) // loop over all rec hits in SC
+      {
+	const DetId recHitId = hafitr->first; // get detid of crystal
+	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
+	if (recHit != recHits->end()) // standard check
+        { 
+	  phrhIDmap[recHitId.rawId()]++;
+	} // end standard check recHit
+      } // end loop over hits and fractions
+      
+      phnrh[iph] = phrhIDmap.size();
+      if (phnrh[iph] > 0) PhotonDump::InitializeRecoRecHitBranches(iph);
+      int irh = 0;
+      for (uiiumap::const_iterator rhiter = phrhIDmap.begin(); rhiter != phrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
+      {
+	const uint32_t rhID = rhiter->first;
+	
+	const DetId recHitId(rhID);
+	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
+	
+	const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
+	
+	// save position, energy, and time of each rechit to a vector
+	phrhX   [iph][irh] = recHitPos.x();
+	phrhY   [iph][irh] = recHitPos.y();
+	phrhZ   [iph][irh] = recHitPos.z();
+	phrhE   [iph][irh] = recHit->energy();
+	phrhdelR[iph][irh] = deltaR(float(recHitPos.phi()),recHitPos.eta(),phphi[iph],pheta[iph]);
+	phrhtime[iph][irh] = recHit->time();
+	phrhID  [iph][irh] = int(rhID);
+	phrhOOT [iph][irh] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
+	
+	// extra info from the SEED
+	if (seedDetId.rawId() == recHitId) 
+	{ 
+	  phseedpos[iph] = irh; // save the position in the vector of the seed 
+	  phsuisseX[iph] = EcalTools::swissCross(recHitId,(*recHits),1.f); // http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalTools.h
+	}
+	
+	irh++; // increment rechit counter
+      } // end loop over rec hit id map
       iph++; // increment photon counter
     } // end loop over photon vector
     delete clustertools; // delete cluster tools once done with loop over photons
@@ -541,6 +566,42 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   ///////////////
   tree->Fill();      
 }    
+
+float PhotonDump::GetChargedHadronEA(const float eta)
+{
+  if      (eta <  1.0)                  return 0.0360;
+  else if (eta >= 1.0   && eta < 1.479) return 0.0377;
+  else if (eta >= 1.479 && eta < 2.0  ) return 0.0306;
+  else if (eta >= 2.0   && eta < 2.2  ) return 0.0283;
+  else if (eta >= 2.2   && eta < 2.3  ) return 0.0254;
+  else if (eta >= 2.3   && eta < 2.4  ) return 0.0217;
+  else if (eta >= 2.4)                  return 0.0167;
+  else                                  return 0.;
+}
+
+float PhotonDump::GetNeutralHadronEA(const float eta) 
+{
+  if      (eta <  1.0)                  return 0.0597;
+  else if (eta >= 1.0   && eta < 1.479) return 0.0807;
+  else if (eta >= 1.479 && eta < 2.0  ) return 0.0629;
+  else if (eta >= 2.0   && eta < 2.2  ) return 0.0197;
+  else if (eta >= 2.2   && eta < 2.3  ) return 0.0184;
+  else if (eta >= 2.3   && eta < 2.4  ) return 0.0284;
+  else if (eta >= 2.4)                  return 0.0591;
+  else                                  return 0.;
+}
+
+float PhotonDump::GetGammaEA(const float eta) 
+{
+  if      (eta <  1.0)                  return 0.1210;
+  else if (eta >= 1.0   && eta < 1.479) return 0.1107;
+  else if (eta >= 1.479 && eta < 2.0  ) return 0.0699;
+  else if (eta >= 2.0   && eta < 2.2  ) return 0.1056;
+  else if (eta >= 2.2   && eta < 2.3  ) return 0.1457;
+  else if (eta >= 2.3   && eta < 2.4  ) return 0.1719;
+  else if (eta >= 2.4)                  return 0.1998;
+  else                                  return 0.;
+}
 
 void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH)
 {
@@ -725,19 +786,31 @@ void PhotonDump::ClearRecoPhotonBranches()
   if (isMC) phmatch.clear();
   phVID.clear();
 
-  phE.clear();
-  phpt.clear();
-  phphi.clear(); 
-  pheta.clear(); 
-  phsmaj.clear();
-  phsmin.clear();
-  
   phscX.clear(); 
   phscY.clear(); 
   phscZ.clear(); 
   phscE.clear(); 
 
+  phE.clear();
+  phpt.clear();
+  phphi.clear(); 
+  pheta.clear(); 
+
+  phHoE.clear();
+  phr9.clear();
+  phChgIso.clear();
+  phNeuIso.clear();
+  phIso.clear();
+  phsuisseX.clear();
+
+  phsieie.clear();
+  phsipip.clear();
+  phsieip.clear();
+  phsmaj.clear();
+  phsmin.clear();
+  
   phnrh.clear();
+  phseedpos.clear();
 
   phrhX.clear(); 
   phrhY.clear(); 
@@ -747,29 +820,38 @@ void PhotonDump::ClearRecoPhotonBranches()
   phrhtime.clear();
   phrhID.clear();
   phrhOOT.clear();
-
-  phseedpos.clear();
-  phsuisseX.clear();
 }
 
 void PhotonDump::InitializeRecoPhotonBranches()
 {
   if (isMC) phmatch.resize(nphotons);
   phVID.resize(nphotons);
-
-  phE.resize(nphotons);
-  phpt.resize(nphotons);
-  phphi.resize(nphotons);
-  pheta.resize(nphotons);
-  phsmaj.resize(nphotons);
-  phsmin.resize(nphotons);
   
   phscX.resize(nphotons);
   phscY.resize(nphotons);
   phscZ.resize(nphotons);
   phscE.resize(nphotons);
 
+  phE.resize(nphotons);
+  phpt.resize(nphotons);
+  phphi.resize(nphotons);
+  pheta.resize(nphotons);
+
+  phHoE.resize(nphotons);
+  phr9.resize(nphotons);
+  phChgIso.resize(nphotons);
+  phNeuIso.resize(nphotons);
+  phIso.resize(nphotons);
+  phsuisseX.resize(nphotons);
+
+  phsieie.resize(nphotons);
+  phsipip.resize(nphotons);
+  phsieip.resize(nphotons);
+  phsmaj.resize(nphotons);
+  phsmin.resize(nphotons);
+
   phnrh.resize(nphotons);
+  phseedpos.resize(nphotons);
 
   phrhX.resize(nphotons);
   phrhY.resize(nphotons);
@@ -780,30 +862,36 @@ void PhotonDump::InitializeRecoPhotonBranches()
   phrhID.resize(nphotons);
   phrhOOT.resize(nphotons);
 
-  phseedpos.resize(nphotons);
-  phsuisseX.resize(nphotons);
-
   for (int iph = 0; iph < nphotons; iph++)
   {
     if (isMC) phmatch[iph] = 0;
     phVID[iph] = 0;
-
-    phE   [iph] = -9999.f; 
-    phpt  [iph] = -9999.f; 
-    phphi [iph] = -9999.f; 
-    pheta [iph] = -9999.f; 
-    phsmaj[iph] = -9999.f;
-    phsmin[iph] = -9999.f;
 
     phscX [iph] = -9999.f; 
     phscY [iph] = -9999.f; 
     phscZ [iph] = -9999.f; 
     phscE [iph] = -9999.f; 
 
-    phnrh [iph] = -9999;
+    phE   [iph] = -9999.f; 
+    phpt  [iph] = -9999.f; 
+    phphi [iph] = -9999.f; 
+    pheta [iph] = -9999.f; 
 
+    phHoE    [iph] = -9999.f;
+    phr9     [iph] = -9999.f;
+    phChgIso [iph] = -9999.f;
+    phNeuIso [iph] = -9999.f;
+    phIso    [iph] = -9999.f;
+    phsuisseX[iph] = -9999.f;
+
+    phsieie[iph] = -9999.f;
+    phsipip[iph] = -9999.f;
+    phsieip[iph] = -9999.f;
+    phsmaj [iph] = -9999.f;
+    phsmin [iph] = -9999.f;
+
+    phnrh    [iph] = -9999;
     phseedpos[iph] = -9999;
-    phsuisseX[iph] = -9999;
   }
 }
 
@@ -941,19 +1029,31 @@ void PhotonDump::beginJob()
   tree->Branch("nphotons"             , &nphotons             , "nphotons/I");
   if (isMC) tree->Branch("phmatch"    , &phmatch);
   tree->Branch("phVID"                , &phVID);
-  tree->Branch("phE"                  , &phE);
-  tree->Branch("phpt"                 , &phpt);
-  tree->Branch("phphi"                , &phphi);
-  tree->Branch("pheta"                , &pheta);
-  tree->Branch("phsmaj"               , &phsmaj);
-  tree->Branch("phsmin"               , &phsmin);
 
   tree->Branch("phscX"                , &phscX);
   tree->Branch("phscY"                , &phscY);
   tree->Branch("phscZ"                , &phscZ);
   tree->Branch("phscE"                , &phscE);
-  tree->Branch("phnrh"                , &phnrh);
 
+  tree->Branch("phE"                  , &phE);
+  tree->Branch("phpt"                 , &phpt);
+  tree->Branch("phphi"                , &phphi);
+  tree->Branch("pheta"                , &pheta);
+
+  tree->Branch("phHoE"                , &phHoE);
+  tree->Branch("phr9"                 , &phr9);
+  tree->Branch("phChgIso"             , &phChgIso);
+  tree->Branch("phNeuIso"             , &phNeuIso);
+  tree->Branch("phIso"                , &phIso);
+  tree->Branch("phsuisseX"            , &phsuisseX);
+
+  tree->Branch("phsieie"              , &phsieie);
+  tree->Branch("phsipip"              , &phsipip);
+  tree->Branch("phsieip"              , &phsieip);
+  tree->Branch("phsmaj"               , &phsmaj);
+  tree->Branch("phsmin"               , &phsmin);
+
+  tree->Branch("phnrh"                , &phnrh);
   tree->Branch("phseedpos"            , &phseedpos);
 
   tree->Branch("phrhX"                , &phrhX);

@@ -70,6 +70,10 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   explicit PhotonDump(const edm::ParameterSet&);
   ~PhotonDump();
 
+  float GetChargedHadronEA(const float);
+  float GetNeutralHadronEA(const float);
+  float GetGammaEA        (const float);
+
   void InitializeGenEvtBranches();
 
   void InitializeGenPUBranches();
@@ -105,6 +109,10 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   // Vertex
   const edm::InputTag verticesTag;
   edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken;
+
+  // rhos
+  const edm::InputTag rhosTag;
+  edm::EDGetTokenT<double> rhosToken;
 
   // mets
   const edm::InputTag metsTag;
@@ -188,7 +196,9 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   // photon info
   int nphotons;
   std::vector<int> phmatch, phVID;
-  std::vector<float> phE, phpt, phphi, pheta, phsmaj, phsmin, phsuisseX;
+  std::vector<float> phE, phpt, phphi, pheta;
+  std::vector<float> phHoE, phr9, phChgIso, phNeuIso, phIso, phsuisseX;
+  std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin;
 
   // supercluster info 
   std::vector<float> phscX, phscY, phscZ, phscE;

@@ -26,7 +26,7 @@ options.register (
 
 ## outputFile Name
 options.register (
-	'outputFileName','photondump_HT600-Inf.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'outputFileName','GJets_HT600ToInf.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
 ## GT to be used    
@@ -117,6 +117,8 @@ process.tree = cms.EDAnalyzer("PhotonDump",
    genjets    = cms.InputTag("slimmedGenJets"),
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
+   ## rho
+   rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## MET
    mets = cms.InputTag("slimmedMETs"),
    ## jets			    	

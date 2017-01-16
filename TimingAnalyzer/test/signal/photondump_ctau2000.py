@@ -86,7 +86,7 @@ else:
 			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau200_Pythia8_13TeV_cff_py_MINIAOD_2611_step3/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3/161126_180544/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_6.root',
 			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau200_Pythia8_13TeV_cff_py_MINIAOD_2611_step3/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3/161126_180544/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_7.root',
 			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau200_Pythia8_13TeV_cff_py_MINIAOD_2611_step3/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3/161126_180544/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_8.root',
-			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau200_Pythia8_13TeV_cff_py_MINIAOD_2611_step3/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3/161126_180544/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_9.root'
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau200_Pythia8_13TeV_cff_py_MINIAOD_2611_step3/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3/161126_180544/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_9.root',
 			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau200_Pythia8_13TeV_cff_py_MINIAOD_2611_step3/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3/161126_180544/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_10.root',
 			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau200_Pythia8_13TeV_cff_py_MINIAOD_2611_step3/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3/161126_180544/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_11.root',
 			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau200_Pythia8_13TeV_cff_py_MINIAOD_2611_step3/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3/161126_180544/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_12.root',
@@ -160,6 +160,8 @@ process.tree = cms.EDAnalyzer("PhotonDump",
    genjets    = cms.InputTag("slimmedGenJets"),
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
+   ## rho
+   rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## MET
    mets = cms.InputTag("slimmedMETs"),
    ## jets			    	

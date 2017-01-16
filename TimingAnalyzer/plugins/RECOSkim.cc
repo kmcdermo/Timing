@@ -185,8 +185,8 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       const float spp  = phshape.sigmaIphiIphi;
       const float sep  = phshape.sigmaIetaIphi;
       const float disc = std::sqrt((spp-see)*(spp-see)+4.f*sep*sep);
-      phsmaj[iph] = std::sqrt(2.f/(spp+see-disc));
-      phsmin[iph] = std::sqrt(2.f/(spp+see+disc));
+      phsmaj[iph] = (spp+see+disc)/2.f;
+      phsmin[iph] = (spp+see-disc)/2.f;
 	
       /////////////////
       //             //

@@ -156,6 +156,8 @@ process.tree = cms.EDAnalyzer("PhotonDump",
    genjets    = cms.InputTag("slimmedGenJets"),
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
+   ## rho
+   rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## MET
    mets = cms.InputTag("slimmedMETs"),
    ## jets			    	
