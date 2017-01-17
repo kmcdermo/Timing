@@ -8,11 +8,11 @@
 PlotPhotons::PlotPhotons(TString filename, Bool_t isMC, Bool_t applyevcut, TString outdir,
 			 Bool_t applyjetptcut, Float_t jetptcut, Bool_t applyphptcut, Float_t phptcut,
 			 Bool_t applyphvidcut, TString phvid, Bool_t applyrhecut, Float_t rhEcut,
-			 Bool_t applyecalacceptcut) :
+			 Bool_t applyecalacceptcut, Bool_t applyEBonly, Bool_t applyEEonly) :
   fOutDir(outdir), fIsMC(isMC), fApplyEvCut(applyevcut),
   fApplyJetPtCut(applyjetptcut), fJetPtCut(jetptcut), fApplyPhPtCut(applyphptcut), fPhPtCut(phptcut),
   fApplyPhVIDCut(applyphvidcut), fPhVID(phvid), fApplyrhECut(applyrhecut), frhECut(rhEcut),
-  fApplyECALAcceptCut(applyecalacceptcut)
+  fApplyECALAcceptCut(applyecalacceptcut), fApplyEBOnly(applyEBonly), fApplyEEOnly(applyEEonly)
 {
   // input
   fInFile = TFile::Open(filename.Data());
@@ -53,7 +53,12 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isMC, Bool_t applyevcut, TStri
     if (fApplyPhPtCut)       fOutDir += Form("_phpt%3.1f" ,fPhPtCut);
     if (fApplyPhVIDCut)      fOutDir += Form("_phVID%s"   ,fPhVID.Data());
     if (fApplyrhECut)        fOutDir += Form("_rhE%2.1f"  ,frhECut);
-    if (fApplyECALAcceptCut) fOutDir += Form("_ecalaccept");
+    if (fApplyECALAcceptCut) 
+    { 
+      if      (fApplyEBOnly) fOutDir += Form("_EBOnly");
+      else if (fApplyEEOnly) fOutDir += Form("_EEOnly");
+      else                   fOutDir += Form("_ecalaccept");
+    }
   }
   fOutDump = fOutDir; // --> simple directory for dump of plots
 
@@ -92,13 +97,13 @@ void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
   {
     if (fIsMC)
     {
-      PlotPhotons::SetupGenInfo();
-      PlotPhotons::SetupGenParticles();
-      PlotPhotons::SetupGenJets();
+      //      PlotPhotons::SetupGenInfo();
+      //      PlotPhotons::SetupGenParticles();
+      //      PlotPhotons::SetupGenJets();
     }
-    PlotPhotons::SetupObjectCounts();
-    PlotPhotons::SetupMET();
-    PlotPhotons::SetupJets();
+    //    PlotPhotons::SetupObjectCounts();
+    //    PlotPhotons::SetupMET();
+    //    PlotPhotons::SetupJets();
     PlotPhotons::SetupRecoPhotons();
   }
 
@@ -135,14 +140,13 @@ void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis)
     {
       if (fIsMC)
       {
-	PlotPhotons::FillGenInfo();
-	PlotPhotons::FillGenParticles();
-	PlotPhotons::FillGenJets();
+	//	PlotPhotons::FillGenInfo();
+	//	PlotPhotons::FillGenParticles();
+	//	PlotPhotons::FillGenJets();
       }
-      PlotPhotons::FillObjectCounts();
-      PlotPhotons::FillMET();
-
-      PlotPhotons::FillJets();
+      //      PlotPhotons::FillObjectCounts();
+      //      PlotPhotons::FillMET();
+      //      PlotPhotons::FillJets();
       PlotPhotons::FillRecoPhotons();
     }
 
@@ -481,6 +485,7 @@ void PlotPhotons::FillRecoPhotons()
     if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
     if (fApplyPhVIDCut && (fPhVIDMap[fPhVID] < (*phVID)[iph])) continue;
     if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
+    if ((fApplyEBOnly && (std::abs((*pheta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*pheta)[iph]) < 1.566 || std::abs((*pheta)[iph]) > 2.5))) continue;
 
     fPlots["phE"]->Fill((*phE)[iph]);
     fPlots["phpt"]->Fill((*phpt)[iph]);

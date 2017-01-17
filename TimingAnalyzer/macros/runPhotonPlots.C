@@ -25,13 +25,13 @@ void runPhotonPlots()
   // filename, isMC, applyevcut, outdir, 
   // applyjetptcut, jetptcut, applyphptcut, phptcut,
   // applyphvidcut, phvid, applyrhecut, 
-  // applyecalacceptcut
+  // applyecalacceptcut, applyEBonly, applyEEonly
   
-  PlotPhotons photonPlots("input/MC/signal/withReReco/ctau6000.root",true,false,"output/ctau6000_wTiming-siep",true,35.f,true,100.f,true,"medium",true,1.f,true);
+  PlotPhotons photonPlots("input/MC/signal/withReReco/ctau6000.root",true,false,"output/test6000",true,35.f,true,100.f,true,"medium",true,1.f,true,false,true);
 
   // which plots to do
   // first bool = generic plots
   // second bool = efficiency
   // third bool = analysis plots
-  photonPlots.DoPlots(true,true,true);
+  photonPlots.DoPlots(true,false,false);
 }

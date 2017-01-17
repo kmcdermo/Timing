@@ -51,7 +51,7 @@ public :
   PlotPhotons(TString filename, Bool_t isMC, Bool_t applyevcut = false, TString outdir = "output", 
 	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
 	      Bool_t applyphvidcut = false, TString phvid = "medium", Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
-	      Bool_t applyecalacceptcut = false);
+	      Bool_t applyecalacceptcut = false, Bool_t applyEBonly = false, Bool_t applyEEonly = false);
   ~PlotPhotons();
   void InitTree();
   void DoPlots(Bool_t generic, Bool_t eff, Bool_t analysis);
@@ -111,6 +111,8 @@ private :
   const Bool_t  fApplyrhECut;
   const Float_t frhECut;
   const Bool_t  fApplyECALAcceptCut;
+  const Bool_t  fApplyEBOnly;
+  const Bool_t  fApplyEEOnly;
 
   // Output vars
   TString fOutDir;
