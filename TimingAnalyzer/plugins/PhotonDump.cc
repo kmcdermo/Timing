@@ -358,7 +358,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    float mindR = 0.4;
 	    for (std::vector<pat::Jet>::const_iterator jetiter = jetsH->begin(); jetiter != jetsH->end(); ++jetiter) // loop over reco jets for match
 	    {
-	      if (std::abs(gjetpt[igjet]-jetiter->pt())/gjetpt[igjet] < 0.5) // pt resolution check
+	      if (std::abs(genjetpt[igjet]-jetiter->pt())/genjetpt[igjet] < 0.5) // pt resolution check
 	      {
 		const float delR = deltaR(jetiter->phi(),gjetiter->eta(),jetiter->phi(),jetiter->eta());
 		if (delR < mindR) // deltaR matching conditional
@@ -463,7 +463,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    break;
 	  } // end conditional over check
 	} // end loop over gen jets matches
-      } // end block over isMC
+      } // end block over isGMSB
 
       ijet++;
     } // end loop over reco jets
@@ -495,7 +495,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  if      (iph == genph1match) phmatch[iph] = 1;
 	  else if (iph == genph2match) phmatch[iph] = 2;
 	} 
-	phisMatched[iph] = PhotonDump::PhotonMatching(phiter,genpartsH);
+	phisMatched[iph] = PhotonDump::PhotonMatching((*phiter),genparticlesH);
       }
 
       // loose > medium > tight
@@ -656,9 +656,9 @@ bool PhotonDump::PhotonMatching(const pat::Photon & photon, const edm::Handle<st
     {
       if (gpiter->pdgId() == 22 && gpiter->isPromptFinalState())
 	{
-	  if (std::abs(gpiter->pt()-photon->pt())/photon->pt() < 0.5)
+	  if (std::abs(gpiter->pt()-photon.pt())/photon.pt() < 0.5)
 	  {
-	    const float dR = deltaR(photon->phi(),photon->eta(),gpiter->phi(),gpiter->eta());
+	    const float dR = deltaR(photon.phi(),photon.eta(),gpiter->phi(),gpiter->eta());
 	    if (dR < dRmin) 
 	    {
 	      return true;
@@ -780,7 +780,7 @@ void PhotonDump::InitializeGenPUBranches()
   genpuobs = -9999; genputrue = -9999;
 }
 
-void PhotonDump::InitializeGenParticleBranches()
+void PhotonDump::InitializeGMSBBranches()
 {
   // Gen particle info
   nNeutralino = -9999;

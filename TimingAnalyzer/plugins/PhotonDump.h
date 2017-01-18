@@ -81,6 +81,8 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
 		   const edm::ValueMap<bool> & photonTightIdMap, 
 		   std::vector<pat::Photon> & photons);
 
+  bool PhotonMatching(const pat::Photon & photon, const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH);
+
   float GetChargedHadronEA(const float);
   float GetNeutralHadronEA(const float);
   float GetGammaEA        (const float);
@@ -90,7 +92,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   void InitializeGenPUBranches();
 
   void DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &);
-  void InitializeGenParticleBranches();
+  void InitializeGMSBBranches();
 
   void InitializePVBranches();
 
@@ -153,7 +155,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   const bool isGMSB;
   const bool isBkg;
   const bool dumpIds;
-  const bool isMC;
+  bool isMC;
   edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
   edm::EDGetTokenT<std::vector<reco::GenParticle> > genpartsToken;

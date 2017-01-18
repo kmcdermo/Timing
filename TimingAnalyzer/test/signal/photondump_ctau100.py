@@ -12,6 +12,14 @@ options.register (
 
 ## data or MC options
 options.register (
+	'isGMSB',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to indicate GMSB');
+
+options.register (
+	'isBkg',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to indicate Background MC');
+
+options.register (
 	'isMC',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate data or MC');
 
@@ -41,6 +49,9 @@ options.register (
 
 ## parsing command line arguments
 options.parseArguments()
+
+if options.isGMSB or options.isBkg: 
+	options.isMC = True
 
 ### check consistentcy of basic options
 if options.isMC and 'dataRun2' in options.globalTag:

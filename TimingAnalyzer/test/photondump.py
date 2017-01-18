@@ -12,7 +12,7 @@ options.register (
 
 ## data or MC options
 options.register (
-	'isGMSB',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'isGMSB',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate GMSB');
 
 options.register (
@@ -45,7 +45,7 @@ options.register (
 ## do a demo run over only 100k events
 options.register (
 	'demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to run over only 100k events as a demo');
+	'flag to run over only 1k events as a demo');
 
 ## parsing command line arguments
 options.parseArguments()
@@ -153,9 +153,9 @@ process.tree = cms.EDAnalyzer("PhotonDump",
    ## jets			    	
    jets = cms.InputTag("slimmedJets"),
    ## photons		
-   loosePhotonID  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-loose"),
-   mediumPhotonID = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-medium"),
-   tightPhotonID  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-tight"),
+   loosePhotonID  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring16-V2p2-loose"),
+   mediumPhotonID = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring16-V2p2-medium"),
+   tightPhotonID  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring16-V2p2-tight"),
    photons        = cms.InputTag("calibratedPhotons"),
    ## ecal recHits			      
    dumpRHs            = cms.bool(options.dumpRHs),
