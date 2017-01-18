@@ -64,11 +64,22 @@
 // Common types
 #include "CommonTypes.h"
 
+inline bool sortByPhotonPt(const pat::Photon & ph1, const pat::Photon & ph2)
+{
+  return ph1.pt()>ph2.pt();
+}
+
 class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
  public:
   explicit PhotonDump(const edm::ParameterSet&);
   ~PhotonDump();
+
+  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
+		   const edm::ValueMap<bool> & photonLooseIdMap, 
+		   const edm::ValueMap<bool> & photonMediumIdMap, 
+		   const edm::ValueMap<bool> & photonTightIdMap, 
+		   std::vector<pat::Photon> & photons);
 
   float GetChargedHadronEA(const float);
   float GetNeutralHadronEA(const float);
@@ -139,8 +150,10 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEETAG;
 
   // Gen Particles and MC info
-  const bool isMC;
+  const bool isGMSB;
+  const bool isBkg;
   const bool dumpIds;
+  const bool isMC;
   edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
   edm::EDGetTokenT<std::vector<reco::GenParticle> > genpartsToken;
@@ -196,6 +209,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   // photon info
   int nphotons;
   std::vector<int> phmatch, phVID;
+  std::vector<bool> phisMatched;
   std::vector<float> phE, phpt, phphi, pheta;
   std::vector<float> phHoE, phr9, phChgIso, phNeuIso, phIso, phsuisseX;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin;
