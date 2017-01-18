@@ -24,7 +24,6 @@
 #include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-#include "DataFormats/PatCandidates/interface/PackedGenParticle.h"
 
 // ROOT
 #include "TTree.h"
@@ -34,11 +33,22 @@
 // Common types
 #include "CommonTypes.h"
 
+inline bool sortByPhotonPt(const pat::Photon & ph1, const pat::Photon & ph2)
+{
+  return ph1.pt()>ph2.pt();
+}
+
 class GenPhDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
  public:
   explicit GenPhDump(const edm::ParameterSet&);
   ~GenPhDump();
+
+  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
+		   const edm::ValueMap<bool> & photonLooseIdMap, 
+		   const edm::ValueMap<bool> & photonMediumIdMap, 
+		   const edm::ValueMap<bool> & photonTightIdMap, 
+		   std::vector<pat::Photon> & photons);
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
   
@@ -64,7 +74,10 @@ class GenPhDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one
   // Gen particles
   const edm::InputTag prunedGenParticlesTag;
   edm::EDGetTokenT<std::vector<reco::GenParticle> > prunedGenParticlesToken;
-  const edm::InputTag packedGenParticlesTag;
-  edm::EDGetTokenT<std::vector<pat::PackedGenParticle> > packedGenParticlesToken;
 
+  // output event level ntuple
+  TTree* tree;
+
+  bool isMatched;
+  float phpt;
 };

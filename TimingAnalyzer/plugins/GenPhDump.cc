@@ -8,8 +8,7 @@ GenPhDump::GenPhDump(const edm::ParameterSet& iConfig):
   photonsTag           (iConfig.getParameter<edm::InputTag>("photons")),  
 
   // gen particle info
-  prunedGenParticlesTag(iConfig.getParameter<edm::InputTag>("prunedGenParticles")),  
-  packedGenParticlesTag(iConfig.getParameter<edm::InputTag>("packedGenParticles"))
+  prunedGenParticlesTag(iConfig.getParameter<edm::InputTag>("prunedGenParticles"))
 {
   usesResource();
   usesResource("TFileService");
@@ -21,7 +20,6 @@ GenPhDump::GenPhDump(const edm::ParameterSet& iConfig):
   photonsToken            = consumes<std::vector<pat::Photon> > (photonsTag);
 
   prunedGenParticlesToken = consumes<std::vector<reco::GenParticle> >      (prunedGenParticlesTag);
-  packedGenParticlesToken = consumes<std::vector<pat::PackedGenParticle> > (packedGenParticlesTag);
 }
 
 GenPhDump::~GenPhDump() {}
@@ -43,119 +41,108 @@ void GenPhDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
+  std::vector<pat::Photon> photons = *photonsH;
 
   // GEN INFO
   edm::Handle<std::vector<reco::GenParticle> > prunedGenParticlesH;
   iEvent.getByToken(prunedGenParticlesToken, prunedGenParticlesH);
 
-  edm::Handle<std::vector<pat::PackedGenParticle> > packedGenParticlesH;
-  iEvent.getByToken(packedGenParticlesToken, packedGenParticlesH);
-  
-  ///////////////////////
-  //                   //
-  // Gen particle info //
-  //                   //
-  ///////////////////////
-  
-  int genph1match = 0, genph2match;
-  if (prunedGenParticlesH.isValid()) // make sure gen particles exist
-  {
-    bool firstMother  = false; // bool for first neutralino found
-    bool secondMother = false; // bool for second neutralino found
-    for (std::vector<reco::GenParticle>::const_iterator gpiter = prunedGenParticlesH->begin(); gpiter != prunedGenParticlesH->end(); ++gpiter) // loop over gen particles
-    {
-      if (firstMother && secondMother) break; // have two matches!
-      
-      if (gpiter->pdgId() == 1000022 && gpiter->numberOfDaughters() == 2)
-      {
-	if ((gpiter->daughter(0)->pdgId() == 22 && gpiter->daughter(1)->pdgId() == 1000039) ||
-	    (gpiter->daughter(1)->pdgId() == 22 && gpiter->daughter(0)->pdgId() == 1000039)) 
-	{
-	  if (!firstMother && !secondMother)
-	  {
-	    // set photon daughter stuff
-	    int phdaughter = -1; // determine which one is the photon daughter
-	    if      (gpiter->daughter(0)->pdgId() == 22) {phdaughter = 0;}
-	    else if (gpiter->daughter(1)->pdgId() == 22) {phdaughter = 1;}
-
-	    const float genph1E   = gpiter->daughter(phdaughter)->energy();
-	    const float genph1pt  = gpiter->daughter(phdaughter)->pt();
-	    const float genph1phi = gpiter->daughter(phdaughter)->phi();
-	    const float genph1eta = gpiter->daughter(phdaughter)->eta();
-
-	    // check for a reco match!
-	    if (photonsH.isValid()) // standard check
-            {
-	      int iph = 0;
-	      for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector 
-	      {
-		const float tmpphi = phiter->phi();
-		const float tmpeta = phiter->eta();
-		  
-		if (deltaR(genph1phi,genph1eta,tmpphi,tmpeta) < 0.3) {genph1match = iph; break;}
-		  
-		iph++;
-	      } // end loop over reco photons
-	    } // end check for reco match
-
-	    // set this to ensure not to overwrite first mother info
-	    firstMother = true;
-	  } // end block over first matched neutralino -> photon + gravitino
-	  else if (firstMother && !secondMother)
-	  {
-	    // set photon daughter stuff
-	    int phdaughter = -1; // determine which one is the photon daughter
-	    if      (gpiter->daughter(0)->pdgId() == 22) {phdaughter = 0;}
-	    else if (gpiter->daughter(1)->pdgId() == 22) {phdaughter = 1;}
-	    
-	    const float genph2E   = gpiter->daughter(phdaughter)->energy();
-	    const float genph2pt  = gpiter->daughter(phdaughter)->pt();
-	    const float genph2phi = gpiter->daughter(phdaughter)->phi();
-	    const float genph2eta = gpiter->daughter(phdaughter)->eta();
-	      
-	    // check for a reco match!
-	    if (photonsH.isValid()) // standard check
-	    {
-	      int iph = 0;
-	      for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector 
-	      {
-		const float tmpphi = phiter->phi();
-		const float tmpeta = phiter->eta();
-		
-		if (deltaR(genph2phi,genph2eta,tmpphi,tmpeta) < 0.3) {genph2match = iph; break;}
-		
-		iph++;
-	      } // end loop over reco photons
-	    } // end check for reco match
-	    
-	    secondMother = true;
-	  } // end block over second matched neutralino -> photon + gravitino
-	} // end conditional over matching daughter ids
-      } // end conditional over neutralino id
-    } // end loop over gen particles
-  } // end check for gen particles
+  GenPhDump::PrepPhotons(photonsH,photonLooseIdMap,photonMediumIdMap,photonTightIdMap,photons); // enormous amount of bullsh*t to get photons in shape 
 
   //////////////////
   //              //
   // Reco Photons //
   //              //
   //////////////////
+
+  for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
+  {
+    isMatched = false;// reset variables
+    //    int igp = -1; // best matched gp index
+        
+    if (!phiter->photonID("medium")) continue;
+        
+    if (prunedGenParticlesH.isValid()) // make sure gen particles exist
+    {
+      float dRmin = 1e9;
+      //      int jgp = 0;
+      for (std::vector<reco::GenParticle>::const_iterator gpiter = prunedGenParticlesH->begin(); gpiter != prunedGenParticlesH->end(); ++gpiter)
+      {
+	if (gpiter->pdgId() == 22 && gpiter->isPromptFinalState())
+	{
+	  if (std::abs(gpiter->pt()-phiter->pt())/phiter->pt() < 0.5)
+	  {
+	    const float dR = deltaR(phiter->phi(),phiter->eta(),gpiter->phi(),gpiter->eta());
+	    if (dR < dRmin) 
+	    {
+	      dRmin = dR;
+	      //	      igp   = jgp;
+	    } // end check over dRmin
+	  } // end check over pT resolution
+	} // end check over gen particle status 
+	//	jgp++;
+      } // end loop over gen particles
+      if (dRmin < 0.1) isMatched = true;
+    } // end check over gen particles exist
+    
+    phpt = phiter->pt();
+
+    tree->Fill();
+  } // end loop over reco photons
+}
+
+void GenPhDump::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
+			    const edm::ValueMap<bool> & photonLooseIdMap, 
+			    const edm::ValueMap<bool> & photonMediumIdMap, 
+			    const edm::ValueMap<bool> & photonTightIdMap, 
+			    std::vector<pat::Photon> & photons)
+{
   if (photonsH.isValid()) // standard handle check
   {
+    // create and initialize temp id-value vector
+    std::vector<std::vector<pat::Photon::IdPair> > idpairs(photons.size());
+    for (size_t iph = 0; iph < idpairs.size(); iph++)
+    {
+      idpairs[iph].resize(3);
+      idpairs[iph][0] = {"loose" ,false};
+      idpairs[iph][1] = {"medium",false};
+      idpairs[iph][2] = {"tight" ,false};
+    }
+
+    int iphH = 0; // dumb counter because iterators only work with VID
     for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector
     {
       // Get the VID of the photon
       const edm::Ptr<pat::Photon> photonPtr(photonsH, phiter - photonsH->begin());
 
+      // store VID in temp struct
       // loose > medium > tight
-      if (photonLooseIdMap [photonPtr]) ;
-      if (photonMediumIdMap[photonPtr]) ;
-      if (photonTightIdMap [photonPtr]) ;
+      if (photonLooseIdMap [photonPtr]) idpairs[iphH][0].second = true;
+      if (photonMediumIdMap[photonPtr]) idpairs[iphH][1].second = true;
+      if (photonTightIdMap [photonPtr]) idpairs[iphH][2].second = true;
+      
+      iphH++;
     }
+    
+    // set the ID-value for each photon in other collection
+    for (size_t iph = 0; iph < photons.size(); iph++)
+    {
+      photons[iph].setPhotonIDs(idpairs[iph]);
+    }
+    
+    // now finally sort vector by pT
+    std::sort(photons.begin(),photons.end(),sortByPhotonPt);
   }
-}    
+}  
 
-void GenPhDump::beginJob() {}
+void GenPhDump::beginJob() 
+{
+  edm::Service<TFileService> fs;
+  tree = fs->make<TTree>("tree","tree");
+
+  tree->Branch("isMatched"    , &isMatched      , "isMatched/O");
+  tree->Branch("phpt"         , &phpt           , "phpt/F");
+}
 
 void GenPhDump::endJob() {}
 
@@ -170,4 +157,4 @@ void GenPhDump::fillDescriptions(edm::ConfigurationDescriptions& descriptions)
   descriptions.addDefault(desc);
 }
 
-DEFINE_FWK_MODULE(GenDump);
+DEFINE_FWK_MODULE(GenPhDump);

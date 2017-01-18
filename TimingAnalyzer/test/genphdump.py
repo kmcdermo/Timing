@@ -22,7 +22,7 @@ options.register (
 
 ## outputFile Name
 options.register (
-	'outputFileName','photondump.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'outputFileName','genphdump.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
 ## parsing command line arguments
@@ -51,26 +51,9 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_1.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_2.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_3.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_4.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_5.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_6.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_7.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_8.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_9.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_10.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_11.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_12.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_13.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_14.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_15.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_16.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_17.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_18.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_19.root',
-'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_20.root'
+#'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_1.root',
+'/store/mc/RunIISummer16MiniAODv2/QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/120000/02FBE5E0-1AB6-E611-85B1-0CC47A7DFF82.root',
+#'/store/mc/RunIISummer16MiniAODv2/GJets_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1/50000/7E62A441-76BC-E611-A02B-A0369F3102F6.root',
 ))
 
 ## How many events to process
@@ -79,7 +62,7 @@ if not options.demoMode:
 		input = cms.untracked.int32(options.maxEvents))
 else:
 	process.maxEvents = cms.untracked.PSet( 
-		input = cms.untracked.int32(1000))
+		input = cms.untracked.int32(20000))
 
 # Set the global tag depending on the sample type
 from Configuration.AlCa.GlobalTag import GlobalTag
@@ -87,7 +70,7 @@ process.GlobalTag.globaltag = options.globalTag
 
 # EGM Smearing and VID
 from Timing.TimingAnalyzer.PhotonTools_cff import PhotonTools
-PhotonTools(process,options.isMC)
+PhotonTools(process,True)
 
 ## Create output file
 ## Setup the service to make a ROOT TTree
@@ -100,9 +83,9 @@ process.tree = cms.EDAnalyzer("GenPhDump",
    prunedGenParticles = cms.InputTag("prunedGenParticles"),
    packedGenParticles = cms.InputTag("packedGenParticles"),
    ## photons		
-   loosePhotonID      = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-loose"),
-   mediumPhotonID     = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-medium"),
-   tightPhotonID      = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-tight"),
+   loosePhotonID      = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring16-V2p2-loose"),
+   mediumPhotonID     = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring16-V2p2-medium"),
+   tightPhotonID      = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring16-V2p2-tight"),
    photons            = cms.InputTag("calibratedPhotons")
 )
 
