@@ -139,9 +139,9 @@ process.tree = cms.EDAnalyzer("PhotonDump",
    ## jets			    	
    jets = cms.InputTag("slimmedJets"),
    ## photons		
-   loosePhotonID  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-loose"),
-   mediumPhotonID = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-medium"),
-   tightPhotonID  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring15-25ns-V1-standalone-tight"),
+   loosePhotonID  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring16-V2p2-loose"),
+   mediumPhotonID = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring16-V2p2-medium"),
+   tightPhotonID  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring16-V2p2-tight"),
    photons        = cms.InputTag("calibratedPhotons"),
    ## ecal recHits			      
    dumpRHs            = cms.bool(options.dumpRHs),
