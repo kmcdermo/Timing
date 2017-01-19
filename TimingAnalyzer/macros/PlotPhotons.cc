@@ -492,7 +492,7 @@ void PlotPhotons::FillRecoPhotons()
     if (fApplyPhVIDCut && (fPhVIDMap[fPhVID] < (*phVID)[iph])) continue;
     if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
     if ((fApplyEBOnly && (std::abs((*pheta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*pheta)[iph]) < 1.566 || std::abs((*pheta)[iph]) > 2.5))) continue;
-    //    if ( (isGMSB && (*phmatch)[iph] <= 0) || (isBkg && (*phisMatched)[iph] == 0) ) continue;
+    if ( (fIsGMSB && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] == 0) ) continue; // set to != 0 for QCD anti-matching
 
     fPlots["phE"]->Fill((*phE)[iph]);
     fPlots["phpt"]->Fill((*phpt)[iph]);
@@ -761,7 +761,7 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["phsmin_ov_phsmaj"] = PlotPhotons::MakeTH1F("phsmin_ov_phsmaj","Photons S_{minor} / S_{major} (reco)",100,0,1.f,"S_{minor}/S_{major}","Photons","RecoPhotons");
   fPlots["phscE"] = PlotPhotons::MakeTH1F("phscE","Photons SuperCluster Energy [GeV] (reco)",100,0.f,2500.f,"Energy [GeV]","Photons","RecoPhotons");
   fPlots["phnrh"] = PlotPhotons::MakeTH1F("phnrh","nRecHits from Photons (reco)",100,0.f,100.f,"nRecHits","Photons","RecoPhotons");
-  fPlots["phisMatched"] = PlotPhotons::MakeTH1F("phisMatched","Photons isMatched (reco)",100,0,2,"isMatched","Photons","RecoPhotons");
+  fPlots["phisMatched"] = PlotPhotons::MakeTH1F("phisMatched","Photons isMatched (reco)",2,0,2,"isMatched","Photons","RecoPhotons");
 
   // all rec hits + seed info
   fPlots["phrhE"] = PlotPhotons::MakeTH1F("phrhE","Photons RecHits Energy [GeV] (reco)",100,0.f,2000.f,"Energy [GeV]","RecHits","RecoPhotons");
@@ -795,7 +795,7 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots2D["ph1seedtime_vs_ph1smin_ov_ph1smaj"] = PlotPhotons::MakeTH2F("ph1seedtime_vs_ph1smin_ov_ph1smaj","Leading Photon Seed RecHit Time [ns] vs S_{minor}/S_{major}",100,0.f,1.f,"Leading Medium ID Photon S_{minor}/S_{major}",100,-5.f,15.f,"Leading Medium ID Seed RecHit Time [ns]","RecoPhotons");
   fPlots2D["ph1seedtime_vs_ph1pt"] = PlotPhotons::MakeTH2F("ph1seedtime_vs_ph1pt","Leading Photon Seed RecHit Time [ns] vs p_{T} [GeV/c]",100,0.f,2500.f,"Leading Medium ID Photon p_{T} [GeV/c]",100,-5.f,15.f,"Leading Medium ID Seed RecHit Time [ns]","RecoPhotons");
   
-  if (fIsGMSB)
+  if (fIsMC)
   {
     // Gen matched reco quantities
     fPlots["phE_gen"] = PlotPhotons::MakeTH1F("phE_gen","Photons Energy [GeV] (reco: gen matched)",100,0.f,2000.f,"Energy [GeV]","Photons","RecoPhotons");

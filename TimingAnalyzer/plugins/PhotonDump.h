@@ -87,6 +87,12 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   float GetNeutralHadronEA(const float);
   float GetGammaEA        (const float);
 
+  int PassHoE   (const float eta, const float HoE);
+  int PassSieie (const float eta, const float Sieie);
+  int PassChgIso(const float eta, const float ChgIso);
+  int PassNeuIso(const float eta, const float NeuIso, const float pt);
+  int PassPhIso (const float eta, const float PhIso,  const float pt);
+
   void InitializeGenEvtBranches();
 
   void InitializeGenPUBranches();
@@ -210,21 +216,22 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
 
   // photon info
   int nphotons;
-  std::vector<int> phmatch, phVID;
-  std::vector<bool> phisMatched;
   std::vector<float> phE, phpt, phphi, pheta;
+  std::vector<int>   phmatch;
+  std::vector<bool>  phisMatched;
   std::vector<float> phHoE, phr9, phChgIso, phNeuIso, phIso, phsuisseX;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin;
+  std::vector<int>   phVID, phHoE_b, phsieie_b, phChgIso_b, phNeuIso_b, phIso_b;
 
   // supercluster info 
-  std::vector<float> phscX, phscY, phscZ, phscE;
+  std::vector<float> phscE, phsceta, phscphi;
 
   // seed info
   std::vector<int> phseedpos;
   
   // all rec hit info
   std::vector<int> phnrh;
-  std::vector<std::vector<float> > phrhX, phrhY, phrhZ, phrhE, phrhdelR, phrhtime;
+  std::vector<std::vector<float> > phrheta, phrhphi, phrhE, phrhtime;
   std::vector<std::vector<int> > phrhID;
   std::vector<std::vector<int> > phrhOOT;
 };
