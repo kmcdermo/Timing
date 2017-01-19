@@ -48,7 +48,7 @@ typedef IntMap::iterator      IntMapIter;
 class PlotPhotons 
 {
 public :
-  PlotPhotons(TString filename, Bool_t isMC, Bool_t applyevcut = false, TString outdir = "output", 
+  PlotPhotons(TString filename, Bool_t isGMSB = false, Bool_t isBkg = false, Bool_t applyevcut = false, TString outdir = "output", 
 	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
 	      Bool_t applyphvidcut = false, TString phvid = "medium", Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
 	      Bool_t applyecalacceptcut = false, Bool_t applyEBonly = false, Bool_t applyEEonly = false);
@@ -58,7 +58,7 @@ public :
   void SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis);
   void SetupEffs();
   void SetupGenInfo();
-  void SetupGenParticles();
+  void SetupGMSB();
   void SetupGenJets();
   void SetupObjectCounts();
   void SetupMET();
@@ -72,7 +72,7 @@ public :
   void CountEvents(Bool_t & event_b);
   void FillEffs();
   void FillGenInfo();
-  void FillGenParticles();
+  void FillGMSB();
   void FillGenJets();
   void FillObjectCounts();
   void FillMET();
@@ -89,7 +89,9 @@ private :
   // Input vars
   TFile * fInFile; //!pointer to file
   TTree * fInTree; //!pointer to the analyzed TTree
-  const Bool_t  fIsMC;
+  const Bool_t fIsGMSB;
+  const Bool_t fIsBkg;
+        Bool_t fIsMC;
 
   // In routine vars
   UInt_t  fNEvCheck;
@@ -199,6 +201,7 @@ private :
   std::vector<Float_t> * jeteta;
   Int_t   nphotons;
   std::vector<Int_t>   * phmatch;
+  std::vector<Bool_t>  * phisMatched;
   std::vector<Int_t>   * phVID;
   std::vector<Float_t> * phscX;
   std::vector<Float_t> * phscY;
@@ -309,6 +312,7 @@ private :
   TBranch * b_jeteta;   //!
   TBranch * b_nphotons;   //!
   TBranch * b_phmatch;   //!
+  TBranch * b_phisMatched;   //!
   TBranch * b_phVID;   //!
   TBranch * b_phscX;   //!
   TBranch * b_phscY;   //!

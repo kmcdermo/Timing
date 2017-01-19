@@ -22,7 +22,7 @@ void runPhotonPlots_signal(TString cuts, TString ctau, TString reco, Bool_t isEB
   gROOT->LoadMacro("PlotPhotons.cc++g");
 
   // config is:
-  // filename, isMC, applyevcut, outdir, 
+  // filename, isGMSB, isBkg, applyevcut, outdir, 
   // applyjetptcut, jetptcut, applyphptcut, phptcut,
   // applyphvidcut, phvid, applyrhecut, 
   // applyecalacceptcut
@@ -32,7 +32,7 @@ void runPhotonPlots_signal(TString cuts, TString ctau, TString reco, Bool_t isEB
 
   TString VID = apply?"medium":"loose";
   
-  PlotPhotons photonPlots(Form("input/MC/signal/%s/ctau%s.root",reco.Data(),ctau.Data()),true,apply,Form("output/MC/signal/%s/%s/ctau%s",reco.Data(),cuts.Data(),ctau.Data()),true,35.f,apply,100.f,true,VID.Data(),true,1.f,true,isEB,isEE);
+  PlotPhotons photonPlots(Form("input/MC/signal/%s/ctau%s.root",reco.Data(),ctau.Data()),true,false,apply,Form("output/MC/signal/%s/%s/ctau%s",reco.Data(),cuts.Data(),ctau.Data()),true,35.f,apply,100.f,true,VID.Data(),true,1.f,true,isEB,isEE);
 
   // which plots to do
   // first bool = generic plots

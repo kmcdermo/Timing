@@ -22,12 +22,12 @@ void runPhotonPlots()
   gROOT->LoadMacro("PlotPhotons.cc++g");
 
   // config is:
-  // filename, isMC, applyevcut, outdir, 
+  // filename, isGMSB, isBkg, applyevcut, outdir, 
   // applyjetptcut, jetptcut, applyphptcut, phptcut,
   // applyphvidcut, phvid, applyrhecut, 
   // applyecalacceptcut, applyEBonly, applyEEonly
   
-  PlotPhotons photonPlots("input/MC/signal/withReReco/ctau6000.root",true,false,"output/test6000",true,35.f,true,100.f,true,"medium",true,1.f,true,false,true);
+  PlotPhotons photonPlots("input/MC/signal/withReReco/ctau6000.root",true,false,false,"output/test6000",true,35.f,true,100.f,true,"medium",true,1.f,true,false,true);
 
   // which plots to do
   // first bool = generic plots
