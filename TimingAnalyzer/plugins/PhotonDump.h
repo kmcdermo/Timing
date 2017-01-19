@@ -59,6 +59,7 @@
 // ROOT
 #include "TTree.h"
 #include "TLorentzVector.h"
+#include "TString.h"
 #include "TPRegexp.h"
 
 // Common types
@@ -112,6 +113,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
 
   void ClearRecoPhotonBranches();
   void InitializeRecoPhotonBranches();
+  void DumpVIDs(const pat::Photon & , int, float);
   void InitializeRecoRecHitBranches(int iph);
   void DumpRecHitInfo(int, const DetIdPairVec &, const EcalRecHitCollection *&);
 

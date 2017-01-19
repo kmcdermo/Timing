@@ -18,7 +18,7 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   photonMediumIdMapTag(iConfig.getParameter<edm::InputTag>("mediumPhotonID")),  
   photonTightIdMapTag (iConfig.getParameter<edm::InputTag>("tightPhotonID")),  
   photonsTag(iConfig.getParameter<edm::InputTag>("photons")),  
-
+  
   //recHits
   dumpRHs(iConfig.existsAs<bool>("dumpRHs") ? iConfig.getParameter<bool>("dumpRHs") : false),
   recHitCollectionEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEB" ))),
@@ -545,26 +545,8 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       phNeuIso_b[iph] = PhotonDump::PassNeuIso(sceta,phNeuIso[iph],phpt[iph]);
       phIso_b   [iph] = PhotonDump::PassPhIso (sceta,phIso   [iph],phpt[iph]);
    
-      if (phiter->photonID("loose"))
-      {
-	bool check = (phHoE_b[iph] >= 1 && phsieie_b[iph] >= 1 && phChgIso_b[iph] >= 1 && phNeuIso_b[iph] >= 1 && phIso_b[iph] >= 1);
-	if (!check)
-	{
-	  std::cout << "vid: " << phVID[iph] << " HoE: " phHoE_b[iph] << " Sieie: " << phsieie_b[iph] 
-		    << " chgIso: " << phChgIso_b[iph] << " neuIso: " << phNeuIso_b[iph] << " phIso: " << phIso_b[iph] << std::endl;
-	}
-      }
-//       else
-//       {
-// 	bool check = (phHoE_b[iph] >= 1 && phsieie_b[iph] >= 1 && phChgIso_b[iph] >= 1 && phNeuIso_b[iph] >= 1 && phIso_b[iph] >= 1);
-// 	if (check)
-// 	{
-// 	  std::cout << "vid: " << phVID[iph] << " HoE: " phHoE_b[iph] << " Sieie: " << phsieie_b[iph] 
-// 		    << " chgIso: " << phChgIso_b[iph] << " neuIso: " << phNeuIso_b[iph] << " phIso: " << phIso_b[iph] << std::endl;
-// 	}
-//       }
+      // if (dumpVIDs) PhotonDump::DumpVIDs((*phiter),iph,sceta);
 
-   
       // use seed to get geometry and recHits
       const DetId seedDetId = phsc->seed()->seed(); //seed detid
       const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
@@ -735,14 +717,14 @@ float PhotonDump::GetGammaEA(const float eta)
 
 int PhotonDump::PassHoE(const float eta, const float HoE)
 { 
-  if (eta < 1.4442)
+  if (eta < 1.479) // 1.4442
   {
     if      (HoE < 0.0269) return 3; 
     else if (HoE < 0.0396) return 2; 
     else if (HoE < 0.0597) return 1; 
     else                   return 0;
   }
-  else if (eta > 1.566 && eta < 2.5)
+  else if (eta > 1.479 && eta < 2.5) // 1.566
   {
     if      (HoE < 0.0213) return 3; 
     else if (HoE < 0.0219) return 2; 
@@ -754,14 +736,14 @@ int PhotonDump::PassHoE(const float eta, const float HoE)
 
 int PhotonDump::PassSieie(const float eta, const float Sieie)
 { 
-  if (eta < 1.4442)
+  if (eta < 1.479)
   {
     if      (Sieie < 0.00994) return 3; 
     else if (Sieie < 0.01022) return 2; 
     else if (Sieie < 0.01031) return 1; 
     else                      return 0;
   }
-  else if (eta > 1.566 && eta < 2.5)
+  else if (eta > 1.479 && eta < 2.5)
   {
     if      (Sieie < 0.03000) return 3; 
     else if (Sieie < 0.03001) return 2; 
@@ -773,14 +755,14 @@ int PhotonDump::PassSieie(const float eta, const float Sieie)
 
 int PhotonDump::PassChgIso(const float eta, const float ChgIso)
 { 
-  if (eta < 1.4442)
+  if (eta < 1.479)
   {
     if      (ChgIso < 0.202) return 3; 
     else if (ChgIso < 0.441) return 2; 
     else if (ChgIso < 1.295) return 1; 
     else                     return 0;
   }
-  else if (eta > 1.566 && eta < 2.5)
+  else if (eta > 1.479 && eta < 2.5)
   {
     if      (ChgIso < 0.034) return 3; 
     else if (ChgIso < 0.442) return 2; 
@@ -792,7 +774,7 @@ int PhotonDump::PassChgIso(const float eta, const float ChgIso)
 
 int PhotonDump::PassNeuIso(const float eta, const float NeuIso, const float pt)
 { 
-  if (eta < 1.4442)
+  if (eta < 1.479)
   {
     const float ptdep = 0.0148*pt+0.000017*pt*pt;
     if      (NeuIso < (0.264 +ptdep)) return 3; 
@@ -800,7 +782,7 @@ int PhotonDump::PassNeuIso(const float eta, const float NeuIso, const float pt)
     else if (NeuIso < (10.910+ptdep)) return 1; 
     else                              return 0;
   }
-  else if (eta > 1.566 && eta < 2.5)
+  else if (eta > 1.479 && eta < 2.5)
   {
     const float ptdep = 0.0163*pt+0.000014*pt*pt;
     if      (NeuIso < (0.586 +ptdep)) return 3; 
@@ -813,7 +795,7 @@ int PhotonDump::PassNeuIso(const float eta, const float NeuIso, const float pt)
 
 int PhotonDump::PassPhIso(const float eta, const float PhIso, const float pt)
 { 
-  if (eta < 1.4442)
+  if (eta < 1.479)
   {
     const float ptdep = 0.0047*pt;
     if      (PhIso < (2.362+ptdep)) return 3; 
@@ -821,7 +803,7 @@ int PhotonDump::PassPhIso(const float eta, const float PhIso, const float pt)
     else if (PhIso < (3.630+ptdep)) return 1; 
     else                            return 0;
   }
-  else if (eta > 1.566 && eta < 2.5)
+  else if (eta > 1.479 && eta < 2.5)
   {
     const float ptdep = 0.0034*pt;
     if      (PhIso < (2.617+ptdep)) return 3; 
@@ -861,6 +843,30 @@ void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &
 
   std::cout << "---------------------------------" << std::endl << std::endl;
 }
+
+void PhotonDump::DumpVIDs(const pat::Photon & photon, int iph, float sceta)
+{
+  int VIDval = 0;
+  TString VIDstr = "loose";
+  if (VIDstr.EqualTo("loose"))  VIDval = 1;
+  if (VIDstr.EqualTo("medium")) VIDval = 2;
+  if (VIDstr.EqualTo("tight"))  VIDval = 3;
+  
+  if (photon.photonID(VIDstr.Data()))
+  {
+    bool check = (phHoE_b[iph] >= VIDval && phsieie_b[iph] >= VIDval && phChgIso_b[iph] >= VIDval && phNeuIso_b[iph] >= VIDval && phIso_b[iph] >= VIDval);
+    if (!check)
+    {
+      std::cout << "VID: "     << phVID[iph]      << " eta: " << sceta         << std::endl
+		<< " HoE:    " << phHoE_b[iph]    << " val: " << phHoE[iph]    << std::endl
+		<< " Sieie:  " << phsieie_b[iph]  << " val: " << phsieie[iph]  << std::endl
+		<< " chgIso: " << phChgIso_b[iph] << " val: " << phChgIso[iph] << std::endl
+		<< " neuIso: " << phNeuIso_b[iph] << " val: " << phNeuIso[iph] << std::endl
+		<< " phIso:  " << phIso_b[iph]    << " val: " << phIso[iph]    << std::endl 
+		<< std::endl;
+    }
+  }
+}  
 
 void PhotonDump::DumpRecHitInfo(int iph, const DetIdPairVec & hitsAndFractions,	const EcalRecHitCollection *& recHits)
 {
