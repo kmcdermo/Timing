@@ -544,7 +544,27 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       phChgIso_b[iph] = PhotonDump::PassChgIso(sceta,phChgIso[iph]);
       phNeuIso_b[iph] = PhotonDump::PassNeuIso(sceta,phNeuIso[iph],phpt[iph]);
       phIso_b   [iph] = PhotonDump::PassPhIso (sceta,phIso   [iph],phpt[iph]);
-      
+   
+      if (phiter->photonID("loose"))
+      {
+	bool check = (phHoE_b[iph] >= 1 && phsieie_b[iph] >= 1 && phChgIso_b[iph] >= 1 && phNeuIso_b[iph] >= 1 && phIso_b[iph] >= 1);
+	if (!check)
+	{
+	  std::cout << "vid: " << phVID[iph] << " HoE: " phHoE_b[iph] << " Sieie: " << phsieie_b[iph] 
+		    << " chgIso: " << phChgIso_b[iph] << " neuIso: " << phNeuIso_b[iph] << " phIso: " << phIso_b[iph] << std::endl;
+	}
+      }
+//       else
+//       {
+// 	bool check = (phHoE_b[iph] >= 1 && phsieie_b[iph] >= 1 && phChgIso_b[iph] >= 1 && phNeuIso_b[iph] >= 1 && phIso_b[iph] >= 1);
+// 	if (check)
+// 	{
+// 	  std::cout << "vid: " << phVID[iph] << " HoE: " phHoE_b[iph] << " Sieie: " << phsieie_b[iph] 
+// 		    << " chgIso: " << phChgIso_b[iph] << " neuIso: " << phNeuIso_b[iph] << " phIso: " << phIso_b[iph] << std::endl;
+// 	}
+//       }
+
+   
       // use seed to get geometry and recHits
       const DetId seedDetId = phsc->seed()->seed(); //seed detid
       const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
@@ -776,7 +796,7 @@ int PhotonDump::PassNeuIso(const float eta, const float ChgIso, const float pt)
   {
     const float ptdep = 0.0148*pt+0.000017*pt*pt;
     if      (NeuIso < (0.264 +ptdep)) return 3; 
-    else if (NeuIso < (2.765 +ptdep)) return 2; 
+    else if (NeuIso < (2.725 +ptdep)) return 2; 
     else if (NeuIso < (10.910+ptdep)) return 1; 
     else                              return 0;
   }
