@@ -770,7 +770,7 @@ int PhotonDump::PassChgIso(const float eta, const float ChgIso)
   else                       return 0;
 }
 
-int PhotonDump::PassNeuIso(const float eta, const float ChgIso, const float pt)
+int PhotonDump::PassNeuIso(const float eta, const float NeuIso, const float pt)
 { 
   if (eta < 1.4442)
   {
@@ -1109,7 +1109,7 @@ void PhotonDump::InitializeRecoPhotonBranches()
     phVID     [iph] = -9999;
 
     phHoE_b   [iph] = -9999;
-    phSieie_b [iph] = -9999;
+    phsieie_b [iph] = -9999;
     phChgIso_b[iph] = -9999;
     phNeuIso_b[iph] = -9999;
     phIso_b   [iph] = -9999;
