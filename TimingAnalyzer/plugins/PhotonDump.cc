@@ -545,7 +545,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       phNeuIso_b[iph] = PhotonDump::PassNeuIso(sceta,phNeuIso[iph],phpt[iph]);
       phIso_b   [iph] = PhotonDump::PassPhIso (sceta,phIso   [iph],phpt[iph]);
    
-      // if (dumpVIDs) PhotonDump::DumpVIDs((*phiter),iph,sceta);
+      // if (true) PhotonDump::DumpVIDs((*phiter),iph,sceta);
 
       // use seed to get geometry and recHits
       const DetId seedDetId = phsc->seed()->seed(); //seed detid
@@ -848,9 +848,9 @@ void PhotonDump::DumpVIDs(const pat::Photon & photon, int iph, float sceta)
 {
   int VIDval = 0;
   TString VIDstr = "loose";
-  if (VIDstr.EqualTo("loose"))  VIDval = 1;
-  if (VIDstr.EqualTo("medium")) VIDval = 2;
-  if (VIDstr.EqualTo("tight"))  VIDval = 3;
+  if      (VIDstr.EqualTo("loose"))  VIDval = 1;
+  else if (VIDstr.EqualTo("medium")) VIDval = 2;
+  else if (VIDstr.EqualTo("tight"))  VIDval = 3;
   
   if (photon.photonID(VIDstr.Data()))
   {

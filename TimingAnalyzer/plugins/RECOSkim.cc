@@ -186,17 +186,17 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       // ID-like variables
       phHoE   [iph] = phiter->hadronicOverEm(); // phiter->hadTowOverEm();
-      phChgIso[iph] = phiter->chargedHadronIso() - (rho * RECOSkim::GetChargedHadronEA(sceta));
-      phNeuIso[iph] = phiter->neutralHadronIso() - (rho * RECOSkim::GetNeutralHadronEA(sceta));
-      phPhIso [iph] = phiter->photonIso()        - (rho * RECOSkim::GetGammaEA        (sceta));
+      phChgIso[iph] = std::max(phiter->chargedHadronIso() - (rho * RECOSkim::GetChargedHadronEA(sceta)),0.f);
+      phNeuIso[iph] = std::max(phiter->neutralHadronIso() - (rho * RECOSkim::GetNeutralHadronEA(sceta)),0.f);
+      phPhIso [iph] = std::max(phiter->photonIso()        - (rho * RECOSkim::GetGammaEA        (sceta)),0.f);
       phr9    [iph] = phshape.e3x3/phsc->rawEnergy();
 
       // store similar ints if pass individual selections
-      phHoE_b   [iph] = PhotonDump::PassHoE   (sceta,phHoE   [iph]);
-      phsieie_b [iph] = PhotonDump::PassSieie (sceta,phsieie [iph]);
-      phChgIso_b[iph] = PhotonDump::PassChgIso(sceta,phChgIso[iph]);
-      phNeuIso_b[iph] = PhotonDump::PassNeuIso(sceta,phNeuIso[iph],phpt[iph]);
-      phPhIso_b [iph] = PhotonDump::PassPhIso (sceta,phPhIso [iph],phpt[iph]);
+      phHoE_b   [iph] = RECOSkim::PassHoE   (sceta,phHoE   [iph]);
+      phsieie_b [iph] = RECOSkim::PassSieie (sceta,phsieie [iph]);
+      phChgIso_b[iph] = RECOSkim::PassChgIso(sceta,phChgIso[iph]);
+      phNeuIso_b[iph] = RECOSkim::PassNeuIso(sceta,phNeuIso[iph],phpt[iph]);
+      phPhIso_b [iph] = RECOSkim::PassPhIso (sceta,phPhIso [iph],phpt[iph]);
 	
       /////////////////
       //             //
