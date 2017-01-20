@@ -104,19 +104,19 @@ else:
 			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/273/411/00000/A6078AC7-661B-E611-B6F9-02163E011D0A.root',
 			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/273/411/00000/AEC55DFE-681B-E611-A644-02163E01342A.root',
 			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/273/411/00000/B02FBE98-6B1B-E611-BEC8-02163E0134A9.root',
-			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/273/411/00000/B0BC5A85-691B-E611-81E9-02163E014797.root',
-			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/275/371/00000/56645C1C-1F39-E611-982E-02163E0119CE.root',
-			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/275/371/00000/9AEFFDED-1D39-E611-B149-02163E014545.root',
-			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/275/371/00000/B6F051E8-2039-E611-A5BD-02163E01367A.root',
-			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/275/371/00000/B88F3F6A-2439-E611-8BBD-02163E0137B2.root',
-			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/275/371/00000/C6E4A786-0F39-E611-AE8F-02163E0140DE.root'
+			'/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/273/411/00000/B0BC5A85-691B-E611-81E9-02163E014797.root'
+			# '/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/275/371/00000/56645C1C-1F39-E611-982E-02163E0119CE.root',
+			# '/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/275/371/00000/9AEFFDED-1D39-E611-B149-02163E014545.root',
+			# '/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/275/371/00000/B6F051E8-2039-E611-A5BD-02163E01367A.root',
+			# '/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/275/371/00000/B88F3F6A-2439-E611-8BBD-02163E0137B2.root',
+			# '/store/data/Run2016B/DoubleEG/RECO/PromptReco-v2/000/275/371/00000/C6E4A786-0F39-E611-AE8F-02163E0140DE.root'
 			))
 
 # Set the json locally because the ReRECO gets f'ed
-process.source.lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange())  
-JSONfile = '/afs/cern.ch/user/k/kmcdermo/private/dispho/CMSSW_8_0_21/src/Timing/TimingAnalyzer/test/data_rereco.json'
-myLumis = LumiList.LumiList(filename = JSONfile).getCMSSWString().split(',')  
-process.source.lumisToProcess.extend(myLumis)                              
+# process.source.lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange())  
+# JSONfile = '/afs/cern.ch/user/k/kmcdermo/private/dispho/CMSSW_8_0_21/src/Timing/TimingAnalyzer/test/data_rereco.json'
+# myLumis = LumiList.LumiList(filename = JSONfile).getCMSSWString().split(',')  
+# process.source.lumisToProcess.extend(myLumis)                              
 
 ## How many events to process
 if   options.demoMode : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
