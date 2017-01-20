@@ -58,11 +58,13 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // JETS
   edm::Handle<std::vector<reco::PFJet> > jetsH;
   iEvent.getByToken(jetsToken, jetsH);
+  std::vector<reco::PFJet> jets = *jetsH;
 
   // PHOTONS
   edm::Handle<std::vector<reco::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
-
+  std::vector<reco::Photon> photons = *photonsH;
+  
   // geometry (from ECAL ELF)
   edm::ESHandle<CaloGeometry> calogeoH;
   iSetup.get<CaloGeometryRecord>().get(calogeoH);
@@ -123,15 +125,14 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //                //
   ////////////////////
   RECOSkim::ClearJetBranches();
+  RECOSkim::PrepJets(jetsH,jets);
   if (jetsH.isValid()) // check to make sure reco jets exist
   {
-    njets = jetsH->size() >= 5 ? 5 : jetsH->size(); // save a max of 5 jets
+    njets = jets.size(); // already trimmed to top 5 pT jets
     if (njets > 0) RECOSkim::InitializeJetBranches();
     int ijet = 0;
-    for (std::vector<reco::PFJet>::const_iterator jetiter = jetsH->begin(); jetiter != jetsH->end(); ++jetiter)
+    for (std::vector<reco::PFJet>::const_iterator jetiter = jets.begin(); jetiter != jets.end(); ++jetiter)
     {
-      if (ijet == njets) break;
-
       jetE  [ijet] = jetiter->energy();
       jetpt [ijet] = jetiter->pt();
       jetphi[ijet] = jetiter->phi();
@@ -147,16 +148,17 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //              //
   //////////////////
   RECOSkim::ClearRecoPhotonBranches();
+  RECOSkim::PrepPhotons(photonsH,photons);
   if (photonsH.isValid()) // standard handle check
   {
     // ECALELF tools
     EcalClusterLazyTools * clustertools = new EcalClusterLazyTools (iEvent, iSetup, recHitCollectionEBToken, recHitCollectionEEToken);
 
-    nphotons = photonsH->size();
+    nphotons = photons.size();
     if (nphotons > 0) RECOSkim::InitializeRecoPhotonBranches();
 
     int iph = 0;
-    for (std::vector<reco::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector
+    for (std::vector<reco::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
     {
       // standard photon branches
       phE  [iph] = phiter->energy();
@@ -269,6 +271,23 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   ///////////////
   tree->Fill();      
 }    
+
+void RECOSkim::PrepJets(const edm::Handle<std::vector<reco::PFJet> > & jetsH, std::vector<reco::PFJet> & jets)
+{
+  if (jetsH.isValid()) // standard handle check
+  {
+    std::sort(jets.begin(),jets.end(),sortByJetPt);
+    jets.resize(5); // keep a maximum of 5, now that they are sorted
+  }
+}  
+
+void RECOSkim::PrepPhotons(const edm::Handle<std::vector<reco::Photon> > & photonsH, std::vector<reco::Photon> & photons)
+{
+  if (photonsH.isValid()) // standard handle check
+  {
+    std::sort(photons.begin(),photons.end(),sortByPhotonPt);
+  }
+}  
 
 float RECOSkim::GetChargedHadronEA(const float eta)
 {

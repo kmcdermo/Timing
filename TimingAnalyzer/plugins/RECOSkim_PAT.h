@@ -60,12 +60,25 @@
 // Common types
 #include "CommonTypes.h"
 
+inline bool sortByJetPt(const pat::Jet & jet1, const pat::Jet & jet2)
+{
+  return jet1.pt()>jet2.pt();
+}
+
+inline bool sortByPhotonPt(const pat::Photon & ph1, const pat::Photon & ph2)
+{
+  return ph1.pt()>ph2.pt();
+}
+
 class RECOSkim_PAT : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
  public:
   explicit RECOSkim_PAT(const edm::ParameterSet&);
   ~RECOSkim_PAT();
 
+  void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::vector<pat::Jet> & jets);
+  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<pat::Photon> & photons);
+  
   float GetChargedHadronEA(const float eta);
   float GetNeutralHadronEA(const float eta);
   float GetGammaEA        (const float eta);

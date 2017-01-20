@@ -60,11 +60,24 @@
 // Common types
 #include "CommonTypes.h"
 
+inline bool sortByJetPt(const reco::PFJet & jet1, const reco::PFJet & jet2)
+{
+  return jet1.pt()>jet2.pt();
+}
+
+inline bool sortByPhotonPt(const reco::Photon & ph1, const reco::Photon & ph2)
+{
+  return ph1.pt()>ph2.pt();
+}
+
 class RECOSkim : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
  public:
   explicit RECOSkim(const edm::ParameterSet&);
   ~RECOSkim();
+
+  void PrepJets(const edm::Handle<std::vector<reco::PFJet> > & jetsH, std::vector<reco::PFJet> & jets);
+  void PrepPhotons(const edm::Handle<std::vector<reco::Photon> > & photonsH, std::vector<reco::Photon> & photons);
 
   float GetChargedHadronEA(const float eta);
   float GetNeutralHadronEA(const float eta);
