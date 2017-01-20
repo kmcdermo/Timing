@@ -70,6 +70,12 @@ class RECOSkim : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
   float GetNeutralHadronEA(const float eta);
   float GetGammaEA        (const float eta);
 
+  int PassHoE   (const float eta, const float HoE);
+  int PassSieie (const float eta, const float Sieie);
+  int PassChgIso(const float eta, const float ChgIso);
+  int PassNeuIso(const float eta, const float NeuIso, const float pt);
+  int PassPhIso (const float eta, const float PhIso , const float pt);
+
   void InitializePVBranches();
 
   void InitializeMETBranches();
@@ -134,16 +140,22 @@ class RECOSkim : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
   // photon info
   int nphotons;
 
-  // supercluster info 
-  std::vector<float> phscE;
-
-  // photon info + ID-like variables
+  // photon info
   std::vector<float> phE, phpt, phphi, pheta; 
-  std::vector<float> phHoE, phsieie, phr9, phChgIso, phNeuIso, phIso;
-  std::vector<float> phsuisseX, phsmaj, phsmin;
+
+  // supercluster info 
+  std::vector<float> phscE, phscphi, phsceta;
+
+  // cluster shape info
+  std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin;
+
+  // ID-like variables
+  std::vector<float> phHoE, phChgIso, phNeuIso, phPhIso;
+  std::vector<float> phr9, phsuisseX;
+  std::vector<int> phHoE_b, phsieie_b, phChgIso_b, phNeuIso_b, phPhIso_b;
 
   // all rec hit info
   std::vector<int> phnrh, phnrhEcut, phnrhOOT;
-  std::vector<float> phseedphi, phseedeta, phseedE, phseedtime;
+  std::vector<float> phseedE, phseedphi, phseedeta, phseedtime;
   std::vector<int> phseedOOT;
 };

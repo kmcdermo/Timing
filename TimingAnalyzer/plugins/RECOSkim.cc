@@ -158,35 +158,45 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     int iph = 0;
     for (std::vector<reco::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector
     {
-      // super cluster from photon
-      const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
-      const float phsceta = std::abs(phsc->eta());
-      phscE[iph] = phsc->energy();
-
-      // Shower Shape Objects
-      const reco::Photon::ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
-
       // standard photon branches
       phE  [iph] = phiter->energy();
       phpt [iph] = phiter->pt();
       phphi[iph] = phiter->phi();
       pheta[iph] = phiter->eta();
 
-      // ID-like variables
-      phHoE   [iph] = phiter->hadronicOverEm(); // phiter->hadTowOverEm();
-      phsieie [iph] = phshape.sigmaIetaIeta;
-      phr9    [iph] = phshape.e3x3/phsc->rawEnergy();
-      phChgIso[iph] = phiter->chargedHadronIso() - (rho * RECOSkim::GetChargedHadronEA(phsceta));
-      phNeuIso[iph] = phiter->neutralHadronIso() - (rho * RECOSkim::GetNeutralHadronEA(phsceta));
-      phIso   [iph] = phiter->photonIso()        - (rho * RECOSkim::GetGammaEA        (phsceta));
+      // super cluster from photon
+      const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
+      phscE  [iph] = phsc->energy();
+      phscphi[iph] = phsc->phi();
+      phsceta[iph] = phsc->eta();
+      const float sceta = std::abs(phsceta[iph]);
+
+      // Shower Shape Objects
+      const reco::Photon::ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
 
       // cluster shape variables
-      const float see  = phshape.sigmaIetaIeta;
-      const float spp  = phshape.sigmaIphiIphi;
-      const float sep  = phshape.sigmaIetaIphi;
-      const float disc = std::sqrt((spp-see)*(spp-see)+4.f*sep*sep);
-      phsmaj[iph] = (spp+see+disc)/2.f;
-      phsmin[iph] = (spp+see-disc)/2.f;
+      phsieie[iph] = phshape.sigmaIetaIeta;
+      phsipip[iph] = phshape.sigmaIphiIphi;
+      phsieip[iph] = phshape.sigmaIetaIphi;
+      const float disc = std::sqrt(std::pow(phsipip[iph]-phsieie[iph],2)+4.f*std::pow(phsieip[iph],2));
+
+      // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
+      phsmaj[iph] = (phsipip[iph]+phsieie[iph]+disc)/2.f;
+      phsmin[iph] = (phsipip[iph]+phsieie[iph]-disc)/2.f;
+
+      // ID-like variables
+      phHoE   [iph] = phiter->hadronicOverEm(); // phiter->hadTowOverEm();
+      phChgIso[iph] = phiter->chargedHadronIso() - (rho * RECOSkim::GetChargedHadronEA(sceta));
+      phNeuIso[iph] = phiter->neutralHadronIso() - (rho * RECOSkim::GetNeutralHadronEA(sceta));
+      phPhIso [iph] = phiter->photonIso()        - (rho * RECOSkim::GetGammaEA        (sceta));
+      phr9    [iph] = phshape.e3x3/phsc->rawEnergy();
+
+      // store similar ints if pass individual selections
+      phHoE_b   [iph] = PhotonDump::PassHoE   (sceta,phHoE   [iph]);
+      phsieie_b [iph] = PhotonDump::PassSieie (sceta,phsieie [iph]);
+      phChgIso_b[iph] = PhotonDump::PassChgIso(sceta,phChgIso[iph]);
+      phNeuIso_b[iph] = PhotonDump::PassNeuIso(sceta,phNeuIso[iph],phpt[iph]);
+      phPhIso_b [iph] = PhotonDump::PassPhIso (sceta,phPhIso [iph],phpt[iph]);
 	
       /////////////////
       //             //
@@ -195,7 +205,7 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       /////////////////
       // use seed to get geometry and recHits
       const DetId seedDetId = phsc->seed()->seed(); //seed detid
-      const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
+      const bool  isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
       const EcalRecHitCollection * recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
       
       // map of rec hit ids
@@ -236,9 +246,9 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	if (seedDetId.rawId() == recHitId) 
 	{ 
 	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
+	  phseedE   [iph] = recHit->energy();
 	  phseedphi [iph] = recHitPos.phi();
 	  phseedeta [iph] = recHitPos.eta();
-	  phseedE   [iph] = recHit->energy();
 	  phseedtime[iph] = recHit->time();
 	  phseedOOT [iph] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
 
@@ -268,7 +278,7 @@ float RECOSkim::GetChargedHadronEA(const float eta)
   else if (eta >= 2.0   && eta < 2.2  ) return 0.0283;
   else if (eta >= 2.2   && eta < 2.3  ) return 0.0254;
   else if (eta >= 2.3   && eta < 2.4  ) return 0.0217;
-  else if (eta >= 2.4)                  return 0.0167;
+  else if (eta >= 2.4   && eta < 5.0  ) return 0.0167;
   else                                  return 0.;
 }
 
@@ -280,7 +290,7 @@ float RECOSkim::GetNeutralHadronEA(const float eta)
   else if (eta >= 2.0   && eta < 2.2  ) return 0.0197;
   else if (eta >= 2.2   && eta < 2.3  ) return 0.0184;
   else if (eta >= 2.3   && eta < 2.4  ) return 0.0284;
-  else if (eta >= 2.4)                  return 0.0591;
+  else if (eta >= 2.4   && eta < 5.0  ) return 0.0591;
   else                                  return 0.;
 }
 
@@ -292,8 +302,107 @@ float RECOSkim::GetGammaEA(const float eta)
   else if (eta >= 2.0   && eta < 2.2  ) return 0.1056;
   else if (eta >= 2.2   && eta < 2.3  ) return 0.1457;
   else if (eta >= 2.3   && eta < 2.4  ) return 0.1719;
-  else if (eta >= 2.4)                  return 0.1998;
+  else if (eta >= 2.4   && eta < 5.0  ) return 0.1998;
   else                                  return 0.;
+}
+
+int RECOSkim::PassHoE(const float eta, const float HoE)
+{ 
+  if (eta < 1.479) // 1.4442
+  {
+    if      (HoE < 0.0269) return 3; 
+    else if (HoE < 0.0396) return 2; 
+    else if (HoE < 0.0597) return 1; 
+    else                   return 0;
+  }
+  else if (eta > 1.479 && eta < 2.5) // 1.566
+  {
+    if      (HoE < 0.0213) return 3; 
+    else if (HoE < 0.0219) return 2; 
+    else if (HoE < 0.0481) return 1; 
+    else                   return 0;
+  }
+  else                     return 0;
+}
+
+int RECOSkim::PassSieie(const float eta, const float Sieie)
+{ 
+  if (eta < 1.479)
+  {
+    if      (Sieie < 0.00994) return 3; 
+    else if (Sieie < 0.01022) return 2; 
+    else if (Sieie < 0.01031) return 1; 
+    else                      return 0;
+  }
+  else if (eta > 1.479 && eta < 2.5)
+  {
+    if      (Sieie < 0.03000) return 3; 
+    else if (Sieie < 0.03001) return 2; 
+    else if (Sieie < 0.03013) return 1; 
+    else                      return 0;
+  }
+  else                        return 0;
+}
+
+int RECOSkim::PassChgIso(const float eta, const float ChgIso)
+{ 
+  if (eta < 1.479)
+  {
+    if      (ChgIso < 0.202) return 3; 
+    else if (ChgIso < 0.441) return 2; 
+    else if (ChgIso < 1.295) return 1; 
+    else                     return 0;
+  }
+  else if (eta > 1.479 && eta < 2.5)
+  {
+    if      (ChgIso < 0.034) return 3; 
+    else if (ChgIso < 0.442) return 2; 
+    else if (ChgIso < 1.011) return 1; 
+    else                     return 0;
+  }
+  else                       return 0;
+}
+
+int RECOSkim::PassNeuIso(const float eta, const float NeuIso, const float pt)
+{ 
+  if (eta < 1.479)
+  {
+    const float ptdep = 0.0148*pt+0.000017*pt*pt;
+    if      (NeuIso < (0.264 +ptdep)) return 3; 
+    else if (NeuIso < (2.725 +ptdep)) return 2; 
+    else if (NeuIso < (10.910+ptdep)) return 1; 
+    else                              return 0;
+  }
+  else if (eta > 1.479 && eta < 2.5)
+  {
+    const float ptdep = 0.0163*pt+0.000014*pt*pt;
+    if      (NeuIso < (0.586 +ptdep)) return 3; 
+    else if (NeuIso < (1.715 +ptdep)) return 2; 
+    else if (NeuIso < (5.931 +ptdep)) return 1; 
+    else                              return 0;
+  }
+  else                                return 0;
+}
+
+int RECOSkim::PassPhIso(const float eta, const float PhIso, const float pt)
+{ 
+  if (eta < 1.479)
+  {
+    const float ptdep = 0.0047*pt;
+    if      (PhIso < (2.362+ptdep)) return 3; 
+    else if (PhIso < (2.571+ptdep)) return 2; 
+    else if (PhIso < (3.630+ptdep)) return 1; 
+    else                            return 0;
+  }
+  else if (eta > 1.479 && eta < 2.5)
+  {
+    const float ptdep = 0.0034*pt;
+    if      (PhIso < (2.617+ptdep)) return 3; 
+    else if (PhIso < (3.863+ptdep)) return 2; 
+    else if (PhIso < (6.641+ptdep)) return 1; 
+    else                            return 0;
+  }
+  else                              return 0;
 }
 
 void RECOSkim::InitializePVBranches()
@@ -337,54 +446,74 @@ void RECOSkim::ClearRecoPhotonBranches()
 {
   nphotons = -9999;
 
-  phscE.clear(); 
-
   phE.clear();
   phpt.clear();
   phphi.clear(); 
   pheta.clear(); 
-  
-  phHoE.clear();
-  phsieie.clear();
-  phr9.clear();
-  phChgIso.clear();
-  phNeuIso.clear();
-  phIso.clear();
 
-  phsuisseX.clear();
+  phscE.clear(); 
+  phscphi.clear(); 
+  phsceta.clear(); 
+
+  phsieie.clear();
+  phsipip.clear();
+  phsieip.clear();
   phsmaj.clear();
   phsmin.clear();
   
+  phHoE.clear();
+  phChgIso.clear();
+  phNeuIso.clear();
+  phPhIso.clear();
+  phr9.clear();
+  phsuisseX.clear();
+
+  phHoE_b.clear();
+  phsieie_b.clear();
+  phChgIso_b.clear();
+  phNeuIso_b.clear();
+  phPhIso_b.clear();
+
   phnrh.clear();
   phnrhEcut.clear();
   phnrhOOT.clear();
+  phseedE.clear(); 
   phseedphi.clear();
   phseedeta.clear(); 
-  phseedE.clear(); 
   phseedtime.clear();
   phseedOOT.clear();
 }
 
 void RECOSkim::InitializeRecoPhotonBranches()
 {
-  phscE.resize(nphotons);
-
   phE.resize(nphotons);
   phpt.resize(nphotons);
   phphi.resize(nphotons);
   pheta.resize(nphotons);
 
-  phHoE.resize(nphotons);
-  phsieie.resize(nphotons);
-  phr9.resize(nphotons);
-  phChgIso.resize(nphotons);
-  phNeuIso.resize(nphotons);
-  phIso.resize(nphotons);
+  phscE.resize(nphotons);
+  phscphi.resize(nphotons);
+  phsceta.resize(nphotons);
 
-  phsuisseX.resize(nphotons);
+  phsieie.resize(nphotons);
+  phsipip.resize(nphotons);
+  phsieip.resize(nphotons);
   phsmaj.resize(nphotons);
   phsmin.resize(nphotons);
+
+  phHoE.resize(nphotons);
+  phChgIso.resize(nphotons);
+  phNeuIso.resize(nphotons);
+  phPhIso.resize(nphotons);
+  phsuisseX.resize(nphotons);
+  phr9.resize(nphotons);
   
+  phHoE_b.resize(nphotons);
+  phsieie_b.resize(nphotons);
+  phChgIso_b.resize(nphotons);
+  phNeuIso_b.resize(nphotons);
+  phPhIso_b.resize(nphotons);
+
   phnrh.resize(nphotons);
   phnrhEcut.resize(nphotons);
   phnrhOOT.resize(nphotons);
@@ -396,30 +525,40 @@ void RECOSkim::InitializeRecoPhotonBranches()
 
   for (int iph = 0; iph < nphotons; iph++)
   {
-    phscE[iph] = -9999.f; 
-
     phE   [iph] = -9999.f; 
     phpt  [iph] = -9999.f; 
     phphi [iph] = -9999.f; 
     pheta [iph] = -9999.f; 
     
-    phHoE   [iph] = -9999.f;
-    phsieie [iph] = -9999.f;
-    phr9    [iph] = -9999.f;
-    phChgIso[iph] = -9999.f;
-    phNeuIso[iph] = -9999.f;
-    phIso   [iph] = -9999.f;
+    phscE  [iph] = -9999.f; 
+    phscphi[iph] = -9999.f; 
+    phsceta[iph] = -9999.f; 
 
+    phsieie[iph] = -9999.f;
+    phsipip[iph] = -9999.f;
+    phsieip[iph] = -9999.f;
+    phsmaj [iph] = -9999.f;
+    phsmin [iph] = -9999.f;
+
+    phHoE    [iph] = -9999.f;
+    phChgIso [iph] = -9999.f;
+    phNeuIso [iph] = -9999.f;
+    phPhIso  [iph] = -9999.f;
+    phr9     [iph] = -9999.f;
     phsuisseX[iph] = -9999.f;
-    phsmaj[iph]    = -9999.f;
-    phsmin[iph]    = -9999.f;
     
+    phHoE_b   [iph] = -9999;
+    phsieie_b [iph] = -9999;
+    phChgIso_b[iph] = -9999;
+    phNeuIso_b[iph] = -9999;
+    phPhIso_b [iph] = -9999;
+
     phnrh     [iph] = -9999;
     phnrhEcut [iph] = -9999;
     phnrhOOT  [iph] = -9999;
+    phseedE   [iph] = -9999.f;
     phseedphi [iph] = -9999.f;
     phseedeta [iph] = -9999.f;
-    phseedE   [iph] = -9999.f;
     phseedtime[iph] = -9999.f;
     phseedOOT [iph] = -9999;
   }
@@ -456,29 +595,40 @@ void RECOSkim::beginJob()
   // Photon Info
   tree->Branch("nphotons"             , &nphotons             , "nphotons/I");
 
-  tree->Branch("phscE"                , &phscE);
-
   tree->Branch("phE"                  , &phE);
   tree->Branch("phpt"                 , &phpt);
   tree->Branch("phphi"                , &phphi);
   tree->Branch("pheta"                , &pheta);
 
-  tree->Branch("phHoE"                , &phHoE);
-  tree->Branch("phsieie"              , &phsieie);
-  tree->Branch("phr9"                 , &phr9);
-  tree->Branch("phChgIso"             , &phChgIso);
-  tree->Branch("phNeuIso"             , &phNeuIso);
-  tree->Branch("phIso"                , &phIso);
+  tree->Branch("phscE"                , &phscE);
+  tree->Branch("phscphi"              , &phscphi);
+  tree->Branch("phsceta"              , &phsceta);
 
+  tree->Branch("phsieie"              , &phsieie);
+  tree->Branch("phsipip"              , &phsipip);
+  tree->Branch("phsieip"              , &phsieip);
   tree->Branch("phsmaj"               , &phsmaj);
   tree->Branch("phsmin"               , &phsmin);
+
+  tree->Branch("phHoE"                , &phHoE);
+  tree->Branch("phChgIso"             , &phChgIso);
+  tree->Branch("phNeuIso"             , &phNeuIso);
+  tree->Branch("phPhIso"              , &phPhIso);
+  tree->Branch("phr9"                 , &phr9);
+  tree->Branch("phsuisseX"            , &phsuisseX);
+
+  tree->Branch("phHoE_b"              , &phHoE_b);
+  tree->Branch("phsieie_b"            , &phsieie_b);
+  tree->Branch("phChgIso_b"           , &phChgIso_b);
+  tree->Branch("phNeuIso_b"           , &phNeuIso_b);
+  tree->Branch("phPhIso_b"            , &phPhIso_b);
 
   tree->Branch("phnrh"                , &phnrh);
   tree->Branch("phnrhEcut"            , &phnrhEcut);
   tree->Branch("phnrhOOT"             , &phnrhOOT);
+  tree->Branch("phseedE"              , &phseedE);
   tree->Branch("phseedphi"            , &phseedphi);
   tree->Branch("phseedeta"            , &phseedeta);
-  tree->Branch("phseedE"              , &phseedE);
   tree->Branch("phseedtime"           , &phseedtime);
   tree->Branch("phseedOOT"            , &phseedOOT);
 }
