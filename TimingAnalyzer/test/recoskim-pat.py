@@ -232,7 +232,7 @@ process.tree = cms.EDAnalyzer("RECOSkim_PAT",
    ## rho
    rhos = cms.InputTag("fixedGridRhoFastjetAll"),
    ## MET
-   mets = cms.InputTag("slimmedMets"),
+   mets = cms.InputTag("slimmedMETs"),
    ## jets			    	
    jets = cms.InputTag("slimmedJets"),
    ## photons		

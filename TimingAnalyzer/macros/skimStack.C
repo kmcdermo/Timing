@@ -11,7 +11,8 @@
 #include <fstream>
 #include <vector>
 
-TString outdir = "output/skimstacks";
+TString indir  = "output/skim";
+TString outdir = "output/skim/stacks";
 
 void getData(std::vector<TH1F*>&, std::vector<TString>&);
 void getSignals(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&);
@@ -37,6 +38,20 @@ void skimStack()
   std::vector<TH1F*> ctau100TH1Fs(histnames.size()), ctau2000TH1Fs(histnames.size()), ctau6000TH1Fs(histnames.size());
   getSignals(ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames);
 
+  // make out dir
+  FileStat_t dummyFileStat; 
+  if (gSystem->GetPathInfo(outdir.Data(), dummyFileStat) == 1)
+  {
+    TString mkDir = Form("mkdir -p %s",outdir.Data());
+    gSystem->Exec(mkDir.Data());
+
+    TString mkLin = Form("mkdir -p %s/lin",outdir.Data());
+    gSystem->Exec(mkLin.Data());
+
+    TString mkLog = Form("mkdir -p %s/log",outdir.Data());
+    gSystem->Exec(mkLog.Data());
+  }
+  
   // Draw everything together
   drawAll(dataTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames);
 
@@ -49,7 +64,7 @@ void skimStack()
 void getHistNames(std::vector<TString> & histnames) 
 {
   std::ifstream histdump;
-  histdump.open("output/histdump.txt",std::ios::in);
+  histdump.open(Form("%s/histdump.txt",indir.Data()),std::ios::in);
   
   TString plotname; 
   while (histdump >> plotname)
@@ -61,7 +76,7 @@ void getHistNames(std::vector<TString> & histnames)
 
 void getData(std::vector<TH1F*>& dataTH1Fs, std::vector<TString>& histnames)
 {
-  TFile * datafile = TFile::Open("output/dataskim/plots.root");
+  TFile * datafile = TFile::Open(Form("%s/data/plots.root",indir.Data()));
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
   {
@@ -76,9 +91,9 @@ void getData(std::vector<TH1F*>& dataTH1Fs, std::vector<TString>& histnames)
 void getSignals(std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames)
 {
   // Signals
-  TFile * file100  = TFile::Open("output/ctau100skim/plots.root");
-  TFile * file2000 = TFile::Open("output/ctau2000skim/plots.root");
-  TFile * file6000 = TFile::Open("output/ctau6000skim/plots.root");
+  TFile * file100  = TFile::Open(Form("%s/ctau100/plots.root" ,indir.Data()));
+  TFile * file2000 = TFile::Open(Form("%s/ctau2000/plots.root",indir.Data()));
+  TFile * file6000 = TFile::Open(Form("%s/ctau6000/plots.root",indir.Data()));
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
   {
@@ -107,7 +122,6 @@ void drawAll(std::vector<TH1F*>& dataTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, st
   {
     TCanvas * canv = new TCanvas("canv","canv");
     canv->cd();
-    canv->SetLogy();
     dataTH1Fs    [ihist]->GetYaxis()->SetRangeUser(5e-5,1.3);
     dataTH1Fs    [ihist]->Draw("EP");
     ctau100TH1Fs [ihist]->Draw("HIST same");
@@ -122,7 +136,18 @@ void drawAll(std::vector<TH1F*>& dataTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, st
     leg->Draw("same");
     
     CMSLumi(canv,"Preliminary");
-    canv->SaveAs(Form("%s/hist_%s.png",outdir.Data(),histnames[ihist].Data()));
+
+    // save as log first
+    canv->cd();
+    canv->SetLogy(1);
+    canv->SaveAs(Form("%s/log/%s.png",outdir.Data(),histnames[ihist].Data()));
+
+    // save as lin second
+    canv->cd();
+    canv->SetLogy(0);
+    dataTH1Fs    [ihist]->GetYaxis()->SetRangeUser(0.f,1.f);
+    dataTH1Fs    [ihist]->Draw("EP");
+    canv->SaveAs(Form("%s/lin/%s.png",outdir.Data(),histnames[ihist].Data()));
 
     delete leg;
     delete canv;

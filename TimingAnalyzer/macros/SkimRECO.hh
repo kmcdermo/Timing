@@ -45,9 +45,9 @@ class SkimRECO
 {
 public :
   SkimRECO(TString filename, TString outdir = "output", Bool_t savehistnames = false,
-	   Float_t jetptcut = 35.f, Int_t njetcut = 3,
-	   Float_t phptcut = 100.f, Float_t phsieieEB = 0.01022, Float_t phsieieEE = 0.03001,
-	   Float_t phsmajcut = 1.f, Float_t phsmincut = 1.f, Float_t phsminOversmajcut = 1.f,
+	   Float_t jetptcut = 0.f, Int_t njetcut = 0,
+	   Float_t phptcut = 0.f, Float_t phsieieEB = 0.f, Float_t phsieieEE = 0.f,
+	   Float_t phsmajEBcut = 1.f, Float_t phsmajEEcut = 1.f, Float_t phsminEBcut = 1.f, Float_t phsminEEcut = 1.f, 
 	   Bool_t applyEBonly = false, Bool_t applyEEonly = false);
   ~SkimRECO();
   void InitTree();
@@ -61,13 +61,15 @@ public :
   TEfficiency * MakeTEff(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle);
   void EventLoop();
   void DoEfficiency(Bool_t & passed);
-  void FillNminus1(const std::vector<Int_t> & phs, const Int_t njets_ptcut);
+  void FillNminus1(const Int_t njets_ptcut, const std::vector<Int_t> & phs);
   void FillTEffs(const Bool_t passed, const std::vector<Int_t> & phs);
   void FillAnalysis(const std::vector<Int_t> & phs);
-  void GetPhsPt(std::vector<Int_t> & phspt);
-  void GetPhsSieie(std::vector<Int_t> & phssieie);
   Int_t GetNJetsPt();
   void GetPhs(std::vector<Int_t> & phs);
+  void GetPhsPt(std::vector<Int_t> & phspt);
+  void GetPhsSieie(std::vector<Int_t> & phssieie);
+  void GetPhsSmaj(std::vector<Int_t> & phssmaj);
+  void GetPhsSmin(std::vector<Int_t> & phssmin);
   void OutputTH1Fs();
   void OutputTH2Fs();
   void OutputTEffs();
@@ -91,9 +93,10 @@ private :
   const Float_t fPhPtCut;
   const Float_t fPhSieieEBCut;
   const Float_t fPhSieieEECut;
-  const Float_t fPhSmajCut;
-  const Float_t fPhSminCut;
-  const Float_t fPhSminOverSmajCut;
+  const Float_t fPhSmajEBCut;
+  const Float_t fPhSmajEECut;
+  const Float_t fPhSminEBCut;
+  const Float_t fPhSminEECut;
   const Bool_t  fApplyEBOnly;
   const Bool_t  fApplyEEOnly;
 
