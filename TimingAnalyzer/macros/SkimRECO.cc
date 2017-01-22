@@ -496,8 +496,9 @@ void SkimRECO::DumpEfficiency()
 {
   const Int_t nEntries = fInTree->GetEntries();
   const Float_t eff = Float_t(fNPassed)/Float_t(nEntries);
+  const Float_t unc = std::sqrt((eff*(1.f-eff))/float(nEntries));
 
-  std::cout << "nEntries: " << nEntries << " nPassed: " << fNPassed << " efficiency: " << eff << std::endl;
+  std::cout << "nEntries: " << nEntries << " nPassed: " << fNPassed << " efficiency: " << eff << " +/- " << unc << std::endl;
 }
 
 void SkimRECO::InitTree()
