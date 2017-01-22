@@ -27,10 +27,23 @@ void runSkim()
   // phsmajcut, phsmincut, phsmin_over_smaj_cut
   //  applyEBonly, applyEEonly
 
-  SkimRECO dataskimmer    ("input/DATA/doubleeg/skim/recoskim.root"         ,"output/skim/data"    ,true,25,2,30,1.f,1.f,0.015,0.04,0.015,0.04);
-  SkimRECO ctau100skimmer ("input/MC/signal/skim/recoskim-pat-ctau100.root" ,"output/skim/ctau100" ,true,25,2,30,1.f,1.f,0.015,0.04,0.015,0.04);
-  SkimRECO ctau2000skimmer("input/MC/signal/skim/recoskim-pat-ctau2000.root","output/skim/ctau2000",true,25,2,30,1.f,1.f,0.015,0.04,0.015,0.04);
-  SkimRECO ctau6000skimmer("input/MC/signal/skim/recoskim-pat-ctau6000.root","output/skim/ctau6000",true,25,2,30,1.f,1.f,0.015,0.04,0.015,0.04);
+  TString outdir = "output/skim";
+  
+  Float_t jetpt = 25.f;
+  Int_t   njets = 2;
+  
+  Float_t phpt    = 30.f;
+  Float_t sieieEB = 1.f;
+  Float_t sieieEE = 1.f;
+  Float_t smajEB  = 0.015;
+  Float_t smajEE  = 0.040;
+  Float_t sminEB  = 0.015;
+  Float_t sminEE  = 0.040;
+
+  SkimRECO dataskimmer    ("input/DATA/doubleeg/skim/recoskim.root"         ,outdir,"data"    ,true ,jetpt,njets,phpt,sieieEB,sieieEE,smajEB,smajEE,sminEB,sminEE);
+  SkimRECO ctau100skimmer ("input/MC/signal/skim/recoskim-pat-ctau100.root" ,outdir,"ctau100" ,false,jetpt,njets,phpt,sieieEB,sieieEE,smajEB,smajEE,sminEB,sminEE);
+  SkimRECO ctau2000skimmer("input/MC/signal/skim/recoskim-pat-ctau2000.root",outdir,"ctau2000",false,jetpt,njets,phpt,sieieEB,sieieEE,smajEB,smajEE,sminEB,sminEE);
+  SkimRECO ctau6000skimmer("input/MC/signal/skim/recoskim-pat-ctau6000.root",outdir,"ctau6000",false,jetpt,njets,phpt,sieieEB,sieieEE,smajEB,smajEE,sminEB,sminEE);
 
   dataskimmer    .DoSkim();
   ctau100skimmer .DoSkim();

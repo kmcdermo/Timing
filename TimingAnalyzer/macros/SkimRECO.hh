@@ -44,7 +44,7 @@ typedef IntMap::iterator      IntMapIter;
 class SkimRECO 
 {
 public :
-  SkimRECO(TString filename, TString outdir = "output", Bool_t savehistnames = false,
+  SkimRECO(TString filename, TString outdir = "output/skim", TString subdir = "", Bool_t savehistnames = false,
 	   Float_t jetptcut = 0.f, Int_t njetcut = 0,
 	   Float_t phptcut = 0.f, Float_t phsieieEB = 0.f, Float_t phsieieEE = 0.f,
 	   Float_t phsmajEBcut = 1.f, Float_t phsmajEEcut = 1.f, Float_t phsminEBcut = 1.f, Float_t phsminEEcut = 1.f, 
@@ -102,8 +102,9 @@ private :
 
   // Output vars
   const TString fOutDir;
-  TFile * fOutFile;
-  const Bool_t fSaveHistNames;
+  const TString fSubDir;
+        TFile * fOutFile;
+  const Bool_t  fDump;
   std::ofstream fHistDump;
 
   // Declaration of leaf types

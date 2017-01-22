@@ -5,12 +5,12 @@
 
 #include <iostream>
 
-SkimRECO::SkimRECO(TString filename, TString outdir, Bool_t savehistnames,
+SkimRECO::SkimRECO(TString filename, TString outdir, TString subdir, Bool_t dump,
 		   Float_t jetptcut, Int_t njetcut, 
 		   Float_t phptcut, Float_t phsieieEBcut, Float_t phsieieEEcut,
 		   Float_t phsmajEBcut, Float_t phsmajEEcut, Float_t phsminEBcut, Float_t phsminEEcut, 
 		   Bool_t applyEBonly, Bool_t applyEEonly) :
-  fOutDir(outdir), fSaveHistNames(savehistnames),
+  fOutDir(outdir), fSubDir(subdir), fDump(dump),
   fJetPtCut(jetptcut), fNJetCut(njetcut), 
   fPhPtCut(phptcut), fPhSieieEBCut(phsieieEBcut), fPhSieieEECut(phsieieEEcut),
   fPhSmajEBCut(phsmajEBcut), fPhSmajEECut(phsmajEEcut), fPhSminEBCut(phsminEBcut), fPhSminEECut(phsminEEcut),
@@ -30,38 +30,38 @@ SkimRECO::SkimRECO(TString filename, TString outdir, Bool_t savehistnames,
   fNPassed = 0;
 
   FileStat_t dummyFileStat; 
-  if (gSystem->GetPathInfo(fOutDir.Data(), dummyFileStat) == 1)
+  if (gSystem->GetPathInfo(Form("%s/%s",fOutDir.Data(),fSubDir.Data()), dummyFileStat) == 1)
   {
-    TString mkDir = Form("mkdir -p %s",fOutDir.Data());
+    TString mkDir = Form("mkdir -p %s/%s",fOutDir.Data(),fSubDir.Data());
     gSystem->Exec(mkDir.Data());
 
-    TString mkLin = Form("mkdir -p %s/lin",fOutDir.Data());
+    TString mkLin = Form("mkdir -p %s/%s/lin",fOutDir.Data(),fSubDir.Data());
     gSystem->Exec(mkLin.Data());
 
-    TString mkLog = Form("mkdir -p %s/log",fOutDir.Data());
+    TString mkLog = Form("mkdir -p %s/%s/log",fOutDir.Data(),fSubDir.Data());
     gSystem->Exec(mkLog.Data());
   }
 
-  // dump cuts used in the selection
-  std::ofstream cutdump;
-  cutdump.open(Form("%s/cuts.txt",fOutDir.Data()),std::ios_base::trunc);
-  cutdump << "jet cuts: " << std::endl
-	  << "  pT: " << fJetPtCut 
-	  << "  nJets over pT cut: " << fNJetCut << std::endl << std::endl;
-  cutdump << "photon cuts: " << std::endl
-	  << "  pT: " << fPhPtCut << std::endl
-	  << "  Sieie EB: " << fPhSieieEBCut << " EE: " << fPhSieieEECut << std::endl
-	  << "  Smaj EB: " << fPhSmajEBCut << " EE: " << fPhSmajEECut << std::endl
-	  << "  Smin EB: " << fPhSminEBCut << " EE: " << fPhSminEECut << std::endl;
-  cutdump.close();
-
-  // dump hists for stacking purposes
-  if (fSaveHistNames)
+  if (fDump)
   {
-    fHistDump.open("output/skim/histdump.txt",std::ios_base::trunc);
+    // dump cuts used in the selection
+    std::ofstream cutdump;
+    cutdump.open(Form("%s/cuts.txt",fOutDir.Data()),std::ios_base::trunc);
+    cutdump << "jet cuts: " << std::endl
+	    << "  pT: " << fJetPtCut 
+	    << " nJets over pT cut: " << fNJetCut << std::endl << std::endl;
+    cutdump << "photon cuts: " << std::endl
+	    << "  pT: " << fPhPtCut << std::endl
+	    << "  Sieie EB: " << fPhSieieEBCut << " EE: " << fPhSieieEECut << std::endl
+	    << "  Smaj EB: " << fPhSmajEBCut << " EE: " << fPhSmajEECut << std::endl
+	    << "  Smin EB: " << fPhSminEBCut << " EE: " << fPhSminEECut << std::endl;
+    cutdump.close();
+
+    // dump hists for stacking purposes
+    fHistDump.open(Form("%s/histdump.txt",fOutDir.Data()),std::ios_base::trunc);
   }  
 
-  fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
+  fOutFile = new TFile(Form("%s/%s/plots.root",fOutDir.Data(),fSubDir.Data()),"UPDATE");
 }
 
 SkimRECO::~SkimRECO()
@@ -70,7 +70,7 @@ SkimRECO::~SkimRECO()
   delete fInFile;
 
   delete fOutFile;
-  if (fSaveHistNames) fHistDump.close();
+  if (fDump) fHistDump.close();
 }
 
 void SkimRECO::DoSkim()
@@ -420,7 +420,7 @@ void SkimRECO::OutputTH1Fs()
     mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); 
     
     // save hist to a text file
-    if (fSaveHistNames) fHistDump << mapiter->second->GetName() << std::endl;
+    if (fDump) fHistDump << mapiter->second->GetName() << std::endl;
 
     // now draw onto canvas to save as png
     TCanvas * canv = new TCanvas("canv","canv");
@@ -429,10 +429,10 @@ void SkimRECO::OutputTH1Fs()
     
     // first save as linear, then log
     canv->SetLogy(0);
-    canv->SaveAs(Form("%s/lin/%s.png",fOutDir.Data(),mapiter->first.Data()));
+    canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
 
     canv->SetLogy(1);
-    canv->SaveAs(Form("%s/log/%s.png",fOutDir.Data(),mapiter->first.Data()));
+    canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
 
     delete canv;
     delete mapiter->second;
@@ -456,7 +456,7 @@ void SkimRECO::OutputTH2Fs()
     
     // first save as linear, then log
     canv->SetLogy(0);
-    canv->SaveAs(Form("%s/lin/%s.png",fOutDir.Data(),mapiter->first.Data()));
+    canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
 
     delete canv;
     delete mapiter->second;
@@ -480,11 +480,11 @@ void SkimRECO::OutputTEffs()
     
     // first save as linear, then log
     canv->SetLogy(0);
-    canv->SaveAs(Form("%s/lin/%s.png",fOutDir.Data(),mapiter->first.Data()));
+    canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
 
     // first save as linear, then log
     canv->SetLogy(1);
-    canv->SaveAs(Form("%s/log/%s.png",fOutDir.Data(),mapiter->first.Data()));
+    canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
 
     delete canv;
     delete mapiter->second;
