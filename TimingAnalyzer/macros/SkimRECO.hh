@@ -11,6 +11,7 @@
 #include "TLorentzVector.h"
 #include "TVector3.h"
 
+#include <fstream>
 #include <vector>
 #include <map>
 
@@ -43,9 +44,10 @@ typedef IntMap::iterator      IntMapIter;
 class SkimRECO 
 {
 public :
-  SkimRECO(TString filename, TString outdir = "output", 
+  SkimRECO(TString filename, TString outdir = "output", Bool_t savehistnames = false,
 	   Float_t jetptcut = 35.f, Int_t njetcut = 3,
 	   Float_t phptcut = 100.f, Float_t phsieieEB = 0.01022, Float_t phsieieEE = 0.03001,
+	   Float_t phsmajcut = 1.f, Float_t phsmincut = 1.f, Float_t phsminOversmajcut = 1.f,
 	   Bool_t applyEBonly = false, Bool_t applyEEonly = false);
   ~SkimRECO();
   void InitTree();
@@ -57,11 +59,15 @@ public :
   TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle);
   TH2F * MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle);
   TEfficiency * MakeTEff(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle);
-  void EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis);
-  void FillNminus1();
-  void DoFullEfficiency(Bool_t & passed);
-  void FillTEffs(const Bool_t & passed, const Int_t ph1all);
-  void FillAnalysis(const Int_t ph1all);
+  void EventLoop();
+  void DoEfficiency(Bool_t & passed);
+  void FillNminus1(const std::vector<Int_t> & phs, const Int_t njets_ptcut);
+  void FillTEffs(const Bool_t passed, const std::vector<Int_t> & phs);
+  void FillAnalysis(const std::vector<Int_t> & phs);
+  void GetPhsPt(std::vector<Int_t> & phspt);
+  void GetPhsSieie(std::vector<Int_t> & phssieie);
+  Int_t GetNJetsPt();
+  void GetPhs(std::vector<Int_t> & phs);
   void OutputTH1Fs();
   void OutputTH2Fs();
   void OutputTEffs();
@@ -77,6 +83,7 @@ private :
   TH1Map  fPlots;
   TH2Map  fPlots2D;
   TEffMap fEffs;
+  Int_t   fNPassed;
 
   // Config
   const Float_t fJetPtCut;
@@ -84,12 +91,17 @@ private :
   const Float_t fPhPtCut;
   const Float_t fPhSieieEBCut;
   const Float_t fPhSieieEECut;
+  const Float_t fPhSmajCut;
+  const Float_t fPhSminCut;
+  const Float_t fPhSminOverSmajCut;
   const Bool_t  fApplyEBOnly;
   const Bool_t  fApplyEEOnly;
 
   // Output vars
-  TString fOutDir;
+  const TString fOutDir;
   TFile * fOutFile;
+  const Bool_t fSaveHistNames;
+  std::ofstream fHistDump;
 
   // Declaration of leaf types
   Int_t                  event;
