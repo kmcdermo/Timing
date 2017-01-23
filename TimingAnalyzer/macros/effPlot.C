@@ -15,6 +15,7 @@ void effPlot(Int_t iphpt, Int_t ivid)
     {
       TH1F * hist = new TH1F(Form("eff_%s_njets%i",samples[isample].Data(),jnjet),Form("Efficiency vs. Jet p_{T} [Photon p_{T} = %i GeV/c, VID = %s]",iphpt,(ivid==1?"loose":"medium")),4,0,4);
       hist->GetYaxis()->SetTitle("Efficiency");
+      hist->GetYaxis()->SetRangeUser(0.f,1.f);
       hist->GetXaxis()->SetTitle("Jet p_{T} [GeV/c]");
       hist->GetXaxis()->SetBinLabel(1,"20");
       hist->GetXaxis()->SetBinLabel(2,"35");

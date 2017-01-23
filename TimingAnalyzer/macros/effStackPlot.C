@@ -1,5 +1,7 @@
 void effStackPlot(Int_t iphpt, Int_t ivid)
 {
+  gStyle->SetOptStat(0);
+
   TFile * file = TFile::Open(Form("output/phpt%i/phvid%i/plots.root",iphpt,ivid));
   file->cd();
 
@@ -15,9 +17,10 @@ void effStackPlot(Int_t iphpt, Int_t ivid)
     {
       TH1F * hist = (TH1F*)file->Get(Form("eff_%s_njets%i",samples[isample].Data(),njets[jnjet]));
       //      hist->SetDirectory(0);
+      hist->GetYaxis()->SetRangeUser(0.f,1.f);
 
       if (isample == 0) hist->Draw((njets[jnjet] == 0)?"ep":"ep same");
-      else              hist->Draw("hist same");
+      else              hist->Draw("hist ep same");
 
       leg->AddEntry(hist,Form("%s njets: %i",tsamples[isample].Data(),njets[jnjet]),"epl");
 
