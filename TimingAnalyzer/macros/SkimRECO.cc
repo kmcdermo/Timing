@@ -1,4 +1,4 @@
-#include "SkimRECO.hh"
+#include"SkimRECO.hh"
 #include "TSystem.h"
 #include "TCanvas.h"
 #include "TObject.h" 
@@ -699,6 +699,43 @@ void SkimRECO::DumpEfficiency(std::ofstream & effdump)
 
   std::cout << "nEntries: " << nEntries << " nPassed: " << fNPassed << " efficiency: " << eff << " +/- " << unc << std::endl;
   effdump << eff << " " << unc << " ";
+
+  TFile * file = TFile::Open(Form("output/phpt%i/phvid%i/plots.root",Int_t(fPhPtCut),fPhHoECut),"UPDATE");
+  TH1F * hist = (TH1F*)file->Get(Form("eff_%s_njets%i",fSubDir.Data(),fNJetsCut));
+  
+  if (fJetPtCut == 0)
+  {
+    hist->SetBinContent(1,eff);
+    hist->SetBinError(1,unc);
+    hist->SetBinContent(2,eff);
+    hist->SetBinError(2,unc);
+    hist->SetBinContent(3,eff);
+    hist->SetBinError(3,unc);
+    hist->SetBinContent(4,eff);
+    hist->SetBinError(4,unc);
+ }
+  else if (fJetPtCut == 20)
+  {
+    hist->SetBinContent(1,eff);
+    hist->SetBinError(1,unc);
+  }
+  else if (fJetPtCut == 35)
+  {
+    hist->SetBinContent(2,eff);
+    hist->SetBinError(2,unc);
+  }
+  else if (fJetPtCut == 50)
+  {
+    hist->SetBinContent(3,eff);
+    hist->SetBinError(3,unc);
+  }
+  else if (fJetPtCut == 80)
+  {
+    hist->SetBinContent(4,eff);
+    hist->SetBinError(4,unc);
+  }
+  hist->Write(hist->GetName(),TObject::kWriteDelete); 
+  delete file;
 }
 
 void SkimRECO::InitTree()
