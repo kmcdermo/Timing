@@ -7,6 +7,9 @@ RECOSkim::RECOSkim(const edm::ParameterSet& iConfig):
   // rhos
   rhosTag(iConfig.getParameter<edm::InputTag>("rhos")),
 
+  // trigger info
+  triggersTag(iConfig.getParameter<edm::InputTag>("triggers")),
+
   // mets
   metsTag(iConfig.getParameter<edm::InputTag>("mets")),  
 
@@ -29,6 +32,9 @@ RECOSkim::RECOSkim(const edm::ParameterSet& iConfig):
   // rhos
   rhosToken = consumes<double> (rhosTag);
 
+  // trigger
+  triggersToken = consumes<edm::TriggerResults> (triggersTag);
+
   // mets
   metsToken = consumes<std::vector<reco::PFMET> > (metsTag);
 
@@ -50,6 +56,10 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // RHOS
   edm::Handle<double> rhosH;
   iEvent.getByToken(rhosToken, rhosH);
+
+  // TRIGGERS
+  edm::Handle<edm::TriggerResults> triggersH;
+  iEvent.getByToken(triggersToken, triggersH);
 
   // MET
   edm::Handle<std::vector<reco::PFMET> > metsH;
@@ -102,6 +112,24 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   ///////////////////
 
   const float rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
+
+  //////////////////
+  //              //
+  // Trigger Info //
+  //              //
+  //////////////////
+
+  hltdoubleph = false;
+
+  // Which triggers fired
+  if (triggersH.isValid())
+  {
+    for (std::size_t i = 0; i < triggerPathsVector.size(); i++) 
+    {
+      if (triggerPathsMap[triggerPathsVector[i]] == -1) continue;	
+      if (i == 0 && triggersH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleph = true; // Double photon trigger: 36, 22
+    }
+  }
 
   //////////////////
   //              //
@@ -599,6 +627,9 @@ void RECOSkim::beginJob()
   tree->Branch("vtxY"                 , &vtxY                 , "vtxY/F");
   tree->Branch("vtxZ"                 , &vtxZ                 , "vtxZ/F");
 
+  // Trigger info
+  tree->Branch("hltdoubleph"          , &hltdoubleph          , "hltdoubleph/O");
+
   // MET info
   tree->Branch("t1pfMETpt"            , &t1pfMETpt            , "t1pfMETpt/F");
   tree->Branch("t1pfMETphi"           , &t1pfMETphi           , "t1pfMETphi/F");
@@ -654,7 +685,32 @@ void RECOSkim::beginJob()
 
 void RECOSkim::endJob() {}
 
-void RECOSkim::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
+void RECOSkim::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
+{
+  triggerPathsVector.push_back("HLT_Photon36_R9Id85_OR_CaloId24b0e_Iso50T80L_Photon22_AND_HE10_R9Id65_Eta2_Mass15_v");
+
+  HLTConfigProvider hltConfig;
+  bool changedConfig = false;
+  hltConfig.init(iRun, iSetup, triggersTag.process(), changedConfig);
+  
+  for (size_t i = 0; i < triggerPathsVector.size(); i++)
+  {
+    triggerPathsMap[triggerPathsVector[i]] = -1;
+  }
+  
+  for(size_t i = 0; i < triggerPathsVector.size(); i++)
+  {
+    TPRegexp pattern(triggerPathsVector[i]);
+    for(size_t j = 0; j < hltConfig.triggerNames().size(); j++)
+    {
+      std::string pathName = hltConfig.triggerNames()[j];
+      if(TString(pathName).Contains(pattern))
+      {
+	triggerPathsMap[triggerPathsVector[i]] = j;
+      }
+    }
+  }
+}
 
 void RECOSkim::endRun(edm::Run const&, edm::EventSetup const&) {}
 

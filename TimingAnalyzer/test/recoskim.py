@@ -56,7 +56,7 @@ else:
 print "##### Settings ######"
 print "Running with demoMode            = ",options.demoMode
 print "Running with isReRECO            = ",options.isReRECO
-print "Running with Block number        = ",options.blockNo
+print "Running with blockNo             = ",options.blockNo
 print "Running with processName         = ",options.processName	
 print "Running with outputFileName      = ",options.outputFileName	
 print "Running with globalTag           = ",options.globalTag	
@@ -163,6 +163,8 @@ process.tree = cms.EDAnalyzer("RECOSkim",
    vertices = cms.InputTag("offlinePrimaryVertices"),
    ## rho
    rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
+   ## trigger
+   triggers = cms.InputTag("TriggerResults", "", "HLT"),
    ## MET
    mets = cms.InputTag("pfMet"),
    ## jets			    	

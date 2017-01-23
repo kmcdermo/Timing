@@ -52,6 +52,9 @@
 #include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
 #include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
 
+// HLT info
+#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+
 // ROOT
 #include "TTree.h"
 #include "TLorentzVector.h"
@@ -117,6 +120,12 @@ class RECOSkim : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
   const edm::InputTag rhosTag;
   edm::EDGetTokenT<double> rhosToken;
 
+  // Trigger
+  const edm::InputTag triggersTag;
+  edm::EDGetTokenT<edm::TriggerResults> triggersToken;
+  std::vector<std::string>   triggerPathsVector;
+  std::map<std::string, int> triggerPathsMap;
+
   // mets
   const edm::InputTag metsTag;
   edm::EDGetTokenT<std::vector<reco::PFMET> > metsToken;
@@ -143,6 +152,9 @@ class RECOSkim : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
   int nvtx;
   float vtxX, vtxY, vtxZ;
 
+  // triggers
+  bool hltdoubleph;
+  
   // MET
   float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
 
