@@ -17,11 +17,11 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runSkim() 
+void runSkim(Int_t iphpt = 50, Int_t iphvid = 1, Int_t ijetpt = 35, Int_t injets = 1) 
 {
   setupcpp11(); 
 
-  gROOT->LoadMacro("SkimRECO.cc++g");
+  gROOT->LoadMacro("SkimRECO.cc+");
 
   // config is:
   // filename, outdir, dump cuts/histnames
@@ -32,20 +32,21 @@ void runSkim()
   // nphscut
   // applyEBonly, applyEEonly
 
-  TString outdir = "output/skim-loose-phpt20";  
+  TString outdir = Form("output/skim_phpt%i_phvid%i_jetpt%i_njets%i",iphpt,iphvid,ijetpt,injets);
 
-  Float_t jetpt = 20.f;
-  Int_t   njets = 2;
+  Float_t jetpt = ijetpt;
+  Int_t njets = injets;
   
-  Float_t phpt     = 20.f;
-  Int_t   phhoe    = 1;
-  Int_t   phsieie  = 1;
-  Int_t   phchgiso = 1;
-  Int_t   phneuiso = 1;
-  Int_t   phiso    = 1;
-  Float_t smajEB   = 1.f;
+  Float_t phpt     = iphpt;
+  Int_t   phvid    = iphvid;
+  Int_t   phhoe    = phvid;
+  Int_t   phsieie  = phvid;
+  Int_t   phchgiso = phvid;
+  Int_t   phneuiso = phvid;
+  Int_t   phiso    = phvid;
+  Float_t smajEB   = 1.f;//0.015f;
   Float_t smajEE   = 1.f;
-  Float_t sminEB   = 1.f;
+  Float_t sminEB   = 1.f;//0.015f;
   Float_t sminEE   = 1.f;
   Int_t   nphs     = 1;
 

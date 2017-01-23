@@ -606,6 +606,12 @@ void SkimRECO::OutputTH1Fs()
 
   for (TH1MapIter mapiter = fPlots.begin(); mapiter != fPlots.end(); ++mapiter) 
   { 
+    if (!(mapiter->first.Contains("time",TString::kExact) || mapiter->first.Contains("MET",TString::kExact)))
+    {
+      delete mapiter->second;
+      continue;
+    }
+
     // scale to 1.0
     mapiter->second->Scale(1.f/mapiter->second->Integral());
 
@@ -692,7 +698,7 @@ void SkimRECO::DumpEfficiency(std::ofstream & effdump)
   const Float_t unc = std::sqrt((eff*(1.f-eff))/float(nEntries));
 
   std::cout << "nEntries: " << nEntries << " nPassed: " << fNPassed << " efficiency: " << eff << " +/- " << unc << std::endl;
-  effdump << fSubDir.Data() << " " << eff << " " << unc << std::endl;
+  effdump << eff << " " << unc << " ";
 }
 
 void SkimRECO::InitTree()
