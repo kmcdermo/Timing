@@ -16,15 +16,11 @@ void effStackPlot(Int_t iphpt, Int_t ivid)
     for (UInt_t jnjet = 0; jnjet < njets.size(); jnjet++)
     {
       TH1F * hist = (TH1F*)file->Get(Form("eff_%s_njets%i",samples[isample].Data(),njets[jnjet]));
-      //      hist->SetDirectory(0);
-      hist->GetYaxis()->SetRangeUser(0.f,1.f);
 
       if (isample == 0) hist->Draw((njets[jnjet] == 0)?"ep":"ep same");
       else              hist->Draw("hist ep same");
 
       leg->AddEntry(hist,Form("%s njets: %i",tsamples[isample].Data(),njets[jnjet]),"epl");
-
-      //      delete hist;
     }
   }
   canv->SaveAs(Form("eff_jet_phpt%i_phvid%i.png",iphpt,ivid));

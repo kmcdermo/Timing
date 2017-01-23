@@ -698,7 +698,7 @@ void SkimRECO::DumpEfficiency(std::ofstream & effdump)
   const Float_t unc = std::sqrt((eff*(1.f-eff))/float(nEntries));
 
   std::cout << "nEntries: " << nEntries << " nPassed: " << fNPassed << " efficiency: " << eff << " +/- " << unc << std::endl;
-  effdump << eff << " " << unc << " ";
+  effdump << "sample: " << fSubDir.Data() << eff << " " << unc << " " << std::endl;
 
   TFile * file = TFile::Open(Form("output/phpt%i/phvid%i/plots.root",Int_t(fPhPtCut),fPhHoECut),"UPDATE");
   TH1F * hist = (TH1F*)file->Get(Form("eff_%s_njets%i",fSubDir.Data(),fNJetsCut));
@@ -719,17 +719,17 @@ void SkimRECO::DumpEfficiency(std::ofstream & effdump)
     hist->SetBinContent(1,eff);
     hist->SetBinError(1,unc);
   }
-  else if (fJetPtCut == 35)
+  else if (fJetPtCut == 30)
   {
     hist->SetBinContent(2,eff);
     hist->SetBinError(2,unc);
   }
-  else if (fJetPtCut == 50)
+  else if (fJetPtCut == 40)
   {
     hist->SetBinContent(3,eff);
     hist->SetBinError(3,unc);
   }
-  else if (fJetPtCut == 80)
+  else if (fJetPtCut == 50)
   {
     hist->SetBinContent(4,eff);
     hist->SetBinError(4,unc);

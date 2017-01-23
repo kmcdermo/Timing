@@ -18,9 +18,9 @@ void effPlot(Int_t iphpt, Int_t ivid)
       hist->GetYaxis()->SetRangeUser(0.f,1.f);
       hist->GetXaxis()->SetTitle("Jet p_{T} [GeV/c]");
       hist->GetXaxis()->SetBinLabel(1,"20");
-      hist->GetXaxis()->SetBinLabel(2,"35");
-      hist->GetXaxis()->SetBinLabel(3,"50");
-      hist->GetXaxis()->SetBinLabel(4,"80");
+      hist->GetXaxis()->SetBinLabel(2,"30");
+      hist->GetXaxis()->SetBinLabel(3,"40");
+      hist->GetXaxis()->SetBinLabel(4,"50");
       
       hist->SetLineColor(colors[isample]);
       hist->SetMarkerColor(colors[isample]);
@@ -29,4 +29,5 @@ void effPlot(Int_t iphpt, Int_t ivid)
       hist->Write();
     }
   }
+  delete file;
 }
