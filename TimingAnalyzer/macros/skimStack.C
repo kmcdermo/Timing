@@ -11,8 +11,8 @@
 #include <fstream>
 #include <vector>
 
-TString indir  = "output/skim";
-TString outdir = "output/skim/stacks";
+TString indir  = "output/skim10";
+TString outdir = "output/skim10/stacks";
 
 void getData(std::vector<TH1F*>&, std::vector<TString>&);
 void getSignals(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&);
@@ -147,6 +147,14 @@ void drawAll(std::vector<TH1F*>& dataTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, st
     canv->SetLogy(0);
     dataTH1Fs    [ihist]->GetYaxis()->SetRangeUser(0.f,1.f);
     dataTH1Fs    [ihist]->Draw("EP");
+    ctau100TH1Fs [ihist]->Draw("HIST same");
+    ctau2000TH1Fs[ihist]->Draw("HIST same");
+    ctau6000TH1Fs[ihist]->Draw("HIST same");
+
+    leg->Draw("same");
+
+    CMSLumi(canv,"Preliminary");
+
     canv->SaveAs(Form("%s/lin/%s.png",outdir.Data(),histnames[ihist].Data()));
 
     delete leg;

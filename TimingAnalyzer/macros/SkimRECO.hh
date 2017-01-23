@@ -44,14 +44,16 @@ typedef IntMap::iterator      IntMapIter;
 class SkimRECO 
 {
 public :
-  SkimRECO(TString filename, TString outdir = "output/skim", TString subdir = "", Bool_t savehistnames = false,
+  SkimRECO(TString filename, TString outdir = "output/skim", TString subdir = "", Bool_t dump = false,
 	   Float_t jetptcut = 0.f, Int_t njetcut = 0,
-	   Float_t phptcut = 0.f, Float_t phsieieEB = 0.f, Float_t phsieieEE = 0.f,
+	   Float_t phptcut = 0.f,
+	   Int_t phhoecut = 0, Int_t phsieiecut = 0, Int_t phchgisocut = 0, Int_t phneuisocut = 0, Int_t phisocut = 0,
 	   Float_t phsmajEBcut = 1.f, Float_t phsmajEEcut = 1.f, Float_t phsminEBcut = 1.f, Float_t phsminEEcut = 1.f, 
+	   Int_t nphscut = 0,
 	   Bool_t applyEBonly = false, Bool_t applyEEonly = false);
   ~SkimRECO();
   void InitTree();
-  void DoSkim();
+  void DoSkim(std::ofstream & effdump);
   void SetupPlots();
   void SetupNminus1();
   void SetupTEffs();
@@ -61,19 +63,31 @@ public :
   TEfficiency * MakeTEff(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle);
   void EventLoop();
   void DoEfficiency(Bool_t & passed);
-  void FillNminus1(const Int_t njets_ptcut, const std::vector<Int_t> & phs);
+  void FillNminus1(const Int_t njetscut, const std::vector<Int_t> & phs);
+  void FillPhsPt(const std::vector<Int_t> & phspt);
+  void FillPhsHoE(const std::vector<Int_t> & phshoe);
+  void FillPhsSieie(const std::vector<Int_t> & phssieie);
+  void FillPhsChgIso(const std::vector<Int_t> & phschgiso);
+  void FillPhsNeuIso(const std::vector<Int_t> & phsneuiso);
+  void FillPhsIso(const std::vector<Int_t> & phsiso);
+  void FillPhsSmaj(const std::vector<Int_t> & phssmaj);
+  void FillPhsSmin(const std::vector<Int_t> & phssmin);
   void FillTEffs(const Bool_t passed, const std::vector<Int_t> & phs);
   void FillAnalysis(const std::vector<Int_t> & phs);
   Int_t GetNJetsPt();
   void GetPhs(std::vector<Int_t> & phs);
   void GetPhsPt(std::vector<Int_t> & phspt);
+  void GetPhsHoE(std::vector<Int_t> & phshoe);
   void GetPhsSieie(std::vector<Int_t> & phssieie);
+  void GetPhsChgIso(std::vector<Int_t> & phschgiso);
+  void GetPhsNeuIso(std::vector<Int_t> & phsneuiso);
+  void GetPhsIso(std::vector<Int_t> & phsiso);
   void GetPhsSmaj(std::vector<Int_t> & phssmaj);
   void GetPhsSmin(std::vector<Int_t> & phssmin);
   void OutputTH1Fs();
   void OutputTH2Fs();
   void OutputTEffs();
-  void DumpEfficiency();
+  void DumpEfficiency(std::ofstream & effdump);
 
 private :
   // Input vars
@@ -89,14 +103,18 @@ private :
 
   // Config
   const Float_t fJetPtCut;
-  const Int_t   fNJetCut;
+  const Int_t   fNJetsCut;
   const Float_t fPhPtCut;
-  const Float_t fPhSieieEBCut;
-  const Float_t fPhSieieEECut;
+  const Int_t   fPhHoECut;
+  const Int_t   fPhSieieCut;
+  const Int_t   fPhChgIsoCut;
+  const Int_t   fPhNeuIsoCut;
+  const Int_t   fPhIsoCut;
   const Float_t fPhSmajEBCut;
   const Float_t fPhSmajEECut;
   const Float_t fPhSminEBCut;
   const Float_t fPhSminEECut;
+  const Int_t   fNPhsCut;
   const Bool_t  fApplyEBOnly;
   const Bool_t  fApplyEEOnly;
 

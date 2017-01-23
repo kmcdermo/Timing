@@ -6,14 +6,18 @@
 #include <iostream>
 
 SkimRECO::SkimRECO(TString filename, TString outdir, TString subdir, Bool_t dump,
-		   Float_t jetptcut, Int_t njetcut, 
-		   Float_t phptcut, Float_t phsieieEBcut, Float_t phsieieEEcut,
+		   Float_t jetptcut, Int_t njetscut, 
+		   Float_t phptcut, 
+		   Int_t phhoecut, Int_t phsieiecut, Int_t phchgisocut, Int_t phneuisocut, Int_t phisocut,
 		   Float_t phsmajEBcut, Float_t phsmajEEcut, Float_t phsminEBcut, Float_t phsminEEcut, 
+		   Int_t nphscut,
 		   Bool_t applyEBonly, Bool_t applyEEonly) :
-  fOutDir(outdir), fSubDir(subdir), fDump(dump),
-  fJetPtCut(jetptcut), fNJetCut(njetcut), 
-  fPhPtCut(phptcut), fPhSieieEBCut(phsieieEBcut), fPhSieieEECut(phsieieEEcut),
+  fOutDir(outdir), fSubDir(subdir), fDump(dump), 
+  fJetPtCut(jetptcut), fNJetsCut(njetscut), 
+  fPhPtCut(phptcut),
+  fPhHoECut(phhoecut), fPhSieieCut(phsieiecut), fPhChgIsoCut(phchgisocut), fPhNeuIsoCut(phneuisocut), fPhIsoCut(phisocut),
   fPhSmajEBCut(phsmajEBcut), fPhSmajEECut(phsmajEEcut), fPhSminEBCut(phsminEBcut), fPhSminEECut(phsminEEcut),
+  fNPhsCut(nphscut),
   fApplyEBOnly(applyEBonly), fApplyEEOnly(applyEEonly)
 {
   // input
@@ -48,19 +52,26 @@ SkimRECO::SkimRECO(TString filename, TString outdir, TString subdir, Bool_t dump
     std::ofstream cutdump;
     cutdump.open(Form("%s/cuts.txt",fOutDir.Data()),std::ios_base::trunc);
     cutdump << "jet cuts: " << std::endl
-	    << "  pT: " << fJetPtCut 
-	    << " nJets over pT cut: " << fNJetCut << std::endl << std::endl;
+	    << "  pT: " << fJetPtCut << std::endl
+	    << "  nJets over pT cut: " << fNJetsCut << std::endl << std::endl;
     cutdump << "photon cuts: " << std::endl
 	    << "  pT: " << fPhPtCut << std::endl
-	    << "  Sieie EB: " << fPhSieieEBCut << " EE: " << fPhSieieEECut << std::endl
-	    << "  Smaj EB: " << fPhSmajEBCut << " EE: " << fPhSmajEECut << std::endl
-	    << "  Smin EB: " << fPhSminEBCut << " EE: " << fPhSminEECut << std::endl;
+	    << "  HoE: " << fPhHoECut << std::endl
+	    << "  Sieie: " << fPhSieieCut << std::endl
+	    << "  ChgIso: " << fPhChgIsoCut << std::endl
+	    << "  NeuIso: " << fPhNeuIsoCut << std::endl
+	    << "  PhIso: " << fPhIsoCut << std::endl
+	    << "  Smaj EB/EE: " << fPhSmajEBCut << " : " << fPhSmajEECut << std::endl
+	    << "  Smin EB/EE: " << fPhSminEBCut << " : " << fPhSminEECut << std::endl
+	    << "  nPhotons cut: " << fNPhsCut << std::endl;
+    
     cutdump.close();
 
     // dump hists for stacking purposes
     fHistDump.open(Form("%s/histdump.txt",fOutDir.Data()),std::ios_base::trunc);
   }  
 
+  // output file for plots
   fOutFile = new TFile(Form("%s/%s/plots.root",fOutDir.Data(),fSubDir.Data()),"UPDATE");
 }
 
@@ -73,14 +84,14 @@ SkimRECO::~SkimRECO()
   if (fDump) fHistDump.close();
 }
 
-void SkimRECO::DoSkim()
+void SkimRECO::DoSkim(std::ofstream & effdump)
 {
   SkimRECO::SetupPlots();
   SkimRECO::EventLoop();
   SkimRECO::OutputTH1Fs();
   SkimRECO::OutputTH2Fs();
   SkimRECO::OutputTEffs();
-  SkimRECO::DumpEfficiency();
+  SkimRECO::DumpEfficiency(effdump);
 }
 
 void SkimRECO::SetupPlots()
@@ -95,7 +106,7 @@ void SkimRECO::EventLoop()
   for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++)
   {
     fInTree->GetEntry(entry);
-    
+
     // standard printout
     if (entry%fNEvCheck == 0 || entry == 0) std::cout << "Entry " << entry << " out of " << fInTree->GetEntries() << std::endl;
 
@@ -115,7 +126,7 @@ void SkimRECO::DoEfficiency(Bool_t & passed)
   /////////////////////////////////////
 
   // jets
-  Int_t njets_ptcut = SkimRECO::GetNJetsPt();
+  Int_t njetscut = SkimRECO::GetNJetsPt();
 
   // photons
   std::vector<Int_t> phs;
@@ -124,119 +135,172 @@ void SkimRECO::DoEfficiency(Bool_t & passed)
   ///////////////
   // N-1 Plots //
   ///////////////
-  SkimRECO::FillNminus1(njets_ptcut,phs);
+  SkimRECO::FillNminus1(njetscut,phs);
 
   ///////////////////////////
   // Full Efficiency Plots //
   ///////////////////////////
 
   // bool if event passed selection
-  passed = (phs.size() > 0 && njets_ptcut > fNJetCut);
+  passed = (Int_t(phs.size()) >= fNPhsCut && njetscut >= fNJetsCut);
 
   SkimRECO::FillTEffs(passed,phs);
   if (passed) SkimRECO::FillAnalysis(phs);
 }
 
-void SkimRECO::FillNminus1(const Int_t njets_ptcut, const std::vector<Int_t> & phs)
+void SkimRECO::FillNminus1(const Int_t njetscut, const std::vector<Int_t> & phs)
 {
   // Still need a few more n-1 vectors
-  std::vector<Int_t> phspt, phssieie, phssmaj, phssmin;
+  std::vector<Int_t> phspt, phshoe, phssieie, phschgiso, phsneuiso, phsiso, phssmaj, phssmin;
   SkimRECO::GetPhsPt(phspt);
+  SkimRECO::GetPhsHoE(phshoe);
   SkimRECO::GetPhsSieie(phssieie);
+  SkimRECO::GetPhsChgIso(phschgiso);
+  SkimRECO::GetPhsNeuIso(phsneuiso);
+  SkimRECO::GetPhsIso(phsiso);
   SkimRECO::GetPhsSmaj(phssmaj);
   SkimRECO::GetPhsSmin(phssmin);
 
   // njets plots
-  if (phs.size() > 0)
+  if (Int_t(phs.size()) >= fNPhsCut)
   {    
-    fPlots["njets_nm1"]->Fill(njets_ptcut);
-    if (njets_ptcut > 0) fPlots["jet0pt_nm1"]->Fill((*jetpt)[0]);
-    if (njets_ptcut > 1) fPlots["jet1pt_nm1"]->Fill((*jetpt)[1]);
-    if (njets_ptcut > 2) fPlots["jet2pt_nm1"]->Fill((*jetpt)[2]);
+    fPlots["njets_nm1"]->Fill(njetscut);
+    if (njetscut > 0) fPlots["jet0pt_nm1"]->Fill((*jetpt)[0]);
+    if (njetscut > 1) fPlots["jet1pt_nm1"]->Fill((*jetpt)[1]);
+    if (njetscut > 2) fPlots["jet2pt_nm1"]->Fill((*jetpt)[2]);
   }
 
   // photon plots
-  if (njets_ptcut > fNJetCut)
+  if (njetscut >= fNJetsCut)
   { 
-    // photon pT plots
-    if (phspt.size() > 0) fPlots["ph0pt_nm1"]->Fill((*phpt)[phspt[0]]);
-    if (phspt.size() > 1) fPlots["ph1pt_nm1"]->Fill((*phpt)[phspt[1]]);
-    if (phspt.size() > 2) fPlots["ph2pt_nm1"]->Fill((*phpt)[phspt[2]]);
+    fPlots["nphs_pt_nm1"]    ->Fill(phspt.size());
+    fPlots["nphs_hoe_nm1"]   ->Fill(phshoe.size());
+    fPlots["nphs_sieie_nm1"] ->Fill(phssieie.size());
+    fPlots["nphs_chgiso_nm1"]->Fill(phschgiso.size());
+    fPlots["nphs_neuiso_nm1"]->Fill(phsneuiso.size());
+    fPlots["nphs_iso_nm1"]   ->Fill(phsiso.size());
+    fPlots["nphs_smaj_nm1"]  ->Fill(phssmaj.size());
+    fPlots["nphs_smin_nm1"]  ->Fill(phssmin.size());
 
-    // SigmaIetaIeta plots
-    if (phssieie.size() > 0)
-    {
-      if   (std::abs((*phsceta)[phssieie[0]]) < 1.4442) fPlots["ph0sieieEB_nm1"]->Fill((*phsieie)[phssieie[0]]);    
-      else                                           	fPlots["ph0sieieEE_nm1"]->Fill((*phsieie)[phssieie[0]]);    
-    }
-    if (phssieie.size() > 1)
-    {
-      if   (std::abs((*phsceta)[phssieie[1]]) < 1.4442) fPlots["ph1sieieEB_nm1"]->Fill((*phsieie)[phssieie[1]]);    
-      else                                           	fPlots["ph1sieieEE_nm1"]->Fill((*phsieie)[phssieie[1]]);    
-    }
-    if (phssieie.size() > 2)
-    {
-      if   (std::abs((*phsceta)[phssieie[2]]) < 1.4442) fPlots["ph2sieieEB_nm1"]->Fill((*phsieie)[phssieie[2]]);    
-      else                                           	fPlots["ph2sieieEE_nm1"]->Fill((*phsieie)[phssieie[2]]);    
-    }
-
-    // Smajor plots
-    if (phssmaj.size() > 0)
-    {
-      if   (std::abs((*phsceta)[phssmaj[0]]) < 1.4442) fPlots["ph0smajEB_nm1"]->Fill((*phsmaj)[phssmaj[0]]);    
-      else                                             fPlots["ph0smajEE_nm1"]->Fill((*phsmaj)[phssmaj[0]]);    
-    }
-    if (phssmaj.size() > 1)
-    {
-      if   (std::abs((*phsceta)[phssmaj[1]]) < 1.4442) fPlots["ph1smajEB_nm1"]->Fill((*phsmaj)[phssmaj[1]]);    
-      else                                             fPlots["ph1smajEE_nm1"]->Fill((*phsmaj)[phssmaj[1]]);    
-    }
-    if (phssmaj.size() > 2)
-    {
-      if   (std::abs((*phsceta)[phssmaj[2]]) < 1.4442) fPlots["ph2smajEB_nm1"]->Fill((*phsmaj)[phssmaj[2]]);    
-      else                                             fPlots["ph2smajEE_nm1"]->Fill((*phsmaj)[phssmaj[2]]);    
-    }
-
-    // Sminor plots
-    if (phssmin.size() > 0)
-    {
-      if   (std::abs((*phsceta)[phssmin[0]]) < 1.4442) fPlots["ph0sminEB_nm1"]->Fill((*phsmin)[phssmin[0]]);    
-      else                                             fPlots["ph0sminEE_nm1"]->Fill((*phsmin)[phssmin[0]]);    
-    }
-    if (phssmin.size() > 1)
-    {
-      if   (std::abs((*phsceta)[phssmin[1]]) < 1.4442) fPlots["ph1sminEB_nm1"]->Fill((*phsmin)[phssmin[1]]);    
-      else                                             fPlots["ph1sminEE_nm1"]->Fill((*phsmin)[phssmin[1]]);    
-    }
-    if (phssmin.size() > 2)
-    {
-      if   (std::abs((*phsceta)[phssmin[2]]) < 1.4442) fPlots["ph2sminEB_nm1"]->Fill((*phsmin)[phssmin[2]]);    
-      else                                             fPlots["ph2sminEE_nm1"]->Fill((*phsmin)[phssmin[2]]);    
-    }
+    SkimRECO::FillPhsPt(phspt);
+    SkimRECO::FillPhsHoE(phshoe);
+    SkimRECO::FillPhsSieie(phssieie);
+    SkimRECO::FillPhsChgIso(phschgiso);
+    SkimRECO::FillPhsNeuIso(phsneuiso);
+    SkimRECO::FillPhsIso(phsiso);
+    SkimRECO::FillPhsSmaj(phssmaj);
+    SkimRECO::FillPhsSmin(phssmin);
   }
 }
+
+void SkimRECO::FillPhsPt(const std::vector<Int_t> & phspt)
+{
+  // photon pT plots
+  if (Int_t(phspt.size()) > 0) fPlots["ph0pt_nm1"]->Fill((*phpt)[phspt[0]]);
+  if (Int_t(phspt.size()) > 1) fPlots["ph1pt_nm1"]->Fill((*phpt)[phspt[1]]);
+  if (Int_t(phspt.size()) > 2) fPlots["ph2pt_nm1"]->Fill((*phpt)[phspt[2]]);
+}
+
+void SkimRECO::FillPhsHoE(const std::vector<Int_t> & phshoe)
+{
+  // HoE plots
+  if (Int_t(phshoe.size()) > 0) fPlots["ph0hoe_nm1"]->Fill((*phHoE_b)[phshoe[0]]);
+  if (Int_t(phshoe.size()) > 1) fPlots["ph1hoe_nm1"]->Fill((*phHoE_b)[phshoe[1]]);
+  if (Int_t(phshoe.size()) > 2) fPlots["ph2hoe_nm1"]->Fill((*phHoE_b)[phshoe[2]]);
+}  
+
+void SkimRECO::FillPhsSieie(const std::vector<Int_t> & phssieie)
+{
+  // Sieie plots
+  if (Int_t(phssieie.size()) > 0) fPlots["ph0sieie_nm1"]->Fill((*phsieie_b)[phssieie[0]]);
+  if (Int_t(phssieie.size()) > 1) fPlots["ph1sieie_nm1"]->Fill((*phsieie_b)[phssieie[1]]);
+  if (Int_t(phssieie.size()) > 2) fPlots["ph2sieie_nm1"]->Fill((*phsieie_b)[phssieie[2]]);
+}  
+
+void SkimRECO::FillPhsChgIso(const std::vector<Int_t> & phschgiso)
+{
+  // ChgIso plots
+  if (Int_t(phschgiso.size()) > 0) fPlots["ph0chgiso_nm1"]->Fill((*phChgIso_b)[phschgiso[0]]);
+  if (Int_t(phschgiso.size()) > 1) fPlots["ph1chgiso_nm1"]->Fill((*phChgIso_b)[phschgiso[1]]);
+  if (Int_t(phschgiso.size()) > 2) fPlots["ph2chgiso_nm1"]->Fill((*phChgIso_b)[phschgiso[2]]);
+}  
+
+void SkimRECO::FillPhsNeuIso(const std::vector<Int_t> & phsneuiso)
+{
+  // NeuIso plots
+  if (Int_t(phsneuiso.size()) > 0) fPlots["ph0neuiso_nm1"]->Fill((*phNeuIso_b)[phsneuiso[0]]);
+  if (Int_t(phsneuiso.size()) > 1) fPlots["ph1neuiso_nm1"]->Fill((*phNeuIso_b)[phsneuiso[1]]);
+  if (Int_t(phsneuiso.size()) > 2) fPlots["ph2neuiso_nm1"]->Fill((*phNeuIso_b)[phsneuiso[2]]);
+}  
+
+void SkimRECO::FillPhsIso(const std::vector<Int_t> & phsiso)
+{
+  // Photon Iso plots
+  if (Int_t(phsiso.size()) > 0) fPlots["ph0iso_nm1"]->Fill((*phPhIso_b)[phsiso[0]]);
+  if (Int_t(phsiso.size()) > 1) fPlots["ph1iso_nm1"]->Fill((*phPhIso_b)[phsiso[1]]);
+  if (Int_t(phsiso.size()) > 2) fPlots["ph2iso_nm1"]->Fill((*phPhIso_b)[phsiso[2]]);
+}  
+
+void SkimRECO::FillPhsSmaj(const std::vector<Int_t> & phssmaj)
+{
+  // Smajor plots
+  if (Int_t(phssmaj.size()) > 0)
+  {
+    if   (std::abs((*phsceta)[phssmaj[0]]) < 1.4442) fPlots["ph0smajEB_nm1"]->Fill((*phsmaj)[phssmaj[0]]);    
+    else                                             fPlots["ph0smajEE_nm1"]->Fill((*phsmaj)[phssmaj[0]]);    
+  }
+  if (Int_t(phssmaj.size()) > 1)
+  {
+    if   (std::abs((*phsceta)[phssmaj[1]]) < 1.4442) fPlots["ph1smajEB_nm1"]->Fill((*phsmaj)[phssmaj[1]]);    
+    else                                             fPlots["ph1smajEE_nm1"]->Fill((*phsmaj)[phssmaj[1]]);    
+  }
+  if (Int_t(phssmaj.size()) > 2)
+  {
+    if   (std::abs((*phsceta)[phssmaj[2]]) < 1.4442) fPlots["ph2smajEB_nm1"]->Fill((*phsmaj)[phssmaj[2]]);    
+    else                                             fPlots["ph2smajEE_nm1"]->Fill((*phsmaj)[phssmaj[2]]);    
+  }
+}  
+
+void SkimRECO::FillPhsSmin(const std::vector<Int_t> & phssmin)
+{
+  // Sminor plots
+  if (Int_t(phssmin.size()) > 0)
+  {
+    if   (std::abs((*phsceta)[phssmin[0]]) < 1.4442) fPlots["ph0sminEB_nm1"]->Fill((*phsmin)[phssmin[0]]);    
+    else                                             fPlots["ph0sminEE_nm1"]->Fill((*phsmin)[phssmin[0]]);    
+  }
+  if (Int_t(phssmin.size()) > 1)
+  {
+    if   (std::abs((*phsceta)[phssmin[1]]) < 1.4442) fPlots["ph1sminEB_nm1"]->Fill((*phsmin)[phssmin[1]]);    
+    else                                             fPlots["ph1sminEE_nm1"]->Fill((*phsmin)[phssmin[1]]);    
+  }
+  if (Int_t(phssmin.size()) > 2)
+  {
+    if   (std::abs((*phsceta)[phssmin[2]]) < 1.4442) fPlots["ph2sminEB_nm1"]->Fill((*phsmin)[phssmin[2]]);    
+    else                                             fPlots["ph2sminEE_nm1"]->Fill((*phsmin)[phssmin[2]]);    
+  }
+}  
 
 void SkimRECO::FillTEffs(const Bool_t passed, const std::vector<Int_t> & phs) {}
 
 void SkimRECO::FillAnalysis(const std::vector<Int_t> & phs) 
 {
-  if (phs.size() > 0) fPlots["ph0seedtime"]->Fill((*phseedtime)[phs[0]]);
-  if (phs.size() > 1) fPlots["ph1seedtime"]->Fill((*phseedtime)[phs[1]]);
-  if (phs.size() > 2) fPlots["ph2seedtime"]->Fill((*phseedtime)[phs[2]]);
+  if (Int_t(phs.size()) > 0) fPlots["ph0seedtime"]->Fill((*phseedtime)[phs[0]]);
+  if (Int_t(phs.size()) > 1) fPlots["ph1seedtime"]->Fill((*phseedtime)[phs[1]]);
+  if (Int_t(phs.size()) > 2) fPlots["ph2seedtime"]->Fill((*phseedtime)[phs[2]]);
 
   fPlots["MET"]->Fill(t1pfMETpt);
 }
 
-
 Int_t SkimRECO::GetNJetsPt()
 {
-  Int_t njets_ptcut = 0;
+  Int_t njetscut = 0;
   for (Int_t ijet = 0; ijet < njets; ijet++)
   {
     if ((*jetpt)[ijet] < fJetPtCut) break;
-    njets_ptcut++;
+    njetscut++;
   }
-  return njets_ptcut;
+  return njetscut;
 }
 
 void SkimRECO::GetPhs(std::vector<Int_t> & phs)
@@ -249,8 +313,12 @@ void SkimRECO::GetPhs(std::vector<Int_t> & phs)
 
     // all cuts
     if ((*phpt)[iph] < fPhPtCut) continue;
+    if ((*phHoE_b)[iph] < fPhHoECut) continue;
+    if ((*phsieie_b)[iph] < fPhSieieCut) continue;
+    if ((*phChgIso_b)[iph] < fPhChgIsoCut) continue;
+    if ((*phNeuIso_b)[iph] < fPhNeuIsoCut) continue;
+    if ((*phPhIso_b)[iph] < fPhIsoCut) continue;
     const Bool_t isEB = (std::abs((*phsceta)[iph]) < 1.4442);
-    if ((isEB && (*phsieie)[iph] > fPhSieieEBCut) || (!isEB && (*phsieie)[iph] > fPhSieieEECut)) continue;
     if ((isEB && (*phsmaj)[iph] > fPhSmajEBCut) || (!isEB && (*phsmaj)[iph] > fPhSmajEECut)) continue;
     if ((isEB && (*phsmin)[iph] > fPhSminEBCut) || (!isEB && (*phsmin)[iph] > fPhSminEECut)) continue;
 
@@ -267,13 +335,39 @@ void SkimRECO::GetPhsPt(std::vector<Int_t> & phspt)
     if ((*phseedE)[iph] < 1.f) continue;
 
     // all other cuts
+    if ((*phHoE_b)[iph] < fPhHoECut) continue;
+    if ((*phsieie_b)[iph] < fPhSieieCut) continue;
+    if ((*phChgIso_b)[iph] < fPhChgIsoCut) continue;
+    if ((*phNeuIso_b)[iph] < fPhNeuIsoCut) continue;
+    if ((*phPhIso_b)[iph] < fPhIsoCut) continue;
     const Bool_t isEB = (std::abs((*phsceta)[iph]) < 1.4442);
-    if ((isEB && (*phsieie)[iph] > fPhSieieEBCut) || (!isEB && (*phsieie)[iph] > fPhSieieEECut)) continue;
     if ((isEB && (*phsmaj)[iph] > fPhSmajEBCut) || (!isEB && (*phsmaj)[iph] > fPhSmajEECut)) continue;
     if ((isEB && (*phsmin)[iph] > fPhSminEBCut) || (!isEB && (*phsmin)[iph] > fPhSminEECut)) continue;
 
     // if passed all that, save the photon!
     phspt.push_back(iph);
+  }
+}
+
+void SkimRECO::GetPhsHoE(std::vector<Int_t> & phshoe)
+{
+  for (Int_t iph = 0; iph < nphotons; iph++)
+  {
+    // photon pre-selection
+    if ((std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+    if ((*phseedE)[iph] < 1.f) continue;
+
+    // all other cuts
+    if ((*phpt)[iph] < fPhPtCut) continue;
+    if ((*phsieie_b)[iph] < fPhSieieCut) continue;
+    if ((*phChgIso_b)[iph] < fPhChgIsoCut) continue;
+    if ((*phNeuIso_b)[iph] < fPhNeuIsoCut) continue;
+    if ((*phPhIso_b)[iph] < fPhIsoCut) continue;
+    const Bool_t isEB = (std::abs((*phsceta)[iph]) < 1.4442);
+    if ((isEB && (*phsmaj)[iph] > fPhSmajEBCut) || (!isEB && (*phsmaj)[iph] > fPhSmajEECut)) continue;
+    if ((isEB && (*phsmin)[iph] > fPhSminEBCut) || (!isEB && (*phsmin)[iph] > fPhSminEECut)) continue;
+
+    phshoe.push_back(iph);
   }
 }
 
@@ -287,12 +381,81 @@ void SkimRECO::GetPhsSieie(std::vector<Int_t> & phssieie)
 
     // all other cuts
     if ((*phpt)[iph] < fPhPtCut) continue;
+    if ((*phHoE_b)[iph] < fPhHoECut) continue;
+    if ((*phChgIso_b)[iph] < fPhChgIsoCut) continue;
+    if ((*phNeuIso_b)[iph] < fPhNeuIsoCut) continue;
+    if ((*phPhIso_b)[iph] < fPhIsoCut) continue;
     const Bool_t isEB = (std::abs((*phsceta)[iph]) < 1.4442);
     if ((isEB && (*phsmaj)[iph] > fPhSmajEBCut) || (!isEB && (*phsmaj)[iph] > fPhSmajEECut)) continue;
     if ((isEB && (*phsmin)[iph] > fPhSminEBCut) || (!isEB && (*phsmin)[iph] > fPhSminEECut)) continue;
-    
-    // if passed all that, save the photon!
+
     phssieie.push_back(iph);
+  }
+}
+
+void SkimRECO::GetPhsChgIso(std::vector<Int_t> & phschgiso)
+{
+  for (Int_t iph = 0; iph < nphotons; iph++)
+  {
+    // photon pre-selection
+    if ((std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+    if ((*phseedE)[iph] < 1.f) continue;
+
+    // all other cuts
+    if ((*phpt)[iph] < fPhPtCut) continue;
+    if ((*phHoE_b)[iph] < fPhHoECut) continue;
+    if ((*phsieie_b)[iph] < fPhSieieCut) continue;
+    if ((*phNeuIso_b)[iph] < fPhNeuIsoCut) continue;
+    if ((*phPhIso_b)[iph] < fPhIsoCut) continue;
+    const Bool_t isEB = (std::abs((*phsceta)[iph]) < 1.4442);
+    if ((isEB && (*phsmaj)[iph] > fPhSmajEBCut) || (!isEB && (*phsmaj)[iph] > fPhSmajEECut)) continue;
+    if ((isEB && (*phsmin)[iph] > fPhSminEBCut) || (!isEB && (*phsmin)[iph] > fPhSminEECut)) continue;
+
+    phschgiso.push_back(iph);
+  }
+}
+
+void SkimRECO::GetPhsNeuIso(std::vector<Int_t> & phsneuiso)
+{
+  for (Int_t iph = 0; iph < nphotons; iph++)
+  {
+    // photon pre-selection
+    if ((std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+    if ((*phseedE)[iph] < 1.f) continue;
+
+    // all other cuts
+    if ((*phpt)[iph] < fPhPtCut) continue;
+    if ((*phHoE_b)[iph] < fPhHoECut) continue;
+    if ((*phsieie_b)[iph] < fPhSieieCut) continue;
+    if ((*phChgIso_b)[iph] < fPhChgIsoCut) continue;
+    if ((*phPhIso_b)[iph] < fPhIsoCut) continue;
+    const Bool_t isEB = (std::abs((*phsceta)[iph]) < 1.4442);
+    if ((isEB && (*phsmaj)[iph] > fPhSmajEBCut) || (!isEB && (*phsmaj)[iph] > fPhSmajEECut)) continue;
+    if ((isEB && (*phsmin)[iph] > fPhSminEBCut) || (!isEB && (*phsmin)[iph] > fPhSminEECut)) continue;
+
+    phsneuiso.push_back(iph);
+  }
+}
+
+void SkimRECO::GetPhsIso(std::vector<Int_t> & phsiso)
+{
+  for (Int_t iph = 0; iph < nphotons; iph++)
+  {
+    // photon pre-selection
+    if ((std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+    if ((*phseedE)[iph] < 1.f) continue;
+
+    // all other cuts
+    if ((*phpt)[iph] < fPhPtCut) continue;
+    if ((*phHoE_b)[iph] < fPhHoECut) continue;
+    if ((*phsieie_b)[iph] < fPhSieieCut) continue;
+    if ((*phChgIso_b)[iph] < fPhChgIsoCut) continue;
+    if ((*phNeuIso_b)[iph] < fPhNeuIsoCut) continue;
+    const Bool_t isEB = (std::abs((*phsceta)[iph]) < 1.4442);
+    if ((isEB && (*phsmaj)[iph] > fPhSmajEBCut) || (!isEB && (*phsmaj)[iph] > fPhSmajEECut)) continue;
+    if ((isEB && (*phsmin)[iph] > fPhSminEBCut) || (!isEB && (*phsmin)[iph] > fPhSminEECut)) continue;
+
+    phsiso.push_back(iph);
   }
 }
 
@@ -306,8 +469,12 @@ void SkimRECO::GetPhsSmaj(std::vector<Int_t> & phssmaj)
 
     // all cuts
     if ((*phpt)[iph] < fPhPtCut) continue;
+    if ((*phHoE_b)[iph] < fPhHoECut) continue;
+    if ((*phsieie_b)[iph] < fPhSieieCut) continue;
+    if ((*phChgIso_b)[iph] < fPhChgIsoCut) continue;
+    if ((*phNeuIso_b)[iph] < fPhNeuIsoCut) continue;
+    if ((*phPhIso_b)[iph] < fPhIsoCut) continue;
     const Bool_t isEB = (std::abs((*phsceta)[iph]) < 1.4442);
-    if ((isEB && (*phsieie)[iph] > fPhSieieEBCut) || (!isEB && (*phsieie)[iph] > fPhSieieEECut)) continue;
     if ((isEB && (*phsmin)[iph] > fPhSminEBCut) || (!isEB && (*phsmin)[iph] > fPhSminEECut)) continue;
 
     phssmaj.push_back(iph);
@@ -324,8 +491,12 @@ void SkimRECO::GetPhsSmin(std::vector<Int_t> & phssmin)
 
     // all cuts
     if ((*phpt)[iph] < fPhPtCut) continue;
+    if ((*phHoE_b)[iph] < fPhHoECut) continue;
+    if ((*phsieie_b)[iph] < fPhSieieCut) continue;
+    if ((*phChgIso_b)[iph] < fPhChgIsoCut) continue;
+    if ((*phNeuIso_b)[iph] < fPhNeuIsoCut) continue;
+    if ((*phPhIso_b)[iph] < fPhIsoCut) continue;
     const Bool_t isEB = (std::abs((*phsceta)[iph]) < 1.4442);
-    if ((isEB && (*phsieie)[iph] > fPhSieieEBCut) || (!isEB && (*phsieie)[iph] > fPhSieieEECut)) continue;
     if ((isEB && (*phsmaj)[iph] > fPhSmajEBCut) || (!isEB && (*phsmaj)[iph] > fPhSmajEECut)) continue;
 
     phssmin.push_back(iph);
@@ -335,22 +506,44 @@ void SkimRECO::GetPhsSmin(std::vector<Int_t> & phssmin)
 void SkimRECO::SetupNminus1()
 {
   // njets
-  fPlots["njets_nm1"]  = SkimRECO::MakeTH1F("njets_nm1","nJets (N-1)",10,0.f,10.f,Form("nJets (p_{T} > %4.1f [GeV/c])",fJetPtCut),"Events");
+  fPlots["njets_nm1"]  = SkimRECO::MakeTH1F("njets_nm1","nJets (N-1)",10,0,10,Form("nJets (p_{T} > %4.1f [GeV/c])",fJetPtCut),"Events");
   fPlots["jet0pt_nm1"] = SkimRECO::MakeTH1F("jet0pt_nm1","Jet p_{T} [GeV/c] (N-1)",100,0.f,1000.f,"Leading Jet p_{T} [GeV/c]","Events");
   fPlots["jet1pt_nm1"] = SkimRECO::MakeTH1F("jet1pt_nm1","Jet p_{T} [GeV/c] (N-1)",100,0.f,1000.f,"Subleading Jet p_{T} [GeV/c]","Events");
   fPlots["jet2pt_nm1"] = SkimRECO::MakeTH1F("jet2pt_nm1","Jet p_{T} [GeV/c] (N-1)",100,0.f,1000.f,"Subsubleading Jet p_{T} [GeV/c]","Events");
 
-  // Leading photons
+  // photons
+  fPlots["nphs_pt_nm1"]     = SkimRECO::MakeTH1F("nphs_pt_nm1","nPhotons (N-1)",10,0,10,"nPhotons (p_{T} N-1)","Events");
+  fPlots["nphs_hoe_nm1"]    = SkimRECO::MakeTH1F("nphs_hoe_nm1","nPhotons (N-1)",10,0,10,"nPhotons (HoverE VID N-1)","Events");
+  fPlots["nphs_sieie_nm1"]  = SkimRECO::MakeTH1F("nphs_sieie_nm1","nPhotons (N-1)",10,0,10,"nPhotons (#sigma_{i#eta i#ieta} VID N-1)","Events");
+  fPlots["nphs_chgiso_nm1"] = SkimRECO::MakeTH1F("nphs_chgiso_nm1","nPhotons (N-1)",10,0,10,"nPhotons (Charged Hadron Isolation VID N-1)","Events");
+  fPlots["nphs_neuiso_nm1"] = SkimRECO::MakeTH1F("nphs_neuiso_nm1","nPhotons (N-1)",10,0,10,"nPhotons (Neutral Hadron Isolation VID N-1)","Events");
+  fPlots["nphs_iso_nm1"]    = SkimRECO::MakeTH1F("nphs_iso_nm1","nPhotons (N-1)",10,0,10,"nPhotons (Photon Isolation VID N-1)","Events");
+  fPlots["nphs_smaj_nm1"]   = SkimRECO::MakeTH1F("nphs_smaj_nm1","nPhotons (N-1)",10,0,10,"nPhotons (S_{major} N-1)","Events");
+  fPlots["nphs_smin_nm1"]   = SkimRECO::MakeTH1F("nphs_smin_nm1","nPhotons (N-1)",10,0,10,"nPhotons (S_{minor} N-1)","Events");
+
   fPlots["ph0pt_nm1"] = SkimRECO::MakeTH1F("ph0pt_nm1","Photon p_{T} [GeV/c] (N-1)",100,0.f,2500.f,"Leading Photon p_{T} [GeV/c]","Events");
   fPlots["ph1pt_nm1"] = SkimRECO::MakeTH1F("ph1pt_nm1","Photon p_{T} [GeV/c] (N-1)",100,0.f,2500.f,"Subleading Photon p_{T} [GeV/c]","Events");
   fPlots["ph2pt_nm1"] = SkimRECO::MakeTH1F("ph2pt_nm1","Photon p_{T} [GeV/c] (N-1)",100,0.f,2500.f,"Subsubleading Photon p_{T} [GeV/c]","Events");
 
-  fPlots["ph0sieieEB_nm1"] = SkimRECO::MakeTH1F("ph0sieieEB_nm1","Photon #sigma_{i#eta i#eta} EB (N-1)",100,0,0.1,"Leading Photon #sigma_{i#eta i#eta}","Events");
-  fPlots["ph0sieieEE_nm1"] = SkimRECO::MakeTH1F("ph0sieieEE_nm1","Photon #sigma_{i#eta i#eta} EE (N-1)",100,0,0.1,"Leading Photon #sigma_{i#eta i#eta}","Events");
-  fPlots["ph1sieieEB_nm1"] = SkimRECO::MakeTH1F("ph1sieieEB_nm1","Photon #sigma_{i#eta i#eta} EB (N-1)",100,0,0.1,"Subleading Photon #sigma_{i#eta i#eta}","Events");
-  fPlots["ph1sieieEE_nm1"] = SkimRECO::MakeTH1F("ph1sieieEE_nm1","Photon #sigma_{i#eta i#eta} EE (N-1)",100,0,0.1,"Subleading Photon #sigma_{i#eta i#eta}","Events");
-  fPlots["ph2sieieEB_nm1"] = SkimRECO::MakeTH1F("ph2sieieEB_nm1","Photon #sigma_{i#eta i#eta} EB (N-1)",100,0,0.1,"Subsubleading Photon #sigma_{i#eta i#eta}","Events");
-  fPlots["ph2sieieEE_nm1"] = SkimRECO::MakeTH1F("ph2sieieEE_nm1","Photon #sigma_{i#eta i#eta} EE (N-1)",100,0,0.1,"Subsubleading Photon #sigma_{i#eta i#eta}","Events");
+  fPlots["ph0hoe_nm1"] = SkimRECO::MakeTH1F("ph0hoe_nm1","Photon HoverE VID (N-1)",4,0,4,"Leading Photon HoverE VID","Events");
+  fPlots["ph1hoe_nm1"] = SkimRECO::MakeTH1F("ph1hoe_nm1","Photon HoverE VID (N-1)",4,0,4,"Subleading Photon HoverE VID","Events");
+  fPlots["ph2hoe_nm1"] = SkimRECO::MakeTH1F("ph2hoe_nm1","Photon HoverE VID (N-1)",4,0,4,"Subsubleading Photon HoverE VID","Events");
+
+  fPlots["ph0sieie_nm1"] = SkimRECO::MakeTH1F("ph0sieie_nm1","Photon #sigma_{i#ieta i#ieta} VID (N-1)",4,0,4,"Leading Photon #sigma_{i#ieta i#ieta} VID","Events");
+  fPlots["ph1sieie_nm1"] = SkimRECO::MakeTH1F("ph1sieie_nm1","Photon #sigma_{i#ieta i#ieta} VID (N-1)",4,0,4,"Subleading Photon #sigma_{i#ieta i#ieta} VID","Events");
+  fPlots["ph2sieie_nm1"] = SkimRECO::MakeTH1F("ph2sieie_nm1","Photon #sigma_{i#ieta i#ieta} VID (N-1)",4,0,4,"Subsubleading Photon #sigma_{i#ieta i#ieta} VID","Events");
+
+  fPlots["ph0chgiso_nm1"] = SkimRECO::MakeTH1F("ph0chgiso_nm1","Photon Charged Hadron Isolation VID (N-1)",4,0,4,"Leading Photon Charged Hadron Isolation VID","Events");
+  fPlots["ph1chgiso_nm1"] = SkimRECO::MakeTH1F("ph1chgiso_nm1","Photon Charged Hadron Isolation VID (N-1)",4,0,4,"Subleading Photon Charged Hadron Isolation VID","Events");
+  fPlots["ph2chgiso_nm1"] = SkimRECO::MakeTH1F("ph2chgiso_nm1","Photon Charged Hadron Isolation VID (N-1)",4,0,4,"Subsubleading Photon Charged Hadron Isolation VID","Events");
+
+  fPlots["ph0neuiso_nm1"] = SkimRECO::MakeTH1F("ph0neuiso_nm1","Photon Neutral Hadron Isolation VID (N-1)",4,0,4,"Leading Photon Neutral Hadron Isolation VID","Events");
+  fPlots["ph1neuiso_nm1"] = SkimRECO::MakeTH1F("ph1neuiso_nm1","Photon Neutral Hadron Isolation VID (N-1)",4,0,4,"Subleading Photon Neutral Hadron Isolation VID","Events");
+  fPlots["ph2neuiso_nm1"] = SkimRECO::MakeTH1F("ph2neuiso_nm1","Photon Neutral Hadron Isolation VID (N-1)",4,0,4,"Subsubleading Photon Neutral Hadron Isolation VID","Events");
+
+  fPlots["ph0iso_nm1"] = SkimRECO::MakeTH1F("ph0iso_nm1","Photon Isolation VID (N-1)",4,0,4,"Leading Photon Isolation VID","Events");
+  fPlots["ph1iso_nm1"] = SkimRECO::MakeTH1F("ph1iso_nm1","Photon Isolation VID (N-1)",4,0,4,"Subleading Isolation VID","Events");
+  fPlots["ph2iso_nm1"] = SkimRECO::MakeTH1F("ph2iso_nm1","Photon Isolation VID (N-1)",4,0,4,"Subsubleading Photon Isolation VID","Events");
 
   fPlots["ph0smajEB_nm1"] = SkimRECO::MakeTH1F("ph0smajEB_nm1","Photon S_{major} EB (N-1)",100,0,0.1,"Leading Photon S_{major}","Events");
   fPlots["ph0smajEE_nm1"] = SkimRECO::MakeTH1F("ph0smajEE_nm1","Photon S_{major} EE (N-1)",100,0,0.1,"Leading Photon S_{major}","Events");
@@ -492,13 +685,14 @@ void SkimRECO::OutputTEffs()
   fEffs.clear();
 }
 
-void SkimRECO::DumpEfficiency()
+void SkimRECO::DumpEfficiency(std::ofstream & effdump)
 {
   const Int_t nEntries = fInTree->GetEntries();
   const Float_t eff = Float_t(fNPassed)/Float_t(nEntries);
   const Float_t unc = std::sqrt((eff*(1.f-eff))/float(nEntries));
 
   std::cout << "nEntries: " << nEntries << " nPassed: " << fNPassed << " efficiency: " << eff << " +/- " << unc << std::endl;
+  effdump << fSubDir.Data() << " " << eff << " " << unc << std::endl;
 }
 
 void SkimRECO::InitTree()
