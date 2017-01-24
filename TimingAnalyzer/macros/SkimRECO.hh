@@ -70,6 +70,7 @@ public :
   void FillPhsChgIso(const std::vector<Int_t> & phschgiso);
   void FillPhsNeuIso(const std::vector<Int_t> & phsneuiso);
   void FillPhsIso(const std::vector<Int_t> & phsiso);
+  void FillPhsVID(const std::vector<Int_t> & phsvid);
   void FillPhsSmaj(const std::vector<Int_t> & phssmaj);
   void FillPhsSmin(const std::vector<Int_t> & phssmin);
   void FillTEffs(const Bool_t passed, const std::vector<Int_t> & phs);
@@ -82,8 +83,10 @@ public :
   void GetPhsChgIso(std::vector<Int_t> & phschgiso);
   void GetPhsNeuIso(std::vector<Int_t> & phsneuiso);
   void GetPhsIso(std::vector<Int_t> & phsiso);
+  void GetPhsVID(std::vector<Int_t> & phsvid);
   void GetPhsSmaj(std::vector<Int_t> & phssmaj);
   void GetPhsSmin(std::vector<Int_t> & phssmin);
+  Int_t GetVID(const Int_t iph);
   void OutputTH1Fs();
   void OutputTH2Fs();
   void OutputTEffs();
@@ -133,6 +136,7 @@ private :
   Float_t                vtxX;
   Float_t                vtxY;
   Float_t                vtxZ;
+  Bool_t                 hltdoubleph;
   Float_t                t1pfMETpt;
   Float_t                t1pfMETphi;
   Float_t                t1pfMETsumEt;
@@ -182,6 +186,7 @@ private :
   TBranch * b_vtxX;
   TBranch * b_vtxY;
   TBranch * b_vtxZ;
+  TBranch * b_hltdoubleph;
   TBranch * b_t1pfMETpt;
   TBranch * b_t1pfMETphi;
   TBranch * b_t1pfMETsumEt;

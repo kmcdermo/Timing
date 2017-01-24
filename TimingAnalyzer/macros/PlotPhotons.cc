@@ -109,7 +109,7 @@ void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
     }
     //    PlotPhotons::SetupObjectCounts();
     //    PlotPhotons::SetupMET();
-    //    PlotPhotons::SetupJets();
+    PlotPhotons::SetupJets();
     PlotPhotons::SetupRecoPhotons();
   }
 
@@ -152,7 +152,7 @@ void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis)
       }
       //      PlotPhotons::FillObjectCounts();
       //      PlotPhotons::FillMET();
-      //      PlotPhotons::FillJets();
+      PlotPhotons::FillJets();
       PlotPhotons::FillRecoPhotons();
     }
 
@@ -492,7 +492,7 @@ void PlotPhotons::FillRecoPhotons()
     if (fApplyPhVIDCut && (fPhVIDMap[fPhVID] < (*phVID)[iph])) continue;
     if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
     if ((fApplyEBOnly && (std::abs((*pheta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*pheta)[iph]) < 1.566 || std::abs((*pheta)[iph]) > 2.5))) continue;
-    if ( (fIsGMSB && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] == 0) ) continue; // set to != 0 for QCD anti-matching
+    //    if ( (fIsGMSB && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] == 0) ) continue; // set to != 0 for QCD anti-matching
 
     fPlots["phE"]->Fill((*phE)[iph]);
     fPlots["phpt"]->Fill((*phpt)[iph]);

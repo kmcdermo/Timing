@@ -11,8 +11,8 @@
 #include <fstream>
 #include <vector>
 
-TString indir  = "output/skim10";
-TString outdir = "output/skim10/stacks";
+TString indir  = "output/skim-test";
+TString outdir = "output/skim-test/stacks";
 
 void getData(std::vector<TH1F*>&, std::vector<TString>&);
 void getSignals(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&);
@@ -120,9 +120,11 @@ void drawAll(std::vector<TH1F*>& dataTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, st
   // Draw it all
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
   {
+    Bool_t isVID = histnames[ihist].Contains("vid",TString::kExact);
+
     TCanvas * canv = new TCanvas("canv","canv");
     canv->cd();
-    dataTH1Fs    [ihist]->GetYaxis()->SetRangeUser(5e-5,1.3);
+    dataTH1Fs    [ihist]->GetYaxis()->SetRangeUser(!isVID?5e-5:7e-3,!isVID?1.3:7e1);
     dataTH1Fs    [ihist]->Draw("EP");
     ctau100TH1Fs [ihist]->Draw("HIST same");
     ctau2000TH1Fs[ihist]->Draw("HIST same");

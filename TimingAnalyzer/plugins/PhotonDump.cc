@@ -81,6 +81,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // JETS
   edm::Handle<std::vector<pat::Jet> > jetsH;
   iEvent.getByToken(jetsToken, jetsH);
+  std::vector<pat::Jet> jets = *jetsH;
 
   // PHOTONS + IDS
   edm::Handle<edm::ValueMap<bool> > photonLooseIdMapH;
@@ -118,6 +119,10 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     iEvent.getByToken(genpartsToken,   genparticlesH);
     iEvent.getByToken(genjetsToken,    genjetsH);
   }
+
+  // do some prepping of objects
+  PhotonDump::PrepJets(jetsH,jets);
+  PhotonDump::PrepPhotons(photonsH,photonLooseIdMap,photonMediumIdMap,photonTightIdMap,photons);
 
   ///////////////////////////
   //                       //
@@ -225,7 +230,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
                 {
 		  int   iph   = 0;
 		  float mindR = 0.3; // at least this much
-		  for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector 
+		  for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
 	          {
 		    const float tmppt  = phiter->pt();
 		    const float tmpphi = phiter->phi();
@@ -293,7 +298,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	        {
 		  int   iph   = 0;
 		  float mindR = 0.3; // at least this much
-		  for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector 
+		  for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
 		  {
 		    const float tmppt  = phiter->pt();
 		    const float tmpphi = phiter->phi();
@@ -356,7 +361,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  {
 	    int   ijet  = 0;
 	    float mindR = 0.4;
-	    for (std::vector<pat::Jet>::const_iterator jetiter = jetsH->begin(); jetiter != jetsH->end(); ++jetiter) // loop over reco jets for match
+	    for (std::vector<pat::Jet>::const_iterator jetiter = jets.begin(); jetiter != jets.end(); ++jetiter) // loop over reco jets for match
 	    {
 	      if (std::abs(genjetpt[igjet]-jetiter->pt())/genjetpt[igjet] < 0.5) // pt resolution check
 	      {
@@ -442,10 +447,10 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   PhotonDump::ClearJetBranches();
   if (jetsH.isValid()) // check to make sure reco jets exist
   {
-    njets = jetsH->size();
+    njets = jets.size();
     if (njets > 0) PhotonDump::InitializeJetBranches();
     int ijet = 0;
-    for (std::vector<pat::Jet>::const_iterator jetiter = jetsH->begin(); jetiter != jetsH->end(); ++jetiter)
+    for (std::vector<pat::Jet>::const_iterator jetiter = jets.begin(); jetiter != jets.end(); ++jetiter)
     {
       jetE  [ijet] = jetiter->energy();
       jetpt [ijet] = jetiter->pt();
@@ -474,7 +479,6 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // Reco Photons //
   //              //
   //////////////////
-  PhotonDump::PrepPhotons(photonsH,photonLooseIdMap,photonMediumIdMap,photonTightIdMap,photons);
   PhotonDump::ClearRecoPhotonBranches();
   if (photonsH.isValid()) // standard handle check
   {
@@ -610,6 +614,14 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   ///////////////
   tree->Fill();      
 }    
+
+void PhotonDump::PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::vector<pat::Jet> & jets)
+{
+  if (jetsH.isValid()) // standard handle check
+  {
+    std::sort(jets.begin(),jets.end(),sortByJetPt);
+  }
+}  
 
 void PhotonDump::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 			     const edm::ValueMap<bool> & photonLooseIdMap, 
