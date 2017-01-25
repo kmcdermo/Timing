@@ -27,7 +27,7 @@ void runPhotonPlots()
   // applyphvidcut, phvid, applyrhecut, 
   // applyecalacceptcut, applyEBonly, applyEEonly
   
-  PlotPhotons photonPlots("input/MC/signal/withReReco/ctau6000.root",true,false,false,"output/test6000",true,35.f,true,100.f,true,"medium",true,1.f,true,false,true);
+  PlotPhotons photonPlots("input/MC/signal/withReReco/ctau6000.root",true,false,false,"output/test6000",true,35.f,true,100.f,true,"medium",true,1.f,true,false,false);
 
   // which plots to do
   // first bool = generic plots

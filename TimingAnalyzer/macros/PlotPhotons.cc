@@ -464,6 +464,8 @@ void PlotPhotons::FillJets()
 {
   for (Int_t ijet = 0; ijet < njets; ijet++)
   {
+    if (ijet == 0) fPlots["jet1pt"]->Fill((*jetpt)[ijet]);
+
     if (fApplyJetPtCut && (*jetpt)[ijet] < fJetPtCut) continue;
     fPlots["jetE"]->Fill((*jetE)[ijet]);
     fPlots["jetpt"]->Fill((*jetpt)[ijet]);
@@ -481,16 +483,24 @@ void PlotPhotons::FillJets()
       }
     }
   }
+  if (njets == 0) fPlots["jet1pt"]->Fill(-1.f);
 }
 
 void PlotPhotons::FillRecoPhotons()
 {
+  Bool_t passed_pt  = false; // n-1 for VID plots
+  Bool_t passed_vid = false; // n-1 for pT  plots
+
   Int_t passed = 0;
   for (Int_t iph = 0; iph < nphotons; iph++)
   {
-    if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
-    if (fApplyPhVIDCut && (fPhVIDMap[fPhVID] < (*phVID)[iph])) continue;
     if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
+
+    if ((*phpt)[iph]  >= fPhPtCut          && !passed_pt)  { fPlots["ph1VID_nm1"]->Fill((*phVID)[iph]); passed_pt  = true; }
+    if ((*phVID)[iph] >= fPhVIDMap[fPhVID] && !passed_vid) { fPlots["ph1pt_nm1"] ->Fill((*phpt) [iph]); passed_vid = true; }
+
+    if (fApplyPhPtCut && ((*phpt)[iph] < fPhPtCut)) continue;
+    if (fApplyPhVIDCut && ((*phVID)[iph] < fPhVIDMap[fPhVID])) continue;
     if ((fApplyEBOnly && (std::abs((*pheta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*pheta)[iph]) < 1.566 || std::abs((*pheta)[iph]) > 2.5))) continue;
     //    if ( (fIsGMSB && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] == 0) ) continue; // set to != 0 for QCD anti-matching
 
@@ -595,8 +605,11 @@ void PlotPhotons::FillRecoPhotons()
     fPlots["phnrh"]->Fill(nRecHits);
     if (fIsGMSB && (*phmatch)[iph] > 0) fPlots["phnrh_gen"]->Fill(nRecHits_gen);
     passed++;
-
   } // end loop over nphotons
+
+  // fill -1 for total failure
+  if (!passed_pt)  { fPlots["ph1VID_nm1"]->Fill(-1.f); }
+  if (!passed_vid) { fPlots["ph1pt_nm1"] ->Fill(-1.f); }
 }
 
 void PlotPhotons::SetupAnalysis()
@@ -726,6 +739,8 @@ void PlotPhotons::SetupMET()
 
 void PlotPhotons::SetupJets()
 {
+  fPlots["jet1pt"] = PlotPhotons::MakeTH1F("jet1pt","Jets p_{T} [GeV/c] (reco)",101,-30.f,3000.f,"p_{T} [GeV/c]","Jets","AK4Jets");
+
   fPlots["jetE"] = PlotPhotons::MakeTH1F("jetE","Jets Energy [GeV] (reco)",100,0.f,3000.f,"Energy [GeV]","Jets","AK4Jets");
   fPlots["jetpt"] = PlotPhotons::MakeTH1F("jetpt","Jets p_{T} [GeV/c] (reco)",100,0.f,3000.f,"p_{T} [GeV/c]","Jets","AK4Jets");
   fPlots["jetphi"] = PlotPhotons::MakeTH1F("jetphi","Jets #phi (reco)",100,-3.2,3.2,"#phi","Jets","AK4Jets");
@@ -733,8 +748,8 @@ void PlotPhotons::SetupJets()
 
   if (fIsGMSB) 
   {
-    fPlots["jetE_gen"] = PlotPhotons::MakeTH1F("jetE_gen","Jets Energy [GeV] (reco: gen matched)",100,0.f,3000.f,"Energy [GeV]","Jets","AK4Jets");
-    fPlots["jetpt_gen"] = PlotPhotons::MakeTH1F("jetpt_gen","Jets p_{T} [GeV/c] (reco: gen matched)",100,0.f,3000.f,"p_{T} [GeV/c]","Jets","AK4Jets");
+    fPlots["jetE_gen"]   = PlotPhotons::MakeTH1F("jetE_gen","Jets Energy [GeV] (reco: gen matched)",100,0.f,3000.f,"Energy [GeV]","Jets","AK4Jets");
+    fPlots["jetpt_gen"]  = PlotPhotons::MakeTH1F("jetpt_gen","Jets p_{T} [GeV/c] (reco: gen matched)",100,0.f,3000.f,"p_{T} [GeV/c]","Jets","AK4Jets");
     fPlots["jetphi_gen"] = PlotPhotons::MakeTH1F("jetphi_gen","Jets #phi (reco: gen matched)",100,-3.2,3.2,"#phi","Jets","AK4Jets");
     fPlots["jeteta_gen"] = PlotPhotons::MakeTH1F("jeteta_gen","Jets #eta (reco: gen matched)",100,-6.0,6.0,"#eta","Jets","AK4Jets");
   }
@@ -742,6 +757,15 @@ void PlotPhotons::SetupJets()
 
 void PlotPhotons::SetupRecoPhotons()
 {
+  // N-1 LIKE PLOTS
+  fPlots["ph1pt_nm1"] = PlotPhotons::MakeTH1F("ph1pt_nm1","Photons p_{T} [GeV/c] (reco)",101,-15.f,1500.f,"Leading Medium ID Photon p_{T} [GeV/c]","Events","RecoPhotons");
+  fPlots["ph1vid_nm1"] = PlotPhotons::MakeTH1F("ph1vid_nm1","Photons VID (reco)",5,-1,4,Form("Leading Photon VID [p_{T} > %4.1f GeV/c]",fPhPtCut),"Events","RecoPhotons");
+  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(1,"No Photon");
+  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(2,"Fail");
+  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(3,"Loose");
+  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(4,"Medium");
+  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(5,"Tight");
+
   // All reco photons
   fPlots["phE"] = PlotPhotons::MakeTH1F("phE","Photons Energy [GeV] (reco)",100,0.f,2500.f,"Energy [GeV]","Photons","RecoPhotons");
   fPlots["phpt"] = PlotPhotons::MakeTH1F("phpt","Photons p_{T} [GeV/c] (reco)",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","RecoPhotons");
