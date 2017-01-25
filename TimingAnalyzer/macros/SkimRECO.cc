@@ -248,9 +248,27 @@ void SkimRECO::FillPhsIso(const std::vector<Int_t> & phsiso)
 void SkimRECO::FillPhsVID(const std::vector<Int_t> & phsvid)
 {
   // Photon VID plots
-  if (Int_t(phsvid.size()) > 0) fPlots["ph0vid_nm1"]->Fill(SkimRECO::GetVID(phsvid[0]));
-  if (Int_t(phsvid.size()) > 1) fPlots["ph1vid_nm1"]->Fill(SkimRECO::GetVID(phsvid[1]));
-  if (Int_t(phsvid.size()) > 2) fPlots["ph2vid_nm1"]->Fill(SkimRECO::GetVID(phsvid[2]));
+  if (Int_t(phsvid.size()) > 0) 
+  {
+    const Int_t ph0vid = SkimRECO::GetVID(phsvid[0]);
+    if (ph0vid >= 1) fPlots["ph0vid_nm1"]->Fill(1);
+    if (ph0vid >= 2) fPlots["ph0vid_nm1"]->Fill(2);
+    if (ph0vid >= 3) fPlots["ph0vid_nm1"]->Fill(3);
+  }
+  if (Int_t(phsvid.size()) > 1) 
+  {
+    const Int_t ph1vid = SkimRECO::GetVID(phsvid[1]);
+    if (ph1vid >= 1) fPlots["ph1vid_nm1"]->Fill(1);
+    if (ph1vid >= 2) fPlots["ph1vid_nm1"]->Fill(2);
+    if (ph1vid >= 3) fPlots["ph1vid_nm1"]->Fill(3);
+  }
+  if (Int_t(phsvid.size()) > 2) 
+  {
+    const Int_t ph2vid = SkimRECO::GetVID(phsvid[2]);
+    if (ph2vid >= 1) fPlots["ph2vid_nm1"]->Fill(1);
+    if (ph2vid >= 2) fPlots["ph2vid_nm1"]->Fill(2);
+    if (ph2vid >= 3) fPlots["ph2vid_nm1"]->Fill(3);
+  }
 }
 
 void SkimRECO::FillPhsSmaj(const std::vector<Int_t> & phssmaj)
@@ -587,8 +605,20 @@ void SkimRECO::SetupNminus1()
   fPlots["ph2iso_nm1"] = SkimRECO::MakeTH1F("ph2iso_nm1","Photon Isolation VID (N-1)",4,0,4,"Subsubleading Photon Isolation VID","Events");
 
   fPlots["ph0vid_nm1"] = SkimRECO::MakeTH1F("ph0vid_nm1","Photon VID (N-1)",4,0,4,"Leading Photon VID","Events");
+  fPlots["ph0vid_nm1"]->GetXaxis()->SetBinLabel(1,"Fail");
+  fPlots["ph0vid_nm1"]->GetXaxis()->SetBinLabel(2,"Loose");
+  fPlots["ph0vid_nm1"]->GetXaxis()->SetBinLabel(3,"Medium");
+  fPlots["ph0vid_nm1"]->GetXaxis()->SetBinLabel(4,"Tight");
   fPlots["ph1vid_nm1"] = SkimRECO::MakeTH1F("ph1vid_nm1","Photon VID (N-1)",4,0,4,"Subleading Photon VID","Events");
+  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(1,"Fail");
+  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(2,"Loose");
+  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(3,"Medium");
+  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(4,"Tight");
   fPlots["ph2vid_nm1"] = SkimRECO::MakeTH1F("ph2vid_nm1","Photon VID (N-1)",4,0,4,"Subsubleading Photon VID","Events");
+  fPlots["ph2vid_nm1"]->GetXaxis()->SetBinLabel(1,"Fail");
+  fPlots["ph2vid_nm1"]->GetXaxis()->SetBinLabel(2,"Loose");
+  fPlots["ph2vid_nm1"]->GetXaxis()->SetBinLabel(3,"Medium");
+  fPlots["ph2vid_nm1"]->GetXaxis()->SetBinLabel(4,"Tight");
 
   fPlots["ph0smajEB_nm1"] = SkimRECO::MakeTH1F("ph0smajEB_nm1","Photon S_{major} EB (N-1)",100,0,0.1,"Leading Photon S_{major}","Events");
   fPlots["ph0smajEE_nm1"] = SkimRECO::MakeTH1F("ph0smajEE_nm1","Photon S_{major} EE (N-1)",100,0,0.1,"Leading Photon S_{major}","Events");
