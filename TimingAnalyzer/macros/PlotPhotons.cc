@@ -107,7 +107,7 @@ void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
       //      PlotPhotons::SetupGenJets();
       //      }
     }
-    //    PlotPhotons::SetupObjectCounts();
+    PlotPhotons::SetupObjectCounts();
     //    PlotPhotons::SetupMET();
     PlotPhotons::SetupJets();
     PlotPhotons::SetupRecoPhotons();
@@ -150,7 +150,7 @@ void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis)
 	//	PlotPhotons::FillGMSB();
 	//	PlotPhotons::FillGenJets();
       }
-      //      PlotPhotons::FillObjectCounts();
+      PlotPhotons::FillObjectCounts();
       //      PlotPhotons::FillMET();
       PlotPhotons::FillJets();
       PlotPhotons::FillRecoPhotons();

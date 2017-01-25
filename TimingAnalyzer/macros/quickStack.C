@@ -12,7 +12,7 @@
 
 #include <vector>
 
-static const Float_t lumi = 36.46 * 1000; // pb
+//static const Float_t lumi = 36.46 * 1000; // pb
 TString outdir = "cuts";
 
 void getQCD(std::vector<TH1F*>&, std::vector<TString>&);
@@ -31,7 +31,8 @@ void quickStack()
   SetTDRStyle(tdrStyle);
   gROOT->ForceStyle();
 
-  std::vector<TString> histnames = {"phpt","phsmaj","phsmin","phsieie","phsipip","phsieip","phsmin_ov_phsmaj"};
+  //  std::vector<TString> histnames = {"phpt","phsmaj","phsmin","phsieie","phsipip","phsieip","phsmin_ov_phsmaj"};
+  std::vector<TString> histnames = {"ph1pt_nm1","ph1VID_nm1","ph1seedtime","jet1pt","njets"};
 
   // BKGs
   std::vector<TH1F*> qcdTH1Fs(histnames.size());
@@ -98,7 +99,8 @@ void getQCD(std::vector<TH1F*>& qcdTH1Fs, std::vector<TString>& histnames)
     for (UInt_t iqcd = 0; iqcd < qcdHTs.size(); iqcd++)
     {
       qcdhists[iqcd] = (TH1F*)qcdfiles[iqcd]->Get(histnames[ihist].Data());
-      qcdhists[iqcd]->Scale((1.0/qcdnes[iqcd])*(qcdxss[iqcd]*lumi));
+      //      qcdhists[iqcd]->Scale((1.0/qcdnes[iqcd])*(qcdxss[iqcd]*lumi));
+      qcdhists[iqcd]->Scale((1.0/qcdnes[iqcd])*(qcdxss[iqcd]));
     }
     
     for (UInt_t iqcd = 0; iqcd < qcdHTs.size(); iqcd++)
@@ -137,7 +139,8 @@ void getGJets(std::vector<TH1F*>& gjetsTH1Fs, std::vector<TString>& histnames)
     for (UInt_t igjets = 0; igjets < gjetsHTs.size(); igjets++)
     {
       gjetshists[igjets] = (TH1F*)gjetsfiles[igjets]->Get(histnames[ihist].Data());
-      gjetshists[igjets]->Scale((1.0/gjetsnes[igjets])*(gjetsxss[igjets]*lumi));
+      //gjetshists[igjets]->Scale((1.0/gjetsnes[igjets])*(gjetsxss[igjets]*lumi));
+      gjetshists[igjets]->Scale((1.0/gjetsnes[igjets])*(gjetsxss[igjets]));
     }
     
     for (UInt_t igjets = 0; igjets < gjetsHTs.size(); igjets++)
@@ -196,7 +199,7 @@ void drawAll(std::vector<TH1F*>& bkgTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std
     TCanvas * canv = new TCanvas("canv","canv");
     canv->cd();
     canv->SetLogy();
-    bkgTH1Fs     [ihist]->GetYaxis()->SetRangeUser(5e-5,3);
+    bkgTH1Fs     [ihist]->GetYaxis()->SetRangeUser(5e-6,5e1);
     bkgTH1Fs     [ihist]->Draw("HIST");
     ctau100TH1Fs [ihist]->Draw("HIST same");
     ctau2000TH1Fs[ihist]->Draw("HIST same");
@@ -225,7 +228,7 @@ void drawStack(std::vector<THStack*>& bkgStacks, std::vector<TH1F*>& qcdTH1Fs, s
     TCanvas * canv = new TCanvas("canv","canv");
     canv->cd();
     canv->SetLogy();
-    ctau100TH1Fs [ihist]->GetYaxis()->SetRangeUser(5e-5,3);
+    ctau100TH1Fs [ihist]->GetYaxis()->SetRangeUser(5e-6,5e1);
     ctau100TH1Fs [ihist]->Draw("HIST");    
     bkgStacks    [ihist]->Draw("HIST same");
     ctau100TH1Fs [ihist]->Draw("HIST same");    
@@ -261,7 +264,7 @@ void drawAllSeparate(std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1F
     TCanvas * canv = new TCanvas("canv","canv");
     canv->cd();
     canv->SetLogy();
-    qcdTH1Fs     [ihist]->GetYaxis()->SetRangeUser(5e-5,3);
+    qcdTH1Fs     [ihist]->GetYaxis()->SetRangeUser(5e-6,5e1);
     qcdTH1Fs     [ihist]->SetFillStyle(3005);
     qcdTH1Fs     [ihist]->Draw("HIST");
     //    gjetsTH1Fs   [ihist]->SetFillColorAlpha(gjetsTH1Fs[ihist]->GetFillColor(),0.5);
