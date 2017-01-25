@@ -30,9 +30,11 @@ void runPhotonPlots_HT(TString cuts, TString sample, TString bin, Bool_t isEB, B
   // apply analysis cuts to individual plots?
   bool apply = (cuts.EqualTo("cuts",TString::kExact)?true:false);
 
-  TString VID = apply?"medium":"loose";
+  TString VID = apply?"loose":"none";
 
-  PlotPhotons photonPlots(Form("input/MC/bkg/%s/%s_HT%s.root",sample.Data(),sample.Data(),bin.Data()),false,true,false,Form("output/MC/bkg/%s/%s/%s",sample.Data(),cuts.Data(),bin.Data()),apply,35.f,apply,100.f,apply,VID.Data(),true,1.f,true,isEB,isEE);
+  Float_t phpt = 50.f;
+
+  PlotPhotons photonPlots(Form("input/MC/bkg/%s/%s_HT%s.root",sample.Data(),sample.Data(),bin.Data()),false,true,false,Form("output/MC/bkg/%s/%s/%s",sample.Data(),cuts.Data(),bin.Data()),apply,35.f,apply,phpt,apply,VID.Data(),true,1.f,true,isEB,isEE);
 
   // which plots to do
   // first bool = generic plots

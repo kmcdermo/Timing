@@ -27,6 +27,7 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isBkg, Bool_t a
   // in routine initialization
   fNEvCheck = 1000;
   // make the vid maps!
+  fPhVIDMap["none"]   = 0;
   fPhVIDMap["loose"]  = 1;
   fPhVIDMap["medium"] = 2;
   fPhVIDMap["tight"]  = 3;

@@ -30,9 +30,11 @@ void runPhotonPlots_signal(TString cuts, TString ctau, TString reco, Bool_t isEB
   // apply analysis cuts to individual plots?
   bool apply = (cuts.EqualTo("cuts",TString::kExact)?true:false);
 
-  TString VID = apply?"medium":"loose";
+  TString VID = apply?"loose":"none";
   
-  PlotPhotons photonPlots(Form("input/MC/signal/%s/ctau%s.root",reco.Data(),ctau.Data()),true,false,false,Form("output/MC/signal/%s/%s/ctau%s",reco.Data(),cuts.Data(),ctau.Data()),apply,35.f,apply,100.f,apply,VID.Data(),true,1.f,true,isEB,isEE);
+  Float_t phpt = 50.f;
+
+  PlotPhotons photonPlots(Form("input/MC/signal/%s/ctau%s.root",reco.Data(),ctau.Data()),true,false,false,Form("output/MC/signal/%s/%s/ctau%s",reco.Data(),cuts.Data(),ctau.Data()),apply,35.f,apply,phpt,apply,VID.Data(),true,1.f,true,isEB,isEE);
 
   // which plots to do
   // first bool = generic plots
