@@ -31,8 +31,8 @@ void quickStack()
   SetTDRStyle(tdrStyle);
   gROOT->ForceStyle();
 
-  //  std::vector<TString> histnames = {"phpt","phsmaj","phsmin","phsieie","phsipip","phsieip","phsmin_ov_phsmaj"};
-  std::vector<TString> histnames = {"ph1pt_nm1","ph1VID_nm1","ph1seedtime","jet1pt","njets"};
+  //  std::vector<TString> histnames = {"ph1smaj","ph1smin","ph1sieie","ph1sipip","ph1sieip"};
+  std::vector<TString> histnames = {"ph1pt_nm1","ph1VID_nm1","ph1seedtime","jet1pt"};
 
   // BKGs
   std::vector<TH1F*> qcdTH1Fs(histnames.size());
@@ -90,7 +90,7 @@ void getQCD(std::vector<TH1F*>& qcdTH1Fs, std::vector<TString>& histnames)
   std::vector<TFile*> qcdfiles(qcdHTs.size());
   for (UInt_t iqcd = 0; iqcd < qcdHTs.size(); iqcd++)
   {
-    qcdfiles[iqcd] = TFile::Open(Form("output/MC/bkg/QCD/cuts/%s/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root",qcdHTs[iqcd].Data()));
+    qcdfiles[iqcd] = TFile::Open(Form("output/MC/bkg/QCD/cuts/%s/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root",qcdHTs[iqcd].Data()));
   }
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -130,7 +130,7 @@ void getGJets(std::vector<TH1F*>& gjetsTH1Fs, std::vector<TString>& histnames)
   std::vector<TFile*> gjetsfiles(gjetsHTs.size());
   for (UInt_t igjets = 0; igjets < gjetsHTs.size(); igjets++)
   {
-    gjetsfiles[igjets] = TFile::Open(Form("output/MC/bkg/GJets/cuts/%s/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root",gjetsHTs[igjets].Data()));
+    gjetsfiles[igjets] = TFile::Open(Form("output/MC/bkg/GJets/cuts/%s/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root",gjetsHTs[igjets].Data()));
   }
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -164,9 +164,9 @@ void getGJets(std::vector<TH1F*>& gjetsTH1Fs, std::vector<TString>& histnames)
 void getSignals(std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames)
 {
   // Signals
-  TFile * file100  = TFile::Open("output/MC/signal/withReReco/cuts/ctau100/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
-  TFile * file2000 = TFile::Open("output/MC/signal/withReReco/cuts/ctau2000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
-  TFile * file6000 = TFile::Open("output/MC/signal/withReReco/cuts/ctau6000/cuts_jetpt35.0_phpt100.0_phVIDmedium_rhE1.0_ecalaccept/plots.root");
+  TFile * file100  = TFile::Open("output/MC/signal/withReReco/cuts/ctau100/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root");
+  TFile * file2000 = TFile::Open("output/MC/signal/withReReco/cuts/ctau2000/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root");
+  TFile * file6000 = TFile::Open("output/MC/signal/withReReco/cuts/ctau6000/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root");
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
   {

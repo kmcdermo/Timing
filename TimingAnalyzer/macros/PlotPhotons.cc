@@ -108,7 +108,7 @@ void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
       //      PlotPhotons::SetupGenJets();
       //      }
     }
-    //    PlotPhotons::SetupObjectCounts();
+    PlotPhotons::SetupObjectCounts();
     //    PlotPhotons::SetupMET();
     PlotPhotons::SetupJets();
     PlotPhotons::SetupRecoPhotons();
@@ -151,7 +151,7 @@ void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis)
 	//	PlotPhotons::FillGMSB();
 	//	PlotPhotons::FillGenJets();
       }
-      //      PlotPhotons::FillObjectCounts();
+      PlotPhotons::FillObjectCounts();
       //      PlotPhotons::FillMET();
       PlotPhotons::FillJets();
       PlotPhotons::FillRecoPhotons();
@@ -501,6 +501,7 @@ void PlotPhotons::FillRecoPhotons()
     if ((*phpt)[iph]  >= fPhPtCut          && !passed_pt)  
     { 
       //      fPlots["ph1VID_nm1"]->Fill((*phVID)[iph]); 
+      if ( (*phVID)[iph] == 0 ) fPlots["ph1VID_nm1"]->Fill(0); 
       if ( (*phVID)[iph] >= 1 ) fPlots["ph1VID_nm1"]->Fill(1); 
       if ( (*phVID)[iph] >= 2 ) fPlots["ph1VID_nm1"]->Fill(2); 
       if ( (*phVID)[iph] >= 3 ) fPlots["ph1VID_nm1"]->Fill(3); 
@@ -511,8 +512,8 @@ void PlotPhotons::FillRecoPhotons()
 
     if (fApplyPhPtCut && ((*phpt)[iph] < fPhPtCut)) continue;
     if (fApplyPhVIDCut && ((*phVID)[iph] < fPhVIDMap[fPhVID])) continue;
-    if ((fApplyEBOnly && (std::abs((*phsceta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*phsceta)[iph]) < 1.566 || std::abs((*phsceta)[iph]) > 2.5))) continue;
-    if ( (fIsGMSB && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] != 0) ) continue; // set to != 0 for QCD anti-matching
+    //    if ((fApplyEBOnly && (std::abs((*phsceta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*phsceta)[iph]) < 1.566 || std::abs((*phsceta)[iph]) > 2.5))) continue;
+    //    if ( (fIsGMSB && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] == 0) ) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
 
     fPlots["phE"]->Fill((*phE)[iph]);
     fPlots["phpt"]->Fill((*phpt)[iph]);

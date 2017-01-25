@@ -9,7 +9,7 @@ do
     done
 done
 
-# #isEB
+#isEB
 # for cut in cuts #nocuts cuts
 # do
 #     for HT in 40To100 100To200 200To400 400To600 600ToInf
@@ -18,7 +18,7 @@ done
 #     done
 # done
 
-# #isEE
+#isEE
 # for cut in nocuts cuts
 # do
 #     for HT in 40To100 100To200 200To400 400To600 600ToInf

@@ -12,7 +12,7 @@ do
     done
 done
 
-# # isEB
+# isEB
 # for reco in withReReco #noReReco
 # do
 #     for cut in cuts #nocuts #cuts
@@ -24,7 +24,7 @@ done
 #     done
 # done
 
-# # isEE
+# isEE
 # for reco in withReReco #noReReco
 # do
 #     for cut in cuts #nocuts #cuts

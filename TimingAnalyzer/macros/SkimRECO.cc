@@ -251,6 +251,7 @@ void SkimRECO::FillPhsVID(const std::vector<Int_t> & phsvid)
   if (Int_t(phsvid.size()) > 0) 
   {
     const Int_t ph0vid = SkimRECO::GetVID(phsvid[0]);
+    if (ph0vid == 0) fPlots["ph0vid_nm1"]->Fill(0);
     if (ph0vid >= 1) fPlots["ph0vid_nm1"]->Fill(1);
     if (ph0vid >= 2) fPlots["ph0vid_nm1"]->Fill(2);
     if (ph0vid >= 3) fPlots["ph0vid_nm1"]->Fill(3);
@@ -258,6 +259,7 @@ void SkimRECO::FillPhsVID(const std::vector<Int_t> & phsvid)
   if (Int_t(phsvid.size()) > 1) 
   {
     const Int_t ph1vid = SkimRECO::GetVID(phsvid[1]);
+    if (ph1vid == 0) fPlots["ph1vid_nm1"]->Fill(0);
     if (ph1vid >= 1) fPlots["ph1vid_nm1"]->Fill(1);
     if (ph1vid >= 2) fPlots["ph1vid_nm1"]->Fill(2);
     if (ph1vid >= 3) fPlots["ph1vid_nm1"]->Fill(3);
@@ -265,6 +267,7 @@ void SkimRECO::FillPhsVID(const std::vector<Int_t> & phsvid)
   if (Int_t(phsvid.size()) > 2) 
   {
     const Int_t ph2vid = SkimRECO::GetVID(phsvid[2]);
+    if (ph2vid == 0) fPlots["ph2vid_nm1"]->Fill(0);
     if (ph2vid >= 1) fPlots["ph2vid_nm1"]->Fill(1);
     if (ph2vid >= 2) fPlots["ph2vid_nm1"]->Fill(2);
     if (ph2vid >= 3) fPlots["ph2vid_nm1"]->Fill(3);
