@@ -176,7 +176,7 @@ void PlotPhotons::CountEvents(Bool_t & event_b)
   // photon selection efficiency
   Bool_t phpt_b  = false;
   Bool_t phvid_b = false;
-  Bool_t pheta_b = false;
+  Bool_t phsceta_b = false;
   Bool_t seedrh_b = false;
   Bool_t seedE_b = false;
 
@@ -186,8 +186,8 @@ void PlotPhotons::CountEvents(Bool_t & event_b)
     phpt_b = true;
     if (fApplyPhVIDCut && (fPhVIDMap[fPhVID] < (*phVID)[iph])) continue;
     phvid_b = true;
-    if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
-    pheta_b = true;
+    if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+    phsceta_b = true;
     if ((*phseedpos)[iph] == -9999) continue;
     seedrh_b = true;
     if (fApplyrhECut && (*phrhE)[iph][(*phseedpos)[iph]] < frhECut) continue;
@@ -196,7 +196,7 @@ void PlotPhotons::CountEvents(Bool_t & event_b)
     // leading photon passing all the selection as required
     break;
   }
-  if (phpt_b && phvid_b && pheta_b) fEfficiency["Photons"]++;
+  if (phpt_b && phvid_b && phsceta_b) fEfficiency["Photons"]++;
   if (seedrh_b && seedE_b) fEfficiency["RecHits"]++;
 
   // jet selection efficiency
@@ -215,7 +215,7 @@ void PlotPhotons::CountEvents(Bool_t & event_b)
   if (njets_ptcut_b) fEfficiency["Jets"]++;
 
   // total efficiency
-  if (njets_ptcut_b && phpt_b && phvid_b && pheta_b && seedrh_b && seedE_b) 
+  if (njets_ptcut_b && phpt_b && phvid_b && phsceta_b && seedrh_b && seedE_b) 
   {
     fEfficiency["Events"]++;
     event_b = true;
@@ -234,7 +234,7 @@ void PlotPhotons::FillAnalysis()
   {
     if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
     if (fApplyPhVIDCut && (fPhVIDMap[fPhVID] < (*phVID)[iph])) continue;
-    if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
+    if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
     photon_b = true;
     if ((*phseedpos)[iph] == -9999) continue;
     if (fApplyrhECut && (*phrhE)[iph][(*phseedpos)[iph]] < frhECut) continue;
@@ -429,7 +429,7 @@ void PlotPhotons::FillObjectCounts()
   for (Int_t iph = 0; iph < nphotons; iph++)
   { 
     if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
-    if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
+    if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
     nPhotons++;
     if ( (*phVID)[iph] >= 1 ) nLoosePh++;
     if ( (*phVID)[iph] >= 2 ) nMediumPh++;
@@ -494,14 +494,14 @@ void PlotPhotons::FillRecoPhotons()
   Int_t passed = 0;
   for (Int_t iph = 0; iph < nphotons; iph++)
   {
-    if (fApplyECALAcceptCut && (std::abs((*pheta)[iph]) > 2.5 || (std::abs((*pheta)[iph]) > 1.4442 && std::abs((*pheta)[iph]) < 1.566))) continue;
+    if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
 
     if ((*phpt)[iph]  >= fPhPtCut          && !passed_pt)  { fPlots["ph1VID_nm1"]->Fill((*phVID)[iph]); passed_pt  = true; }
     if ((*phVID)[iph] >= fPhVIDMap[fPhVID] && !passed_vid) { fPlots["ph1pt_nm1"] ->Fill((*phpt) [iph]); passed_vid = true; }
 
     if (fApplyPhPtCut && ((*phpt)[iph] < fPhPtCut)) continue;
     if (fApplyPhVIDCut && ((*phVID)[iph] < fPhVIDMap[fPhVID])) continue;
-    if ((fApplyEBOnly && (std::abs((*pheta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*pheta)[iph]) < 1.566 || std::abs((*pheta)[iph]) > 2.5))) continue;
+    //    if ((fApplyEBOnly && (std::abs((*phsceta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*phsceta)[iph]) < 1.566 || std::abs((*phsceta)[iph]) > 2.5))) continue;
     //    if ( (fIsGMSB && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] == 0) ) continue; // set to != 0 for QCD anti-matching
 
     fPlots["phE"]->Fill((*phE)[iph]);
@@ -562,13 +562,11 @@ void PlotPhotons::FillRecoPhotons()
       nRecHits++;
 
       fPlots["phrhE"]->Fill((*phrhE)[iph][irh]);
-      fPlots["phrhdelR"]->Fill((*phrhdelR)[iph][irh]);
       fPlots["phrhtime"]->Fill((*phrhtime)[iph][irh]);
       fPlots["phrhOOT"]->Fill((*phrhOOT)[iph][irh]);
       if ( (*phseedpos)[iph] == irh ) // seed info
       {
 	fPlots["phseedE"]->Fill((*phrhE)[iph][irh]);
-	fPlots["phseeddelR"]->Fill((*phrhdelR)[iph][irh]);
 	fPlots["phseedtime"]->Fill((*phrhtime)[iph][irh]);
 	fPlots["phseedOOT"]->Fill((*phrhOOT)[iph][irh]);
       
@@ -588,13 +586,11 @@ void PlotPhotons::FillRecoPhotons()
         {
 	  nRecHits_gen++;
 	  fPlots["phrhE_gen"]->Fill((*phrhE)[iph][irh]);
-	  fPlots["phrhdelR_gen"]->Fill((*phrhdelR)[iph][irh]);
 	  fPlots["phrhtime_gen"]->Fill((*phrhtime)[iph][irh]);
 	  fPlots["phrhOOT_gen"]->Fill((*phrhOOT)[iph][irh]);
 	  if ( (*phseedpos)[iph] == irh ) // seed info
 	  {
 	    fPlots["phseedE_gen"]->Fill((*phrhE)[iph][irh]);
-	    fPlots["phseeddelR_gen"]->Fill((*phrhdelR)[iph][irh]);
 	    fPlots["phseedtime_gen"]->Fill((*phrhtime)[iph][irh]);
 	    fPlots["phseedOOT_gen"]->Fill((*phrhOOT)[iph][irh]);
 	  }
@@ -759,12 +755,12 @@ void PlotPhotons::SetupRecoPhotons()
 {
   // N-1 LIKE PLOTS
   fPlots["ph1pt_nm1"] = PlotPhotons::MakeTH1F("ph1pt_nm1","Photons p_{T} [GeV/c] (reco)",101,-15.f,1500.f,"Leading Medium ID Photon p_{T} [GeV/c]","Events","RecoPhotons");
-  fPlots["ph1vid_nm1"] = PlotPhotons::MakeTH1F("ph1vid_nm1","Photons VID (reco)",5,-1,4,Form("Leading Photon VID [p_{T} > %4.1f GeV/c]",fPhPtCut),"Events","RecoPhotons");
-  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(1,"No Photon");
-  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(2,"Fail");
-  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(3,"Loose");
-  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(4,"Medium");
-  fPlots["ph1vid_nm1"]->GetXaxis()->SetBinLabel(5,"Tight");
+  fPlots["ph1VID_nm1"] = PlotPhotons::MakeTH1F("ph1VID_nm1","Photons VID (reco)",5,-1,4,Form("Leading Photon VID [p_{T} > %4.1f GeV/c]",fPhPtCut),"Events","RecoPhotons");
+  fPlots["ph1VID_nm1"]->GetXaxis()->SetBinLabel(1,"No Photon");
+  fPlots["ph1VID_nm1"]->GetXaxis()->SetBinLabel(2,"Fail");
+  fPlots["ph1VID_nm1"]->GetXaxis()->SetBinLabel(3,"Loose");
+  fPlots["ph1VID_nm1"]->GetXaxis()->SetBinLabel(4,"Medium");
+  fPlots["ph1VID_nm1"]->GetXaxis()->SetBinLabel(5,"Tight");
 
   // All reco photons
   fPlots["phE"] = PlotPhotons::MakeTH1F("phE","Photons Energy [GeV] (reco)",100,0.f,2500.f,"Energy [GeV]","Photons","RecoPhotons");
@@ -789,11 +785,9 @@ void PlotPhotons::SetupRecoPhotons()
 
   // all rec hits + seed info
   fPlots["phrhE"] = PlotPhotons::MakeTH1F("phrhE","Photons RecHits Energy [GeV] (reco)",100,0.f,2000.f,"Energy [GeV]","RecHits","RecoPhotons");
-  fPlots["phrhdelR"] = PlotPhotons::MakeTH1F("phrhdelR","#DeltaR of RecHits to Photon (reco)",100,0.f,1.0f,"Time [ns]","RecHits","RecoPhotons");
   fPlots["phrhtime"] = PlotPhotons::MakeTH1F("phrhtime","Photons RecHits Time [ns] (reco)",200,-100.f,100.f,"Time [ns]","RecHits","RecoPhotons");
   fPlots["phrhOOT"] = PlotPhotons::MakeTH1F("phrhOOT","Photons RecHits OoT Flag (reco)",2,0.f,2.f,"OoT Flag","RecHits","RecoPhotons");
   fPlots["phseedE"] = PlotPhotons::MakeTH1F("phseedE","Photons Seed RecHit Energy [GeV] (reco)",100,0.f,2000.f,"Energy [GeV]","Seed RecHits","RecoPhotons");
-  fPlots["phseeddelR"] = PlotPhotons::MakeTH1F("phseeddelR","#DeltaR of Seed RecHit to Photon (reco)",100,0.f,1.0f,"Time [ns]","Seed RecHits","RecoPhotons");
   fPlots["phseedtime"] = PlotPhotons::MakeTH1F("phseedtime","Photons Seed RecHit Time [ns] (reco)",200,-10.f,10.f,"Time [ns]","Seed RecHits","RecoPhotons");
   fPlots["phseedOOT"] = PlotPhotons::MakeTH1F("phseedOOT","Photons Seed RecHit OoT Flag (reco)",2,0.f,2.f,"OoT Flag","Seed RecHits","RecoPhotons");  
 
@@ -831,11 +825,9 @@ void PlotPhotons::SetupRecoPhotons()
     
     // all rec hits + seed info for gen matched photons
     fPlots["phrhE_gen"] = PlotPhotons::MakeTH1F("phrhE_gen","Photons RecHits Energy [GeV] (reco: gen matched)",100,0.f,2000.f,"Energy [GeV]","RecHits","RecoPhotons");
-    fPlots["phrhdelR_gen"] = PlotPhotons::MakeTH1F("phrhdelR_gen","#DeltaR of RecHits to Photon (reco: gen matched)",100,0.f,1.0f,"Time [ns]","RecHits","RecoPhotons");
     fPlots["phrhtime_gen"] = PlotPhotons::MakeTH1F("phrhtime_gen","Photons RecHits Time [ns] (reco: gen matched)",200,-100.f,100.f,"Time [ns]","RecHits","RecoPhotons");
     fPlots["phrhOOT_gen"] = PlotPhotons::MakeTH1F("phrhOOT_gen","Photons RecHits OoT Flag (reco: gen matched)",2,0.f,2.f,"OoT Flag","RecHits","RecoPhotons");
     fPlots["phseedE_gen"] = PlotPhotons::MakeTH1F("phseedE_gen","Photons Seed RecHit Energy [GeV] (reco: gen matched)",100,0.f,2000.f,"Energy [GeV]","Seed RecHits","RecoPhotons");
-    fPlots["phseeddelR_gen"] = PlotPhotons::MakeTH1F("phseeddelR_gen","#DeltaR of Seed RecHit to Photon (reco: gen matched)",100,0.f,1.0f,"Time [ns]","Seed RecHits","RecoPhotons");
     fPlots["phseedtime_gen"] = PlotPhotons::MakeTH1F("phseedtime_gen","Photons Seed RecHit Time [ns] (reco: gen matched)",200,-10.f,10.f,"Time [ns]","Seed RecHits","RecoPhotons");
     fPlots["phseedOOT_gen"] = PlotPhotons::MakeTH1F("phseedOOT_gen","Photons Seed RecHit OoT Flag (reco: gen matched)",2,0.f,2.f,"OoT Flag","Seed RecHits","RecoPhotons");  
   }
@@ -1005,17 +997,15 @@ void PlotPhotons::InitTree()
   jetpt = 0;
   jetphi = 0;
   jeteta = 0;
-  phmatch = 0;
-  phisMatched = 0;
-  phVID = 0;
-  phscX = 0;
-  phscY = 0;
-  phscZ = 0;
-  phscE = 0;
   phE = 0;
   phpt = 0;
   phphi = 0;
   pheta = 0;
+  phmatch = 0;
+  phisMatched = 0;
+  phscE = 0;
+  phsceta = 0;
+  phscphi = 0;
   phHoE = 0;
   phr9 = 0;
   phChgIso = 0;
@@ -1027,13 +1017,17 @@ void PlotPhotons::InitTree()
   phsieip = 0;
   phsmaj = 0;
   phsmin = 0;
+  phVID = 0;
+  phHoE_b = 0;
+  phsieie_b = 0;
+  phChgIso_b = 0;
+  phNeuIso_b = 0;
+  phIso_b = 0;
   phnrh = 0;
   phseedpos = 0;
-  phrhX = 0;
-  phrhY = 0;
-  phrhZ = 0;
+  phrheta = 0;
+  phrhphi = 0;
   phrhE = 0;
-  phrhdelR = 0;
   phrhtime = 0;
   phrhID = 0;
   phrhOOT = 0;
@@ -1068,6 +1062,7 @@ void PlotPhotons::InitTree()
     fInTree->SetBranchAddress("genph1phi", &genph1phi, &b_genph1phi);
     fInTree->SetBranchAddress("genph1eta", &genph1eta, &b_genph1eta);
     fInTree->SetBranchAddress("genph1match", &genph1match, &b_genph1match);
+    fInTree->SetBranchAddress("gengr1mass", &gengr1mass, &b_gengr1mass);
     fInTree->SetBranchAddress("gengr1E", &gengr1E, &b_gengr1E);
     fInTree->SetBranchAddress("gengr1pt", &gengr1pt, &b_gengr1pt);
     fInTree->SetBranchAddress("gengr1phi", &gengr1phi, &b_gengr1phi);
@@ -1088,6 +1083,7 @@ void PlotPhotons::InitTree()
     fInTree->SetBranchAddress("genph2phi", &genph2phi, &b_genph2phi);
     fInTree->SetBranchAddress("genph2eta", &genph2eta, &b_genph2eta);
     fInTree->SetBranchAddress("genph2match", &genph2match, &b_genph2match);
+    fInTree->SetBranchAddress("gengr2mass", &gengr2mass, &b_gengr2mass);
     fInTree->SetBranchAddress("gengr2E", &gengr2E, &b_gengr2E);
     fInTree->SetBranchAddress("gengr2pt", &gengr2pt, &b_gengr2pt);
     fInTree->SetBranchAddress("gengr2phi", &gengr2phi, &b_gengr2phi);
@@ -1125,17 +1121,15 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("jetphi", &jetphi, &b_jetphi);
   fInTree->SetBranchAddress("jeteta", &jeteta, &b_jeteta);
   fInTree->SetBranchAddress("nphotons", &nphotons, &b_nphotons);
-  if (fIsGMSB) fInTree->SetBranchAddress("phmatch", &phmatch, &b_phmatch);
-  if (fIsMC)   fInTree->SetBranchAddress("phisMatched", &phisMatched, &b_phisMatched);
-  fInTree->SetBranchAddress("phVID", &phVID, &b_phVID);
-  fInTree->SetBranchAddress("phscX", &phscX, &b_phscX);
-  fInTree->SetBranchAddress("phscY", &phscY, &b_phscY);
-  fInTree->SetBranchAddress("phscZ", &phscZ, &b_phscZ);
-  fInTree->SetBranchAddress("phscE", &phscE, &b_phscE);
   fInTree->SetBranchAddress("phE", &phE, &b_phE);
   fInTree->SetBranchAddress("phpt", &phpt, &b_phpt);
   fInTree->SetBranchAddress("phphi", &phphi, &b_phphi);
   fInTree->SetBranchAddress("pheta", &pheta, &b_pheta);
+  if (fIsGMSB) fInTree->SetBranchAddress("phmatch", &phmatch, &b_phmatch);
+  if (fIsMC)   fInTree->SetBranchAddress("phisMatched", &phisMatched, &b_phisMatched);
+  fInTree->SetBranchAddress("phscE", &phscE, &b_phscE);
+  fInTree->SetBranchAddress("phsceta", &phsceta, &b_phsceta);
+  fInTree->SetBranchAddress("phscphi", &phscphi, &b_phscphi);
   fInTree->SetBranchAddress("phHoE", &phHoE, &b_phHoE);
   fInTree->SetBranchAddress("phr9", &phr9, &b_phr9);
   fInTree->SetBranchAddress("phChgIso", &phChgIso, &b_phChgIso);
@@ -1147,13 +1141,17 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("phsieip", &phsieip, &b_phsieip);
   fInTree->SetBranchAddress("phsmaj", &phsmaj, &b_phsmaj);
   fInTree->SetBranchAddress("phsmin", &phsmin, &b_phsmin);
+  fInTree->SetBranchAddress("phVID", &phVID, &b_phVID);
+  fInTree->SetBranchAddress("phHoE_b", &phHoE_b, &b_phHoE_b);
+  fInTree->SetBranchAddress("phsieie_b", &phsieie_b, &b_phsieie_b);
+  fInTree->SetBranchAddress("phChgIso_b", &phChgIso_b, &b_phChgIso_b);
+  fInTree->SetBranchAddress("phNeuIso_b", &phNeuIso_b, &b_phNeuIso_b);
+  fInTree->SetBranchAddress("phIso_b", &phIso_b, &b_phIso_b);
   fInTree->SetBranchAddress("phnrh", &phnrh, &b_phnrh);
   fInTree->SetBranchAddress("phseedpos", &phseedpos, &b_phseedpos);
-  fInTree->SetBranchAddress("phrhX", &phrhX, &b_phrhX);
-  fInTree->SetBranchAddress("phrhY", &phrhY, &b_phrhY);
-  fInTree->SetBranchAddress("phrhZ", &phrhZ, &b_phrhZ);
+  fInTree->SetBranchAddress("phrheta", &phrheta, &b_phrheta);
+  fInTree->SetBranchAddress("phrhphi", &phrhphi, &b_phrhphi);
   fInTree->SetBranchAddress("phrhE", &phrhE, &b_phrhE);
-  fInTree->SetBranchAddress("phrhdelR", &phrhdelR, &b_phrhdelR);
   fInTree->SetBranchAddress("phrhtime", &phrhtime, &b_phrhtime);
   fInTree->SetBranchAddress("phrhID", &phrhID, &b_phrhID);
   fInTree->SetBranchAddress("phrhOOT", &phrhOOT, &b_phrhOOT);

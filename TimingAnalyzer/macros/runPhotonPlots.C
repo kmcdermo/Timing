@@ -19,7 +19,7 @@ void runPhotonPlots()
 {
   setupcpp11(); 
 
-  gROOT->LoadMacro("PlotPhotons.cc++g");
+  gROOT->LoadMacro("PlotPhotons.cc+g");
 
   // config is:
   // filename, isGMSB, isBkg, applyevcut, outdir, 
