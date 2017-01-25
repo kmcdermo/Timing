@@ -305,7 +305,7 @@ void RECOSkim::PrepJets(const edm::Handle<std::vector<reco::PFJet> > & jetsH, st
   if (jetsH.isValid()) // standard handle check
   {
     std::sort(jets.begin(),jets.end(),sortByJetPt);
-    jets.resize(5); // keep a maximum of 5, now that they are sorted
+    jets.resize(10); // keep a maximum of 10, now that they are sorted
   }
 }  
 
