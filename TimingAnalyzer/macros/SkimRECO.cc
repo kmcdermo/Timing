@@ -131,7 +131,7 @@ void SkimRECO::EventLoop(const Bool_t doNm1, const Bool_t doTeff, const Bool_t d
     ///////////////////////////
 
     // bool if event passed selection
-    passed = (Int_t(phs.size()) >= fNPhsCut && njetscut >= fNJetsCut);
+    Bool_t passed = (Int_t(phs.size()) >= fNPhsCut && njetscut >= fNJetsCut);
     //  if (fDump) passed &= hltdoubleph; // --> for trigger effs
     
     if (doTeff) SkimRECO::FillTEffs();
@@ -772,7 +772,7 @@ void SkimRECO::OutputTEffs()
 {
   fOutFile->cd();
 
-  for (TEffMapIter mapiter = fEffs.begin(); mapiter != fEffs.end(); ++mapiter) 
+  for (TEffMapIter mapiter = fTEffs.begin(); mapiter != fTEffs.end(); ++mapiter) 
   { 
     // save to output file
     mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); 
@@ -793,7 +793,7 @@ void SkimRECO::OutputTEffs()
     delete canv;
     delete mapiter->second;
   }
-  fEffs.clear();
+  fTEffs.clear();
 }
 
 void SkimRECO::DumpEfficiency(std::ofstream & effdump)

@@ -100,7 +100,7 @@ private :
   UInt_t  fNEvCheck;
   TH1Map  fPlots;
   TH2Map  fPlots2D;
-  TEffMap fEffs;
+  TEffMap fTEffs;
   Int_t   fNPassed;
 
   // Config
