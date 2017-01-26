@@ -17,7 +17,7 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runSkim(Int_t iphpt = 50, Int_t iphvid = 1, Int_t ijetpt = 35, Int_t injets = 0) 
+void runSkim(Int_t iphpt = 50, Int_t iphvid = 1, Int_t ijetpt = 35, Int_t injets = 0, Bool_t batch = false) 
 {
   setupcpp11(); 
 
@@ -44,16 +44,16 @@ void runSkim(Int_t iphpt = 50, Int_t iphvid = 1, Int_t ijetpt = 35, Int_t injets
   Int_t   phchgiso = phvid;
   Int_t   phneuiso = phvid;
   Int_t   phiso    = phvid;
-  Float_t smajEB   = 1.f;//0.015f;
+  Float_t smajEB   = 1.f;//0.013f; // from the no id cut
   Float_t smajEE   = 1.f;
   Float_t sminEB   = 1.f;//0.015f;
   Float_t sminEE   = 1.f;
   Int_t   nphs     = 1;
 
-  SkimRECO dataskimmer    ("input/DATA/doubleeg/skim/recoskim.root"         ,outdir,"data"    ,true ,jetpt,njets,phpt,phhoe,phsieie,phchgiso,phneuiso,phiso,smajEB,smajEE,sminEB,sminEE,nphs);
-  SkimRECO ctau100skimmer ("input/MC/signal/skim/recoskim-pat-ctau100.root" ,outdir,"ctau100" ,false,jetpt,njets,phpt,phhoe,phsieie,phchgiso,phneuiso,phiso,smajEB,smajEE,sminEB,sminEE,nphs);
-  SkimRECO ctau2000skimmer("input/MC/signal/skim/recoskim-pat-ctau2000.root",outdir,"ctau2000",false,jetpt,njets,phpt,phhoe,phsieie,phchgiso,phneuiso,phiso,smajEB,smajEE,sminEB,sminEE,nphs);
-  SkimRECO ctau6000skimmer("input/MC/signal/skim/recoskim-pat-ctau6000.root",outdir,"ctau6000",false,jetpt,njets,phpt,phhoe,phsieie,phchgiso,phneuiso,phiso,smajEB,smajEE,sminEB,sminEE,nphs);
+  SkimRECO dataskimmer    ("input/DATA/doubleeg/skim/recoskim.root"         ,outdir,"data"    ,true ,batch,jetpt,njets,phpt,phhoe,phsieie,phchgiso,phneuiso,phiso,smajEB,smajEE,sminEB,sminEE,nphs);
+  SkimRECO ctau100skimmer ("input/MC/signal/skim/recoskim-pat-ctau100.root" ,outdir,"ctau100" ,false,batch,jetpt,njets,phpt,phhoe,phsieie,phchgiso,phneuiso,phiso,smajEB,smajEE,sminEB,sminEE,nphs);
+  SkimRECO ctau2000skimmer("input/MC/signal/skim/recoskim-pat-ctau2000.root",outdir,"ctau2000",false,batch,jetpt,njets,phpt,phhoe,phsieie,phchgiso,phneuiso,phiso,smajEB,smajEE,sminEB,sminEE,nphs);
+  SkimRECO ctau6000skimmer("input/MC/signal/skim/recoskim-pat-ctau6000.root",outdir,"ctau6000",false,batch,jetpt,njets,phpt,phhoe,phsieie,phchgiso,phneuiso,phiso,smajEB,smajEE,sminEB,sminEE,nphs);
 
   // store efficiency in small text file
   std::ofstream effdump;

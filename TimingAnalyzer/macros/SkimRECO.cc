@@ -5,14 +5,14 @@
 
 #include <iostream>
 
-SkimRECO::SkimRECO(TString filename, TString outdir, TString subdir, Bool_t dump,
+SkimRECO::SkimRECO(TString filename, TString outdir, TString subdir, Bool_t dump, Bool_t batch,
 		   Float_t jetptcut, Int_t njetscut, 
 		   Float_t phptcut, 
 		   Int_t phhoecut, Int_t phsieiecut, Int_t phchgisocut, Int_t phneuisocut, Int_t phisocut,
 		   Float_t phsmajEBcut, Float_t phsmajEEcut, Float_t phsminEBcut, Float_t phsminEEcut, 
 		   Int_t nphscut,
 		   Bool_t applyEBonly, Bool_t applyEEonly) :
-  fOutDir(outdir), fSubDir(subdir), fDump(dump), 
+  fOutDir(outdir), fSubDir(subdir), fDump(dump), fBatch(batch),
   fJetPtCut(jetptcut), fNJetsCut(njetscut), 
   fPhPtCut(phptcut),
   fPhHoECut(phhoecut), fPhSieieCut(phsieiecut), fPhChgIsoCut(phchgisocut), fPhNeuIsoCut(phneuisocut), fPhIsoCut(phisocut),
@@ -143,7 +143,7 @@ void SkimRECO::DoEfficiency(Bool_t & passed)
 
   // bool if event passed selection
   passed = (Int_t(phs.size()) >= fNPhsCut && njetscut >= fNJetsCut);
-  //if (fDump) passed &= hltdoubleph;
+  //  if (fDump) passed &= hltdoubleph; // --> for trigger effs
 
   //  SkimRECO::FillTEffs(passed,phs);
   if (passed) SkimRECO::FillAnalysis(phs);
@@ -684,11 +684,11 @@ void SkimRECO::OutputTH1Fs()
 
   for (TH1MapIter mapiter = fPlots.begin(); mapiter != fPlots.end(); ++mapiter) 
   { 
-//     if (!(mapiter->first.Contains("time",TString::kExact) || mapiter->first.Contains("MET",TString::kExact)))
-//     {
-//       delete mapiter->second;
-//       continue;
-//     }
+    if (fBatch && !(mapiter->first.Contains("time",TString::kExact) || mapiter->first.Contains("MET",TString::kExact)))
+    {
+      delete mapiter->second;
+      continue;
+    }
 
     // scale to 1.0
     mapiter->second->Scale(1.f/mapiter->second->Integral());
@@ -778,42 +778,45 @@ void SkimRECO::DumpEfficiency(std::ofstream & effdump)
   std::cout << "nEntries: " << nEntries << " nPassed: " << fNPassed << " efficiency: " << eff << " +/- " << unc << std::endl;
   effdump << "sample: " << fSubDir.Data() << eff << " " << unc << " " << std::endl;
 
-//   TFile * file = TFile::Open(Form("output/phpt%i/phvid%i/plots.root",Int_t(fPhPtCut),fPhHoECut),"UPDATE");
-//   TH1F * hist = (TH1F*)file->Get(Form("eff_%s_njets%i",fSubDir.Data(),fNJetsCut));
+  if (fBatch)
+  {
+    TFile * file = TFile::Open(Form("output/phpt%i/phvid%i/plots.root",Int_t(fPhPtCut),fPhHoECut),"UPDATE");
+    TH1F * hist = (TH1F*)file->Get(Form("eff_%s_njets%i",fSubDir.Data(),fNJetsCut));
   
-//   if (fJetPtCut == 0)
-//   {
-//     hist->SetBinContent(1,eff);
-//     hist->SetBinError(1,unc);
-//     hist->SetBinContent(2,eff);
-//     hist->SetBinError(2,unc);
-//     hist->SetBinContent(3,eff);
-//     hist->SetBinError(3,unc);
-//     hist->SetBinContent(4,eff);
-//     hist->SetBinError(4,unc);
-//   }
-//   else if (fJetPtCut == 20)
-//   {
-//     hist->SetBinContent(1,eff);
-//     hist->SetBinError(1,unc);
-//   }
-//   else if (fJetPtCut == 30)
-//   {
-//     hist->SetBinContent(2,eff);
-//     hist->SetBinError(2,unc);
-//   }
-//   else if (fJetPtCut == 40)
-//   {
-//     hist->SetBinContent(3,eff);
-//     hist->SetBinError(3,unc);
-//   }
-//   else if (fJetPtCut == 50)
-//   {
-//     hist->SetBinContent(4,eff);
-//     hist->SetBinError(4,unc);
-//   }
-//   hist->Write(hist->GetName(),TObject::kWriteDelete); 
-//   delete file;
+    if (fJetPtCut == 0)
+    {
+      hist->SetBinContent(1,eff);
+      hist->SetBinError(1,unc);
+      hist->SetBinContent(2,eff);
+      hist->SetBinError(2,unc);
+      hist->SetBinContent(3,eff);
+      hist->SetBinError(3,unc);
+      hist->SetBinContent(4,eff);
+      hist->SetBinError(4,unc);
+    }
+    else if (fJetPtCut == 20)
+    {
+      hist->SetBinContent(1,eff);
+      hist->SetBinError(1,unc);
+    }
+    else if (fJetPtCut == 30)
+    {
+      hist->SetBinContent(2,eff);
+      hist->SetBinError(2,unc);
+    }
+    else if (fJetPtCut == 40)
+    {
+      hist->SetBinContent(3,eff);
+      hist->SetBinError(3,unc);
+    }
+    else if (fJetPtCut == 50)
+    {
+      hist->SetBinContent(4,eff);
+      hist->SetBinError(4,unc);
+    }
+    hist->Write(hist->GetName(),TObject::kWriteDelete); 
+    delete file;
+  }
 }
 
 void SkimRECO::InitTree()

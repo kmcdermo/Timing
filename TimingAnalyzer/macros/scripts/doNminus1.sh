@@ -13,7 +13,7 @@ do
 	do
 	    for njets in 1 2 3
 	    do
-		root -l -b -q "runSkim.C("${phpt},${phvid},${jetpt},${njets}")"
+		root -l -b -q "runSkim.C("${phpt},${phvid},${jetpt},${njets},1")"
 	    done
 	done
     done
@@ -23,7 +23,7 @@ for phpt in 20 35 50 80
 do
     for phvid in 1 2 
     do
-	root -l -b -q "runSkim.C("${phpt},${phvid},0,0")"
+	root -l -b -q "runSkim.C("${phpt},${phvid},0,0,1")"
     done
 done
 
