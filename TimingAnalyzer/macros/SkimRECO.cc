@@ -84,24 +84,24 @@ SkimRECO::~SkimRECO()
   if (fDump) fHistDump.close();
 }
 
-void SkimRECO::DoSkim(std::ofstream & effdump)
+void SkimRECO::DoSkim(std::ofstream & effdump, const Bool_t doNm1, const Bool_t doTeff, const Bool_t doAn)
 {
-  SkimRECO::SetupPlots();
-  SkimRECO::EventLoop();
+  SkimRECO::SetupPlots(doNm1,doTeff,doAn);
+  SkimRECO::EventLoop(doNm1,doTeff,doAn);
   SkimRECO::OutputTH1Fs();
   SkimRECO::OutputTH2Fs();
   SkimRECO::OutputTEffs();
   SkimRECO::DumpEfficiency(effdump);
 }
 
-void SkimRECO::SetupPlots()
+void SkimRECO::SetupPlots(const Bool_t doNm1, const Bool_t doTeff, const Bool_t doAn)
 {
-  SkimRECO::SetupNminus1();
-  //  SkimRECO::SetupTEffs();
-  SkimRECO::SetupAnalysis();
+  if (doNm1)  SkimRECO::SetupNminus1();
+  if (doTeff) SkimRECO::SetupTEffs();
+  if (doAn)   SkimRECO::SetupAnalysis();
 }
 
-void SkimRECO::EventLoop()
+void SkimRECO::EventLoop(const Bool_t doNm1, const Bool_t doTeff, const Bool_t doAn)
 {
   for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++)
   {
@@ -110,43 +110,37 @@ void SkimRECO::EventLoop()
     // standard printout
     if (entry%fNEvCheck == 0 || entry == 0) std::cout << "Entry " << entry << " out of " << fInTree->GetEntries() << std::endl;
 
-    // Efficiency related plots
-    Bool_t passed = false;
-    SkimRECO::DoEfficiency(passed);
+    /////////////////////////////////////
+    // First assess individual objects //
+    // passing the full selection      //
+    /////////////////////////////////////
+    // jets
+    Int_t njetscut = SkimRECO::GetNJetsPt();
+    
+    // photons
+    std::vector<Int_t> phs;
+    SkimRECO::GetPhs(phs);
+    
+    ///////////////
+    // N-1 Plots //
+    ///////////////
+    if (doNm1) SkimRECO::FillNminus1(njetscut,phs);
+    
+    ///////////////////////////
+    // Full Efficiency Plots //
+    ///////////////////////////
 
-    if (passed) fNPassed++;
-  }
-}
-
-void SkimRECO::DoEfficiency(Bool_t & passed)
-{
-  /////////////////////////////////////
-  // First assess individual objects //
-  // passing the full selection      //
-  /////////////////////////////////////
-
-  // jets
-  Int_t njetscut = SkimRECO::GetNJetsPt();
-
-  // photons
-  std::vector<Int_t> phs;
-  SkimRECO::GetPhs(phs);
-
-  ///////////////
-  // N-1 Plots //
-  ///////////////
-  SkimRECO::FillNminus1(njetscut,phs);
-
-  ///////////////////////////
-  // Full Efficiency Plots //
-  ///////////////////////////
-
-  // bool if event passed selection
-  passed = (Int_t(phs.size()) >= fNPhsCut && njetscut >= fNJetsCut);
-  //  if (fDump) passed &= hltdoubleph; // --> for trigger effs
-
-  //  SkimRECO::FillTEffs(passed,phs);
-  if (passed) SkimRECO::FillAnalysis(phs);
+    // bool if event passed selection
+    passed = (Int_t(phs.size()) >= fNPhsCut && njetscut >= fNJetsCut);
+    //  if (fDump) passed &= hltdoubleph; // --> for trigger effs
+    
+    if (doTeff) SkimRECO::FillTEffs();
+    if (passed) 
+    { 
+      fNPassed++; // event counter 
+      if (doAn) SkimRECO::FillAnalysis(phs);
+    }
+  } // end of event loop
 }
 
 void SkimRECO::FillNminus1(const Int_t njetscut, const std::vector<Int_t> & phs)
@@ -314,7 +308,33 @@ void SkimRECO::FillPhsSmin(const std::vector<Int_t> & phssmin)
   }
 }  
 
-void SkimRECO::FillTEffs(const Bool_t passed, const std::vector<Int_t> & phs) {}
+void SkimRECO::FillTEffs() 
+{
+  std::vector<Int_t> phsvid;
+  SkimRECO::GetPhsVID(phsvid);
+
+  if (phsvid.size() > 0)
+  {
+    const Int_t ph0vid = SkimRECO::GetVID(phsvid[0]);
+    fTEffs["looseid_vs_ph0pt"] ->Fill(ph0vid>=1,(*phpt)[phsvid[0]]);
+    fTEffs["mediumid_vs_ph0pt"]->Fill(ph0vid>=2,(*phpt)[phsvid[0]]);
+    fTEffs["tightid_vs_ph0pt"] ->Fill(ph0vid>=3,(*phpt)[phsvid[0]]);
+  }
+  if (phsvid.size() > 1)
+  {
+    const Int_t ph1vid = SkimRECO::GetVID(phsvid[1]);
+    fTEffs["looseid_vs_ph1pt"] ->Fill(ph1vid>=1,(*phpt)[phsvid[1]]);
+    fTEffs["mediumid_vs_ph1pt"]->Fill(ph1vid>=2,(*phpt)[phsvid[1]]);
+    fTEffs["tightid_vs_ph1pt"] ->Fill(ph1vid>=3,(*phpt)[phsvid[1]]);
+  }
+  if (phsvid.size() > 2)
+  {
+    const Int_t ph2vid = SkimRECO::GetVID(phsvid[2]);
+    fTEffs["looseid_vs_ph2pt"] ->Fill(ph2vid>=1,(*phpt)[phsvid[2]]);
+    fTEffs["mediumid_vs_ph2pt"]->Fill(ph2vid>=2,(*phpt)[phsvid[2]]);
+    fTEffs["tightid_vs_ph2pt"] ->Fill(ph2vid>=3,(*phpt)[phsvid[2]]);
+  }
+}
 
 void SkimRECO::FillAnalysis(const std::vector<Int_t> & phs) 
 {
@@ -638,7 +658,20 @@ void SkimRECO::SetupNminus1()
   fPlots["ph2sminEE_nm1"] = SkimRECO::MakeTH1F("ph2sminEE_nm1","Photon S_{minor} EE (N-1)",100,0,0.1,"Subsubleading Photon S_{minor}","Events");
 }
 
-void SkimRECO::SetupTEffs() {}
+void SkimRECO::SetupTEffs() 
+{
+  fTEffs["looseid_vs_ph0pt"] = SkimRECO::MakeTEff("looseid_vs_ph0pt","Leading Photon Loose ID Efficiency vs p_{T} [GeV/c]",100,0.f,2500.f,"Leading Photon p_{T} [GeV/c]","Loose ID Efficiency");
+  fTEffs["mediumid_vs_ph0pt"] = SkimRECO::MakeTEff("mediumid_vs_ph0pt","Leading Photon Medium ID Efficiency vs p_{T} [GeV/c]",100,0.f,2500.f,"Leading Photon p_{T} [GeV/c]","Medium ID Efficiency");
+  fTEffs["tightid_vs_ph0pt"] = SkimRECO::MakeTEff("tightid_vs_ph0pt","Leading Photon Tight ID Efficiency vs p_{T} [GeV/c]",100,0.f,2500.f,"Leading Photon p_{T} [GeV/c]","Tight ID Efficiency");
+
+  fTEffs["looseid_vs_ph1pt"] = SkimRECO::MakeTEff("looseid_vs_ph1pt","Subleading Photon Loose ID Efficiency vs p_{T} [GeV/c]",100,0.f,2500.f,"Subleading Photon p_{T} [GeV/c]","Loose ID Efficiency");
+  fTEffs["mediumid_vs_ph1pt"] = SkimRECO::MakeTEff("mediumid_vs_ph1pt","Subleading Photon Medium ID Efficiency vs p_{T} [GeV/c]",100,0.f,2500.f,"Subleading Photon p_{T} [GeV/c]","Medium ID Efficiency");
+  fTEffs["tightid_vs_ph1pt"] = SkimRECO::MakeTEff("tightid_vs_ph1pt","Subleading Photon Tight ID Efficiency vs p_{T} [GeV/c]",100,0.f,2500.f,"Subleading Photon p_{T} [GeV/c]","Tight ID Efficiency");
+
+  fTEffs["looseid_vs_ph2pt"] = SkimRECO::MakeTEff("looseid_vs_ph2pt","Subsubleading Photon Loose ID Efficiency vs p_{T} [GeV/c]",100,0.f,2500.f,"Subsubleading Photon p_{T} [GeV/c]","Loose ID Efficiency");
+  fTEffs["mediumid_vs_ph2pt"] = SkimRECO::MakeTEff("mediumid_vs_ph2pt","Subsubleading Photon Medium ID Efficiency vs p_{T} [GeV/c]",100,0.f,2500.f,"Subsubleading Photon p_{T} [GeV/c]","Medium ID Efficiency");
+  fTEffs["tightid_vs_ph2pt"] = SkimRECO::MakeTEff("tightid_vs_ph2pt","Subsubleading Photon Tight ID Efficiency vs p_{T} [GeV/c]",100,0.f,2500.f,"Subsubleading Photon p_{T} [GeV/c]","Tight ID Efficiency");
+}
 
 void SkimRECO::SetupAnalysis() 
 {
@@ -660,14 +693,6 @@ TH1F * SkimRECO::MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t x
   return hist;
 }
 
-TEfficiency * SkimRECO::MakeTEff(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle)
-{
-  TEfficiency * eff = new TEfficiency(hname.Data(),Form("%s;%s;%s",htitle.Data(),xtitle.Data(),ytitle.Data()),nbinsx,xlow,xhigh);
-  eff->SetLineColor(kBlack);
-
-  return eff;
-}
-
 TH2F * SkimRECO::MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle)
 {
   TH2F * hist = new TH2F(hname.Data(),htitle.Data(),nbinsx,xlow,xhigh,nbinsy,ylow,yhigh);
@@ -678,18 +703,20 @@ TH2F * SkimRECO::MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t x
   return hist;
 }
 
+TEfficiency * SkimRECO::MakeTEff(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle)
+{
+  TEfficiency * eff = new TEfficiency(hname.Data(),Form("%s;%s;%s",htitle.Data(),xtitle.Data(),ytitle.Data()),nbinsx,xlow,xhigh);
+  eff->SetLineColor(kBlack);
+
+  return eff;
+}
+
 void SkimRECO::OutputTH1Fs()
 {
   fOutFile->cd();
 
   for (TH1MapIter mapiter = fPlots.begin(); mapiter != fPlots.end(); ++mapiter) 
   { 
-    if (fBatch && !(mapiter->first.Contains("time",TString::kExact) || mapiter->first.Contains("MET",TString::kExact)))
-    {
-      delete mapiter->second;
-      continue;
-    }
-
     // scale to 1.0
     mapiter->second->Scale(1.f/mapiter->second->Integral());
 

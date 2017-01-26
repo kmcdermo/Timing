@@ -53,16 +53,15 @@ public :
 	   Bool_t applyEBonly = false, Bool_t applyEEonly = false);
   ~SkimRECO();
   void InitTree();
-  void DoSkim(std::ofstream & effdump);
-  void SetupPlots();
+  void DoSkim(std::ofstream & effdump, const Bool_t doNm1, const Bool_t doTeff, const Bool_t doAn);
+  void SetupPlots(const Bool_t doNm1, const Bool_t doTeff, const Bool_t doAn);
   void SetupNminus1();
   void SetupTEffs();
   void SetupAnalysis();
   TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle);
   TH2F * MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle);
   TEfficiency * MakeTEff(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle);
-  void EventLoop();
-  void DoEfficiency(Bool_t & passed);
+  void EventLoop(const Bool_t doNm1, const Bool_t doTeff, const Bool_t doAn);
   void FillNminus1(const Int_t njetscut, const std::vector<Int_t> & phs);
   void FillPhsPt(const std::vector<Int_t> & phspt);
   void FillPhsHoE(const std::vector<Int_t> & phshoe);
@@ -73,7 +72,7 @@ public :
   void FillPhsVID(const std::vector<Int_t> & phsvid);
   void FillPhsSmaj(const std::vector<Int_t> & phssmaj);
   void FillPhsSmin(const std::vector<Int_t> & phssmin);
-  void FillTEffs(const Bool_t passed, const std::vector<Int_t> & phs);
+  void FillTEffs();
   void FillAnalysis(const std::vector<Int_t> & phs);
   Int_t GetNJetsPt();
   void GetPhs(std::vector<Int_t> & phs);

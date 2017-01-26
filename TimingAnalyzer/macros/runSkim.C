@@ -59,10 +59,15 @@ void runSkim(Int_t iphpt = 50, Int_t iphvid = 1, Int_t ijetpt = 35, Int_t injets
   std::ofstream effdump;
   effdump.open(Form("%s/efficiency.txt",outdir.Data()),std::ios_base::trunc);
 
-  dataskimmer    .DoSkim(effdump);
-  ctau100skimmer .DoSkim(effdump);
-  ctau2000skimmer.DoSkim(effdump);
-  ctau6000skimmer.DoSkim(effdump);
+  // Bools to do which plots
+  Bool_t doNm1  = false;
+  Bool_t doTeff = true;
+  Bool_t doAn   = false;
+
+  dataskimmer    .DoSkim(effdump,doNm1,doTeff,doAn);
+  ctau100skimmer .DoSkim(effdump,doNm1,doTeff,doAn);
+  ctau2000skimmer.DoSkim(effdump,doNm1,doTeff,doAn);
+  ctau6000skimmer.DoSkim(effdump,doNm1,doTeff,doAn);
 
   effdump.close();
 }
