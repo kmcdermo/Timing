@@ -78,14 +78,8 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // geometry (from ECAL ELF)
   edm::ESHandle<CaloGeometry> caloGeoH;
   iSetup.get<CaloGeometryRecord>().get(caloGeoH);
-  const CaloGeometry            * fullGeometry   = caloGeoH.product();
   const CaloSubdetectorGeometry * barrelGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
   const CaloSubdetectorGeometry * endcapGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
-
-  // topology (from Photon producer)
-  edm::ESHandle<CaloTopology> caloTopoH;
-  iSetup.get<CaloTopologyRecord>().get(caloTopoH);
-  const CaloTopology * topology = caloTopoH.product();
 
   ///////////////////////////
   //                       //
@@ -209,52 +203,10 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       // Shower Shape Objects
       const reco::Photon::ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
-
-      // use seed to get geometry and recHits
-      const DetId seedDetId = phsc->seed()->seed(); //seed detid
-      const bool  isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
-      const EcalRecHitCollection * recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
-
       // cluster shape variables
       phsieie[iph] = phshape.sigmaIetaIeta; // need to square it now
       phsipip[iph] = phshape.sigmaIphiIphi; // already is squared??
       phsieip[iph] = phshape.sigmaIetaIphi; // need to square it now
-      const float disc = std::sqrt(std::pow(phsipip[iph]-phsieie[iph],2)+4.f*std::pow(phsieip[iph],2));
-
-      // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
-      phsmaj[iph] = (phsipip[iph]+phsieie[iph]+disc)/2.f;
-      phsmin[iph] = (phsipip[iph]+phsieie[iph]-disc)/2.f;
-
-      const float phsee1 = phshape.sigmaEtaEta;
-
-
-      const std::vector<float> locov = noZS::EcalClusterTools::localCovariances( (*phsc->seed()), &(*recHits), &(*topology) );
-
-
-      std::cout << "=======" << std::endl;
-      std::cout << "ee " << phsieie[iph] << " " << std::sqrt(locov[0]) << " pp " << phsipip[iph] << " " << std::sqrt(locov[2]) << " ep "  << phsieip[iph] << " " << locov[1] << std::endl;
-
-
-
-      const std::vector<float> cov = noZS::EcalClusterTools::covariances( (*phsc->seed()), &(*recHits), &(*topology), fullGeometry );
-      
-      const float phsee = std::sqrt(cov[0]);
-
-      std::cout << "--------" << std::endl;
-      std::cout << phsee <<  " " << phsee1 << std::endl;
-
-      const float phspp = std::sqrt(cov[2]);
-      const float phsep = std::sqrt(cov[1]);
-      const float disc1 = std::sqrt(std::pow(phspp-phsee,2)+4.f*std::pow(phsep,2));
-
-      // // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
-      const float phsmaj1 = (phspp+phsee+disc1)/2.f;
-      const float phsmin1 = (phspp+phsee-disc1)/2.f;
-      
-      std::cout << "+++" << std::endl;
-      Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments(*phsc, *recHits);
-      std::cout << ph2ndMoments.sMaj << " " << phsmaj[iph] << " " << phsmaj1 << std::endl;
-      std::cout << ph2ndMoments.sMin << " " << phsmin[iph] << " " << phsmin1 << std::endl;
 
       // ID-like variables
       phHoE   [iph] = phiter->hadronicOverEm(); // phiter->hadTowOverEm();
@@ -275,6 +227,16 @@ void RECOSkim::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       // RecHit Info //
       //             //
       /////////////////
+      // get geometry and recHits
+      const DetId seedDetId = phsc->seed()->seed(); //seed detid
+      const bool  isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
+      const EcalRecHitCollection * recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
+
+      // 2nd moments from official calculation
+      const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phsc, *recHits);
+      // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
+      phsmaj[iph] = ph2ndMoments.sMaj;
+      phsmin[iph] = ph2ndMoments.sMin;
 
       // map of rec hit ids
       uiiumap phrhIDmap;
