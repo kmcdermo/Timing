@@ -5,11 +5,12 @@
 
 #include <iostream>
 
-PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isBkg, Bool_t applyevcut, TString outdir,
+PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isBkg, Bool_t applyevcut, 
+			 TString outdir, Bool_t savehists,
 			 Bool_t applyjetptcut, Float_t jetptcut, Bool_t applyphptcut, Float_t phptcut,
 			 Bool_t applyphvidcut, TString phvid, Bool_t applyrhecut, Float_t rhEcut,
 			 Bool_t applyecalacceptcut, Bool_t applyEBonly, Bool_t applyEEonly) :
-  fOutDir(outdir), fIsGMSB(isGMSB), fIsBkg(isBkg), fApplyEvCut(applyevcut),
+  fOutDir(outdir), fIsGMSB(isGMSB), fIsBkg(isBkg), fApplyEvCut(applyevcut), fSaveHists(savehists),
   fApplyJetPtCut(applyjetptcut), fJetPtCut(jetptcut), fApplyPhPtCut(applyphptcut), fPhPtCut(phptcut),
   fApplyPhVIDCut(applyphvidcut), fPhVID(phvid), fApplyrhECut(applyrhecut), frhECut(rhEcut),
   fApplyECALAcceptCut(applyecalacceptcut), fApplyEBOnly(applyEBonly), fApplyEEOnly(applyEEonly)
@@ -512,7 +513,7 @@ void PlotPhotons::FillRecoPhotons()
 
     if (fApplyPhPtCut && ((*phpt)[iph] < fPhPtCut)) continue;
     if (fApplyPhVIDCut && ((*phVID)[iph] < fPhVIDMap[fPhVID])) continue;
-    //    if ((fApplyEBOnly && (std::abs((*phsceta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*phsceta)[iph]) < 1.566 || std::abs((*phsceta)[iph]) > 2.5))) continue;
+    if ((fApplyEBOnly && (std::abs((*phsceta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*phsceta)[iph]) < 1.566 || std::abs((*phsceta)[iph]) > 2.5))) continue;
     if ( (fIsGMSB && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] == 0) ) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
 
     fPlots["phE"]->Fill((*phE)[iph]);
@@ -924,18 +925,23 @@ void PlotPhotons::OutputTEffs()
   { 
     // save to output file
     mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); 
-    
-    // now draw onto canvas to save as png
-    TCanvas * canv = new TCanvas("canv","canv");
-    canv->cd();
-    mapiter->second->Draw("AP");
-    
-    // first save as linear, then log
-    canv->SetLogy(0);
-    //canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
-    canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
 
-    delete canv;
+    if (fSaveHists)
+    {
+
+      // now draw onto canvas to save as png
+      TCanvas * canv = new TCanvas("canv","canv");
+      canv->cd();
+      mapiter->second->Draw("AP");
+      
+      // first save as linear, then log
+      canv->SetLogy(0);
+      //canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+      canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
+
+      delete canv;
+    }
+
     delete mapiter->second;
   }
   fEffs.clear();
@@ -949,22 +955,27 @@ void PlotPhotons::OutputTH1Fs()
   { 
     // save to output file
     mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); 
-    
-    // now draw onto canvas to save as png
-    TCanvas * canv = new TCanvas("canv","canv");
-    canv->cd();
-    mapiter->second->Draw("HIST");
-    
-    // first save as linear, then log
-    canv->SetLogy(0);
-    //canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
-    canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
 
-    canv->SetLogy(1);
-    //canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
-    canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->first.Data()));
+    if (fSaveHists)
+    {
 
-    delete canv;
+      // now draw onto canvas to save as png
+      TCanvas * canv = new TCanvas("canv","canv");
+      canv->cd();
+      mapiter->second->Draw("HIST");
+      
+      // first save as linear, then log
+      canv->SetLogy(0);
+      //canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+      canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
+      
+      canv->SetLogy(1);
+      //canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+      canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->first.Data()));
+      
+      delete canv;
+    }
+
     delete mapiter->second;
   }
   fPlots.clear();
@@ -979,17 +990,21 @@ void PlotPhotons::OutputTH2Fs()
     // save to output file
     mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); 
     
-    // now draw onto canvas to save as png
-    TCanvas * canv = new TCanvas("canv","canv");
-    canv->cd();
-    mapiter->second->Draw("colz");
+    if (fSaveHists)
+    {
+      // now draw onto canvas to save as png
+      TCanvas * canv = new TCanvas("canv","canv");
+      canv->cd();
+      mapiter->second->Draw("colz");
+      
+      // first save as linear, then log
+      canv->SetLogy(0);
+      //canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+      canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
     
-    // first save as linear, then log
-    canv->SetLogy(0);
-    //canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
-    canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
+      delete canv;
+    }
 
-    delete canv;
     delete mapiter->second;
   }
   fPlots2D.clear();

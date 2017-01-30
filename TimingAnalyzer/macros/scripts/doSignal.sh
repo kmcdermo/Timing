@@ -14,7 +14,7 @@ for vid in none loose
 do
     for ctau in 100 2000 6000
     do
-	root -l -b -q "runPhotonPlots_signal.C("\"${vid}\",\"${ctau}\",\"${reco}\",1,0")"
+	root -l -b -q "runPhotonPlots_signal.C("\"${vid}\",\"${ctau}\",1,0")"
     done
 done
 
@@ -23,6 +23,6 @@ for vid in none loose
 do
     for ctau in 100 2000 6000
     do
-	root -l -b -q "runPhotonPlots_signal.C("\"${vid}\",\"${ctau}\",\"${reco}\",0,1")"
+	root -l -b -q "runPhotonPlots_signal.C("\"${vid}\",\"${ctau}\",0,1")"
     done
 done

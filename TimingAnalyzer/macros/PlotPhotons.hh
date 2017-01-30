@@ -48,7 +48,8 @@ typedef IntMap::iterator      IntMapIter;
 class PlotPhotons 
 {
 public :
-  PlotPhotons(TString filename, Bool_t isGMSB = false, Bool_t isBkg = false, Bool_t applyevcut = false, TString outdir = "output", 
+  PlotPhotons(TString filename, Bool_t isGMSB = false, Bool_t isBkg = false, Bool_t applyevcut = false, 
+	      TString outdir = "output", Bool_t savehists = false, 
 	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
 	      Bool_t applyphvidcut = false, TString phvid = "medium", Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
 	      Bool_t applyecalacceptcut = false, Bool_t applyEBonly = false, Bool_t applyEEonly = false);
@@ -103,6 +104,7 @@ private :
 
   // Config
   const Bool_t  fApplyEvCut;
+  const Bool_t  fSaveHists;
   const Bool_t  fApplyJetPtCut;
   const Float_t fJetPtCut;
   const Bool_t  fApplyPhPtCut;
