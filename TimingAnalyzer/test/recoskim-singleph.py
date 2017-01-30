@@ -101,85 +101,90 @@ if options.era == "2016B" :
 elif options.era == "2016D" :
 	if options.blockNo == 1:
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/00C8D27D-0545-E611-8A03-02163E01191E.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/024EBF60-0845-E611-A3DC-02163E011BEC.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/04B0F29F-0945-E611-8F3F-02163E0144AB.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/06D3A4C0-0745-E611-ADFD-02163E014769.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/080D3F0F-0B45-E611-B26F-02163E01456D.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/0C249CF1-0545-E611-87FE-02163E011BB4.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/0C7843ED-0445-E611-A15C-02163E014536.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/10735A75-0745-E611-89EF-02163E013520.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/1E274E44-0545-E611-8440-02163E01438B.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/222A5144-0545-E611-8082-02163E013469.root'
-				))
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/0074ECE9-FB44-E611-B9F2-02163E0133CF.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/08E95BEE-FB44-E611-8791-02163E0135CC.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/0AF5B472-FC44-E611-9B0C-02163E011F8A.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/0C36AD86-FD44-E611-9DF0-02163E0138FC.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/0CB0372F-FB44-E611-9252-02163E013549.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/105C9708-FE44-E611-992F-02163E011C1F.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/124A5DDD-FA44-E611-AECD-02163E0146E7.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/126D8115-FE44-E611-90D0-02163E014516.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/1463B687-FF44-E611-89B7-02163E0127E8.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/1879ED27-FA44-E611-B963-02163E011B8C.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/1E2B474D-FF44-E611-A97D-02163E0144FE.root'
+))
 	elif options.blockNo == 2:
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/28D71DA5-0645-E611-9B6D-02163E0126E9.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/28FBD075-0945-E611-99BB-02163E0140D9.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/2C06FC3C-0845-E611-80C5-02163E014607.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/2C304BED-0645-E611-A4A3-02163E01372E.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/2C84FBA2-0645-E611-8BB3-02163E01261C.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/34515BB5-0545-E611-B69F-02163E01346E.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/38790BA7-0A45-E611-B887-02163E0137AF.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/3A2A5E94-0345-E611-9317-02163E011D90.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/3AF0C7FE-0445-E611-BC2A-02163E013575.root',
-				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/3C50024E-0545-E611-86CD-02163E013499.root'
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/1E5A4E8F-FA44-E611-9F49-02163E011DC1.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/22D08927-FD44-E611-B981-02163E01358F.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/2654ED6E-FC44-E611-BC7E-02163E01428F.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/28C5C345-FA44-E611-814C-02163E011B5A.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/303E099F-FD44-E611-BF5F-02163E0145F2.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/3475848F-FC44-E611-85AC-02163E014151.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/38CBDFB1-FC44-E611-82FF-02163E012586.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/3A0F9DE4-FD44-E611-8C3F-02163E0144DD.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/3CD49A94-FC44-E611-BE13-02163E013744.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/3E2E75FB-FA44-E611-B391-02163E014222.root',
+				'/store/data/Run2016D/SinglePhoton/RECO/PromptReco-v2/000/276/315/00000/40E63C2A-FA44-E611-BD22-02163E01348F.root'
 				))
 	else: exit
 elif options.era == "2016F" :
 	if options.blockNo == 1:
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/06F29843-9959-E611-AA51-02163E011DDE.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/0A2196BD-9959-E611-BB7D-02163E012797.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/0A711C15-9959-E611-BAD9-FA163EDB8B04.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/0E966A3E-9959-E611-8A25-02163E0119B0.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/1030481F-9959-E611-BF7F-FA163ED57BE5.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/10A96A38-9959-E611-95DB-02163E01412A.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/12B5CA47-9959-E611-B2E2-02163E013498.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/14ED9B32-9959-E611-8867-02163E0146DD.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/180B141B-9959-E611-80F0-FA163ED57BE5.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/182FAB23-9959-E611-85FF-FA163EABCA0F.root'
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/0A3D4A1F-5D5A-E611-9206-02163E013762.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/0C73CC1E-5D5A-E611-84A8-FA163EEE3D44.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/0E36BE2B-5D5A-E611-BBBD-02163E014629.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/0E373009-5D5A-E611-967C-02163E011B99.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/1081D5FF-5B5A-E611-ADEF-02163E0143D6.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/124F333A-5D5A-E611-811D-02163E0142F0.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/12BDC305-5C5A-E611-AF01-02163E014284.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/12EABB1C-5C5A-E611-B8AC-02163E012736.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/14796A0A-5C5A-E611-9DB4-02163E0141BD.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/167391F1-5B5A-E611-A0E7-FA163ED5641F.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/1805EC5B-5D5A-E611-A3BA-02163E01397E.root'
 				))
 	elif options.blockNo == 2:
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/1A337134-9959-E611-8B72-02163E01430D.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/1EFC3F1B-9959-E611-A9CC-FA163E110010.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/2017AA5C-9959-E611-9AFD-02163E0142F3.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/201E3E21-9959-E611-BF76-FA163E8586D4.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/2226825A-9959-E611-9B45-02163E0135EA.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/2237A224-9959-E611-B1B0-FA163EA628DC.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/22CAED2C-9959-E611-8C18-02163E011DF1.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/2C6B3F17-9959-E611-964D-FA163E736D17.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/2EA8CC36-9959-E611-9335-02163E01412A.root',
-				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/306FA91D-9959-E611-9BB6-FA163E6F017D.root'
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/1808E902-5C5A-E611-B54A-FA163E37255B.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/1813B215-5C5A-E611-8940-02163E0129DF.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/18F7162C-5C5A-E611-82ED-02163E0134F4.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/1A3EA202-5C5A-E611-9173-FA163ED18647.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/1A82E69B-5D5A-E611-954F-02163E01232B.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/1C4F6C11-5C5A-E611-B644-02163E0143C1.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/1E60F707-5E5A-E611-8B59-02163E0134C3.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/1E9CF510-5C5A-E611-A955-FA163E5751CB.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/205E65C2-5D5A-E611-BBE9-02163E012135.root',
+				'/store/data/Run2016F/SinglePhoton/RECO/PromptReco-v1/000/278/018/00000/24BE0835-5C5A-E611-9B5F-02163E014376.root'
 				))
 	else: exit
 elif options.era == "2016H" :
 	if options.blockNo == 1:
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/0A486505-5885-E611-AB10-02163E01415E.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/0C3EFCF3-5785-E611-A14C-FA163E6FB889.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/107A4A29-5885-E611-ACDE-02163E01338A.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/126CB6F1-5785-E611-89F7-FA163E6C447B.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/1651C021-5885-E611-BF5C-02163E01340B.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/18C97029-5885-E611-A507-02163E012482.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/1AAF2DF8-5785-E611-ACB7-02163E014597.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/1E95DCE6-5785-E611-8084-FA163E776DCA.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/1EB3E9FC-5785-E611-8A1B-02163E0144D3.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/22D94C06-5885-E611-BF9E-02163E01225E.root'
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/4C027FFC-A584-E611-8172-02163E0144EC.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/526D1AFA-A584-E611-9FEC-FA163EE0D423.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/5AA900E9-A584-E611-B6C9-FA163E5A1011.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/5C05D4EE-A584-E611-B453-02163E014550.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/5C7F80EB-A584-E611-9239-FA163E84F3D6.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/5C92C5F7-A584-E611-B1C2-02163E014104.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/6247CBF0-A584-E611-AE3F-FA163EACE1FA.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/62AA8BFA-A584-E611-B179-FA163ECEA2E8.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/6613E8EA-A584-E611-BBAF-FA163EB9CF24.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/6E134701-A684-E611-A71D-FA163E5B1EE0.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/783773FC-A584-E611-A9C1-02163E0144EC.root'
 				))
 	elif options.blockNo == 2:
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/2428A5F8-5785-E611-B3AC-02163E0144B4.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/26F87B1D-5885-E611-9F31-02163E011AE9.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/28FF89F7-5785-E611-9B2C-02163E01464C.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/2EA84A00-5885-E611-9F0C-02163E013816.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/303C4EE4-5785-E611-81E5-FA163E6C51B3.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/36C16901-5885-E611-84F1-02163E0122F0.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/3C2E1AF7-5785-E611-845E-FA163E19056B.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/3CE6ADEC-5785-E611-9E25-02163E0141A7.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/402378F0-5785-E611-A291-FA163E51BCFD.root',
-				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/4249BFEA-5785-E611-A4FE-FA163E70A7CF.root'
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/78796937-A684-E611-A53C-02163E0146B3.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/8007D30F-A684-E611-9833-02163E0144C2.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/807F6FEC-A584-E611-A02D-FA163E3EB09A.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/82621115-A684-E611-9A28-02163E0118AA.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/82FBAAEC-A584-E611-8360-FA163E72225D.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/90540EEB-A584-E611-A501-FA163E61FE92.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/942BD71E-A684-E611-801D-02163E0142E3.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/9ADEA500-A684-E611-845A-02163E0145CD.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/A26B6150-A684-E611-A9EA-02163E011D0B.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/BAB722F4-A584-E611-AA86-FA163E6696AB.root',
+				'/store/data/Run2016H/SinglePhoton/RECO/PromptReco-v2/000/281/613/00000/BC2D16FC-A584-E611-9598-02163E0138E9.root'
 				))
 	else: exit
 else: exit
