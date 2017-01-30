@@ -40,8 +40,8 @@ options.register (
 ## parsing command line arguments
 options.parseArguments()
 
-if   options.blockNo == 1: options.outputFileName = 'recoskim-singleph-'+era+'-1.root'
-elif options.blockNo == 2: options.outputFileName = 'recoskim-singleph-'+era+'-2.root'
+if   options.blockNo == 1: options.outputFileName = 'recoskim-singleph-'+options.era+'-1.root'
+elif options.blockNo == 2: options.outputFileName = 'recoskim-singleph-'+options.era+'-2.root'
 else: exit
 
 print "##### Settings ######"
@@ -68,7 +68,7 @@ process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
-if era == "2016B" :
+if options.era == "2016B" :
 	if options.blockNo == 1:
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 				'/store/data/Run2016B/SinglePhoton/RECO/PromptReco-v2/000/273/158/00000/14EE3AEC-471A-E611-A84F-02163E014380.root',
@@ -98,7 +98,7 @@ if era == "2016B" :
 				'/store/data/Run2016B/SinglePhoton/RECO/PromptReco-v2/000/273/158/00000/14B7A527-1A1A-E611-AE84-02163E01475F.root'
 				))
 	else: exit
-elif era == "2016D" :
+elif options.era == "2016D" :
 	if options.blockNo == 1:
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/00C8D27D-0545-E611-8A03-02163E01191E.root',
@@ -126,7 +126,7 @@ elif era == "2016D" :
 				'/store/data/Run2016D/DoubleEG/RECO/PromptReco-v2/000/276/315/00000/3C50024E-0545-E611-86CD-02163E013499.root'
 				))
 	else: exit
-elif era == "2016F" :
+elif options.era == "2016F" :
 	if options.blockNo == 1:
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/06F29843-9959-E611-AA51-02163E011DDE.root',
@@ -154,7 +154,7 @@ elif era == "2016F" :
 				'/store/data/Run2016F/DoubleEG/RECO/PromptReco-v1/000/277/992/00000/306FA91D-9959-E611-9BB6-FA163E6F017D.root'
 				))
 	else: exit
-elif era == "2016H" :
+elif options.era == "2016H" :
 	if options.blockNo == 1:
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 				'/store/data/Run2016H/DoubleEG/RECO/PromptReco-v2/000/281/639/00000/0A486505-5885-E611-AB10-02163E01415E.root',
