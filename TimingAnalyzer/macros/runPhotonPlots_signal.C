@@ -15,7 +15,7 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runPhotonPlots_signal(TString cuts, TString ctau, TString reco, Bool_t isEB, Bool_t isEE) 
+void runPhotonPlots_signal(TString cuts, TString ctau, Bool_t isEB, Bool_t isEE) 
 {
   setupcpp11(); 
 
@@ -34,7 +34,7 @@ void runPhotonPlots_signal(TString cuts, TString ctau, TString reco, Bool_t isEB
   
   Float_t phpt = 50.f;
 
-  PlotPhotons photonPlots(Form("input/MC/signal/%s/ctau%s.root",reco.Data(),ctau.Data()),true,false,false,Form("output/MC/signal/%s/%s/ctau%s",reco.Data(),cuts.Data(),ctau.Data()),apply,35.f,apply,phpt,apply,VID.Data(),true,1.f,true,isEB,isEE);
+  PlotPhotons photonPlots(Form("input/MC/signal/GMSB/photondump-ctau%s.root",ctau.Data()),true,false,false,Form("output/MC/signal/GMSB/photondump/ctau%s",cuts.Data(),ctau.Data()),apply,35.f,apply,phpt,apply,VID.Data(),true,1.f,true,isEB,isEE);
 
   // which plots to do
   // first bool = generic plots

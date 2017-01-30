@@ -108,9 +108,9 @@ void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
       //      PlotPhotons::SetupGenJets();
       //      }
     }
-    PlotPhotons::SetupObjectCounts();
+    //    PlotPhotons::SetupObjectCounts();
     //    PlotPhotons::SetupMET();
-    PlotPhotons::SetupJets();
+    //    PlotPhotons::SetupJets();
     PlotPhotons::SetupRecoPhotons();
   }
 
@@ -784,11 +784,11 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["phNeuIso"] = PlotPhotons::MakeTH1F("phNeuIso","Photons #rho-corrected Neutral Hadron Isolation (reco)",100,0.f,1000.f,"#rho-corrected Neutral Hadron Isolation","Photons","RecoPhotons");
   fPlots["phIso"] = PlotPhotons::MakeTH1F("phIso","Photons #rho-corrected Photon Isolation (reco)",100,0.f,1000.f,"#rho-corrected Photon Isolation","Photons","RecoPhotons");
   fPlots["phsuisseX"] = PlotPhotons::MakeTH1F("phsuisse","Photons Swiss Cross (reco)",100,0.f,1.f,"Swiss Cross","Photons","RecoPhotons");
-  fPlots["phsieie"] = PlotPhotons::MakeTH1F("phsieie","Photons #sigma_{i#eta{}i#eta} (reco)",100,0,0.1,"#sigma_{i#eta{}i#eta}","Photons","RecoPhotons");
-  fPlots["phsipip"] = PlotPhotons::MakeTH1F("phsipip","Photons #sigma_{i#phi{}i#phi} (reco)",100,0,0.1,"#sigma_{i#phi{}i#phi}","Photons","RecoPhotons");
-  fPlots["phsieip"] = PlotPhotons::MakeTH1F("phsieip","Photons #sigma_{i#eta{}i#phi} (reco)",100,-0.005,0.005,"#sigma_{i#eta{}i#phi}","Photons","RecoPhotons");
-  fPlots["phsmaj"] = PlotPhotons::MakeTH1F("phsmaj","Photons S_{major} (reco)",100,0.f,0.05,"S_{major}","Photons","RecoPhotons");
-  fPlots["phsmin"] = PlotPhotons::MakeTH1F("phsmin","Photons S_{minor} (reco)",100,0.f,0.05,"S_{minor}","Photons","RecoPhotons");
+  fPlots["phsieie"] = PlotPhotons::MakeTH1F("phsieie","Photons #sigma_{i#eta i#eta} (reco)",100,0,0.1,"#sigma_{i#eta i#eta}","Photons","RecoPhotons");
+  fPlots["phsipip"] = PlotPhotons::MakeTH1F("phsipip","Photons #sigma_{i#phi i#phi} (reco)",100,0,0.1,"#sigma_{i#phi i#phi}","Photons","RecoPhotons");
+  fPlots["phsieip"] = PlotPhotons::MakeTH1F("phsieip","Photons #sigma_{i#eta i#phi} (reco)",100,-0.005,0.005,"#sigma_{i#eta i#phi}","Photons","RecoPhotons");
+  fPlots["phsmaj"] = PlotPhotons::MakeTH1F("phsmaj","Photons S_{major} (reco)",100,0.f,5.f,"S_{major}","Photons","RecoPhotons");
+  fPlots["phsmin"] = PlotPhotons::MakeTH1F("phsmin","Photons S_{minor} (reco)",100,0.f,1.f,"S_{minor}","Photons","RecoPhotons");
   fPlots["phsmin_ov_phsmaj"] = PlotPhotons::MakeTH1F("phsmin_ov_phsmaj","Photons S_{minor} / S_{major} (reco)",100,0,1.f,"S_{minor}/S_{major}","Photons","RecoPhotons");
   fPlots["phscE"] = PlotPhotons::MakeTH1F("phscE","Photons SuperCluster Energy [GeV] (reco)",100,0.f,2500.f,"Energy [GeV]","Photons","RecoPhotons");
   fPlots["phnrh"] = PlotPhotons::MakeTH1F("phnrh","nRecHits from Photons (reco)",100,0.f,100.f,"nRecHits","Photons","RecoPhotons");
@@ -810,17 +810,17 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["ph1NeuIso"] = PlotPhotons::MakeTH1F("ph1NeuIso","Photons #rho-corrected Neutral Hadron Isolation (reco)",100,0.f,1000.f,"#rho-corrected Neutral Hadron Isolation","Photons","RecoPhotons");
   fPlots["ph1Iso"] = PlotPhotons::MakeTH1F("ph1Iso","Photons #rho-corrected Photon Isolation (reco)",100,0.f,1000.f,"#rho-corrected Photon Isolation","Photons","RecoPhotons");
   fPlots["ph1suisseX"] = PlotPhotons::MakeTH1F("ph1suisse","Photons Swiss Cross (reco)",100,0.f,1.f,"Swiss Cross","Photons","RecoPhotons");
-  fPlots["ph1sieie"] = PlotPhotons::MakeTH1F("ph1sieie","Photons #sigma_{i#eta{}i#eta} (reco)",100,0,0.1,"#sigma_{i#eta{}i#eta}","Photons","RecoPhotons");
-  fPlots["ph1sipip"] = PlotPhotons::MakeTH1F("ph1sipip","Photons #sigma_{i#phi{}i#phi} (reco)",100,0,0.1,"#sigma_{i#phi{}i#phi}","Photons","RecoPhotons");
-  fPlots["ph1sieip"] = PlotPhotons::MakeTH1F("ph1sieip","Photons #sigma_{i#eta{}i#phi} (reco)",100,-0.005,0.005,"#sigma_{i#eta{}i#phi}","Photons","RecoPhotons");
-  fPlots["ph1smaj"] = PlotPhotons::MakeTH1F("ph1smaj","Leading Photon S_{major}",100,0.f,0.05,"Leading Photon S_{major}","Events","RecoPhotons");
-  fPlots["ph1smin"] = PlotPhotons::MakeTH1F("ph1smin","Leading Photon S_{minor}",100,0.f,0.05,"Leading Photon S_{minor}","Events","RecoPhotons");
+  fPlots["ph1sieie"] = PlotPhotons::MakeTH1F("ph1sieie","Photons #sigma_{i#eta i#eta} (reco)",100,0,0.1,"#sigma_{i#eta i#eta}","Photons","RecoPhotons");
+  fPlots["ph1sipip"] = PlotPhotons::MakeTH1F("ph1sipip","Photons #sigma_{i#phi i#phi} (reco)",100,0,0.1,"#sigma_{i#phi i#phi}","Photons","RecoPhotons");
+  fPlots["ph1sieip"] = PlotPhotons::MakeTH1F("ph1sieip","Photons #sigma_{i#eta i#phi} (reco)",100,-0.005,0.005,"#sigma_{i#eta i#phi}","Photons","RecoPhotons");
+  fPlots["ph1smaj"] = PlotPhotons::MakeTH1F("ph1smaj","Leading Photon S_{major}",100,0.f,5.f,"Leading Photon S_{major}","Events","RecoPhotons");
+  fPlots["ph1smin"] = PlotPhotons::MakeTH1F("ph1smin","Leading Photon S_{minor}",100,0.f,1.f,"Leading Photon S_{minor}","Events","RecoPhotons");
   fPlots["ph1smin_ov_ph1smaj"] = PlotPhotons::MakeTH1F("ph1smin_ov_ph1smaj","Leading Photon S_{minor} / S_{major}",100,0.f,1.f,"Leading Photon S_{minor}/S_{major}","Events","RecoPhotons");
   fPlots["ph1seedtime"] = PlotPhotons::MakeTH1F("ph1seedtime","Leading Photon Seed RecHit Time [ns]",80,-5.f,15.f,"Leading Photon Seed RecHit Time [ns]","Events","RecoPhotons");
 
-  fPlots2D["ph1smin_vs_ph1smaj"] = PlotPhotons::MakeTH2F("ph1smin_vs_ph1smaj","Leading Photon S_{minor} vs S_{major}",100,0.f,0.1,"Leading Photon S_{major}",100,0.f,0.1,"Leading Photon S_{minor}","RecoPhotons");
-  fPlots2D["ph1seedtime_vs_ph1smaj"] = PlotPhotons::MakeTH2F("ph1seedtime_vs_ph1smaj","Leading Photon Seed RecHit Time vs S_{major}",100,0.f,0.1,"Leading Photon S_{major}",100,-5.f,15.f,"Leading Seed RecHit Time","RecoPhotons");
-  fPlots2D["ph1seedtime_vs_ph1smin"] = PlotPhotons::MakeTH2F("ph1seedtime_vs_ph1smin","Leading Photon Seed RecHit Time vs S_{minor}",100,0.f,0.1,"Leading Photon S_{minor}",100,-5.f,15.f,"Leading Seed RecHit Time","RecoPhotons");
+  fPlots2D["ph1smin_vs_ph1smaj"] = PlotPhotons::MakeTH2F("ph1smin_vs_ph1smaj","Leading Photon S_{minor} vs S_{major}",100,0.f,5.f,"Leading Photon S_{major}",100,0.f,1.f,"Leading Photon S_{minor}","RecoPhotons");
+  fPlots2D["ph1seedtime_vs_ph1smaj"] = PlotPhotons::MakeTH2F("ph1seedtime_vs_ph1smaj","Leading Photon Seed RecHit Time vs S_{major}",100,0.f,5.f,"Leading Photon S_{major}",100,-5.f,15.f,"Leading Seed RecHit Time","RecoPhotons");
+  fPlots2D["ph1seedtime_vs_ph1smin"] = PlotPhotons::MakeTH2F("ph1seedtime_vs_ph1smin","Leading Photon Seed RecHit Time vs S_{minor}",100,0.f,1.f,"Leading Photon S_{minor}",100,-5.f,15.f,"Leading Seed RecHit Time","RecoPhotons");
   fPlots2D["ph1seedtime_vs_ph1smin_ov_ph1smaj"] = PlotPhotons::MakeTH2F("ph1seedtime_vs_ph1smin_ov_ph1smaj","Leading Photon Seed RecHit Time [ns] vs S_{minor}/S_{major}",100,0.f,1.f,"Leading Photon S_{minor}/S_{major}",100,-5.f,15.f,"Leading Seed RecHit Time [ns]","RecoPhotons");
   fPlots2D["ph1seedtime_vs_ph1pt"] = PlotPhotons::MakeTH2F("ph1seedtime_vs_ph1pt","Leading Photon Seed RecHit Time [ns] vs p_{T} [GeV/c]",100,0.f,2500.f,"Leading Photon p_{T} [GeV/c]",100,-5.f,15.f,"Leading Seed RecHit Time [ns]","RecoPhotons");
   

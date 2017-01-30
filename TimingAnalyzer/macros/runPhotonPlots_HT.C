@@ -34,7 +34,7 @@ void runPhotonPlots_HT(TString cuts, TString sample, TString bin, Bool_t isEB, B
 
   Float_t phpt = 50.f;
 
-  PlotPhotons photonPlots(Form("input/MC/bkg/%s/%s_HT%s.root",sample.Data(),sample.Data(),bin.Data()),false,true,false,Form("output/MC/bkg/%s/%s/%s",sample.Data(),cuts.Data(),bin.Data()),apply,35.f,apply,phpt,apply,VID.Data(),true,1.f,true,isEB,isEE);
+  PlotPhotons photonPlots(Form("input/MC/bkg/%s/photondump-%s_HT%s.root",sample.Data(),sample.Data(),bin.Data()),false,true,false,Form("output/MC/bkg/%s/photondump/HT%s",sample.Data(),bin.Data()),apply,35.f,apply,phpt,apply,VID.Data(),true,1.f,true,isEB,isEE);
 
   // which plots to do
   // first bool = generic plots
