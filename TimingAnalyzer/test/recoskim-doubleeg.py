@@ -48,9 +48,9 @@ if options.isReRECO:
 	else: exit
 else:
 	if options.blockNo == 1:
-		options.outputFileName = 'recoskim1.root'
+		options.outputFileName = 'recoskim-doubleeg1.root'
 	elif options.blockNo == 2:
-		options.outputFileName = 'recoskim2.root'
+		options.outputFileName = 'recoskim-doubleeg2.root'
 	else: exit
 
 print "##### Settings ######"
