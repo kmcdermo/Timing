@@ -15,7 +15,7 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runPhotonPlots_HT(TString cuts, TString sample, TString bin, Bool_t isEB, Bool_t isEE) 
+void runPhotonPlots_HT(TString VID, TString sample, TString bin, Bool_t isEB, Bool_t isEE) 
 {
   setupcpp11(); 
 
@@ -28,9 +28,7 @@ void runPhotonPlots_HT(TString cuts, TString sample, TString bin, Bool_t isEB, B
   // applyecalacceptcut, applyEBonly, applyEEonly
   
   // apply analysis cuts to individual plots?
-  bool apply = (cuts.EqualTo("cuts",TString::kExact)?true:false);
-
-  TString VID = apply?"loose":"none";
+  bool apply = true;
 
   Float_t phpt = 50.f;
 

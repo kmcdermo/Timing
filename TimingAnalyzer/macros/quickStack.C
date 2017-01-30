@@ -13,14 +13,14 @@
 #include <vector>
 
 //static const Float_t lumi = 36.46 * 1000; // pb
-TString outdir = "cuts";
 
-void getQCD(std::vector<TH1F*>&, std::vector<TString>&);
-void getGJets(std::vector<TH1F*>&, std::vector<TString>&);
-void getSignals(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&);
-void drawAll(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&);
-void drawStack(std::vector<THStack*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&);
-void drawAllSeparate(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&);
+void makeDir(const TString &);
+void getQCD(std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void getGJets(std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void getSignals(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void drawAll(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void drawStack(std::vector<THStack*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void drawAllSeparate(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
 void delTH1FVec(std::vector<TH1F*>&);
 void delTHStackVec(std::vector<THStack*>&);
 
@@ -31,15 +31,20 @@ void quickStack()
   SetTDRStyle(tdrStyle);
   gROOT->ForceStyle();
 
-  //  std::vector<TString> histnames = {"ph1smaj","ph1smin","ph1sieie","ph1sipip","ph1sieip"};
-  std::vector<TString> histnames = {"ph1pt_nm1","ph1VID_nm1","ph1seedtime","jet1pt"};
+  std::vector<TString> histnames = {"ph1smaj","ph1smin","ph1sieie","ph1sipip","ph1sieip"};
+  // std::vector<TString> histnames = {"ph1pt_nm1","ph1VID_nm1","ph1seedtime","jet1pt"};
+
+  // generic settings
+  TString cuts = "cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept";
+  TString outdir = "output/stacks/photondump/"+cuts;
+  makeDir(outdir);
 
   // BKGs
   std::vector<TH1F*> qcdTH1Fs(histnames.size());
-  getQCD(qcdTH1Fs,histnames);
+  getQCD(qcdTH1Fs,histnames,cuts);
 
   std::vector<TH1F*> gjetsTH1Fs(histnames.size());
-  getGJets(gjetsTH1Fs,histnames);
+  getGJets(gjetsTH1Fs,histnames,cuts);
 
   // Totals and scale
   std::vector<TH1F*> bkgTH1Fs(histnames.size());
@@ -65,12 +70,12 @@ void quickStack()
 
   // Signals
   std::vector<TH1F*> ctau100TH1Fs(histnames.size()), ctau2000TH1Fs(histnames.size()), ctau6000TH1Fs(histnames.size());
-  getSignals(ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames);
+  getSignals(ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames,cuts);
 
   // Draw everything together
-  drawAll(bkgTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames);
-  drawStack(bkgStacks,qcdTH1Fs,gjetsTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames);
-  drawAllSeparate(qcdTH1Fs,gjetsTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames);
+  drawAll(bkgTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames,outdir);
+  drawStack(bkgStacks,qcdTH1Fs,gjetsTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames,outdir);
+  drawAllSeparate(qcdTH1Fs,gjetsTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames,outdir);
 
   delTH1FVec(qcdTH1Fs);
   delTH1FVec(gjetsTH1Fs);
@@ -81,7 +86,7 @@ void quickStack()
   delTH1FVec(ctau6000TH1Fs);
 }
 
-void getQCD(std::vector<TH1F*>& qcdTH1Fs, std::vector<TString>& histnames)
+void getQCD(std::vector<TH1F*>& qcdTH1Fs, std::vector<TString>& histnames, const TString & cuts)
 {
   std::vector<TString> qcdHTs = {"100To200","200To300","300To500","500To700","700To1000","1000To1500","1500To2000","2000ToInf"};
   std::vector<Float_t> qcdnes = {387775,356732,323810,299995,186869,237396,203266,228166}; //nEvents
@@ -90,7 +95,7 @@ void getQCD(std::vector<TH1F*>& qcdTH1Fs, std::vector<TString>& histnames)
   std::vector<TFile*> qcdfiles(qcdHTs.size());
   for (UInt_t iqcd = 0; iqcd < qcdHTs.size(); iqcd++)
   {
-    qcdfiles[iqcd] = TFile::Open(Form("output/MC/bkg/QCD/cuts/%s/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root",qcdHTs[iqcd].Data()));
+    qcdfiles[iqcd] = TFile::Open(Form("output/MC/bkg/QCD/photondump/HT%s/%s/plots.root",qcdHTs[iqcd].Data(),cuts.Data()));
   }
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -121,7 +126,7 @@ void getQCD(std::vector<TH1F*>& qcdTH1Fs, std::vector<TString>& histnames)
   }
 }
 
-void getGJets(std::vector<TH1F*>& gjetsTH1Fs, std::vector<TString>& histnames)
+void getGJets(std::vector<TH1F*>& gjetsTH1Fs, std::vector<TString>& histnames, const TString & cuts)
 {
   std::vector<TString> gjetsHTs = {"40To100","100To200","200To400","400To600","600ToInf"};
   std::vector<Float_t> gjetsnes = {227636,281313,234157,282915,196590}; //nEvents
@@ -130,7 +135,7 @@ void getGJets(std::vector<TH1F*>& gjetsTH1Fs, std::vector<TString>& histnames)
   std::vector<TFile*> gjetsfiles(gjetsHTs.size());
   for (UInt_t igjets = 0; igjets < gjetsHTs.size(); igjets++)
   {
-    gjetsfiles[igjets] = TFile::Open(Form("output/MC/bkg/GJets/cuts/%s/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root",gjetsHTs[igjets].Data()));
+    gjetsfiles[igjets] = TFile::Open(Form("output/MC/bkg/GJets/photondump/HT%s/%s/plots.root",gjetsHTs[igjets].Data(),cuts.Data()));
   }
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -161,12 +166,12 @@ void getGJets(std::vector<TH1F*>& gjetsTH1Fs, std::vector<TString>& histnames)
   }
 }
 
-void getSignals(std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames)
+void getSignals(std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames, const TString & cuts)
 {
   // Signals
-  TFile * file100  = TFile::Open("output/MC/signal/withReReco/cuts/ctau100/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root");
-  TFile * file2000 = TFile::Open("output/MC/signal/withReReco/cuts/ctau2000/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root");
-  TFile * file6000 = TFile::Open("output/MC/signal/withReReco/cuts/ctau6000/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root");
+  TFile * file100  = TFile::Open(Form("output/MC/signal/GMSB/photondump/ctau100/%s/plots.root",cuts.Data()));
+  TFile * file2000 = TFile::Open(Form("output/MC/signal/GMSB/photondump/ctau2000/%s/plots.root",cuts.Data()));
+  TFile * file6000 = TFile::Open(Form("output/MC/signal/GMSB/photondump/ctau6000/%s/plots.root",cuts.Data()));
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
   {
@@ -191,7 +196,7 @@ void getSignals(std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH
   delete file6000;
 }
 
-void drawAll(std::vector<TH1F*>& bkgTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames)
+void drawAll(std::vector<TH1F*>& bkgTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames, const TString & outdir)
 {
   // Draw it all
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -220,7 +225,7 @@ void drawAll(std::vector<TH1F*>& bkgTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std
   }
 }
 
-void drawStack(std::vector<THStack*>& bkgStacks, std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames)
+void drawStack(std::vector<THStack*>& bkgStacks, std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames, const TString & outdir)
 {
   // Draw it all
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -252,7 +257,7 @@ void drawStack(std::vector<THStack*>& bkgStacks, std::vector<TH1F*>& qcdTH1Fs, s
   }
 }
 
-void drawAllSeparate(std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames)
+void drawAllSeparate(std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames, const TString & outdir)
 {
   // Draw it all
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -306,3 +311,12 @@ void delTHStackVec(std::vector<THStack*>& stackvec)
   }
 }
 
+void makeDir(const TString & outdir)
+{
+  FileStat_t dummyFileStat; 
+  if (gSystem->GetPathInfo(outdir.Data(), dummyFileStat) == 1)
+  {
+    TString mkDir = Form("mkdir -p %s",outdir.Data());
+    gSystem->Exec(mkDir.Data());
+  }
+}

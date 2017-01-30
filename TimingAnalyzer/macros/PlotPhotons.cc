@@ -513,7 +513,7 @@ void PlotPhotons::FillRecoPhotons()
     if (fApplyPhPtCut && ((*phpt)[iph] < fPhPtCut)) continue;
     if (fApplyPhVIDCut && ((*phVID)[iph] < fPhVIDMap[fPhVID])) continue;
     //    if ((fApplyEBOnly && (std::abs((*phsceta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*phsceta)[iph]) < 1.566 || std::abs((*phsceta)[iph]) > 2.5))) continue;
-    if ( (fIsGMSB && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] != 0) ) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
+    if ( (fIsGMSB && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] == 0) ) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
 
     fPlots["phE"]->Fill((*phE)[iph]);
     fPlots["phpt"]->Fill((*phpt)[iph]);
