@@ -42,15 +42,15 @@ options.parseArguments()
 
 if options.isReRECO: 
 	if options.blockNo == 1:
-		options.outputFileName = 'recoskim-rereco1.root'
+		options.outputFileName = 'recoskim-rereco-2016B-1.root'
 	elif options.blockNo == 2:
-		options.outputFileName = 'recoskim-rereco2.root'
+		options.outputFileName = 'recoskim-rereco-2016B-2.root'
 	else: exit
 else:
 	if options.blockNo == 1:
-		options.outputFileName = 'recoskim-doubleeg1.root'
+		options.outputFileName = 'recoskim-doubleeg-2016B-1.root'
 	elif options.blockNo == 2:
-		options.outputFileName = 'recoskim-doubleeg2.root'
+		options.outputFileName = 'recoskim-doubleeg-2016B-2.root'
 	else: exit
 
 print "##### Settings ######"
