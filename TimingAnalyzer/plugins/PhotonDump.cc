@@ -530,11 +530,6 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       phsieie[iph] = phshape.sigmaIetaIeta;
       phsipip[iph] = phshape.sigmaIphiIphi;
       phsieip[iph] = phshape.sigmaIetaIphi;
-      const float disc = std::sqrt(std::pow(phsipip[iph]-phsieie[iph],2)+4.f*std::pow(phsieip[iph],2));
-
-      // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
-      phsmaj[iph] = (phsipip[iph]+phsieie[iph]+disc)/2.f;
-      phsmin[iph] = (phsipip[iph]+phsieie[iph]-disc)/2.f;
 
       // 0 --> did not pass anything, 1 --> loose pass, 2 --> medium pass, 3 --> tight pass
       if      (phiter->photonID("tight"))  {phVID[iph] = 3;}
@@ -555,6 +550,12 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       const DetId seedDetId = phsc->seed()->seed(); //seed detid
       const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
       const EcalRecHitCollection * recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
+
+      // 2nd moments from official calculation
+      const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phsc, *recHits);
+      // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
+      phsmaj[iph] = ph2ndMoments.sMaj;
+      phsmin[iph] = ph2ndMoments.sMin;
 
       // map of rec hit ids
       uiiumap phrhIDmap;

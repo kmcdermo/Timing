@@ -175,16 +175,10 @@ void RECOSkim_PAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
       // Shower Shape Objects
       const reco::Photon::ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
-
       // cluster shape variables
       phsieie[iph] = phshape.sigmaIetaIeta;
       phsipip[iph] = phshape.sigmaIphiIphi;
       phsieip[iph] = phshape.sigmaIetaIphi;
-      const float disc = std::sqrt(std::pow(phsipip[iph]-phsieie[iph],2)+4.f*std::pow(phsieip[iph],2));
-
-      // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
-      phsmaj[iph] = (phsipip[iph]+phsieie[iph]+disc)/2.f;
-      phsmin[iph] = (phsipip[iph]+phsieie[iph]-disc)/2.f;
 
       // ID-like variables
       phHoE   [iph] = phiter->hadronicOverEm(); // phiter->hadTowOverEm();
@@ -209,6 +203,12 @@ void RECOSkim_PAT::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
       const DetId seedDetId = phsc->seed()->seed(); //seed detid
       const bool  isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
       const EcalRecHitCollection * recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
+
+      // 2nd moments from official calculation
+      const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phsc, *recHits);
+      // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
+      phsmaj[iph] = ph2ndMoments.sMaj;
+      phsmin[iph] = ph2ndMoments.sMin;
       
       // map of rec hit ids
       uiiumap phrhIDmap;
