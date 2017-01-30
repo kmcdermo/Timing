@@ -552,10 +552,13 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       const EcalRecHitCollection * recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
 
       // 2nd moments from official calculation
-      const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phsc, *recHits);
-      // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
-      phsmaj[iph] = ph2ndMoments.sMaj;
-      phsmin[iph] = ph2ndMoments.sMin;
+      if ( recHits->size() )
+      {
+	const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phsc, *recHits);
+	// radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
+	phsmaj[iph] = ph2ndMoments.sMaj;
+	phsmin[iph] = ph2ndMoments.sMin;
+      }
 
       // map of rec hit ids
       uiiumap phrhIDmap;
