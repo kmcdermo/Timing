@@ -12,16 +12,20 @@ options.register (
 
 ## data or MC options
 options.register (
+	'isMC',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to indicate data or MC');
+
+options.register (
 	'isGMSB',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate GMSB');
 
 options.register (
-	'isBkg',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to indicate Background MC');
+	'ctau','6000',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'which GMSB sample to use');
 
 options.register (
-	'isMC',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to indicate data or MC');
+	'isBkg',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to indicate Background MC');
 
 options.register (
 	'dumpIds',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
@@ -34,12 +38,12 @@ options.register (
 
 ## outputFile Name
 options.register (
-	'outputFileName','ctau100_wTiming.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'outputFileName','photondump.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
 ## GT to be used    
 options.register (
-	'globalTag','80X_dataRun2_Prompt_ICHEP16JEC_v0',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'globalTag','80X_mcRun2_asymptotic_2016_TrancheIV_v6',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'gloabl tag to be used');
 
 ## do a demo run over only 100k events
@@ -50,18 +54,13 @@ options.register (
 ## parsing command line arguments
 options.parseArguments()
 
-if options.isGMSB or options.isBkg: 
-	options.isMC = True
-
-### check consistentcy of basic options
-if options.isMC and 'dataRun2' in options.globalTag:
-	options.globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'; #otherwise this craps out claiming no calo geometry...
+## reset file name
+options.outputFileName = 'photondump-ctau'+options.ctau+'.root'
 
 print "##### Settings ######"
 print "Running with dumpRHs             = ",options.dumpRHs
-print "Running with isMC                = ",options.isMC	
-if options.isMC:
-	print "Running with dumpIds             = ",options.dumpIds
+print "Running with dumpIds             = ",options.dumpIds
+print "Running with ctau                = ",options.ctau
 print "Running with processName         = ",options.processName	
 print "Running with outputFileName      = ",options.outputFileName	
 print "Running with globalTag           = ",options.globalTag	
@@ -83,11 +82,81 @@ process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
-if not options.isMC :
+if options.ctau == '6000' :
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-			'/store/data/Run2016D/SinglePhoton/MINIAOD/PromptReco-v2/000/276/317/00000/DE9EC1AE-1745-E611-AF8F-02163E014413.root' #2016D (276317)
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_1.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_2.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_3.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_4.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_5.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_6.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_7.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_8.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_9.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_10.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_11.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_12.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_13.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_14.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_15.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_16.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_17.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_18.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_19.root',
+			'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_ReRECO_PAT-v1/161223_141459/0000/GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD_20.root'
 			))
-else:
+elif options.ctau == '2000' :
+	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_1.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_3.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_4.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_5.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_6.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_7.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_8.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_9.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_10.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_11.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_12.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_13.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_14.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_15.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_16.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_17.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_18.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_19.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_20.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_21.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_22.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_23.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_24.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_25.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_26.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_27.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_28.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_29.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_30.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_31.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_32.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_33.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_34.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_35.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_36.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_37.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_38.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_39.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_40.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_41.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_42.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_43.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_44.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_45.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_46.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_47.root',
+			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_2811_step3_wTIMING/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau2000_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161128_185505/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_48.root'
+			))
+elif options.ctau == '100' :
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2210_step3_wTIMING/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161021_204634/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_1.root',
 			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2210_step3_wTIMING/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161021_204634/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2.root',
@@ -152,14 +221,11 @@ else:
 			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2210_step3_wTIMING/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161021_204634/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_61.root',
 			'root://xrootd-cms.infn.it//store/user/soffi/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_2210_step3_wTIMING/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_GEN_SIM_1810/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_step3_wTIMING/161021_204634/0000/GMSB_L180_Ctau100_Pythia8_13TeV_cff_py_MINIAOD_62.root'
 			))
+else : exit
 
 ## How many events to process
-if not options.demoMode:
-	process.maxEvents = cms.untracked.PSet( 
-		input = cms.untracked.int32(options.maxEvents))
-else:
-	process.maxEvents = cms.untracked.PSet( 
-		input = cms.untracked.int32(1000))
+if   options.demoMode : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
+else                  : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(options.maxEvents))
 
 # Set the global tag depending on the sample type
 from Configuration.AlCa.GlobalTag import GlobalTag
