@@ -722,23 +722,27 @@ void SkimRECO::OutputTH1Fs()
 
     // save to output file
     mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); 
+
+    if (fBatch)
+    {
+      // save hist to a text file
+      if (fDump) fHistDump << mapiter->second->GetName() << std::endl;
+      
+      // now draw onto canvas to save as png
+      TCanvas * canv = new TCanvas("canv","canv");
+      canv->cd();
+      mapiter->second->Draw("HIST");
+      
+      // first save as linear, then log
+      canv->SetLogy(0);
+      canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
+      
+      canv->SetLogy(1);
+      canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
     
-    // save hist to a text file
-    if (fDump) fHistDump << mapiter->second->GetName() << std::endl;
+      delete canv;
+    }
 
-    // now draw onto canvas to save as png
-    TCanvas * canv = new TCanvas("canv","canv");
-    canv->cd();
-    mapiter->second->Draw("HIST");
-
-    // first save as linear, then log
-    canv->SetLogy(0);
-    canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
-
-    canv->SetLogy(1);
-    canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
-
-    delete canv;
     delete mapiter->second;
   }
   fPlots.clear();
@@ -753,16 +757,20 @@ void SkimRECO::OutputTH2Fs()
     // save to output file
     mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); 
 
-    // now draw onto canvas to save as png
-    TCanvas * canv = new TCanvas("canv","canv");
-    canv->cd();
-    mapiter->second->Draw("colz");
-    
-    // first save as linear, then log
-    canv->SetLogy(0);
-    canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
+    if (fBatch)
+    {
+      // now draw onto canvas to save as png
+      TCanvas * canv = new TCanvas("canv","canv");
+      canv->cd();
+      mapiter->second->Draw("colz");
+      
+      // first save as linear, then log
+      canv->SetLogy(0);
+      canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
 
-    delete canv;
+      delete canv;
+    }
+
     delete mapiter->second;
   }
   fPlots2D.clear();
@@ -776,21 +784,25 @@ void SkimRECO::OutputTEffs()
   { 
     // save to output file
     mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); 
-    
-    // now draw onto canvas to save as png
-    TCanvas * canv = new TCanvas("canv","canv");
-    canv->cd();
-    mapiter->second->Draw("AP");
-    
-    // first save as linear, then log
-    canv->SetLogy(0);
-    canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
 
-    // first save as linear, then log
-    canv->SetLogy(1);
-    canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
+    if (fBatch)
+    {
+      // now draw onto canvas to save as png
+      TCanvas * canv = new TCanvas("canv","canv");
+      canv->cd();
+      mapiter->second->Draw("AP");
+      
+      // first save as linear, then log
+      canv->SetLogy(0);
+      canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
 
-    delete canv;
+      // first save as linear, then log
+      canv->SetLogy(1);
+      canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDir.Data(),mapiter->first.Data()));
+      
+      delete canv;
+    }
+
     delete mapiter->second;
   }
   fTEffs.clear();
