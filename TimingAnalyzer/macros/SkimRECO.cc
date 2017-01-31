@@ -723,7 +723,7 @@ void SkimRECO::OutputTH1Fs()
     // save to output file
     mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); 
 
-    if (fBatch)
+    if (!fBatch)
     {
       // save hist to a text file
       if (fDump) fHistDump << mapiter->second->GetName() << std::endl;
@@ -757,7 +757,7 @@ void SkimRECO::OutputTH2Fs()
     // save to output file
     mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); 
 
-    if (fBatch)
+    if (!fBatch)
     {
       // now draw onto canvas to save as png
       TCanvas * canv = new TCanvas("canv","canv");
@@ -785,7 +785,7 @@ void SkimRECO::OutputTEffs()
     // save to output file
     mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); 
 
-    if (fBatch)
+    if (!fBatch)
     {
       // now draw onto canvas to save as png
       TCanvas * canv = new TCanvas("canv","canv");
@@ -819,40 +819,40 @@ void SkimRECO::DumpEfficiency(std::ofstream & effdump)
 
   if (fBatch)
   {
-    TFile * file = TFile::Open(Form("output/phpt%i/phvid%i/plots.root",Int_t(fPhPtCut),fPhHoECut),"UPDATE");
-    TH1F * hist = (TH1F*)file->Get(Form("eff_%s_njets%i",fSubDir.Data(),fNJetsCut));
+    TFile * file = TFile::Open(Form("output/recoskim/njets%i/jetpt%i/plots.root",fNJetsCut,Int_t(fJetPtCut)),"UPDATE");
+    TH1F  * hist = (TH1F*)file->Get(Form("eff_%s_phpt%i",fSubDir.Data(),Int_t(fPhPtCut)));
   
-    if (fJetPtCut == 0)
+    if      (fPhIsoCut == 1 && fPhNeuIsoCut == 1 && fPhChgIsoCut == 1 && fPhSieieCut == 1 && fPhHoECut == 1)
     {
       hist->SetBinContent(1,eff);
-      hist->SetBinError(1,unc);
-      hist->SetBinContent(2,eff);
-      hist->SetBinError(2,unc);
-      hist->SetBinContent(3,eff);
-      hist->SetBinError(3,unc);
-      hist->SetBinContent(4,eff);
-      hist->SetBinError(4,unc);
+      hist->SetBinError  (1,unc);
     }
-    else if (fJetPtCut == 20)
-    {
-      hist->SetBinContent(1,eff);
-      hist->SetBinError(1,unc);
-    }
-    else if (fJetPtCut == 30)
+    else if (fPhIsoCut == 0 && fPhNeuIsoCut == 1 && fPhChgIsoCut == 1 && fPhSieieCut == 1 && fPhHoECut == 1)
     {
       hist->SetBinContent(2,eff);
-      hist->SetBinError(2,unc);
+      hist->SetBinError  (2,unc);
     }
-    else if (fJetPtCut == 40)
+    else if (fPhIsoCut == 0 && fPhNeuIsoCut == 0 && fPhChgIsoCut == 1 && fPhSieieCut == 1 && fPhHoECut == 1)
     {
       hist->SetBinContent(3,eff);
-      hist->SetBinError(3,unc);
+      hist->SetBinError  (3,unc);
     }
-    else if (fJetPtCut == 50)
+    else if (fPhIsoCut == 0 && fPhNeuIsoCut == 0 && fPhChgIsoCut == 0 && fPhSieieCut == 1 && fPhHoECut == 1)
     {
       hist->SetBinContent(4,eff);
-      hist->SetBinError(4,unc);
+      hist->SetBinError  (4,unc);
     }
+    else if (fPhIsoCut == 0 && fPhNeuIsoCut == 0 && fPhChgIsoCut == 0 && fPhSieieCut == 0 && fPhHoECut == 1)
+    {
+      hist->SetBinContent(5,eff);
+      hist->SetBinError  (5,unc);
+    }
+    else if (fPhIsoCut == 0 && fPhNeuIsoCut == 0 && fPhChgIsoCut == 0 && fPhSieieCut == 0 && fPhHoECut == 0)
+    {
+      hist->SetBinContent(6,eff);
+      hist->SetBinError  (6,unc);
+    }
+
     hist->Write(hist->GetName(),TObject::kWriteDelete); 
     delete file;
   }
