@@ -19,9 +19,11 @@ do
     done
 done
 
-
 # njets == 0, no loop over jet pt
+. /Applications/root_v6.06.08/bin/thisroot.sh
 mkdir -p output/recoskim/njets0/jetpt0
+root -l -b -q "effPlot_VID.C("0,0")"
+. /Applications/root_v5.34.36/bin/thisroot.sh
 for phpt in 30 50 80
 do
     for novid in full noPhIso noNeuIso noChgIso noSieie noHoE
