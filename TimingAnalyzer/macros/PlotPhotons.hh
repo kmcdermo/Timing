@@ -11,6 +11,7 @@
 #include "TLorentzVector.h"
 #include "TVector3.h"
 
+#include <fstream>
 #include <vector>
 #include <map>
 
@@ -48,7 +49,7 @@ typedef IntMap::iterator      IntMapIter;
 class PlotPhotons 
 {
 public :
-  PlotPhotons(TString filename, Bool_t isGMSB = false, Bool_t isBkg = false, Bool_t applyevcut = false, 
+  PlotPhotons(TString filename, Bool_t isGMSB = false, Bool_t isBkg = false, Bool_t applyevcut = false, Bool_t rhdump = false,
 	      TString outdir = "output", Bool_t savehists = false, 
 	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
 	      Bool_t applyphvidcut = false, TString phvid = "medium", Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
@@ -70,6 +71,7 @@ public :
   TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
   TH2F * MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString subdir);
   void EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis);
+  void RecHitDumper();
   void CountEvents(Bool_t & event_b);
   void FillEffs();
   void FillGenInfo();
@@ -101,8 +103,11 @@ private :
   TH2Map  fPlots2D;
   TStrIntMap fEfficiency;
   Float_t fCTau;
+  std::ofstream fSeedDump;
+  std::ofstream fAllRHDump;
 
   // Config
+  const Bool_t  fRHDump;
   const Bool_t  fApplyEvCut;
   const Bool_t  fSaveHists;
   const Bool_t  fApplyJetPtCut;

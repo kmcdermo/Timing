@@ -5,12 +5,12 @@
 
 #include <iostream>
 
-PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isBkg, Bool_t applyevcut, 
+PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isBkg, Bool_t applyevcut, Bool_t rhdump,
 			 TString outdir, Bool_t savehists,
 			 Bool_t applyjetptcut, Float_t jetptcut, Bool_t applyphptcut, Float_t phptcut,
 			 Bool_t applyphvidcut, TString phvid, Bool_t applyrhecut, Float_t rhEcut,
 			 Bool_t applyecalacceptcut, Bool_t applyEBonly, Bool_t applyEEonly) :
-  fOutDir(outdir), fIsGMSB(isGMSB), fIsBkg(isBkg), fApplyEvCut(applyevcut), fSaveHists(savehists),
+  fOutDir(outdir), fIsGMSB(isGMSB), fIsBkg(isBkg), fApplyEvCut(applyevcut), fRHDump(rhdump), fSaveHists(savehists),
   fApplyJetPtCut(applyjetptcut), fJetPtCut(jetptcut), fApplyPhPtCut(applyphptcut), fPhPtCut(phptcut),
   fApplyPhVIDCut(applyphvidcut), fPhVID(phvid), fApplyrhECut(applyrhecut), frhECut(rhEcut),
   fApplyECALAcceptCut(applyecalacceptcut), fApplyEBOnly(applyEBonly), fApplyEEOnly(applyEEonly)
@@ -74,7 +74,15 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isBkg, Bool_t a
     gSystem->Exec(mkDir.Data());
   }
 
-  fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
+  if (fRHDump)
+  {
+    fSeedDump.open (Form("%s/seeddump.txt" ,fOutDir.Data()),std::ios_base::trunc);
+    fAllRHDump.open(Form("%s/allrhdump.txt",fOutDir.Data()),std::ios_base::trunc);
+  }
+  else 
+  {  
+    fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
+  }
 }
 
 PlotPhotons::~PlotPhotons()
@@ -82,18 +90,26 @@ PlotPhotons::~PlotPhotons()
   delete fInTree;
   delete fInFile;
 
-  delete fOutFile;
+  if (fRHDump)
+  {
+    fSeedDump.close();
+    fAllRHDump.close();
+  }
+  else
+  {
+    delete fOutFile;
+  }
 }
 
 void PlotPhotons::DoPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
 {
-  PlotPhotons::SetupPlots(generic, eff, analysis);
+  if (!fRHDump) PlotPhotons::SetupPlots(generic, eff, analysis);
   PlotPhotons::EventLoop(generic, eff, analysis);
-  PlotPhotons::MakeSubDirs();
-  PlotPhotons::OutputTEffs();
-  PlotPhotons::OutputTH1Fs();
-  PlotPhotons::OutputTH2Fs();
-  PlotPhotons::DumpEventCounts();
+  if (!fRHDump) PlotPhotons::MakeSubDirs();
+  if (!fRHDump) PlotPhotons::OutputTEffs();
+  if (!fRHDump) PlotPhotons::OutputTH1Fs();
+  if (!fRHDump) PlotPhotons::OutputTH2Fs();
+  if (!fRHDump) PlotPhotons::DumpEventCounts();
 }
 
 void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
@@ -139,8 +155,11 @@ void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis)
     if (entry%fNEvCheck == 0 || entry == 0) std::cout << "Entry " << entry << " out of " << fInTree->GetEntries() << std::endl;
     
     // rec hit dumper... ignore all else
-    PlotPhotons::RecHitDumper();
-    continue;
+    if (fRHDump)
+    {
+      PlotPhotons::RecHitDumper();
+      continue;
+    }
 
     // N-1 efficiency couting
     Bool_t event_b = false;
@@ -176,6 +195,43 @@ void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis)
     }
   }
 }
+
+void PlotPhotons::RecHitDumper()
+{
+  bool ph1passed = false;
+  for (Int_t iph = 0; iph < nphotons; iph++)
+  {
+    if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+    if (fApplyPhPtCut && ((*phpt)[iph] < fPhPtCut)) continue;
+    if (fApplyPhVIDCut && ((*phVID)[iph] < fPhVIDMap[fPhVID])) continue;
+    
+    for (Int_t irh = 0; irh < (*phnrh)[iph]; irh++)
+    {
+      if (ph1passed) break;
+      if (fApplyrhECut && (*phrhE)[iph][irh] < frhECut) continue;
+     
+      if ( (*phseedpos)[iph] == irh ) // seed info
+      {
+	if (!ph1passed) 
+        {
+	  fSeedDump << event << " " << iph << " " << irh << " " << (*phrhID)[iph][irh] << " " << (*phrhOOT)[iph][irh] << " " << (*phrhE)[iph][irh] << " " << (*phrhtime)[iph][irh] << std::endl;
+	  ph1passed = true;
+	}
+      }
+    }
+
+    // redo loop dumping all rechits
+    if (ph1passed) 
+    {      
+      for (Int_t irh = 0; irh < (*phnrh)[iph]; irh++)
+      {
+	fAllRHDump << event << " " << iph << " " << irh << " " << (*phrhID)[iph][irh] << " " << (*phrhOOT)[iph][irh] << " " << (*phrhE)[iph][irh] << " " << (*phrhtime)[iph][irh] << std::endl;
+      }
+      break;
+    }
+  }
+}
+
 
 void PlotPhotons::CountEvents(Bool_t & event_b)
 {
