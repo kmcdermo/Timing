@@ -19,6 +19,7 @@ void AODRecHitsCheck::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   // RecHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
   iEvent.getByToken(recHitsEBToken, recHitsEBH);
+
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
   iEvent.getByToken(recHitsEEToken, recHitsEEH);
 
@@ -27,20 +28,35 @@ void AODRecHitsCheck::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   // Event number
   event = iEvent.id().event();
 
-  if (evmap.count(event)) 
+  if (evseedmap.count(event)) 
   {
     isEvent = true;
 
-    const DetId seedId(evmap[event].rawid_);
-    const bool  isEB = (seedId.subdetId() == EcalBarrel);
+    // get rechits / isEB
+    const DetId seedId(evseedmap[event].rawid_);
+    isEB = (seedId.subdetId() == EcalBarrel);
+    const EcalRecHitCollection * recHits = (isEB?recHitsEBH:recHitsEEH).product();
+
+    // displaced photon seed rechit info
+    seedID   = evseedmap[event].rawid_;
+    seedE    = evseedmap[event].energy_;
+    seedtime = evseedmap[event].time_;
+    seedOOT  = evseedmap[event].oot_;
     
-    isSeed = AODRecHitsCheck::SeedCheck(isEB?recHitsEBH:recHitsEEH);
-    
-    seedID   = evmap[event].rawid_;
-    seedDet  = isEB;
-    seedE    = evmap[event].energy_;
-    seedtime = evmap[event].time_;
-    seedOOT  = evmap[event].oot_;
+    // does it exist in AOD??
+    isSeed   = (recHits->find(seedId) != recHits->end());
+
+    nRHs = evrhvecmap[event].size();
+    for (const auto& rhinfo : evrhvecmap[event])
+    {
+      rhIDs.push_back(rhinfo.rawid_);
+      rhEs.push_back(rhinfo.energy_);
+      rhtimes.push_back(rhinfo.time_);
+      rhOOTs.push_back(rhinfo.oot_);
+
+      const DetId rhId(rhinfo.rawid_);
+      isRHs.push_back((recHits->find(rhId) != recHits->end()));
+    }
   }
   
   // fill the tree
@@ -52,41 +68,54 @@ void AODRecHitsCheck::InitializeBranches()
   event    = -9999;
   isEvent  = false;
   seedID   = -9999;
-  seedDet  = false;
+  isEB     = false;
   seedE    = -9999.f;
   seedtime = -9999.f;
   seedOOT  = false; 
   isSeed   = false;
-}
 
-bool AODRecHitsCheck::SeedCheck(const edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > & recHits)
-{
-  bool found = false;
-  
-  for (auto recHitIter = recHits->begin(); recHitIter != recHits->end(); ++recHitIter)
-  {
-    int recHitId = recHitIter->detid().rawId();
-    if (recHitId == evmap[event].rawid_) {found = true; break;}
-  }
-  
-  return found;
+  nRHs     = -9999;
+  rhIDs.clear();
+  rhEs.clear();
+  rhtimes.clear();
+  rhOOTs.clear();
+  isRHs.clear();
 }
 
 void AODRecHitsCheck::beginJob() 
 {
-  // read in text file
+  ////////////////////////
+  //                    //
+  // read in text files //
+  //                    //
+  ////////////////////////
   std::ifstream seedreader;
   seedreader.open("/afs/cern.ch/user/k/kmcdermo/private/dispho/CMSSW_8_0_21/src/Timing/TimingAnalyzer/tmp/seeddump.txt",std::ios::in);
-  int   ev  = -1, iph = -1, irh = -1, rawid = -1;
+  int   ev  = -9999, iph = -9999, irh = -9999, rawid = -9999;
   bool  oot = false;
-  float energy, time;
-
+  float energy = -9999.f, time = -9999.f;
   while(seedreader >> ev >> iph >> irh >> rawid >> oot >> energy >> time)
   {
-    evmap[ev] = SeedInfo(rawid,oot,energy,time);
+    evseedmap[ev] = RHInfo(rawid,oot,energy,time);
   }
+  seedreader.close();
 
-  // set up output
+  std::ifstream rhreader;
+  rhreader.open("/afs/cern.ch/user/k/kmcdermo/private/dispho/CMSSW_8_0_21/src/Timing/TimingAnalyzer/tmp/allrhdump.txt",std::ios::in);
+  ev  = -9999, iph = -9999, irh = -9999, rawid = -9999;
+  oot = false;
+  energy = -9999.f, time = -9999.f;
+  while(rhreader >> ev >> iph >> irh >> rawid >> oot >> energy >> time)
+  {
+    evrhvecmap[ev].push_back(RHInfo(rawid,oot,energy,time));
+  }
+  rhreader.close();
+
+  ///////////////////
+  //               //
+  // set up output //
+  //               //
+  ///////////////////
   edm::Service<TFileService> fs;
 
   // rh tree
@@ -95,12 +124,20 @@ void AODRecHitsCheck::beginJob()
   // event level info
   tree->Branch("event"             , &event              , "event/I");
   tree->Branch("isEvent"           , &isEvent            , "isEvent/O");
+
   tree->Branch("seedID"            , &seedID             , "seedID/I");
-  tree->Branch("seedDet"           , &seedDet            , "seedDet/O");
+  tree->Branch("isEB"              , &isEB               , "isEB/O");
   tree->Branch("seedE"             , &seedE              , "seedE/F");
   tree->Branch("seedtime"          , &seedtime           , "seedtime/F");
   tree->Branch("seedOOT"           , &seedOOT            , "seedOOT/O");
   tree->Branch("isSeed"            , &isSeed             , "isSeed/O");
+
+  tree->Branch("nRHs"              , &nRHs               , "nRHs/I");
+  tree->Branch("rhIDs"             , &rhIDs);
+  tree->Branch("rhEs"              , &rhEs);
+  tree->Branch("rhtimes"           , &rhtimes);
+  tree->Branch("rhOOTs"            , &rhOOTs);
+  tree->Branch("isRHs"             , &isRHs);
 }
 
 void AODRecHitsCheck::endJob() {}

@@ -37,10 +37,10 @@
 #include "TLorentzVector.h"
 #include "TPRegexp.h"
 
-struct SeedInfo
+struct RHInfo
 {
-  SeedInfo(){}
-  SeedInfo(int rawid, bool oot, float energy, float time) : rawid_(rawid), oot_(oot), energy_(energy), time_(time) {}
+  RHInfo(){}
+  RHInfo(int rawid, bool oot, float energy, float time) : rawid_(rawid), oot_(oot), energy_(energy), time_(time) {}
   int   rawid_;
   bool  oot_;
   float energy_;
@@ -54,7 +54,6 @@ public:
   ~AODRecHitsCheck();
   
   void InitializeBranches();
-  bool SeedCheck(const edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > &);
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
   
@@ -73,18 +72,27 @@ private:
   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEToken;
 
   // input seeds
-  std::unordered_map<int,SeedInfo> evmap;
+  std::unordered_map<int,RHInfo>               evseedmap;
+  std::unordered_map<int,std::vector<RHInfo> > evrhvecmap;
 
   // tree
   TTree * tree;
 
-  int event;
-  bool isEvent;
-  int seedID;
-  bool seedDet;
+  int   event;
+  bool  isEvent;
+
+  int   seedID;
+  bool  isEB;
   float seedE;
   float seedtime;
-  bool seedOOT;
-  bool isSeed;
+  bool  seedOOT;
+  bool  isSeed;
+
+  int   nRHs;
+  std::vector<int>   rhIDs;
+  std::vector<float> rhEs;
+  std::vector<float> rhtimes;
+  std::vector<bool>  rhOOTs;
+  std::vector<bool>  isRHs;
 };
 
