@@ -31,11 +31,12 @@ void quickStack()
   SetTDRStyle(tdrStyle);
   gROOT->ForceStyle();
 
-  std::vector<TString> histnames = {"ph1smaj","ph1smin","ph1sieie","ph1sipip","ph1sieip"};
+  //std::vector<TString> histnames = {"ph1smaj","ph1smin","ph1sieie","ph1sipip","ph1sieip"};
+  std::vector<TString> histnames = {"ph1r9","ph1suisse"};
   // std::vector<TString> histnames = {"ph1pt_nm1","ph1VID_nm1","ph1seedtime","jet1pt"};
 
   // generic settings
-  TString cuts = "cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept";
+  TString cuts = "cuts_jetpt35.0_phpt50.0_phVIDnone_rhE1.0_EBOnly";
   TString outdir = "output/stacks/photondump/"+cuts;
   makeDir(outdir);
 

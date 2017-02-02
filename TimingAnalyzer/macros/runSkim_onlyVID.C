@@ -17,7 +17,7 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runSkim_VID(Int_t iphpt = 50, TString inovid = "full", Int_t ijetpt = 35, Int_t injets = 0, Bool_t batch = false) 
+void runSkim_onlyVID(Int_t iphpt = 50, TString ionlyvid = "none", Int_t ijetpt = 35, Int_t injets = 0, Bool_t batch = false) 
 {
   setupcpp11(); 
 
@@ -32,26 +32,28 @@ void runSkim_VID(Int_t iphpt = 50, TString inovid = "full", Int_t ijetpt = 35, I
   // nphscut
   // applyEBonly, applyEEonly
 
-  TString outdir = Form("output/recoskim/novid-sph-smin/phpt%i_%s_jetpt%i_njets%i",iphpt,inovid.Data(),ijetpt,injets);
+  TString outdir = Form("output/recoskim/onlyvid-sph1/phpt%i_%s_jetpt%i_njets%i",iphpt,ionlyvid.Data(),ijetpt,injets);
 
   Float_t jetpt = ijetpt;
   Int_t   njets = injets;
   
   Float_t phpt  = iphpt;
   Int_t   phvid = 1; // loose id for now
-  Int_t   phhoe = phvid, phsieie = phvid, phchgiso = phvid, phneuiso = phvid, phiso = phvid;
-
-  if      (inovid.EqualTo("noPhIso" ,TString::kExact)) {phiso = 0;}
-  else if (inovid.EqualTo("noNeuIso",TString::kExact)) {phiso = 0; phneuiso = 0;}
-  else if (inovid.EqualTo("noChgIso",TString::kExact)) {phiso = 0; phneuiso = 0; phchgiso = 0;}
-  else if (inovid.EqualTo("noSieie" ,TString::kExact)) {phiso = 0; phneuiso = 0; phchgiso = 0; phsieie = 0;}
-  else if (inovid.EqualTo("noHoE"   ,TString::kExact)) {phiso = 0; phneuiso = 0; phchgiso = 0; phsieie = 0; phhoe = 0;}
-
+  Int_t   phhoe = 0, phsieie = 0, phchgiso = 0, phneuiso = 0, phiso = 0;
   Float_t smajEB = 10000.f;// 0.6;
   Float_t smajEE = 10000.f;// 0.5;
-  Float_t sminEB = 0.4f;// 0.4; // 0.3 is the hard cut 
-  Float_t sminEE = 0.4f;// 0.4; // 0.3 is the hard cut
+  Float_t sminEB = 10000.f;// 0.3;
+  Float_t sminEE = 10000.f;// 0.3;
   Int_t   nphs   = 1;
+
+  if      (ionlyvid.EqualTo("PhIso"   ,TString::kExact)) {phiso    = 1;}
+  else if (ionlyvid.EqualTo("NeuIso"  ,TString::kExact)) {phneuiso = 1;}
+  else if (ionlyvid.EqualTo("ChgIso"  ,TString::kExact)) {phchgiso = 1;}
+  else if (ionlyvid.EqualTo("Sieie"   ,TString::kExact)) {phsieie  = 1;}
+  else if (ionlyvid.EqualTo("HoE"     ,TString::kExact)) {phhoe    = 1;}
+  else if (ionlyvid.EqualTo("Sminor"  ,TString::kExact)) {sminEB   = 0.4f; sminEE = 0.4f;}
+  else if (ionlyvid.EqualTo("ClShape" ,TString::kExact)) {phsieie  = 1; phhoe = 1;}
+  else if (ionlyvid.EqualTo("ClShapeP",TString::kExact)) {phsieie  = 1; phhoe = 1; sminEB = 0.4f; sminEE = 0.4f;}
 
   //  SkimRECO deg2016Bskimmer("input/DATA/doubleeg/2016B/recoskim-doubleeg-2016B.root",outdir,"deg2016B",true,batch,jetpt,njets,phpt,phhoe,phsieie,phchgiso,phneuiso,phiso,smajEB,smajEE,sminEB,sminEE,nphs);
   SkimRECO sph2016Bskimmer("input/DATA/singleph/2016B/recoskim-singleph-2016B.root",outdir,"sph2016B",true,batch,jetpt,njets,phpt,phhoe,phsieie,phchgiso,phneuiso,phiso,smajEB,smajEE,sminEB,sminEE,nphs);
@@ -65,10 +67,10 @@ void runSkim_VID(Int_t iphpt = 50, TString inovid = "full", Int_t ijetpt = 35, I
 
   // Bools to do which plots
   Bool_t doNm1  = false;
-  Bool_t doTeff = true;
+  Bool_t doTeff = false;
   Bool_t doAn   = false;
 
-  //  deg2016Bskimmer.DoSkim(effdump,doNm1,doTeff,doAn);
+  //deg2016Bskimmer.DoSkim(effdump,doNm1,doTeff,doAn);
   sph2016Bskimmer.DoSkim(effdump,doNm1,doTeff,doAn);
   ctau100skimmer .DoSkim(effdump,doNm1,doTeff,doAn);
   //  ctau2000skimmer.DoSkim(effdump,doNm1,doTeff,doAn);

@@ -1,14 +1,14 @@
-void effStackPlot_VID(Int_t ijetpt, Int_t injets)
+void effStackPlot_onlyVID(Int_t ijetpt, Int_t injets)
 {
   gStyle->SetOptStat(0);
 
-  TFile * file = TFile::Open(Form("output/recoskim/novid-sph-smin/njets%i/jetpt%i/plots.root",injets,ijetpt));
+  TFile * file = TFile::Open(Form("output/recoskim/onlyvid-sph1/njets%i/jetpt%i/plots.root",injets,ijetpt));
   file->cd();
 
+//   std::vector<TString> samples  = {"sph2016B","ctau100","ctau2000","ctau6000"};
+//   std::vector<TString> tsamples = {"2016B SinglePh","c#tau = 36.5 mm","c#tau = 730.5 mm","c#tau = 2192 mm"};
   std::vector<TString> samples  = {"sph2016B","ctau100","ctau6000"};
-  std::vector<TString> tsamples = {"2016B DoubleEG","c#tau = 36.5 mm","c#tau = 2192 mm"};
-//   std::vector<TString> samples  = {"deg2016B","ctau100","ctau2000","ctau6000"};
-//   std::vector<TString> tsamples = {"2016B DoubleEG","c#tau = 36.5 mm","c#tau = 730.5 mm","c#tau = 2192 mm"};
+  std::vector<TString> tsamples = {"2016B SinglePh","c#tau = 36.5 mm","c#tau = 2192 mm"};
   std::vector<Int_t>   phpts    = {30,40,50};
 
   TCanvas * canv = new TCanvas(); canv->cd();
@@ -25,11 +25,11 @@ void effStackPlot_VID(Int_t ijetpt, Int_t injets)
       leg->AddEntry(hist,Form("%s photon p_{T}: %i",tsamples[isample].Data(),phpts[jphpt]),"epl");
     }
   }
-  canv->SaveAs(Form("eff_novid_jetpt%i_njets%i.png",ijetpt,injets));
+  canv->SaveAs(Form("eff_onlyvid_jetpt%i_njets%i.png",ijetpt,injets));
 
   TCanvas * canvL = new TCanvas(); canvL->cd();
   leg->Draw();
-  if (ijetpt == 0 && injets == 0) canvL->SaveAs("eff_leg_noVID.png");
+  if (ijetpt == 0 && injets == 0) canvL->SaveAs("eff_leg_onlyVID.png");
   
   delete canvL;
   delete leg;

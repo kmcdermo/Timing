@@ -819,9 +819,59 @@ void SkimRECO::DumpEfficiency(std::ofstream & effdump)
 
   if (fBatch)
   {
-    TFile * file = TFile::Open(Form("output/recoskim/njets%i/jetpt%i/plots.root",fNJetsCut,Int_t(fJetPtCut)),"UPDATE");
+//     TFile * file = TFile::Open(Form("output/recoskim/onlyvid-sph1/njets%i/jetpt%i/plots.root",fNJetsCut,Int_t(fJetPtCut)),"UPDATE");
+//     TH1F  * hist = (TH1F*)file->Get(Form("eff_%s_phpt%i",fSubDir.Data(),Int_t(fPhPtCut)));
+
+//     if      (fPhIsoCut == 0 && fPhNeuIsoCut == 0 && fPhChgIsoCut == 0 && fPhSieieCut == 0 && fPhHoECut == 0 && fPhSminEBCut == 10000.f && fPhSminEECut == 10000.f)
+//     {
+//       hist->SetBinContent(1,eff);
+//       hist->SetBinError  (1,unc);
+//     }
+//     else if (fPhIsoCut == 1 && fPhNeuIsoCut == 0 && fPhChgIsoCut == 0 && fPhSieieCut == 0 && fPhHoECut == 0 && fPhSminEBCut == 10000.f && fPhSminEECut == 10000.f)
+//     {
+//       hist->SetBinContent(2,eff);
+//       hist->SetBinError  (2,unc);
+//     }
+//     else if (fPhIsoCut == 0 && fPhNeuIsoCut == 1 && fPhChgIsoCut == 0 && fPhSieieCut == 0 && fPhHoECut == 0 && fPhSminEBCut == 10000.f && fPhSminEECut == 10000.f)
+//     {
+//       hist->SetBinContent(3,eff);
+//       hist->SetBinError  (3,unc);
+//     }
+//     else if (fPhIsoCut == 0 && fPhNeuIsoCut == 0 && fPhChgIsoCut == 1 && fPhSieieCut == 0 && fPhHoECut == 0 && fPhSminEBCut == 10000.f && fPhSminEECut == 10000.f)
+//     {
+//       hist->SetBinContent(4,eff);
+//       hist->SetBinError  (4,unc);
+//     }
+//     else if (fPhIsoCut == 0 && fPhNeuIsoCut == 0 && fPhChgIsoCut == 0 && fPhSieieCut == 1 && fPhHoECut == 0 && fPhSminEBCut == 10000.f && fPhSminEECut == 10000.f)
+//     {
+//       hist->SetBinContent(5,eff);
+//       hist->SetBinError  (5,unc);
+//     }
+//     else if (fPhIsoCut == 0 && fPhNeuIsoCut == 0 && fPhChgIsoCut == 0 && fPhSieieCut == 0 && fPhHoECut == 1 && fPhSminEBCut == 10000.f && fPhSminEECut == 10000.f)
+//     {
+//       hist->SetBinContent(6,eff);
+//       hist->SetBinError  (6,unc);
+//     }
+//     else if (fPhIsoCut == 0 && fPhNeuIsoCut == 0 && fPhChgIsoCut == 0 && fPhSieieCut == 0 && fPhHoECut == 0 && fPhSminEBCut == 0.4f    && fPhSminEECut == 0.4f)
+//     {
+//       hist->SetBinContent(7,eff);
+//       hist->SetBinError  (7,unc);
+//     }
+//     else if (fPhIsoCut == 0 && fPhNeuIsoCut == 0 && fPhChgIsoCut == 0 && fPhSieieCut == 1 && fPhHoECut == 1 && fPhSminEBCut == 10000.f && fPhSminEECut == 10000.f)
+//     {
+//       hist->SetBinContent(8,eff);
+//       hist->SetBinError  (8,unc);
+//     }
+//     else if (fPhIsoCut == 0 && fPhNeuIsoCut == 0 && fPhChgIsoCut == 0 && fPhSieieCut == 1 && fPhHoECut == 1 && fPhSminEBCut == 0.4f    && fPhSminEECut == 0.4f)
+//     {
+//       hist->SetBinContent(9,eff);
+//       hist->SetBinError  (9,unc);
+//     }
+
+    // For the noVID additive case  
+    TFile * file = TFile::Open(Form("output/recoskim/novid-sph-smin/njets%i/jetpt%i/plots.root",fNJetsCut,Int_t(fJetPtCut)),"UPDATE");
     TH1F  * hist = (TH1F*)file->Get(Form("eff_%s_phpt%i",fSubDir.Data(),Int_t(fPhPtCut)));
-  
+
     if      (fPhIsoCut == 1 && fPhNeuIsoCut == 1 && fPhChgIsoCut == 1 && fPhSieieCut == 1 && fPhHoECut == 1)
     {
       hist->SetBinContent(1,eff);

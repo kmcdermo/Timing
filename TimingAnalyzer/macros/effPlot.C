@@ -13,7 +13,7 @@ void effPlot(Int_t iphpt, Int_t ivid)
   {
     for (UInt_t jnjet = 0; jnjet < njets.size(); jnjet++)
     {
-      TH1F * hist = new TH1F(Form("eff_%s_njets%i",samples[isample].Data(),jnjet),Form("Efficiency vs. Jet p_{T} [Photon p_{T} = %i GeV/c, VID = %s]",iphpt,(ivid==1?"loose":"medium")),4,0,4);
+      TH1F * hist = new TH1F(Form("eff_%s_njets%i",samples[isample].Data(),jnjet),Form("Efficiency vs. Jet p_{T} [Photon p_{T} > %i GeV/c, VID #geq %s]",iphpt,(ivid==1?"loose":"medium")),4,0,4);
       hist->GetYaxis()->SetTitle("Efficiency");
       hist->GetYaxis()->SetRangeUser(0.f,1.f);
       hist->GetXaxis()->SetTitle("Jet p_{T} [GeV/c]");

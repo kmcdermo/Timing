@@ -27,7 +27,7 @@ void runPhotonPlots()
   // applyphvidcut, phvid, applyrhecut, 
   // applyecalacceptcut, applyEBonly, applyEEonly
   
-  PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-ctau6000.root",true,false,false,"output/test6000",true,
+  PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-ctau6000.root",true,false,false,"output/test6000-gmsbMatched",true,
 			  true,35.f,true,50.f,true,"loose",true,1.f,true,false,false);
 
   // which plots to do
