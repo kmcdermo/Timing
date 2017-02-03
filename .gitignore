@@ -5,7 +5,7 @@ main
 *.png
 *.log
 *.root
-crab_*
+crab_projects*
 *.o
 *.so
 *.d

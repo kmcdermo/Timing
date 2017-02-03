@@ -1,0 +1,77 @@
+! HVphoton.cmnd
+! Yuhsin Tsai, for dark showering
+! Goal: generate v-quarks, shower them, and decay v-pions into photons
+
+
+! 1) Settings used in the main program.
+
+Main:numberOfEvents     = 10000          ! number of events to generate
+Main:timesAllowErrors   = 10            ! how many aborts before run stops
+Random:setSeed          = on            ! allow us to set a seed...
+Random:seed             = 0             ! ... and use a new seed for each run
+
+
+! 2) Settings related to output in init(), next() and stat().
+
+Init:showProcesses              = on    ! list all processes simulated
+Init:showChangedSettings        = off   ! list changed settings
+Init:showChangedParticleData    = on   ! list changed particle data
+
+Next:numberCount             = 10000  ! print message every n events
+Next:numberShowInfo          = 1    ! print event information n times
+Next:numberShowProcess       = 1    ! print process record n times
+Next:numberShowEvent         = 1    ! print event record n times
+
+
+
+! 3) Beam parameter settings. Values below agree with default ones.
+!
+! 11: e-, -11: e+, 13: mu-, -13: mu+, 130: KL, 310: KS, 311: K0, 321: K+, 2212: p, 223: omega, 213: rho+, 113: rho0, 211: pi+
+! We want monochromatic gluons, so we need to control the CM energy
+
+Beams:idA = 2212                  ! first beam, p = 2212, pbar = -2212
+Beams:idB = 2212          ! second beam, p = 2212, pbar = -2212
+Beams:eA = 6500
+Beams:eB = 6500
+!Beams:eCM = 125                    ! CM energy of collision [GeV]
+
+
+! 5) Process selection 
+HiddenValley:ffbar2Zv = on	! Pair production q qbar → Dv Dvbar
+HiddenValley:Ngauge = 3
+4900023:onMode = off
+4900023:onIfAny = 4900101 ! specify the Zv decay into Dv Dv~
+!4900023:onIfAny = 2 !
+
+HiddenValley:pTminFSR = .1
+HiddenValley:alphaFSR = .8
+4900111:m0 = 40 ! vPion mass
+
+HiddenValley:FSR = on
+HiddenValley:fragment = on !on, otherwise no pions
+HiddenValley:probVector = 0
+
+4900023:m0 = 500 ! Zp mass
+4900023:mWidth = 0.01 ! widthZp
+4900101:m0 = .5 ! v-quark mass
+-4900101:m0 = .5
+
+
+
+
+! 6) Settings for the event generation process in the Pythia8 library.
+! Turn off showering and hadronization for this run
+PartonLevel:MPI = off              ! multiparton interactions
+PartonLevel:ISR = on              ! initial-state radiation
+PartonLevel:FSR = on               ! final-state radiation
+HadronLevel:Hadronize = on         ! hadronization
+
+
+! 7) Setting particle properties
+4900111:mayDecay = on
+! change to on if decay v-pi
+5:mayDecay = off
+-5:mayDecay = off
+4900211:mayDecay = off
+-4900211:mayDecay = off
+
