@@ -556,8 +556,9 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       {
 	const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phsc, *recHits);
 	// radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
-	phsmaj[iph] = ph2ndMoments.sMaj;
-	phsmin[iph] = ph2ndMoments.sMin;
+	phsmaj [iph] = ph2ndMoments.sMaj;
+	phsmin [iph] = ph2ndMoments.sMin;
+	phalpha[iph] = ph2ndMoments.alpha;
       }
 
       // map of rec hit ids
@@ -1102,6 +1103,7 @@ void PhotonDump::InitializeRecoPhotonBranches()
   phsieip.resize(nphotons);
   phsmaj.resize(nphotons);
   phsmin.resize(nphotons);
+  phalpha.resize(nphotons);
 
   phVID.resize(nphotons);
 
@@ -1147,6 +1149,7 @@ void PhotonDump::InitializeRecoPhotonBranches()
     phsieip[iph] = -9999.f;
     phsmaj [iph] = -9999.f;
     phsmin [iph] = -9999.f;
+    phalpha[iph] = -9999.f;
 
     phVID     [iph] = -9999;
 
