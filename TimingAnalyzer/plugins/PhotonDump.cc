@@ -27,6 +27,7 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   ///////////// GEN INFO
   // isMC or Data --> default Data
   isGMSB (iConfig.existsAs<bool>("isGMSB")  ? iConfig.getParameter<bool>("isGMSB")  : false),
+  isHVDS (iConfig.existsAs<bool>("isHVDS")  ? iConfig.getParameter<bool>("isHVDS")  : false),
   isBkg  (iConfig.existsAs<bool>("isBkg")   ? iConfig.getParameter<bool>("isBkg")   : false),
   dumpIds(iConfig.existsAs<bool>("dumpIds") ? iConfig.getParameter<bool>("dumpIds") : false)
 {
@@ -52,7 +53,7 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   photonsToken           = consumes<std::vector<pat::Photon> > (photonsTag);
 
   // only for simulated samples
-  if (isGMSB || isBkg)
+  if (isGMSB || isHVDS || isBkg)
   {
     isMC = true;
     genevtInfoToken = consumes<GenEventInfoProduct>             (iConfig.getParameter<edm::InputTag>("genevt"));
@@ -335,6 +336,96 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	} // end loop over gen particles
       } // end check for gen particles
     } // end check over isGMSB
+ 
+    if (isHVDS) 
+    {
+      //      PhotonDump::InitializeHVDSBranches();
+      if (genparticlesH.isValid()) // make sure gen particles exist --> only do this for GMSB
+      {
+    	for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter) // loop over gen particles
+        {
+	  std::cout << gpiter->pdgId() << " " << gpiter->status() << std::endl;
+    	  if (gpiter->pdgId() == 4900111)//  && gpiter->numberOfDaughters() == 2)
+    	  {
+	    for (unsigned int idaughter = 0; idaughter < gpiter->numberOfDaughters(); idaughter++)
+	    {
+	      std::cout << gpiter->daughter(idaughter)->pdgId() << " " << gpiter->daughter(idaughter)->status() << std::endl;
+	    }
+	    std::cout << "-------------------------" << std::endl;
+	    //    	    nNeutralino++;
+	  }
+	}	   
+	std::cout << "-------------------------" << std::endl;	
+      }
+    } 
+    // 	    if ((gpiter->daughter(0)->pdgId() == 22 && gpiter->daughter(1)->pdgId() == 1000039) ||
+    // 	      (gpiter->daughter(1)->pdgId() == 22 && gpiter->daughter(0)->pdgId() == 1000039)) 
+    // 	    {
+
+		
+    // 		// set neutralino parameters
+    // 		genN1mass = gpiter->mass();
+    // 		genN1E    = gpiter->energy();
+    // 		genN1pt   = gpiter->pt();
+    // 		genN1phi  = gpiter->phi();
+    // 		genN1eta  = gpiter->eta();
+
+    // 		// neutralino production vertex
+    // 		genN1prodvx = gpiter->vx();
+    // 		genN1prodvy = gpiter->vy();
+    // 		genN1prodvz = gpiter->vz();
+		
+    // 		// neutralino decay vertex (same for both daughters unless really screwed up)
+    // 		genN1decayvx = gpiter->daughter(0)->vx();
+    // 		genN1decayvy = gpiter->daughter(0)->vy();
+    // 		genN1decayvz = gpiter->daughter(0)->vz();
+		
+    // 		// set photon daughter stuff
+    // 		int phdaughter = -1; // determine which one is the photon daughter
+    // 		if      (gpiter->daughter(0)->pdgId() == 22) {phdaughter = 0;}
+    // 		else if (gpiter->daughter(1)->pdgId() == 22) {phdaughter = 1;}
+
+    // 		genph1E    = gpiter->daughter(phdaughter)->energy();
+    // 		genph1pt   = gpiter->daughter(phdaughter)->pt();
+    // 		genph1phi  = gpiter->daughter(phdaughter)->phi();
+    // 		genph1eta  = gpiter->daughter(phdaughter)->eta();
+		
+    // 		// check for a reco match!
+    // 		if (photonsH.isValid()) // standard check
+    //             {
+    // 		  int   iph   = 0;
+    // 		  float mindR = 0.3; // at least this much
+    // 		  for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
+    // 	          {
+    // 		    const float tmppt  = phiter->pt();
+    // 		    const float tmpphi = phiter->phi();
+    // 		    const float tmpeta = phiter->eta();
+		  
+    // 		    if (std::abs(tmppt-genph1pt)/genph1pt < 0.5)
+    // 		    {
+    // 		      const float delR = deltaR(genph1phi,genph1eta,tmpphi,tmpeta);
+    // 		      if (delR < mindR) 
+    // 		      {
+    // 			mindR = delR;
+    // 			genph1match = iph; 
+    // 		      } // end check over deltaR
+    // 		    } // end check over pt resolution
+    // 		    iph++;
+    // 		  } // end loop over reco photons
+    // 		} // end check for reco match
+    // 	      } 
+    // 	    }
+    // 	  }
+    // 	}
+    //   }
+    // }
+
+
+
+
+
+
+
 
     ///////////////////
     //               //

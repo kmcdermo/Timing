@@ -168,6 +168,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
 
   // Gen Particles and MC info
   const bool isGMSB;
+  const bool isHVDS;
   const bool isBkg;
   const bool dumpIds;
   bool isMC;

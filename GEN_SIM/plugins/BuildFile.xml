@@ -4,17 +4,14 @@
 <use name="FWCore/MessageLogger"/>
 <use name="FWCore/ServiceRegistry"/>
 
-<library file="*.cc" name="TimingPlugins">
+<library file="*.cc" name="GENAnalyzerPlugins">
   <use name="CommonTools/UtilAlgos"/>
   <use name="CommonTools/Utils"/>
-  <use name="HLTrigger/HLTcore"/>
-  <use name="DataFormats/HLTReco"/>
-  <use name="DataFormats/VertexReco"/>
   <use name="DataFormats/Math"/>
   <use name="DataFormats/Common"/>
-  <use name="DataFormats/EgammaCandidates"/>
-  <use name="DataFormats/PatCandidates"/>
+  <use name="DataFormats/METReco"/>
+  <use name="DataFormats/JetReco"/>
   <use name="DataFormats/HepMCCandidate"/>
-  <use name="SimDataFormats/PileupSummaryInfo"/>
-  <use name="RecoEgamma/EgammaTools"/>
+  <use name="SimDataFormats/GeneratorProducts"/>
 </library>
+
