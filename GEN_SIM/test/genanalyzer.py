@@ -17,7 +17,7 @@ options.register (
 
 ## GT to be used    
 options.register (
-	'globalTag','auto:mc',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'globalTag','80X_mcRun2_asymptotic_2016_TrancheIV_v6',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'gloabl tag to be used');
 
 ## parsing command line arguments
@@ -45,12 +45,8 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_1.root',
+        'file:/afs/cern.ch/user/k/kmcdermo/private/dispho/CMSSW_8_0_21/src/Timing/GEN_SIM/HVphoton/HVDS_13TeV_FULLSIM.root'
 		))
-
-## How many events to process
-if   options.demoMode : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
-else                  : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(options.maxEvents))
 
 # Set the global tag depending on the sample type
 from Configuration.AlCa.GlobalTag import GlobalTag
