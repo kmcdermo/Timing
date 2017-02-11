@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: Configuration/GenProduction/python/ThirteenTeV/HVphoton_13TeV_cfi.py --mc --eventcontent RAWSIM --customise SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1 --datatier GEN-SIM --conditions MCRUN2_71_V1::All --beamspot Realistic50ns13TeVCollision --step GEN,SIM --magField 38T_PostLS1 DarkShower_Pythia8_13TeV_GEN_SIM.root
+# with command line options: Configuration/GenProduction/python/ThirteenTeV/HVDS_13TeV_cfi.py --mc --eventcontent RAWSIM --customise SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1 --datatier GEN-SIM --conditions MCRUN2_71_V1::All --beamspot Realistic50ns13TeVCollision --step GEN,SIM --magField 38T_PostLS1 HVDS_GEN_SIM.root
 import FWCore.ParameterSet.Config as cms
 
 process = cms.Process('SIM')
@@ -37,7 +37,7 @@ process.options = cms.untracked.PSet(
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
     version = cms.untracked.string('$Revision: 1.19 $'),
-    annotation = cms.untracked.string('Configuration/GenProduction/python/ThirteenTeV/HVphoton_13TeV_cfi.py nevts:1'),
+    annotation = cms.untracked.string('Configuration/GenProduction/python/ThirteenTeV/HVDS_13TeV_cfi.py nevts:1'),
     name = cms.untracked.string('Applications')
 )
 
@@ -47,7 +47,7 @@ process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
     splitLevel = cms.untracked.int32(0),
     eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
     outputCommands = process.RAWSIMEventContent.outputCommands,
-    fileName = cms.untracked.string('HVphoton_13TeV_GEN_SIM.root'),
+    fileName = cms.untracked.string('HVDS_GEN_SIM.root'),
     dataset = cms.untracked.PSet(
         filterName = cms.untracked.string(''),
         dataTier = cms.untracked.string('GEN-SIM')

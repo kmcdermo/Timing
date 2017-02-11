@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: step2 --mc --eventcontent AODSIM --runUnscheduled --datatier AODSIM --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v6 --step RAW2DIGI,L1Reco,RECO --era Run2_2016 --filein file:HVphoton_DIGI_L1_DIGI2RAW_HLT_PU.root --fileout file:HVphoton_RAW2DIGI_L1Reco_RECO.root
+# with command line options: step2 --mc --eventcontent AODSIM --runUnscheduled --datatier AODSIM --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v6 --step RAW2DIGI,L1Reco,RECO --era Run2_2016 --filein file:HVDS_DIGI_L1_DIGI2RAW_HLT_PU.root --fileout file:HVDS_RAW2DIGI_L1Reco_RECO.root
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
@@ -29,7 +29,7 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:HVphoton_DIGI_L1_DIGI2RAW_HLT_PU.root'),
+    fileNames = cms.untracked.vstring('file:HVDS_DIGI_L1_DIGI2RAW_HLT_PU.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -58,7 +58,7 @@ process.AODSIMoutput = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(15728640),
-    fileName = cms.untracked.string('file:HVphoton_RAW2DIGI_L1Reco_RECO.root'),
+    fileName = cms.untracked.string('file:HVDS_RAW2DIGI_L1Reco_RECO.root'),
     outputCommands = process.AODSIMEventContent.outputCommands
 )
 
