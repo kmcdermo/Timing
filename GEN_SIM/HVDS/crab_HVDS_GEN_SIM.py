@@ -5,7 +5,7 @@ config.General.requestName = 'HVDS_13TeV_GEN_SIM'
 config.General.workArea = 'crab_projects'
 
 config.JobType.pluginName = 'PrivateMC'
-config.JobType.psetName   = 'HVDS_13TeV_GEN_SIM.py'
+config.JobType.psetName   = 'step0_HVDS_GEN_SIM.py'
 
 config.Data.outputPrimaryDataset = 'HVDS_13TeV_GEN_SIM'
 config.Data.splitting = 'EventBased'
