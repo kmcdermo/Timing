@@ -344,88 +344,66 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       {
     	for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter) // loop over gen particles
         {
-	  std::cout << gpiter->pdgId() << " " << gpiter->status() << std::endl;
-    	  if (gpiter->pdgId() == 4900111)//  && gpiter->numberOfDaughters() == 2)
+    	  if (gpiter->pdgId() == 4900111 && gpiter->numberOfDaughters() == 2)
     	  {
-	    for (unsigned int idaughter = 0; idaughter < gpiter->numberOfDaughters(); idaughter++)
+	    if (gpiter->daughter(0)->pdgId() == 22 && gpiter->daughter(1)->pdgId() == 22)
 	    {
-	      std::cout << gpiter->daughter(idaughter)->pdgId() << " " << gpiter->daughter(idaughter)->status() << std::endl;
-	    }
-	    std::cout << "-------------------------" << std::endl;
-	    //    	    nNeutralino++;
-	  }
-	}	   
-	std::cout << "-------------------------" << std::endl;	
-      }
-    } 
-    // 	    if ((gpiter->daughter(0)->pdgId() == 22 && gpiter->daughter(1)->pdgId() == 1000039) ||
-    // 	      (gpiter->daughter(1)->pdgId() == 22 && gpiter->daughter(0)->pdgId() == 1000039)) 
-    // 	    {
+	      // set neutralino parameters
+	      genvPionmass.push_back(gpiter->mass());
+	      genvPionE   .push_back(gpiter->energy());
+	      genvPionpt  .push_back(gpiter->pt());
+	      genvPionphi .push_back(gpiter->phi());
+	      genvPioneta .push_back(gpiter->eta());
+	      
+	      // vPion production vertex
+	      genvPionprodvx.push_back(gpiter->vx());
+	      genvPionprodvy.push_back(gpiter->vy());
+	      genvPionprodvz.push_back(gpiter->vz());
+	      
+	      // vPion decay vertex (same for both daughters unless really screwed up)
+	      genvPiondecayvx.push_back(gpiter->daughter(0)->vx());
+	      genvPiondecayvy.push_back(gpiter->daughter(0)->vy());
+	      genvPiondecayvz.push_back(gpiter->daughter(0)->vz());
+	      
+	      genph1E  .push_back(gpiter->daughter(0)->energy());
+	      genph1pt .push_back(gpiter->daughter(0)->pt());
+	      genph1phi.push_back(gpiter->daughter(0)->phi());
+	      genph1eta.push_back(gpiter->daughter(0)->eta());
 
-		
-    // 		// set neutralino parameters
-    // 		genN1mass = gpiter->mass();
-    // 		genN1E    = gpiter->energy();
-    // 		genN1pt   = gpiter->pt();
-    // 		genN1phi  = gpiter->phi();
-    // 		genN1eta  = gpiter->eta();
-
-    // 		// neutralino production vertex
-    // 		genN1prodvx = gpiter->vx();
-    // 		genN1prodvy = gpiter->vy();
-    // 		genN1prodvz = gpiter->vz();
-		
-    // 		// neutralino decay vertex (same for both daughters unless really screwed up)
-    // 		genN1decayvx = gpiter->daughter(0)->vx();
-    // 		genN1decayvy = gpiter->daughter(0)->vy();
-    // 		genN1decayvz = gpiter->daughter(0)->vz();
-		
-    // 		// set photon daughter stuff
-    // 		int phdaughter = -1; // determine which one is the photon daughter
-    // 		if      (gpiter->daughter(0)->pdgId() == 22) {phdaughter = 0;}
-    // 		else if (gpiter->daughter(1)->pdgId() == 22) {phdaughter = 1;}
-
-    // 		genph1E    = gpiter->daughter(phdaughter)->energy();
-    // 		genph1pt   = gpiter->daughter(phdaughter)->pt();
-    // 		genph1phi  = gpiter->daughter(phdaughter)->phi();
-    // 		genph1eta  = gpiter->daughter(phdaughter)->eta();
-		
-    // 		// check for a reco match!
-    // 		if (photonsH.isValid()) // standard check
-    //             {
-    // 		  int   iph   = 0;
-    // 		  float mindR = 0.3; // at least this much
-    // 		  for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
-    // 	          {
-    // 		    const float tmppt  = phiter->pt();
-    // 		    const float tmpphi = phiter->phi();
-    // 		    const float tmpeta = phiter->eta();
+	      genph2E  .push_back(gpiter->daughter(1)->energy());
+	      genph2pt .push_back(gpiter->daughter(1)->pt());
+	      genph2phi.push_back(gpiter->daughter(1)->phi());
+	      genph2eta.push_back(gpiter->daughter(1)->eta());
+	      
+	      // check for a reco match!
+	      if (photonsH.isValid()) // standard check
+	      {
+		int   tmp1  = -9999, tmp2 = -9999;
+		int   iph   = 0;
+		float mindR = 0.3; // at least this much
+		for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
+	        {
+		  const float tmppt  = phiter->pt();
+		  const float tmpphi = phiter->phi();
+		  const float tmpeta = phiter->eta();
 		  
-    // 		    if (std::abs(tmppt-genph1pt)/genph1pt < 0.5)
-    // 		    {
-    // 		      const float delR = deltaR(genph1phi,genph1eta,tmpphi,tmpeta);
-    // 		      if (delR < mindR) 
-    // 		      {
-    // 			mindR = delR;
-    // 			genph1match = iph; 
-    // 		      } // end check over deltaR
-    // 		    } // end check over pt resolution
-    // 		    iph++;
-    // 		  } // end loop over reco photons
-    // 		} // end check for reco match
-    // 	      } 
-    // 	    }
-    // 	  }
-    // 	}
-    //   }
-    // }
-
-
-
-
-
-
-
+		  if (std::abs(tmppt-genph2pt.back())/genph2pt.back() < 0.5)
+		  {
+		    const float delR = deltaR(genph2phi.back(),genph2eta.back(),tmpphi,tmpeta);
+		    if (delR < mindR) 
+		    {
+		      mindR = delR;
+		      genph2match = iph;
+		    } // end check over deltaR
+		  } // end check over pt resolution
+		  iph++;
+		} // end loop over reco photons
+	      } // end check for reco match
+	    } // end check over both gen photons
+	  } // end check over vPions
+	} // end loop over gen particles
+      } // end check over valid gen particles
+    } // end check over isHVDS
 
     ///////////////////
     //               //
@@ -928,7 +906,7 @@ void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &
   
   for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter) // loop over gen particles
   {
-    if (gpiter->pdgId() != 1000022) continue;
+    if ((isGMSB && gpiter->pdgId() != 1000022) && (isHVDS && gpiter->pdgId() != 4900111)) continue;
 
     std::cout << "particle id: " << gpiter->pdgId() << " (" << gpiter->mass() << ")" << std::endl;
     
