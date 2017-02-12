@@ -18,6 +18,9 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h" 
 
+// Photons
+#include "DataFormats/EgammaCandidates/interface/Photon.h"
+
 // DetIds and Ecal stuff
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 #include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
@@ -36,6 +39,11 @@
 #include "TTree.h"
 #include "TLorentzVector.h"
 #include "TPRegexp.h"
+
+inline bool sortByPhotonPt(const reco::Photon & ph1, const reco::Photon & ph2)
+{
+  return ph1.pt()>ph2.pt();
+}
 
 struct RHInfo
 {
@@ -65,6 +73,10 @@ private:
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
 
+  // photons
+  const edm::InputTag photonsTag;
+  edm::EDGetTokenT<std::vector<reco::Photon> > photonsToken;
+
   // ECAL RecHits
   const edm::InputTag recHitsEBTag;
   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBToken;
@@ -83,6 +95,7 @@ private:
 
   int   seedID;
   bool  isEB;
+  bool  isPhoton;
   float seedE;
   float seedtime;
   bool  seedOOT;

@@ -339,15 +339,18 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
  
     if (isHVDS) 
     {
-      //      PhotonDump::InitializeHVDSBranches();
+      PhotonDump::ClearHVDSBranches();
       if (genparticlesH.isValid()) // make sure gen particles exist --> only do this for GMSB
       {
+	PhotonDump::InitializeHVDSBranches();
     	for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter) // loop over gen particles
         {
     	  if (gpiter->pdgId() == 4900111 && gpiter->numberOfDaughters() == 2)
     	  {
 	    if (gpiter->daughter(0)->pdgId() == 22 && gpiter->daughter(1)->pdgId() == 22)
 	    {
+	      nvPions++;
+
 	      // set neutralino parameters
 	      genvPionmass.push_back(gpiter->mass());
 	      genvPionE   .push_back(gpiter->energy());
@@ -365,39 +368,57 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	      genvPiondecayvy.push_back(gpiter->daughter(0)->vy());
 	      genvPiondecayvz.push_back(gpiter->daughter(0)->vz());
 	      
-	      genph1E  .push_back(gpiter->daughter(0)->energy());
-	      genph1pt .push_back(gpiter->daughter(0)->pt());
-	      genph1phi.push_back(gpiter->daughter(0)->phi());
-	      genph1eta.push_back(gpiter->daughter(0)->eta());
+	      genHVph1E  .push_back(gpiter->daughter(0)->energy());
+	      genHVph1pt .push_back(gpiter->daughter(0)->pt());
+	      genHVph1phi.push_back(gpiter->daughter(0)->phi());
+	      genHVph1eta.push_back(gpiter->daughter(0)->eta());
 
-	      genph2E  .push_back(gpiter->daughter(1)->energy());
-	      genph2pt .push_back(gpiter->daughter(1)->pt());
-	      genph2phi.push_back(gpiter->daughter(1)->phi());
-	      genph2eta.push_back(gpiter->daughter(1)->eta());
+	      genHVph2E  .push_back(gpiter->daughter(1)->energy());
+	      genHVph2pt .push_back(gpiter->daughter(1)->pt());
+	      genHVph2phi.push_back(gpiter->daughter(1)->phi());
+	      genHVph2eta.push_back(gpiter->daughter(1)->eta());
 	      
 	      // check for a reco match!
 	      if (photonsH.isValid()) // standard check
 	      {
-		int   tmp1  = -9999, tmp2 = -9999;
-		int   iph   = 0;
-		float mindR = 0.3; // at least this much
+		int   tmpph1 = -9999, tmpph2 = -9999;
+		int   iph = 0;
+		float mindR1 = 0.3, mindR2 = 0.3; // at least this much
 		for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
 	        {
 		  const float tmppt  = phiter->pt();
 		  const float tmpphi = phiter->phi();
 		  const float tmpeta = phiter->eta();
 		  
-		  if (std::abs(tmppt-genph2pt.back())/genph2pt.back() < 0.5)
+		  // check photon 1
+		  if (std::abs(tmppt-genHVph1pt.back())/genHVph1pt.back() < 0.5)
 		  {
-		    const float delR = deltaR(genph2phi.back(),genph2eta.back(),tmpphi,tmpeta);
-		    if (delR < mindR) 
+		    const float delR = deltaR(genHVph1phi.back(),genHVph1eta.back(),tmpphi,tmpeta);
+		    if (delR < mindR1) 
 		    {
-		      mindR = delR;
-		      genph2match = iph;
+		      mindR1 = delR;
+		      tmpph1 = iph;
 		    } // end check over deltaR
 		  } // end check over pt resolution
+
+		  // check photon 2
+		  if (std::abs(tmppt-genHVph2pt.back())/genHVph2pt.back() < 0.5)
+		  {
+		    const float delR = deltaR(genHVph2phi.back(),genHVph2eta.back(),tmpphi,tmpeta);
+		    if (delR < mindR2) 
+		    {
+		      mindR2 = delR;
+		      tmpph2 = iph;
+		    } // end check over deltaR
+		  } // end check over pt resolution
+		  
+		  // now update iph
 		  iph++;
 		} // end loop over reco photons
+		
+		// now save tmp photon iphs
+		genHVph1match.push_back(tmpph1);
+		genHVph2match.push_back(tmpph2);
 	      } // end check for reco match
 	    } // end check over both gen photons
 	  } // end check over vPions
@@ -1016,6 +1037,43 @@ void PhotonDump::InitializeGMSBBranches()
   gengr2mass = -9999.f; gengr2E = -9999.f; gengr2pt = -9999.f; gengr2phi = -9999.f; gengr2eta = -9999.f;
 }
 
+void PhotonDump::ClearHVDSBranches()
+{
+  nvPions = -9999;
+  
+  genvPionmass.clear();
+  genvPionE   .clear();
+  genvPionpt  .clear();
+  genvPionphi .clear();
+  genvPioneta .clear();
+  
+  genvPionprodvx.clear();
+  genvPionprodvy.clear();
+  genvPionprodvz.clear();
+  
+  genvPiondecayvx.clear();
+  genvPiondecayvy.clear();
+  genvPiondecayvz.clear();
+  
+  genHVph1E  .clear();
+  genHVph1pt .clear();
+  genHVph1phi.clear();
+  genHVph1eta.clear();
+  
+  genHVph2E  .clear();
+  genHVph2pt .clear();
+  genHVph2phi.clear();
+  genHVph2eta.clear();
+  
+  genHVph1match.clear();
+  genHVph2match.clear();
+}
+
+void PhotonDump::InitializeHVDSBranches()
+{
+  nvPions = 0;
+}
+
 void PhotonDump::ClearGenJetBranches()
 {
   ngenjets = -9999;
@@ -1328,6 +1386,31 @@ void PhotonDump::beginJob()
     tree->Branch("genjetpt"             , &genjetpt);
     tree->Branch("genjetphi"            , &genjetphi);
     tree->Branch("genjeteta"            , &genjeteta);
+  }
+
+  // HVDS info
+  if (isHVDS)
+  {
+    tree->Branch("nvPions"              , &nvPions             , "nvPions/I");
+
+    tree->Branch("genvPionmass"         , &genvPionmass);
+    tree->Branch("genvPionE"            , &genvPionE);   
+    tree->Branch("genvPionpt"           , &genvPionpt);
+    tree->Branch("genvPionphi"          , &genvPionphi);
+    tree->Branch("genvPioneta"          , &genvPioneta);
+
+    tree->Branch("genHVph1E"            , &genHVph1E);   
+    tree->Branch("genHVph1pt"           , &genHVph1pt);
+    tree->Branch("genHVph1phi"          , &genHVph1phi);
+    tree->Branch("genHVph1eta"          , &genHVph1eta);
+
+    tree->Branch("genHVph2E"            , &genHVph2E);   
+    tree->Branch("genHVph2pt"           , &genHVph2pt);
+    tree->Branch("genHVph2phi"          , &genHVph2phi);
+    tree->Branch("genHVph2eta"          , &genHVph2eta);
+
+    tree->Branch("genHVph1match"        , &genHVph1match);
+    tree->Branch("genHVph2match"        , &genHVph2match);
   }
 
   // Vertex info

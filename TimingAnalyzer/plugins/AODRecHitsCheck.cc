@@ -1,10 +1,15 @@
 #include "AODRecHitsCheck.h"
 
 AODRecHitsCheck::AODRecHitsCheck(const edm::ParameterSet& iConfig): 
+  //photons
+  photonsTag(iConfig.getParameter<edm::InputTag>("photons")),
+
   //recHits
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
   recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE"))
 {
+  photonsToken   = consumes<std::vector<reco::Photon> > (photonsTag);
+
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
   recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
 
@@ -16,6 +21,12 @@ AODRecHitsCheck::~AODRecHitsCheck() {}
 
 void AODRecHitsCheck::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 {
+  // Photons
+  edm::Handle<std::vector<reco::Photon> > photonsH;
+  iEvent.getByToken(photonsToken, photonsH);
+  std::vector<reco::Photon> photons = *photonsH;
+  if (photonsH.isValid()) std::sort(photons.begin(),photons.end(),sortByPhotonPt);
+
   // RecHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
   iEvent.getByToken(recHitsEBToken, recHitsEBH);
@@ -36,6 +47,13 @@ void AODRecHitsCheck::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     const DetId seedId(evseedmap[event].rawid_);
     isEB = (seedId.subdetId() == EcalBarrel);
     const EcalRecHitCollection * recHits = (isEB?recHitsEBH:recHitsEEH).product();
+
+    // get the (potential) photons
+    for (std::vector<reco::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter)
+    {
+      const DetId phSeedId = phiter->superCluster()->seed()->seed();
+      if (phSeedId.rawId() == seedId.rawId()) isPhoton = true;
+    }
 
     // displaced photon seed rechit info
     seedID   = evseedmap[event].rawid_;
@@ -69,6 +87,7 @@ void AODRecHitsCheck::InitializeBranches()
   isEvent  = false;
   seedID   = -9999;
   isEB     = false;
+  isPhoton = false;
   seedE    = -9999.f;
   seedtime = -9999.f;
   seedOOT  = false; 
@@ -127,6 +146,7 @@ void AODRecHitsCheck::beginJob()
 
   tree->Branch("seedID"            , &seedID             , "seedID/I");
   tree->Branch("isEB"              , &isEB               , "isEB/O");
+  tree->Branch("isPhoton"          , &isPhoton           , "isPhoton/O");
   tree->Branch("seedE"             , &seedE              , "seedE/F");
   tree->Branch("seedtime"          , &seedtime           , "seedtime/F");
   tree->Branch("seedOOT"           , &seedOOT            , "seedOOT/O");

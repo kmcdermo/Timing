@@ -98,6 +98,8 @@ process.TFileService = cms.Service("TFileService",
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("AODRecHitsCheck",
+   ##photons
+   photons   = cms.InputTag("photons"),
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEcalRecHitsEB"),
    recHitsEE = cms.InputTag("reducedEcalRecHitsEE"),

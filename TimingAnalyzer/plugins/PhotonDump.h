@@ -106,7 +106,11 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   void InitializeGenPUBranches();
 
   void DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &);
+
   void InitializeGMSBBranches();
+  
+  void ClearHVDSBranches();
+  void InitializeHVDSBranches();
 
   void InitializePVBranches();
 
@@ -187,7 +191,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   float genwgt;
   int genpuobs, genputrue;
 
-  // Gen particle info
+  // Gen particle info: GMSB
   int nNeutralino, nNeutoPhGr;
 
   float genN1mass, genN1E, genN1pt, genN1phi, genN1eta;
@@ -203,6 +207,18 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   float genph2E, genph2pt, genph2phi, genph2eta;
   int genph2match;
   float gengr2mass, gengr2E, gengr2pt, gengr2phi, gengr2eta;
+
+  // Gen particle info: HVDS
+
+  int nvPions;
+  
+  std::vector<float> genvPionmass, genvPionE, genvPionpt, genvPionphi, genvPioneta;
+  std::vector<float> genvPionprodvx, genvPionprodvy, genvPionprodvz;
+  std::vector<float> genvPiondecayvx, genvPiondecayvy, genvPiondecayvz;
+  
+  std::vector<float> genHVph1E, genHVph1pt, genHVph1phi, genHVph1eta;
+  std::vector<float> genHVph2E, genHVph2pt, genHVph2phi, genHVph2eta;
+  std::vector<int> genHVph1match, genHVph2match;
 
   // gen jets
   int ngenjets;
