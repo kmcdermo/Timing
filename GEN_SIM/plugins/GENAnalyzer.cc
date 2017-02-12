@@ -52,11 +52,28 @@ void GENAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   {
     for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter) // loop over gen particles
     {
-      std::cout << gpiter->pdgId() << " " << gpiter->status() << std::endl;
+      if (gpiter->pdgId() == 4900111) 
+      {
+	std::cout << gpiter->pdgId() << " " << gpiter->status() << std::endl;
+	if (gpiter->numberOfMothers() != 0) std::cout << " mothers: ";
+	for (auto mgpiter = gpiter->motherRefVector().begin(); mgpiter != gpiter->motherRefVector().end(); ++mgpiter)
+	{
+	  std::cout << (*mgpiter)->pdgId() << " ";
+	}
+	if (gpiter->numberOfMothers() != 0) std::cout << std::endl;
+	
+	// dump daughters second
+	if (gpiter->numberOfDaughters() != 0) std::cout << " daughters: ";
+	for (auto dgpiter = gpiter->daughterRefVector().begin(); dgpiter != gpiter->daughterRefVector().end(); ++dgpiter)
+	{
+	  std::cout << (*dgpiter)->pdgId() << " ";
+	}
+	if (gpiter->numberOfDaughters() != 0) std::cout << std::endl;
+      }
     } // end loop over gen particles
     std::cout << "-------------------" << std::endl;
   } // end check for gen particles
-
+  std::cout << "===================" << std::endl << std::endl;
   ///////////////////
   //               //
   // Gen Jets info //

@@ -45,7 +45,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-        'file:/afs/cern.ch/user/k/kmcdermo/private/dispho/CMSSW_8_0_21/src/Timing/GEN_SIM/HVphoton/HVDS_13TeV_FULLSIM.root'
+        'file:/afs/cern.ch/user/k/kmcdermo/private/dispho/CMSSW_8_0_21/src/Timing/GEN_SIM/HVDS/HVDS_13TeV_FULLSIM.root'
 		))
 
 # Set the global tag depending on the sample type
