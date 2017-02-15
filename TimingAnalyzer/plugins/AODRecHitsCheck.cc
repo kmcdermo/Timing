@@ -2,13 +2,15 @@
 
 AODRecHitsCheck::AODRecHitsCheck(const edm::ParameterSet& iConfig): 
   //photons
-  photonsTag(iConfig.getParameter<edm::InputTag>("photons")),
+  photonsTag   (iConfig.getParameter<edm::InputTag>("photons")),
+  gedPhotonsTag(iConfig.getParameter<edm::InputTag>("gedPhotons")),
 
   //recHits
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
   recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE"))
 {
-  photonsToken   = consumes<std::vector<reco::Photon> > (photonsTag);
+  photonsToken    = consumes<std::vector<reco::Photon> > (photonsTag);
+  gedPhotonsToken = consumes<std::vector<reco::Photon> > (gedPhotonsTag);
 
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
   recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
@@ -24,8 +26,9 @@ void AODRecHitsCheck::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   // Photons
   edm::Handle<std::vector<reco::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
-  std::vector<reco::Photon> photons = *photonsH;
-  if (photonsH.isValid()) std::sort(photons.begin(),photons.end(),sortByPhotonPt);
+
+  edm::Handle<std::vector<reco::Photon> > gedPhotonsH;
+  iEvent.getByToken(gedPhotonsToken, gedPhotonsH);
 
   // RecHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
@@ -49,10 +52,22 @@ void AODRecHitsCheck::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     const EcalRecHitCollection * recHits = (isEB?recHitsEBH:recHitsEEH).product();
 
     // get the (potential) photons
-    for (std::vector<reco::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter)
+    if (photonsH.isValid())
     {
-      const DetId phSeedId = phiter->superCluster()->seed()->seed();
-      if (phSeedId.rawId() == seedId.rawId()) isPhoton = true;
+      for (std::vector<reco::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter)
+      {
+       const DetId phSeedId = phiter->superCluster()->seed()->seed();
+       if (phSeedId.rawId() == seedId.rawId()) {isPhoton = true; break;}
+      } 
+    }
+
+    if (gedPhotonsH.isValid())
+    {
+      for (std::vector<reco::Photon>::const_iterator phiter = gedPhotonsH->begin(); phiter != gedPhotonsH->end(); ++phiter)
+      {
+       const DetId phSeedId = phiter->superCluster()->seed()->seed();
+       if (phSeedId.rawId() == seedId.rawId()) {isGedPhoton = true; break;}
+      } 
     }
 
     // displaced photon seed rechit info
@@ -88,6 +103,7 @@ void AODRecHitsCheck::InitializeBranches()
   seedID   = -9999;
   isEB     = false;
   isPhoton = false;
+  isGedPhoton = false;
   seedE    = -9999.f;
   seedtime = -9999.f;
   seedOOT  = false; 
@@ -147,6 +163,7 @@ void AODRecHitsCheck::beginJob()
   tree->Branch("seedID"            , &seedID             , "seedID/I");
   tree->Branch("isEB"              , &isEB               , "isEB/O");
   tree->Branch("isPhoton"          , &isPhoton           , "isPhoton/O");
+  tree->Branch("isGedPhoton"       , &isGedPhoton        , "isGedPhoton/O");
   tree->Branch("seedE"             , &seedE              , "seedE/F");
   tree->Branch("seedtime"          , &seedtime           , "seedtime/F");
   tree->Branch("seedOOT"           , &seedOOT            , "seedOOT/O");

@@ -40,11 +40,6 @@
 #include "TLorentzVector.h"
 #include "TPRegexp.h"
 
-inline bool sortByPhotonPt(const reco::Photon & ph1, const reco::Photon & ph2)
-{
-  return ph1.pt()>ph2.pt();
-}
-
 struct RHInfo
 {
   RHInfo(){}
@@ -76,6 +71,8 @@ private:
   // photons
   const edm::InputTag photonsTag;
   edm::EDGetTokenT<std::vector<reco::Photon> > photonsToken;
+  const edm::InputTag gedPhotonsTag;
+  edm::EDGetTokenT<std::vector<reco::Photon> > gedPhotonsToken;
 
   // ECAL RecHits
   const edm::InputTag recHitsEBTag;
@@ -96,6 +93,7 @@ private:
   int   seedID;
   bool  isEB;
   bool  isPhoton;
+  bool  isGedPhoton;
   float seedE;
   float seedtime;
   bool  seedOOT;
@@ -108,4 +106,3 @@ private:
   std::vector<bool>  rhOOTs;
   std::vector<bool>  isRHs;
 };
-
