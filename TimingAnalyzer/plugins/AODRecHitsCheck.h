@@ -18,8 +18,10 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h" 
 
-// Photons
+// Photons + Clusters
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
+#include "DataFormats/EgammaReco/interface/SuperCluster.h"
+#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
 
 // DetIds and Ecal stuff
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
@@ -94,6 +96,7 @@ private:
   bool  isEB;
   bool  isPhoton;
   bool  isGedPhoton;
+  bool  isCluster;
   float seedE;
   float seedtime;
   bool  seedOOT;

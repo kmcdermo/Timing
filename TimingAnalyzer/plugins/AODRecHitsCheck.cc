@@ -5,12 +5,19 @@ AODRecHitsCheck::AODRecHitsCheck(const edm::ParameterSet& iConfig):
   photonsTag   (iConfig.getParameter<edm::InputTag>("photons")),
   gedPhotonsTag(iConfig.getParameter<edm::InputTag>("gedPhotons")),
 
+  //clusters?
+  clustersEBTag(iConfig.getParameter<edm::InputTag>("clustersEB")),
+  clustersEETag(iConfig.getParameter<edm::InputTag>("clustersEE")),
+
   //recHits
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
   recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE"))
 {
   photonsToken    = consumes<std::vector<reco::Photon> > (photonsTag);
   gedPhotonsToken = consumes<std::vector<reco::Photon> > (gedPhotonsTag);
+
+  clustersEBToken = consumes<std::vector<reco::SuperCluster> > (clustersEBTag);
+  clustersEEToken = consumes<std::vector<reco::CaloCluster > > (clustersEETag);
 
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
   recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
@@ -29,6 +36,13 @@ void AODRecHitsCheck::analyze(const edm::Event& iEvent, const edm::EventSetup& i
 
   edm::Handle<std::vector<reco::Photon> > gedPhotonsH;
   iEvent.getByToken(gedPhotonsToken, gedPhotonsH);
+
+  // Clusters
+  edm::Handle<std::vector<reco::SuperCluster> > clustersEBH;
+  iEvent.getByToken(clustersEBToken, clustersEBH);
+
+  edm::Handle<std::vector<reco::CaloCluster > > clustersEEH;
+  iEvent.getByToken(clustersEEToken, clustersEEH);
 
   // RecHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
@@ -70,6 +84,30 @@ void AODRecHitsCheck::analyze(const edm::Event& iEvent, const edm::EventSetup& i
       } 
     }
 
+    // get the (potential) clusters???
+    if (isEB)
+    {
+      if (clustersEBH.isValid())
+      {
+	for (std::vector<reco::SuperCluster>::const_iterator sciter = clustersEBH->begin(); sciter != clustersEBH->end(); ++sciter)
+	{
+	  const DetId scSeedId = sciter->seed()->seed();
+	  if (scSeedId.rawId() == seedId.rawId()) {isCluster = true; break;}
+	}
+      }
+    }
+    else
+    {
+      if (clustersEEH.isValid())
+      {
+	for (std::vector<reco::CaloCluster>::const_iterator cciter = clustersEEH->begin(); cciter != clustersEEH->end(); ++sciter)
+	{
+	  const DetId ccSeedId = cciter->seed(); // Photon->SuperCluster->CaloCluster->DetId
+	  if (ccSeedId.rawId() == seedId.rawId()) {isCluster = true; break;}
+	}
+      }
+    }
+
     // displaced photon seed rechit info
     seedID   = evseedmap[event].rawid_;
     seedE    = evseedmap[event].energy_;
@@ -104,6 +142,7 @@ void AODRecHitsCheck::InitializeBranches()
   isEB     = false;
   isPhoton = false;
   isGedPhoton = false;
+  isCluster =  false;
   seedE    = -9999.f;
   seedtime = -9999.f;
   seedOOT  = false; 
@@ -164,6 +203,7 @@ void AODRecHitsCheck::beginJob()
   tree->Branch("isEB"              , &isEB               , "isEB/O");
   tree->Branch("isPhoton"          , &isPhoton           , "isPhoton/O");
   tree->Branch("isGedPhoton"       , &isGedPhoton        , "isGedPhoton/O");
+  tree->Branch("isCluster"         , &isCluster          , "isCluster/O");
   tree->Branch("seedE"             , &seedE              , "seedE/F");
   tree->Branch("seedtime"          , &seedtime           , "seedtime/F");
   tree->Branch("seedOOT"           , &seedOOT            , "seedOOT/O");
