@@ -594,7 +594,7 @@ void PlotPhotons::FillRecoPhotons()
     fPlots["phsmin"]->Fill((*phsmin)[iph]);
     fPlots["phsmin_ov_phsmaj"]->Fill((*phsmin)[iph]/(*phsmaj)[iph]);
     fPlots["phscE"]->Fill((*phscE)[iph]);
-    fPlots["phisMatched"]->Fill((*phisMatched)[iph]);
+    if (fIsMC) fPlots["phisMatched"]->Fill((*phisMatched)[iph]);
 
     if (passed == 0)
     {
