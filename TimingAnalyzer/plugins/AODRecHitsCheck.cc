@@ -100,7 +100,7 @@ void AODRecHitsCheck::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     {
       if (clustersEEH.isValid())
       {
-	for (std::vector<reco::CaloCluster>::const_iterator cciter = clustersEEH->begin(); cciter != clustersEEH->end(); ++sciter)
+	for (std::vector<reco::CaloCluster>::const_iterator cciter = clustersEEH->begin(); cciter != clustersEEH->end(); ++cciter)
 	{
 	  const DetId ccSeedId = cciter->seed(); // Photon->SuperCluster->CaloCluster->DetId
 	  if (ccSeedId.rawId() == seedId.rawId()) {isCluster = true; break;}

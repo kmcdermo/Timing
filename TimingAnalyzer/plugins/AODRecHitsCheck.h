@@ -76,6 +76,12 @@ private:
   const edm::InputTag gedPhotonsTag;
   edm::EDGetTokenT<std::vector<reco::Photon> > gedPhotonsToken;
 
+  // clusters
+  const edm::InputTag clustersEBTag;
+  edm::EDGetTokenT<std::vector<reco::SuperCluster> > clustersEBToken;
+  const edm::InputTag clustersEETag;
+  edm::EDGetTokenT<std::vector<reco::CaloCluster > > clustersEEToken;
+
   // ECAL RecHits
   const edm::InputTag recHitsEBTag;
   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBToken;
