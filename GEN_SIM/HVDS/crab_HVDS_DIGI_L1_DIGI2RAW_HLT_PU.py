@@ -7,7 +7,7 @@ config.General.workArea    = 'crab_projects'
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName   = 'step1_DIGI_L1_DIGI2RAW_HLT_PU.py'
 
-config.Data.inputDataset = '/HVDS_13TeV_GEN_SIM/kmcdermo-HVDS_13TeV_GEN_SIM-84087116fcd473a17911a03fe4d56595/USER'
+config.Data.inputDataset = '/HVDS_13TeV_GEN_SIM/kmcdermo-HVDS_13TeV_GEN_SIM-6da5a015ddbab982ec1ff08a905ba73c/USER'
 config.Data.inputDBS     = 'phys03'
 config.Data.splitting    = 'FileBased'
 config.Data.unitsPerJob  = 1
