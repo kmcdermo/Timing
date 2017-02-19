@@ -182,158 +182,151 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	
 	nNeutralino = 0;
 	nNeutoPhGr  = 0;
-	bool firstMother  = false; // bool for first neutralino found
-	bool secondMother = false; // bool for second neutralino found
+	std::vector<reco::GenParticle> neutralinos;
 	for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter) // loop over gen particles
         {
-	  if (firstMother && secondMother) break; // have two matches!
+	  if (nNeutoPhGr == 2) break;
 
 	  if (gpiter->pdgId() == 1000022 && gpiter->numberOfDaughters() == 2)
 	  {
 	    nNeutralino++;
 	    
 	    if ((gpiter->daughter(0)->pdgId() == 22 && gpiter->daughter(1)->pdgId() == 1000039) ||
-	      (gpiter->daughter(1)->pdgId() == 22 && gpiter->daughter(0)->pdgId() == 1000039)) 
+		(gpiter->daughter(1)->pdgId() == 22 && gpiter->daughter(0)->pdgId() == 1000039)) 
 	    {
-	      if (!firstMother && !secondMother)
-	      {
-		nNeutoPhGr++;
-		
-		// set neutralino parameters
-		genN1mass = gpiter->mass();
-		genN1E    = gpiter->energy();
-		genN1pt   = gpiter->pt();
-		genN1phi  = gpiter->phi();
-		genN1eta  = gpiter->eta();
-
-		// neutralino production vertex
-		genN1prodvx = gpiter->vx();
-		genN1prodvy = gpiter->vy();
-		genN1prodvz = gpiter->vz();
-		
-		// neutralino decay vertex (same for both daughters unless really screwed up)
-		genN1decayvx = gpiter->daughter(0)->vx();
-		genN1decayvy = gpiter->daughter(0)->vy();
-		genN1decayvz = gpiter->daughter(0)->vz();
-		
-		// set photon daughter stuff
-		int phdaughter = -1; // determine which one is the photon daughter
-		if      (gpiter->daughter(0)->pdgId() == 22) {phdaughter = 0;}
-		else if (gpiter->daughter(1)->pdgId() == 22) {phdaughter = 1;}
-
-		genph1E    = gpiter->daughter(phdaughter)->energy();
-		genph1pt   = gpiter->daughter(phdaughter)->pt();
-		genph1phi  = gpiter->daughter(phdaughter)->phi();
-		genph1eta  = gpiter->daughter(phdaughter)->eta();
-		
-		// check for a reco match!
-		if (photonsH.isValid()) // standard check
-                {
-		  int   iph   = 0;
-		  float mindR = 0.3; // at least this much
-		  for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
-	          {
-		    const float tmppt  = phiter->pt();
-		    const float tmpphi = phiter->phi();
-		    const float tmpeta = phiter->eta();
-		  
-		    if (std::abs(tmppt-genph1pt)/genph1pt < 0.5)
-		    {
-		      const float delR = deltaR(genph1phi,genph1eta,tmpphi,tmpeta);
-		      if (delR < mindR) 
-		      {
-			mindR = delR;
-			genph1match = iph; 
-		      } // end check over deltaR
-		    } // end check over pt resolution
-		    iph++;
-		  } // end loop over reco photons
-		} // end check for reco match
-		
-		int grdaughter = -1; // determine which one is the gravitino
-		if      (gpiter->daughter(0)->pdgId() == 1000039) {grdaughter = 0;}
-		else if (gpiter->daughter(1)->pdgId() == 1000039) {grdaughter = 1;}
-	      
-		gengr1mass = gpiter->daughter(grdaughter)->mass();
-		gengr1E    = gpiter->daughter(grdaughter)->energy();
-		gengr1pt   = gpiter->daughter(grdaughter)->pt();
-		gengr1phi  = gpiter->daughter(grdaughter)->phi();
-		gengr1eta  = gpiter->daughter(grdaughter)->eta();
-	      
-		// set this to ensure not to overwrite first mother info
-		firstMother = true;
-	      } // end block over first matched neutralino -> photon + gravitino
-	      else if (firstMother && !secondMother)
-	      {
-		nNeutoPhGr++;
-
-		// set neutralino parameters
-		genN2mass = gpiter->mass();
-		genN2E    = gpiter->energy();
-		genN2pt   = gpiter->pt();
-		genN2phi  = gpiter->phi();
-		genN2eta  = gpiter->eta();
-		
-		// neutralino production vertex
-		genN2prodvx = gpiter->vx();
-		genN2prodvy = gpiter->vy();
-		genN2prodvz = gpiter->vz();
-		
-		// neutralino decay vertex (same for both daughters unless really screwed up)
-		genN2decayvx = gpiter->daughter(0)->vx();
-		genN2decayvy = gpiter->daughter(0)->vy();
-		genN2decayvz = gpiter->daughter(0)->vz();
-
-		// set photon daughter stuff
-		int phdaughter = -1; // determine which one is the photon daughter
-		if      (gpiter->daughter(0)->pdgId() == 22) {phdaughter = 0;}
-		else if (gpiter->daughter(1)->pdgId() == 22) {phdaughter = 1;}
-	      
-		genph2E    = gpiter->daughter(phdaughter)->energy();
-		genph2pt   = gpiter->daughter(phdaughter)->pt();
-		genph2phi  = gpiter->daughter(phdaughter)->phi();
-		genph2eta  = gpiter->daughter(phdaughter)->eta();
-	      
-		// check for a reco match!
-		if (photonsH.isValid()) // standard check
-	        {
-		  int   iph   = 0;
-		  float mindR = 0.3; // at least this much
-		  for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
-		  {
-		    const float tmppt  = phiter->pt();
-		    const float tmpphi = phiter->phi();
-		    const float tmpeta = phiter->eta();
-		  
-		    if (std::abs(tmppt-genph2pt)/genph2pt < 0.5)
-		    {
-		      const float delR = deltaR(genph2phi,genph2eta,tmpphi,tmpeta);
-		      if (delR < mindR) 
-		      {
-			mindR = delR;
-			genph2match = iph;
-		      } // end check over deltaR
-		    } // end check over pt resolution
-		    iph++;
-		  } // end loop over reco photons
-		} // end check for reco match
-		
-		int grdaughter = -1; // determine which one is the gravitino
-		if      (gpiter->daughter(0)->pdgId() == 1000039) {grdaughter = 0;}
-		else if (gpiter->daughter(1)->pdgId() == 1000039) {grdaughter = 1;}
-	      
-		gengr2mass = gpiter->daughter(grdaughter)->mass();
-		gengr2E    = gpiter->daughter(grdaughter)->energy();
-		gengr2pt   = gpiter->daughter(grdaughter)->pt();
-		gengr2phi  = gpiter->daughter(grdaughter)->phi();
-		gengr2eta  = gpiter->daughter(grdaughter)->eta();
-		
-		// set this to ensure not to overwrite first mother info
-		secondMother = true;
-	      } // end block over second matched neutralino -> photon + gravitino
+	      nNeutoPhGr++;
+	      neutralinos.push_back((*gpiter));
 	    } // end conditional over matching daughter ids
 	  } // end conditional over neutralino id
 	} // end loop over gen particles
+
+	std::sort(neutralinos.begin(),neutralinos.end(),sortGenParticleByPt);
+
+	nNeutoPhGr = 0; // reuse
+	for (std::vector<reco::GenParticle>::const_iterator gpiter = neutralinos.begin(); gpiter != neutralinos.end(); ++gpiter) // loop over neutralinos
+	{
+	  nNeutoPhGr++;
+	  if (nNeutoPhGr == 1)
+	  { 
+	    // set neutralino parameters
+	    genN1mass = gpiter->mass();
+	    genN1E    = gpiter->energy();
+	    genN1pt   = gpiter->pt();
+	    genN1phi  = gpiter->phi();
+	    genN1eta  = gpiter->eta();
+	    
+	    // neutralino production vertex
+	    genN1prodvx = gpiter->vx();
+	    genN1prodvy = gpiter->vy();
+	    genN1prodvz = gpiter->vz();
+	    
+	    // neutralino decay vertex (same for both daughters unless really screwed up)
+	    genN1decayvx = gpiter->daughter(0)->vx();
+	    genN1decayvy = gpiter->daughter(0)->vy();
+	    genN1decayvz = gpiter->daughter(0)->vz();
+	    
+	    // set photon daughter stuff
+	    int phdaughter = (gpiter->daughter(0)->pdgId() == 22)?0:1;
+	    
+	    genph1E    = gpiter->daughter(phdaughter)->energy();
+	    genph1pt   = gpiter->daughter(phdaughter)->pt();
+	    genph1phi  = gpiter->daughter(phdaughter)->phi();
+	    genph1eta  = gpiter->daughter(phdaughter)->eta();
+	    
+	    // check for a reco match!
+	    if (photonsH.isValid()) // standard check
+	    {
+	      int   iph   = 0;
+	      float mindR = 0.3; // at least this much
+	      for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
+	      {
+		const float tmppt  = phiter->pt();
+		const float tmpphi = phiter->phi();
+		const float tmpeta = phiter->eta();
+		
+		if (std::abs(tmppt-genph1pt)/genph1pt < 0.5)
+		{
+		  const float delR = deltaR(genph1phi,genph1eta,tmpphi,tmpeta);
+		  if (delR < mindR) 
+		  {
+		    mindR = delR;
+		    genph1match = iph; 
+		  } // end check over deltaR
+		} // end check over pt resolution
+		iph++;
+	      } // end loop over reco photons
+	    } // end check for reco match
+
+	    // set gravitino daughter stuff
+	    int grdaughter = (gpiter->daughter(0)->pdgId() == 1000039)?0:1;
+
+	    gengr1mass = gpiter->daughter(grdaughter)->mass();
+	    gengr1E    = gpiter->daughter(grdaughter)->energy();
+	    gengr1pt   = gpiter->daughter(grdaughter)->pt();
+	    gengr1phi  = gpiter->daughter(grdaughter)->phi();
+	    gengr1eta  = gpiter->daughter(grdaughter)->eta();
+	  } // end block over first matched neutralino -> photon + gravitino
+       	  else if (nNeutoPhGr == 2)
+	  {
+	    // set neutralino parameters
+	    genN2mass = gpiter->mass();
+	    genN2E    = gpiter->energy();
+	    genN2pt   = gpiter->pt();
+	    genN2phi  = gpiter->phi();
+	    genN2eta  = gpiter->eta();
+	    
+	    // neutralino production vertex
+	    genN2prodvx = gpiter->vx();
+	    genN2prodvy = gpiter->vy();
+	    genN2prodvz = gpiter->vz();
+	    
+	    // neutralino decay vertex (same for both daughters unless really screwed up)
+	    genN2decayvx = gpiter->daughter(0)->vx();
+	    genN2decayvy = gpiter->daughter(0)->vy();
+	    genN2decayvz = gpiter->daughter(0)->vz();
+
+	    // set photon daughter stuff
+	    int phdaughter = (gpiter->daughter(0)->pdgId() == 22)?0:1;
+		
+	    genph2E    = gpiter->daughter(phdaughter)->energy();
+	    genph2pt   = gpiter->daughter(phdaughter)->pt();
+	    genph2phi  = gpiter->daughter(phdaughter)->phi();
+	    genph2eta  = gpiter->daughter(phdaughter)->eta();
+	      
+	    // check for a reco match!
+	    if (photonsH.isValid()) // standard check
+	    {
+	      int   iph   = 0;
+	      float mindR = 0.3; // at least this much
+	      for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
+	      {
+		const float tmppt  = phiter->pt();
+		const float tmpphi = phiter->phi();
+		const float tmpeta = phiter->eta();
+		
+		if (std::abs(tmppt-genph2pt)/genph2pt < 0.5)
+		{
+		  const float delR = deltaR(genph2phi,genph2eta,tmpphi,tmpeta);
+		  if (delR < mindR) 
+		  {
+		    mindR = delR;
+		    genph2match = iph;
+		  } // end check over deltaR
+		} // end check over pt resolution
+		iph++;
+	      } // end loop over reco photons
+	    } // end check for reco match
+		
+	    // set gravitino daughter stuff
+	    int grdaughter = (gpiter->daughter(0)->pdgId() == 1000039)?0:1;
+
+	    gengr2mass = gpiter->daughter(grdaughter)->mass();
+	    gengr2E    = gpiter->daughter(grdaughter)->energy();
+	    gengr2pt   = gpiter->daughter(grdaughter)->pt();
+	    gengr2phi  = gpiter->daughter(grdaughter)->phi();
+	    gengr2eta  = gpiter->daughter(grdaughter)->eta();
+	  } // end block over second matched neutralino -> photon + gravitino
+	} // end loop over good neutralinos
       } // end check for gen particles
     } // end check over isGMSB
  
@@ -342,7 +335,10 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       PhotonDump::ClearHVDSBranches();
       if (genparticlesH.isValid()) // make sure gen particles exist --> only do this for GMSB
       {
+	if (dumpIds) PhotonDump::DumpGenIds(genparticlesH); 
+
 	PhotonDump::InitializeHVDSBranches();
+	std::vector<reco::GenParticle> vPions;
     	for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter) // loop over gen particles
         {
     	  if (gpiter->pdgId() == 4900111 && gpiter->numberOfDaughters() == 2)
@@ -350,82 +346,91 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    if (gpiter->daughter(0)->pdgId() == 22 && gpiter->daughter(1)->pdgId() == 22)
 	    {
 	      nvPions++;
-
-	      // set neutralino parameters
-	      genvPionmass.push_back(gpiter->mass());
-	      genvPionE   .push_back(gpiter->energy());
-	      genvPionpt  .push_back(gpiter->pt());
-	      genvPionphi .push_back(gpiter->phi());
-	      genvPioneta .push_back(gpiter->eta());
-	      
-	      // vPion production vertex
-	      genvPionprodvx.push_back(gpiter->vx());
-	      genvPionprodvy.push_back(gpiter->vy());
-	      genvPionprodvz.push_back(gpiter->vz());
-	      
-	      // vPion decay vertex (same for both daughters unless really screwed up)
-	      genvPiondecayvx.push_back(gpiter->daughter(0)->vx());
-	      genvPiondecayvy.push_back(gpiter->daughter(0)->vy());
-	      genvPiondecayvz.push_back(gpiter->daughter(0)->vz());
-	      
-	      genHVph1E  .push_back(gpiter->daughter(0)->energy());
-	      genHVph1pt .push_back(gpiter->daughter(0)->pt());
-	      genHVph1phi.push_back(gpiter->daughter(0)->phi());
-	      genHVph1eta.push_back(gpiter->daughter(0)->eta());
-
-	      genHVph2E  .push_back(gpiter->daughter(1)->energy());
-	      genHVph2pt .push_back(gpiter->daughter(1)->pt());
-	      genHVph2phi.push_back(gpiter->daughter(1)->phi());
-	      genHVph2eta.push_back(gpiter->daughter(1)->eta());
-	      
-	      // check for a reco match!
-	      if (photonsH.isValid()) // standard check
-	      {
-		int   tmpph1 = -9999, tmpph2 = -9999;
-		int   iph = 0;
-		float mindR1 = 0.3, mindR2 = 0.3; // at least this much
-		for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
-	        {
-		  const float tmppt  = phiter->pt();
-		  const float tmpphi = phiter->phi();
-		  const float tmpeta = phiter->eta();
-		  
-		  // check photon 1
-		  if (std::abs(tmppt-genHVph1pt.back())/genHVph1pt.back() < 0.5)
-		  {
-		    const float delR = deltaR(genHVph1phi.back(),genHVph1eta.back(),tmpphi,tmpeta);
-		    if (delR < mindR1) 
-		    {
-		      mindR1 = delR;
-		      tmpph1 = iph;
-		    } // end check over deltaR
-		  } // end check over pt resolution
-
-		  // check photon 2
-		  if (std::abs(tmppt-genHVph2pt.back())/genHVph2pt.back() < 0.5)
-		  {
-		    const float delR = deltaR(genHVph2phi.back(),genHVph2eta.back(),tmpphi,tmpeta);
-		    if (delR < mindR2) 
-		    {
-		      mindR2 = delR;
-		      tmpph2 = iph;
-		    } // end check over deltaR
-		  } // end check over pt resolution
-		  
-		  // now update iph
-		  iph++;
-		} // end loop over reco photons
-		
-		// now save tmp photon iphs
-		genHVph1match.push_back(tmpph1);
-		genHVph2match.push_back(tmpph2);
-	      } // end check for reco match
-	    } // end check over both gen photons
+	      vPions.push_back((*gpiter));
+	    } // end check over both gen photons	
 	  } // end check over vPions
 	} // end loop over gen particles
+
+	std::sort(vPions.begin(),vPions.end(),sortByGenParticlePt);
+
+	for (std::vector<reco::GenParticle>::const_iterator gpiter = vPions.begin(); gpiter != vPions.end(); ++vPions)
+	{
+	  // set neutralino parameters
+	  genvPionmass.push_back(gpiter->mass());
+	  genvPionE   .push_back(gpiter->energy());
+	  genvPionpt  .push_back(gpiter->pt());
+	  genvPionphi .push_back(gpiter->phi());
+	  genvPioneta .push_back(gpiter->eta());
+	  
+	  // vPion production vertex
+	  genvPionprodvx.push_back(gpiter->vx());
+	  genvPionprodvy.push_back(gpiter->vy());
+	  genvPionprodvz.push_back(gpiter->vz());
+	  
+	  // vPion decay vertex (same for both daughters unless really screwed up)
+	  genvPiondecayvx.push_back(gpiter->daughter(0)->vx());
+	  genvPiondecayvy.push_back(gpiter->daughter(0)->vy());
+	  genvPiondecayvz.push_back(gpiter->daughter(0)->vz());
+	  
+	  int leading    = (gpiter->daughter(0)->pt()>gpiter->daugter(1)->pt())?0:1;
+	  int subleading = (gpiter->daughter(0)->pt()>gpiter->daugter(1)->pt())?1:0;
+	  
+	  genHVph1E  .push_back(gpiter->daughter(leading)->energy());
+	  genHVph1pt .push_back(gpiter->daughter(leading)->pt());
+	  genHVph1phi.push_back(gpiter->daughter(leading)->phi());
+	  genHVph1eta.push_back(gpiter->daughter(leading)->eta());
+	  
+	  genHVph2E  .push_back(gpiter->daughter(subleading)->energy());
+	  genHVph2pt .push_back(gpiter->daughter(subleading)->pt());
+	  genHVph2phi.push_back(gpiter->daughter(subleading)->phi());
+	  genHVph2eta.push_back(gpiter->daughter(subleading)->eta());
+	  
+	  // check for a reco match!
+	  if (photonsH.isValid()) // standard check
+	  {
+	    int   tmpph1 = -9999, tmpph2 = -9999;
+	    int   iph = 0;
+	    float mindR1 = 0.3, mindR2 = 0.3; // at least this much
+	    for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
+	    {
+	      const float tmppt  = phiter->pt();
+	      const float tmpphi = phiter->phi();
+	      const float tmpeta = phiter->eta();
+		  
+	      // check photon 1
+	      if (std::abs(tmppt-genHVph1pt.back())/genHVph1pt.back() < 0.5)
+	      {
+		const float delR = deltaR(genHVph1phi.back(),genHVph1eta.back(),tmpphi,tmpeta);
+		if (delR < mindR1) 
+		{
+		  mindR1 = delR;
+		  tmpph1 = iph;
+		} // end check over deltaR
+	      } // end check over pt resolution
+	      
+	      // check photon 2
+	      if (std::abs(tmppt-genHVph2pt.back())/genHVph2pt.back() < 0.5)
+	      {
+		const float delR = deltaR(genHVph2phi.back(),genHVph2eta.back(),tmpphi,tmpeta);
+		if (delR < mindR2) 
+		{
+		  mindR2 = delR;
+		  tmpph2 = iph;
+		} // end check over deltaR
+	      } // end check over pt resolution
+	      
+	      // now update iph
+	      iph++;
+	    } // end loop over reco photons
+	    
+	    // now save tmp photon iphs
+	    genHVph1match.push_back(tmpph1);
+	    genHVph2match.push_back(tmpph2);
+	  } // end check for reco match
+	} // end loop over good vPions
       } // end check over valid gen particles
     } // end check over isHVDS
-
+    
     ///////////////////
     //               //
     // Gen Jets info //

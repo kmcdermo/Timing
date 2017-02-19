@@ -22,17 +22,20 @@ void runPhotonPlots()
   gROOT->LoadMacro("PlotPhotons.cc+g");
 
   // config is:
-  // filename, isGMSB, isBkg, applyevcut, rhdump, outdir, savehists,
+  // filename, isGMSB, isHVDS, isBkg, applyevcut, rhdump, outdir, savehists,
   // applyjetptcut, jetptcut, applyphptcut, phptcut,
   // applyphvidcut, phvid, applyrhecut, 
   // applyecalacceptcut, applyEBonly, applyEEonly
   
-  PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-ctau6000.root",true,false,false,true,"output/test6000",true,
+//   PlotPhotons photonPlots("input/MC/signal/HVDS/photondump-hvds.root",false,true,false,false,false,"output/testhvds",true,
+// 			  true,35.f,true,50.f,true,"loose",true,1.f,true,false,false);
+
+  PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-ctau2000.root",true,false,false,false,false,"output/test2000",true,
 			  true,35.f,true,50.f,true,"loose",true,1.f,true,false,false);
 
   // which plots to do
   // first bool = generic plots
   // second bool = efficiency
   // third bool = analysis plots
-  photonPlots.DoPlots(false,false,false);
+  photonPlots.DoPlots(true,false,false);
 }

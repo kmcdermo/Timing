@@ -65,6 +65,11 @@
 // Common types
 #include "CommonTypes.h"
 
+inline bool sortByGenParticlePt(const reco::GenParticle & gp1, const reco::GenParticle & gp2)
+{
+  return gp1.pt()>gp2.pt();
+}
+
 inline bool sortByJetPt(const pat::Jet & jet1, const pat::Jet & jet2)
 {
   return jet1.pt()>jet2.pt();

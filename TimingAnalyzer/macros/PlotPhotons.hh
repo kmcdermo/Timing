@@ -49,8 +49,8 @@ typedef IntMap::iterator      IntMapIter;
 class PlotPhotons 
 {
 public :
-  PlotPhotons(TString filename, Bool_t isGMSB = false, Bool_t isBkg = false, Bool_t applyevcut = false, Bool_t rhdump = false,
-	      TString outdir = "output", Bool_t savehists = false, 
+  PlotPhotons(TString filename, Bool_t isGMSB = false, Bool_t isHVDS = false, Bool_t isBkg = false, 
+	      Bool_t applyevcut = false, Bool_t rhdump = false, TString outdir = "output", Bool_t savehists = false, 
 	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
 	      Bool_t applyphvidcut = false, TString phvid = "medium", Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
 	      Bool_t applyecalacceptcut = false, Bool_t applyEBonly = false, Bool_t applyEEonly = false);
@@ -61,6 +61,7 @@ public :
   void SetupEffs();
   void SetupGenInfo();
   void SetupGMSB();
+  void SetupHVDS();
   void SetupGenJets();
   void SetupObjectCounts();
   void SetupMET();
@@ -76,6 +77,7 @@ public :
   void FillEffs();
   void FillGenInfo();
   void FillGMSB();
+  void FillHVDS();
   void FillGenJets();
   void FillObjectCounts();
   void FillMET();
@@ -93,6 +95,7 @@ private :
   TFile * fInFile; //!pointer to file
   TTree * fInTree; //!pointer to the analyzed TTree
   const Bool_t fIsGMSB;
+  const Bool_t fIsHVDS;
   const Bool_t fIsBkg;
         Bool_t fIsMC;
 
@@ -180,6 +183,28 @@ private :
   Float_t gengr2pt;
   Float_t gengr2phi;
   Float_t gengr2eta;
+  Int_t   nvPions;   
+  std::vector<Float_t> * genvPionprodvx;
+  std::vector<Float_t> * genvPionprodvy;
+  std::vector<Float_t> * genvPionprodvz;
+  std::vector<Float_t> * genvPiondecayvx;
+  std::vector<Float_t> * genvPiondecayvy;
+  std::vector<Float_t> * genvPiondecayvz;
+  std::vector<Float_t> * genvPionmass;
+  std::vector<Float_t> * genvPionE;
+  std::vector<Float_t> * genvPionpt;
+  std::vector<Float_t> * genvPionphi;
+  std::vector<Float_t> * genvPioneta;
+  std::vector<Float_t> * genHVph1E;
+  std::vector<Float_t> * genHVph1pt;
+  std::vector<Float_t> * genHVph1phi;
+  std::vector<Float_t> * genHVph1eta;
+  std::vector<Float_t> * genHVph2E;
+  std::vector<Float_t> * genHVph2pt;
+  std::vector<Float_t> * genHVph2phi;
+  std::vector<Float_t> * genHVph2eta;
+  std::vector<Int_t>   * genHVph1match;
+  std::vector<Int_t>   * genHVph2match;
   Int_t   ngenjets;
   std::vector<Int_t>   * genjetmatch;
   std::vector<Float_t> * genjetE;
@@ -295,6 +320,28 @@ private :
   TBranch * b_gengr2pt;
   TBranch * b_gengr2phi;
   TBranch * b_gengr2eta;
+  TBranch * b_nvPions;
+  TBranch * b_genvPionprodvx;
+  TBranch * b_genvPionprodvy;
+  TBranch * b_genvPionprodvz;
+  TBranch * b_genvPiondecayvx;
+  TBranch * b_genvPiondecayvy;
+  TBranch * b_genvPiondecayvz;
+  TBranch * b_genvPionmass;
+  TBranch * b_genvPionE;
+  TBranch * b_genvPionpt;
+  TBranch * b_genvPionphi;
+  TBranch * b_genvPioneta;
+  TBranch * b_genHVph1E;
+  TBranch * b_genHVph1pt;
+  TBranch * b_genHVph1phi;
+  TBranch * b_genHVph1eta;
+  TBranch * b_genHVph2E;
+  TBranch * b_genHVph2pt;
+  TBranch * b_genHVph2phi;
+  TBranch * b_genHVph2eta;
+  TBranch * b_genHVph1match;
+  TBranch * b_genHVph2match;
   TBranch * b_ngenjets;
   TBranch * b_genjetmatch;
   TBranch * b_genjetE;

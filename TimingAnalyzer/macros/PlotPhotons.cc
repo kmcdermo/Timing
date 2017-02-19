@@ -5,12 +5,12 @@
 
 #include <iostream>
 
-PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isBkg, Bool_t applyevcut, Bool_t rhdump,
+PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t isBkg, Bool_t applyevcut, Bool_t rhdump,
 			 TString outdir, Bool_t savehists,
 			 Bool_t applyjetptcut, Float_t jetptcut, Bool_t applyphptcut, Float_t phptcut,
 			 Bool_t applyphvidcut, TString phvid, Bool_t applyrhecut, Float_t rhEcut,
 			 Bool_t applyecalacceptcut, Bool_t applyEBonly, Bool_t applyEEonly) :
-  fOutDir(outdir), fIsGMSB(isGMSB), fIsBkg(isBkg), fApplyEvCut(applyevcut), fRHDump(rhdump), fSaveHists(savehists),
+  fOutDir(outdir), fIsGMSB(isGMSB), fIsHVDS(isHVDS), fIsBkg(isBkg), fApplyEvCut(applyevcut), fRHDump(rhdump), fSaveHists(savehists),
   fApplyJetPtCut(applyjetptcut), fJetPtCut(jetptcut), fApplyPhPtCut(applyphptcut), fPhPtCut(phptcut),
   fApplyPhVIDCut(applyphvidcut), fPhVID(phvid), fApplyrhECut(applyrhecut), frhECut(rhEcut),
   fApplyECALAcceptCut(applyecalacceptcut), fApplyEBOnly(applyEBonly), fApplyEEOnly(applyEEonly)
@@ -19,8 +19,8 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isBkg, Bool_t a
   fInFile = TFile::Open(filename.Data());
   fInTree = (TTree*)fInFile->Get("tree/tree");
 
-  if   (fIsGMSB || fIsBkg) fIsMC = true;
-  else                     fIsMC = false;
+  if   (fIsGMSB || fIsHVDS || fIsBkg) fIsMC = true;
+  else                                fIsMC = false;
   
   // initialize tree
   PlotPhotons::InitTree();
@@ -38,6 +38,7 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isBkg, Bool_t a
   if (filename.Contains("ctau100" ,TString::kExact)) fCTau = 3.65;  // 100  mm --> 36.5  mm == 3.65  cm
   if (filename.Contains("ctau2000",TString::kExact)) fCTau = 73.5;  // 2000 mm --> 730.5 mm == 73.5  cm
   if (filename.Contains("ctau6000",TString::kExact)) fCTau = 219.2; // 6000 mm --> 2192  mm == 219.2 cm  
+  if (filename.Contains("hvds"    ,TString::kExact)) fCTau = 20.0;  // 200 mm 
 
   // initialize efficiency map
   fEfficiency["Photons"] = 0;
@@ -119,11 +120,15 @@ void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
     if (fIsMC)
     {
       //      PlotPhotons::SetupGenInfo();
-      //      if (fIsGMSB)
-      //      {
-      //      PlotPhotons::SetupGenParticles();
+      if (fIsGMSB)
+      {
+	PlotPhotons::SetupGMSB();
       //      PlotPhotons::SetupGenJets();
-      //      }
+      }
+      if (fIsHVDS)
+      {
+	PlotPhotons::SetupHVDS();
+      }
     }
     //    PlotPhotons::SetupObjectCounts();
     //    PlotPhotons::SetupMET();
@@ -172,8 +177,15 @@ void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis)
       if (fIsMC)
       {
 	//	PlotPhotons::FillGenInfo();
-	//	PlotPhotons::FillGMSB();
-	//	PlotPhotons::FillGenJets();
+	if (fIsGMSB)
+	{	
+	  PlotPhotons::FillGMSB();
+	  //	PlotPhotons::FillGenJets();
+	}
+	if (fIsHVDS)
+	{
+	  PlotPhotons::FillHVDS();
+	}
       }
       //      PlotPhotons::FillObjectCounts();
       //      PlotPhotons::FillMET();
@@ -414,6 +426,8 @@ void PlotPhotons::FillGMSB()
     const Float_t genN1p  = std::sqrt(rad2(genN1_lorvec.Px(),genN1_lorvec.Py(),genN1_lorvec.Pz()));
     const Float_t genN1bg = bg(genN1p,genN1mass);
 
+    fPlots["genN1gamma"]->Fill(gamma(genN1p,genN1mass));
+
     // ctau is distance / beta*gamma
     fPlots["genN1ctau"]->Fill(genN1traveld/genN1bg);
   }
@@ -435,15 +449,17 @@ void PlotPhotons::FillGMSB()
     fPlots["genN2decayd_zoom"]->Fill(std::sqrt(rad2(genN2decayvx,genN2decayvy,genN2decayvz)));
     fPlots2D["genN2decayr_vs_z_zoom"]->Fill(std::abs(genN2decayvz),std::sqrt(rad2(genN2decayvx,genN2decayvy)));
 
-    // calculate proper distance for the first neutralino
+    // calculate proper distance for the second neutralino
     const Float_t genN2traveld = std::sqrt(rad2(genN2decayvx-genN2prodvx,genN2decayvy-genN2prodvy,genN2decayvz-genN2prodvz)); 
     fPlots["genN2traveld"]->Fill(genN2traveld);
     fPlots["genN2traveld_zoom"]->Fill(genN2traveld);
 
-    // calculate total momentum for the first neutralino
+    // calculate total momentum for the second neutralino
     TLorentzVector genN2_lorvec; genN2_lorvec.SetPtEtaPhiE(genN2pt,genN2eta,genN2phi,genN2E);
     const Float_t genN2p  = std::sqrt(rad2(genN2_lorvec.Px(),genN2_lorvec.Py(),genN2_lorvec.Pz()));
     const Float_t genN2bg = bg(genN2p,genN2mass);
+
+    fPlots["genN2gamma"]->Fill(gamma(genN2p,genN2mass));
 
     // ctau is distance / beta*gamma
     fPlots["genN2ctau"]->Fill(genN2traveld/genN2bg);
@@ -451,6 +467,45 @@ void PlotPhotons::FillGMSB()
 
   // 2D plots
   fPlots2D["genN2EvsN1E"]->Fill(genN1E,genN2E);
+}
+
+void PlotPhotons::FillHVDS()
+{
+  for (Int_t ipion = 0; ipion < nvPions; ipion++)
+  {
+    // first gen pions
+    fPlots["genvPionE"]->Fill((*genvPionE)[ipion]);
+    fPlots["genvPionpt"]->Fill((*genvPionpt)[ipion]);
+    fPlots["genvPionphi"]->Fill((*genvPionphi)[ipion]);
+    fPlots["genvPioneta"]->Fill((*genvPioneta)[ipion]);
+    
+    const Float_t genvPiontraveld = std::sqrt(rad2((*genvPiondecayvx)[ipion]-(*genvPionprodvx)[ipion],
+						   (*genvPiondecayvy)[ipion]-(*genvPionprodvy)[ipion],
+						   (*genvPiondecayvz)[ipion]-(*genvPionprodvz)[ipion])); 
+    fPlots["genvPiontraveld"]->Fill(genvPiontraveld);
+    fPlots["genvPiontraveld_zoom"]->Fill(genvPiontraveld);
+    
+    // calculate total momentum for the second neutralino
+    TLorentzVector genvPion_lorvec; genvPion_lorvec.SetPtEtaPhiE((*genvPionpt)[ipion],(*genvPioneta)[ipion],(*genvPionphi)[ipion],(*genvPionE)[ipion]);
+    const Float_t genvPionp  = std::sqrt(rad2(genvPion_lorvec.Px(),genvPion_lorvec.Py(),genvPion_lorvec.Pz()));
+    const Float_t genvPionbg = bg(genvPionp,(*genvPionmass)[ipion]);
+
+    fPlots["genvPiongamma"]->Fill(gamma(genvPionp,(*genvPionmass)[ipion]));
+      
+    // ctau is distance / beta*gamma
+    fPlots["genvPionctau"]->Fill(genvPiontraveld/genvPionbg);
+
+    // now do gen photon info
+    fPlots["genHVph1E"]->Fill((*genHVph1E)[ipion]);
+    fPlots["genHVph1pt"]->Fill((*genHVph1pt)[ipion]);
+    fPlots["genHVph1phi"]->Fill((*genHVph1phi)[ipion]);
+    fPlots["genHVph1eta"]->Fill((*genHVph1eta)[ipion]);
+
+    fPlots["genHVph2E"]->Fill((*genHVph2E)[ipion]);
+    fPlots["genHVph2pt"]->Fill((*genHVph2pt)[ipion]);
+    fPlots["genHVph2phi"]->Fill((*genHVph2phi)[ipion]);
+    fPlots["genHVph2eta"]->Fill((*genHVph2eta)[ipion]);
+  }
 }
 
 void PlotPhotons::FillGenJets()
@@ -724,6 +779,7 @@ void PlotPhotons::SetupGMSB()
   fPlots2D["genN1decayr_vs_z_zoom"] = PlotPhotons::MakeTH2F("genN1decayr_vs_z_zoom","Generator Leading Neutralino Decay Vertex r vs. z Position [cm]",100,0.f,350.f,"Decay Vertex z-Position [cm]",100,0.f,160.f,"Decay Vertex r-Position [cm]","GMSB");
   fPlots["genN1traveld"] = PlotPhotons::MakeTH1F("genN1traveld","Generator Leading Neutralino Travel Distance [cm]",100,0.f,10000.f,"Distance [cm]","Neutralinos","GMSB");
   fPlots["genN1traveld_zoom"] = PlotPhotons::MakeTH1F("genN1traveld_zoom","Generator Leading Neutralino Travel Distance [cm]",100,0.f,400.f,"Distance [cm]","Neutralinos","GMSB");
+  fPlots["genN1gamma"] = PlotPhotons::MakeTH1F("genN1gamma","Generator Leading Neutralino #gamma factor",100,0.f,100.f,"#gamma factor","Neutralinos","GMSB");
   fPlots["genN1ctau"] = PlotPhotons::MakeTH1F("genN1ctau","Generator Leading Neutralino c#tau [cm]",200,0.f,fCTau*20.f,"c#tau [cm]","Neutralinos","GMSB");
   fPlots["genph1E"] = PlotPhotons::MakeTH1F("genph1E","Generator Leading Photon E [GeV]",100,0.f,2500.f,"Energy [GeV]","Photons","GMSB");
   fPlots["genph1pt"] = PlotPhotons::MakeTH1F("genph1pt","Generator Leading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","GMSB");
@@ -743,16 +799,17 @@ void PlotPhotons::SetupGMSB()
   fPlots["genN2prodr"] = PlotPhotons::MakeTH1F("genN2prodr","Generator Subleading Neutralino Production Vertex r-Position [cm]",100,0.f,2.f,"Production Vertex r-Position [cm]","Neutralinos","GMSB");
   fPlots["genN2prodd"] = PlotPhotons::MakeTH1F("genN2prodd","Generator Subleading Neutralino Production Vertex Distance [cm]",100,0.f,20.f,"Production Vertex Distance [cm]","Neutralinos","GMSB");
   fPlots2D["genN2prodr_vs_z"] = PlotPhotons::MakeTH2F("genN2prodr_vs_z","Generator Subleading Neutralino Production Vertex r vs. z Position [cm]",100,0.f,20.f,"Production Vertex z-Position [cm]",100,0.f,2.f,"Production Vertex r-Position [cm]","GMSB");
-  fPlots["genN2decayz"] = PlotPhotons::MakeTH1F("genN2decayz","Generator Leading Neutralino Decay Vertex z-Position [cm]",143,0.f,10000.f,"Decay Vertex z-Position [cm]","Neutralinos","GMSB");
-  fPlots["genN2decayr"] = PlotPhotons::MakeTH1F("genN2decayr","Generator Leading Neutralino Decay Vertex r-Position [cm]",125,0.f,10000.f,"Decay Vertex r-Position [cm]","Neutralinos","GMSB");
-  fPlots["genN2decayd"] = PlotPhotons::MakeTH1F("genN2decayd","Generator Leading Neutralino Decay Vertex Distance [cm]",100,0.f,10000.f,"Decay Vertex Distance [cm]","Neutralinos","GMSB");
-  fPlots2D["genN2decayr_vs_z"] = PlotPhotons::MakeTH2F("genN2decayr_vs_z","Generator Leading Neutralino Decay Vertex r vs. z Position [cm]",100,0.f,10000.f,"Decay Vertex z-Position [cm]",100,0.f,10000.f,"Decay Vertex r-Position [cm]","GMSB");
-  fPlots["genN2decayz_zoom"] = PlotPhotons::MakeTH1F("genN2decayz_zoom","Generator Leading Neutralino Decay Vertex z-Position [cm]",100,0.f,350.f,"Decay Vertex z-Position [cm]","Neutralinos","GMSB");
-  fPlots["genN2decayr_zoom"] = PlotPhotons::MakeTH1F("genN2decayr_zoom","Generator Leading Neutralino Decay Vertex r-Position [cm]",100,0.f,160.f,"Decay Vertex r-Position [cm]","Neutralinos","GMSB");
-  fPlots["genN2decayd_zoom"] = PlotPhotons::MakeTH1F("genN2decayd_zoom","Generator Leading Neutralino Decay Vertex Distance [cm]",100,0.f,380.f,"Decay Vertex Distance [cm]","Neutralinos","GMSB");
-  fPlots2D["genN2decayr_vs_z_zoom"] = PlotPhotons::MakeTH2F("genN2decayr_vs_z_zoom","Generator Leading Neutralino Decay Vertex r vs. z Position [cm]",100,0.f,350.f,"Decay Vertex z-Position [cm]",100,0.f,160.f,"Decay Vertex r-Position [cm]","GMSB");
-  fPlots["genN2traveld"] = PlotPhotons::MakeTH1F("genN2traveld","Generator Leading Neutralino Travel Distance [cm]",100,0.f,10000.f,"Distance [cm]","Neutralinos","GMSB");
-  fPlots["genN2traveld_zoom"] = PlotPhotons::MakeTH1F("genN2traveld_zoom","Generator Leading Neutralino Travel Distance [cm]",100,0.f,400.f,"Distance [cm]","Neutralinos","GMSB");
+  fPlots["genN2decayz"] = PlotPhotons::MakeTH1F("genN2decayz","Generator Subleading Neutralino Decay Vertex z-Position [cm]",143,0.f,10000.f,"Decay Vertex z-Position [cm]","Neutralinos","GMSB");
+  fPlots["genN2decayr"] = PlotPhotons::MakeTH1F("genN2decayr","Generator Subleading Neutralino Decay Vertex r-Position [cm]",125,0.f,10000.f,"Decay Vertex r-Position [cm]","Neutralinos","GMSB");
+  fPlots["genN2decayd"] = PlotPhotons::MakeTH1F("genN2decayd","Generator Subleading Neutralino Decay Vertex Distance [cm]",100,0.f,10000.f,"Decay Vertex Distance [cm]","Neutralinos","GMSB");
+  fPlots2D["genN2decayr_vs_z"] = PlotPhotons::MakeTH2F("genN2decayr_vs_z","Generator Subleading Neutralino Decay Vertex r vs. z Position [cm]",100,0.f,10000.f,"Decay Vertex z-Position [cm]",100,0.f,10000.f,"Decay Vertex r-Position [cm]","GMSB");
+  fPlots["genN2decayz_zoom"] = PlotPhotons::MakeTH1F("genN2decayz_zoom","Generator Subleading Neutralino Decay Vertex z-Position [cm]",100,0.f,350.f,"Decay Vertex z-Position [cm]","Neutralinos","GMSB");
+  fPlots["genN2decayr_zoom"] = PlotPhotons::MakeTH1F("genN2decayr_zoom","Generator Subleading Neutralino Decay Vertex r-Position [cm]",100,0.f,160.f,"Decay Vertex r-Position [cm]","Neutralinos","GMSB");
+  fPlots["genN2decayd_zoom"] = PlotPhotons::MakeTH1F("genN2decayd_zoom","Generator Subleading Neutralino Decay Vertex Distance [cm]",100,0.f,380.f,"Decay Vertex Distance [cm]","Neutralinos","GMSB");
+  fPlots2D["genN2decayr_vs_z_zoom"] = PlotPhotons::MakeTH2F("genN2decayr_vs_z_zoom","Generator Subleading Neutralino Decay Vertex r vs. z Position [cm]",100,0.f,350.f,"Decay Vertex z-Position [cm]",100,0.f,160.f,"Decay Vertex r-Position [cm]","GMSB");
+  fPlots["genN2traveld"] = PlotPhotons::MakeTH1F("genN2traveld","Generator Subleading Neutralino Travel Distance [cm]",100,0.f,10000.f,"Distance [cm]","Neutralinos","GMSB");
+  fPlots["genN2traveld_zoom"] = PlotPhotons::MakeTH1F("genN2traveld_zoom","Generator Subleading Neutralino Travel Distance [cm]",100,0.f,400.f,"Distance [cm]","Neutralinos","GMSB");
+  fPlots["genN2gamma"] = PlotPhotons::MakeTH1F("genN2gamma","Generator Subleading Neutralino #gamma factor",100,0.f,100.f,"#gamma factor","Neutralinos","GMSB");
   fPlots["genN2ctau"] = PlotPhotons::MakeTH1F("genN2ctau","Generator Subleading Neutralino c#tau [cm]",200,0.f,fCTau*20.f,"c#tau [cm]","Neutralinos","GMSB");
   fPlots["genph2E"] = PlotPhotons::MakeTH1F("genph2E","Generator Subleading Photon E [GeV]",100,0.f,2500.f,"Energy [GeV]","Photons","GMSB");
   fPlots["genph2pt"] = PlotPhotons::MakeTH1F("genph2pt","Generator Subleading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","GMSB");
@@ -765,6 +822,30 @@ void PlotPhotons::SetupGMSB()
 
   // 2D Histogram
   fPlots2D["genN2EvsN1E"] = PlotPhotons::MakeTH2F("genN2EvsN1E","Generator Neutralino2 E vs Neutralino1 E [GeV]",100,0.f,2500.f,"Neutralino1 Energy [GeV]",100,0.f,2500.f,"Neutralino2 Energy [GeV]","GMSB");
+}
+
+void PlotPhotons::SetupHVDS()
+{
+  fPlots["genvPionE"] = PlotPhotons::MakeTH1F("genvPionE","Generator Dark Pions E [GeV]",100,0.f,2500.f,"Energy [GeV]","Dark Pions","HVDS");
+  fPlots["genvPionpt"] = PlotPhotons::MakeTH1F("genvPionpt","Generator Dark Pions p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Dark Pions","HVDS");
+  fPlots["genvPionphi"] = PlotPhotons::MakeTH1F("genvPionphi","Generator Dark Pions #phi",100,-3.2,3.2,"#phi","Dark Pions","HVDS");
+  fPlots["genvPioneta"] = PlotPhotons::MakeTH1F("genvPioneta","Generator Dark Pions #eta",100,-6.0,6.0,"#eta","Dark Pions","HVDS");
+
+  fPlots["genvPiongamma"] = PlotPhotons::MakeTH1F("genvPiongamma","Generator Dark Pions #gamma factor",100,0.f,100.f,"#gamma factor","Dark Pions","HVDS");
+
+  fPlots["genvPiontraveld"] = PlotPhotons::MakeTH1F("genvPiontraveld","Generator Dark Pions Travel Distance [cm]",100,0.f,10000.f,"Distance [cm]","Dark Pions","GMSB");
+  fPlots["genvPiontraveld_zoom"] = PlotPhotons::MakeTH1F("genvPiontraveld_zoom","Generator Dark Pions Travel Distance [cm]",100,0.f,400.f,"Distance [cm]","Dark Pions","GMSB");
+  fPlots["genvPionctau"] = PlotPhotons::MakeTH1F("genvPionctau","Generator Dark Pions c#tau [cm]",200,0.f,fCTau*20.f,"c#tau [cm]","Dark Pions","GMSB");
+
+  fPlots["genHVph1E"] = PlotPhotons::MakeTH1F("genHVph1E","Generator Leading Photon E [GeV]",100,0.f,2500.f,"Energy [GeV]","Photons","HVDS");
+  fPlots["genHVph1pt"] = PlotPhotons::MakeTH1F("genHVph1pt","Generator Leading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","HVDS");
+  fPlots["genHVph1phi"] = PlotPhotons::MakeTH1F("genHVph1phi","Generator Leading Photon #phi",100,-3.2,3.2,"#phi","Photons","HVDS");
+  fPlots["genHVph1eta"] = PlotPhotons::MakeTH1F("genHVph1eta","Generator Leading Photon #eta",100,-6.0,6.0,"#eta","Photons","HVDS");
+
+  fPlots["genHVph2E"] = PlotPhotons::MakeTH1F("genHVph2E","Generator Leading Photon E [GeV]",100,0.f,2500.f,"Energy [GeV]","Photons","HVDS");
+  fPlots["genHVph2pt"] = PlotPhotons::MakeTH1F("genHVph2pt","Generator Leading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","HVDS");
+  fPlots["genHVph2phi"] = PlotPhotons::MakeTH1F("genHVph2phi","Generator Leading Photon #phi",100,-3.2,3.2,"#phi","Photons","HVDS");
+  fPlots["genHVph2eta"] = PlotPhotons::MakeTH1F("genHVph2eta","Generator Leading Photon #eta",100,-6.0,6.0,"#eta","Photons","HVDS");
 }
 
 void PlotPhotons::SetupGenJets()
@@ -1118,6 +1199,30 @@ void PlotPhotons::InitTree()
   phrhtime = 0;
   phrhID = 0;
   phrhOOT = 0;
+  if (fIsHVDS)
+  {
+    genvPionprodvx = 0;
+    genvPionprodvy = 0;
+    genvPionprodvz = 0;
+    genvPiondecayvx = 0;
+    genvPiondecayvy = 0;
+    genvPiondecayvz = 0;
+    genvPionmass = 0;
+    genvPionE = 0;
+    genvPionpt = 0;
+    genvPionphi = 0;
+    genvPioneta = 0;
+    genHVph1E = 0;
+    genHVph1pt = 0;
+    genHVph1phi = 0;
+    genHVph1eta = 0;
+    genHVph2E = 0;
+    genHVph2pt = 0;
+    genHVph2phi = 0;
+    genHVph2eta = 0;
+    genHVph1match = 0;
+    genHVph2match = 0;
+  }
 
   // set branch addresses
   fInTree->SetBranchAddress("event", &event, &b_event);
@@ -1181,6 +1286,31 @@ void PlotPhotons::InitTree()
     fInTree->SetBranchAddress("genjetpt", &genjetpt, &b_genjetpt);
     fInTree->SetBranchAddress("genjetphi", &genjetphi, &b_genjetphi);
     fInTree->SetBranchAddress("genjeteta", &genjeteta, &b_genjeteta);
+  }
+  if (fIsHVDS)
+  {
+    fInTree->SetBranchAddress("nvPions", &nvPions, &b_nvPions);
+    fInTree->SetBranchAddress("genvPionprodvx", &genvPionprodvx, &b_genvPionprodvx);
+    fInTree->SetBranchAddress("genvPionprodvy", &genvPionprodvy, &b_genvPionprodvy);
+    fInTree->SetBranchAddress("genvPionprodvz", &genvPionprodvz, &b_genvPionprodvz);
+    fInTree->SetBranchAddress("genvPiondecayvx", &genvPiondecayvx, &b_genvPiondecayvx);
+    fInTree->SetBranchAddress("genvPiondecayvy", &genvPiondecayvy, &b_genvPiondecayvy);
+    fInTree->SetBranchAddress("genvPiondecayvz", &genvPiondecayvz, &b_genvPiondecayvz);
+    fInTree->SetBranchAddress("genvPionmass", &genvPionmass, &b_genvPionmass);
+    fInTree->SetBranchAddress("genvPionE", &genvPionE, &b_genvPionE);
+    fInTree->SetBranchAddress("genvPionpt", &genvPionpt, &b_genvPionpt);
+    fInTree->SetBranchAddress("genvPionphi", &genvPionphi, &b_genvPionphi);
+    fInTree->SetBranchAddress("genvPioneta", &genvPioneta, &b_genvPioneta);
+    fInTree->SetBranchAddress("genHVph1E", &genHVph1E, &b_genHVph1E);
+    fInTree->SetBranchAddress("genHVph1pt", &genHVph1pt, &b_genHVph1pt);
+    fInTree->SetBranchAddress("genHVph1phi", &genHVph1phi, &b_genHVph1phi);
+    fInTree->SetBranchAddress("genHVph1eta", &genHVph1eta, &b_genHVph1eta);
+    fInTree->SetBranchAddress("genHVph2E", &genHVph2E, &b_genHVph2E);
+    fInTree->SetBranchAddress("genHVph2pt", &genHVph2pt, &b_genHVph2pt);
+    fInTree->SetBranchAddress("genHVph2phi", &genHVph2phi, &b_genHVph2phi);
+    fInTree->SetBranchAddress("genHVph2eta", &genHVph2eta, &b_genHVph2eta);
+    fInTree->SetBranchAddress("genHVph1match", &genHVph1match, &b_genHVph1match);
+    fInTree->SetBranchAddress("genHVph2match", &genHVph2match, &b_genHVph2match);
   }
   fInTree->SetBranchAddress("nvtx", &nvtx, &b_nvtx);
   fInTree->SetBranchAddress("vtxX", &vtxX, &b_vtxX);
