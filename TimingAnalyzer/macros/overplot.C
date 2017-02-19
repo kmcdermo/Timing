@@ -9,27 +9,29 @@
 
 #include <vector>
 
-void stack5()
+void overplot()
 {
   gStyle->SetOptStat(0);
 
-  std::vector<TFile*> files(5);
-  files[0] = TFile::Open("output/test6000/cuts_jetpt35.0_phpt0.0_phVIDnone_rhE1.0_ecalaccept/plots.root");
-  files[1] = TFile::Open("output/test6000/cuts_jetpt35.0_phpt50.0_phVIDnone_rhE1.0_ecalaccept/plots.root");
-  files[2] = TFile::Open("output/test6000/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root");
-  files[3] = TFile::Open("output/test6000-gmsbMatched/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root");
-  files[4] = TFile::Open("output/test6000-phMatched/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root");
+  std::vector<TFile*> files(2);
+  files[0] = TFile::Open("output/test2000/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root");
+  files[1] = TFile::Open("output/testhvds/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/plots.root");
 
   TCanvas * canv = new TCanvas(); canv->cd(); canv->SetLogy(1);
-  TLegend * leg  = new TLegend(0.55,0.6,0.9,0.9);
+  TLegend * leg  = new TLegend(0.6,0.7,0.9,0.9);
 
-  std::vector<TH1F*> hists(files.size()); 
+  std::vector<TH1F*>   hists(files.size()); 
   std::vector<Color_t> colors = {kBlack,kRed+1,kViolet-1,kBlue+1,kGreen+2};
-  std::vector<TString> labels = {"No Cuts","p_{T}>50","p_{T}>50, Loose","p_{T}>50, Loose, GMSB Match","p_{T}>50, Loose, Ph Match"};
+  std::vector<TString> labels = {"GMSB c#tau = 730.5 mm","HVDS c#tau = 200 mm"};
 
   for (UInt_t i = 0; i < hists.size(); i++)
   { 
-    hists[i] = (TH1F*)files[i]->Get("ph1seedtime");
+    //    hists[i] = (TH1F*)files[i]->Get("ph1seedtime");
+    hists[i] = (TH1F*)files[i]->Get(i==0?"genN1gamma":"genvPiongamma");
+    if (i == 0) hists[i]->Add((TH1F*)files[i]->Get("genN2gamma"));
+
+    hists[i] ->SetTitle("Neutralinos or Dark Pions #gamma factor");
+    hists[i] ->GetYaxis()->SetTitle("Neutralinos or Dark Pions");
     hists[i] ->Scale(1.f/hists[i]->Integral());
     hists[i] ->SetLineColor(colors[i]);
     hists[i] ->SetMarkerColor(colors[i]);
@@ -39,6 +41,5 @@ void stack5()
   }
 
   leg->Draw("same");
-  canv->SaveAs("GMSB_2192mm_cutflow_seed1time.png");
-
+  canv->SaveAs("SignalMC_gamma.png");
 }

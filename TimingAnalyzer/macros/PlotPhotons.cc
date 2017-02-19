@@ -36,7 +36,7 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
   //ctau for plots
   fCTau = 1000;
   if (filename.Contains("ctau100" ,TString::kExact)) fCTau = 3.65;  // 100  mm --> 36.5  mm == 3.65  cm
-  if (filename.Contains("ctau2000",TString::kExact)) fCTau = 73.5;  // 2000 mm --> 730.5 mm == 73.5  cm
+  if (filename.Contains("ctau2000",TString::kExact)) fCTau = 73.05; // 2000 mm --> 730.5 mm == 73.5  cm
   if (filename.Contains("ctau6000",TString::kExact)) fCTau = 219.2; // 6000 mm --> 2192  mm == 219.2 cm  
   if (filename.Contains("hvds"    ,TString::kExact)) fCTau = 20.0;  // 200 mm 
 
