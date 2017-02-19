@@ -1393,6 +1393,14 @@ void PhotonDump::beginJob()
   {
     tree->Branch("nvPions"              , &nvPions             , "nvPions/I");
 
+    tree->Branch("genvPionprodvx"       , &genvPionprodvx);
+    tree->Branch("genvPionprodvy"       , &genvPionprodvy);
+    tree->Branch("genvPionprodvz"       , &genvPionprodvz);
+
+    tree->Branch("genvPiondecayvx"      , &genvPiondecayvx);
+    tree->Branch("genvPiondecayvy"      , &genvPiondecayvy);
+    tree->Branch("genvPiondecayvz"      , &genvPiondecayvz);
+
     tree->Branch("genvPionmass"         , &genvPionmass);
     tree->Branch("genvPionE"            , &genvPionE);   
     tree->Branch("genvPionpt"           , &genvPionpt);
