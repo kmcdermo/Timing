@@ -200,7 +200,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  } // end conditional over neutralino id
 	} // end loop over gen particles
 
-	std::sort(neutralinos.begin(),neutralinos.end(),sortGenParticleByPt);
+	std::sort(neutralinos.begin(),neutralinos.end(),sortByGenParticlePt);
 
 	nNeutoPhGr = 0; // reuse
 	for (std::vector<reco::GenParticle>::const_iterator gpiter = neutralinos.begin(); gpiter != neutralinos.end(); ++gpiter) // loop over neutralinos
@@ -353,7 +353,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
 	std::sort(vPions.begin(),vPions.end(),sortByGenParticlePt);
 
-	for (std::vector<reco::GenParticle>::const_iterator gpiter = vPions.begin(); gpiter != vPions.end(); ++vPions)
+	for (std::vector<reco::GenParticle>::const_iterator gpiter = vPions.begin(); gpiter != vPions.end(); ++gpiter)
 	{
 	  // set neutralino parameters
 	  genvPionmass.push_back(gpiter->mass());
@@ -372,8 +372,8 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  genvPiondecayvy.push_back(gpiter->daughter(0)->vy());
 	  genvPiondecayvz.push_back(gpiter->daughter(0)->vz());
 	  
-	  int leading    = (gpiter->daughter(0)->pt()>gpiter->daugter(1)->pt())?0:1;
-	  int subleading = (gpiter->daughter(0)->pt()>gpiter->daugter(1)->pt())?1:0;
+	  int leading    = (gpiter->daughter(0)->pt()>gpiter->daughter(1)->pt())?0:1;
+	  int subleading = (gpiter->daughter(0)->pt()>gpiter->daughter(1)->pt())?1:0;
 	  
 	  genHVph1E  .push_back(gpiter->daughter(leading)->energy());
 	  genHVph1pt .push_back(gpiter->daughter(leading)->pt());
