@@ -82,26 +82,26 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_1.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_2.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_3.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_4.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_5.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_6.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_7.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_8.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_9.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_10.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_11.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_12.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_13.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_14.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_15.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_16.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_17.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_18.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_19.root',
-		'/store/user/kmcdermo/HVphoton_13TeV_GEN_SIM/HVphoton_PAT-v1/170209_012134/0000/HVphoton_PAT_20.root'
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_1.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_2.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_3.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_4.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_5.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_6.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_7.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_8.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_9.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_10.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_11.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_12.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_13.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_14.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_15.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_16.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_17.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_18.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_19.root',
+		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVphoton_PAT_20.root'
 		))
 
 ## How many events to process

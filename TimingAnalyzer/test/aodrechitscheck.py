@@ -102,7 +102,8 @@ process.tree = cms.EDAnalyzer("AODRecHitsCheck",
    photons    = cms.InputTag("photons"),
    gedPhotons = cms.InputTag("gedPhotons"),
    ##
-   clustersEB = cms.InputTag("hybridSuperClusters","uncleanOnlyHybridSuperClusters"),
+#   clustersEB = cms.InputTag("hybridSuperClusters","uncleanOnlyHybridSuperClusters"),
+   clustersEB = cms.InputTag("hybridSuperClusters","uncleanOnlyHybridBarrelBasicClusters"),
    clustersEE = cms.InputTag("multi5x5SuperClusters","multi5x5EndcapBasicClusters"),
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEcalRecHitsEB"),

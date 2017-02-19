@@ -16,8 +16,8 @@ AODRecHitsCheck::AODRecHitsCheck(const edm::ParameterSet& iConfig):
   photonsToken    = consumes<std::vector<reco::Photon> > (photonsTag);
   gedPhotonsToken = consumes<std::vector<reco::Photon> > (gedPhotonsTag);
 
-  clustersEBToken = consumes<std::vector<reco::SuperCluster> > (clustersEBTag);
-  clustersEEToken = consumes<std::vector<reco::CaloCluster > > (clustersEETag);
+  clustersEBToken = consumes<std::vector<reco::CaloCluster> > (clustersEBTag);
+  clustersEEToken = consumes<std::vector<reco::CaloCluster> > (clustersEETag);
 
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
   recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
@@ -38,10 +38,10 @@ void AODRecHitsCheck::analyze(const edm::Event& iEvent, const edm::EventSetup& i
   iEvent.getByToken(gedPhotonsToken, gedPhotonsH);
 
   // Clusters
-  edm::Handle<std::vector<reco::SuperCluster> > clustersEBH;
+  edm::Handle<std::vector<reco::CaloCluster> > clustersEBH;
   iEvent.getByToken(clustersEBToken, clustersEBH);
 
-  edm::Handle<std::vector<reco::CaloCluster > > clustersEEH;
+  edm::Handle<std::vector<reco::CaloCluster> > clustersEEH;
   iEvent.getByToken(clustersEEToken, clustersEEH);
 
   // RecHits
@@ -89,10 +89,13 @@ void AODRecHitsCheck::analyze(const edm::Event& iEvent, const edm::EventSetup& i
     {
       if (clustersEBH.isValid())
       {
-	for (std::vector<reco::SuperCluster>::const_iterator sciter = clustersEBH->begin(); sciter != clustersEBH->end(); ++sciter)
+	// for (std::vector<reco::SuperCluster>::const_iterator sciter = clustersEBH->begin(); sciter != clustersEBH->end(); ++sciter)
+	// {
+	//   const DetId scSeedId = sciter->seed()->seed();
+	for (std::vector<reco::CaloCluster>::const_iterator cciter = clustersEBH->begin(); cciter != clustersEBH->end(); ++cciter)
 	{
-	  const DetId scSeedId = sciter->seed()->seed();
-	  if (scSeedId.rawId() == seedId.rawId()) {isCluster = true; break;}
+	  const DetId ccSeedId = cciter->seed();
+	  if (ccSeedId.rawId() == seedId.rawId()) {isCluster = true; break;}
 	}
       }
     }

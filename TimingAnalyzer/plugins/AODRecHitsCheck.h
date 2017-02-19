@@ -78,9 +78,9 @@ private:
 
   // clusters
   const edm::InputTag clustersEBTag;
-  edm::EDGetTokenT<std::vector<reco::SuperCluster> > clustersEBToken;
+  edm::EDGetTokenT<std::vector<reco::CaloCluster> > clustersEBToken;
   const edm::InputTag clustersEETag;
-  edm::EDGetTokenT<std::vector<reco::CaloCluster > > clustersEEToken;
+  edm::EDGetTokenT<std::vector<reco::CaloCluster> > clustersEEToken;
 
   // ECAL RecHits
   const edm::InputTag recHitsEBTag;
