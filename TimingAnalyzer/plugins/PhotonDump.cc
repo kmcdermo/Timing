@@ -1485,6 +1485,7 @@ void PhotonDump::beginJob()
   tree->Branch("phsieip"              , &phsieip);
   tree->Branch("phsmaj"               , &phsmaj);
   tree->Branch("phsmin"               , &phsmin);
+  tree->Branch("phalpha"              , &phalpha);
 
   tree->Branch("phVID"                , &phVID);
 
