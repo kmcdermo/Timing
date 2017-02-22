@@ -604,12 +604,13 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	} 
 	if (isHVDS) 
 	{
+	  // reminder genHVph(1?2)match is a vector of size nvPions --> stores the index of reco photon that a gen photon from a dark pion is matched to
 	  // since we can have many dipho pairs, store just if reco photon is matched to dark pion decay
 	  // so meaning of 1,2, and 3 change
 
 	  bool tmpph1match = false;
 	  bool tmpph2match = false;
-	  for (auto jph = 0; jph < genHVph1match.size(); jph++)
+	  for (unsigned int jph = 0; jph < genHVph1match.size(); jph++)
 	  {
 	    if (genHVph1match[jph] == iph)
 	    { 
@@ -617,7 +618,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	      break;
 	    }
 	  } // end loop over genHVph1matches
-	  for (auto jph = 0; jph < genHVph2match.size(); jph++)
+	  for (unsigned int jph = 0; jph < genHVph2match.size(); jph++)
 	  {
 	    if (genHVph2match[jph] == iph) 
 	    {
