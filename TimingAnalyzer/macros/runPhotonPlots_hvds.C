@@ -33,7 +33,7 @@ void runPhotonPlots_hvds(TString VID, Bool_t isEB, Bool_t isEE)
   Float_t phpt = 50.f;
 
   PlotPhotons photonPlots("input/MC/signal/HVDS/photondump-hvds.root",
-			  false,true,false,false,false,"output/MC/signal/HVDS/photondump/hvds",false,
+			  false,true,false,false,false,"output/MC/signal/HVDS/photondump",false,
 			  apply,35.f,apply,phpt,apply,VID.Data(),true,1.f,true,isEB,isEE);
 
   // which plots to do
