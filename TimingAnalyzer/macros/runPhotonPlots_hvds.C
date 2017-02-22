@@ -15,7 +15,7 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runPhotonPlots_HT(TString VID, TString sample, TString bin, Bool_t isEB, Bool_t isEE) 
+void runPhotonPlots_hvds(TString VID, Bool_t isEB, Bool_t isEE) 
 {
   setupcpp11(); 
 
@@ -26,14 +26,14 @@ void runPhotonPlots_HT(TString VID, TString sample, TString bin, Bool_t isEB, Bo
   // applyjetptcut, jetptcut, applyphptcut, phptcut,
   // applyphvidcut, phvid, applyrhecut, 
   // applyecalacceptcut, applyEBonly, applyEEonly
-  
+
   // apply analysis cuts to individual plots?
   bool apply = true;
 
   Float_t phpt = 50.f;
 
-  PlotPhotons photonPlots(Form("input/MC/bkg/%s/photondump-%s_HT%s.root",sample.Data(),sample.Data(),bin.Data()),
-			  false,false,true,false,false,Form("output/MC/bkg/%s/photondump/HT%s",sample.Data(),bin.Data()),false,
+  PlotPhotons photonPlots("input/MC/signal/HVDS/photondump-hvds.root",
+			  false,true,false,false,false,"output/MC/signal/HVDS/photondump/hvds",false,
 			  apply,35.f,apply,phpt,apply,VID.Data(),true,1.f,true,isEB,isEE);
 
   // which plots to do

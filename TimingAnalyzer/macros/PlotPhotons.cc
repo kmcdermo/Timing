@@ -122,12 +122,12 @@ void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
       //      PlotPhotons::SetupGenInfo();
       if (fIsGMSB)
       {
-	PlotPhotons::SetupGMSB();
+	//	PlotPhotons::SetupGMSB();
       //      PlotPhotons::SetupGenJets();
       }
       if (fIsHVDS)
       {
-	PlotPhotons::SetupHVDS();
+	//	PlotPhotons::SetupHVDS();
       }
     }
     //    PlotPhotons::SetupObjectCounts();
@@ -179,12 +179,12 @@ void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis)
 	//	PlotPhotons::FillGenInfo();
 	if (fIsGMSB)
 	{	
-	  PlotPhotons::FillGMSB();
+	  //	  PlotPhotons::FillGMSB();
 	  //	PlotPhotons::FillGenJets();
 	}
 	if (fIsHVDS)
 	{
-	  PlotPhotons::FillHVDS();
+	  //	  PlotPhotons::FillHVDS();
 	}
       }
       //      PlotPhotons::FillObjectCounts();
@@ -628,8 +628,8 @@ void PlotPhotons::FillRecoPhotons()
 
     if (fApplyPhPtCut && ((*phpt)[iph] < fPhPtCut)) continue;
     if (fApplyPhVIDCut && ((*phVID)[iph] < fPhVIDMap[fPhVID])) continue;
-    //    if ((fApplyEBOnly && (std::abs((*phsceta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*phsceta)[iph]) < 1.566 || std::abs((*phsceta)[iph]) > 2.5))) continue;
-    if ( (fIsGMSB && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] == 0) ) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
+    if ((fApplyEBOnly && (std::abs((*phsceta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*phsceta)[iph]) < 1.566 || std::abs((*phsceta)[iph]) > 2.5))) continue;
+    if (((fIsGMSB || fIsHVDS) && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] == 0) ) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
     //if ((*phisMatched)[iph] == 0) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
 
     fPlots["phE"]->Fill((*phE)[iph]);
@@ -648,6 +648,7 @@ void PlotPhotons::FillRecoPhotons()
     fPlots["phsmaj"]->Fill((*phsmaj)[iph]);
     fPlots["phsmin"]->Fill((*phsmin)[iph]);
     fPlots["phsmin_ov_phsmaj"]->Fill((*phsmin)[iph]/(*phsmaj)[iph]);
+    fPlots["phalpha"]->Fill((*phalpha)[iph]);
     fPlots["phscE"]->Fill((*phscE)[iph]);
     if (fIsMC) fPlots["phisMatched"]->Fill((*phisMatched)[iph]);
 
@@ -667,11 +668,12 @@ void PlotPhotons::FillRecoPhotons()
       fPlots["ph1smin"]->Fill((*phsmin)[iph]);
       fPlots["ph1smin_ov_ph1smaj"]->Fill((*phsmin)[iph]/(*phsmaj)[iph]);
       fPlots2D["ph1smin_vs_ph1smaj"]->Fill((*phsmaj)[iph],(*phsmin)[iph]);
+      fPlots["ph1alpha"]->Fill((*phalpha)[iph]);
     }
 
     if (fIsMC) 
     {
-      if ( (fIsGMSB && (*phmatch)[iph] > 0) || (fIsBkg && (*phisMatched)[iph]) ) // gen matched photons
+      if ( ((fIsGMSB || fIsHVDS) && (*phmatch)[iph] > 0) || (fIsBkg && (*phisMatched)[iph]) ) // gen matched photons
       {
 	fPlots["phE_gen"]->Fill((*phE)[iph]);
 	fPlots["phpt_gen"]->Fill((*phpt)[iph]);
@@ -708,26 +710,23 @@ void PlotPhotons::FillRecoPhotons()
 	}
       }
 
-      if (fIsGMSB)
+      if ((fIsGMSB || fIsHVDS) && (*phmatch)[iph] > 0) // gen matched photons
       {
-	if ( (*phmatch)[iph] > 0 ) // gen matched photons
-        {
-	  nRecHits_gen++;
-	  fPlots["phrhE_gen"]->Fill((*phrhE)[iph][irh]);
-	  fPlots["phrhtime_gen"]->Fill((*phrhtime)[iph][irh]);
-	  fPlots["phrhOOT_gen"]->Fill((*phrhOOT)[iph][irh]);
-	  if ( (*phseedpos)[iph] == irh ) // seed info
-	  {
-	    fPlots["phseedE_gen"]->Fill((*phrhE)[iph][irh]);
-	    fPlots["phseedtime_gen"]->Fill((*phrhtime)[iph][irh]);
-	    fPlots["phseedOOT_gen"]->Fill((*phrhOOT)[iph][irh]);
-	  }
+	nRecHits_gen++;
+	fPlots["phrhE_gen"]->Fill((*phrhE)[iph][irh]);
+	fPlots["phrhtime_gen"]->Fill((*phrhtime)[iph][irh]);
+	fPlots["phrhOOT_gen"]->Fill((*phrhOOT)[iph][irh]);
+	if ( (*phseedpos)[iph] == irh ) // seed info
+	{
+	  fPlots["phseedE_gen"]->Fill((*phrhE)[iph][irh]);
+	  fPlots["phseedtime_gen"]->Fill((*phrhtime)[iph][irh]);
+	  fPlots["phseedOOT_gen"]->Fill((*phrhOOT)[iph][irh]);
 	}
-      } // end conditional over isMC
+      } // end conditional over isSignal
     } // end loop over nrechits
 
     fPlots["phnrh"]->Fill(nRecHits);
-    if (fIsGMSB && (*phmatch)[iph] > 0) fPlots["phnrh_gen"]->Fill(nRecHits_gen);
+    if ((fIsGMSB || fIsHVDS) && (*phmatch)[iph] > 0) fPlots["phnrh_gen"]->Fill(nRecHits_gen);
     passed++;
   } // end loop over nphotons
 
@@ -933,6 +932,7 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["phsmaj"] = PlotPhotons::MakeTH1F("phsmaj","Photons S_{major} (reco)",100,0.f,5.f,"S_{major}","Photons","RecoPhotons");
   fPlots["phsmin"] = PlotPhotons::MakeTH1F("phsmin","Photons S_{minor} (reco)",100,0.f,1.f,"S_{minor}","Photons","RecoPhotons");
   fPlots["phsmin_ov_phsmaj"] = PlotPhotons::MakeTH1F("phsmin_ov_phsmaj","Photons S_{minor} / S_{major} (reco)",100,0,1.f,"S_{minor}/S_{major}","Photons","RecoPhotons");
+  fPlots["phalpha"] = PlotPhotons::MakeTH1F("phalpha","Photons Cluster Shape #alpha (reco)",100,-1.7,1.7,"Cluster Shape #alpha","Photons","RecoPhotons");
   fPlots["phscE"] = PlotPhotons::MakeTH1F("phscE","Photons SuperCluster Energy [GeV] (reco)",100,0.f,2500.f,"Energy [GeV]","Photons","RecoPhotons");
   fPlots["phnrh"] = PlotPhotons::MakeTH1F("phnrh","nRecHits from Photons (reco)",100,0.f,100.f,"nRecHits","Photons","RecoPhotons");
   fPlots["phisMatched"] = PlotPhotons::MakeTH1F("phisMatched","Photons isMatched (reco)",2,0,2,"isMatched","Photons","RecoPhotons");
@@ -959,6 +959,7 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["ph1smaj"] = PlotPhotons::MakeTH1F("ph1smaj","Leading Photon S_{major}",100,0.f,5.f,"Leading Photon S_{major}","Events","RecoPhotons");
   fPlots["ph1smin"] = PlotPhotons::MakeTH1F("ph1smin","Leading Photon S_{minor}",100,0.f,1.f,"Leading Photon S_{minor}","Events","RecoPhotons");
   fPlots["ph1smin_ov_ph1smaj"] = PlotPhotons::MakeTH1F("ph1smin_ov_ph1smaj","Leading Photon S_{minor} / S_{major}",100,0.f,1.f,"Leading Photon S_{minor}/S_{major}","Events","RecoPhotons");
+  fPlots["ph1alpha"] = PlotPhotons::MakeTH1F("ph1alpha","Leading Photon Cluster Shape #alpha (reco)",100,-1.7,1.7,"Leading Photon Cluster Shape #alpha","Events","RecoPhotons");
   fPlots["ph1seedtime"] = PlotPhotons::MakeTH1F("ph1seedtime","Leading Photon Seed RecHit Time [ns]",100,-5.f,20.f,"Leading Photon Seed RecHit Time [ns]","Events","RecoPhotons");
 
   fPlots2D["ph1smin_vs_ph1smaj"] = PlotPhotons::MakeTH2F("ph1smin_vs_ph1smaj","Leading Photon S_{minor} vs S_{major}",100,0.f,5.f,"Leading Photon S_{major}",100,0.f,1.f,"Leading Photon S_{minor}","RecoPhotons");
@@ -1185,6 +1186,7 @@ void PlotPhotons::InitTree()
   phsieip = 0;
   phsmaj = 0;
   phsmin = 0;
+  phalpha = 0;
   phVID = 0;
   phHoE_b = 0;
   phsieie_b = 0;
@@ -1342,8 +1344,8 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("phpt", &phpt, &b_phpt);
   fInTree->SetBranchAddress("phphi", &phphi, &b_phphi);
   fInTree->SetBranchAddress("pheta", &pheta, &b_pheta);
-  if (fIsGMSB) fInTree->SetBranchAddress("phmatch", &phmatch, &b_phmatch);
-  if (fIsMC)   fInTree->SetBranchAddress("phisMatched", &phisMatched, &b_phisMatched);
+  if (fIsGMSB || fIsHVDS) fInTree->SetBranchAddress("phmatch", &phmatch, &b_phmatch);
+  if (fIsMC) fInTree->SetBranchAddress("phisMatched", &phisMatched, &b_phisMatched);
   fInTree->SetBranchAddress("phscE", &phscE, &b_phscE);
   fInTree->SetBranchAddress("phsceta", &phsceta, &b_phsceta);
   fInTree->SetBranchAddress("phscphi", &phscphi, &b_phscphi);
@@ -1358,6 +1360,7 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("phsieip", &phsieip, &b_phsieip);
   fInTree->SetBranchAddress("phsmaj", &phsmaj, &b_phsmaj);
   fInTree->SetBranchAddress("phsmin", &phsmin, &b_phsmin);
+  fInTree->SetBranchAddress("phalpha", &phalpha, &b_phalpha);
   fInTree->SetBranchAddress("phVID", &phVID, &b_phVID);
   fInTree->SetBranchAddress("phHoE_b", &phHoE_b, &b_phHoE_b);
   fInTree->SetBranchAddress("phsieie_b", &phsieie_b, &b_phsieie_b);

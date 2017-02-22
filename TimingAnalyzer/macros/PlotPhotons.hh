@@ -254,6 +254,7 @@ private :
   std::vector<Float_t> * phsieip;
   std::vector<Float_t> * phsmaj;
   std::vector<Float_t> * phsmin;
+  std::vector<Float_t> * phalpha;
   std::vector<Int_t>   * phVID;
   std::vector<Int_t>   * phHoE_b;
   std::vector<Int_t>   * phsieie_b;
@@ -391,6 +392,7 @@ private :
   TBranch * b_phsieip;
   TBranch * b_phsmaj;
   TBranch * b_phsmin;
+  TBranch * b_phalpha;
   TBranch * b_phVID;
   TBranch * b_phHoE_b;
   TBranch * b_phsieie_b;

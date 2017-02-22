@@ -597,10 +597,40 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       {
 	if (isGMSB)
 	{
-	  if      (iph == genph1match) phmatch[iph] = 1;
-	  else if (iph == genph2match) phmatch[iph] = 2;
-	  else                         phmatch[iph] = 0;
+	  if      (iph == genph1match && iph != genph2match) phmatch[iph] = 1; // matched to photon from leading neutralino 
+	  else if (iph == genph2match && iph != genph1match) phmatch[iph] = 2; // matched to photon from subleading neutralino
+	  else if (iph == genph1match && iph == genph2match) phmatch[iph] = 3; // matched to both photons from both neutralinos (probably will never happen)
+	  else                                               phmatch[iph] = 0; // no corresponding match
 	} 
+	if (isHVDS) 
+	{
+	  // since we can have many dipho pairs, store just if reco photon is matched to dark pion decay
+	  // so meaning of 1,2, and 3 change
+
+	  bool tmpph1match = false;
+	  bool tmpph2match = false;
+	  for (auto jph = 0; jph < genHVph1match.size(); jph++)
+	  {
+	    if (genHVph1match[jph] == iph)
+	    { 
+	      tmpph1match = true;
+	      break;
+	    }
+	  } // end loop over genHVph1matches
+	  for (auto jph = 0; jph < genHVph2match.size(); jph++)
+	  {
+	    if (genHVph2match[jph] == iph) 
+	    {
+	      tmpph2match = true;
+	      break;
+	    }
+	  } // end loop over genHVph2matches
+
+	  if      (tmpph1match && !tmpph2match) phmatch[iph] = 1; // 1 means "I am matched to some photon inside genHVph1match and not to any photon in genHVph2match"
+	  else if (tmpph2match && !tmpph1match) phmatch[iph] = 2; // 2 means "I am matched to some photon inside genHVph2match and not to any photon in genHVph1match"
+	  else if (tmpph1match &&  tmpph2match) phmatch[iph] = 3; // 3 means "I am matched to some photon inside genHVph1match and some photon in genHVph2match" (i.e. the generator photons merged into a single reco photon)
+	  else                                  phmatch[iph] = 0; // no corresponding match
+	} // end block over HVDS
 	phisMatched[iph] = PhotonDump::PhotonMatching((*phiter),genparticlesH);
       }
 
@@ -1170,8 +1200,8 @@ void PhotonDump::ClearRecoPhotonBranches()
   phphi.clear(); 
   pheta.clear(); 
 
-  if (isGMSB) phmatch.clear();
-  if (isMC)   phisMatched.clear();
+  if (isGMSB || isHVDS) phmatch.clear();
+  if (isMC) phisMatched.clear();
 
   phscE.clear(); 
   phsceta.clear(); 
@@ -1216,8 +1246,8 @@ void PhotonDump::InitializeRecoPhotonBranches()
   phphi.resize(nphotons);
   pheta.resize(nphotons);
 
-  if (isGMSB) phmatch.resize(nphotons);
-  if (isMC)   phisMatched.resize(nphotons);
+  if (isGMSB || isHVDS) phmatch.resize(nphotons);
+  if (isMC) phisMatched.resize(nphotons);
   
   phscE.resize(nphotons);
   phsceta.resize(nphotons);
@@ -1262,8 +1292,8 @@ void PhotonDump::InitializeRecoPhotonBranches()
     phphi[iph] = -9999.f; 
     pheta[iph] = -9999.f; 
 
-    if (isGMSB) phmatch    [iph] = -9999;
-    if (isMC)   phisMatched[iph] = false;
+    if (isGMSB || isHVDS) phmatch [iph] = -9999;
+    if (isMC) phisMatched[iph] = false;
 
     phscE  [iph] = -9999.f; 
     phsceta[iph] = -9999.f; 
@@ -1466,7 +1496,7 @@ void PhotonDump::beginJob()
   tree->Branch("phphi"                , &phphi);
   tree->Branch("pheta"                , &pheta);
 
-  if (isGMSB) tree->Branch("phmatch"  , &phmatch);
+  if (isGMSB || isHVDS) tree->Branch("phmatch", &phmatch);
   if (isMC) tree->Branch("phisMatched", &phisMatched);
 
   tree->Branch("phscE"                , &phscE);
