@@ -629,7 +629,7 @@ void PlotPhotons::FillRecoPhotons()
     if (fApplyPhPtCut && ((*phpt)[iph] < fPhPtCut)) continue;
     if (fApplyPhVIDCut && ((*phVID)[iph] < fPhVIDMap[fPhVID])) continue;
     if ((fApplyEBOnly && (std::abs((*phsceta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*phsceta)[iph]) < 1.566 || std::abs((*phsceta)[iph]) > 2.5))) continue;
-    if (((fIsGMSB || fIsHVDS) && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] == 0) ) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
+    if (((fIsGMSB || fIsHVDS) && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] != 0) ) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
     //if ((*phisMatched)[iph] == 0) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
 
     fPlots["phE"]->Fill((*phE)[iph]);
@@ -925,7 +925,7 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["phChgIso"] = PlotPhotons::MakeTH1F("phChgIso","Photons #rho-corrected Charged Hadron Isolation (reco)",100,0.f,1000.f,"#rho-corrected Charged Hadron Isolation","Photons","RecoPhotons");
   fPlots["phNeuIso"] = PlotPhotons::MakeTH1F("phNeuIso","Photons #rho-corrected Neutral Hadron Isolation (reco)",100,0.f,1000.f,"#rho-corrected Neutral Hadron Isolation","Photons","RecoPhotons");
   fPlots["phIso"] = PlotPhotons::MakeTH1F("phIso","Photons #rho-corrected Photon Isolation (reco)",100,0.f,1000.f,"#rho-corrected Photon Isolation","Photons","RecoPhotons");
-  fPlots["phsuisseX"] = PlotPhotons::MakeTH1F("phsuisse","Photons Swiss Cross (reco)",100,0.f,1.f,"Swiss Cross","Photons","RecoPhotons");
+  fPlots["phsuisseX"] = PlotPhotons::MakeTH1F("phsuisseX","Photons Swiss Cross (reco)",100,0.f,1.f,"Swiss Cross","Photons","RecoPhotons");
   fPlots["phsieie"] = PlotPhotons::MakeTH1F("phsieie","Photons #sigma_{i#eta i#eta} (reco)",100,0,0.1,"#sigma_{i#eta i#eta}","Photons","RecoPhotons");
   fPlots["phsipip"] = PlotPhotons::MakeTH1F("phsipip","Photons #sigma_{i#phi i#phi} (reco)",100,0,0.1,"#sigma_{i#phi i#phi}","Photons","RecoPhotons");
   fPlots["phsieip"] = PlotPhotons::MakeTH1F("phsieip","Photons #sigma_{i#eta i#phi} (reco)",100,-0.005,0.005,"#sigma_{i#eta i#phi}","Photons","RecoPhotons");
@@ -952,7 +952,7 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["ph1ChgIso"] = PlotPhotons::MakeTH1F("ph1ChgIso","Photons #rho-corrected Charged Hadron Isolation (reco)",100,0.f,1000.f,"#rho-corrected Charged Hadron Isolation","Photons","RecoPhotons");
   fPlots["ph1NeuIso"] = PlotPhotons::MakeTH1F("ph1NeuIso","Photons #rho-corrected Neutral Hadron Isolation (reco)",100,0.f,1000.f,"#rho-corrected Neutral Hadron Isolation","Photons","RecoPhotons");
   fPlots["ph1Iso"] = PlotPhotons::MakeTH1F("ph1Iso","Photons #rho-corrected Photon Isolation (reco)",100,0.f,1000.f,"#rho-corrected Photon Isolation","Photons","RecoPhotons");
-  fPlots["ph1suisseX"] = PlotPhotons::MakeTH1F("ph1suisse","Photons Swiss Cross (reco)",100,0.f,1.f,"Swiss Cross","Photons","RecoPhotons");
+  fPlots["ph1suisseX"] = PlotPhotons::MakeTH1F("ph1suisseX","Photons Swiss Cross (reco)",100,0.f,1.f,"Swiss Cross","Photons","RecoPhotons");
   fPlots["ph1sieie"] = PlotPhotons::MakeTH1F("ph1sieie","Photons #sigma_{i#eta i#eta} (reco)",100,0,0.1,"#sigma_{i#eta i#eta}","Photons","RecoPhotons");
   fPlots["ph1sipip"] = PlotPhotons::MakeTH1F("ph1sipip","Photons #sigma_{i#phi i#phi} (reco)",100,0,0.1,"#sigma_{i#phi i#phi}","Photons","RecoPhotons");
   fPlots["ph1sieip"] = PlotPhotons::MakeTH1F("ph1sieip","Photons #sigma_{i#eta i#phi} (reco)",100,-0.005,0.005,"#sigma_{i#eta i#phi}","Photons","RecoPhotons");

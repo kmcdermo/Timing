@@ -17,10 +17,11 @@
 void makeDir(const TString &);
 void getQCD(std::vector<TH1F*>&, std::vector<TString>&, const TString &);
 void getGJets(std::vector<TH1F*>&, std::vector<TString>&, const TString &);
-void getSignals(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
-void drawAll(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
-void drawStack(std::vector<THStack*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
-void drawAllSeparate(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void getGMSB(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void getHVDS(std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void drawAll(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void drawStack(std::vector<THStack*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void drawAllSeparate(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
 void delTH1FVec(std::vector<TH1F*>&);
 void delTHStackVec(std::vector<THStack*>&);
 
@@ -31,8 +32,8 @@ void quickStack()
   SetTDRStyle(tdrStyle);
   gROOT->ForceStyle();
 
-  //std::vector<TString> histnames = {"ph1smaj","ph1smin","ph1sieie","ph1sipip","ph1sieip"};
-  std::vector<TString> histnames = {"ph1r9","ph1suisse"};
+  std::vector<TString> histnames = {"ph1smaj","ph1smin","ph1sieie","ph1sipip","ph1sieip","phalpha","ph1smin_ov_ph1smaj","ph1suisseX","ph1r9"};
+  //std::vector<TString> histnames = {"ph1r9","ph1suisse"};
   // std::vector<TString> histnames = {"ph1pt_nm1","ph1VID_nm1","ph1seedtime","jet1pt"};
 
   // generic settings
@@ -69,14 +70,18 @@ void quickStack()
     bkgStacks[ihist]->Add(qcdTH1Fs[ihist]);
   }
 
-  // Signals
+  // GMSB
   std::vector<TH1F*> ctau100TH1Fs(histnames.size()), ctau2000TH1Fs(histnames.size()), ctau6000TH1Fs(histnames.size());
-  getSignals(ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames,cuts);
+  getGMSB(ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames,cuts);
+
+  // HVDS
+  std::vector<TH1F*> hvdsTH1Fs(histnames.size());
+  getHVDS(hvdsTH1Fs,histnames,cuts);
 
   // Draw everything together
-  drawAll(bkgTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames,outdir);
-  drawStack(bkgStacks,qcdTH1Fs,gjetsTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames,outdir);
-  drawAllSeparate(qcdTH1Fs,gjetsTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames,outdir);
+  drawAll(bkgTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,hvdsTH1Fs,histnames,outdir);
+  drawStack(bkgStacks,qcdTH1Fs,gjetsTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,hvdsTH1Fs,histnames,outdir);
+  drawAllSeparate(qcdTH1Fs,gjetsTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,hvdsTH1Fs,histnames,outdir);
 
   delTH1FVec(qcdTH1Fs);
   delTH1FVec(gjetsTH1Fs);
@@ -85,6 +90,7 @@ void quickStack()
   delTH1FVec(ctau100TH1Fs);
   delTH1FVec(ctau2000TH1Fs);
   delTH1FVec(ctau6000TH1Fs);
+  delTH1FVec(hvdsTH1Fs);
 }
 
 void getQCD(std::vector<TH1F*>& qcdTH1Fs, std::vector<TString>& histnames, const TString & cuts)
@@ -167,9 +173,9 @@ void getGJets(std::vector<TH1F*>& gjetsTH1Fs, std::vector<TString>& histnames, c
   }
 }
 
-void getSignals(std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames, const TString & cuts)
+void getGMSB(std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames, const TString & cuts)
 {
-  // Signals
+  // GMSB
   TFile * file100  = TFile::Open(Form("output/MC/signal/GMSB/photondump/ctau100/%s/plots.root",cuts.Data()));
   TFile * file2000 = TFile::Open(Form("output/MC/signal/GMSB/photondump/ctau2000/%s/plots.root",cuts.Data()));
   TFile * file6000 = TFile::Open(Form("output/MC/signal/GMSB/photondump/ctau6000/%s/plots.root",cuts.Data()));
@@ -197,7 +203,23 @@ void getSignals(std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH
   delete file6000;
 }
 
-void drawAll(std::vector<TH1F*>& bkgTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames, const TString & outdir)
+void getHVDS(std::vector<TH1F*>& hvdsTH1Fs, std::vector<TString>& histnames, const TString & cuts)
+{
+  // HVDS
+  TFile * filehvds = TFile::Open(Form("output/MC/signal/HVDS/photondump/%s/plots.root",cuts.Data()));
+
+  for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
+  {
+    hvdsTH1Fs[ihist] = (TH1F*)filehvds->Get(histnames[ihist].Data());     
+    hvdsTH1Fs[ihist]->SetDirectory(0);
+    hvdsTH1Fs[ihist]->Scale(1.0/hvdsTH1Fs[ihist]->Integral());
+    hvdsTH1Fs[ihist]->SetLineColor(kAzure+10);
+  }
+
+  delete filehvds;
+}
+
+void drawAll(std::vector<TH1F*>& bkgTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TH1F*>& hvdsTH1Fs, std::vector<TString>& histnames, const TString & outdir)
 {
   // Draw it all
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -210,12 +232,14 @@ void drawAll(std::vector<TH1F*>& bkgTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std
     ctau100TH1Fs [ihist]->Draw("HIST same");
     ctau2000TH1Fs[ihist]->Draw("HIST same");
     ctau6000TH1Fs[ihist]->Draw("HIST same");
+    hvdsTH1Fs    [ihist]->Draw("HIST same");
     
     TLegend * leg = new TLegend(0.6,0.7,0.8,0.9);
     leg->AddEntry(bkgTH1Fs     [ihist],"Background","f");
     leg->AddEntry(ctau100TH1Fs [ihist],"c#tau = 36.5 mm" ,"l");
     leg->AddEntry(ctau2000TH1Fs[ihist],"c#tau = 730.5 mm","l");
     leg->AddEntry(ctau6000TH1Fs[ihist],"c#tau = 2192 mm","l");
+    leg->AddEntry(hvdsTH1Fs    [ihist],"HVDS","l");
     leg->Draw("same");
     
     CMSLumi(canv,"Simulation");
@@ -226,7 +250,7 @@ void drawAll(std::vector<TH1F*>& bkgTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std
   }
 }
 
-void drawStack(std::vector<THStack*>& bkgStacks, std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames, const TString & outdir)
+void drawStack(std::vector<THStack*>& bkgStacks, std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TH1F*>& hvdsTH1Fs, std::vector<TString>& histnames, const TString & outdir)
 {
   // Draw it all
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -240,6 +264,7 @@ void drawStack(std::vector<THStack*>& bkgStacks, std::vector<TH1F*>& qcdTH1Fs, s
     ctau100TH1Fs [ihist]->Draw("HIST same");    
     ctau2000TH1Fs[ihist]->Draw("HIST same");
     ctau6000TH1Fs[ihist]->Draw("HIST same");
+    hvdsTH1Fs    [ihist]->Draw("HIST same");
     canv->RedrawAxis("same");
 
     TLegend * leg = new TLegend(0.6,0.7,0.8,0.9);
@@ -248,6 +273,7 @@ void drawStack(std::vector<THStack*>& bkgStacks, std::vector<TH1F*>& qcdTH1Fs, s
     leg->AddEntry(ctau100TH1Fs [ihist],"c#tau = 36.5 mm" ,"l");
     leg->AddEntry(ctau2000TH1Fs[ihist],"c#tau = 730.5 mm","l");
     leg->AddEntry(ctau6000TH1Fs[ihist],"c#tau = 2192 mm","l");
+    leg->AddEntry(hvdsTH1Fs    [ihist],"HVDS","l");
     leg->Draw("same");
     
     CMSLumi(canv,"Simulation");
@@ -258,7 +284,7 @@ void drawStack(std::vector<THStack*>& bkgStacks, std::vector<TH1F*>& qcdTH1Fs, s
   }
 }
 
-void drawAllSeparate(std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames, const TString & outdir)
+void drawAllSeparate(std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TH1F*>& hvdsTH1Fs, std::vector<TString>& histnames, const TString & outdir)
 {
   // Draw it all
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -279,6 +305,7 @@ void drawAllSeparate(std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1F
     ctau100TH1Fs [ihist]->Draw("HIST same");
     ctau2000TH1Fs[ihist]->Draw("HIST same");
     ctau6000TH1Fs[ihist]->Draw("HIST same");
+    hvdsTH1Fs    [ihist]->Draw("HIST same");
     
     TLegend * leg = new TLegend(0.6,0.7,0.8,0.9);
     leg->AddEntry(qcdTH1Fs     [ihist],"QCD","f");
@@ -286,6 +313,7 @@ void drawAllSeparate(std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1F
     leg->AddEntry(ctau100TH1Fs [ihist],"c#tau = 36.5 mm" ,"l");
     leg->AddEntry(ctau2000TH1Fs[ihist],"c#tau = 730.5 mm","l");
     leg->AddEntry(ctau6000TH1Fs[ihist],"c#tau = 2192 mm","l");
+    leg->AddEntry(hvdsTH1Fs    [ihist],"HVDS","l");
     leg->Draw("same");
     
     CMSLumi(canv,"Simulation");
