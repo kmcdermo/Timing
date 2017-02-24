@@ -32,7 +32,7 @@ void quickStack()
   SetTDRStyle(tdrStyle);
   gROOT->ForceStyle();
 
-  std::vector<TString> histnames = {"ph1smaj","ph1smin","ph1sieie","ph1sipip","ph1sieip","phalpha","ph1smin_ov_ph1smaj","ph1suisseX","ph1r9"};
+  std::vector<TString> histnames = {"ph1smaj","ph1smin","ph1sieie","ph1sipip","ph1sieip","ph1alpha","ph1smin_ov_ph1smaj","ph1suisseX","ph1r9"};
   //std::vector<TString> histnames = {"ph1r9","ph1suisse"};
   // std::vector<TString> histnames = {"ph1pt_nm1","ph1VID_nm1","ph1seedtime","jet1pt"};
 
