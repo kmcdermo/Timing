@@ -67,11 +67,11 @@ inline bool sortElectronsByPt(const pat::ElectronRef& el1, const pat::ElectronRe
   return el1->pt()>el2->pt();
 }
 
-class TimingAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
+class ZeeTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
 public:
-  explicit TimingAnalyzer(const edm::ParameterSet&);
-  ~TimingAnalyzer();
+  explicit ZeeTree(const edm::ParameterSet&);
+  ~ZeeTree();
   
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
   
@@ -154,12 +154,14 @@ private:
   std::vector<float> el1rhXs, el1rhYs, el1rhZs, el1rhEs, el1rhtimes;
   std::vector<float> el2rhXs, el2rhYs, el2rhZs, el2rhEs, el2rhtimes;
   std::vector<int> el1rhids, el2rhids;
+  std::vector<int> el1rhOOTs, el2rhOOTs;
   std::vector<int> el1rhgain1s, el1rhgain6s, el2rhgain1s, el2rhgain6s;
 
   // seed info
   float el1seedX, el1seedY, el1seedZ, el1seedE, el1seedtime;
   float el2seedX, el2seedY, el2seedZ, el2seedE, el2seedtime;
   int el1seedid, el2seedid;
+  int el1seedOOT, el2seedOOT;
   int el1seedgain1, el1seedgain6, el2seedgain1, el2seedgain6;
 
   // dielectron info

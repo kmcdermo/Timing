@@ -1,6 +1,6 @@
-#include "TimingAnalyzer.h"
+#include "ZeeTree.h"
 
-TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig): 
+ZeeTree::ZeeTree(const edm::ParameterSet& iConfig): 
   ///////////// TRIGGER and filter info INFO
   triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
   applyHLTFilter(iConfig.existsAs<bool>("applyHLTFilter") ? iConfig.getParameter<bool>("applyHLTFilter") : false),
@@ -52,9 +52,9 @@ TimingAnalyzer::TimingAnalyzer(const edm::ParameterSet& iConfig):
   }
 }
 
-TimingAnalyzer::~TimingAnalyzer() {}
+ZeeTree::~ZeeTree() {}
 
-void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
+void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 {
   // TRIGGER
   edm::Handle<edm::TriggerResults> triggerResultsH;
@@ -144,14 +144,14 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   el1rhXs.clear(); el1rhYs.clear(); el1rhZs.clear(); el1rhEs.clear(); el1rhtimes.clear(); 
   el2rhXs.clear(); el2rhYs.clear(); el2rhZs.clear(); el2rhEs.clear(); el2rhtimes.clear(); 
 
-  el1rhids.clear(); el1rhgain1s.clear(); el1rhgain6s.clear();
-  el2rhids.clear(); el2rhgain1s.clear(); el2rhgain6s.clear();
+  el1rhids.clear(); el1rhOOTs.clear(); el1rhgain1s.clear(); el1rhgain6s.clear();
+  el2rhids.clear(); el2rhOOTs.clear(); el2rhgain1s.clear(); el2rhgain6s.clear();
 
   el1seedX = -999.0; el1seedY = -999.0; el1seedZ = -999.0; el1seedE = -999.0; el1seedtime = -999.0; 
   el2seedX = -999.0; el2seedY = -999.0; el2seedZ = -999.0; el2seedE = -999.0; el2seedtime = -999.0; 
 
-  el1seedid = -99; el1seedgain1 = -99; el1seedgain6 = -99;
-  el2seedid = -99; el2seedgain1 = -99; el2seedgain6 = -99;
+  el1seedid = -99; el1seedOOT = -99; el1seedgain1 = -99; el1seedgain6 = -99;
+  el2seedid = -99; el2seedOOT = -99; el2seedgain1 = -99; el2seedgain6 = -99;
 
   el1nrh = -99; el2nrh = -99;
 
@@ -246,6 +246,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	  el1rhEs.push_back(recHit->energy());
 	  el1rhtimes.push_back(recHit->time());	 
 	  el1rhids.push_back(int(recHitId.rawId()));
+	  el1rhOOTs.push_back(recHit->checkFlag(EcalRecHit::kOutofTime));
 	  el1rhgain1s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
 	  el1rhgain6s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
 
@@ -258,6 +259,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	    el1seedE = el1rhEs.back();
 	    el1seedtime = el1rhtimes.back();
 	    el1seedid = el1rhids.back();
+	    el1seedOOT = el1rhOOTs.back();
 	    el1seedgain1 = el1rhgain1s.back();
 	    el1seedgain6 = el1rhgain6s.back();
 	  }
@@ -298,6 +300,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	  el2rhEs.push_back(recHit->energy());
 	  el2rhtimes.push_back(recHit->time());	 
 	  el2rhids.push_back(int(recHitId.rawId()));
+	  el2rhOOTs.push_back(recHit->checkFlag(EcalRecHit::kOutofTime));
 	  el2rhgain1s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
 	  el2rhgain6s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
 
@@ -310,6 +313,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	    el2seedE = el2rhEs.back();
 	    el2seedtime = el2rhtimes.back();
 	    el2seedid = el2rhids.back();
+	    el2seedOOT = el2rhOOTs.back();
 	    el2seedgain1 = el2rhgain1s.back();
 	    el2seedgain6 = el2rhgain6s.back();
 	  }
@@ -460,7 +464,7 @@ void TimingAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   tree->Fill();    
 }    
 
-void TimingAnalyzer::beginJob() 
+void ZeeTree::beginJob() 
 {
   edm::Service<TFileService> fs;
   tree = fs->make<TTree>("tree"       , "tree");
@@ -527,10 +531,12 @@ void TimingAnalyzer::beginJob()
   tree->Branch("el2rhtimes"           , "std::vector<float>"  , &el2rhtimes);
 
   tree->Branch("el1rhids"             , "std::vector<int>"    , &el1rhids);
+  tree->Branch("el1rhOOTs"            , "std::vector<int>"    , &el1rhOOTs);
   tree->Branch("el1rhgain1s"          , "std::vector<int>"    , &el1rhgain1s);
   tree->Branch("el1rhgain6s"          , "std::vector<int>"    , &el1rhgain6s);
 
   tree->Branch("el2rhids"             , "std::vector<int>"    , &el2rhids);
+  tree->Branch("el2rhOOTs"            , "std::vector<int>"    , &el2rhOOTs);
   tree->Branch("el2rhgain1s"          , "std::vector<int>"    , &el2rhgain1s);
   tree->Branch("el2rhgain6s"          , "std::vector<int>"    , &el2rhgain6s);
 
@@ -548,9 +554,12 @@ void TimingAnalyzer::beginJob()
   tree->Branch("el2seedtime"          , &el2seedtime          , "el2seedtime/F");
 
   tree->Branch("el1seedid"            , &el1seedid            , "el1seedid/I");
+  tree->Branch("el1seedOOT"           , &el1seedOOT           , "el1seedOOT/I");
   tree->Branch("el1seedgain1"         , &el1seedgain1         , "el1seedgain1/I");
   tree->Branch("el1seedgain6"         , &el1seedgain6         , "el1seedgain6/I");
+
   tree->Branch("el2seedid"            , &el2seedid            , "el2seedid/I");
+  tree->Branch("el2seedOOT"           , &el2seedOOT           , "el2seedOOT/I");
   tree->Branch("el2seedgain1"         , &el2seedgain1         , "el2seedgain1/I");
   tree->Branch("el2seedgain6"         , &el2seedgain6         , "el2seedgain6/I");
 
@@ -600,9 +609,9 @@ void TimingAnalyzer::beginJob()
   }
 }
 
-void TimingAnalyzer::endJob() {}
+void ZeeTree::endJob() {}
 
-void TimingAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
+void ZeeTree::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
 {
   // triggers for the Analysis
   //  triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ");
@@ -636,13 +645,13 @@ void TimingAnalyzer::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetu
   }
 }
 
-void TimingAnalyzer::endRun(edm::Run const&, edm::EventSetup const&) {}
+void ZeeTree::endRun(edm::Run const&, edm::EventSetup const&) {}
 
-void TimingAnalyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
+void ZeeTree::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
 {
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addDefault(desc);
 }
 
-DEFINE_FWK_MODULE(TimingAnalyzer);
+DEFINE_FWK_MODULE(ZeeTree);
