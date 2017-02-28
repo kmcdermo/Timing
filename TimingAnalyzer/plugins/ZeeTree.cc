@@ -158,14 +158,40 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // z variables
   zmass = -99.0; zpt = -99.0; zeta = -99.0; zphi = -99.0; zE = -99.0; zp = -99.0;
 
-       // save only really pure electrons
+  // save only really pure electrons
   std::vector<pat::ElectronRef> tightelectrons;
   for (std::size_t i = 0; i < tightelectronsvec.size(); i++) 
   {
+    bool saveElectron = false;
+
     if (tightelectronsvec[i]->pt() > 35.) 
     {
-      tightelectrons.push_back(tightelectronsvec[i]); 
+      clustertools = new EcalClusterLazyTools (iEvent, iSetup, recHitCollectionEBTAG, recHitCollectionEETAG);
+      const reco::SuperClusterRef& elsc = tightelectronsvec[i]->superCluster().isNonnull() ? tightelectronsvec[i]->superCluster() : tightelectronsvec[i]->parentSuperCluster();
+      if (tightelectronsvec[i]->ecalDrivenSeed() && elsc.isNonnull()) 
+      {
+	// use seed to get geometry and recHits
+	const DetId seedDetId = elsc->seed()->seed(); //seed detid
+	const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
+	const EcalRecHitCollection *recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
+
+	// loop over all crystals
+	const DetIdPairVec hitsAndFractions = elsc->hitsAndFractions(); // all crystals in SC
+	for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) 
+        {
+	  const DetId recHitId = hafitr->first; // get detid of crystal
+	  EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
+
+	  if (recHit != recHits->end() && seedDetId == recHitId) // standard check
+	  { 
+	    saveElectron = true;
+	    break;
+	  }
+	} 
+      }
+      delete clustertools;
     }
+    if (saveElectron) tightelectrons.push_back(tightelectronsvec[i]);   
   }
 
   // Z matching + filling of variables
@@ -186,11 +212,16 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	const pat::ElectronRef el1 = tightelectrons[i];
 	for (std::size_t j = i+1; j < tightelectrons.size(); j++) 
 	{
-	  const pat::ElectronRef el2 = tightelectrons[j];
-	  TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1->pt(), el1->eta(), el1->phi(), el1->energy());
-	  TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2->pt(), el2->eta(), el2->phi(), el2->energy());
-	  el1vec += el2vec;
-	  invmasspairs.push_back(std::make_tuple(i,j,std::abs(el1vec.M()-91.1876))); 
+	  int el1pdgId = el1->pdgId();
+	  int el2pdgId = el2->pdgId();
+	  if (el1pdgId == -el2pdgId)
+	  {
+	    const pat::ElectronRef el2 = tightelectrons[j];
+	    TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1->pt(), el1->eta(), el1->phi(), el1->energy());
+	    TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2->pt(), el2->eta(), el2->phi(), el2->energy());
+	    el1vec += el2vec;
+	    invmasspairs.push_back(std::make_tuple(i,j,std::abs(el1vec.M()-91.1876))); 
+	  }
 	}
       }
       auto best = std::min_element(invmasspairs.begin(),invmasspairs.end(),minimizeByZmass); // keep the lowest! --> returns pointer to lowest element
@@ -246,7 +277,7 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  el1rhEs.push_back(recHit->energy());
 	  el1rhtimes.push_back(recHit->time());	 
 	  el1rhids.push_back(int(recHitId.rawId()));
-	  el1rhOOTs.push_back(recHit->checkFlag(EcalRecHit::kOutofTime));
+	  el1rhOOTs.push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
 	  el1rhgain1s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
 	  el1rhgain6s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
 
@@ -300,7 +331,7 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  el2rhEs.push_back(recHit->energy());
 	  el2rhtimes.push_back(recHit->time());	 
 	  el2rhids.push_back(int(recHitId.rawId()));
-	  el2rhOOTs.push_back(recHit->checkFlag(EcalRecHit::kOutofTime));
+	  el2rhOOTs.push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
 	  el2rhgain1s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
 	  el2rhgain6s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
 
