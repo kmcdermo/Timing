@@ -139,7 +139,7 @@ process.selectedObjects = cms.EDProducer("PFCleaner",
      electronidloose  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-loose"),
      electronidmedium = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"),
      electronidtight  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"),
-     electronidheep   = cms.InputTag("egmGsfElectronIDs:heepElectronID-HEEPV60"),
+     electronidheep   = cms.InputTag("egmGsfElectronIDs:heepElectronID-HEEPV70"),
 )
 
 ## Create output file

@@ -16,7 +16,7 @@ def PhotonTools(process,isMC):
     setattr(process,"calibratedPhotons",calibratedPatPhotons.clone(
             isMC = cms.bool(isMC),				
             photons = cms.InputTag('selectedPhotons'),
-            correctionFile = cms.string(files["80Xapproval"])
+            correctionFile = cms.string(files["Moriond17_23Jan"])
             ))
 
     process.RandomNumberGeneratorService.calibratedPhotons = cms.PSet(

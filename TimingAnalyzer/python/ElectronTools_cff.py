@@ -16,7 +16,7 @@ def ElectronTools(process,isMC):
     setattr(process,"calibratedElectrons",calibratedPatElectrons.clone(
             isMC = cms.bool(isMC),				
             electrons = cms.InputTag('selectedElectrons'),
-            correctionFile = cms.string(files["80Xapproval"])
+            correctionFile = cms.string(files["Moriond17_23Jan"])
             ))
 
     process.RandomNumberGeneratorService.calibratedElectrons = cms.PSet(

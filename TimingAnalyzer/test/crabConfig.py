@@ -1,7 +1,7 @@
 from CRABClient.UserUtilities import config
 config = config()
 
-config.General.requestName = 'DoubleEG_ReRecoBv3-v1'
+config.General.requestName = 'DoubleEG_reMAD_PRHv2-v1'
  
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'zeetree.py'
@@ -13,17 +13,18 @@ config.JobType.psetName = 'zeetree.py'
 ############################################
 #                Data samples              #
 ############################################
-# /DoubleEG/Run2016B-23Sep2016-v3/MINIAOD --> GT: 80X_dataRun2_2016SeptRepro_v4
-# /DoubleEG/Run2016C-23Sep2016-v1/MINIAOD --> GT: 80X_dataRun2_2016SeptRepro_v4
-# /DoubleEG/Run2016D-23Sep2016-v1/MINIAOD --> GT: 80X_dataRun2_2016SeptRepro_v4
-# /DoubleEG/Run2016E-23Sep2016-v1/MINIAOD --> GT: 80X_dataRun2_2016SeptRepro_v4
-# /DoubleEG/Run2016F-23Sep2016-v1/MINIAOD --> GT: 80X_dataRun2_2016SeptRepro_v4
-# /DoubleEG/Run2016G-23Sep2016-v1/MINIAOD --> GT: 80X_dataRun2_2016SeptRepro_v4
-# /DoubleEG/Run2016H-PromptReco-v2/MINIAOD --> GT: 80X_dataRun2_Prompt_v14
-# /DoubleEG/Run2016H-PromptReco-v3/MINIAOD --> GT: 80X_dataRun2_Prompt_v14
+# /DoubleEG/Run2016B-03Feb2017_ver1-v1/MINIAOD --> NOT IN Golden JSON
+# /DoubleEG/Run2016B-03Feb2017_ver2-v2/MINIAOD --> GT: 80X_dataRun2_2016SeptRepro_v7
+# /DoubleEG/Run2016C-03Feb2017-v1/MINIAOD --> GT: 80X_dataRun2_2016SeptRepro_v7
+# /DoubleEG/Run2016D-03Feb2017-v1/MINIAOD --> GT: 80X_dataRun2_2016SeptRepro_v7
+# /DoubleEG/Run2016E-03Feb2017-v1/MINIAOD --> GT: 80X_dataRun2_2016SeptRepro_v7
+# /DoubleEG/Run2016F-03Feb2017-v1/MINIAOD --> GT: 80X_dataRun2_2016SeptRepro_v7
+# /DoubleEG/Run2016G-03Feb2017-v1/MINIAOD --> GT: 80X_dataRun2_2016SeptRepro_v7
+# /DoubleEG/Run2016H-03Feb2017_ver2-v1/MINIAOD --> GT: 80X_dataRun2_Prompt_v16
+# /DoubleEG/Run2016H-03Feb2017_ver3-v1/MINIAOD --> GT: 80X_dataRun2_Prompt_v16
 
-config.Data.inputDataset = '/DoubleEG/Run2016B-23Sep2016-v3/MINIAOD'
-config.Data.lumiMask = 'rereco2016.txt'
+config.Data.inputDataset = '/DoubleEG/Run2016H-03Feb2016_ver2-v1/MINIAOD'
+config.Data.lumiMask = 'final2016json.txt'
 config.Data.unitsPerJob = 500000
 
 #config.Data.ignoreLocality = True
