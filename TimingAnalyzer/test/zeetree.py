@@ -21,12 +21,12 @@ options.register (
 
 ## outputFile Name
 options.register (
-	'outputFileName','tree.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'outputFileName','zeetree.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
 ## GT to be used    
 options.register (
-	'globalTag','80X_dataRun2_2016SeptRepro_v4',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'globalTag','80X_dataRun2_2016SeptRepro_v7',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'gloabl tag to be used');
 
 ## Skim on events that pass hlt paths and tight electron kinematic requirements
@@ -48,10 +48,6 @@ options.register (
 	'demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to run over only 100k events as a demo');
 
-options.register (
-	'doZmassSort',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to pick electrons based on dilepton mass');
-
 ## parsing command line arguments
 options.parseArguments()
 
@@ -72,7 +68,6 @@ print "Running with filterOnHLT         = ",options.filterOnHLT
 print "Running with filterOnKinematics  = ",options.filterOnKinematics
 print "Running with nThreads            = ",options.nThreads
 print "Running with demoMode            = ",options.demoMode
-print "Running with doZmassSort         = ",options.doZmassSort
 print "#####################"
 
 ## Define the CMSSW process
@@ -122,7 +117,7 @@ if not options.demoMode:
 		input = cms.untracked.int32(options.maxEvents))
 else:
 	process.maxEvents = cms.untracked.PSet( 
-		input = cms.untracked.int32(100000))
+		input = cms.untracked.int32(10000))
 
 # Set the global tag depending on the sample type
 from Configuration.AlCa.GlobalTag import GlobalTag
@@ -132,23 +127,13 @@ process.GlobalTag.globaltag = options.globalTag
 from Timing.TimingAnalyzer.ElectronTools_cff import ElectronTools
 ElectronTools(process,options.isMC)
 
-# Create a set of objects to read from
-process.selectedObjects = cms.EDProducer("PFCleaner",
-     electrons        = cms.InputTag("calibratedElectrons"), 
-     electronidveto   = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-veto"),
-     electronidloose  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-loose"),
-     electronidmedium = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"),
-     electronidtight  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"),
-     electronidheep   = cms.InputTag("egmGsfElectronIDs:heepElectronID-HEEPV70"),
-)
-
 ## Create output file
 ## Setup the service to make a ROOT TTree
 process.TFileService = cms.Service("TFileService", 
 		                   fileName = cms.string(options.outputFileName))
 
 # Make the tree 
-process.tree = cms.EDAnalyzer("TimingAnalyzer",
+process.tree = cms.EDAnalyzer("ZeeTree",
    ## gen info			     
    isMC       = cms.bool(options.isMC),
    pileup     = cms.InputTag("slimmedAddPileupInfo"),
@@ -160,18 +145,16 @@ process.tree = cms.EDAnalyzer("TimingAnalyzer",
    ## vertexes			    	
    vertices  = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## electrons
-   vetoelectrons   = cms.InputTag("selectedObjects", "vetoelectrons"),
-   looseelectrons  = cms.InputTag("selectedObjects", "looseelectrons"),
-   mediumelectrons = cms.InputTag("selectedObjects", "mediumelectrons"),
-   tightelectrons  = cms.InputTag("selectedObjects", "tightelectrons"),
-   heepelectrons   = cms.InputTag("selectedObjects", "heepelectrons"),
+   vetoElectronID   = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-veto"),
+   looseElectronID  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-loose"),
+   mediumElectronID = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"),
+   tightElectronID  = cms.InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"),
+   electrons        = cms.InputTag("calibratedElectrons"),
    applyKinematicsFilter = cms.bool(options.filterOnKinematics),
    ## ecal recHits			      
-   recHitCollectionEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
-   recHitCollectionEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
-   ## turn on dilepton selection based on mass
-   doZmassSort = cms.bool(options.doZmassSort)
+   recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
+   recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
 )
 
 # Set up the path
-process.treePath = cms.Path(process.tree)
+process.treePath = cms.Path(process.selectedElectrons * process.calibratedElectrons * process.egmGsfElectronIDs * process.tree)

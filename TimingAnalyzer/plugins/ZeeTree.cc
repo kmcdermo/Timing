@@ -9,23 +9,22 @@ ZeeTree::ZeeTree(const edm::ParameterSet& iConfig):
   verticesTag(iConfig.getParameter<edm::InputTag>("vertices")),
   
   // electrons
-  vetoelectronsTag(iConfig.getParameter<edm::InputTag>("vetoelectrons")),
-  looseelectronsTag(iConfig.getParameter<edm::InputTag>("looseelectrons")),
-  mediumelectronsTag(iConfig.getParameter<edm::InputTag>("mediumelectrons")),
-  tightelectronsTag(iConfig.getParameter<edm::InputTag>("tightelectrons")),
-  heepelectronsTag(iConfig.getParameter<edm::InputTag>("heepelectrons")),
+  electronVetoIdMapTag  (iConfig.getParameter<edm::InputTag>("vetoElectronID")),  
+  electronLooseIdMapTag (iConfig.getParameter<edm::InputTag>("looseElectronID")),  
+  electronMediumIdMapTag(iConfig.getParameter<edm::InputTag>("mediumElectronID")),  
+  electronTightIdMapTag (iConfig.getParameter<edm::InputTag>("tightElectronID")),  
+  electronsTag          (iConfig.getParameter<edm::InputTag>("electrons")),  
 
   // more filters
   applyKinematicsFilter(iConfig.existsAs<bool>("applyKinematicsFilter") ? iConfig.getParameter<bool>("applyKinematicsFilter") : false),  
 
   //recHits
-  recHitCollectionEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEB" ))),
-  recHitCollectionEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEE" ))),
+  recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
+  recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE")),
 
   ///////////// GEN INFO
   // isMC or Data --> default Data
-  isMC(iConfig.existsAs<bool>("isMC") ? iConfig.getParameter<bool>("isMC") : false),
-  doZmassSort(iConfig.existsAs<bool>("doZmassSort") ? iConfig.getParameter<bool>("doZmassSort") : false)
+  isMC(iConfig.existsAs<bool>("isMC") ? iConfig.getParameter<bool>("isMC") : false)
 {
   usesResource();
   usesResource("TFileService");
@@ -37,11 +36,15 @@ ZeeTree::ZeeTree(const edm::ParameterSet& iConfig):
   verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
 
   // electrons
-  vetoelectronsToken   = consumes<pat::ElectronRefVector> (vetoelectronsTag);
-  looseelectronsToken  = consumes<pat::ElectronRefVector> (looseelectronsTag);
-  mediumelectronsToken = consumes<pat::ElectronRefVector> (mediumelectronsTag);
-  tightelectronsToken  = consumes<pat::ElectronRefVector> (tightelectronsTag);
-  heepelectronsToken   = consumes<pat::ElectronRefVector> (heepelectronsTag);
+  electronVetoIdMapToken   = consumes<edm::ValueMap<bool> > (electronVetoIdMapTag);
+  electronLooseIdMapToken  = consumes<edm::ValueMap<bool> > (electronLooseIdMapTag);
+  electronMediumIdMapToken = consumes<edm::ValueMap<bool> > (electronMediumIdMapTag);
+  electronTightIdMapToken  = consumes<edm::ValueMap<bool> > (electronTightIdMapTag);
+  electronsToken           = consumes<std::vector<pat::Electron> > (electronsTag);
+
+  // recHits
+  recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
+  recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
 
   // only for simulated samples
   if (isMC)
@@ -64,22 +67,38 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<std::vector<reco::Vertex> > verticesH;
   iEvent.getByToken(verticesToken, verticesH);
 
-  // ELECTRONS
-  edm::Handle<pat::ElectronRefVector> vetoelectronsH;
-  iEvent.getByToken(vetoelectronsToken, vetoelectronsH);
+  // ELECTRONS + ID
+  edm::Handle<edm::ValueMap<bool> > electronVetoIdMapH;
+  iEvent.getByToken(electronVetoIdMapToken, electronVetoIdMapH);
+  edm::ValueMap<bool> electronVetoIdMap = *electronVetoIdMapH;
 
-  edm::Handle<pat::ElectronRefVector> looseelectronsH;
-  iEvent.getByToken(looseelectronsToken, looseelectronsH);
+  edm::Handle<edm::ValueMap<bool> > electronLooseIdMapH;
+  iEvent.getByToken(electronLooseIdMapToken, electronLooseIdMapH);
+  edm::ValueMap<bool> electronLooseIdMap = *electronLooseIdMapH;
 
-  edm::Handle<pat::ElectronRefVector> mediumelectronsH;
-  iEvent.getByToken(mediumelectronsToken, mediumelectronsH);
+  edm::Handle<edm::ValueMap<bool> > electronMediumIdMapH;
+  iEvent.getByToken(electronMediumIdMapToken, electronMediumIdMapH);
+  edm::ValueMap<bool> electronMediumIdMap = *electronMediumIdMapH;
 
-  edm::Handle<pat::ElectronRefVector> tightelectronsH;
-  iEvent.getByToken(tightelectronsToken, tightelectronsH);
-  pat::ElectronRefVector tightelectronsvec = *tightelectronsH;
+  edm::Handle<edm::ValueMap<bool> > electronTightIdMapH;
+  iEvent.getByToken(electronTightIdMapToken, electronTightIdMapH);
+  edm::ValueMap<bool> electronTightIdMap = *electronTightIdMapH;
 
-  edm::Handle<pat::ElectronRefVector> heepelectronsH;
-  iEvent.getByToken(heepelectronsToken, heepelectronsH);
+  edm::Handle<std::vector<pat::Electron> > electronsH;
+  iEvent.getByToken(electronsToken, electronsH);
+  std::vector<pat::Electron> electrons = *electronsH;
+
+  // Prep electrons
+  ZeeTree::PrepElectrons(electronsH,electronVetoIdMap,electronLooseIdMap,electronMediumIdMap,electronTightIdMap,electrons);
+
+  // recHits
+  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
+  iEvent.getByToken(recHitsEBToken, recHitsEBH);
+  const EcalRecHitCollection * recHitsEB = recHitsEBH.product();
+
+  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
+  iEvent.getByToken(recHitsEEToken, recHitsEEH);
+  const EcalRecHitCollection * recHitsEE = recHitsEEH.product();
 
   // geometry (from ECAL ELF)
   edm::ESHandle<CaloGeometry> geoHandle;
@@ -113,7 +132,7 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (applyHLTFilter && !triggered) return;
 
   // Vertex info
-  nvtx = -99; vtxX = -999.0; vtxY = -999.0; vtxZ = -999.0;
+  nvtx = -9999; vtxX = -9999.0; vtxY = -9999.0; vtxZ = -9999.0;
   if (verticesH.isValid()) 
   {
     nvtx = verticesH->size();
@@ -124,22 +143,18 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
   
   // ELECTRON ANALYSIS 
-  // nelectrons AFTER PF cleaning (kinematic selection pT > 10, |eta| < 2.5
-  nvetoelectrons = -99; nlooseelectrons = -99; nmediumelectrons = -99; ntightelectrons = -99; nheepelectrons = -99;
-  if (vetoelectronsH.isValid())   nvetoelectrons   = vetoelectronsH->size();
-  if (looseelectronsH.isValid())  nlooseelectrons  = looseelectronsH->size();
-  if (mediumelectronsH.isValid()) nmediumelectrons = mediumelectronsH->size();
-  if (tightelectronsH.isValid())  ntightelectrons  = tightelectronsH->size();
-  if (heepelectronsH.isValid())   nheepelectrons   = heepelectronsH->size();
-  
   // electron tree vars (initialize)
-  el1pid  = -99;   el1pt   = -99.0; el1eta = -99.0; el1phi = -99.0; 
-  el2pid  = -99;   el2pt   = -99.0; el2eta = -99.0; el2phi = -99.0; 
-  el1E    = -99.0; el2E    = -99.0; el1p   = -99.0; el2p   = -99.0;
+  el1pid  = -9999;   el1pt   = -9999.0; el1eta = -9999.0; el1phi = -9999.0; 
+  el2pid  = -9999;   el2pt   = -9999.0; el2eta = -9999.0; el2phi = -9999.0; 
+  el1E    = -9999.0; el2E    = -9999.0; el1p   = -9999.0; el2p   = -9999.0;
 
-  // supercluster, rec hits, and seed info
-  el1scX = -999.0; el1scY = -999.0; el1scZ = -999.0; el1scE = -999.0;
-  el2scX = -999.0; el2scY = -999.0; el2scZ = -999.0; el2scE = -999.0;
+  // supercluster info
+  el1scX = -9999.0; el1scY = -9999.0; el1scZ = -9999.0; el1scE = -9999.0;
+  el2scX = -9999.0; el2scY = -9999.0; el2scZ = -9999.0; el2scE = -9999.0;
+
+  // rechits info
+  el1nrh = -9999; el1seedpos = -9999;
+  el2nrh = -9999; el2seedpos = -9999;
 
   el1rhXs.clear(); el1rhYs.clear(); el1rhZs.clear(); el1rhEs.clear(); el1rhtimes.clear(); 
   el2rhXs.clear(); el2rhYs.clear(); el2rhZs.clear(); el2rhEs.clear(); el2rhtimes.clear(); 
@@ -147,33 +162,24 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   el1rhids.clear(); el1rhOOTs.clear(); el1rhgain1s.clear(); el1rhgain6s.clear();
   el2rhids.clear(); el2rhOOTs.clear(); el2rhgain1s.clear(); el2rhgain6s.clear();
 
-  el1seedX = -999.0; el1seedY = -999.0; el1seedZ = -999.0; el1seedE = -999.0; el1seedtime = -999.0; 
-  el2seedX = -999.0; el2seedY = -999.0; el2seedZ = -999.0; el2seedE = -999.0; el2seedtime = -999.0; 
-
-  el1seedid = -99; el1seedOOT = -99; el1seedgain1 = -99; el1seedgain6 = -99;
-  el2seedid = -99; el2seedOOT = -99; el2seedgain1 = -99; el2seedgain6 = -99;
-
-  el1nrh = -99; el2nrh = -99;
-
   // z variables
-  zmass = -99.0; zpt = -99.0; zeta = -99.0; zphi = -99.0; zE = -99.0; zp = -99.0;
+  zmass = -9999.0; zpt = -9999.0; zeta = -9999.0; zphi = -9999.0; zE = -9999.0; zp = -9999.0;
 
   // save only really pure electrons
-  std::vector<pat::ElectronRef> tightelectrons;
-  for (std::size_t i = 0; i < tightelectronsvec.size(); i++) 
+  std::vector<pat::Electron> goodelectrons;
+  for (std::vector<pat::Electron>::const_iterator eliter = electrons.begin(); eliter != electrons.end(); ++eliter)
   {
     bool saveElectron = false;
 
-    if (tightelectronsvec[i]->pt() > 35.) 
+    if (eliter->pt() > 35.f && std::abs(eliter->superCluster()->eta()) < 2.5 && eliter->electronID("tight"))  
     {
-      clustertools = new EcalClusterLazyTools (iEvent, iSetup, recHitCollectionEBTAG, recHitCollectionEETAG);
-      const reco::SuperClusterRef& elsc = tightelectronsvec[i]->superCluster().isNonnull() ? tightelectronsvec[i]->superCluster() : tightelectronsvec[i]->parentSuperCluster();
-      if (tightelectronsvec[i]->ecalDrivenSeed() && elsc.isNonnull()) 
+      const reco::SuperClusterRef& elsc = eliter->superCluster().isNonnull() ? eliter->superCluster() : eliter->parentSuperCluster();
+      if (eliter->ecalDrivenSeed() && elsc.isNonnull()) 
       {
 	// use seed to get geometry and recHits
 	const DetId seedDetId = elsc->seed()->seed(); //seed detid
 	const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
-	const EcalRecHitCollection *recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
+	const EcalRecHitCollection *recHits = isEB ? recHitsEB : recHitsEE;
 
 	// loop over all crystals
 	const DetIdPairVec hitsAndFractions = elsc->hitsAndFractions(); // all crystals in SC
@@ -189,65 +195,56 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  }
 	} 
       }
-      delete clustertools;
     }
-    if (saveElectron) tightelectrons.push_back(tightelectronsvec[i]);   
+    if (saveElectron) goodelectrons.push_back((*eliter));   
   }
 
   // Z matching + filling of variables
-  if (tightelectrons.size()>1)  // need at least two electrons that pass id and pt cuts! 
+  triplevec invmasspairs; // store i-j good el index + invariant mass
+  if (goodelectrons.size()>1)  // need at least two electrons that pass id and pt cuts! 
   {
-    // First sort on pT --> should be redudant, as already sorted this way in miniAOD
-    std::sort(tightelectrons.begin(), tightelectrons.end(), sortElectronsByPt);
-
-    pat::ElectronRef el1;
-    pat::ElectronRef el2;
-
-    if (doZmassSort) 
+    // only want pair of good electrons that yield closest zmass diff   
+    for (std::size_t i = 0; i < goodelectrons.size(); i++) 
     {
-      triplevec invmasspairs; // store i-j tight el index + invariant mass
-      // only want pair of tight electrons that yield closest zmass diff   
-      for (std::size_t i = 0; i < tightelectrons.size(); i++) 
+      const pat::Electron& el1_tmp = goodelectrons[i];
+      for (std::size_t j = i+1; j < goodelectrons.size(); j++) 
       {
-	const pat::ElectronRef el1 = tightelectrons[i];
-	for (std::size_t j = i+1; j < tightelectrons.size(); j++) 
-	{
-	  int el1pdgId = el1->pdgId();
-	  int el2pdgId = el2->pdgId();
-	  if (el1pdgId == -el2pdgId)
-	  {
-	    const pat::ElectronRef el2 = tightelectrons[j];
-	    TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1->pt(), el1->eta(), el1->phi(), el1->energy());
-	    TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2->pt(), el2->eta(), el2->phi(), el2->energy());
-	    el1vec += el2vec;
-	    invmasspairs.push_back(std::make_tuple(i,j,std::abs(el1vec.M()-91.1876))); 
-	  }
+	const pat::Electron& el2_tmp = goodelectrons[j];
+	int el1pdgId = el1_tmp.pdgId();
+	int el2pdgId = el2_tmp.pdgId();
+	if (el1pdgId == -el2pdgId)
+        {
+	  TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1_tmp.pt(), el1_tmp.eta(), el1_tmp.phi(), el1_tmp.energy());
+	  TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2_tmp.pt(), el2_tmp.eta(), el2_tmp.phi(), el2_tmp.energy());
+	  el1vec += el2vec;
+	  invmasspairs.push_back(std::make_tuple(i,j,std::abs(el1vec.M()-91.1876))); 
 	}
       }
-      auto best = std::min_element(invmasspairs.begin(),invmasspairs.end(),minimizeByZmass); // keep the lowest! --> returns pointer to lowest element
-      el1 = tightelectrons[std::get<0>(*best)];
-      el2 = tightelectrons[std::get<1>(*best)];
     }
-    else
-    { // just take highest pt electrons in event
-      el1 = tightelectrons[0];
-      el2 = tightelectrons[1];
-    }
+  }
+  else
+  {
+    if (applyKinematicsFilter) return;
+  }
 
+  if (invmasspairs.size()>0)
+  {
+    // Get the best pair (if it exists)
+    auto best = std::min_element(invmasspairs.begin(),invmasspairs.end(),minimizeByZmass); // keep the lowest! --> returns pointer to lowest element
+    pat::Electron el1 = goodelectrons[std::get<0>(*best)];
+    pat::Electron el2 = goodelectrons[std::get<1>(*best)];
+  
     // set the individual electron variables
-    el1pid = el1->pdgId();  el2pid = el2->pdgId();
-    el1pt  = el1->pt();     el2pt  = el2->pt();
-    el1eta = el1->eta();    el2eta = el2->eta();
-    el1phi = el1->phi();    el2phi = el2->phi();
-    el1E   = el1->energy(); el2E   = el2->energy();
-    el1p   = el1->p();      el2p   = el2->p();
-
-    // ecal cluster tools --> stolen from ECAL ELF
-    clustertools = new EcalClusterLazyTools (iEvent, iSetup, recHitCollectionEBTAG, recHitCollectionEETAG);
+    el1pid = el1.pdgId();  el2pid = el2.pdgId();
+    el1pt  = el1.pt();     el2pt  = el2.pt();
+    el1eta = el1.eta();    el2eta = el2.eta();
+    el1phi = el1.phi();    el2phi = el2.phi();
+    el1E   = el1.energy(); el2E   = el2.energy();
+    el1p   = el1.p();      el2p   = el2.p();
 
     // super cluster from electron 1
-    const reco::SuperClusterRef& el1sc = el1->superCluster().isNonnull() ? el1->superCluster() : el1->parentSuperCluster();
-    if (el1->ecalDrivenSeed() && el1sc.isNonnull()) 
+    const reco::SuperClusterRef& el1sc = el1.superCluster().isNonnull() ? el1.superCluster() : el1.parentSuperCluster();
+    if (el1.ecalDrivenSeed() && el1sc.isNonnull()) 
     {
       // save some supercluster info
       el1scX = el1sc->position().x();
@@ -258,50 +255,57 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       // use seed to get geometry and recHits
       const DetId seedDetId = el1sc->seed()->seed(); //seed detid
       const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
-      const EcalRecHitCollection *recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
+      const EcalRecHitCollection *recHits = isEB ? recHitsEB : recHitsEE;
 
-      // loop over all crystals
-      const DetIdPairVec hitsAndFractions = el1sc->hitsAndFractions(); // all crystals in SC
-      for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) 
+      // map of rec hit ids
+      uiiumap el1rhIDmap;
+      
+      // all rechits in superclusters
+      const DetIdPairVec hitsAndFractions = el1sc->hitsAndFractions();
+
+      // only count each recHit once
+      for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) // loop over all rec hits in SC
       {
 	const DetId recHitId = hafitr->first; // get detid of crystal
 	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
-
 	if (recHit != recHits->end()) // standard check
         { 
-	  // save position, energy, and time of each crystal to a vector
-	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
-	  el1rhXs.push_back(recHitPos.x());
-	  el1rhYs.push_back(recHitPos.y());
-	  el1rhZs.push_back(recHitPos.z());
-	  el1rhEs.push_back(recHit->energy());
-	  el1rhtimes.push_back(recHit->time());	 
-	  el1rhids.push_back(int(recHitId.rawId()));
-	  el1rhOOTs.push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
-	  el1rhgain1s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
-	  el1rhgain6s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+	  el1rhIDmap[recHitId.rawId()]++;
+	} // end standard check recHit
+      } // end loop over hits and fractions
 
-	  // save seed info in a flat branch
-	  if (seedDetId == recHitId) 
-          { 
-	    el1seedX = el1rhXs.back();
-	    el1seedY = el1rhYs.back();
-	    el1seedZ = el1rhZs.back();
-	    el1seedE = el1rhEs.back();
-	    el1seedtime = el1rhtimes.back();
-	    el1seedid = el1rhids.back();
-	    el1seedOOT = el1rhOOTs.back();
-	    el1seedgain1 = el1rhgain1s.back();
-	    el1seedgain6 = el1rhgain6s.back();
-	  }
+      for (uiiumap::const_iterator rhiter = el1rhIDmap.begin(); rhiter != el1rhIDmap.end(); ++rhiter) // loop over only good rec hit ids
+      {
+	// get the underlying recHit
+	const uint32_t rhID = rhiter->first;
+	const DetId recHitId(rhID);
+	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
+	
+	// get the position
+	const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
+
+	// push back the values
+	el1rhXs.push_back(recHitPos.x());
+	el1rhYs.push_back(recHitPos.y());
+	el1rhZs.push_back(recHitPos.z());
+	el1rhEs.push_back(recHit->energy());
+	el1rhtimes.push_back(recHit->time());	 
+	el1rhids.push_back(int(rhID));
+	el1rhOOTs.push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
+	el1rhgain1s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
+	el1rhgain6s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+	
+	// extra info from the SEED
+	if (seedDetId.rawId() == recHitId) 
+	{ 
+	  el1seedpos = el1rhEs.size()-1;
 	}
-      } // end loop over all crystals
-      el1nrh = el1rhtimes.size(); // save the number of valid rechits
-    } // end check over supercluster
+      } // end loop over rec hit id map
+    } // end check over electron1 supercluster
 
     // super cluster from electron 2
-    const reco::SuperClusterRef& el2sc = el2->superCluster().isNonnull() ? el2->superCluster() : el2->parentSuperCluster();
-    if (el2->ecalDrivenSeed() && el2sc.isNonnull()) 
+    const reco::SuperClusterRef& el2sc = el2.superCluster().isNonnull() ? el2.superCluster() : el2.parentSuperCluster();
+    if (el2.ecalDrivenSeed() && el2sc.isNonnull()) 
     {
       // save some supercluster info
       el2scX = el2sc->position().x();
@@ -312,46 +316,53 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       // use seed to get geometry and recHits
       const DetId seedDetId = el2sc->seed()->seed(); //seed detid
       const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
-      const EcalRecHitCollection *recHits = isEB ? clustertools->getEcalEBRecHitCollection() : clustertools->getEcalEERecHitCollection();
+      const EcalRecHitCollection *recHits = isEB ? recHitsEB : recHitsEE;
 
-      // loop over all crystals
-      const DetIdPairVec hitsAndFractions = el2sc->hitsAndFractions(); // all crystals in SC
-      for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr)
+      // map of rec hit ids
+      uiiumap el2rhIDmap;
+      
+      // all rechits in superclusters
+      const DetIdPairVec hitsAndFractions = el2sc->hitsAndFractions();
+
+      // only count each recHit once
+      for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) // loop over all rec hits in SC
       {
 	const DetId recHitId = hafitr->first; // get detid of crystal
 	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
-
 	if (recHit != recHits->end()) // standard check
-	{
-	  // save position, energy, and time of each crystal to a vector
-	  const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
-	  el2rhXs.push_back(recHitPos.x());
-	  el2rhYs.push_back(recHitPos.y());
-	  el2rhZs.push_back(recHitPos.z());
-	  el2rhEs.push_back(recHit->energy());
-	  el2rhtimes.push_back(recHit->time());	 
-	  el2rhids.push_back(int(recHitId.rawId()));
-	  el2rhOOTs.push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
-	  el2rhgain1s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
-	  el2rhgain6s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+        { 
+	  el2rhIDmap[recHitId.rawId()]++;
+	} // end standard check recHit
+      } // end loop over hits and fractions
 
-	  // save seed info in a flat branch
-	  if (seedDetId == recHitId) 
-          { 
-	    el2seedX = el2rhXs.back();
-	    el2seedY = el2rhYs.back();
-	    el2seedZ = el2rhZs.back();
-	    el2seedE = el2rhEs.back();
-	    el2seedtime = el2rhtimes.back();
-	    el2seedid = el2rhids.back();
-	    el2seedOOT = el2rhOOTs.back();
-	    el2seedgain1 = el2rhgain1s.back();
-	    el2seedgain6 = el2rhgain6s.back();
-	  }
+      for (uiiumap::const_iterator rhiter = el2rhIDmap.begin(); rhiter != el2rhIDmap.end(); ++rhiter) // loop over only good rec hit ids
+      {
+	// get the underlying recHit
+	const uint32_t rhID = rhiter->first;
+	const DetId recHitId(rhID);
+	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
+	
+	// get the position
+	const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
+
+	// push back the values
+	el2rhXs.push_back(recHitPos.x());
+	el2rhYs.push_back(recHitPos.y());
+	el2rhZs.push_back(recHitPos.z());
+	el2rhEs.push_back(recHit->energy());
+	el2rhtimes.push_back(recHit->time());	 
+	el2rhids.push_back(int(rhID));
+	el2rhOOTs.push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
+	el2rhgain1s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
+	el2rhgain6s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+	
+	// extra info from the SEED
+	if (seedDetId.rawId() == recHitId) 
+	{ 
+	  el2seedpos = el2rhEs.size()-1;
 	}
-      } // end loop over all crystals
-      el2nrh = el2rhtimes.size(); // save the number of valid rechits
-    } // end check over supercluster
+      } // end loop over rec hit id map
+    } // end check over electron2 supercluster
 
     // store Z information
     TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1pt, el1eta, el1phi, el1E);
@@ -366,9 +377,7 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     zmass = zvec.M();
     zE    = zvec.Energy();
     zp    = zvec.P();
-
-    delete clustertools;
-  } // end section over tight electrons
+  } // end section over two good electrons
   else
   {
     if (applyKinematicsFilter) return;
@@ -404,10 +413,10 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (genevtInfoH.isValid()) {wgt = genevtInfoH->weight();}
   
     // Gen particles info
-    genzpid   = -99;   genzpt   = -99.0; genzeta   = -99.0; genzphi   = -99.0; genzmass = -99.0; genzE = -99.0; genzp = -99.0;
-    genel1pid = -99;   genel1pt = -99.0; genel1eta = -99.0; genel1phi = -99.0;
-    genel2pid = -99;   genel2pt = -99.0; genel2eta = -99.0; genel2phi = -99.0;
-    genel1E   = -99.0; genel2E  = -99.0; genel1p   = -99.0; genel2p   = -99.0;
+    genzpid   = -9999;   genzpt   = -9999.0; genzeta   = -9999.0; genzphi   = -9999.0; genzmass = -9999.0; genzE = -9999.0; genzp = -9999.0;
+    genel1pid = -9999;   genel1pt = -9999.0; genel1eta = -9999.0; genel1phi = -9999.0;
+    genel2pid = -9999;   genel2pt = -9999.0; genel2eta = -9999.0; genel2phi = -9999.0;
+    genel1E   = -9999.0; genel2E  = -9999.0; genel1p   = -9999.0; genel2p   = -9999.0;
 
     if (gensH.isValid())
     {
@@ -495,6 +504,53 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   tree->Fill();    
 }    
 
+void ZeeTree::PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
+			    const edm::ValueMap<bool> & electronVetoIdMap, 
+			    const edm::ValueMap<bool> & electronLooseIdMap, 
+			    const edm::ValueMap<bool> & electronMediumIdMap, 
+			    const edm::ValueMap<bool> & electronTightIdMap, 
+			    std::vector<pat::Electron> & electrons)
+{
+  if (electronsH.isValid()) // standard handle check
+  {
+    // create and initialize temp id-value vector
+    std::vector<std::vector<pat::Electron::IdPair> > idpairs(electrons.size());
+    for (size_t iph = 0; iph < idpairs.size(); iph++)
+    {
+      idpairs[iph].resize(4);
+      idpairs[iph][0] = {"veto"  ,false};
+      idpairs[iph][1] = {"loose" ,false};
+      idpairs[iph][2] = {"medium",false};
+      idpairs[iph][3] = {"tight" ,false};
+    }
+
+    int iphH = 0; // dumb counter because iterators only work with VID
+    for (std::vector<pat::Electron>::const_iterator phiter = electronsH->begin(); phiter != electronsH->end(); ++phiter) // loop over electron vector
+    {
+      // Get the VID of the electron
+      const edm::Ptr<pat::Electron> electronPtr(electronsH, phiter - electronsH->begin());
+
+      // store VID in temp struct
+      // veto < loose < medium < tight
+      if (electronVetoIdMap  [electronPtr]) idpairs[iphH][0].second = true;
+      if (electronLooseIdMap [electronPtr]) idpairs[iphH][1].second = true;
+      if (electronMediumIdMap[electronPtr]) idpairs[iphH][2].second = true;
+      if (electronTightIdMap [electronPtr]) idpairs[iphH][3].second = true;
+      
+      iphH++;
+    }
+    
+    // set the ID-value for each electron in other collection
+    for (size_t iph = 0; iph < electrons.size(); iph++)
+    {
+      electrons[iph].setElectronIDs(idpairs[iph]);
+    }
+    
+    // now finally sort vector by pT
+    std::sort(electrons.begin(),electrons.end(),sortByElectronPt);
+  }
+}  
+
 void ZeeTree::beginJob() 
 {
   edm::Service<TFileService> fs;
@@ -514,13 +570,6 @@ void ZeeTree::beginJob()
   tree->Branch("vtxX"                 , &vtxX                 , "vtxX/F");
   tree->Branch("vtxY"                 , &vtxY                 , "vtxY/F");
   tree->Branch("vtxZ"                 , &vtxZ                 , "vtxZ/F");
-
-  // Object counts
-  tree->Branch("nvetoelectrons"       , &nvetoelectrons       , "nvetoelectrons/I");
-  tree->Branch("nlooseelectrons"      , &nlooseelectrons      , "nlooseelectrons/I");
-  tree->Branch("nmediumelectrons"     , &nmediumelectrons     , "nmediumelectrons/I");
-  tree->Branch("ntightelectrons"      , &ntightelectrons      , "ntightelectrons/I");
-  tree->Branch("nheepelectrons"       , &nheepelectrons       , "nheepelectrons/I");
 
   // Lepton info
   tree->Branch("el1pid"               , &el1pid               , "el1pid/I");
@@ -548,6 +597,12 @@ void ZeeTree::beginJob()
   tree->Branch("el2scZ"               , &el2scZ               , "el2scZ/F");
   tree->Branch("el2scE"               , &el2scE               , "el2scE/F");
 
+  // seed crystal info
+  tree->Branch("el1nrh"               , &el1nrh               , "el1nrh/I");  
+  tree->Branch("el1seedpos"           , &el1seedpos           , "el1seedpos/I");  
+  tree->Branch("el2nrh"               , &el2nrh               , "el2nrh/I");  
+  tree->Branch("el2seedpos"           , &el2seedpos           , "el2seedpos/I");  
+
   // all rechits
   tree->Branch("el1rhXs"              , "std::vector<float>"  , &el1rhXs);
   tree->Branch("el1rhYs"              , "std::vector<float>"  , &el1rhYs);
@@ -570,32 +625,6 @@ void ZeeTree::beginJob()
   tree->Branch("el2rhOOTs"            , "std::vector<int>"    , &el2rhOOTs);
   tree->Branch("el2rhgain1s"          , "std::vector<int>"    , &el2rhgain1s);
   tree->Branch("el2rhgain6s"          , "std::vector<int>"    , &el2rhgain6s);
-
-  // seed crystal info
-  tree->Branch("el1seedX"             , &el1seedX             , "el1seedX/F");
-  tree->Branch("el1seedY"             , &el1seedY             , "el1seedY/F");
-  tree->Branch("el1seedZ"             , &el1seedZ             , "el1seedZ/F");
-  tree->Branch("el1seedE"             , &el1seedE             , "el1seedE/F");
-  tree->Branch("el1seedtime"          , &el1seedtime          , "el1seedtime/F");
-
-  tree->Branch("el2seedX"             , &el2seedX             , "el2seedX/F");
-  tree->Branch("el2seedY"             , &el2seedY             , "el2seedY/F");
-  tree->Branch("el2seedZ"             , &el2seedZ             , "el2seedZ/F");
-  tree->Branch("el2seedE"             , &el2seedE             , "el2seedE/F");
-  tree->Branch("el2seedtime"          , &el2seedtime          , "el2seedtime/F");
-
-  tree->Branch("el1seedid"            , &el1seedid            , "el1seedid/I");
-  tree->Branch("el1seedOOT"           , &el1seedOOT           , "el1seedOOT/I");
-  tree->Branch("el1seedgain1"         , &el1seedgain1         , "el1seedgain1/I");
-  tree->Branch("el1seedgain6"         , &el1seedgain6         , "el1seedgain6/I");
-
-  tree->Branch("el2seedid"            , &el2seedid            , "el2seedid/I");
-  tree->Branch("el2seedOOT"           , &el2seedOOT           , "el2seedOOT/I");
-  tree->Branch("el2seedgain1"         , &el2seedgain1         , "el2seedgain1/I");
-  tree->Branch("el2seedgain6"         , &el2seedgain6         , "el2seedgain6/I");
-
-  tree->Branch("el1nrh"               , &el1nrh               , "el1nrh/I");  
-  tree->Branch("el2nrh"               , &el2nrh               , "el2nrh/I");  
 
   // Dilepton info
   tree->Branch("zmass"                , &zmass                , "zmass/F");

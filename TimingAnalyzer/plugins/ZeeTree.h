@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <tuple>
 
+#include "CommonTypes.h"
+
 // FWCore
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/one/EDAnalyzer.h"
@@ -37,10 +39,8 @@
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
-
-// EGamma Tools
-#include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
-#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 
 // Geometry
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
@@ -62,9 +62,9 @@ inline bool minimizeByZmass(const triple& elpair1, const triple& elpair2)
   return std::get<2>(elpair1)<std::get<2>(elpair2);
 }
 
-inline bool sortElectronsByPt(const pat::ElectronRef& el1, const pat::ElectronRef& el2)
+inline bool sortByElectronPt(const pat::Electron& el1, const pat::Electron& el2)
 {
-  return el1->pt()>el2->pt();
+  return el1.pt()>el2.pt();
 }
 
 class ZeeTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
@@ -83,6 +83,9 @@ private:
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
   
+  void PrepElectrons(const edm::Handle<std::vector<pat::Electron> >&, const edm::ValueMap<bool>&, const edm::ValueMap<bool>&, 
+		     const edm::ValueMap<bool>&, const edm::ValueMap<bool> &, std::vector<pat::Electron>&);
+   
   // Trigger
   const edm::InputTag triggerResultsTag;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
@@ -94,22 +97,24 @@ private:
   const edm::InputTag verticesTag;
   edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken;
 
-  // Electrons
-  const edm::InputTag vetoelectronsTag;
-  const edm::InputTag looseelectronsTag;
-  const edm::InputTag mediumelectronsTag;
-  const edm::InputTag tightelectronsTag;
-  const edm::InputTag heepelectronsTag;
-  edm::EDGetTokenT<pat::ElectronRefVector> vetoelectronsToken;
-  edm::EDGetTokenT<pat::ElectronRefVector> looseelectronsToken;
-  edm::EDGetTokenT<pat::ElectronRefVector> mediumelectronsToken;
-  edm::EDGetTokenT<pat::ElectronRefVector> tightelectronsToken;
-  edm::EDGetTokenT<pat::ElectronRefVector> heepelectronsToken;
+  // Electrons + ID
+  const edm::InputTag electronVetoIdMapTag;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electronVetoIdMapToken;
+  const edm::InputTag electronLooseIdMapTag;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electronLooseIdMapToken;
+  const edm::InputTag electronMediumIdMapTag;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electronMediumIdMapToken;
+  const edm::InputTag electronTightIdMapTag;
+  edm::EDGetTokenT<edm::ValueMap<bool> > electronTightIdMapToken;
+  const edm::InputTag electronsTag;
+  edm::EDGetTokenT<std::vector<pat::Electron> > electronsToken;
   const bool applyKinematicsFilter;
 
   // ECAL RecHits
-  edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEBTAG;
-  edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEETAG;
+  const edm::InputTag recHitsEBTag;
+  edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBToken;
+  const edm::InputTag recHitsEETag;
+  edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEToken;
 
   // Gen Particles and MC info
   const bool isMC;
@@ -117,15 +122,9 @@ private:
   edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
   edm::EDGetTokenT<edm::View<reco::GenParticle> >   gensToken;
 
-  // how to select electrons
-  const bool doZmassSort;
-
-  // ECALELF tools
-  EcalClusterLazyTools *clustertools;
-
   // output ntuple
   // tree
-  TTree* tree;
+  TTree * tree;
 
   // event info
   int event, run, lumi;  
@@ -137,32 +136,24 @@ private:
   int nvtx; 
   float vtxX, vtxY, vtxZ;
 
-  // object counts
-  int nvetoelectrons,nlooseelectrons,nmediumelectrons,ntightelectrons,nheepelectrons;
-
   // electron info
-  int   el1pid,el2pid;
+  int el1pid,el2pid;
   float el1pt,el1eta,el1phi,el1E,el1p;
   float el2pt,el2eta,el2phi,el2E,el2p;
   
   // supercluster info 
   float el1scX, el1scY, el1scZ, el1scE;
   float el2scX, el2scY, el2scZ, el2scE;
-  int   el1nrh, el2nrh;
-
+  
+  // global rechit info
+  int el1nrh, el1seedpos;
+  int el2nrh, el2seedpos;
+  
   // all rec hit info
   std::vector<float> el1rhXs, el1rhYs, el1rhZs, el1rhEs, el1rhtimes;
   std::vector<float> el2rhXs, el2rhYs, el2rhZs, el2rhEs, el2rhtimes;
-  std::vector<int> el1rhids, el2rhids;
-  std::vector<int> el1rhOOTs, el2rhOOTs;
-  std::vector<int> el1rhgain1s, el1rhgain6s, el2rhgain1s, el2rhgain6s;
-
-  // seed info
-  float el1seedX, el1seedY, el1seedZ, el1seedE, el1seedtime;
-  float el2seedX, el2seedY, el2seedZ, el2seedE, el2seedtime;
-  int el1seedid, el2seedid;
-  int el1seedOOT, el2seedOOT;
-  int el1seedgain1, el1seedgain6, el2seedgain1, el2seedgain6;
+  std::vector<int> el1rhids, el1rhOOTs, el1rhgain1s, el1rhgain6s;
+  std::vector<int> el2rhids, el2rhOOTs, el2rhgain1s, el2rhgain6s;
 
   // dielectron info
   float zpt,zeta,zphi,zmass,zE,zp;
@@ -175,7 +166,7 @@ private:
   float wgt;
 
   // gen particle info
-  int   genzpid,genel1pid,genel2pid;
+  int genzpid,genel1pid,genel2pid;
   float genzpt,genzeta,genzphi,genzmass,genzE,genzp;
   float genel1pt,genel1eta,genel1phi,genel1E,genel1p;
   float genel2pt,genel2eta,genel2phi,genel2E,genel2p;

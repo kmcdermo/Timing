@@ -36,7 +36,6 @@ private:
   const edm::EDGetTokenT<edm::ValueMap<bool> > electronLooseIdMapToken;
   const edm::EDGetTokenT<edm::ValueMap<bool> > electronMediumIdMapToken;
   const edm::EDGetTokenT<edm::ValueMap<bool> > electronTightIdMapToken;
-  const edm::EDGetTokenT<edm::ValueMap<bool> > electronHeepIdMapToken;
 };
 
 PFCleaner::PFCleaner(const edm::ParameterSet& iConfig): 
@@ -44,14 +43,12 @@ PFCleaner::PFCleaner(const edm::ParameterSet& iConfig):
   electronVetoIdMapToken   (consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electronidveto"))),
   electronLooseIdMapToken  (consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electronidloose"))),
   electronMediumIdMapToken (consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electronidmedium"))),
-  electronTightIdMapToken  (consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electronidtight"))),
-  electronHeepIdMapToken   (consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electronidheep")))
+  electronTightIdMapToken  (consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("electronidtight")))
 {
   produces<pat::ElectronRefVector>("vetoelectrons");
   produces<pat::ElectronRefVector>("looseelectrons");
   produces<pat::ElectronRefVector>("mediumelectrons");
   produces<pat::ElectronRefVector>("tightelectrons");
-  produces<pat::ElectronRefVector>("heepelectrons");
 }
 
 PFCleaner::~PFCleaner() {}
@@ -72,14 +69,10 @@ void PFCleaner::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   edm::Handle<edm::ValueMap<bool> > electronTightIdH;
   iEvent.getByToken(electronTightIdMapToken, electronTightIdH);
 
-  edm::Handle<edm::ValueMap<bool> > electronHeepIdH;
-  iEvent.getByToken(electronHeepIdMapToken, electronHeepIdH);
-    
   std::auto_ptr<pat::ElectronRefVector> outputvetoelectrons(new pat::ElectronRefVector);
   std::auto_ptr<pat::ElectronRefVector> outputlooseelectrons(new pat::ElectronRefVector);
   std::auto_ptr<pat::ElectronRefVector> outputmediumelectrons(new pat::ElectronRefVector);
   std::auto_ptr<pat::ElectronRefVector> outputtightelectrons(new pat::ElectronRefVector);
-  std::auto_ptr<pat::ElectronRefVector> outputheepelectrons(new pat::ElectronRefVector);
 
   //electron info https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedElectronIdentificationRun2
   for (std::vector<pat::Electron>::const_iterator electrons_iter = electronsH->begin(); electrons_iter != electronsH->end(); ++electrons_iter) {
@@ -91,7 +84,6 @@ void PFCleaner::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     bool passeslooseid  = (*electronLooseIdH)[electronPtr];
     bool passesmediumid = (*electronMediumIdH)[electronPtr];
     bool passestightid  = (*electronTightIdH)[electronPtr];
-    bool passesheepid   = (*electronHeepIdH)[electronPtr];
     
     if (passeskincuts && passesvetoid) 
       outputvetoelectrons->push_back(pat::ElectronRef(electronsH, electrons_iter - electronsH->begin()));
@@ -104,16 +96,12 @@ void PFCleaner::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
     
     if (passeskincuts && passestightid) 
       outputtightelectrons->push_back(pat::ElectronRef(electronsH, electrons_iter - electronsH->begin()));
-    
-    if (passeskincuts && passesheepid)
-	outputheepelectrons->push_back(pat::ElectronRef(electronsH, electrons_iter - electronsH->begin()));
   }
 
   iEvent.put(outputvetoelectrons,   "vetoelectrons");
   iEvent.put(outputlooseelectrons,  "looseelectrons");
   iEvent.put(outputmediumelectrons, "mediumelectrons");
   iEvent.put(outputtightelectrons,  "tightelectrons");
-  iEvent.put(outputheepelectrons,   "heepelectrons");
 }
 
 void PFCleaner::beginJob() {}
