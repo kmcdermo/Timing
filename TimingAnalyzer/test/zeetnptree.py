@@ -93,7 +93,7 @@ process.GlobalTag.globaltag = options.globalTag
 
 # run cut-based electron ID https://twiki.cern.ch/twiki/bin/viewauth/CMS/CutBasedElectronIdentificationRun2
 from Timing.TimingAnalyzer.ElectronTools_cff import ElectronTools
-ElectronTools(process,options.isMC)
+ElectronTools(process,False)
 
 ## Create output file
 ## Setup the service to make a ROOT TTree

@@ -1,6 +1,6 @@
-#include "ZeeTnpTree.h"
+#include "ZeeTnPTree.h"
 
-ZeeTnpTree::ZeeTnpTree(const edm::ParameterSet& iConfig): 
+ZeeTnPTree::ZeeTnPTree(const edm::ParameterSet& iConfig): 
   // triggers
   triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
   
@@ -39,9 +39,9 @@ ZeeTnpTree::ZeeTnpTree(const edm::ParameterSet& iConfig):
   recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
 }
 
-ZeeTnpTree::~ZeeTnpTree() {}
+ZeeTnPTree::~ZeeTnPTree() {}
 
-void ZeeTnpTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
+void ZeeTnPTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 {
   // TRIGGER
   edm::Handle<edm::TriggerResults> triggerResultsH;
@@ -73,7 +73,7 @@ void ZeeTnpTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   std::vector<pat::Electron> electrons = *electronsH;
 
   // Prep electrons
-  ZeeTnpTree::PrepElectrons(electronsH,electronVetoIdMap,electronLooseIdMap,electronMediumIdMap,electronTightIdMap,electrons);
+  ZeeTnPTree::PrepElectrons(electronsH,electronVetoIdMap,electronLooseIdMap,electronMediumIdMap,electronTightIdMap,electrons);
 
   // recHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
@@ -144,7 +144,7 @@ void ZeeTnpTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   el2seedX = -9999.0; el2seedY = -9999.0; el2seedZ = -9999.0; el2seedE = -9999.0; el2seedtime = -9999.0; 
 
   el1seedid = -9999; el1seedOOT = -9999; el1seedgain1 = -9999; el1seedgain6 = -9999;
-  el2seedid = -9999; el2seedOOT = -9999; el2seedgain2 = -9999; el2seedgain6 = -9999;
+  el2seedid = -9999; el2seedOOT = -9999; el2seedgain1 = -9999; el2seedgain6 = -9999;
 
   // z variables
   zmass = -9999.0; zE = -9999.0; zp = -9999.0; zpt = -9999.0; zeta = -9999.0; zphi = -9999.0;
@@ -189,7 +189,7 @@ void ZeeTnpTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	} // end check over seed id 
       } // end loop over all rec hits in SC
     } // end check over valid SC
-    if (saveElectron) taglectrons.push_back(i); // save index of tag electron
+    if (saveElectron) tagelectrons.push_back(i); // save index of tag electron
   } // end loop over all electrons
 
   // Now build the tnppairs
@@ -281,20 +281,21 @@ void ZeeTnpTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     el1scE = el1sc->energy();
 
     // use seed to get geometry and recHits
-    const DetId        el1seedDetId = el1sc->seed()->seed(); //seed detid
-    const bool         el1isEB      = (el1seedDetId.subdetId() == EcalBarrel); //which subdet
+    const DetId el1seedDetId = el1sc->seed()->seed(); //seed detid
+    const bool el1isEB = (el1seedDetId.subdetId() == EcalBarrel); //which subdet
     const GlobalPoint& el1recHitPos = el1isEB ? barrelGeometry->getGeometry(el1seedDetId)->getPosition() : endcapGeometry->getGeometry(el1seedDetId)->getPosition();
-
+    EcalRecHitCollection::const_iterator el1recHit = el1isEB ? recHitsEB->find(el1seedDetId) : recHitsEE->find(el1seedDetId);
+    
     // push back the values
-    el1seedX     = recHitPos.x();
-    el1seedY     = recHitPos.y();
-    el1seedZ     = recHitPos.z();
-    el1seedE     = recHit->energy();
-    el1seedtime  = recHit->time();	 
+    el1seedX     = el1recHitPos.x();
+    el1seedY     = el1recHitPos.y();
+    el1seedZ     = el1recHitPos.z();
+    el1seedE     = el1recHit->energy();
+    el1seedtime  = el1recHit->time();	 
     el1seedid    = int(el1seedDetId.rawId());
-    el1seedOOT   = recHit->checkFlag(EcalRecHit::kOutOfTime);
-    el1seedgain1 = recHit->checkFlag(EcalRecHit::kHasSwitchToGain1);
-    el1seedgain6 = recHit->checkFlag(EcalRecHit::kHasSwitchToGain6);
+    el1seedOOT   = el1recHit->checkFlag(EcalRecHit::kOutOfTime);
+    el1seedgain1 = el1recHit->checkFlag(EcalRecHit::kHasSwitchToGain1);
+    el1seedgain6 = el1recHit->checkFlag(EcalRecHit::kHasSwitchToGain6);
 
     // Probe is el2
     pat::Electron el2 = electrons[std::get<1>(*best)];
@@ -324,20 +325,21 @@ void ZeeTnpTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     el2scE = el2sc->energy();
 
     // use seed to get geometry and recHits
-    const DetId        el2seedDetId = el2sc->seed()->seed(); //seed detid
-    const bool         el2isEB      = (el2seedDetId.subdetId() == EcalBarrel); //which subdet
+    const DetId el2seedDetId = el2sc->seed()->seed(); //seed detid
+    const bool el2isEB = (el2seedDetId.subdetId() == EcalBarrel); //which subdet
     const GlobalPoint& el2recHitPos = el2isEB ? barrelGeometry->getGeometry(el2seedDetId)->getPosition() : endcapGeometry->getGeometry(el2seedDetId)->getPosition();
+    EcalRecHitCollection::const_iterator el2recHit = el2isEB ? recHitsEB->find(el2seedDetId) : recHitsEE->find(el2seedDetId);
 
     // push back the values
-    el2seedX     = recHitPos.x();
-    el2seedY     = recHitPos.y();
-    el2seedZ     = recHitPos.z();
-    el2seedE     = recHit->energy();
-    el2seedtime  = recHit->time();	 
+    el2seedX     = el2recHitPos.x();
+    el2seedY     = el2recHitPos.y();
+    el2seedZ     = el2recHitPos.z();
+    el2seedE     = el2recHit->energy();
+    el2seedtime  = el2recHit->time();	 
     el2seedid    = int(el2seedDetId.rawId());
-    el2seedOOT   = recHit->checkFlag(EcalRecHit::kOutOfTime);
-    el2seedgain1 = recHit->checkFlag(EcalRecHit::kHasSwitchToGain1);
-    el2seedgain6 = recHit->checkFlag(EcalRecHit::kHasSwitchToGain6);
+    el2seedOOT   = el2recHit->checkFlag(EcalRecHit::kOutOfTime);
+    el2seedgain1 = el2recHit->checkFlag(EcalRecHit::kHasSwitchToGain1);
+    el2seedgain6 = el2recHit->checkFlag(EcalRecHit::kHasSwitchToGain6);
 
     // store Z information
     TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1pt, el1eta, el1phi, el1E);
@@ -358,7 +360,7 @@ void ZeeTnpTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   tree->Fill();    
 }    
 
-void ZeeTnpTree::PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
+void ZeeTnPTree::PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
 			       const edm::ValueMap<bool> & electronVetoIdMap, 
 			       const edm::ValueMap<bool> & electronLooseIdMap, 
 			       const edm::ValueMap<bool> & electronMediumIdMap, 
@@ -405,7 +407,7 @@ void ZeeTnpTree::PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & 
   }
 }  
 
-void ZeeTnpTree::beginJob() 
+void ZeeTnPTree::beginJob() 
 {
   edm::Service<TFileService> fs;
   tree = fs->make<TTree>("tree"       , "tree");
@@ -487,9 +489,9 @@ void ZeeTnpTree::beginJob()
   tree->Branch("zp"                   , &zp                   , "zp/F");
 }
 
-void ZeeTnpTree::endJob() {}
+void ZeeTnPTree::endJob() {}
 
-void ZeeTnpTree::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
+void ZeeTnPTree::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
 {
   // triggers for the Analysis -- all unprescaled till RunH
   triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_L1JetTauSeeded_v");
@@ -521,13 +523,13 @@ void ZeeTnpTree::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
   }
 }
 
-void ZeeTnpTree::endRun(edm::Run const&, edm::EventSetup const&) {}
+void ZeeTnPTree::endRun(edm::Run const&, edm::EventSetup const&) {}
 
-void ZeeTnpTree::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
+void ZeeTnPTree::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
 {
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addDefault(desc);
 }
 
-DEFINE_FWK_MODULE(ZeeTnpTree);
+DEFINE_FWK_MODULE(ZeeTnPTree);

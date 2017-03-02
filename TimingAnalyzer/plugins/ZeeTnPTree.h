@@ -54,7 +54,7 @@
 #include "TPRegexp.h"
 
 typedef std::tuple<std::size_t, std::size_t, double> triple;
-typedef std::vector<triple> triplevec;
+typedef std::vector<triple> tuplevec;
 
 inline bool minimizeByZmass(const triple& elpair1, const triple& elpair2)
 {
