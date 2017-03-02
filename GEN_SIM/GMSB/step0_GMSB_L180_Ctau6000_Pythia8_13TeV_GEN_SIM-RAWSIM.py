@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: Configuration/GenProduction/python/ThirteenTeV/GMSB_L180_Ctau6000_Pythia8_13TeV_cff.py --mc --eventcontent RAWSIM --customise SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1 --datatier GEN-SIM --conditions MCRUN2_71_V1::All --beamspot Realistic50ns13TeVCollision --step GEN,SIM --magField 38T_PostLS1 GMSB_L180_Ctau6000_Pythia8_13TeV_GENSIM.root
+# with command line options: Configuration/GenProduction/python/ThirteenTeV/GMSB_L180_Ctau6000_Pythia8_13TeV_cff.py --mc --eventcontent RAWSIM --customise SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1 --datatier GEN-SIM --conditions MCRUN2_71_V1::All --beamspot Realistic50ns13TeVCollision --step GEN,SIM --magField 38T_PostLS1 --fileout file:GMSB_L180_Ctau6000_Pythia8_13TeV_GEN_SIM-RAWSIM.root
 import FWCore.ParameterSet.Config as cms
 
 process = cms.Process('SIM')
@@ -47,7 +47,7 @@ process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
     splitLevel = cms.untracked.int32(0),
     eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
     outputCommands = process.RAWSIMEventContent.outputCommands,
-    fileName = cms.untracked.string('GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM.root'),
+    fileName = cms.untracked.string('GMSB_L180_Ctau6000_Pythia8_13TeV_GEN_SIM-RAWSIM.root'),
     dataset = cms.untracked.PSet(
         filterName = cms.untracked.string(''),
         dataTier = cms.untracked.string('GEN-SIM')

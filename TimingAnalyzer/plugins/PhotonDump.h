@@ -20,26 +20,32 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h" 
 
+// HLT + Trigger info
+#include "FWCore/Common/interface/TriggerNames.h"
+#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+#include "DataFormats/Common/interface/TriggerResults.h"
+
 // Gen Info
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 // DataFormats
-#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
-#include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
-// DetIds and Ecal stuff
+// DetIds 
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
-#include "DataFormats/GeometryVector/interface/GlobalPoint.h"
+
+// Ecal RecHits
+#include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 
 // Supercluster info
 #include "DataFormats/EgammaReco/interface/SuperCluster.h"
@@ -55,6 +61,7 @@
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 #include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
 #include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
+#include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 
 // ROOT
 #include "TTree.h"
@@ -106,11 +113,14 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   int PassNeuIso(const float eta, const float NeuIso, const float pt);
   int PassPhIso (const float eta, const float PhIso,  const float pt);
 
+  void DumpTriggerMenu(const HLTConfigProvider& hltConfig, const std::vector<std::string>& pathNames, edm::Run const& iRun);
+  void InitializeTriggerBranches();
+
   void InitializeGenEvtBranches();
 
   void InitializeGenPUBranches();
 
-  void DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &);
+  void DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH);
 
   void InitializeGMSBBranches();
   
@@ -143,7 +153,14 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
   
-  // Vertex
+  // triggers
+  const bool dumpTriggerMenu;
+  const edm::InputTag triggerResultsTag;
+  edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
+  std::vector<std::string>  triggerNames;
+  std::map<std::string,int> triggerIndex;
+
+  // vertices
   const edm::InputTag verticesTag;
   edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken;
 
@@ -190,7 +207,15 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   TTree* tree;
 
   // event info
-  int event, run, lumi;  
+  unsigned long int event;
+  unsigned int run, lumi;  
+
+  // trigger info
+  bool hltdispho, hltpho175;
+
+  // vertices
+  int nvtx;
+  float vtxX, vtxY, vtxZ;
 
   // Generator level info
   float genwgt;
@@ -229,10 +254,6 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   int ngenjets;
   std::vector<int> genjetmatch;
   std::vector<float> genjetE, genjetpt, genjetphi, genjeteta;
-
-  // vertices
-  int nvtx;
-  float vtxX, vtxY, vtxZ;
 
   // MET
   float t1pfMETpt,       t1pfMETphi,       t1pfMETsumEt;

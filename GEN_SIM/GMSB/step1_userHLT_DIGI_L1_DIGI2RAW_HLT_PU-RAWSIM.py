@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: step1_newHLT --mc --era Run2_2016 --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v6 --eventcontent RAWSIM --datatier GEN-SIM-RAW --step DIGI,L1,DIGI2RAW,HLT:hltdev:/users/kmcdermo/TestDev/DisplacedPhoton_8_0_24/V1 --processName userHLT2 --pileup 2016_25ns_Moriond17MC_PoissonOOTPU --pileup_input dbs:/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM --filein file:GMSB_L180_Ctau6000_GEN_SIM.root --fileout file:GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU.root --no_exec
+# with command line options: step1_newHLT --mc --era Run2_2016 --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v6 --eventcontent RAWSIM --datatier GEN-SIM-RAW --step DIGI,L1,DIGI2RAW,HLT:hltdev:/users/kmcdermo/TestDev/DisplacedPhoton_8_0_24/V1 --processName userHLT2 --pileup 2016_25ns_Moriond17MC_PoissonOOTPU --pileup_input dbs:/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM --filein file:GMSB_L180_Ctau6000_Pythia8_13TeV_GEN_SIM-RAWSIM.root --fileout file:DIGI_L1_DIGI2RAW_HLT_PU-RAWSIM.root --no_exec
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
@@ -30,7 +30,7 @@ process.maxEvents = cms.untracked.PSet(
 # Input source
 process.source = cms.Source("PoolSource",
     dropDescendantsOfDroppedBranches = cms.untracked.bool(False),
-    fileNames = cms.untracked.vstring('file:GMSB_L180_Ctau6000_GEN_SIM.root'),
+    fileNames = cms.untracked.vstring('file:GMSB_L180_Ctau6000_Pythia8_13TeV_GEN_SIM-RAWSIM.root'),
     inputCommands = cms.untracked.vstring('keep *', 
         'drop *_genParticles_*_*', 
         'drop *_genParticlesForJets_*_*', 
@@ -70,7 +70,7 @@ process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
-    fileName = cms.untracked.string('file:GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU.root'),
+    fileName = cms.untracked.string('file:DIGI_L1_DIGI2RAW_HLT_PU-RAWSIM.root'),
     outputCommands = process.RAWSIMEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0)
 )

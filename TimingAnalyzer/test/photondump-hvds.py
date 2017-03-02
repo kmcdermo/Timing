@@ -5,6 +5,11 @@ import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
+## dump trigger menu 
+options.register (
+	'dumpTriggerMenu',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to dump trigger menu');
+
 ## dump rec hit info
 options.register (
 	'dumpRHs',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
@@ -58,6 +63,7 @@ options.parseArguments()
 options.outputFileName = 'photondump-hvds.root'
 
 print "##### Settings ######"
+print "Running with dumpTriggerMenu     = ",options.dumpTriggerMenu
 print "Running with dumpRHs             = ",options.dumpRHs
 print "Running with dumpIds             = ",options.dumpIds
 print "Running with processName         = ",options.processName	
@@ -132,6 +138,9 @@ process.tree = cms.EDAnalyzer("PhotonDump",
    pileup     = cms.InputTag("slimmedAddPileupInfo"),
    genparts   = cms.InputTag("prunedGenParticles"),
    genjets    = cms.InputTag("slimmedGenJets"),
+   ## triggers
+   dumpTriggerMenu = cms.bool(options.dumpTriggerMenu),
+   triggerResults  = cms.InputTag("TriggerResults", "", "HLT"),
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## rho

@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: step3 --mc --eventcontent MINIAODSIM --runUnscheduled --datatier MINIAODSIM --process reRECO --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v6 --filtername RECOfromRECO -s RECO,PAT --era Run2_2016 --filein file:GMSB_L180_Ctau6000_RAW2DIGI_L1Reco_RECO.root --fileout file:GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD.root --no_exec
+# with command line options: step3 --mc --eventcontent MINIAODSIM --runUnscheduled --datatier MINIAODSIM --process reRECO --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v6 --filtername RECOfromRECO -s RECO,PAT --era Run2_2016 --filein file:RAW2DIGI_L1Reco_RECO-RECOSIM.root --fileout file:ReRECO_PAT-MINIAODSIM.root --no_exec
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
@@ -28,7 +28,7 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:GMSB_L180_Ctau6000_RAW2DIGI_L1Reco_RECO.root'),
+    fileNames = cms.untracked.vstring('file:RAW2DIGI_L1Reco_RECO-RECOSIM.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -55,7 +55,7 @@ process.MINIAODSIMoutput = cms.OutputModule("PoolOutputModule",
     dropMetaData = cms.untracked.string('ALL'),
     eventAutoFlushCompressedSize = cms.untracked.int32(15728640),
     fastCloning = cms.untracked.bool(False),
-    fileName = cms.untracked.string('file:GMSB_L180_Ctau6000_ReRECO_PAT_MINIAOD.root'),
+    fileName = cms.untracked.string('file:ReRECO_PAT-MINIAODSIM.root'),
     outputCommands = process.MINIAODSIMEventContent.outputCommands,
     overrideInputFileSplitLevels = cms.untracked.bool(True)
 )

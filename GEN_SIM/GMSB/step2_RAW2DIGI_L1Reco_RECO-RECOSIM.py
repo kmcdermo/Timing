@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: step2 --mc --eventcontent RECOSIM --runUnscheduled --datatier RECOSIM --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v6 --step RAW2DIGI,L1Reco,RECO --era Run2_2016 --filein file:GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU.root --fileout file:GMSB_L180_Ctau6000_RAW2DIGI_L1Reco_RECO.root
+# with command line options: step2 --mc --eventcontent RECOSIM --runUnscheduled --datatier RECOSIM --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v6 --step RAW2DIGI,L1Reco,RECO --era Run2_2016 --filein file:GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU-RAWSIM.root --fileout file:RAW2DIGI_L1Reco_RECO-RECOSIM.root
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
@@ -29,13 +29,7 @@ process.maxEvents = cms.untracked.PSet(
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring(
-        'root://xrootd-cms.infn.it//store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU-v1/161214_173206/0000/GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU_1.root',
-        'root://xrootd-cms.infn.it//store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU-v1/161214_173206/0000/GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU_2.root',
-        'root://xrootd-cms.infn.it//store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU-v1/161214_173206/0000/GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU_3.root',
-        'root://xrootd-cms.infn.it//store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU-v1/161214_173206/0000/GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU_4.root',
-        'root://xrootd-cms.infn.it//store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU-v1/161214_173206/0000/GMSB_L180_Ctau6000_DIGI_L1_DIGI2RAW_HLT_PU_5.root',
-        ),
+    fileNames = cms.untracked.vstring('file:DIGI_L1_DIGI2RAW_HLT_PU-RAWSIM.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -58,7 +52,7 @@ process.RECOSIMoutput = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
-    fileName = cms.untracked.string('file:GMSB_L180_Ctau6000_RAW2DIGI_L1Reco_RECO.root'),
+    fileName = cms.untracked.string('file:RAW2DIGI_L1Reco_RECO-RECOSIM.root'),
     outputCommands = process.RECOSIMEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0)
 )

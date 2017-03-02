@@ -1,6 +1,10 @@
 #include "PhotonDump.h"
 
 PhotonDump::PhotonDump(const edm::ParameterSet& iConfig): 
+  // triggers
+  dumpTriggerMenu  (iConfig.existsAs<bool>("dumpTriggerMenu") ? iConfig.getParameter<bool>("dumpTriggerMenu") : false),
+  triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
+
   // vertexes
   verticesTag(iConfig.getParameter<edm::InputTag>("vertices")),
 
@@ -17,10 +21,10 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   photonLooseIdMapTag (iConfig.getParameter<edm::InputTag>("loosePhotonID")),  
   photonMediumIdMapTag(iConfig.getParameter<edm::InputTag>("mediumPhotonID")),  
   photonTightIdMapTag (iConfig.getParameter<edm::InputTag>("tightPhotonID")),  
-  photonsTag(iConfig.getParameter<edm::InputTag>("photons")),  
+  photonsTag          (iConfig.getParameter<edm::InputTag>("photons")),  
   
   //recHits
-  dumpRHs(iConfig.existsAs<bool>("dumpRHs") ? iConfig.getParameter<bool>("dumpRHs") : false),
+  dumpRHs              (iConfig.existsAs<bool>("dumpRHs") ? iConfig.getParameter<bool>("dumpRHs") : false),
   recHitCollectionEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEB" ))),
   recHitCollectionEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEE" ))),
 
@@ -33,6 +37,9 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
 {
   usesResource();
   usesResource("TFileService");
+
+  // triggers
+  triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
 
   //vertex
   verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
@@ -67,7 +74,11 @@ PhotonDump::~PhotonDump() {}
 
 void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 {
-  // VERTEX
+  // TRIGGERS
+  edm::Handle<edm::TriggerResults> triggerResultsH;
+  iEvent.getByToken(triggerResultsToken, triggerResultsH);
+
+  // VERTICES
   edm::Handle<std::vector<reco::Vertex> > verticesH;
   iEvent.getByToken(verticesToken, verticesH);
   
@@ -133,6 +144,38 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   run   = iEvent.id().run();
   lumi  = iEvent.luminosityBlock();
   event = iEvent.id().event();
+
+  //////////////////
+  //              //
+  // Trigger Info //
+  //              //
+  //////////////////
+  PhotonDump::InitializeTriggerBranches();
+  if (triggerResultsH.isValid())
+  {
+    for (std::size_t i = 0; i < triggerNames.size(); i++)
+    {
+      if (triggerIndex[triggerNames[i]] == -1) continue;	
+      if (i == 0 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho = true;
+      if (i == 1 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltpho175 = true; 
+    }
+  }
+
+
+  /////////////////////////
+  //                     //   
+  // Primary Vertex info //
+  //                     //
+  /////////////////////////
+  PhotonDump::InitializePVBranches();
+  if (verticesH.isValid()) 
+  {
+    nvtx = verticesH->size();
+    const reco::Vertex & primevtx = (*verticesH)[0];
+    vtxX = primevtx.position().x();
+    vtxY = primevtx.position().y();
+    vtxZ = primevtx.position().z();
+  }
 
   /////////////
   //         //
@@ -477,21 +520,6 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     } // end check over isGMSB
   } // end block over isMC
 
-  /////////////////////////
-  //                     //   
-  // Primary Vertex info //
-  //                     //
-  /////////////////////////
-  PhotonDump::InitializePVBranches();
-  if (verticesH.isValid()) 
-  {
-    nvtx = verticesH->size();
-    const reco::Vertex & primevtx = (*verticesH)[0];
-    vtxX = primevtx.position().x();
-    vtxY = primevtx.position().y();
-    vtxZ = primevtx.position().z();
-  }
-
   ///////////////////
   //               //
   // FixedGrid Rho //
@@ -555,7 +583,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       // check if reco jet is matched to gen jet
       if (isGMSB)
       {
-	for (size_t igjet = 0; igjet < genjetmatch.size(); igjet++) // loop over gen jet matches
+	for (std::size_t igjet = 0; igjet < genjetmatch.size(); igjet++) // loop over gen jet matches
         {
 	  if (genjetmatch[igjet] == ijet) 
 	  {
@@ -764,7 +792,7 @@ void PhotonDump::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & phot
   {
     // create and initialize temp id-value vector
     std::vector<std::vector<pat::Photon::IdPair> > idpairs(photons.size());
-    for (size_t iph = 0; iph < idpairs.size(); iph++)
+    for (std::size_t iph = 0; iph < idpairs.size(); iph++)
     {
       idpairs[iph].resize(3);
       idpairs[iph][0] = {"loose" ,false};
@@ -788,7 +816,7 @@ void PhotonDump::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & phot
     }
     
     // set the ID-value for each photon in other collection
-    for (size_t iph = 0; iph < photons.size(); iph++)
+    for (std::size_t iph = 0; iph < photons.size(); iph++)
     {
       photons[iph].setPhotonIDs(idpairs[iph]);
     }
@@ -957,6 +985,15 @@ int PhotonDump::PassPhIso(const float eta, const float PhIso, const float pt)
   else                              return 0;
 }
 
+void PhotonDump::DumpTriggerMenu(const HLTConfigProvider& hltConfig, const std::vector<std::string>& pathNames, edm::Run const& iRun)
+{
+  std::cout << "Run Number: " << iRun.run() << std::endl;
+  for (std::size_t j = 0; j < pathNames.size(); j++)
+  {
+    std::cout << "  " << pathNames[j].c_str() << " : " << hltConfig.triggerIndex(pathNames[j]) << " - " << j << std::endl;
+  }
+}
+
 void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH)
 {
   std::cout << "event: " << event << std::endl;
@@ -1040,6 +1077,12 @@ void PhotonDump::DumpRecHitInfo(int iph, const DetIdPairVec & hitsAndFractions,	
     } // ensure within confines of ECAL
   } // gen matched photon (pt > 100, medium)
   std::cout << "---------------------------------" << std::endl << std::endl;
+}
+
+void PhotonDump::InitializeTriggerBranches()
+{
+  hltdispho = false;
+  hltpho175 = false;
 }
 
 void PhotonDump::InitializeGenEvtBranches()
@@ -1353,10 +1396,20 @@ void PhotonDump::beginJob()
   tree = fs->make<TTree>("tree"     , "tree");
 
   // Run, Lumi, Event info
-  tree->Branch("event"                  , &event                , "event/I");
-  tree->Branch("run"                    , &run                  , "run/I");
-  tree->Branch("lumi"                   , &lumi                 , "lumi/I");
+  tree->Branch("event"                  , &event                , "event/l");
+  tree->Branch("run"                    , &run                  , "run/i");
+  tree->Branch("lumi"                   , &lumi                 , "lumi/i");
    
+  // Trigger Info
+  tree->Branch("hltdispho"              , &hltdispho            , "hltdispho/O");
+  tree->Branch("hltpho175"              , &hltpho175            , "hltpho175/O");
+
+  // Vertex info
+  tree->Branch("nvtx"                   , &nvtx                 , "nvtx/I");
+  tree->Branch("vtxX"                   , &vtxX                 , "vtxX/F");
+  tree->Branch("vtxY"                   , &vtxY                 , "vtxY/F");
+  tree->Branch("vtxZ"                   , &vtxZ                 , "vtxZ/F");
+
   if (isMC)
   {
     // Generator inf
@@ -1457,12 +1510,6 @@ void PhotonDump::beginJob()
     tree->Branch("genHVph2match"        , &genHVph2match);
   }
 
-  // Vertex info
-  tree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");
-  tree->Branch("vtxX"                 , &vtxX                 , "vtxX/F");
-  tree->Branch("vtxY"                 , &vtxY                 , "vtxY/F");
-  tree->Branch("vtxZ"                 , &vtxZ                 , "vtxZ/F");
-
   // MET info
   tree->Branch("t1pfMETpt"            , &t1pfMETpt            , "t1pfMETpt/F");
   tree->Branch("t1pfMETphi"           , &t1pfMETphi           , "t1pfMETphi/F");
@@ -1539,9 +1586,44 @@ void PhotonDump::beginJob()
 
 void PhotonDump::endJob() {}
 
-void PhotonDump::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
+void PhotonDump::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
+{
+  // add triggers of interest for the analysis
+  triggerNames.push_back("HLT_DisplacedPhoton45_v"); // i = 0
+  triggerNames.push_back("HLT_Photon175_v");         // i = 1
 
-void PhotonDump::endRun(edm::Run const&, edm::EventSetup const&) {}
+  // initialize triggerIndex, key: Name, value: Index 
+  for (std::size_t i = 0; i < triggerNames.size(); i++)
+  {
+    triggerIndex[triggerNames[i]] = -1;
+  }
+  
+  HLTConfigProvider hltConfig;
+  bool changed = false;
+  hltConfig.init(iRun, iSetup, triggerResultsTag.process(), changed);
+  const std::vector<std::string>& pathNames = hltConfig.triggerNames();
+  if (dumpTriggerMenu) PhotonDump::DumpTriggerMenu(hltConfig,pathNames,iRun);
+
+  for (std::size_t i = 0; i < triggerNames.size(); i++)
+  {
+    TPRegexp pattern(triggerNames[i]);
+    for (std::size_t j = 0; j < pathNames.size(); j++)
+    {
+      if (TString(pathNames[j]).Contains(pattern))
+      {
+	triggerIndex[triggerNames[i]] = j; //hltConfig.triggerIndex(pathNames[j]);
+	break;
+      }
+    }
+  }
+}
+
+void PhotonDump::endRun(edm::Run const&, edm::EventSetup const&) 
+{
+  // reset trigger info
+  triggerNames.clear();
+  triggerIndex.clear();
+}
 
 void PhotonDump::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
 {
