@@ -133,9 +133,14 @@ private :
   TFile * fOutFile;
 
   // Declaration of leaf types
-  Int_t   event;
-  Int_t   run;
-  Int_t   lumi;
+  ULong64_t event;
+  UInt_t    run;
+  UInt_t    lumi;
+  Bool_t  hltpho120_met40;
+  Bool_t  hltpho175;
+  Bool_t  hltpho200;
+  Bool_t  hltdoublepho60;
+  Bool_t  hltdispho45;
   Float_t genwgt;
   Int_t   genpuobs;
   Int_t   genputrue;
@@ -274,6 +279,11 @@ private :
   TBranch * b_event;
   TBranch * b_run;
   TBranch * b_lumi;
+  TBranch * b_hltpho120_met40;
+  TBranch * b_hltpho175;
+  TBranch * b_hltpho200;
+  TBranch * b_hltdoublepho60;
+  TBranch * b_hltdispho45;
   TBranch * b_genwgt;
   TBranch * b_genpuobs;
   TBranch * b_genputrue;

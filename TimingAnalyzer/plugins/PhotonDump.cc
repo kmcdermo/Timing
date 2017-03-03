@@ -156,11 +156,13 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     for (std::size_t i = 0; i < triggerNames.size(); i++)
     {
       if (triggerIndex[triggerNames[i]] == -1) continue;	
-      if (i == 0 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho = true;
-      if (i == 1 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltpho175 = true; 
+      if (i == 0 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltpho120_met40 = true;
+      if (i == 1 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltpho175       = true;
+      if (i == 2 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltpho200       = true;
+      if (i == 3 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdoublepho60  = true;
+      if (i == 4 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45     = true; 
     }
   }
-
 
   /////////////////////////
   //                     //   
@@ -1081,8 +1083,12 @@ void PhotonDump::DumpRecHitInfo(int iph, const DetIdPairVec & hitsAndFractions,	
 
 void PhotonDump::InitializeTriggerBranches()
 {
-  hltdispho = false;
-  hltpho175 = false;
+  hltpho120_met40 = false;
+  hltpho175       = false;
+  hltpho200       = false;
+  hltdoublepho60  = false;
+  hltdispho45     = false;
+
 }
 
 void PhotonDump::InitializeGenEvtBranches()
@@ -1401,8 +1407,11 @@ void PhotonDump::beginJob()
   tree->Branch("lumi"                   , &lumi                 , "lumi/i");
    
   // Trigger Info
-  tree->Branch("hltdispho"              , &hltdispho            , "hltdispho/O");
+  tree->Branch("hltpho120_met40"        , &hltpho120_met40      , "hltpho120_met40/O");
   tree->Branch("hltpho175"              , &hltpho175            , "hltpho175/O");
+  tree->Branch("hltpho200"              , &hltpho200            , "hltpho200/O");
+  tree->Branch("hltdoublepho60"         , &hltdoublepho60       , "hltdoublepho60/O");
+  tree->Branch("hltdispho45"            , &hltdispho45          , "hltdispho45/O");
 
   // Vertex info
   tree->Branch("nvtx"                   , &nvtx                 , "nvtx/I");
@@ -1589,8 +1598,11 @@ void PhotonDump::endJob() {}
 void PhotonDump::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
 {
   // add triggers of interest for the analysis
-  triggerNames.push_back("HLT_DisplacedPhoton45_v"); // i = 0
-  triggerNames.push_back("HLT_Photon175_v");         // i = 1
+  triggerNames.push_back("HLT_Photon120_R9Id90_HE10_Iso40_EBOnly_PFMET40_v"); // i = 0
+  triggerNames.push_back("HLT_Photon175_v");                                  // i = 1
+  triggerNames.push_back("HLT_Photon200_v");                                  // i = 2
+  triggerNames.push_back("HLT_DoublePhoton60_v");                             // i = 3
+  triggerNames.push_back("HLT_DisplacedPhoton45_v");                          // i = 4
 
   // initialize triggerIndex, key: Name, value: Index 
   for (std::size_t i = 0; i < triggerNames.size(); i++)

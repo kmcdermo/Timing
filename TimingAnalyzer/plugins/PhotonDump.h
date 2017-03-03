@@ -211,7 +211,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   unsigned int run, lumi;  
 
   // trigger info
-  bool hltdispho, hltpho175;
+  bool hltpho120_met40, hltpho175, hltpho200, hltdoublepho40, hltdispho45; 
 
   // vertices
   int nvtx;
@@ -239,7 +239,6 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   float gengr2mass, gengr2E, gengr2pt, gengr2phi, gengr2eta;
 
   // Gen particle info: HVDS
-
   int nvPions;
   
   std::vector<float> genvPionmass, genvPionE, genvPionpt, genvPionphi, genvPioneta;

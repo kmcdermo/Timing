@@ -1230,6 +1230,11 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("event", &event, &b_event);
   fInTree->SetBranchAddress("run", &run, &b_run);
   fInTree->SetBranchAddress("lumi", &lumi, &b_lumi);
+  fInTree->SetBranchAddress("hltpho120_met40", &hltpho120_met40, &b_hltpho120_met40);
+  fInTree->SetBranchAddress("hltpho175", &hltpho175, &b_hltpho175);
+  fInTree->SetBranchAddress("hltpho200", &hltpho200, &b_hltpho200);
+  fInTree->SetBranchAddress("hltdoublepho60", &hltdoublepho60, &b_hltdoublepho60);
+  fInTree->SetBranchAddress("hltdispho45", &hltdispho45, &b_hltdispho45);
   if (fIsMC)
   {
     fInTree->SetBranchAddress("genwgt", &genwgt, &b_genwgt);
