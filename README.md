@@ -12,7 +12,7 @@ HLTDisplacedPhoton Trigger documentation:
 
 ### Full Recipe for Analyzers and Rest of MC Production (step1-3)
 
-Recipe to install of all the code necessary to run analyzers. Works so far on LXPLUS.
+Recipe to install of all the code necessary to run analyzers. Works so far on LXPLUS. Sidenote: the long block on the optional packages for the trigger are ONLY for actually playing with the displaced photon trigger and modifying it on the fly. Step1 (HLT) with our new trigger path will still work without these packages, so they can be omitted.
 
 ```
 cmsrel CMSSW_8_0_26_patch2
