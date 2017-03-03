@@ -1,7 +1,7 @@
 from CRABClient.UserUtilities import config
 config = config()
 
-config.General.requestName   = 'GMSB_L180_Ctau6000_newHLT_PAT-v1'
+config.General.requestName   = 'GMSB_L180_Ctau6000_userHLT_customiseTiming_PAT-v1'
 config.General.workArea      = 'crab_projects'
 
 config.JobType.pluginName    = 'Analysis'
@@ -13,6 +13,6 @@ config.Data.splitting        = 'FileBased'
 config.Data.unitsPerJob      = 5
 config.Data.publication      = True
 config.Data.publishDBS       = 'phys03'
-config.Data.outputDatasetTag = 'GMSB_L180_Ctau6000_newHLT_PAT-v1'
+config.Data.outputDatasetTag = 'GMSB_L180_Ctau6000_userHLT_customiseTiming_PAT-v1'
 
 config.Site.storageSite      = 'T2_CH_CERN'
