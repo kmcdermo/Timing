@@ -211,7 +211,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   unsigned int run, lumi;  
 
   // trigger info
-  bool hltpho120_met40, hltpho175, hltpho200, hltdoublepho40, hltdispho45; 
+  bool hltpho120_met40, hltpho175, hltpho200, hltdoublepho60, hltdispho45; 
 
   // vertices
   int nvtx;
