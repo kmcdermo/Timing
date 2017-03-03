@@ -2,12 +2,12 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: step1_newHLT --mc --era Run2_2016 --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v6 --eventcontent RAWSIM --datatier GEN-SIM-RAW --step DIGI,L1,DIGI2RAW,HLT:hltdev:/users/kmcdermo/TestDev/DisplacedPhoton_8_0_24/V1 --processName userHLT2 --pileup 2016_25ns_Moriond17MC_PoissonOOTPU --pileup_input dbs:/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM --filein file:GMSB_L180_Ctau6000_Pythia8_13TeV_GEN_SIM-RAWSIM.root --fileout file:DIGI_L1_DIGI2RAW_HLT_PU-RAWSIM.root --no_exec
+# with command line options: step1_userHLT --mc --era Run2_2016 --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v6 --eventcontent RAWSIM --datatier GEN-SIM-RAW --step DIGI,L1,DIGI2RAW,HLT:hltdev:/users/kmcdermo/TestDev/DisplacedPhoton_8_0_24/V1 --pileup 2016_25ns_Moriond17MC_PoissonOOTPU --pileup_input dbs:/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM --filein file:GMSB_L180_Ctau6000_Pythia8_13TeV_GEN_SIM-RAWSIM.root --fileout file:DIGI_L1_DIGI2RAW_HLT_PU-RAWSIM.root --no_exec
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
 
-process = cms.Process('userHLT2',eras.Run2_2016)
+process = cms.Process('HLT',eras.Run2_2016)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
@@ -57,7 +57,7 @@ process.options = cms.untracked.PSet(
 
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
-    annotation = cms.untracked.string('step1_newHLT nevts:1'),
+    annotation = cms.untracked.string('step1_userHLT nevts:1'),
     name = cms.untracked.string('Applications'),
     version = cms.untracked.string('$Revision: 1.19 $')
 )
@@ -81,9 +81,6 @@ process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
 process.mix.input.fileNames = cms.untracked.vstring(['/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/00482E71-60D0-E511-B9F9-0CC47A4D76BE.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/007E7AAA-63D0-E511-ADF4-24BE05CEEDE1.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/00AA656C-5DD0-E511-A219-0CC47A4D7626.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/00BE0DDB-55D0-E511-A68E-00259029ECEA.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/00C57044-69D0-E511-973C-0CC47A78A440.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/0220124D-62D0-E511-951F-0025905938A8.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/0234C1C7-51D0-E511-A562-001E67E71CB3.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/025BB030-5FD0-E511-AD16-FA163EAA4FD8.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/02A1C4A6-66D0-E511-9D6F-0CC47A4D7606.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/02F11D3E-5DD0-E511-9AE9-002590E39C46.root'])
 import HLTrigger.Configuration.Utilities
 process.loadHltConfiguration("hltdev:/users/kmcdermo/TestDev/DisplacedPhoton_8_0_24/V1",type='GRun')
-from HLTrigger.Configuration.CustomConfigs import ProcessName
-process = ProcessName(process)
-
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag = GlobalTag(process.GlobalTag, '80X_mcRun2_asymptotic_2016_TrancheIV_v6', '')
 
