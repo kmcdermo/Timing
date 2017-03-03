@@ -120,7 +120,8 @@ root -l -b -j runPhotonPlots.C
 ### This code is in flux, as some sections are commented out, so be sure to comment them in if you want certain plots to be made. ###  
 
 ### Also, pay attention to the line containing: ###
-### if (((fIsGMSB || fIsHVDS) && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] != 0) ) continue; (at L632 at the moment) ###  ### Comment this out if you do NOT want gen-level matching (for signals and gamma+jets) or gen-level matching veto (for QCD). ###
+### if (((fIsGMSB || fIsHVDS) && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] != 0) ) continue; (at L632 at the moment) ###
+### Comment this out if you do NOT want gen-level matching (for signals and gamma+jets) or gen-level matching veto (for QCD). ###
 ```
 
 ------------------------------------
