@@ -54,8 +54,8 @@ git remote rename origin kmcdermo
 cd ../
 
 ### Copy this for custom timing reco ###
-git cms-addpkg EgammaAnalysis/Configuration
-cp Timing/TimingAnalyzer/python/RecoEcal_CustomiseTimeCleaning.py EgammaAnalysis/Configuration/python
+git cms-addpkg RecoEcal/Configuration
+cp Timing/TimingAnalyzer/python/RecoEcal_CustomiseTimeCleaning.py RecoEcal/Configuration/python
 
 scram b -j 16
 ```
