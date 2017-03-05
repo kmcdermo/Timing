@@ -102,18 +102,19 @@ PlotPhotons::~PlotPhotons()
   }
 }
 
-void PlotPhotons::DoPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
+void PlotPhotons::DoPlots(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t trigger)
 {
-  if (!fRHDump) PlotPhotons::SetupPlots(generic, eff, analysis);
-  PlotPhotons::EventLoop(generic, eff, analysis);
+  if (!fRHDump) PlotPhotons::SetupPlots(generic, eff, analysis, trigger);
+  PlotPhotons::EventLoop(generic, eff, analysis, trigger);
   if (!fRHDump) PlotPhotons::MakeSubDirs();
   if (!fRHDump) PlotPhotons::OutputTEffs();
   if (!fRHDump) PlotPhotons::OutputTH1Fs();
+  if (trigger)  PlotPhotons::OutputTrigTH1Fs();
   if (!fRHDump) PlotPhotons::OutputTH2Fs();
   if (!fRHDump) PlotPhotons::DumpEventCounts();
 }
 
-void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
+void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t trigger)
 {
   if (generic) 
   {
@@ -148,9 +149,14 @@ void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis)
   {
     PlotPhotons::SetupAnalysis();
   }
+
+  if (trigger)
+  {
+    PlotPhotons::SetupTrigger();
+  }
 }
 
-void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis)
+void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t trigger)
 {
   for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++)
   {
@@ -205,6 +211,11 @@ void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis)
     {
       PlotPhotons::FillAnalysis();
     }
+    
+    if (trigger)
+    {
+      PlotPhoton::FillTrigger();
+    }
   }
 }
 
@@ -243,7 +254,6 @@ void PlotPhotons::RecHitDumper()
     }
   }
 }
-
 
 void PlotPhotons::CountEvents(Bool_t & event_b)
 {
@@ -293,6 +303,31 @@ void PlotPhotons::CountEvents(Bool_t & event_b)
   {
     fEfficiency["Events"]++;
     event_b = true;
+  }
+}
+
+void PlotPhotons::FillTrigger()
+{
+  Int_t iph1 = -1;
+  for (Int_t iph = 0; iph < nphotons; iph++)
+  { 
+    // very minor selection on photons --> just get the leading one passing these minimal cuts
+    if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+    if ((*phseedpos)[iph] == -9999) continue;
+    if (fApplyrhECut && (*phrhE)[iph][(*phseedpos)[iph]] < frhECut) continue;
+    iph1 = iph;
+    break;
+  }
+
+  // first is denom
+  // second is numer
+
+  fTrigPlots["ph1pt_hltdispho45"].first->Fill((*phpt)[iph1]);
+  fTrigPlots["ph1seedtime_hltdispho45"].first->Fill((*phrhtime)[iph1][(*phseedpos)[iph1]]);
+  if (hltdispho45) 
+  {
+    fTrigPlots["ph1pt_hltdispho45"].second->Fill((*phpt)[iph1]);
+    fTrigPlots["ph1seedtime_hltdispho45"].second->Fill((*phrhtime)[iph1][(*phseedpos)[iph1]]);
   }
 }
 
@@ -740,6 +775,12 @@ void PlotPhotons::SetupAnalysis()
   fPlots2D["MET_vs_seed1time"] = PlotPhotons::MakeTH2F("MET_vs_seed1time","MET vs Leading Photon Seed RecHit Time",80,-2.f,14.f,"Leading Photon Seed RecHit Time [ns]",100,0.f,2000.f,"MET","Analysis");
 }
 
+void PlotPhotons::SetupTrigger()
+{
+  fTrigPlots["ph1pt_hltdispho45"] = PlotPhotons::MakeTrigTH1Fs("ph1pt_hltdispho45","Leading Photon p_{T}",100,0.f,2500.f,"Leading Photon p_{T}","Events","HLT_DisplacedPhoton45_v","trigger");
+  fTrigPlots["ph1seedtime_hltdispho45"] = PlotPhotons::MakeTrigTH1Fs("ph1seedtime_hltdispho45","Leading Photon Seed recHit Time",100,0.f,2500.f,"Leading Photon Seed recHit Time","Events","HLT_DisplacedPhoton45_v","trigger");
+}
+
 void PlotPhotons::SetupEffs()
 {
   fEffs["effMatchVsGenPhPt"] = PlotPhotons::MakeTEff("effMatchVsGenPhPt","Gen to Reco Photon Matching Efficiency vs. Gen Photon p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","#epsilon","Efficiencies");
@@ -1011,6 +1052,61 @@ TH1F * PlotPhotons::MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_
   return hist;
 }
 
+std::pair<TH1F*,TH1F*> PlotPhotons::MakeTrigTH1Fs(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString path, TString subdir)
+{
+  TH1F * denom = new TH1F(hname.Data()+"_denom",htitle.Data()+" "+path.Data()+" [Denom]",nbinsx,xlow,xhigh);
+  denom->SetLineColor(kBlack);
+  denom->GetXaxis()->SetTitle(xtitle.Data()+" "+path.Data()+" [Denom]");
+  denom->GetYaxis()->SetTitle(ytitle.Data());
+  denom->Sumw2();
+
+  fSubDirs[denom->GetName()] = subdir;
+
+  TH1F * numer = new TH1F(hname.Data()+"_numer",htitle.Data()+" "+path.Data()+" [Numer]",nbinsx,xlow,xhigh);
+  numer->SetLineColor(kBlack);
+  numer->GetXaxis()->SetTitle(xtitle.Data()+" "+path.Data()+" [Numer]");
+  numer->GetYaxis()->SetTitle(ytitle.Data());
+  numer->Sumw2();
+
+  fSubDirs[numer->GetName()] = subdir;
+  
+  return std::make_pair(denom,numer);
+}
+
+void PlotPhotons::MakeEffPlot(TH1F *& eff, TString hname, const TH1F *& denom, const TH1F *& numer)
+{
+  TString title = denom->GetTitle();
+  Ssiz_t  hlt   = title.Index("HLT_"); 
+  Ssiz_t  denom = title.Index(" [Denom]"); 
+  TString var (title(0,hlt-1));
+  TString path(title(hlt,denom-hlt));
+  
+  TString xtitle = denom->GetXaxis()->GetTitle();
+  Ssiz_t  xhlt   = xtitle.Index("HLT_"); 
+  TString xvar(xtitle(0,xhlt-1));
+  
+  eff = new TH1F(hname->Data()+"_eff",var+" "+path+" Efficiency",denom->GetNbinsX(),denom->GetXaxis()->GetBinLowEdge(1),denom->GetXaxis()->GetBinUpEdge(denom->GetNbinsX()));
+  eff->SetLineColor(kBlack);
+  eff->GetXaxis()->SetTitle(xvar.Data()+" "+path.Data()+" [Efficiency]");
+  eff->GetYaxis()->SetTitle(denom->GetYaxis()->GetTitle());
+  eff->Sumw2();
+  
+  Double_t value = 0;
+  Double_t err   = 0;
+  for (Int_t ibin = 1; ibin <= eff->GetNbinsX(); ibin++)
+  {
+    if (denom->GetBinContent(ibin)!=0)
+    {
+      value = numer->GetBinContent(ibin) / denom->GetBinContent(ibin); 
+      // Binonimal errors 
+      err = sqrt( value*(1.0-value)/denom->GetBinContent(ibin) );
+      //Fill plots with correct values
+      eff->SetBinContent(ibin,value);
+      eff->SetBinError  (ibin,err);
+    }
+  }
+}
+
 TH2F * PlotPhotons::MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString subdir)
 {
   TH2F * hist = new TH2F(hname.Data(),htitle.Data(),nbinsx,xlow,xhigh,nbinsy,ylow,yhigh);
@@ -1071,7 +1167,6 @@ void PlotPhotons::OutputTEffs()
 
     if (fSaveHists)
     {
-
       // now draw onto canvas to save as png
       TCanvas * canv = new TCanvas("canv","canv");
       canv->cd();
@@ -1101,7 +1196,6 @@ void PlotPhotons::OutputTH1Fs()
 
     if (fSaveHists)
     {
-
       // now draw onto canvas to save as png
       TCanvas * canv = new TCanvas("canv","canv");
       canv->cd();
@@ -1122,6 +1216,67 @@ void PlotPhotons::OutputTH1Fs()
     delete mapiter->second;
   }
   fPlots.clear();
+}
+
+void PlotPhotons::OutputTrigTH1Fs()
+{
+  fOutFile->cd();
+
+  for (TH1PairMapIter mapiter = fTrigPlots.begin(); mapiter != fTrigPlots.end(); ++mapiter) 
+  { 
+    // make efficiency plot
+    TH1F * eff;
+    PlotPhotons::MakeEffPlot(eff,mapiter->first,mapiter->second.first,mapiter->second.second);
+
+    // save to output file
+    mapiter->second.first ->Write(mapiter->second.first ->GetName(),TObject::kWriteDelete); // denom
+    mapiter->second.second->Write(mapiter->second.second->GetName(),TObject::kWriteDelete); // numer
+    eff->Write(eff->GetName(),TObject::kWriteDelete);
+
+    if (fSaveHists)
+    {
+      // now draw onto canvas to save as png
+      TCanvas * canv = new TCanvas("canv","canv");
+      canv->cd();
+
+      // first denom
+      mapiter->second.first->Draw("HIST");
+      
+      // first save as linear, then log
+      canv->SetLogy(0);
+      canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->second.first->GetName()));
+      
+      canv->SetLogy(1);
+      canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->second.first->GetName()));
+
+      // second numer
+      mapiter->second.second->Draw("HIST");
+      
+      // first save as linear, then log
+      canv->SetLogy(0);
+      canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->second.second->GetName()));
+      
+      canv->SetLogy(1);
+      canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->second.second->GetName()));
+
+      // efficiency last
+      eff->Draw("HIST");
+      
+      // first save as linear, then log
+      canv->SetLogy(0);
+      canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),eff->GetName()));
+      
+      canv->SetLogy(1);
+      canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),eff->GetName()));
+      
+      delete canv;
+    }
+
+    delete eff;
+    delete mapiter->second.first;
+    delete mapiter->second.second;
+  }
+  fTrigPlots.clear();
 }
 
 void PlotPhotons::OutputTH2Fs()

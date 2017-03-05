@@ -30,12 +30,13 @@ void runPhotonPlots()
 //   PlotPhotons photonPlots("input/MC/signal/HVDS/photondump-hvds.root",false,true,false,false,false,"output/testhvds",true,
 // 			  true,35.f,true,50.f,true,"loose",true,1.f,true,false,false);
 
-  PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-ctau2000.root",true,false,false,false,false,"output/test2000",true,
+  PlotPhotons photonPlots("input/photondump-ctau100.root",true,false,false,false,false,"output/ctau100",true,
 			  true,35.f,true,50.f,true,"loose",true,1.f,true,false,false);
 
   // which plots to do
   // first bool = generic plots
   // second bool = efficiency
   // third bool = analysis plots
-  photonPlots.DoPlots(true,false,false);
+  // fourth bool = trigger plots
+  photonPlots.DoPlots(false,false,false,true);
 }

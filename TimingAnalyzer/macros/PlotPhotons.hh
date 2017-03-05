@@ -14,6 +14,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <utility>
 
 static const Float_t sol = 2.99792458e8; // cm/s
 
@@ -30,6 +31,9 @@ inline void    semiR(const Float_t insmaj, const Float_t insmin, Float_t & smaj,
 
 typedef std::map<TString,TEfficiency*> TEffMap;
 typedef TEffMap::iterator              TEffMapIter;
+
+typedef std::map<TString,std::pair<TH1F*,TH1F*> > TH1PairMap;
+typedef TH1PairMap::iterator                      TH1PairMapIter;
 
 typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator        TH1MapIter;
@@ -56,8 +60,8 @@ public :
 	      Bool_t applyecalacceptcut = false, Bool_t applyEBonly = false, Bool_t applyEEonly = false);
   ~PlotPhotons();
   void InitTree();
-  void DoPlots(Bool_t generic, Bool_t eff, Bool_t analysis);
-  void SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis);
+  void DoPlots(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t trigger);
+  void SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t trigger);
   void SetupEffs();
   void SetupGenInfo();
   void SetupGMSB();
@@ -68,8 +72,11 @@ public :
   void SetupJets();
   void SetupRecoPhotons();
   void SetupAnalysis();
+  void SetupTrigger();
   TEfficiency * MakeTEff(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
   TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
+  std::pair<TH1F*,TH1F*> MakeTrigTH1Fs(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString path, TString subdir);
+  void MakeEffPlot(TH1F *& eff, TString hname, const TH1F *& denom, const TH1F *& numer);
   TH2F * MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString subdir);
   void EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis);
   void RecHitDumper();
@@ -84,9 +91,11 @@ public :
   void FillJets();
   void FillRecoPhotons();
   void FillAnalysis();
+  void FillTrigger();
   void DumpEventCounts();
   void MakeSubDirs();
   void OutputTEffs();
+  void OutputTrigTH1Fs();
   void OutputTH1Fs();
   void OutputTH2Fs();
 
@@ -104,6 +113,7 @@ private :
   TEffMap fEffs;
   TH1Map  fPlots;
   TH2Map  fPlots2D;
+  TH1PairMap fTrigPlots;
   TStrIntMap fEfficiency;
   Float_t fCTau;
   std::ofstream fSeedDump;
