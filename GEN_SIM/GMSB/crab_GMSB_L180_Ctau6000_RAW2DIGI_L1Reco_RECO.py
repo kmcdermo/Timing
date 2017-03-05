@@ -8,6 +8,7 @@ config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'step2_customiseTiming_RAW2DIGI_L1Reco_RECO-AODSIM.py'
 
 config.Data.inputDataset = '/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/kmcdermo-GMSB_L180_Ctau6000_userHLT_DIGI_L1_DIGI2RAW_HLT_PU-RAWSIM-v1-4763f36c0c6ad7117eaff44776e31715/USER'
+
 config.Data.inputDBS = 'phys03'
 config.Data.splitting = 'FileBased'
 config.Data.unitsPerJob = 5
