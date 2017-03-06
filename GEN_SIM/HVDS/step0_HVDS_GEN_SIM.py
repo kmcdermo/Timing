@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: Configuration/GenProduction/python/ThirteenTeV/HVDS_13TeV_cfi.py --mc --eventcontent RAWSIM --customise SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1 --datatier GEN-SIM --conditions MCRUN2_71_V1::All --beamspot Realistic50ns13TeVCollision --step GEN,SIM --magField 38T_PostLS1 HVDS_GEN_SIM.root
+# with command line options: Configuration/GenProduction/python/ThirteenTeV/HVDS_13TeV_cfi.py --mc --eventcontent RAWSIM --customise SLHCUpgradeSimulations/Configuration/postLS1Customs.customisePostLS1 --datatier GEN-SIM --conditions MCRUN2_71_V1::All --beamspot Realistic50ns13TeVCollision --step GEN,SIM --magField 38T_PostLS1 DarkShower_Pythia8_13TeV_GEN_SIM.root
 import FWCore.ParameterSet.Config as cms
 
 process = cms.Process('SIM')
@@ -37,7 +37,7 @@ process.options = cms.untracked.PSet(
 # Production Info
 process.configurationMetadata = cms.untracked.PSet(
     version = cms.untracked.string('$Revision: 1.19 $'),
-    annotation = cms.untracked.string('Configuration/GenProduction/python/ThirteenTeV/HVDS_13TeV_cfi.py nevts:1'),
+    annotation = cms.untracked.string('Configuration/GenProduction/python/ThirteenTeV/HVDS_13TeV_cfi.py nevts:10'),
     name = cms.untracked.string('Applications')
 )
 
@@ -47,7 +47,7 @@ process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
     splitLevel = cms.untracked.int32(0),
     eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
     outputCommands = process.RAWSIMEventContent.outputCommands,
-    fileName = cms.untracked.string('HVDS_GEN_SIM.root'),
+    fileName = cms.untracked.string('HVDS_13TeV_ctau1000_GEN_SIM.root'),
     dataset = cms.untracked.PSet(
         filterName = cms.untracked.string(''),
         dataTier = cms.untracked.string('GEN-SIM')
@@ -76,14 +76,15 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
             'SLHA:keepSM = on', 
             'SLHA:minMassSM = 1000.', 
             'ParticleDecays:limitTau0 = off', 
-            'ParticleDecays:tau0Max = 10000', 
+            'ParticleDecays:tau0Max = 100000', 
             'ParticleDecays:allowPhotonRadiation = on'),
         pythia8CUEP8M1Settings = cms.vstring('Tune:pp 14', 
             'Tune:ee 7', 
             'MultipartonInteractions:pT0Ref=2.4024', 
             'MultipartonInteractions:ecmPow=0.25208', 
             'MultipartonInteractions:expPow=1.6'),
-        processParameters = cms.vstring('HiddenValley:ffbar2Zv = on', 
+        processParameters = cms.vstring(
+	    'HiddenValley:ffbar2Zv = on', 
             'HiddenValley:Ngauge = 3', 
             '4900023:onMode = off', 
             '4900023:onIfAny = 4900101', 
@@ -102,7 +103,7 @@ process.generator = cms.EDFilter("Pythia8GeneratorFilter",
             'HadronLevel:Hadronize = on', 
             '4900111:mayDecay = on', 
             '4900111:addChannel 1 1. 0 22 22', 
-            '4900111:tau0 = 200', 
+            '4900111:tau0 = 1000', 
             '4900211:mayDecay = off', 
             '-4900211:mayDecay = off'),
         parameterSets = cms.vstring('pythia8CommonSettings', 
