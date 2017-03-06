@@ -76,9 +76,9 @@ public :
   TEfficiency * MakeTEff(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
   TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
   std::pair<TH1F*,TH1F*> MakeTrigTH1Fs(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString path, TString subdir);
-  void MakeEffPlot(TH1F *& eff, TString hname, const TH1F *& denom, const TH1F *& numer);
+  void MakeEffPlot(TH1F *& eff, TString hname, TH1F *& denom, TH1F *& numer);
   TH2F * MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString subdir);
-  void EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis);
+  void EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t trigger);
   void RecHitDumper();
   void CountEvents(Bool_t & event_b);
   void FillEffs();

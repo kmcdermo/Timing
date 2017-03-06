@@ -30,7 +30,7 @@ void runPhotonPlots()
 //   PlotPhotons photonPlots("input/MC/signal/HVDS/photondump-hvds.root",false,true,false,false,false,"output/testhvds",true,
 // 			  true,35.f,true,50.f,true,"loose",true,1.f,true,false,false);
 
-  PlotPhotons photonPlots("input/photondump-ctau100.root",true,false,false,false,false,"output/ctau100",true,
+  PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-ctau6000.root",true,false,false,false,false,"output/ctau6000",true,
 			  true,35.f,true,50.f,true,"loose",true,1.f,true,false,false);
 
   // which plots to do

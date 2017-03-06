@@ -214,7 +214,7 @@ void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t 
     
     if (trigger)
     {
-      PlotPhoton::FillTrigger();
+      PlotPhotons::FillTrigger();
     }
   }
 }
@@ -311,6 +311,9 @@ void PlotPhotons::FillTrigger()
   Int_t iph1 = -1;
   for (Int_t iph = 0; iph < nphotons; iph++)
   { 
+    if (fApplyPhPtCut && ((*phpt)[iph] < fPhPtCut)) continue;
+    if (fApplyPhVIDCut && ((*phVID)[iph] < fPhVIDMap[fPhVID])) continue;
+
     // very minor selection on photons --> just get the leading one passing these minimal cuts
     if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
     if ((*phseedpos)[iph] == -9999) continue;
@@ -319,16 +322,19 @@ void PlotPhotons::FillTrigger()
     break;
   }
 
-  // first is denom
-  // second is numer
-
-  fTrigPlots["ph1pt_hltdispho45"].first->Fill((*phpt)[iph1]);
-  fTrigPlots["ph1seedtime_hltdispho45"].first->Fill((*phrhtime)[iph1][(*phseedpos)[iph1]]);
-  if (hltdispho45) 
+  if (iph1 != -1)
   {
-    fTrigPlots["ph1pt_hltdispho45"].second->Fill((*phpt)[iph1]);
-    fTrigPlots["ph1seedtime_hltdispho45"].second->Fill((*phrhtime)[iph1][(*phseedpos)[iph1]]);
-  }
+    // first is denom
+    // second is numer
+    
+    fTrigPlots["ph1pt_hltdispho45"].first->Fill((*phpt)[iph1]);
+    fTrigPlots["ph1seedtime_hltdispho45"].first->Fill((*phrhtime)[iph1][(*phseedpos)[iph1]]);
+    if (hltdispho45) 
+    {
+     fTrigPlots["ph1pt_hltdispho45"].second->Fill((*phpt)[iph1]);
+     fTrigPlots["ph1seedtime_hltdispho45"].second->Fill((*phrhtime)[iph1][(*phseedpos)[iph1]]);
+    } 
+  } 
 }
 
 void PlotPhotons::FillAnalysis()
@@ -778,7 +784,7 @@ void PlotPhotons::SetupAnalysis()
 void PlotPhotons::SetupTrigger()
 {
   fTrigPlots["ph1pt_hltdispho45"] = PlotPhotons::MakeTrigTH1Fs("ph1pt_hltdispho45","Leading Photon p_{T}",100,0.f,2500.f,"Leading Photon p_{T}","Events","HLT_DisplacedPhoton45_v","trigger");
-  fTrigPlots["ph1seedtime_hltdispho45"] = PlotPhotons::MakeTrigTH1Fs("ph1seedtime_hltdispho45","Leading Photon Seed recHit Time",100,0.f,2500.f,"Leading Photon Seed recHit Time","Events","HLT_DisplacedPhoton45_v","trigger");
+  fTrigPlots["ph1seedtime_hltdispho45"] = PlotPhotons::MakeTrigTH1Fs("ph1seedtime_hltdispho45","Leading Photon Seed recHit Time",100,-5.f,20.f,"Leading Photon Seed recHit Time","Events","HLT_DisplacedPhoton45_v","trigger");
 }
 
 void PlotPhotons::SetupEffs()
@@ -1054,17 +1060,17 @@ TH1F * PlotPhotons::MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_
 
 std::pair<TH1F*,TH1F*> PlotPhotons::MakeTrigTH1Fs(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString path, TString subdir)
 {
-  TH1F * denom = new TH1F(hname.Data()+"_denom",htitle.Data()+" "+path.Data()+" [Denom]",nbinsx,xlow,xhigh);
+  TH1F * denom = new TH1F(Form("%s_denom",hname.Data()),Form("%s %s [Denom]",htitle.Data(),path.Data()),nbinsx,xlow,xhigh);
   denom->SetLineColor(kBlack);
-  denom->GetXaxis()->SetTitle(xtitle.Data()+" "+path.Data()+" [Denom]");
+  denom->GetXaxis()->SetTitle(Form("%s %s [Denom]",xtitle.Data(),path.Data()));
   denom->GetYaxis()->SetTitle(ytitle.Data());
   denom->Sumw2();
 
   fSubDirs[denom->GetName()] = subdir;
 
-  TH1F * numer = new TH1F(hname.Data()+"_numer",htitle.Data()+" "+path.Data()+" [Numer]",nbinsx,xlow,xhigh);
+  TH1F * numer = new TH1F(Form("%s_numer",hname.Data()),Form("%s %s [Numer]",htitle.Data(),path.Data()),nbinsx,xlow,xhigh);
   numer->SetLineColor(kBlack);
-  numer->GetXaxis()->SetTitle(xtitle.Data()+" "+path.Data()+" [Numer]");
+  numer->GetXaxis()->SetTitle(Form("%s %s [Numer]",xtitle.Data(),path.Data()));
   numer->GetYaxis()->SetTitle(ytitle.Data());
   numer->Sumw2();
 
@@ -1073,21 +1079,21 @@ std::pair<TH1F*,TH1F*> PlotPhotons::MakeTrigTH1Fs(TString hname, TString htitle,
   return std::make_pair(denom,numer);
 }
 
-void PlotPhotons::MakeEffPlot(TH1F *& eff, TString hname, const TH1F *& denom, const TH1F *& numer)
+void PlotPhotons::MakeEffPlot(TH1F *& eff, TString hname, TH1F *& denom, TH1F *& numer)
 {
   TString title = denom->GetTitle();
-  Ssiz_t  hlt   = title.Index("HLT_"); 
-  Ssiz_t  denom = title.Index(" [Denom]"); 
-  TString var (title(0,hlt-1));
-  TString path(title(hlt,denom-hlt));
+  Ssiz_t  start = title.Index("HLT_"); 
+  Ssiz_t  end   = title.Index(" [Denom]"); 
+  TString var   (title(0,start-1));
+  TString path  (title(start,end-start));
   
   TString xtitle = denom->GetXaxis()->GetTitle();
   Ssiz_t  xhlt   = xtitle.Index("HLT_"); 
-  TString xvar(xtitle(0,xhlt-1));
+  TString xvar   (xtitle(0,xhlt-1));
   
-  eff = new TH1F(hname->Data()+"_eff",var+" "+path+" Efficiency",denom->GetNbinsX(),denom->GetXaxis()->GetBinLowEdge(1),denom->GetXaxis()->GetBinUpEdge(denom->GetNbinsX()));
+  eff = new TH1F(Form("%s_eff",hname.Data()),Form("%s %s Efficiency",var.Data(),path.Data()),denom->GetNbinsX(),denom->GetXaxis()->GetBinLowEdge(1),denom->GetXaxis()->GetBinUpEdge(denom->GetNbinsX()));
   eff->SetLineColor(kBlack);
-  eff->GetXaxis()->SetTitle(xvar.Data()+" "+path.Data()+" [Efficiency]");
+  eff->GetXaxis()->SetTitle(Form("%s %s [Efficiency]",xvar.Data(),path.Data()));
   eff->GetYaxis()->SetTitle(denom->GetYaxis()->GetTitle());
   eff->Sumw2();
   
@@ -1260,7 +1266,7 @@ void PlotPhotons::OutputTrigTH1Fs()
       canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->second.second->GetName()));
 
       // efficiency last
-      eff->Draw("HIST");
+      eff->Draw("EP");
       
       // first save as linear, then log
       canv->SetLogy(0);
