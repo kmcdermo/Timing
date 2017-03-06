@@ -43,7 +43,10 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
   // initialize efficiency map
   fEfficiency["Photons"] = 0;
   fEfficiency["RecHits"] = 0;
+  fEfficiency["Pho+RH"]  = 0;
   fEfficiency["Jets"]    = 0;
+  fEfficiency["Trigger"] = 0;
+  fEfficiency["Trg+Pho+RH"] = 0;
   fEfficiency["Events"]  = 0;
 
   // output
@@ -263,6 +266,7 @@ void PlotPhotons::CountEvents(Bool_t & event_b)
   Bool_t phsceta_b = false;
   Bool_t seedrh_b = false;
   Bool_t seedE_b = false;
+  Bool_t photon_b = false;
 
   for (Int_t iph = 0; iph < nphotons; iph++)
   {
@@ -282,6 +286,8 @@ void PlotPhotons::CountEvents(Bool_t & event_b)
   }
   if (phpt_b && phvid_b && phsceta_b) fEfficiency["Photons"]++;
   if (seedrh_b && seedE_b) fEfficiency["RecHits"]++;
+  if (phpt_b && phvid_b && phsceta_b && seedrh_b && seedE_b) photon_b = true;
+  if (photon_b) fEfficiency["Pho+RH"]++;
 
   // jet selection efficiency
   Int_t njets_ptcut = 0;
@@ -298,8 +304,22 @@ void PlotPhotons::CountEvents(Bool_t & event_b)
   }
   if (njets_ptcut_b) fEfficiency["Jets"]++;
 
+  //trigger efficiency
+  Bool_t trig_b = false;
+  if (hltdispho45) 
+  {
+    fEfficiency["Trigger"]++;
+    trig_b = true; 
+  }
+
+  //trigger + photon selection efficiency
+  if (trig_b && photon_b)
+  {
+    fEfficiency["Trg+Pho+RH"]++;
+  }
+
   // total efficiency
-  if (njets_ptcut_b && phpt_b && phvid_b && phsceta_b && seedrh_b && seedE_b) 
+  if (trig_b && njets_ptcut_b && photon_b)
   {
     fEfficiency["Events"]++;
     event_b = true;
@@ -1127,22 +1147,33 @@ TH2F * PlotPhotons::MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_
 
 void PlotPhotons::DumpEventCounts()
 {
+  std::ofstream output;
+  output.open(Form("%s/efficiency.txt",fOutDir.Data()),std::ios_base::trunc);
+
   std::cout << std::endl << "-----------------" << std::endl << std::endl;
   Int_t total = fInTree->GetEntries();
+
   std::cout << "Total Events: " << total << std::endl;
+  output << "Total " << total << std::endl;
 
   for (TStrIntMapIter mapiter = fEfficiency.begin(); mapiter != fEfficiency.end(); ++mapiter)
   {
-    std::cout << "nEvents Passing " << (*mapiter).first.Data() << " Selection: " << (*mapiter).second <<std::endl;
+    const Int_t   passed      = mapiter->second;
+    const Float_t efficiency  = float(passed)/float(total);
+    const Float_t uncertainty = std::sqrt((efficiency*(1.f-efficiency))/float(total));
+
+    std::cout << "nEvents Passing " << mapiter->first.Data() << " Selection: " << passed << std::endl;
+    output << mapiter->first.Data() << " " << passed << " " << efficiency << " " << uncertainty << std::endl;
   }
 
   // Compute event level efficiency + binomial error
-  Int_t   passed      = fEfficiency["Events"];
-  Float_t efficiency  = float(passed)/float(total);
-  Float_t uncertainty = std::sqrt((efficiency*(1.f-efficiency))/float(total));
-  std::cout << "Event level efficiency: " << efficiency << " +/- " << uncertainty << std::endl;
+  const Int_t   passed      = fEfficiency["Events"];
+  const Float_t efficiency  = float(passed)/float(total);
+  const Float_t uncertainty = std::sqrt((efficiency*(1.f-efficiency))/float(total));
 
+  std::cout << "Event level efficiency: " << efficiency << " +/- " << uncertainty << std::endl;
   std::cout << std::endl << "-----------------" << std::endl << std::endl;
+  output.close();
 }
 
 void PlotPhotons::MakeSubDirs()
