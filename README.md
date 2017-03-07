@@ -39,10 +39,6 @@ cd Timing/
 git remote rename origin kmcdermo
 cd ../
 
-### Copy this for custom timing reco ###
-git cms-addpkg RecoEcal/Configuration
-cp Timing/TimingAnalyzer/python/RecoEcal_CustomiseTimeCleaning.py RecoEcal/Configuration/python
-
 scram b -j 16
 ```
 
@@ -91,6 +87,7 @@ cd CMSSW_7_1_25/src/
 cmsenv
 git cms-init
 
+### Contains Timing/GEN_SIM directory ###
 git clone ssh://git@github.com/kmcdermo/Timing.git
 cd Timing/
 git remote rename origin kmcdermo
@@ -114,10 +111,15 @@ cd CMSSW_8_0_26_patch2/src/
 cmsenv
 git cms-init
 
+### Contains Timing/GEN_SIM directory ###
 git clone ssh://git@github.com/kmcdermo/Timing.git
 cd Timing/
 git remote rename origin kmcdermo
 cd ../
+
+### Copy this for custom timing reco ###
+git cms-addpkg RecoEcal/Configuration
+cp Timing/GEN_SIM/python/RecoEcal_CustomiseTimeCleaning.py RecoEcal/Configuration/python
 
 scram b -j 16
 
@@ -187,7 +189,7 @@ git clone git@github.com:cms-steam/RemovePileUpDominatedEvents.git RemovePileUpD
 git cms-addpkg HLTrigger/HLTanalyzers
 git clone git@github.com:cms-steam/HLTrigger temp
 cp -r temp/* HLTrigger/
-rm -fr temp/
+rm -rf temp/
 cp /afs/cern.ch/user/n/ndaci/public/STEAM/L1Menus/L1Menu_Collisions2016_v9_m2.xml L1Trigger/L1TGlobal/data/Luminosity/startup/
 cp /afs/cern.ch/user/n/ndaci/public/STEAM/Prescales/UGT_BASE_RS_FINOR_MASK_v91.xml L1Trigger/L1TGlobal/data/Luminosity/startup/
 cp /afs/cern.ch/user/n/ndaci/public/STEAM/Prescales/UGT_BASE_RS_PRESCALES_v214.xml L1Trigger/L1TGlobal/data/Luminosity/startup/
