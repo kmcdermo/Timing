@@ -182,7 +182,7 @@ void ZeeTnPTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	const DetId recHitId = hafitr->first; // get detid of crystal
 	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
 	
-	if (recHit != recHits->end() && seedDetId == recHitId) // standard check
+	if (recHit != recHits->end() && seedDetId == recHitId && !recHit->checkFlag(EcalRecHit::kOutOfTime)) // ensure seed actually exists and is marked in time
 	{ 
 	  saveElectron = true;
 	  break;
