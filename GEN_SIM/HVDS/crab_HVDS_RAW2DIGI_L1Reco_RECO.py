@@ -1,7 +1,7 @@
 from CRABClient.UserUtilities import config
 config = config()
 
-config.General.requestName = 'HVDS_userHLT_customiseTiming_RAW2DIGI_L1Reco_RECO-AODSIM-v1'
+config.General.requestName = 'HVDS_ctau1000_userHLT_customiseTiming_RAW2DIGI_L1Reco_RECO-AODSIM-v1'
 config.General.workArea    = 'crab_projects'
 
 config.JobType.pluginName = 'Analysis'
@@ -13,7 +13,7 @@ config.Data.splitting    = 'FileBased'
 config.Data.unitsPerJob  = 5
 config.Data.publication  = True
 config.Data.publishDBS   = 'phys03'
-config.Data.outputDatasetTag = 'HVDS_userHLT_customiseTiming_RAW2DIGI_L1Reco_RECO-AODSIM-v1'
+config.Data.outputDatasetTag = 'HVDS_ctau1000_userHLT_customiseTiming_RAW2DIGI_L1Reco_RECO-AODSIM-v1'
 
 config.Site.storageSite = 'T2_CH_CERN'
 
