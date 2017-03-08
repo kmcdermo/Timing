@@ -35,10 +35,17 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
 
   //ctau for plots
   fCTau = 1000;
-  if (filename.Contains("ctau100" ,TString::kExact)) fCTau = 3.65;  // 100  mm --> 36.5  mm == 3.65  cm
-  if (filename.Contains("ctau2000",TString::kExact)) fCTau = 73.05; // 2000 mm --> 730.5 mm == 73.5  cm
-  if (filename.Contains("ctau6000",TString::kExact)) fCTau = 219.2; // 6000 mm --> 2192  mm == 219.2 cm  
-  if (filename.Contains("hvds"    ,TString::kExact)) fCTau = 20.0;  // 200 mm 
+  if (filename.Contains("gmsb",TString::kExact))
+  {
+    if (filename.Contains("ctau100" ,TString::kExact)) fCTau = 3.65;  // 100  mm --> 36.5  mm == 3.65  cm
+    if (filename.Contains("ctau2000",TString::kExact)) fCTau = 73.05; // 2000 mm --> 730.5 mm == 73.5  cm
+    if (filename.Contains("ctau6000",TString::kExact)) fCTau = 219.2; // 6000 mm --> 2192  mm == 219.2 cm  
+  }
+  else if (filename.Contains("hvds",TString::kExact))
+  {
+    if (filename.Contains("1000",TString::kExact)) fCTau = 100; // 1000 mm
+    else fCTau = 10; 
+  }
 
   // initialize efficiency map
   fEfficiency["Photons"] = 0;
@@ -131,12 +138,12 @@ void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t
       }
       if (fIsHVDS)
       {
-	//	PlotPhotons::SetupHVDS();
+	PlotPhotons::SetupHVDS();
       }
     }
-    //    PlotPhotons::SetupObjectCounts();
-    //    PlotPhotons::SetupMET();
-    //    PlotPhotons::SetupJets();
+    PlotPhotons::SetupObjectCounts();
+    PlotPhotons::SetupMET();
+    PlotPhotons::SetupJets();
     PlotPhotons::SetupRecoPhotons();
   }
 
@@ -193,12 +200,12 @@ void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t 
 	}
 	if (fIsHVDS)
 	{
-	  //	  PlotPhotons::FillHVDS();
+	  PlotPhotons::FillHVDS();
 	}
       }
-      //      PlotPhotons::FillObjectCounts();
-      //      PlotPhotons::FillMET();
-      //      PlotPhotons::FillJets();
+      PlotPhotons::FillObjectCounts();
+      PlotPhotons::FillMET();
+      PlotPhotons::FillJets();
       PlotPhotons::FillRecoPhotons();
     }
 
@@ -379,6 +386,28 @@ void PlotPhotons::FillAnalysis()
     break;
   }
 
+  if (ph1 != -1 && hltdispho45)
+  {
+    Int_t ngoodpho = 0;
+    Int_t phlong = ph1;
+    for (Int_t iph = 0; iph < nphotons; iph++)
+    {
+      if (fApplyPhVIDCut && ((*phVID)[iph]) < fPhVIDMap[fPhVID]) continue;
+      if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+      if ((*phseedpos)[iph] == -9999) continue;
+      if (fApplyrhECut && (*phrhE)[iph][(*phseedpos)[iph]] < frhECut) continue;
+      
+      ngoodpho++;
+
+      if ((*phrhtime)[iph][(*phseedpos)[iph]] > (*phrhtime)[phlong][(*phseedpos)[phlong]]) phlong = iph;
+
+      fPlots["phseedtime_gt1goodpho"]->Fill((*phrhtime)[iph][(*phseedpos)[iph]]);
+      fPlots2D["phseedtime_vs_phpt_gt1goodpho"]->Fill((*phpt)[iph],(*phrhtime)[iph][(*phseedpos)[iph]]);
+    }
+    fPlots["ngoodphotons_gt1goodpho"]->Fill(ngoodpho);
+    fPlots["phbestseedtime_gt1goodpho"]->Fill((*phrhtime)[phlong][(*phseedpos)[phlong]]);
+  }
+  
   // jet selection efficiency
   Int_t njets_ptcut = 0;
   for (Int_t ijet = 0; ijet < njets; ijet++)
@@ -712,7 +741,7 @@ void PlotPhotons::FillRecoPhotons()
     fPlots["phalpha"]->Fill((*phalpha)[iph]);
     fPlots["phscE"]->Fill((*phscE)[iph]);
     if (fIsMC) fPlots["phisMatched"]->Fill((*phisMatched)[iph]);
-
+    
     if (passed == 0)
     {
       fPlots["ph1pt"]->Fill((*phpt)[iph]);
@@ -798,6 +827,11 @@ void PlotPhotons::FillRecoPhotons()
 
 void PlotPhotons::SetupAnalysis()
 {
+  fPlots["phseedtime_gt1goodpho"] = PlotPhotons::MakeTH1F("phseedtime_gt1goodpho","Photons Seed RecHit Time [ns] (reco)",200,-10.f,10.f,"Time [ns]","Seed RecHits","Analysis");
+  fPlots["phbestseedtime_gt1goodpho"] = PlotPhotons::MakeTH1F("phbestseedtime_gt1goodpho","Most Delayed Photons Seed RecHit Time [ns] (reco)",200,-10.f,10.f,"Time [ns]","Events","Analysis");
+  fPlots2D["phseedtime_vs_phpt_gt1goodpho"] = PlotPhotons::MakeTH2F("phseedtime_vs_phpt_gt1goodpho","Photon Seed RecHit Time vs Photon p_{T}",100,0,500.f,"Photon p_{T} [GeV/c]",100,-10.f,10.f,"Photon Seed RecHit Time [ns]","Analysis");
+  fPlots["ngoodphotons_gt1goodpho"] = PlotPhotons::MakeTH1F("ngoodphotons_gt1goodpho","N good photons/event",20,0.f,20.f,"nPhotons","Events","Analysis");
+
   fPlots2D["MET_vs_seed1time"] = PlotPhotons::MakeTH2F("MET_vs_seed1time","MET vs Leading Photon Seed RecHit Time",80,-2.f,14.f,"Leading Photon Seed RecHit Time [ns]",100,0.f,2000.f,"MET","Analysis");
 }
 
