@@ -156,8 +156,8 @@ cmsRun step2_customiseTiming_RAW2DIGI_L1Reco_RECO-AODSIM.py
 
 cmsDriver.py step3 --mc --eventcontent MINIAODSIM --runUnscheduled --datatier MINIAODSIM --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v6 --step PAT --era Run2_2016 --filein file:RAW2DIGI_L1Reco_RECO-AODSIM.root --fileout file:PAT-MINIAODSIM.root --no_exec
 
-mv step3_PAT.root step3_PAT-MINIAODSIM.root
-cmsRun step3_PAT-MINIAODSIM.root
+mv step3_PAT.py step3_PAT-MINIAODSIM.py
+cmsRun step3_PAT-MINIAODSIM.py
 ```
 
 When you have finished the PAT step, save the output directory from ```crab status``` or just search for the files with ```eos ls``` to be used in the analysis plugins and macros.

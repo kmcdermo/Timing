@@ -25,6 +25,10 @@ options.register (
 	'flag to indicate GMSB');
 
 options.register (
+	'isHVDS',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to indicate GMSB');
+
+options.register (
 	'ctau','6000',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'which GMSB sample to use');
 
@@ -60,7 +64,7 @@ options.register (
 options.parseArguments()
 
 ## reset file name
-options.outputFileName = 'photondump-ctau'+options.ctau+'.root'
+options.outputFileName = 'photondump-gmsb-ctau'+options.ctau+'.root'
 
 print "##### Settings ######"
 print "Running with dumpTriggerMenu     = ",options.dumpTriggerMenu

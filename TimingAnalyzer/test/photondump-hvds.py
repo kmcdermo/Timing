@@ -25,6 +25,10 @@ options.register (
 	'flag to indicate GMSB');
 
 options.register (
+	'ctau','1000',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'which GMSB sample to use');
+
+options.register (
 	'isHVDS',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate Hidden Valley Dark Shower');
 
@@ -60,12 +64,13 @@ options.register (
 options.parseArguments()
 
 ## reset file name
-options.outputFileName = 'photondump-hvds.root'
+options.outputFileName = 'photondump-hvds-ctau'+options.ctau+'.root'
 
 print "##### Settings ######"
 print "Running with dumpTriggerMenu     = ",options.dumpTriggerMenu
 print "Running with dumpRHs             = ",options.dumpRHs
 print "Running with dumpIds             = ",options.dumpIds
+print "Running with ctau                = ",options.ctau
 print "Running with processName         = ",options.processName	
 print "Running with outputFileName      = ",options.outputFileName	
 print "Running with globalTag           = ",options.globalTag	
@@ -87,28 +92,53 @@ process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
-process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_1.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_2.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_3.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_4.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_5.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_6.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_7.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_8.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_9.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_10.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_11.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_12.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_13.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_14.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_15.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_16.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_17.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_18.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_19.root',
-		'/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_20.root'
-		))
+if options.ctau == '1000' :
+    process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_1.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_2.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_3.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_4.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_5.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_6.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_7.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_8.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_9.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_10.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_11.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_12.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_13.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_14.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_15.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_16.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_17.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_18.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_19.root',
+            '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_userHLT_customiseTiming_PAT-MINIAODSIM-v1/170307_221814/0000/PAT-MINIAODSIM_20.root'
+            ))
+elif options.ctau == '100' :
+    process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_1.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_2.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_3.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_4.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_5.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_6.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_7.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_8.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_9.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_10.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_11.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_12.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_13.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_14.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_15.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_16.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_17.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_18.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_19.root',
+            '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_20.root'
+            ))
+else : exit
 
 ## How many events to process
 if   options.demoMode : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))

@@ -106,14 +106,15 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   const CaloSubdetectorGeometry *barrelGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
   const CaloSubdetectorGeometry *endcapGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
-  // Event, lumi, run info
-  event = iEvent.id().event();
+  // Run, lumi, and event info
   run   = iEvent.id().run();
   lumi  = iEvent.luminosityBlock();
+  event = iEvent.id().event();
     
   // Trigger info
-  hltdoubleel33 = false;
-  hltdoubleel37 = false;
+  hltdoubleel23_12 = false; // not unprescaled in all eras...
+  hltdoubleel33_33 = false;
+  hltdoubleel37_27 = false;
 
   // Which triggers fired
   if (triggerResultsH.isValid())
@@ -121,14 +122,17 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     for (std::size_t i = 0; i < triggerPathsVector.size(); i++) 
     {
       if (triggerPathsMap[triggerPathsVector[i]] == -1) continue;	
-      if (i == 0 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel33 = true; // Double electron trigger (33-33)
-      if (i == 1 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel37 = true; // Double electron trigger (37-27)
+      if (i == 0 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel23_12 = true; // Double electron trigger (23-12)
+      if (i == 1 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel23_12 = true; // Double electron trigger (23-12)
+      if (i == 2 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel33_33 = true; // Double electron trigger (33-33)
+      if (i == 3 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel33_33 = true; // Double electron trigger (33-33)
+      if (i == 4 && triggerResultsH->accept(triggerPathsMap[triggerPathsVector[i]])) hltdoubleel37_27 = true; // Double electron trigger (37-27)
     }
   }
 
   // skim on events that pass triggers
   bool triggered = false;
-  if (hltdoubleel33 || hltdoubleel37) triggered = true;
+  if (hltdoubleel33_33 || hltdoubleel37_27) triggered = true;
   if (applyHLTFilter && !triggered) return;
 
   // Vertex info
@@ -144,9 +148,8 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   // ELECTRON ANALYSIS 
   // electron tree vars (initialize)
-  el1pid  = -9999;   el1pt   = -9999.0; el1eta = -9999.0; el1phi = -9999.0; 
-  el2pid  = -9999;   el2pt   = -9999.0; el2eta = -9999.0; el2phi = -9999.0; 
-  el1E    = -9999.0; el2E    = -9999.0; el1p   = -9999.0; el2p   = -9999.0;
+  el1pid  = -9999; el1E = -9999.0; el1p = -9999.0; el1pt = -9999.0; el1eta = -9999.0; el1phi = -9999.0; 
+  el2pid  = -9999; el2E = -9999.0; el2p = -9999.0; el2pt = -9999.0; el2eta = -9999.0; el2phi = -9999.0; 
 
   // supercluster info
   el1scX = -9999.0; el1scY = -9999.0; el1scZ = -9999.0; el1scE = -9999.0;
@@ -163,7 +166,7 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   el2rhids.clear(); el2rhOOTs.clear(); el2rhgain1s.clear(); el2rhgain6s.clear();
 
   // z variables
-  zmass = -9999.0; zpt = -9999.0; zeta = -9999.0; zphi = -9999.0; zE = -9999.0; zp = -9999.0;
+  zpt = -9999.0; zeta = -9999.0; zphi = -9999.0; zE = -9999.0; zp = -9999.0; zmass = -9999.0; 
 
   // save only really pure electrons
   std::vector<pat::Electron> goodelectrons;
@@ -371,12 +374,12 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     TLorentzVector zvec(el1vec);
     zvec += el2vec;
       
+    zE    = zvec.Energy();
+    zp    = zvec.P();
     zpt   = zvec.Pt();
     zeta  = zvec.Eta();
     zphi  = zvec.Phi();
     zmass = zvec.M();
-    zE    = zvec.Energy();
-    zp    = zvec.P();
   } // end section over two good electrons
   else
   {
@@ -413,10 +416,9 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (genevtInfoH.isValid()) {wgt = genevtInfoH->weight();}
   
     // Gen particles info
-    genzpid   = -9999;   genzpt   = -9999.0; genzeta   = -9999.0; genzphi   = -9999.0; genzmass = -9999.0; genzE = -9999.0; genzp = -9999.0;
-    genel1pid = -9999;   genel1pt = -9999.0; genel1eta = -9999.0; genel1phi = -9999.0;
-    genel2pid = -9999;   genel2pt = -9999.0; genel2eta = -9999.0; genel2phi = -9999.0;
-    genel1E   = -9999.0; genel2E  = -9999.0; genel1p   = -9999.0; genel2p   = -9999.0;
+    genzpid   = -9999; genzE   = -9999.0; genzp   = -9999.0; genzpt   = -9999.0; genzeta   = -9999.0; genzphi   = -9999.0; genzmass = -9999.0; 
+    genel1pid = -9999; genel1E = -9999.0; genel1p = -9999.0; genel1pt = -9999.0; genel1eta = -9999.0; genel1phi = -9999.0;
+    genel2pid = -9999; genel2E = -9999.0; genel2p = -9999.0; genel2pt = -9999.0; genel2eta = -9999.0; genel2phi = -9999.0;
 
     if (gensH.isValid())
     {
@@ -427,29 +429,28 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	{ 
 	  // Z info
 	  genzpid  = gens_iter->pdgId();
+	  genzE    = gens_iter->energy();
+	  genzp    = gens_iter->p();
 	  genzpt   = gens_iter->pt();
 	  genzeta  = gens_iter->eta();
 	  genzphi  = gens_iter->phi();
 	  genzmass = gens_iter->mass();
-	  genzE    = gens_iter->energy();
-	  genzp    = gens_iter->p();
 	  
 	  // electron 1 info
 	  genel1pid  = gens_iter->daughter(0)->pdgId();
+	  genel1E    = gens_iter->daughter(0)->energy();
+	  genel1p    = gens_iter->daughter(0)->p();
 	  genel1pt   = gens_iter->daughter(0)->pt();
 	  genel1eta  = gens_iter->daughter(0)->eta();
 	  genel1phi  = gens_iter->daughter(0)->phi();
-	  genel1E    = gens_iter->daughter(0)->energy();
-	  genel1p    = gens_iter->daughter(0)->p();
 	  
 	  // electron 2 info
 	  genel2pid  = gens_iter->daughter(1)->pdgId();
+	  genel2E    = gens_iter->daughter(1)->energy();
+	  genel2p    = gens_iter->daughter(1)->p();
 	  genel2pt   = gens_iter->daughter(1)->pt();
 	  genel2eta  = gens_iter->daughter(1)->eta();
 	  genel2phi  = gens_iter->daughter(1)->phi();
-	  genel2E    = gens_iter->daughter(1)->energy();
-	  genel2p    = gens_iter->daughter(1)->p();
-
 	} // end check over decay
       } // end loop over gen particles
     
@@ -464,20 +465,20 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   	    if (gens_iter->pdgId() == 11) 
             {
   	      genel1pid = gens_iter->pdgId();
+  	      genel1E   = gens_iter->energy();
+  	      genel1p   = gens_iter->p();
   	      genel1pt  = gens_iter->pt();
   	      genel1eta = gens_iter->eta();
   	      genel1phi = gens_iter->phi();
-  	      genel1E   = gens_iter->energy();
-  	      genel1p   = gens_iter->p();
   	    }
   	    else if (gens_iter->pdgId() == -11) 
             {
   	      genel2pid = gens_iter->pdgId();
+  	      genel2E   = gens_iter->energy();
+  	      genel2p   = gens_iter->p();
   	      genel2pt  = gens_iter->pt();
   	      genel2eta = gens_iter->eta();
   	      genel2phi = gens_iter->phi();
-  	      genel2E   = gens_iter->energy();
-  	      genel2p   = gens_iter->p();
   	    }
   	  } // end check over final state 
 	} // end loop over gen particles
@@ -490,12 +491,12 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   	  zvec    += el2vec;
 
 	  genzpid  = 23;
+  	  genzE    = zvec.Energy();
+  	  genzp    = zvec.P();
   	  genzpt   = zvec.Pt();
   	  genzeta  = zvec.Eta();
   	  genzphi  = zvec.Phi();
   	  genzmass = zvec.M();
-  	  genzE    = zvec.Energy();
-  	  genzp    = zvec.P();
   	}
       } // end recovery of DY check
     } // end check over gen particles are valid
@@ -557,13 +558,14 @@ void ZeeTree::beginJob()
   tree = fs->make<TTree>("tree"       , "tree");
 
   // Run, Lumi, Event info
-  tree->Branch("event"                , &event                , "event/I");
-  tree->Branch("run"                  , &run                  , "run/I");
-  tree->Branch("lumi"                 , &lumi                 , "lumi/I");
+  tree->Branch("run"                  , &run                  , "run/i");
+  tree->Branch("lumi"                 , &lumi                 , "lumi/i");
+  tree->Branch("event"                , &event                , "event/l");
   
   // Triggers
-  tree->Branch("hltdoubleel37"        , &hltdoubleel37        , "hltdoubleel37/O");
-  tree->Branch("hltdoubleel33"        , &hltdoubleel33        , "hltdoubleel33/O");
+  tree->Branch("hltdoubleel23_12"     , &hltdoubleel23_12     , "hltdoubleel23_12/O");
+  tree->Branch("hltdoubleel33_33"     , &hltdoubleel33_33     , "hltdoubleel33_33/O");
+  tree->Branch("hltdoubleel37_27"     , &hltdoubleel37_27     , "hltdoubleel37_27/O");
 
   // Vertex info
   tree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");
@@ -573,18 +575,18 @@ void ZeeTree::beginJob()
 
   // Lepton info
   tree->Branch("el1pid"               , &el1pid               , "el1pid/I");
+  tree->Branch("el1E"                 , &el1E                 , "el1E/F");
+  tree->Branch("el1p"                 , &el1p                 , "el1p/F");
   tree->Branch("el1pt"                , &el1pt                , "el1pt/F");
   tree->Branch("el1eta"               , &el1eta               , "el1eta/F");
   tree->Branch("el1phi"               , &el1phi               , "el1phi/F");
-  tree->Branch("el1E"                 , &el1E                 , "el1E/F");
-  tree->Branch("el1p"                 , &el1p                 , "el1p/F");
 
+  tree->Branch("el2E"                 , &el2E                 , "el2E/F");
+  tree->Branch("el2p"                 , &el2p                 , "el2p/F");
   tree->Branch("el2pid"               , &el2pid               , "el2pid/I");
   tree->Branch("el2pt"                , &el2pt                , "el2pt/F");
   tree->Branch("el2eta"               , &el2eta               , "el2eta/F");
   tree->Branch("el2phi"               , &el2phi               , "el2phi/F");
-  tree->Branch("el2E"                 , &el2E                 , "el2E/F");
-  tree->Branch("el2p"                 , &el2p                 , "el2p/F");
 
   // supercluster stuff
   tree->Branch("el1scX"               , &el1scX               , "el1scX/F");
@@ -617,22 +619,22 @@ void ZeeTree::beginJob()
   tree->Branch("el2rhtimes"           , "std::vector<float>"  , &el2rhtimes);
 
   tree->Branch("el1rhids"             , "std::vector<int>"    , &el1rhids);
-  tree->Branch("el1rhOOTs"            , "std::vector<int>"    , &el1rhOOTs);
-  tree->Branch("el1rhgain1s"          , "std::vector<int>"    , &el1rhgain1s);
-  tree->Branch("el1rhgain6s"          , "std::vector<int>"    , &el1rhgain6s);
+  tree->Branch("el1rhOOTs"            , "std::vector<bool>"   , &el1rhOOTs);
+  tree->Branch("el1rhgain1s"          , "std::vector<bool>"   , &el1rhgain1s);
+  tree->Branch("el1rhgain6s"          , "std::vector<bool>"   , &el1rhgain6s);
 
   tree->Branch("el2rhids"             , "std::vector<int>"    , &el2rhids);
-  tree->Branch("el2rhOOTs"            , "std::vector<int>"    , &el2rhOOTs);
-  tree->Branch("el2rhgain1s"          , "std::vector<int>"    , &el2rhgain1s);
-  tree->Branch("el2rhgain6s"          , "std::vector<int>"    , &el2rhgain6s);
+  tree->Branch("el2rhOOTs"            , "std::vector<bool>"   , &el2rhOOTs);
+  tree->Branch("el2rhgain1s"          , "std::vector<bool>"   , &el2rhgain1s);
+  tree->Branch("el2rhgain6s"          , "std::vector<bool>"   , &el2rhgain6s);
 
   // Dilepton info
-  tree->Branch("zmass"                , &zmass                , "zmass/F");
+  tree->Branch("zE"                   , &zE                   , "zE/F");
+  tree->Branch("zp"                   , &zp                   , "zp/F");
   tree->Branch("zpt"                  , &zpt                  , "zpt/F");
   tree->Branch("zeta"                 , &zeta                 , "zeta/F");
   tree->Branch("zphi"                 , &zphi                 , "zphi/F");
-  tree->Branch("zE"                   , &zE                   , "zE/F");
-  tree->Branch("zp"                   , &zp                   , "zp/F");
+  tree->Branch("zmass"                , &zmass                , "zmass/F");
   
   // Z gen-level info: leptonic 
   if (isMC) 
@@ -646,26 +648,26 @@ void ZeeTree::beginJob()
 
     //Gen particles info
     tree->Branch("genzpid"              , &genzpid              , "genzpid/I");
+    tree->Branch("genzE"                , &genzE                , "genzE/F");
+    tree->Branch("genzp"                , &genzp                , "genzp/F");
     tree->Branch("genzpt"               , &genzpt               , "genzpt/F");
     tree->Branch("genzeta"              , &genzeta              , "genzeta/F");
     tree->Branch("genzphi"              , &genzphi              , "genzphi/F");
     tree->Branch("genzmass"             , &genzmass             , "genzmass/F");
-    tree->Branch("genzE"                , &genzE                , "genzE/F");
-    tree->Branch("genzp"                , &genzp                , "genzp/F");
 
     tree->Branch("genel1pid"            , &genel1pid            , "genel1pid/I");
+    tree->Branch("genel1E"              , &genel1E              , "genel1E/F");
+    tree->Branch("genel1p"              , &genel1p              , "genel1p/F");
     tree->Branch("genel1pt"             , &genel1pt             , "genel1pt/F");
     tree->Branch("genel1eta"            , &genel1eta            , "genel1eta/F");
     tree->Branch("genel1phi"            , &genel1phi            , "genel1phi/F");
-    tree->Branch("genel1E"              , &genel1E              , "genel1E/F");
-    tree->Branch("genel1p"              , &genel1p              , "genel1p/F");
 
     tree->Branch("genel2pid"            , &genel2pid            , "genel2pid/I");
+    tree->Branch("genel2E"              , &genel2E              , "genel2E/F");
+    tree->Branch("genel2p"              , &genel2p              , "genel2p/F");
     tree->Branch("genel2pt"             , &genel2pt             , "genel2pt/F");
     tree->Branch("genel2eta"            , &genel2eta            , "genel2eta/F");
     tree->Branch("genel2phi"            , &genel2phi            , "genel2phi/F");
-    tree->Branch("genel2E"              , &genel2E              , "genel2E/F");
-    tree->Branch("genel2p"              , &genel2p              , "genel2p/F");
   }
 }
 
@@ -674,14 +676,12 @@ void ZeeTree::endJob() {}
 void ZeeTree::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
 {
   // triggers for the Analysis
-  //  triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ");
+  triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_L1JetTauSeeded_v");
+  triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v");
   triggerPathsVector.push_back("HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_v");
+  triggerPathsVector.push_back("HLT_DoubleEle33_CaloIdL_MW_v");
   triggerPathsVector.push_back("HLT_DoubleEle37_Ele27_CaloIdL_GsfTrkIdVL");
 
-  triggerPathsVector.push_back("HLT_Diphoton30_18_R9Id_OR_IsoCaloId_AND_HE_R9Id_Mass90");
-  triggerPathsVector.push_back("HLT_Diphoton30_18_R9Id_OR_IsoCaloId_AND_HE_R9Id_DoublePixelSeedMatch_Mass70");
-  triggerPathsVector.push_back("HLT_Diphoton30PV_18PV_R9Id_AND_IsoCaloId_AND_HE_R9Id_DoublePixelVeto_Mass55");
-  
   HLTConfigProvider hltConfig;
   bool changedConfig = false;
   hltConfig.init(iRun, iSetup, triggerResultsTag.process(), changedConfig);

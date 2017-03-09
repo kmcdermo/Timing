@@ -43,17 +43,17 @@ options.register (
 	'nThreads',1,VarParsing.multiplicity.singleton, VarParsing.varType.int,
 	'default number of threads');
 
-## do a demo run over only 100k events
+## do a demo run over only 10k events
 options.register (
 	'demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to run over only 100k events as a demo');
+	'flag to run over only 10k events as a demo');
 
 ## parsing command line arguments
 options.parseArguments()
 
 ### check consistentcy of basic options
 if options.isMC and 'dataRun2' in options.globalTag:
-	options.globalTag = '80X_mcRun2_asymptotic_2016_miniAODv2_v1';
+	options.globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
 
 if options.isMC and options.miniAODProcess != 'PAT':
 	options.miniAODProcess  = 'PAT'
@@ -87,17 +87,20 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 ## Define the input source
 if not options.isMC :
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-			# run 2016B
-			'/store/data/Run2016B/DoubleEG/MINIAOD/23Sep2016-v3/00000/0060C751-C097-E611-9FE6-FA163EFD4308.root'
+			'/store/data/Run2016B/DoubleEG/MINIAOD/03Feb2017_ver2-v2/50000/0035454A-9FEA-E611-A31E-0CC47A7C3424.root', # 2016B v2
+			'/store/data/Run2016D/DoubleEG/MINIAOD/03Feb2017-v1/100000/00E13E32-EEEA-E611-9F76-002590E3A0FA.root', # 2016D v1
+			'/store/data/Run2016F/DoubleEG/MINIAOD/03Feb2017-v1/80000/049C3175-EAEA-E611-9F36-34E6D7E387A8.root', # 2016F v1
+#			'/store/data/Run2016H/DoubleEG/MINIAOD/03Feb2017_ver2-v1/100000/04B4E4C6-8EED-E611-8F0C-0CC47A7EECE8.root' # 2016H v2
 			) 
-				    )
+        )
 else:
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-			'/store/mc/RunIISpring16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/40000/00A42394-FA5C-E611-9E01-0025905C96E8.root',
-			'/store/mc/RunIISpring16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/40000/0C109D17-0D5D-E611-9D5B-A0000420FE80.root',
-			'/store/mc/RunIISpring16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/40000/1686540B-055D-E611-AC79-0002C94CD0D8.root'
+			'/store/mc/RunIISummer16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/110000/005ED0EB-79F1-E611-B6DA-02163E011C2B.root',
+			'/store/mc/RunIISummer16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/110000/02021E37-7CF1-E611-BC63-02163E0145C4.root',
+			'/store/mc/RunIISummer16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/110000/028E0C9A-6CF1-E611-B270-02163E019D38.root',
+			'/store/mc/RunIISummer16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/110000/08D1C8CD-86E4-E611-870C-B083FED42488.root'
 			)    	
-)
+	)
 
 ## Set the process options -- Display summary at the end, enable unscheduled execution
 if options.nThreads == 1 or options.nThreads == 0:

@@ -133,10 +133,34 @@ void Analysis::EventLoop()
       if (entry%Config::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << fInTree->GetEntries() << std::endl;
     } 
 
-    //if (!(run >= Config::eraHlow && run <= Config::eraHhigh)) continue;
+    const Bool_t triggered = (fIsMC)?true:(hltdoubleel33_33||hltdoubleel37_27);
+    if ( (zmass < 76.f || zmass > 106.f) || (!triggered) || (el1seedpos < 0) || (el2seedpos < 0) ) continue;
 
+    ///////////////
+    //           //
+    // Seed Info //
+    //           //
+    ///////////////
+
+    // get seed rhID
+    const Int_t el1seedid = (*el1rhids)[el1seedpos];
+    const Int_t el2seedid = (*el2rhids)[el2seedpos];
+
+    // get seed geometry positions
+    const Float_t el1seedX = (*el1rhXs)[el1seedpos]; const Float_t el1seedY = (*el1rhYs)[el1seedpos]; const Float_t el1seedZ = (*el1rhZs)[el1seedpos];
+    const Float_t el2seedX = (*el2rhXs)[el2seedpos]; const Float_t el2seedY = (*el2rhYs)[el2seedpos]; const Float_t el2seedZ = (*el2rhZs)[el2seedpos];
+
+    // calculate seed crystals eta and phi
     const Float_t el1seedeta = eta(el1seedX,el1seedY,el1seedZ); const Float_t el1seedphi = phi(el1seedX,el1seedY);
     const Float_t el2seedeta = eta(el2seedX,el2seedY,el2seedZ); const Float_t el2seedphi = phi(el2seedX,el2seedY);
+
+    // get seed energy
+    Float_t el1seedE = (*el1rhEs)[el1seedpos];
+    Float_t el2seedE = (*el2rhEs)[el2seedpos];
+
+    // get seed time
+    Float_t el1seedtime = (*el1rhtimes)[el1seedpos];
+    Float_t el2seedtime = (*el2rhtimes)[el2seedpos];
 
     ////////////////////
     //                // 
@@ -219,13 +243,9 @@ void Analysis::EventLoop()
     if (Config::doStandard || Config::wgtedTime) 
     {
       // el1 
-      el1rhetps.reserve(el1nrh * 0.25f); IntMap el1rhIDMap;
       for (Int_t rh = 0; rh < el1nrh; rh++)
       {
-	const Int_t rhid = (*el1rhids)[rh]; 
-	if (el1rhIDMap.count(rhid) > 0) continue; // do not double count rechits which can be saved more than once
-	el1rhIDMap[rhid]++;
-
+	const Int_t rhid = (*el1rhids)[rh];
 	const Float_t rhE = (*el1rhEs)[rh];
 	if (rhE < Config::rhEcut) continue; // 1 GeV cut on recHit times
 	
@@ -240,13 +260,9 @@ void Analysis::EventLoop()
       }
 
       // el2
-      el2rhetps.reserve(el2nrh * 0.25f); IntMap el2rhIDMap;
       for (Int_t rh = 0; rh < el2nrh; rh++)
       {
-	const Int_t rhid = (*el2rhids)[rh]; 
-	if (el2rhIDMap.count(rhid) > 0) continue; // do not double count rechits which can be saved more than once
-	el2rhIDMap[rhid]++;
-
+	const Int_t rhid = (*el2rhids)[rh];
 	const Float_t rhE = (*el2rhEs)[rh];
 	if (rhE < Config::rhEcut) continue; // 1 GeV cut on recHit times
 	
@@ -288,9 +304,9 @@ void Analysis::EventLoop()
     const Float_t effseedE = effA(el1seedE,el2seedE);
 
     // fill the plots
-    if (Config::doStandard) Analysis::FillStandardPlots(weight,timediff,effseedE,el1time,el1seedeta,el1eb,el1ee,el1ep,el1em,el1rhetps,el2time,el2seedeta,el2eb,el2ee,el2ep,el2em,el1rhetps);
-    if (Config::doSingleE)  Analysis::FillSingleEPlots(weight,timediff,el1time,el2time,el1eb,el1ee,el2eb,el2ee);
-    if (Config::doEffE)     Analysis::FillEffEPlots(weight,timediff,effseedE,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
+    if (Config::doStandard) Analysis::FillStandardPlots(weight,effseedE,el1seedE,el2seedE,timediff,el1time,el1seedeta,el1eb,el1ee,el1ep,el1em,el1rhetps,el2time,el2seedeta,el2eb,el2ee,el2ep,el2em,el1rhetps);
+    if (Config::doSingleE)  Analysis::FillSingleEPlots(weight,el1seedE,el2seedE,timediff,el1time,el2time,el1eb,el1ee,el2eb,el2ee);
+    if (Config::doEffE)     Analysis::FillEffEPlots(weight,effseedE,timediff,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
     if (Config::doNvtx)     Analysis::FillNvtxPlots(weight,timediff,el1time,el2time,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
     if (Config::doEta)      Analysis::FillEtaPlots(weight,timediff,el1time,el2time,el1seedeta,el2seedeta,el1eb,el1ee,el1ep,el1em,el2eb,el2ee,el2ep,el2em);
     if (Config::doVtxZ)     Analysis::FillVtxZPlots(weight,timediff,el1time,el2time);
@@ -572,7 +588,7 @@ void Analysis::SetupTrigEffPlots()
   trTH1Map["hltdoubleel_el2pt"] = Analysis::MakeTH1Plot("hltdoubleel_el2pt","Double Electron Trigger Efficiency vs. p_{T}",nBinsDEEpt,xLowDEEpt,xHighDEEpt,"Subleading Electron p_{T} [GeV/c]","Efficiency",trTH1SubMap,"trigger_zoomest");
 }
 
-void Analysis::FillStandardPlots(const Float_t weight, const Float_t timediff, const Float_t effseedE, 
+void Analysis::FillStandardPlots(const Float_t weight, const Float_t effseedE, const Float_t el1seedE, const Float_t el2seedE, const Float_t timediff,
 				 const Float_t el1time, const Float_t el1seedeta, Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, const FltArr3Vec & el1rhetps,
 				 const Float_t el2time, const Float_t el2seedeta, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em, const FltArr3Vec & el2rhetps)
 {
@@ -715,7 +731,7 @@ void Analysis::FillStandardPlots(const Float_t weight, const Float_t timediff, c
   }
 }
 
-void Analysis::FillSingleEPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time,
+void Analysis::FillSingleEPlots(const Float_t weight, const Float_t el1seedE, const Float_t el2seedE, const Float_t timediff, const Float_t el1time, const Float_t el2time,
 				Bool_t el1eb, Bool_t el1ee, Bool_t el2eb, Bool_t el2ee)
 {
   if (el1eb && el2eb) //EBEB
@@ -733,7 +749,7 @@ void Analysis::FillSingleEPlots(const Float_t weight, const Float_t timediff, co
     el2seedE2DMap["el2time_el2seedE_EEEE"]->Fill(el2seedE,el2time,weight);
   }
 }
-void Analysis::FillEffEPlots(const Float_t weight, const Float_t timediff, const Float_t effseedE, 
+void Analysis::FillEffEPlots(const Float_t weight, const Float_t effseedE, const Float_t timediff,
 			     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em)
 {
   // inclusive
@@ -812,7 +828,7 @@ void Analysis::FillRunPlots(const Float_t weight, const Float_t timediff, Bool_t
 
 void Analysis::FillTrigEffPlots(const Float_t weight)
 {
-  if ( hltdoubleel33 || hltdoubleel37 ) // fill number if passed
+  if ( hltdoubleel33_33 || hltdoubleel37_27 ) // fill number if passed
   {
     n_hltdoubleel_el1pt->Fill(el1pt,weight);
     n_hltdoubleel_el2pt->Fill(el2pt,weight);
@@ -1746,33 +1762,49 @@ void Analysis::GetADC2GeVConvs()
   
 void Analysis::InitTree() 
 {
+  // set pointers to vectors
+  el1rhXs = 0;
+  el1rhYs = 0;
+  el1rhZs = 0;
+  el1rhEs = 0;
+  el1rhtimes = 0;
+  el2rhXs = 0;
+  el2rhYs = 0;
+  el2rhZs = 0;
+  el2rhEs = 0;
+  el2rhtimes = 0;
+  el1rhids = 0;
+  el1rhOOTs = 0;
+  el1rhgain1s = 0;
+  el1rhgain6s = 0;
+  el2rhids = 0;
+  el2rhOOTs = 0;
+  el2rhgain1s = 0;
+  el2rhgain6s = 0;
+
   // Set branch addresses and branch pointers
-  fInTree->SetBranchAddress("event", &event, &b_event);
   fInTree->SetBranchAddress("run", &run, &b_run);
   fInTree->SetBranchAddress("lumi", &lumi, &b_lumi);
-  fInTree->SetBranchAddress("hltdoubleel33", &hltdoubleel33, &b_hltdoubleel33);
-  fInTree->SetBranchAddress("hltdoubleel37", &hltdoubleel37, &b_hltdoubleel37);
+  fInTree->SetBranchAddress("event", &event, &b_event);
+  fInTree->SetBranchAddress("hltdoubleel23_12", &hltdoubleel23_12, &b_hltdoubleel23_12);
+  fInTree->SetBranchAddress("hltdoubleel33_33", &hltdoubleel33_33, &b_hltdoubleel33_33);
+  fInTree->SetBranchAddress("hltdoubleel37_27", &hltdoubleel37_27, &b_hltdoubleel37_27);
   fInTree->SetBranchAddress("nvtx", &nvtx, &b_nvtx);
   fInTree->SetBranchAddress("vtxX", &vtxX, &b_vtxX);
   fInTree->SetBranchAddress("vtxY", &vtxY, &b_vtxY);
   fInTree->SetBranchAddress("vtxZ", &vtxZ, &b_vtxZ);
-  fInTree->SetBranchAddress("nvetoelectrons", &nvetoelectrons, &b_nvetoelectrons);
-  fInTree->SetBranchAddress("nlooseelectrons", &nlooseelectrons, &b_nlooseelectrons);
-  fInTree->SetBranchAddress("nmediumelectrons", &nmediumelectrons, &b_nmediumelectrons);
-  fInTree->SetBranchAddress("ntightelectrons", &ntightelectrons, &b_ntightelectrons);
-  fInTree->SetBranchAddress("nheepelectrons", &nheepelectrons, &b_nheepelectrons);
   fInTree->SetBranchAddress("el1pid", &el1pid, &b_el1pid);
+  fInTree->SetBranchAddress("el1E", &el1E, &b_el1E);
+  fInTree->SetBranchAddress("el1p", &el1p, &b_el1p);
   fInTree->SetBranchAddress("el1pt", &el1pt, &b_el1pt);
   fInTree->SetBranchAddress("el1eta", &el1eta, &b_el1eta);
   fInTree->SetBranchAddress("el1phi", &el1phi, &b_el1phi);
-  fInTree->SetBranchAddress("el1E", &el1E, &b_el1E);
-  fInTree->SetBranchAddress("el1p", &el1p, &b_el1p);
+  fInTree->SetBranchAddress("el2E", &el2E, &b_el2E);
+  fInTree->SetBranchAddress("el2p", &el2p, &b_el2p);
   fInTree->SetBranchAddress("el2pid", &el2pid, &b_el2pid);
   fInTree->SetBranchAddress("el2pt", &el2pt, &b_el2pt);
   fInTree->SetBranchAddress("el2eta", &el2eta, &b_el2eta);
   fInTree->SetBranchAddress("el2phi", &el2phi, &b_el2phi);
-  fInTree->SetBranchAddress("el2E", &el2E, &b_el2E);
-  fInTree->SetBranchAddress("el2p", &el2p, &b_el2p);
   fInTree->SetBranchAddress("el1scX", &el1scX, &b_el1scX);
   fInTree->SetBranchAddress("el1scY", &el1scY, &b_el1scY);
   fInTree->SetBranchAddress("el1scZ", &el1scZ, &b_el1scZ);
@@ -1781,38 +1813,34 @@ void Analysis::InitTree()
   fInTree->SetBranchAddress("el2scY", &el2scY, &b_el2scY);
   fInTree->SetBranchAddress("el2scZ", &el2scZ, &b_el2scZ);
   fInTree->SetBranchAddress("el2scE", &el2scE, &b_el2scE);
+  fInTree->SetBranchAddress("el1nrh", &el1nrh, &b_el1nrh);
+  fInTree->SetBranchAddress("el1seedpos", &el1seedpos, &b_el1seedpos);
+  fInTree->SetBranchAddress("el2nrh", &el2nrh, &b_el2nrh);
+  fInTree->SetBranchAddress("el2seedpos", &el2seedpos, &b_el2seedpos);
   fInTree->SetBranchAddress("el1rhXs", &el1rhXs, &b_el1rhXs);
   fInTree->SetBranchAddress("el1rhYs", &el1rhYs, &b_el1rhYs);
   fInTree->SetBranchAddress("el1rhZs", &el1rhZs, &b_el1rhZs);
   fInTree->SetBranchAddress("el1rhEs", &el1rhEs, &b_el1rhEs);
   fInTree->SetBranchAddress("el1rhtimes", &el1rhtimes, &b_el1rhtimes);
-  fInTree->SetBranchAddress("el1rhids", &el1rhids, &b_el1rhids);
   fInTree->SetBranchAddress("el2rhXs", &el2rhXs, &b_el2rhXs);
   fInTree->SetBranchAddress("el2rhYs", &el2rhYs, &b_el2rhYs);
   fInTree->SetBranchAddress("el2rhZs", &el2rhZs, &b_el2rhZs);
   fInTree->SetBranchAddress("el2rhEs", &el2rhEs, &b_el2rhEs);
   fInTree->SetBranchAddress("el2rhtimes", &el2rhtimes, &b_el2rhtimes);
+  fInTree->SetBranchAddress("el1rhids", &el1rhids, &b_el1rhids);
+  fInTree->SetBranchAddress("el1rhOOTs", &el1rhOOTs, &b_el1rhOOTs);
+  fInTree->SetBranchAddress("el1rhgain1s", &el1rhgain1s, &b_el1rhgain1s);
+  fInTree->SetBranchAddress("el1rhgain6s", &el1rhgain6s, &b_el1rhgain6s);
   fInTree->SetBranchAddress("el2rhids", &el2rhids, &b_el2rhids);
-  fInTree->SetBranchAddress("el1seedX", &el1seedX, &b_el1seedX);
-  fInTree->SetBranchAddress("el1seedY", &el1seedY, &b_el1seedY);
-  fInTree->SetBranchAddress("el1seedZ", &el1seedZ, &b_el1seedZ);
-  fInTree->SetBranchAddress("el1seedE", &el1seedE, &b_el1seedE);
-  fInTree->SetBranchAddress("el1seedtime", &el1seedtime, &b_el1seedtime);
-  fInTree->SetBranchAddress("el1seedid", &el1seedid, &b_el1seedid);
-  fInTree->SetBranchAddress("el2seedX", &el2seedX, &b_el2seedX);
-  fInTree->SetBranchAddress("el2seedY", &el2seedY, &b_el2seedY);
-  fInTree->SetBranchAddress("el2seedZ", &el2seedZ, &b_el2seedZ);
-  fInTree->SetBranchAddress("el2seedE", &el2seedE, &b_el2seedE);
-  fInTree->SetBranchAddress("el2seedtime", &el2seedtime, &b_el2seedtime);
-  fInTree->SetBranchAddress("el2seedid", &el2seedid, &b_el2seedid);
-  fInTree->SetBranchAddress("el1nrh", &el1nrh, &b_el1nrh);
-  fInTree->SetBranchAddress("el2nrh", &el2nrh, &b_el2nrh);
-  fInTree->SetBranchAddress("zmass", &zmass, &b_zmass);
+  fInTree->SetBranchAddress("el2rhOOTs", &el2rhOOTs, &b_el2rhOOTs);
+  fInTree->SetBranchAddress("el2rhgain1s", &el2rhgain1s, &b_el2rhgain1s);
+  fInTree->SetBranchAddress("el2rhgain6s", &el2rhgain6s, &b_el2rhgain6s);
+  fInTree->SetBranchAddress("zE", &zE, &b_zE);
+  fInTree->SetBranchAddress("zp", &zp, &b_zp);
   fInTree->SetBranchAddress("zpt", &zpt, &b_zpt);
   fInTree->SetBranchAddress("zeta", &zeta, &b_zeta);
   fInTree->SetBranchAddress("zphi", &zphi, &b_zphi);
-  fInTree->SetBranchAddress("zE", &zE, &b_zE);
-  fInTree->SetBranchAddress("zp", &zp, &b_zp);
+  fInTree->SetBranchAddress("zmass", &zmass, &b_zmass);
   
   if (fIsMC) // initialize extra branches if MC
   {
@@ -1820,15 +1848,21 @@ void Analysis::InitTree()
     fInTree->SetBranchAddress("putrue", &putrue, &b_putrue);
     fInTree->SetBranchAddress("wgt", &wgt, &b_wgt);
     fInTree->SetBranchAddress("genzpid", &genzpid, &b_genzpid);
+    fInTree->SetBranchAddress("genzE", &genzE, &b_genzE);
+    fInTree->SetBranchAddress("genzp", &genzp, &b_genzp);
     fInTree->SetBranchAddress("genzpt", &genzpt, &b_genzpt);
     fInTree->SetBranchAddress("genzeta", &genzeta, &b_genzeta);
     fInTree->SetBranchAddress("genzphi", &genzphi, &b_genzphi);
     fInTree->SetBranchAddress("genzmass", &genzmass, &b_genzmass);
     fInTree->SetBranchAddress("genel1pid", &genel1pid, &b_genel1pid);
+    fInTree->SetBranchAddress("genel1E", &genel1E, &b_genel1E);
+    fInTree->SetBranchAddress("genel1p", &genel1p, &b_genel1p);
     fInTree->SetBranchAddress("genel1pt", &genel1pt, &b_genel1pt);
     fInTree->SetBranchAddress("genel1eta", &genel1eta, &b_genel1eta);
     fInTree->SetBranchAddress("genel1phi", &genel1phi, &b_genel1phi);
     fInTree->SetBranchAddress("genel2pid", &genel2pid, &b_genel2pid);
+    fInTree->SetBranchAddress("genel2E", &genel2E, &b_genel2E);
+    fInTree->SetBranchAddress("genel2p", &genel2p, &b_genel2p);
     fInTree->SetBranchAddress("genel2pt", &genel2pt, &b_genel2pt);
     fInTree->SetBranchAddress("genel2eta", &genel2eta, &b_genel2eta);
     fInTree->SetBranchAddress("genel2phi", &genel2phi, &b_genel2phi);

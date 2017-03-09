@@ -66,12 +66,12 @@ public:
   void SetupVtxZPlots();
   void SetupRunPlots();
   void SetupTrigEffPlots();
-  void FillStandardPlots(const Float_t weight, const Float_t timediff, const Float_t effseedE, 
+  void FillStandardPlots(const Float_t weight, const Float_t effseedE, const Float_t el1seedE, const Float_t el2seedE, const Float_t timediff, 
 			 const Float_t el1time, const Float_t el1seedeta, Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, const FltArr3Vec & el1rhetps,
 			 const Float_t el2time, const Float_t el2seedeta, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em, const FltArr3Vec & el2rhetps);
-  void FillSingleEPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time,
+  void FillSingleEPlots(const Float_t weight, const Float_t el1seedE, const Float_t el2seedE, const Float_t timediff, const Float_t el1time, const Float_t el2time, 
 			Bool_t el1eb, Bool_t el1ee, Bool_t el2eb, Bool_t el2ee);
-  void FillEffEPlots(const Float_t weight, const Float_t timediff, const Float_t effseedE, 
+  void FillEffEPlots(const Float_t weight, const Float_t effseedE, const Float_t timediff,  
 		     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
   void FillNvtxPlots(const Float_t weight, const Float_t timediff, const Float_t el1time, const Float_t el2time,
 		     Bool_t el1eb, Bool_t el1ee, Bool_t el1ep, Bool_t el1em, Bool_t el2eb, Bool_t el2ee, Bool_t el2ep, Bool_t el2em);
@@ -176,176 +176,172 @@ private:
 
 public:
   // Declaration of leaf types
-  Int_t           event;
-  Int_t           run;
-  Int_t           lumi;
-  Bool_t          hltdoubleel33;
-  Bool_t          hltdoubleel37;
-  Int_t           nvtx;
-  Float_t         vtxX;
-  Float_t         vtxY;
-  Float_t         vtxZ;
-  Int_t           nvetoelectrons;
-  Int_t           nlooseelectrons;
-  Int_t           nmediumelectrons;
-  Int_t           ntightelectrons;
-  Int_t           nheepelectrons;
-  Int_t           el1pid;
-  Float_t         el1pt;
-  Float_t         el1eta;
-  Float_t         el1phi;
-  Float_t         el1E;
-  Float_t         el1p;
-  Int_t           el2pid;
-  Float_t         el2pt;
-  Float_t         el2eta;
-  Float_t         el2phi;
-  Float_t         el2E;
-  Float_t         el2p;
-  Float_t         el1scX;
-  Float_t         el1scY;
-  Float_t         el1scZ;
-  Float_t         el1scE;
-  Float_t         el2scX;
-  Float_t         el2scY;
-  Float_t         el2scZ;
-  Float_t         el2scE;
-  std::vector<float>   *el1rhXs;
-  std::vector<float>   *el1rhYs;
-  std::vector<float>   *el1rhZs;
-  std::vector<float>   *el1rhEs;
-  std::vector<float>   *el1rhtimes;
-  std::vector<int>     *el1rhids;
-  std::vector<float>   *el2rhXs;
-  std::vector<float>   *el2rhYs;
-  std::vector<float>   *el2rhZs;
-  std::vector<float>   *el2rhEs;
-  std::vector<float>   *el2rhtimes;
-  std::vector<int>     *el2rhids;
-  Float_t         el1seedX;
-  Float_t         el1seedY;
-  Float_t         el1seedZ;
-  Float_t         el1seedE;
-  Float_t         el1seedtime;
-  Int_t           el1seedid;
-  Float_t         el2seedX;
-  Float_t         el2seedY;
-  Float_t         el2seedZ;
-  Float_t         el2seedE;
-  Float_t         el2seedtime;
-  Int_t           el2seedid;
-  Int_t           el1nrh;
-  Int_t           el2nrh;
-  Float_t         zmass;
-  Float_t         zpt;
-  Float_t         zeta;
-  Float_t         zphi;
-  Float_t         zE;
-  Float_t         zp;
-  Int_t           puobs;
-  Int_t           putrue;
+  UInt_t    run;
+  UInt_t    lumi;
+  ULong64_t event;
+  Bool_t    hltdoubleel23_12;
+  Bool_t    hltdoubleel33_33;
+  Bool_t    hltdoubleel37_27;
+  Int_t     nvtx;
+  Float_t   vtxX;
+  Float_t   vtxY;
+  Float_t   vtxZ;
+  Int_t     el1pid;
+  Float_t   el1E;
+  Float_t   el1p;
+  Float_t   el1pt;
+  Float_t   el1eta;
+  Float_t   el1phi;
+  Float_t   el2E;
+  Float_t   el2p;
+  Int_t     el2pid;
+  Float_t   el2pt;
+  Float_t   el2eta;
+  Float_t   el2phi;
+  Float_t   el1scX;
+  Float_t   el1scY;
+  Float_t   el1scZ;
+  Float_t   el1scE;
+  Float_t   el2scX;
+  Float_t   el2scY;
+  Float_t   el2scZ;
+  Float_t   el2scE;
+  Int_t     el1nrh;
+  Int_t     el1seedpos;
+  Int_t     el2nrh;
+  Int_t     el2seedpos;
+  std::vector<float> * el1rhXs;
+  std::vector<float> * el1rhYs;
+  std::vector<float> * el1rhZs;
+  std::vector<float> * el1rhEs;
+  std::vector<float> * el1rhtimes;
+  std::vector<float> * el2rhXs;
+  std::vector<float> * el2rhYs;
+  std::vector<float> * el2rhZs;
+  std::vector<float> * el2rhEs;
+  std::vector<float> * el2rhtimes;
+  std::vector<int>   * el1rhids;
+  std::vector<bool>  * el1rhOOTs;
+  std::vector<bool>  * el1rhgain1s;
+  std::vector<bool>  * el1rhgain6s;
+  std::vector<int>   * el2rhids;
+  std::vector<bool>  * el2rhOOTs;
+  std::vector<bool>  * el2rhgain1s;
+  std::vector<bool>  * el2rhgain6s;
+  Float_t   zE;
+  Float_t   zp;
+  Float_t   zpt;
+  Float_t   zeta;
+  Float_t   zphi;
+  Float_t   zmass;
 
   // MC
-  Float_t         wgt;
-  Int_t           genzpid;
-  Float_t         genzpt;
-  Float_t         genzeta;
-  Float_t         genzphi;
-  Float_t         genzmass;
-  Int_t           genel1pid;
-  Float_t         genel1pt;
-  Float_t         genel1eta;
-  Float_t         genel1phi;
-  Int_t           genel2pid;
-  Float_t         genel2pt;
-  Float_t         genel2eta;
-  Float_t         genel2phi;
+  Float_t   puobs;
+  Float_t   putrue;
+  Float_t   wgt;
+  Int_t     genzpid;
+  Float_t   genzE;
+  Float_t   genzp;
+  Float_t   genzpt;
+  Float_t   genzeta;
+  Float_t   genzphi;
+  Float_t   genzmass;
+  Int_t     genel1pid;
+  Float_t   genel1E;
+  Float_t   genel1p;
+  Float_t   genel1pt;
+  Float_t   genel1eta;
+  Float_t   genel1phi;
+  Int_t     genel2pid;
+  Float_t   genel2E;
+  Float_t   genel2p;
+  Float_t   genel2pt;
+  Float_t   genel2eta;
+  Float_t   genel2phi;
 
   // List of branches
-  TBranch        *b_event;   //!
-  TBranch        *b_run;   //!
-  TBranch        *b_lumi;   //!
-  TBranch        *b_hltdoubleel33;   //!
-  TBranch        *b_hltdoubleel37;   //!
-  TBranch        *b_nvtx;   //!
-  TBranch        *b_vtxX;   //!
-  TBranch        *b_vtxY;   //!
-  TBranch        *b_vtxZ;   //!
-  TBranch        *b_nvetoelectrons;   //!
-  TBranch        *b_nlooseelectrons;   //!
-  TBranch        *b_nmediumelectrons;   //!
-  TBranch        *b_ntightelectrons;   //!
-  TBranch        *b_nheepelectrons;   //!
-  TBranch        *b_el1pid;   //!
-  TBranch        *b_el1pt;   //!
-  TBranch        *b_el1eta;   //!
-  TBranch        *b_el1phi;   //!
-  TBranch        *b_el1E;   //!
-  TBranch        *b_el1p;   //!
-  TBranch        *b_el2pid;   //!
-  TBranch        *b_el2pt;   //!
-  TBranch        *b_el2eta;   //!
-  TBranch        *b_el2phi;   //!
-  TBranch        *b_el2E;   //!
-  TBranch        *b_el2p;   //!
-  TBranch        *b_el1scX;   //!
-  TBranch        *b_el1scY;   //!
-  TBranch        *b_el1scZ;   //!
-  TBranch        *b_el1scE;   //!
-  TBranch        *b_el2scX;   //!
-  TBranch        *b_el2scY;   //!
-  TBranch        *b_el2scZ;   //!
-  TBranch        *b_el2scE;   //!
-  TBranch        *b_el1rhXs;   //!
-  TBranch        *b_el1rhYs;   //!
-  TBranch        *b_el1rhZs;   //!
-  TBranch        *b_el1rhEs;   //!
-  TBranch        *b_el1rhtimes;   //!
-  TBranch        *b_el1rhids;   //!
-  TBranch        *b_el2rhXs;   //!
-  TBranch        *b_el2rhYs;   //!
-  TBranch        *b_el2rhZs;   //!
-  TBranch        *b_el2rhEs;   //!
-  TBranch        *b_el2rhtimes;   //!
-  TBranch        *b_el2rhids;   //!
-  TBranch        *b_el1seedX;   //!
-  TBranch        *b_el1seedY;   //!
-  TBranch        *b_el1seedZ;   //!
-  TBranch        *b_el1seedE;   //!
-  TBranch        *b_el1seedtime;   //!
-  TBranch        *b_el1seedid;   //!
-  TBranch        *b_el2seedX;   //!
-  TBranch        *b_el2seedY;   //!
-  TBranch        *b_el2seedZ;   //!
-  TBranch        *b_el2seedE;   //!
-  TBranch        *b_el2seedtime;   //!
-  TBranch        *b_el2seedid;   //!
-  TBranch        *b_el1nrh;   //!
-  TBranch        *b_el2nrh;   //!
-  TBranch        *b_zmass;   //!
-  TBranch        *b_zpt;   //!
-  TBranch        *b_zeta;   //!
-  TBranch        *b_zphi;   //!
-  TBranch        *b_zE;   //!
-  TBranch        *b_zp;   //!
+  TBranch * b_run;
+  TBranch * b_lumi;
+  TBranch * b_event;
+  TBranch * b_hltdoubleel23_12;
+  TBranch * b_hltdoubleel33_33;
+  TBranch * b_hltdoubleel37_27;
+  TBranch * b_nvtx;
+  TBranch * b_vtxX;
+  TBranch * b_vtxY;
+  TBranch * b_vtxZ;
+  TBranch * b_el1pid;
+  TBranch * b_el1E;
+  TBranch * b_el1p;
+  TBranch * b_el1pt;
+  TBranch * b_el1eta;
+  TBranch * b_el1phi;
+  TBranch * b_el2E;
+  TBranch * b_el2p;
+  TBranch * b_el2pid;
+  TBranch * b_el2pt;
+  TBranch * b_el2eta;
+  TBranch * b_el2phi;
+  TBranch * b_el1scX;
+  TBranch * b_el1scY;
+  TBranch * b_el1scZ;
+  TBranch * b_el1scE;
+  TBranch * b_el2scX;
+  TBranch * b_el2scY;
+  TBranch * b_el2scZ;
+  TBranch * b_el2scE;
+  TBranch * b_el1nrh;
+  TBranch * b_el1seedpos;
+  TBranch * b_el2nrh;
+  TBranch * b_el2seedpos;
+  TBranch * b_el1rhXs;
+  TBranch * b_el1rhYs;
+  TBranch * b_el1rhZs;
+  TBranch * b_el1rhEs;
+  TBranch * b_el1rhtimes;
+  TBranch * b_el2rhXs;
+  TBranch * b_el2rhYs;
+  TBranch * b_el2rhZs;
+  TBranch * b_el2rhEs;
+  TBranch * b_el2rhtimes;
+  TBranch * b_el1rhids;
+  TBranch * b_el1rhOOTs;
+  TBranch * b_el1rhgain1s;
+  TBranch * b_el1rhgain6s;
+  TBranch * b_el2rhids;
+  TBranch * b_el2rhOOTs;
+  TBranch * b_el2rhgain1s;
+  TBranch * b_el2rhgain6s;
+  TBranch * b_zE;
+  TBranch * b_zp;
+  TBranch * b_zpt;
+  TBranch * b_zeta;
+  TBranch * b_zphi;
+  TBranch * b_zmass;
 
   // MC
-  TBranch        *b_puobs;   //!
-  TBranch        *b_putrue;   //!
-  TBranch        *b_wgt;   //!
-  TBranch        *b_genzpid;   //!
-  TBranch        *b_genzpt;   //!
-  TBranch        *b_genzeta;   //!
-  TBranch        *b_genzphi;   //!
-  TBranch        *b_genzmass;   //!
-  TBranch        *b_genel1pid;   //!
-  TBranch        *b_genel1pt;   //!
-  TBranch        *b_genel1eta;   //!
-  TBranch        *b_genel1phi;   //!
-  TBranch        *b_genel2pid;   //!
-  TBranch        *b_genel2pt;   //!
-  TBranch        *b_genel2eta;   //!
-  TBranch        *b_genel2phi;   //!
+  TBranch * b_puobs;
+  TBranch * b_putrue;
+  TBranch * b_wgt;
+  TBranch * b_genzpid;
+  TBranch * b_genzE;
+  TBranch * b_genzp;
+  TBranch * b_genzpt;
+  TBranch * b_genzeta;
+  TBranch * b_genzphi;
+  TBranch * b_genzmass;
+  TBranch * b_genel1pid;
+  TBranch * b_genel1E;
+  TBranch * b_genel1p;
+  TBranch * b_genel1pt;
+  TBranch * b_genel1eta;
+  TBranch * b_genel1phi;
+  TBranch * b_genel2pid;
+  TBranch * b_genel2E;
+  TBranch * b_genel2p;
+  TBranch * b_genel2pt;
+  TBranch * b_genel2eta;
+  TBranch * b_genel2phi;
 };
 
 #endif

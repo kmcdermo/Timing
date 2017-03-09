@@ -127,10 +127,11 @@ private:
   TTree * tree;
 
   // event info
-  int event, run, lumi;  
-
+  unsigned int run, lumi;
+  unsigned long int event;
+  
   // triggers 
-  bool hltdoubleel33,hltdoubleel37;
+  bool hltdoubleel23_12,hltdoubleel33_33,hltdoubleel37_27;
 
   // vertices
   int nvtx; 
@@ -138,8 +139,8 @@ private:
 
   // electron info
   int el1pid,el2pid;
-  float el1pt,el1eta,el1phi,el1E,el1p;
-  float el2pt,el2eta,el2phi,el2E,el2p;
+  float el1E,el1p,el1pt,el1eta,el1phi;
+  float el2E,el2p,el2pt,el2eta,el2phi;
   
   // supercluster info 
   float el1scX, el1scY, el1scZ, el1scE;
@@ -152,11 +153,12 @@ private:
   // all rec hit info
   std::vector<float> el1rhXs, el1rhYs, el1rhZs, el1rhEs, el1rhtimes;
   std::vector<float> el2rhXs, el2rhYs, el2rhZs, el2rhEs, el2rhtimes;
-  std::vector<int> el1rhids, el1rhOOTs, el1rhgain1s, el1rhgain6s;
-  std::vector<int> el2rhids, el2rhOOTs, el2rhgain1s, el2rhgain6s;
+  std::vector<int> el1rhids, el2rhids;
+  std::vector<bool> el1rhOOTs, el1rhgain1s, el1rhgain6s;
+  std::vector<bool> el2rhOOTs, el2rhgain1s, el2rhgain6s;
 
   // dielectron info
-  float zpt,zeta,zphi,zmass,zE,zp;
+  float zE,zp,zpt,zeta,zphi,zmass;
 
   // MC Info Only
   // pileup info
@@ -167,7 +169,7 @@ private:
 
   // gen particle info
   int genzpid,genel1pid,genel2pid;
-  float genzpt,genzeta,genzphi,genzmass,genzE,genzp;
-  float genel1pt,genel1eta,genel1phi,genel1E,genel1p;
-  float genel2pt,genel2eta,genel2phi,genel2E,genel2p;
+  float genzE,genzp,genzpt,genzeta,genzphi,genzmass;
+  float genel1E,genel1p,genel1pt,genel1eta,genel1phi;
+  float genel2E,genel2p,genel2pt,genel2eta,genel2phi;
 };
