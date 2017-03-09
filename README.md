@@ -42,6 +42,42 @@ cd ../
 scram b -j 16
 ```
 
+#### Running the ECAL Timing Resolution Study
+
+The analyzer used for producing the ECAL timing resolution ntuples is Timing/TimingAnalyzer/plugins/ZeeTree.cc[h].  The analyzer first forms pairs of oppositely signed tightly indentified electrons.  If more than one pair is formed in event, then it selects only the pair with an invariant mass closest to the Z-mass. It then saves the timing info (as well as other kinematic info) for each recHit in each electron's SC (accounting for the double counting of recHits in the SC).
+
+The python config for this analyzer is Timing/TimingAnalyzer/test/zeetree.py.  This config can be configured to run over CRAB: crabConfig_zee.py.  To save on space, you can pass a boolean (filterOnKinematics, and also filterOnHLT) to only write out events that pass the full kinematic selection.  Otherwise, most of the branches will be left with their intiailized values.
+
+After the analyzer finishes producing ntuples, the main analysis is in Timing/TimingAnalyzer/work.  You will need to put the output root files in "input/DATA/2016/doubleeg" for data, and "input/MC/2016/dyll" for MC.  For now, the analysis expects the name of root file to be skimmedtree.root, but this can of course be changed.  The main analysis code is inside /work/src/Analysis.cc (header: /work/interface/Analysis.hh), while the executable is work/src/main.cc.  The executable needs to be compiled with a Makefile (so simply do ```make -j 4``` inside work/).  It requires a ROOT6 build to compile.  This will produce an executable named "main".
+
+The exectuable is fairly flexible.  To see the command line options, simply do ```./main --help```. There are a number of other configurable parameters that are currently not set at the command line, like the lumi, that are set in work/src/Config.cc or work/interface/Config.hh.
+
+To do the basic timing resolution study versus effective energy for data, simply do:
+
+```
+### uses just the seed crystal time as the electron time
+./main --use-DEG --do-effE --use-sigman
+
+### use weighted average of rechits to evaluate electron time --> automatically applies sigma_n
+./main --use-DEG --do-effE --wgt-time
+
+#### apply Time of Flight correction
+./main --use-DEG --do-effE --wgt-time --apply-TOF
+``` 
+
+If you have produced both data and MC, then you can run some basic comparison plots, like:
+```
+./main --use-DEG --use-DYll --do-purw --do-standard --do-stacks
+``` 
+
+There are a number of other analyses one can do, like timing versus single electron E, nvertices, eta, etc. See ```./main --help``` for guidance.
+
+There are a number of other helper macros to do refitting, skims, etc. in work/macros.  Last, but certainly not least, there is the "final" macro for producing the fit over the time resolution vs effective energy plot to extract the intrinsic resolution: work/macros/timefit.C.  Simply run like an macro with ```root -l -b -q timefit.C```.  Inside the macro, you can specify which plot exactly you want fit (EB vs EE, data vs MC, etc).
+
+One last detail: the time resolution is related to the intrinsic pedestal noise of each crystal. So, to factorize this, when calculating the effective energy, each leg of the effective energy (either just the seed crystal energies or both electron's full recHit energies) is weighted by the pedestal noise of the corresponding crystal.  This value changes over a run era, so you have to make sure you have the IOV for each crystal's pedestal noise value.  Each IOV is read into the main executable from the following text files: /work/config/pedestals/*.txt. 
+
+The following github repo has the tools to download the pedestals and convert them into the text format the executbale expects: https://github.com/kmcdermo/CondDBDumperECAL/tree/ecalpeds/DBDump.  Use confDB and the GT you ran the analyzer over to dump out the appropriate IOVs. I have not updated this for the re-miniAOD, so the pedestals need to be dumped and saved again.
+
 #### Running the general displaced photon analyzers and macros
 
 The general displaced photon analyzer for now is Timing/TimingAnalyzer/plugins/PhotonDump.cc[h]. It has a number of unique branches for each MC samples (GMSB, HVDS, and background).  The gen info stored is specific to each sample.  The python config to run this plugin is Timing/TimingAnalyzer/test/photondump-*.py. Make sure to checkout each one and modify it accordingly for new samples.  One thing to be aware of is the fact that there is a moderate level of configuration via the command line, so make sure to check out the available options.  
