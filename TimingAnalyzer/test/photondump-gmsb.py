@@ -10,6 +10,11 @@ options.register (
 	'dumpTriggerMenu',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to dump trigger menu');
 
+## which trigger menu though??
+options.register (
+	'triggerTag','HLT',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'process name of trigger menu to consider');
+
 ## dump rec hit info
 options.register (
 	'dumpRHs',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
@@ -68,6 +73,7 @@ options.outputFileName = 'photondump-gmsb-ctau'+options.ctau+'.root'
 
 print "##### Settings ######"
 print "Running with dumpTriggerMenu     = ",options.dumpTriggerMenu
+print "Running with triggerTag          = ",options.triggerTag
 print "Running with dumpRHs             = ",options.dumpRHs
 print "Running with dumpIds             = ",options.dumpIds
 print "Running with ctau                = ",options.ctau
@@ -192,7 +198,7 @@ process.tree = cms.EDAnalyzer("PhotonDump",
    genjets    = cms.InputTag("slimmedGenJets"),
    ## triggers
    dumpTriggerMenu = cms.bool(options.dumpTriggerMenu),
-   triggerResults  = cms.InputTag("TriggerResults", "", "HLT"),
+   triggerResults  = cms.InputTag("TriggerResults", "", options.triggerTag),
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## rho
