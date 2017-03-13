@@ -992,8 +992,14 @@ void PhotonDump::DumpTriggerMenu(const HLTConfigProvider& hltConfig, const std::
   std::cout << "Run Number: " << iRun.run() << std::endl;
   for (std::size_t j = 0; j < pathNames.size(); j++)
   {
-    std::cout << "  " << pathNames[j].c_str() << " : " << hltConfig.triggerIndex(pathNames[j]) << " - " << j << std::endl;
+    std::cout << "   " << pathNames[j].c_str() << " : " << hltConfig.triggerIndex(pathNames[j]) << " - " << j << std::endl;
   }
+  std::cout << "--------------------------" << std::endl;
+  for (std::size_t i = 0; i < triggerNames.size(); i++)
+  {
+    std::cout << "   " << triggerNames[i].c_str() << " : " << i << std::endl;
+  }
+  std::cout << "--------------------------" << std::endl;
 }
 
 void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH)
