@@ -10,10 +10,19 @@ options.register (
 	'dumpTriggerMenu',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to dump trigger menu');
 
-## which trigger menu though??
+## which trigger menu??
 options.register (
-	'triggerTag','HLT',VarParsing.multiplicity.singleton,VarParsing.varType.string,
-	'process name of trigger menu to consider');
+	'isHLT2',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to use displaced photon menu');
+
+options.register (
+	'isHLT3',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to use displaced photon breakdown menu');
+
+## triggerPName
+options.register ( 
+	'triggerPName','HLT',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'trigger menu process name');
 
 ## dump rec hit info
 options.register (
@@ -34,16 +43,16 @@ options.register (
 	'flag to indicate GMSB');
 
 options.register (
-	'testName','test',VarParsing.multiplicity.singleton,VarParsing.varType.string,
-	'extra text modifier on output ROOT file');
-
-options.register (
 	'isBkg',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to indicate Background MC');
 
 options.register (
 	'dumpIds',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to dump gen particles IDs');
+
+options.register (
+	'testName','test',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'extra text modifier on output ROOT file');
 
 ## processName
 options.register (
@@ -68,12 +77,22 @@ options.register (
 ## parsing command line arguments
 options.parseArguments()
 
+## setup triggerPName from bools
+if   options.isHLT2 : options.triggerPName = 'HLT2'
+elif options.isHLT3 : options.triggerPName = 'HLT3'
+
 ## reset file name
 options.outputFileName = 'photondump-'+options.testName+'.root'
 
 print "##### Settings ######"
 print "Running with dumpTriggerMenu     = ",options.dumpTriggerMenu
-print "Running with triggerTag          = ",options.triggerTag
+print "Running with isHLT2              = ",options.isHLT2
+print "Running with isHLT3              = ",options.isHLT3
+print "Running with triggerPName        = ",options.triggerPName
+print "Running with isMC                = ",options.isMC
+print "Running with isGMSB              = ",options.isGMSB
+print "Running with isHVDS              = ",options.isHVDS
+print "Running with isBkg               = ",options.isBkg
 print "Running with dumpRHs             = ",options.dumpRHs
 print "Running with dumpIds             = ",options.dumpIds
 print "Running with testName            = ",options.testName
@@ -127,7 +146,9 @@ process.tree = cms.EDAnalyzer("PhotonDump",
    genjets    = cms.InputTag("slimmedGenJets"),
    ## triggers
    dumpTriggerMenu = cms.bool(options.dumpTriggerMenu),
-   triggerResults  = cms.InputTag("TriggerResults", "", options.triggerTag),
+   isHLT2          = cms.bool(options.isHLT2),
+   isHLT3          = cms.bool(options.isHLT3),
+   triggerResults  = cms.InputTag("TriggerResults", "", options.triggerPName),
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## rho

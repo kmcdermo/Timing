@@ -155,6 +155,8 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   
   // triggers
   const bool dumpTriggerMenu;
+  const bool isHLT2;
+  const bool isHLT3;
   const edm::InputTag triggerResultsTag;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
   std::vector<std::string>  triggerNames;
@@ -211,7 +213,12 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   unsigned int run, lumi;  
 
   // trigger info
-  bool hltpho120_met40, hltpho175, hltpho200, hltdoublepho60, hltdispho45; 
+  // HLT2 + HlT3
+  bool hltpho120_met40, hltpho175, hltdoublepho60;
+  bool hltdispho45, hltdispho45_jet50, hltdispho45_dijet50, hltdispho45_dijet35, hltdispho45_trijet35, hltdispho45_el100veto, hltdispho45_notkveto;
+  bool hltdispho50, hltdispho80, hltdispho100;
+  bool hltdispho60, hltdispho60_jet50, hltdispho60_dijet50, hltdispho60_dijet35, hltdispho60_trijet35, hltdispho60_notkveto;
+  bool hltdispho45_notime, hltdispho45_nosmaj, hltdispho45_nosmin, hltdispho45_nosieie, hltdispho45_nor9, hltdispho45_nohoe, hltdispho45_noet, hltdispho45_nol1match;
 
   // vertices
   int nvtx;
