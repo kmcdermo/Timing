@@ -32,8 +32,9 @@ inline void    semiR(const Float_t insmaj, const Float_t insmin, Float_t & smaj,
 typedef std::map<TString,TEfficiency*> TEffMap;
 typedef TEffMap::iterator              TEffMapIter;
 
-typedef std::map<TString,std::pair<TH1F*,TH1F*> > TH1PairMap;
-typedef TH1PairMap::iterator                      TH1PairMapIter;
+typedef std::pair<TH1F*,TH1F*>     TH1Pair;
+typedef std::map<TString, TH1Pair> TH1PairMap;
+typedef TH1PairMap::iterator       TH1PairMapIter;
 
 typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator        TH1MapIter;
@@ -54,6 +55,7 @@ class PlotPhotons
 {
 public :
   PlotPhotons(TString filename, Bool_t isGMSB = false, Bool_t isHVDS = false, Bool_t isBkg = false, 
+	      Bool_t isHLT2 = false, Bool_t isHLT3 = false,
 	      Bool_t applyevcut = false, Bool_t rhdump = false, TString outdir = "output", Bool_t savehists = false, 
 	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
 	      Bool_t applyphvidcut = false, TString phvid = "medium", Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
@@ -81,6 +83,7 @@ public :
   void EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t trigger);
   void RecHitDumper();
   void CountEvents(Bool_t & event_b);
+  Int_t GetMostDelayedPhoton(const Bool_t applyptcut, const Bool_t applyvid);
   void FillEffs();
   void FillGenInfo();
   void FillGMSB();
@@ -92,6 +95,7 @@ public :
   void FillRecoPhotons();
   void FillAnalysis();
   void FillTrigger();
+  void FillTriggerPlot(TH1Pair & th1pair, const Bool_t passed, const Float_t value);
   void DumpEventCounts();
   void MakeSubDirs();
   void OutputTEffs();
@@ -107,6 +111,8 @@ private :
   const Bool_t fIsHVDS;
   const Bool_t fIsBkg;
         Bool_t fIsMC;
+  const Bool_t fIsHLT2;
+  const Bool_t fIsHLT3;
 
   // In routine vars
   UInt_t  fNEvCheck;
@@ -148,9 +154,30 @@ private :
   UInt_t    lumi;
   Bool_t  hltpho120_met40;
   Bool_t  hltpho175;
-  Bool_t  hltpho200;
   Bool_t  hltdoublepho60;
   Bool_t  hltdispho45;
+  Bool_t  hltdispho45_jet50;
+  Bool_t  hltdispho45_dijet50;
+  Bool_t  hltdispho45_dijet35;
+  Bool_t  hltdispho45_trijet35;
+  Bool_t  hltdispho45_el100veto;
+  Bool_t  hltdispho45_notkveto;
+  Bool_t  hltdispho50;
+  Bool_t  hltdispho60;
+  Bool_t  hltdispho60_dijet50;
+  Bool_t  hltdispho60_dijet35;
+  Bool_t  hltdispho60_trijet35;
+  Bool_t  hltdispho60_notkveto;
+  Bool_t  hltdispho80;
+  Bool_t  hltdispho100;
+  Bool_t  hltdispho45_notime;
+  Bool_t  hltdispho45_nosmaj;
+  Bool_t  hltdispho45_nosmin;
+  Bool_t  hltdispho45_nosieie;
+  Bool_t  hltdispho45_nor9;
+  Bool_t  hltdispho45_nohoe;
+  Bool_t  hltdispho45_noet;
+  Bool_t  hltdispho45_nol1match;
   Float_t genwgt;
   Int_t   genpuobs;
   Int_t   genputrue;
@@ -291,9 +318,30 @@ private :
   TBranch * b_lumi;
   TBranch * b_hltpho120_met40;
   TBranch * b_hltpho175;
-  TBranch * b_hltpho200;
   TBranch * b_hltdoublepho60;
   TBranch * b_hltdispho45;
+  TBranch * b_hltdispho45_jet50;
+  TBranch * b_hltdispho45_dijet50;
+  TBranch * b_hltdispho45_dijet35;
+  TBranch * b_hltdispho45_trijet35;
+  TBranch * b_hltdispho45_el100veto;
+  TBranch * b_hltdispho45_notkveto;
+  TBranch * b_hltdispho50;
+  TBranch * b_hltdispho60;
+  TBranch * b_hltdispho60_dijet50;
+  TBranch * b_hltdispho60_dijet35;
+  TBranch * b_hltdispho60_trijet35;
+  TBranch * b_hltdispho60_notkveto;
+  TBranch * b_hltdispho80;
+  TBranch * b_hltdispho100;
+  TBranch * b_hltdispho45_notime;
+  TBranch * b_hltdispho45_nosmaj;
+  TBranch * b_hltdispho45_nosmin;
+  TBranch * b_hltdispho45_nosieie;
+  TBranch * b_hltdispho45_nor9;
+  TBranch * b_hltdispho45_nohoe;
+  TBranch * b_hltdispho45_noet;
+  TBranch * b_hltdispho45_nol1match;
   TBranch * b_genwgt;
   TBranch * b_genpuobs;
   TBranch * b_genputrue;

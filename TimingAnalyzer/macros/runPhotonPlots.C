@@ -22,16 +22,19 @@ void runPhotonPlots()
   gROOT->LoadMacro("PlotPhotons.cc+g");
 
   // config is:
-  // filename, isGMSB, isHVDS, isBkg, applyevcut, rhdump, outdir, savehists,
-  // applyjetptcut, jetptcut, applyphptcut, phptcut,
-  // applyphvidcut, phvid, applyrhecut, 
+  // filename, isGMSB, isHVDS, isBkg
+  // isHLT2, isHLT3
+  // applyevcut, rhdump, outdir, savehists,
+  // applyjetptcut, jetptcut, 
+  // applyphptcut, phptcut, applyphvidcut, phvid, applyrhecut, 
   // applyecalacceptcut, applyEBonly, applyEEonly
   
-//   PlotPhotons photonPlots("input/MC/signal/HVDS/photondump-hvds.root",false,true,false,false,false,"output/testhvds",true,
-// 			  true,35.f,true,50.f,true,"loose",true,1.f,true,false,false);
-
-  PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-ctau6000.root",true,false,false,false,false,"output/ctau6000",true,
-			  true,35.f,true,50.f,true,"loose",true,1.f,true,false,false);
+  PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-ctau6000.root",true,false,false,
+			  false,false,
+			  false,false,"output/ctau6000",true,
+			  true,35.f,true,
+			  50.f,true,"loose",true,1.f,
+			  true,false,false);
 
   // which plots to do
   // first bool = generic plots
