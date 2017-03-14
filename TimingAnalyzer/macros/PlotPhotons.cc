@@ -5,14 +5,17 @@
 
 #include <iostream>
 
-PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t isBkg, Bool_t applyevcut, Bool_t rhdump,
-			 TString outdir, Bool_t savehists,
-			 Bool_t applyjetptcut, Float_t jetptcut, Bool_t applyphptcut, Float_t phptcut,
-			 Bool_t applyphvidcut, TString phvid, Bool_t applyrhecut, Float_t rhEcut,
+PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t isBkg, 
+			 Bool_t isHLT2, Bool_t isHLT3,
+			 Bool_t applyevcut, Bool_t rhdump, TString outdir, Bool_t savehists,
+			 Bool_t applyjetptcut, Float_t jetptcut, 
+			 Bool_t applyphptcut, Float_t phptcut, Bool_t applyphvidcut, TString phvid, Bool_t applyrhecut, Float_t rhEcut,
 			 Bool_t applyecalacceptcut, Bool_t applyEBonly, Bool_t applyEEonly) :
-  fOutDir(outdir), fIsGMSB(isGMSB), fIsHVDS(isHVDS), fIsBkg(isBkg), fApplyEvCut(applyevcut), fRHDump(rhdump), fSaveHists(savehists),
-  fApplyJetPtCut(applyjetptcut), fJetPtCut(jetptcut), fApplyPhPtCut(applyphptcut), fPhPtCut(phptcut),
-  fApplyPhVIDCut(applyphvidcut), fPhVID(phvid), fApplyrhECut(applyrhecut), frhECut(rhEcut),
+  fOutDir(outdir), fIsGMSB(isGMSB), fIsHVDS(isHVDS), fIsBkg(isBkg), 
+  fIsHLT2(isHLT2), fIsHLT3(isHLT3),
+  fApplyEvCut(applyevcut), fRHDump(rhdump), fSaveHists(savehists),
+  fApplyJetPtCut(applyjetptcut), fJetPtCut(jetptcut), 
+  fApplyPhPtCut(applyphptcut), fPhPtCut(phptcut), fApplyPhVIDCut(applyphvidcut), fPhVID(phvid), fApplyrhECut(applyrhecut), frhECut(rhEcut),
   fApplyECALAcceptCut(applyecalacceptcut), fApplyEBOnly(applyEBonly), fApplyEEOnly(applyEEonly)
 {
   // input
@@ -333,7 +336,7 @@ void PlotPhotons::CountEvents(Bool_t & event_b)
   }
 }
 
-Int_t PlotPhotons::GetMostDelayedPhoton(const Bool_t applyptcut, const Bool_t applyvid)
+Int_t PlotPhotons::GetMostDelayedPhoton(const Bool_t applyptcut, const Bool_t applyvidcut)
 {
   // first ensure that at least one photon passes the analysis selection
   Int_t ph1 = -1;
@@ -406,7 +409,7 @@ void PlotPhotons::FillTrigger()
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45"],hltdispho45,phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45_notkveto"],hltdispho45_notkveto,phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45_notime"],hltdispho45_notime,phdelayseedtime);
-      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45_nosmaj"],hltdispho45_nsmaj,phdelayseedtime);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45_nosmaj"],hltdispho45_nosmaj,phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45_nosmin"],hltdispho45_nosmin,phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45_nosieie"],hltdispho45_nosieie,phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45_nor9"],hltdispho45_nor9,phdelayseedtime);
@@ -459,7 +462,7 @@ void PlotPhotons::FillAnalysis()
   
   if (photon_b && jets_b && rh_b) 
   {
-    Float_t seed1time = (*phrhtime)[ph1][(*phseedpos)[ph1]];
+    Float_t seed1time = (*phrhtime)[phdelay][(*phseedpos)[phdelay]];
     fPlots2D["MET_vs_seed1time"]->Fill(seed1time,t1pfMETpt);
   }
 }
@@ -1546,6 +1549,7 @@ void PlotPhotons::InitTree()
     fInTree->SetBranchAddress("hltdispho45_notkveto", &hltdispho45_notkveto, &b_hltdispho45_notkveto);
     fInTree->SetBranchAddress("hltdispho50", &hltdispho50, &b_hltdispho50);
     fInTree->SetBranchAddress("hltdispho60", &hltdispho60, &b_hltdispho60);
+    fInTree->SetBranchAddress("hltdispho60_jet50", &hltdispho60_jet50, &b_hltdispho60_jet50);
     fInTree->SetBranchAddress("hltdispho60_dijet50", &hltdispho60_dijet50, &b_hltdispho60_dijet50);
     fInTree->SetBranchAddress("hltdispho60_dijet35", &hltdispho60_dijet35, &b_hltdispho60_dijet35);
     fInTree->SetBranchAddress("hltdispho60_trijet35", &hltdispho60_trijet35, &b_hltdispho60_trijet35);

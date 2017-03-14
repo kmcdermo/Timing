@@ -1496,6 +1496,7 @@ void PhotonDump::beginJob()
     tree->Branch("hltdispho45_notkveto" , &hltdispho45_notkveto , "hltdispho45_notkveto/O");
     tree->Branch("hltdispho50"          , &hltdispho50          , "hltdispho50/O");
     tree->Branch("hltdispho60"          , &hltdispho60          , "hltdispho60/O");
+    tree->Branch("hltdispho60_jet50"    , &hltdispho60_jet50    , "hltdispho60_jet50/O");
     tree->Branch("hltdispho60_dijet50"  , &hltdispho60_dijet50  , "hltdispho60_dijet50/O");
     tree->Branch("hltdispho60_dijet35"  , &hltdispho60_dijet35  , "hltdispho60_dijet35/O");
     tree->Branch("hltdispho60_trijet35" , &hltdispho60_trijet35 , "hltdispho60_trijet35/O");

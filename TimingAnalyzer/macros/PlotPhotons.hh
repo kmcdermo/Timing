@@ -83,7 +83,7 @@ public :
   void EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t trigger);
   void RecHitDumper();
   void CountEvents(Bool_t & event_b);
-  Int_t GetMostDelayedPhoton(const Bool_t applyptcut, const Bool_t applyvid);
+  Int_t GetMostDelayedPhoton(const Bool_t applyptcut, const Bool_t applyvidcut);
   void FillEffs();
   void FillGenInfo();
   void FillGMSB();
@@ -164,6 +164,7 @@ private :
   Bool_t  hltdispho45_notkveto;
   Bool_t  hltdispho50;
   Bool_t  hltdispho60;
+  Bool_t  hltdispho60_jet50;
   Bool_t  hltdispho60_dijet50;
   Bool_t  hltdispho60_dijet35;
   Bool_t  hltdispho60_trijet35;
@@ -328,6 +329,7 @@ private :
   TBranch * b_hltdispho45_notkveto;
   TBranch * b_hltdispho50;
   TBranch * b_hltdispho60;
+  TBranch * b_hltdispho60_jet50;
   TBranch * b_hltdispho60_dijet50;
   TBranch * b_hltdispho60_dijet35;
   TBranch * b_hltdispho60_trijet35;
