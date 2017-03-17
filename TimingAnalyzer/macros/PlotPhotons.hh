@@ -86,7 +86,7 @@ public :
   void RecHitDumper();
   void CountEvents(Bool_t & event_b);
   Int_t GetLeadingPhoton();
-  Int_t GetMostDelayedPhoton(const Bool_t applyptcut, const Bool_t applyvidcut);
+  Int_t GetMostDelayedPhoton(const Bool_t applyphptcut, const Bool_t applyphvidcut);
   void FillEffs();
   void FillGenInfo();
   void FillGMSB();

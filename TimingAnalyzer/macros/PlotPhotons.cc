@@ -352,8 +352,8 @@ Int_t PlotPhotons::GetLeadingPhoton()
   Int_t ph1 = -1;
   for (Int_t iph = 0; iph < nphotons; iph++)
   {
-    if (fApplyPtCut && (*phpt)[iph] < fPhPtCut) continue;
-    if (fApplyVIDCut && ((*phVID)[iph]) < fPhVIDMap[fPhVID]) continue;
+    if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
+    if (fApplyPhVIDCut && ((*phVID)[iph]) < fPhVIDMap[fPhVID]) continue;
 
     const Float_t eta = std::abs((*phsceta)[iph]);
     if (fApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
@@ -377,7 +377,7 @@ Int_t PlotPhotons::GetLeadingPhoton()
   return ph1;
 }
 
-Int_t PlotPhotons::GetMostDelayedPhoton(const Bool_t applyptcut, const Bool_t applyvidcut)
+Int_t PlotPhotons::GetMostDelayedPhoton(const Bool_t applyphptcut, const Bool_t applyphvidcut)
 {
   // remove pT cut to search for "most-delayed" photon
   Int_t phdelay = PlotPhotons::GetLeadingPhoton();
@@ -385,8 +385,8 @@ Int_t PlotPhotons::GetMostDelayedPhoton(const Bool_t applyptcut, const Bool_t ap
   {
     for (Int_t iph = 0; iph < nphotons; iph++)
     {
-      if (applyptcut && (*phpt)[iph] < fPhPtCut) continue;
-      if (applyvidcut && ((*phVID)[iph]) < fPhVIDMap[fPhVID]) continue;
+      if (applyphptcut && (*phpt)[iph] < fPhPtCut) continue;
+      if (applyphvidcut && ((*phVID)[iph]) < fPhVIDMap[fPhVID]) continue;
 
       const Float_t eta = std::abs((*phsceta)[iph]);
       if (fApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
@@ -414,13 +414,16 @@ void PlotPhotons::FillMostDelayed()
 {
   const Int_t phdelay = PlotPhotons::GetMostDelayedPhoton(false,true);
   
-  fPlots["phmostdelayedpt"]->Fill((*phpt)[phdelay]);
-  fPlots["phmostdelayedHoE"]->Fill((*phHoE)[phdelay]);
-  fPlots["phmostdelayedr9"]->Fill((*phr9)[phdelay]);
-  fPlots["phmostdelayedsieie"]->Fill((*phsieie)[phdelay]);
-  fPlots["phmostdelayedsmin"]->Fill((*phsmaj)[phdelay]);
-  fPlots["phmostdelayedsmaj"]->Fill((*phsmin)[phdelay]);
-  fPlots["phmostdelayedseedtime"]->Fill((*phrhtime)[phdelay][(*phseedpos)[phdelay]]);
+  if (phdelay != -1)
+  {
+    fPlots["phmostdelayedpt"]->Fill((*phpt)[phdelay]);
+    fPlots["phmostdelayedHoE"]->Fill((*phHoE)[phdelay]);
+    fPlots["phmostdelayedr9"]->Fill((*phr9)[phdelay]);
+    fPlots["phmostdelayedsieie"]->Fill((*phsieie)[phdelay]);
+    fPlots["phmostdelayedsmin"]->Fill((*phsmaj)[phdelay]);
+    fPlots["phmostdelayedsmaj"]->Fill((*phsmin)[phdelay]);
+    fPlots["phmostdelayedseedtime"]->Fill((*phrhtime)[phdelay][(*phseedpos)[phdelay]]);
+  }
 }
 
 void PlotPhotons::FillTrigger()

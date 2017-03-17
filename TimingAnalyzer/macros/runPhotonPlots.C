@@ -34,12 +34,12 @@ void runPhotonPlots()
 			  false,false,"output/MC/signal/GMSB/ctau6000",false,
 			  true,35.f,true,
 			  50.f,true,"loose",true,1.f,
-			  true,true,false);
+			  true,false,false);
 
   // which plots to do
   // first bool = generic plots
   // second bool = efficiency
   // third bool = analysis plots
   // fourth bool = trigger plots
-  photonPlots.DoPlots(false,false,false,true);
+  photonPlots.DoPlots(true,false,false,true);
 }
