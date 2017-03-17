@@ -10,13 +10,15 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
 			 Bool_t applyevcut, Bool_t rhdump, TString outdir, Bool_t savehists,
 			 Bool_t applyjetptcut, Float_t jetptcut, 
 			 Bool_t applyphptcut, Float_t phptcut, Bool_t applyphvidcut, TString phvid, Bool_t applyrhecut, Float_t rhEcut,
-			 Bool_t applyecalacceptcut, Bool_t applyEBonly, Bool_t applyEEonly) :
+			 Bool_t applyecalacceptcut, Bool_t applyEBonly, Bool_t applyEEonly,
+			 Bool_t applyphotonmcmatching) :
   fOutDir(outdir), fIsGMSB(isGMSB), fIsHVDS(isHVDS), fIsBkg(isBkg), 
   fIsHLT2(isHLT2), fIsHLT3(isHLT3),
   fApplyEvCut(applyevcut), fRHDump(rhdump), fSaveHists(savehists),
   fApplyJetPtCut(applyjetptcut), fJetPtCut(jetptcut), 
   fApplyPhPtCut(applyphptcut), fPhPtCut(phptcut), fApplyPhVIDCut(applyphvidcut), fPhVID(phvid), fApplyrhECut(applyrhecut), frhECut(rhEcut),
-  fApplyECALAcceptCut(applyecalacceptcut), fApplyEBOnly(applyEBonly), fApplyEEOnly(applyEEonly)
+  fApplyECALAcceptCut(applyecalacceptcut), fApplyEBOnly(applyEBonly), fApplyEEOnly(applyEEonly),
+  fApplyPhotonMCMatching(applyphotonmcmatching)
 {
   // input
   fInFile = TFile::Open(filename.Data());
@@ -144,10 +146,11 @@ void PlotPhotons::SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t
 	//	PlotPhotons::SetupHVDS();
       }
     }
-    PlotPhotons::SetupObjectCounts();
-    PlotPhotons::SetupMET();
-    PlotPhotons::SetupJets();
-    PlotPhotons::SetupRecoPhotons();
+    //    PlotPhotons::SetupObjectCounts();
+    //   PlotPhotons::SetupMET();
+    //   PlotPhotons::SetupJets();
+    //    PlotPhotons::SetupRecoPhotons();
+    PlotPhotons::SetupMostDelayed();
   }
 
   if (eff)
@@ -206,10 +209,11 @@ void PlotPhotons::EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t 
 	  //	  PlotPhotons::FillHVDS();
 	}
       }
-      PlotPhotons::FillObjectCounts();
-      PlotPhotons::FillMET();
-      PlotPhotons::FillJets();
-      PlotPhotons::FillRecoPhotons();
+      //      PlotPhotons::FillObjectCounts();
+      //      PlotPhotons::FillMET();
+      //      PlotPhotons::FillJets();
+      //      PlotPhotons::FillRecoPhotons();
+      PlotPhotons::FillMostDelayed();
     }
 
     if (eff)
@@ -284,7 +288,13 @@ void PlotPhotons::CountEvents(Bool_t & event_b)
     phpt_b = true;
     if (fApplyPhVIDCut && ((*phVID)[iph] < fPhVIDMap[fPhVID])) continue;
     phvid_b = true;
-    if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+    const Float_t eta = std::abs((*phsceta)[iph]);
+    if (fApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
+    {
+      if      (fApplyEBOnly && (eta > 1.4442)) continue;
+      else if (fApplyEEOnly && ((eta < 1.566) || (eta > 2.5))) continue;
+    }
+    else continue;
     phsceta_b = true;
     if ((*phseedpos)[iph] == -9999) continue;
     seedrh_b = true;
@@ -336,45 +346,93 @@ void PlotPhotons::CountEvents(Bool_t & event_b)
   }
 }
 
-Int_t PlotPhotons::GetMostDelayedPhoton(const Bool_t applyptcut, const Bool_t applyvidcut)
+Int_t PlotPhotons::GetLeadingPhoton()
 {
   // first ensure that at least one photon passes the analysis selection
   Int_t ph1 = -1;
   for (Int_t iph = 0; iph < nphotons; iph++)
   {
-    if (applyptcut && (*phpt)[iph] < fPhPtCut) continue;
-    if (applyvidcut && ((*phVID)[iph]) < fPhVIDMap[fPhVID]) continue;
-    if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+    if (fApplyPtCut && (*phpt)[iph] < fPhPtCut) continue;
+    if (fApplyVIDCut && ((*phVID)[iph]) < fPhVIDMap[fPhVID]) continue;
+
+    const Float_t eta = std::abs((*phsceta)[iph]);
+    if (fApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
+    {
+      if      (fApplyEBOnly && (eta > 1.4442)) continue;
+      else if (fApplyEEOnly && ((eta < 1.566) || (eta > 2.5))) continue;
+    }
+    else continue;
+    
     if ((*phseedpos)[iph] == -9999) continue;
     if (fApplyrhECut && (*phrhE)[iph][(*phseedpos)[iph]] < frhECut) continue;
+    if (fApplyPhotonMCMatching)
+    {
+      if ((fIsGMSB || fIsHVDS) && (*phmatch)[iph] <= 0) continue; 
+      if (fIsBkg && (*phisMatched)[iph] != 0) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
+    }
+
     ph1 = iph; // save the good photon
     break;
   }
+  return ph1;
+}
 
+Int_t PlotPhotons::GetMostDelayedPhoton(const Bool_t applyptcut, const Bool_t applyvidcut)
+{
   // remove pT cut to search for "most-delayed" photon
-  Int_t phdelay = ph1;
+  Int_t phdelay = PlotPhotons::GetLeadingPhoton();
   if (phdelay != -1)
   {
     for (Int_t iph = 0; iph < nphotons; iph++)
     {
+      if (applyptcut && (*phpt)[iph] < fPhPtCut) continue;
       if (applyvidcut && ((*phVID)[iph]) < fPhVIDMap[fPhVID]) continue;
-      if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+
+      const Float_t eta = std::abs((*phsceta)[iph]);
+      if (fApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
+      {
+	if      (fApplyEBOnly && (eta > 1.4442)) continue;
+	else if (fApplyEEOnly && ((eta < 1.566) || (eta > 2.5))) continue;
+      }
+      else continue;
+
       if ((*phseedpos)[iph] == -9999) continue;
       if (fApplyrhECut && (*phrhE)[iph][(*phseedpos)[iph]] < frhECut) continue;
+      if (fApplyPhotonMCMatching)
+      {
+	if ((fIsGMSB || fIsHVDS) && (*phmatch)[iph] <= 0) continue; 
+	if (fIsBkg && (*phisMatched)[iph] != 0) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
+      }
+
       if ((*phrhtime)[iph][(*phseedpos)[iph]] > (*phrhtime)[phdelay][(*phseedpos)[phdelay]]) phdelay = iph;
     }
   }
-
   return phdelay;
+}
+
+void PlotPhotons::FillMostDelayed()
+{
+  const Int_t phdelay = PlotPhotons::GetMostDelayedPhoton(false,true);
+  
+  fPlots["phmostdelayedpt"]->Fill((*phpt)[phdelay]);
+  fPlots["phmostdelayedHoE"]->Fill((*phHoE)[phdelay]);
+  fPlots["phmostdelayedr9"]->Fill((*phr9)[phdelay]);
+  fPlots["phmostdelayedsieie"]->Fill((*phsieie)[phdelay]);
+  fPlots["phmostdelayedsmin"]->Fill((*phsmaj)[phdelay]);
+  fPlots["phmostdelayedsmaj"]->Fill((*phsmin)[phdelay]);
+  fPlots["phmostdelayedseedtime"]->Fill((*phrhtime)[phdelay][(*phseedpos)[phdelay]]);
 }
 
 void PlotPhotons::FillTrigger()
 {
-  Int_t phdelay = PlotPhotons::GetMostDelayedPhoton(false,false);
+  const Int_t phdelay = PlotPhotons::GetMostDelayedPhoton(false,true);
 
   if (phdelay != -1)
   {
     const Float_t phdelayseedtime = (*phrhtime)[phdelay][(*phseedpos)[phdelay]];
+    const Float_t phdelayeta = (*pheta)[phdelay];
+    const Float_t phdelayphi = (*phphi)[phdelay];
+    const Float_t phdelaypt = (*phpt)[phdelay];
 
     // first is denom
     // second is numer
@@ -406,6 +464,7 @@ void PlotPhotons::FillTrigger()
     // HLT Dispho45 Breakdown
     if (fIsHLT3)
     {
+      // time
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45"],hltdispho45,phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45_notkveto"],hltdispho45_notkveto,phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45_notime"],hltdispho45_notime,phdelayseedtime);
@@ -416,6 +475,42 @@ void PlotPhotons::FillTrigger()
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45_nohoe"],hltdispho45_nohoe,phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45_noet"],hltdispho45_noet,phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45_nol1match"],hltdispho45_nol1match,phdelayseedtime);
+
+      // eta
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayeta_hltdispho45"],hltdispho45,phdelayeta);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayeta_hltdispho45_notkveto"],hltdispho45_notkveto,phdelayeta);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayeta_hltdispho45_notime"],hltdispho45_notime,phdelayeta);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayeta_hltdispho45_nosmaj"],hltdispho45_nosmaj,phdelayeta);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayeta_hltdispho45_nosmin"],hltdispho45_nosmin,phdelayeta);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayeta_hltdispho45_nosieie"],hltdispho45_nosieie,phdelayeta);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayeta_hltdispho45_nor9"],hltdispho45_nor9,phdelayeta);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayeta_hltdispho45_nohoe"],hltdispho45_nohoe,phdelayeta);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayeta_hltdispho45_noet"],hltdispho45_noet,phdelayeta);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayeta_hltdispho45_nol1match"],hltdispho45_nol1match,phdelayeta);
+
+      // phi
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayphi_hltdispho45"],hltdispho45,phdelayphi);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayphi_hltdispho45_notkveto"],hltdispho45_notkveto,phdelayphi);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayphi_hltdispho45_notime"],hltdispho45_notime,phdelayphi);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayphi_hltdispho45_nosmaj"],hltdispho45_nosmaj,phdelayphi);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayphi_hltdispho45_nosmin"],hltdispho45_nosmin,phdelayphi);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayphi_hltdispho45_nosieie"],hltdispho45_nosieie,phdelayphi);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayphi_hltdispho45_nor9"],hltdispho45_nor9,phdelayphi);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayphi_hltdispho45_nohoe"],hltdispho45_nohoe,phdelayphi);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayphi_hltdispho45_noet"],hltdispho45_noet,phdelayphi);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayphi_hltdispho45_nol1match"],hltdispho45_nol1match,phdelayphi);
+
+      // pt
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelaypt_hltdispho45"],hltdispho45,phdelaypt);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelaypt_hltdispho45_notkveto"],hltdispho45_notkveto,phdelaypt);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelaypt_hltdispho45_notime"],hltdispho45_notime,phdelaypt);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelaypt_hltdispho45_nosmaj"],hltdispho45_nosmaj,phdelaypt);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelaypt_hltdispho45_nosmin"],hltdispho45_nosmin,phdelaypt);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelaypt_hltdispho45_nosieie"],hltdispho45_nosieie,phdelaypt);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelaypt_hltdispho45_nor9"],hltdispho45_nor9,phdelaypt);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelaypt_hltdispho45_nohoe"],hltdispho45_nohoe,phdelaypt);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelaypt_hltdispho45_noet"],hltdispho45_noet,phdelaypt);
+      PlotPhotons::FillTriggerPlot(fTrigPlots["phdelaypt_hltdispho45_nol1match"],hltdispho45_nol1match,phdelaypt);
     } // displaced breakdown menu
   } 
 }
@@ -434,7 +529,15 @@ void PlotPhotons::FillAnalysis()
     for (Int_t iph = 0; iph < nphotons; iph++)
     {
       if (fApplyPhVIDCut && ((*phVID)[iph]) < fPhVIDMap[fPhVID]) continue;
-      if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+
+      const Float_t eta = std::abs((*phsceta)[iph]);
+      if (fApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
+      {
+	if      (fApplyEBOnly && (eta > 1.4442)) continue;
+	else if (fApplyEEOnly && ((eta < 1.566) || (eta > 2.5))) continue;
+      }
+      else continue;
+
       if ((*phseedpos)[iph] == -9999) continue;
       if (fApplyrhECut && (*phrhE)[iph][(*phseedpos)[iph]] < frhECut) continue;
       
@@ -675,7 +778,15 @@ void PlotPhotons::FillObjectCounts()
   for (Int_t iph = 0; iph < nphotons; iph++)
   { 
     if (fApplyPhPtCut && (*phpt)[iph] < fPhPtCut) continue;
-    if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+
+    const Float_t eta = std::abs((*phsceta)[iph]);
+    if (fApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
+    {
+      if      (fApplyEBOnly && (eta > 1.4442)) continue;
+      else if (fApplyEEOnly && ((eta < 1.566) || (eta > 2.5))) continue;
+    }
+    else continue;
+
     nPhotons++;
     if ( (*phVID)[iph] >= 1 ) nLoosePh++;
     if ( (*phVID)[iph] >= 2 ) nMediumPh++;
@@ -740,7 +851,17 @@ void PlotPhotons::FillRecoPhotons()
   Int_t passed = 0;
   for (Int_t iph = 0; iph < nphotons; iph++)
   {
-    if (fApplyECALAcceptCut && (std::abs((*phsceta)[iph]) > 2.5 || (std::abs((*phsceta)[iph]) > 1.4442 && std::abs((*phsceta)[iph]) < 1.566))) continue;
+    // standard fare selection on photons
+    const Float_t eta = std::abs((*phsceta)[iph]);
+    if (fApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
+    {
+      if      (fApplyEBOnly && (eta > 1.4442)) continue;
+      else if (fApplyEEOnly && ((eta < 1.566) || (eta > 2.5))) continue;
+    }
+    else continue;
+
+    if ((*phseedpos)[iph] == -9999) continue;
+    if (fApplyrhECut && (*phrhE)[iph][(*phseedpos)[iph]] < frhECut) continue;
 
     // N-1 like plots
     if ((*phpt)[iph]  >= fPhPtCut          && !passed_pt)  
@@ -757,9 +878,12 @@ void PlotPhotons::FillRecoPhotons()
 
     if (fApplyPhPtCut && ((*phpt)[iph] < fPhPtCut)) continue;
     if (fApplyPhVIDCut && ((*phVID)[iph] < fPhVIDMap[fPhVID])) continue;
-    if ((fApplyEBOnly && (std::abs((*phsceta)[iph]) > 1.4442)) || (fApplyEEOnly && (std::abs((*phsceta)[iph]) < 1.566 || std::abs((*phsceta)[iph]) > 2.5))) continue;
-    if (((fIsGMSB || fIsHVDS) && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] != 0) ) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
-    //if ((*phisMatched)[iph] == 0) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
+
+    if (fApplyPhotonMCMatching)
+    {
+      if ((fIsGMSB || fIsHVDS) && (*phmatch)[iph] <= 0) continue; // reminder that HVDS and GMSB have different meaning for 1,2,3 
+      else if (fIsBkg && (*phisMatched)[iph] != 0) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
+    }
 
     fPlots["phE"]->Fill((*phE)[iph]);
     fPlots["phpt"]->Fill((*phpt)[iph]);
@@ -828,7 +952,8 @@ void PlotPhotons::FillRecoPhotons()
 	fPlots["phseedE"]->Fill((*phrhE)[iph][irh]);
 	fPlots["phseedtime"]->Fill((*phrhtime)[iph][irh]);
 	fPlots["phseedOOT"]->Fill((*phrhOOT)[iph][irh]);
-      
+	
+
 	if (passed == 0) 
 	{
 	  fPlots["ph1seedtime"]->Fill((*phrhtime)[iph][irh]);
@@ -874,6 +999,17 @@ void PlotPhotons::SetupAnalysis()
   fPlots2D["MET_vs_seed1time"] = PlotPhotons::MakeTH2F("MET_vs_seed1time","MET vs Leading Photon Seed RecHit Time",80,-2.f,14.f,"Leading Photon Seed RecHit Time [ns]",100,0.f,2000.f,"MET","Analysis");
 }
 
+void PlotPhotons::SetupMostDelayed()
+{
+  fPlots["phmostdelayedpt"] = PlotPhotons::MakeTH1F("phmostdelayedpt","Most Delayed Photon p_{T} [GeV/c] (reco)",100,0.f,2000.f,"p_{T} [GeV/c]","Events","MostDelayed");
+  fPlots["phmostdelayedHoE"] = PlotPhotons::MakeTH1F("phmostdelayedHoE","Most Delayed Photon HE/EE (reco)",100,0.f,5.0,"HE/EE","Events","MostDelayed");
+  fPlots["phmostdelayedr9"] = PlotPhotons::MakeTH1F("phmostdelayedr9","Most Delayed Photon R9 (reco)",100,0.f,5.0,"R9","Events","MostDelayed");
+  fPlots["phmostdelayedsieie"] = PlotPhotons::MakeTH1F("phmostdelayedsieie","Most Delayed Photon #sigma_{i#eta i#eta} (reco)",100,0,0.1,"#sigma_{i#eta i#eta}","Events","MostDelayed");
+  fPlots["phmostdelayedsmaj"] = PlotPhotons::MakeTH1F("phmostdelayedsmaj","Most Delayed Photon S_{major} (reco)",100,0.f,5.f,"S_{major}","Events","MostDelayed");
+  fPlots["phmostdelayedsmin"] = PlotPhotons::MakeTH1F("phmostdelayedsmin","Most Delayed Photon S_{minor} (reco)",100,0.f,1.f,"S_{minor}","Events","MostDelayed");
+  fPlots["phmostdelayedseedtime"] = PlotPhotons::MakeTH1F("phmostdelayedseedtime","Most Delayed Photon Seed RecHit Time [ns]",100,-5.f,20.f,"Most Delayed Photon Seed RecHit Time [ns]","Events","MostDelayed");
+}
+
 void PlotPhotons::SetupTrigger()
 {
   if (fIsHLT2)
@@ -900,6 +1036,7 @@ void PlotPhotons::SetupTrigger()
   }
   if (fIsHLT3)
   {
+    // seed time
     fTrigPlots["phdelayseedtime_hltdispho45"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho45","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton45_v","trigger");
     fTrigPlots["phdelayseedtime_hltdispho45_notkveto"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho45_notkveto","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton45_noTrackVeto_v","trigger");
     fTrigPlots["phdelayseedtime_hltdispho45_notime"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho45_notime","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton45_noTime_v","trigger");
@@ -910,6 +1047,42 @@ void PlotPhotons::SetupTrigger()
     fTrigPlots["phdelayseedtime_hltdispho45_nohoe"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho45_nohoe","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton45_noHoE_v","trigger");
     fTrigPlots["phdelayseedtime_hltdispho45_noet"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho45_noet","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton45_noEt_v","trigger");
     fTrigPlots["phdelayseedtime_hltdispho45_nol1match"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho45_nol1match","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton45_noL1Match_v","trigger");
+
+    // eta
+    fTrigPlots["phdelayeta_hltdispho45"] = PlotPhotons::MakeTrigTH1Fs("phdelayeta_hltdispho45","Most Delayed Photon #eta",100,-5.f,5.f,"Most Delayed Photon #eta","Events","HLT_DisplacedPhoton45_v","trigger");
+    fTrigPlots["phdelayeta_hltdispho45_notkveto"] = PlotPhotons::MakeTrigTH1Fs("phdelayeta_hltdispho45_notkveto","Most Delayed Photon #eta",100,-5.f,5.f,"Most Delayed Photon #eta","Events","HLT_DisplacedPhoton45_noTrackVeto_v","trigger");
+    fTrigPlots["phdelayeta_hltdispho45_notime"] = PlotPhotons::MakeTrigTH1Fs("phdelayeta_hltdispho45_notime","Most Delayed Photon #eta",100,-5.f,5.f,"Most Delayed Photon #eta","Events","HLT_DisplacedPhoton45_noTime_v","trigger");
+    fTrigPlots["phdelayeta_hltdispho45_nosmaj"] = PlotPhotons::MakeTrigTH1Fs("phdelayeta_hltdispho45_nosmaj","Most Delayed Photon #eta",100,-5.f,5.f,"Most Delayed Photon #eta","Events","HLT_DisplacedPhoton45_noSmaj_v","trigger");
+    fTrigPlots["phdelayeta_hltdispho45_nosmin"] = PlotPhotons::MakeTrigTH1Fs("phdelayeta_hltdispho45_nosmin","Most Delayed Photon #eta",100,-5.f,5.f,"Most Delayed Photon #eta","Events","HLT_DisplacedPhoton45_noSmin_v","trigger");
+    fTrigPlots["phdelayeta_hltdispho45_nosieie"] = PlotPhotons::MakeTrigTH1Fs("phdelayeta_hltdispho45_nosieie","Most Delayed Photon #eta",100,-5.f,5.f,"Most Delayed Photon #eta","Events","HLT_DisplacedPhoton45_noSieie_v","trigger");
+    fTrigPlots["phdelayeta_hltdispho45_nor9"] = PlotPhotons::MakeTrigTH1Fs("phdelayeta_hltdispho45_nor9","Most Delayed Photon #eta",100,-5.f,5.f,"Most Delayed Photon #eta","Events","HLT_DisplacedPhoton45_noR9_v","trigger");
+    fTrigPlots["phdelayeta_hltdispho45_nohoe"] = PlotPhotons::MakeTrigTH1Fs("phdelayeta_hltdispho45_nohoe","Most Delayed Photon #eta",100,-5.f,5.f,"Most Delayed Photon #eta","Events","HLT_DisplacedPhoton45_noHoE_v","trigger");
+    fTrigPlots["phdelayeta_hltdispho45_noet"] = PlotPhotons::MakeTrigTH1Fs("phdelayeta_hltdispho45_noet","Most Delayed Photon #eta",100,-5.f,5.f,"Most Delayed Photon #eta","Events","HLT_DisplacedPhoton45_noEt_v","trigger");
+    fTrigPlots["phdelayeta_hltdispho45_nol1match"] = PlotPhotons::MakeTrigTH1Fs("phdelayeta_hltdispho45_nol1match","Most Delayed Photon #eta",100,-5.f,5.f,"Most Delayed Photon #eta","Events","HLT_DisplacedPhoton45_noL1Match_v","trigger");
+
+    // phi
+    fTrigPlots["phdelayphi_hltdispho45"] = PlotPhotons::MakeTrigTH1Fs("phdelayphi_hltdispho45","Most Delayed Photon #phi",100,-3.2f,3.2f,"Most Delayed Photon #phi","Events","HLT_DisplacedPhoton45_v","trigger");
+    fTrigPlots["phdelayphi_hltdispho45_notkveto"] = PlotPhotons::MakeTrigTH1Fs("phdelayphi_hltdispho45_notkveto","Most Delayed Photon #phi",100,-3.2f,3.2f,"Most Delayed Photon #phi","Events","HLT_DisplacedPhoton45_noTrackVeto_v","trigger");
+    fTrigPlots["phdelayphi_hltdispho45_notime"] = PlotPhotons::MakeTrigTH1Fs("phdelayphi_hltdispho45_notime","Most Delayed Photon #phi",100,-3.2f,3.2f,"Most Delayed Photon #phi","Events","HLT_DisplacedPhoton45_noTime_v","trigger");
+    fTrigPlots["phdelayphi_hltdispho45_nosmaj"] = PlotPhotons::MakeTrigTH1Fs("phdelayphi_hltdispho45_nosmaj","Most Delayed Photon #phi",100,-3.2f,3.2f,"Most Delayed Photon #phi","Events","HLT_DisplacedPhoton45_noSmaj_v","trigger");
+    fTrigPlots["phdelayphi_hltdispho45_nosmin"] = PlotPhotons::MakeTrigTH1Fs("phdelayphi_hltdispho45_nosmin","Most Delayed Photon #phi",100,-3.2f,3.2f,"Most Delayed Photon #phi","Events","HLT_DisplacedPhoton45_noSmin_v","trigger");
+    fTrigPlots["phdelayphi_hltdispho45_nosieie"] = PlotPhotons::MakeTrigTH1Fs("phdelayphi_hltdispho45_nosieie","Most Delayed Photon #phi",100,-3.2f,3.2f,"Most Delayed Photon #phi","Events","HLT_DisplacedPhoton45_noSieie_v","trigger");
+    fTrigPlots["phdelayphi_hltdispho45_nor9"] = PlotPhotons::MakeTrigTH1Fs("phdelayphi_hltdispho45_nor9","Most Delayed Photon #phi",100,-3.2f,3.2f,"Most Delayed Photon #phi","Events","HLT_DisplacedPhoton45_noR9_v","trigger");
+    fTrigPlots["phdelayphi_hltdispho45_nohoe"] = PlotPhotons::MakeTrigTH1Fs("phdelayphi_hltdispho45_nohoe","Most Delayed Photon #phi",100,-3.2f,3.2f,"Most Delayed Photon #phi","Events","HLT_DisplacedPhoton45_noHoE_v","trigger");
+    fTrigPlots["phdelayphi_hltdispho45_noet"] = PlotPhotons::MakeTrigTH1Fs("phdelayphi_hltdispho45_noet","Most Delayed Photon #phi",100,-3.2f,3.2f,"Most Delayed Photon #phi","Events","HLT_DisplacedPhoton45_noEt_v","trigger");
+    fTrigPlots["phdelayphi_hltdispho45_nol1match"] = PlotPhotons::MakeTrigTH1Fs("phdelayphi_hltdispho45_nol1match","Most Delayed Photon #phi",100,-3.2f,3.2f,"Most Delayed Photon #phi","Events","HLT_DisplacedPhoton45_noL1Match_v","trigger");
+
+    // pt
+    fTrigPlots["phdelaypt_hltdispho45"] = PlotPhotons::MakeTrigTH1Fs("phdelaypt_hltdispho45","Most Delayed Photon p_{T}",100,0.f,2000.f,"Most Delayed Photon p_{T}","Events","HLT_DisplacedPhoton45_v","trigger");
+    fTrigPlots["phdelaypt_hltdispho45_notkveto"] = PlotPhotons::MakeTrigTH1Fs("phdelaypt_hltdispho45_notkveto","Most Delayed Photon p_{T}",100,0.f,2000.f,"Most Delayed Photon p_{T}","Events","HLT_DisplacedPhoton45_noTrackVeto_v","trigger");
+    fTrigPlots["phdelaypt_hltdispho45_notime"] = PlotPhotons::MakeTrigTH1Fs("phdelaypt_hltdispho45_notime","Most Delayed Photon p_{T}",100,0.f,2000.f,"Most Delayed Photon p_{T}","Events","HLT_DisplacedPhoton45_noTime_v","trigger");
+    fTrigPlots["phdelaypt_hltdispho45_nosmaj"] = PlotPhotons::MakeTrigTH1Fs("phdelaypt_hltdispho45_nosmaj","Most Delayed Photon p_{T}",100,0.f,2000.f,"Most Delayed Photon p_{T}","Events","HLT_DisplacedPhoton45_noSmaj_v","trigger");
+    fTrigPlots["phdelaypt_hltdispho45_nosmin"] = PlotPhotons::MakeTrigTH1Fs("phdelaypt_hltdispho45_nosmin","Most Delayed Photon p_{T}",100,0.f,2000.f,"Most Delayed Photon p_{T}","Events","HLT_DisplacedPhoton45_noSmin_v","trigger");
+    fTrigPlots["phdelaypt_hltdispho45_nosieie"] = PlotPhotons::MakeTrigTH1Fs("phdelaypt_hltdispho45_nosieie","Most Delayed Photon p_{T}",100,0.f,2000.f,"Most Delayed Photon p_{T}","Events","HLT_DisplacedPhoton45_noSieie_v","trigger");
+    fTrigPlots["phdelaypt_hltdispho45_nor9"] = PlotPhotons::MakeTrigTH1Fs("phdelaypt_hltdispho45_nor9","Most Delayed Photon p_{T}",100,0.f,2000.f,"Most Delayed Photon p_{T}","Events","HLT_DisplacedPhoton45_noR9_v","trigger");
+    fTrigPlots["phdelaypt_hltdispho45_nohoe"] = PlotPhotons::MakeTrigTH1Fs("phdelaypt_hltdispho45_nohoe","Most Delayed Photon p_{T}",100,0.f,2000.f,"Most Delayed Photon p_{T}","Events","HLT_DisplacedPhoton45_noHoE_v","trigger");
+    fTrigPlots["phdelaypt_hltdispho45_noet"] = PlotPhotons::MakeTrigTH1Fs("phdelaypt_hltdispho45_noet","Most Delayed Photon p_{T}",100,0.f,2000.f,"Most Delayed Photon p_{T}","Events","HLT_DisplacedPhoton45_noEt_v","trigger");
+    fTrigPlots["phdelaypt_hltdispho45_nol1match"] = PlotPhotons::MakeTrigTH1Fs("phdelaypt_hltdispho45_nol1match","Most Delayed Photon p_{T}",100,0.f,2000.f,"Most Delayed Photon p_{T}","Events","HLT_DisplacedPhoton45_noL1Match_v","trigger");
   }
 }
 
@@ -1094,7 +1267,7 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["phphi"] = PlotPhotons::MakeTH1F("phphi","Photons #phi (reco)",100,-3.2,3.2,"#phi","Photons","RecoPhotons");
   fPlots["pheta"] = PlotPhotons::MakeTH1F("pheta","Photons #eta (reco)",100,-5.0,5.0,"#eta","Photons","RecoPhotons");
   fPlots["phHoE"] = PlotPhotons::MakeTH1F("phHoE","Photons HE/EE (reco)",100,0.f,5.0,"HE/EE","Photons","RecoPhotons");
-  fPlots["phr9"] = PlotPhotons::MakeTH1F("phr9","Photons r9 (reco)",100,0.f,25.0,"HE/EE","Photons","RecoPhotons");
+  fPlots["phr9"] = PlotPhotons::MakeTH1F("phr9","Photons R9 (reco)",100,0.f,25.0,"R9","Photons","RecoPhotons");
   fPlots["phChgIso"] = PlotPhotons::MakeTH1F("phChgIso","Photons #rho-corrected Charged Hadron Isolation (reco)",100,0.f,1000.f,"#rho-corrected Charged Hadron Isolation","Photons","RecoPhotons");
   fPlots["phNeuIso"] = PlotPhotons::MakeTH1F("phNeuIso","Photons #rho-corrected Neutral Hadron Isolation (reco)",100,0.f,1000.f,"#rho-corrected Neutral Hadron Isolation","Photons","RecoPhotons");
   fPlots["phIso"] = PlotPhotons::MakeTH1F("phIso","Photons #rho-corrected Photon Isolation (reco)",100,0.f,1000.f,"#rho-corrected Photon Isolation","Photons","RecoPhotons");
@@ -1121,7 +1294,7 @@ void PlotPhotons::SetupRecoPhotons()
   // Leading photon info
   fPlots["ph1pt"] = PlotPhotons::MakeTH1F("ph1pt","Leading Photon p_{T} [GeV/c]",100,0.f,2500.f,"Leading Photon p_{T} [GeV/c]","Events","RecoPhotons");
   fPlots["ph1HoE"] = PlotPhotons::MakeTH1F("ph1HoE","Photons HE/EE (reco)",100,0.f,5.0,"HE/EE","Photons","RecoPhotons");
-  fPlots["ph1r9"] = PlotPhotons::MakeTH1F("ph1r9","Photons r9 (reco)",100,0.f,25.0,"HE/EE","Photons","RecoPhotons");
+  fPlots["ph1r9"] = PlotPhotons::MakeTH1F("ph1r9","Photons R9 (reco)",100,0.f,25.0,"R9","Photons","RecoPhotons");
   fPlots["ph1ChgIso"] = PlotPhotons::MakeTH1F("ph1ChgIso","Photons #rho-corrected Charged Hadron Isolation (reco)",100,0.f,1000.f,"#rho-corrected Charged Hadron Isolation","Photons","RecoPhotons");
   fPlots["ph1NeuIso"] = PlotPhotons::MakeTH1F("ph1NeuIso","Photons #rho-corrected Neutral Hadron Isolation (reco)",100,0.f,1000.f,"#rho-corrected Neutral Hadron Isolation","Photons","RecoPhotons");
   fPlots["ph1Iso"] = PlotPhotons::MakeTH1F("ph1Iso","Photons #rho-corrected Photon Isolation (reco)",100,0.f,1000.f,"#rho-corrected Photon Isolation","Photons","RecoPhotons");

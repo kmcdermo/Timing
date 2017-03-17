@@ -29,12 +29,12 @@ void runPhotonPlots()
   // applyphptcut, phptcut, applyphvidcut, phvid, applyrhecut, 
   // applyecalacceptcut, applyEBonly, applyEEonly
   
-  PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-ctau6000.root",true,false,false,
-			  false,false,
-			  false,false,"output/ctau6000",true,
+  PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-gmsb-ctau6000-HLT3.root",true,false,false,
+			  false,true,
+			  false,false,"output/MC/signal/GMSB/ctau6000",false,
 			  true,35.f,true,
 			  50.f,true,"loose",true,1.f,
-			  true,false,false);
+			  true,true,false);
 
   // which plots to do
   // first bool = generic plots

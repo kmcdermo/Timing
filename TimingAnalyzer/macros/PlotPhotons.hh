@@ -59,7 +59,8 @@ public :
 	      Bool_t applyevcut = false, Bool_t rhdump = false, TString outdir = "output", Bool_t savehists = false, 
 	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
 	      Bool_t applyphvidcut = false, TString phvid = "medium", Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
-	      Bool_t applyecalacceptcut = false, Bool_t applyEBonly = false, Bool_t applyEEonly = false);
+	      Bool_t applyecalacceptcut = false, Bool_t applyEBonly = false, Bool_t applyEEonly = false,
+	      Bool_t applyphotonmcmatching = false);
   ~PlotPhotons();
   void InitTree();
   void DoPlots(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t trigger);
@@ -73,6 +74,7 @@ public :
   void SetupMET();
   void SetupJets();
   void SetupRecoPhotons();
+  void SetupMostDelayed();
   void SetupAnalysis();
   void SetupTrigger();
   TEfficiency * MakeTEff(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
@@ -83,6 +85,7 @@ public :
   void EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t trigger);
   void RecHitDumper();
   void CountEvents(Bool_t & event_b);
+  Int_t GetLeadingPhoton();
   Int_t GetMostDelayedPhoton(const Bool_t applyptcut, const Bool_t applyvidcut);
   void FillEffs();
   void FillGenInfo();
@@ -92,6 +95,7 @@ public :
   void FillObjectCounts();
   void FillMET();
   void FillJets();
+  void FillMostDelayed();
   void FillRecoPhotons();
   void FillAnalysis();
   void FillTrigger();
@@ -141,6 +145,7 @@ private :
   const Bool_t  fApplyECALAcceptCut;
   const Bool_t  fApplyEBOnly;
   const Bool_t  fApplyEEOnly;
+  const Bool_t  fApplyPhotonMCMatching;
 
   // Output vars
   TString fOutDir;
