@@ -15,30 +15,47 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runPhotonPlots_hvds(TString VID, Bool_t isEB, Bool_t isEE) 
+void runPhotonPlots_hvds(TString VID1, TString ctau, Bool_t isEB, Bool_t isEE) 
 {
   setupcpp11(); 
 
   gROOT->LoadMacro("PlotPhotons.cc+g");
 
   // config is:
-  // filename, isGMSB, isHVDS, isBkg, applyevcut, rhdump, outdir, savehists,
-  // applyjetptcut, jetptcut, applyphptcut, phptcut,
-  // applyphvidcut, phvid, applyrhecut, 
+  // filename, isGMSB, isHVDS, isBkg
+  // isHLT2, isHLT3
+  // applyevcut, outdir, savehists
+  // applyjetptcut, jetptcut, applynjetscut, njetscut
+  // applyph1ptcut, ph1ptcut, applyph1vidcut, ph1vid
+  // applyphanyptcut, phanyptcut, applyphanyvidcut, phanyvid
+  // applyrhecut, rhEcut
   // applyecalacceptcut, applyEBonly, applyEEonly
+  // applyphmcmatching
 
   // apply analysis cuts to individual plots?
   bool apply = true;
 
-  Float_t phpt = 50.f;
+  Float_t ph1pt = 50.f;
+  Float_t phany = 10.f;
 
-  PlotPhotons photonPlots("input/MC/signal/HVDS/photondump-hvds.root",
-			  false,true,false,false,false,"output/MC/signal/HVDS/photondump",false,
-			  apply,35.f,apply,phpt,apply,VID.Data(),true,1.f,true,isEB,isEE);
+  TString VIDany = (VID1.Contains("none",TString::kExact)) ? "none" : "loose";
 
-  // which plots to do
-  // first bool = generic plots
-  // second bool = efficiency
-  // third bool = analysis plots
-  photonPlots.DoPlots(true,false,false);
+  PlotPhotons photonPlots(Form("input/MC/signal/HVDS/photondump-hvds-ctau%s.root",ctau.Data()),
+			  false,true,false,
+			  false,false,
+			  false,Form("output/MC/signal/HVDS/photondump/ctau%s",ctau.Data()),false,
+			  apply,35.f,apply,3,
+			  apply,ph1pt,apply,VID1.Data(),
+			  apply,phanypt,apply,VIDany.Data(),
+			  true,1.f,
+			  true,isEB,isEE,
+			  true);
+
+  // which plots to do:
+  // geninfo, vtxs, met, jets
+  // photons, ph1, phdelay
+  // trigger, analysis
+  photonPlots.DoPlots(false,false,false,false,
+ 		      false,true,true,
+		      false,false);
 }

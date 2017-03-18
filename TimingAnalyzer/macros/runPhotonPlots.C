@@ -24,22 +24,29 @@ void runPhotonPlots()
   // config is:
   // filename, isGMSB, isHVDS, isBkg
   // isHLT2, isHLT3
-  // applyevcut, rhdump, outdir, savehists,
-  // applyjetptcut, jetptcut, 
-  // applyphptcut, phptcut, applyphvidcut, phvid, applyrhecut, 
+  // applyevcut, outdir, savehists
+  // applyjetptcut, jetptcut, applynjetscut, njetscut
+  // applyph1ptcut, ph1ptcut, applyph1vidcut, ph1vid
+  // applyphanyptcut, phanyptcut, applyphanyvidcut, phanyvid
+  // applyrhecut, rhEcut
   // applyecalacceptcut, applyEBonly, applyEEonly
-  
+  // applyphmcmatching
+
   PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-gmsb-ctau6000-HLT3.root",true,false,false,
 			  false,true,
-			  false,false,"output/MC/signal/GMSB/ctau6000",false,
-			  true,35.f,true,
-			  50.f,true,"loose",true,1.f,
-			  true,false,false);
+			  false,"output/MC/signal/GMSB/ctau6000",false,
+			  true,35.f,true,3,
+			  true,50.f,true,"medium",
+			  true,10.f,true,"loose",
+			  true,1.f,
+			  true,false,false,
+			  false);
 
-  // which plots to do
-  // first bool = generic plots
-  // second bool = efficiency
-  // third bool = analysis plots
-  // fourth bool = trigger plots
-  photonPlots.DoPlots(true,false,false,true);
+  // which plots to do:
+  // geninfo, vtxs, met, jets
+  // photons, ph1, phdelay
+  // trigger, analysis
+  photonPlots.DoPlots(false,false,false,false,
+ 		      false,false,false,
+		      false,false);
 }

@@ -5,7 +5,6 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
-#include "TEfficiency.h"
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TLorentzVector.h"
@@ -21,16 +20,12 @@ static const Float_t sol = 2.99792458e8; // cm/s
 inline Float_t rad2 (const Float_t x, const Float_t y){return x*x + y*y;}
 inline Float_t rad2 (const Float_t x, const Float_t y, const Float_t z){return x*x + y*y + z*z;}
 inline Float_t gamma(const Float_t p, const Float_t m){return std::sqrt(1.f+std::pow(p/m,2));}
-inline Float_t beta (const Float_t p, const Float_t m){return std::sqrt(1.f/(1.f+std::pow(m/p,2)));}
 inline Float_t bg   (const Float_t p, const Float_t m){return std::abs(p/m);}
 inline void    semiR(const Float_t insmaj, const Float_t insmin, Float_t & smaj, Float_t & smin)
 {
   smaj = 1.f/std::sqrt(insmin);
   smin = 1.f/std::sqrt(insmaj);
 }
-
-typedef std::map<TString,TEfficiency*> TEffMap;
-typedef TEffMap::iterator              TEffMapIter;
 
 typedef std::pair<TH1F*,TH1F*>     TH1Pair;
 typedef std::map<TString, TH1Pair> TH1PairMap;
@@ -56,53 +51,55 @@ class PlotPhotons
 public :
   PlotPhotons(TString filename, Bool_t isGMSB = false, Bool_t isHVDS = false, Bool_t isBkg = false, 
 	      Bool_t isHLT2 = false, Bool_t isHLT3 = false,
-	      Bool_t applyevcut = false, Bool_t rhdump = false, TString outdir = "output", Bool_t savehists = false, 
-	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t applyphptcut = false, Float_t phptcut = 100.f,
-	      Bool_t applyphvidcut = false, TString phvid = "medium", Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
+	      Bool_t applyevcut = false, TString outdir = "output", Bool_t savehists = false, 
+	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t appynjetscut = false, Int_t njetscut = 3,
+	      Bool_t applyph1ptcut = false, Float_t ph1ptcut = 50.f, Bool_t applyph1vidcut = false, TString ph1vid = "medium", 
+	      Bool_t applyphanyptcut = false, Float_t phanyptcut = 10.f, Bool_t applyphvidcut = false, TString phvid = "loose", 
+	      Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
 	      Bool_t applyecalacceptcut = false, Bool_t applyEBonly = false, Bool_t applyEEonly = false,
 	      Bool_t applyphotonmcmatching = false);
   ~PlotPhotons();
   void InitTree();
-  void DoPlots(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t trigger);
-  void SetupPlots(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t trigger);
-  void SetupEffs();
+  void DoPlots(Bool_t geninfo = false, Bool_t vtxs = false, Bool_t met = false, Bool_t jets = false, 
+	       Bool_t photons = false, Bool_t ph1 = false, Bool_t phdelay = false, Bool_t trigger = false, Bool_t analysis = false);
+  void SetupPlots(Bool_t geninfo, Bool_t vtxs, Bool_t met, Bool_t jets, Bool_t photons, Bool_t ph1, Bool_t phdelay, Bool_t trigger, Bool_t analysis);
   void SetupGenInfo();
   void SetupGMSB();
-  void SetupHVDS();
   void SetupGenJets();
-  void SetupObjectCounts();
+  void SetupHVDS();
+  void SetupVertices();
   void SetupMET();
   void SetupJets();
   void SetupRecoPhotons();
+  void SetupLeading();
   void SetupMostDelayed();
-  void SetupAnalysis();
   void SetupTrigger();
-  TEfficiency * MakeTEff(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
+  void SetupAnalysis();
   TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
   std::pair<TH1F*,TH1F*> MakeTrigTH1Fs(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString path, TString subdir);
   void MakeEffPlot(TH1F *& eff, TString hname, TH1F *& denom, TH1F *& numer);
   TH2F * MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString subdir);
-  void EventLoop(Bool_t generic, Bool_t eff, Bool_t analysis, Bool_t trigger);
-  void RecHitDumper();
-  void CountEvents(Bool_t & event_b);
+  void EventLoop(Bool_t geninfo, Bool_t vtxs, Bool_t met, Bool_t jets, Bool_t photons, Bool_t ph1, Bool_t phdelay, Bool_t trigger, Bool_t analysis);
+  Bool_t CountEvents();
   Int_t GetLeadingPhoton();
-  Int_t GetMostDelayedPhoton(const Bool_t applyphptcut, const Bool_t applyphvidcut);
-  void FillEffs();
+  Int_t GetGoodPhotons(std::vector<Int_t> & goodphotons);
+  Int_t GetMostDelayedPhoton();
+  Int_t GetNJetsAbovePt();
   void FillGenInfo();
   void FillGMSB();
-  void FillHVDS();
   void FillGenJets();
-  void FillObjectCounts();
+  void FillHVDS();
+  void FillVertices();
   void FillMET();
   void FillJets();
-  void FillMostDelayed();
   void FillRecoPhotons();
-  void FillAnalysis();
+  void FillLeading();
+  void FillMostDelayed();
   void FillTrigger();
   void FillTriggerPlot(TH1Pair & th1pair, const Bool_t passed, const Float_t value);
+  void FillAnalysis(const Bool_t passed);
   void DumpEventCounts();
   void MakeSubDirs();
-  void OutputTEffs();
   void OutputTrigTH1Fs();
   void OutputTH1Fs();
   void OutputTH2Fs();
@@ -120,32 +117,34 @@ private :
 
   // In routine vars
   UInt_t  fNEvCheck;
-  TEffMap fEffs;
   TH1Map  fPlots;
   TH2Map  fPlots2D;
   TH1PairMap fTrigPlots;
   TStrIntMap fEfficiency;
   Float_t fCTau;
-  std::ofstream fSeedDump;
-  std::ofstream fAllRHDump;
 
   // Config
-  const Bool_t  fRHDump;
   const Bool_t  fApplyEvCut;
   const Bool_t  fSaveHists;
   const Bool_t  fApplyJetPtCut;
   const Float_t fJetPtCut;
-  const Bool_t  fApplyPhPtCut;
-  const Float_t fPhPtCut;
-  const Bool_t  fApplyPhVIDCut;
-  const TString fPhVID;
-  TStrIntMap    fPhVIDMap;
+  const Bool_t  fApplyNJetsCut;
+  const Int_t   fNJetsCut;
+  const Bool_t  fApplyPh1PtCut;
+  const Float_t fPh1PtCut;
+  const Bool_t  fApplyPh1VIDCut;
+  const TString fPh1VID;
+  const Bool_t  fApplyPhAnyPtCut;
+  const Float_t fPhAnyPtCut;
+  const Bool_t  fApplyPhAnyVIDCut;
+  const TString fPhAnyVID;
   const Bool_t  fApplyrhECut;
   const Float_t frhECut;
   const Bool_t  fApplyECALAcceptCut;
   const Bool_t  fApplyEBOnly;
   const Bool_t  fApplyEEOnly;
   const Bool_t  fApplyPhotonMCMatching;
+  TStrIntMap    fPhVIDMap;
 
   // Output vars
   TString fOutDir;

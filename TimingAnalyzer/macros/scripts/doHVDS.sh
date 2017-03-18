@@ -3,11 +3,17 @@
 # isEB
 for vid in none loose
 do
-    root -l -b -q "runPhotonPlots_hvds.C("\"${vid}\",1,0")"
+    for ctau in 100 1000
+    do
+	root -l -b -q "runPhotonPlots_hvds.C("\"${vid}\",\"${ctau}\",1,0")"
+    done
 done
 
 #isEE
 for vid in none loose
 do
-    root -l -b -q "runPhotonPlots_hvds.C("\"${vid}\",0,1")"
+    for ctau in 100 1000
+    do
+	root -l -b -q "runPhotonPlots_hvds.C("\"${vid}\",\"${ctau}\",0,1")"
+    done
 done

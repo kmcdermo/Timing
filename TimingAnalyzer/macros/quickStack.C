@@ -18,10 +18,10 @@ void makeDir(const TString &);
 void getQCD(std::vector<TH1F*>&, std::vector<TString>&, const TString &);
 void getGJets(std::vector<TH1F*>&, std::vector<TString>&, const TString &);
 void getGMSB(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
-void getHVDS(std::vector<TH1F*>&, std::vector<TString>&, const TString &);
-void drawAll(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
-void drawStack(std::vector<THStack*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
-void drawAllSeparate(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void getHVDS(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void drawAll(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void drawStack(std::vector<THStack*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void drawAllSeparate(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
 void delTH1FVec(std::vector<TH1F*>&);
 void delTHStackVec(std::vector<THStack*>&);
 
@@ -32,12 +32,13 @@ void quickStack()
   SetTDRStyle(tdrStyle);
   gROOT->ForceStyle();
 
-  std::vector<TString> histnames = {"ph1smaj","ph1smin","ph1sieie","ph1sipip","ph1sieip","ph1alpha","ph1smin_ov_ph1smaj","ph1suisseX","ph1r9"};
+  std::vector<TString> histnames = {"phmostdelayedpt","phmostdelayedHoE","phmostdelayedr9","phmostdelayedsieie","phmostdelayedsmaj","phmostdelayedsmin","phmostdelayedseedtime"};
+  //  std::vector<TString> histnames = {"ph1smaj","ph1smin","ph1sieie","ph1sipip","ph1sieip","ph1alpha","ph1smin_ov_ph1smaj","ph1suisseX","ph1r9"};
   //std::vector<TString> histnames = {"ph1r9","ph1suisse"};
   // std::vector<TString> histnames = {"ph1pt_nm1","ph1VID_nm1","ph1seedtime","jet1pt"};
 
   // generic settings
-  TString cuts = "cuts_jetpt35.0_phpt50.0_phVIDnone_rhE1.0_EBOnly";
+  TString cuts = "cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_EBOnly";
   TString outdir = "output/stacks/photondump/"+cuts;
   makeDir(outdir);
 
@@ -71,26 +72,27 @@ void quickStack()
   }
 
   // GMSB
-  std::vector<TH1F*> ctau100TH1Fs(histnames.size()), ctau2000TH1Fs(histnames.size()), ctau6000TH1Fs(histnames.size());
-  getGMSB(ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,histnames,cuts);
+  std::vector<TH1F*> gmsb100TH1Fs(histnames.size()), gmsb2000TH1Fs(histnames.size()), gmsb6000TH1Fs(histnames.size());
+  getGMSB(gmsb100TH1Fs,gmsb2000TH1Fs,gmsb6000TH1Fs,histnames,cuts);
 
   // HVDS
-  std::vector<TH1F*> hvdsTH1Fs(histnames.size());
-  getHVDS(hvdsTH1Fs,histnames,cuts);
+  std::vector<TH1F*> hvds100TH1Fs(histnames.size()), hvds1000TH1Fs(histnames.size());
+  getHVDS(hvds100TH1Fs,hvds1000TH1Fs,histnames,cuts);
 
   // Draw everything together
-  drawAll(bkgTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,hvdsTH1Fs,histnames,outdir);
-  drawStack(bkgStacks,qcdTH1Fs,gjetsTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,hvdsTH1Fs,histnames,outdir);
-  drawAllSeparate(qcdTH1Fs,gjetsTH1Fs,ctau100TH1Fs,ctau2000TH1Fs,ctau6000TH1Fs,hvdsTH1Fs,histnames,outdir);
+  drawAll(bkgTH1Fs,gmsb100TH1Fs,gmsb2000TH1Fs,gmsb6000TH1Fs,hvds100TH1Fs,hvds1000TH1Fs,histnames,outdir);
+  drawStack(bkgStacks,qcdTH1Fs,gjetsTH1Fs,gmsb100TH1Fs,gmsb2000TH1Fs,gmsb6000TH1Fs,hvds100TH1Fs,hvds1000TH1Fs,histnames,outdir);
+  drawAllSeparate(qcdTH1Fs,gjetsTH1Fs,gmsb100TH1Fs,gmsb2000TH1Fs,gmsb6000TH1Fs,hvds100TH1Fs,hvds1000TH1Fs,histnames,outdir);
 
   delTH1FVec(qcdTH1Fs);
   delTH1FVec(gjetsTH1Fs);
   delTH1FVec(bkgTH1Fs);
   delTHStackVec(bkgStacks);
-  delTH1FVec(ctau100TH1Fs);
-  delTH1FVec(ctau2000TH1Fs);
-  delTH1FVec(ctau6000TH1Fs);
-  delTH1FVec(hvdsTH1Fs);
+  delTH1FVec(gmsb100TH1Fs);
+  delTH1FVec(gmsb2000TH1Fs);
+  delTH1FVec(gmsb6000TH1Fs);
+  delTH1FVec(hvds100TH1Fs);
+  delTH1FVec(hvds1000TH1Fs);
 }
 
 void getQCD(std::vector<TH1F*>& qcdTH1Fs, std::vector<TString>& histnames, const TString & cuts)
@@ -173,7 +175,7 @@ void getGJets(std::vector<TH1F*>& gjetsTH1Fs, std::vector<TString>& histnames, c
   }
 }
 
-void getGMSB(std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TString>& histnames, const TString & cuts)
+void getGMSB(std::vector<TH1F*>& gmsb100TH1Fs, std::vector<TH1F*>& gmsb2000TH1Fs, std::vector<TH1F*>& gmsb6000TH1Fs, std::vector<TString>& histnames, const TString & cuts)
 {
   // GMSB
   TFile * file100  = TFile::Open(Form("output/MC/signal/GMSB/photondump/ctau100/%s/plots.root",cuts.Data()));
@@ -182,20 +184,20 @@ void getGMSB(std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
   {
-    ctau100TH1Fs[ihist] = (TH1F*)file100->Get(histnames[ihist].Data());     
-    ctau100TH1Fs[ihist]->SetDirectory(0);
-    ctau100TH1Fs[ihist]->Scale(1.0/ctau100TH1Fs[ihist]->Integral());
-    ctau100TH1Fs[ihist]->SetLineColor(kRed+1);
+    gmsb100TH1Fs[ihist] = (TH1F*)file100->Get(histnames[ihist].Data());     
+    gmsb100TH1Fs[ihist]->SetDirectory(0);
+    gmsb100TH1Fs[ihist]->Scale(1.0/gmsb100TH1Fs[ihist]->Integral());
+    gmsb100TH1Fs[ihist]->SetLineColor(kRed+1);
 
-    ctau2000TH1Fs[ihist] = (TH1F*)file2000->Get(histnames[ihist].Data());     
-    ctau2000TH1Fs[ihist]->SetDirectory(0);
-    ctau2000TH1Fs[ihist]->Scale(1.0/ctau2000TH1Fs[ihist]->Integral());
-    ctau2000TH1Fs[ihist]->SetLineColor(kViolet-1);
+    gmsb2000TH1Fs[ihist] = (TH1F*)file2000->Get(histnames[ihist].Data());     
+    gmsb2000TH1Fs[ihist]->SetDirectory(0);
+    gmsb2000TH1Fs[ihist]->Scale(1.0/gmsb2000TH1Fs[ihist]->Integral());
+    gmsb2000TH1Fs[ihist]->SetLineColor(kViolet-1);
 
-    ctau6000TH1Fs[ihist] = (TH1F*)file6000->Get(histnames[ihist].Data());     
-    ctau6000TH1Fs[ihist]->SetDirectory(0);
-    ctau6000TH1Fs[ihist]->Scale(1.0/ctau6000TH1Fs[ihist]->Integral());
-    ctau6000TH1Fs[ihist]->SetLineColor(kBlue+1);
+    gmsb6000TH1Fs[ihist] = (TH1F*)file6000->Get(histnames[ihist].Data());     
+    gmsb6000TH1Fs[ihist]->SetDirectory(0);
+    gmsb6000TH1Fs[ihist]->Scale(1.0/gmsb6000TH1Fs[ihist]->Integral());
+    gmsb6000TH1Fs[ihist]->SetLineColor(kBlue+1);
   }
 
   delete file100;
@@ -203,23 +205,30 @@ void getGMSB(std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs
   delete file6000;
 }
 
-void getHVDS(std::vector<TH1F*>& hvdsTH1Fs, std::vector<TString>& histnames, const TString & cuts)
+void getHVDS(std::vector<TH1F*>& hvds100TH1Fs, std::vector<TH1F*>& hvds1000TH1Fs, std::vector<TString>& histnames, const TString & cuts)
 {
   // HVDS
-  TFile * filehvds = TFile::Open(Form("output/MC/signal/HVDS/photondump/%s/plots.root",cuts.Data()));
+  TFile * file100  = TFile::Open(Form("output/MC/signal/HVDS/photondump/ctau100/%s/plots.root",cuts.Data()));
+  TFile * file1000 = TFile::Open(Form("output/MC/signal/HVDS/photondump/ctau1000/%s/plots.root",cuts.Data()));
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
   {
-    hvdsTH1Fs[ihist] = (TH1F*)filehvds->Get(histnames[ihist].Data());     
-    hvdsTH1Fs[ihist]->SetDirectory(0);
-    hvdsTH1Fs[ihist]->Scale(1.0/hvdsTH1Fs[ihist]->Integral());
-    hvdsTH1Fs[ihist]->SetLineColor(kAzure+10);
+    hvds100TH1Fs[ihist] = (TH1F*)file100->Get(histnames[ihist].Data());     
+    hvds100TH1Fs[ihist]->SetDirectory(0);
+    hvds100TH1Fs[ihist]->Scale(1.0/hvds100TH1Fs[ihist]->Integral());
+    hvds100TH1Fs[ihist]->SetLineColor(kPink-4);
+
+    hvds1000TH1Fs[ihist] = (TH1F*)file1000->Get(histnames[ihist].Data());     
+    hvds1000TH1Fs[ihist]->SetDirectory(0);
+    hvds1000TH1Fs[ihist]->Scale(1.0/hvds1000TH1Fs[ihist]->Integral());
+    hvds1000TH1Fs[ihist]->SetLineColor(kAzure+6);
   }
 
-  delete filehvds;
+  delete file100;
+  delete file1000;
 }
 
-void drawAll(std::vector<TH1F*>& bkgTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TH1F*>& hvdsTH1Fs, std::vector<TString>& histnames, const TString & outdir)
+void drawAll(std::vector<TH1F*>& bkgTH1Fs, std::vector<TH1F*>& gmsb100TH1Fs, std::vector<TH1F*>& gmsb2000TH1Fs, std::vector<TH1F*>& gmsb6000TH1Fs, std::vector<TH1F*>& hvds100TH1Fs, std::vector<TH1F*>& hvds1000TH1Fs, std::vector<TString>& histnames, const TString & outdir)
 {
   // Draw it all
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -229,17 +238,19 @@ void drawAll(std::vector<TH1F*>& bkgTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std
     canv->SetLogy();
     bkgTH1Fs     [ihist]->GetYaxis()->SetRangeUser(5e-6,5e1);
     bkgTH1Fs     [ihist]->Draw("HIST");
-    ctau100TH1Fs [ihist]->Draw("HIST same");
-    ctau2000TH1Fs[ihist]->Draw("HIST same");
-    ctau6000TH1Fs[ihist]->Draw("HIST same");
-    hvdsTH1Fs    [ihist]->Draw("HIST same");
+    gmsb100TH1Fs [ihist]->Draw("HIST same");
+    gmsb2000TH1Fs[ihist]->Draw("HIST same");
+    gmsb6000TH1Fs[ihist]->Draw("HIST same");
+    hvds100TH1Fs [ihist]->Draw("HIST same");
+    hvds1000TH1Fs[ihist]->Draw("HIST same");
     
     TLegend * leg = new TLegend(0.6,0.7,0.8,0.9);
     leg->AddEntry(bkgTH1Fs     [ihist],"Background","f");
-    leg->AddEntry(ctau100TH1Fs [ihist],"c#tau = 36.5 mm" ,"l");
-    leg->AddEntry(ctau2000TH1Fs[ihist],"c#tau = 730.5 mm","l");
-    leg->AddEntry(ctau6000TH1Fs[ihist],"c#tau = 2192 mm","l");
-    leg->AddEntry(hvdsTH1Fs    [ihist],"HVDS","l");
+    leg->AddEntry(gmsb100TH1Fs [ihist],"GMSB c#tau = 36.5 mm" ,"l");
+    leg->AddEntry(gmsb2000TH1Fs[ihist],"GMSB c#tau = 730.5 mm","l");
+    leg->AddEntry(gmsb6000TH1Fs[ihist],"GMSB c#tau = 2192 mm","l");
+    leg->AddEntry(hvds100TH1Fs [ihist],"HVDS c#tau = 100 mm","l");
+    leg->AddEntry(hvds1000TH1Fs[ihist],"HVDS c#tau = 1000 mm","l");
     leg->Draw("same");
     
     CMSLumi(canv,"Simulation");
@@ -250,7 +261,7 @@ void drawAll(std::vector<TH1F*>& bkgTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std
   }
 }
 
-void drawStack(std::vector<THStack*>& bkgStacks, std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TH1F*>& hvdsTH1Fs, std::vector<TString>& histnames, const TString & outdir)
+void drawStack(std::vector<THStack*>& bkgStacks, std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1Fs, std::vector<TH1F*>& gmsb100TH1Fs, std::vector<TH1F*>& gmsb2000TH1Fs, std::vector<TH1F*>& gmsb6000TH1Fs, std::vector<TH1F*>& hvds100TH1Fs, std::vector<TH1F*>& hvds1000TH1Fs, std::vector<TString>& histnames, const TString & outdir)
 {
   // Draw it all
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -258,22 +269,24 @@ void drawStack(std::vector<THStack*>& bkgStacks, std::vector<TH1F*>& qcdTH1Fs, s
     TCanvas * canv = new TCanvas("canv","canv");
     canv->cd();
     canv->SetLogy();
-    ctau100TH1Fs [ihist]->GetYaxis()->SetRangeUser(5e-6,5e1);
-    ctau100TH1Fs [ihist]->Draw("HIST");    
+    gmsb100TH1Fs [ihist]->GetYaxis()->SetRangeUser(5e-6,5e1);
+    gmsb100TH1Fs [ihist]->Draw("HIST");    
     bkgStacks    [ihist]->Draw("HIST same");
-    ctau100TH1Fs [ihist]->Draw("HIST same");    
-    ctau2000TH1Fs[ihist]->Draw("HIST same");
-    ctau6000TH1Fs[ihist]->Draw("HIST same");
-    hvdsTH1Fs    [ihist]->Draw("HIST same");
+    gmsb100TH1Fs [ihist]->Draw("HIST same");    
+    gmsb2000TH1Fs[ihist]->Draw("HIST same");
+    gmsb6000TH1Fs[ihist]->Draw("HIST same");
+    hvds100TH1Fs [ihist]->Draw("HIST same");
+    hvds1000TH1Fs[ihist]->Draw("HIST same");
     canv->RedrawAxis("same");
 
     TLegend * leg = new TLegend(0.6,0.7,0.8,0.9);
     leg->AddEntry(qcdTH1Fs     [ihist],"QCD","f");
     leg->AddEntry(gjetsTH1Fs   [ihist],"#gamma+jets","f");
-    leg->AddEntry(ctau100TH1Fs [ihist],"c#tau = 36.5 mm" ,"l");
-    leg->AddEntry(ctau2000TH1Fs[ihist],"c#tau = 730.5 mm","l");
-    leg->AddEntry(ctau6000TH1Fs[ihist],"c#tau = 2192 mm","l");
-    leg->AddEntry(hvdsTH1Fs    [ihist],"HVDS","l");
+    leg->AddEntry(gmsb100TH1Fs [ihist],"GMSB c#tau = 36.5 mm" ,"l");
+    leg->AddEntry(gmsb2000TH1Fs[ihist],"GMSB c#tau = 730.5 mm","l");
+    leg->AddEntry(gmsb6000TH1Fs[ihist],"GMSB c#tau = 2192 mm","l");
+    leg->AddEntry(hvds100TH1Fs [ihist],"HVDS c#tau = 100 mm","l");
+    leg->AddEntry(hvds1000TH1Fs[ihist],"HVDS c#tau = 1000 mm","l");
     leg->Draw("same");
     
     CMSLumi(canv,"Simulation");
@@ -284,7 +297,7 @@ void drawStack(std::vector<THStack*>& bkgStacks, std::vector<TH1F*>& qcdTH1Fs, s
   }
 }
 
-void drawAllSeparate(std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1Fs, std::vector<TH1F*>& ctau100TH1Fs, std::vector<TH1F*>& ctau2000TH1Fs, std::vector<TH1F*>& ctau6000TH1Fs, std::vector<TH1F*>& hvdsTH1Fs, std::vector<TString>& histnames, const TString & outdir)
+void drawAllSeparate(std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1Fs, std::vector<TH1F*>& gmsb100TH1Fs, std::vector<TH1F*>& gmsb2000TH1Fs, std::vector<TH1F*>& gmsb6000TH1Fs, std::vector<TH1F*>& hvds100TH1Fs, std::vector<TH1F*>& hvds1000TH1Fs, std::vector<TString>& histnames, const TString & outdir)
 {
   // Draw it all
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -302,18 +315,20 @@ void drawAllSeparate(std::vector<TH1F*>& qcdTH1Fs, std::vector<TH1F*>& gjetsTH1F
     //    gjetsTH1Fs   [ihist]->SetFillColorAlpha(gjetsTH1Fs[ihist]->GetFillColor(),0.5);
     gjetsTH1Fs   [ihist]->SetFillStyle(3004);
     gjetsTH1Fs   [ihist]->Draw("HIST same");
-    ctau100TH1Fs [ihist]->Draw("HIST same");
-    ctau2000TH1Fs[ihist]->Draw("HIST same");
-    ctau6000TH1Fs[ihist]->Draw("HIST same");
-    hvdsTH1Fs    [ihist]->Draw("HIST same");
+    gmsb100TH1Fs [ihist]->Draw("HIST same");
+    gmsb2000TH1Fs[ihist]->Draw("HIST same");
+    gmsb6000TH1Fs[ihist]->Draw("HIST same");
+    hvds100TH1Fs [ihist]->Draw("HIST same");
+    hvds1000TH1Fs[ihist]->Draw("HIST same");
     
     TLegend * leg = new TLegend(0.6,0.7,0.8,0.9);
     leg->AddEntry(qcdTH1Fs     [ihist],"QCD","f");
     leg->AddEntry(gjetsTH1Fs   [ihist],"#gamma+jets","f");
-    leg->AddEntry(ctau100TH1Fs [ihist],"c#tau = 36.5 mm" ,"l");
-    leg->AddEntry(ctau2000TH1Fs[ihist],"c#tau = 730.5 mm","l");
-    leg->AddEntry(ctau6000TH1Fs[ihist],"c#tau = 2192 mm","l");
-    leg->AddEntry(hvdsTH1Fs    [ihist],"HVDS","l");
+    leg->AddEntry(gmsb100TH1Fs [ihist],"GMSB c#tau = 36.5 mm" ,"l");
+    leg->AddEntry(gmsb2000TH1Fs[ihist],"GMSB c#tau = 730.5 mm","l");
+    leg->AddEntry(gmsb6000TH1Fs[ihist],"GMSB c#tau = 2192 mm","l");
+    leg->AddEntry(hvds100TH1Fs [ihist],"HVDS c#tau = 100 mm","l");
+    leg->AddEntry(hvds1000TH1Fs[ihist],"HVDS c#tau = 1000 mm","l");
     leg->Draw("same");
     
     CMSLumi(canv,"Simulation");
