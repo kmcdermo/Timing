@@ -183,6 +183,8 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
        if (i == 16 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_notkveto  = true; 
        if (i == 17 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho80           = true; 
        if (i == 18 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho100          = true;
+       if (i == 19 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdoublepho42_25_m15 = true;
+       if (i == 20 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltpho90_ht600        = true;
      } // end loop over trigger names
     } // end check over HLT2
     else if (isHLT3)
@@ -595,7 +597,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     t1pfMETcalophi   = t1pfMET.phi();
     t1pfMETcalosumEt = t1pfMET.sumEt();
 
-    if (isGMSB)
+    if (isGMSB || isHVDS)
     {
       // GEN MET 
       t1pfMETgenMETpt    = t1pfMET.genMET()->pt();
@@ -1150,6 +1152,8 @@ void PhotonDump::InitializeTriggerBranches()
     hltdispho60_notkveto  = false; 
     hltdispho80           = false; 
     hltdispho100          = false;
+    hltdoublepho42_25_m15 = false;
+    hltpho90_ht600        = false;
   }
   else if (isHLT3)
   {
@@ -1278,7 +1282,7 @@ void PhotonDump::InitializeMETBranches()
   t1pfMETuncorpt = -9999.f; t1pfMETuncorphi = -9999.f; t1pfMETuncorsumEt = -9999.f;
   t1pfMETcalopt  = -9999.f; t1pfMETcalophi  = -9999.f; t1pfMETcalosumEt  = -9999.f;
  
-  if (isGMSB)
+  if (isGMSB || isHVDS)
   {
     t1pfMETgenMETpt = -9999.f; t1pfMETgenMETphi = -9999.f; t1pfMETgenMETsumEt = -9999.f;
   }
@@ -1503,6 +1507,8 @@ void PhotonDump::beginJob()
     tree->Branch("hltdispho60_notkveto" , &hltdispho60_notkveto , "hltdispho60_notkveto/O");
     tree->Branch("hltdispho80"          , &hltdispho80          , "hltdispho80/O");
     tree->Branch("hltdispho100"         , &hltdispho100         , "hltdispho100/O");
+    tree->Branch("hltdoublepho42_25_m15", &hltdoublepho42_25_m15, "hltdoublepho42_25_m15/O");
+    tree->Branch("hltpho90_ht600"       , &hltpho90_ht600       , "hltpho90_ht600/O");
   }
   else if (isHLT3)
   {
@@ -1635,7 +1641,7 @@ void PhotonDump::beginJob()
   tree->Branch("t1pfMETcalophi"       , &t1pfMETcalophi       , "t1pfMETcalophi/F");
   tree->Branch("t1pfMETcalosumEt"     , &t1pfMETcalosumEt     , "t1pfMETcalosumEt/F");
   
-  if (isGMSB)
+  if (isGMSB || isHVDS)
   {
     tree->Branch("t1pfMETgenMETpt"      , &t1pfMETgenMETpt      , "t1pfMETgenMETpt/F");
     tree->Branch("t1pfMETgenMETphi"     , &t1pfMETgenMETphi     , "t1pfMETgenMETphi/F");
@@ -1723,6 +1729,8 @@ void PhotonDump::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
     triggerNames.push_back("HLT_DisplacedPhoton60_noTrackVeto_v");              // i = 16
     triggerNames.push_back("HLT_DisplacedPhoton80_v");                          // i = 17
     triggerNames.push_back("HLT_DisplacedPhoton100_v");                         // i = 18
+    triggerNames.push_back("HLT_Photon42_R9Id85_OR_CaloId24b40e_Iso50T80L_Photon25_AND_HE10_R9Id65_Eta2_Mass15_v"); // i = 19
+    triggerNames.push_back("HLT_Photon90_CaloIdL_PFHT600_v");                   // i = 20
   }
   else if (isHLT3) // remove cuts on at a time for DisplacedPhoton45
   {

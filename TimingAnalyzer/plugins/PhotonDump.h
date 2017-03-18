@@ -214,7 +214,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
 
   // trigger info
   // HLT2 + HlT3
-  bool hltpho120_met40, hltpho175, hltdoublepho60;
+  bool hltpho120_met40, hltpho175, hltdoublepho60, hltdoublepho42_25_m15, hltpho90_ht600;
   bool hltdispho45, hltdispho45_jet50, hltdispho45_dijet50, hltdispho45_dijet35, hltdispho45_trijet35, hltdispho45_el100veto, hltdispho45_notkveto;
   bool hltdispho50, hltdispho80, hltdispho100;
   bool hltdispho60, hltdispho60_jet50, hltdispho60_dijet50, hltdispho60_dijet35, hltdispho60_trijet35, hltdispho60_notkveto;
