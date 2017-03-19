@@ -30,7 +30,7 @@ void runPhotonPlots()
   // applyphanyptcut, phanyptcut, applyphanyvidcut, phanyvid
   // applyrhecut, rhEcut
   // applyecalacceptcut, applyEBonly, applyEEonly
-  // applyphmcmatching
+  // applyphmcmatchingcut, applyexactphmcmatch, applyantiphmcmatch
 
   PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-gmsb-ctau6000-HLT3.root",true,false,false,
 			  false,true,
@@ -40,7 +40,7 @@ void runPhotonPlots()
 			  true,10.f,true,"loose",
 			  true,1.f,
 			  true,false,false,
-			  false);
+			  true,true,false);
 
   // which plots to do:
   // geninfo, vtxs, met, jets

@@ -15,7 +15,7 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runPhotonPlots_HT(TString VID1, TString sample, TString bin, Bool_t isEB, Bool_t isEE) 
+void runPhotonPlots_HT(TString VID1, TString sample, TString bin, Bool_t isEB, Bool_t isEE, Bool_t exact, Bool_t anti) 
 {
   setupcpp11(); 
 
@@ -30,7 +30,7 @@ void runPhotonPlots_HT(TString VID1, TString sample, TString bin, Bool_t isEB, B
   // applyphanyptcut, phanyptcut, applyphanyvidcut, phanyvid
   // applyrhecut, rhEcut
   // applyecalacceptcut, applyEBonly, applyEEonly
-  // applyphmcmatching
+  // applyphmcmatching, applyexactphmcmatch, applyantiphmcmatch
   
   // apply analysis cuts to individual plots?
   bool apply = true;
@@ -49,7 +49,7 @@ void runPhotonPlots_HT(TString VID1, TString sample, TString bin, Bool_t isEB, B
 			  apply,phanypt,apply,VIDany.Data(),
 			  true,1.f,
 			  true,isEB,isEE,
-			  true);
+			  true,exact,anti);
 
   // which plots to do:
   // geninfo, vtxs, met, jets

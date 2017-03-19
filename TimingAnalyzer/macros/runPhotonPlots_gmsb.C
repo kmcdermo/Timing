@@ -30,7 +30,7 @@ void runPhotonPlots_gmsb(TString VID1, TString ctau, Bool_t isEB, Bool_t isEE)
   // applyphanyptcut, phanyptcut, applyphanyvidcut, phanyvid
   // applyrhecut, rhEcut
   // applyecalacceptcut, applyEBonly, applyEEonly
-  // applyphmcmatching
+  // applyphmcmatchingcut, applyexactphmcmatch, applyantiphmcmatch
   
   // apply analysis cuts to individual plots?
   bool apply = true;
@@ -49,7 +49,7 @@ void runPhotonPlots_gmsb(TString VID1, TString ctau, Bool_t isEB, Bool_t isEE)
 			  apply,phanypt,apply,VIDany.Data(),
 			  true,1.f,
 			  true,isEB,isEE,
-			  true);
+			  true,true,false);
 
   // which plots to do:
   // geninfo, vtxs, met, jets

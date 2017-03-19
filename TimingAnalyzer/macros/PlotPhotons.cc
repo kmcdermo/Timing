@@ -13,7 +13,7 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
 			 Bool_t applyphanyptcut, Float_t phanyptcut, Bool_t applyphanyvidcut, TString phanyvid,
 			 Bool_t applyrhecut, Float_t rhEcut,
 			 Bool_t applyecalacceptcut, Bool_t applyEBonly, Bool_t applyEEonly,
-			 Bool_t applyphotonmcmatching) :
+			 Bool_t applyphmcmatchingcut, Bool_t applyexactphmcmatch, Bool_t applyantiphmcmatch) :
   fOutDir(outdir), fIsGMSB(isGMSB), fIsHVDS(isHVDS), fIsBkg(isBkg), 
   fIsHLT2(isHLT2), fIsHLT3(isHLT3),
   fApplyEvCut(applyevcut), fSaveHists(savehists),
@@ -22,7 +22,7 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
   fApplyPhAnyPtCut(applyphanyptcut), fPhAnyPtCut(phanyptcut), fApplyPhAnyVIDCut(applyphanyvidcut), fPhAnyVID(phanyvid), 
   fApplyrhECut(applyrhecut), frhECut(rhEcut),
   fApplyECALAcceptCut(applyecalacceptcut), fApplyEBOnly(applyEBonly), fApplyEEOnly(applyEEonly),
-  fApplyPhotonMCMatching(applyphotonmcmatching)
+  fApplyPhMCMatchingCut(applyphmcmatchingcut), fApplyExactPhMCMatch(applyexactphmcmatch), fApplyAntiPhMCMatch(applyantiphmcmatch)
 {
   // input
   fInFile = TFile::Open(filename.Data());
@@ -67,20 +67,26 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
 
   // output
   // setup outdir name
-  if (!fApplyNJetsCut && !fApplyPh1PtCut && !fApplyPh1VIDCut && !fApplyPhAnyPtCut && !fApplyPhAnyVIDCut && !fApplyrhECut && !fApplyECALAcceptCut)
+  if (!fApplyNJetsCut && !fApplyPh1PtCut && !fApplyPh1VIDCut && !fApplyPhAnyPtCut && !fApplyPhAnyVIDCut && !fApplyrhECut && !fApplyPhMCMatchingCut && !fApplyECALAcceptCut)
   { 
     fOutDir += "/Inclusive";
   }
   else 
   {
     fOutDir += "/cuts";
-    if (fApplyJetPtCut)      fOutDir += Form("_jetpt%3.1f"  , fJetPtCut);
-    if (fApplyNJetsCut)      fOutDir += Form("_njets%i"     , fNJetsCut);
-    if (fApplyPh1PtCut)      fOutDir += Form("_ph1pt%3.1f"  , fPh1PtCut);
-    if (fApplyPh1VIDCut)     fOutDir += Form("_ph1VID%s"    , fPh1VID.Data());
-    if (fApplyPhAnyPtCut)    fOutDir += Form("_phanypt%3.1f", fPhAnyPtCut);
-    if (fApplyPhAnyVIDCut)   fOutDir += Form("_phanyVID%s"  , fPhAnyVID.Data());
-    if (fApplyrhECut)        fOutDir += Form("_rhE%2.1f"    , frhECut);
+    if (fApplyJetPtCut)    fOutDir += Form("_jetpt%3.1f"  , fJetPtCut);
+    if (fApplyNJetsCut)    fOutDir += Form("_njets%i"     , fNJetsCut);
+    if (fApplyPh1PtCut)    fOutDir += Form("_ph1pt%3.1f"  , fPh1PtCut);
+    if (fApplyPh1VIDCut)   fOutDir += Form("_ph1VID%s"    , fPh1VID.Data());
+    if (fApplyPhAnyPtCut)  fOutDir += Form("_phanypt%3.1f", fPhAnyPtCut);
+    if (fApplyPhAnyVIDCut) fOutDir += Form("_phanyVID%s"  , fPhAnyVID.Data());
+    if (fApplyrhECut)      fOutDir += Form("_rhE%2.1f"    , frhECut);
+    if (fApplyPhMCMatchingCut)
+    {
+      if      (fApplyExactPhMCMatch)  fOutDir += Form("_exactphmc");
+      else if (fApplyAntiPhMCMatch)   fOutDir += Form("_antiphmc");
+      else    { std::cout << "Need to specify a matching criterion!" << std::endl; exit(0); }
+    }
     if (fApplyECALAcceptCut) 
     { 
       if      (fApplyEBOnly) fOutDir += Form("_EBOnly");
@@ -236,10 +242,18 @@ Int_t PlotPhotons::GetLeadingPhoton()
     if (fApplyrhECut && ((*phrhE)[iph][(*phseedpos)[iph]] < frhECut)) continue;
 
     // MC matching selection
-    if (fApplyPhotonMCMatching)
+    if (fApplyPhMCMatchingCut)
     {
-      if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] <= 0)) continue; 
-      else if (fIsBkg && ((*phisMatched)[iph] == 0)) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
+      if      (fApplyExactPhMCMatch)
+      {
+	if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] <= 0)) continue; // set to <= 0 for exact matching 
+	else if (fIsBkg && ((*phisMatched)[iph] == 0)) continue; // set to == 0 for exact matching
+      }
+      else if (fApplyAntiPhMCMatch)
+      {
+	if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] > 0)) continue; // set to <=0 for exact matching
+	else if (fIsBkg && ((*phisMatched)[iph] != 0)) continue; // set to != 0 for anti-matching
+      }
     }
 
     // Photons ordered in pT, so save index of first photon passing
@@ -272,12 +286,20 @@ Int_t PlotPhotons::GetGoodPhotons(std::vector<Int_t> & goodphotons)
       if (fApplyrhECut && ((*phrhE)[iph][(*phseedpos)[iph]] < frhECut)) continue;
 
       // MC matching selection
-      if (fApplyPhotonMCMatching)
+      if (fApplyPhMCMatchingCut)
       {
-	if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] <= 0)) continue; 
-	else if (fIsBkg && ((*phisMatched)[iph] == 0)) continue; // set to != 0 for QCD anti-matching, == 0 for GJet exact matching
+	if      (fApplyExactPhMCMatch)
+        {
+	  if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] <= 0)) continue; // set to <= 0 for exact matching 
+	  else if (fIsBkg && ((*phisMatched)[iph] == 0)) continue; // set to == 0 for exact matching
+	}
+	else if (fApplyAntiPhMCMatch)
+        {
+	  if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] > 0)) continue; // set to <=0 for exact matching
+	  else if (fIsBkg && ((*phisMatched)[iph] != 0)) continue; // set to != 0 for anti-matching
+	}
       }
-      
+
       // Save photon index
       goodphotons.push_back(iph);
     } // end loop over nphotons

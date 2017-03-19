@@ -57,7 +57,7 @@ public :
 	      Bool_t applyphanyptcut = false, Float_t phanyptcut = 10.f, Bool_t applyphvidcut = false, TString phvid = "loose", 
 	      Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
 	      Bool_t applyecalacceptcut = false, Bool_t applyEBonly = false, Bool_t applyEEonly = false,
-	      Bool_t applyphotonmcmatching = false);
+	      Bool_t applyphmcmatchingcut = false, Bool_t applyphmcexactmacth = false, Bool_t applyphmcantimatch = false);
   ~PlotPhotons();
   void InitTree();
   void DoPlots(Bool_t geninfo = false, Bool_t vtxs = false, Bool_t met = false, Bool_t jets = false, 
@@ -143,7 +143,9 @@ private :
   const Bool_t  fApplyECALAcceptCut;
   const Bool_t  fApplyEBOnly;
   const Bool_t  fApplyEEOnly;
-  const Bool_t  fApplyPhotonMCMatching;
+  const Bool_t  fApplyPhMCMatchingCut;
+  const Bool_t  fApplyExactPhMCMatch;
+  const Bool_t  fApplyAntiPhMCMatch;
   TStrIntMap    fPhVIDMap;
 
   // Output vars
