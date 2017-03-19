@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # isEB
-for vid in none loose
+for vid in none medium
 do
     for ctau in 100 1000
     do
@@ -10,7 +10,7 @@ do
 done
 
 #isEE
-for vid in none loose
+for vid in none medium
 do
     for ctau in 100 1000
     do

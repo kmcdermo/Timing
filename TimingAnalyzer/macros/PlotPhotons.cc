@@ -555,6 +555,13 @@ void PlotPhotons::FillRecoPhotons()
 	fPlots["phseedE"]->Fill((*phrhE)[iph][irh]);
 	fPlots["phseedtime"]->Fill((*phrhtime)[iph][irh]);
 	fPlots["phseedOOT"]->Fill((*phrhOOT)[iph][irh]);
+    
+	// 2D plots of interest
+	fPlots2D["phseedtime_vs_phpt"]->Fill((*phpt)[iph],(*phrhtime)[iph][irh]);
+	fPlots2D["phseedtime_vs_phsmaj"]->Fill((*phsmaj)[iph],(*phrhtime)[iph][irh]);
+	fPlots2D["phseedtime_vs_phsmin"]->Fill((*phsmin)[iph],(*phrhtime)[iph][irh]);
+	fPlots2D["phseedtime_vs_phalpha"]->Fill((*phalpha)[iph],(*phrhtime)[iph][irh]);
+	fPlots2D["phseedtime_vs_phsmin_ov_phsmaj"]->Fill(((*phsmin)[iph]/(*phsmaj)[iph]),(*phrhtime)[iph][irh]);
       }
     } // end loop over nrechits
     fPlots["phnrh"]->Fill(nRecHits);
@@ -575,8 +582,8 @@ void PlotPhotons::FillLeading()
     fPlots["ph1HoE"]->Fill((*phHoE)[ph1]);
     fPlots["ph1r9"]->Fill((*phr9)[ph1]);
     fPlots["ph1sieie"]->Fill((*phsieie)[ph1]);
-    fPlots["ph1smin"]->Fill((*phsmin)[ph1]);
     fPlots["ph1smaj"]->Fill((*phsmaj)[ph1]);
+    fPlots["ph1smin"]->Fill((*phsmin)[ph1]);
     fPlots["ph1seedtime"]->Fill((*phrhtime)[ph1][(*phseedpos)[ph1]]);
   }
 }
@@ -591,8 +598,8 @@ void PlotPhotons::FillMostDelayed()
     fPlots["phdelayHoE"]->Fill((*phHoE)[phdelay]);
     fPlots["phdelayr9"]->Fill((*phr9)[phdelay]);
     fPlots["phdelaysieie"]->Fill((*phsieie)[phdelay]);
-    fPlots["phdelaysmin"]->Fill((*phsmin)[phdelay]);
     fPlots["phdelaysmaj"]->Fill((*phsmaj)[phdelay]);
+    fPlots["phdelaysmin"]->Fill((*phsmin)[phdelay]);
     fPlots["phdelayseedtime"]->Fill((*phrhtime)[phdelay][(*phseedpos)[phdelay]]);
   }
 }
@@ -812,7 +819,7 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["phphi"] = PlotPhotons::MakeTH1F("phphi","Photons #phi (reco)",100,-3.2,3.2,"#phi","Photons","RecoPhotons");
   fPlots["pheta"] = PlotPhotons::MakeTH1F("pheta","Photons #eta (reco)",100,-5.0,5.0,"#eta","Photons","RecoPhotons");
   fPlots["phHoE"] = PlotPhotons::MakeTH1F("phHoE","Photons HE/EE (reco)",100,0.f,5.0,"HE/EE","Photons","RecoPhotons");
-  fPlots["phr9"] = PlotPhotons::MakeTH1F("phr9","Photons R9 (reco)",100,0.f,25.0,"R9","Photons","RecoPhotons");
+  fPlots["phr9"] = PlotPhotons::MakeTH1F("phr9","Photons R9 (reco)",100,0.f,5.0,"R9","Photons","RecoPhotons");
   fPlots["phChgIso"] = PlotPhotons::MakeTH1F("phChgIso","Photons #rho-corrected Charged Hadron Isolation (reco)",100,0.f,1000.f,"#rho-corrected Charged Hadron Isolation","Photons","RecoPhotons");
   fPlots["phNeuIso"] = PlotPhotons::MakeTH1F("phNeuIso","Photons #rho-corrected Neutral Hadron Isolation (reco)",100,0.f,1000.f,"#rho-corrected Neutral Hadron Isolation","Photons","RecoPhotons");
   fPlots["phIso"] = PlotPhotons::MakeTH1F("phIso","Photons #rho-corrected Photon Isolation (reco)",100,0.f,1000.f,"#rho-corrected Photon Isolation","Photons","RecoPhotons");
@@ -823,7 +830,7 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["phsmaj"] = PlotPhotons::MakeTH1F("phsmaj","Photons S_{major} (reco)",100,0.f,5.f,"S_{major}","Photons","RecoPhotons");
   fPlots["phsmin"] = PlotPhotons::MakeTH1F("phsmin","Photons S_{minor} (reco)",100,0.f,1.f,"S_{minor}","Photons","RecoPhotons");
   fPlots["phsmin_ov_phsmaj"] = PlotPhotons::MakeTH1F("phsmin_ov_phsmaj","Photons S_{minor} / S_{major} (reco)",100,0,1.f,"S_{minor}/S_{major}","Photons","RecoPhotons");
-  fPlots["phalpha"] = PlotPhotons::MakeTH1F("phalpha","Photons Cluster Shape #alpha (reco)",100,-1.7,1.7,"Cluster Shape #alpha","Photons","RecoPhotons");
+  fPlots["phalpha"] = PlotPhotons::MakeTH1F("phalpha","Photons Cluster Shape #alpha (reco)",100,-2.f,2.f,"Cluster Shape #alpha","Photons","RecoPhotons");
   fPlots["phscE"] = PlotPhotons::MakeTH1F("phscE","Photons SuperCluster Energy [GeV] (reco)",100,0.f,2500.f,"Energy [GeV]","Photons","RecoPhotons");
   fPlots["phnrh"] = PlotPhotons::MakeTH1F("phnrh","nRecHits from Photons (reco)",100,0.f,100.f,"nRecHits","Photons","RecoPhotons");
 
@@ -832,8 +839,15 @@ void PlotPhotons::SetupRecoPhotons()
   fPlots["phrhtime"] = PlotPhotons::MakeTH1F("phrhtime","Photons RecHits Time [ns] (reco)",200,-100.f,100.f,"Time [ns]","RecHits","RecoPhotons");
   fPlots["phrhOOT"] = PlotPhotons::MakeTH1F("phrhOOT","Photons RecHits OoT Flag (reco)",2,0.f,2.f,"OoT Flag","RecHits","RecoPhotons");
   fPlots["phseedE"] = PlotPhotons::MakeTH1F("phseedE","Photons Seed RecHit Energy [GeV] (reco)",100,0.f,2000.f,"Energy [GeV]","Seed RecHits","RecoPhotons");
-  fPlots["phseedtime"] = PlotPhotons::MakeTH1F("phseedtime","Photons Seed RecHit Time [ns] (reco)",200,-10.f,10.f,"Time [ns]","Seed RecHits","RecoPhotons");
+  fPlots["phseedtime"] = PlotPhotons::MakeTH1F("phseedtime","Photons Seed RecHit Time [ns] (reco)",100,-20.f,20.f,"Time [ns]","Seed RecHits","RecoPhotons");
   fPlots["phseedOOT"] = PlotPhotons::MakeTH1F("phseedOOT","Photons Seed RecHit OoT Flag (reco)",2,0.f,2.f,"OoT Flag","Seed RecHits","RecoPhotons");  
+
+  // some 2D plots of interest
+  fPlots2D["phseedtime_vs_phpt"] = PlotPhotons::MakeTH2F("phseedtime_vs_phpt","Photon Seed RecHit Time vs Photon p_{T}",100,0.f,2000.f,"Photon p_{T} [GeV/c]",100,-20.f,20.f,"Photon Seed RecHit Time [ns]","RecoPhotons");
+  fPlots2D["phseedtime_vs_phsmaj"] = PlotPhotons::MakeTH2F("phseedtime_vs_phsmaj","Photon Seed RecHit Time vs Photon S_{major}",100,0.f,5.f,"Photon S_{major}",100,-20.f,20.f,"Photon Seed RecHit Time [ns]","RecoPhotons");
+  fPlots2D["phseedtime_vs_phsmin"] = PlotPhotons::MakeTH2F("phseedtime_vs_phsmin","Photon Seed RecHit Time vs Photon S_{minor}",100,0.f,1.f,"Photon S_{minor}",100,-20.f,20.f,"Photon Seed RecHit Time [ns]","RecoPhotons");
+  fPlots2D["phseedtime_vs_phalpha"] = PlotPhotons::MakeTH2F("phseedtime_vs_phalpha","Photon Seed RecHit Time vs Photon Cluster #alpha",100,-2.f,2.f,"Photon Cluster Shape #alpha",100,-20.f,20.f,"Photon Seed RecHit Time [ns]","RecoPhotons");
+  fPlots2D["phseedtime_vs_phsmin_ov_phsmaj"] = PlotPhotons::MakeTH2F("phseedtime_vs_phsmin_ov_phsmaj","Photon Seed RecHit Time vs Photon S_{minor}/S_{major}",100,0.f,1.f,"Photon S_{minor}/S_{major}",100,-20.f,20.f,"Photon Seed RecHit Time [ns]","RecoPhotons");
 }
 
 void PlotPhotons::SetupLeading()
@@ -936,8 +950,8 @@ void PlotPhotons::SetupTrigger()
 
 void PlotPhotons::SetupAnalysis()
 {
-  fPlots2D["MET_vs_ph1seedtime"] = PlotPhotons::MakeTH2F("MET_vs_ph1seedtime","MET vs Leading Photon Seed RecHit Time",80,-2.f,14.f,"Leading Photon Seed RecHit Time [ns]",100,0.f,2000.f,"MET","Analysis");
-  fPlots2D["MET_vs_phdelayseedtime"] = PlotPhotons::MakeTH2F("MET_vs_phdelayseedtime","MET vs Most Delayed Photon Seed RecHit Time",80,-2.f,14.f,"Most Delayed Photon Seed RecHit Time [ns]",100,0.f,2000.f,"MET","Analysis");
+  fPlots2D["MET_vs_ph1seedtime"] = PlotPhotons::MakeTH2F("MET_vs_ph1seedtime","MET vs Leading Photon Seed RecHit Time",100,-5.f,20.f,"Leading Photon Seed RecHit Time [ns]",100,0.f,2000.f,"MET","Analysis");
+  fPlots2D["MET_vs_phdelayseedtime"] = PlotPhotons::MakeTH2F("MET_vs_phdelayseedtime","MET vs Most Delayed Photon Seed RecHit Time",100,-5.f,20.f,"Most Delayed Photon Seed RecHit Time [ns]",100,0.f,2000.f,"MET","Analysis");
 }
 
 TH1F * PlotPhotons::MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir)

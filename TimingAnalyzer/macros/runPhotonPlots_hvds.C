@@ -35,8 +35,8 @@ void runPhotonPlots_hvds(TString VID1, TString ctau, Bool_t isEB, Bool_t isEE)
   // apply analysis cuts to individual plots?
   bool apply = true;
 
-  Float_t ph1pt = 50.f;
-  Float_t phany = 10.f;
+  Float_t ph1pt   = 50.f;
+  Float_t phanypt = 10.f;
 
   TString VIDany = (VID1.Contains("none",TString::kExact)) ? "none" : "loose";
 
