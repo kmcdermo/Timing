@@ -15,10 +15,10 @@
 //static const Float_t lumi = 36.46 * 1000; // pb
 
 void makeDir(const TString &);
-void getQCD(std::vector<TH1F*>&, std::vector<TString>&, const TString &);
-void getGJets(std::vector<TH1F*>&, std::vector<TString>&, const TString &);
-void getGMSB(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
-void getHVDS(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
+void getQCD(std::vector<TH1F*>&, std::vector<TString>&, const TString &, const TString &);
+void getGJets(std::vector<TH1F*>&, std::vector<TString>&, const TString &, const TString &);
+void getGMSB(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &, const TString &);
+void getHVDS(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &, const TString &);
 void drawAll(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
 void drawStack(std::vector<THStack*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
 void drawAllSeparate(std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TH1F*>&, std::vector<TString>&, const TString &);
@@ -32,22 +32,21 @@ void quickStack()
   SetTDRStyle(tdrStyle);
   gROOT->ForceStyle();
 
-  std::vector<TString> histnames = {"phmostdelayedpt","phmostdelayedHoE","phmostdelayedr9","phmostdelayedsieie","phmostdelayedsmaj","phmostdelayedsmin","phmostdelayedseedtime"};
-  //  std::vector<TString> histnames = {"ph1smaj","ph1smin","ph1sieie","ph1sipip","ph1sieip","ph1alpha","ph1smin_ov_ph1smaj","ph1suisseX","ph1r9"};
-  //std::vector<TString> histnames = {"ph1r9","ph1suisse"};
-  // std::vector<TString> histnames = {"ph1pt_nm1","ph1VID_nm1","ph1seedtime","jet1pt"};
+  //std::vector<TString> histnames = {"phdelaypt","phdelayHoE","phdelayr9","phdelaysieie","phdelaysmaj","phdelaysmin","phdelayseedtime"};
+  std::vector<TString> histnames = {"ph1pt","ph1HoE","ph1r9","ph1sieie","ph1smaj","ph1smin","ph1seedtime"};
 
   // generic settings
-  TString cuts = "cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_EBOnly";
-  TString outdir = "output/stacks/photondump/"+cuts;
+  TString cuts = "cuts_jetpt35.0_njets3_ph1pt50.0_ph1VIDmedium_phanypt10.0_phanyVIDloose_rhE1.0";
+  TString region = "EBOnly";
+  TString outdir = "output/stacks/photondump/"+cuts+"_"+region;
   makeDir(outdir);
 
   // BKGs
   std::vector<TH1F*> qcdTH1Fs(histnames.size());
-  getQCD(qcdTH1Fs,histnames,cuts);
+  getQCD(qcdTH1Fs,histnames,cuts,region);
 
   std::vector<TH1F*> gjetsTH1Fs(histnames.size());
-  getGJets(gjetsTH1Fs,histnames,cuts);
+  getGJets(gjetsTH1Fs,histnames,cuts,region);
 
   // Totals and scale
   std::vector<TH1F*> bkgTH1Fs(histnames.size());
@@ -73,11 +72,11 @@ void quickStack()
 
   // GMSB
   std::vector<TH1F*> gmsb100TH1Fs(histnames.size()), gmsb2000TH1Fs(histnames.size()), gmsb6000TH1Fs(histnames.size());
-  getGMSB(gmsb100TH1Fs,gmsb2000TH1Fs,gmsb6000TH1Fs,histnames,cuts);
+  getGMSB(gmsb100TH1Fs,gmsb2000TH1Fs,gmsb6000TH1Fs,histnames,cuts,region);
 
   // HVDS
   std::vector<TH1F*> hvds100TH1Fs(histnames.size()), hvds1000TH1Fs(histnames.size());
-  getHVDS(hvds100TH1Fs,hvds1000TH1Fs,histnames,cuts);
+  getHVDS(hvds100TH1Fs,hvds1000TH1Fs,histnames,cuts,region);
 
   // Draw everything together
   drawAll(bkgTH1Fs,gmsb100TH1Fs,gmsb2000TH1Fs,gmsb6000TH1Fs,hvds100TH1Fs,hvds1000TH1Fs,histnames,outdir);
@@ -95,7 +94,7 @@ void quickStack()
   delTH1FVec(hvds1000TH1Fs);
 }
 
-void getQCD(std::vector<TH1F*>& qcdTH1Fs, std::vector<TString>& histnames, const TString & cuts)
+void getQCD(std::vector<TH1F*>& qcdTH1Fs, std::vector<TString>& histnames, const TString & cuts, const TString & region)
 {
   std::vector<TString> qcdHTs = {"100To200","200To300","300To500","500To700","700To1000","1000To1500","1500To2000","2000ToInf"};
   std::vector<Float_t> qcdnes = {387775,356732,323810,299995,186869,237396,203266,228166}; //nEvents
@@ -104,7 +103,7 @@ void getQCD(std::vector<TH1F*>& qcdTH1Fs, std::vector<TString>& histnames, const
   std::vector<TFile*> qcdfiles(qcdHTs.size());
   for (UInt_t iqcd = 0; iqcd < qcdHTs.size(); iqcd++)
   {
-    qcdfiles[iqcd] = TFile::Open(Form("output/MC/bkg/QCD/photondump/HT%s/%s/plots.root",qcdHTs[iqcd].Data(),cuts.Data()));
+    qcdfiles[iqcd] = TFile::Open(Form("output/MC/bkg/QCD/photondump/HT%s/%s_antiphmc_%s/plots.root",qcdHTs[iqcd].Data(),cuts.Data(),region.Data()));
   }
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -135,7 +134,7 @@ void getQCD(std::vector<TH1F*>& qcdTH1Fs, std::vector<TString>& histnames, const
   }
 }
 
-void getGJets(std::vector<TH1F*>& gjetsTH1Fs, std::vector<TString>& histnames, const TString & cuts)
+void getGJets(std::vector<TH1F*>& gjetsTH1Fs, std::vector<TString>& histnames, const TString & cuts, const TString & region)
 {
   std::vector<TString> gjetsHTs = {"40To100","100To200","200To400","400To600","600ToInf"};
   std::vector<Float_t> gjetsnes = {227636,281313,234157,282915,196590}; //nEvents
@@ -144,7 +143,7 @@ void getGJets(std::vector<TH1F*>& gjetsTH1Fs, std::vector<TString>& histnames, c
   std::vector<TFile*> gjetsfiles(gjetsHTs.size());
   for (UInt_t igjets = 0; igjets < gjetsHTs.size(); igjets++)
   {
-    gjetsfiles[igjets] = TFile::Open(Form("output/MC/bkg/GJets/photondump/HT%s/%s/plots.root",gjetsHTs[igjets].Data(),cuts.Data()));
+    gjetsfiles[igjets] = TFile::Open(Form("output/MC/bkg/GJets/photondump/HT%s/%s_exactphmc_%s/plots.root",gjetsHTs[igjets].Data(),cuts.Data(),region.Data()));
   }
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
@@ -175,12 +174,12 @@ void getGJets(std::vector<TH1F*>& gjetsTH1Fs, std::vector<TString>& histnames, c
   }
 }
 
-void getGMSB(std::vector<TH1F*>& gmsb100TH1Fs, std::vector<TH1F*>& gmsb2000TH1Fs, std::vector<TH1F*>& gmsb6000TH1Fs, std::vector<TString>& histnames, const TString & cuts)
+void getGMSB(std::vector<TH1F*>& gmsb100TH1Fs, std::vector<TH1F*>& gmsb2000TH1Fs, std::vector<TH1F*>& gmsb6000TH1Fs, std::vector<TString>& histnames, const TString & cuts, const TString & region)
 {
   // GMSB
-  TFile * file100  = TFile::Open(Form("output/MC/signal/GMSB/photondump/ctau100/%s/plots.root",cuts.Data()));
-  TFile * file2000 = TFile::Open(Form("output/MC/signal/GMSB/photondump/ctau2000/%s/plots.root",cuts.Data()));
-  TFile * file6000 = TFile::Open(Form("output/MC/signal/GMSB/photondump/ctau6000/%s/plots.root",cuts.Data()));
+  TFile * file100  = TFile::Open(Form("output/MC/signal/GMSB/photondump/ctau100/%s_exactphmc_%s/plots.root",cuts.Data(),region.Data()));
+  TFile * file2000 = TFile::Open(Form("output/MC/signal/GMSB/photondump/ctau2000/%s_exactphmc_%s/plots.root",cuts.Data(),region.Data()));
+  TFile * file6000 = TFile::Open(Form("output/MC/signal/GMSB/photondump/ctau6000/%s_exactphmc_%s/plots.root",cuts.Data(),region.Data()));
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
   {
@@ -205,11 +204,11 @@ void getGMSB(std::vector<TH1F*>& gmsb100TH1Fs, std::vector<TH1F*>& gmsb2000TH1Fs
   delete file6000;
 }
 
-void getHVDS(std::vector<TH1F*>& hvds100TH1Fs, std::vector<TH1F*>& hvds1000TH1Fs, std::vector<TString>& histnames, const TString & cuts)
+void getHVDS(std::vector<TH1F*>& hvds100TH1Fs, std::vector<TH1F*>& hvds1000TH1Fs, std::vector<TString>& histnames, const TString & cuts, const TString & region)
 {
   // HVDS
-  TFile * file100  = TFile::Open(Form("output/MC/signal/HVDS/photondump/ctau100/%s/plots.root",cuts.Data()));
-  TFile * file1000 = TFile::Open(Form("output/MC/signal/HVDS/photondump/ctau1000/%s/plots.root",cuts.Data()));
+  TFile * file100  = TFile::Open(Form("output/MC/signal/HVDS/photondump/ctau100/%s_exactphmc_%s/plots.root",cuts.Data(),region.Data()));
+  TFile * file1000 = TFile::Open(Form("output/MC/signal/HVDS/photondump/ctau1000/%s_exactphmc_%s/plots.root",cuts.Data(),region.Data()));
 
   for (UInt_t ihist = 0; ihist < histnames.size(); ihist++)
   {
