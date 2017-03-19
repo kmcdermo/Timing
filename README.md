@@ -95,13 +95,12 @@ cmsRun test/photondump-gmsb.py
 cd macros/
 root -l -b -j runPhotonPlots.C
 
-### Few things worth mentioning... there is again another huge set of configurables, so make sure to set them properly! ###
+### There is again another huge set of configurable options, so make sure to set them properly! ###
 ### This code compiles PlotPhotons.cc[hh]. ### 
-### This code is in flux, as some sections are commented out, so be sure to comment them in if you want certain plots to be made. ###  
+### DoPlots() also contains a huge set of configurables on which plots to produce! ###
 
-### Also, pay attention to the line containing: ###
-### if (((fIsGMSB || fIsHVDS) && (*phmatch)[iph] <= 0) || (fIsBkg && (*phisMatched)[iph] != 0) ) continue; (at L632 at the moment) ###
-### Comment this out if you do NOT want gen-level matching (for signals and gamma+jets) or gen-level matching veto (for QCD). ###
+### Can do overplots of background and signals. ./scripts/do{sample}.sh will run over all samples. ###
+### Can stack these with quickStacks.C --> need to modify for plots/directories! ###
 ```
 
 ------------------------------------
