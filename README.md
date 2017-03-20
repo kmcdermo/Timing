@@ -205,7 +205,7 @@ Further Documentation:
 
 ## HLT Trigger Development 
 
-This is only for tinkering with the HLTDisplacedPhoton path on the fly and for rate/time measurements.  Efficiencies can be measured with the analysis plugin PhotonDump.cc, after following the new rules for MC production in step1.
+This is only for tinkering with the HLTDisplacedPhoton path on the fly and for rate/time measurements.  Efficiencies can be measured with the analysis plugin PhotonDump.cc, after following the new rules for MC production in step1.  The instructions below are for calculating rates.  More info is in the Twiki.
 
 ```
 mkdir HLT_Dev
@@ -232,10 +232,15 @@ cp /afs/cern.ch/user/n/ndaci/public/STEAM/Prescales/L1TGlobalPrescalesVetosESPro
 
 git clone git@github.com:cms-steam/RateEstimate.git RateEstimate
 
+### Contains Timing/TrigTests directory ###
+git clone ssh://git@github.com/kmcdermo/Timing.git
+cd Timing/
+git remote rename origin kmcdermo
+cd ../
+
 scram b -j 16
 
-### Presumably STEAM needs this particular version of ROOT6 
-source /cvmfs/cms.cern.ch/slc6_amd64_gcc491/lcg/root/6.02.10/bin/thisroot.sh
+cd Timing/TrigTests
 ```
 
 Further Documentation:
