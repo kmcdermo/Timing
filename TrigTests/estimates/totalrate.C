@@ -20,7 +20,7 @@ void totalrate()
   TString dir = "ps_1p35e34/hlt0/";
   Float_t nls  = 618;
   Float_t lsl  = 23.3;
-  Float_t ps   = 445;
+  Float_t ps   = 428; // 107 major factor * 4 for PS of HLT_L1FatEvents_part0_v1
   TFile * file = TFile::Open(dir+"hltbits.root");
   TTree * tree = (TTree*)file->Get("HltTree");
 

@@ -18,7 +18,7 @@ void myrate(TString mypath)
   TString dir = "ps_1p35e34/hlt0/";
   Float_t nls  = 618;
   Float_t lsl  = 23.3;
-  Float_t ps   = 445;
+  Float_t ps   = 428; // 107 * 4 HLT PS 
   Float_t SF   = ps/(lsl*nls);
   TFile * file = TFile::Open(dir+"hltbits.root");
   TTree * tree = (TTree*)file->Get("HltTree");
