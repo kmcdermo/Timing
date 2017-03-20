@@ -62,9 +62,21 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
   fEfficiency["Photons"] = 0;
   fEfficiency["Jets"]    = 0;
   fEfficiency["Trigger"] = 0;
-  fEfficiency["Trg+Pho"] = 0;
   fEfficiency["Events"]  = 0;
+  
+  fEfficiency["Reco"] = 0;
+  fEfficiency["HLT_DisplacedPhoton45_v"] = 0;
+  fEfficiency["HLT_DisplacedPhoton60_DiPFJet50_v"] = 0;
+  fEfficiency["HLT_DisplacedPhoton60_TriPFJet35_v"] = 0; 
+  fEfficiency["HLT_DisplacedPhoton100_v"] = 0;
+  fEfficiency["HLT_DoublePhoton60_v"] = 0;
 
+  fEfficiency["HLT_DisplacedPhoton45_v_Event"] = 0;
+  fEfficiency["HLT_DisplacedPhoton60_DiPFJet50_v_Event"] = 0;
+  fEfficiency["HLT_DisplacedPhoton60_TriPFJet35_v_Event"] = 0; 
+  fEfficiency["HLT_DisplacedPhoton100_v_Event"] = 0;
+  fEfficiency["HLT_DoublePhoton60_v_Event"] = 0;
+  
   // output
   // setup outdir name
   if (!fApplyNJetsCut && !fApplyPh1PtCut && !fApplyPh1VIDCut && !fApplyPhAnyPtCut && !fApplyPhAnyVIDCut && !fApplyrhECut && !fApplyPhMCMatchingCut && !fApplyECALAcceptCut)
@@ -201,14 +213,26 @@ Bool_t PlotPhotons::CountEvents()
   const Bool_t jets_b = (fApplyNJetsCut ? (nJets >= fNJetsCut) : true);
   if (jets_b) fEfficiency["Jets"]++;
 
+  const Bool_t event_b = (photon_b && jets_b);
+
   //trigger efficiency
   const Bool_t hlt_b = ((fIsHLT2 || fIsHLT3) ? hltdispho45 : true);
   if (hlt_b) fEfficiency["Trigger"]++;
 
-  //trigger + photon selection efficiency
-  if (hlt_b && photon_b)
+  if (hltdispho45)          fEfficiency["HLT_DisplacedPhoton45_v"]++;
+  if (hltdispho60_dijet50)  fEfficiency["HLT_DisplacedPhoton60_DiPFJet50_v"]++;
+  if (hltdispho60_trijet35) fEfficiency["HLT_DisplacedPhoton60_TriPFJet35_v"]++;
+  if (hltdispho100)         fEfficiency["HLT_DisplacedPhoton100_v"]++;
+  if (hltdoublepho60)       fEfficiency["HLT_DoublePhoton60_v"]++;
+
+  if (event_b)
   {
-    fEfficiency["Trg+Pho"]++;
+    fEfficiency["Reco"]++;
+    if (hltdispho45)          fEfficiency["HLT_DisplacedPhoton45_v_Event"]++;
+    if (hltdispho60_dijet50)  fEfficiency["HLT_DisplacedPhoton60_DiPFJet50_v_Event"]++;
+    if (hltdispho60_trijet35) fEfficiency["HLT_DisplacedPhoton60_TriPFJet35_v_Event"]++;
+    if (hltdispho100)         fEfficiency["HLT_DisplacedPhoton100_v_Event"]++;
+    if (hltdoublepho60)       fEfficiency["HLT_DoublePhoton60_v_Event"]++;
   }
 
   // total efficiency
@@ -585,6 +609,8 @@ void PlotPhotons::FillLeading()
     fPlots["ph1smaj"]->Fill((*phsmaj)[ph1]);
     fPlots["ph1smin"]->Fill((*phsmin)[ph1]);
     fPlots["ph1seedtime"]->Fill((*phrhtime)[ph1][(*phseedpos)[ph1]]);
+
+    fPlots2D["ph1seedtime_vs_ph1pt"]->Fill((*phpt)[ph1],(*phrhtime)[ph1][(*phseedpos)[ph1]]);
   }
 }
 
@@ -601,6 +627,8 @@ void PlotPhotons::FillMostDelayed()
     fPlots["phdelaysmaj"]->Fill((*phsmaj)[phdelay]);
     fPlots["phdelaysmin"]->Fill((*phsmin)[phdelay]);
     fPlots["phdelayseedtime"]->Fill((*phrhtime)[phdelay][(*phseedpos)[phdelay]]);
+
+    fPlots2D["phdelayseedtime_vs_phdelaypt"]->Fill((*phpt)[phdelay],(*phrhtime)[phdelay][(*phseedpos)[phdelay]]);
   }
 }
 
@@ -859,6 +887,7 @@ void PlotPhotons::SetupLeading()
   fPlots["ph1smaj"] = PlotPhotons::MakeTH1F("ph1smaj","Leading Photon S_{major} (reco)",100,0.f,5.f,"S_{major}","Events","Leading");
   fPlots["ph1smin"] = PlotPhotons::MakeTH1F("ph1smin","Leading Photon S_{minor} (reco)",100,0.f,1.f,"S_{minor}","Events","Leading");
   fPlots["ph1seedtime"] = PlotPhotons::MakeTH1F("ph1seedtime","Leading Photon Seed RecHit Time [ns]",100,-5.f,20.f,"Seed RecHit Time [ns]","Events","Leading");
+  fPlots2D["ph1seedtime_vs_ph1pt"] = PlotPhotons::MakeTH2F("ph1seedtime_vs_ph1pt","Leading Photon Seed RecHit Time vs Leading Photon p_{T}",100,0.f,2000.f,"Photon p_{T} [GeV/c]",100,-20.f,20.f,"Photon Seed RecHit Time [ns]","Leading");
 }
 
 void PlotPhotons::SetupMostDelayed()
@@ -870,6 +899,7 @@ void PlotPhotons::SetupMostDelayed()
   fPlots["phdelaysmaj"] = PlotPhotons::MakeTH1F("phdelaysmaj","Most Delayed Photon S_{major} (reco)",100,0.f,5.f,"S_{major}","Events","MostDelayed");
   fPlots["phdelaysmin"] = PlotPhotons::MakeTH1F("phdelaysmin","Most Delayed Photon S_{minor} (reco)",100,0.f,1.f,"S_{minor}","Events","MostDelayed");
   fPlots["phdelayseedtime"] = PlotPhotons::MakeTH1F("phdelayseedtime","Most Delayed Photon Seed RecHit Time [ns]",100,-5.f,20.f,"Seed RecHit Time [ns]","Events","MostDelayed");
+  fPlots2D["phdelayseedtime_vs_phdelaypt"] = PlotPhotons::MakeTH2F("phdelayseedtime_vs_phdelaypt","Most Delayed Photon Seed RecHit Time vs Most Delayed Photon p_{T}",100,0.f,2000.f,"Photon p_{T} [GeV/c]",100,-20.f,20.f,"Photon Seed RecHit Time [ns]","MostDelayed");
 }
 
 void PlotPhotons::SetupTrigger()

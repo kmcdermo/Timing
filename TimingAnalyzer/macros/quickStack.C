@@ -32,11 +32,13 @@ void quickStack()
   SetTDRStyle(tdrStyle);
   gROOT->ForceStyle();
 
-  //std::vector<TString> histnames = {"phdelaypt","phdelayHoE","phdelayr9","phdelaysieie","phdelaysmaj","phdelaysmin","phdelayseedtime"};
-  std::vector<TString> histnames = {"ph1pt","ph1HoE","ph1r9","ph1sieie","ph1smaj","ph1smin","ph1seedtime"};
+  std::vector<TString> histnames = {"phdelaypt","phdelayHoE","phdelayr9","phdelaysieie","phdelaysmaj","phdelaysmin","phdelayseedtime",
+				    "ph1pt"    ,"ph1HoE"    ,"ph1r9"    ,"ph1sieie"    ,"ph1smaj"    ,"ph1smin"    ,"ph1seedtime"};
+
+//  std::vector<TString> histnames = {"njets","nJets"};
 
   // generic settings
-  TString cuts = "cuts_jetpt35.0_njets3_ph1pt50.0_ph1VIDmedium_phanypt10.0_phanyVIDloose_rhE1.0";
+  TString cuts = "cuts_jetpt35.0_njets3_ph1pt50.0_ph1VIDnone_phanypt10.0_phanyVIDnone_rhE1.0";
   TString region = "EBOnly";
   TString outdir = "output/stacks/photondump/"+cuts+"_"+region;
   makeDir(outdir);

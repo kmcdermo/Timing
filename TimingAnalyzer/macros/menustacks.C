@@ -96,7 +96,7 @@ void cmsmenustack(TFile *& file, TString dir)
 
 void dispho45stack(TFile *& file, TString dir)
 {
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho45_eff","phdelayseedtime_hltdispho45_jet50_eff","phdelayseedtime_hltdispho45_dijet50_eff","phdelayseedtime_hltdispho45_dijet35_eff","phdelayseedtime_hltdispho45_trijet35_eff","phdelayseedtime_hltdispho45_el100veto_eff","phdelayseedtime_hltdispho45_notkveto_eff"};
+  std::vector<TString> histnames = {"phdelayseedtime_hltdispho45_eff","phdelayseedtime_hltdispho45_jet50_eff","phdelayseedtime_hltdispho45_dijet50_eff","phdelayseedtime_hltdispho45_dijet35_eff","phdelayseedtime_hltdispho45_trijet35_eff"};
 
   TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
   TString output = "dispho45stack";
@@ -106,7 +106,7 @@ void dispho45stack(TFile *& file, TString dir)
 
 void dispho60stack(TFile *& file, TString dir)
 {
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho60_eff","phdelayseedtime_hltdispho60_jet50_eff","phdelayseedtime_hltdispho60_dijet50_eff","phdelayseedtime_hltdispho60_dijet35_eff","phdelayseedtime_hltdispho60_trijet35_eff","phdelayseedtime_hltdispho60_notkveto_eff"};
+  std::vector<TString> histnames = {"phdelayseedtime_hltdispho60_eff","phdelayseedtime_hltdispho60_jet50_eff","phdelayseedtime_hltdispho60_dijet50_eff","phdelayseedtime_hltdispho60_dijet35_eff","phdelayseedtime_hltdispho60_trijet35_eff"};
 
   TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
   TString output = "dispho60stack";
@@ -160,14 +160,15 @@ void ptbreakdownstack(TFile *& file, TString dir)
 
 void menustacks()
 {
-  //  TString dir  = "output/MC/signal/HVDS/ctau1000/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_EEOnly/";
-  TString dir  = "output/MC/signal/GMSB/ctau6000/cuts_jetpt35.0_phpt50.0_phVIDloose_rhE1.0_ecalaccept/";
+  TString dir  = "output/trigger/MC/signal/HVDS/ctau1000/cuts_jetpt35.0_njets3_ph1pt50.0_ph1VIDmedium_phanypt10.0_phanyVIDloose_rhE1.0_ecalaccept/";
+  //TString dir  = "output/trigger/MC/signal/GMSB/ctau6000/cuts_jetpt35.0_njets3_ph1pt50.0_ph1VIDmedium_phanypt10.0_phanyVIDloose_rhE1.0_EEOnly/";
+  //TString dir  = "output/trigger/MC/signal/GMSB/ctau100/cuts_jetpt35.0_njets3_ph1pt50.0_ph1VIDmedium_phanypt10.0_phanyVIDloose_rhE1.0_ecalaccept/";
   TFile * file = TFile::Open(dir+"plots.root");
 
-//   cmsmenustack(file,dir);
-//   ptstack(file,dir);
-//   dispho45stack(file,dir);
-//   dispho60stack(file,dir);
+  //  cmsmenustack(file,dir);
+  //  ptstack(file,dir);
+  //  dispho45stack(file,dir);
+  //  dispho60stack(file,dir);
   seedtimebreakdownstack(file,dir);
   etabreakdownstack(file,dir);
   phibreakdownstack(file,dir);
