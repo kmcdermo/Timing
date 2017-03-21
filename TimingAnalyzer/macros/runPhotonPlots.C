@@ -32,21 +32,21 @@ void runPhotonPlots()
   // applyecalacceptcut, applyEBonly, applyEEonly
   // applyphmcmatchingcut, applyexactphmcmatch, applyantiphmcmatch
 
-  PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-gmsb-ctau6000-HLT3.root",true,false,false,
-			  false,true,
-			  false,"output/MC/signal/GMSB/ctau6000",false,
+  PlotPhotons photonPlots("input/MC/signal/HVDS/photondump-hvds-ctau1000-HLT2.root",false,true,false,
+			  false,false,
+			  false,"output/MC/signal/HVDS/ctau1000",true,
 			  true,35.f,true,3,
-			  true,50.f,true,"medium",
-			  true,10.f,true,"loose",
+			  false,50.f,false,"medium",
+			  false,10.f,false,"loose",
 			  true,1.f,
-			  true,false,false,
-			  true,true,false);
+			  true,true,false,
+			  false,false,false);
 
   // which plots to do:
   // geninfo, vtxs, met, jets
   // photons, ph1, phdelay
   // trigger, analysis
   photonPlots.DoPlots(false,false,false,false,
- 		      false,false,false,
-		      false,false);
+ 		      true,true,true,
+		      false,true);
 }
