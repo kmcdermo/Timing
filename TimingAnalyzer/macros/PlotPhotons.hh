@@ -51,7 +51,7 @@ class PlotPhotons
 public :
   PlotPhotons(TString filename, Bool_t isGMSB = false, Bool_t isHVDS = false, Bool_t isBkg = false, 
 	      Bool_t isHLT2 = false, Bool_t isHLT3 = false,
-	      Bool_t applyevcut = false, TString outdir = "output", Bool_t savehists = false, 
+	      Bool_t applyevcut = false, TString outdir = "output", Bool_t savehists = false, Bool_t savesub = false,
 	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t appynjetscut = false, Int_t njetscut = 3,
 	      Bool_t applyph1ptcut = false, Float_t ph1ptcut = 50.f, Bool_t applyph1vidcut = false, TString ph1vid = "medium", 
 	      Bool_t applyphanyptcut = false, Float_t phanyptcut = 10.f, Bool_t applyphvidcut = false, TString phvid = "loose", 
@@ -126,6 +126,7 @@ private :
   // Config
   const Bool_t  fApplyEvCut;
   const Bool_t  fSaveHists;
+  const Bool_t  fSaveSub;
   const Bool_t  fApplyJetPtCut;
   const Float_t fJetPtCut;
   const Bool_t  fApplyNJetsCut;

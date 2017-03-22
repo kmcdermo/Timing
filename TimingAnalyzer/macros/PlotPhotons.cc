@@ -7,7 +7,7 @@
 
 PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t isBkg, 
 			 Bool_t isHLT2, Bool_t isHLT3,
-			 Bool_t applyevcut, TString outdir, Bool_t savehists,
+			 Bool_t applyevcut, TString outdir, Bool_t savehists, Bool_t savesub,
 			 Bool_t applyjetptcut, Float_t jetptcut, Bool_t applynjetscut, Int_t njetscut,
 			 Bool_t applyph1ptcut, Float_t ph1ptcut, Bool_t applyph1vidcut, TString ph1vid,
 			 Bool_t applyphanyptcut, Float_t phanyptcut, Bool_t applyphanyvidcut, TString phanyvid,
@@ -16,7 +16,7 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
 			 Bool_t applyphmcmatchingcut, Bool_t applyexactphmcmatch, Bool_t applyantiphmcmatch) :
   fOutDir(outdir), fIsGMSB(isGMSB), fIsHVDS(isHVDS), fIsBkg(isBkg), 
   fIsHLT2(isHLT2), fIsHLT3(isHLT3),
-  fApplyEvCut(applyevcut), fSaveHists(savehists),
+  fApplyEvCut(applyevcut), fSaveHists(savehists), fSaveSub(savesub),
   fApplyJetPtCut(applyjetptcut), fJetPtCut(jetptcut), fApplyNJetsCut(applynjetscut), fNJetsCut(njetscut),
   fApplyPh1PtCut(applyph1ptcut), fPh1PtCut(ph1ptcut), fApplyPh1VIDCut(applyph1vidcut), fPh1VID(ph1vid), 
   fApplyPhAnyPtCut(applyphanyptcut), fPhAnyPtCut(phanyptcut), fApplyPhAnyVIDCut(applyphanyvidcut), fPhAnyVID(phanyvid), 
@@ -1198,12 +1198,12 @@ void PlotPhotons::OutputTH1Fs()
       
       // first save as linear, then log
       canv->SetLogy(0);
-      //canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
-      canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+      else            canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
       
       canv->SetLogy(1);
-      //canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
-      canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->first.Data()));
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/log/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+      else            canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->first.Data()));
       
       delete canv;
     }
@@ -1239,7 +1239,8 @@ void PlotPhotons::OutputTrigTH1Fs()
       
       // first save as linear, then log
       canv->SetLogy(0);
-      canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->second.first->GetName()));
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDump.Data(),fSubDirs[mapiter->first].Data(),mapiter->second.first->GetName()));
+      else            canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->second.first->GetName()));
       
       canv->SetLogy(1);
       canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->second.first->GetName()));
@@ -1249,20 +1250,24 @@ void PlotPhotons::OutputTrigTH1Fs()
       
       // first save as linear, then log
       canv->SetLogy(0);
-      canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->second.second->GetName()));
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDump.Data(),fSubDirs[mapiter->first].Data(),mapiter->second.second->GetName()));
+      else            canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->second.second->GetName()));
       
       canv->SetLogy(1);
-      canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->second.second->GetName()));
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/log/%s.png",fOutDump.Data(),fSubDirs[mapiter->first].Data(),mapiter->second.second->GetName()));
+      else            canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->second.second->GetName()));
 
       // efficiency last
       eff->Draw("EP");
       
       // first save as linear, then log
       canv->SetLogy(0);
-      canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),eff->GetName()));
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDump.Data(),fSubDirs[mapiter->first].Data(),eff->GetName()));
+      else            canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),eff->GetName()));
       
       canv->SetLogy(1);
-      canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),eff->GetName()));
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/log/%s.png",fOutDump.Data(),fSubDirs[mapiter->first].Data(),eff->GetName()));
+      else            canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),eff->GetName()));
       
       delete canv;
     }
@@ -1292,8 +1297,8 @@ void PlotPhotons::OutputTH2Fs()
       
       // first save as linear, then log
       canv->SetLogy(0);
-      //canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
-      canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
+      if (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDir.Data(),fSubDirs[mapiter->first].Data(),mapiter->first.Data()));
+      else          canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->first.Data()));
     
       delete canv;
     }

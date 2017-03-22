@@ -24,7 +24,7 @@ void runPhotonPlots()
   // config is:
   // filename, isGMSB, isHVDS, isBkg
   // isHLT2, isHLT3
-  // applyevcut, outdir, savehists
+  // applyevcut, outdir, savehists, savesub
   // applyjetptcut, jetptcut, applynjetscut, njetscut
   // applyph1ptcut, ph1ptcut, applyph1vidcut, ph1vid
   // applyphanyptcut, phanyptcut, applyphanyvidcut, phanyvid
@@ -32,14 +32,14 @@ void runPhotonPlots()
   // applyecalacceptcut, applyEBonly, applyEEonly
   // applyphmcmatchingcut, applyexactphmcmatch, applyantiphmcmatch
 
-  PlotPhotons photonPlots("input/MC/signal/HVDS/photondump-hvds-ctau1000-HLT2.root",false,true,false,
-			  false,false,
-			  false,"output/MC/signal/HVDS/ctau1000",true,
+  PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-gmsb-ctau6000-HLT2.root",true,false,false,
+			  true,false,
+			  false,"output/MC/signal/GMSB/ctau6000",true,true,
 			  true,35.f,true,3,
-			  false,50.f,false,"medium",
-			  false,10.f,false,"loose",
+			  true,50.f,true,"medium",
+			  true,10.f,true,"loose",
 			  true,1.f,
-			  true,true,false,
+			  true,false,false,
 			  false,false,false);
 
   // which plots to do:
@@ -47,6 +47,6 @@ void runPhotonPlots()
   // photons, ph1, phdelay
   // trigger, analysis
   photonPlots.DoPlots(false,false,false,false,
- 		      true,true,true,
-		      false,true);
+		      false,false,false,
+		      false,false);
 }

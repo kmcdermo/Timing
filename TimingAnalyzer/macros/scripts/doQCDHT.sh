@@ -1,11 +1,13 @@
 #!/bin/sh
 
+apply=${1:-1}
+
 # inclusive
 for vid in none medium
 do
     for HT in 100To200 200To300 300To500 500To700 700To1000 1000To1500 1500To2000 2000ToInf
     do
-	root -l -b -q "runPhotonPlots_HT.C("\"${vid}\",\"QCD\",\"${HT}\",0,0,0,1")"
+	root -l -b -q "runPhotonPlots_HT.C("\"${vid}\",\"QCD\",\"${HT}\",${apply},0,0,0,1")"
     done
 done
 
@@ -14,7 +16,7 @@ for vid in none medium
 do
     for HT in 100To200 200To300 300To500 500To700 700To1000 1000To1500 1500To2000 2000ToInf
     do
-	root -l -b -q "runPhotonPlots_HT.C("\"${vid}\",\"QCD\",\"${HT}\",1,0,0,1")"
+	root -l -b -q "runPhotonPlots_HT.C("\"${vid}\",\"QCD\",\"${HT}\",${apply},1,0,0,1")"
     done
 done
 
@@ -23,6 +25,6 @@ for vid in none medium
 do
     for HT in 100To200 200To300 300To500 500To700 700To1000 1000To1500 1500To2000 2000ToInf
     do
-	root -l -b -q "runPhotonPlots_HT.C("\"${vid}\",\"QCD\",\"${HT}\",0,1,0,1")"
+	root -l -b -q "runPhotonPlots_HT.C("\"${vid}\",\"QCD\",\"${HT}\",${apply},0,1,0,1")"
     done
 done

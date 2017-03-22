@@ -15,7 +15,7 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runPhotonPlots_hvds(TString VID1, TString ctau, Bool_t isEB, Bool_t isEE) 
+void runPhotonPlots_hvds(TString VID1, TString ctau, Bool_t apply, Bool_t isEB, Bool_t isEE) 
 {
   setupcpp11(); 
 
@@ -24,16 +24,13 @@ void runPhotonPlots_hvds(TString VID1, TString ctau, Bool_t isEB, Bool_t isEE)
   // config is:
   // filename, isGMSB, isHVDS, isBkg
   // isHLT2, isHLT3
-  // applyevcut, outdir, savehists
+  // applyevcut, outdir, savehists, savesub
   // applyjetptcut, jetptcut, applynjetscut, njetscut
   // applyph1ptcut, ph1ptcut, applyph1vidcut, ph1vid
   // applyphanyptcut, phanyptcut, applyphanyvidcut, phanyvid
   // applyrhecut, rhEcut
   // applyecalacceptcut, applyEBonly, applyEEonly
   // applyphmcmatching, applyexactphmcmcatch, applyantiphmcmatch
-
-  // apply analysis cuts to individual plots?
-  bool apply = true;
 
   Float_t ph1pt   = 50.f;
   Float_t phanypt = 10.f;
@@ -43,19 +40,19 @@ void runPhotonPlots_hvds(TString VID1, TString ctau, Bool_t isEB, Bool_t isEE)
   PlotPhotons photonPlots(Form("input/MC/signal/HVDS/photondump-hvds-ctau%s.root",ctau.Data()),
 			  false,true,false,
 			  false,false,
-			  false,Form("output/MC/signal/HVDS/photondump/ctau%s",ctau.Data()),false,
-			  apply,35.f,apply,3,
+			  false,Form("output/MC/signal/HVDS/photondump/ctau%s",ctau.Data()),false,false,
+			  apply,30.f,apply,3,
 			  apply,ph1pt,apply,VID1.Data(),
 			  apply,phanypt,apply,VIDany.Data(),
 			  true,1.f,
 			  true,isEB,isEE,
-			  true,true,false);
+			  apply,true,false);
 
   // which plots to do:
   // geninfo, vtxs, met, jets
   // photons, ph1, phdelay
   // trigger, analysis
   photonPlots.DoPlots(false,false,false,false,
- 		      false,true,true,
+ 		      true,true,true,
 		      false,false);
 }

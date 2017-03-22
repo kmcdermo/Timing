@@ -15,7 +15,7 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runPhotonPlots_HT(TString VID1, TString sample, TString bin, Bool_t isEB, Bool_t isEE, Bool_t exact, Bool_t anti) 
+void runPhotonPlots_HT(TString VID1, TString sample, TString bin, Bool_t apply, Bool_t isEB, Bool_t isEE, Bool_t exact, Bool_t anti) 
 {
   setupcpp11(); 
 
@@ -24,7 +24,7 @@ void runPhotonPlots_HT(TString VID1, TString sample, TString bin, Bool_t isEB, B
   // config is:
   // filename, isGMSB, isHVDS, isBkg
   // isHLT2, isHLT3
-  // applyevcut, outdir, savehists
+  // applyevcut, outdir, savehists, savesub
   // applyjetptcut, jetptcut, applynjetscut, njetscut
   // applyph1ptcut, ph1ptcut, applyph1vidcut, ph1vid
   // applyphanyptcut, phanyptcut, applyphanyvidcut, phanyvid
@@ -32,9 +32,6 @@ void runPhotonPlots_HT(TString VID1, TString sample, TString bin, Bool_t isEB, B
   // applyecalacceptcut, applyEBonly, applyEEonly
   // applyphmcmatching, applyexactphmcmatch, applyantiphmcmatch
   
-  // apply analysis cuts to individual plots?
-  bool apply = true;
-
   Float_t ph1pt   = 50.f;
   Float_t phanypt = 10.f;
 
@@ -43,19 +40,19 @@ void runPhotonPlots_HT(TString VID1, TString sample, TString bin, Bool_t isEB, B
   PlotPhotons photonPlots(Form("input/MC/bkg/%s/photondump-%s_HT%s.root",sample.Data(),sample.Data(),bin.Data()),
 			  false,false,true,
 			  false,false,
-			  false,Form("output/MC/bkg/%s/photondump/HT%s",sample.Data(),bin.Data()),false,
-			  apply,35.f,apply,3,
+			  false,Form("output/MC/bkg/%s/photondump/HT%s",sample.Data(),bin.Data()),false,false,
+			  apply,30.f,apply,3,
 			  apply,ph1pt,apply,VID1.Data(),
 			  apply,phanypt,apply,VIDany.Data(),
 			  true,1.f,
 			  true,isEB,isEE,
-			  true,exact,anti);
+			  apply,exact,anti);
 
   // which plots to do:
   // geninfo, vtxs, met, jets
   // photons, ph1, phdelay
   // trigger, analysis
   photonPlots.DoPlots(false,false,false,false,
- 		      false,true,true,
+ 		      true,true,true,
 		      false,false);
 }
