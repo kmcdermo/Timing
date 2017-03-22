@@ -54,9 +54,9 @@ public :
 	      Bool_t applyevcut = false, TString outdir = "output", Bool_t savehists = false, Bool_t savesub = false,
 	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t appynjetscut = false, Int_t njetscut = 3,
 	      Bool_t applyph1ptcut = false, Float_t ph1ptcut = 50.f, Bool_t applyph1vidcut = false, TString ph1vid = "medium", 
-	      Bool_t applyphanyptcut = false, Float_t phanyptcut = 10.f, Bool_t applyphvidcut = false, TString phvid = "loose", 
-	      Bool_t applyrhecut = false, Float_t rhEcut = 1.f,
-	      Bool_t applyecalacceptcut = false, Bool_t applyEBonly = false, Bool_t applyEEonly = false,
+	      Bool_t applyphanyptcut = true, Float_t phanyptcut = 10.f, Bool_t applyphvidcut = false, TString phvid = "loose", 
+	      Bool_t applyrhecut = true, Float_t rhEcut = 1.f,
+	      Bool_t applyecalacceptcut = true, Bool_t applyEBonly = false, Bool_t applyEEonly = false,
 	      Bool_t applyphmcmatchingcut = false, Bool_t applyphmcexactmacth = false, Bool_t applyphmcantimatch = false);
   ~PlotPhotons();
   void InitTree();

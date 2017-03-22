@@ -251,7 +251,14 @@ Int_t PlotPhotons::GetLeadingPhoton()
   for (Int_t iph = 0; iph < nphotons; iph++)
   {
     // basic photon selection
-    if (fApplyPh1PtCut && ((*phpt)[iph] < fPh1PtCut)) continue;
+    if (fApplyPh1PtCut)
+    {
+      if ((*phpt)[iph] < fPh1PtCut) continue;
+    }
+    else if (fApplyPhAnyPtCut)
+    { 
+      if ((*phpt)[iph] < fPhAnyPtCut) continue;
+    }
     if (fApplyPh1VIDCut && ((*phVID)[iph] < fPhVIDMap[fPh1VID])) continue;
     const Float_t eta = std::abs((*phsceta)[iph]);
     if (fApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
