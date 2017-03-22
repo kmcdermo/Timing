@@ -511,14 +511,19 @@ void PlotPhotons::FillMET()
 
 void PlotPhotons::FillJets()
 {
-  fPlots["njets"]->Fill(njets); 
+  fPlots["njetsinc"]->Fill(njets); 
 
   const Int_t nJets = PlotPhotons::GetNJetsAbovePt();
-  fPlots["nJets"]->Fill(nJets);  
+  fPlots["njets"]->Fill(nJets);  
 
+  Float_t jetHTinc = 0.f;
+  Float_t jetHT    = 0.f;
   Int_t nMatchedJets = 0;
-  for (Int_t ijet = 0; ijet < (fApplyNJetsCut ? nJets : njets); ijet++) 
+  for (Int_t ijet = 0; ijet < (fApplyNJetsCut ? nJets : njets); ijet++) // jets are ordered by pT, so up to nJets if applying njets cut!
   {
+    jetHTinc += (*jetpt)[ijet];
+    if (fApplyJetPtCut && ((*jetpt)[ijet] > fJetPtCut)) jetHT += (*jetpt)[ijet];
+
     fPlots["jetE"]->Fill((*jetE)[ijet]);
     fPlots["jetpt"]->Fill((*jetpt)[ijet]);
     fPlots["jetphi"]->Fill((*jetphi)[ijet]);
@@ -526,18 +531,20 @@ void PlotPhotons::FillJets()
     
     if (fIsGMSB && ((*jetmatch)[ijet] >= 0)) nMatchedJets++;
   }
+  fPlots["jetHTinc"]->Fill(jetHTinc);
+  fPlots["jetHT"]->Fill(jetHT);
 
   if (fIsGMSB) fPlots["nMatchedJets"]->Fill(nMatchedJets);  
 }
 
 void PlotPhotons::FillRecoPhotons()
 {
-  fPlots["nphotons"]->Fill(nphotons);
+  fPlots["nphotonsinc"]->Fill(nphotons);
 
   std::vector<Int_t> goodphotons;
   PlotPhotons::GetGoodPhotons(goodphotons);
 
-  fPlots["nPhotons"]->Fill(goodphotons.size());
+  fPlots["nphotons"]->Fill(goodphotons.size());
 
   Int_t nMatchedPhotons = 0;
   for (UInt_t gph = 0; gph < goodphotons.size(); gph++)
@@ -849,9 +856,12 @@ void PlotPhotons::SetupMET()
 
 void PlotPhotons::SetupJets()
 {
-  fPlots["njets"] = PlotPhotons::MakeTH1F("njets","nAK4Jets",40,0.f,40.f,"nAK4Jets","Events","AK4Jets");
-  fPlots["nJets"] = PlotPhotons::MakeTH1F("nJets",Form("nAK4Jets, p_{T} > %4.1f GeV/c",fJetPtCut),40,0.f,40.f,Form("nAK4Jets [p_{T} > %4.1f GeV/c]",fJetPtCut),"Events","AK4Jets");
+  fPlots["njetsinc"] = PlotPhotons::MakeTH1F("njetsinc","nAK4Jets",40,0.f,40.f,"nAK4Jets","Events","AK4Jets");
+  fPlots["njets"] = PlotPhotons::MakeTH1F("njets",Form("nAK4Jets, p_{T} > %4.1f GeV/c",fJetPtCut),40,0.f,40.f,Form("nAK4Jets (p_{T} > %4.1f GeV/c)",fJetPtCut),"Events","AK4Jets");
   if (fIsGMSB) fPlots["nMatchedJets"] = PlotPhotons::MakeTH1F("nMatchedJets","nMatchedJets (reco to gen)",40,0.f,40.f,"nMatchedJets","Events","AK4Jets");
+
+  fPlots["jetHTinc"] = PlotPhotons::MakeTH1F("jetHTinc","Jet HT [GeV/c] (reco)",100,0.f,5000.f,"Jet HT [GeV/c]","Events","AK4Jets");
+  fPlots["jetHT"] = PlotPhotons::MakeTH1F("jetHT","Jet HT [GeV/c] (reco)",100,0.f,5000.f,Form("Jet HT [GeV/c] (p_{T} > %4.1f GeV/c)",fJetPtCut),"Events","AK4Jets");
 
   fPlots["jetE"] = PlotPhotons::MakeTH1F("jetE","Jets Energy [GeV] (reco)",100,0.f,3000.f,"Energy [GeV]","Jets","AK4Jets");
   fPlots["jetpt"] = PlotPhotons::MakeTH1F("jetpt","Jets p_{T} [GeV/c] (reco)",100,0.f,3000.f,"Jet p_{T} [GeV/c]","Jets","AK4Jets");
@@ -861,8 +871,8 @@ void PlotPhotons::SetupJets()
 
 void PlotPhotons::SetupRecoPhotons()
 {
-  fPlots["nphotons"] = PlotPhotons::MakeTH1F("nphotons","nPhotons (reco)",20,0.f,20.f,"nPhotons","Events","RecoPhotons");
-  fPlots["nPhotons"] = PlotPhotons::MakeTH1F("nPhotons","nGoodPhotons (reco)",20,0.f,20.f,"nGoodPhotons","Events","RecoPhotons");
+  fPlots["nphotonsinc"] = PlotPhotons::MakeTH1F("nphotonsinc","nPhotons (reco)",20,0.f,20.f,"nPhotons","Events","RecoPhotons");
+  fPlots["nphotons"] = PlotPhotons::MakeTH1F("nphotons","nGoodPhotons (reco)",20,0.f,20.f,"nGoodPhotons","Events","RecoPhotons");
   if (fIsMC) fPlots["nMatchedPhotons"] = PlotPhotons::MakeTH1F("nMatchedPhotons","nMatchedPhotons (reco to gen)",20,0.f,20.f,"nMatchedPhotons","Events","RecoPhotons");
 
   // All reco photons
