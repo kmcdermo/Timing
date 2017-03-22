@@ -526,13 +526,35 @@ void PlotPhotons::FillJets()
   Float_t jetHTinc = 0.f;
   Float_t jetHT    = 0.f;
   Int_t nMatchedJets = 0;
+  
+  std::map<Int_t,Int_t> nJetspTmap; 
+  nJetspTmap[5]   = 0;
+  nJetspTmap[10]  = 0;
+  nJetspTmap[15]  = 0;
+  nJetspTmap[20]  = 0;
+  nJetspTmap[30]  = 0;
+  nJetspTmap[40]  = 0;
+  nJetspTmap[50]  = 0;
+  nJetspTmap[75]  = 0;
+  nJetspTmap[100] = 0;
+
   for (Int_t ijet = 0; ijet < (fApplyNJetsCut ? nJets : njets); ijet++) // jets are ordered by pT, so up to nJets if applying njets cut!
   {
-    jetHTinc += (*jetpt)[ijet];
-    if (fApplyJetPtCut && ((*jetpt)[ijet] > fJetPtCut)) jetHT += (*jetpt)[ijet];
+    const Float_t jetPt = (*jetpt)[ijet];
+    jetHTinc += jetPt;
+    if (fApplyJetPtCut && (jetPt > fJetPtCut)) jetHT += jetPt;
+    if (jetPt > 5.f  ) nJetspTmap[5]++;
+    if (jetPt > 10.f ) nJetspTmap[10]++;
+    if (jetPt > 15.f ) nJetspTmap[15]++;
+    if (jetPt > 20.f ) nJetspTmap[20]++;
+    if (jetPt > 30.f ) nJetspTmap[30]++;
+    if (jetPt > 40.f ) nJetspTmap[40]++;
+    if (jetPt > 50.f ) nJetspTmap[50]++;
+    if (jetPt > 75.f ) nJetspTmap[75]++;
+    if (jetPt > 100.f) nJetspTmap[100]++;
 
     fPlots["jetE"]->Fill((*jetE)[ijet]);
-    fPlots["jetpt"]->Fill((*jetpt)[ijet]);
+    fPlots["jetpt"]->Fill(jetPt);
     fPlots["jetphi"]->Fill((*jetphi)[ijet]);
     fPlots["jeteta"]->Fill((*jeteta)[ijet]);
     
@@ -540,6 +562,16 @@ void PlotPhotons::FillJets()
   }
   fPlots["jetHTinc"]->Fill(jetHTinc);
   fPlots["jetHT"]->Fill(jetHT);
+
+  fPlots2D["nJetsPt5_vs_jetHT"]  ->Fill(jetHTinc,nJetspTmap[5]);
+  fPlots2D["nJetsPt10_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[10]);
+  fPlots2D["nJetsPt15_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[15]);
+  fPlots2D["nJetsPt20_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[20]);
+  fPlots2D["nJetsPt30_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[30]);
+  fPlots2D["nJetsPt40_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[40]);
+  fPlots2D["nJetsPt50_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[50]);
+  fPlots2D["nJetsPt75_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[75]);
+  fPlots2D["nJetsPt100_vs_jetHT"]->Fill(jetHTinc,nJetspTmap[100]);
 
   if (fIsGMSB) fPlots["nMatchedJets"]->Fill(nMatchedJets);  
 }
@@ -867,8 +899,18 @@ void PlotPhotons::SetupJets()
   fPlots["njets"] = PlotPhotons::MakeTH1F("njets",Form("nAK4Jets, p_{T} > %4.1f GeV/c",fJetPtCut),40,0.f,40.f,Form("nAK4Jets (p_{T} > %4.1f GeV/c)",fJetPtCut),"Events","AK4Jets");
   if (fIsGMSB) fPlots["nMatchedJets"] = PlotPhotons::MakeTH1F("nMatchedJets","nMatchedJets (reco to gen)",40,0.f,40.f,"nMatchedJets","Events","AK4Jets");
 
-  fPlots["jetHTinc"] = PlotPhotons::MakeTH1F("jetHTinc","Jet HT [GeV/c] (reco)",100,0.f,5000.f,"Jet HT [GeV/c]","Events","AK4Jets");
-  fPlots["jetHT"] = PlotPhotons::MakeTH1F("jetHT","Jet HT [GeV/c] (reco)",100,0.f,5000.f,Form("Jet HT [GeV/c] (p_{T} > %4.1f GeV/c)",fJetPtCut),"Events","AK4Jets");
+  fPlots["jetHTinc"] = PlotPhotons::MakeTH1F("jetHTinc","Jet H_{T} [GeV/c] (reco)",100,0.f,5000.f,"Jet H_{T} [GeV/c]","Events","AK4Jets");
+  fPlots["jetHT"] = PlotPhotons::MakeTH1F("jetHT","Jet H_{T} [GeV/c] (reco)",100,0.f,5000.f,Form("Jet H_{T} [GeV/c] (p_{T} > %4.1f GeV/c)",fJetPtCut),"Events","AK4Jets");
+
+  fPlots2D["nJetsPt5_vs_jetHT"]   = PlotPhotons::MakeTH2F("nJetsPt5_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 5 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 5 GeV/c","AK4Jets");
+  fPlots2D["nJetsPt10_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt10_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 10 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 10 GeV/c","AK4Jets");
+  fPlots2D["nJetsPt15_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt15_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 15 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 15 GeV/c","AK4Jets");
+  fPlots2D["nJetsPt20_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt20_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 20 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 20 GeV/c","AK4Jets");
+  fPlots2D["nJetsPt30_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt30_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 30 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 30 GeV/c","AK4Jets");
+  fPlots2D["nJetsPt40_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt40_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 40 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 40 GeV/c","AK4Jets");
+  fPlots2D["nJetsPt50_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt50_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 50 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 50 GeV/c","AK4Jets");
+  fPlots2D["nJetsPt75_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt75_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 75 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 75 GeV/c","AK4Jets");
+  fPlots2D["nJetsPt100_vs_jetHT"] = PlotPhotons::MakeTH2F("nJetsPt100_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 100 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 100 GeV/c","AK4Jets");
 
   fPlots["jetE"] = PlotPhotons::MakeTH1F("jetE","Jets Energy [GeV] (reco)",100,0.f,3000.f,"Energy [GeV]","Jets","AK4Jets");
   fPlots["jetpt"] = PlotPhotons::MakeTH1F("jetpt","Jets p_{T} [GeV/c] (reco)",100,0.f,3000.f,"Jet p_{T} [GeV/c]","Jets","AK4Jets");

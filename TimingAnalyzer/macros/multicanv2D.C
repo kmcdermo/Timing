@@ -38,8 +38,8 @@ void multicanv2D()
 	for (UInt_t ihistname = 0; ihistname < histnames.size(); ihistname++)
 	{
 	  // declare canvas
-	  TCanvas * canv = new TCanvas("canv","canv",2000,1200); 
-	  canv->Divide(photons.size(),cuts.size(),0.0001,0.025);  
+	  TCanvas * canv = new TCanvas("canv","canv",2000,1300); 
+	  canv->Divide(photons.size(),cuts.size(),0.0001,0.001);  
 	  for (UInt_t icut = 0; icut < cuts.size(); icut++)
           {
 	    TFile * file = TFile::Open(Form("%s%s/%s_%s/plots.root",mapiter->first.Data(),mapiter->second[ictau].Data(),cuts[icut].Data(),regions[iregion].Data()));
@@ -54,11 +54,16 @@ void multicanv2D()
 	    
 	      // get and draw the histogram in question
 	      TH1F * hist = (TH1F*)file->Get(histname.Data());
+	      hist->Scale(1.f/hist->Integral());
 	      hist->Draw("colz");
 	    } // end loop over group of photon
 	  } // end loop over group of cuts
+	  // Rename ecal accept
+	  TString region = regions[iregion];
+	  if (region.EqualTo("ecalaccept",TString::kExact)) region = "InclusiveECAL";
+
 	  // save and delete the canvas
-	  canv->SaveAs(Form("%s%s/%s_%s.png",mapiter->first.Data(),mapiter->second[ictau].Data(),histnames[ihistname].Data(),regions[iregion].Data()));
+	  canv->SaveAs(Form("%s%s/%s_%s.png",mapiter->first.Data(),mapiter->second[ictau].Data(),histnames[ihistname].Data(),region.Data()));
 	  delete canv;
 	} // end loop over histogram names
       } // end loop over ECAL region
