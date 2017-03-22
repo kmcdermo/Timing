@@ -15,7 +15,7 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runPhotonPlots_HT(TString VID1, TString sample, TString bin, Bool_t apply, Bool_t isEB, Bool_t isEE, Bool_t exact, Bool_t anti) 
+void runPhotonPlots_HT(TString VID1, TString sample, TString bin, Bool_t apply, Bool_t isEB, Bool_t isEE, Bool_t exact, Bool_t anti, Bool_t phmc) 
 {
   setupcpp11(); 
 
@@ -43,10 +43,10 @@ void runPhotonPlots_HT(TString VID1, TString sample, TString bin, Bool_t apply, 
 			  false,Form("output/MC/bkg/%s/photondump/HT%s",sample.Data(),bin.Data()),false,false,
 			  apply,30.f,apply,3,
 			  apply,ph1pt,apply,VID1.Data(),
-			  apply,phanypt,apply,VIDany.Data(),
+			  true,phanypt,apply,VIDany.Data(),
 			  true,1.f,
 			  true,isEB,isEE,
-			  apply,exact,anti);
+			  phmc,exact,anti);
 
   // which plots to do:
   // geninfo, vtxs, met, jets

@@ -15,7 +15,7 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runPhotonPlots_gmsb(TString VID1, TString ctau, Bool_t apply, Bool_t isEB, Bool_t isEE) 
+void runPhotonPlots_gmsb(TString VID1, TString ctau, Bool_t apply, Bool_t isEB, Bool_t isEE, Bool_t phmc) 
 {
   setupcpp11(); 
 
@@ -43,10 +43,10 @@ void runPhotonPlots_gmsb(TString VID1, TString ctau, Bool_t apply, Bool_t isEB, 
 			  false,Form("output/MC/signal/GMSB/photondump/ctau%s",ctau.Data()),false,false,
 			  apply,30.f,apply,3,
 			  apply,ph1pt,apply,VID1.Data(),
-			  apply,phanypt,apply,VIDany.Data(),
+			  true,phanypt,apply,VIDany.Data(),
 			  true,1.f,
 			  true,isEB,isEE,
-			  apply,true,false);
+			  phmc,true,false);
 
   // which plots to do:
   // geninfo, vtxs, met, jets
