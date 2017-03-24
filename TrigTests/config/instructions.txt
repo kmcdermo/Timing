@@ -2,7 +2,7 @@ Generate the file with this line:
 
 DATA
 
-hltGetConfiguration /users/kmcdermo/Tutorial/TestDev_8_0_24/V4 --full --offline --unprescale --no-output --process TEST --l1-emulator 'uGT' --l1Xml L1Menu_Collisions2016_v9_m2.xml --data --globaltag auto:run2_hlt_GRun --input /store/data/Run2016H/SinglePhoton/RAW/v1/000/283/885/00000/32F9297A-4B9D-E611-B83E-02163E01458F.root --max-events 100 > hlt_L1uGT.py
+hltGetConfiguration /users/kmcdermo/TestDev/GRunDisplacedPhotonHT_Full/V2 --full --offline --prescale 1.35e34 --no-output --process TEST --l1-emulator 'uGT' --l1Xml L1Menu_Collisions2016_v9_m2.xml --data --globaltag auto:run2_hlt_GRun --input /store/data/Run2016H/SinglePhoton/RAW/v1/000/283/885/00000/32F9297A-4B9D-E611-B83E-02163E01458F.root --max-events 100 > hlt_L1uGT.py
 
 MC
 
@@ -45,4 +45,4 @@ process.L1TGlobalPrescalesVetos.PrescaleXMLFile = cms.string('UGT_BASE_RS_PRESCA
 process.L1TGlobalPrescalesVetos.FinOrMaskXMLFile = cms.string('UGT_BASE_RS_FINOR_MASK_v91.xml')
 process.simGtStage2Digis.AlgorithmTriggersUnmasked = cms.bool(False)
 process.simGtStage2Digis.AlgorithmTriggersUnprescaled = cms.bool(False)
-process.simGtStage2Digis.PrescaleSet = cms.uint32(1)
+process.simGtStage2Digis.PrescaleSet = cms.uint32(3) #### change this to '1' if using --prescale emergency (i.e. 1p6e34)
