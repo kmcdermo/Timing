@@ -1652,7 +1652,7 @@ void PlotPhotons::InitPh1Config(TString config)
     if (var.EqualTo("ApplyPh1PtCut")) Config::ApplyPh1PtCut = val.Atoi();
     if (var.EqualTo("Ph1PtCut")) Config::Ph1PtCut = val.Atof();
     if (var.EqualTo("ApplyPh1VIDCut")) Config::ApplyPh1VIDCut = val.Atoi();
-    if (var.EqualTo("Ph1VIDCut")) Config::Ph1VID = val;
+    if (var.EqualTo("Ph1VID")) Config::Ph1VID = val;
     if (var.EqualTo("ApplyPh1R9Cut")) Config::ApplyPh1R9Cut = val.Atoi();
     if (var.EqualTo("Ph1R9Cut")) Config::Ph1R9Cut = val.Atof();
     if (var.EqualTo("ApplyPh1SmajEBMin")) Config::ApplyPh1SmajEBMin = val.Atoi();
@@ -1685,7 +1685,7 @@ void PlotPhotons::InitPhAnyConfig(TString config)
     if (var.EqualTo("ApplyPhAnyPtCut")) Config::ApplyPhAnyPtCut = val.Atoi();
     if (var.EqualTo("PhAnyPtCut")) Config::PhAnyPtCut = val.Atof();
     if (var.EqualTo("ApplyPhAnyVIDCut")) Config::ApplyPhAnyVIDCut = val.Atoi();
-    if (var.EqualTo("PhAnyVIDCut")) Config::PhAnyVID = val;
+    if (var.EqualTo("PhAnyVID")) Config::PhAnyVID = val;
     if (var.EqualTo("ApplyPhAnyR9Cut")) Config::ApplyPhAnyR9Cut = val.Atoi();
     if (var.EqualTo("PhAnyR9Cut")) Config::PhAnyR9Cut = val.Atof();
     if (var.EqualTo("ApplyPhAnySmajEBMin")) Config::ApplyPhAnySmajEBMin = val.Atoi();
