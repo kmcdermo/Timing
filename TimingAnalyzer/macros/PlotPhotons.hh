@@ -51,12 +51,8 @@ class PlotPhotons
 public :
   PlotPhotons(TString filename, Bool_t isGMSB = false, Bool_t isHVDS = false, Bool_t isBkg = false, 
 	      TString outdir = "output", Bool_t savehists = false, Bool_t savesub = false,
-	      TString genericconfig = "config/plotter-generic.txt",
-	      TString hltconfig = "config/plotter-hlt.txt",
-	      TString jetconfig = "config/plotter-jet.txt",
-	      TString ph1config = "config/plotter-ph1.txt",
-	      TString phanyconfig = "config/plotter-phany.txt",	
-	      TString photonconfig = "config/plotter-photon.txt");
+	      TString genericconfig = "config/plotter-generic.txt", TString hltconfig = "config/plotter-hlt.txt", TString jetconfig = "config/plotter-jet.txt",
+	      TString ph1config = "config/plotter-ph1.txt", TString phanyconfig = "config/plotter-phany.txt", TString photonconfig = "config/plotter-photon.txt");
   ~PlotPhotons();
   void InitTree();
   void InitGenericConfig(TString config);

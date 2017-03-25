@@ -8,7 +8,8 @@
 
 PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t isBkg, 
 			 TString outdir, Bool_t savehists, Bool_t savesub,
-			 TString genericconfig, TString hltconfig, TString jetconfig, TString ph1config, TString phanyconfig, TString photonconfig) :
+			 TString genericconfig, TString hltconfig, TString jetconfig, 
+			 TString ph1config, TString phanyconfig, TString photonconfig) :
   fOutDir(outdir), fIsGMSB(isGMSB), fIsHVDS(isHVDS), fIsBkg(isBkg), 
   fSaveHists(savehists), fSaveSub(savesub)
 {
