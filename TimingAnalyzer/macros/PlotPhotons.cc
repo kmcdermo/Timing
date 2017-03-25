@@ -69,11 +69,13 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
   if (Config::ApplyMinJetPtCut) fOutDir += Form("_minjetpt%4.1f", Config::MinJetPtCut);
   if (Config::ApplyJetPtCut)    fOutDir += Form("_jetpt%4.1f"   , Config::JetPtCut);
   if (Config::ApplyNJetsCut)    fOutDir += Form("_njets%i"      , Config::NJetsCut);
-  if (Config::ApplyPh1PtCut)    fOutDir += Form("_ph1pt%3.1f"   , Config::Ph1PtCut);
+  if (Config::ApplyPh1PtCut)    fOutDir += Form("_ph1pt%4.1f"   , Config::Ph1PtCut);
   if (Config::ApplyPh1VIDCut)   fOutDir += Form("_ph1VID%s"     , Config::Ph1VID.Data());
-  if (Config::ApplyPhAnyPtCut)  fOutDir += Form("_phanypt%3.1f" , Config::PhAnyPtCut);
+  if (Config::ApplyPh1R9Cut)    fOutDir += Form("_ph1r9%3.1f"   , Config::Ph1R9Cut);
+  if (Config::ApplyPhAnyPtCut)  fOutDir += Form("_phanypt%4.1f" , Config::PhAnyPtCut);
   if (Config::ApplyPhAnyVIDCut) fOutDir += Form("_phanyVID%s"   , Config::PhAnyVID.Data());
-  if (Config::ApplyrhECut)      fOutDir += Form("_rhE%2.1f"     , Config::rhECut);
+  if (Config::ApplyPhAnyR9Cut)  fOutDir += Form("_phanyr9%3.1f" , Config::PhAnyR9Cut);
+  if (Config::ApplyrhECut)      fOutDir += Form("_rhE%3.1f"     , Config::rhECut);
   if (Config::ApplyPhMCMatchingCut)
   {
     if      (Config::ApplyExactPhMCMatch) fOutDir += Form("_exactphmc");
