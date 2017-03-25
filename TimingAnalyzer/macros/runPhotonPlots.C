@@ -19,34 +19,34 @@ void runPhotonPlots()
 {
   setupcpp11(); 
 
+  gROOT->LoadMacro("Config.cc+g");
   gROOT->LoadMacro("PlotPhotons.cc+g");
 
   // config is:
-  // filename, isGMSB, isHVDS, isBkg
-  // isHLT2, isHLT3
-  // applyevcut, outdir, savehists, savesub
-  // applyjetptcut, jetptcut, applynjetscut, njetscut
-  // applyph1ptcut, ph1ptcut, applyph1vidcut, ph1vid
-  // applyphanyptcut, phanyptcut, applyphanyvidcut, phanyvid
-  // applyrhecut, rhEcut
-  // applyecalacceptcut, applyEBonly, applyEEonly
-  // applyphmcmatchingcut, applyexactphmcmatch, applyantiphmcmatch
-
-  PlotPhotons photonPlots("input/MC/signal/GMSB/photondump-gmsb-ctau6000-HLT2.root",true,false,false,
-			  true,false,
-			  false,"output/MC/signal/GMSB/ctau6000",true,true,
-			  true,35.f,true,3,
-			  true,50.f,true,"medium",
-			  true,10.f,true,"loose",
-			  true,1.f,
-			  true,false,false,
-			  false,false,false);
+  // filename, 
+  // isGMSB, isHVDS, isBkg
+  // outdir
+  // savehists, savesub
+  // generic config
+  // hlt config
+  // jet config
+  // leading photon config
+  // any photon config
+  PlotPhotons photonPlots("input/MC/signal/HVDS/photondump-hvds-ctau1000-HLT2.root",
+			  false,false,false,
+			  "output/trigger/MC/signal/HVDS/ctau1000",
+			  false,false,
+			  "config/plotter-generic.txt",
+			  "config/plotter-hlt.txt",
+			  "config/plotter-jet.txt",
+			  "config/plotter-ph1.txt",
+			  "config/plotter-phany.txt");
 
   // which plots to do:
   // geninfo, vtxs, met, jets
   // photons, ph1, phdelay
   // trigger, analysis
-  photonPlots.DoPlots(false,false,false,false,
-		      false,false,false,
+  photonPlots.DoPlots(false,false,false,true,
+		      true,true,true,
 		      false,false);
 }

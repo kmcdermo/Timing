@@ -50,15 +50,14 @@ class PlotPhotons
 {
 public :
   PlotPhotons(TString filename, Bool_t isGMSB = false, Bool_t isHVDS = false, Bool_t isBkg = false, 
-	      Bool_t isHLT2 = false, Bool_t isHLT3 = false,
-	      Bool_t applyevcut = false, TString outdir = "output", Bool_t savehists = false, Bool_t savesub = false,
-	      Bool_t applyjetptcut = false, Float_t jetptcut = 35.f, Bool_t appynjetscut = false, Int_t njetscut = 3,
-	      Bool_t applyph1ptcut = false, Float_t ph1ptcut = 50.f, Bool_t applyph1vidcut = false, TString ph1vid = "medium", 
-	      Bool_t applyphanyptcut = true, Float_t phanyptcut = 10.f, Bool_t applyphvidcut = false, TString phvid = "loose", 
-	      Bool_t applyrhecut = true, Float_t rhEcut = 1.f,
-	      Bool_t applyecalacceptcut = true, Bool_t applyEBonly = false, Bool_t applyEEonly = false,
-	      Bool_t applyphmcmatchingcut = false, Bool_t applyphmcexactmacth = false, Bool_t applyphmcantimatch = false);
-  ~PlotPhotons();
+	      TString outdir = "output", Bool_t savehists = false, Bool_t savesub = false,
+	      TString genericconfig = "config/plotter-generic.txt",
+	      TString hltconfig = "config/plotter-hlt.txt",
+	      TString jetconfig = "config/plotter-jet.txt",
+	      TString ph1config = "config/plotter-ph1.txt",
+	      TString phanyconfig = "config/plotter-phany.txt");
+
+	 ~PlotPhotons();
   void InitTree();
   void DoPlots(Bool_t geninfo = false, Bool_t vtxs = false, Bool_t met = false, Bool_t jets = false, 
 	       Bool_t photons = false, Bool_t ph1 = false, Bool_t phdelay = false, Bool_t trigger = false, Bool_t analysis = false);
@@ -84,6 +83,7 @@ public :
   Int_t GetLeadingPhoton();
   Int_t GetGoodPhotons(std::vector<Int_t> & goodphotons);
   Int_t GetMostDelayedPhoton();
+  Float_t GetJetHTAbovePt();
   Int_t GetNJetsAbovePt();
   void FillGenInfo();
   void FillGMSB();
@@ -112,42 +112,16 @@ private :
   const Bool_t fIsHVDS;
   const Bool_t fIsBkg;
         Bool_t fIsMC;
-  const Bool_t fIsHLT2;
-  const Bool_t fIsHLT3;
+  const Bool_t fSaveHists;
+  const Bool_t fSaveSub;
 
   // In routine vars
-  UInt_t  fNEvCheck;
   TH1Map  fPlots;
   TH2Map  fPlots2D;
   TH1PairMap fTrigPlots;
   TStrIntMap fEfficiency;
-  Float_t fCTau;
-
-  // Config
-  const Bool_t  fApplyEvCut;
-  const Bool_t  fSaveHists;
-  const Bool_t  fSaveSub;
-  const Bool_t  fApplyJetPtCut;
-  const Float_t fJetPtCut;
-  const Bool_t  fApplyNJetsCut;
-  const Int_t   fNJetsCut;
-  const Bool_t  fApplyPh1PtCut;
-  const Float_t fPh1PtCut;
-  const Bool_t  fApplyPh1VIDCut;
-  const TString fPh1VID;
-  const Bool_t  fApplyPhAnyPtCut;
-  const Float_t fPhAnyPtCut;
-  const Bool_t  fApplyPhAnyVIDCut;
-  const TString fPhAnyVID;
-  const Bool_t  fApplyrhECut;
-  const Float_t frhECut;
-  const Bool_t  fApplyECALAcceptCut;
-  const Bool_t  fApplyEBOnly;
-  const Bool_t  fApplyEEOnly;
-  const Bool_t  fApplyPhMCMatchingCut;
-  const Bool_t  fApplyExactPhMCMatch;
-  const Bool_t  fApplyAntiPhMCMatch;
-  TStrIntMap    fPhVIDMap;
+  Float_t    fCTau;
+  TStrIntMap fPhVIDMap;
 
   // Output vars
   TString fOutDir;

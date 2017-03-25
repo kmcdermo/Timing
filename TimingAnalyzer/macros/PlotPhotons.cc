@@ -1,3 +1,4 @@
+#include "Config.hh"
 #include "PlotPhotons.hh"
 #include "TSystem.h"
 #include "TCanvas.h"
@@ -6,23 +7,10 @@
 #include <iostream>
 
 PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t isBkg, 
-			 Bool_t isHLT2, Bool_t isHLT3,
-			 Bool_t applyevcut, TString outdir, Bool_t savehists, Bool_t savesub,
-			 Bool_t applyjetptcut, Float_t jetptcut, Bool_t applynjetscut, Int_t njetscut,
-			 Bool_t applyph1ptcut, Float_t ph1ptcut, Bool_t applyph1vidcut, TString ph1vid,
-			 Bool_t applyphanyptcut, Float_t phanyptcut, Bool_t applyphanyvidcut, TString phanyvid,
-			 Bool_t applyrhecut, Float_t rhEcut,
-			 Bool_t applyecalacceptcut, Bool_t applyEBonly, Bool_t applyEEonly,
-			 Bool_t applyphmcmatchingcut, Bool_t applyexactphmcmatch, Bool_t applyantiphmcmatch) :
+			 TString outdir, Bool_t savehists, Bool_t savesub,
+			 TString genericconfig, TString hltconfig, TString jetconfig, TString ph1config, TString phanyconfig) :
   fOutDir(outdir), fIsGMSB(isGMSB), fIsHVDS(isHVDS), fIsBkg(isBkg), 
-  fIsHLT2(isHLT2), fIsHLT3(isHLT3),
-  fApplyEvCut(applyevcut), fSaveHists(savehists), fSaveSub(savesub),
-  fApplyJetPtCut(applyjetptcut), fJetPtCut(jetptcut), fApplyNJetsCut(applynjetscut), fNJetsCut(njetscut),
-  fApplyPh1PtCut(applyph1ptcut), fPh1PtCut(ph1ptcut), fApplyPh1VIDCut(applyph1vidcut), fPh1VID(ph1vid), 
-  fApplyPhAnyPtCut(applyphanyptcut), fPhAnyPtCut(phanyptcut), fApplyPhAnyVIDCut(applyphanyvidcut), fPhAnyVID(phanyvid), 
-  fApplyrhECut(applyrhecut), frhECut(rhEcut),
-  fApplyECALAcceptCut(applyecalacceptcut), fApplyEBOnly(applyEBonly), fApplyEEOnly(applyEEonly),
-  fApplyPhMCMatchingCut(applyphmcmatchingcut), fApplyExactPhMCMatch(applyexactphmcmatch), fApplyAntiPhMCMatch(applyantiphmcmatch)
+  fSaveHists(savehists), fSaveSub(savesub)
 {
   // input
   fInFile = TFile::Open(filename.Data());
@@ -34,8 +22,8 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
   // initialize tree
   PlotPhotons::InitTree();
 
-  // in routine initialization
-  fNEvCheck = 1000;
+  // in routine initialization from config files
+
   // make the vid maps!
   fPhVIDMap["none"]   = 0;
   fPhVIDMap["loose"]  = 1;
@@ -60,51 +48,36 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
 
   // initialize efficiency map
   fEfficiency["Photons"] = 0;
+  fEfficiency["HT"]      = 0;
   fEfficiency["Jets"]    = 0;
+  fEfficiency["Jets+HT"] = 0;
+  fEfficiency["Reco"]    = 0;
   fEfficiency["Trigger"] = 0;
   fEfficiency["Events"]  = 0;
   
-  fEfficiency["Reco"] = 0;
-  fEfficiency["HLT_DisplacedPhoton45_v"] = 0;
-  fEfficiency["HLT_DisplacedPhoton60_DiPFJet50_v"] = 0;
-  fEfficiency["HLT_DisplacedPhoton60_TriPFJet35_v"] = 0; 
-  fEfficiency["HLT_DisplacedPhoton100_v"] = 0;
-  fEfficiency["HLT_DoublePhoton60_v"] = 0;
-
-  fEfficiency["HLT_DisplacedPhoton45_v_Event"] = 0;
-  fEfficiency["HLT_DisplacedPhoton60_DiPFJet50_v_Event"] = 0;
-  fEfficiency["HLT_DisplacedPhoton60_TriPFJet35_v_Event"] = 0; 
-  fEfficiency["HLT_DisplacedPhoton100_v_Event"] = 0;
-  fEfficiency["HLT_DoublePhoton60_v_Event"] = 0;
-  
   // output
   // setup outdir name
-  if (!fApplyNJetsCut && !fApplyPh1PtCut && !fApplyPh1VIDCut && !fApplyPhAnyPtCut && !fApplyPhAnyVIDCut && !fApplyrhECut && !fApplyPhMCMatchingCut && !fApplyECALAcceptCut)
-  { 
-    fOutDir += "/Inclusive";
-  }
-  else 
+  fOutDir += "/cuts";
+  if (Config::ApplyJetHtCut)    fOutDir += Form("_jetht%5.1f"   , Config::JetHtCut);
+  if (Config::ApplyMinJetPtCut) fOutDir += Form("_minjetpt%4.1f", Config::MinJetPtCut);
+  if (Config::ApplyJetPtCut)    fOutDir += Form("_jetpt%4.1f"   , Config::JetPtCut);
+  if (Config::ApplyNJetsCut)    fOutDir += Form("_njets%i"      , Config::NJetsCut);
+  if (Config::ApplyPh1PtCut)    fOutDir += Form("_ph1pt%3.1f"   , Config::Ph1PtCut);
+  if (Config::ApplyPh1VIDCut)   fOutDir += Form("_ph1VID%s"     , Config::Ph1VID.Data());
+  if (Config::ApplyPhAnyPtCut)  fOutDir += Form("_phanypt%3.1f" , Config::PhAnyPtCut);
+  if (Config::ApplyPhAnyVIDCut) fOutDir += Form("_phanyVID%s"   , Config::PhAnyVID.Data());
+  if (Config::ApplyrhECut)      fOutDir += Form("_rhE%2.1f"     , Config::rhECut);
+  if (Config::ApplyPhMCMatchingCut)
   {
-    fOutDir += "/cuts";
-    if (fApplyJetPtCut)    fOutDir += Form("_jetpt%3.1f"  , fJetPtCut);
-    if (fApplyNJetsCut)    fOutDir += Form("_njets%i"     , fNJetsCut);
-    if (fApplyPh1PtCut)    fOutDir += Form("_ph1pt%3.1f"  , fPh1PtCut);
-    if (fApplyPh1VIDCut)   fOutDir += Form("_ph1VID%s"    , fPh1VID.Data());
-    if (fApplyPhAnyPtCut)  fOutDir += Form("_phanypt%3.1f", fPhAnyPtCut);
-    if (fApplyPhAnyVIDCut) fOutDir += Form("_phanyVID%s"  , fPhAnyVID.Data());
-    if (fApplyrhECut)      fOutDir += Form("_rhE%2.1f"    , frhECut);
-    if (fApplyPhMCMatchingCut)
-    {
-      if      (fApplyExactPhMCMatch)  fOutDir += Form("_exactphmc");
-      else if (fApplyAntiPhMCMatch)   fOutDir += Form("_antiphmc");
-      else    { std::cout << "Need to specify a matching criterion!" << std::endl; exit(0); }
-    }
-    if (fApplyECALAcceptCut) 
-    { 
-      if      (fApplyEBOnly) fOutDir += Form("_EBOnly");
-      else if (fApplyEEOnly) fOutDir += Form("_EEOnly");
-      else                   fOutDir += Form("_ecalaccept");
-    }
+    if      (Config::ApplyExactPhMCMatch) fOutDir += Form("_exactphmc");
+    else if (Config::ApplyAntiPhMCMatch)  fOutDir += Form("_antiphmc");
+    else    { std::cout << "Need to specify a matching criterion!" << std::endl; exit(0); }
+  }
+  if (Config::ApplyECALAcceptCut) 
+  { 
+    if      (Config::ApplyEBOnly) fOutDir += Form("_EBOnly");
+    else if (Config::ApplyEEOnly) fOutDir += Form("_EEOnly");
+    else                          fOutDir += Form("_ecalaccept");
   }
   fOutDump = fOutDir; // --> simple directory for dump of plots
 
@@ -169,11 +142,11 @@ void PlotPhotons::EventLoop(Bool_t geninfo, Bool_t vtxs, Bool_t met, Bool_t jets
     fInTree->GetEntry(entry);
     
     // standard printout
-    if (entry%fNEvCheck == 0 || entry == 0) std::cout << "Entry " << entry << " out of " << fInTree->GetEntries() << std::endl;
+    if (entry%Config::NEvCheck == 0 || entry == 0) std::cout << "Entry " << entry << " out of " << fInTree->GetEntries() << std::endl;
 
     // count events passing given selection
     const Bool_t passed = PlotPhotons::CountEvents();
-    if (fApplyEvCut && !passed) continue;
+    if (Config::ApplyEvCut && !passed) continue;
 
     // plots!
     if (geninfo && fIsMC)
@@ -204,39 +177,33 @@ void PlotPhotons::EventLoop(Bool_t geninfo, Bool_t vtxs, Bool_t met, Bool_t jets
 Bool_t PlotPhotons::CountEvents()
 {
   // photon selection efficiency
-  const Int_t ph1 = PlotPhotons::GetLeadingPhoton();
+  std::vector<Int_t> goodphotons;
+  const Int_t ph1 = PlotPhotons::GetGoodPhotons(goodphotons);
   const Bool_t photon_b = (ph1 != -1);
   if (photon_b) fEfficiency["Photons"]++;
 
-  // jet selection efficiency
-  const Int_t nJets = PlotPhotons::GetNJetsAbovePt();
-  const Bool_t jets_b = (fApplyNJetsCut ? (nJets >= fNJetsCut) : true);
-  if (jets_b) fEfficiency["Jets"]++;
+  // HT selection efficiency
+  const Float_t jetHT = PlotPhotons::GetJetHTAbovePt();
+  const Bool_t jetht_b = (Config::ApplyJetHtCut ? (jetHT > Config::JetHtCut) : true);
+  if (jetht_b) fEfficiency["HT"]++;
 
-  const Bool_t event_b = (photon_b && jets_b);
+  // multi-jet selection efficiency
+  const Int_t nJets = PlotPhotons::GetNJetsAbovePt();
+  const Bool_t njets_b = (Config::ApplyNJetsCut ? (nJets >= Config::NJetsCut) : true);
+  if (njets_b) fEfficiency["Jets"]++;
+
+  // is event compatible with both jets and HT?
+  if (jetht_b && njets_b) fEfficiency["Jets+HT"]++;
+  
+  // event level (no HLT) efficiency
+  const Bool_t event_b = (photon_b && jetht_b && njets_b);
+  if (event_b) fEfficiency["Reco"]++;
 
   //trigger efficiency
-  const Bool_t hlt_b = ((fIsHLT2 || fIsHLT3) ? hltdispho45 : true);
+  const Bool_t hlt_b = ((Config::isHLT2 || Config::isHLT3) ? hltdispho45 : true);
   if (hlt_b) fEfficiency["Trigger"]++;
 
-  if (hltdispho45)          fEfficiency["HLT_DisplacedPhoton45_v"]++;
-  if (hltdispho60_dijet50)  fEfficiency["HLT_DisplacedPhoton60_DiPFJet50_v"]++;
-  if (hltdispho60_trijet35) fEfficiency["HLT_DisplacedPhoton60_TriPFJet35_v"]++;
-  if (hltdispho100)         fEfficiency["HLT_DisplacedPhoton100_v"]++;
-  if (hltdoublepho60)       fEfficiency["HLT_DoublePhoton60_v"]++;
-
-  if (event_b)
-  {
-    fEfficiency["Reco"]++;
-    if (hltdispho45)          fEfficiency["HLT_DisplacedPhoton45_v_Event"]++;
-    if (hltdispho60_dijet50)  fEfficiency["HLT_DisplacedPhoton60_DiPFJet50_v_Event"]++;
-    if (hltdispho60_trijet35) fEfficiency["HLT_DisplacedPhoton60_TriPFJet35_v_Event"]++;
-    if (hltdispho100)         fEfficiency["HLT_DisplacedPhoton100_v_Event"]++;
-    if (hltdoublepho60)       fEfficiency["HLT_DoublePhoton60_v_Event"]++;
-  }
-
-  // total efficiency
-  if (photon_b && jets_b && hlt_b)
+  if (event_b && hlt_b)
   {
     fEfficiency["Events"]++;
     return true;
@@ -251,36 +218,54 @@ Int_t PlotPhotons::GetLeadingPhoton()
   for (Int_t iph = 0; iph < nphotons; iph++)
   {
     // basic photon selection
-    if (fApplyPh1PtCut)
+    if      (Config::ApplyPh1PtCut)
+    {  
+      if ((*phpt)[iph] < Config::Ph1PtCut) continue;
+    }
+    else if (Config::ApplyPhAnyPtCut) 
     {
-      if ((*phpt)[iph] < fPh1PtCut) continue;
+      if ((*phpt)[iph] < Config::PhAnyPtCut) continue;
     }
-    else if (fApplyPhAnyPtCut)
-    { 
-      if ((*phpt)[iph] < fPhAnyPtCut) continue;
-    }
-    if (fApplyPh1VIDCut && ((*phVID)[iph] < fPhVIDMap[fPh1VID])) continue;
-    const Float_t eta = std::abs((*phsceta)[iph]);
-    if (fApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
+    if (Config::ApplyPh1VIDCut && ((*phVID)[iph] < fPhVIDMap[Config::Ph1VID])) continue;
+    if (Config::ApplyPh1R9Cut && ((*phr9)[iph] < Config::Ph1R9Cut)) continue;
+
+    // eta specific selection
+    const Float_t eta  = std::abs((*phsceta)[iph]);
+    const Float_t smaj = (*phsmaj)[iph];
+    const Float_t smin = (*phsmin)[iph];
+    if (Config::ApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
     {
-      if      (fApplyEBOnly && (eta > 1.4442)) continue;
-      else if (fApplyEEOnly && ((eta < 1.566) || (eta > 2.5))) continue;
+      // EB/EE only selection
+      if      (Config::ApplyEBOnly && (eta > 1.4442)) continue;
+      else if (Config::ApplyEEOnly && ((eta < 1.566) || (eta > 2.5))) continue;
+
+      // eta specific selection
+      if      (eta < 1.4442) 
+      {
+	if ((Config::ApplyPh1SmajEBMin && (smaj < Config::Ph1SmajEBMin)) || (Config::ApplyPh1SmajEBMax && (smaj > Config::Ph1SmajEBMax))) continue;
+	if ((Config::ApplyPh1SminEBMin && (smin < Config::Ph1SminEBMin)) || (Config::ApplyPh1SminEBMax && (smin > Config::Ph1SminEBMax))) continue;
+      }
+      else if ((eta > 1.566) && (eta < 2.5))
+      {
+	if ((Config::ApplyPh1SmajEEMin && (smaj < Config::Ph1SmajEEMin)) || (Config::ApplyPh1SmajEEMax && (smaj > Config::Ph1SmajEEMax))) continue;
+	if ((Config::ApplyPh1SminEEMin && (smin < Config::Ph1SminEEMin)) || (Config::ApplyPh1SminEEMax && (smin > Config::Ph1SminEEMax))) continue;
+      }
     }
-    else continue;
+    else continue; // photon SC totally outside acceptance
     
     // photon seed crystal selection
     if ((*phseedpos)[iph] == -9999) continue;
-    if (fApplyrhECut && ((*phrhE)[iph][(*phseedpos)[iph]] < frhECut)) continue;
+    if (Config::ApplyrhECut && ((*phrhE)[iph][(*phseedpos)[iph]] < Config::rhECut)) continue;
 
     // MC matching selection
-    if (fApplyPhMCMatchingCut)
+    if (Config::ApplyPhMCMatchingCut)
     {
-      if      (fApplyExactPhMCMatch)
+      if      (Config::ApplyExactPhMCMatch)
       {
 	if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] <= 0)) continue; // set to <= 0 for exact matching 
 	else if (fIsBkg && ((*phisMatched)[iph] == 0)) continue; // set to == 0 for exact matching
       }
-      else if (fApplyAntiPhMCMatch)
+      else if (Config::ApplyAntiPhMCMatch)
       {
 	if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] > 0)) continue; // set to <=0 for exact matching
 	else if (fIsBkg && ((*phisMatched)[iph] != 0)) continue; // set to != 0 for anti-matching
@@ -302,29 +287,47 @@ Int_t PlotPhotons::GetGoodPhotons(std::vector<Int_t> & goodphotons)
     for (Int_t iph = 0; iph < nphotons; iph++) // remove pt cut
     {
       // basic photon selection
-      if (fApplyPhAnyPtCut && ((*phpt)[iph] < fPhAnyPtCut)) continue;
-      if (fApplyPhAnyVIDCut && ((*phVID)[iph] < fPhVIDMap[fPhAnyVID])) continue;
-      const Float_t eta = std::abs((*phsceta)[iph]);
-      if (fApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
+      if (Config::ApplyPhAnyPtCut && ((*phpt)[iph] < Config::PhAnyPtCut)) continue;
+      if (Config::ApplyPhAnyVIDCut && ((*phVID)[iph] < fPhVIDMap[Config::PhAnyVID])) continue;
+      if (Config::ApplyPhAnyR9Cut && ((*phr9)[iph] < Config::PhAnyR9Cut)) continue;
+
+      // eta specific selection
+      const Float_t eta  = std::abs((*phsceta)[iph]);
+      const Float_t smaj = (*phsmaj)[iph];
+      const Float_t smin = (*phsmin)[iph];
+      if (Config::ApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
       {
-	if      (fApplyEBOnly && (eta > 1.4442)) continue;
-	else if (fApplyEEOnly && ((eta < 1.566) || (eta > 2.5))) continue;
+	// EB/EE only selection
+	if      (Config::ApplyEBOnly && (eta > 1.4442)) continue;
+	else if (Config::ApplyEEOnly && ((eta < 1.566) || (eta > 2.5))) continue;
+
+	// eta specific selection
+	if      (eta < 1.4442) 
+        {
+	  if ((Config::ApplyPhAnySmajEBMin && (smaj < Config::PhAnySmajEBMin)) || (Config::ApplyPhAnySmajEBMax && (smaj > Config::PhAnySmajEBMax))) continue;
+	  if ((Config::ApplyPhAnySminEBMin && (smin < Config::PhAnySminEBMin)) || (Config::ApplyPhAnySminEBMax && (smin > Config::PhAnySminEBMax))) continue;
+	}
+	else if ((eta > 1.566) && (eta < 2.5))
+        {
+	  if ((Config::ApplyPhAnySmajEEMin && (smaj < Config::PhAnySmajEEMin)) || (Config::ApplyPhAnySmajEEMax && (smaj > Config::PhAnySmajEEMax))) continue;
+	  if ((Config::ApplyPhAnySminEEMin && (smin < Config::PhAnySminEEMin)) || (Config::ApplyPhAnySminEEMax && (smin > Config::PhAnySminEEMax))) continue;
+	}
       }
-      else continue;
+      else continue; // photon SC totally outside acceptance
     
       // photon seed crystal selection
       if ((*phseedpos)[iph] == -9999) continue;
-      if (fApplyrhECut && ((*phrhE)[iph][(*phseedpos)[iph]] < frhECut)) continue;
+      if (Config::ApplyrhECut && ((*phrhE)[iph][(*phseedpos)[iph]] < Config::rhECut)) continue;
 
       // MC matching selection
-      if (fApplyPhMCMatchingCut)
+      if (Config::ApplyPhMCMatchingCut)
       {
-	if      (fApplyExactPhMCMatch)
+	if      (Config::ApplyExactPhMCMatch)
         {
 	  if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] <= 0)) continue; // set to <= 0 for exact matching 
 	  else if (fIsBkg && ((*phisMatched)[iph] == 0)) continue; // set to == 0 for exact matching
 	}
-	else if (fApplyAntiPhMCMatch)
+	else if (Config::ApplyAntiPhMCMatch)
         {
 	  if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] > 0)) continue; // set to <=0 for exact matching
 	  else if (fIsBkg && ((*phisMatched)[iph] != 0)) continue; // set to != 0 for anti-matching
@@ -350,12 +353,23 @@ Int_t PlotPhotons::GetMostDelayedPhoton()
   return phdelay;
 }
 
+Float_t PlotPhotons::GetJetHTAbovePt()
+{
+  Float_t jetHT = 0.f;
+  for (Int_t ijet = 0; ijet < njets; ijet++) 
+  {
+    if (Config::ApplyMinJetPtCut && ((*jetpt)[ijet] < Config::MinJetPtCut)) break; // jets are ordered in pT!
+    jetHT += (*jetpt)[ijet];
+  }
+  return jetHT;
+}
+
 Int_t PlotPhotons::GetNJetsAbovePt()
 {
   Int_t nJets = 0;
   for (Int_t ijet = 0; ijet < njets; ijet++) 
   {
-    if (fApplyJetPtCut && ((*jetpt)[ijet] < fJetPtCut)) break; // jets are ordered in pT!
+    if (Config::ApplyJetPtCut && ((*jetpt)[ijet] < Config::JetPtCut)) break; // jets are ordered in pT!
     nJets++;
   }
   return nJets;
@@ -518,60 +532,26 @@ void PlotPhotons::FillMET()
 
 void PlotPhotons::FillJets()
 {
-  fPlots["njetsinc"]->Fill(njets); 
+  // jetHT plots
+  Float_t jetHT = PlotPhotons::GetJetHTAbovePt();
+  fPlots["jetHT"]->Fill(jetHT);
 
+  // nJets plots
+  fPlots["njetsinc"]->Fill(njets); 
   const Int_t nJets = PlotPhotons::GetNJetsAbovePt();
   fPlots["njets"]->Fill(nJets);  
 
-  Float_t jetHTinc = 0.f;
-  Float_t jetHT    = 0.f;
   Int_t nMatchedJets = 0;
-  
-  std::map<Int_t,Int_t> nJetspTmap; 
-  nJetspTmap[5]   = 0;
-  nJetspTmap[10]  = 0;
-  nJetspTmap[15]  = 0;
-  nJetspTmap[20]  = 0;
-  nJetspTmap[30]  = 0;
-  nJetspTmap[40]  = 0;
-  nJetspTmap[50]  = 0;
-  nJetspTmap[75]  = 0;
-  nJetspTmap[100] = 0;
-
-  for (Int_t ijet = 0; ijet < (fApplyNJetsCut ? nJets : njets); ijet++) // jets are ordered by pT, so up to nJets if applying njets cut!
+  for (Int_t ijet = 0; ijet < (Config::ApplyNJetsCut ? nJets : njets); ijet++) // jets are ordered by pT, so up to nJets if applying njets cut!
   {
     const Float_t jetPt = (*jetpt)[ijet];
-    jetHTinc += jetPt;
-    if (fApplyJetPtCut && (jetPt > fJetPtCut)) jetHT += jetPt;
-    if (jetPt > 5.f  ) nJetspTmap[5]++;
-    if (jetPt > 10.f ) nJetspTmap[10]++;
-    if (jetPt > 15.f ) nJetspTmap[15]++;
-    if (jetPt > 20.f ) nJetspTmap[20]++;
-    if (jetPt > 30.f ) nJetspTmap[30]++;
-    if (jetPt > 40.f ) nJetspTmap[40]++;
-    if (jetPt > 50.f ) nJetspTmap[50]++;
-    if (jetPt > 75.f ) nJetspTmap[75]++;
-    if (jetPt > 100.f) nJetspTmap[100]++;
-
     fPlots["jetE"]->Fill((*jetE)[ijet]);
-    fPlots["jetpt"]->Fill(jetPt);
+    fPlots["jetpt"]->Fill((*jetpt)[ijet]);
     fPlots["jetphi"]->Fill((*jetphi)[ijet]);
     fPlots["jeteta"]->Fill((*jeteta)[ijet]);
     
     if (fIsGMSB && ((*jetmatch)[ijet] >= 0)) nMatchedJets++;
   }
-  fPlots["jetHTinc"]->Fill(jetHTinc);
-  fPlots["jetHT"]->Fill(jetHT);
-
-  fPlots2D["nJetsPt5_vs_jetHT"]  ->Fill(jetHTinc,nJetspTmap[5]);
-  fPlots2D["nJetsPt10_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[10]);
-  fPlots2D["nJetsPt15_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[15]);
-  fPlots2D["nJetsPt20_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[20]);
-  fPlots2D["nJetsPt30_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[30]);
-  fPlots2D["nJetsPt40_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[40]);
-  fPlots2D["nJetsPt50_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[50]);
-  fPlots2D["nJetsPt75_vs_jetHT"] ->Fill(jetHTinc,nJetspTmap[75]);
-  fPlots2D["nJetsPt100_vs_jetHT"]->Fill(jetHTinc,nJetspTmap[100]);
 
   if (fIsGMSB) fPlots["nMatchedJets"]->Fill(nMatchedJets);  
 }
@@ -615,7 +595,7 @@ void PlotPhotons::FillRecoPhotons()
     Int_t nRecHits = 0;
     for (Int_t irh = 0; irh < (*phnrh)[iph]; irh++)
     {
-      if (fApplyrhECut && (*phrhE)[iph][irh] < frhECut) continue;
+      if (Config::ApplyrhECut && (*phrhE)[iph][irh] < Config::rhECut) continue;
       nRecHits++;
 
       fPlots["phrhE"]->Fill((*phrhE)[iph][irh]);
@@ -640,7 +620,7 @@ void PlotPhotons::FillRecoPhotons()
     } // end loop over nrechits
     fPlots["phnrh"]->Fill(nRecHits);
 
-    // MC matching selection --> redundant when fApplyMCP
+    // MC matching selection --> redundant with ph mc matching
     if ( ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] > 0)) || (fIsBkg && ((*phisMatched)[iph])) ) nMatchedPhotons++;
   } // end loop over nphotons
   if (fIsMC) fPlots["nMatchedPhotons"]->Fill(nMatchedPhotons);
@@ -717,7 +697,7 @@ void PlotPhotons::FillTrigger()
     // second is numer
 
     // full displaced menu
-    if (fIsHLT2)
+    if (Config::isHLT2)
     {
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltpho120_met40"],hltpho120_met40,phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltpho175"],hltpho175,phdelayseedtime);
@@ -741,7 +721,7 @@ void PlotPhotons::FillTrigger()
     } // end block over HLT Displaced Photon menu
 
     // HLT Dispho45 Breakdown
-    if (fIsHLT3)
+    if (Config::isHLT3)
     {
       // time
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho45"],hltdispho45,phdelayseedtime);
@@ -895,22 +875,11 @@ void PlotPhotons::SetupMET()
 
 void PlotPhotons::SetupJets()
 {
+  fPlots["jetHT"] = PlotPhotons::MakeTH1F("jetHT","Jet H_{T} [GeV/c] (reco)",100,0.f,5000.f,Form("Jet H_{T} [GeV/c] (p_{T} > %4.1f GeV/c)",Config::MinJetPtCut),"Events","AK4Jets");
+
   fPlots["njetsinc"] = PlotPhotons::MakeTH1F("njetsinc","nAK4Jets",40,0.f,40.f,"nAK4Jets","Events","AK4Jets");
-  fPlots["njets"] = PlotPhotons::MakeTH1F("njets",Form("nAK4Jets, p_{T} > %4.1f GeV/c",fJetPtCut),40,0.f,40.f,Form("nAK4Jets (p_{T} > %4.1f GeV/c)",fJetPtCut),"Events","AK4Jets");
+  fPlots["njets"] = PlotPhotons::MakeTH1F("njets",Form("nAK4Jets, p_{T} > %4.1f GeV/c",Config::JetPtCut),40,0.f,40.f,Form("nAK4Jets (p_{T} > %4.1f GeV/c)",Config::JetPtCut),"Events","AK4Jets");
   if (fIsGMSB) fPlots["nMatchedJets"] = PlotPhotons::MakeTH1F("nMatchedJets","nMatchedJets (reco to gen)",40,0.f,40.f,"nMatchedJets","Events","AK4Jets");
-
-  fPlots["jetHTinc"] = PlotPhotons::MakeTH1F("jetHTinc","Jet H_{T} [GeV/c] (reco)",100,0.f,5000.f,"Jet H_{T} [GeV/c]","Events","AK4Jets");
-  fPlots["jetHT"] = PlotPhotons::MakeTH1F("jetHT","Jet H_{T} [GeV/c] (reco)",100,0.f,5000.f,Form("Jet H_{T} [GeV/c] (p_{T} > %4.1f GeV/c)",fJetPtCut),"Events","AK4Jets");
-
-  fPlots2D["nJetsPt5_vs_jetHT"]   = PlotPhotons::MakeTH2F("nJetsPt5_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 5 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 5 GeV/c","AK4Jets");
-  fPlots2D["nJetsPt10_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt10_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 10 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 10 GeV/c","AK4Jets");
-  fPlots2D["nJetsPt15_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt15_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 15 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 15 GeV/c","AK4Jets");
-  fPlots2D["nJetsPt20_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt20_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 20 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 20 GeV/c","AK4Jets");
-  fPlots2D["nJetsPt30_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt30_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 30 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 30 GeV/c","AK4Jets");
-  fPlots2D["nJetsPt40_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt40_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 40 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 40 GeV/c","AK4Jets");
-  fPlots2D["nJetsPt50_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt50_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 50 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 50 GeV/c","AK4Jets");
-  fPlots2D["nJetsPt75_vs_jetHT"]  = PlotPhotons::MakeTH2F("nJetsPt75_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 75 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 75 GeV/c","AK4Jets");
-  fPlots2D["nJetsPt100_vs_jetHT"] = PlotPhotons::MakeTH2F("nJetsPt100_vs_jetHT","Jet H_{T} vs nAK4Jets, p_{T} > 100 GeV/c",100,0.f,5000.f,"Jet HT [GeV/c]",40,0.f,40.f,"nAK4Jets, p_{T} > 100 GeV/c","AK4Jets");
 
   fPlots["jetE"] = PlotPhotons::MakeTH1F("jetE","Jets Energy [GeV] (reco)",100,0.f,3000.f,"Energy [GeV]","Jets","AK4Jets");
   fPlots["jetpt"] = PlotPhotons::MakeTH1F("jetpt","Jets p_{T} [GeV/c] (reco)",100,0.f,3000.f,"Jet p_{T} [GeV/c]","Jets","AK4Jets");
@@ -1013,7 +982,7 @@ void PlotPhotons::SetupMostDelayed()
 
 void PlotPhotons::SetupTrigger()
 {
-  if (fIsHLT2)
+  if (Config::isHLT2)
   {
     fTrigPlots["phdelayseedtime_hltpho120_met40"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltpho120_met40","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_Photon120_R9Id90_HE10_Iso40_EBOnly_PFMET40_v","trigger");
     fTrigPlots["phdelayseedtime_hltpho175"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltpho175","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_Photon175_v","trigger");
@@ -1035,7 +1004,7 @@ void PlotPhotons::SetupTrigger()
     fTrigPlots["phdelayseedtime_hltdispho80"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho80","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton80_v","trigger");
     fTrigPlots["phdelayseedtime_hltdispho100"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho100","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton100_v","trigger");
   }
-  if (fIsHLT3)
+  if (Config::isHLT3)
   {
     // seed time
     fTrigPlots["phdelayseedtime_hltdispho45"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho45","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton45_v","trigger");
@@ -1435,7 +1404,7 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("run", &run, &b_run);
   fInTree->SetBranchAddress("lumi", &lumi, &b_lumi);
 
-  if (fIsHLT2)
+  if (Config::isHLT2)
   {
     fInTree->SetBranchAddress("hltpho120_met40", &hltpho120_met40, &b_hltpho120_met40);
     fInTree->SetBranchAddress("hltpho175", &hltpho175, &b_hltpho175);
@@ -1457,7 +1426,7 @@ void PlotPhotons::InitTree()
     fInTree->SetBranchAddress("hltdispho80", &hltdispho80, &b_hltdispho80);
     fInTree->SetBranchAddress("hltdispho100", &hltdispho100, &b_hltdispho100);
   }
-  else if (fIsHLT3)
+  else if (Config::isHLT3)
   {
     fInTree->SetBranchAddress("hltdispho45", &hltdispho45, &b_hltdispho45);
     fInTree->SetBranchAddress("hltdispho45_notkveto", &hltdispho45_notkveto, &b_hltdispho45_notkveto);
