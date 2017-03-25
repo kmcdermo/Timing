@@ -19,7 +19,7 @@ void runPhotonPlots()
 {
   setupcpp11(); 
 
-  gROOT->LoadMacro("Config.cc+g");
+  gROOT->LoadMacro("PlotConfig.cc+g");
   gROOT->LoadMacro("PlotPhotons.cc+g");
 
   // config is:
@@ -40,7 +40,8 @@ void runPhotonPlots()
 			  "config/plotter-hlt.txt",
 			  "config/plotter-jet.txt",
 			  "config/plotter-ph1.txt",
-			  "config/plotter-phany.txt");
+			  "config/plotter-phany.txt",
+			  "config/plotter-photon.txt");
 
   // which plots to do:
   // geninfo, vtxs, met, jets

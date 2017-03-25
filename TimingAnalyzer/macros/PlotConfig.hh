@@ -4,8 +4,10 @@ namespace Config
 {
   extern UInt_t  NEvCheck;
   extern Bool_t  ApplyEvCut;
+
   extern Bool_t  isHLT2;
   extern Bool_t  isHLT3;
+
   extern Bool_t  ApplyJetHtCut;
   extern Float_t JetHtCut;
   extern Bool_t  ApplyMinJetPtCut;
@@ -14,6 +16,7 @@ namespace Config
   extern Float_t JetPtCut;
   extern Bool_t  ApplyNJetsCut;
   extern Int_t   NJetsCut;
+
   extern Bool_t  ApplyPh1PtCut;
   extern Float_t Ph1PtCut;
   extern Bool_t  ApplyPh1VIDCut;
@@ -36,6 +39,7 @@ namespace Config
   extern Float_t Ph1SminEEMin;
   extern Bool_t  ApplyPh1SminEEMax;
   extern Float_t Ph1SminEEMax;
+
   extern Bool_t  ApplyPhAnyPtCut;
   extern Float_t PhAnyPtCut;
   extern Bool_t  ApplyPhAnyVIDCut;
@@ -58,6 +62,7 @@ namespace Config
   extern Float_t PhAnySminEEMin;
   extern Bool_t  ApplyPhAnySminEEMax;
   extern Float_t PhAnySminEEMax;
+
   extern Bool_t  ApplyrhECut;
   extern Float_t rhECut;
   extern Bool_t  ApplyECALAcceptCut;

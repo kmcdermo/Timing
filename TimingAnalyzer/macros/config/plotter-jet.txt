@@ -1,0 +1,8 @@
+ApplyJetHtCut 0
+JetHtCut = 300.f
+ApplyMinJetPtCut 0
+MinJetPtCut = 15.f
+ApplyJetPtCut 0
+JetPtCut = 35.f
+ApplyNJetsCut 0
+NJetsCut = 3

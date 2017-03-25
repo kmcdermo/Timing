@@ -1,11 +1,13 @@
-#include "Config.hh"
+#include "PlotConfig.hh"
 
 namespace Config
 {
   UInt_t  NEvCheck = 1000;
   Bool_t  ApplyEvCut = false;
+
   Bool_t  isHLT2 = false;
   Bool_t  isHLT3 = false;
+
   Bool_t  ApplyJetHtCut = false;
   Float_t JetHtCut = 300.f;
   Bool_t  ApplyMinJetPtCut = false;
@@ -14,6 +16,7 @@ namespace Config
   Float_t JetPtCut = 35.f;
   Bool_t  ApplyNJetsCut = false;
   Int_t   NJetsCut = 3;
+
   Bool_t  ApplyPh1PtCut = false;
   Float_t Ph1PtCut = 60.f;
   Bool_t  ApplyPh1VIDCut = false;
@@ -36,6 +39,7 @@ namespace Config
   Float_t Ph1SminEEMin = 0.f;
   Bool_t  ApplyPh1SminEEMax = false;
   Float_t Ph1SminEEMax = 0.4;
+
   Bool_t  ApplyPhAnyPtCut = true;
   Float_t PhAnyPtCut = 10.f;
   Bool_t  ApplyPhAnyVIDCut = false;
@@ -59,6 +63,7 @@ namespace Config
   Bool_t  ApplyPhAnySminEEMax = false;
   Float_t PhAnySminEEMax = 0.4;
   Bool_t  ApplyrhECut = true;
+
   Float_t rhECut = 1.f;
   Bool_t  ApplyECALAcceptCut = true;
   Bool_t  ApplyEBOnly = false;

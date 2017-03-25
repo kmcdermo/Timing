@@ -1,4 +1,4 @@
-#include "Config.hh"
+#include "PlotConfig.hh"
 #include "PlotPhotons.hh"
 #include "TSystem.h"
 #include "TCanvas.h"
@@ -8,7 +8,7 @@
 
 PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t isBkg, 
 			 TString outdir, Bool_t savehists, Bool_t savesub,
-			 TString genericconfig, TString hltconfig, TString jetconfig, TString ph1config, TString phanyconfig) :
+			 TString genericconfig, TString hltconfig, TString jetconfig, TString ph1config, TString phanyconfig, TString photonconfig) :
   fOutDir(outdir), fIsGMSB(isGMSB), fIsHVDS(isHVDS), fIsBkg(isBkg), 
   fSaveHists(savehists), fSaveSub(savesub)
 {
@@ -23,6 +23,12 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
   PlotPhotons::InitTree();
 
   // in routine initialization from config files
+  PlotPhotons::InitGenericConfig(genericconfig);
+  PlotPhotons::InitHLTConfig(hltconfig);
+  PlotPhotons::InitJetConfig(jetconfig);
+  PlotPhotons::InitPh1Config(ph1config);
+  PlotPhotons::InitPhAnyConfig(phanyconfig);
+  PlotPhotons::InitPhotonConfig(photonconfig);
 
   // make the vid maps!
   fPhVIDMap["none"]   = 0;
@@ -1585,4 +1591,134 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("phrhtime", &phrhtime, &b_phrhtime);
   fInTree->SetBranchAddress("phrhID", &phrhID, &b_phrhID);
   fInTree->SetBranchAddress("phrhOOT", &phrhOOT, &b_phrhOOT);
+}
+
+void PlotPhotons::InitGenericConfig(TString config)
+{
+  std::ifstream input;
+  input.open(config.Data(),std::ios::in);
+  
+  TString var = "", val = "";
+  while (input >> var >> val)
+  {
+    if (var.EqualTo("NEvCheck"))   Config::NEvCheck = val.Atoi();
+    if (var.EqualTo("ApplyEvCut")) Config::ApplyEvCut = val.Atoi();
+  }
+}
+
+void PlotPhotons::InitHLTConfig(TString config)
+{
+  std::ifstream input;
+  input.open(config.Data(),std::ios::in);
+  
+  TString var = "", val = "";
+  while (input >> var >> val)
+  {
+    if (var.EqualTo("isHLT2")) Config::isHLT2 = val.Atoi();
+    if (var.EqualTo("isHLT3")) Config::isHLT3 = val.Atoi();
+  }
+}
+
+void PlotPhotons::InitJetConfig(TString config)
+{
+  std::ifstream input;
+  input.open(config.Data(),std::ios::in);
+  
+  TString var = "", val = "";
+  while (input >> var >> val)
+  {
+    if (var.EqualTo("ApplyJetHtCut")) Config::ApplyJetHtCut = val.Atoi();
+    if (var.EqualTo("JetHtCut")) Config::JetHtCut = val.Atof();
+    if (var.EqualTo("ApplyMinJetPtCut")) Config::ApplyMinJetPtCut = val.Atoi();
+    if (var.EqualTo("MinJetPtCut")) Config::MinJetPtCut = val.Atof();
+    if (var.EqualTo("ApplyJetPtCut")) Config::ApplyJetPtCut = val.Atoi();
+    if (var.EqualTo("JetPtCut")) Config::JetPtCut = val.Atof();
+    if (var.EqualTo("ApplyNJetsCut")) Config::ApplyNJetsCut = val.Atoi();
+    if (var.EqualTo("NJetsCut")) Config::NJetsCut = val.Atoi();
+  }
+}
+
+void PlotPhotons::InitPh1Config(TString config)
+{
+  std::ifstream input;
+  input.open(config.Data(),std::ios::in);
+  
+  TString var = "", val = "";
+  while (input >> var >> val)
+  {
+    if (var.EqualTo("ApplyPh1PtCut")) Config::ApplyPh1PtCut = val.Atoi();
+    if (var.EqualTo("Ph1PtCut")) Config::Ph1PtCut = val.Atof();
+    if (var.EqualTo("ApplyPh1VIDCut")) Config::ApplyPh1VIDCut = val.Atoi();
+    if (var.EqualTo("Ph1VIDCut")) Config::Ph1VID = val;
+    if (var.EqualTo("ApplyPh1R9Cut")) Config::ApplyPh1R9Cut = val.Atoi();
+    if (var.EqualTo("Ph1R9Cut")) Config::Ph1R9Cut = val.Atof();
+    if (var.EqualTo("ApplyPh1SmajEBMin")) Config::ApplyPh1SmajEBMin = val.Atoi();
+    if (var.EqualTo("Ph1SmajEBMin")) Config::Ph1SmajEBMin = val.Atof();
+    if (var.EqualTo("ApplyPh1SmajEBMax")) Config::ApplyPh1SmajEBMax = val.Atoi();
+    if (var.EqualTo("Ph1SmajEBMax")) Config::Ph1SmajEBMax = val.Atof();
+    if (var.EqualTo("ApplyPh1SmajEEMin")) Config::ApplyPh1SmajEEMin = val.Atoi();
+    if (var.EqualTo("Ph1SmajEEMin")) Config::Ph1SmajEEMin = val.Atof();
+    if (var.EqualTo("ApplyPh1SmajEEMax")) Config::ApplyPh1SmajEEMax = val.Atoi();
+    if (var.EqualTo("Ph1SmajEEMax")) Config::Ph1SmajEEMax = val.Atof();
+    if (var.EqualTo("ApplyPh1SminEBMin")) Config::ApplyPh1SminEBMin = val.Atoi();
+    if (var.EqualTo("Ph1SminEBMin")) Config::Ph1SminEBMin = val.Atof();
+    if (var.EqualTo("ApplyPh1SminEBMax")) Config::ApplyPh1SminEBMax = val.Atoi();
+    if (var.EqualTo("Ph1SminEBMax")) Config::Ph1SminEBMax = val.Atof();
+    if (var.EqualTo("ApplyPh1SminEEMin")) Config::ApplyPh1SminEEMin = val.Atoi();
+    if (var.EqualTo("Ph1SminEEMin")) Config::Ph1SminEEMin = val.Atof();
+    if (var.EqualTo("ApplyPh1SminEEMax")) Config::ApplyPh1SminEEMax = val.Atoi();
+    if (var.EqualTo("Ph1SminEEMax")) Config::Ph1SminEEMax = val.Atof();
+  }
+}
+
+void PlotPhotons::InitPhAnyConfig(TString config)
+{
+  std::ifstream input;
+  input.open(config.Data(),std::ios::in);
+  
+  TString var = "", val = "";
+  while (input >> var >> val)
+  {
+    if (var.EqualTo("ApplyPhAnyPtCut")) Config::ApplyPhAnyPtCut = val.Atoi();
+    if (var.EqualTo("PhAnyPtCut")) Config::PhAnyPtCut = val.Atof();
+    if (var.EqualTo("ApplyPhAnyVIDCut")) Config::ApplyPhAnyVIDCut = val.Atoi();
+    if (var.EqualTo("PhAnyVIDCut")) Config::PhAnyVID = val;
+    if (var.EqualTo("ApplyPhAnyR9Cut")) Config::ApplyPhAnyR9Cut = val.Atoi();
+    if (var.EqualTo("PhAnyR9Cut")) Config::PhAnyR9Cut = val.Atof();
+    if (var.EqualTo("ApplyPhAnySmajEBMin")) Config::ApplyPhAnySmajEBMin = val.Atoi();
+    if (var.EqualTo("PhAnySmajEBMin")) Config::PhAnySmajEBMin = val.Atof();
+    if (var.EqualTo("ApplyPhAnySmajEBMax")) Config::ApplyPhAnySmajEBMax = val.Atoi();
+    if (var.EqualTo("PhAnySmajEBMax")) Config::PhAnySmajEBMax = val.Atof();
+    if (var.EqualTo("ApplyPhAnySmajEEMin")) Config::ApplyPhAnySmajEEMin = val.Atoi();
+    if (var.EqualTo("PhAnySmajEEMin")) Config::PhAnySmajEEMin = val.Atof();
+    if (var.EqualTo("ApplyPhAnySmajEEMax")) Config::ApplyPhAnySmajEEMax = val.Atoi();
+    if (var.EqualTo("PhAnySmajEEMax")) Config::PhAnySmajEEMax = val.Atof();
+    if (var.EqualTo("ApplyPhAnySminEBMin")) Config::ApplyPhAnySminEBMin = val.Atoi();
+    if (var.EqualTo("PhAnySminEBMin")) Config::PhAnySminEBMin = val.Atof();
+    if (var.EqualTo("ApplyPhAnySminEBMax")) Config::ApplyPhAnySminEBMax = val.Atoi();
+    if (var.EqualTo("PhAnySminEBMax")) Config::PhAnySminEBMax = val.Atof();
+    if (var.EqualTo("ApplyPhAnySminEEMin")) Config::ApplyPhAnySminEEMin = val.Atoi();
+    if (var.EqualTo("PhAnySminEEMin")) Config::PhAnySminEEMin = val.Atof();
+    if (var.EqualTo("ApplyPhAnySminEEMax")) Config::ApplyPhAnySminEEMax = val.Atoi();
+    if (var.EqualTo("PhAnySminEEMax")) Config::PhAnySminEEMax = val.Atof();
+  }
+}
+
+void PlotPhotons::InitPhotonConfig(TString config)
+{
+  std::ifstream input;
+  input.open(config.Data(),std::ios::in);
+  
+  TString var = "", val = "";
+  while (input >> var >> val)
+  {
+    if (var.EqualTo("ApplyrhECut")) Config::ApplyrhECut = val.Atoi();
+    if (var.EqualTo("rhECut")) Config::rhECut = val.Atof();
+    if (var.EqualTo("ApplyECALAcceptCut")) Config::ApplyECALAcceptCut = val.Atoi();
+    if (var.EqualTo("ApplyEBOnly")) Config::ApplyEBOnly = val.Atoi();
+    if (var.EqualTo("ApplyEEOnly")) Config::ApplyEEOnly = val.Atoi();
+    if (var.EqualTo("ApplyPhMCMatchingCut")) Config::ApplyPhMCMatchingCut = val.Atoi();
+    if (var.EqualTo("ApplyExactPhMCMatch")) Config::ApplyExactPhMCMatch = val.Atoi();
+    if (var.EqualTo("ApplyAntiPhMCMatch")) Config::ApplyAntiPhMCMatch = val.Atoi();
+  }
 }

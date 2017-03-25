@@ -55,10 +55,16 @@ public :
 	      TString hltconfig = "config/plotter-hlt.txt",
 	      TString jetconfig = "config/plotter-jet.txt",
 	      TString ph1config = "config/plotter-ph1.txt",
-	      TString phanyconfig = "config/plotter-phany.txt");
-
-	 ~PlotPhotons();
+	      TString phanyconfig = "config/plotter-phany.txt",	
+	      TString photonconfig = "config/plotter-photon.txt");
+  ~PlotPhotons();
   void InitTree();
+  void InitGenericConfig(TString config);
+  void InitHLTConfig(TString config);
+  void InitJetConfig(TString config);
+  void InitPh1Config(TString config);
+  void InitPhAnyConfig(TString config);
+  void InitPhotonConfig(TString config);
   void DoPlots(Bool_t geninfo = false, Bool_t vtxs = false, Bool_t met = false, Bool_t jets = false, 
 	       Bool_t photons = false, Bool_t ph1 = false, Bool_t phdelay = false, Bool_t trigger = false, Bool_t analysis = false);
   void SetupPlots(Bool_t geninfo, Bool_t vtxs, Bool_t met, Bool_t jets, Bool_t photons, Bool_t ph1, Bool_t phdelay, Bool_t trigger, Bool_t analysis);

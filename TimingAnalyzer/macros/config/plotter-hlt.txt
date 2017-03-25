@@ -1,0 +1,2 @@
+isHLT2 0
+isHLT3 0
