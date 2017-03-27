@@ -1,13 +1,13 @@
-\# Auto generated configuration file
+# Auto generated configuration file
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: reHLT -s DIGI,L1,DIGI2RAW,HLT:hltdev:/users/kmcdermo/TestDev/DisplacedPhoton_8_0_24/V11 --processName HLT2 --mc --datatier MINIAODSIM --eventcontent MINIAODSIM --era Run2_2016 --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v6 --python_filename step1_reHLT-DisplacedPhoton_8_0_24_V11_DIGI_L1_DIGI2RAW_HLT_PU-MINIAODSIM.py --filein file:PAT-MINIAODSIM.root --secondfilein file:GMSB_L180_Ctau6000_Pythia8_13TeV_GEN_SIM-RAWSIM.root --fileout file:reHLT-PAT-MINIAODSIM.root --pileup 2016_25ns_Moriond17MC_PoissonOOTPU --pileup_input dbs:/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM -n 1 --no_exec
+# with command line options: reHLT -s DIGI,L1,DIGI2RAW,HLT:hltdev:/users/kmcdermo/TestDev/DisplacedPhotonHT_8_0_24/V11 --processName HLT4 --mc --datatier HLTDEBUG --eventcontent HLTDEBUG --era Run2_2016 --conditions 80X_mcRun2_asymptotic_2016_TrancheIV_v6 --python_filename step1_reHLT-DisplacedPhotonHT_8_0_24_V11_DIGI_L1_DIGI2RAW_HLT_PU-HLTDEBUG-MINIAODSIM.py --filein file:PAT-MINIAODSIM.root --secondfilein file:GMSB_L180_Ctau6000_Pythia8_13TeV_GEN_SIM-RAWSIM.root --fileout file:reHLT4-HLTDEBUG-MINIAODSIM.root --pileup 2016_25ns_Moriond17MC_PoissonOOTPU --pileup_input dbs:/MinBias_TuneCUETP8M1_13TeV-pythia8/RunIISummer15GS-MCRUN2_71_V1_ext1-v1/GEN-SIM -n 1 --no_exec
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras
 
-process = cms.Process('HLT2',eras.Run2_2016)
+process = cms.Process('HLT4',eras.Run2_2016)
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
@@ -64,27 +64,27 @@ process.configurationMetadata = cms.untracked.PSet(
 
 # Output definition
 
-process.MINIAODSIMoutput = cms.OutputModule("PoolOutputModule",
-    compressionAlgorithm = cms.untracked.string('LZMA'),
-    compressionLevel = cms.untracked.int32(4),
+process.HLTDEBUGoutput = cms.OutputModule("PoolOutputModule",
     dataset = cms.untracked.PSet(
-        dataTier = cms.untracked.string('MINIAODSIM'),
+        dataTier = cms.untracked.string('HLTDEBUG'),
         filterName = cms.untracked.string('')
     ),
-    dropMetaData = cms.untracked.string('ALL'),
-    eventAutoFlushCompressedSize = cms.untracked.int32(15728640),
-    fastCloning = cms.untracked.bool(False),
-    fileName = cms.untracked.string('file:reHLT-PAT-MINIAODSIM.root'),
-    outputCommands = process.MINIAODSIMEventContent.outputCommands,
-    overrideInputFileSplitLevels = cms.untracked.bool(True)
+    eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
+    fileName = cms.untracked.string('file:reHLT4-HLTDEBUG-MINIAODSIM.root'),
+    outputCommands = process.HLTDEBUGEventContent.outputCommands,
+    splitLevel = cms.untracked.int32(0)
 )
+
+# customized event content
+from Timing.GEN_SIM.MINIAODSIMEventContent_Extension_cff import MINIAODSIMEventContent
+process.HLTDEBUGEventContent.outputCommands.extend(MINIAODSIMEventContent.outputCommands)
 
 # Additional output definition
 
 # Other statements
 process.mix.input.fileNames = cms.untracked.vstring(['/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/00482E71-60D0-E511-B9F9-0CC47A4D76BE.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/007E7AAA-63D0-E511-ADF4-24BE05CEEDE1.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/00AA656C-5DD0-E511-A219-0CC47A4D7626.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/00BE0DDB-55D0-E511-A68E-00259029ECEA.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/00C57044-69D0-E511-973C-0CC47A78A440.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/0220124D-62D0-E511-951F-0025905938A8.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/0234C1C7-51D0-E511-A562-001E67E71CB3.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/025BB030-5FD0-E511-AD16-FA163EAA4FD8.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/02A1C4A6-66D0-E511-9D6F-0CC47A4D7606.root', '/store/mc/RunIISummer15GS/MinBias_TuneCUETP8M1_13TeV-pythia8/GEN-SIM/MCRUN2_71_V1_ext1-v1/00000/02F11D3E-5DD0-E511-9AE9-002590E39C46.root'])
 import HLTrigger.Configuration.Utilities
-process.loadHltConfiguration("hltdev:/users/kmcdermo/TestDev/DisplacedPhoton_8_0_24/V11",type='GRun')
+process.loadHltConfiguration("hltdev:/users/kmcdermo/TestDev/DisplacedPhotonHT_8_0_24/V11",type='GRun')
 from HLTrigger.Configuration.CustomConfigs import ProcessName
 process = ProcessName(process)
 
@@ -96,12 +96,12 @@ process.digitisation_step = cms.Path(process.pdigi)
 process.L1simulation_step = cms.Path(process.SimL1Emulator)
 process.digi2raw_step = cms.Path(process.DigiToRaw)
 process.endjob_step = cms.EndPath(process.endOfProcess)
-process.MINIAODSIMoutput_step = cms.EndPath(process.MINIAODSIMoutput)
+process.HLTDEBUGoutput_step = cms.EndPath(process.HLTDEBUGoutput)
 
 # Schedule definition
 process.schedule = cms.Schedule(process.digitisation_step,process.L1simulation_step,process.digi2raw_step)
 process.schedule.extend(process.HLTSchedule)
-process.schedule.extend([process.endjob_step,process.MINIAODSIMoutput_step])
+process.schedule.extend([process.endjob_step,process.HLTDEBUGoutput_step])
 
 # customisation of the process.
 
