@@ -19,6 +19,10 @@ options.register (
 	'isHLT3',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to use displaced photon breakdown menu');
 
+options.register (
+	'isHLT4',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to use displaced photon breakdown menu');
+
 ## which trigger menu though??
 options.register (
 	'triggerPName','HLT',VarParsing.multiplicity.singleton,VarParsing.varType.string,
@@ -79,6 +83,7 @@ options.parseArguments()
 
 if   options.isHLT2 : options.triggerPName = 'HLT2'
 elif options.isHLT3 : options.triggerPName = 'HLT3'
+elif options.isHLT4 : options.triggerPName = 'HLT4'
 
 ## reset file name
 options.outputFileName = 'photondump-hvds-ctau'+options.ctau+'-'+options.triggerPName+'.root'
@@ -87,6 +92,7 @@ print "##### Settings ######"
 print "Running with dumpTriggerMenu     = ",options.dumpTriggerMenu
 print "Running with isHLT2              = ",options.isHLT2
 print "Running with isHLT3              = ",options.isHLT3
+print "Running with isHLT4              = ",options.isHLT4
 print "Running with triggerPName        = ",options.triggerPName
 print "Running with dumpRHs             = ",options.dumpRHs
 print "Running with dumpIds             = ",options.dumpIds
@@ -235,6 +241,105 @@ if options.ctau == '1000' :
                 '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhoton_8_0_24_V11_customiseTiming_PAT-MINIAODSIM-v1/170314_111338/0000/reHLT-PAT-MINIAODSIM_97.root',
                 '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhoton_8_0_24_V11_customiseTiming_PAT-MINIAODSIM-v1/170314_111338/0000/reHLT-PAT-MINIAODSIM_98.root'
                 ))
+    elif options.triggerPName == 'HLT4':
+        process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_1.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_10.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_11.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_12.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_13.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_14.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_15.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_16.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_17.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_18.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_19.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_2.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_20.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_22.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_23.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_24.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_25.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_26.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_27.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_28.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_29.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_3.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_30.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_31.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_32.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_33.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_34.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_35.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_36.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_37.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_38.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_39.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_4.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_41.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_42.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_43.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_44.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_45.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_46.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_47.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_48.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_49.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_5.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_50.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_51.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_52.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_53.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_54.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_55.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_56.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_57.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_58.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_59.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_6.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_60.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_61.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_62.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_63.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_64.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_65.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_66.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_67.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_68.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_69.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_7.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_70.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_71.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_72.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_73.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_74.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_75.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_76.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_77.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_78.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_79.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_8.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_80.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_81.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_82.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_83.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_84.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_85.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_86.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_87.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_88.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_89.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_9.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_90.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_91.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_92.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_93.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_94.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_95.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_96.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_97.root',
+                '/store/user/kmcdermo/HVDS_13TeV_ctau1000_GEN_SIM/HVDS_ctau1000_reHLT-DisplacedPhotonHT_8_0_24_V11-HLTDEBUG-MINIAODSIM-v1/170327_144839/0000/reHLT4-PAT-MINIAODSIM_98.root'
+                ))
 elif options.ctau == '100' :
     process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
             '/store/user/kmcdermo/HVDS_13TeV_GEN_SIM/HVDS_PAT-v1/170217_125813/0000/HVDS_PAT_1.root',
@@ -292,6 +397,7 @@ process.tree = cms.EDAnalyzer("PhotonDump",
    dumpTriggerMenu = cms.bool(options.dumpTriggerMenu),
    isHLT2          = cms.bool(options.isHLT2),
    isHLT3          = cms.bool(options.isHLT3),
+   isHLT4          = cms.bool(options.isHLT4),
    triggerResults  = cms.InputTag("TriggerResults", "", options.triggerPName),
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),

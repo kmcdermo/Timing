@@ -1,5 +1,6 @@
 // basic C++ headers
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -71,6 +72,8 @@
 
 // Common types
 #include "CommonTypes.h"
+
+inline bool file_exists(const std::string & filename){std::fstream input(filename.c_str()); return (bool)input;}
 
 inline bool sortByGenParticlePt(const reco::GenParticle & gp1, const reco::GenParticle & gp2)
 {
@@ -155,9 +158,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   
   // triggers
   const bool dumpTriggerMenu;
-  const bool isHLT2;
-  const bool isHLT3;
-  const bool isHLT4;
+  const std::string inputPaths;
   const edm::InputTag triggerResultsTag;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
   std::vector<std::string>  triggerNames;
@@ -214,15 +215,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   unsigned int run, lumi;  
 
   // trigger info
-  // HLT2 + HlT3 + HLT4
-  bool hltpho120_met40, hltpho175, hltdoublepho60, hltdoublepho42_25_m15, hltpho90_ht600;
-  bool hltdispho45, hltdispho45_jet50, hltdispho45_dijet50, hltdispho45_dijet35, hltdispho45_trijet35, hltdispho45_el100veto, hltdispho45_notkveto;
-  bool hltdispho50, hltdispho80, hltdispho100;
-  bool hltdispho60, hltdispho60_jet50, hltdispho60_dijet50, hltdispho60_dijet35, hltdispho60_trijet35, hltdispho60_notkveto;
-  bool hltdispho45_notime, hltdispho45_nosmaj, hltdispho45_nosmin, hltdispho45_nosieie, hltdispho45_nor9, hltdispho45_nohoe, hltdispho45_noet, hltdispho45_nol1match;
-
-
-
+  std::vector<bool> triggerBits;
 
   // vertices
   int nvtx;
@@ -284,6 +277,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   std::vector<float> phHoE, phr9, phChgIso, phNeuIso, phIso, phsuisseX;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
   std::vector<int>   phVID, phHoE_b, phsieie_b, phChgIso_b, phNeuIso_b, phIso_b;
+  std::vector<std::vector<int> > phHLTmatched;
 
   // supercluster info 
   std::vector<float> phscE, phsceta, phscphi;

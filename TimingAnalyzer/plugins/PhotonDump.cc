@@ -3,9 +3,7 @@
 PhotonDump::PhotonDump(const edm::ParameterSet& iConfig): 
   // triggers
   dumpTriggerMenu  (iConfig.existsAs<bool>("dumpTriggerMenu") ? iConfig.getParameter<bool>("dumpTriggerMenu") : false),
-  isHLT2           (iConfig.existsAs<bool>("isHLT2")          ? iConfig.getParameter<bool>("isHLT2")          : false),
-  isHLT3           (iConfig.existsAs<bool>("isHLT3")          ? iConfig.getParameter<bool>("isHLT3")          : false),
-  isHLT4           (iConfig.existsAs<bool>("isHLT4")          ? iConfig.getParameter<bool>("isHLT4")          : false),
+  inputPaths       (iConfig.existsAs<std::string>("inputPaths") ? iConfig.getParameter<std::string>("inputPaths") : ""),
   triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
 
   // vertexes
@@ -28,8 +26,8 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   
   //recHits
   dumpRHs              (iConfig.existsAs<bool>("dumpRHs") ? iConfig.getParameter<bool>("dumpRHs") : false),
-  recHitCollectionEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEB" ))),
-  recHitCollectionEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitCollectionEE" ))),
+  recHitCollectionEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("recHitCollectionEB"))),
+  recHitCollectionEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>("recHitCollectionEE"))),
 
   ///////////// GEN INFO
   // isMC or Data --> default Data
@@ -43,6 +41,21 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
 
   // triggers
   triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
+
+  if (file_exists(inputPaths))
+  {
+    std::fstream triggerStream;
+    triggerStream.open(inputPaths.c_str(),std::ios::in);
+    std::string path;
+    while (triggerStream >> path)
+    {
+      if (path != "") triggerNames.push_back(path);
+    }
+    triggerStream.close();
+
+    // branch to store trigger info
+    triggerBits.resize(triggerNames.size());
+  } // check to make sure text file exists
 
   //vertex
   verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
@@ -160,89 +173,11 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   PhotonDump::InitializeTriggerBranches();
   if (triggerResultsH.isValid())
   {
-    if (isHLT2)
+    for (std::size_t i = 0; i < triggerNames.size(); i++)
     {
-      for (std::size_t i = 0; i < triggerNames.size(); i++)
-      {
-	if (triggerIndex[triggerNames[i]] == -1) continue;	
-	if (i == 0  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltpho120_met40       = true;
-	if (i == 1  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltpho175             = true;
-	if (i == 2  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdoublepho60        = true;
-	if (i == 3  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45           = true; 
-	if (i == 4  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_jet50     = true; 
-	if (i == 5  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_dijet50   = true; 
-	if (i == 6  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_dijet35   = true; 
-	if (i == 7  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_trijet35  = true; 
-	if (i == 8  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_el100veto = true; 
-	if (i == 9  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_notkveto  = true; 
-	if (i == 10 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho50           = true; 
-	if (i == 11 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60           = true; 
-	if (i == 12 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_jet50     = true; 
-	if (i == 13 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_dijet50   = true; 
-	if (i == 14 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_dijet35   = true; 
-	if (i == 15 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_trijet35  = true; 
-	if (i == 16 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_notkveto  = true; 
-	if (i == 17 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho80           = true; 
-	if (i == 18 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho100          = true;
-	if (i == 19 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdoublepho42_25_m15 = true;
-	if (i == 20 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltpho90_ht600        = true;
-      } // end loop over trigger names
-    } // end check over HLT2
-    if (isHLT3)
-    {
-      for (std::size_t i = 0; i < triggerNames.size(); i++)
-      {
-	if (triggerIndex[triggerNames[i]] == -1) continue;	
-	if (i == 0  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45           = true;
-	if (i == 1  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_notkveto  = true;
-	if (i == 2  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_notime    = true;
-	if (i == 3  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_nosmaj    = true;
-	if (i == 4  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_nosmin    = true;
-	if (i == 5  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_nosieie   = true;
-	if (i == 6  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_nor9      = true;
-	if (i == 7  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_nohoe     = true;
-	if (i == 8  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_noet      = true;
-	if (i == 9  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho45_nol1match = true;
-      } // end loop over trigger names
-    } // end check over HLT3
-    if (isHLT4)
-    {
-      for (std::size_t i = 0; i < triggerNames.size(); i++)
-      {
-	if (triggerIndex[triggerNames[i]] == -1) continue;	
-	if (i == 0  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltpho120_met40       = true;
-	if (i == 1  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltpho175             = true;
-	if (i == 2  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdoublepho42_25_m15 = true;
-	if (i == 3  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdoublepho60        = true;
-	if (i == 4  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltpho90_ht600        = true;
-	if (i == 5  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60           = true; 
-	if (i == 6  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_neg5      = true; 
-	if (i == 7  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_r9Id90    = true; 
-	if (i == 8  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_caloIdL   = true;
-	if (i == 9  && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_isoL      = true;   
-
-	/// REPURPOSE THE MULTIJET TRIGGERS!!! dispho60 now is with the new selection!!!
-
-	if (i == 10 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_ht100 = true; 
-	if (i == 11 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_ht200 = true; 
-	if (i == 12 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_ht300 = true; 
-
-	if (i == 13 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_jet80       = true; 
-	if (i == 14 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_jet80_ht100 = true; 
-	if (i == 15 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_jet80_ht200 = true; 
-	if (i == 16 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_jet80_ht300 = true; 
-
-	if (i == 17 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_dijet50       = true; 
-	if (i == 18 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_dijet50_ht100 = true; 
-	if (i == 19 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_dijet50_ht200 = true; 
-	if (i == 20 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_dijet50_ht300 = true; 
-
-	if (i == 21 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_trijet35       = true; 
-	if (i == 22 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_trijet35_ht100 = true; 
-	if (i == 23 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_trijet35_ht200 = true; 
-	if (i == 24 && triggerResultsH->accept(triggerIndex[triggerNames[i]])) hltdispho60_trijet35_ht300 = true; 
-      } // end loop over trigger names
-    } // end check over HLT4
+      if (triggerIndex[triggerNames[i]] == -1) continue;	
+      if (triggerResultsH->accept(triggerIndex[triggerNames[i]])) triggerBits[i] = true;
+    } // end loop over trigger names
   } // end check over valid triggerResults
 
   /////////////////////////
@@ -1170,75 +1105,9 @@ void PhotonDump::DumpRecHitInfo(int iph, const DetIdPairVec & hitsAndFractions,	
 
 void PhotonDump::InitializeTriggerBranches()
 {
-  if (isHLT2)
-  {
-    hltpho120_met40       = false;
-    hltpho175             = false;
-    hltdoublepho60        = false;
-    hltdispho45           = false; 
-    hltdispho45_jet50     = false; 
-    hltdispho45_dijet50   = false; 
-    hltdispho45_dijet35   = false; 
-    hltdispho45_trijet35  = false; 
-    hltdispho45_el100veto = false; 
-    hltdispho45_notkveto  = false; 
-    hltdispho50           = false; 
-    hltdispho60           = false; 
-    hltdispho60_jet50     = false; 
-    hltdispho60_dijet50   = false; 
-    hltdispho60_dijet35   = false; 
-    hltdispho60_trijet35  = false; 
-    hltdispho60_notkveto  = false; 
-    hltdispho80           = false; 
-    hltdispho100          = false;
-    hltdoublepho42_25_m15 = false;
-    hltpho90_ht600        = false;
-  }
-  if (isHLT3)
-  {
-    hltdispho45           = false; 
-    hltdispho45_notkveto  = false;
-    hltdispho45_notime    = false;
-    hltdispho45_nosmaj    = false;
-    hltdispho45_nosmin    = false;
-    hltdispho45_nosieie   = false;
-    hltdispho45_nor9      = false;
-    hltdispho45_nohoe     = false;
-    hltdispho45_noet      = false;
-    hltdispho45_nol1match = false;
-  }
-  if (isHLT4)
-  {
-     hltpho120_met40       = false;
-     hltpho175             = false;
-     hltdoublepho42_25_m15 = false;
-     hltdoublepho60        = false;
-     hltpho90_ht600        = false;
-     hltdispho60           = false; 
-     hltdispho60_neg5      = false; 
-     hltdispho60_r9Id90    = false; 
-     hltdispho60_caloIdL   = false;
-     hltdispho60_isoL      = false;   
-     
-     /// REPURPOSE THE MULTIJET TRIGGERS!!! dispho60 now is with the new selection!!!
-     
-     hltdispho60_ht100 = false; 
-     hltdispho60_ht200 = false; 
-     hltdispho60_ht300 = false; 
-     hltdispho60_jet80       = false; 
-     hltdispho60_jet80_ht100 = false; 
-     hltdispho60_jet80_ht200 = false; 
-     hltdispho60_jet80_ht300 = false; 
-     
-     hltdispho60_dijet50       = false; 
-     hltdispho60_dijet50_ht100 = false; 
-     hltdispho60_dijet50_ht200 = false; 
-     hltdispho60_dijet50_ht300 = false; 
-     
-     hltdispho60_trijet35       = false; 
-     hltdispho60_trijet35_ht100 = false; 
-     hltdispho60_trijet35_ht200 = false; 
-     hltdispho60_trijet35_ht300 = false; 
+  for (std::size_t i = 0; i < triggerNames.size(); i++)
+  { 
+    triggerBits[i] = false;
   }
 }
 
@@ -1558,43 +1427,7 @@ void PhotonDump::beginJob()
   tree->Branch("lumi"                   , &lumi                 , "lumi/i");
    
   // Trigger Info
-  if (isHLT2)
-  {
-    tree->Branch("hltpho120_met40"      , &hltpho120_met40      , "hltpho120_met40/O");
-    tree->Branch("hltpho175"            , &hltpho175            , "hltpho175/O");
-    tree->Branch("hltdoublepho60"       , &hltdoublepho60       , "hltdoublepho60/O");
-    tree->Branch("hltdispho45"          , &hltdispho45          , "hltdispho45/O");
-    tree->Branch("hltdispho45_jet50"    , &hltdispho45_jet50    , "hltdispho45_jet50/O");
-    tree->Branch("hltdispho45_dijet50"  , &hltdispho45_dijet50  , "hltdispho45_dijet50/O");
-    tree->Branch("hltdispho45_dijet35"  , &hltdispho45_dijet35  , "hltdispho45_dijet35/O");
-    tree->Branch("hltdispho45_trijet35" , &hltdispho45_trijet35 , "hltdispho45_trijet35/O");
-    tree->Branch("hltdispho45_el100veto", &hltdispho45_el100veto, "hltdispho45_el100veto/O");
-    tree->Branch("hltdispho45_notkveto" , &hltdispho45_notkveto , "hltdispho45_notkveto/O");
-    tree->Branch("hltdispho50"          , &hltdispho50          , "hltdispho50/O");
-    tree->Branch("hltdispho60"          , &hltdispho60          , "hltdispho60/O");
-    tree->Branch("hltdispho60_jet50"    , &hltdispho60_jet50    , "hltdispho60_jet50/O");
-    tree->Branch("hltdispho60_dijet50"  , &hltdispho60_dijet50  , "hltdispho60_dijet50/O");
-    tree->Branch("hltdispho60_dijet35"  , &hltdispho60_dijet35  , "hltdispho60_dijet35/O");
-    tree->Branch("hltdispho60_trijet35" , &hltdispho60_trijet35 , "hltdispho60_trijet35/O");
-    tree->Branch("hltdispho60_notkveto" , &hltdispho60_notkveto , "hltdispho60_notkveto/O");
-    tree->Branch("hltdispho80"          , &hltdispho80          , "hltdispho80/O");
-    tree->Branch("hltdispho100"         , &hltdispho100         , "hltdispho100/O");
-    tree->Branch("hltdoublepho42_25_m15", &hltdoublepho42_25_m15, "hltdoublepho42_25_m15/O");
-    tree->Branch("hltpho90_ht600"       , &hltpho90_ht600       , "hltpho90_ht600/O");
-  }
-  if (isHLT3)
-  {
-    tree->Branch("hltdispho45"          , &hltdispho45          , "hltdispho45/O");
-    tree->Branch("hltdispho45_notkveto" , &hltdispho45_notkveto , "hltdispho45_notkveto/O");
-    tree->Branch("hltdispho45_notime"   , &hltdispho45_notime   , "hltdispho45_notime/O");
-    tree->Branch("hltdispho45_nosmaj"   , &hltdispho45_nosmaj   , "hltdispho45_nosmaj/O");
-    tree->Branch("hltdispho45_nosmin"   , &hltdispho45_nosmin   , "hltdispho45_nosmin/O");
-    tree->Branch("hltdispho45_nosieie"  , &hltdispho45_nosieie  , "hltdispho45_nosieie/O");
-    tree->Branch("hltdispho45_nor9"     , &hltdispho45_nor9     , "hltdispho45_nor9/O");
-    tree->Branch("hltdispho45_nohoe"    , &hltdispho45_nohoe    , "hltdispho45_nohoe/O");
-    tree->Branch("hltdispho45_noet"     , &hltdispho45_noet     , "hltdispho45_noet/O");
-    tree->Branch("hltdispho45_nol1match", &hltdispho45_nol1match, "hltdispho45_nol1match/O");
-  }
+  tree->Branch("triggerBits"            , &triggerBits);
 
   // Vertex info
   tree->Branch("nvtx"                   , &nvtx                 , "nvtx/I");
@@ -1765,6 +1598,8 @@ void PhotonDump::beginJob()
   tree->Branch("phNeuIso_b"           , &phNeuIso_b);
   tree->Branch("phIso_b"              , &phIso_b);
 
+  tree->Branch("phHLTmatched"         , &phHLTmatched);
+
   tree->Branch("phnrh"                , &phnrh);
   tree->Branch("phseedpos"            , &phseedpos);
 
@@ -1780,72 +1615,6 @@ void PhotonDump::endJob() {}
 
 void PhotonDump::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
 {
-  if (isHLT2) // test menu for displaced photons
-  {
-    triggerNames.push_back("HLT_Photon120_R9Id90_HE10_Iso40_EBOnly_PFMET40_v"); // i = 0
-    triggerNames.push_back("HLT_Photon175_v");                                  // i = 1
-    triggerNames.push_back("HLT_DoublePhoton60_v");                             // i = 2
-    triggerNames.push_back("HLT_DisplacedPhoton45_v");                          // i = 3
-    triggerNames.push_back("HLT_DisplacedPhoton45_PFJet50_v");                  // i = 4
-    triggerNames.push_back("HLT_DisplacedPhoton45_DiPFJet50_v");                // i = 5
-    triggerNames.push_back("HLT_DisplacedPhoton45_DiPFJet35_v");                // i = 6
-    triggerNames.push_back("HLT_DisplacedPhoton45_TriPFJet35_v");               // i = 7
-    triggerNames.push_back("HLT_DisplacedPhoton45_El100Veto_v");                // i = 8
-    triggerNames.push_back("HLT_DisplacedPhoton45_noTrackVeto_v");              // i = 9
-    triggerNames.push_back("HLT_DisplacedPhoton50_v");                          // i = 10
-    triggerNames.push_back("HLT_DisplacedPhoton60_v");                          // i = 11
-    triggerNames.push_back("HLT_DisplacedPhoton60_PFJet50_v");                  // i = 12
-    triggerNames.push_back("HLT_DisplacedPhoton60_DiPFJet50_v");                // i = 13
-    triggerNames.push_back("HLT_DisplacedPhoton60_DiPFJet35_v");                // i = 14
-    triggerNames.push_back("HLT_DisplacedPhoton60_TriPFJet35_v");               // i = 15
-    triggerNames.push_back("HLT_DisplacedPhoton60_noTrackVeto_v");              // i = 16
-    triggerNames.push_back("HLT_DisplacedPhoton80_v");                          // i = 17
-    triggerNames.push_back("HLT_DisplacedPhoton100_v");                         // i = 18
-    triggerNames.push_back("HLT_Photon42_R9Id85_OR_CaloId24b40e_Iso50T80L_Photon25_AND_HE10_R9Id65_Eta2_Mass15_v"); // i = 19
-    triggerNames.push_back("HLT_Photon90_CaloIdL_PFHT600_v");                   // i = 20
-  }
-  if (isHLT3) // remove cuts on at a time for DisplacedPhoton45
-  {
-    triggerNames.push_back("HLT_DisplacedPhoton45_v");                          // i = 0
-    triggerNames.push_back("HLT_DisplacedPhoton45_noTrackVeto_v");              // i = 1
-    triggerNames.push_back("HLT_DisplacedPhoton45_noTime_v");                   // i = 2
-    triggerNames.push_back("HLT_DisplacedPhoton45_noSmaj_v");                   // i = 3
-    triggerNames.push_back("HLT_DisplacedPhoton45_noSmin_v");                   // i = 4
-    triggerNames.push_back("HLT_DisplacedPhoton45_noSieie_v");                  // i = 5
-    triggerNames.push_back("HLT_DisplacedPhoton45_noR9_v");                     // i = 6
-    triggerNames.push_back("HLT_DisplacedPhoton45_noHoE_v");                    // i = 7
-    triggerNames.push_back("HLT_DisplacedPhoton45_noEt_v");                     // i = 8
-    triggerNames.push_back("HLT_DisplacedPhoton45_noL1Match_v");                // i = 9
-  }
-  if (isHLT4) // test menu for displaced photons
-  {
-    triggerNames.push_back("HLT_Photon120_R9Id90_HE10_Iso40_EBOnly_PFMET40_v");                // i = 0
-    triggerNames.push_back("HLT_Photon175_v");                                                 // i = 1
-    triggerNames.push_back("HLT_Photon42_R9Id85_OR_CaloId24b40e_Iso50T80L_Photon25_AND_HE10_R9Id65_Eta2_Mass15_v"); // i = 2
-    triggerNames.push_back("HLT_DoublePhoton60_v");                                            // i = 3
-    triggerNames.push_back("HLT_Photon90_PFHT600_v");                                          // i = 4
-    triggerNames.push_back("HLT_DisplacedPhoton60_v");                                         // i = 5
-    triggerNames.push_back("HLT_DisplacedPhoton60_neg5time_v");                                // i = 6
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_v');                                  // i = 7
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_v');                          // i = 8  
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_v');                     // i = 9
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT100_v');             // i = 10  
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT200_v');             // i = 11 
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT300_v');             // i = 12
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFJet80_v');             // i = 13
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFJet80_PFHT100_v');     // i = 14
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFJet80_PFHT200_v');     // i = 15
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFJet80_PFHT300_v');     // i = 16
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_DiPFJet50_v');           // i = 17
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_DiPFJet50_PFHT100_v');   // i = 18
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_DiPFJet50_PFHT200_v');   // i = 19
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_DiPFJet50_PFHT300_v');   // i = 20
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_TriPFJet35_v');          // i = 21
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_TriPFJet35_PFHT100_v');  // i = 22
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_TriPFJet35_PFHT200_v');  // i = 23
-    triggerNames.push_back('HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_TriPFJet35_PFHT300_v');  // i = 24
-  }
-
   // initialize triggerIndex, key: Name, value: Index 
   for (std::size_t i = 0; i < triggerNames.size(); i++)
   {
@@ -1875,7 +1644,6 @@ void PhotonDump::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
 void PhotonDump::endRun(edm::Run const&, edm::EventSetup const&) 
 {
   // reset trigger info
-  triggerNames.clear();
   triggerIndex.clear();
 }
 
