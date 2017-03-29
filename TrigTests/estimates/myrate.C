@@ -1,4 +1,4 @@
-void myrate(Int_t psc, TString mypath)
+void myrate(TString mypath, Int_t psc = 3)
 {
   std::ifstream input;
   input.open("stdpaths.txt",std::ios::in);
@@ -16,8 +16,8 @@ void myrate(Int_t psc, TString mypath)
   fullmenu += "(" + mypath + "==1)";
 
   TString spsc = (psc == 1 ? "1p6e34/" : "1p35e34/");
-  TString dir  = "GRunDisplacedPhotonHT_Full_V2/" + spsc  + "hlt0/";
-  Float_t nls  = (psc == 1 ? 640 : 638); //618;
+  TString dir  = "GRunDisplacedPhotonHT_Full_V4/" + spsc  + "hlt0/";
+  Float_t nls  = 648; //(psc == 1 ? 640 : 638); //618;
   Float_t lsl  = 23.3;
   Float_t ps   = 428; // 107 * 4 HLT PS 
   Float_t SF   = ps/(lsl*nls);
@@ -27,7 +27,7 @@ void myrate(Int_t psc, TString mypath)
   ROOT::v5::TFormula::SetMaxima(3000);
 
   Int_t   total = 2548707; //2465556; // tree->GetEntries();
-  Int_t   npass_stdfull = 38288; /*37052;*/                                Float_t npass_stdfull_unc = std::sqrt(npass_stdfull);
+  Int_t   npass_stdfull = 38286;    /*38285; 38288; 37052;*/               Float_t npass_stdfull_unc = std::sqrt(npass_stdfull);
   Int_t   npass_indiv   = tree->GetEntries(Form("%s == 1",mypath.Data())); Float_t npass_indiv_unc   = std::sqrt(npass_indiv);
   Int_t   npass_total   = tree->GetEntries(fullmenu.Data());               Float_t npass_total_unc   = std::sqrt(npass_total);
   //  Int_t   npass_total = npass_stdfull; Float_t npass_total_unc = 0;
