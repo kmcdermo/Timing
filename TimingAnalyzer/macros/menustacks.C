@@ -86,7 +86,7 @@ void ptstack(TFile *& file, TString dir)
 
 void cmsmenustack(TFile *& file, TString dir)
 {
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho45_eff","phdelayseedtime_hltpho175_eff","phdelayseedtime_hltpho120_met40_eff","phdelayseedtime_hltdoublepho60_eff"};
+  std::vector<TString> histnames = {"phdelayseedtime_hltdispho60_isoL_eff","phdelayseedtime_hltpho175_eff","phdelayseedtime_hltpho120_met40_eff","phdelayseedtime_hltdoublepho60_eff","phdelayseedtime_hltdoublepho42_25_m15_eff","phdelayseedtime_hltpho90_ht600_eff"};
 
   TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
   TString output = "cmsmenustack";
@@ -158,21 +158,98 @@ void ptbreakdownstack(TFile *& file, TString dir)
   dostack(file,dir,histnames,title,output);
 }
 
+void pho60downstack(TFile *& file, TString dir)
+{
+  std::vector<TString> histnames = {"phdelayseedtime_hltdispho60_eff","phdelayseedtime_hltdispho60_r9Id90_eff","phdelayseedtime_hltdispho60_caloIdL_eff","phdelayseedtime_hltdispho60_isoL_eff"};
+
+  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
+  TString output = "pho60downstack";
+
+  dostack(file,dir,histnames,title,output);
+}
+
+void etstack(TFile *& file, TString dir)
+{
+  std::vector<TString> histnames = {"phdelayseedtime_hltdispho50_isoL_eff","phdelayseedtime_hltdispho60_isoL_eff","phdelayseedtime_hltdispho70_isoL_eff","phdelayseedtime_hltdispho80_isoL_eff"};
+
+  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
+  TString output = "etstack";
+
+  dostack(file,dir,histnames,title,output);
+}
+
+void htet50stack(TFile *& file, TString dir)
+{
+  std::vector<TString> histnames = {"phdelayseedtime_hltdispho50_isoL_eff","phdelayseedtime_hltdispho50_ht100_eff","phdelayseedtime_hltdispho50_ht200_eff","phdelayseedtime_hltdispho50_ht300_eff","phdelayseedtime_hltdispho50_ht350_eff","phdelayseedtime_hltdispho50_ht400_eff"};
+
+  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
+  TString output = "htet50stack";
+
+  dostack(file,dir,histnames,title,output);
+}
+
+void htet60stack(TFile *& file, TString dir)
+{
+  std::vector<TString> histnames = {"phdelayseedtime_hltdispho60_isoL_eff","phdelayseedtime_hltdispho60_ht100_eff","phdelayseedtime_hltdispho60_ht200_eff","phdelayseedtime_hltdispho60_ht300_eff","phdelayseedtime_hltdispho60_ht350_eff","phdelayseedtime_hltdispho60_ht400_eff"};
+
+  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
+  TString output = "htet60stack";
+
+  dostack(file,dir,histnames,title,output);
+}
+
+void htet70stack(TFile *& file, TString dir)
+{
+  std::vector<TString> histnames = {"phdelayseedtime_hltdispho70_isoL_eff","phdelayseedtime_hltdispho70_ht100_eff","phdelayseedtime_hltdispho70_ht200_eff","phdelayseedtime_hltdispho70_ht300_eff","phdelayseedtime_hltdispho70_ht350_eff","phdelayseedtime_hltdispho70_ht400_eff"};
+
+  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
+  TString output = "htet70stack";
+
+  dostack(file,dir,histnames,title,output);
+}
+
+void htet80stack(TFile *& file, TString dir)
+{
+  std::vector<TString> histnames = {"phdelayseedtime_hltdispho80_isoL_eff","phdelayseedtime_hltdispho80_ht100_eff","phdelayseedtime_hltdispho80_ht200_eff","phdelayseedtime_hltdispho80_ht300_eff","phdelayseedtime_hltdispho80_ht350_eff","phdelayseedtime_hltdispho80_ht400_eff"};
+
+  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
+  TString output = "htet80stack";
+
+  dostack(file,dir,histnames,title,output);
+}
+
+
+
 void menustacks()
 {
-  TString dir  = "output/trigger/MC/signal/HVDS/ctau1000/cuts_jetpt35.0_njets3_ph1pt50.0_ph1VIDmedium_phanypt10.0_phanyVIDloose_rhE1.0_ecalaccept/";
+
+
+
+  TString dir  = "output/hlt4/MC/signal/GMSB/ctau6000/cuts_jetht300.0_minjetpt15.0_jetpt35.0_njets3_ph1pt10.0_phanypt10.0_rhE1.0_ecalaccept/";
   //TString dir  = "output/trigger/MC/signal/GMSB/ctau6000/cuts_jetpt35.0_njets3_ph1pt50.0_ph1VIDmedium_phanypt10.0_phanyVIDloose_rhE1.0_EEOnly/";
   //TString dir  = "output/trigger/MC/signal/GMSB/ctau100/cuts_jetpt35.0_njets3_ph1pt50.0_ph1VIDmedium_phanypt10.0_phanyVIDloose_rhE1.0_ecalaccept/";
   TFile * file = TFile::Open(dir+"plots.root");
+
+  cmsmenustack(file,dir);
+  pho60downstack(file,dir);
+  etstack(file,dir);
+  htet50stack(file,dir);
+  htet60stack(file,dir);
+  htet70stack(file,dir);
+  htet80stack(file,dir);
+
+
+
+
 
   //  cmsmenustack(file,dir);
   //  ptstack(file,dir);
   //  dispho45stack(file,dir);
   //  dispho60stack(file,dir);
-  seedtimebreakdownstack(file,dir);
-  etabreakdownstack(file,dir);
-  phibreakdownstack(file,dir);
-  ptbreakdownstack(file,dir);
+//   seedtimebreakdownstack(file,dir);
+//   etabreakdownstack(file,dir);
+//   phibreakdownstack(file,dir);
+//   ptbreakdownstack(file,dir);
 
   delete file;
 }

@@ -46,8 +46,9 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   {
     std::fstream triggerStream;
     triggerStream.open(inputPaths.c_str(),std::ios::in);
+    int index;
     std::string path;
-    while (triggerStream >> path)
+    while (triggerStream >> index >> path)
     {
       if (path != "") triggerNames.push_back(path);
     }

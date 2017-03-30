@@ -1,2 +1,3 @@
 isHLT2 0
 isHLT3 0
+isHLT4 1
