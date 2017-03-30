@@ -25,6 +25,8 @@
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
+#include "DataFormats/HLTReco/interface/TriggerEvent.h"
+#include "DataFormats/HLTReco/interface/TriggerObject.h"
 
 // Gen Info
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
@@ -104,7 +106,8 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
 		   const edm::ValueMap<bool> & photonTightIdMap, 
 		   std::vector<pat::Photon> & photons);
 
-  bool PhotonMatching(const pat::Photon & photon, const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH);
+  bool GenToPATPhotonMatching(const int, const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH);
+  void HLTToPATPhotonMatching(const int);
 
   float GetChargedHadronEA(const float);
   float GetNeutralHadronEA(const float);
@@ -142,9 +145,9 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
 
   void ClearRecoPhotonBranches();
   void InitializeRecoPhotonBranches();
-  void DumpVIDs(const pat::Photon & , int, float);
-  void InitializeRecoRecHitBranches(int iph);
-  void DumpRecHitInfo(int, const DetIdPairVec &, const EcalRecHitCollection *&);
+  void DumpVIDs(const pat::Photon &, const int, const float);
+  void InitializeRecoRecHitBranches(const int iph);
+  void DumpRecHitInfo(const int, const DetIdPairVec &, const EcalRecHitCollection *&);
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
   
@@ -155,14 +158,23 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
-  
+
+  // dR matching criteria
+  const float dRmin;
+  const float pTres;
+
   // triggers
   const bool dumpTriggerMenu;
   const std::string inputPaths;
+  std::vector<std::string> pathNames;
+  std::map<std::string,int> pathIndex;
+  const std::string inputFilters;
+  std::vector<edm::InputTag> filterTags;
   const edm::InputTag triggerResultsTag;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
-  std::vector<std::string>  triggerNames;
-  std::map<std::string,int> triggerIndex;
+  const edm::InputTag triggerEventTag;
+  edm::EDGetTokenT<trigger::TriggerEvent> triggerEventToken;
+  std::vector<std::vector<trigger::TriggerObject> > triggerObjectsByFilter; // first index is filter label, second is trigger objects
 
   // vertices
   const edm::InputTag verticesTag;
@@ -193,8 +205,10 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
 
   // ECAL RecHits
   const bool dumpRHs;
-  edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEBTAG;
-  edm::EDGetTokenT<EcalRecHitCollection> recHitCollectionEETAG;
+  const edm::InputTag recHitsEBTag;
+  edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBToken;
+  const edm::InputTag recHitsEETag;
+  edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEToken;
 
   // Gen Particles and MC info
   const bool isGMSB;
@@ -273,11 +287,11 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   int nphotons;
   std::vector<float> phE, phpt, phphi, pheta;
   std::vector<int>   phmatch;
-  std::vector<bool>  phisMatched;
+  std::vector<bool>  phIsGenMatched;
   std::vector<float> phHoE, phr9, phChgIso, phNeuIso, phIso, phsuisseX;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
   std::vector<int>   phVID, phHoE_b, phsieie_b, phChgIso_b, phNeuIso_b, phIso_b;
-  std::vector<std::vector<int> > phHLTmatched;
+  std::vector<std::vector<int> > phIsHLTMatched; // first index is iph, second is for filter, true/false
 
   // supercluster info 
   std::vector<float> phscE, phsceta, phscphi;
