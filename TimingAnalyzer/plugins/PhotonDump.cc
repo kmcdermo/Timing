@@ -72,10 +72,10 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
     std::fstream filterStream;
     filterStream.open(inputFilters.c_str(),std::ios::in);
     int index;
-    std::string label, instance, processName;
-    while (filterStream >> index >> label >> instance >> processName)
+    std::string label;// instance, processName;
+    while (filterStream >> index >> label)
     {
-      if (label != "") filterTags.push_back(edm::InputTag(label,instance,processName));
+      if (label != "") filterTags.push_back(edm::InputTag(label));
     }
     filterStream.close();
 
@@ -168,7 +168,6 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // RecHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
   iEvent.getByToken(recHitsEBToken, recHitsEBH);
-
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
   iEvent.getByToken(recHitsEEToken, recHitsEEH);
 
@@ -1074,14 +1073,14 @@ int PhotonDump::PassPhIso(const float eta, const float PhIso, const float pt)
 void PhotonDump::DumpTriggerMenu(const HLTConfigProvider& hltConfig, const std::vector<std::string>& pathNames, edm::Run const& iRun)
 {
   std::cout << "Run Number: " << iRun.run() << std::endl;
-  for (std::size_t j = 0; j < pathNames.size(); j++)
+  for (std::size_t itrigger = 0; itrigger < pathNames.size(); itrigger++)
   {
-    std::cout << "   " << pathNames[j].c_str() << " : " << hltConfig.triggerIndex(pathNames[j]) << " - " << j << std::endl;
+    std::cout << "   " << pathNames[itrigger].c_str() << " : " << hltConfig.triggerIndex(pathNames[itrigger]) << " - " << itrigger << std::endl;
   }
   std::cout << "--------------------------" << std::endl;
-  for (std::size_t i = 0; i < pathNames.size(); i++)
+  for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
   {
-    std::cout << "   " << pathNames[i].c_str() << " : " << i << " - " << pathIndex[pathNames[i]] << std::endl;
+    std::cout << "   " << pathNames[ipath].c_str() << " : " << ipath << " - " << pathIndex[pathNames[ipath]] << std::endl;
   }
   std::cout << "--------------------------" << std::endl;
 }
@@ -1173,15 +1172,15 @@ void PhotonDump::DumpRecHitInfo(const int iph, const DetIdPairVec & hitsAndFract
 
 void PhotonDump::InitializeTriggerBranches()
 {
-  for (std::size_t i = 0; i < pathNames.size(); i++)
+  for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
   { 
-    triggerBits[i] = false;
+    triggerBits[ipath] = false;
   }
 
   // clear all old trigger objects
-  for (std::size_t i = 0; i < triggerObjectsByFilter.size(); i++)
+  for (std::size_t ifilter = 0; ifilter < triggerObjectsByFilter.size(); ifilter++)
   {
-    triggerObjectsByFilter[i].clear();
+    triggerObjectsByFilter[ifilter].clear();
   }
 }
 
@@ -1472,10 +1471,10 @@ void PhotonDump::InitializeRecoPhotonBranches()
     phnrh    [iph] = -9999;
     phseedpos[iph] = -9999;
 
-    phIsHLTMatched.resize(filterTags.size());
+    phIsHLTMatched[iph].resize(filterTags.size());
     for (std::size_t ifilter = 0; ifilter < filterTags.size(); ifilter++)
     {
-      phIsHLTMatched[iph][ifilter] = false;
+      phIsHLTMatched[iph][ifilter] = 0; // false
     }
   }
 }
@@ -1704,12 +1703,12 @@ void PhotonDump::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
   {
     pathIndex[pathNames[ipath]] = -1;
   }
-  
+
   HLTConfigProvider hltConfig;
   bool changed = false;
   hltConfig.init(iRun, iSetup, triggerResultsTag.process(), changed);
   const std::vector<std::string>& triggerNames = hltConfig.triggerNames();
-  for (std::size_t ipath = 0; ipath < triggerNames.size(); ipath++)
+  for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
   {
     TPRegexp pattern(pathNames[ipath]);
     for (std::size_t itrigger = 0; itrigger < triggerNames.size(); itrigger++)

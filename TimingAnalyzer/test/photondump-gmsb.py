@@ -5,27 +5,19 @@ import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
+## general cuts
+options.register (
+	'dRmin',0.4,VarParsing.multiplicity.singleton,VarParsing.varType.float,
+	'dR minimum cut');
+
+options.register (
+	'pTres',0.5,VarParsing.multiplicity.singleton,VarParsing.varType.float,
+	'pT resolution cut');
+
 ## dump trigger menu 
 options.register (
 	'dumpTriggerMenu',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to dump trigger menu');
-
-## which trigger menu??
-options.register (
-	'isHLT2',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to use displaced photon menu');
-
-options.register (
-	'isHLT3',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to use displaced photon breakdown menu');
-
-options.register (
-	'isHLT4',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to use displaced photon breakdown menu');
-
-options.register (
-	'isHLT5',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to use displaced photon breakdown menu');
 
 ## which trigger menu though??
 options.register (
@@ -48,7 +40,7 @@ options.register (
 
 options.register (
 	'isHVDS',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to indicate GMSB');
+	'flag to indicate HVDS');
 
 options.register (
 	'ctau','6000',VarParsing.multiplicity.singleton,VarParsing.varType.string,
@@ -85,21 +77,13 @@ options.register (
 ## parsing command line arguments
 options.parseArguments()
 
-## setup triggerPName from bools
-if   options.isHLT2 : options.triggerPName = 'HLT2'
-elif options.isHLT3 : options.triggerPName = 'HLT3'
-elif options.isHLT4 : options.triggerPName = 'HLT4'
-elif options.isHLT5 : options.triggerPName = 'HLT5'
-
 ## reset file name
 options.outputFileName = 'photondump-gmsb-ctau'+options.ctau+'-'+options.triggerPName+'.root'
 
 print "##### Settings ######"
+print "Running with dRmin               = ",options.dRmin
+print "Running with pTres               = ",options.pTres
 print "Running with dumpTriggerMenu     = ",options.dumpTriggerMenu
-print "Running with isHLT2              = ",options.isHLT2
-print "Running with isHLT3              = ",options.isHLT3
-print "Running with isHLT4              = ",options.isHLT4
-print "Running with isHLT5              = ",options.isHLT5
 print "Running with triggerPName        = ",options.triggerPName
 print "Running with dumpRHs             = ",options.dumpRHs
 print "Running with dumpIds             = ",options.dumpIds
@@ -454,12 +438,17 @@ if options.ctau == '6000' :
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_1.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_10.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_11.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_12.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_13.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_14.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_15.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_16.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_17.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_18.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_19.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_2.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_20.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_21.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_22.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_23.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_24.root',
@@ -472,40 +461,53 @@ if options.ctau == '6000' :
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_30.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_31.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_32.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_33.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_34.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_35.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_36.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_37.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_38.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_39.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_4.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_40.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_41.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_42.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_43.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_44.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_45.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_46.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_47.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_48.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_49.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_5.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_50.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_51.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_52.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_53.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_54.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_55.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_56.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_57.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_58.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_59.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_6.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_60.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_61.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_62.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_63.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_64.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_65.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_66.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_67.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_68.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_69.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_7.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_70.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_71.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_72.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_73.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_74.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_75.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_76.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_77.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_78.root',
@@ -516,6 +518,7 @@ if options.ctau == '6000' :
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_82.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_83.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_84.root',
+				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_85.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_86.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_87.root',
 				'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_reHLT-DisplacedPhotonsTime_8_0_24_V9-HLTDEBUG-MINIAODSIM-v1/170329_000050/0000/reHLT5-HLTDEBUG-MINIAODSIM_88.root',
@@ -800,18 +803,15 @@ process.TFileService = cms.Service("TFileService",
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("PhotonDump",
-   ## gen info			     
-   isGMSB     = cms.bool(options.isGMSB),
-   isBkg      = cms.bool(options.isBkg),
-   dumpIds    = cms.bool(options.dumpIds),
-   genevt     = cms.InputTag("generator"),
-   pileup     = cms.InputTag("slimmedAddPileupInfo"),
-   genparts   = cms.InputTag("prunedGenParticles"),
-   genjets    = cms.InputTag("slimmedGenJets"),
+   ## general cuts
+   dRmin = cms.double(options.dRmin),
+   pTres = cms.double(options.pTres),
    ## triggers
    dumpTriggerMenu = cms.bool(options.dumpTriggerMenu),
-   inputPaths      = cms.string("test/"+options.triggerPName+".txt"),
+   inputPaths      = cms.string("test/"+options.triggerPName+"paths.txt"),
+   inputFilters    = cms.string("test/"+options.triggerPName+"filters.txt"),
    triggerResults  = cms.InputTag("TriggerResults", "", options.triggerPName),
+   triggerEvent    = cms.InputTag("hltTriggerSummaryAOD", "", options.triggerPName),
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## rho
@@ -826,9 +826,18 @@ process.tree = cms.EDAnalyzer("PhotonDump",
    tightPhotonID  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring16-V2p2-tight"),
    photons        = cms.InputTag("calibratedPhotons"),
    ## ecal recHits			      
-   dumpRHs            = cms.bool(options.dumpRHs),
-   recHitCollectionEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
-   recHitCollectionEE = cms.InputTag("reducedEgamma", "reducedEERecHits")
+   dumpRHs   = cms.bool(options.dumpRHs),
+   recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
+   recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
+   ## gen info			     
+   isGMSB   = cms.bool(options.isGMSB),
+   isHVDS   = cms.bool(options.isHVDS),
+   isBkg    = cms.bool(options.isBkg),
+   dumpIds  = cms.bool(options.dumpIds),
+   genevt   = cms.InputTag("generator"),
+   pileup   = cms.InputTag("slimmedAddPileupInfo"),
+   genparts = cms.InputTag("prunedGenParticles"),
+   genjets  = cms.InputTag("slimmedGenJets")
 )
 
 # Set up the path
