@@ -17,4 +17,5 @@ config.Data.publication      = True
 config.Data.publishDBS       = 'phys03'
 config.Data.outputDatasetTag = 'GMSB_L180_Ctau6000_reHLT-DisplacedPhoton_8_0_24_V11_customiseTiming_PAT-MINIAODSIM-v5'
 
-config.Site.storageSite      = 'T2_CH_CERN'
+config.Site.storageSite   = 'T2_CH_CERN'
+config.Data.outLFNDirBase = '/store/group/phys_exotica/displacedPhotons/'
