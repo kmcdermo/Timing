@@ -5,23 +5,19 @@ import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
+## general cuts
+options.register (
+	'dRmin',0.4,VarParsing.multiplicity.singleton,VarParsing.varType.float,
+	'dR minimum cut');
+
+options.register (
+	'pTres',0.5,VarParsing.multiplicity.singleton,VarParsing.varType.float,
+	'pT resolution cut');
+
 ## dump trigger menu 
 options.register (
 	'dumpTriggerMenu',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to dump trigger menu');
-
-## which trigger menu??
-options.register (
-	'isHLT2',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to use displaced photon menu');
-
-options.register (
-	'isHLT3',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to use displaced photon breakdown menu');
-
-options.register (
-	'isHLT4',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to use displaced photon breakdown menu');
 
 ## which trigger menu though??
 options.register (
@@ -81,18 +77,13 @@ options.register (
 ## parsing command line arguments
 options.parseArguments()
 
-if   options.isHLT2 : options.triggerPName = 'HLT2'
-elif options.isHLT3 : options.triggerPName = 'HLT3'
-elif options.isHLT4 : options.triggerPName = 'HLT4'
-
 ## reset file name
 options.outputFileName = 'photondump-hvds-ctau'+options.ctau+'-'+options.triggerPName+'.root'
 
 print "##### Settings ######"
+print "Running with dRmin               = ",options.dRmin
+print "Running with pTres               = ",options.pTres
 print "Running with dumpTriggerMenu     = ",options.dumpTriggerMenu
-print "Running with isHLT2              = ",options.isHLT2
-print "Running with isHLT3              = ",options.isHLT3
-print "Running with isHLT4              = ",options.isHLT4
 print "Running with triggerPName        = ",options.triggerPName
 print "Running with dumpRHs             = ",options.dumpRHs
 print "Running with dumpIds             = ",options.dumpIds
@@ -384,21 +375,15 @@ process.TFileService = cms.Service("TFileService",
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("PhotonDump",
-   ## gen info			     
-   isGMSB     = cms.bool(options.isGMSB),
-   isHVDS     = cms.bool(options.isHVDS),
-   isBkg      = cms.bool(options.isBkg),
-   dumpIds    = cms.bool(options.dumpIds),
-   genevt     = cms.InputTag("generator"),
-   pileup     = cms.InputTag("slimmedAddPileupInfo"),
-   genparts   = cms.InputTag("prunedGenParticles"),
-   genjets    = cms.InputTag("slimmedGenJets"),
+   ## general cuts
+   dRmin = cms.double(options.dRmin),
+   pTres = cms.double(options.pTres),
    ## triggers
    dumpTriggerMenu = cms.bool(options.dumpTriggerMenu),
-   isHLT2          = cms.bool(options.isHLT2),
-   isHLT3          = cms.bool(options.isHLT3),
-   isHLT4          = cms.bool(options.isHLT4),
+   inputPaths      = cms.string("test/"+options.triggerPName+"paths.txt"),
+   inputFilters    = cms.string("test/"+options.triggerPName+"filters.txt"),
    triggerResults  = cms.InputTag("TriggerResults", "", options.triggerPName),
+   triggerEvent    = cms.InputTag("hltTriggerSummaryAOD", "", options.triggerPName),
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## rho
@@ -413,9 +398,18 @@ process.tree = cms.EDAnalyzer("PhotonDump",
    tightPhotonID  = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-Spring16-V2p2-tight"),
    photons        = cms.InputTag("calibratedPhotons"),
    ## ecal recHits			      
-   dumpRHs            = cms.bool(options.dumpRHs),
-   recHitCollectionEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
-   recHitCollectionEE = cms.InputTag("reducedEgamma", "reducedEERecHits")
+   dumpRHs   = cms.bool(options.dumpRHs),
+   recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
+   recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
+   ## gen info			     
+   isGMSB   = cms.bool(options.isGMSB),
+   isHVDS   = cms.bool(options.isHVDS),
+   isBkg    = cms.bool(options.isBkg),
+   dumpIds  = cms.bool(options.dumpIds),
+   genevt   = cms.InputTag("generator"),
+   pileup   = cms.InputTag("slimmedAddPileupInfo"),
+   genparts = cms.InputTag("prunedGenParticles"),
+   genjets  = cms.InputTag("slimmedGenJets")
 )
 
 # Set up the path
