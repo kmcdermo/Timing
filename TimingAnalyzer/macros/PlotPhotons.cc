@@ -117,6 +117,7 @@ void PlotPhotons::DoPlots(Bool_t geninfo, Bool_t vtxs, Bool_t met, Bool_t jets, 
   PlotPhotons::OutputTH1Fs();
   PlotPhotons::OutputTrigTH1Fs();
   PlotPhotons::OutputTH2Fs();
+  PlotPhotons::OutputTrigTH2Fs();
   PlotPhotons::DumpEventCounts();
 }
 
@@ -211,7 +212,7 @@ Bool_t PlotPhotons::CountEvents()
   if (event_b) fEfficiency["Reco"]++;
 
   //trigger efficiency
-  const Bool_t hlt_b = ((Config::isHLT2 || Config::isHLT3) ? hltdispho45 : true);
+  const Bool_t hlt_b = ((Config::isHLT4) ? (*triggerBits)[9] : true); // dispho60_ht350
   if (hlt_b) fEfficiency["Trigger"]++;
 
   if (event_b && hlt_b)
@@ -274,12 +275,12 @@ Int_t PlotPhotons::GetLeadingPhoton()
       if      (Config::ApplyExactPhMCMatch)
       {
 	if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] <= 0)) continue; // set to <= 0 for exact matching 
-	else if (fIsBkg && ((*phisMatched)[iph] == 0)) continue; // set to == 0 for exact matching
+	else if (fIsBkg && ((*phIsGenMatched)[iph] == 0)) continue; // set to == 0 for exact matching
       }
       else if (Config::ApplyAntiPhMCMatch)
       {
 	if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] > 0)) continue; // set to <=0 for exact matching
-	else if (fIsBkg && ((*phisMatched)[iph] != 0)) continue; // set to != 0 for anti-matching
+	else if (fIsBkg && ((*phIsGenMatched)[iph] != 0)) continue; // set to != 0 for anti-matching
       }
     }
 
@@ -336,12 +337,12 @@ Int_t PlotPhotons::GetGoodPhotons(std::vector<Int_t> & goodphotons)
 	if      (Config::ApplyExactPhMCMatch)
         {
 	  if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] <= 0)) continue; // set to <= 0 for exact matching 
-	  else if (fIsBkg && ((*phisMatched)[iph] == 0)) continue; // set to == 0 for exact matching
+	  else if (fIsBkg && ((*phIsGenMatched)[iph] == 0)) continue; // set to == 0 for exact matching
 	}
 	else if (Config::ApplyAntiPhMCMatch)
         {
 	  if      ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] > 0)) continue; // set to <=0 for exact matching
-	  else if (fIsBkg && ((*phisMatched)[iph] != 0)) continue; // set to != 0 for anti-matching
+	  else if (fIsBkg && ((*phIsGenMatched)[iph] != 0)) continue; // set to != 0 for anti-matching
 	}
       }
 
@@ -632,7 +633,7 @@ void PlotPhotons::FillRecoPhotons()
     fPlots["phnrh"]->Fill(nRecHits);
 
     // MC matching selection --> redundant with ph mc matching
-    if ( ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] > 0)) || (fIsBkg && ((*phisMatched)[iph])) ) nMatchedPhotons++;
+    if ( ((fIsGMSB || fIsHVDS) && ((*phmatch)[iph] > 0)) || (fIsBkg && ((*phIsGenMatched)[iph])) ) nMatchedPhotons++;
   } // end loop over nphotons
   if (fIsMC) fPlots["nMatchedPhotons"]->Fill(nMatchedPhotons);
 }
@@ -695,16 +696,29 @@ void PlotPhotons::FillMostDelayed()
 
 void PlotPhotons::FillTrigger()
 {
+  std::vector<Int_t> goodphotons;
+  const Int_t ph1 = PlotPhotons::GetGoodPhotons(goodphotons);
   const Int_t phdelay = PlotPhotons::GetMostDelayedPhoton();
+
+  if (ph1 != -1)
+  {
+    const Float_t ph1seedtime = (*phrhtime)[ph1][(*phseedpos)[ph1]];
+    const Float_t ph1pt = (*phpt)[ph1];
+
+    if (Config::isHLT4) // consult HLT4.txt for position in vectors -->could make this automatic but eh who cares
+    {
+      PlotPhotons::FillTriggerPlot2D(fTrigPlots2D["ph1seedtime_vs_ph1pt_hltdispho50_ht350"],((*phIsHLTMatched)[ph1][0]&&(*triggerBits)[6]),ph1pt,ph1seedtime);
+      PlotPhotons::FillTriggerPlot2D(fTrigPlots2D["ph1seedtime_vs_ph1pt_hltdispho60_ht350"],((*phIsHLTMatched)[ph1][1]&&(*triggerBits)[9]),ph1pt,ph1seedtime);
+      PlotPhotons::FillTriggerPlot2D(fTrigPlots2D["ph1seedtime_vs_ph1pt_hltdispho70_ht350"],((*phIsHLTMatched)[ph1][2]&&(*triggerBits)[12]),ph1pt,ph1seedtime);
+    }
+  } // end block over leading photon
 
   if (phdelay != -1)
   {
     const Float_t phdelayseedtime = (*phrhtime)[phdelay][(*phseedpos)[phdelay]];
+    const Float_t phdelaypt = (*phpt)[phdelay];
 
-    // first is denom
-    // second is numer
-
-    if (Config::isHLT4) // consult HLT4.txt for position in vectors
+    if (Config::isHLT4) // consult HLT4.txt for position in vectors -->could make this automatic but eh who cares
     {
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltpho120_met40"],(*triggerBits)[0],phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltpho175"],(*triggerBits)[1],phdelayseedtime);
@@ -724,11 +738,30 @@ void PlotPhotons::FillTrigger()
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho70_ht350"],(*triggerBits)[12],phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho70_ht400"],(*triggerBits)[13],phdelayseedtime);
 
-      // need to add 2D plot vs all, leading, most delayed of pt vs seedtime efficiency
-      // can also do 1D time vs seedtime to make it more obvious 
-
+      // 2D plots 
+      PlotPhotons::FillTriggerPlot2D(fTrigPlots2D["phdelayseedtime_vs_phdelaypt_hltdispho50_ht350"],((*phIsHLTMatched)[phdelay][0]&&(*triggerBits)[6]),phdelaypt,phdelayseedtime);
+      PlotPhotons::FillTriggerPlot2D(fTrigPlots2D["phdelayseedtime_vs_phdelaypt_hltdispho60_ht350"],((*phIsHLTMatched)[phdelay][1]&&(*triggerBits)[9]),phdelaypt,phdelayseedtime);
+      PlotPhotons::FillTriggerPlot2D(fTrigPlots2D["phdelayseedtime_vs_phdelaypt_hltdispho70_ht350"],((*phIsHLTMatched)[phdelay][2]&&(*triggerBits)[12]),phdelaypt,phdelayseedtime);
     } // end check over isHLT4
-  } // end block over one good photon
+  } // end block over most delayed photon
+
+  if (goodphotons.size() > 0)
+  {
+    if (Config::isHLT4)
+    {
+      // all good photons that are HLT amtched --> taxing!
+      for (UInt_t gph = 0; gph < goodphotons.size(); gph++)
+      {
+	// get photon index of good photons
+	const Int_t iph = goodphotons[gph];
+	const Int_t phgoodseedtime = (*phrhtime)[iph][(*phseedpos)[iph]];
+	const Int_t phgoodpt = (*phpt)[iph];
+	PlotPhotons::FillTriggerPlot2D(fTrigPlots2D["phgoodseedtime_vs_phgoodpt_hltdispho50_ht350"],((*phIsHLTMatched)[iph][0]&&(*triggerBits)[6]),phgoodpt,phgoodseedtime);
+	PlotPhotons::FillTriggerPlot2D(fTrigPlots2D["phgoodseedtime_vs_phgoodpt_hltdispho60_ht350"],((*phIsHLTMatched)[iph][1]&&(*triggerBits)[9]),phgoodpt,phgoodseedtime);
+	PlotPhotons::FillTriggerPlot2D(fTrigPlots2D["phgoodseedtime_vs_phgoodpt_hltdispho70_ht350"],((*phIsHLTMatched)[iph][2]&&(*triggerBits)[12]),phgoodpt,phgoodseedtime);
+      } // end loop over all good photons
+    } // end check over isHLT4
+  } // end block over all good photons
 }
 
 void PlotPhotons::FillAnalysis(const Bool_t passed)
@@ -941,23 +974,35 @@ void PlotPhotons::SetupTrigger()
 {
   if (Config::isHLT4)
   {
-    fTrigPlots["phdelayseedtime_hltpho120_met40"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltpho120_met40","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_Photon120_R9Id90_HE10_Iso40_EBOnly_PFMET40_v","trigger");
-    fTrigPlots["phdelayseedtime_hltpho175"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltpho175","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_Photon175_v","trigger");
-    fTrigPlots["phdelayseedtime_hltdoublepho60"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdoublepho60","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DoublePhoton60_v","trigger");
-    fTrigPlots["phdelayseedtime_hltdoublepho42_25_m15"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdoublepho42_25_m15","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_Photon42_R9Id85_OR_CaloId24b40e_Iso50T80L_Photon25_AND_HE10_R9Id65_Eta2_Mass15_v","trigger");
-    fTrigPlots["phdelayseedtime_hltpho90_ht600"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltpho90_ht600","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_Photon90_CaloIdL_PFHT600_v","trigger");
+    fTrigPlots["phdelayseedtime_hltpho120_met40"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltpho120_met40","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_Photon120_R9Id90_HE10_Iso40_EBOnly_PFMET40_v","trigger");
+    fTrigPlots["phdelayseedtime_hltpho175"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltpho175","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_Photon175_v","trigger");
+    fTrigPlots["phdelayseedtime_hltdoublepho60"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdoublepho60","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DoublePhoton60_v","trigger");
+    fTrigPlots["phdelayseedtime_hltdoublepho42_25_m15"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdoublepho42_25_m15","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_Photon42_R9Id85_OR_CaloId24b40e_Iso50T80L_Photon25_AND_HE10_R9Id65_Eta2_Mass15_v","trigger");
+    fTrigPlots["phdelayseedtime_hltpho90_ht600"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltpho90_ht600","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_Photon90_CaloIdL_PFHT600_v","trigger");
 
-    fTrigPlots["phdelayseedtime_hltdispho50_ht300"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho50_ht300","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton50_R9Id90_CaloIdL_IsoL_PFHT300_v","trigger");
-    fTrigPlots["phdelayseedtime_hltdispho50_ht350"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho50_ht350","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton50_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
-    fTrigPlots["phdelayseedtime_hltdispho50_ht400"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho50_ht400","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton50_R9Id90_CaloIdL_IsoL_PFHT400_v","trigger");
+    fTrigPlots["phdelayseedtime_hltdispho50_ht300"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho50_ht300","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton50_R9Id90_CaloIdL_IsoL_PFHT300_v","trigger");
+    fTrigPlots["phdelayseedtime_hltdispho50_ht350"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho50_ht350","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton50_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
+    fTrigPlots["phdelayseedtime_hltdispho50_ht400"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho50_ht400","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton50_R9Id90_CaloIdL_IsoL_PFHT400_v","trigger");
 
-    fTrigPlots["phdelayseedtime_hltdispho60_ht300"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho60_ht300","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT300_v","trigger");
-    fTrigPlots["phdelayseedtime_hltdispho60_ht350"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho60_ht350","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
-    fTrigPlots["phdelayseedtime_hltdispho60_ht400"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho60_ht400","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT400_v","trigger");
+    fTrigPlots["phdelayseedtime_hltdispho60_ht300"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho60_ht300","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT300_v","trigger");
+    fTrigPlots["phdelayseedtime_hltdispho60_ht350"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho60_ht350","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
+    fTrigPlots["phdelayseedtime_hltdispho60_ht400"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho60_ht400","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT400_v","trigger");
 
-    fTrigPlots["phdelayseedtime_hltdispho70_ht300"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho70_ht300","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT300_v","trigger");
-    fTrigPlots["phdelayseedtime_hltdispho70_ht350"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho70_ht350","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
-    fTrigPlots["phdelayseedtime_hltdispho70_ht400"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho70_ht400","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time","Events","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT400_v","trigger");
+    fTrigPlots["phdelayseedtime_hltdispho70_ht300"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho70_ht300","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT300_v","trigger");
+    fTrigPlots["phdelayseedtime_hltdispho70_ht350"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho70_ht350","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
+    fTrigPlots["phdelayseedtime_hltdispho70_ht400"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho70_ht400","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT400_v","trigger");
+
+    fTrigPlots2D["ph1seedtime_vs_ph1pt_hltdispho50_ht350"] = PlotPhotons::MakeTrigTH2Fs("ph1seedtime_vs_ph1pt_hltdispho50_ht350","Leading Photon Seed recHit Time vs Leading Photon p_{T}",25,0,1000,"Leading Photon p_{T}",25,-5.f,20.f,"Leading Photon Seed recHit Time [ns]","HLT_DisplacedPhoton50_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
+    fTrigPlots2D["ph1seedtime_vs_ph1pt_hltdispho60_ht350"] = PlotPhotons::MakeTrigTH2Fs("ph1seedtime_vs_ph1pt_hltdispho60_ht350","Leading Photon Seed recHit Time vs Leading Photon p_{T}",25,0,1000,"Leading Photon p_{T}",25,-5.f,20.f,"Leading Photon Seed recHit Time [ns]","HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
+    fTrigPlots2D["ph1seedtime_vs_ph1pt_hltdispho70_ht350"] = PlotPhotons::MakeTrigTH2Fs("ph1seedtime_vs_ph1pt_hltdispho70_ht350","Leading Photon Seed recHit Time vs Leading Photon p_{T}",25,0,1000,"Leading Photon p_{T}",25,-5.f,20.f,"Leading Photon Seed recHit Time [ns]","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
+
+    fTrigPlots2D["phdelayseedtime_vs_phdelaypt_hltdispho50_ht350"] = PlotPhotons::MakeTrigTH2Fs("phdelayseedtime_vs_phdelaypt_hltdispho50_ht350","Most Delayed Photon Seed recHit Time vs Most Delayed Photon p_{T}",25,0,1000,"Most Delayed Photon p_{T}",25,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","HLT_DisplacedPhoton50_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
+    fTrigPlots2D["phdelayseedtime_vs_phdelaypt_hltdispho60_ht350"] = PlotPhotons::MakeTrigTH2Fs("phdelayseedtime_vs_phdelaypt_hltdispho60_ht350","Most Delayed Photon Seed recHit Time vs Most Delayed Photon p_{T}",25,0,1000,"Most Delayed Photon p_{T}",25,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
+    fTrigPlots2D["phdelayseedtime_vs_phdelaypt_hltdispho70_ht350"] = PlotPhotons::MakeTrigTH2Fs("phdelayseedtime_vs_phdelaypt_hltdispho70_ht350","Most Delayed Photon Seed recHit Time vs Most Delayed Photon p_{T}",25,0,1000,"Most Delayed Photon p_{T}",25,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
+
+    fTrigPlots2D["phgoodseedtime_vs_phgoodpt_hltdispho50_ht350"] = PlotPhotons::MakeTrigTH2Fs("phgoodseedtime_vs_phgoodpt_hltdispho50_ht350","Photons Seed recHit Time vs Photons p_{T}",25,0,1000,"Photons p_{T}",25,-5.f,20.f,"Photons Seed recHit Time [ns]","HLT_DisplacedPhoton50_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
+    fTrigPlots2D["phgoodseedtime_vs_phgoodpt_hltdispho60_ht350"] = PlotPhotons::MakeTrigTH2Fs("phgoodseedtime_vs_phgoodpt_hltdispho60_ht350","Photons Seed recHit Time vs Photons p_{T}",25,0,1000,"Photons p_{T}",25,-5.f,20.f,"Photons Seed recHit Time [ns]","HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
+    fTrigPlots2D["phgoodseedtime_vs_phgoodpt_hltdispho70_ht350"] = PlotPhotons::MakeTrigTH2Fs("phgoodseedtime_vs_phgoodpt_hltdispho70_ht350","Photons Seed recHit Time vs Photons p_{T}",25,0,1000,"Photons p_{T}",25,-5.f,20.f,"Photons Seed recHit Time [ns]","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
   } // isHLT4
 }
 
@@ -1025,6 +1070,8 @@ void PlotPhotons::MakeEffPlot(TH1F *& eff, TString hname, TH1F *& denom, TH1F *&
   eff->GetYaxis()->SetTitle(denom->GetYaxis()->GetTitle());
   eff->Sumw2();
   
+  fSubDirs[eff->GetName()] = fSubDirs[denom->GetName()];
+
   Double_t value = 0;
   Double_t err   = 0;
   for (Int_t ibin = 1; ibin <= eff->GetNbinsX(); ibin++)
@@ -1039,6 +1086,10 @@ void PlotPhotons::MakeEffPlot(TH1F *& eff, TString hname, TH1F *& denom, TH1F *&
       eff->SetBinError  (ibin,err);
     }
   }
+
+  // set consistent min/max for comparisons...
+  // eff->SetMininum(0.f);
+  // eff->SetMaxinum(1.1f);
 }
 
 TH2F * PlotPhotons::MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString subdir)
@@ -1051,6 +1102,81 @@ TH2F * PlotPhotons::MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_
   fSubDirs[hname] = subdir;
 
   return hist;
+}
+
+void PlotPhotons::FillTriggerPlot2D(TH2Pair & th2pair, const Bool_t passed, const Float_t xvalue, const Float_t yvalue)
+{
+  th2pair.first->Fill(xvalue,yvalue);
+  if (passed) th2pair.second->Fill(xvalue,yvalue);
+}
+
+std::pair<TH2F*,TH2F*> PlotPhotons::MakeTrigTH2Fs(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString path, TString subdir)
+{
+  TH2F * denom = new TH2F(Form("%s_denom",hname.Data()),Form("%s %s [Denom]",htitle.Data(),path.Data()),nbinsx,xlow,xhigh,nbinsy,ylow,yhigh);
+  denom->SetLineColor(kBlack);
+  denom->GetXaxis()->SetTitle(Form("%s %s [Denom]",xtitle.Data(),path.Data()));
+  denom->GetYaxis()->SetTitle(Form("%s %s [Denom]",ytitle.Data(),path.Data()));
+  denom->Sumw2();
+
+  fSubDirs[denom->GetName()] = subdir;
+
+  TH2F * numer = new TH2F(Form("%s_numer",hname.Data()),Form("%s %s [Numer]",htitle.Data(),path.Data()),nbinsx,xlow,xhigh,nbinsy,ylow,yhigh);
+  numer->SetLineColor(kBlack);
+  numer->GetXaxis()->SetTitle(Form("%s %s [Numer]",xtitle.Data(),path.Data()));
+  numer->GetYaxis()->SetTitle(Form("%s %s [Numer]",ytitle.Data(),path.Data()));
+  numer->Sumw2();
+
+  fSubDirs[numer->GetName()] = subdir;
+  
+  return std::make_pair(denom,numer);
+}
+
+void PlotPhotons::MakeEffPlot2D(TH2F *& eff, TString hname, TH2F *& denom, TH2F *& numer)
+{
+  TString title = denom->GetTitle();
+  Ssiz_t  start = title.Index("HLT_"); 
+  Ssiz_t  end   = title.Index(" [Denom]"); 
+  TString var   (title(0,start-1));
+  TString path  (title(start,end-start));
+  
+  TString xtitle = denom->GetXaxis()->GetTitle();
+  Ssiz_t  xhlt   = xtitle.Index("HLT_"); 
+  TString xvar   (xtitle(0,xhlt-1));
+
+  TString ytitle = denom->GetYaxis()->GetTitle();
+  Ssiz_t  yhlt   = ytitle.Index("HLT_"); 
+  TString yvar   (ytitle(0,xhlt-1));
+  
+  eff = new TH2F(Form("%s_eff",hname.Data()),Form("%s %s Efficiency",var.Data(),path.Data()),denom->GetNbinsX(),denom->GetXaxis()->GetBinLowEdge(1),denom->GetXaxis()->GetBinUpEdge(denom->GetNbinsX()),denom->GetNbinsY(),denom->GetYaxis()->GetBinLowEdge(1),denom->GetYaxis()->GetBinUpEdge(denom->GetNbinsY()));
+  eff->SetLineColor(kBlack);
+  eff->GetXaxis()->SetTitle(Form("%s [Efficiency]",xvar.Data()));
+  eff->GetYaxis()->SetTitle(Form("%s [Efficiency]",yvar.Data()));
+  eff->Sumw2();
+  
+  eff->SetStats(0);
+  fSubDirs[eff->GetName()] = fSubDirs[denom->GetName()];
+
+  Double_t value = 0;
+  Double_t err   = 0;
+  for (Int_t ibinx = 1; ibinx <= eff->GetNbinsX(); ibinx++)
+  {
+    for (Int_t ibiny = 1; ibiny <= eff->GetNbinsY(); ibiny++)
+    {
+      if (denom->GetBinContent(ibinx,ibiny)!=0.f)
+      {
+	value = numer->GetBinContent(ibinx,ibiny) / denom->GetBinContent(ibinx,ibiny); 
+	// Binonimal errors 
+	err = sqrt( value*(1.0-value)/denom->GetBinContent(ibinx,ibiny) );
+	//Fill plots with correct values
+	eff->SetBinContent(ibinx,ibiny,value);
+	eff->SetBinError  (ibinx,ibiny,err);
+      }
+    }
+  }
+
+  // set min/max to 0.0/1.0 to make consistent comparisons
+  eff->SetMinimum(0.f);
+  eff->SetMaximum(1.f);
 }
 
 void PlotPhotons::DumpEventCounts()
@@ -1162,22 +1288,23 @@ void PlotPhotons::OutputTrigTH1Fs()
       
       // first save as linear, then log
       canv->SetLogy(0);
-      if   (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDump.Data(),fSubDirs[mapiter->first].Data(),mapiter->second.first->GetName()));
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDump.Data(),fSubDirs[mapiter->second.first->GetName()].Data(),mapiter->second.first->GetName()));
       else            canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->second.first->GetName()));
       
       canv->SetLogy(1);
-      canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->second.first->GetName()));
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/log/%s.png",fOutDump.Data(),fSubDirs[mapiter->second.first->GetName()].Data(),mapiter->second.first->GetName()));
+      else            canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->second.first->GetName()));
 
       // second numer
       mapiter->second.second->Draw("HIST");
       
       // first save as linear, then log
       canv->SetLogy(0);
-      if   (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDump.Data(),fSubDirs[mapiter->first].Data(),mapiter->second.second->GetName()));
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDump.Data(),fSubDirs[mapiter->second.second->GetName()].Data(),mapiter->second.second->GetName()));
       else            canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->second.second->GetName()));
       
       canv->SetLogy(1);
-      if   (fSaveSub) canv->SaveAs(Form("%s/%s/log/%s.png",fOutDump.Data(),fSubDirs[mapiter->first].Data(),mapiter->second.second->GetName()));
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/log/%s.png",fOutDump.Data(),fSubDirs[mapiter->second.second->GetName()].Data(),mapiter->second.second->GetName()));
       else            canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),mapiter->second.second->GetName()));
 
       // efficiency last
@@ -1185,11 +1312,11 @@ void PlotPhotons::OutputTrigTH1Fs()
       
       // first save as linear, then log
       canv->SetLogy(0);
-      if   (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDump.Data(),fSubDirs[mapiter->first].Data(),eff->GetName()));
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDump.Data(),fSubDirs[eff->GetName()].Data(),eff->GetName()));
       else            canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),eff->GetName()));
       
       canv->SetLogy(1);
-      if   (fSaveSub) canv->SaveAs(Form("%s/%s/log/%s.png",fOutDump.Data(),fSubDirs[mapiter->first].Data(),eff->GetName()));
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/log/%s.png",fOutDump.Data(),fSubDirs[eff->GetName()].Data(),eff->GetName()));
       else            canv->SaveAs(Form("%s/%s_log.png",fOutDump.Data(),eff->GetName()));
       
       delete canv;
@@ -1231,6 +1358,61 @@ void PlotPhotons::OutputTH2Fs()
   fPlots2D.clear();
 }
 
+void PlotPhotons::OutputTrigTH2Fs()
+{
+  fOutFile->cd();
+
+  for (TH2PairMapIter mapiter = fTrigPlots2D.begin(); mapiter != fTrigPlots2D.end(); ++mapiter) 
+  { 
+    // make efficiency plot
+    TH2F * eff;
+    PlotPhotons::MakeEffPlot2D(eff,mapiter->first,mapiter->second.first,mapiter->second.second);
+
+    // save to output file
+    mapiter->second.first ->Write(mapiter->second.first ->GetName(),TObject::kWriteDelete); // denom
+    mapiter->second.second->Write(mapiter->second.second->GetName(),TObject::kWriteDelete); // numer
+    eff->Write(eff->GetName(),TObject::kWriteDelete);
+
+    if (fSaveHists)
+    {
+      // now draw onto canvas to save as png
+      TCanvas * canv = new TCanvas("canv","canv");
+      canv->cd();
+
+      // first denom
+      mapiter->second.first->Draw("COLZ");
+      
+      // only lin
+      canv->SetLogy(0);
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDump.Data(),fSubDirs[mapiter->second.first->GetName()].Data(),mapiter->second.first->GetName()));
+      else            canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->second.first->GetName()));
+
+      // second numer
+      mapiter->second.second->Draw("COLZ");
+      
+      // only lin
+      canv->SetLogy(0);
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDump.Data(),fSubDirs[mapiter->second.second->GetName()].Data(),mapiter->second.second->GetName()));
+      else            canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),mapiter->second.second->GetName()));
+
+      // efficiency last
+      eff->Draw("COLZ TEXT");
+      
+      // only lin
+      canv->SetLogy(0);
+      if   (fSaveSub) canv->SaveAs(Form("%s/%s/lin/%s.png",fOutDump.Data(),fSubDirs[eff->GetName()].Data(),eff->GetName()));
+      else            canv->SaveAs(Form("%s/%s_lin.png",fOutDump.Data(),eff->GetName()));
+      
+      delete canv;
+    }
+
+    delete eff;
+    delete mapiter->second.first;
+    delete mapiter->second.second;
+  }
+  fTrigPlots2D.clear();
+}
+
 void PlotPhotons::InitTree()
 {
   // Set object pointer
@@ -1250,7 +1432,7 @@ void PlotPhotons::InitTree()
   phphi = 0;
   pheta = 0;
   phmatch = 0;
-  phisMatched = 0;
+  phIsGenMatched = 0;
   phscE = 0;
   phsceta = 0;
   phscphi = 0;
@@ -1272,6 +1454,7 @@ void PlotPhotons::InitTree()
   phChgIso_b = 0;
   phNeuIso_b = 0;
   phIso_b = 0;
+  phIsHLTMatched = 0;
   phnrh = 0;
   phseedpos = 0;
   phrheta = 0;
@@ -1430,7 +1613,7 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("phphi", &phphi, &b_phphi);
   fInTree->SetBranchAddress("pheta", &pheta, &b_pheta);
   if (fIsGMSB || fIsHVDS) fInTree->SetBranchAddress("phmatch", &phmatch, &b_phmatch);
-  if (fIsMC) fInTree->SetBranchAddress("phisMatched", &phisMatched, &b_phisMatched);
+  if (fIsMC) fInTree->SetBranchAddress("phIsGenMatched", &phIsGenMatched, &b_phIsGenMatched);
   fInTree->SetBranchAddress("phscE", &phscE, &b_phscE);
   fInTree->SetBranchAddress("phsceta", &phsceta, &b_phsceta);
   fInTree->SetBranchAddress("phscphi", &phscphi, &b_phscphi);
@@ -1452,6 +1635,7 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("phChgIso_b", &phChgIso_b, &b_phChgIso_b);
   fInTree->SetBranchAddress("phNeuIso_b", &phNeuIso_b, &b_phNeuIso_b);
   fInTree->SetBranchAddress("phIso_b", &phIso_b, &b_phIso_b);
+  fInTree->SetBranchAddress("phIsHLTMatched", &phIsHLTMatched, &b_phIsHLTMatched);
   fInTree->SetBranchAddress("phnrh", &phnrh, &b_phnrh);
   fInTree->SetBranchAddress("phseedpos", &phseedpos, &b_phseedpos);
   fInTree->SetBranchAddress("phrheta", &phrheta, &b_phrheta);

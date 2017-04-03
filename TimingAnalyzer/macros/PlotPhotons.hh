@@ -31,6 +31,10 @@ typedef std::pair<TH1F*,TH1F*>     TH1Pair;
 typedef std::map<TString, TH1Pair> TH1PairMap;
 typedef TH1PairMap::iterator       TH1PairMapIter;
 
+typedef std::pair<TH2F*,TH2F*>     TH2Pair;
+typedef std::map<TString, TH2Pair> TH2PairMap;
+typedef TH2PairMap::iterator       TH2PairMapIter;
+
 typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator        TH1MapIter;
 
@@ -80,6 +84,8 @@ public :
   std::pair<TH1F*,TH1F*> MakeTrigTH1Fs(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString path, TString subdir);
   void MakeEffPlot(TH1F *& eff, TString hname, TH1F *& denom, TH1F *& numer);
   TH2F * MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString subdir);
+  std::pair<TH2F*,TH2F*> MakeTrigTH2Fs(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString path, TString subdir);
+  void MakeEffPlot2D(TH2F *& eff, TString hname, TH2F *& denom, TH2F *& numer);
   void EventLoop(Bool_t geninfo, Bool_t vtxs, Bool_t met, Bool_t jets, Bool_t photons, Bool_t ph1, Bool_t phdelay, Bool_t trigger, Bool_t analysis);
   Bool_t CountEvents();
   Int_t GetLeadingPhoton();
@@ -99,12 +105,14 @@ public :
   void FillMostDelayed();
   void FillTrigger();
   void FillTriggerPlot(TH1Pair & th1pair, const Bool_t passed, const Float_t value);
+  void FillTriggerPlot2D(TH2Pair & th2pair, const Bool_t passed, const Float_t xvalue, const Float_t yvalue);
   void FillAnalysis(const Bool_t passed);
   void DumpEventCounts();
   void MakeSubDirs();
-  void OutputTrigTH1Fs();
   void OutputTH1Fs();
+  void OutputTrigTH1Fs();
   void OutputTH2Fs();
+  void OutputTrigTH2Fs();
 
 private :
   // Input vars
@@ -121,6 +129,7 @@ private :
   TH1Map  fPlots;
   TH2Map  fPlots2D;
   TH1PairMap fTrigPlots;
+  TH2PairMap fTrigPlots2D;
   TStrIntMap fEfficiency;
   Float_t    fCTau;
   TStrIntMap fPhVIDMap;
@@ -239,7 +248,7 @@ private :
   std::vector<Float_t> * phphi;
   std::vector<Float_t> * pheta;
   std::vector<Int_t>   * phmatch;
-  std::vector<Bool_t>  * phisMatched;
+  std::vector<Bool_t>  * phIsGenMatched;
   std::vector<Float_t> * phscE;
   std::vector<Float_t> * phsceta;
   std::vector<Float_t> * phscphi;
@@ -261,6 +270,7 @@ private :
   std::vector<Int_t>   * phChgIso_b;
   std::vector<Int_t>   * phNeuIso_b;
   std::vector<Int_t>   * phIso_b;
+  std::vector<std::vector<Int_t> >   * phIsHLTMatched;
   std::vector<Int_t>   * phnrh;
   std::vector<Int_t>   * phseedpos;
   std::vector<std::vector<Float_t> > * phrheta;
@@ -378,7 +388,7 @@ private :
   TBranch * b_phphi;
   TBranch * b_pheta;
   TBranch * b_phmatch;
-  TBranch * b_phisMatched;
+  TBranch * b_phIsGenMatched;
   TBranch * b_phscE;
   TBranch * b_phsceta;
   TBranch * b_phscphi;
@@ -400,6 +410,7 @@ private :
   TBranch * b_phChgIso_b;
   TBranch * b_phNeuIso_b;
   TBranch * b_phIso_b;
+  TBranch * b_phIsHLTMatched;
   TBranch * b_phnrh;
   TBranch * b_phseedpos;
   TBranch * b_phrheta;
