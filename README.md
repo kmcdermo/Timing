@@ -230,6 +230,7 @@ cp /afs/cern.ch/user/n/ndaci/public/STEAM/Prescales/UGT_BASE_RS_FINOR_MASK_v91.x
 cp /afs/cern.ch/user/n/ndaci/public/STEAM/Prescales/UGT_BASE_RS_PRESCALES_v214.xml L1Trigger/L1TGlobal/data/Luminosity/startup/
 cp /afs/cern.ch/user/n/ndaci/public/STEAM/Prescales/L1TGlobalPrescalesVetosESProducer.cc L1Trigger/L1TGlobal/plugins/
 
+git clone git@github.com:cms-steam/TimingScripts.git
 git clone git@github.com:cms-steam/RateEstimate.git RateEstimate
 
 ### Contains Timing/TrigTests directory ###
