@@ -16,6 +16,9 @@ process.options = cms.untracked.PSet(
     numberOfStreams = cms.untracked.uint32( 0 ),
 ) 
 
+range, resolution for menus == 5000, 1
+range, resolution for paths == 500, .1
+
 ----
 
 set skipFirstPath to FALSE
