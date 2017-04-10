@@ -1,2 +1,2 @@
 NEvCheck 1000
-ApplyEvCut 1
+ApplyEvCut 0

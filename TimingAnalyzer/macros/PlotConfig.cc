@@ -8,6 +8,8 @@ namespace Config
   Bool_t  isHLT2 = false;
   Bool_t  isHLT3 = false;
   Bool_t  isHLT4 = false;
+  Bool_t  ApplyHLTMatching = false;
+  Int_t   filterIdx = -1;
 
   Bool_t  ApplyJetHtCut = false;
   Float_t JetHtCut = 300.f;

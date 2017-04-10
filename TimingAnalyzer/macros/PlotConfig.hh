@@ -8,6 +8,8 @@ namespace Config
   extern Bool_t  isHLT2;
   extern Bool_t  isHLT3;
   extern Bool_t  isHLT4;
+  extern Bool_t  ApplyHLTMatching;
+  extern Int_t   filterIdx;
 
   extern Bool_t  ApplyJetHtCut;
   extern Float_t JetHtCut;

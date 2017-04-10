@@ -31,8 +31,6 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
   // initialize tree
   PlotPhotons::InitTree();
 
-
-
   // make the vid maps!
   fPhVIDMap["none"]   = 0;
   fPhVIDMap["loose"]  = 1;
@@ -84,6 +82,10 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
     else if (Config::ApplyAntiPhMCMatch)  fOutDir += Form("_antiphmc");
     else    { std::cout << "Need to specify a matching criterion!" << std::endl; exit(0); }
   }
+  if (Config::ApplyHLTMatching)
+  {
+    fOutDir += Form("_hltmatch");
+  }  
   if (Config::ApplyECALAcceptCut) 
   { 
     if      (Config::ApplyEBOnly) fOutDir += Form("_EBOnly");
@@ -159,7 +161,7 @@ void PlotPhotons::EventLoop(Bool_t geninfo, Bool_t vtxs, Bool_t met, Bool_t jets
     // count events passing given selection
     const Bool_t passed = PlotPhotons::CountEvents();
     if (Config::ApplyEvCut && !passed) continue;
-
+  
     // plots!
     if (geninfo && fIsMC)
     {
@@ -229,6 +231,12 @@ Int_t PlotPhotons::GetLeadingPhoton()
   Int_t ph1 = -1;
   for (Int_t iph = 0; iph < nphotons; iph++)
   {
+    // HLT matching??
+    if (Config::ApplyHLTMatching)
+    {
+      if (Config::filterIdx != -1 && !(*phIsHLTMatched)[iph][Config::filterIdx]) continue;
+    }
+
     // basic photon selection
     if      (Config::ApplyPh1PtCut)
     {  
@@ -298,6 +306,12 @@ Int_t PlotPhotons::GetGoodPhotons(std::vector<Int_t> & goodphotons)
   {
     for (Int_t iph = 0; iph < nphotons; iph++) // remove pt cut
     {
+      // HLT matching??
+      if (Config::ApplyHLTMatching)
+      {
+	if (Config::filterIdx != -1 && !(*phIsHLTMatched)[iph][Config::filterIdx]) continue;
+      }
+
       // basic photon selection
       if (Config::ApplyPhAnyPtCut && ((*phpt)[iph] < Config::PhAnyPtCut)) continue;
       if (Config::ApplyPhAnyVIDCut && ((*phVID)[iph] < fPhVIDMap[Config::PhAnyVID])) continue;
@@ -1670,6 +1684,8 @@ void PlotPhotons::InitHLTConfig(TString config)
     if (var.EqualTo("isHLT2")) Config::isHLT2 = val.Atoi();
     if (var.EqualTo("isHLT3")) Config::isHLT3 = val.Atoi();
     if (var.EqualTo("isHLT4")) Config::isHLT4 = val.Atoi();
+    if (var.EqualTo("ApplyHLTMatching")) Config::ApplyHLTMatching = val.Atoi();
+    if (var.EqualTo("filterIdx")) Config::filterIdx = val.Atoi();
   }
 }
 
