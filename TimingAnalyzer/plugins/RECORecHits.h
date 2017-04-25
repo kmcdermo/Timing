@@ -25,10 +25,6 @@
 #include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 
-// EGamma Tools
-#include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
-#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
-
 // Geometry
 #include "Geometry/Records/interface/CaloGeometryRecord.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
@@ -46,7 +42,7 @@ public:
   explicit RECORecHits(const edm::ParameterSet&);
   ~RECORecHits();
   
-  void InitializeBranches();
+  void ClearBranches();
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
   
@@ -59,16 +55,19 @@ private:
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
 
   // ECAL RecHits
-  edm::EDGetTokenT<EcalRecHitCollection> recHitsFullEBTAG;
-  edm::EDGetTokenT<EcalRecHitCollection> recHitsFullEETAG;
+  const edm::InputTag recHitsEBTag;
+  edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBToken;
+  const edm::InputTag recHitsEETag;
+  edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEToken;
 
   // rhtree;
-  TTree * rhtree;
+  TTree * tree;
 
-  int run,lumi,event;
+  unsigned long int event;
+  unsigned int lumi, run;
 
   int nrhEB, nrhEE;
-  std::vector<float> rhEs, rhphis, rhetas, rhtimes;
-  std::vector<int>   rhIDs, rhOOTs;
+  std::vector<float> rhE, rhphi, rheta, rhtime;
+  std::vector<int>   rhID, rhOOT, rhisEB;
 };
 
