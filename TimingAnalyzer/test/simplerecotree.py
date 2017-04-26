@@ -21,7 +21,7 @@ options.register (
 
 ## outputFile Name
 options.register (
-	'outputFileName','recorechits.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'outputFileName','recophoton.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
 ## GT to be used    
@@ -33,13 +33,13 @@ options.register (
 options.parseArguments()
 
 ## reset file name
-options.outputFileName = 'recorechits-'+options.dataset+'-'+options.reco+'.root'
+options.outputFileName = 'recophoton-'+options.dataset+'-'+options.reco+'.root'
 
-print "################# Settings ##################"
+print "##### Settings ######"
 print "Running with processName     = ",options.processName	
 print "Running with outputFileName  = ",options.outputFileName	
 print "Running with globalTag       = ",options.globalTag	
-print "#############################################"
+print "#####################"
 
 ## Define the CMSSW process
 process = cms.Process(options.processName)
@@ -76,12 +76,12 @@ elif options.dataset == 'sph_2016C' :
 				))
 else : exit
 
+## How many events to process
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
+
 # Set the global tag depending on the sample type
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag.globaltag = options.globalTag  
-
-## How many events to process
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
 ## Create output file
 ## Setup the service to make a ROOT TTree
@@ -89,10 +89,14 @@ process.TFileService = cms.Service("TFileService",
 		                   fileName = cms.string(options.outputFileName))
 
 # Make the tree 
-process.tree = cms.EDAnalyzer("RECORecHits",
+process.tree = cms.EDAnalyzer("SimpleRECOTree",
+   ## rho
+   rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
+   ## photons		
+   photons = cms.InputTag("gedPhotons"),
    ## ecal recHits			      
    recHitsEB = cms.InputTag("ecalRecHit","EcalRecHitsEB"),
-   recHitsEE = cms.InputTag("ecalRecHit","EcalRecHitsEE")
+   recHitsEE = cms.InputTag("ecalRecHit","EcalRecHitsEE"),
 )
 
 # Set up the path
