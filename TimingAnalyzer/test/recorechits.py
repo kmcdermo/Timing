@@ -59,7 +59,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 if options.dataset == 'deg_2016B' :
 	if options.reco == 'reco':
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/test_deg_2016B.root'
+				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/regular_reco_deg_2016B.root'
 				))
 	elif options.reco == 'rereco':
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
@@ -68,7 +68,7 @@ if options.dataset == 'deg_2016B' :
 elif options.dataset == 'sph_2016C' :
 	if options.reco == 'reco':
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/test_sph_2016C.root'
+				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/regular_reco_sph_2016C.root'
 				))
 	elif options.reco == 'rereco':
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
