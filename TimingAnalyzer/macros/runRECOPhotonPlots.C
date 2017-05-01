@@ -2,6 +2,8 @@
 #include "TSystem.h"
 #include "TROOT.h"
 
+#include <iostream>
+
 void setupcpp11() // customize ACLiC's behavior ...
 {
   TString o;
@@ -23,25 +25,42 @@ void runRECOPhotonPlots()
 
   // config is:
   // input file, output directory
+  // applyrhEcut, rhEcut
   // applyptcut, ptcut
+  // applyr9cut, r9cut
+  // applyhoecut, hoecut
+  // applysieiecut, sieieEBcut, sieieEEcut
+  
+  TString dataset = "sph_2016C";
+  Bool_t rhE = false;
 
-  // DEG 2016B
-  PlotRECOPhotons reco_deg_2016B_Plots("input/DATA/RECO/recophoton-deg_2016B-reco.root","output/recophotons/reco/deg_2016B",false,10.f);
-  reco_deg_2016B_Plots.DoPlots();
+  std::cout << "RECO" << std::endl;
+  PlotRECOPhotons reco_Plots(Form("input/DATA/RECO/recophoton-%s-reco.root",dataset.Data()),Form("output/recophotons/reco/%s",dataset.Data()),rhE,1.f);
+  reco_Plots.DoPlots();
+  std::cout << std::endl;
 
-  PlotRECOPhotons rereco_deg_2016B_Plots("input/DATA/RECO/recophoton-deg_2016B-rereco.root","output/recophotons/rereco/deg_2016B",false,10.f);
-  rereco_deg_2016B_Plots.DoPlots();
+  std::cout << "ReRECO" << std::endl;
+  PlotRECOPhotons rereco_Plots(Form("input/DATA/RECO/recophoton-%s-rereco.root",dataset.Data()),Form("output/recophotons/rereco/%s",dataset.Data()),rhE,1.f);
+  rereco_Plots.DoPlots();
+  std::cout << std::endl;
 
-  PlotRECOPhotons rereco_deg_2016B_ptcuts_Plots("input/DATA/RECO/recophoton-deg_2016B-rereco.root","output/recophotons/rereco/deg_2016B_ptcuts",true,10.f);
-  rereco_deg_2016B_ptcuts_Plots.DoPlots();
+  std::cout << "ReRECO+pT" << std::endl;
+  PlotRECOPhotons rereco_pt_Plots(Form("input/DATA/RECO/recophoton-%s-rereco.root",dataset.Data()),Form("output/recophotons/rereco/%s_pt",dataset.Data()),rhE,1.f,true,10.f);
+  rereco_pt_Plots.DoPlots();
+  std::cout << std::endl;
 
-  // SPH 2016C
-  PlotRECOPhotons reco_sph_2016C_Plots("input/DATA/RECO/recophoton-sph_2016C-reco.root","output/recophotons/reco/sph_2016C",false,10.f);
-  reco_sph_2016C_Plots.DoPlots();
+  std::cout << "ReRECO+pT+H/E" << std::endl;
+  PlotRECOPhotons rereco_hoe_Plots(Form("input/DATA/RECO/recophoton-%s-rereco.root",dataset.Data()),Form("output/recophotons/rereco/%s_hoe",dataset.Data()),rhE,1.f,true,10.f,true,0.3);
+  rereco_hoe_Plots.DoPlots();
+  std::cout << std::endl;
 
-  PlotRECOPhotons rereco_sph_2016C_Plots("input/DATA/RECO/recophoton-sph_2016C-rereco.root","output/recophotons/rereco/sph_2016C",false,10.f);
-  rereco_sph_2016C_Plots.DoPlots();
+  std::cout << "ReRECO+pT+H/E+R9" << std::endl;
+  PlotRECOPhotons rereco_r9_Plots(Form("input/DATA/RECO/recophoton-%s-rereco.root",dataset.Data()),Form("output/recophotons/rereco/%s_r9",dataset.Data()),rhE,1.f,true,10.f,true,0.3,true,0.5);
+  rereco_r9_Plots.DoPlots();
+  std::cout << std::endl;
 
-  PlotRECOPhotons rereco_sph_2016C_ptcuts_Plots("input/DATA/RECO/recophoton-sph_2016C-rereco.root","output/recophotons/rereco/sph_2016C_ptcuts",true,10.f);
-  rereco_sph_2016C_ptcuts_Plots.DoPlots();
+  std::cout << "ReRECO+pT+H/E+R9+Sieie" << std::endl;
+  PlotRECOPhotons rereco_sieie_Plots(Form("input/DATA/RECO/recophoton-%s-rereco.root",dataset.Data()),Form("output/recophotons/rereco/%s_sieie",dataset.Data()),rhE,1.f,true,10.f,true,0.3,true,0.5,true,0.030,0.070);
+  rereco_sieie_Plots.DoPlots();
+  std::cout << std::endl;
 }

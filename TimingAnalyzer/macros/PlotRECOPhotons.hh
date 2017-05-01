@@ -1,14 +1,12 @@
 #ifndef _plotrecophotons_
 #define _plotrecophotons_
 
-#include "TROOT.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
 #include "TH1F.h"
 #include "TH2F.h"
 
-#include <fstream>
 #include <vector>
 #include <map>
 
@@ -21,13 +19,12 @@ typedef TH2Map::iterator        TH2MapIter;
 typedef std::map<TString,TString> TStrMap;
 typedef TStrMap::iterator         TStrMapIter;
 
-typedef std::vector<TString> TStrVec;
-
 class PlotRECOPhotons 
 {
 public :
-  PlotRECOPhotons(TString filename, TString outdir = "output", 
-		  Bool_t applyptcut, Float_t ptcut);
+  PlotRECOPhotons(TString filename, TString outdir = "output", Bool_t applyrhEcut = false, Float_t rhEcut = 1.f,
+		  Bool_t applyptcut = false, Float_t ptcut = 10.f, Bool_t applyhoecut = false, Float_t hoecut = 0.3f, Bool_t applyr9cut = false, Float_t r9cut = 0.5f,
+		  Bool_t applysieiecut = false, Float_t sieieEBcut = 0.03f, Float_t sieieEEcut = 0.07f);
   ~PlotRECOPhotons();
   void InitTree();
   void DoPlots();
@@ -52,8 +49,17 @@ private :
   TH2Map  fPlots2D;
   
   // Photon cuts
+  const Bool_t  fApplyrhECut;
+  const Float_t frhECut;
   const Bool_t  fApplyPtCut;
   const Float_t fPtCut;
+  const Bool_t  fApplyHoECut;
+  const Float_t fHoECut;
+  const Bool_t  fApplyR9Cut;
+  const Float_t fR9Cut;
+  const Bool_t  fApplySieieCut;
+  const Float_t fSieieEBCut;
+  const Float_t fSieieEECut;
 
   // Output vars
   TString fOutDir;
@@ -61,10 +67,10 @@ private :
   TFile * fOutFile;
 
   // Declaration of leaf types
-  ULong64_t       event;
-  UInt_t          run;
-  UInt_t          lumi;
-  Int_t           nphotons;
+  ULong64_t event;
+  UInt_t    run;
+  UInt_t    lumi;
+  Int_t     nphotons;
   std::vector<Float_t> * phE;
   std::vector<Float_t> * phpt;
   std::vector<Float_t> * phphi;
