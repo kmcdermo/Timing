@@ -27,8 +27,7 @@ class PlotRecHits
 {
 public :
   PlotRecHits(TString filename, TString outdir = "output", 
-	      Bool_t applyrhidcut = false, TString rhlistfile = "output/rhlist.txt",
-	      Bool_t applyrhecut = false, Float_t rhEcut = 1.f, Bool_t applyecalacceptcut = false);
+	      Bool_t applyrhecut = false, Float_t rhEcut = 1.f);
   ~PlotRecHits();
   void InitTree();
   void DoPlots();
@@ -41,56 +40,52 @@ public :
   void MakeSubDirs();
   void OutputTH1Fs();
   void OutputTH2Fs();
-  void ClearTH1Map();
-  void ClearTH2Map();
 
 private :
   // Input vars
-  TFile * fInFile; //!pointer to file
-  TTree * fInTree; //!pointer to the analyzed TTree
+  TFile * fInFile; //pointer to file
+  TTree * fInTree; //pointer to the analyzed TTree
 
   // In routine vars
-  std::map<int,std::map<int,int> > fEvRhMapMap;  
   UInt_t  fNEvCheck;
   TH1Map  fPlots;
   TH2Map  fPlots2D;
   TStrVec fTotalNames;
 
   // Config
-  const Bool_t  fApplyrhIDCut;
-  const TString fRHListFile;
   const Bool_t  fApplyrhECut;
   const Float_t frhECut;
-  const Bool_t  fApplyECALAcceptCut;
 
   // Output vars
   TString fOutDir;
   TStrMap fSubDirs;
   TFile * fOutFile;
 
-  Int_t event;
-  Int_t run;
-  Int_t lumi;
+  ULong64_t event;
+  UInt_t run;
+  UInt_t lumi;
   Int_t nrhEB;
   Int_t nrhEE;
-  vector<float> * rhEs;
-  vector<float> * rhphis;
-  vector<float> * rhetas;
-  vector<float> * rhtimes;
-  vector<int>   * rhIDs;
-  vector<int>   * rhOOTs;
+  std::vector<Float_t> * rhE;
+  std::vector<Float_t> * rhphi;
+  std::vector<Float_t> * rheta;
+  std::vector<Float_t> * rhtime;
+  std::vector<Int_t>   * rhID;
+  std::vector<Int_t>   * rhOOT;
+  std::vector<Int_t>   * rhisEB;
 
   // List of branches
-  TBranch * b_event;   //!
-  TBranch * b_run;   //!
-  TBranch * b_lumi;   //!
-  TBranch * b_nrhEB;   //!
-  TBranch * b_nrhEE;   //!
-  TBranch * b_rhEs;   //!
-  TBranch * b_rhphis;   //!
-  TBranch * b_rhetas;   //!
-  TBranch * b_rhtimes;   //!
-  TBranch * b_rhIDs;   //!
-  TBranch * b_rhOOTs;   //!
+  TBranch * b_event;
+  TBranch * b_run;
+  TBranch * b_lumi;
+  TBranch * b_nrhEB;
+  TBranch * b_nrhEE;
+  TBranch * b_rhE;
+  TBranch * b_rhphi;
+  TBranch * b_rheta;
+  TBranch * b_rhtime;
+  TBranch * b_rhID;
+  TBranch * b_rhOOT;
+  TBranch * b_rhisEB;
 };
 #endif
