@@ -22,10 +22,18 @@ void runRecHitPlots()
   gROOT->LoadMacro("PlotRecHits.cc++g");
 
   // config is:
-  // applyrhidcut, rhlistfile
+  // input file, output directory
   // applyrhEcut, rhEcut 
-  // applyEcalAcceptcut
   
-  PlotRecHits recHitPlots("input/recorechits.root","output/full",true,"output/reco/cuts_phpt50.0_rhE1.0_ecalaccept/rhlist.txt",true,1.f,false);
-  recHitPlots.DoPlots();
+  PlotRecHits reco_deg_2016B_Plots("input/DATA/RECO/recorechits-deg_2016B-reco.root","output/rechits/reco",false,1.f);
+  reco_deg_2016B_Plots.DoPlots();
+
+  PlotRecHits rereco_deg_2016B_Plots("input/DATA/RECO/recorechits-deg_2016B-rereco.root","output/rechits/rereco",false,1.f);
+  rereco_deg_2016B_Plots.DoPlots();
+
+  PlotRecHits reco_sph_2016C_Plots("input/DATA/RECO/recorechits-sph_2016C-reco.root","output/rechits/reco",false,1.f);
+  reco_sph_2016C_Plots.DoPlots();
+
+  PlotRecHits rereco_sph_2016C_Plots("input/DATA/RECO/recorechits-sph_2016C-rereco.root","output/rechits/rereco",false,1.f);
+  rereco_sph_2016C_Plots.DoPlots();
 }
