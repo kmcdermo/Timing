@@ -93,6 +93,11 @@ void PlotRECOPhotons::FillRecoPhotons()
 
       fPlots["phE_OOT"]->Fill((*phE)[iph]);
       fPlots["phpt_OOT"]->Fill((*phpt)[iph]);
+      fPlots["phphi_OOT"]->Fill((*phphi)[iph]);
+      fPlots["pheta_OOT"]->Fill((*pheta)[iph]);
+      fPlots["phseedtime_OOT"]->Fill((*phrhtime)[iph][(*phseedpos)[iph]]);
+      fPlots["phseedE_OOT"]->Fill((*phrhE)[iph][(*phseedpos)[iph]]);
+
       fPlots["phHoE_OOT"]->Fill((*phHoE)[iph]);
       fPlots["phr9_OOT"]->Fill((*phr9)[iph]);
       if (std::abs((*phsceta)[iph]) < 1.5) fPlots["phsieieEB_OOT"]->Fill((*phsieie)[iph]);
@@ -144,6 +149,9 @@ void PlotRECOPhotons::SetupRecoPhotons()
   // OOT == True Only
   fPlots["phE_OOT"] = PlotRECOPhotons::MakeTH1F("phE_OOT","Photon OoT Energy [GeV]",100,0.f,200.f,"Energy [GeV]","Photons","gedPhotons/GeneralProps");
   fPlots["phpt_OOT"] = PlotRECOPhotons::MakeTH1F("phpt_OOT","Photon OoT p_{T} [GeV/c]",100,0.f,200.f,"p_{T} [GeV/c]","Photons","gedPhotons/GeneralProps");
+  fPlots["phphi_OOT"] = PlotRECOPhotons::MakeTH1F("phphi_OOT","Photon OoT #phi",100,-3.2,3.2,"#phi","Photons","gedPhotons/GeneralProps");
+  fPlots["pheta_OOT"] = PlotRECOPhotons::MakeTH1F("pheta_OOT","Photon OoT #eta",100,-3.0,3.0,"#eta","Photons","gedPhotons/GeneralProps");
+
   fPlots["phHoE_OOT"] = PlotRECOPhotons::MakeTH1F("phHoE_OOT","Photon OoT HoverE",100,0.f,2.f,"HoverE","Photons","gedPhotons/GeneralProps");
   fPlots["phr9_OOT"] = PlotRECOPhotons::MakeTH1F("phr9_OOT","Photon OoT R9",100,0.f,2.f,"R9","Photons","gedPhotons/GeneralProps");
   fPlots["phsieieEB_OOT"] = PlotRECOPhotons::MakeTH1F("phsieieEB_OOT","Photon OoT #sigma_{i#eta i#eta} EB",100,0.f,0.1f,"#sigma_{i#eta i#eta} EB","Photons","gedPhotons/GeneralProps");
@@ -155,6 +163,10 @@ void PlotRECOPhotons::SetupRecoPhotons()
 
   fPlots["phrhtime"] = PlotRECOPhotons::MakeTH1F("phrhtime","Photon RecHit Time [ns]",100,-200.f,200.f,"RecHit Time [ns]","RecHits","gedPhotons/GeneralProps");
   fPlots["phrhE"] = PlotRECOPhotons::MakeTH1F("phrhE","Photon RecHit Energy [GeV]",100.f,0.f,1000.f,"Energy [GeV]","RecHits","gedPhotons/GeneralProps");
+
+  // OOT == True only for rechits
+  fPlots["phseedtime_OOT"] = PlotRECOPhotons::MakeTH1F("phseedtime_OOT","Photon OoT Seed Time [ns]",25,-25.f,25.f,"Seed Time [ns]","Photons","gedPhotons/GeneralProps");
+  fPlots["phseedE_OOT"] = PlotRECOPhotons::MakeTH1F("phseedE_OOT","Photon OoT Seed Energy [GeV]",100.f,0.f,100.f,"Energy [GeV]","Photons","gedPhotons/GeneralProps");
 }
 
 TH1F * PlotRECOPhotons::MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir)

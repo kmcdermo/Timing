@@ -26,14 +26,19 @@ void recophoton_comp()
   std::vector<TString> hists = 
   {
     "nphotons","nphotonsOOT","phnrh","phnrhOOT",
-    "phE","phpt","phE_OOT","phpt_OOT","phHoE_OOT","phr9_OOT","phsieieEB_OOT","phsieieEE_OOT",
-    "phseedtime","phseedOOT","phseedE","phrhtime","phrhE"
+    "phE","phpt","phphi","pheta","phE_OOT","phpt_OOT","phphi_OOT","pheta_OOT",
+    "phHoE_OOT","phr9_OOT","phsieieEB_OOT","phsieieEE_OOT",
+    "phseedtime","phseedOOT","phseedE",
+    "phseedtime_OOT","phseedE_OOT",
+    "phrhtime","phrhE"
   };
 
   for (UInt_t ihist = 0; ihist < hists.size(); ihist++)
   { 
     TCanvas * canv = new TCanvas(); canv->cd(); canv->SetLogy(1);
-    TLegend * leg  = new TLegend(0.65,0.65,0.95,0.95);
+    TLegend * leg;
+    if (hists[ihist].Contains("pheta") || hists[ihist].Contains("phphi")) leg = new TLegend(0.35,0.35,0.65,0.65);
+    else leg = new TLegend(0.65,0.65,0.95,0.95);
 
     std::vector<TH1F*> th1fs(filenames.size());
     Float_t max = -1e7;
@@ -52,11 +57,12 @@ void recophoton_comp()
     for (UInt_t ith1f = 0; ith1f < th1fs.size(); ith1f++)
     {
       th1fs[ith1f]->SetMaximum(max*1.1);
+      if (hists[ihist].Contains("phseedE_OOT")){th1fs[ith1f]->SetMaximum(100);th1fs[ith1f]->SetMinimum(1);}
       th1fs[ith1f]->Draw(ith1f>0?"same epl":"epl");
       leg->AddEntry(th1fs[ith1f],Form("%s: %5.3f",labels[ith1f].Data(),th1fs[ith1f]->GetMean()),"epl");
     }
 
-    leg->Draw("same");    
+    if (!hists[ihist].Contains("pheta_OOT") && !hists[ihist].Contains("phphi_OOT")) leg->Draw("same");    
     canv->SaveAs(Form("output/recophotons/%s%s_%s.png",dataset.Data(),rhE.Data(),hists[ihist].Data()));
 
     for (UInt_t ith1f = 0; ith1f < th1fs.size(); ith1f++)   

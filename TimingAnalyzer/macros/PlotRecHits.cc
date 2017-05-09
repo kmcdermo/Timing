@@ -24,6 +24,9 @@ PlotRecHits::PlotRecHits(TString filename, TString outdir,
 
   // in routine initialization
   fNEvCheck = 1000;
+
+  // extra appendages
+  if (fApplyrhECut) fOutDir += "_rhE";
   
   FileStat_t dummyFileStat; 
   if (gSystem->GetPathInfo(fOutDir.Data(), dummyFileStat) == 1)

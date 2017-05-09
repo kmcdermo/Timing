@@ -1,13 +1,17 @@
-void recophoton_comp()
+void recorechits_comp()
 {
   gStyle->SetOptStat(0);
 
+  TString dataset = "sph_2016C";
+  TString rhE = "";
   std::vector<TString> filenames = 
-    {"output/rechits/reco/deg_2016B/plots.root","output/rechits/rereco/deg_2016B/plots.root",
-     "output/rechits/reco/sph_2016C/plots.root","output/rechits/rereco/sph_2016C/plots.root"};
-
-  std::vector<TString> labels = {"RECO DEG2016B","ReRECO DEG2016B","RECO SPH2016C","ReRECO SPH2016C"};
-  std::vector<Color_t> colors = {kBlack,kBlue,kGreen+1,kMagenta};
+  {
+    Form("output/rechits/reco/%s%s/plots.root",dataset.Data(),rhE.Data()),
+    Form("output/rechits/rereco/%s%s/plots.root",dataset.Data(),rhE.Data())
+  };
+  
+  std::vector<TString> labels = {"RECO","ReRECO"};
+  std::vector<Color_t> colors = {kRed,kBlue};
 
   std::vector<TFile*> files(filenames.size());
   for (UInt_t ifile = 0; ifile < filenames.size(); ifile++)
@@ -15,7 +19,13 @@ void recophoton_comp()
     files[ifile] = TFile::Open(filenames[ifile].Data());
   }
 
-  std::vector<TString> hists = {"nphotons","phE","phseedtime","phseedOOT","phnrh","phnrhOOT"};
+  std::vector<TString> hists = 
+  {
+    "nrh","nrhOOT","nrhEB","nrhEE","rhE","rhE_zoom","rhtime","rhOOT",
+    "rhE_OOTT","rhE_OOTT_zoom","rhtime_OOTT","rhtime_OOTT_zoom",
+    "rhE_OOTF","rhE_OOTF_zoom","rhtime_OOTF","rhtime_OOTF_zoom"
+  };
+  
   for (UInt_t ihist = 0; ihist < hists.size(); ihist++)
   { 
     TCanvas * canv = new TCanvas(); canv->cd(); canv->SetLogy(1);
@@ -43,7 +53,7 @@ void recophoton_comp()
     }
 
     leg->Draw("same");    
-    canv->SaveAs(Form("output/recophotons/%s.png",hists[ihist].Data()));
+    canv->SaveAs(Form("output/rechits/%s%s_%s.png",dataset.Data(),rhE.Data(),hists[ihist].Data()));
 
     for (UInt_t ith1f = 0; ith1f < th1fs.size(); ith1f++)   
     {
