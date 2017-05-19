@@ -58,7 +58,8 @@ process.HLTDEBUGoutput = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
-    fileName = cms.untracked.string('root://eoscms.cern.ch//eos/cms/store/group/phys_exotica/displacedPhotons/SinglePhoton/test/reHLT.root'),
+#    fileName = cms.untracked.string('root://eoscms.cern.ch//eos/cms/store/group/phys_exotica/displacedPhotons/SinglePhoton/test/reHLT.root'),
+    fileName = cms.untracked.string('reHLT.root'),
     outputCommands = process.HLTDEBUGEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0)
 )

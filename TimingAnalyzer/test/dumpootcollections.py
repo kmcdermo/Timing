@@ -7,11 +7,11 @@ options = VarParsing ('python')
 
 ## general cuts
 options.register (
-	'dataset','deg_2016B',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'dataset','sph_2016H',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'dataset to be used');
 
 options.register (
-	'reco','rereco',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'reco','OOT',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'dataset to be used');
 
 ## processName
@@ -21,19 +21,19 @@ options.register (
 
 ## outputFile Name
 options.register (
-	'outputFileName','recophoton.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'outputFileName','nOOT.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
 ## GT to be used    
 options.register (
-	'globalTag','80X_dataRun2_2016SeptRepro_v4',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'globalTag','80X_dataRun2_Prompt_v14',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'gloabl tag to be used');
 
 ## parsing command line arguments
 options.parseArguments()
 
 ## reset file name
-options.outputFileName = 'recophoton-'+options.dataset+'-'+options.reco+'.root'
+options.outputFileName = 'nOOT-'+options.dataset+'-'+options.reco+'.root'
 
 print "##### Settings ######"
 print "Running with processName     = ",options.processName	
@@ -56,25 +56,7 @@ process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
-if options.dataset == 'deg_2016B' :
-	if options.reco == 'reco':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/regular_reco_deg_2016B.root'
-				))
-	elif options.reco == 'rereco':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/rereco_deg_2016B.root'
-				))
-elif options.dataset == 'sph_2016C' :
-	if options.reco == 'reco':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/regular_reco_sph_2016C.root'
-				))
-	elif options.reco == 'rereco':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/rereco_sph_2016C.root'
-				))
-elif options.dataset == 'sph_2016H' :
+if options.dataset == 'sph_2016H' :
 	if options.reco == 'OOT':
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/oot_aod_slimmed.root'
@@ -99,11 +81,18 @@ process.TFileService = cms.Service("TFileService",
 		                   fileName = cms.string(options.outputFileName))
 
 # Make the tree 
-process.tree = cms.EDAnalyzer("SimpleRECOTree",
-   ## rho
-   rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
+process.tree = cms.EDAnalyzer("DumpOOTCollections",
    ## photons		
-   photons = cms.InputTag("gedPhotons","","RECO"),
+   photons = cms.InputTag("mustacheOOTPhotons","","RECO"),
+   ## photoncores		
+   photonCores = cms.InputTag("mustacheOOTPhotonCore","","RECO"),
+   ## superClusters		
+   superClustersEB = cms.InputTag("particleFlowSuperClusterOOTECAL","particleFlowSuperClusterOOTECALBarrel","RECO"),
+   superClustersEE = cms.InputTag("particleFlowSuperClusterOOTECAL","particleFlowSuperClusterOOTECALEndcapWithPreshower","RECO"),
+   ## clusters
+   clustersEB = cms.InputTag("particleFlowSuperClusterOOTECAL","particleFlowBasicClusterOOTECALBarrel","RECO"),
+   clustersEE = cms.InputTag("particleFlowSuperClusterOOTECAL","particleFlowBasicClusterOOTECALEndcap","RECO"),
+   clustersES = cms.InputTag("particleFlowSuperClusterOOTECAL","particleFlowBasicClusterOOTECALPreshower","RECO"),
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEcalRecHitsEB","","RECO"),
    recHitsEE = cms.InputTag("reducedEcalRecHitsEE","","RECO"),
