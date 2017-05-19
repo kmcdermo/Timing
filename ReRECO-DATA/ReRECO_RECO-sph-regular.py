@@ -1,8 +1,4 @@
-# Auto generated configuration file
-# using: 
-# Revision: 1.19 
-# Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: ReRECO --data --era Run2_2016 --runUnscheduled --customise Configuration/DataProcessing/RecoTLR.customisePostEra_Run2_2016,RecoTracker/Configuration/customizeMinPtForHitRecoveryInGluedDet.customizeHitRecoveryInGluedDetOn --process reRECO --filtername RECOfromRECO -s RECO --eventcontent RECO --datatier RECO --conditions 80X_dataRun2_2016SeptRepro_v4 --filein file:/afs/cern.ch/work/k/kmcdermo/files/RECO/test_2016B.root --fileout file:rereco_test.root --no_exec -n 100
+##### Regular reco, with same config as ReRECO minus ECAL cuts!!!!
 import FWCore.ParameterSet.Config as cms
 
 # with --era Run2_2016 --> RECO output module RP for totem not found
@@ -34,7 +30,7 @@ process.Timing = cms.Service("Timing",
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/test_deg_2016B.root'),
+    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/test_sph_2016C.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -49,10 +45,6 @@ process.configurationMetadata = cms.untracked.PSet(
     version = cms.untracked.string('$Revision: 1.19 $')
 )
 
-#ReRECO customization
-process.particleFlowRecHitECAL.producers[0].qualityTests[1].timingCleaning = cms.bool(False)
-process.particleFlowRecHitECAL.producers[1].qualityTests[1].timingCleaning = cms.bool(False)
-
 # Output definition
 
 process.RECOoutput = cms.OutputModule("PoolOutputModule",
@@ -61,7 +53,7 @@ process.RECOoutput = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('RECOfromRECO')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
-    fileName = cms.untracked.string('file:rereco_deg_2016B.root'),
+    fileName = cms.untracked.string('file:regular_reco_sph_2016C.root'),
     outputCommands = process.RECOEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0)
 )

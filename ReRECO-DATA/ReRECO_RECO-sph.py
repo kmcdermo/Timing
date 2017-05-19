@@ -34,7 +34,7 @@ process.Timing = cms.Service("Timing",
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/test_deg_2016B.root'),
+    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/test_sph_2016C.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -61,7 +61,7 @@ process.RECOoutput = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('RECOfromRECO')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
-    fileName = cms.untracked.string('file:rereco_deg_2016B.root'),
+    fileName = cms.untracked.string('file:rereco_sph_2016C.root'),
     outputCommands = process.RECOEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0)
 )

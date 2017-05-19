@@ -34,7 +34,7 @@ process.Timing = cms.Service("Timing",
 
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/test_deg_2016B.root'),
+    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/test_sph_2016C.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -50,21 +50,67 @@ process.configurationMetadata = cms.untracked.PSet(
 )
 
 #ReRECO customization
-process.particleFlowRecHitECAL.producers[0].qualityTests[1].timingCleaning = cms.bool(False)
-process.particleFlowRecHitECAL.producers[1].qualityTests[1].timingCleaning = cms.bool(False)
+
+from RecoParticleFlow.PFClusterProducer.particleFlowRecHitECAL_cfi import *
+process.particleFlowOOTRecHitECAL = process.particleFlowRecHitECAL.clone()
+
+process.particleFlowOOTRecHitECAL.producers[0].qualityTests[1].timingCleaning = cms.bool(False) 
+process.particleFlowOOTRecHitECAL.producers[1].qualityTests[1].timingCleaning = cms.bool(False)
+
+from RecoParticleFlow.PFClusterProducer.particleFlowClusterECALUncorrected_cfi import *
+process.particleFlowClusterOOTECALUncorrected = process.particleFlowClusterECALUncorrected.clone()
+process.particleFlowClusterOOTECALUncorrected.recHitsSource = cms.InputTag("particleFlowOOTRecHitECAL")
+
+from RecoParticleFlow.PFClusterProducer.particleFlowClusterECAL_cfi import *
+process.particleFlowClusterOOTECAL = process.particleFlowClusterECAL.clone()
+process.particleFlowClusterOOTECAL.inputECAL = cms.InputTag("particleFlowClusterOOTECALUncorrected")
+
+from RecoEcal.EgammaClusterProducers.particleFlowSuperClusterECAL_cfi import *
+process.particleFlowSuperClusterOOTECAL = process.particleFlowSuperClusterECAL.clone()
+process.particleFlowSuperClusterOOTECAL.PFClusters = cms.InputTag("particleFlowClusterOOTECAL")
+process.particleFlowSuperClusterOOTECAL.ESAssociation = cms.InputTag("particleFlowClusterOOTECAL")
+process.particleFlowSuperClusterOOTECAL.PFBasicClusterCollectionBarrel = cms.string("particleFlowBasicClusterOOTECALBarrel")
+process.particleFlowSuperClusterOOTECAL.PFSuperClusterCollectionBarrel = cms.string("particleFlowSuperClusterOOTECALBarrel")
+process.particleFlowSuperClusterOOTECAL.PFBasicClusterCollectionEndcap = cms.string("particleFlowBasicClusterOOTECALEndcap")
+process.particleFlowSuperClusterOOTECAL.PFSuperClusterCollectionEndcap = cms.string("particleFlowSuperClusterOOTECALEndcap")
+process.particleFlowSuperClusterOOTECAL.PFBasicClusterCollectionPreshower = cms.string("particleFlowBasicClusterOOTECALPreshower")
+process.particleFlowSuperClusterOOTECAL.PFSuperClusterCollectionEndcapWithPreshower = cms.string("particleFlowSuperClusterOOTECALEndcapWithPreshower")
+
+from RecoEgamma.EgammaPhotonProducers.photonCore_cfi import *
+from RecoEgamma.EgammaPhotonProducers.photons_cfi import *
+process.mustacheOOTPhotonCore = process.photonCore.clone()
+process.mustacheOOTPhotonCore.scHybridBarrelProducer = cms.InputTag("particleFlowSuperClusterOOTECAL:particleFlowSuperClusterOOTECALBarrel")
+process.mustacheOOTPhotonCore.scIslandEndcapProducer = cms.InputTag("particleFlowSuperClusterOOTECAL:particleFlowSuperClusterOOTECALEndcapWithPreshower")
+process.mustacheOOTPhotonCore.conversionProducer = cms.InputTag("conversions")
+process.mustacheOOTPhotons = process.photons.clone()
+process.mustacheOOTPhotons.photonCoreProducer = cms.InputTag('mustacheOOTPhotonCore')
+process.mustacheOOTPhotons.isOOTCollection = cms.bool(True)
+
+process.OOTPhotonSequence = cms.Sequence(process.particleFlowOOTRecHitECAL*process.particleFlowClusterOOTECALUncorrected*process.particleFlowClusterOOTECAL*process.particleFlowSuperClusterOOTECAL*process.mustacheOOTPhotonCore*process.mustacheOOTPhotons)
+
+process.particleFlowEGammaFull += cms.Sequence(process.OOTPhotonSequence)
+
+process.RecoOOTPhoton = cms.untracked.PSet( 
+    outputCommands = cms.untracked.vstring( 
+        "keep *_particleFlowClusterOOTECAL_*_*", 
+        "keep *_particleFlowSuperClusterOOTECAL_*_*",
+        "keep *_mustacheOOTPhotonCore_*_*", 
+        "keep *_mustacheOOTPhotons_*_*" 
+))
 
 # Output definition
-
 process.RECOoutput = cms.OutputModule("PoolOutputModule",
     dataset = cms.untracked.PSet(
         dataTier = cms.untracked.string('RECO'),
         filterName = cms.untracked.string('RECOfromRECO')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
-    fileName = cms.untracked.string('file:rereco_deg_2016B.root'),
+    fileName = cms.untracked.string('file:rereco_sph_2016C.root'),
     outputCommands = process.RECOEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0)
 )
+
+process.RECOoutput.outputCommands.extend(process.RecoOOTPhoton.outputCommands)
 
 # Additional output definition
 
