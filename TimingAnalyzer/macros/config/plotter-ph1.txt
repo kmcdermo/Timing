@@ -1,5 +1,5 @@
 ApplyPh1PtCut 1
-Ph1PtCut 60.f
+Ph1PtCut 70.f
 ApplyPh1VIDCut 1
 Ph1VID medium
 ApplyPh1R9Cut 1
@@ -7,16 +7,16 @@ Ph1R9Cut 0.9
 ApplyPh1SmajEBMin 0
 Ph1SmajEBMin 0.f
 ApplyPh1SmajEBMax 1
-Ph1SmajEBMax 1.5
+Ph1SmajEBMax 1.f
 ApplyPh1SmajEEMin 0
 Ph1SmajEEMin 0.f
 ApplyPh1SmajEEMax 1
-Ph1SmajEEMax 1.5
+Ph1SmajEEMax 1.f
 ApplyPh1SminEBMin 0
 Ph1SminEBMin 0.0
 ApplyPh1SminEBMax 1
-Ph1SminEBMax 0.4
+Ph1SminEBMax 0.3
 ApplyPh1SminEEMin 0
 Ph1SminEEMin 0.f
 ApplyPh1SminEEMax 1
-Ph1SminEEMax 0.4
+Ph1SminEEMax 0.3

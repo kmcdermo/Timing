@@ -214,7 +214,7 @@ Bool_t PlotPhotons::CountEvents()
   if (event_b) fEfficiency["Reco"]++;
 
   //trigger efficiency
-  const Bool_t hlt_b = ((Config::isHLT4) ? (*triggerBits)[9] : true); // dispho60_ht350
+  const Bool_t hlt_b = (*triggerBits)[0];   //((Config::isHLT4) ? (*triggerBits)[9] : true); // dispho60_ht350
   if (hlt_b) fEfficiency["Trigger"]++;
 
   if (event_b && hlt_b)
@@ -568,17 +568,23 @@ void PlotPhotons::FillHVDS()
 
     // photon arrival time
     const Float_t genvPiondecayvr = std::sqrt(rad2((*genvPiondecayvx)[ipion],(*genvPiondecayvy)[ipion]));
-    if (genvPiondecayvr < ECAL::rEB && (*genvPiondecayvz)[ipion] < ECAL::zEE) 
+    if (genvPiondecayvr < ECAL::rEB && std::abs((*genvPiondecayvz)[ipion]) < ECAL::zEE) 
     {
+      std::cout << std::endl;
+      std::cout << "decayr: "<< genvPiondecayvr << " decayz: " << (*genvPiondecayvz)[ipion] << " ineta: " << ineta((*genHVph1eta)[ipion]) << std::endl;
+
       Float_t genph1time = PlotPhotons::GetGenPhotonArrivalTime(genvPiondecayvr,(*genvPiondecayvz)[ipion],ineta((*genHVph1eta)[ipion]));
-      genph1time = ((genph1time > 0) ? genph1time + genvPionctau * genvPiongamma / sol : -1.f);
+      genph1time = ((genph1time != -1.f) ? genph1time + genvPionctau * genvPiongamma / sol : -1.f);
+      
+      std::cout << " w/ vpiontime: " << genph1time << std::endl; 
+
       fPlots["genHVph1time"]->Fill(genph1time);
       fPlots2D["genHVph1time_vs_genHVph1pt"]->Fill((*genHVph1pt)[ipion],genph1time);
 
-      Float_t genph2time = PlotPhotons::GetGenPhotonArrivalTime(genvPiondecayvr,(*genvPiondecayvz)[ipion],ineta((*genHVph2eta)[ipion]));
-      genph2time = ((genph2time > 0) ? genph2time + genvPionctau * genvPiongamma / sol : -1.f);
-      fPlots["genHVph2time"]->Fill(genph2time);
-      fPlots2D["genHVph2time_vs_genHVph2pt"]->Fill((*genHVph2pt)[ipion],genph2time);
+//       Float_t genph2time = PlotPhotons::GetGenPhotonArrivalTime(genvPiondecayvr,(*genvPiondecayvz)[ipion],ineta((*genHVph2eta)[ipion]));
+//       genph2time = ((genph2time != -1.f) ? genph2time + genvPionctau * genvPiongamma / sol : -1.f);
+//       fPlots["genHVph2time"]->Fill(genph2time);
+//       fPlots2D["genHVph2time_vs_genHVph2pt"]->Fill((*genHVph2pt)[ipion],genph2time);
     }
     else 
     {
@@ -598,7 +604,12 @@ Float_t PlotPhotons::GetGenPhotonArrivalTime(const Float_t r0, const Float_t z0,
   if (std::abs(z) < ECAL::zEB) 
   {
     time  = std::sqrt(rad2(ECAL::rEB-r0,z-z0)) / sol;
+    
+    std::cout << "EB: " << time << " (z" << z << ")" ;
+
     time -= std::sqrt(rad2(ECAL::rEB,z)) / sol; // TOF correction;
+
+    std::cout << " w TOF: " << time;
   }
   else 
   {
@@ -606,7 +617,12 @@ Float_t PlotPhotons::GetGenPhotonArrivalTime(const Float_t r0, const Float_t z0,
     if (std::abs(r) > ECAL::rEEmin && std::abs(r) < ECAL::rEEmax)
     {
       time  = std::sqrt(rad2(r-r0,ECAL::zEE-z0)) / sol;
+
+      std::cout << "EE: " << time << " (z" << r << ")" ;
+
       time -= std::sqrt(rad2(r0,ECAL::zEE)) / sol; // TOF correction;
+
+      std::cout << " w TOF: " << time;
     }
   }
 
@@ -832,6 +848,8 @@ void PlotPhotons::FillTrigger()
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho70_ht300"],(*triggerBits)[11],phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho70_ht350"],(*triggerBits)[12],phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho70_ht400"],(*triggerBits)[13],phdelayseedtime);
+
+      PlotPhotons::FillTriggerPlot(fTrigPlots["pu_hltdispho60_ht350"],(*triggerBits)[9],nvtx);
 
       // 2D plots 
       PlotPhotons::FillTriggerPlot2D(fTrigPlots2D["phdelayseedtime_vs_phdelaypt_hltdispho50_ht350"],((*phIsHLTMatched)[phdelay][0]&&(*triggerBits)[6]),phdelaypt,phdelayseedtime);
@@ -1095,6 +1113,8 @@ void PlotPhotons::SetupTrigger()
     fTrigPlots["phdelayseedtime_hltdispho70_ht300"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho70_ht300","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT300_v","trigger");
     fTrigPlots["phdelayseedtime_hltdispho70_ht350"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho70_ht350","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
     fTrigPlots["phdelayseedtime_hltdispho70_ht400"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho70_ht400","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT400_v","trigger");
+
+    fTrigPlots["pu_hltdispho60_ht350"] = PlotPhotons::MakeTrigTH1Fs("pu_hltdispho60_ht350","n Primary Vertices",80,0.f,80.f,"n Primary Vertices","Events","HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
 
     fTrigPlots2D["ph1seedtime_vs_ph1pt_hltdispho50_ht350"] = PlotPhotons::MakeTrigTH2Fs("ph1seedtime_vs_ph1pt_hltdispho50_ht350","Leading Photon Seed recHit Time vs Leading Photon p_{T}",25,0,1000,"Leading Photon p_{T}",25,-5.f,20.f,"Leading Photon Seed recHit Time [ns]","HLT_DisplacedPhoton50_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
     fTrigPlots2D["ph1seedtime_vs_ph1pt_hltdispho60_ht350"] = PlotPhotons::MakeTrigTH2Fs("ph1seedtime_vs_ph1pt_hltdispho60_ht350","Leading Photon Seed recHit Time vs Leading Photon p_{T}",25,0,1000,"Leading Photon p_{T}",25,-5.f,20.f,"Leading Photon Seed recHit Time [ns]","HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
@@ -1597,7 +1617,7 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("run", &run, &b_run);
   fInTree->SetBranchAddress("lumi", &lumi, &b_lumi);
 
-  if (Config::isHLT2 || Config::isHLT3 || Config::isHLT4)
+  if (Config::isHLT2 || Config::isHLT3 || Config::isHLT4 || Config::isuserHLT)
   {
     fInTree->SetBranchAddress("triggerBits", &triggerBits, &b_triggerBits);
   }
@@ -1774,6 +1794,7 @@ void PlotPhotons::InitHLTConfig(TString config)
     if (var.EqualTo("isHLT2")) Config::isHLT2 = val.Atoi();
     if (var.EqualTo("isHLT3")) Config::isHLT3 = val.Atoi();
     if (var.EqualTo("isHLT4")) Config::isHLT4 = val.Atoi();
+    if (var.EqualTo("isuserHLT")) Config::isuserHLT = val.Atoi();
     if (var.EqualTo("ApplyHLTMatching")) Config::ApplyHLTMatching = val.Atoi();
     if (var.EqualTo("filterIdx")) Config::filterIdx = val.Atoi();
   }
