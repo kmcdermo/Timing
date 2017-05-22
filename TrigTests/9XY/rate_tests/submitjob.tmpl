@@ -1,0 +1,23 @@
+#!/bin/sh
+
+export X509_USER_PROXY=/afs/cern.ch/user/k/kmcdermo/private/x509up_u38274
+
+ANA_DIR=/afs/cern.ch/user/k/kmcdermo/private/dispho/HLT_Dev/CMSSW_9_1_0_pre3/src/
+RUN_DIR=/afs/cern.ch/user/k/kmcdermo/private/dispho/HLT_Dev/CMSSW_9_1_0_pre3/src/HLTrigger/HLTanalyzers/test/batch/pt15to20/
+
+cd $ANA_DIR
+eval `scram runtime -sh`
+cd $RUN_DIR
+
+echo "run job!"
+cmsRun JOB_NAME
+echo "done running job! now copy output file to eos" 
+xrdcp OUTPUT_FILE root://eoscms.cern.ch//eos/cms/store/group/phys_exotica/displacedPhotons/QCD_Pt-15to20_EMEnriched/
+echo "... done, remove files locally" 
+rm OUTPUT_FILE
+
+echo "removing potential core dump file!"
+rm core.*
+
+echo "all done successfully!"
+
