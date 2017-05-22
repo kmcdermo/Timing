@@ -21,7 +21,7 @@ options.register (
 
 ## outputFile Name
 options.register (
-	'outputFileName','recophoton.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'outputFileName','patphoton.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
 ## GT to be used    
@@ -33,7 +33,7 @@ options.register (
 options.parseArguments()
 
 ## reset file name
-options.outputFileName = 'recophoton-'+options.dataset+'-'+options.reco+'.root'
+options.outputFileName = 'patphoton-'+options.dataset+'-'+options.reco+'.root'
 
 print "##### Settings ######"
 print "Running with processName     = ",options.processName	
@@ -77,15 +77,15 @@ elif options.dataset == 'sph_2016C' :
 elif options.dataset == 'sph_2016H' :
 	if options.reco == 'OOT':
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/oot_aod_1000.root'
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/oot_miniaod_1000.root'
 				))
 #	elif options.reco == 'prompt':
 #		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-#				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/prompt_aod_1000.root'
+#				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/prompt_miniaod_1000.root'
 #				))
 	elif options.reco == 'prompt':
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/oot_aod_1000.root'
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/oot_miniaod_1000.root'
 				))
 
 else : exit
@@ -103,19 +103,19 @@ process.TFileService = cms.Service("TFileService",
 		                   fileName = cms.string(options.outputFileName))
 
 if options.reco == 'OOT' :
-	photonsTag = cms.InputTag("mustacheOOTPhotons","","RECO")
+	photonsTag = cms.InputTag("slimmedOOTPhotons","","PAT")
 else :
-	photonsTag = cms.InputTag("gedPhotons","","RECO")
+	photonsTag = cms.InputTag("slimmedPhotons","","PAT")
 
 # Make the tree 
-process.tree = cms.EDAnalyzer("SimpleRECOTree",
+process.tree = cms.EDAnalyzer("SimplePATTree",
    ## rho
    rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## photons		
    photons = photonsTag,
    ## ecal recHits			      
-   recHitsEB = cms.InputTag("reducedEcalRecHitsEB","","RECO"),
-   recHitsEE = cms.InputTag("reducedEcalRecHitsEE","","RECO"),
+   recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
+   recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
 )
 
 # Set up the path
