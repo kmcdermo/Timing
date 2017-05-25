@@ -23,10 +23,14 @@ void quickrateplot()
     gr->SetMarkerStyle(20);
     gr->Draw("AP");
 
-    TFormula form("quad","[0]*x+[1]*x*x");
+    TFormula form("quad","[0]*x*x+[1]*x");
     TF1 * fit  = new TF1("quad_fit","quad",x[0],x[3]);
-    fit->SetParName(0,"b"); fit->SetParameter(0,5.f);
-    fit->SetParName(1,"a"); fit->SetParameter(0,0.1f);
+    fit->SetParName(0,"a"); fit->SetParameter(0,5.f);
+    fit->SetParName(1,"b"); fit->SetParameter(0,0.1f);
+
+//     TFormula form("linear","[0]*x");
+//     TF1 * fit  = new TF1("linear_fit","linear",x[0],x[3]);
+//     fit->SetParName(0,"Slope"); fit->SetParameter(0,5.f);
     
     gr->Fit(fit->GetName(),"RBQ");
 
