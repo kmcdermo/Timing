@@ -21,8 +21,12 @@ SimpleRECOTree::SimpleRECOTree(const edm::ParameterSet& iConfig):
   // rhos
   rhosToken = consumes<double> (rhosTag);
 
-  // photons + ids
+  // photons
   photonsToken = consumes<std::vector<reco::Photon> > (photonsTag);
+
+  // pfcluster isos
+  ecalIsoToken = consumes<edm::ValueMap<float> > (ecalIsoTag);
+  hcalIsoToken = consumes<edm::ValueMap<float> > (hcalIsoTag);
 
   // rechits
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);

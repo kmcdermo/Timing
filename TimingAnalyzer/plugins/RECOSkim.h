@@ -53,6 +53,7 @@
 
 // HLT info
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+#include "DataFormats/Common/interface/TriggerResults.h"
 
 // ROOT
 #include "TTree.h"

@@ -21,6 +21,7 @@
 
 // HLT info
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+#include "DataFormats/Common/interface/TriggerResults.h"
 
 // Gen Info
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
