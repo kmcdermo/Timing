@@ -22,6 +22,7 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h" 
 
 // DataFormats
+#include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
 #include "DataFormats/EgammaReco/interface/SuperCluster.h"
 #include "DataFormats/CaloRecHit/interface/CaloCluster.h"
@@ -52,9 +53,16 @@
 // Common types
 #include "CommonTypes.h"
 
-inline bool sortByPhotonPt(const reco::Photon & ph1, const reco::Photon & ph2)
+struct RecoPhoton
 {
-  return ph1.pt()>ph2.pt();
+  reco::Photon photon;
+  float ecalIso;
+  float hcalIso;
+};
+
+inline bool sortByPhotonPt(const RecoPhoton & ph1, const RecoPhoton & ph2)
+{
+  return ph1.photon.pt()>ph2.photon.pt();
 }
 
 class SimpleRECOTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
@@ -63,7 +71,8 @@ class SimpleRECOTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm
   explicit SimpleRECOTree(const edm::ParameterSet&);
   ~SimpleRECOTree();
 
-  void PrepPhotons(const edm::Handle<std::vector<reco::Photon> > & photonsH, std::vector<reco::Photon> & photons);
+  void PrepPhotons(const edm::Handle<std::vector<reco::Photon> > & photonsH, std::vector<RecoPhoton> & photons,
+		   const edm::ValueMap<float> & ecalIso, const edm::ValueMap<float> & hcalIso);
 
   float GetChargedHadronEA(const float);
   float GetNeutralHadronEA(const float);
@@ -87,9 +96,15 @@ class SimpleRECOTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm
   const edm::InputTag rhosTag;
   edm::EDGetTokenT<double> rhosToken;
 
-  // photons + ids
+  // photons
   const edm::InputTag photonsTag;
   edm::EDGetTokenT<std::vector<reco::Photon> > photonsToken;
+
+  // value map for pfcluster isolation
+  const edm::InputTag ecalIsoTag;
+  edm::EDGetTokenT<edm::ValueMap<float> > ecalIsoToken;
+  const edm::InputTag hcalIsoTag;
+  edm::EDGetTokenT<edm::ValueMap<float> > hcalIsoToken;
 
   // ECAL RecHits
   const edm::InputTag recHitsEBTag;
@@ -110,6 +125,7 @@ class SimpleRECOTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm
   std::vector<int>   phmatch;
   std::vector<float> phHoE, phr9, phChgIso, phNeuIso, phIso, phsuisseX;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
+  std::vector<float> phEcalIso, phHcalIso;
 
   // supercluster info 
   std::vector<float> phscE, phsceta, phscphi;

@@ -4,8 +4,13 @@ SimpleRECOTree::SimpleRECOTree(const edm::ParameterSet& iConfig):
   // rhos
   rhosTag(iConfig.getParameter<edm::InputTag>("rhos")),
 
+  // photons
   photonsTag  (iConfig.getParameter<edm::InputTag>("photons")),  
   
+  // pfcluster isos
+  ecalIsoTag  (iConfig.getParameter<edm::InputTag>("ecalIso")),  
+  hcalIsoTag  (iConfig.getParameter<edm::InputTag>("hcalIso")),  
+
   //recHits
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
   recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE"))
@@ -35,7 +40,16 @@ void SimpleRECOTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // PHOTONS
   edm::Handle<std::vector<reco::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
-  std::vector<reco::Photon> photons = *photonsH;
+  std::vector<RecoPhoton> photons(photonsH->size());
+
+  // PFCluster Isolations
+  edm::Handle<edm::ValueMap<float> > ecalIsoH;
+  iEvent.getByToken(ecalIsoToken, ecalIsoH);
+  edm::ValueMap<float> ecalIso = *ecalIsoH;
+
+  edm::Handle<edm::ValueMap<float> > hcalIsoH;
+  iEvent.getByToken(hcalIsoToken, hcalIsoH);
+  edm::ValueMap<float> hcalIso = *hcalIsoH;
 
   // RecHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
@@ -50,7 +64,7 @@ void SimpleRECOTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   const CaloSubdetectorGeometry * endcapGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
   // do some prepping of objects
-  SimpleRECOTree::PrepPhotons(photonsH,photons);
+  SimpleRECOTree::PrepPhotons(photonsH,photons,ecalIso,hcalIso);
 
   ///////////////////////////
   //                       //
@@ -81,30 +95,30 @@ void SimpleRECOTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     if (nphotons > 0) SimpleRECOTree::InitializeRecoPhotonBranches();
 
     int iph = 0;
-    for (std::vector<reco::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
+    for (std::vector<RecoPhoton>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
     {
       // standard photon branches
-      phE  [iph] = phiter->energy();
-      phpt [iph] = phiter->pt();
-      phphi[iph] = phiter->phi();
-      pheta[iph] = phiter->eta();
+      phE  [iph] = phiter->photon.energy();
+      phpt [iph] = phiter->photon.pt();
+      phphi[iph] = phiter->photon.phi();
+      pheta[iph] = phiter->photon.eta();
 
       // super cluster from photon
-      const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
+      const reco::SuperClusterRef& phsc = phiter->photon.superCluster().isNonnull() ? phiter->photon.superCluster() : phiter->photon.parentSuperCluster();
       phscE  [iph] = phsc->energy();
       phsceta[iph] = phsc->eta();
       phscphi[iph] = phsc->phi();
       const float sceta = std::abs(phsceta[iph]);
 
       // Shower Shape Objects
-      const reco::Photon::ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
+      const reco::Photon::ShowerShape& phshape = phiter->photon.full5x5_showerShapeVariables(); // phiter->photon.showerShapeVariables();
 
       // ID-like variables
-      phHoE   [iph] = phiter->hadronicOverEm(); // phiter->hadTowOverEm();
+      phHoE   [iph] = phiter->photon.hadronicOverEm(); // phiter->photon.hadTowOverEm();
       phr9    [iph] = phshape.e3x3/phsc->rawEnergy(); // http://cmslxr.fnal.gov/source/DataFormats/EgammaCandidates/interface/Photon.h#0239
-      phChgIso[iph] = std::max(phiter->chargedHadronIso() - (rho * SimpleRECOTree::GetChargedHadronEA(sceta)),0.f);
-      phNeuIso[iph] = std::max(phiter->neutralHadronIso() - (rho * SimpleRECOTree::GetNeutralHadronEA(sceta)),0.f);
-      phIso   [iph] = std::max(phiter->photonIso()        - (rho * SimpleRECOTree::GetGammaEA        (sceta)),0.f);
+      phChgIso[iph] = std::max(phiter->photon.chargedHadronIso() - (rho * SimpleRECOTree::GetChargedHadronEA(sceta)),0.f);
+      phNeuIso[iph] = std::max(phiter->photon.neutralHadronIso() - (rho * SimpleRECOTree::GetNeutralHadronEA(sceta)),0.f);
+      phIso   [iph] = std::max(phiter->photon.photonIso()        - (rho * SimpleRECOTree::GetGammaEA        (sceta)),0.f);
 
       // cluster shape variables
       phsieie[iph] = phshape.sigmaIetaIeta;
@@ -125,6 +139,10 @@ void SimpleRECOTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	phsmin [iph] = ph2ndMoments.sMin;
 	phalpha[iph] = ph2ndMoments.alpha;
       }
+
+      // PF Cluster Isolations
+      phEcalIso[iph] = phiter->ecalIso;
+      phHcalIso[iph] = phiter->hcalIso;
 
       // map of rec hit ids
       uiiumap phrhIDmap;
@@ -182,10 +200,24 @@ void SimpleRECOTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   tree->Fill();      
 }    
 
-void SimpleRECOTree::PrepPhotons(const edm::Handle<std::vector<reco::Photon> > & photonsH, std::vector<reco::Photon> & photons)
+void SimpleRECOTree::PrepPhotons(const edm::Handle<std::vector<reco::Photon> > & photonsH, std::vector<RecoPhoton> & photons,
+				 const edm::ValueMap<float> & ecalIso, const edm::ValueMap<float> & hcalIso)
 {
   if (photonsH.isValid()) // standard handle check
   {
+    int iph = 0;
+    for (std::vector<reco::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter)
+    {
+      // get ptr to photon
+      const edm::Ptr<reco::Photon> photonPtr(photonsH, phiter - photonsH->begin());
+      
+      photons[iph].photon  = (*phiter);
+      photons[iph].ecalIso = ecalIso[photonPtr];
+      photons[iph].hcalIso = hcalIso[photonPtr];
+
+      iph++;
+    }
+
     std::sort(photons.begin(),photons.end(),sortByPhotonPt);
   }
 }  
@@ -253,6 +285,9 @@ void SimpleRECOTree::ClearRecoPhotonBranches()
   phsmin.clear();
   phalpha.clear();
 
+  phEcalIso.clear();
+  phHcalIso.clear();
+
   phnrh.clear();
   phseedpos.clear();
 
@@ -289,6 +324,9 @@ void SimpleRECOTree::InitializeRecoPhotonBranches()
   phsmin.resize(nphotons);
   phalpha.resize(nphotons);
 
+  phEcalIso.resize(nphotons);
+  phHcalIso.resize(nphotons);
+
   phnrh.resize(nphotons);
   phseedpos.resize(nphotons);
 
@@ -324,6 +362,9 @@ void SimpleRECOTree::InitializeRecoPhotonBranches()
     phsmin [iph] = -9999.f;
     phalpha[iph] = -9999.f;
 
+    phEcalIso[iph] = -9999.f;
+    phHcalIso[iph] = -9999.f;
+
     phnrh    [iph] = -9999;
     phseedpos[iph] = -9999;
   }
@@ -355,9 +396,9 @@ void SimpleRECOTree::beginJob()
   tree = fs->make<TTree>("tree"     , "tree");
 
   // Run, Lumi, Event info
-  tree->Branch("event"                  , &event                , "event/l");
-  tree->Branch("run"                    , &run                  , "run/i");
-  tree->Branch("lumi"                   , &lumi                 , "lumi/i");
+  tree->Branch("event"                , &event                , "event/l");
+  tree->Branch("run"                  , &run                  , "run/i");
+  tree->Branch("lumi"                 , &lumi                 , "lumi/i");
    
   // Photon Info
   tree->Branch("nphotons"             , &nphotons             , "nphotons/I");
@@ -384,6 +425,9 @@ void SimpleRECOTree::beginJob()
   tree->Branch("phsmaj"               , &phsmaj);
   tree->Branch("phsmin"               , &phsmin);
   tree->Branch("phalpha"              , &phalpha);
+
+  tree->Branch("phEcalIso"            , &phEcalIso);
+  tree->Branch("phHcalIso"            , &phHcalIso);
 
   tree->Branch("phnrh"                , &phnrh);
   tree->Branch("phseedpos"            , &phseedpos);

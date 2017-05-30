@@ -7,11 +7,11 @@ options = VarParsing ('python')
 
 ## general cuts
 options.register (
-	'dataset','deg_2016B',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'dataset','sph_2016H',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'dataset to be used');
 
 options.register (
-	'reco','rereco',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'reco','prompt',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'dataset to be used');
 
 ## processName
@@ -85,7 +85,8 @@ elif options.dataset == 'sph_2016H' :
 #				))
 	elif options.reco == 'prompt':
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/oot_aod_1000.root'
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/local_test_aod.root'
+#				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/oot_aod_1000.root'
 				))
 
 else : exit
@@ -103,9 +104,13 @@ process.TFileService = cms.Service("TFileService",
 		                   fileName = cms.string(options.outputFileName))
 
 if options.reco == 'OOT' :
-	photonsTag = cms.InputTag("mustacheOOTPhotons","","RECO")
+	photonsTag = cms.InputTag("ootPhotons","","RECO")
+	ecalIsoTag = cms.InputTag("ootPhotonEcalPFClusterIsolationProducer","","RECO")
+	hcalIsoTag = cms.InputTag("ootPhotonHcalPFClusterIsolationProducer","","RECO")
 else :
 	photonsTag = cms.InputTag("gedPhotons","","RECO")
+	ecalIsoTag = cms.InputTag("photonEcalPFClusterIsolationProducer","","RECO")
+	hcalIsoTag = cms.InputTag("photonHcalPFClusterIsolationProducer","","RECO")
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("SimpleRECOTree",
@@ -113,6 +118,9 @@ process.tree = cms.EDAnalyzer("SimpleRECOTree",
    rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## photons		
    photons = photonsTag,
+   ## pfClusterIso
+   ecalIso = ecalIsoTag,
+   hcalIso = hcalIsoTag,
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEcalRecHitsEB","","RECO"),
    recHitsEE = cms.InputTag("reducedEcalRecHitsEE","","RECO"),
