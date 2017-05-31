@@ -100,8 +100,8 @@ void PlotRECOPhotons::FillRecoPhotons()
 
       fPlots["phHoE_OOT"]->Fill((*phHoE)[iph]);
       fPlots["phr9_OOT"]->Fill((*phr9)[iph]);
-      if (std::abs((*phsceta)[iph]) < 1.5) fPlots["phsieieEB_OOT"]->Fill((*phsieie)[iph]);
-      if (std::abs((*phsceta)[iph]) > 1.5) fPlots["phsieieEE_OOT"]->Fill((*phsieie)[iph]);
+      if      (std::abs((*phsceta)[iph]) < ECAL::etaEB) fPlots["phsieieEB_OOT"]->Fill((*phsieie)[iph]);
+      else if (std::abs((*phsceta)[iph]) > ECAL::etaEEmin && std::abs((*phsceta)[iph]) < ECAL::etaEEmax) fPlots["phsieieEE_OOT"]->Fill((*phsieie)[iph]);
       nPhotonsOOT++;
     }
     nPhotons++;
@@ -111,6 +111,31 @@ void PlotRECOPhotons::FillRecoPhotons()
     fPlots["phphi"]->Fill((*phphi)[iph]);
     fPlots["pheta"]->Fill((*pheta)[iph]);
     
+    if      (std::abs((*phsceta)[iph]) < ECAL::etaEB) 
+    {
+      fPlots["phsieieEB"]->Fill((*phsieie)[iph]);
+      fPlots["phsieipEB"]->Fill((*phsieip)[iph]);
+      fPlots["phsipipEB"]->Fill((*phsipip)[iph]);
+
+      fPlots["phsmajEB"]->Fill((*phsmaj)[iph]);
+      fPlots["phsminEB"]->Fill((*phsmin)[iph]);
+
+      fPlots["phEcalIsoEB"]->Fill((*phEcalIso)[iph]);
+      fPlots["phHcalIsoEB"]->Fill((*phHcalIso)[iph]);
+    }
+    else if (std::abs((*phsceta)[iph]) > ECAL::etaEEmin && std::abs((*phsceta)[iph]) < ECAL::etaEEmax) 
+    {
+      fPlots["phsieieEE"]->Fill((*phsieie)[iph]);
+      fPlots["phsieipEE"]->Fill((*phsieip)[iph]);
+      fPlots["phsipipEE"]->Fill((*phsipip)[iph]);
+
+      fPlots["phsmajEE"]->Fill((*phsmaj)[iph]);
+      fPlots["phsminEE"]->Fill((*phsmin)[iph]);
+
+      fPlots["phEcalIsoEE"]->Fill((*phEcalIso)[iph]);
+      fPlots["phHcalIsoEE"]->Fill((*phHcalIso)[iph]);
+    }
+      
     fPlots["phseedtime"]->Fill((*phrhtime)[iph][(*phseedpos)[iph]]);
     fPlots["phseedOOT"]->Fill((*phrhOOT)[iph][(*phseedpos)[iph]]);
     fPlots["phseedE"]->Fill((*phrhE)[iph][(*phseedpos)[iph]]);
@@ -143,20 +168,43 @@ void PlotRECOPhotons::SetupRecoPhotons()
 
   fPlots["phE"] = PlotRECOPhotons::MakeTH1F("phE","Photon Energy [GeV]",100,0.f,2000.f,"Energy [GeV]","Photons","gedPhotons/GeneralProps");
   fPlots["phpt"] = PlotRECOPhotons::MakeTH1F("phpt","Photon p_{T} [GeV/c]",100,0.f,2000.f,"p_{T} [GeV/c]","Photons","gedPhotons/GeneralProps");
-  fPlots["phphi"] = PlotRECOPhotons::MakeTH1F("phphi","Photon #phi",100,-3.2,3.2,"#phi","Photons","gedPhotons/GeneralProps");
-  fPlots["pheta"] = PlotRECOPhotons::MakeTH1F("pheta","Photon #eta",100,-3.0,3.0,"#eta","Photons","gedPhotons/GeneralProps");
+  fPlots["phphi"] = PlotRECOPhotons::MakeTH1F("phphi","Photon #phi",32,-3.2,3.2,"#phi","Photons","gedPhotons/GeneralProps");
+  fPlots["pheta"] = PlotRECOPhotons::MakeTH1F("pheta","Photon #eta",100,-5.0,5.0,"#eta","Photons","gedPhotons/GeneralProps");
 
   // OOT == True Only
   fPlots["phE_OOT"] = PlotRECOPhotons::MakeTH1F("phE_OOT","Photon OoT Energy [GeV]",100,0.f,200.f,"Energy [GeV]","Photons","gedPhotons/GeneralProps");
   fPlots["phpt_OOT"] = PlotRECOPhotons::MakeTH1F("phpt_OOT","Photon OoT p_{T} [GeV/c]",100,0.f,200.f,"p_{T} [GeV/c]","Photons","gedPhotons/GeneralProps");
-  fPlots["phphi_OOT"] = PlotRECOPhotons::MakeTH1F("phphi_OOT","Photon OoT #phi",100,-3.2,3.2,"#phi","Photons","gedPhotons/GeneralProps");
-  fPlots["pheta_OOT"] = PlotRECOPhotons::MakeTH1F("pheta_OOT","Photon OoT #eta",100,-3.0,3.0,"#eta","Photons","gedPhotons/GeneralProps");
+  fPlots["phphi_OOT"] = PlotRECOPhotons::MakeTH1F("phphi_OOT","Photon OoT #phi",32,-3.2,3.2,"#phi","Photons","gedPhotons/GeneralProps");
+  fPlots["pheta_OOT"] = PlotRECOPhotons::MakeTH1F("pheta_OOT","Photon OoT #eta",100,-5.0,5.0,"#eta","Photons","gedPhotons/GeneralProps");
 
   fPlots["phHoE_OOT"] = PlotRECOPhotons::MakeTH1F("phHoE_OOT","Photon OoT HoverE",100,0.f,2.f,"HoverE","Photons","gedPhotons/GeneralProps");
   fPlots["phr9_OOT"] = PlotRECOPhotons::MakeTH1F("phr9_OOT","Photon OoT R9",100,0.f,2.f,"R9","Photons","gedPhotons/GeneralProps");
   fPlots["phsieieEB_OOT"] = PlotRECOPhotons::MakeTH1F("phsieieEB_OOT","Photon OoT #sigma_{i#eta i#eta} EB",100,0.f,0.1f,"#sigma_{i#eta i#eta} EB","Photons","gedPhotons/GeneralProps");
   fPlots["phsieieEE_OOT"] = PlotRECOPhotons::MakeTH1F("phsieieEE_OOT","Photon OoT #sigma_{i#eta i#eta} EE",100,0.f,0.1f,"#sigma_{i#eta i#eta} EE","Photons","gedPhotons/GeneralProps");
 
+  // EB only
+  fPlots["phsieieEB"] = PlotRECOPhotons::MakeTH1F("phsieieEB","Photon #sigma_{i#eta i#eta} EB",100,0.f,0.1f,"#sigma_{i#eta i#eta} EB","Photons","gedPhotons/GeneralProps");
+  fPlots["phsieipEB"] = PlotRECOPhotons::MakeTH1F("phsieipEB","Photon #sigma_{i#eta i#phi} EB",100,-0.005f,0.005f,"#sigma_{i#eta i#phi} EB","Photons","gedPhotons/GeneralProps");
+  fPlots["phsipipEB"] = PlotRECOPhotons::MakeTH1F("phsipipEB","Photon #sigma_{i#phi i#phi} EB",100,0.f,0.1f,"#sigma_{i#phi i#phi} EB","Photons","gedPhotons/GeneralProps");
+
+  fPlots["phsmajEB"] = PlotRECOPhotons::MakeTH1F("phsmajEB","Photon S_{Major} EB",100,0.f,3.f,"S_{Major} EB","Photons","gedPhotons/GeneralProps");
+  fPlots["phsminEB"] = PlotRECOPhotons::MakeTH1F("phsminEB","Photon S_{Minor} EB",100,0.f,3.f,"S_{Minor} EB","Photons","gedPhotons/GeneralProps");
+
+  fPlots["phEcalIsoEB"] = PlotRECOPhotons::MakeTH1F("phEcalIsoEB","Photon Ecal PFCluster Iso EB",100,0.f,1000.f,"Ecal PFCluster Iso EB","Photons","gedPhotons/GeneralProps");
+  fPlots["phHcalIsoEB"] = PlotRECOPhotons::MakeTH1F("phHcalIsoEB","Photon Hcal PFCluster Iso EB",100,0.f,1000.f,"Hcal PFCluster Iso EB","Photons","gedPhotons/GeneralProps");
+
+  // EE only
+  fPlots["phsieieEE"] = PlotRECOPhotons::MakeTH1F("phsieieEE","Photon #sigma_{i#eta i#eta} EE",100,0.f,0.1f,"#sigma_{i#eta i#eta} EE","Photons","gedPhotons/GeneralProps");
+  fPlots["phsieipEE"] = PlotRECOPhotons::MakeTH1F("phsieipEE","Photon #sigma_{i#eta i#phi} EE",100,-0.005f,0.005f,"#sigma_{i#eta i#phi} EE","Photons","gedPhotons/GeneralProps");
+  fPlots["phsipipEE"] = PlotRECOPhotons::MakeTH1F("phsipipEE","Photon #sigma_{i#phi i#phi} EE",100,0.f,0.1f,"#sigma_{i#phi i#phi} EE","Photons","gedPhotons/GeneralProps");
+
+  fPlots["phsmajEE"] = PlotRECOPhotons::MakeTH1F("phsmajEE","Photon S_{Major} EE",100,0.f,3.f,"S_{Major} EE","Photons","gedPhotons/GeneralProps");
+  fPlots["phsminEE"] = PlotRECOPhotons::MakeTH1F("phsminEE","Photon S_{Minor} EE",100,0.f,3.f,"S_{Minor} EE","Photons","gedPhotons/GeneralProps");
+
+  fPlots["phEcalIsoEE"] = PlotRECOPhotons::MakeTH1F("phEcalIsoEE","Photon Ecal PFCluster Iso EE",100,0.f,1000.f,"Ecal PFCluster Iso EE","Photons","gedPhotons/GeneralProps");
+  fPlots["phHcalIsoEE"] = PlotRECOPhotons::MakeTH1F("phHcalIsoEE","Photon Hcal PFCluster Iso EE",100,0.f,1000.f,"Hcal PFCluster Iso EE","Photons","gedPhotons/GeneralProps");
+
+  // seed stuff
   fPlots["phseedtime"] = PlotRECOPhotons::MakeTH1F("phseedtime","Photon Seed Time [ns]",100,-25.f,25.f,"Seed Time [ns]","Photons","gedPhotons/GeneralProps");
   fPlots["phseedOOT"] = PlotRECOPhotons::MakeTH1F("phseedOOT","Photon Seed OoT Flag",2,0.f,2.f,"Seed Out-of-Time Flag","Photons","gedPhotons/GeneralProps");
   fPlots["phseedE"] = PlotRECOPhotons::MakeTH1F("phseedE","Photon Seed Energy [GeV]",100.f,0.f,1000.f,"Energy [GeV]","Photons","gedPhotons/GeneralProps");
@@ -261,6 +309,8 @@ void PlotRECOPhotons::InitTree()
   phsmaj = 0;
   phsmin = 0;
   phalpha = 0;
+  phEcalIso = 0;
+  phHcalIso = 0;
   phnrh = 0;
   phseedpos = 0;
   phrheta = 0;
@@ -293,6 +343,8 @@ void PlotRECOPhotons::InitTree()
   fInTree->SetBranchAddress("phsmaj", &phsmaj, &b_phsmaj);
   fInTree->SetBranchAddress("phsmin", &phsmin, &b_phsmin);
   fInTree->SetBranchAddress("phalpha", &phalpha, &b_phalpha);
+  fInTree->SetBranchAddress("phEcalIso", &phEcalIso, &b_phEcalIso);
+  fInTree->SetBranchAddress("phHcalIso", &phHcalIso, &b_phHcalIso);
   fInTree->SetBranchAddress("phnrh", &phnrh, &b_phnrh);
   fInTree->SetBranchAddress("phseedpos", &phseedpos, &b_phseedpos);
   fInTree->SetBranchAddress("phrheta", &phrheta, &b_phrheta);

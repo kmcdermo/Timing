@@ -2,19 +2,16 @@ void recophoton_comp()
 {
   gStyle->SetOptStat(0);
 
-  TString dataset = "sph_2016C";
+  TString dataset = "sph_2016H";
   TString rhE = "";
   std::vector<TString> filenames = 
   {
-    Form("output/recophotons/reco/%s%s/plots.root",dataset.Data(),rhE.Data()),
-    Form("output/recophotons/rereco/%s%s/plots.root",dataset.Data(),rhE.Data()),
-    Form("output/recophotons/rereco/%s_pt%s/plots.root",dataset.Data(),rhE.Data()),
-    Form("output/recophotons/rereco/%s_hoe%s/plots.root",dataset.Data(),rhE.Data()),
-    Form("output/recophotons/rereco/%s_r9%s/plots.root",dataset.Data(),rhE.Data()),
-    Form("output/recophotons/rereco/%s_sieie%s/plots.root",dataset.Data(),rhE.Data())
+    Form("output/recophotons/Prompt-v1/%s%s/plots.root",dataset.Data(),rhE.Data()),
+    Form("output/recophotons/Prompt-v2/%s%s/plots.root",dataset.Data(),rhE.Data()),
+    Form("output/recophotons/OOT/%s%s/plots.root",dataset.Data(),rhE.Data()),
   };
 
-  std::vector<TString> labels = {"RECO","ReRECO","ReRECO+p_{T}","ReRECO+p_{T}+H/E","ReRECO+p_{T}+H/E+R_{9}","ReRECO+p_{T}+H/E+R_{9}+#sigma_{i#eta i#eta}"};
+  std::vector<TString> labels = {"Vanilla","gedPhotons","ootPhotons"};
   std::vector<Color_t> colors = {kBlack,kBlue,kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3};
 
   std::vector<TFile*> files(filenames.size());
@@ -26,8 +23,10 @@ void recophoton_comp()
   std::vector<TString> hists = 
   {
     "nphotons","nphotonsOOT","phnrh","phnrhOOT",
-    "phE","phpt","phphi","pheta","phE_OOT","phpt_OOT","phphi_OOT","pheta_OOT",
-    "phHoE_OOT","phr9_OOT","phsieieEB_OOT","phsieieEE_OOT",
+    "phE","phpt","phphi","pheta",
+    //    "phHoE_OOT","phr9_OOT","phsieieEB_OOT","phsieieEE_OOT","phE_OOT","phpt_OOT","phphi_OOT","pheta_OOT",
+    "phsieieEB","phsieipEB","phsipipEB","phsmajEB","phsminEB","phEcalIsoEB","phHcalIsoEB",
+    "phsieieEE","phsieipEE","phsipipEE","phsmajEE","phsminEE","phEcalIsoEE","phHcalIsoEE",
     "phseedtime","phseedOOT","phseedE",
     "phseedtime_OOT","phseedE_OOT",
     "phrhtime","phrhE"
@@ -36,33 +35,37 @@ void recophoton_comp()
   for (UInt_t ihist = 0; ihist < hists.size(); ihist++)
   { 
     TCanvas * canv = new TCanvas(); canv->cd(); canv->SetLogy(1);
-    TLegend * leg;
-    if (hists[ihist].Contains("pheta") || hists[ihist].Contains("phphi")) leg = new TLegend(0.35,0.35,0.65,0.65);
-    else leg = new TLegend(0.65,0.65,0.95,0.95);
+    TLegend * leg  = new TLegend(0.75,0.8,0.99,0.99);
 
     std::vector<TH1F*> th1fs(filenames.size());
     Float_t max = -1e7;
+    Float_t min =  1e7;
     for (UInt_t ith1f = 0; ith1f < th1fs.size(); ith1f++)
     {
       th1fs[ith1f] = (TH1F*)files[ith1f]->Get(hists[ihist]);
 
       th1fs[ith1f]->SetLineColor(colors[ith1f]);
       th1fs[ith1f]->SetMarkerColor(colors[ith1f]);
+      th1fs[ith1f]->Scale(1.f/th1fs[ith1f]->GetEntries());
 
-      Float_t tmpmax = th1fs[ith1f]->GetMaximum();
-
-      if (tmpmax > max) max = tmpmax;
+      Int_t nBinsX = th1fs[ith1f]->GetNbinsX();
+      for (Int_t ibin = 1; ibin <= nBinsX; ibin++)
+      {
+	Float_t tmp = th1fs[ith1f]->GetBinContent(ibin);
+	if (tmp > max) max = tmp;
+	if (tmp != 0.f && tmp < min) min = tmp;
+      }
     }
 
     for (UInt_t ith1f = 0; ith1f < th1fs.size(); ith1f++)
     {
-      th1fs[ith1f]->SetMaximum(max*1.1);
-      if (hists[ihist].Contains("phseedE_OOT")){th1fs[ith1f]->SetMaximum(100);th1fs[ith1f]->SetMinimum(1);}
+      th1fs[ith1f]->SetMaximum(max*2);
+      th1fs[ith1f]->SetMinimum(min/2);
       th1fs[ith1f]->Draw(ith1f>0?"same epl":"epl");
       leg->AddEntry(th1fs[ith1f],Form("%s: %5.3f",labels[ith1f].Data(),th1fs[ith1f]->GetMean()),"epl");
     }
 
-    if (!hists[ihist].Contains("pheta_OOT") && !hists[ihist].Contains("phphi_OOT")) leg->Draw("same");    
+    leg->Draw("same");    
     canv->SaveAs(Form("output/recophotons/%s%s_%s.png",dataset.Data(),rhE.Data(),hists[ihist].Data()));
 
     for (UInt_t ith1f = 0; ith1f < th1fs.size(); ith1f++)   

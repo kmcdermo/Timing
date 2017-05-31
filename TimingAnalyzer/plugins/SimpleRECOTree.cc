@@ -67,6 +67,11 @@ void SimpleRECOTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   const CaloSubdetectorGeometry * barrelGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
   const CaloSubdetectorGeometry * endcapGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
+  // topology (from PhotonProducer)
+  edm::ESHandle<CaloTopology> calotopoH;
+  iSetup.get<CaloTopologyRecord>().get(calotopoH);
+  const CaloTopology * topology = calotopoH.product();
+
   // do some prepping of objects
   SimpleRECOTree::PrepPhotons(photonsH,photons,ecalIso,hcalIso);
 
@@ -114,29 +119,30 @@ void SimpleRECOTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       phscphi[iph] = phsc->phi();
       const float sceta = std::abs(phsceta[iph]);
 
-      // Shower Shape Objects
-      const reco::Photon::ShowerShape& phshape = phiter->photon.full5x5_showerShapeVariables(); // phiter->photon.showerShapeVariables();
-
       // ID-like variables
-      phHoE   [iph] = phiter->photon.hadronicOverEm(); // phiter->photon.hadTowOverEm();
-      phr9    [iph] = phshape.e3x3/phsc->rawEnergy(); // http://cmslxr.fnal.gov/source/DataFormats/EgammaCandidates/interface/Photon.h#0239
+      phHoE   [iph] = phiter->photon.hadTowOverEm(); // : hcal energy behind BC in SC (used in slimming), phiter->photon.hadronicOverEm() : total hadronic fraction (used in ID)
+      phr9    [iph] = phiter->photon.r9(); // ?? should this be full5x5_r9()?? --> r9() used in slimming (full == noZS)
       phChgIso[iph] = std::max(phiter->photon.chargedHadronIso() - (rho * SimpleRECOTree::GetChargedHadronEA(sceta)),0.f);
       phNeuIso[iph] = std::max(phiter->photon.neutralHadronIso() - (rho * SimpleRECOTree::GetNeutralHadronEA(sceta)),0.f);
       phIso   [iph] = std::max(phiter->photon.photonIso()        - (rho * SimpleRECOTree::GetGammaEA        (sceta)),0.f);
 
-      // cluster shape variables
-      phsieie[iph] = phshape.sigmaIetaIeta;
-      phsipip[iph] = phshape.sigmaIphiIphi;
-      phsieip[iph] = phshape.sigmaIetaIphi;
-
       // use seed to get geometry and recHits
-      const DetId seedDetId = phsc->seed()->seed(); //seed detid
+      const reco::BasicClusterRef& phbc = phsc->seed();
+      const DetId seedDetId = phbc->seed(); //seed detid
       const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
       const EcalRecHitCollection * recHits = (isEB ? recHitsEBH : recHitsEEH).product();
 
-      // 2nd moments from official calculation
+      // need recHits to calculate shape variables
       if (recHits->size() > 0)
       {
+	// For now sipip and sieip not in shower shape for standard photon producer
+	std::vector<float> localCov = noZS::EcalClusterTools::localCovariances( *phbc, recHits, topology);
+	// cluster shape variables
+	phsieie[iph] = std::sqrt(localCov[0]);
+	phsipip[iph] = (!edm::isFinite(localCov[2]) ? 0. : std::sqrt(localCov[2]));
+	phsieip[iph] = localCov[1];
+
+	// 2nd moments from official calculation
 	const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phsc, *recHits);
 	// radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
 	phsmaj [iph] = ph2ndMoments.sMaj;

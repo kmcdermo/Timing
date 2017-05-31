@@ -10,6 +10,13 @@
 #include <vector>
 #include <map>
 
+namespace ECAL
+{
+  static const Float_t etaEB = 1.4442;
+  static const Float_t etaEEmin = 1.566;
+  static const Float_t etaEEmax = 2.5;
+};
+
 typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator        TH1MapIter;
 
@@ -90,6 +97,8 @@ private :
   std::vector<Float_t> * phsmaj;
   std::vector<Float_t> * phsmin;
   std::vector<Float_t> * phalpha;
+  std::vector<Float_t> * phEcalIso;
+  std::vector<Float_t> * phHcalIso;
   std::vector<Int_t>   * phnrh;
   std::vector<Int_t>   * phseedpos;
   std::vector<std::vector<Float_t> > * phrheta;
@@ -123,6 +132,8 @@ private :
   TBranch * b_phsmaj;
   TBranch * b_phsmin;
   TBranch * b_phalpha;
+  TBranch * b_phEcalIso;
+  TBranch * b_phHcalIso;
   TBranch * b_phnrh;
   TBranch * b_phseedpos;
   TBranch * b_phrheta;
