@@ -11,7 +11,7 @@ options.register (
 	'dataset to be used');
 
 options.register (
-	'reco','prompt',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'reco','OOT',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'dataset to be used');
 
 ## processName
@@ -56,37 +56,18 @@ process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 ## Define the input source
-if options.dataset == 'deg_2016B' :
-	if options.reco == 'reco':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/regular_reco_deg_2016B.root'
-				))
-	elif options.reco == 'rereco':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/rereco_deg_2016B.root'
-				))
-elif options.dataset == 'sph_2016C' :
-	if options.reco == 'reco':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/regular_reco_sph_2016C.root'
-				))
-	elif options.reco == 'rereco':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/rereco_sph_2016C.root'
-				))
-elif options.dataset == 'sph_2016H' :
+if options.dataset == 'sph_2016H' :
 	if options.reco == 'OOT':
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/oot_aod_1000.root'
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/AOD/OOT/oot_aod.root'
 				))
-#	elif options.reco == 'prompt':
-#		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-#				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/prompt_aod_1000.root'
-#				))
-	elif options.reco == 'prompt':
+	elif options.reco == 'Prompt-v1':
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/local_test_aod.root'
-#				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/oot_aod_1000.root'
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/AOD/Prompt/prompt_aod.root'
+				))
+	elif options.reco == 'Prompt-v2':
+		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/AOD/OOT/oot_aod.root'
 				))
 
 else : exit

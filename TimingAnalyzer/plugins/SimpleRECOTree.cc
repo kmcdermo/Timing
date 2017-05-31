@@ -1,4 +1,5 @@
 #include "SimpleRECOTree.h"
+#include "FWCore/Utilities/interface/isFinite.h"
 
 SimpleRECOTree::SimpleRECOTree(const edm::ParameterSet& iConfig): 
   // rhos
@@ -127,7 +128,7 @@ void SimpleRECOTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       phIso   [iph] = std::max(phiter->photon.photonIso()        - (rho * SimpleRECOTree::GetGammaEA        (sceta)),0.f);
 
       // use seed to get geometry and recHits
-      const reco::BasicClusterRef& phbc = phsc->seed();
+      const reco::CaloClusterPtr& phbc = phsc->seed();
       const DetId seedDetId = phbc->seed(); //seed detid
       const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
       const EcalRecHitCollection * recHits = (isEB ? recHitsEBH : recHitsEEH).product();
