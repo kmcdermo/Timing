@@ -25,8 +25,8 @@ void recophoton_comp()
     "nphotons","nphotonsOOT","phnrh","phnrhOOT",
     "phE","phpt","phphi","pheta",
     //    "phHoE_OOT","phr9_OOT","phsieieEB_OOT","phsieieEE_OOT","phE_OOT","phpt_OOT","phphi_OOT","pheta_OOT",
-    "phsieieEB","phsieipEB","phsipipEB","phsmajEB","phsminEB","phEcalIsoEB","phHcalIsoEB",
-    "phsieieEE","phsieipEE","phsipipEE","phsmajEE","phsminEE","phEcalIsoEE","phHcalIsoEE",
+    "phHoEEB","phr9EB","phsieieEB","phsieipEB","phsipipEB","phsmajEB","phsminEB","phEcalIsoEB","phHcalIsoEB",
+    "phHoEEE","phr9EE","phsieieEE","phsieipEE","phsipipEE","phsmajEE","phsminEE","phEcalIsoEE","phHcalIsoEE",
     "phseedtime","phseedOOT","phseedE",
     "phseedtime_OOT","phseedE_OOT",
     "phrhtime","phrhE"

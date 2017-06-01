@@ -113,6 +113,9 @@ void PlotRECOPhotons::FillRecoPhotons()
     
     if      (std::abs((*phsceta)[iph]) < ECAL::etaEB) 
     {
+      fPlots["phHoEEB"]->Fill((*phHoE)[iph]);
+      fPlots["phr9EB"]->Fill((*phr9)[iph]);
+
       fPlots["phsieieEB"]->Fill((*phsieie)[iph]);
       fPlots["phsieipEB"]->Fill((*phsieip)[iph]);
       fPlots["phsipipEB"]->Fill((*phsipip)[iph]);
@@ -125,6 +128,9 @@ void PlotRECOPhotons::FillRecoPhotons()
     }
     else if (std::abs((*phsceta)[iph]) > ECAL::etaEEmin && std::abs((*phsceta)[iph]) < ECAL::etaEEmax) 
     {
+      fPlots["phHoEEE"]->Fill((*phHoE)[iph]);
+      fPlots["phr9EE"]->Fill((*phr9)[iph]);
+
       fPlots["phsieieEE"]->Fill((*phsieie)[iph]);
       fPlots["phsieipEE"]->Fill((*phsieip)[iph]);
       fPlots["phsipipEE"]->Fill((*phsipip)[iph]);
@@ -183,7 +189,10 @@ void PlotRECOPhotons::SetupRecoPhotons()
   fPlots["phsieieEE_OOT"] = PlotRECOPhotons::MakeTH1F("phsieieEE_OOT","Photon OoT #sigma_{i#eta i#eta} EE",100,0.f,0.1f,"#sigma_{i#eta i#eta} EE","Photons","gedPhotons/GeneralProps");
 
   // EB only
-  fPlots["phsieieEB"] = PlotRECOPhotons::MakeTH1F("phsieieEB","Photon #sigma_{i#eta i#eta} EB",100,0.f,0.1f,"#sigma_{i#eta i#eta} EB","Photons","gedPhotons/GeneralProps");
+  fPlots["phHoEEB"] = PlotRECOPhotons::MakeTH1F("phHoEEB","Photon HoverE EB",100,0.f,2.f,"HoverE EB","Photons","gedPhotons/GeneralProps");
+  fPlots["phr9EB"] = PlotRECOPhotons::MakeTH1F("phr9EB","Photon R9 EB",100,0.f,2.f,"R_{9} EB","Photons","gedPhotons/GeneralProps");
+
+  fPlots["phsieieEB"] = PlotRECOPhotons::MakeTH1F("phsieieEB","Photon #sigma_{i#eta i#eta} EB",100,0.f,0.05f,"#sigma_{i#eta i#eta} EB","Photons","gedPhotons/GeneralProps");
   fPlots["phsieipEB"] = PlotRECOPhotons::MakeTH1F("phsieipEB","Photon #sigma_{i#eta i#phi} EB",100,-0.005f,0.005f,"#sigma_{i#eta i#phi} EB","Photons","gedPhotons/GeneralProps");
   fPlots["phsipipEB"] = PlotRECOPhotons::MakeTH1F("phsipipEB","Photon #sigma_{i#phi i#phi} EB",100,0.f,0.1f,"#sigma_{i#phi i#phi} EB","Photons","gedPhotons/GeneralProps");
 
@@ -194,6 +203,9 @@ void PlotRECOPhotons::SetupRecoPhotons()
   fPlots["phHcalIsoEB"] = PlotRECOPhotons::MakeTH1F("phHcalIsoEB","Photon Hcal PFCluster Iso EB",100,0.f,1000.f,"Hcal PFCluster Iso EB","Photons","gedPhotons/GeneralProps");
 
   // EE only
+  fPlots["phHoEEE"] = PlotRECOPhotons::MakeTH1F("phHoEEE","Photon HoverE EE",100,0.f,2.f,"HoverE EE","Photons","gedPhotons/GeneralProps");
+  fPlots["phr9EE"] = PlotRECOPhotons::MakeTH1F("phr9EE","Photon R9 EE",100,0.f,2.f,"R_{9} EE","Photons","gedPhotons/GeneralProps");
+
   fPlots["phsieieEE"] = PlotRECOPhotons::MakeTH1F("phsieieEE","Photon #sigma_{i#eta i#eta} EE",100,0.f,0.1f,"#sigma_{i#eta i#eta} EE","Photons","gedPhotons/GeneralProps");
   fPlots["phsieipEE"] = PlotRECOPhotons::MakeTH1F("phsieipEE","Photon #sigma_{i#eta i#phi} EE",100,-0.005f,0.005f,"#sigma_{i#eta i#phi} EE","Photons","gedPhotons/GeneralProps");
   fPlots["phsipipEE"] = PlotRECOPhotons::MakeTH1F("phsipipEE","Photon #sigma_{i#phi i#phi} EE",100,0.f,0.1f,"#sigma_{i#phi i#phi} EE","Photons","gedPhotons/GeneralProps");
