@@ -7,11 +7,11 @@ options = VarParsing ('python')
 
 ## general cuts
 options.register (
-	'dataset','deg_2016B',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'dataset','sph_2016H',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'dataset to be used');
 
 options.register (
-	'reco','rereco',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'reco','OOT',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'dataset to be used');
 
 ## processName
@@ -26,7 +26,7 @@ options.register (
 
 ## GT to be used    
 options.register (
-	'globalTag','80X_dataRun2_2016SeptRepro_v4',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'globalTag','91X_dataRun2_PromptLike_v4',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'gloabl tag to be used');
 
 ## parsing command line arguments
@@ -56,36 +56,37 @@ process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 ## Define the input source
-if options.dataset == 'deg_2016B' :
-	if options.reco == 'reco':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/regular_reco_deg_2016B.root'
-				))
-	elif options.reco == 'rereco':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/rereco_deg_2016B.root'
-				))
-elif options.dataset == 'sph_2016C' :
-	if options.reco == 'reco':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/regular_reco_sph_2016C.root'
-				))
-	elif options.reco == 'rereco':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/rereco_sph_2016C.root'
-				))
-elif options.dataset == 'sph_2016H' :
+if options.dataset == 'sph_2016H' :
 	if options.reco == 'OOT':
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/oot_miniaod_1000.root'
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod.root'
 				))
-#	elif options.reco == 'prompt':
-#		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-#				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/prompt_miniaod_1000.root'
-#				))
-	elif options.reco == 'prompt':
+	elif options.reco == 'OOT_NoHoE':
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/OOT_Sequence/oot_miniaod_1000.root'
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT_NoHoE/oot_nohoe_miniaod.root'
+				))
+	elif options.reco == 'vanilla':
+		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/vanilla/prompt_miniaod.root'
+				))
+	elif options.reco == 'gedPho':
+		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod.root'
+				))
+	elif options.reco == 'OOT_sep':
+		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_1.root',
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_2.root',
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_3.root',
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_4.root',
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_5.root',
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_6.root',
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_7.root',
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_8.root',
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_9.root',
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_10.root',
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_11.root',
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_12.root',
 				))
 
 else : exit
@@ -102,7 +103,7 @@ process.GlobalTag.globaltag = options.globalTag
 process.TFileService = cms.Service("TFileService", 
 		                   fileName = cms.string(options.outputFileName))
 
-if options.reco == 'OOT' :
+if 'OOT' in options.reco :
 	photonsTag = cms.InputTag("slimmedOOTPhotons","","PAT")
 else :
 	photonsTag = cms.InputTag("slimmedPhotons","","PAT")

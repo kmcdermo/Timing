@@ -1,4 +1,5 @@
 #include "SimplePATTree.h"
+#include "FWCore/Utilities/interface/isFinite.h"
 
 SimplePATTree::SimplePATTree(const edm::ParameterSet& iConfig): 
   // rhos
@@ -49,6 +50,11 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   const CaloSubdetectorGeometry * barrelGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
   const CaloSubdetectorGeometry * endcapGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
+  // topology (from PhotonProducer)
+  edm::ESHandle<CaloTopology> calotopoH;
+  iSetup.get<CaloTopologyRecord>().get(calotopoH);
+  const CaloTopology * topology = calotopoH.product();
+
   // do some prepping of objects
   SimplePATTree::PrepPhotons(photonsH,photons);
 
@@ -96,35 +102,40 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       phscphi[iph] = phsc->phi();
       const float sceta = std::abs(phsceta[iph]);
 
-      // Shower Shape Objects
-      const pat::Photon::ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
-
       // ID-like variables
-      phHoE   [iph] = phiter->hadronicOverEm(); // phiter->hadTowOverEm();
-      phr9    [iph] = phshape.e3x3/phsc->rawEnergy(); // http://cmslxr.fnal.gov/source/DataFormats/EgammaCandidates/interface/Photon.h#0239
+      phHoE   [iph] = phiter->hadTowOverEm();
+      phr9    [iph] = phiter->r9();
       phChgIso[iph] = std::max(phiter->chargedHadronIso() - (rho * SimplePATTree::GetChargedHadronEA(sceta)),0.f);
       phNeuIso[iph] = std::max(phiter->neutralHadronIso() - (rho * SimplePATTree::GetNeutralHadronEA(sceta)),0.f);
       phIso   [iph] = std::max(phiter->photonIso()        - (rho * SimplePATTree::GetGammaEA        (sceta)),0.f);
 
-      // cluster shape variables
-      phsieie[iph] = phshape.sigmaIetaIeta;
-      phsipip[iph] = phshape.sigmaIphiIphi;
-      phsieip[iph] = phshape.sigmaIetaIphi;
-
       // use seed to get geometry and recHits
-      const DetId seedDetId = phsc->seed()->seed(); //seed detid
+      const reco::CaloClusterPtr& phbc = phsc->seed();
+      const DetId seedDetId = phbc->seed(); //seed detid
       const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
       const EcalRecHitCollection * recHits = (isEB ? recHitsEBH : recHitsEEH).product();
 
-      // 2nd moments from official calculation
+      // need recHits to calculate shape variables
       if (recHits->size() > 0)
       {
+	// For now sipip and sieip not in shower shape for standard photon producer
+	std::vector<float> localCov = noZS::EcalClusterTools::localCovariances( *phbc, recHits, topology);
+	// cluster shape variables
+	phsieie[iph] = std::sqrt(localCov[0]);
+	phsipip[iph] = (!edm::isFinite(localCov[2]) ? 0. : std::sqrt(localCov[2]));
+	phsieip[iph] = localCov[1];
+
+	// 2nd moments from official calculation
 	const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phsc, *recHits);
 	// radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
 	phsmaj [iph] = ph2ndMoments.sMaj;
 	phsmin [iph] = ph2ndMoments.sMin;
 	phalpha[iph] = ph2ndMoments.alpha;
       }
+
+      // PF Cluster Isolations
+      phEcalIso[iph] = phiter->ecalPFClusterIso();
+      phHcalIso[iph] = phiter->hcalPFClusterIso();
 
       // map of rec hit ids
       uiiumap phrhIDmap;
@@ -253,6 +264,9 @@ void SimplePATTree::ClearRecoPhotonBranches()
   phsmin.clear();
   phalpha.clear();
 
+  phEcalIso.clear();
+  phHcalIso.clear();
+
   phnrh.clear();
   phseedpos.clear();
 
@@ -289,6 +303,9 @@ void SimplePATTree::InitializeRecoPhotonBranches()
   phsmin.resize(nphotons);
   phalpha.resize(nphotons);
 
+  phEcalIso.resize(nphotons);
+  phHcalIso.resize(nphotons);
+
   phnrh.resize(nphotons);
   phseedpos.resize(nphotons);
 
@@ -323,6 +340,9 @@ void SimplePATTree::InitializeRecoPhotonBranches()
     phsmaj [iph] = -9999.f;
     phsmin [iph] = -9999.f;
     phalpha[iph] = -9999.f;
+
+    phEcalIso[iph] = -9999.f;
+    phHcalIso[iph] = -9999.f;
 
     phnrh    [iph] = -9999;
     phseedpos[iph] = -9999;
@@ -384,6 +404,9 @@ void SimplePATTree::beginJob()
   tree->Branch("phsmaj"               , &phsmaj);
   tree->Branch("phsmin"               , &phsmin);
   tree->Branch("phalpha"              , &phalpha);
+
+  tree->Branch("phEcalIso"            , &phEcalIso);
+  tree->Branch("phHcalIso"            , &phHcalIso);
 
   tree->Branch("phnrh"                , &phnrh);
   tree->Branch("phseedpos"            , &phseedpos);

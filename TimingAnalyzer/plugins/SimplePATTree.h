@@ -37,8 +37,10 @@
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
 
 // Geometry
-#include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "Geometry/CaloTopology/interface/CaloTopology.h"
+#include "Geometry/Records/interface/CaloTopologyRecord.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
 #include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
 #include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
@@ -110,6 +112,7 @@ class SimplePATTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm:
   std::vector<int>   phmatch;
   std::vector<float> phHoE, phr9, phChgIso, phNeuIso, phIso, phsuisseX;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
+  std::vector<float> phEcalIso, phHcalIso;
 
   // supercluster info 
   std::vector<float> phscE, phsceta, phscphi;
