@@ -65,6 +65,14 @@ if options.dataset == 'sph_2016H' :
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT_NoHoE/oot_nohoe_miniaod.root'
 				))
+	elif options.reco == 'OOT_Clusters':
+		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT_Clusters/oot_miniaod.root'
+				))
+	elif options.reco == 'OOT_Clusters_NoHoE':
+		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT_Clusters_NoHoE/oot_nohoe_miniaod.root'
+				))
 	elif options.reco == 'vanilla':
 		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/vanilla/prompt_miniaod.root'
@@ -88,6 +96,15 @@ if options.dataset == 'sph_2016H' :
 				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_11.root',
 				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_12.root',
 				))
+	elif options.reco == 'reg':
+		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/regression/oot_miniaod_reg.root'
+				))
+	elif options.reco == 'noreg':
+		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/regression/oot_miniaod_noreg.root'
+				))
+		
 
 else : exit
 
@@ -103,7 +120,7 @@ process.GlobalTag.globaltag = options.globalTag
 process.TFileService = cms.Service("TFileService", 
 		                   fileName = cms.string(options.outputFileName))
 
-if 'OOT' in options.reco :
+if 'OOT' or 'reg' in options.reco :
 	photonsTag = cms.InputTag("slimmedOOTPhotons","","PAT")
 else :
 	photonsTag = cms.InputTag("slimmedPhotons","","PAT")

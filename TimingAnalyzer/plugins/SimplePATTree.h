@@ -112,7 +112,8 @@ class SimplePATTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm:
   std::vector<int>   phmatch;
   std::vector<float> phHoE, phr9, phChgIso, phNeuIso, phIso, phsuisseX;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
-  std::vector<float> phEcalIso, phHcalIso;
+  std::vector<float> phPFClEcalIso, phPFClHcalIso;
+  std::vector<float> phHollowTkIso;
 
   // supercluster info 
   std::vector<float> phscE, phsceta, phscphi;

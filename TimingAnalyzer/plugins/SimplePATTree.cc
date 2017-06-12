@@ -95,6 +95,8 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       phphi[iph] = phiter->phi();
       pheta[iph] = phiter->eta();
 
+      //std::cout << phE[iph] << " " << phpt[iph] << " " << phphi[iph] << " " <<pheta[iph] << std::endl;
+
       // super cluster from photon
       const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
       phscE  [iph] = phsc->energy();
@@ -134,8 +136,11 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       }
 
       // PF Cluster Isolations
-      phEcalIso[iph] = phiter->ecalPFClusterIso();
-      phHcalIso[iph] = phiter->hcalPFClusterIso();
+      phPFClEcalIso[iph] = phiter->ecalPFClusterIso();
+      phPFClHcalIso[iph] = phiter->hcalPFClusterIso();
+
+      // Track Isolation (dR of outer cone < 0.3 as matching in trigger)
+      phHollowTkIso[iph] = phiter->trkSumPtHollowConeDR03();
 
       // map of rec hit ids
       uiiumap phrhIDmap;
@@ -264,8 +269,9 @@ void SimplePATTree::ClearRecoPhotonBranches()
   phsmin.clear();
   phalpha.clear();
 
-  phEcalIso.clear();
-  phHcalIso.clear();
+  phPFClEcalIso.clear();
+  phPFClHcalIso.clear();
+  phHollowTkIso.clear();
 
   phnrh.clear();
   phseedpos.clear();
@@ -303,8 +309,9 @@ void SimplePATTree::InitializeRecoPhotonBranches()
   phsmin.resize(nphotons);
   phalpha.resize(nphotons);
 
-  phEcalIso.resize(nphotons);
-  phHcalIso.resize(nphotons);
+  phPFClEcalIso.resize(nphotons);
+  phPFClHcalIso.resize(nphotons);
+  phHollowTkIso.resize(nphotons);
 
   phnrh.resize(nphotons);
   phseedpos.resize(nphotons);
@@ -341,8 +348,9 @@ void SimplePATTree::InitializeRecoPhotonBranches()
     phsmin [iph] = -9999.f;
     phalpha[iph] = -9999.f;
 
-    phEcalIso[iph] = -9999.f;
-    phHcalIso[iph] = -9999.f;
+    phPFClEcalIso[iph] = -9999.f;
+    phPFClHcalIso[iph] = -9999.f;
+    phHollowTkIso[iph] = -9999.f;
 
     phnrh    [iph] = -9999;
     phseedpos[iph] = -9999;
@@ -405,8 +413,9 @@ void SimplePATTree::beginJob()
   tree->Branch("phsmin"               , &phsmin);
   tree->Branch("phalpha"              , &phalpha);
 
-  tree->Branch("phEcalIso"            , &phEcalIso);
-  tree->Branch("phHcalIso"            , &phHcalIso);
+  tree->Branch("phPFClEcalIso"        , &phPFClEcalIso);
+  tree->Branch("phPFClHcalIso"        , &phPFClHcalIso);
+  tree->Branch("phHollowTkIso"        , &phHollowTkIso);
 
   tree->Branch("phnrh"                , &phnrh);
   tree->Branch("phseedpos"            , &phseedpos);
