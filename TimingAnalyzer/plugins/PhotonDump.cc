@@ -743,8 +743,8 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       const reco::Photon::ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
 
       // ID-like variables
-      phHoE   [iph] = phiter->hadronicOverEm(); // phiter->hadTowOverEm();
-      phr9    [iph] = phshape.e3x3/phsc->rawEnergy(); // http://cmslxr.fnal.gov/source/DataFormats/EgammaCandidates/interface/Photon.h#0239
+      phHoE   [iph] = phiter->hadronicOverEm(); // used in ID
+      phr9    [iph] = phiter->r9();
       phChgIso[iph] = std::max(phiter->chargedHadronIso() - (rho * PhotonDump::GetChargedHadronEA(sceta)),0.f);
       phNeuIso[iph] = std::max(phiter->neutralHadronIso() - (rho * PhotonDump::GetNeutralHadronEA(sceta)),0.f);
       phIso   [iph] = std::max(phiter->photonIso()        - (rho * PhotonDump::GetGammaEA        (sceta)),0.f);
