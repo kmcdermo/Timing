@@ -35,8 +35,8 @@ options.register (
 
 ## GT to be used    
 options.register (
-	'globalTag','80X_dataRun2_Prompt_v14',VarParsing.multiplicity.singleton,VarParsing.varType.string,
-	'gloabl tag to be used');
+	'globalTag','92X_dataRun2_Prompt_v4',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'global tag to be used');
 
 ## do a demo run over only 100k events
 options.register (
@@ -72,22 +72,9 @@ process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
-if options.triggerPName == 'userHLT':
+if options.triggerPName == 'HLT':
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-			'/store/group/phys_exotica/displacedPhotons/SinglePhoton/crab_SinglePhoton_2016H_reHLT-v3/170508_140412/0000/reHLT_9.root',
-			'/store/group/phys_exotica/displacedPhotons/SinglePhoton/crab_SinglePhoton_2016H_reHLT-v3/170508_140412/0000/reHLT_10.root',
-			'/store/group/phys_exotica/displacedPhotons/SinglePhoton/crab_SinglePhoton_2016H_reHLT-v3/170508_140412/0000/reHLT_11.root',
-			'/store/group/phys_exotica/displacedPhotons/SinglePhoton/crab_SinglePhoton_2016H_reHLT-v3/170508_140412/0000/reHLT_14.root',
-			'/store/group/phys_exotica/displacedPhotons/SinglePhoton/crab_SinglePhoton_2016H_reHLT-v3/170508_140412/0000/reHLT_15.root',
-			'/store/group/phys_exotica/displacedPhotons/SinglePhoton/crab_SinglePhoton_2016H_reHLT-v3/170508_140412/0000/reHLT_24.root',
-			'/store/group/phys_exotica/displacedPhotons/SinglePhoton/crab_SinglePhoton_2016H_reHLT-v3/170508_140412/0000/reHLT_25.root',
-			'/store/group/phys_exotica/displacedPhotons/SinglePhoton/crab_SinglePhoton_2016H_reHLT-v3/170508_140412/0000/reHLT_26.root',
-			'/store/group/phys_exotica/displacedPhotons/SinglePhoton/crab_SinglePhoton_2016H_reHLT-v3/170508_140412/0000/reHLT_27.root',
-			'/store/group/phys_exotica/displacedPhotons/SinglePhoton/crab_SinglePhoton_2016H_reHLT-v3/170508_140412/0000/reHLT_28.root',
-			'/store/group/phys_exotica/displacedPhotons/SinglePhoton/crab_SinglePhoton_2016H_reHLT-v3/170508_140412/0000/reHLT_29.root',
-			'/store/group/phys_exotica/displacedPhotons/SinglePhoton/crab_SinglePhoton_2016H_reHLT-v3/170508_140412/0000/reHLT_30.root',
-			'/store/group/phys_exotica/displacedPhotons/SinglePhoton/crab_SinglePhoton_2016H_reHLT-v3/170508_140412/0000/reHLT_31.root'
-#			'root://eoscms.cern.ch//eos/cms/store/group/phys_exotica/displacedPhotons/SinglePhoton/test/reHLT.root'
+			'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v2/000/296/173/00000/C8E82FEC-754C-E711-AB22-02163E019C8E.root',
 			))
 else : exit
 
@@ -111,10 +98,10 @@ process.tree = cms.EDAnalyzer("HLTDump",
    dRmin = cms.double(options.dRmin),
    pTres = cms.double(options.pTres),
    ## triggers
-   inputPaths      = cms.string("test/"+options.triggerPName+"paths.txt"),
-   inputFilters    = cms.string("test/"+options.triggerPName+"filters.txt"),
-   triggerResults  = cms.InputTag("TriggerResults", "", options.triggerPName),
-   triggerEvent    = cms.InputTag("hltTriggerSummaryAOD", "", options.triggerPName),
+   inputPaths     = cms.string("test/"+options.triggerPName+"paths.txt"),
+   inputFilters   = cms.string("test/"+options.triggerPName+"filters.txt"),
+   triggerResults = cms.InputTag("TriggerResults", "", "HLT"),
+   triggerObjects = cms.InputTag("slimmedPatTrigger"),
    ## rho
    rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## jets			    	

@@ -10,10 +10,7 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
   inputPaths       (iConfig.existsAs<std::string>("inputPaths")   ? iConfig.getParameter<std::string>("inputPaths") : ""),
   inputFilters     (iConfig.existsAs<std::string>("inputFilters") ? iConfig.getParameter<std::string>("inputFilters") : ""),
   triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
-  triggerEventTag  (iConfig.getParameter<edm::InputTag>("triggerEvent")),
-
-  // rhos
-  rhosTag(iConfig.getParameter<edm::InputTag>("rhos")),
+  triggerObjectsTag(iConfig.getParameter<edm::InputTag>("triggerObjects")),
 
   // jets
   jetsTag(iConfig.getParameter<edm::InputTag>("jets")),  
@@ -29,17 +26,16 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
   usesResource("TFileService");
 
   // triggers
-  triggerResultsToken = consumes<edm::TriggerResults>   (triggerResultsTag);
-  triggerEventToken   = consumes<trigger::TriggerEvent> (triggerEventTag);
+  triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
+  triggerObjectsToken = consumes<std::vector<pat::TriggerObjectStandAlone> > (triggerObjectsTag);
 
   // read in from a stream the trigger paths for saving
   if (file_exists(inputPaths))
   {
     std::fstream pathStream;
     pathStream.open(inputPaths.c_str(),std::ios::in);
-    int index;
     std::string path;
-    while (pathStream >> index >> path)
+    while (pathStream >> path)
     {
       if (path != "") pathNames.push_back(path);
     }
@@ -54,20 +50,16 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
   {
     std::fstream filterStream;
     filterStream.open(inputFilters.c_str(),std::ios::in);
-    int index;
     std::string label;// instance, processName;
-    while (filterStream >> index >> label)
+    while (filterStream >> label)
     {
-      if (label != "") filterTags.push_back(edm::InputTag(label));
+      if (label != "") filterNames.push_back(label);
     }
     filterStream.close();
 
     // vector of vector of trigger objects
-    triggerObjectsByFilter.resize(filterTags.size());
+    triggerObjectsByFilter.resize(filterNames.size());
   } // check to make sure text file exists
-
-  // rhos
-  rhosToken = consumes<double> (rhosTag);
 
   // jets
   jetsToken = consumes<std::vector<pat::Jet> > (jetsTag);
@@ -88,12 +80,9 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<edm::TriggerResults> triggerResultsH;
   iEvent.getByToken(triggerResultsToken, triggerResultsH);
 
-  edm::Handle<trigger::TriggerEvent> triggerEventH;
-  iEvent.getByToken(triggerEventToken, triggerEventH);
-
-  // RHOS
-  edm::Handle<double> rhosH;
-  iEvent.getByToken(rhosToken, rhosH);
+  edm::Handle<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsH;
+  iEvent.getByToken(triggerObjectsToken, triggerObjectsH);
+  std::vector<pat::TriggerObjectStandAlone> triggerObjects = *triggerObjectsH;
 
   // JETS
   edm::Handle<std::vector<pat::Jet> > jetsH;
@@ -138,32 +127,30 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   HLTDump::InitializeTriggerBranches();
   if (triggerResultsH.isValid())
   {
-    for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
+    const edm::TriggerNames &triggerNames = iEvent.triggerNames(*triggerResultsH);
+    for (std::size_t itrig = 0; itrig < triggerNames.size(); itrig++)
     {
-      if (pathIndex[pathNames[ipath]] == -1) continue;	
-      if (triggerResultsH->accept(pathIndex[pathNames[ipath]])) triggerBits[ipath] = true;
-    } // end loop over trigger names
-  } // end check over valid TriggerResults
-
-  // store all the trigger objects needed to be checked later
-  if (triggerEventH.isValid())
-  {
-    // adapted from: https://github.com/prbbing/EXOTriggerTutorial/blob/master/TriggerEfficiencyMeasurement/plugins/TriggerEfficiencyAnalyzer.cc
-    // http://cmslxr.fnal.gov/source/DataFormats/HLTReco/interface/TriggerObject.h?v=CMSSW_8_0_24
-    const std::vector<trigger::TriggerObject> & triggerEventObjects = triggerEventH->getObjects();
-    for (std::size_t ifilter = 0; ifilter < filterTags.size(); ifilter++)
-    {
-      const size_t filterIndex = triggerEventH->filterIndex(filterTags[ifilter]);
-      if (filterIndex < triggerEventH->sizeFilters())
+      TString triggerName = triggerNames.triggerName(itrig);
+      for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
       {
-	const std::vector<uint16_t> & objectKeys = triggerEventH->filterKeys(filterIndex);
-	for (std::size_t ikey = 0; ikey < objectKeys.size(); ikey++)
-	{
-	  triggerObjectsByFilter[ifilter].push_back(triggerEventObjects[objectKeys[ikey]]);
-	} // end loop over matching filter keys
-      } // end check over filter existing!!!
-    } // end loop over n filters by label
-  } // end check over valid TriggerEvent
+	if (triggerName.Contains(pathNames[ipath],TString::kExact)) triggerBits[ipath] = triggerResultsH->accept(itrig);
+      } // end loop over user path names
+    } // end loop over trigger names
+
+    // store all the trigger objects needed to be checked later
+    if (triggerObjectsH.isValid())
+    {
+      for (pat::TriggerObjectStandAlone triggerObject : triggerObjects) 
+      {
+	triggerObject.unpackPathNames(triggerNames);
+	triggerObject.unpackFilterLabels(iEvent, *triggerResultsH);
+	for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
+	{	
+	  if (triggerObject.hasFilterLabel(filterNames[ifilter])) triggerObjectsByFilter[ifilter].push_back(triggerObject);
+	} // emd loop over user filter names
+      } // end loop over trigger objects
+    } // end check over valid TriggerObjects
+  } // end check over valid TriggerResults
 
   /////////////////
   //             //
@@ -178,7 +165,7 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     
     for (std::size_t iobject = 0; iobject < triggerObjectsByFilter[ifilter].size(); iobject++)
     {
-      const trigger::TriggerObject & triggerObject = triggerObjectsByFilter[ifilter][iobject];
+      const pat::TriggerObjectStandAlone & triggerObject = triggerObjectsByFilter[ifilter][iobject];
 
       trigobjE  [ifilter][iobject] = triggerObject.energy();
       trigobjeta[ifilter][iobject] = triggerObject.eta();
@@ -186,14 +173,6 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       trigobjpt [ifilter][iobject] = triggerObject.pt();
     }
   }
-
-  ///////////////////
-  //               //
-  // FixedGrid Rho //
-  //               //
-  ///////////////////
-
-  const float rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
 
   /////////////////////////
   //                     //
@@ -240,23 +219,26 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       phscE  [iph] = phsc->energy();
       phsceta[iph] = phsc->eta();
       phscphi[iph] = phsc->phi();
-      const float sceta = std::abs(phsceta[iph]);
 
       // Shower Shape Objects
       const reco::Photon::ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
 
       // ID-like variables
-      phHoE   [iph] = phiter->hadronicOverEm(); // phiter->hadTowOverEm();
-      phr9    [iph] = phshape.e3x3/phsc->rawEnergy(); // http://cmslxr.fnal.gov/source/DataFormats/EgammaCandidates/interface/Photon.h#0239
-      phChgIso[iph] = std::max(phiter->chargedHadronIso() - (rho * HLTDump::GetChargedHadronEA(sceta)),0.f);
-      phNeuIso[iph] = std::max(phiter->neutralHadronIso() - (rho * HLTDump::GetNeutralHadronEA(sceta)),0.f);
-      phIso   [iph] = std::max(phiter->photonIso()        - (rho * HLTDump::GetGammaEA        (sceta)),0.f);
+      phHoE   [iph] = phiter->hadTowOverEm(); // close to trigger
+      phr9    [iph] = phiter->r9();
 
       // cluster shape variables
       phsieie[iph] = phshape.sigmaIetaIeta;
       phsipip[iph] = phshape.sigmaIphiIphi;
       phsieip[iph] = phshape.sigmaIetaIphi;
 
+      // PF Cluster Isolations
+      phPFClEcalIso[iph] = phiter->ecalPFClusterIso();
+      phPFClHcalIso[iph] = phiter->hcalPFClusterIso();
+
+      // Track Isolation (dR of outer cone < 0.3 as matching in trigger)
+      phHollowTkIso[iph] = phiter->trkSumPtHollowConeDR03();
+     
       // use seed to get geometry and recHits
       const DetId seedDetId = phsc->seed()->seed(); //seed detid
       const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
@@ -277,9 +259,6 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       	if (recHits->size() > 0)
 	{
-	  // http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalTools.h
-	  phsuisseX[iph] = EcalTools::swissCross(seedDetId,(*recHits),1.f);
-
 	  // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
 	  const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phsc, *recHits);
 	  phsmaj [iph] = ph2ndMoments.sMaj;
@@ -318,7 +297,7 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   tree->Fill();      
 }    
 
-void HLTDump::PrepTrigObjs(std::vector<trigger::TriggerObject>& triggerObjects)
+void HLTDump::PrepTrigObjs(std::vector<pat::TriggerObjectStandAlone>& triggerObjects)
 {
   if (triggerObjects.size() > 0) 
   {
@@ -348,7 +327,7 @@ void HLTDump::HLTToPATPhotonMatching(const int iph)
   {
     for (std::size_t iobject = 0; iobject < triggerObjectsByFilter[ifilter].size(); iobject++)
     {
-      const trigger::TriggerObject & triggerObject = triggerObjectsByFilter[ifilter][iobject];
+      const pat::TriggerObjectStandAlone & triggerObject = triggerObjectsByFilter[ifilter][iobject];
       if (std::abs(triggerObject.pt()-phpt[iph])/phpt[iph] < pTres)
       {
 	if (deltaR(phphi[iph],pheta[iph],triggerObject.phi(),triggerObject.eta()) < dRmin)
@@ -358,42 +337,6 @@ void HLTDump::HLTToPATPhotonMatching(const int iph)
       }
     }
   }
-}
-
-float HLTDump::GetChargedHadronEA(const float eta)
-{
-  if      (eta <  1.0)                  return 0.0360;
-  else if (eta >= 1.0   && eta < 1.479) return 0.0377;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0306;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.0283;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.0254;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.0217;
-  else if (eta >= 2.4)                  return 0.0167;
-  else                                  return 0.;
-}
-
-float HLTDump::GetNeutralHadronEA(const float eta) 
-{
-  if      (eta <  1.0)                  return 0.0597;
-  else if (eta >= 1.0   && eta < 1.479) return 0.0807;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0629;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.0197;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.0184;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.0284;
-  else if (eta >= 2.4)                  return 0.0591;
-  else                                  return 0.;
-}
-
-float HLTDump::GetGammaEA(const float eta) 
-{
-  if      (eta <  1.0)                  return 0.1210;
-  else if (eta >= 1.0   && eta < 1.479) return 0.1107;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0699;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.1056;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.1457;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.1719;
-  else if (eta >= 2.4)                  return 0.1998;
-  else                                  return 0.;
 }
 
 void HLTDump::InitializeTriggerBranches()
@@ -453,10 +396,10 @@ void HLTDump::ClearRecoPhotonBranches()
 
   phHoE.clear();
   phr9.clear();
-  phChgIso.clear();
-  phNeuIso.clear();
-  phIso.clear();
-  phsuisseX.clear();
+
+  phPFClEcalIso.clear();
+  phPFClHcalIso.clear();
+  phHollowTkIso.clear();
 
   phsieie.clear();
   phsipip.clear();
@@ -490,10 +433,10 @@ void HLTDump::InitializeRecoPhotonBranches()
 
   phHoE.resize(nphotons);
   phr9.resize(nphotons);
-  phChgIso.resize(nphotons);
-  phNeuIso.resize(nphotons);
-  phIso.resize(nphotons);
-  phsuisseX.resize(nphotons);
+
+  phPFClEcalIso.resize(nphotons);
+  phPFClHcalIso.resize(nphotons);
+  phHollowTkIso.resize(nphotons);
 
   phsieie.resize(nphotons);
   phsipip.resize(nphotons);
@@ -526,10 +469,10 @@ void HLTDump::InitializeRecoPhotonBranches()
 
     phHoE    [iph] = -9999.f;
     phr9     [iph] = -9999.f;
-    phChgIso [iph] = -9999.f;
-    phNeuIso [iph] = -9999.f;
-    phIso    [iph] = -9999.f;
-    phsuisseX[iph] = -9999.f;
+
+    phPFClEcalIso[iph] = -9999.f;
+    phPFClHcalIso[iph] = -9999.f;
+    phHollowTkIso[iph] = -9999.f;
 
     phsieie[iph] = -9999.f;
     phsipip[iph] = -9999.f;
@@ -540,8 +483,8 @@ void HLTDump::InitializeRecoPhotonBranches()
 
     phnrh    [iph] = -9999;
 
-    phIsHLTMatched[iph].resize(filterTags.size());
-    for (std::size_t ifilter = 0; ifilter < filterTags.size(); ifilter++)
+    phIsHLTMatched[iph].resize(filterNames.size());
+    for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
     {
       phIsHLTMatched[iph][ifilter] = 0; // false
     }
@@ -591,10 +534,10 @@ void HLTDump::beginJob()
 
   tree->Branch("phHoE"                , &phHoE);
   tree->Branch("phr9"                 , &phr9);
-  tree->Branch("phChgIso"             , &phChgIso);
-  tree->Branch("phNeuIso"             , &phNeuIso);
-  tree->Branch("phIso"                , &phIso);
-  tree->Branch("phsuisseX"            , &phsuisseX);
+
+  tree->Branch("phPFClEcalIso"        , &phPFClEcalIso);
+  tree->Branch("phPFClHcalIso"        , &phPFClHcalIso);
+  tree->Branch("phHollowTkIso"        , &phHollowTkIso);
 
   tree->Branch("phsieie"              , &phsieie);
   tree->Branch("phsipip"              , &phsipip);
@@ -617,37 +560,9 @@ void HLTDump::beginJob()
 
 void HLTDump::endJob() {}
 
-void HLTDump::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
-{
-  // initialize pathIndex, key: Name, value: Index 
-  for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
-  {
-    pathIndex[pathNames[ipath]] = -1;
-  }
+void HLTDump::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
 
-  HLTConfigProvider hltConfig;
-  bool changed = false;
-  hltConfig.init(iRun, iSetup, triggerResultsTag.process(), changed);
-  const std::vector<std::string>& triggerNames = hltConfig.triggerNames();
-  for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
-  {
-    TPRegexp pattern(pathNames[ipath]);
-    for (std::size_t itrigger = 0; itrigger < triggerNames.size(); itrigger++)
-    {
-      if (TString(triggerNames[itrigger]).Contains(pattern))
-      {
-	pathIndex[pathNames[ipath]] = itrigger; //hltConfig.triggerIndex(pathNames[itrigger]);
-	break;
-      }
-    }
-  }
-}
-
-void HLTDump::endRun(edm::Run const&, edm::EventSetup const&) 
-{
-  // reset trigger info
-  pathIndex.clear();
-}
+void HLTDump::endRun(edm::Run const&, edm::EventSetup const&) {}
 
 void HLTDump::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
 {

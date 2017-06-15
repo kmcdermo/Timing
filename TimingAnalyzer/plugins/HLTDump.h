@@ -72,7 +72,7 @@
 
 inline bool file_exists(const std::string & filename){std::fstream input(filename.c_str()); return (bool)input;}
 
-inline bool sortByTrigObjPt(const trigger::TriggerObject & trigobj1, const trigger::TriggerObject & trigobj2)
+inline bool sortByTrigObjPt(const pat::TriggerObjectStandAlone & trigobj1, const pat::TriggerObjectStandAlone & trigobj2)
 {
   return trigobj1.pt()>trigobj2.pt();
 }
@@ -93,13 +93,9 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   explicit HLTDump(const edm::ParameterSet&);
   ~HLTDump();
 
-  void PrepTrigObjs(std::vector<trigger::TriggerObject>& triggerObjects);
+  void PrepTrigObjs(std::vector<pat::TriggerObjectStandAlone>& triggerObjects);
   void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::vector<pat::Jet> & jets);
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<pat::Photon> & photons);
-
-  float GetChargedHadronEA(const float);
-  float GetNeutralHadronEA(const float);
-  float GetGammaEA        (const float);
 
   void InitializeTriggerBranches();
 
@@ -127,14 +123,13 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   // triggers
   const std::string inputPaths;
   std::vector<std::string> pathNames;
-  std::map<std::string,int> pathIndex;
   const std::string inputFilters;
-  std::vector<edm::InputTag> filterTags;
+  std::vector<std::string> filterNames;
   const edm::InputTag triggerResultsTag;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
-  const edm::InputTag triggerEventTag;
-  edm::EDGetTokenT<trigger::TriggerEvent> triggerEventToken;
-  std::vector<std::vector<trigger::TriggerObject> > triggerObjectsByFilter; // first index is filter label, second is trigger objects
+  const edm::InputTag triggerObjectsTag;
+  edm::EDGetTokenT<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsToken;
+  std::vector<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsByFilter; // first index is filter label, second is trigger objects
 
   // rhos
   const edm::InputTag rhosTag;
@@ -173,7 +168,8 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   // photon info
   int nphotons;
   std::vector<float> phE, phpt, phphi, pheta;
-  std::vector<float> phHoE, phr9, phChgIso, phNeuIso, phIso, phsuisseX;
+  std::vector<float> phHoE, phr9;
+  std::vector<float> phPFClEcalIso, phPFClHcalIso, phHollowTkIso;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
   std::vector<std::vector<int> > phIsHLTMatched; // first index is iph, second is for filter, true/false
 
