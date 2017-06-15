@@ -2,9 +2,6 @@
 #include "FWCore/Utilities/interface/isFinite.h"
 
 SimplePATTree::SimplePATTree(const edm::ParameterSet& iConfig): 
-  // rhos
-  rhosTag(iConfig.getParameter<edm::InputTag>("rhos")),
-
   photonsTag  (iConfig.getParameter<edm::InputTag>("photons")),  
   
   //recHits
@@ -13,9 +10,6 @@ SimplePATTree::SimplePATTree(const edm::ParameterSet& iConfig):
 {
   usesResource();
   usesResource("TFileService");
-
-  // rhos
-  rhosToken = consumes<double> (rhosTag);
 
   // photons + ids
   photonsToken = consumes<std::vector<pat::Photon> > (photonsTag);
@@ -29,10 +23,6 @@ SimplePATTree::~SimplePATTree() {}
 
 void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 {
-  // RHOS
-  edm::Handle<double> rhosH;
-  iEvent.getByToken(rhosToken, rhosH);
-
   // PHOTONS
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
@@ -67,14 +57,6 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   lumi  = iEvent.luminosityBlock();
   event = iEvent.id().event();
 
-  ///////////////////
-  //               //
-  // FixedGrid Rho //
-  //               //
-  ///////////////////
-
-  const float rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
-
   //////////////////
   //              //
   // Reco Photons //
@@ -102,14 +84,14 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       phscE  [iph] = phsc->energy();
       phsceta[iph] = phsc->eta();
       phscphi[iph] = phsc->phi();
-      const float sceta = std::abs(phsceta[iph]);
 
       // ID-like variables
       phHoE   [iph] = phiter->hadTowOverEm();
       phr9    [iph] = phiter->r9();
-      phChgIso[iph] = std::max(phiter->chargedHadronIso() - (rho * SimplePATTree::GetChargedHadronEA(sceta)),0.f);
-      phNeuIso[iph] = std::max(phiter->neutralHadronIso() - (rho * SimplePATTree::GetNeutralHadronEA(sceta)),0.f);
-      phIso   [iph] = std::max(phiter->photonIso()        - (rho * SimplePATTree::GetGammaEA        (sceta)),0.f);
+
+      // pseudo-track veto
+      phPixSeed[iph] = phiter->passElectronVeto();
+      phEleVeto[iph] = phiter->hasPixelSeed();
 
       // use seed to get geometry and recHits
       const reco::CaloClusterPtr& phbc = phsc->seed();
@@ -181,7 +163,6 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	if (seedDetId.rawId() == recHitId) 
 	{ 
 	  phseedpos[iph] = irh; // save the position in the vector of the seed 
-	  phsuisseX[iph] = EcalTools::swissCross(recHitId,(*recHits),1.f); // http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalTools.h
 	}
 	
 	irh++; // increment rechit counter
@@ -206,42 +187,6 @@ void SimplePATTree::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & p
   }
 }  
 
-float SimplePATTree::GetChargedHadronEA(const float eta)
-{
-  if      (eta <  1.0)                  return 0.0360;
-  else if (eta >= 1.0   && eta < 1.479) return 0.0377;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0306;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.0283;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.0254;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.0217;
-  else if (eta >= 2.4)                  return 0.0167;
-  else                                  return 0.;
-}
-
-float SimplePATTree::GetNeutralHadronEA(const float eta) 
-{
-  if      (eta <  1.0)                  return 0.0597;
-  else if (eta >= 1.0   && eta < 1.479) return 0.0807;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0629;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.0197;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.0184;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.0284;
-  else if (eta >= 2.4)                  return 0.0591;
-  else                                  return 0.;
-}
-
-float SimplePATTree::GetGammaEA(const float eta) 
-{
-  if      (eta <  1.0)                  return 0.1210;
-  else if (eta >= 1.0   && eta < 1.479) return 0.1107;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0699;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.1056;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.1457;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.1719;
-  else if (eta >= 2.4)                  return 0.1998;
-  else                                  return 0.;
-}
-
 void SimplePATTree::ClearRecoPhotonBranches()
 {
   nphotons = -9999;
@@ -257,10 +202,9 @@ void SimplePATTree::ClearRecoPhotonBranches()
 
   phHoE.clear();
   phr9.clear();
-  phChgIso.clear();
-  phNeuIso.clear();
-  phIso.clear();
-  phsuisseX.clear();
+
+  phPixSeed.clear();
+  phEleVeto.clear();
 
   phsieie.clear();
   phsipip.clear();
@@ -297,10 +241,9 @@ void SimplePATTree::InitializeRecoPhotonBranches()
 
   phHoE.resize(nphotons);
   phr9.resize(nphotons);
-  phChgIso.resize(nphotons);
-  phNeuIso.resize(nphotons);
-  phIso.resize(nphotons);
-  phsuisseX.resize(nphotons);
+
+  phPixSeed.resize(nphotons);
+  phEleVeto.resize(nphotons);
 
   phsieie.resize(nphotons);
   phsipip.resize(nphotons);
@@ -336,10 +279,9 @@ void SimplePATTree::InitializeRecoPhotonBranches()
 
     phHoE    [iph] = -9999.f;
     phr9     [iph] = -9999.f;
-    phChgIso [iph] = -9999.f;
-    phNeuIso [iph] = -9999.f;
-    phIso    [iph] = -9999.f;
-    phsuisseX[iph] = -9999.f;
+
+    phPixSeed[iph] = false;
+    phEleVeto[iph] = false;
 
     phsieie[iph] = -9999.f;
     phsipip[iph] = -9999.f;
@@ -401,10 +343,9 @@ void SimplePATTree::beginJob()
 
   tree->Branch("phHoE"                , &phHoE);
   tree->Branch("phr9"                 , &phr9);
-  tree->Branch("phChgIso"             , &phChgIso);
-  tree->Branch("phNeuIso"             , &phNeuIso);
-  tree->Branch("phIso"                , &phIso);
-  tree->Branch("phsuisseX"            , &phsuisseX);
+
+  tree->Branch("phPixSeed"            , &phPixSeed);
+  tree->Branch("phEleVeto"            , &phEleVeto);
 
   tree->Branch("phsieie"              , &phsieie);
   tree->Branch("phsipip"              , &phsipip);

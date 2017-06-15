@@ -227,6 +227,10 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       phHoE   [iph] = phiter->hadTowOverEm(); // close to trigger
       phr9    [iph] = phiter->r9();
 
+      // pseudo-track veto
+      phPixSeed[iph] = phiter->passElectronVeto();
+      phEleVeto[iph] = phiter->hasPixelSeed();
+
       // cluster shape variables
       phsieie[iph] = phshape.sigmaIetaIeta;
       phsipip[iph] = phshape.sigmaIphiIphi;
@@ -397,6 +401,9 @@ void HLTDump::ClearRecoPhotonBranches()
   phHoE.clear();
   phr9.clear();
 
+  phPixSeed.clear();
+  phEleVeto.clear();
+
   phPFClEcalIso.clear();
   phPFClHcalIso.clear();
   phHollowTkIso.clear();
@@ -434,6 +441,9 @@ void HLTDump::InitializeRecoPhotonBranches()
   phHoE.resize(nphotons);
   phr9.resize(nphotons);
 
+  phPixSeed.resize(nphotons);
+  phEleVeto.resize(nphotons);
+
   phPFClEcalIso.resize(nphotons);
   phPFClHcalIso.resize(nphotons);
   phHollowTkIso.resize(nphotons);
@@ -470,6 +480,9 @@ void HLTDump::InitializeRecoPhotonBranches()
     phHoE    [iph] = -9999.f;
     phr9     [iph] = -9999.f;
 
+    phPixSeed[iph] = false;
+    phEleVeto[iph] = false;
+
     phPFClEcalIso[iph] = -9999.f;
     phPFClHcalIso[iph] = -9999.f;
     phHollowTkIso[iph] = -9999.f;
@@ -501,24 +514,24 @@ void HLTDump::InitializeRecoPhotonBranches()
 void HLTDump::beginJob() 
 {
   edm::Service<TFileService> fs;
-  tree = fs->make<TTree>("tree"     , "tree");
+  tree = fs->make<TTree>("tree","tree");
 
   // Run, Lumi, Event info
-  tree->Branch("event"                  , &event                , "event/l");
-  tree->Branch("run"                    , &run                  , "run/i");
-  tree->Branch("lumi"                   , &lumi                 , "lumi/i");
+  tree->Branch("event"                , &event                , "event/l");
+  tree->Branch("run"                  , &run                  , "run/i");
+  tree->Branch("lumi"                 , &lumi                 , "lumi/i");
    
   // Trigger Info
-  tree->Branch("triggerBits"            , &triggerBits);
+  tree->Branch("triggerBits"          , &triggerBits);
 
   // Jet Info
-  tree->Branch("pfjetHT"              , &pfjetHT                , "pfjetHT/F");
+  tree->Branch("pfjetHT"              , &pfjetHT              , "pfjetHT/F");
    
   // HLT Info
-  tree->Branch("trigobjE"                  , &trigobjE);
-  tree->Branch("trigobjeta"                , &trigobjeta);
-  tree->Branch("trigobjphi"                , &trigobjphi);
-  tree->Branch("trigobjpt"                 , &trigobjpt);
+  tree->Branch("trigobjE"             , &trigobjE);
+  tree->Branch("trigobjeta"           , &trigobjeta);
+  tree->Branch("trigobjphi"           , &trigobjphi);
+  tree->Branch("trigobjpt"            , &trigobjpt);
 
   // Photon Info
   tree->Branch("nphotons"             , &nphotons             , "nphotons/I");
@@ -535,6 +548,9 @@ void HLTDump::beginJob()
   tree->Branch("phHoE"                , &phHoE);
   tree->Branch("phr9"                 , &phr9);
 
+  tree->Branch("phPixSeed"            , &phPixSeed);
+  tree->Branch("phEleVeto"            , &phEleVeto);
+
   tree->Branch("phPFClEcalIso"        , &phPFClEcalIso);
   tree->Branch("phPFClHcalIso"        , &phPFClHcalIso);
   tree->Branch("phHollowTkIso"        , &phHollowTkIso);
@@ -550,12 +566,12 @@ void HLTDump::beginJob()
 
   tree->Branch("phnrh"                , &phnrh);
 
-  tree->Branch("phseedeta"              , &phseedeta);
-  tree->Branch("phseedphi"              , &phseedphi);
-  tree->Branch("phseedE"                , &phseedE);
-  tree->Branch("phseedtime"             , &phseedtime);
-  tree->Branch("phseedID"               , &phseedID);
-  tree->Branch("phseedOOT"              , &phseedOOT);
+  tree->Branch("phseedeta"            , &phseedeta);
+  tree->Branch("phseedphi"            , &phseedphi);
+  tree->Branch("phseedE"              , &phseedE);
+  tree->Branch("phseedtime"           , &phseedtime);
+  tree->Branch("phseedID"             , &phseedID);
+  tree->Branch("phseedOOT"            , &phseedOOT);
 }
 
 void HLTDump::endJob() {}

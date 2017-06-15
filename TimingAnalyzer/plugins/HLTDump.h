@@ -169,6 +169,7 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   int nphotons;
   std::vector<float> phE, phpt, phphi, pheta;
   std::vector<float> phHoE, phr9;
+  std::vector<bool> phPixSeed, phEleVeto;
   std::vector<float> phPFClEcalIso, phPFClHcalIso, phHollowTkIso;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
   std::vector<std::vector<int> > phIsHLTMatched; // first index is iph, second is for filter, true/false
