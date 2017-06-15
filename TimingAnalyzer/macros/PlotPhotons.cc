@@ -4,6 +4,8 @@
 #include "TCanvas.h"
 #include "TObject.h" 
 
+#include "common/common.h"
+
 #include <iostream>
 
 PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t isBkg, 
