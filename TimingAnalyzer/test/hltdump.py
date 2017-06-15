@@ -1,5 +1,7 @@
 import os, re
 import FWCore.ParameterSet.Config as cms
+import FWCore.PythonUtilities.LumiList as LumiList  
+import FWCore.ParameterSet.Types as CfgTypes    
   
 ### CMSSW command line parameter parser
 from FWCore.ParameterSet.VarParsing import VarParsing
@@ -75,8 +77,16 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 if options.triggerPName == 'HLT':
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 			'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v2/000/296/173/00000/C8E82FEC-754C-E711-AB22-02163E019C8E.root',
+			'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v2/000/296/173/00000/D8A4F64B-6A4C-E711-9068-02163E01A6DE.root',
+			'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v2/000/296/174/00000/9A808125-6D4C-E711-80DA-02163E01A7A6.root'
 			))
 else : exit
+
+# Set the json locally 
+process.source.lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange())  
+JSONfile = 'test/dcs2017.json'
+myLumis = LumiList.LumiList(filename = JSONfile).getCMSSWString().split(',')  
+process.source.lumisToProcess.extend(myLumis) 
 
 ## How many events to process
 if   options.demoMode : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
