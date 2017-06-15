@@ -6,13 +6,16 @@ void recophoton_comp()
   TString rhE = "";
   std::vector<TString> filenames = 
   {
-    Form("output/recophotons/Prompt-v1/%s%s/plots.root",dataset.Data(),rhE.Data()),
-    Form("output/recophotons/Prompt-v2/%s%s/plots.root",dataset.Data(),rhE.Data()),
-    Form("output/recophotons/OOT/%s%s/plots.root",dataset.Data(),rhE.Data()),
+    //Form("output/patphotons/vanilla/%s%s/plots.root",dataset.Data(),rhE.Data()),
+    //    Form("output/patphotons/gedPhotons/%s%s/plots.root",dataset.Data(),rhE.Data()),
+    Form("output/patphotons/OOT_Clusters/%s%s/plots.root",dataset.Data(),rhE.Data()),
+    Form("output/patphotons/OOT_Clusters_NoHoE/%s%s/plots.root",dataset.Data(),rhE.Data()),
   };
 
-  std::vector<TString> labels = {"Vanilla","gedPhotons","ootPhotons"};
-  std::vector<Color_t> colors = {kBlack,kBlue,kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3};
+  //  std::vector<TString> labels = {"Vanilla","gedPhotons","ootPhotons","ootPhotons (No H/E slim)","ootPhotons-sep"};
+  //  std::vector<Color_t> colors = {kBlack,kBlue,kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3};
+  std::vector<TString> labels = {"ootPhotons","ootPhotons (No H/E slim)","ootPhotons-sep"};
+  std::vector<Color_t> colors = {kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3};
 
   std::vector<TFile*> files(filenames.size());
   for (UInt_t ifile = 0; ifile < filenames.size(); ifile++)
@@ -22,7 +25,7 @@ void recophoton_comp()
 
   std::vector<TString> hists = 
   {
-    "nphotons","nphotonsOOT","phnrh","phnrhOOT",
+    "nphotonsAll","nPhotons","nPhotonsOOT","phnrh","phnrhOOT",
     "phE","phpt","phphi","pheta",
     //    "phHoE_OOT","phr9_OOT","phsieieEB_OOT","phsieieEE_OOT","phE_OOT","phpt_OOT","phphi_OOT","pheta_OOT",
     "phHoEEB","phr9EB","phsieieEB","phsieipEB","phsipipEB","phsmajEB","phsminEB","phEcalIsoEB","phHcalIsoEB",
@@ -46,7 +49,8 @@ void recophoton_comp()
 
       th1fs[ith1f]->SetLineColor(colors[ith1f]);
       th1fs[ith1f]->SetMarkerColor(colors[ith1f]);
-      th1fs[ith1f]->Scale(1.f/th1fs[ith1f]->GetEntries());
+      //      th1fs[ith1f]->Scale(1.f/th1fs[ith1f]->GetEntries());
+      th1fs[ith1f]->Scale(1.f/th1fs[ith1f]->Integral());
 
       Int_t nBinsX = th1fs[ith1f]->GetNbinsX();
       for (Int_t ibin = 1; ibin <= nBinsX; ibin++)
@@ -66,7 +70,7 @@ void recophoton_comp()
     }
 
     leg->Draw("same");    
-    canv->SaveAs(Form("output/recophotons/%s%s_%s.png",dataset.Data(),rhE.Data(),hists[ihist].Data()));
+    canv->SaveAs(Form("output/patphotons/nohoe/%s%s_%s.png",dataset.Data(),rhE.Data(),hists[ihist].Data()));
 
     for (UInt_t ith1f = 0; ith1f < th1fs.size(); ith1f++)   
     {

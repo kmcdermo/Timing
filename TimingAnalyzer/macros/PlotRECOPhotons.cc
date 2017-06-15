@@ -78,6 +78,8 @@ void PlotRECOPhotons::FillRecoPhotons()
   Int_t nPhotonsOOT = 0;
   for (Int_t iph = 0; iph < nphotons; iph++)
   {
+    if ((*phseedpos)[iph] == -9999.f) continue;
+
     if (fApplyrhECut && (*phrhE)[iph][(*phseedpos)[iph]] < frhECut) continue;
 
     if ((*phrhOOT)[iph][(*phseedpos)[iph]])
@@ -161,14 +163,16 @@ void PlotRECOPhotons::FillRecoPhotons()
     fPlots["phnrhOOT"]->Fill(nRHOOT);
   }
 
-  fPlots["nphotons"]->Fill(nPhotons);
-  fPlots["nphotonsOOT"]->Fill(nPhotonsOOT);
+  fPlots["nphotonsAll"]->Fill(nphotons);
+  fPlots["nPhotons"]->Fill(nPhotons);
+  fPlots["nPhotonsOOT"]->Fill(nPhotonsOOT);
 }
 
 void PlotRECOPhotons::SetupRecoPhotons()
 {
-  fPlots["nphotons"] = PlotRECOPhotons::MakeTH1F("nphotons","nPhotons per Event",20,0.f,20.f,"nPhotons","Events","gedPhotons/GeneralProps");
-  fPlots["nphotonsOOT"] = PlotRECOPhotons::MakeTH1F("nphotonsOOT","nPhotons OoT per Event",20,0.f,20.f,"nPhotons OoT","Events","gedPhotons/GeneralProps");
+  fPlots["nphotonsAll"] = PlotRECOPhotons::MakeTH1F("nphotonsAll","nPhotons per Event",20,0.f,20.f,"nPhotons","Events","gedPhotons/GeneralProps"); // no seed pos cut
+  fPlots["nPhotons"] = PlotRECOPhotons::MakeTH1F("nPhotons","nPhotons per Event",20,0.f,20.f,"nPhotons","Events","gedPhotons/GeneralProps");
+  fPlots["nPhotonsOOT"] = PlotRECOPhotons::MakeTH1F("nPhotonsOOT","nPhotons OoT per Event",20,0.f,20.f,"nPhotons OoT","Events","gedPhotons/GeneralProps");
   fPlots["phnrh"] = PlotRECOPhotons::MakeTH1F("phnrh","nRecHits per Photon",100,0.f,250.f,"nRecHits","Photons","gedPhotons/GeneralProps");
   fPlots["phnrhOOT"] = PlotRECOPhotons::MakeTH1F("phnrhOOT","nRecHits OoT per Photon",20,0.f,20.f,"nRecHits OoT","Photons","gedPhotons/GeneralProps");
 
