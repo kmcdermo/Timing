@@ -36,6 +36,8 @@ private :
   std::vector<Float_t> * phscphi;
   std::vector<Float_t> * phHoE;
   std::vector<Float_t> * phr9;
+  std::vector<Bool_t>  * phEleVeto;
+  std::vector<Bool_t>  * phPixSeed;
   std::vector<Float_t> * phPFClEcalIso;
   std::vector<Float_t> * phPFClHcalIso;
   std::vector<Float_t> * phHollowTkIso;
@@ -78,6 +80,8 @@ private :
   TBranch * b_phscphi;
   TBranch * b_phHoE;
   TBranch * b_phr9;
+  TBranch * b_phEleVeto;
+  TBranch * b_phPixSeed;
   TBranch * b_phPFClEcalIso;
   TBranch * b_phPFClHcalIso;
   TBranch * b_phHollowTkIso;
