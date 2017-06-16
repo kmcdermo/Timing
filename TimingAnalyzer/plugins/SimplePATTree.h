@@ -67,10 +67,6 @@ class SimplePATTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm:
 
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<pat::Photon> & photons);
 
-  float GetChargedHadronEA(const float);
-  float GetNeutralHadronEA(const float);
-  float GetGammaEA        (const float);
-
   void ClearRecoPhotonBranches();
   void InitializeRecoPhotonBranches();
   void InitializeRecoRecHitBranches(const int iph);
@@ -110,7 +106,8 @@ class SimplePATTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm:
   int nphotons;
   std::vector<float> phE, phpt, phphi, pheta;
   std::vector<int>   phmatch;
-  std::vector<float> phHoE, phr9, phChgIso, phNeuIso, phIso, phsuisseX;
+  std::vector<float> phHoE, phr9;
+  std::vector<bool>  phPixSeed, phEleVeto;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
   std::vector<float> phPFClEcalIso, phPFClHcalIso;
   std::vector<float> phHollowTkIso;
