@@ -5,15 +5,6 @@ import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
-## general cuts
-options.register (
-	'dataset','sph_2016H',VarParsing.multiplicity.singleton,VarParsing.varType.string,
-	'dataset to be used');
-
-options.register (
-	'reco','OOT',VarParsing.multiplicity.singleton,VarParsing.varType.string,
-	'dataset to be used');
-
 ## processName
 options.register (
 	'processName','TREE',VarParsing.multiplicity.singleton,VarParsing.varType.string,
@@ -26,14 +17,11 @@ options.register (
 
 ## GT to be used    
 options.register (
-	'globalTag','91X_dataRun2_PromptLike_v4',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'globalTag','92X_dataRun2_Prompt_v4',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'gloabl tag to be used');
 
 ## parsing command line arguments
 options.parseArguments()
-
-## reset file name
-options.outputFileName = 'recophoton-'+options.dataset+'-'+options.reco+'.root'
 
 print "##### Settings ######"
 print "Running with processName     = ",options.processName	
@@ -56,24 +44,12 @@ process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 ## Define the input source
-if options.dataset == 'sph_2016H' :
-	if options.reco == 'OOT':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/AOD/OOT/oot_aod.root'
-				))
-	elif options.reco == 'Prompt-v1':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/AOD/Prompt/prompt_aod.root'
-				))
-	elif options.reco == 'Prompt-v2':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/AOD/OOT/oot_aod.root'
-				))
-
-else : exit
+process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+		'/store/data/Run2017B/SinglePhoton/AOD/PromptReco-v1/000/297/046/00000/1CAEB625-3356-E711-AA79-02163E019DB0.root'
+		))
 
 ## How many events to process
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
 
 # Set the global tag depending on the sample type
 from Configuration.AlCa.GlobalTag import GlobalTag
@@ -84,24 +60,18 @@ process.GlobalTag.globaltag = options.globalTag
 process.TFileService = cms.Service("TFileService", 
 		                   fileName = cms.string(options.outputFileName))
 
-if options.reco == 'OOT' :
-	photonsTag = cms.InputTag("ootPhotons","","RECO")
-	ecalIsoTag = cms.InputTag("ootPhotonEcalPFClusterIsolationProducer","","RECO")
-	hcalIsoTag = cms.InputTag("ootPhotonHcalPFClusterIsolationProducer","","RECO")
-else :
-	photonsTag = cms.InputTag("gedPhotons","","RECO")
-	ecalIsoTag = cms.InputTag("photonEcalPFClusterIsolationProducer","","RECO")
-	hcalIsoTag = cms.InputTag("photonHcalPFClusterIsolationProducer","","RECO")
-
 # Make the tree 
 process.tree = cms.EDAnalyzer("SimpleRECOTree",
    ## rho
    rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
-   ## photons		
-   photons = photonsTag,
-   ## pfClusterIso
-   ecalIso = ecalIsoTag,
-   hcalIso = hcalIsoTag,
+   ## prompt photons		
+   photons = cms.InputTag("gedPhotons","","RECO"),
+   ecalIso = cms.InputTag("photonEcalPFClusterIsolationProducer","","RECO"),
+   hcalIso = cms.InputTag("photonHcalPFClusterIsolationProducer","","RECO"),
+   ## out-of-time photons		
+   ootphotons = cms.InputTag("ootPhotons","","RECO"),
+   ootecalIso = cms.InputTag("ootPhotonEcalPFClusterIsolationProducer","","RECO"),
+   oothcalIso = cms.InputTag("ootPhotonHcalPFClusterIsolationProducer","","RECO"),
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEcalRecHitsEB","","RECO"),
    recHitsEE = cms.InputTag("reducedEcalRecHitsEE","","RECO"),

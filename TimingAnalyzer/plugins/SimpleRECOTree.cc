@@ -6,11 +6,14 @@ SimpleRECOTree::SimpleRECOTree(const edm::ParameterSet& iConfig):
   rhosTag(iConfig.getParameter<edm::InputTag>("rhos")),
 
   // photons
-  photonsTag  (iConfig.getParameter<edm::InputTag>("photons")),  
-  
-  // pfcluster isos
-  ecalIsoTag  (iConfig.getParameter<edm::InputTag>("ecalIso")),  
-  hcalIsoTag  (iConfig.getParameter<edm::InputTag>("hcalIso")),  
+  photonsTag(iConfig.getParameter<edm::InputTag>("photons")),  
+  ecalIsoTag(iConfig.getParameter<edm::InputTag>("ecalIso")),  
+  hcalIsoTag(iConfig.getParameter<edm::InputTag>("hcalIso")),  
+
+  // ootphotons
+  ootphotonsTag(iConfig.getParameter<edm::InputTag>("ootphotons")),  
+  ootecalIsoTag(iConfig.getParameter<edm::InputTag>("ootecalIso")),  
+  oothcalIsoTag(iConfig.getParameter<edm::InputTag>("oothcalIso")),  
 
   //recHits
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
@@ -24,10 +27,13 @@ SimpleRECOTree::SimpleRECOTree(const edm::ParameterSet& iConfig):
 
   // photons
   photonsToken = consumes<std::vector<reco::Photon> > (photonsTag);
-
-  // pfcluster isos
   ecalIsoToken = consumes<edm::ValueMap<float> > (ecalIsoTag);
   hcalIsoToken = consumes<edm::ValueMap<float> > (hcalIsoTag);
+
+  // ootphotons
+  ootphotonsToken = consumes<std::vector<reco::Photon> > (ootphotonsTag);
+  ootecalIsoToken = consumes<edm::ValueMap<float> > (ootecalIsoTag);
+  oothcalIsoToken = consumes<edm::ValueMap<float> > (oothcalIsoTag);
 
   // rechits
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
@@ -42,12 +48,11 @@ void SimpleRECOTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   edm::Handle<double> rhosH;
   iEvent.getByToken(rhosToken, rhosH);
 
-  // PHOTONS
+  // Prompt PHOTONS
   edm::Handle<std::vector<reco::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
   std::vector<RecoPhoton> photons(photonsH->size());
 
-  // PFCluster Isolations
   edm::Handle<edm::ValueMap<float> > ecalIsoH;
   iEvent.getByToken(ecalIsoToken, ecalIsoH);
   edm::ValueMap<float> ecalIso = *ecalIsoH;
@@ -55,6 +60,19 @@ void SimpleRECOTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   edm::Handle<edm::ValueMap<float> > hcalIsoH;
   iEvent.getByToken(hcalIsoToken, hcalIsoH);
   edm::ValueMap<float> hcalIso = *hcalIsoH;
+
+  // Out-of-time PHOTONS
+  edm::Handle<std::vector<reco::Photon> > ootphotonsH;
+  iEvent.getByToken(ootphotonsToken, ootphotonsH);
+  std::vector<RecoPhoton> ootphotons(ootphotonsH->size());
+
+  edm::Handle<edm::ValueMap<float> > ootecalIsoH;
+  iEvent.getByToken(ootecalIsoToken, ootecalIsoH);
+  edm::ValueMap<float> ootecalIso = *ootecalIsoH;
+
+  edm::Handle<edm::ValueMap<float> > oothcalIsoH;
+  iEvent.getByToken(oothcalIsoToken, oothcalIsoH);
+  edm::ValueMap<float> oothcalIso = *oothcalIsoH;
 
   // RecHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
@@ -74,7 +92,9 @@ void SimpleRECOTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   const CaloTopology * topology = calotopoH.product();
 
   // do some prepping of objects
-  SimpleRECOTree::PrepPhotons(photonsH,photons,ecalIso,hcalIso);
+  SimpleRECOTree::PrepPhotons(photonsH,photons,ecalIso,hcalIso,false);
+  SimpleRECOTree::PrepPhotons(ootphotonsH,ootphotons,ootecalIso,oothcalIso,true);
+  photons.insert(photons.end(), ootphotons.begin(), ootphotons.end());
 
   ///////////////////////////
   //                       //
@@ -107,6 +127,9 @@ void SimpleRECOTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     int iph = 0;
     for (std::vector<RecoPhoton>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
     {
+      // isOOT collecion
+      phisOOT[iph] = phiter->isOOT;
+
       // standard photon branches
       phE  [iph] = phiter->photon.energy();
       phpt [iph] = phiter->photon.pt();
@@ -212,7 +235,7 @@ void SimpleRECOTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 }    
 
 void SimpleRECOTree::PrepPhotons(const edm::Handle<std::vector<reco::Photon> > & photonsH, std::vector<RecoPhoton> & photons,
-				 const edm::ValueMap<float> & ecalIso, const edm::ValueMap<float> & hcalIso)
+				 const edm::ValueMap<float> & ecalIso, const edm::ValueMap<float> & hcalIso, const bool isOOT)
 {
   if (photonsH.isValid()) // standard handle check
   {
@@ -223,6 +246,7 @@ void SimpleRECOTree::PrepPhotons(const edm::Handle<std::vector<reco::Photon> > &
       const edm::Ptr<reco::Photon> photonPtr(photonsH, phiter - photonsH->begin());
       
       photons[iph].photon  = (*phiter);
+      photons[iph].isOOT   = isOOT;
       photons[iph].ecalIso = ecalIso[photonPtr];
       photons[iph].hcalIso = hcalIso[photonPtr];
 
@@ -273,6 +297,8 @@ void SimpleRECOTree::ClearRecoPhotonBranches()
 {
   nphotons = -9999;
 
+  phisOOT.clear();
+
   phE.clear();
   phpt.clear();
   phphi.clear(); 
@@ -312,6 +338,8 @@ void SimpleRECOTree::ClearRecoPhotonBranches()
 
 void SimpleRECOTree::InitializeRecoPhotonBranches()
 {
+  phisOOT.resize(nphotons);
+
   phE.resize(nphotons);
   phpt.resize(nphotons);
   phphi.resize(nphotons);
@@ -350,6 +378,8 @@ void SimpleRECOTree::InitializeRecoPhotonBranches()
 
   for (int iph = 0; iph < nphotons; iph++)
   {
+    phisOOT[iph] = -9999;
+
     phE  [iph] = -9999.f; 
     phpt [iph] = -9999.f; 
     phphi[iph] = -9999.f; 
@@ -413,6 +443,8 @@ void SimpleRECOTree::beginJob()
    
   // Photon Info
   tree->Branch("nphotons"             , &nphotons             , "nphotons/I");
+
+  tree->Branch("phisOOT"              , &phisOOT);
 
   tree->Branch("phE"                  , &phE);
   tree->Branch("phpt"                 , &phpt);

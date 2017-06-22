@@ -58,6 +58,7 @@
 struct RecoPhoton
 {
   reco::Photon photon;
+  bool  isOOT;
   float ecalIso;
   float hcalIso;
 };
@@ -74,7 +75,7 @@ class SimpleRECOTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm
   ~SimpleRECOTree();
 
   void PrepPhotons(const edm::Handle<std::vector<reco::Photon> > & photonsH, std::vector<RecoPhoton> & photons,
-		   const edm::ValueMap<float> & ecalIso, const edm::ValueMap<float> & hcalIso);
+		   const edm::ValueMap<float> & ecalIso, const edm::ValueMap<float> & hcalIso, const bool isOOT);
 
   float GetChargedHadronEA(const float);
   float GetNeutralHadronEA(const float);
@@ -101,12 +102,18 @@ class SimpleRECOTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm
   // photons
   const edm::InputTag photonsTag;
   edm::EDGetTokenT<std::vector<reco::Photon> > photonsToken;
-
-  // value map for pfcluster isolation
   const edm::InputTag ecalIsoTag;
   edm::EDGetTokenT<edm::ValueMap<float> > ecalIsoToken;
   const edm::InputTag hcalIsoTag;
   edm::EDGetTokenT<edm::ValueMap<float> > hcalIsoToken;
+
+  // ootphotons
+  const edm::InputTag ootphotonsTag;
+  edm::EDGetTokenT<std::vector<reco::Photon> > ootphotonsToken;
+  const edm::InputTag ootecalIsoTag;
+  edm::EDGetTokenT<edm::ValueMap<float> > ootecalIsoToken;
+  const edm::InputTag oothcalIsoTag;
+  edm::EDGetTokenT<edm::ValueMap<float> > oothcalIsoToken;
 
   // ECAL RecHits
   const edm::InputTag recHitsEBTag;
@@ -123,8 +130,8 @@ class SimpleRECOTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm
 
   // photon info
   int nphotons;
+  std::vector<int>   phisOOT;
   std::vector<float> phE, phpt, phphi, pheta;
-  std::vector<int>   phmatch;
   std::vector<float> phHoE, phr9, phChgIso, phNeuIso, phIso, phsuisseX;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
   std::vector<float> phEcalIso, phHcalIso;
