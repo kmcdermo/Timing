@@ -54,9 +54,15 @@
 // Common types
 #include "CommonTypes.h"
 
-inline bool sortByPhotonPt(const pat::Photon & ph1, const pat::Photon & ph2)
+struct PatPhoton
 {
-  return ph1.pt()>ph2.pt();
+  pat::Photon photon;
+  bool isOOT_;
+};
+
+inline bool sortByPhotonPt(const PatPhoton & ph1, const PatPhoton & ph2)
+{
+  return ph1.photon.pt()>ph2.photon.pt();
 }
 
 class SimplePATTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
@@ -65,11 +71,10 @@ class SimplePATTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm:
   explicit SimplePATTree(const edm::ParameterSet&);
   ~SimplePATTree();
 
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<pat::Photon> & photons);
+  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<PatPhoton> & photons, const bool isOOT);
 
   void ClearRecoPhotonBranches();
   void InitializeRecoPhotonBranches();
-  void InitializeRecoRecHitBranches(const int iph);
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
   
@@ -85,9 +90,11 @@ class SimplePATTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm:
   const edm::InputTag rhosTag;
   edm::EDGetTokenT<double> rhosToken;
 
-  // photons + ids
+  // photons
   const edm::InputTag photonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > photonsToken;
+  const edm::InputTag ootphotonsTag;
+  edm::EDGetTokenT<std::vector<pat::Photon> > ootphotonsToken;
 
   // ECAL RecHits
   const edm::InputTag recHitsEBTag;
@@ -104,23 +111,14 @@ class SimplePATTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm:
 
   // photon info
   int nphotons;
+  std::vector<int>   phIsOOT, phIsEB;
   std::vector<float> phE, phpt, phphi, pheta;
-  std::vector<int>   phmatch;
-  std::vector<float> phHoE, phr9;
-  std::vector<bool>  phPixSeed, phEleVeto;
-  std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
-  std::vector<float> phPFClEcalIso, phPFClHcalIso;
-  std::vector<float> phHollowTkIso;
+  std::vector<float> phHoE, phr9, phsieie;
+  std::vector<float> phsmaj, phsmin, phalpha;
+  std::vector<float> phPFClEcalIso, phPFClHcalIso, phHollowTkIso;
 
-  // supercluster info 
-  std::vector<float> phscE, phsceta, phscphi;
-
-  // seed info
-  std::vector<int> phseedpos;
-  
   // all rec hit info
-  std::vector<int> phnrh;
-  std::vector<std::vector<float> > phrheta, phrhphi, phrhE, phrhtime;
-  std::vector<std::vector<int> > phrhID;
-  std::vector<std::vector<int> > phrhOOT;
+  std::vector<int>   phnrh;
+  std::vector<float> phseedE, phseedtime;
+  std::vector<int>   phseedOOT;
 };
