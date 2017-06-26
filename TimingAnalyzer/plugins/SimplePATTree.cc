@@ -101,7 +101,7 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       }
 
       // need recHits to calculate shape variables
-      if (recHits != nullptr)
+      if (recHits->size() > 0)
       {
 	// 2nd moments from official calculation
 	const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phsc, *recHits);
