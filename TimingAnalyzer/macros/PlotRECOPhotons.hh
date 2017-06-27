@@ -17,11 +17,10 @@ namespace ECAL
   static const Float_t etaEEmax = 2.5;
 };
 
+typedef std::vector<TString> TStrVec;
+
 typedef std::map<TString,TH1F*> TH1Map;
 typedef TH1Map::iterator        TH1MapIter;
-
-typedef std::map<TString,TH2F*> TH2Map;
-typedef TH2Map::iterator        TH2MapIter;
 
 typedef std::map<TString,TString> TStrMap;
 typedef TStrMap::iterator         TStrMapIter;
@@ -37,13 +36,10 @@ public :
   void DoPlots();
   void SetupPlots();
   void SetupRecoPhotons();
-  TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle, TString subdir);
-  TH2F * MakeTH2F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, Int_t nbinsy, Float_t ylow, Float_t yhigh, TString ytitle, TString subdir);
+  TH1F * MakeTH1F(TString hname, TString htitle, Int_t nbinsx, Float_t xlow, Float_t xhigh, TString xtitle, TString ytitle);
   void EventLoop();
   void FillRecoPhotons();
-  void MakeSubDirs();
   void OutputTH1Fs();
-  void OutputTH2Fs();
 
 private :
   // Input vars
@@ -53,7 +49,6 @@ private :
   // In routine vars
   UInt_t  fNEvCheck;
   TH1Map  fPlots;
-  TH2Map  fPlots2D;
   
   // Photon cuts
   const Bool_t  fApplyrhECut;
@@ -78,6 +73,7 @@ private :
   UInt_t    run;
   UInt_t    lumi;
   Int_t     nphotons;
+  std::vector<Int_t>   * phisOOT;
   std::vector<Float_t> * phE;
   std::vector<Float_t> * phpt;
   std::vector<Float_t> * phphi;
@@ -113,6 +109,7 @@ private :
   TBranch * b_run;
   TBranch * b_lumi;
   TBranch * b_nphotons;
+  TBranch * b_phisOOT;
   TBranch * b_phE;
   TBranch * b_phpt;
   TBranch * b_phphi;
