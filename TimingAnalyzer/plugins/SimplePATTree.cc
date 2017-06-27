@@ -2,6 +2,21 @@
 #include "FWCore/Utilities/interface/isFinite.h"
 
 SimplePATTree::SimplePATTree(const edm::ParameterSet& iConfig): 
+  // isMC
+  isMC(iConfig.existsAs<bool>("isMC") ? iConfig.getParameter<bool>("isMC") : false),
+
+  // rhos
+  rhosTag(iConfig.getParameter<edm::InputTag>("rhos")),
+
+   // vertexes
+  verticesTag(iConfig.getParameter<edm::InputTag>("vertices")),
+
+  // mets
+  metsTag(iConfig.getParameter<edm::InputTag>("mets")),  
+
+  // jets
+  jetsTag(iConfig.getParameter<edm::InputTag>("jets")),  
+
   //photons
   photonsTag   (iConfig.getParameter<edm::InputTag>("photons")),  
   ootphotonsTag(iConfig.getParameter<edm::InputTag>("ootphotons")),  
@@ -12,6 +27,23 @@ SimplePATTree::SimplePATTree(const edm::ParameterSet& iConfig):
 {
   usesResource();
   usesResource("TFileService");
+
+  if (isMC)
+  {
+    pileupToken = consumes<std::vector<PileupSummaryInfo> > (iConfig.getParameter<edm::InputTag>("pileup"));
+  }
+
+  // rhos
+  rhosToken = consumes<double> (rhosTag);
+
+  //vertex
+  verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
+
+  // mets
+  metsToken = consumes<std::vector<pat::MET> > (metsTag);
+
+  // jets
+  jetsToken = consumes<std::vector<pat::Jet> > (jetsTag);
 
   // photons
   photonsToken    = consumes<std::vector<pat::Photon> > (photonsTag);
@@ -26,6 +58,30 @@ SimplePATTree::~SimplePATTree() {}
 
 void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 {
+  // MC Info
+  edm::Handle<std::vector<PileupSummaryInfo> > pileupH;
+  if (isMC)
+  {
+    iEvent.getByToken(pileupToken, pileupH);
+  }
+  
+  // RHOS
+  edm::Handle<double> rhosH;
+  iEvent.getByToken(rhosToken, rhosH);
+
+  // VERTICES
+  edm::Handle<std::vector<reco::Vertex> > verticesH;
+  iEvent.getByToken(verticesToken, verticesH);
+  
+  // MET
+  edm::Handle<std::vector<pat::MET> > metsH;
+  iEvent.getByToken(metsToken, metsH);
+
+  // JETS
+  edm::Handle<std::vector<pat::Jet> > jetsH;
+  iEvent.getByToken(jetsToken, jetsH);
+  std::vector<pat::Jet> jets = *jetsH;
+
   // PHOTONS
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
@@ -45,6 +101,7 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   SimplePATTree::PrepPhotons(photonsH,photons,false);
   SimplePATTree::PrepPhotons(ootphotonsH,ootphotons,true);
   photons.insert(photons.end(), ootphotons.begin(), ootphotons.end());
+  SimplePATTree::PrepJets(jetsH,jets);
 
   ///////////////////////////
   //                       //
@@ -54,6 +111,90 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   run   = iEvent.id().run();
   lumi  = iEvent.luminosityBlock();
   event = iEvent.id().event();
+
+  /////////////
+  //         //
+  // MC Info //
+  //         //
+  /////////////
+  if (isMC)
+  {
+    npuobs  = -1;
+    nputrue = -1;
+    if (pileupH.isValid())
+    {
+      for (std::vector<PileupSummaryInfo>::const_iterator puiter = pileupH->begin(); puiter != pileupH->end(); ++puiter) 
+      {
+	if (puiter->getBunchCrossing() == 0) 
+	{
+	  npuobs  = puiter->getPU_NumInteractions();
+	  nputrue = puiter->getTrueNumInteractions();
+	} // end check over correct BX
+      } // end loop over PU
+    } // end check over pileup info valid
+  } // end block over MC only code
+  
+  ///////////////////
+  //               //
+  // FixedGrid Rho //
+  //               //
+  ///////////////////
+
+  rho = -9999.f;
+  if (rhosH.isValid())
+  {
+    rho = *(rhosH.product());
+  }
+
+  /////////////////////////
+  //                     //   
+  // Primary Vertex info //
+  //                     //
+  /////////////////////////
+  SimplePATTree::InitializePVBranches();
+  if (verticesH.isValid()) 
+  {
+    nvtx = verticesH->size();
+    const reco::Vertex & primevtx = (*verticesH)[0];
+    vtxX = primevtx.position().x();
+    vtxY = primevtx.position().y();
+    vtxZ = primevtx.position().z();
+  }
+
+  //////////////////
+  //              //
+  // Type1 PF Met //
+  //              //
+  //////////////////
+  SimplePATTree::InitializeMETBranches();
+  if (metsH.isValid())
+  {
+    const pat::MET & t1pfMET = (*metsH)[0];
+
+    // Type1 PF MET (corrected)
+    t1pfMETpt    = t1pfMET.pt();
+    t1pfMETphi   = t1pfMET.phi();
+    t1pfMETsumEt = t1pfMET.sumEt();
+  }
+
+  /////////////////////////
+  //                     //
+  // Jets (AK4 standard) //
+  //                     //
+  /////////////////////////
+  SimplePATTree::InitializeJetBranches();
+  if (jetsH.isValid()) // check to make sure reco jets exist
+  {
+    njets = jets.size();
+    
+    njets15 = 0; jetHT15 = 0.f;
+    njets30 = 0; jetHT30 = 0.f;
+    for (std::vector<pat::Jet>::const_iterator jetiter = jets.begin(); jetiter != jets.end(); ++jetiter)
+    {
+      if (jetiter->pt() > 15.) {njets15++; jetHT15 += jetiter->pt();}
+      if (jetiter->pt() > 30.) {njets30++; jetHT30 += jetiter->pt();}
+    }
+  }
 
   //////////////////
   //              //
@@ -162,7 +303,15 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   //           //
   ///////////////
   tree->Fill();      
-}    
+}
+
+void SimplePATTree::PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::vector<pat::Jet> & jets)
+{
+  if (jetsH.isValid()) // standard handle check
+  {
+    std::sort(jets.begin(),jets.end(),sortByJetPt);
+  }
+}  
 
 void SimplePATTree::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<PatPhoton> & photons, const bool isOOT)
 {
@@ -179,6 +328,31 @@ void SimplePATTree::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & p
     std::sort(photons.begin(),photons.end(),sortByPhotonPt);
   }
 }  
+
+void SimplePATTree::InitializePVBranches()
+{
+  nvtx = -1;
+  vtxX = -9999.f;
+  vtxY = -9999.f;
+  vtxZ = -9999.f;
+}
+
+void SimplePATTree::InitializeMETBranches()
+{
+  t1pfMETpt    = -9999.f;
+  t1pfMETphi   = -9999.f;
+  t1pfMETsumEt = -9999.f;
+}
+
+void SimplePATTree::InitializeJetBranches()
+{
+  njets = -1;
+  njets15 = -1; 
+  njets30 = -1; 
+  
+  jetHT15 = -9999.f;
+  jetHT30 = -9999.f;
+}
 
 void SimplePATTree::ClearRecoPhotonBranches()
 {
@@ -278,7 +452,32 @@ void SimplePATTree::beginJob()
   tree->Branch("event"                , &event                , "event/l");
   tree->Branch("run"                  , &run                  , "run/i");
   tree->Branch("lumi"                 , &lumi                 , "lumi/i");
-   
+  
+  // Pileup info
+  tree->Branch("npuobs"               , &npuobs               , "npuobs/I");
+  tree->Branch("nputrue"              , &nputrue              , "nputrue/I");
+
+  // rho
+  tree->Branch("rho"                  , &rho                  , "rho/F");
+
+  // Reco Vertex info
+  tree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");
+  tree->Branch("vtxX"                 , &vtxX                 , "vtxX/F");
+  tree->Branch("vtxY"                 , &vtxY                 , "vtxY/F");
+  tree->Branch("vtxZ"                 , &vtxZ                 , "vtxZ/F");
+
+  // MET info
+  tree->Branch("t1pfMETpt"            , &t1pfMETpt            , "t1pfMETpt/F");
+  tree->Branch("t1pfMETphi"           , &t1pfMETphi           , "t1pfMETphi/F");
+  tree->Branch("t1pfMETsumEt"         , &t1pfMETsumEt         , "t1pfMETsumEt/F");
+
+  // Jet Info
+  tree->Branch("njets"                , &njets                , "njets/I");
+  tree->Branch("njets15"              , &njets15              , "njets15/I");
+  tree->Branch("njets30"              , &njets30              , "njets30/I");
+  tree->Branch("jetHT15"              , &jetHT15              , "jetHT15/F");
+  tree->Branch("jetHT30"              , &jetHT30              , "jetHT30/F");
+ 
   // Photon Info
   tree->Branch("nphotons"             , &nphotons             , "nphotons/I");
 

@@ -21,8 +21,16 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h" 
 
+// SimDataFormats
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+
 // DataFormats
+#include "DataFormats/VertexReco/interface/Vertex.h"
+#include "DataFormats/PatCandidates/interface/MET.h"
+#include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
+
+// Data Formats: ECAL
 #include "DataFormats/EgammaReco/interface/SuperCluster.h"
 #include "DataFormats/CaloRecHit/interface/CaloCluster.h"
 #include "DataFormats/DetId/interface/DetId.h"
@@ -60,6 +68,11 @@ struct PatPhoton
   bool isOOT_;
 };
 
+inline bool sortByJetPt(const pat::Jet & jet1, const pat::Jet & jet2)
+{
+  return jet1.pt()>jet2.pt();
+}
+
 inline bool sortByPhotonPt(const PatPhoton & ph1, const PatPhoton & ph2)
 {
   return ph1.photon.pt()>ph2.photon.pt();
@@ -71,8 +84,12 @@ class SimplePATTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm:
   explicit SimplePATTree(const edm::ParameterSet&);
   ~SimplePATTree();
 
+  void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::vector<pat::Jet> & jets);
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<PatPhoton> & photons, const bool isOOT);
 
+  void InitializePVBranches();
+  void InitializeMETBranches();
+  void InitializeJetBranches();
   void ClearRecoPhotonBranches();
   void InitializeRecoPhotonBranches();
 
@@ -86,9 +103,25 @@ class SimplePATTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm:
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
 
+  // MC info
+  const bool isMC;
+   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupToken;
+
   // rhos
   const edm::InputTag rhosTag;
   edm::EDGetTokenT<double> rhosToken;
+
+  // vertices
+  const edm::InputTag verticesTag;
+  edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken;
+
+  // mets
+  const edm::InputTag metsTag;
+  edm::EDGetTokenT<std::vector<pat::MET> > metsToken;
+
+  // jets
+  const edm::InputTag jetsTag;
+  edm::EDGetTokenT<std::vector<pat::Jet> > jetsToken;
 
   // photons
   const edm::InputTag photonsTag;
@@ -108,6 +141,23 @@ class SimplePATTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm:
   // event info
   unsigned long int event;
   unsigned int run, lumi;  
+
+  // true vertices (MC ONLY)
+  int npuobs, nputrue;
+
+  // rho
+  float rho;
+
+  // reco vertices
+  int nvtx;
+  float vtxX, vtxY, vtxZ;
+
+  // MET
+  float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
+
+  // jets
+  int njets, njets15, njets30;
+  float jetHT15, jetHT30;
 
   // photon info
   int nphotons;
