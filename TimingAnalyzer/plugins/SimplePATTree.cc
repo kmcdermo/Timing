@@ -2,7 +2,9 @@
 #include "FWCore/Utilities/interface/isFinite.h"
 
 SimplePATTree::SimplePATTree(const edm::ParameterSet& iConfig): 
-  photonsTag  (iConfig.getParameter<edm::InputTag>("photons")),  
+  //photons
+  photonsTag   (iConfig.getParameter<edm::InputTag>("photons")),  
+  ootphotonsTag(iConfig.getParameter<edm::InputTag>("ootphotons")),  
   
   //recHits
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
@@ -11,8 +13,9 @@ SimplePATTree::SimplePATTree(const edm::ParameterSet& iConfig):
   usesResource();
   usesResource("TFileService");
 
-  // photons + ids
-  photonsToken = consumes<std::vector<pat::Photon> > (photonsTag);
+  // photons
+  photonsToken    = consumes<std::vector<pat::Photon> > (photonsTag);
+  ootphotonsToken = consumes<std::vector<pat::Photon> > (ootphotonsTag);
 
   // rechits
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
@@ -26,7 +29,11 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   // PHOTONS
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
-  std::vector<pat::Photon> photons = *photonsH;
+  std::vector<PatPhoton> photons(photonsH->size());
+
+  edm::Handle<std::vector<pat::Photon> > ootphotonsH;
+  iEvent.getByToken(ootphotonsToken, ootphotonsH);
+  std::vector<PatPhoton> ootphotons(ootphotonsH->size());
 
   // RecHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
@@ -34,19 +41,10 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
   iEvent.getByToken(recHitsEEToken, recHitsEEH);
 
-  // geometry (from ECAL ELF)
-  edm::ESHandle<CaloGeometry> calogeoH;
-  iSetup.get<CaloGeometryRecord>().get(calogeoH);
-  const CaloSubdetectorGeometry * barrelGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
-  const CaloSubdetectorGeometry * endcapGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
-
-  // topology (from PhotonProducer)
-  edm::ESHandle<CaloTopology> calotopoH;
-  iSetup.get<CaloTopologyRecord>().get(calotopoH);
-  const CaloTopology * topology = calotopoH.product();
-
   // do some prepping of objects
-  SimplePATTree::PrepPhotons(photonsH,photons);
+  SimplePATTree::PrepPhotons(photonsH,photons,false);
+  SimplePATTree::PrepPhotons(ootphotonsH,ootphotons,true);
+  photons.insert(photons.end(), ootphotons.begin(), ootphotons.end());
 
   ///////////////////////////
   //                       //
@@ -69,46 +67,42 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     if (nphotons > 0) SimplePATTree::InitializeRecoPhotonBranches();
 
     int iph = 0;
-    for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
+    for (std::vector<PatPhoton>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
     {
+      // which photon collection
+      phIsOOT[iph] = phiter->isOOT_;
+
       // standard photon branches
-      phE  [iph] = phiter->energy();
-      phpt [iph] = phiter->pt();
-      phphi[iph] = phiter->phi();
-      pheta[iph] = phiter->eta();
-
-      //std::cout << phE[iph] << " " << phpt[iph] << " " << phphi[iph] << " " <<pheta[iph] << std::endl;
-
-      // super cluster from photon
-      const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
-      phscE  [iph] = phsc->energy();
-      phsceta[iph] = phsc->eta();
-      phscphi[iph] = phsc->phi();
+      phE  [iph] = phiter->photon.energy();
+      phpt [iph] = phiter->photon.pt();
+      phphi[iph] = phiter->photon.phi();
+      pheta[iph] = phiter->photon.eta();
 
       // ID-like variables
-      phHoE   [iph] = phiter->hadTowOverEm();
-      phr9    [iph] = phiter->r9();
+      phHoE  [iph] = phiter->photon.hadTowOverEm();
+      phr9   [iph] = phiter->photon.r9();
+      phsieie[iph] = phiter->photon.full5x5_sigmaIetaIeta();
 
-      // pseudo-track veto
-      phPixSeed[iph] = phiter->passElectronVeto();
-      phEleVeto[iph] = phiter->hasPixelSeed();
-
-      // use seed to get geometry and recHits
+      // super cluster from photon
+      const reco::SuperClusterRef& phsc = phiter->photon.superCluster().isNonnull() ? phiter->photon.superCluster() : phiter->photon.parentSuperCluster();
       const reco::CaloClusterPtr& phbc = phsc->seed();
       const DetId seedDetId = phbc->seed(); //seed detid
-      const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
-      const EcalRecHitCollection * recHits = (isEB ? recHitsEBH : recHitsEEH).product();
+
+      const EcalRecHitCollection * recHits = nullptr;
+      if      (seedDetId.subdetId() == EcalBarrel) 
+      {
+	phIsEB[iph] = 1;
+	recHits = recHitsEBH.product();
+      }
+      else if (seedDetId.subdetId() == EcalEndcap) 
+      {
+	phIsEB[iph] = 0;
+	recHits = recHitsEEH.product();
+      }
 
       // need recHits to calculate shape variables
       if (recHits->size() > 0)
       {
-	// For now sipip and sieip not in shower shape for standard photon producer
-	std::vector<float> localCov = noZS::EcalClusterTools::localCovariances( *phbc, recHits, topology);
-	// cluster shape variables
-	phsieie[iph] = std::sqrt(localCov[0]);
-	phsipip[iph] = (!edm::isFinite(localCov[2]) ? 0. : std::sqrt(localCov[2]));
-	phsieip[iph] = localCov[1];
-
 	// 2nd moments from official calculation
 	const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phsc, *recHits);
 	// radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
@@ -118,11 +112,11 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       }
 
       // PF Cluster Isolations
-      phPFClEcalIso[iph] = phiter->ecalPFClusterIso();
-      phPFClHcalIso[iph] = phiter->hcalPFClusterIso();
+      phPFClEcalIso[iph] = phiter->photon.ecalPFClusterIso();
+      phPFClHcalIso[iph] = phiter->photon.hcalPFClusterIso();
 
       // Track Isolation (dR of outer cone < 0.3 as matching in trigger)
-      phHollowTkIso[iph] = phiter->trkSumPtHollowConeDR03();
+      phHollowTkIso[iph] = phiter->photon.trkSumPtHollowConeDR03();
 
       // map of rec hit ids
       uiiumap phrhIDmap;
@@ -140,7 +134,6 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       } // end loop over hits and fractions
       
       phnrh[iph] = phrhIDmap.size();
-      if (phnrh[iph] > 0) SimplePATTree::InitializeRecoRecHitBranches(iph);
       int irh = 0;
       for (uiiumap::const_iterator rhiter = phrhIDmap.begin(); rhiter != phrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
       {
@@ -149,20 +142,12 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	const DetId recHitId(rhID);
 	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
 	
-	const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
-	
-	// save position, energy, and time of each rechit to a vector
-	phrheta [iph][irh] = recHitPos.eta();
-	phrhphi [iph][irh] = recHitPos.phi();
-	phrhE   [iph][irh] = recHit->energy();
-	phrhtime[iph][irh] = recHit->time();
-	phrhID  [iph][irh] = int(rhID);
-	phrhOOT [iph][irh] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
-	
 	// extra info from the SEED
 	if (seedDetId.rawId() == recHitId) 
 	{ 
-	  phseedpos[iph] = irh; // save the position in the vector of the seed 
+	  phseedE   [iph] = recHit->energy();
+	  phseedtime[iph] = recHit->time();
+	  phseedOOT [iph] = int(recHit->checkFlag(EcalRecHit::kOutOfTime));
 	}
 	
 	irh++; // increment rechit counter
@@ -179,36 +164,38 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   tree->Fill();      
 }    
 
-void SimplePATTree::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<pat::Photon> & photons)
+void SimplePATTree::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<PatPhoton> & photons, const bool isOOT)
 {
   if (photonsH.isValid()) // standard handle check
   {
+    int iph = 0;
+    for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter)
+    {
+      photons[iph].photon = (*phiter);
+      photons[iph].isOOT_ = isOOT;
+      iph++;
+    }
+
     std::sort(photons.begin(),photons.end(),sortByPhotonPt);
   }
 }  
 
 void SimplePATTree::ClearRecoPhotonBranches()
 {
-  nphotons = -9999;
+  nphotons = -1;
+
+  phIsOOT.clear();
+  phIsEB.clear();
 
   phE.clear();
   phpt.clear();
   phphi.clear(); 
   pheta.clear(); 
 
-  phscE.clear(); 
-  phsceta.clear(); 
-  phscphi.clear(); 
-
   phHoE.clear();
   phr9.clear();
-
-  phPixSeed.clear();
-  phEleVeto.clear();
-
   phsieie.clear();
-  phsipip.clear();
-  phsieip.clear();
+
   phsmaj.clear();
   phsmin.clear();
   phalpha.clear();
@@ -218,36 +205,26 @@ void SimplePATTree::ClearRecoPhotonBranches()
   phHollowTkIso.clear();
 
   phnrh.clear();
-  phseedpos.clear();
 
-  phrheta.clear(); 
-  phrhphi.clear(); 
-  phrhE.clear(); 
-  phrhtime.clear();
-  phrhID.clear();
-  phrhOOT.clear();
+  phseedE.clear(); 
+  phseedtime.clear();
+  phseedOOT.clear();
 }
 
 void SimplePATTree::InitializeRecoPhotonBranches()
 {
+  phIsOOT.resize(nphotons);
+  phIsEB.resize(nphotons);
+  
   phE.resize(nphotons);
   phpt.resize(nphotons);
   phphi.resize(nphotons);
   pheta.resize(nphotons);
   
-  phscE.resize(nphotons);
-  phsceta.resize(nphotons);
-  phscphi.resize(nphotons);
-
   phHoE.resize(nphotons);
   phr9.resize(nphotons);
-
-  phPixSeed.resize(nphotons);
-  phEleVeto.resize(nphotons);
-
   phsieie.resize(nphotons);
-  phsipip.resize(nphotons);
-  phsieip.resize(nphotons);
+
   phsmaj.resize(nphotons);
   phsmin.resize(nphotons);
   phalpha.resize(nphotons);
@@ -257,35 +234,25 @@ void SimplePATTree::InitializeRecoPhotonBranches()
   phHollowTkIso.resize(nphotons);
 
   phnrh.resize(nphotons);
-  phseedpos.resize(nphotons);
 
-  phrheta.resize(nphotons);
-  phrhphi.resize(nphotons);
-  phrhE.resize(nphotons);
-  phrhtime.resize(nphotons);
-  phrhID.resize(nphotons);
-  phrhOOT.resize(nphotons);
+  phseedE.resize(nphotons);
+  phseedtime.resize(nphotons);
+  phseedOOT.resize(nphotons);
 
   for (int iph = 0; iph < nphotons; iph++)
   {
+    phIsOOT[iph] = -1;
+    phIsEB [iph] = -1;
+
     phE  [iph] = -9999.f; 
     phpt [iph] = -9999.f; 
     phphi[iph] = -9999.f; 
     pheta[iph] = -9999.f; 
 
-    phscE  [iph] = -9999.f; 
-    phsceta[iph] = -9999.f; 
-    phscphi[iph] = -9999.f; 
-
-    phHoE    [iph] = -9999.f;
-    phr9     [iph] = -9999.f;
-
-    phPixSeed[iph] = false;
-    phEleVeto[iph] = false;
-
+    phHoE  [iph] = -9999.f;
+    phr9   [iph] = -9999.f;
     phsieie[iph] = -9999.f;
-    phsipip[iph] = -9999.f;
-    phsieip[iph] = -9999.f;
+
     phsmaj [iph] = -9999.f;
     phsmin [iph] = -9999.f;
     phalpha[iph] = -9999.f;
@@ -294,28 +261,11 @@ void SimplePATTree::InitializeRecoPhotonBranches()
     phPFClHcalIso[iph] = -9999.f;
     phHollowTkIso[iph] = -9999.f;
 
-    phnrh    [iph] = -9999;
-    phseedpos[iph] = -9999;
-  }
-}
+    phnrh[iph] = -1;
 
-void SimplePATTree::InitializeRecoRecHitBranches(const int iph)
-{
-  phrheta [iph].resize(phnrh[iph]);
-  phrhphi [iph].resize(phnrh[iph]);
-  phrhE   [iph].resize(phnrh[iph]);
-  phrhtime[iph].resize(phnrh[iph]);
-  phrhID  [iph].resize(phnrh[iph]);
-  phrhOOT [iph].resize(phnrh[iph]);
-
-  for (int irh = 0; irh < phnrh[iph]; irh++)
-  {
-    phrheta [iph][irh] = -9999.f;
-    phrhphi [iph][irh] = -9999.f;
-    phrhE   [iph][irh] = -9999.f;
-    phrhtime[iph][irh] = -9999.f;
-    phrhID  [iph][irh] = -9999;
-    phrhOOT [iph][irh] = -9999;
+    phseedE   [iph] = -9999.f;
+    phseedtime[iph] = -9999.f;
+    phseedOOT [iph] = -1;
   }
 }
 
@@ -325,31 +275,25 @@ void SimplePATTree::beginJob()
   tree = fs->make<TTree>("tree"     , "tree");
 
   // Run, Lumi, Event info
-  tree->Branch("event"                  , &event                , "event/l");
-  tree->Branch("run"                    , &run                  , "run/i");
-  tree->Branch("lumi"                   , &lumi                 , "lumi/i");
+  tree->Branch("event"                , &event                , "event/l");
+  tree->Branch("run"                  , &run                  , "run/i");
+  tree->Branch("lumi"                 , &lumi                 , "lumi/i");
    
   // Photon Info
   tree->Branch("nphotons"             , &nphotons             , "nphotons/I");
+
+  tree->Branch("phIsOOT"              , &phIsOOT);
+  tree->Branch("phIsEB"               , &phIsEB);
 
   tree->Branch("phE"                  , &phE);
   tree->Branch("phpt"                 , &phpt);
   tree->Branch("phphi"                , &phphi);
   tree->Branch("pheta"                , &pheta);
 
-  tree->Branch("phscE"                , &phscE);
-  tree->Branch("phsceta"              , &phsceta);
-  tree->Branch("phscphi"              , &phscphi);
-
   tree->Branch("phHoE"                , &phHoE);
   tree->Branch("phr9"                 , &phr9);
-
-  tree->Branch("phPixSeed"            , &phPixSeed);
-  tree->Branch("phEleVeto"            , &phEleVeto);
-
   tree->Branch("phsieie"              , &phsieie);
-  tree->Branch("phsipip"              , &phsipip);
-  tree->Branch("phsieip"              , &phsieip);
+
   tree->Branch("phsmaj"               , &phsmaj);
   tree->Branch("phsmin"               , &phsmin);
   tree->Branch("phalpha"              , &phalpha);
@@ -359,14 +303,10 @@ void SimplePATTree::beginJob()
   tree->Branch("phHollowTkIso"        , &phHollowTkIso);
 
   tree->Branch("phnrh"                , &phnrh);
-  tree->Branch("phseedpos"            , &phseedpos);
 
-  tree->Branch("phrheta"              , &phrheta);
-  tree->Branch("phrhphi"              , &phrhphi);
-  tree->Branch("phrhE"                , &phrhE);
-  tree->Branch("phrhtime"             , &phrhtime);
-  tree->Branch("phrhID"               , &phrhID);
-  tree->Branch("phrhOOT"              , &phrhOOT);
+  tree->Branch("phseedE"              , &phseedE);
+  tree->Branch("phseedtime"           , &phseedtime);
+  tree->Branch("phseedOOT"            , &phseedOOT);
 }
 
 void SimplePATTree::endJob() {}

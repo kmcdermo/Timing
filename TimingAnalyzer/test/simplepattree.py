@@ -5,15 +5,6 @@ import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
-## general cuts
-options.register (
-	'dataset','sph_2016H',VarParsing.multiplicity.singleton,VarParsing.varType.string,
-	'dataset to be used');
-
-options.register (
-	'reco','OOT',VarParsing.multiplicity.singleton,VarParsing.varType.string,
-	'dataset to be used');
-
 ## processName
 options.register (
 	'processName','TREE',VarParsing.multiplicity.singleton,VarParsing.varType.string,
@@ -24,21 +15,15 @@ options.register (
 	'outputFileName','patphoton.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
-## GT to be used    
-options.register (
-	'globalTag','91X_dataRun2_PromptLike_v4',VarParsing.multiplicity.singleton,VarParsing.varType.string,
-	'gloabl tag to be used');
-
 ## parsing command line arguments
 options.parseArguments()
 
 ## reset file name
-options.outputFileName = 'patphoton-'+options.dataset+'-'+options.reco+'.root'
+options.outputFileName = 'patphoton-legacy.root'
 
 print "##### Settings ######"
 print "Running with processName     = ",options.processName	
 print "Running with outputFileName  = ",options.outputFileName	
-print "Running with globalTag       = ",options.globalTag	
 print "#####################"
 
 ## Define the CMSSW process
@@ -56,81 +41,47 @@ process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 ## Define the input source
-if options.dataset == 'sph_2016H' :
-	if options.reco == 'OOT':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod.root'
-				))
-	elif options.reco == 'OOT_NoHoE':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT_NoHoE/oot_nohoe_miniaod.root'
-				))
-	elif options.reco == 'OOT_Clusters':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT_Clusters/oot_miniaod.root'
-				))
-	elif options.reco == 'OOT_Clusters_NoHoE':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT_Clusters_NoHoE/oot_nohoe_miniaod.root'
-				))
-	elif options.reco == 'vanilla':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/vanilla/prompt_miniaod.root'
-				))
-	elif options.reco == 'gedPho':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod.root'
-				))
-	elif options.reco == 'OOT_sep':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_1.root',
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_2.root',
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_3.root',
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_4.root',
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_5.root',
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_6.root',
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_7.root',
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_8.root',
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_9.root',
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_10.root',
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_11.root',
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/OOT/oot_miniaod_12.root',
-				))
-	elif options.reco == 'reg':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/regression/oot_miniaod_reg.root'
-				))
-	elif options.reco == 'noreg':
-		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-				'file:/afs/cern.ch/work/k/kmcdermo/public/files/MINIAOD/regression/oot_miniaod_noreg.root'
-				))
-		
-
-else : exit
+process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_1.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_2.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_3.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_4.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_5.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_6.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_7.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_8.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_9.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_10.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_11.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_12.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_13.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_14.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_15.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_16.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_17.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_18.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_19.root',
+		'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_20.root'
+		))
 
 ## How many events to process
 process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
 # Set the global tag depending on the sample type
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag.globaltag = options.globalTag  
+from Configuration.AlCa.autoCond import autoCond
+process.GlobalTag.globaltag = autoCond['run2_mc']
 
 ## Create output file
 ## Setup the service to make a ROOT TTree
 process.TFileService = cms.Service("TFileService", 
 		                   fileName = cms.string(options.outputFileName))
 
-if 'OOT' or 'reg' in options.reco :
-	photonsTag = cms.InputTag("slimmedOOTPhotons","","PAT")
-else :
-	photonsTag = cms.InputTag("slimmedPhotons","","PAT")
-
 # Make the tree 
 process.tree = cms.EDAnalyzer("SimplePATTree",
-   ## rho
-   rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## photons		
-   photons = photonsTag,
+   photons    = cms.InputTag("slimmedPhotons"   ,"","PAT"),
+   ootphotons = cms.InputTag("slimmedOOTPhotons","","PAT"),
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
