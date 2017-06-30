@@ -1,1 +1,2 @@
+hltEG60R9Id90CaloIdLIsoLHollowTrackIsoFilter
 hltEG60R9Id90CaloIdLIsoLDisplacedIdFilter

@@ -93,7 +93,7 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   explicit HLTDump(const edm::ParameterSet&);
   ~HLTDump();
 
-  void PrepTrigObjs(std::vector<pat::TriggerObjectStandAlone>& triggerObjects);
+  void PrepTriggerObjects();
   void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::vector<pat::Jet> & jets);
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<pat::Photon> & photons);
 
@@ -119,6 +119,7 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   const float jetpTmin;
   const float dRmin;
   const float pTres;
+  const bool  saveTrigObjs;
 
   // triggers
   const std::string inputPaths;

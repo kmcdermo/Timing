@@ -20,6 +20,10 @@ options.register (
 	'pTres',0.5,VarParsing.multiplicity.singleton,VarParsing.varType.float,
 	'pT resolution cut');
 
+options.register (
+	'saveTrigObjs',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to save trigger objects from associated filters');
+
 ## which trigger menu though??
 options.register (
 	'triggerPName','HLT',VarParsing.multiplicity.singleton,VarParsing.varType.string,
@@ -52,6 +56,7 @@ print "##### Settings ######"
 print "Running with jetpTmin            = ",options.jetpTmin
 print "Running with dRmin               = ",options.dRmin
 print "Running with pTres               = ",options.pTres
+print "Running with saveTrigObjs        = ",options.saveTrigObjs
 print "Running with triggerPName        = ",options.triggerPName
 print "Running with processName         = ",options.processName	
 print "Running with outputFileName      = ",options.outputFileName	
@@ -83,10 +88,10 @@ if options.triggerPName == 'HLT':
 else : exit
 
 # Set the json locally 
-process.source.lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange())  
-JSONfile = 'test/dcs2017.json'
-myLumis = LumiList.LumiList(filename = JSONfile).getCMSSWString().split(',')  
-process.source.lumisToProcess.extend(myLumis) 
+#process.source.lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange())  
+#JSONfile = 'test/dcs2017.json'
+#myLumis = LumiList.LumiList(filename = JSONfile).getCMSSWString().split(',')  
+#process.source.lumisToProcess.extend(myLumis) 
 
 ## How many events to process
 if   options.demoMode : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
@@ -107,6 +112,7 @@ process.tree = cms.EDAnalyzer("HLTDump",
    jetpTmin = cms.double(options.jetpTmin),
    dRmin = cms.double(options.dRmin),
    pTres = cms.double(options.pTres),
+   saveTrigObjs = cms.bool(options.saveTrigObjs),
    ## triggers
    inputPaths     = cms.string("test/"+options.triggerPName+"paths.txt"),
    inputFilters   = cms.string("test/"+options.triggerPName+"filters.txt"),

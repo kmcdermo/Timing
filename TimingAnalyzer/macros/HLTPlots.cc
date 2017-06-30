@@ -41,7 +41,7 @@ void HLTPlots::DoPlots()
     Bool_t isHLTMatched = false;
     for (Int_t jph = 0; jph < nphotons; jph++)
     {
-      if ((*phIsHLTMatched)[jph][0]) 
+      if ((*phIsHLTMatched)[jph][0]) // [0] == hollowtrk cut, [1] == displacedIdcut
       {
 	iph = jph;
 	isHLTMatched = true;
@@ -69,10 +69,10 @@ void HLTPlots::DoPlots()
       
       if (passHT)
       {
-	effptEB->Fill((*triggerBits)[0],pt);
+	effptEB->Fill((*phIsHLTMatched)[iph][1],pt);
 	if (pt < 70.f) continue;
-	effeta->Fill((*triggerBits)[0],(*phsceta)[iph]);
-	effphi->Fill((*triggerBits)[0],(*phscphi)[iph]);
+	effeta->Fill((*phIsHLTMatched)[iph][1],(*phsceta)[iph]);
+	effphi->Fill((*phIsHLTMatched)[iph][1],(*phscphi)[iph]);
       } // end check HT
     } // end check over EB
     else if ((std::abs((*phsceta)[iph]) > ECAL::etaEEmin) && (std::abs((*phsceta)[iph]) < ECAL::etaEEmax))
@@ -86,8 +86,8 @@ void HLTPlots::DoPlots()
       {
 	effptEE->Fill((*triggerBits)[0],pt);
 	if (pt < 70.f) continue;
-	effeta->Fill((*triggerBits)[0],(*phsceta)[iph]);
-	effphi->Fill((*triggerBits)[0],(*phscphi)[iph]);
+	effeta->Fill((*phIsHLTMatched)[iph][1],(*phsceta)[iph]);
+	effphi->Fill((*phIsHLTMatched)[iph][1],(*phscphi)[iph]);
       } // end check HT
     } // end check over EE
 

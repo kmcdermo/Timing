@@ -5,6 +5,7 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
   jetpTmin(iConfig.existsAs<double>("jetpTmin") ? iConfig.getParameter<double>("jetpTmin") : 15.f),
   dRmin(iConfig.existsAs<double>("dRmin") ? iConfig.getParameter<double>("dRmin") : 0.4),
   pTres(iConfig.existsAs<double>("pTres") ? iConfig.getParameter<double>("pTres") : 0.5),
+  saveTrigObjs(iConfig.existsAs<bool>("saveTrigObjs") ? iConfig.getParameter<bool>("saveTrigObjs") : false),
   
   // triggers
   inputPaths       (iConfig.existsAs<std::string>("inputPaths")   ? iConfig.getParameter<std::string>("inputPaths") : ""),
@@ -147,7 +148,7 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
 	{	
 	  if (triggerObject.hasFilterLabel(filterNames[ifilter])) triggerObjectsByFilter[ifilter].push_back(triggerObject);
-	} // emd loop over user filter names
+	} // end loop over user filter names
       } // end loop over trigger objects
     } // end check over valid TriggerObjects
   } // end check over valid TriggerResults
@@ -157,22 +158,24 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // HLT Objects //
   //             //
   /////////////////
+  HLTDump::PrepTriggerObjects();
 
-  HLTDump::ClearTriggerObjectBranches();
-  for (std::size_t ifilter = 0; ifilter < triggerObjectsByFilter.size(); ifilter++)
+  if (saveTrigObjs) 
   {
-    HLTDump::PrepTrigObjs(triggerObjectsByFilter[ifilter]);
-    
-    for (std::size_t iobject = 0; iobject < triggerObjectsByFilter[ifilter].size(); iobject++)
+    HLTDump::ClearTriggerObjectBranches();
+    for (std::size_t ifilter = 0; ifilter < triggerObjectsByFilter.size(); ifilter++)
     {
-      const pat::TriggerObjectStandAlone & triggerObject = triggerObjectsByFilter[ifilter][iobject];
-
-      trigobjE  [ifilter][iobject] = triggerObject.energy();
-      trigobjeta[ifilter][iobject] = triggerObject.eta();
-      trigobjphi[ifilter][iobject] = triggerObject.phi();
-      trigobjpt [ifilter][iobject] = triggerObject.pt();
-    }
-  }
+      for (std::size_t iobject = 0; iobject < triggerObjectsByFilter[ifilter].size(); iobject++)
+      {
+	const pat::TriggerObjectStandAlone & triggerObject = triggerObjectsByFilter[ifilter][iobject];
+	
+	trigobjE  [ifilter][iobject] = triggerObject.energy();
+	trigobjeta[ifilter][iobject] = triggerObject.eta();
+	trigobjphi[ifilter][iobject] = triggerObject.phi();
+	trigobjpt [ifilter][iobject] = triggerObject.pt();
+      } // save trig objects
+    } // end loop over filter objects
+  } // end loop over filters
 
   /////////////////////////
   //                     //
@@ -301,9 +304,9 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   tree->Fill();      
 }    
 
-void HLTDump::PrepTrigObjs(std::vector<pat::TriggerObjectStandAlone>& triggerObjects)
+void HLTDump::PrepTriggerObjects()
 {
-  if (triggerObjects.size() > 0) 
+  for (auto& triggerObjects : triggerObjectsByFilter)
   {
     std::sort(triggerObjects.begin(),triggerObjects.end(),sortByTrigObjPt);
   }
@@ -527,11 +530,14 @@ void HLTDump::beginJob()
   // Jet Info
   tree->Branch("pfjetHT"              , &pfjetHT              , "pfjetHT/F");
    
-  // HLT Info
-  tree->Branch("trigobjE"             , &trigobjE);
-  tree->Branch("trigobjeta"           , &trigobjeta);
-  tree->Branch("trigobjphi"           , &trigobjphi);
-  tree->Branch("trigobjpt"            , &trigobjpt);
+  // Trigger Object Info
+  if (saveTrigObjs)
+  {
+    tree->Branch("trigobjE"             , &trigobjE);
+    tree->Branch("trigobjeta"           , &trigobjeta);
+    tree->Branch("trigobjphi"           , &trigobjphi);
+    tree->Branch("trigobjpt"            , &trigobjpt);
+  }
 
   // Photon Info
   tree->Branch("nphotons"             , &nphotons             , "nphotons/I");
