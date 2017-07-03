@@ -81,9 +81,8 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 ## Define the input source
 if options.triggerPName == 'HLT':
 	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-			'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v2/000/296/173/00000/C8E82FEC-754C-E711-AB22-02163E019C8E.root',
-			'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v2/000/296/173/00000/D8A4F64B-6A4C-E711-9068-02163E01A6DE.root',
-			'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v2/000/296/174/00000/9A808125-6D4C-E711-80DA-02163E01A7A6.root'
+			#'root://xrootd-cms.infn.it//store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v2/000/296/174/00000/9A808125-6D4C-E711-80DA-02163E01A7A6.root',
+			'root://xrootd-cms.infn.it//store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v1/000/297/046/00000/74C3B1CB-B056-E711-A8A6-02163E01A737.root',
 			))
 else : exit
 
