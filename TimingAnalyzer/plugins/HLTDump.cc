@@ -30,7 +30,7 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
   triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
   triggerObjectsToken = consumes<std::vector<pat::TriggerObjectStandAlone> > (triggerObjectsTag);
 
-  // read in from a stream the trigger paths for saving
+  //  read in from a stream the trigger paths for saving
   if (file_exists(inputPaths))
   {
     std::fstream pathStream;
@@ -88,7 +88,7 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // JETS
   edm::Handle<std::vector<pat::Jet> > jetsH;
   iEvent.getByToken(jetsToken, jetsH);
-  std::vector<pat::Jet> jets = *jetsH;
+  std::vector<pat::Jet> jets; jets.reserve(jetsH->size());
 
   // PHOTONS
   edm::Handle<std::vector<pat::Photon> > photonsH;
@@ -183,14 +183,37 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //                     //
   /////////////////////////
   
-  pfjetHT = -9999.f;
+  HLTDump::ClearJetBranches();
   if (jetsH.isValid()) // check to make sure reco jets exist
   {
-    pfjetHT = 0.f;
+    njets = jets.size();
+    if (njets > 0) HLTDump::InitializeJetBranches();
+
+    int ijet = 0;
     for (std::vector<pat::Jet>::const_iterator jetiter = jets.begin(); jetiter != jets.end(); ++jetiter)
     {
-      if (jetiter->pt() < jetpTmin) break;
-      pfjetHT += jetiter->pt();
+      jetE  [ijet] = jetiter->energy();
+      jetpt [ijet] = jetiter->pt();
+      jetphi[ijet] = jetiter->phi();
+      jeteta[ijet] = jetiter->eta();
+      
+      const float nhf = jetiter->neutralHadronEnergyFraction();
+      const float chf = jetiter->chargedHadronEnergyFraction();
+
+      const float nef = jetiter->neutralEmEnergyFraction();
+      const float cef = jetiter->chargedEmEnergyFraction();
+
+      const int cm = jetiter->chargedMultiplicity();
+      const int nm = jetiter->neutralMultiplicity();
+
+      const float eta = std::abs(jeteta[ijet]);
+
+      if      (eta <= 2.4) jetidL[ijet] = nhf<0.99 && nef<0.99 && (cm+nm)>1 && chf > 0 && cm > 0 && cef < 0.99;
+      else if (eta <= 2.7) jetidL[ijet] = nhf<0.99 && nef<0.99 && (cm+nm)>1;
+      else if (eta <= 3.0) jetidL[ijet] = nef>0.01 && nhf<0.98 && nm>2;
+      else                 jetidL[ijet] = nef<0.90 && nm>10;
+      
+      ijet++;
     } // end loop over reco jets
   } // end check over reco jets
   
@@ -316,6 +339,11 @@ void HLTDump::PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::v
 {
   if (jetsH.isValid()) // standard handle check
   {
+    for (const auto& jet : *jetsH)
+    {
+      if (jet.pt() > jetpTmin) jets.push_back(jet);
+    }
+
     std::sort(jets.begin(),jets.end(),sortByJetPt);
   }
 }  
@@ -385,6 +413,35 @@ void HLTDump::ClearTriggerObjectBranches()
       trigobjphi[ifilter][iobject] = -9999.f;
       trigobjpt [ifilter][iobject] = -9999.f;
     }
+  }
+}
+
+void HLTDump::ClearJetBranches()
+{
+  njets = -9999;
+
+  jetE.clear();
+  jetpt.clear();
+  jetphi.clear();
+  jeteta.clear();
+  jetidL.clear();
+}
+
+void HLTDump::InitializeJetBranches()
+{
+  jetE.resize(njets);
+  jetpt.resize(njets);
+  jetphi.resize(njets);
+  jeteta.resize(njets);
+  jetidL.resize(njets);
+
+  for (int ijet = 0; ijet < njets; ijet++)
+  {
+    jetE  [ijet] = -9999.f;
+    jetpt [ijet] = -9999.f;
+    jetphi[ijet] = -9999.f;
+    jeteta[ijet] = -9999.f;
+    jetidL[ijet] = false;
   }
 }
 
@@ -528,7 +585,13 @@ void HLTDump::beginJob()
   tree->Branch("triggerBits"          , &triggerBits);
 
   // Jet Info
-  tree->Branch("pfjetHT"              , &pfjetHT              , "pfjetHT/F");
+  tree->Branch("njets"                , &njets                , "njets/I");
+
+  tree->Branch("jetE"                 , &jetE);
+  tree->Branch("jetpt"                , &jetpt);
+  tree->Branch("jetphi"               , &jetphi);
+  tree->Branch("jeteta"               , &jeteta);
+  tree->Branch("jetidL"               , &jetidL);
    
   // Trigger Object Info
   if (saveTrigObjs)
