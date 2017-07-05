@@ -1,10 +1,9 @@
-#ifndef _hltplots_
-#define _hltplots_
+#ifndef _hltplots_simple_
+#define _hltplots_simple_
 
 #include "TFile.h"
 #include "TTree.h"
 #include "TBranch.h"
-#include <vector>
 #include "TMath.h"
 #include <vector>
 #include <cmath>
@@ -23,15 +22,16 @@ inline Float_t deltaR(const Float_t phi1, const Float_t eta1, const Float_t phi2
   return std::sqrt(deta*deta+dphi*dphi);
 }
 
-class HLTPlots 
+class HLTPlots_simple 
 {
 public :
-  HLTPlots();
-  ~HLTPlots();
+  HLTPlots_simple();
+  ~HLTPlots_simple();
   
   void InitTree();
-  void DoPlots();
+  void InitPassed(std::vector<Bool_t>&);
   Float_t HT(const Bool_t, const Int_t, const Bool_t, const Bool_t);
+  void DoPlots();
   
 private :
   TFile * fInFile;
@@ -42,14 +42,15 @@ private :
   UInt_t          run;
   UInt_t          lumi;
 
+  //  Float_t         pfjetHT;
   Int_t           njets;
   Int_t           nphotons;
+  std::vector<Bool_t>  * triggerBits;
   std::vector<Float_t> * jetE;
   std::vector<Float_t> * jetpt;
   std::vector<Float_t> * jetphi;
   std::vector<Float_t> * jeteta;
   std::vector<Bool_t>  * jetidL;
-  std::vector<Bool_t>  * triggerBits;
   std::vector<Float_t> * phE;
   std::vector<Float_t> * phpt;
   std::vector<Float_t> * phphi;
@@ -84,6 +85,7 @@ private :
   TBranch * b_run;
   TBranch * b_lumi;
   TBranch * b_triggerBits;
+  //  TBranch * b_pfjetHT;
   TBranch * b_njets;
   TBranch * b_jetE;
   TBranch * b_jetpt;

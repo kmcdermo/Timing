@@ -8,7 +8,7 @@
 
 HLTPlots::HLTPlots()
 {
-  fInFile = TFile::Open("input/DATA/HLT/hltdump.root");
+  fInFile = TFile::Open("input/DATA/2017/HLT_CHECK/30_06_17/jets/hltdump.root");
   fInTree = (TTree*)fInFile->Get("tree/tree");
 
   HLTPlots::InitTree();
@@ -28,70 +28,92 @@ void HLTPlots::DoPlots()
   TEfficiency * effeta = new TEfficiency("effeta","HLT Efficiency vs Leading Photon #eta;Photon Offline #eta;Efficiency",30,-3.f,3.f);
   TEfficiency * effphi = new TEfficiency("effeta","HLT Efficiency vs Leading Photon #phi;Photon Offline #phi;Efficiency",32,-3.2f,3.2f);
 
+  TEfficiency * efftime = new TEfficiency("efftime","HLT Efficiency vs Leading Photon Seed Time [ns];Photon Offline Seed Time [ns];Efficiency",100,-25.,25.);
+
   TEfficiency * effHT = new TEfficiency("effHT","HLT Efficiency vs PF H_{T};Offline PF H_{T} (Min PFJet p_{T} > 15);Efficiency",100,0,2000.f);
 
+  const Float_t htcut = 400.f;
+  const Bool_t isoph = true;
+  const Bool_t isidL = false;
+  const Bool_t iser  = false;
+  
   for (UInt_t ientry = 0; ientry < fInTree->GetEntries(); ientry++)
   {
+    if (ientry%10000 == 0 || ientry == 0) std::cout << "Entry " << ientry << " out of " << fInTree->GetEntries() << std::endl;
+
     fInTree->GetEntry(ientry);
 
-    Bool_t passHT = false;
-    if (pfjetHT > 400.f) passHT = true;
-
-    Int_t iph = 0; // get leading matched photon
-    Bool_t isHLTMatched = false;
-    for (Int_t jph = 0; jph < nphotons; jph++)
+    Int_t goodpho = -1;
+    for (Int_t iph = 0; iph < nphotons; iph++)
     {
-      if ((*phIsHLTMatched)[jph][0]) // [0] == hollowtrk cut, [1] == displacedIdcut
+      if (!(*phIsHLTMatched)[iph][1]) continue; // [0] == hollowtrk cut, [1] == displacedIdcut
+      const Float_t pt = (*phpt)[iph];
+
+      if ((*phr9)[iph] < 0.95) continue;
+      if ((*phsmaj)[iph] > 1.f) continue;
+      if ((*phsmin)[iph] > 0.3) continue;
+      if ((*phHollowTkIso)[iph] > (3.f + 0.002*pt)) continue;
+
+      // track veto 
+      //if (!(*phEleVeto)[iph]) continue;
+      //if ((*phPixSeed)[iph]) continue;
+
+      if (std::abs((*phsceta)[iph]) < ECAL::etaEB)
       {
-	iph = jph;
-	isHLTMatched = true;
+	if ((*phHoE)[iph] > 0.0396) continue;
+	if ((*phsieie)[iph] > 0.01022) continue;
+	if ((*phPFClEcalIso)[iph] > (2.5 + 0.01*pt)) continue;
+	if ((*phPFClHcalIso)[iph] > (6.f + 0.03*pt + 0.00003*pt*pt)) continue;
+
+	if (pt > 70.f) goodpho = iph;
+
+	const Float_t pfjetHT = HLTPlots::HT(isoph,iph,isidL,iser);
+	if (pfjetHT < htcut) continue;
+
+	effptEB->Fill((*triggerBits)[0],pt);
+	if (goodpho == iph)
+        {
+	  const Float_t pfjetHT70 = HLTPlots::HT(isoph,iph,isidL,iser);
+	  if (pfjetHT70 < htcut) 
+	  {
+	    effeta->Fill((*triggerBits)[0],(*phsceta)[iph]);
+	    effphi->Fill((*triggerBits)[0],(*phscphi)[iph]);
+	    efftime->Fill((*triggerBits)[0],(*phseedtime)[iph]);
+	  } // end ht check
+	} // end check on good pho
 	break;
-      }
-    }
-    if (!isHLTMatched) continue;
-
-    const Float_t pt = (*phpt)[iph];
-
-    if ((*phr9)[iph] < 0.95) continue;
-    if ((*phsmaj)[iph] > 1.f) continue;
-    if ((*phsmin)[iph] > 0.3) continue;
-    if ((*phHollowTkIso)[iph] > (3.f + 0.002*pt)) continue;
-
-    // track veto 
-    //if (!(*phEleVeto)[iph]) continue;
-
-    if (std::abs((*phsceta)[iph]) < ECAL::etaEB)
-    {
-      if ((*phHoE)[iph] > 0.0396) continue;
-      if ((*phsieie)[iph] > 0.01022) continue;
-      if ((*phPFClEcalIso)[iph] > (2.5 + 0.01*pt)) continue;
-      if ((*phPFClHcalIso)[iph] > (6.f + 0.03*pt + 0.00003*pt*pt)) continue;
-      
-      if (passHT)
+      } // end check over EB
+      else if ((std::abs((*phsceta)[iph]) > ECAL::etaEEmin) && (std::abs((*phsceta)[iph]) < ECAL::etaEEmax))
       {
-	effptEB->Fill((*phIsHLTMatched)[iph][1],pt);
-	if (pt < 70.f) continue;
-	effeta->Fill((*phIsHLTMatched)[iph][1],(*phsceta)[iph]);
-	effphi->Fill((*phIsHLTMatched)[iph][1],(*phscphi)[iph]);
-      } // end check HT
-    } // end check over EB
-    else if ((std::abs((*phsceta)[iph]) > ECAL::etaEEmin) && (std::abs((*phsceta)[iph]) < ECAL::etaEEmax))
-    {
-      if ((*phHoE)[iph] > 0.0219) continue;
-      if ((*phsieie)[iph] > 0.03001) continue;
-      if ((*phPFClEcalIso)[iph] > (4.f + 0.01*pt)) continue;
-      if ((*phPFClHcalIso)[iph] > (3.5 + 0.03*pt + 0.00003*pt*pt)) continue;
+	if ((*phHoE)[iph] > 0.0219) continue;
+	if ((*phsieie)[iph] > 0.03001) continue;
+	if ((*phPFClEcalIso)[iph] > (4.f + 0.01*pt)) continue;
+	if ((*phPFClHcalIso)[iph] > (3.5 + 0.03*pt + 0.00003*pt*pt)) continue;
 
-      if (passHT)
-      {
+	if (pt > 70.f) goodpho = iph;
+	
+	const Float_t pfjetHT = HLTPlots::HT(isoph,iph,isidL,iser);
+	if (pfjetHT < htcut) continue;
+
 	effptEE->Fill((*triggerBits)[0],pt);
-	if (pt < 70.f) continue;
-	effeta->Fill((*phIsHLTMatched)[iph][1],(*phsceta)[iph]);
-	effphi->Fill((*phIsHLTMatched)[iph][1],(*phscphi)[iph]);
-      } // end check HT
-    } // end check over EE
+	if (goodpho == iph) 
+	{
+	  const Float_t pfjetHT70 = HLTPlots::HT(isoph,iph,isidL,iser);
+	  if (pfjetHT70 < htcut) 
+	  {
+	    effeta->Fill((*triggerBits)[0],(*phsceta)[iph]);
+	    effphi->Fill((*triggerBits)[0],(*phscphi)[iph]);
+	    efftime->Fill((*triggerBits)[0],(*phseedtime)[iph]);
+	  } // end ht check
+	} // end check on good pho
+	break;
+      } // end check over EE
+    } // end loop over photons
 
-    effHT->Fill((*triggerBits)[0],pfjetHT);
+    if (goodpho < 0) continue;
+
+    const Float_t pfjetHT70 = HLTPlots::HT(isoph,goodpho,isidL,iser);
+    effHT->Fill((*triggerBits)[0],pfjetHT70);
   } // end loop over events
 
   TCanvas * canv = new TCanvas();
@@ -136,6 +158,15 @@ void HLTPlots::DoPlots()
   hphi->Draw("EP");
   canv->SaveAs("hphi.png");
 
+  efftime->Draw("AP");
+  canv->SaveAs("efftime.png");
+  TH1F * htime  = (TH1F*)efftime ->GetCopyTotalHisto();
+  TString htimetitle = htime->GetTitle();
+  htime->SetTitle(htimetitle.Remove(htimetitle.Index(toreplace),length));
+  htime->GetYaxis()->SetTitle("nEvents");
+  htime->Draw("EP");
+  canv->SaveAs("htime.png");
+
   effHT->Draw("AP");
   canv->SaveAs("effHT.png");
   TH1F * hHT  = (TH1F*)effHT ->GetCopyTotalHisto();
@@ -150,21 +181,37 @@ void HLTPlots::DoPlots()
   delete effptEE;
   delete effeta;
   delete effphi;
+  delete efftime;
   delete effHT;
   delete hptEB;
   delete hptEE;
   delete heta;
   delete hphi;
+  delete htime;
   delete hHT;
+}
+
+Float_t HLTPlots::HT(const Bool_t isoph, const Int_t iph, const Bool_t isidL, const Bool_t iser)
+{
+  Float_t ht = 0;
+  for (Int_t ijet = 0; ijet < njets; ijet++)
+  {
+    if (iser && (*jeteta)[ijet] > 3.f) continue;
+    if (isoph && deltaR((*phphi)[iph],(*pheta)[iph],(*jetphi)[iph],(*jeteta)[iph]) < 0.4) continue;
+    if (isidL && !(*jetidL)[ijet]) continue;
+    ht += (*jetpt)[ijet];
+  }
+  return ht;
 }
 
 void HLTPlots::InitTree()
 {
   triggerBits = 0;
-  trigobjE = 0;
-  trigobjeta = 0;
-  trigobjphi = 0;
-  trigobjpt = 0;
+  jetE = 0;
+  jetpt = 0;
+  jetphi = 0;
+  jeteta = 0;
+  jetidL = 0;
   phE = 0;
   phpt = 0;
   phphi = 0;
@@ -198,11 +245,12 @@ void HLTPlots::InitTree()
   fInTree->SetBranchAddress("run", &run, &b_run);
   fInTree->SetBranchAddress("lumi", &lumi, &b_lumi);
   fInTree->SetBranchAddress("triggerBits", &triggerBits, &b_triggerBits);
-  fInTree->SetBranchAddress("pfjetHT", &pfjetHT, &b_pfjetHT);
-  fInTree->SetBranchAddress("trigobjE", &trigobjE, &b_trigobjE);
-  fInTree->SetBranchAddress("trigobjeta", &trigobjeta, &b_trigobjeta);
-  fInTree->SetBranchAddress("trigobjphi", &trigobjphi, &b_trigobjphi);
-  fInTree->SetBranchAddress("trigobjpt", &trigobjpt, &b_trigobjpt);
+  fInTree->SetBranchAddress("njets", &njets, &b_njets);
+  fInTree->SetBranchAddress("jetE", &jetE, &b_jetE);
+  fInTree->SetBranchAddress("jetpt", &jetpt, &b_jetpt);
+  fInTree->SetBranchAddress("jetphi", &jetphi, &b_jetphi);
+  fInTree->SetBranchAddress("jeteta", &jeteta, &b_jeteta);
+  fInTree->SetBranchAddress("jetidL", &jetidL, &b_jetidL);
   fInTree->SetBranchAddress("nphotons", &nphotons, &b_nphotons);
   fInTree->SetBranchAddress("phE", &phE, &b_phE);
   fInTree->SetBranchAddress("phpt", &phpt, &b_phpt);
