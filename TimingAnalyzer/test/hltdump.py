@@ -24,11 +24,6 @@ options.register (
 	'saveTrigObjs',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to save trigger objects from associated filters');
 
-## which trigger menu though??
-options.register (
-	'triggerPName','HLT',VarParsing.multiplicity.singleton,VarParsing.varType.string,
-	'process name of trigger menu to consider');
-
 ## processName
 options.register (
 	'processName','TREE',VarParsing.multiplicity.singleton,VarParsing.varType.string,
@@ -57,7 +52,6 @@ print "Running with jetpTmin            = ",options.jetpTmin
 print "Running with dRmin               = ",options.dRmin
 print "Running with pTres               = ",options.pTres
 print "Running with saveTrigObjs        = ",options.saveTrigObjs
-print "Running with triggerPName        = ",options.triggerPName
 print "Running with processName         = ",options.processName	
 print "Running with outputFileName      = ",options.outputFileName	
 print "Running with globalTag           = ",options.globalTag	
@@ -79,16 +73,15 @@ process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
-if options.triggerPName == 'HLT':
-	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-			#'root://xrootd-cms.infn.it//store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v2/000/296/174/00000/9A808125-6D4C-E711-80DA-02163E01A7A6.root',
-			'root://xrootd-cms.infn.it//store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v1/000/297/046/00000/74C3B1CB-B056-E711-A8A6-02163E01A737.root',
-			))
-else : exit
+process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+		#'root://xrootd-cms.infn.it//store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v2/000/296/174/00000/9A808125-6D4C-E711-80DA-02163E01A7A6.root',
+		#			'root://xrootd-cms.infn.it//store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v1/000/297/046/00000/74C3B1CB-B056-E711-A8A6-02163E01A737.root',
+		'root://xrootd-cms.infn.it//store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v1/000/297/468/00000/FC001FE4-DE5A-E711-AFDC-02163E01A4AE.root'
+		))
 
 # Set the json locally 
 #process.source.lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange())  
-#JSONfile = 'test/dcs2017.json'
+#JSONfile = 'test/hcal_good_gte297467.txt'
 #myLumis = LumiList.LumiList(filename = JSONfile).getCMSSWString().split(',')  
 #process.source.lumisToProcess.extend(myLumis) 
 
@@ -113,8 +106,8 @@ process.tree = cms.EDAnalyzer("HLTDump",
    pTres = cms.double(options.pTres),
    saveTrigObjs = cms.bool(options.saveTrigObjs),
    ## triggers
-   inputPaths     = cms.string("test/"+options.triggerPName+"paths.txt"),
-   inputFilters   = cms.string("test/"+options.triggerPName+"filters.txt"),
+   inputPaths     = cms.string("HLTpaths.txt"),
+   inputFilters   = cms.string("HLTfilters.txt"),
    triggerResults = cms.InputTag("TriggerResults", "", "HLT"),
    triggerObjects = cms.InputTag("slimmedPatTrigger"),
    ## rho

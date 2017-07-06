@@ -98,8 +98,10 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<pat::Photon> & photons);
 
   void InitializeTriggerBranches();
-
   void ClearTriggerObjectBranches();
+
+  void ClearJetBranches();
+  void InitializeJetBranches();
 
   void ClearRecoPhotonBranches();
   void HLTToPATPhotonMatching(const int iph);
@@ -164,7 +166,9 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   std::vector<std::vector<float> > trigobjE, trigobjeta, trigobjphi, trigobjpt;
 
   // jets
-  float pfjetHT;
+  int njets;
+  std::vector<float> jetE, jetpt, jetphi, jeteta;
+  std::vector<bool> jetidL;
 
   // photon info
   int nphotons;
