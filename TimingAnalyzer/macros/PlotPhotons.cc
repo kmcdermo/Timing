@@ -96,12 +96,7 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
   }
   fOutDump = fOutDir; // --> simple directory for dump of plots
 
-  FileStat_t dummyFileStat; 
-  if (gSystem->GetPathInfo(fOutDir.Data(), dummyFileStat) == 1)
-  {
-    TString mkDir = Form("mkdir -p %s",fOutDir.Data());
-    gSystem->Exec(mkDir.Data());
-  }
+  makeDir(fOutDir);
 
   fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
 }

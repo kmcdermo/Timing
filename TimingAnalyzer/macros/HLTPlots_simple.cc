@@ -1,17 +1,25 @@
 #include "HLTPlots_simple.hh"
 #include "TString.h"
-#include "TH1F.h"
-#include "TH2F.h"
 #include "TColor.h"
 
 #include <vector>
 #include "common/common.h"
 #include <iostream>
 
-HLTPlots_simple::HLTPlots_simple()
+HLTPlots_simple::HLTPlots_simple(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser) :
+  fIsoPh(isoph), fIsIdL(isidL), fIsER(iser)
 {
-  fInFile = TFile::Open("input/DATA/2017/HLT_CHECK/30_06_17/jets/hltdump.root");
+  fInFile = TFile::Open(infile.Data());
   fInTree = (TTree*)fInFile->Get("tree/tree");
+
+  makeOutDir(outdir);
+
+  TString outstring = "";
+  if (fIsoPh) outstring += "_nopho";
+  if (fIsIdL) outstring += "_jetIdL";
+  if (fIsER)  outstring += "_jetER";
+
+  fOutFile = new TFile(Form("%s/plots%s.root",outdir.Data(),outstring.Data()),"UPDATE");
 
   HLTPlots_simple::InitTree();
 }
@@ -20,19 +28,16 @@ HLTPlots_simple::~HLTPlots_simple()
 {
   delete fInTree;
   delete fInFile;
+
+  delete fOutFile;
 }
 
 void HLTPlots_simple::DoPlots()
 {
-  TFile * outfile = new TFile("hltcheck/nophoinjet.root","UPDATE");
-  const Bool_t isoph = true;
-  const Bool_t isidL = false;
-  const Bool_t iser  = false;
-
   const Int_t ncuts = 10;
   
-  std::vector<TH1F*> phopt(ncuts), phoeta(ncuts), ht(ncuts);
-  std::vector<TH2F*> phoptvht(ncuts);
+  TH1FVec phopt(ncuts), phoeta(ncuts), ht(ncuts);
+  TH2FVec phoptvht(ncuts);
 
   std::vector<TString> cut(ncuts);
   cut[0] = "none";
@@ -83,7 +88,7 @@ void HLTPlots_simple::DoPlots()
       const Float_t pt = (*phpt)[iph];
       if(!passed[0]) 
       {
-	const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	passed  [0] = true; 
 	phopt   [0]->Fill((*phpt)[iph]); 
 	phoeta  [0]->Fill((*pheta)[iph]); 
@@ -94,7 +99,7 @@ void HLTPlots_simple::DoPlots()
       if((*phr9)[iph] < 0.95) continue;
       if(!passed[1]) 
       {
-	const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	passed  [1] = true; 
 	phopt   [1]->Fill((*phpt)[iph]); 
 	phoeta  [1]->Fill((*pheta)[iph]); 
@@ -105,7 +110,7 @@ void HLTPlots_simple::DoPlots()
       if((*phsmaj)[iph] > 1.f) continue;
       if(!passed[2]) 
       {
-	const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	passed  [2] = true; 
 	phopt   [2]->Fill((*phpt)[iph]); 
 	phoeta  [2]->Fill((*pheta)[iph]); 
@@ -116,7 +121,7 @@ void HLTPlots_simple::DoPlots()
       if((*phsmin)[iph] > 0.3) continue;
       if(!passed[3]) 
       {
-	const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	passed  [3] = true; 
 	phopt   [3]->Fill((*phpt)[iph]); 
 	phoeta  [3]->Fill((*pheta)[iph]); 
@@ -127,7 +132,7 @@ void HLTPlots_simple::DoPlots()
       if((*phHollowTkIso)[iph] > (3.f + 0.002*pt)) continue;
       if(!passed[4]) 
       {
-	const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	passed  [4] = true; 
 	phopt   [4]->Fill((*phpt)[iph]); 
 	phoeta  [4]->Fill((*pheta)[iph]); 
@@ -140,7 +145,7 @@ void HLTPlots_simple::DoPlots()
 	if((*phHoE)[iph] > 0.0396) continue;
 	if(!passed[5]) 
         {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	  passed  [5] = true; 
 	  phopt   [5]->Fill((*phpt)[iph]); 
 	  phoeta  [5]->Fill((*pheta)[iph]); 
@@ -151,7 +156,7 @@ void HLTPlots_simple::DoPlots()
 	if((*phsieie)[iph] > 0.01022) continue;
 	if(!passed[6]) 
         {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	  passed  [6] = true; 
 	  phopt   [6]->Fill((*phpt)[iph]); 
 	  phoeta  [6]->Fill((*pheta)[iph]); 
@@ -162,7 +167,7 @@ void HLTPlots_simple::DoPlots()
 	if((*phPFClEcalIso)[iph] > (2.5 + 0.01*pt)) continue;
 	if(!passed[7]) 
         {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	  passed  [7] = true; 
 	  phopt   [7]->Fill((*phpt)[iph]); 
 	  phoeta  [7]->Fill((*pheta)[iph]); 
@@ -173,7 +178,7 @@ void HLTPlots_simple::DoPlots()
 	if((*phPFClHcalIso)[iph] > (6.f + 0.03*pt + 0.00003*pt*pt)) continue;
 	if(!passed[8]) 
         {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	  passed  [8] = true; 
 	  phopt   [8]->Fill((*phpt)[iph]); 
 	  phoeta  [8]->Fill((*pheta)[iph]); 
@@ -184,7 +189,7 @@ void HLTPlots_simple::DoPlots()
 	if(pt < 70.f) continue;
 	if(!passed[9]) 
         {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	  passed  [9] = true; 
 	  phopt   [9]->Fill((*phpt)[iph]); 
 	  phoeta  [9]->Fill((*pheta)[iph]); 
@@ -199,7 +204,7 @@ void HLTPlots_simple::DoPlots()
 	if((*phHoE)[iph] > 0.0219) continue;
 	if(!passed[5]) 
         {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	  passed  [5] = true; 
 	  phopt   [5]->Fill((*phpt)[iph]); 
 	  phoeta  [5]->Fill((*pheta)[iph]); 
@@ -210,7 +215,7 @@ void HLTPlots_simple::DoPlots()
 	if((*phsieie)[iph] > 0.03001) continue;
 	if(!passed[6]) 
         {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	  passed  [6] = true; 
 	  phopt   [6]->Fill((*phpt)[iph]); 
 	  phoeta  [6]->Fill((*pheta)[iph]); 
@@ -221,7 +226,7 @@ void HLTPlots_simple::DoPlots()
 	if((*phPFClEcalIso)[iph] > (4.f + 0.01*pt)) continue;
 	if(!passed[7]) 
         {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	  passed  [7] = true; 
 	  phopt   [7]->Fill((*phpt)[iph]); 
 	  phoeta  [7]->Fill((*pheta)[iph]); 
@@ -232,7 +237,7 @@ void HLTPlots_simple::DoPlots()
 	if((*phPFClHcalIso)[iph] > (3.5 + 0.03*pt + 0.00003*pt*pt)) continue;
 	if(!passed[8]) 
         {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	  passed  [8] = true; 
 	  phopt   [8]->Fill((*phpt)[iph]); 
 	  phoeta  [8]->Fill((*pheta)[iph]); 
@@ -243,7 +248,7 @@ void HLTPlots_simple::DoPlots()
 	if(pt < 70.f) continue;
 	if(!passed[9]) 
         {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(isoph,iph,isidL,iser);
+	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
 	  passed  [9] = true; 
 	  phopt   [9]->Fill((*phpt)[iph]); 
 	  phoeta  [9]->Fill((*pheta)[iph]); 
@@ -256,7 +261,7 @@ void HLTPlots_simple::DoPlots()
     } // end loop over photons
   } // end loop over events
 
-  outfile->cd();
+  fOutFile->cd();
   for (Int_t i = 0; i < ncuts; i++)
   {
     phopt[i]->Write(phopt[i]->GetName(),TObject::kWriteDelete);
@@ -265,7 +270,6 @@ void HLTPlots_simple::DoPlots()
     phoptvht[i]->Write(phoptvht[i]->GetName(),TObject::kWriteDelete);
 
   }
-  delete outfile;
 }
 
 void HLTPlots_simple::InitPassed(std::vector<Bool_t>& passed)
@@ -273,14 +277,14 @@ void HLTPlots_simple::InitPassed(std::vector<Bool_t>& passed)
   for (auto&& pass : passed) {pass = false;}
 }
 
-Float_t HLTPlots_simple::HT(const Bool_t isoph, const Int_t iph, const Bool_t isidL, const Bool_t iser)
+Float_t HLTPlots_simple::HT(const Int_t iph)
 {
   Float_t ht = 0;
   for (Int_t ijet = 0; ijet < njets; ijet++)
   {
-    if (iser && (*jeteta)[ijet] > 3.f) continue;
-    if (isoph && deltaR((*phphi)[iph],(*pheta)[iph],(*jetphi)[iph],(*jeteta)[iph]) < 0.4) continue;
-    if (isidL && !(*jetidL)[ijet]) continue;
+    if (fIsER && (*jeteta)[ijet] > 3.f) continue;
+    if (fIsoPh && deltaR((*phphi)[iph],(*pheta)[iph],(*jetphi)[iph],(*jeteta)[iph]) < 0.4) continue;
+    if (fIsIdL && !(*jetidL)[ijet]) continue;
     ht += (*jetpt)[ijet];
   }
   return ht;
@@ -327,7 +331,6 @@ void HLTPlots_simple::InitTree()
   fInTree->SetBranchAddress("run", &run, &b_run);
   fInTree->SetBranchAddress("lumi", &lumi, &b_lumi);
   fInTree->SetBranchAddress("triggerBits", &triggerBits, &b_triggerBits);
-  //  fInTree->SetBranchAddress("pfjetHT", &pfjetHT, &b_pfjetHT);
   fInTree->SetBranchAddress("njets", &njets, &b_njets);
   fInTree->SetBranchAddress("jetE", &jetE, &b_jetE);
   fInTree->SetBranchAddress("jetpt", &jetpt, &b_jetpt);

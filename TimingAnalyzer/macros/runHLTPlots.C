@@ -21,6 +21,13 @@ void runHLTPlots()
 
   gROOT->LoadMacro("HLTPlots.cc+g");
 
-  HLTPlots plots;
+  const TString infile = "input/DATA/2017/HLT_CHECK/30_06_17/jets/hltdump_SM_HFGood.root";
+  const TString outdir = "hltcheck_SP";
+  const Bool_t isoph = false;
+  const Bool_t isidL = false;
+  const Bool_t iser  = false;
+  const Float_t htcut = 400.f;
+
+  HLTPlots plots(infile,outdir,isoph,isidL,iser,htcut);
   plots.DoPlots();
 }

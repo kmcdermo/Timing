@@ -1,9 +1,12 @@
+#include "TSystem.h"
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TString.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TMath.h"
 
+#include <cmath>
 #include <vector>
 #include <map>
 #include <utility>
@@ -22,6 +25,30 @@ inline void    semiR(const Float_t insmaj, const Float_t insmin, Float_t & smaj,
 {
   smaj = 1.f/std::sqrt(insmin);
   smin = 1.f/std::sqrt(insmaj);
+}
+
+inline Float_t mphi(Float_t phi)
+{
+  while (phi >= TMath::Pi()) phi -= TMath::TwoPi();
+  while (phi < -TMath::Pi()) phi += TMath::TwoPi();
+  return phi;
+}
+
+inline Float_t deltaR(const Float_t phi1, const Float_t eta1, const Float_t phi2, const Float_t eta2)
+{
+  const Float_t deta = eta1-eta2;
+  const Float_t dphi = mphi(phi1-phi2);
+  return std::sqrt(deta*deta+dphi*dphi);
+}
+
+inline void makeOutDir(TString outdir)
+{
+  FileStat_t dummyFileStat; 
+  if (gSystem->GetPathInfo(outdir.Data(), dummyFileStat) == 1)
+  {
+    TString mkDir = Form("mkdir -p %s",outdir.Data());
+    gSystem->Exec(mkDir.Data());
+  }
 }
 
 // global namespaces
@@ -68,3 +95,6 @@ typedef TStrIntMap::iterator    TStrIntMapIter;
 
 typedef std::map<Int_t,Int_t> IntMap;
 typedef IntMap::iterator      IntMapIter;
+
+typedef std::vector<TH1F*> TH1FVec;
+typedef std::vector<TH2F*> TH2FVec;

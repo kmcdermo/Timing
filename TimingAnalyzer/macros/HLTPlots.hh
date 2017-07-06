@@ -4,39 +4,35 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TBranch.h"
-#include <vector>
-#include "TMath.h"
-#include <vector>
-#include <cmath>
+#include "TH1F.h"
+#include "TEfficiency.h"
+#include "TString.h"
 
-inline Float_t mphi(Float_t phi)
-{
-  while (phi >= TMath::Pi()) phi -= TMath::TwoPi();
-  while (phi < -TMath::Pi()) phi += TMath::TwoPi();
-  return phi;
-}
-
-inline Float_t deltaR(const Float_t phi1, const Float_t eta1, const Float_t phi2, const Float_t eta2)
-{
-  const Float_t deta = eta1-eta2;
-  const Float_t dphi = mphi(phi1-phi2);
-  return std::sqrt(deta*deta+dphi*dphi);
-}
+#include <vector>
 
 class HLTPlots 
 {
 public :
-  HLTPlots();
+  HLTPlots(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, const Float_t htcut);
   ~HLTPlots();
   
   void InitTree();
   void DoPlots();
-  Float_t HT(const Bool_t, const Int_t, const Bool_t, const Bool_t);
+  Float_t HT(const Int_t);
+  void OutputEfficiency(TEfficiency *&, const TString);
   
 private :
   TFile * fInFile;
   TTree * fInTree;
+
+  TString fOutDir;
+  TFile * fOutFile;
   
+  const Bool_t fIsER;
+  const Bool_t fIsoPh;
+  const Bool_t fIsIdL;
+  const Float_t fHTCut;
+
   // Declaration of leaf types
   ULong64_t       event;
   UInt_t          run;
@@ -77,7 +73,7 @@ private :
   std::vector<Float_t> * phseedtime;
   std::vector<Int_t>   * phseedID;
   std::vector<Int_t>   * phseedOOT;
-  std::vector<std::vector<Int_t> >   * phIsHLTMatched;
+  std::vector<std::vector<Int_t> > * phIsHLTMatched;
 
   // List of branches
   TBranch * b_event;

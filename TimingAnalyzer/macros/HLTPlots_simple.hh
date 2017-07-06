@@ -4,9 +4,8 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TBranch.h"
-#include "TMath.h"
+
 #include <vector>
-#include <cmath>
 
 inline Float_t mphi(Float_t phi)
 {
@@ -25,18 +24,23 @@ inline Float_t deltaR(const Float_t phi1, const Float_t eta1, const Float_t phi2
 class HLTPlots_simple 
 {
 public :
-  HLTPlots_simple();
+  HLTPlots_simple(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser);
   ~HLTPlots_simple();
   
   void InitTree();
   void InitPassed(std::vector<Bool_t>&);
-  Float_t HT(const Bool_t, const Int_t, const Bool_t, const Bool_t);
+  Float_t HT(const Int_t);
   void DoPlots();
   
 private :
   TFile * fInFile;
   TTree * fInTree;
-  
+  TFile * fOutFile;
+
+  const Bool_t fIsER;
+  const Bool_t fIsoPh;
+  const Bool_t fIsIdL;
+
   // Declaration of leaf types
   ULong64_t       event;
   UInt_t          run;

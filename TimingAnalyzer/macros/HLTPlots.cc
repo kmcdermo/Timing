@@ -1,15 +1,24 @@
 #include "HLTPlots.hh"
 #include "TCanvas.h"
-#include "TH1F.h"
-#include "TEfficiency.h"
 
 #include "common/common.h"
 #include <iostream>
 
-HLTPlots::HLTPlots()
+HLTPlots::HLTPlots(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, const Float_t htcut) :
+  fIsoPh(isoph), fIsIdL(isidL), fIsER(iser), fHTCut(htcut)
 {
-  fInFile = TFile::Open("input/DATA/2017/HLT_CHECK/30_06_17/jets/hltdump.root");
+  fInFile = TFile::Open(infile.Data());
   fInTree = (TTree*)fInFile->Get("tree/tree");
+
+  TString outstring = Form("htcut_%i",Int_t(fHTCut));
+  if (fIsoPh) outstring += "_nopho";
+  if (fIsIdL) outstring += "_jetIdL";
+  if (fIsER)  outstring += "_jetER";
+
+  fOutDir = outdir+"/"+outstring;
+  makeOutDir(fOutDir);
+
+  fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
 
   HLTPlots::InitTree();
 }
@@ -18,28 +27,22 @@ HLTPlots::~HLTPlots()
 {
   delete fInTree;
   delete fInFile;
+
+  delete fOutFile;
 }
 
 void HLTPlots::DoPlots()
 {
-  TEfficiency * effptEB = new TEfficiency("pteffEB","HLT Efficiency vs Leading Photon p_{T} [EB];Photon Offline p_{T};Efficiency",100,0,1000);
-  TEfficiency * effptEE = new TEfficiency("pteffEE","HLT Efficiency vs Leading Photon p_{T} [EE];Photon Offline p_{T};Efficiency",100,0,1000);
-
+  TEfficiency * effptEB = new TEfficiency("effptEB","HLT Efficiency vs Leading Photon p_{T} [EB];Photon Offline p_{T};Efficiency",100,0,1000);
+  TEfficiency * effptEE = new TEfficiency("effptEE","HLT Efficiency vs Leading Photon p_{T} [EE];Photon Offline p_{T};Efficiency",100,0,1000);
   TEfficiency * effeta = new TEfficiency("effeta","HLT Efficiency vs Leading Photon #eta;Photon Offline #eta;Efficiency",30,-3.f,3.f);
-  TEfficiency * effphi = new TEfficiency("effeta","HLT Efficiency vs Leading Photon #phi;Photon Offline #phi;Efficiency",32,-3.2f,3.2f);
-
+  TEfficiency * effphi = new TEfficiency("effphi","HLT Efficiency vs Leading Photon #phi;Photon Offline #phi;Efficiency",32,-3.2f,3.2f);
   TEfficiency * efftime = new TEfficiency("efftime","HLT Efficiency vs Leading Photon Seed Time [ns];Photon Offline Seed Time [ns];Efficiency",100,-25.,25.);
-
   TEfficiency * effHT = new TEfficiency("effHT","HLT Efficiency vs PF H_{T};Offline PF H_{T} (Min PFJet p_{T} > 15);Efficiency",100,0,2000.f);
 
-  const Float_t htcut = 400.f;
-  const Bool_t isoph = true;
-  const Bool_t isidL = false;
-  const Bool_t iser  = false;
-  
   for (UInt_t ientry = 0; ientry < fInTree->GetEntries(); ientry++)
   {
-    if (ientry%10000 == 0 || ientry == 0) std::cout << "Entry " << ientry << " out of " << fInTree->GetEntries() << std::endl;
+    if (ientry%100000 == 0 || ientry == 0) std::cout << "Entry " << ientry << " out of " << fInTree->GetEntries() << std::endl;
 
     fInTree->GetEntry(ientry);
 
@@ -67,14 +70,14 @@ void HLTPlots::DoPlots()
 
 	if (pt > 70.f) goodpho = iph;
 
-	const Float_t pfjetHT = HLTPlots::HT(isoph,iph,isidL,iser);
-	if (pfjetHT < htcut) continue;
+	const Float_t pfjetHT = HLTPlots::HT(iph);
+	if (pfjetHT < fHTCut) continue;
 
 	effptEB->Fill((*triggerBits)[0],pt);
 	if (goodpho == iph)
         {
-	  const Float_t pfjetHT70 = HLTPlots::HT(isoph,iph,isidL,iser);
-	  if (pfjetHT70 < htcut) 
+	  const Float_t pfjetHT70 = HLTPlots::HT(iph);
+	  if (pfjetHT70 >= fHTCut) 
 	  {
 	    effeta->Fill((*triggerBits)[0],(*phsceta)[iph]);
 	    effphi->Fill((*triggerBits)[0],(*phscphi)[iph]);
@@ -92,14 +95,14 @@ void HLTPlots::DoPlots()
 
 	if (pt > 70.f) goodpho = iph;
 	
-	const Float_t pfjetHT = HLTPlots::HT(isoph,iph,isidL,iser);
-	if (pfjetHT < htcut) continue;
+	const Float_t pfjetHT = HLTPlots::HT(iph);
+	if (pfjetHT < fHTCut) continue;
 
 	effptEE->Fill((*triggerBits)[0],pt);
 	if (goodpho == iph) 
 	{
-	  const Float_t pfjetHT70 = HLTPlots::HT(isoph,iph,isidL,iser);
-	  if (pfjetHT70 < htcut) 
+	  const Float_t pfjetHT70 = HLTPlots::HT(iph);
+	  if (pfjetHT70 >= fHTCut) 
 	  {
 	    effeta->Fill((*triggerBits)[0],(*phsceta)[iph]);
 	    effphi->Fill((*triggerBits)[0],(*phscphi)[iph]);
@@ -112,9 +115,42 @@ void HLTPlots::DoPlots()
 
     if (goodpho < 0) continue;
 
-    const Float_t pfjetHT70 = HLTPlots::HT(isoph,goodpho,isidL,iser);
+    const Float_t pfjetHT70 = HLTPlots::HT(goodpho);
     effHT->Fill((*triggerBits)[0],pfjetHT70);
   } // end loop over events
+
+  HLTPlots::OutputEfficiency(effptEB,"hptEB");
+  HLTPlots::OutputEfficiency(effptEE,"hptEE");
+  HLTPlots::OutputEfficiency(effeta,"heta");
+  HLTPlots::OutputEfficiency(effphi,"hphi");
+  HLTPlots::OutputEfficiency(efftime,"htime");
+  HLTPlots::OutputEfficiency(effHT,"hHT");
+
+  delete effptEB;
+  delete effptEE;
+  delete effeta;
+  delete effphi;
+  delete efftime;
+  delete effHT;
+}
+
+Float_t HLTPlots::HT(const Int_t iph)
+{
+  Float_t ht = 0;
+  for (Int_t ijet = 0; ijet < njets; ijet++)
+  {
+    if (fIsER && (*jeteta)[ijet] > 3.f) continue;
+    if (fIsoPh && deltaR((*phphi)[iph],(*pheta)[iph],(*jetphi)[iph],(*jeteta)[iph]) < 0.4) continue;
+    if (fIsIdL && !(*jetidL)[ijet]) continue;
+    ht += (*jetpt)[ijet];
+  }
+  return ht;
+}
+
+void HLTPlots::OutputEfficiency(TEfficiency *& teff, const TString outname)
+{
+  fOutFile->cd();
+  teff->Write(teff->GetName(),TObject::kWriteDelete);
 
   TCanvas * canv = new TCanvas();
   canv->cd();
@@ -122,86 +158,17 @@ void HLTPlots::DoPlots()
   TString toreplace = "HLT Efficiency vs ";
   Ssiz_t length = toreplace.Length();
 
-  effptEB->Draw("AP");
-  canv->SaveAs("effptEB.png");
-  TH1F * hptEB = (TH1F*)effptEB->GetCopyTotalHisto();
-  TString hptEBtitle = hptEB->GetTitle();
-  hptEB->SetTitle(hptEBtitle.Remove(hptEBtitle.Index(toreplace),length));
-  hptEB->GetYaxis()->SetTitle("nEvents");
-  hptEB->Draw("EP");
-  canv->SaveAs("hptEB.png");
-
-  effptEE->Draw("AP");
-  canv->SaveAs("effptEE.png");
-  TH1F * hptEE = (TH1F*)effptEE->GetCopyTotalHisto();
-  TString hptEEtitle = hptEE->GetTitle();
-  hptEE->SetTitle(hptEEtitle.Remove(hptEEtitle.Index(toreplace),length));
-  hptEE->GetYaxis()->SetTitle("nEvents");
-  hptEE->Draw("EP");
-  canv->SaveAs("hptEE.png");
-
-  effeta->Draw("AP");
-  canv->SaveAs("effeta.png");
-  TH1F * heta  = (TH1F*)effeta ->GetCopyTotalHisto();
-  TString hetatitle = heta->GetTitle();
-  heta->SetTitle(hetatitle.Remove(hetatitle.Index(toreplace),length));
-  heta->GetYaxis()->SetTitle("nEvents");
-  heta->Draw("EP");
-  canv->SaveAs("heta.png");
-
-  effphi->Draw("AP");
-  canv->SaveAs("effphi.png");
-  TH1F * hphi  = (TH1F*)effphi ->GetCopyTotalHisto();
-  TString hphititle = hphi->GetTitle();
-  hphi->SetTitle(hphititle.Remove(hphititle.Index(toreplace),length));
-  hphi->GetYaxis()->SetTitle("nEvents");
-  hphi->Draw("EP");
-  canv->SaveAs("hphi.png");
-
-  efftime->Draw("AP");
-  canv->SaveAs("efftime.png");
-  TH1F * htime  = (TH1F*)efftime ->GetCopyTotalHisto();
-  TString htimetitle = htime->GetTitle();
-  htime->SetTitle(htimetitle.Remove(htimetitle.Index(toreplace),length));
-  htime->GetYaxis()->SetTitle("nEvents");
-  htime->Draw("EP");
-  canv->SaveAs("htime.png");
-
-  effHT->Draw("AP");
-  canv->SaveAs("effHT.png");
-  TH1F * hHT  = (TH1F*)effHT ->GetCopyTotalHisto();
-  TString hHTtitle = hHT->GetTitle();
-  hHT->SetTitle(hHTtitle.Remove(hHTtitle.Index(toreplace),length));
-  hHT->GetYaxis()->SetTitle("nEvents");
-  hHT->Draw("EP");
-  canv->SaveAs("hHT.png");
+  teff->Draw("AP");
+  canv->SaveAs(Form("%s/%s.png",fOutDir.Data(),teff->GetName()));
+  TH1F * hist = (TH1F*)teff->GetCopyTotalHisto();
+  TString histtitle = hist->GetTitle();
+  hist->SetTitle(histtitle.Remove(histtitle.Index(toreplace),length));
+  hist->GetYaxis()->SetTitle("nEvents");
+  hist->Draw("EP");
+  canv->SaveAs(Form("%s/%s.png",fOutDir.Data(),outname.Data()));
 
   delete canv;
-  delete effptEB;
-  delete effptEE;
-  delete effeta;
-  delete effphi;
-  delete efftime;
-  delete effHT;
-  delete hptEB;
-  delete hptEE;
-  delete heta;
-  delete hphi;
-  delete htime;
-  delete hHT;
-}
-
-Float_t HLTPlots::HT(const Bool_t isoph, const Int_t iph, const Bool_t isidL, const Bool_t iser)
-{
-  Float_t ht = 0;
-  for (Int_t ijet = 0; ijet < njets; ijet++)
-  {
-    if (iser && (*jeteta)[ijet] > 3.f) continue;
-    if (isoph && deltaR((*phphi)[iph],(*pheta)[iph],(*jetphi)[iph],(*jeteta)[iph]) < 0.4) continue;
-    if (isidL && !(*jetidL)[ijet]) continue;
-    ht += (*jetpt)[ijet];
-  }
-  return ht;
+  delete hist;
 }
 
 void HLTPlots::InitTree()
