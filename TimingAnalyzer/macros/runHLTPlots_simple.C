@@ -21,12 +21,14 @@ void runHLTPlots_simple()
 
   gROOT->LoadMacro("HLTPlots_simple.cc+g");
 
-  const TString infile = "input/DATA/2017/HLT_CHECK/30_06_17/jets/hltdump_SM_HFGood.root";
-  const TString outdir = "dump_dcs_SP";
-  const Bool_t isoph = false;
-  const Bool_t isidL = false;
-  const Bool_t iser  = false;
+  const TString infile = "input/DATA/2017/HLT_CHECK/30_06_17/hltdump_DCS_SM.root";
+  const TString outdir = "dump_dcs_SM";
+  const Bool_t isoph = true;
+  const Bool_t isidL = true;
+  const Bool_t iser  = true;
   
-  HLTPlots_simple plots(infile,outdir,isoph,isidL,iser);
+  const Int_t psfactor = 10;
+
+  HLTPlots_simple plots(infile,outdir,isoph,isidL,iser,psfactor);
   plots.DoPlots();
 }

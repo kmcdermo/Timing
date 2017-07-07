@@ -6,8 +6,8 @@
 #include "common/common.h"
 #include <iostream>
 
-HLTPlots_simple::HLTPlots_simple(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser) :
-  fIsoPh(isoph), fIsIdL(isidL), fIsER(iser)
+HLTPlots_simple::HLTPlots_simple(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, const Int_t psfactor) :
+  fIsoPh(isoph), fIsIdL(isidL), fIsER(iser), fPSFactor(psfactor)
 {
   fInFile = TFile::Open(infile.Data());
   fInTree = (TTree*)fInFile->Get("tree/tree");
@@ -78,10 +78,12 @@ void HLTPlots_simple::DoPlots()
   std::vector<Bool_t> passed(ncuts);
   for (UInt_t ientry = 0; ientry < fInTree->GetEntries(); ientry++)
   {
+    if (ientry % fPSFactor != 0) continue;
+
     fInTree->GetEntry(ientry);
     HLTPlots_simple::InitPassed(passed);
   
-    if (ientry%10000 == 0 || ientry == 0) std::cout << "Entry " << ientry << " out of " << fInTree->GetEntries() << std::endl;
+    if (ientry%100000 == 0 || ientry == 0) std::cout << "Entry " << ientry << " out of " << fInTree->GetEntries() << std::endl;
   
     for (Int_t iph = 0; iph < nphotons; iph++)
     {

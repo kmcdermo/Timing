@@ -4,27 +4,12 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TBranch.h"
-
 #include <vector>
-
-inline Float_t mphi(Float_t phi)
-{
-  while (phi >= TMath::Pi()) phi -= TMath::TwoPi();
-  while (phi < -TMath::Pi()) phi += TMath::TwoPi();
-  return phi;
-}
-
-inline Float_t deltaR(const Float_t phi1, const Float_t eta1, const Float_t phi2, const Float_t eta2)
-{
-  const Float_t deta = eta1-eta2;
-  const Float_t dphi = mphi(phi1-phi2);
-  return std::sqrt(deta*deta+dphi*dphi);
-}
 
 class HLTPlots_simple 
 {
 public :
-  HLTPlots_simple(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser);
+  HLTPlots_simple(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, const Int_t psfactor);
   ~HLTPlots_simple();
   
   void InitTree();
@@ -40,6 +25,7 @@ private :
   const Bool_t fIsER;
   const Bool_t fIsoPh;
   const Bool_t fIsIdL;
+  const Int_t fPSFactor;
 
   // Declaration of leaf types
   ULong64_t       event;
