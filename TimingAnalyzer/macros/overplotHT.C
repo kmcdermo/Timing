@@ -35,15 +35,16 @@ void overplotHT()
 {
   gStyle->SetOptStat(0);
 
-  std::vector<TString> cuts = {"none","R9","Smaj","Smin","HollTkIso","HoE","sieie","EcalIso","HcalIso","phpt"};
+  const std::vector<TString> cuts = {"none","R9","Smaj","Smin","HollTkIso","HoE","sieie","EcalIso","HcalIso","phpt"};
 
-  std::vector<TFile*> files = {TFile::Open("dump_dcs_SM/plots.root"),
-			       TFile::Open("dump_dcs_SM/plots_jetER.root"),
-			       TFile::Open("dump_dcs_SM/plots_jetIdL_jetER.root"),
-			       TFile::Open("dump_dcs_SM/plots_nopho_jetIdL_jetER.root")};
+  const TString dir = "dump_dcs_SM";
+  std::vector<TFile*> files = {TFile::Open(Form("%s/plots.root",dir.Data())),
+			       TFile::Open(Form("%s/plots_jetER.root",dir.Data())),
+			       TFile::Open(Form("%s/plots_jetIdL_jetER.root",dir.Data())),
+			       TFile::Open(Form("%s/plots_nopho_jetIdL_jetER.root",dir.Data()))};
 
-  std::vector<TString> labels = {"No Cuts","|#eta_{jet}| < 3.0","jet ID:L","dR_{#gamma,jets} > 0.4"};
-  std::vector<Color_t> colors = {kBlack,kRed+1,kGreen+1,kBlue+1};
+  const std::vector<TString> labels = {"No Cuts","|#eta_{jet}| < 3.0","jet ID:L","#DeltaR(#gamma,jets) > 0.4"};
+  const std::vector<Color_t> colors = {kBlack,kRed+1,kGreen+1,kBlue+1};
 
   std::vector<std::vector<TH1F*> > vhists(cuts.size()); 
   for (Int_t icut = 0; icut < cuts.size(); icut++)
@@ -54,12 +55,14 @@ void overplotHT()
     vhists[icut].resize(files.size());
     for (Int_t ifile = 0; ifile < files.size(); ifile++)
     {
-      vhists[icut][ifile] = (TH1F*)files[ifile]->Get(Form("ht_%s",cuts[icut].Data()));
-      vhists[icut][ifile] ->GetXaxis()->SetTitle("H_{T} = #sum_{i=1}^{n} p_{T}^{i} , p_{T}^{i} > 15");
+//       vhists[icut][ifile] = (TH1F*)files[ifile]->Get(Form("ht_%s",cuts[icut].Data()));
+//       vhists[icut][ifile] ->GetXaxis()->SetTitle("H_{T} = #sum_{i=1}^{n} p_{T}^{i} , p_{T}^{i} > 15");
+      vhists[icut][ifile] = (TH1F*)files[ifile]->Get(Form("nJets_%s",cuts[icut].Data()));
+      vhists[icut][ifile] ->GetXaxis()->SetTitle("nJets, p_{T} > 15");
       vhists[icut][ifile] ->GetYaxis()->SetTitle("Events");
       vhists[icut][ifile] ->SetLineColor(colors[ifile]);
       vhists[icut][ifile] ->SetMarkerColor(colors[ifile]);
-      vhists[icut][ifile] ->Scale(1.f/vhists[icut][ifile]->Integral());
+      //      vhists[icut][ifile] ->Scale(1.f/vhists[icut][ifile]->Integral());
       
       const Float_t tmpmax = GetMax(vhists[icut][ifile]);
       const Float_t tmpmin = GetMin(vhists[icut][ifile]);
@@ -76,11 +79,13 @@ void overplotHT()
       vhists[icut][ifile] -> SetMinimum(min/2.f);
       vhists[icut][ifile] -> SetMaximum(max*2.f);
       vhists[icut][ifile] -> Draw(ifile>0?"same ep":"ep");
-      leg->AddEntry(vhists[icut][ifile],Form("%s: <#mu> = %6.2f",labels[ifile].Data(),vhists[icut][ifile]->GetMean()),"epl");
+      //      leg->AddEntry(vhists[icut][ifile],Form("%s: <#mu> = %6.2f",labels[ifile].Data(),vhists[icut][ifile]->GetMean()),"epl");
+      leg->AddEntry(vhists[icut][ifile],Form("%s: <#mu> = %4.1f",labels[ifile].Data(),vhists[icut][ifile]->GetMean()),"epl");
     }
     leg->Draw("same");
     
-    canv->SaveAs(Form("ht_%s.png",cuts[icut].Data()));
+    //    canv->SaveAs(Form("%s/ht_%s.png",dir.Data(),cuts[icut].Data());)
+    canv->SaveAs(Form("%s/nJets_%s.png",dir.Data(),cuts[icut].Data()));
 
     delete leg;
     delete canv;

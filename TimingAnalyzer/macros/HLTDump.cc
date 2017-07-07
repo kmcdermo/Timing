@@ -1,12 +1,11 @@
-#include "HLTPlots_simple.hh"
+#include "HLTDump.hh"
 #include "TString.h"
 #include "TColor.h"
 
 #include <vector>
-#include "common/common.h"
 #include <iostream>
 
-HLTPlots_simple::HLTPlots_simple(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, const Int_t psfactor) :
+HLTDump::HLTDump(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, const Int_t psfactor) :
   fIsoPh(isoph), fIsIdL(isidL), fIsER(iser), fPSFactor(psfactor)
 {
   fInFile = TFile::Open(infile.Data());
@@ -21,10 +20,10 @@ HLTPlots_simple::HLTPlots_simple(const TString infile, const TString outdir, con
 
   fOutFile = new TFile(Form("%s/plots%s.root",outdir.Data(),outstring.Data()),"UPDATE");
 
-  HLTPlots_simple::InitTree();
+  HLTDump::InitTree();
 }
 
-HLTPlots_simple::~HLTPlots_simple()
+HLTDump::~HLTDump()
 {
   delete fInTree;
   delete fInFile;
@@ -32,11 +31,11 @@ HLTPlots_simple::~HLTPlots_simple()
   delete fOutFile;
 }
 
-void HLTPlots_simple::DoPlots()
+void HLTDump::DoPlots()
 {
   const Int_t ncuts = 10;
   
-  TH1FVec phopt(ncuts), phoeta(ncuts), ht(ncuts);
+  TH1FVec phopt(ncuts), phoeta(ncuts), ht(ncuts), nJets(ncuts), deltaRs(ncuts);
   TH2FVec phoptvht(ncuts);
 
   std::vector<TString> cut(ncuts);
@@ -72,193 +71,83 @@ void HLTPlots_simple::DoPlots()
     ht[i] ->SetLineColor(colors[i]);
     ht[i] ->SetMarkerColor(colors[i]);
 
+    nJets[i] = new TH1F(Form("nJets_%s",cut[i].Data()),Form("nJets w/ %s cut",cut[i].Data()),20,0,20);
+    nJets[i] ->Sumw2();
+    nJets[i] ->SetLineColor(colors[i]);
+    nJets[i] ->SetMarkerColor(colors[i]);
+
+    deltaRs[i] = new TH1F(Form("deltaRs_%s",cut[i].Data()),Form("#DeltaR(#gamma,jets) w/ %s cut",cut[i].Data()),100,0.f,6.3f);
+    deltaRs[i] ->Sumw2();
+    deltaRs[i] ->SetLineColor(colors[i]);
+    deltaRs[i] ->SetMarkerColor(colors[i]);
+
     phoptvht[i] = new TH2F(Form("phoptvht_%s",cut[i].Data()),Form("Leading Photon p_{T} vs PFJet H_{T} w/ %s cut",cut[i].Data()),25,0.f,1000.f,50,0,2000.f);
   }
 
-  std::vector<Bool_t> passed(ncuts);
+  BoolVec passed(ncuts);
   for (UInt_t ientry = 0; ientry < fInTree->GetEntries(); ientry++)
   {
     if (ientry % fPSFactor != 0) continue;
 
     fInTree->GetEntry(ientry);
-    HLTPlots_simple::InitPassed(passed);
+    HLTDump::InitPassed(passed);
   
     if (ientry%100000 == 0 || ientry == 0) std::cout << "Entry " << ientry << " out of " << fInTree->GetEntries() << std::endl;
   
     for (Int_t iph = 0; iph < nphotons; iph++)
     {
       const Float_t pt = (*phpt)[iph];
-      if(!passed[0]) 
+      if (!passed[0]) {HLTDump::FillPlots(0,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
+
+      if ((*phr9)[iph] < 0.95) continue;
+      if (!passed[1]) {HLTDump::FillPlots(1,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
+
+      if ((*phsmaj)[iph] > 1.f) continue;
+      if (!passed[2]) {HLTDump::FillPlots(2,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
+
+      if ((*phsmin)[iph] > 0.3) continue;
+      if (!passed[3]) {HLTDump::FillPlots(3,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
+
+      if ((*phHollowTkIso)[iph] > (3.f + 0.002*pt)) continue;
+      if (!passed[4]) {HLTDump::FillPlots(4,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
+
+      if (std::abs((*phsceta)[iph]) < ECAL::etaEB)
       {
-	const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	passed  [0] = true; 
-	phopt   [0]->Fill((*phpt)[iph]); 
-	phoeta  [0]->Fill((*pheta)[iph]); 
-	ht      [0]->Fill(pfjetHT); 
-	phoptvht[0]->Fill((*phpt)[iph],pfjetHT);
-      }
+	if ((*phHoE)[iph] > 0.0396) continue;
+	if (!passed[5]) {HLTDump::FillPlots(5,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-      if((*phr9)[iph] < 0.95) continue;
-      if(!passed[1]) 
-      {
-	const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	passed  [1] = true; 
-	phopt   [1]->Fill((*phpt)[iph]); 
-	phoeta  [1]->Fill((*pheta)[iph]); 
-	ht      [1]->Fill(pfjetHT); 
-	phoptvht[1]->Fill((*phpt)[iph],pfjetHT);
-      }
+	if ((*phsieie)[iph] > 0.01022) continue;
+	if (!passed[6]) {HLTDump::FillPlots(6,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-      if((*phsmaj)[iph] > 1.f) continue;
-      if(!passed[2]) 
-      {
-	const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	passed  [2] = true; 
-	phopt   [2]->Fill((*phpt)[iph]); 
-	phoeta  [2]->Fill((*pheta)[iph]); 
-	ht      [2]->Fill(pfjetHT); 
-	phoptvht[2]->Fill((*phpt)[iph],pfjetHT);
-      }
+	if ((*phPFClEcalIso)[iph] > (2.5 + 0.01*pt)) continue;
+	if (!passed[7]) {HLTDump::FillPlots(7,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-      if((*phsmin)[iph] > 0.3) continue;
-      if(!passed[3]) 
-      {
-	const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	passed  [3] = true; 
-	phopt   [3]->Fill((*phpt)[iph]); 
-	phoeta  [3]->Fill((*pheta)[iph]); 
-	ht      [3]->Fill(pfjetHT); 
-	phoptvht[3]->Fill((*phpt)[iph],pfjetHT);
-      }
+	if ((*phPFClHcalIso)[iph] > (6.f + 0.03*pt + 0.00003*pt*pt)) continue;
+	if (!passed[8]) {HLTDump::FillPlots(8,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-      if((*phHollowTkIso)[iph] > (3.f + 0.002*pt)) continue;
-      if(!passed[4]) 
-      {
-	const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	passed  [4] = true; 
-	phopt   [4]->Fill((*phpt)[iph]); 
-	phoeta  [4]->Fill((*pheta)[iph]); 
-	ht      [4]->Fill(pfjetHT); 
-	phoptvht[4]->Fill((*phpt)[iph],pfjetHT);
-      }
+	if (pt < 70.f) continue;
+	if (!passed[9]) {HLTDump::FillPlots(9,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-      if(std::abs((*phsceta)[iph]) < ECAL::etaEB)
-      {
-	if((*phHoE)[iph] > 0.0396) continue;
-	if(!passed[5]) 
-        {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	  passed  [5] = true; 
-	  phopt   [5]->Fill((*phpt)[iph]); 
-	  phoeta  [5]->Fill((*pheta)[iph]); 
-	  ht      [5]->Fill(pfjetHT); 
-	  phoptvht[5]->Fill((*phpt)[iph],pfjetHT);
-	}
-
-	if((*phsieie)[iph] > 0.01022) continue;
-	if(!passed[6]) 
-        {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	  passed  [6] = true; 
-	  phopt   [6]->Fill((*phpt)[iph]); 
-	  phoeta  [6]->Fill((*pheta)[iph]); 
-	  ht      [6]->Fill(pfjetHT); 
-	  phoptvht[6]->Fill((*phpt)[iph],pfjetHT);
-	}
-
-	if((*phPFClEcalIso)[iph] > (2.5 + 0.01*pt)) continue;
-	if(!passed[7]) 
-        {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	  passed  [7] = true; 
-	  phopt   [7]->Fill((*phpt)[iph]); 
-	  phoeta  [7]->Fill((*pheta)[iph]); 
-	  ht      [7]->Fill(pfjetHT); 
-	  phoptvht[7]->Fill((*phpt)[iph],pfjetHT);
-	}
-
-	if((*phPFClHcalIso)[iph] > (6.f + 0.03*pt + 0.00003*pt*pt)) continue;
-	if(!passed[8]) 
-        {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	  passed  [8] = true; 
-	  phopt   [8]->Fill((*phpt)[iph]); 
-	  phoeta  [8]->Fill((*pheta)[iph]); 
-	  ht      [8]->Fill(pfjetHT); 
-	  phoptvht[8]->Fill((*phpt)[iph],pfjetHT);
-	}
-
-	if(pt < 70.f) continue;
-	if(!passed[9]) 
-        {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	  passed  [9] = true; 
-	  phopt   [9]->Fill((*phpt)[iph]); 
-	  phoeta  [9]->Fill((*pheta)[iph]); 
-	  ht      [9]->Fill(pfjetHT); 
-	  phoptvht[9]->Fill((*phpt)[iph],pfjetHT);
-	}
-
-	if(passed[9]) break;
+	if (passed[9]) break;
       } // end check over EB
-      else if((std::abs((*phsceta)[iph]) > ECAL::etaEEmin) && (std::abs((*phsceta)[iph]) < ECAL::etaEEmax))
+      else if ((std::abs((*phsceta)[iph]) > ECAL::etaEEmin) && (std::abs((*phsceta)[iph]) < ECAL::etaEEmax))
       {
-	if((*phHoE)[iph] > 0.0219) continue;
-	if(!passed[5]) 
-        {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	  passed  [5] = true; 
-	  phopt   [5]->Fill((*phpt)[iph]); 
-	  phoeta  [5]->Fill((*pheta)[iph]); 
-	  ht      [5]->Fill(pfjetHT); 
-	  phoptvht[5]->Fill((*phpt)[iph],pfjetHT);
-	}
+	if ((*phHoE)[iph] > 0.0219) continue;
+	if (!passed[5]) {HLTDump::FillPlots(5,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-	if((*phsieie)[iph] > 0.03001) continue;
-	if(!passed[6]) 
-        {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	  passed  [6] = true; 
-	  phopt   [6]->Fill((*phpt)[iph]); 
-	  phoeta  [6]->Fill((*pheta)[iph]); 
-	  ht      [6]->Fill(pfjetHT); 
-	  phoptvht[6]->Fill((*phpt)[iph],pfjetHT);
-	}
+	if ((*phsieie)[iph] > 0.03001) continue;
+	if (!passed[6]) {HLTDump::FillPlots(6,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-	if((*phPFClEcalIso)[iph] > (4.f + 0.01*pt)) continue;
-	if(!passed[7]) 
-        {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	  passed  [7] = true; 
-	  phopt   [7]->Fill((*phpt)[iph]); 
-	  phoeta  [7]->Fill((*pheta)[iph]); 
-	  ht      [7]->Fill(pfjetHT); 
-	  phoptvht[7]->Fill((*phpt)[iph],pfjetHT);
-	}
+	if ((*phPFClEcalIso)[iph] > (4.f + 0.01*pt)) continue;
+	if (!passed[7]) {HLTDump::FillPlots(7,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-	if((*phPFClHcalIso)[iph] > (3.5 + 0.03*pt + 0.00003*pt*pt)) continue;
-	if(!passed[8]) 
-        {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	  passed  [8] = true; 
-	  phopt   [8]->Fill((*phpt)[iph]); 
-	  phoeta  [8]->Fill((*pheta)[iph]); 
-	  ht      [8]->Fill(pfjetHT); 
-	  phoptvht[8]->Fill((*phpt)[iph],pfjetHT);
-	}
+	if ((*phPFClHcalIso)[iph] > (3.5 + 0.03*pt + 0.00003*pt*pt)) continue;
+	if (!passed[8]) {HLTDump::FillPlots(8,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-	if(pt < 70.f) continue;
-	if(!passed[9]) 
-        {
-	  const Float_t pfjetHT = HLTPlots_simple::HT(iph);
-	  passed  [9] = true; 
-	  phopt   [9]->Fill((*phpt)[iph]); 
-	  phoeta  [9]->Fill((*pheta)[iph]); 
-	  ht      [9]->Fill(pfjetHT); 
-	  phoptvht[9]->Fill((*phpt)[iph],pfjetHT);
-	}
+	if (pt < 70.f) continue;
+	if (!passed[9]) {HLTDump::FillPlots(9,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-	if(passed[9]) break;
+	if (passed[9]) break;
       } // end check over EE
     } // end loop over photons
   } // end loop over events
@@ -269,30 +158,44 @@ void HLTPlots_simple::DoPlots()
     phopt[i]->Write(phopt[i]->GetName(),TObject::kWriteDelete);
     phoeta[i]->Write(phoeta[i]->GetName(),TObject::kWriteDelete);
     ht[i]->Write(ht[i]->GetName(),TObject::kWriteDelete);
+    nJets[i]->Write(nJets[i]->GetName(),TObject::kWriteDelete);
     phoptvht[i]->Write(phoptvht[i]->GetName(),TObject::kWriteDelete);
-
   }
 }
 
-void HLTPlots_simple::InitPassed(std::vector<Bool_t>& passed)
+void HLTDump::InitPassed(std::vector<Bool_t>& passed)
 {
   for (auto&& pass : passed) {pass = false;}
 }
 
-Float_t HLTPlots_simple::HT(const Int_t iph)
+void HLTDump::HT(const Int_t iph, JetInfo & jetinfo)
 {
-  Float_t ht = 0;
   for (Int_t ijet = 0; ijet < njets; ijet++)
   {
     if (fIsER && (*jeteta)[ijet] > 3.f) continue;
-    if (fIsoPh && deltaR((*phphi)[iph],(*pheta)[iph],(*jetphi)[iph],(*jeteta)[iph]) < 0.4) continue;
     if (fIsIdL && !(*jetidL)[ijet]) continue;
-    ht += (*jetpt)[ijet];
+    const Float_t dR = deltaR((*phphi)[iph],(*pheta)[iph],(*jetphi)[iph],(*jeteta)[iph]);
+    if (fIsoPh && dR < 0.4) continue;
+    jetinfo.pfjetHT += (*jetpt)[ijet];
+    jetinfo.nJets++;
+    jetinfo.dRs.push_back(dR);
   }
-  return ht;
 }
 
-void HLTPlots_simple::InitTree()
+void HLTDump::FillPlots(const Int_t i, const Int_t iph, BoolVec& passed, TH1FVec& phopt, TH1FVec& phoeta, TH1FVec& ht, TH1FVec& nJets, TH1FVec& deltaRs, TH2FVec& phoptvht)
+{
+  JetInfo jetinfo;
+  HLTDump::HT(iph,jetinfo);
+  passed  [i] = true;
+  phopt   [i]->Fill((*phpt)[iph]);
+  phoeta  [i]->Fill((*pheta)[iph]);
+  ht      [i]->Fill(jetinfo.pfjetHT);
+  nJets   [i]->Fill(jetinfo.nJets);
+  for (auto& dR : jetinfo.dRs) deltaRs[i]->Fill(dR); 
+  phoptvht[i]->Fill((*phpt)[iph],jetinfo.pfjetHT);
+}
+
+void HLTDump::InitTree()
 {
   triggerBits = 0;
   jetE = 0;

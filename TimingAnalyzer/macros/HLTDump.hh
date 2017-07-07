@@ -1,20 +1,30 @@
-#ifndef _hltplots_simple_
-#define _hltplots_simple_
+#ifndef _hltdump_
+#define _hltdump_
 
 #include "TFile.h"
 #include "TTree.h"
 #include "TBranch.h"
 #include <vector>
 
-class HLTPlots_simple 
+#include "common/common.h"
+
+struct JetInfo
+{
+  Float_t pfjetHT = 0.f;
+  Int_t nJets = 0;
+  std::vector<Float_t> dRs;
+};
+
+class HLTDump
 {
 public :
-  HLTPlots_simple(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, const Int_t psfactor);
-  ~HLTPlots_simple();
+  HLTDump(const TString, const TString, const Bool_t, const Bool_t, const Bool_t, const Int_t);
+  ~HLTDump();
   
   void InitTree();
-  void InitPassed(std::vector<Bool_t>&);
-  Float_t HT(const Int_t);
+  void InitPassed(BoolVec&);
+  void HT(const Int_t, JetInfo&);
+  void FillPlots(const Int_t, const Int_t, BoolVec&, TH1FVec&, TH1FVec&, TH1FVec&, TH1FVec&, TH1FVec&, TH2FVec&);
   void DoPlots();
   
 private :
