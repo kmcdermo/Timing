@@ -22,24 +22,24 @@ void runHLTDump()
   gROOT->LoadMacro("HLTDump.cc+g");
 
   const TString infile = "input/DATA/2017/HLT_CHECK/30_06_17/hltdump_DCS_SM.root";
-  const TString outdir = "dump_dcs_SM";
+  const TString outdir = "dump_dcs_SM_jetpt30";
   const Int_t psfactor = 10;
 
-  // first = nopho, second = jetIdL, third = jet eta < 3.0
+  // first = nopho, second = jetIdL, third = jet eta < 3.0, fourth is jetpt > 4.0
   
   std::cout << std::endl << "No cuts" << std::endl;
-  HLTDump plots_nocuts(infile,outdir,false,false,false,psfactor);
+  HLTDump plots_nocuts(infile,outdir,false,false,false,true,psfactor);
   plots_nocuts.DoPlots();
 
   std::cout << std::endl << "Jet Eta Cut" << std::endl;
-  HLTDump plots_jetER(infile,outdir,false,false,true,psfactor);
+  HLTDump plots_jetER(infile,outdir,false,false,true,true,psfactor);
   plots_jetER.DoPlots();
 
   std::cout << std::endl << "Jet IdL Cut" << std::endl;
-  HLTDump plots_jetIdL(infile,outdir,false,true,true,psfactor);
+  HLTDump plots_jetIdL(infile,outdir,false,true,true,true,psfactor);
   plots_jetIdL.DoPlots();
 
   std::cout << std::endl << "Photon dR Cut" << std::endl;
-  HLTDump plots_nopho(infile,outdir,true,true,true,psfactor);
+  HLTDump plots_nopho(infile,outdir,true,true,true,true,psfactor);
   plots_nopho.DoPlots();
 }

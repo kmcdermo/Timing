@@ -18,7 +18,7 @@ struct JetInfo
 class HLTDump
 {
 public :
-  HLTDump(const TString, const TString, const Bool_t, const Bool_t, const Bool_t, const Int_t);
+  HLTDump(const TString, const TString, const Bool_t, const Bool_t, const Bool_t, const Bool_t, const Int_t);
   ~HLTDump();
   
   void InitTree();
@@ -32,6 +32,7 @@ private :
   TTree * fInTree;
   TFile * fOutFile;
 
+  const Bool_t fIsJetPt;
   const Bool_t fIsER;
   const Bool_t fIsoPh;
   const Bool_t fIsIdL;

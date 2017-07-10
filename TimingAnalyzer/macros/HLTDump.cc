@@ -5,8 +5,8 @@
 #include <vector>
 #include <iostream>
 
-HLTDump::HLTDump(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, const Int_t psfactor) :
-  fIsoPh(isoph), fIsIdL(isidL), fIsER(iser), fPSFactor(psfactor)
+HLTDump::HLTDump(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, const Bool_t isjetpt, const Int_t psfactor) :
+  fIsoPh(isoph), fIsIdL(isidL), fIsER(iser), fIsJetPt(isjetpt), fPSFactor(psfactor)
 {
   fInFile = TFile::Open(infile.Data());
   fInTree = (TTree*)fInFile->Get("tree/tree");
@@ -14,9 +14,10 @@ HLTDump::HLTDump(const TString infile, const TString outdir, const Bool_t isoph,
   makeOutDir(outdir);
 
   TString outstring = "";
-  if (fIsoPh) outstring += "_nopho";
-  if (fIsIdL) outstring += "_jetIdL";
-  if (fIsER)  outstring += "_jetER";
+  if (fIsoPh)   outstring += "_nopho";
+  if (fIsIdL)   outstring += "_jetIdL";
+  if (fIsER)    outstring += "_jetER";
+  if (fIsJetPt) outstring += "_jetpt";
 
   fOutFile = new TFile(Form("%s/plots%s.root",outdir.Data(),outstring.Data()),"UPDATE");
 
@@ -159,6 +160,7 @@ void HLTDump::DoPlots()
     phoeta[i]->Write(phoeta[i]->GetName(),TObject::kWriteDelete);
     ht[i]->Write(ht[i]->GetName(),TObject::kWriteDelete);
     nJets[i]->Write(nJets[i]->GetName(),TObject::kWriteDelete);
+    deltaRs[i]->Write(deltaRs[i]->GetName(),TObject::kWriteDelete);
     phoptvht[i]->Write(phoptvht[i]->GetName(),TObject::kWriteDelete);
   }
 }
@@ -172,6 +174,7 @@ void HLTDump::HT(const Int_t iph, JetInfo & jetinfo)
 {
   for (Int_t ijet = 0; ijet < njets; ijet++)
   {
+    if (fIsJetPt && (*jetpt)[ijet] < 30.f) continue;
     if (fIsER && (*jeteta)[ijet] > 3.f) continue;
     if (fIsIdL && !(*jetidL)[ijet]) continue;
     const Float_t dR = deltaR((*phphi)[iph],(*pheta)[iph],(*jetphi)[iph],(*jeteta)[iph]);
