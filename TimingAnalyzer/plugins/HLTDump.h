@@ -97,14 +97,18 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::vector<pat::Jet> & jets);
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<pat::Photon> & photons);
 
+  void HLTToPATPhotonMatching(const int iph);
+  float GetChargedHadronEA(const float);
+  float GetNeutralHadronEA(const float);
+  float GetGammaEA        (const float);
+
   void InitializeTriggerBranches();
   void ClearTriggerObjectBranches();
-
+  void InitializePVBranches();
+  void InitializeMETBranches();
   void ClearJetBranches();
   void InitializeJetBranches();
-
   void ClearRecoPhotonBranches();
-  void HLTToPATPhotonMatching(const int iph);
   void InitializeRecoPhotonBranches();
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
@@ -116,6 +120,8 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
+
+  const float phpTmin;
 
   // dR matching criteria
   const float jetpTmin;
@@ -134,9 +140,17 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   edm::EDGetTokenT<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsToken;
   std::vector<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsByFilter; // first index is filter label, second is trigger objects
 
+  // vertices
+  const edm::InputTag verticesTag;
+  edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken;
+
   // rhos
   const edm::InputTag rhosTag;
   edm::EDGetTokenT<double> rhosToken;
+
+  // mets
+  const edm::InputTag metsTag;
+  edm::EDGetTokenT<std::vector<pat::MET> > metsToken;
 
   // jets
   const edm::InputTag jetsTag;
@@ -159,11 +173,18 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   unsigned long int event;
   unsigned int run, lumi;  
 
+  // vertices
+  int nvtx;
+  float vtxX, vtxY, vtxZ;
+
   // trigger info
   std::vector<bool> triggerBits;
 
   // trigger object
   std::vector<std::vector<float> > trigobjE, trigobjeta, trigobjphi, trigobjpt;
+
+  // MET
+  float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
 
   // jets
   int njets;
@@ -173,8 +194,9 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   // photon info
   int nphotons;
   std::vector<float> phE, phpt, phphi, pheta;
-  std::vector<float> phHoE, phr9;
+  std::vector<float> phHOvE, phHTowOvE, phr9;
   std::vector<bool> phPixSeed, phEleVeto;
+  std::vector<float> phChgIso, phNeuIso, phIso;
   std::vector<float> phPFClEcalIso, phPFClHcalIso, phHollowTkIso;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
   std::vector<std::vector<int> > phIsHLTMatched; // first index is iph, second is for filter, true/false

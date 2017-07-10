@@ -2,6 +2,7 @@
 
 HLTDump::HLTDump(const edm::ParameterSet& iConfig): 
   // cuts
+  phpTmin(iConfig.existsAs<double>("phpTmin") ? iConfig.getParameter<double>("phpTmin") : 20.f),
   jetpTmin(iConfig.existsAs<double>("jetpTmin") ? iConfig.getParameter<double>("jetpTmin") : 15.f),
   dRmin(iConfig.existsAs<double>("dRmin") ? iConfig.getParameter<double>("dRmin") : 0.4),
   pTres(iConfig.existsAs<double>("pTres") ? iConfig.getParameter<double>("pTres") : 0.5),
@@ -12,6 +13,15 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
   inputFilters     (iConfig.existsAs<std::string>("inputFilters") ? iConfig.getParameter<std::string>("inputFilters") : ""),
   triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
   triggerObjectsTag(iConfig.getParameter<edm::InputTag>("triggerObjects")),
+
+  // vertices
+  verticesTag(iConfig.getParameter<edm::InputTag>("vertices")),
+
+  // rhos
+  rhosTag(iConfig.getParameter<edm::InputTag>("rhos")),
+
+  // mets
+  metsTag(iConfig.getParameter<edm::InputTag>("mets")),  
 
   // jets
   jetsTag(iConfig.getParameter<edm::InputTag>("jets")),  
@@ -62,6 +72,16 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
     triggerObjectsByFilter.resize(filterNames.size());
   } // check to make sure text file exists
 
+
+  //vertex
+  verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
+
+  // rhos
+  rhosToken = consumes<double> (rhosTag);
+
+  // mets
+  metsToken = consumes<std::vector<pat::MET> > (metsTag);
+
   // jets
   jetsToken = consumes<std::vector<pat::Jet> > (jetsTag);
 
@@ -77,6 +97,14 @@ HLTDump::~HLTDump() {}
 
 void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 {
+  // VERTICES
+  edm::Handle<std::vector<reco::Vertex> > verticesH;
+  iEvent.getByToken(verticesToken, verticesH);
+  
+  // RHOS
+  edm::Handle<double> rhosH;
+  iEvent.getByToken(rhosToken, rhosH);
+
   // TRIGGERS
   edm::Handle<edm::TriggerResults> triggerResultsH;
   iEvent.getByToken(triggerResultsToken, triggerResultsH);
@@ -84,6 +112,10 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsH;
   iEvent.getByToken(triggerObjectsToken, triggerObjectsH);
   std::vector<pat::TriggerObjectStandAlone> triggerObjects = *triggerObjectsH;
+
+  // MET
+  edm::Handle<std::vector<pat::MET> > metsH;
+  iEvent.getByToken(metsToken, metsH);
 
   // JETS
   edm::Handle<std::vector<pat::Jet> > jetsH;
@@ -93,7 +125,7 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // PHOTONS
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
-  std::vector<pat::Photon> photons = *photonsH;
+  std::vector<pat::Photon> photons; photons.reserve(photonsH->size());
 
   // RecHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
@@ -119,6 +151,28 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   run   = iEvent.id().run();
   lumi  = iEvent.luminosityBlock();
   event = iEvent.id().event();
+
+  /////////////////////////
+  //                     //   
+  // Primary Vertex info //
+  //                     //
+  /////////////////////////
+  HLTDump::InitializePVBranches();
+  if (verticesH.isValid()) 
+  {
+    nvtx = verticesH->size();
+    const reco::Vertex & primevtx = (*verticesH)[0];
+    vtxX = primevtx.position().x();
+    vtxY = primevtx.position().y();
+    vtxZ = primevtx.position().z();
+  }
+
+  ///////////////////
+  //               //
+  // FixedGrid Rho //
+  //               //
+  ///////////////////
+  const float rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
 
   //////////////////
   //              //
@@ -176,6 +230,22 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       } // save trig objects
     } // end loop over filter objects
   } // end loop over filters
+
+  //////////////////
+  //              //
+  // Type1 PF Met //
+  //              //
+  //////////////////
+  HLTDump::InitializeMETBranches();
+  if (metsH.isValid())
+  {
+    const pat::MET & t1pfMET = (*metsH)[0];
+
+    // Type1 PF MET (corrected)
+    t1pfMETpt    = t1pfMET.pt();
+    t1pfMETphi   = t1pfMET.phi();
+    t1pfMETsumEt = t1pfMET.sumEt();
+  }
 
   /////////////////////////
   //                     //
@@ -250,8 +320,9 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       const reco::Photon::ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
 
       // ID-like variables
-      phHoE   [iph] = phiter->hadTowOverEm(); // close to trigger
-      phr9    [iph] = phiter->r9();
+      phHOvE   [iph] = phiter->hadronicOverEm(); // ID
+      phHTowOvE[iph] = phiter->hadTowOverEm(); // close to trigger
+      phr9     [iph] = phiter->r9();
 
       // pseudo-track veto
       phPixSeed[iph] = phiter->passElectronVeto();
@@ -261,6 +332,12 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       phsieie[iph] = phshape.sigmaIetaIeta;
       phsipip[iph] = phshape.sigmaIphiIphi;
       phsieip[iph] = phshape.sigmaIetaIphi;
+
+      // PF Isolations
+      const float sceta = std::abs(phsceta[iph]);
+      phChgIso[iph] = std::max(phiter->chargedHadronIso() - (rho * HLTDump::GetChargedHadronEA(sceta)),0.f);
+      phNeuIso[iph] = std::max(phiter->neutralHadronIso() - (rho * HLTDump::GetNeutralHadronEA(sceta)),0.f);
+      phIso   [iph] = std::max(phiter->photonIso()        - (rho * HLTDump::GetGammaEA        (sceta)),0.f);
 
       // PF Cluster Isolations
       phPFClEcalIso[iph] = phiter->ecalPFClusterIso();
@@ -352,6 +429,10 @@ void HLTDump::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photons
 {
   if (photonsH.isValid()) // standard handle check
   {
+    for (const auto& photon : *photonsH)
+    {
+      if (photon.pt() > phpTmin) photons.push_back(photon);
+    }
     std::sort(photons.begin(),photons.end(),sortByPhotonPt);
   }
 }  
@@ -372,6 +453,42 @@ void HLTDump::HLTToPATPhotonMatching(const int iph)
       }
     }
   }
+}
+
+float HLTDump::GetChargedHadronEA(const float eta)
+{
+  if      (eta <  1.0)                  return 0.0360;
+  else if (eta >= 1.0   && eta < 1.479) return 0.0377;
+  else if (eta >= 1.479 && eta < 2.0  ) return 0.0306;
+  else if (eta >= 2.0   && eta < 2.2  ) return 0.0283;
+  else if (eta >= 2.2   && eta < 2.3  ) return 0.0254;
+  else if (eta >= 2.3   && eta < 2.4  ) return 0.0217;
+  else if (eta >= 2.4)                  return 0.0167;
+  else                                  return 0.;
+}
+
+float HLTDump::GetNeutralHadronEA(const float eta) 
+{
+  if      (eta <  1.0)                  return 0.0597;
+  else if (eta >= 1.0   && eta < 1.479) return 0.0807;
+  else if (eta >= 1.479 && eta < 2.0  ) return 0.0629;
+  else if (eta >= 2.0   && eta < 2.2  ) return 0.0197;
+  else if (eta >= 2.2   && eta < 2.3  ) return 0.0184;
+  else if (eta >= 2.3   && eta < 2.4  ) return 0.0284;
+  else if (eta >= 2.4)                  return 0.0591;
+  else                                  return 0.;
+}
+
+float HLTDump::GetGammaEA(const float eta) 
+{
+  if      (eta <  1.0)                  return 0.1210;
+  else if (eta >= 1.0   && eta < 1.479) return 0.1107;
+  else if (eta >= 1.479 && eta < 2.0  ) return 0.0699;
+  else if (eta >= 2.0   && eta < 2.2  ) return 0.1056;
+  else if (eta >= 2.2   && eta < 2.3  ) return 0.1457;
+  else if (eta >= 2.3   && eta < 2.4  ) return 0.1719;
+  else if (eta >= 2.4)                  return 0.1998;
+  else                                  return 0.;
 }
 
 void HLTDump::InitializeTriggerBranches()
@@ -416,6 +533,17 @@ void HLTDump::ClearTriggerObjectBranches()
   }
 }
 
+void HLTDump::InitializePVBranches()
+{
+  nvtx = -9999; 
+  vtxX = -9999.f; vtxY = -9999.f; vtxZ = -9999.f;
+}
+
+void HLTDump::InitializeMETBranches()
+{
+  t1pfMETpt = -9999.f; t1pfMETphi = -9999.f; t1pfMETsumEt = -9999.f;
+}
+
 void HLTDump::ClearJetBranches()
 {
   njets = -9999;
@@ -458,12 +586,16 @@ void HLTDump::ClearRecoPhotonBranches()
   phsceta.clear(); 
   phscphi.clear(); 
 
-  phHoE.clear();
+  phHOvE.clear();
+  phHTowOvE.clear();
   phr9.clear();
 
   phPixSeed.clear();
   phEleVeto.clear();
 
+  phChgIso.clear();
+  phNeuIso.clear();
+  phIso.clear();
   phPFClEcalIso.clear();
   phPFClHcalIso.clear();
   phHollowTkIso.clear();
@@ -498,12 +630,16 @@ void HLTDump::InitializeRecoPhotonBranches()
   phsceta.resize(nphotons);
   phscphi.resize(nphotons);
 
-  phHoE.resize(nphotons);
+  phHOvE.resize(nphotons);
+  phHTowOvE.resize(nphotons);
   phr9.resize(nphotons);
 
   phPixSeed.resize(nphotons);
   phEleVeto.resize(nphotons);
 
+  phChgIso.resize(nphotons);
+  phNeuIso.resize(nphotons);
+  phIso.resize(nphotons);
   phPFClEcalIso.resize(nphotons);
   phPFClHcalIso.resize(nphotons);
   phHollowTkIso.resize(nphotons);
@@ -537,12 +673,16 @@ void HLTDump::InitializeRecoPhotonBranches()
     phsceta[iph] = -9999.f; 
     phscphi[iph] = -9999.f; 
 
-    phHoE    [iph] = -9999.f;
+    phHOvE   [iph] = -9999.f;
+    phHTowOvE[iph] = -9999.f;
     phr9     [iph] = -9999.f;
 
     phPixSeed[iph] = false;
     phEleVeto[iph] = false;
 
+    phChgIso     [iph] = -9999.f;
+    phNeuIso     [iph] = -9999.f;
+    phIso        [iph] = -9999.f;
     phPFClEcalIso[iph] = -9999.f;
     phPFClHcalIso[iph] = -9999.f;
     phHollowTkIso[iph] = -9999.f;
@@ -584,6 +724,17 @@ void HLTDump::beginJob()
   // Trigger Info
   tree->Branch("triggerBits"          , &triggerBits);
 
+  // Vertex info
+  tree->Branch("nvtx"                 , &nvtx                 , "nvtx/I");
+  tree->Branch("vtxX"                 , &vtxX                 , "vtxX/F");
+  tree->Branch("vtxY"                 , &vtxY                 , "vtxY/F");
+  tree->Branch("vtxZ"                 , &vtxZ                 , "vtxZ/F");
+
+  // MET info
+  tree->Branch("t1pfMETpt"            , &t1pfMETpt            , "t1pfMETpt/F");
+  tree->Branch("t1pfMETphi"           , &t1pfMETphi           , "t1pfMETphi/F");
+  tree->Branch("t1pfMETsumEt"         , &t1pfMETsumEt         , "t1pfMETsumEt/F");
+
   // Jet Info
   tree->Branch("njets"                , &njets                , "njets/I");
 
@@ -614,12 +765,16 @@ void HLTDump::beginJob()
   tree->Branch("phsceta"              , &phsceta);
   tree->Branch("phscphi"              , &phscphi);
 
-  tree->Branch("phHoE"                , &phHoE);
+  tree->Branch("phHOvE"               , &phHOvE);
+  tree->Branch("phHTowOvE"            , &phHTowOvE);
   tree->Branch("phr9"                 , &phr9);
 
   tree->Branch("phPixSeed"            , &phPixSeed);
   tree->Branch("phEleVeto"            , &phEleVeto);
 
+  tree->Branch("phChgIso"             , &phChgIso);
+  tree->Branch("phNeuIso"             , &phNeuIso);
+  tree->Branch("phIso"                , &phIso);
   tree->Branch("phPFClEcalIso"        , &phPFClEcalIso);
   tree->Branch("phPFClHcalIso"        , &phPFClHcalIso);
   tree->Branch("phHollowTkIso"        , &phHollowTkIso);

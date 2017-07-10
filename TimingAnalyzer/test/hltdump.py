@@ -9,6 +9,10 @@ options = VarParsing ('python')
 
 ## general cuts
 options.register (
+	'phpTmin',20.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,
+	'photon pT minimum cut');
+
+options.register (
 	'jetpTmin',15.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,
 	'jet pT minimum cut');
 
@@ -48,6 +52,7 @@ options.register (
 options.parseArguments()
 
 print "##### Settings ######"
+print "Running with phpTmin             = ",options.phpTmin
 print "Running with jetpTmin            = ",options.jetpTmin
 print "Running with dRmin               = ",options.dRmin
 print "Running with pTres               = ",options.pTres
@@ -101,6 +106,7 @@ process.TFileService = cms.Service("TFileService",
 # Make the tree 
 process.tree = cms.EDAnalyzer("HLTDump",
    ## general cuts
+   phpTmin = cms.double(options.phpTmin),
    jetpTmin = cms.double(options.jetpTmin),
    dRmin = cms.double(options.dRmin),
    pTres = cms.double(options.pTres),
@@ -110,8 +116,12 @@ process.tree = cms.EDAnalyzer("HLTDump",
    inputFilters   = cms.string("HLTfilters.txt"),
    triggerResults = cms.InputTag("TriggerResults", "", "HLT"),
    triggerObjects = cms.InputTag("slimmedPatTrigger"),
+   ## vertices
+   vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## rho
    rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
+   ## MET
+   mets = cms.InputTag("slimmedMETs"),
    ## jets			    	
    jets = cms.InputTag("slimmedJets"),
    ## photons		
