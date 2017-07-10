@@ -10,15 +10,22 @@
 
 #include <vector>
 
+struct JetInfo
+{
+  Float_t pfjetHT = 0.f;
+  Int_t nJets = 0;
+};
+
 class HLTPlots 
 {
 public :
-  HLTPlots(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, const Float_t htcut);
+  HLTPlots(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
+	   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applyphpt);
   ~HLTPlots();
   
   void InitTree();
   void DoPlots();
-  Float_t HT(const Int_t);
+  void HT(const Int_t, JetInfo &);
   void OutputEfficiency(TEfficiency *&, const TString);
   
 private :
@@ -31,7 +38,10 @@ private :
   const Bool_t fIsER;
   const Bool_t fIsoPh;
   const Bool_t fIsIdL;
+  const Bool_t fApplyHT;
   const Float_t fHTCut;
+  const Bool_t fApplyPhDenom;
+  const Bool_t fApplyPhPt;
 
   // Declaration of leaf types
   ULong64_t       event;
