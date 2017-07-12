@@ -5,12 +5,22 @@
 #include <iostream>
 #include <fstream>
 
-HLTPlots::HLTPlots(const TString infile, const TString outdir, const TString runs, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
+HLTPlots::HLTPlots(const TString infile, const TString outdir, const TString runs, const Int_t era, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
 		   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applylast, const Bool_t applyphpt) :
   fIsoPh(isoph), fIsIdL(isidL), fIsER(iser), fApplyHT(applyht), fHTCut(htcut), fApplyPhDenom(applyphdenom), fApplyLast(applylast), fApplyPhPt(applyphpt)
 {
   fInFile = TFile::Open(infile.Data());
   fInTree = (TTree*)fInFile->Get("tree/tree");
+
+  // read in runs
+  std::ifstream inputruns;
+  inputruns.open(runs.Data(),std::ios::in);
+  Int_t erano;
+  UInt_t runno;
+  while (inputruns >> erano >> runno)
+  {
+    if (erano == era) fRuns.push_back(runno);
+  }
 
   TString outstring = "cuts";
   if (fApplyHT) outstring += Form("_htcut_%i",Int_t(fHTCut));
@@ -20,20 +30,12 @@ HLTPlots::HLTPlots(const TString infile, const TString outdir, const TString run
   if (fApplyPhDenom) outstring += "_phden";
   if (fApplyLast) outstring += "_last";
   if (fApplyPhPt) outstring += "_phpt";
+  if (fRuns.size() != 0) outstring += Form("_era%i",era);
   
   fOutDir = outdir+"/"+outstring;
   makeOutDir(fOutDir);
 
   fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
-
-  // read in runs
-  std::ifstream inputruns;
-  inputruns.open(runs.Data(),std::ios::in);
-  UInt_t runno;
-  while (inputruns >> runno)
-  {
-    fRuns.push_back(runno);
-  }
 
   HLTPlots::InitTree();
 }
@@ -73,7 +75,7 @@ void HLTPlots::DoPlots()
     if (fRuns.size() != 0)
     {
       Bool_t goodrun = false;
-      for (const auto&& runno : fRuns)
+      for (const auto runno : fRuns)
       {
 	if (runno == run) 
 	{
