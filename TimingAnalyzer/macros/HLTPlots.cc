@@ -66,8 +66,11 @@ HLTPlots::~HLTPlots()
 
 void HLTPlots::DoPlots()
 {
-  const Int_t nbinsx = 22;
-  Double_t xbins[nbinsx+1] = {0,10,20,30,40,45,50,52,54,56,58,60,62,64,66,68,70,75,80,100,200,500,1000};
+  const Int_t nbinsx = 20;
+  Double_t xbins[nbinsx+1] = {20,30,40,45,50,52,54,56,58,60,62,64,66,68,70,75,80,100,200,500,1000};
+
+  const Int_t nbinsxHT = 23;
+  Double_t xbinsHT[nbinsxHT+1] = {100,150,200,250,300,325,350,375,400,425,450,475,500,525,550,575,600,625,650,700,750,1000,1500,2000};
   
   for (Int_t iera = 0; iera < fNEras; iera++)
   {
@@ -76,7 +79,7 @@ void HLTPlots::DoPlots()
     effetas[iera] = new TEfficiency(Form("effeta_%i",iera),"HLT Efficiency vs Leading Photon #eta;Photon Offline #eta;Efficiency",30,-3.f,3.f);
     effphis[iera] = new TEfficiency(Form("effphi_%i",iera),"HLT Efficiency vs Leading Photon #phi;Photon Offline #phi;Efficiency",32,-3.2f,3.2f);
     efftimes[iera] = new TEfficiency(Form("efftime_%i",iera),"HLT Efficiency vs Leading Photon Seed Time [ns];Photon Offline Seed Time [ns];Efficiency",100,-25.,25.);
-    effHTs[iera] = new TEfficiency(Form("effHT_%i",iera),"HLT Efficiency vs PF H_{T};Offline PF H_{T} (Min PFJet p_{T} > 15);Efficiency",100,0,2000.f);
+    effHTs[iera] = new TEfficiency(Form("effHT_%i",iera),"HLT Efficiency vs PF H_{T};Offline PF H_{T} (Min PFJet p_{T} > 15);Efficiency",nbinsxHT,xbinsHT);
   }
 
   const Int_t idenom = 1;
@@ -100,7 +103,7 @@ void HLTPlots::DoPlots()
       }
 
       const Float_t pt = (*phpt)[iph];
-      if (fApplyPhPt && (pt > ph1pt)) continue;
+      if (fApplyPhPt && (pt < ph1pt)) continue;
 
       if ((*phr9)[iph] < 0.95) continue;
       if ((*phsmaj)[iph] > 1.f) continue;
@@ -259,18 +262,21 @@ void HLTPlots::DoOverplot()
 
 void HLTPlots::Overplot(const TEffVec& teffs, const TString cname)
 {
-  std::vector<Color_t> colors = {kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3};
+  std::vector<Color_t> colors = {kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3,kBlack};
 
   TCanvas * canv = new TCanvas();
   canv->cd();
-  
+  canv->SetLogx(1);
+  canv->SetGrid(1,1);
+
   TLegend * leg = new TLegend(0.8,0.8,0.99,0.99);
+  leg->SetNColumns(2);
 
   for (Int_t iera = 0; iera < fNEras; iera++)
   {
     teffs[iera]->SetLineColor(colors[iera]);
     teffs[iera]->SetMarkerColor(colors[iera]);
-    teffs[iera]->Draw(iera>0?"P same":"AP");
+    teffs[iera]->Draw(iera>0?"PZ same":"APZ");
     leg->AddEntry(teffs[iera],Form("Era: %i",iera),"epl");
   }
 
