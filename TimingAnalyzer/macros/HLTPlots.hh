@@ -19,8 +19,8 @@ struct JetInfo
 class HLTPlots 
 {
 public :
-  HLTPlots(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
-	   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applyphpt);
+  HLTPlots(const TString infile, const TString outdir, const TString runs, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
+	   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applylast, const Bool_t applyphpt);
   ~HLTPlots();
   
   void InitTree();
@@ -35,21 +35,30 @@ private :
   TString fOutDir;
   TFile * fOutFile;
   
+  std::vector<UInt_t> fRuns;
+
   const Bool_t fIsER;
   const Bool_t fIsoPh;
   const Bool_t fIsIdL;
   const Bool_t fApplyHT;
   const Float_t fHTCut;
   const Bool_t fApplyPhDenom;
+  const Bool_t fApplyLast;
   const Bool_t fApplyPhPt;
 
   // Declaration of leaf types
-  ULong64_t       event;
-  UInt_t          run;
-  UInt_t          lumi;
-
-  Int_t           njets;
-  Int_t           nphotons;
+  ULong64_t event;
+  UInt_t    run;
+  UInt_t    lumi;
+  Int_t     nvtx;
+  Float_t   vtxX;
+  Float_t   vtxY;
+  Float_t   vtxZ;
+  Float_t   t1pfMETpt;
+  Float_t   t1pfMETphi;
+  Float_t   t1pfMETsumEt;
+  Int_t     njets;
+  Int_t     nphotons;
   std::vector<Float_t> * jetE;
   std::vector<Float_t> * jetpt;
   std::vector<Float_t> * jetphi;
@@ -63,10 +72,14 @@ private :
   std::vector<Float_t> * phscE;
   std::vector<Float_t> * phsceta;
   std::vector<Float_t> * phscphi;
-  std::vector<Float_t> * phHoE;
+  std::vector<Float_t> * phHOvE;
+  std::vector<Float_t> * phHTowOvE;
   std::vector<Float_t> * phr9;
   std::vector<Bool_t>  * phEleVeto;
   std::vector<Bool_t>  * phPixSeed;
+  std::vector<Float_t> * phChgIso;
+  std::vector<Float_t> * phNeuIso;
+  std::vector<Float_t> * phIso;
   std::vector<Float_t> * phPFClEcalIso;
   std::vector<Float_t> * phPFClHcalIso;
   std::vector<Float_t> * phHollowTkIso;
@@ -90,6 +103,13 @@ private :
   TBranch * b_run;
   TBranch * b_lumi;
   TBranch * b_triggerBits;
+  TBranch * b_nvtx;
+  TBranch * b_vtxX;
+  TBranch * b_vtxY;
+  TBranch * b_vtxZ;
+  TBranch * b_t1pfMETpt;
+  TBranch * b_t1pfMETphi;
+  TBranch * b_t1pfMETsumEt;
   TBranch * b_njets;
   TBranch * b_jetE;
   TBranch * b_jetpt;
@@ -104,10 +124,14 @@ private :
   TBranch * b_phscE;
   TBranch * b_phsceta;
   TBranch * b_phscphi;
-  TBranch * b_phHoE;
+  TBranch * b_phHOvE;
+  TBranch * b_phHTowOvE;
   TBranch * b_phr9;
   TBranch * b_phEleVeto;
   TBranch * b_phPixSeed;
+  TBranch * b_phChgIso;
+  TBranch * b_phNeuIso;
+  TBranch * b_phIso;
   TBranch * b_phPFClEcalIso;
   TBranch * b_phPFClHcalIso;
   TBranch * b_phHollowTkIso;

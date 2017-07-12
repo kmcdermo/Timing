@@ -44,11 +44,14 @@ void HLTDump::DoPlots()
   cut[1] = "R9";
   cut[2] = "Smaj";
   cut[3] = "Smin";
-  cut[4] = "HollTkIso";
-  cut[5] = "HoE";
-  cut[6] = "sieie";
-  cut[7] = "EcalIso";
-  cut[8] = "HcalIso";
+  //  cut[4] = "HollTkIso";
+  cut[4] = "HoE";
+  cut[5] = "sieie";
+  cut[6] = "ChgIso";
+  cut[7] = "NeuIso";
+  cut[8] = "PhIso";
+//   cut[6] = "EcalIso";
+//   cut[8] = "HcalIso";
   cut[9] = "phpt";
   
   std::vector<Color_t> colors(ncuts); //= {kRed+1,kGreen+1,kBlue+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3,kBlack};
@@ -109,22 +112,26 @@ void HLTDump::DoPlots()
       if ((*phsmin)[iph] > 0.3) continue;
       if (!passed[3]) {HLTDump::FillPlots(3,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-      if ((*phHollowTkIso)[iph] > (3.f + 0.002*pt)) continue;
-      if (!passed[4]) {HLTDump::FillPlots(4,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
-
+//       if ((*phHollowTkIso)[iph] > (3.f + 0.002*pt)) continue;
       if (std::abs((*phsceta)[iph]) < ECAL::etaEB)
       {
-	if ((*phHoE)[iph] > 0.0396) continue;
-	if (!passed[5]) {HLTDump::FillPlots(5,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
+	if ((*phHOvE)[iph] > 0.0396) continue;
+	if (!passed[4]) {HLTDump::FillPlots(4,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
 	if ((*phsieie)[iph] > 0.01022) continue;
+	if (!passed[5]) {HLTDump::FillPlots(5,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
+
+	if ((*phChgIso)[iph] > 0.441) continue;
 	if (!passed[6]) {HLTDump::FillPlots(6,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-	if ((*phPFClEcalIso)[iph] > (2.5 + 0.01*pt)) continue;
+	if ((*phNeuIso)[iph] > (2.725+0.0148*pt+0.000017*pt*pt)) continue;
 	if (!passed[7]) {HLTDump::FillPlots(7,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-	if ((*phPFClHcalIso)[iph] > (6.f + 0.03*pt + 0.00003*pt*pt)) continue;
+	if ((*phIso)[iph] > (2.571+0.0047*pt)) continue;
 	if (!passed[8]) {HLTDump::FillPlots(8,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
+
+// 	if ((*phPFClEcalIso)[iph] > (2.5 + 0.01*pt)) continue;
+// 	if ((*phPFClHcalIso)[iph] > (6.f + 0.03*pt + 0.00003*pt*pt)) continue;
 
 	if (pt < 70.f) continue;
 	if (!passed[9]) {HLTDump::FillPlots(9,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
@@ -133,17 +140,23 @@ void HLTDump::DoPlots()
       } // end check over EB
       else if ((std::abs((*phsceta)[iph]) > ECAL::etaEEmin) && (std::abs((*phsceta)[iph]) < ECAL::etaEEmax))
       {
-	if ((*phHoE)[iph] > 0.0219) continue;
-	if (!passed[5]) {HLTDump::FillPlots(5,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
+	if ((*phHOvE)[iph] > 0.0219) continue;
+	if (!passed[4]) {HLTDump::FillPlots(4,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
 	if ((*phsieie)[iph] > 0.03001) continue;
+	if (!passed[5]) {HLTDump::FillPlots(5,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
+
+	if ((*phChgIso)[iph] > 0.442) continue;
 	if (!passed[6]) {HLTDump::FillPlots(6,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-	if ((*phPFClEcalIso)[iph] > (4.f + 0.01*pt)) continue;
+	if ((*phNeuIso)[iph] > (1.715+0.0163*pt+0.000014*pt*pt)) continue;
 	if (!passed[7]) {HLTDump::FillPlots(7,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
 
-	if ((*phPFClHcalIso)[iph] > (3.5 + 0.03*pt + 0.00003*pt*pt)) continue;
+	if ((*phIso)[iph] > (3.863+0.0034*pt)) continue;
 	if (!passed[8]) {HLTDump::FillPlots(8,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
+
+// 	if ((*phPFClEcalIso)[iph] > (4.f + 0.01*pt)) continue;
+// 	if ((*phPFClHcalIso)[iph] > (3.5 + 0.03*pt + 0.00003*pt*pt)) continue;
 
 	if (pt < 70.f) continue;
 	if (!passed[9]) {HLTDump::FillPlots(9,iph,passed,phopt,phoeta,ht,nJets,deltaRs,phoptvht);}
@@ -213,10 +226,14 @@ void HLTDump::InitTree()
   phscE = 0;
   phsceta = 0;
   phscphi = 0;
-  phHoE = 0;
+  phHOvE = 0;
+  phHTowOvE = 0;
   phr9 = 0;
   phEleVeto = 0;  
   phPixSeed = 0;
+  phChgIso = 0;
+  phNeuIso = 0;
+  phIso = 0;
   phPFClEcalIso = 0;
   phPFClHcalIso = 0;
   phHollowTkIso = 0;
@@ -239,6 +256,13 @@ void HLTDump::InitTree()
   fInTree->SetBranchAddress("run", &run, &b_run);
   fInTree->SetBranchAddress("lumi", &lumi, &b_lumi);
   fInTree->SetBranchAddress("triggerBits", &triggerBits, &b_triggerBits);
+  fInTree->SetBranchAddress("nvtx", &nvtx, &b_nvtx);
+  fInTree->SetBranchAddress("vtxX", &vtxX, &b_vtxX);
+  fInTree->SetBranchAddress("vtxY", &vtxY, &b_vtxY);
+  fInTree->SetBranchAddress("vtxZ", &vtxZ, &b_vtxZ);
+  fInTree->SetBranchAddress("t1pfMETpt", &t1pfMETpt, &b_t1pfMETpt);
+  fInTree->SetBranchAddress("t1pfMETphi", &t1pfMETphi, &b_t1pfMETphi);
+  fInTree->SetBranchAddress("t1pfMETsumEt", &t1pfMETsumEt, &b_t1pfMETsumEt);
   fInTree->SetBranchAddress("njets", &njets, &b_njets);
   fInTree->SetBranchAddress("jetE", &jetE, &b_jetE);
   fInTree->SetBranchAddress("jetpt", &jetpt, &b_jetpt);
@@ -253,10 +277,14 @@ void HLTDump::InitTree()
   fInTree->SetBranchAddress("phscE", &phscE, &b_phscE);
   fInTree->SetBranchAddress("phsceta", &phsceta, &b_phsceta);
   fInTree->SetBranchAddress("phscphi", &phscphi, &b_phscphi);
-  fInTree->SetBranchAddress("phHoE", &phHoE, &b_phHoE);
+  fInTree->SetBranchAddress("phHOvE", &phHOvE, &b_phHOvE);
+  fInTree->SetBranchAddress("phHTowOvE", &phHTowOvE, &b_phHTowOvE);
   fInTree->SetBranchAddress("phr9", &phr9, &b_phr9);
   fInTree->SetBranchAddress("phEleVeto", &phEleVeto, &b_phEleVeto);
   fInTree->SetBranchAddress("phPixSeed", &phPixSeed, &b_phPixSeed);
+  fInTree->SetBranchAddress("phChgIso", &phChgIso, &b_phChgIso);
+  fInTree->SetBranchAddress("phNeuIso", &phNeuIso, &b_phNeuIso);
+  fInTree->SetBranchAddress("phIso", &phIso, &b_phIso);
   fInTree->SetBranchAddress("phPFClEcalIso", &phPFClEcalIso, &b_phPFClEcalIso);
   fInTree->SetBranchAddress("phPFClHcalIso", &phPFClHcalIso, &b_phPFClHcalIso);
   fInTree->SetBranchAddress("phHollowTkIso", &phHollowTkIso, &b_phHollowTkIso);

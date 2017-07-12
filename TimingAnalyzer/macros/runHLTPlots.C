@@ -22,15 +22,17 @@ void runHLTPlots()
   gROOT->LoadMacro("HLTPlots.cc+g");
 
   const TString infile = "input/DATA/2017/HLT_CHECK/30_06_17/hltdump_DCS_SM.root";
-  const TString outdir = "hltcheck_SM_phpt";
+  const TString outdir = "hltcheck_SM_vid";
+  const TString runs = "runs.txt";
   const Bool_t  isoph = true;
   const Bool_t  isidL = false;
   const Bool_t  iser  = true;
-  const Bool_t  applyht = false;
+  const Bool_t  applyht = true;
   const Float_t htcut = 400.f;
-  const Bool_t applyphdenom = false;
+  const Bool_t applyphdenom = true;
+  const Bool_t applylast = false;
   const Bool_t applyphpt = false;
 
-  HLTPlots plots(infile,outdir,isoph,isidL,iser,applyht,htcut,applyphdenom,applyphpt);
+  HLTPlots plots(infile,outdir,runs,isoph,isidL,iser,applyht,htcut,applyphdenom,applylast,applyphpt);
   plots.DoPlots();
 }

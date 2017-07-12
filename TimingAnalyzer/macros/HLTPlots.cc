@@ -3,10 +3,11 @@
 
 #include "common/common.h"
 #include <iostream>
+#include <fstream>
 
-HLTPlots::HLTPlots(const TString infile, const TString outdir, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
-		   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applyphpt) :
-  fIsoPh(isoph), fIsIdL(isidL), fIsER(iser), fApplyHT(applyht), fHTCut(htcut), fApplyPhDenom(applyphdenom), fApplyPhPt(applyphpt)
+HLTPlots::HLTPlots(const TString infile, const TString outdir, const TString runs, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
+		   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applylast, const Bool_t applyphpt) :
+  fIsoPh(isoph), fIsIdL(isidL), fIsER(iser), fApplyHT(applyht), fHTCut(htcut), fApplyPhDenom(applyphdenom), fApplyLast(applylast), fApplyPhPt(applyphpt)
 {
   fInFile = TFile::Open(infile.Data());
   fInTree = (TTree*)fInFile->Get("tree/tree");
@@ -17,12 +18,22 @@ HLTPlots::HLTPlots(const TString infile, const TString outdir, const Bool_t isop
   if (fIsIdL) outstring += "_jetIdL";
   if (fIsER)  outstring += "_jetER";
   if (fApplyPhDenom) outstring += "_phden";
+  if (fApplyLast) outstring += "_last";
   if (fApplyPhPt) outstring += "_phpt";
   
   fOutDir = outdir+"/"+outstring;
   makeOutDir(fOutDir);
 
   fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
+
+  // read in runs
+  std::ifstream inputruns;
+  inputruns.open(runs.Data(),std::ios::in);
+  UInt_t runno;
+  while (inputruns >> runno)
+  {
+    fRuns.push_back(runno);
+  }
 
   HLTPlots::InitTree();
 }
@@ -58,18 +69,37 @@ void HLTPlots::DoPlots()
 
     fInTree->GetEntry(ientry);
 
+    // GET RUN NUMBER TO PROCESS
+    if (fRuns.size() != 0)
+    {
+      Bool_t goodrun = false;
+      for (const auto&& runno : fRuns)
+      {
+	if (runno == run) 
+	{
+	  goodrun = true;
+	  break;
+	}
+      }
+      if (!goodrun) continue;
+    }
+
     Int_t goodpho = -1;
     for (Int_t iph = 0; iph < nphotons; iph++)
     {
-      if (fApplyPhDenom && !(*phIsHLTMatched)[iph][idenom]) continue; 
+      if (fApplyPhDenom)
+      {
+	if ( fApplyLast && !(*phIsHLTMatched)[iph][ilast] ) continue; 
+	if (!fApplyLast && !(*phIsHLTMatched)[iph][idenom]) continue; 
+      }
 
       const Float_t pt = (*phpt)[iph];
-      if (fApplyPhPt && pt > ph1pt) continue;
+      if (fApplyPhPt && (pt > ph1pt)) continue;
 
       if ((*phr9)[iph] < 0.95) continue;
       if ((*phsmaj)[iph] > 1.f) continue;
       if ((*phsmin)[iph] > 0.3) continue;
-      if ((*phHollowTkIso)[iph] > (3.f + 0.002*pt)) continue;
+      //if ((*phHollowTkIso)[iph] > (3.f + 0.002*pt)) continue;
 
       // track veto 
       //if (!(*phEleVeto)[iph]) continue;
@@ -77,10 +107,13 @@ void HLTPlots::DoPlots()
 
       if (std::abs((*phsceta)[iph]) < ECAL::etaEB)
       {
-	if ((*phHoE)[iph] > 0.0396) continue;
+	if ((*phHOvE)[iph] > 0.0396) continue;
 	if ((*phsieie)[iph] > 0.01022) continue;
-	if ((*phPFClEcalIso)[iph] > (2.5 + 0.01*pt)) continue;
-	if ((*phPFClHcalIso)[iph] > (6.f + 0.03*pt + 0.00003*pt*pt)) continue;
+	if ((*phChgIso)[iph] > 0.441) continue;
+	if ((*phNeuIso)[iph] > (2.725+0.0148*pt+0.000017*pt*pt)) continue;
+	if ((*phIso)[iph] > (2.571+0.0047*pt)) continue;
+// 	if ((*phPFClEcalIso)[iph] > (2.5 + 0.01*pt)) continue;
+// 	if ((*phPFClHcalIso)[iph] > (6.f + 0.03*pt + 0.00003*pt*pt)) continue;
 
 	if (fApplyHT)
 	{
@@ -94,10 +127,13 @@ void HLTPlots::DoPlots()
       } // end check over EB
       else if ((std::abs((*phsceta)[iph]) > ECAL::etaEEmin) && (std::abs((*phsceta)[iph]) < ECAL::etaEEmax))
       {
-	if ((*phHoE)[iph] > 0.0219) continue;
+	if ((*phHOvE)[iph] > 0.0219) continue;
 	if ((*phsieie)[iph] > 0.03001) continue;
-	if ((*phPFClEcalIso)[iph] > (4.f + 0.01*pt)) continue;
-	if ((*phPFClHcalIso)[iph] > (3.5 + 0.03*pt + 0.00003*pt*pt)) continue;
+	if ((*phChgIso)[iph] > 0.442) continue;
+	if ((*phNeuIso)[iph] > (1.715+0.0163*pt+0.000014*pt*pt)) continue;
+	if ((*phIso)[iph] > (3.863+0.0034*pt)) continue;
+// 	if ((*phPFClEcalIso)[iph] > (4.f + 0.01*pt)) continue;
+// 	if ((*phPFClHcalIso)[iph] > (3.5 + 0.03*pt + 0.00003*pt*pt)) continue;
 	
 	if (fApplyHT)
 	{
@@ -113,7 +149,16 @@ void HLTPlots::DoPlots()
 
     if (goodpho < 0) continue;
     
-    const Bool_t passed = (fApplyPhDenom ? (*phIsHLTMatched)[goodpho][inumer] : (*triggerBits)[0]);
+    Bool_t passed = false;
+    if (fApplyPhDenom)
+    {
+      if ( fApplyLast && (*triggerBits)[0])                  passed = true;
+      if (!fApplyLast && (*phIsHLTMatched)[goodpho][inumer]) passed = true;
+    }
+    else
+    {
+      if ((*triggerBits)[0]) passed = true;
+    }
 
     if (std::abs((*phsceta)[goodpho]) < ECAL::etaEB)
     {
@@ -152,6 +197,7 @@ void HLTPlots::HT(const Int_t iph, JetInfo & jetinfo)
 {
   for (Int_t ijet = 0; ijet < njets; ijet++)
   {
+    //    if ((*jetpt)[ijet] < 30.f) break;
     if (fIsER && (*jeteta)[ijet] > 3.f) continue;
     if (fIsoPh && deltaR((*phphi)[iph],(*pheta)[iph],(*jetphi)[iph],(*jeteta)[iph]) < 0.4) continue;
     if (fIsIdL && !(*jetidL)[ijet]) continue;
@@ -199,10 +245,14 @@ void HLTPlots::InitTree()
   phscE = 0;
   phsceta = 0;
   phscphi = 0;
-  phHoE = 0;
+  phHOvE = 0;
+  phHTowOvE = 0;
   phr9 = 0;
   phEleVeto = 0;  
   phPixSeed = 0;
+  phChgIso = 0;
+  phNeuIso = 0;
+  phIso = 0;
   phPFClEcalIso = 0;
   phPFClHcalIso = 0;
   phHollowTkIso = 0;
@@ -225,6 +275,13 @@ void HLTPlots::InitTree()
   fInTree->SetBranchAddress("run", &run, &b_run);
   fInTree->SetBranchAddress("lumi", &lumi, &b_lumi);
   fInTree->SetBranchAddress("triggerBits", &triggerBits, &b_triggerBits);
+  fInTree->SetBranchAddress("nvtx", &nvtx, &b_nvtx);
+  fInTree->SetBranchAddress("vtxX", &vtxX, &b_vtxX);
+  fInTree->SetBranchAddress("vtxY", &vtxY, &b_vtxY);
+  fInTree->SetBranchAddress("vtxZ", &vtxZ, &b_vtxZ);
+  fInTree->SetBranchAddress("t1pfMETpt", &t1pfMETpt, &b_t1pfMETpt);
+  fInTree->SetBranchAddress("t1pfMETphi", &t1pfMETphi, &b_t1pfMETphi);
+  fInTree->SetBranchAddress("t1pfMETsumEt", &t1pfMETsumEt, &b_t1pfMETsumEt);
   fInTree->SetBranchAddress("njets", &njets, &b_njets);
   fInTree->SetBranchAddress("jetE", &jetE, &b_jetE);
   fInTree->SetBranchAddress("jetpt", &jetpt, &b_jetpt);
@@ -239,10 +296,14 @@ void HLTPlots::InitTree()
   fInTree->SetBranchAddress("phscE", &phscE, &b_phscE);
   fInTree->SetBranchAddress("phsceta", &phsceta, &b_phsceta);
   fInTree->SetBranchAddress("phscphi", &phscphi, &b_phscphi);
-  fInTree->SetBranchAddress("phHoE", &phHoE, &b_phHoE);
+  fInTree->SetBranchAddress("phHOvE", &phHOvE, &b_phHOvE);
+  fInTree->SetBranchAddress("phHTowOvE", &phHTowOvE, &b_phHTowOvE);
   fInTree->SetBranchAddress("phr9", &phr9, &b_phr9);
   fInTree->SetBranchAddress("phEleVeto", &phEleVeto, &b_phEleVeto);
   fInTree->SetBranchAddress("phPixSeed", &phPixSeed, &b_phPixSeed);
+  fInTree->SetBranchAddress("phChgIso", &phChgIso, &b_phChgIso);
+  fInTree->SetBranchAddress("phNeuIso", &phNeuIso, &b_phNeuIso);
+  fInTree->SetBranchAddress("phIso", &phIso, &b_phIso);
   fInTree->SetBranchAddress("phPFClEcalIso", &phPFClEcalIso, &b_phPFClEcalIso);
   fInTree->SetBranchAddress("phPFClHcalIso", &phPFClHcalIso, &b_phPFClHcalIso);
   fInTree->SetBranchAddress("phHollowTkIso", &phHollowTkIso, &b_phHollowTkIso);

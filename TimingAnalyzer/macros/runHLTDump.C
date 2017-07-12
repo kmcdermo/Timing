@@ -22,7 +22,7 @@ void runHLTDump()
   gROOT->LoadMacro("HLTDump.cc+g");
 
   const TString infile = "input/DATA/2017/HLT_CHECK/30_06_17/hltdump_DCS_SM.root";
-  const TString outdir = "dump_dcs_SM_jetpt30";
+  const TString outdir = "dump_dcs_SM_vid";
   const Int_t psfactor = 10;
 
   // first = nopho, second = jetIdL, third = jet eta < 3.0, fourth is jetpt > 4.0
