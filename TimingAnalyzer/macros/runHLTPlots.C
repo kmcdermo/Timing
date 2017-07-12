@@ -35,4 +35,6 @@ void runHLTPlots()
 
   HLTPlots plots(infile,outdir,runs,isoph,isidL,iser,applyht,htcut,applyphdenom,applylast,applyphpt);
   plots.DoPlots();
+
+  plots.DoOverplot();
 }

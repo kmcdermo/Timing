@@ -1,7 +1,7 @@
 #include "HLTPlots.hh"
 #include "TCanvas.h"
+#include "TLegend.h"
 
-#include "common/common.h"
 #include <iostream>
 #include <fstream>
 
@@ -31,6 +31,14 @@ HLTPlots::HLTPlots(const TString infile, const TString outdir, const TString run
   if (eralist.size() != 0) fNEras = eralist.size();
   else                     fNEras = 1;
 
+  // resize plot vectors
+  effptEBs.resize(fNEras);
+  effptEEs.resize(fNEras); 
+  effetas.resize(fNEras); 
+  effphis.resize(fNEras); 
+  efftimes.resize(fNEras); 
+  effHTs.resize(fNEras);
+  
   TString outstring = "cuts";
   if (fApplyHT) outstring += Form("_htcut_%i",Int_t(fHTCut));
   if (fIsoPh) outstring += "_nopho";
@@ -61,7 +69,6 @@ void HLTPlots::DoPlots()
   const Int_t nbinsx = 22;
   Double_t xbins[nbinsx+1] = {0,10,20,30,40,45,50,52,54,56,58,60,62,64,66,68,70,75,80,100,200,500,1000};
   
-  TEffVec effptEBs(fNEras), effptEEs(fNEras), effetas(fNEras), effphis(fNEras), efftimes(fNEras), effHTs(fNEras);
   for (Int_t iera = 0; iera < fNEras; iera++)
   {
     effptEBs[iera] = new TEfficiency(Form("effptEB_%i",iera),"HLT Efficiency vs Leading Photon p_{T} [EB];Photon Offline p_{T};Efficiency",nbinsx,xbins);
@@ -228,7 +235,50 @@ void HLTPlots::OutputEfficiency(TEfficiency *& teff, const TString outname)
 
   delete hist;
   delete canv;
-  delete teff;
+}
+
+void HLTPlots::DoOverplot()
+{
+  HLTPlots::Overplot(effptEBs,"cptEB");
+  HLTPlots::Overplot(effptEEs,"cptEE");
+  HLTPlots::Overplot(effetas,"ceta");
+  HLTPlots::Overplot(effphis,"cphi");
+  HLTPlots::Overplot(efftimes,"ctime");
+  HLTPlots::Overplot(effHTs,"cHT");  
+
+  for (Int_t iera = 0; iera < fNEras; iera++)
+  {
+    delete effptEBs[iera];
+    delete effptEEs[iera];
+    delete effetas[iera];
+    delete effphis[iera];
+    delete efftimes[iera];
+    delete effHTs[iera];
+  }
+}
+
+void HLTPlots::Overplot(const TEffVec& teffs, const TString cname)
+{
+  std::vector<Color_t> colors = {kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3};
+
+  TCanvas * canv = new TCanvas();
+  canv->cd();
+  
+  TLegend * leg = new TLegend(0.8,0.8,0.99,0.99);
+
+  for (Int_t iera = 0; iera < fNEras; iera++)
+  {
+    teffs[iera]->SetLineColor(colors[iera]);
+    teffs[iera]->SetMarkerColor(colors[iera]);
+    teffs[iera]->Draw(iera>0?"P same":"AP");
+    leg->AddEntry(teffs[iera],Form("Era: %i",iera),"epl");
+  }
+
+  leg->Draw("same");
+  canv->SaveAs(Form("%s/%s.png",fOutDir.Data(),cname.Data()));
+
+  delete leg;
+  delete canv;
 }
 
 void HLTPlots::InitTree()

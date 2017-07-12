@@ -8,6 +8,8 @@
 #include "TEfficiency.h"
 #include "TString.h"
 
+#include "common/common.h"
+
 #include <vector>
 #include <map>
 
@@ -28,7 +30,9 @@ public :
   void DoPlots();
   void HT(const Int_t, JetInfo &);
   void OutputEfficiency(TEfficiency *&, const TString);
-  
+  void DoOverplot();
+  void Overplot(const TEffVec&, const TString);
+
 private :
   TFile * fInFile;
   TTree * fInTree;
@@ -38,6 +42,14 @@ private :
   
   std::map<UInt_t,Int_t> fRunEraMap;
   Int_t fNEras;
+  
+  // plots
+  TEffVec effptEBs;
+  TEffVec effptEEs; 
+  TEffVec effetas; 
+  TEffVec effphis; 
+  TEffVec efftimes; 
+  TEffVec effHTs;
 
   const Bool_t fIsER;
   const Bool_t fIsoPh;
