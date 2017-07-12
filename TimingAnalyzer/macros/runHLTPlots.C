@@ -22,9 +22,8 @@ void runHLTPlots()
   gROOT->LoadMacro("HLTPlots.cc+g");
 
   const TString infile = "input/DATA/2017/HLT_CHECK/30_06_17/hltdump_DCS_SM.root";
-  const TString outdir = "hltcheck_SM_vid";
+  const TString outdir = "hltcheck_SM_vid_eras";
   const TString runs = "runs.txt";
-  const Int_t   era = 3;
   const Bool_t  isoph = false;
   const Bool_t  isidL = false;
   const Bool_t  iser  = false;
@@ -34,6 +33,6 @@ void runHLTPlots()
   const Bool_t  applylast = false;
   const Bool_t  applyphpt = false;
 
-  HLTPlots plots(infile,outdir,runs,era,isoph,isidL,iser,applyht,htcut,applyphdenom,applylast,applyphpt);
+  HLTPlots plots(infile,outdir,runs,isoph,isidL,iser,applyht,htcut,applyphdenom,applylast,applyphpt);
   plots.DoPlots();
 }

@@ -99,3 +99,5 @@ typedef IntMap::iterator      IntMapIter;
 typedef std::vector<TH1F*> TH1FVec;
 typedef std::vector<TH2F*> TH2FVec;
 typedef std::vector<Bool_t> BoolVec;
+
+typedef std::vector<TEfficiency*> TEffVec;

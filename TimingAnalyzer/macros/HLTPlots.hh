@@ -9,6 +9,7 @@
 #include "TString.h"
 
 #include <vector>
+#include <map>
 
 struct JetInfo
 {
@@ -19,7 +20,7 @@ struct JetInfo
 class HLTPlots 
 {
 public :
-  HLTPlots(const TString infile, const TString outdir, const TString runs, const Int_t era, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
+  HLTPlots(const TString infile, const TString outdir, const TString runs, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
 	   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applylast, const Bool_t applyphpt);
   ~HLTPlots();
   
@@ -35,7 +36,8 @@ private :
   TString fOutDir;
   TFile * fOutFile;
   
-  std::vector<UInt_t> fRuns;
+  std::map<UInt_t,Int_t> fRunEraMap;
+  Int_t fNEras;
 
   const Bool_t fIsER;
   const Bool_t fIsoPh;

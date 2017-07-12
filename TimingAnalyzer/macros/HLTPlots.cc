@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 
-HLTPlots::HLTPlots(const TString infile, const TString outdir, const TString runs, const Int_t era, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
+HLTPlots::HLTPlots(const TString infile, const TString outdir, const TString runs, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
 		   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applylast, const Bool_t applyphpt) :
   fIsoPh(isoph), fIsIdL(isidL), fIsER(iser), fApplyHT(applyht), fHTCut(htcut), fApplyPhDenom(applyphdenom), fApplyLast(applylast), fApplyPhPt(applyphpt)
 {
@@ -17,10 +17,19 @@ HLTPlots::HLTPlots(const TString infile, const TString outdir, const TString run
   inputruns.open(runs.Data(),std::ios::in);
   Int_t erano;
   UInt_t runno;
+  std::vector<Int_t> eralist;
   while (inputruns >> erano >> runno)
   {
-    if (erano == era) fRuns.push_back(runno);
+    fRunEraMap[runno] = erano;
+    Bool_t newera = true;
+    for (const auto era : eralist)
+    {
+      if (erano == era) {newera = false; break;}
+    }
+    if (newera) eralist.push_back(erano);
   }
+  if (eralist.size() != 0) fNEras = eralist.size();
+  else                     fNEras = 1;
 
   TString outstring = "cuts";
   if (fApplyHT) outstring += Form("_htcut_%i",Int_t(fHTCut));
@@ -30,7 +39,6 @@ HLTPlots::HLTPlots(const TString infile, const TString outdir, const TString run
   if (fApplyPhDenom) outstring += "_phden";
   if (fApplyLast) outstring += "_last";
   if (fApplyPhPt) outstring += "_phpt";
-  if (fRuns.size() != 0) outstring += Form("_era%i",era);
   
   fOutDir = outdir+"/"+outstring;
   makeOutDir(fOutDir);
@@ -53,12 +61,16 @@ void HLTPlots::DoPlots()
   const Int_t nbinsx = 22;
   Double_t xbins[nbinsx+1] = {0,10,20,30,40,45,50,52,54,56,58,60,62,64,66,68,70,75,80,100,200,500,1000};
   
-  TEfficiency * effptEB = new TEfficiency("effptEB","HLT Efficiency vs Leading Photon p_{T} [EB];Photon Offline p_{T};Efficiency",nbinsx,xbins);
-  TEfficiency * effptEE = new TEfficiency("effptEE","HLT Efficiency vs Leading Photon p_{T} [EE];Photon Offline p_{T};Efficiency",nbinsx,xbins);
-  TEfficiency * effeta = new TEfficiency("effeta","HLT Efficiency vs Leading Photon #eta;Photon Offline #eta;Efficiency",30,-3.f,3.f);
-  TEfficiency * effphi = new TEfficiency("effphi","HLT Efficiency vs Leading Photon #phi;Photon Offline #phi;Efficiency",32,-3.2f,3.2f);
-  TEfficiency * efftime = new TEfficiency("efftime","HLT Efficiency vs Leading Photon Seed Time [ns];Photon Offline Seed Time [ns];Efficiency",100,-25.,25.);
-  TEfficiency * effHT = new TEfficiency("effHT","HLT Efficiency vs PF H_{T};Offline PF H_{T} (Min PFJet p_{T} > 15);Efficiency",100,0,2000.f);
+  TEffVec effptEBs(fNEras), effptEEs(fNEras), effetas(fNEras), effphis(fNEras), efftimes(fNEras), effHTs(fNEras);
+  for (Int_t iera = 0; iera < fNEras; iera++)
+  {
+    effptEBs[iera] = new TEfficiency(Form("effptEB_%i",iera),"HLT Efficiency vs Leading Photon p_{T} [EB];Photon Offline p_{T};Efficiency",nbinsx,xbins);
+    effptEEs[iera] = new TEfficiency(Form("effptEE_%i",iera),"HLT Efficiency vs Leading Photon p_{T} [EE];Photon Offline p_{T};Efficiency",nbinsx,xbins);
+    effetas[iera] = new TEfficiency(Form("effeta_%i",iera),"HLT Efficiency vs Leading Photon #eta;Photon Offline #eta;Efficiency",30,-3.f,3.f);
+    effphis[iera] = new TEfficiency(Form("effphi_%i",iera),"HLT Efficiency vs Leading Photon #phi;Photon Offline #phi;Efficiency",32,-3.2f,3.2f);
+    efftimes[iera] = new TEfficiency(Form("efftime_%i",iera),"HLT Efficiency vs Leading Photon Seed Time [ns];Photon Offline Seed Time [ns];Efficiency",100,-25.,25.);
+    effHTs[iera] = new TEfficiency(Form("effHT_%i",iera),"HLT Efficiency vs PF H_{T};Offline PF H_{T} (Min PFJet p_{T} > 15);Efficiency",100,0,2000.f);
+  }
 
   const Int_t idenom = 1;
   const Int_t inumer = 2;
@@ -70,21 +82,6 @@ void HLTPlots::DoPlots()
     if (ientry%100000 == 0 || ientry == 0) std::cout << "Entry " << ientry << " out of " << fInTree->GetEntries() << std::endl;
 
     fInTree->GetEntry(ientry);
-
-    // GET RUN NUMBER TO PROCESS
-    if (fRuns.size() != 0)
-    {
-      Bool_t goodrun = false;
-      for (const auto runno : fRuns)
-      {
-	if (runno == run) 
-	{
-	  goodrun = true;
-	  break;
-	}
-      }
-      if (!goodrun) continue;
-    }
 
     Int_t goodpho = -1;
     for (Int_t iph = 0; iph < nphotons; iph++)
@@ -150,7 +147,12 @@ void HLTPlots::DoPlots()
     } // end loop over photons
 
     if (goodpho < 0) continue;
-    
+
+    // Get era number
+    Int_t era = -1;
+    if (fNEras != 1) era = fRunEraMap[run];
+    else             era = 0;
+
     Bool_t passed = false;
     if (fApplyPhDenom)
     {
@@ -164,35 +166,31 @@ void HLTPlots::DoPlots()
 
     if (std::abs((*phsceta)[goodpho]) < ECAL::etaEB)
     {
-      effptEB->Fill(passed,(*phpt)[goodpho]);
+      effptEBs[era]->Fill(passed,(*phpt)[goodpho]);
     }
     else if ((std::abs((*phsceta)[goodpho]) > ECAL::etaEEmin) && (std::abs((*phsceta)[goodpho]) < ECAL::etaEEmax))
     {
-      effptEE->Fill(passed,(*phpt)[goodpho]);
+      effptEEs[era]->Fill(passed,(*phpt)[goodpho]);
     }
 
-    effeta->Fill(passed,(*phsceta)[goodpho]);
-    effphi->Fill(passed,(*phscphi)[goodpho]);
-    efftime->Fill(passed,(*phseedtime)[goodpho]);
+    effetas[era]->Fill(passed,(*phsceta)[goodpho]);
+    effphis[era]->Fill(passed,(*phscphi)[goodpho]);
+    efftimes[era]->Fill(passed,(*phseedtime)[goodpho]);
 
     JetInfo jetinfo;
     HLTPlots::HT(goodpho,jetinfo);
-    effHT->Fill(passed,jetinfo.pfjetHT);
+    effHTs[era]->Fill(passed,jetinfo.pfjetHT);
   } // end loop over events
 
-  HLTPlots::OutputEfficiency(effptEB,"hptEB");
-  HLTPlots::OutputEfficiency(effptEE,"hptEE");
-  HLTPlots::OutputEfficiency(effeta,"heta");
-  HLTPlots::OutputEfficiency(effphi,"hphi");
-  HLTPlots::OutputEfficiency(efftime,"htime");
-  HLTPlots::OutputEfficiency(effHT,"hHT");
-
-  delete effptEB;
-  delete effptEE;
-  delete effeta;
-  delete effphi;
-  delete efftime;
-  delete effHT;
+  for (Int_t iera = 0; iera < fNEras; iera++)
+  {
+    HLTPlots::OutputEfficiency(effptEBs[iera],Form("hptEB_%i",iera));
+    HLTPlots::OutputEfficiency(effptEEs[iera],Form("hptEE_%i",iera));
+    HLTPlots::OutputEfficiency(effetas[iera],Form("heta_%i",iera));
+    HLTPlots::OutputEfficiency(effphis[iera],Form("hphi_%i",iera));
+    HLTPlots::OutputEfficiency(efftimes[iera],Form("htime_%i",iera));
+    HLTPlots::OutputEfficiency(effHTs[iera],Form("hHT_%i",iera));
+  }
 }
 
 void HLTPlots::HT(const Int_t iph, JetInfo & jetinfo)
@@ -228,8 +226,9 @@ void HLTPlots::OutputEfficiency(TEfficiency *& teff, const TString outname)
   hist->Draw("EP");
   canv->SaveAs(Form("%s/%s.png",fOutDir.Data(),outname.Data()));
 
-  delete canv;
   delete hist;
+  delete canv;
+  delete teff;
 }
 
 void HLTPlots::InitTree()
