@@ -15,6 +15,22 @@
 #include <map>
 #include <utility>
 
+inline Float_t ineta (const Float_t eta){return std::tan(2.f*std::atan(std::exp(-eta)));}
+
+namespace ECAL
+{
+  static const Float_t etaEB = 1.4442;
+  static const Float_t etaEEmin = 1.566;
+  static const Float_t etaEEmax = 2.5;
+
+  static const Float_t rEB = 129.f; // 1.29 m
+  static const Float_t zEB = rEB / ineta(etaEB);
+
+  static const Float_t zEE = 314.f; // 3.14 m 
+  static const Float_t rEEmin = zEE * ineta(etaEEmin);
+  static const Float_t rEEmax = zEE * ineta(etaEEmax);
+};
+
 static const Float_t sol = 2.99792458e8; // cm/s
 
 inline Float_t rad2 (const Float_t x, const Float_t y){return x*x + y*y;}
@@ -97,6 +113,7 @@ public :
   void FillGMSB();
   void FillGenJets();
   void FillHVDS();
+  Float_t GetGenPhotonArrivalTime(const Float_t r0, const Float_t z0, const Float_t slope);
   void FillVertices();
   void FillMET();
   void FillJets();

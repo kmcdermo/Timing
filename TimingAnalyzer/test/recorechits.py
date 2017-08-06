@@ -5,34 +5,40 @@ import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
+## general cuts
+options.register (
+	'dataset','deg_2016B',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'dataset to be used');
+
+options.register (
+	'reco','rereco',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'dataset to be used');
+
 ## processName
 options.register (
 	'processName','TREE',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'process name to be considered');
-
-## GT to be used    
-options.register (
-	'globalTag','80X_dataRun2_Prompt_ICHEP16JEC_v0',VarParsing.multiplicity.singleton,VarParsing.varType.string,
-	'gloabl tag to be used');
-
-## do a demo run over only 100k events
-options.register (
-	'demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
-	'flag to run over only 100k events as a demo');
 
 ## outputFile Name
 options.register (
 	'outputFileName','recorechits.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'output file name created by cmsRun');
 
+## GT to be used    
+options.register (
+	'globalTag','80X_dataRun2_2016SeptRepro_v4',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'gloabl tag to be used');
+
 ## parsing command line arguments
 options.parseArguments()
 
+## reset file name
+options.outputFileName = 'recorechits-'+options.dataset+'-'+options.reco+'.root'
+
 print "################# Settings ##################"
-print "Running with processName            = ",options.processName	
-print "Running with globalTag              = ",options.globalTag	
-print "Running with demoMode               = ",options.demoMode
-print "Running with outputFileName         = ",options.outputFileName	
+print "Running with processName     = ",options.processName	
+print "Running with outputFileName  = ",options.outputFileName	
+print "Running with globalTag       = ",options.globalTag	
 print "#############################################"
 
 ## Define the CMSSW process
@@ -50,27 +56,32 @@ process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
-process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-		'file:/afs/cern.ch/work/k/kmcdermo/files/OOT/recoOOT0.root',
-		'file:/afs/cern.ch/work/k/kmcdermo/files/OOT/recoOOT1.root'
-		) 
-)
-
-process.options = cms.untracked.PSet( 
-	allowUnscheduled = cms.untracked.bool(True),
-	wantSummary = cms.untracked.bool(True))
+if options.dataset == 'deg_2016B' :
+	if options.reco == 'reco':
+		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/regular_reco_deg_2016B.root'
+				))
+	elif options.reco == 'rereco':
+		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/rereco_deg_2016B.root'
+				))
+elif options.dataset == 'sph_2016C' :
+	if options.reco == 'reco':
+		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/regular_reco_sph_2016C.root'
+				))
+	elif options.reco == 'rereco':
+		process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+				'file:/afs/cern.ch/work/k/kmcdermo/files/RECO/rereco_sph_2016C.root'
+				))
+else : exit
 
 # Set the global tag depending on the sample type
 from Configuration.AlCa.GlobalTag import GlobalTag
 process.GlobalTag.globaltag = options.globalTag  
 
 ## How many events to process
-if not options.demoMode:
-	process.maxEvents = cms.untracked.PSet( 
-		input = cms.untracked.int32(options.maxEvents))
-else:
-	process.maxEvents = cms.untracked.PSet( 
-		input = cms.untracked.int32(100))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
 ## Create output file
 ## Setup the service to make a ROOT TTree
@@ -80,8 +91,8 @@ process.TFileService = cms.Service("TFileService",
 # Make the tree 
 process.tree = cms.EDAnalyzer("RECORecHits",
    ## ecal recHits			      
-   recHitsFullEB = cms.InputTag("ecalRecHit","EcalRecHitsEB"),
-   recHitsFullEE = cms.InputTag("ecalRecHit","EcalRecHitsEE")
+   recHitsEB = cms.InputTag("ecalRecHit","EcalRecHitsEB"),
+   recHitsEE = cms.InputTag("ecalRecHit","EcalRecHitsEE")
 )
 
 # Set up the path

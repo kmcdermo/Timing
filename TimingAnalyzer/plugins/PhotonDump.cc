@@ -1362,6 +1362,7 @@ void PhotonDump::ClearRecoPhotonBranches()
   phsieip.clear();
   phsmaj.clear();
   phsmin.clear();
+  phalpha.clear();
 
   phVID.clear();
 

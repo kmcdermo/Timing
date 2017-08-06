@@ -1,0 +1,36 @@
+hltGetConfiguration /users/kmcdermo/TestDev/DisplacedPhotonTimeTest/V2 --timing --full --offline --prescale 1.35e34 --no-output --process TEST --data --globaltag auto:run2_hlt_GRun --input /data/samples/skim_L1Menuv6/PU_45to50_v4.2.2_PS_1.35e34.root > hlt_V2.py
+
+-----
+
+then edit both places for maxevents = -1 (could probably do this from the command line)
+
+---------
+
+also add the following lines assuming you have grabbed the setup config from confb as usual
+
+process.load("setup_cff") 
+
+process.options = cms.untracked.PSet(
+    wantSummary = cms.untracked.bool( True ),
+    numberOfThreads = cms.untracked.uint32( 4 ),
+    numberOfStreams = cms.untracked.uint32( 0 ),
+) 
+
+range, resolution for menus == 5000, 1
+range, resolution for paths == 500, .1
+
+----
+
+set skipFirstPath to FALSE
+
+-----
+
+assuming we set nThreads  = 4, to run do:
+
+nohup taskset -c 0-3 cmsRun hlt.py >& full.log&
+
+-----
+
+then do harvesting!
+
+cmsRun harvesting.py

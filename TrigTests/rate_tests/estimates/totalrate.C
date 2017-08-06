@@ -1,4 +1,4 @@
-void totalrate(Int_t psc = 3)
+void totalrate()
 {
   std::ifstream input;
   input.open("stdpaths.txt",std::ios::in);
@@ -17,9 +17,8 @@ void totalrate(Int_t psc = 3)
     else fullmenu += "(" + paths[i] + "==1)";
   }
 
-  TString spsc = (psc == 1 ? "1p6e34/" : "1p35e34/");
-  TString dir  = "GRunDisplacedPhotonHT_Full_V4/" + spsc + "hlt0/";
-  Float_t nls  = 648; // V3 = 648 //(psc == 1 ? 640 : 638); //618;
+  TString dir  = "GRunDisplacedPhotonHTv4_Full_PS5/";
+  Float_t nls  = 895;
   Float_t lsl  = 23.3;
   Float_t ps   = 428; // 107 major factor * 4 for PS of HLT_L1FatEvents_part0_v1
   TFile * file = TFile::Open(dir+"hltbits.root");
@@ -32,3 +31,9 @@ void totalrate(Int_t psc = 3)
   std::cout << "Total entries:" << total << " nPassed: " << npass << std::endl;
   std::cout << "Rate: " << ((ps*npass)/(lsl*nls)) << " Hz" <<std::endl;
 }
+
+
+// PS2: 90
+// PS3: 648, V4
+// PS4: 988
+// PS5: 895 

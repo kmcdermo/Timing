@@ -1,3 +1,6 @@
 isHLT2 0
 isHLT3 0
 isHLT4 1
+isuserHLT 0
+ApplyHLTMatching 0
+filterIdx -1

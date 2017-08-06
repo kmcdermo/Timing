@@ -215,7 +215,7 @@ cd CMSSW_8_0_26_patch2/src/
 cmsenv
 git cms-init
 
-### Trigger tests --> Optional ###
+### Official packages ###
 git cms-addpkg HLTrigger/Configuration
 git cms-addpkg GeneratorInterface/GenFilters
 git cms-addpkg L1Trigger/L1TGlobal
@@ -230,9 +230,16 @@ cp /afs/cern.ch/user/n/ndaci/public/STEAM/Prescales/UGT_BASE_RS_FINOR_MASK_v91.x
 cp /afs/cern.ch/user/n/ndaci/public/STEAM/Prescales/UGT_BASE_RS_PRESCALES_v214.xml L1Trigger/L1TGlobal/data/Luminosity/startup/
 cp /afs/cern.ch/user/n/ndaci/public/STEAM/Prescales/L1TGlobalPrescalesVetosESProducer.cc L1Trigger/L1TGlobal/plugins/
 
+### Contains official scripts and macros for rate estimates (currently not used)
 git clone git@github.com:cms-steam/RateEstimate.git RateEstimate
 
-### Contains Timing/TrigTests directory ###
+### Contains Timing Scripts (modified from STEAM) to do CPU timing studies
+git clone ss://github.com/kmcdermo/TimingScripts.git
+cd TimingScripts/
+git remote rename origin kmcdermo
+cd ../
+
+### Contains Timing/TrigTests directory --> has rate and cpu timing script instructions plus some macros ###
 git clone ssh://git@github.com/kmcdermo/Timing.git
 cd Timing/
 git remote rename origin kmcdermo

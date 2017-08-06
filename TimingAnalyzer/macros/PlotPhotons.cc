@@ -31,8 +31,6 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
   // initialize tree
   PlotPhotons::InitTree();
 
-
-
   // make the vid maps!
   fPhVIDMap["none"]   = 0;
   fPhVIDMap["loose"]  = 1;
@@ -84,6 +82,10 @@ PlotPhotons::PlotPhotons(TString filename, Bool_t isGMSB, Bool_t isHVDS, Bool_t 
     else if (Config::ApplyAntiPhMCMatch)  fOutDir += Form("_antiphmc");
     else    { std::cout << "Need to specify a matching criterion!" << std::endl; exit(0); }
   }
+  if (Config::ApplyHLTMatching)
+  {
+    fOutDir += Form("_hltmatch");
+  }  
   if (Config::ApplyECALAcceptCut) 
   { 
     if      (Config::ApplyEBOnly) fOutDir += Form("_EBOnly");
@@ -212,7 +214,7 @@ Bool_t PlotPhotons::CountEvents()
   if (event_b) fEfficiency["Reco"]++;
 
   //trigger efficiency
-  const Bool_t hlt_b = ((Config::isHLT4) ? (*triggerBits)[9] : true); // dispho60_ht350
+  const Bool_t hlt_b = (*triggerBits)[0];   //((Config::isHLT4) ? (*triggerBits)[9] : true); // dispho60_ht350
   if (hlt_b) fEfficiency["Trigger"]++;
 
   if (event_b && hlt_b)
@@ -229,6 +231,12 @@ Int_t PlotPhotons::GetLeadingPhoton()
   Int_t ph1 = -1;
   for (Int_t iph = 0; iph < nphotons; iph++)
   {
+    // HLT matching??
+    if (Config::ApplyHLTMatching)
+    {
+      if (Config::filterIdx != -1 && !(*phIsHLTMatched)[iph][Config::filterIdx]) continue;
+    }
+
     // basic photon selection
     if      (Config::ApplyPh1PtCut)
     {  
@@ -245,19 +253,19 @@ Int_t PlotPhotons::GetLeadingPhoton()
     const Float_t eta  = std::abs((*phsceta)[iph]);
     const Float_t smaj = (*phsmaj)[iph];
     const Float_t smin = (*phsmin)[iph];
-    if (Config::ApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
+    if (Config::ApplyECALAcceptCut && ((eta < ECAL::etaEB) || ((eta > ECAL::etaEEmin) && (eta < ECAL::etaEEmax))))
     {
       // EB/EE only selection
-      if      (Config::ApplyEBOnly && (eta > 1.4442)) continue;
-      else if (Config::ApplyEEOnly && ((eta < 1.566) || (eta > 2.5))) continue;
+      if      (Config::ApplyEBOnly && (eta > ECAL::etaEB)) continue;
+      else if (Config::ApplyEEOnly && ((eta < ECAL::etaEEmin) || (eta > ECAL::etaEEmax))) continue;
 
       // eta specific selection
-      if      (eta < 1.4442) 
+      if      (eta < ECAL::etaEB) 
       {
 	if ((Config::ApplyPh1SmajEBMin && (smaj < Config::Ph1SmajEBMin)) || (Config::ApplyPh1SmajEBMax && (smaj > Config::Ph1SmajEBMax))) continue;
 	if ((Config::ApplyPh1SminEBMin && (smin < Config::Ph1SminEBMin)) || (Config::ApplyPh1SminEBMax && (smin > Config::Ph1SminEBMax))) continue;
       }
-      else if ((eta > 1.566) && (eta < 2.5))
+      else if ((eta > ECAL::etaEEmin) && (eta < ECAL::etaEEmax))
       {
 	if ((Config::ApplyPh1SmajEEMin && (smaj < Config::Ph1SmajEEMin)) || (Config::ApplyPh1SmajEEMax && (smaj > Config::Ph1SmajEEMax))) continue;
 	if ((Config::ApplyPh1SminEEMin && (smin < Config::Ph1SminEEMin)) || (Config::ApplyPh1SminEEMax && (smin > Config::Ph1SminEEMax))) continue;
@@ -298,6 +306,12 @@ Int_t PlotPhotons::GetGoodPhotons(std::vector<Int_t> & goodphotons)
   {
     for (Int_t iph = 0; iph < nphotons; iph++) // remove pt cut
     {
+      // HLT matching??
+      if (Config::ApplyHLTMatching)
+      {
+	if (Config::filterIdx != -1 && !(*phIsHLTMatched)[iph][Config::filterIdx]) continue;
+      }
+
       // basic photon selection
       if (Config::ApplyPhAnyPtCut && ((*phpt)[iph] < Config::PhAnyPtCut)) continue;
       if (Config::ApplyPhAnyVIDCut && ((*phVID)[iph] < fPhVIDMap[Config::PhAnyVID])) continue;
@@ -307,19 +321,19 @@ Int_t PlotPhotons::GetGoodPhotons(std::vector<Int_t> & goodphotons)
       const Float_t eta  = std::abs((*phsceta)[iph]);
       const Float_t smaj = (*phsmaj)[iph];
       const Float_t smin = (*phsmin)[iph];
-      if (Config::ApplyECALAcceptCut && ((eta < 1.4442) || ((eta > 1.566) && (eta < 2.5))))
+      if (Config::ApplyECALAcceptCut && ((eta < ECAL::etaEB) || ((eta > ECAL::etaEEmin) && (eta < ECAL::etaEEmax))))
       {
 	// EB/EE only selection
-	if      (Config::ApplyEBOnly && (eta > 1.4442)) continue;
-	else if (Config::ApplyEEOnly && ((eta < 1.566) || (eta > 2.5))) continue;
+	if      (Config::ApplyEBOnly && (eta > ECAL::etaEB)) continue;
+	else if (Config::ApplyEEOnly && ((eta < ECAL::etaEEmin) || (eta > ECAL::etaEEmax))) continue;
 
 	// eta specific selection
-	if      (eta < 1.4442) 
+	if      (eta < ECAL::etaEB) 
         {
 	  if ((Config::ApplyPhAnySmajEBMin && (smaj < Config::PhAnySmajEBMin)) || (Config::ApplyPhAnySmajEBMax && (smaj > Config::PhAnySmajEBMax))) continue;
 	  if ((Config::ApplyPhAnySminEBMin && (smin < Config::PhAnySminEBMin)) || (Config::ApplyPhAnySminEBMax && (smin > Config::PhAnySminEBMax))) continue;
 	}
-	else if ((eta > 1.566) && (eta < 2.5))
+	else if ((eta > ECAL::etaEEmin) && (eta < ECAL::etaEEmax))
         {
 	  if ((Config::ApplyPhAnySmajEEMin && (smaj < Config::PhAnySmajEEMin)) || (Config::ApplyPhAnySmajEEMax && (smaj > Config::PhAnySmajEEMax))) continue;
 	  if ((Config::ApplyPhAnySminEEMin && (smin < Config::PhAnySminEEMin)) || (Config::ApplyPhAnySminEEMax && (smin > Config::PhAnySminEEMax))) continue;
@@ -407,7 +421,7 @@ void PlotPhotons::FillGMSB()
     fPlots["genNeta"]->Fill(genN1eta);
 
     // calculate proper distance for the first neutralino
-    const Float_t genN1traveld = std::sqrt(rad2(genN1decayvx-genN1prodvx,genN1decayvy-genN1prodvy,genN1decayvz-genN1prodvz)); 
+    const Float_t genN1traveld = std::sqrt(rad2(genN1decayvx-genN1prodvx,genN1decayvy-genN1prodvy,genN1decayvz-genN1prodvz));
     fPlots["genNtraveld"]->Fill(genN1traveld);
     fPlots["genNtraveld_zoom"]->Fill(genN1traveld);
 
@@ -416,10 +430,12 @@ void PlotPhotons::FillGMSB()
     const Float_t genN1p  = std::sqrt(rad2(genN1_lorvec.Px(),genN1_lorvec.Py(),genN1_lorvec.Pz()));
     const Float_t genN1bg = bg(genN1p,genN1mass);
 
-    fPlots["genNgamma"]->Fill(gamma(genN1p,genN1mass));
+    const Float_t genN1gamma = gamma(genN1p,genN1mass);
+    fPlots["genNgamma"]->Fill(genN1gamma);
 
     // ctau is distance / beta*gamma
-    fPlots["genNctau"]->Fill(genN1traveld/genN1bg);
+    const Float_t genN1ctau = genN1traveld/genN1bg; 
+    fPlots["genNctau"]->Fill(genN1ctau);
 
     // decay products
     fPlots["genphE"]->Fill(genph1E);
@@ -430,6 +446,21 @@ void PlotPhotons::FillGMSB()
     fPlots["gengrpt"]->Fill(gengr1pt);
     fPlots["gengrphi"]->Fill(gengr1phi);
     fPlots["gengreta"]->Fill(gengr1eta);
+
+    // photon arrival time
+    const Float_t genN1decayvr = std::sqrt(rad2(genN1decayvx,genN1decayvy));
+    if (genN1decayvr < ECAL::rEB && genN1decayvz < ECAL::zEE) 
+    {
+      Float_t genphtime = PlotPhotons::GetGenPhotonArrivalTime(genN1decayvr,genN1decayvz,ineta(genph1eta));
+      genphtime = ((genphtime != -1.f) ? genphtime + genN1ctau * genN1gamma / sol : -1.f);
+      fPlots["genphtime"]->Fill(genphtime);
+      fPlots2D["genphtime_vs_genphpt"]->Fill(genph1pt,genphtime);
+    }
+    else 
+    {
+      fPlots["genphtime"]->Fill(-2.f);
+      fPlots2D["genphtime_vs_genphpt"]->Fill(genph1pt,-2.f);
+    }
   }
   if (nNeutoPhGr >= 2)
   {
@@ -449,10 +480,12 @@ void PlotPhotons::FillGMSB()
     const Float_t genN2p  = std::sqrt(rad2(genN2_lorvec.Px(),genN2_lorvec.Py(),genN2_lorvec.Pz()));
     const Float_t genN2bg = bg(genN2p,genN2mass);
 
-    fPlots["genNgamma"]->Fill(gamma(genN2p,genN2mass));
+    const Float_t genN2gamma = gamma(genN2p,genN2mass);
+    fPlots["genNgamma"]->Fill(genN2gamma);
 
     // ctau is distance / beta*gamma
-    fPlots["genNctau"]->Fill(genN2traveld/genN2bg);
+    const Float_t genN2ctau = genN2traveld/genN2bg;
+    fPlots["genNctau"]->Fill(genN2ctau);
 
     // decay products
     fPlots["genphE"]->Fill(genph2E);
@@ -463,6 +496,21 @@ void PlotPhotons::FillGMSB()
     fPlots["gengrpt"]->Fill(gengr2pt);
     fPlots["gengrphi"]->Fill(gengr2phi);
     fPlots["gengreta"]->Fill(gengr2eta);
+    
+    // photon arrival time
+    const Float_t genN2decayvr = std::sqrt(rad2(genN2decayvx,genN2decayvy));
+    if (genN2decayvr < ECAL::rEB && genN2decayvz < ECAL::zEE) 
+    {
+      Float_t genphtime = PlotPhotons::GetGenPhotonArrivalTime(genN2decayvr,genN2decayvz,ineta(genph2eta));
+      genphtime = ((genphtime != -1.f) ? genphtime + genN2ctau * genN2gamma / sol : -1.f);
+      fPlots["genphtime"]->Fill(genphtime);
+      fPlots2D["genphtime_vs_genphpt"]->Fill(genph2pt,genphtime);
+    }
+    else 
+    {
+      fPlots["genphtime"]->Fill(-2.f);
+      fPlots2D["genphtime_vs_genphpt"]->Fill(genph2pt,-2.f);
+    }
   }
 }
 
@@ -500,10 +548,12 @@ void PlotPhotons::FillHVDS()
     const Float_t genvPionp  = std::sqrt(rad2(genvPion_lorvec.Px(),genvPion_lorvec.Py(),genvPion_lorvec.Pz()));
     const Float_t genvPionbg = bg(genvPionp,(*genvPionmass)[ipion]);
 
-    fPlots["genvPiongamma"]->Fill(gamma(genvPionp,(*genvPionmass)[ipion]));
+    const Float_t genvPiongamma = gamma(genvPionp,(*genvPionmass)[ipion]);
+    fPlots["genvPiongamma"]->Fill(genvPiongamma);
       
     // ctau is distance / beta*gamma
-    fPlots["genvPionctau"]->Fill(genvPiontraveld/genvPionbg);
+    const Float_t genvPionctau = genvPiontraveld/genvPionbg;
+    fPlots["genvPionctau"]->Fill(genvPionctau);
 
     // now do gen photon info
     fPlots["genHVph1E"]->Fill((*genHVph1E)[ipion]);
@@ -515,7 +565,68 @@ void PlotPhotons::FillHVDS()
     fPlots["genHVph2pt"]->Fill((*genHVph2pt)[ipion]);
     fPlots["genHVph2phi"]->Fill((*genHVph2phi)[ipion]);
     fPlots["genHVph2eta"]->Fill((*genHVph2eta)[ipion]);
+
+    // photon arrival time
+    const Float_t genvPiondecayvr = std::sqrt(rad2((*genvPiondecayvx)[ipion],(*genvPiondecayvy)[ipion]));
+    if (genvPiondecayvr < ECAL::rEB && std::abs((*genvPiondecayvz)[ipion]) < ECAL::zEE) 
+    {
+      std::cout << std::endl;
+      std::cout << "decayr: "<< genvPiondecayvr << " decayz: " << (*genvPiondecayvz)[ipion] << " ineta: " << ineta((*genHVph1eta)[ipion]) << std::endl;
+
+      Float_t genph1time = PlotPhotons::GetGenPhotonArrivalTime(genvPiondecayvr,(*genvPiondecayvz)[ipion],ineta((*genHVph1eta)[ipion]));
+      genph1time = ((genph1time != -1.f) ? genph1time + genvPionctau * genvPiongamma / sol : -1.f);
+      
+      std::cout << " w/ vpiontime: " << genph1time << std::endl; 
+
+      fPlots["genHVph1time"]->Fill(genph1time);
+      fPlots2D["genHVph1time_vs_genHVph1pt"]->Fill((*genHVph1pt)[ipion],genph1time);
+
+//       Float_t genph2time = PlotPhotons::GetGenPhotonArrivalTime(genvPiondecayvr,(*genvPiondecayvz)[ipion],ineta((*genHVph2eta)[ipion]));
+//       genph2time = ((genph2time != -1.f) ? genph2time + genvPionctau * genvPiongamma / sol : -1.f);
+//       fPlots["genHVph2time"]->Fill(genph2time);
+//       fPlots2D["genHVph2time_vs_genHVph2pt"]->Fill((*genHVph2pt)[ipion],genph2time);
+    }
+    else 
+    {
+      fPlots["genHVph1time"]->Fill(-2.f);
+      fPlots2D["genHVph1time_vs_genHVph1pt"]->Fill((*genHVph1pt)[ipion],-2.f);
+      fPlots["genHVph2time"]->Fill(-2.f);
+      fPlots2D["genHVph2time_vs_genHVph2pt"]->Fill((*genHVph2pt)[ipion],-2.f);
+    }
   }
+}
+
+Float_t PlotPhotons::GetGenPhotonArrivalTime(const Float_t r0, const Float_t z0, const Float_t slope)
+{
+  Float_t time = -1.f;
+  
+  const Float_t z = z0 + ( (ECAL::rEB - r0) / slope );
+  if (std::abs(z) < ECAL::zEB) 
+  {
+    time  = std::sqrt(rad2(ECAL::rEB-r0,z-z0)) / sol;
+    
+    std::cout << "EB: " << time << " (z" << z << ")" ;
+
+    time -= std::sqrt(rad2(ECAL::rEB,z)) / sol; // TOF correction;
+
+    std::cout << " w TOF: " << time;
+  }
+  else 
+  {
+    const Float_t r = r0 + ( slope * (ECAL::zEE - z0) );
+    if (std::abs(r) > ECAL::rEEmin && std::abs(r) < ECAL::rEEmax)
+    {
+      time  = std::sqrt(rad2(r-r0,ECAL::zEE-z0)) / sol;
+
+      std::cout << "EE: " << time << " (z" << r << ")" ;
+
+      time -= std::sqrt(rad2(r0,ECAL::zEE)) / sol; // TOF correction;
+
+      std::cout << " w TOF: " << time;
+    }
+  }
+
+  return time;
 }
 
 void PlotPhotons::FillVertices()
@@ -738,6 +849,8 @@ void PlotPhotons::FillTrigger()
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho70_ht350"],(*triggerBits)[12],phdelayseedtime);
       PlotPhotons::FillTriggerPlot(fTrigPlots["phdelayseedtime_hltdispho70_ht400"],(*triggerBits)[13],phdelayseedtime);
 
+      PlotPhotons::FillTriggerPlot(fTrigPlots["pu_hltdispho60_ht350"],(*triggerBits)[9],nvtx);
+
       // 2D plots 
       PlotPhotons::FillTriggerPlot2D(fTrigPlots2D["phdelayseedtime_vs_phdelaypt_hltdispho50_ht350"],((*phIsHLTMatched)[phdelay][0]&&(*triggerBits)[6]),phdelaypt,phdelayseedtime);
       PlotPhotons::FillTriggerPlot2D(fTrigPlots2D["phdelayseedtime_vs_phdelaypt_hltdispho60_ht350"],((*phIsHLTMatched)[phdelay][1]&&(*triggerBits)[9]),phdelaypt,phdelayseedtime);
@@ -796,15 +909,18 @@ void PlotPhotons::SetupGMSB()
   fPlots["genNgamma"] = PlotPhotons::MakeTH1F("genNgamma","Generator Neutralino #gamma factor",100,0.f,100.f,"#gamma factor","Neutralinos","GMSB");
   fPlots["genNctau"] = PlotPhotons::MakeTH1F("genNctau","Generator Neutralino c#tau [cm]",200,0.f,fCTau*20.f,"c#tau [cm]","Neutralinos","GMSB");
 
-  fPlots["genphE"] = PlotPhotons::MakeTH1F("genph1E","Generator Photon E [GeV]",100,0.f,2500.f,"Energy [GeV]","Photons","GMSB");
-  fPlots["genphpt"] = PlotPhotons::MakeTH1F("genph1pt","Generator p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","GMSB");
-  fPlots["genphphi"] = PlotPhotons::MakeTH1F("genph1phi","Generator Photon #phi",100,-3.2,3.2,"#phi","Photons","GMSB");
-  fPlots["genpheta"] = PlotPhotons::MakeTH1F("genph1eta","Generator Photon #eta",100,-6.0,6.0,"#eta","Photons","GMSB");
+  fPlots["genphE"] = PlotPhotons::MakeTH1F("genphE","Generator Photon E [GeV]",100,0.f,2500.f,"Energy [GeV]","Photons","GMSB");
+  fPlots["genphpt"] = PlotPhotons::MakeTH1F("genphpt","Generator p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","GMSB");
+  fPlots["genphphi"] = PlotPhotons::MakeTH1F("genphphi","Generator Photon #phi",100,-3.2,3.2,"#phi","Photons","GMSB");
+  fPlots["genpheta"] = PlotPhotons::MakeTH1F("genpheta","Generator Photon #eta",100,-6.0,6.0,"#eta","Photons","GMSB");
 
-  fPlots["gengrE"] = PlotPhotons::MakeTH1F("gengr1E","Generator Gravitino E [GeV]",100,0.f,2500.f,"Energy [GeV]","Gravitinos","GMSB");
-  fPlots["gengrpt"] = PlotPhotons::MakeTH1F("gengr1pt","Generator p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Gravitinos","GMSB");
-  fPlots["gengrphi"] = PlotPhotons::MakeTH1F("gengr1phi","Generator Gravitino #phi",100,-3.2,3.2,"#phi","Gravitinos","GMSB");
-  fPlots["gengreta"] = PlotPhotons::MakeTH1F("gengr1eta","Generator Gravitino #eta",100,-6.0,6.0,"#eta","Gravitinos","GMSB");
+  fPlots["gengrE"] = PlotPhotons::MakeTH1F("gengrE","Generator Gravitino E [GeV]",100,0.f,2500.f,"Energy [GeV]","Gravitinos","GMSB");
+  fPlots["gengrpt"] = PlotPhotons::MakeTH1F("gengrpt","Generator p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Gravitinos","GMSB");
+  fPlots["gengrphi"] = PlotPhotons::MakeTH1F("gengrphi","Generator Gravitino #phi",100,-3.2,3.2,"#phi","Gravitinos","GMSB");
+  fPlots["gengreta"] = PlotPhotons::MakeTH1F("gengreta","Generator Gravitino #eta",100,-6.0,6.0,"#eta","Gravitinos","GMSB");
+
+  fPlots["genphtime"] = PlotPhotons::MakeTH1F("genphtime","Generator Photon Time [ns]",120,-2.0,28.0,"Arrival Time [ns]","Photons","GMSB");
+  fPlots2D["genphtime_vs_genphpt"] = PlotPhotons::MakeTH2F("genphtime_vs_genphpt","Generator Photon Time vs. Photon p_{T}",100,0.f,2500.f,"Photon p_{T} [GeV/c]",120,-2.0,28.0,"Photon Arrival Time [ns]","GMSB");
 }
 
 void PlotPhotons::SetupGenJets()
@@ -837,6 +953,12 @@ void PlotPhotons::SetupHVDS()
   fPlots["genHVph2pt"] = PlotPhotons::MakeTH1F("genHVph2pt","Generator Subleading p_{T} [GeV/c]",100,0.f,2500.f,"p_{T} [GeV/c]","Photons","HVDS");
   fPlots["genHVph2phi"] = PlotPhotons::MakeTH1F("genHVph2phi","Generator Subleading Photon #phi",100,-3.2,3.2,"#phi","Photons","HVDS");
   fPlots["genHVph2eta"] = PlotPhotons::MakeTH1F("genHVph2eta","Generator Subleading Photon #eta",100,-6.0,6.0,"#eta","Photons","HVDS");
+
+  fPlots["genHVph1time"] = PlotPhotons::MakeTH1F("genHVph1time","Generator Leading Photon Time [ns]",120,-2.0,28.0,"Arrival Time [ns]","Photons","HVDS");
+  fPlots["genHVph2time"] = PlotPhotons::MakeTH1F("genHVph2time","Generator Subleading Photon Time [ns]",120,-2.0,28.0,"Arrival Time [ns]","Photons","HVDS");
+
+  fPlots2D["genHVph1time_vs_genHVph1pt"] = PlotPhotons::MakeTH2F("genHVph1time_vs_genHVph1pt","Generator Leading Photon Time vs. Photon p_{T}",100,0.f,2500.f,"Leading Photon p_{T} [GeV/c]",120,-2.0,28.0,"Photon Arrival Time [ns]","HVDS");
+  fPlots2D["genHVph2time_vs_genHVph2pt"] = PlotPhotons::MakeTH2F("genHVph2time_vs_genHVph2pt","Generator Subleading Photon Time vs. Photon p_{T}",100,0.f,2500.f,"Subleading Photon p_{T} [GeV/c]",120,-2.0,28.0,"Photon Arrival Time [ns]","HVDS");
 }
 
 void PlotPhotons::SetupVertices()
@@ -991,6 +1113,8 @@ void PlotPhotons::SetupTrigger()
     fTrigPlots["phdelayseedtime_hltdispho70_ht300"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho70_ht300","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT300_v","trigger");
     fTrigPlots["phdelayseedtime_hltdispho70_ht350"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho70_ht350","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
     fTrigPlots["phdelayseedtime_hltdispho70_ht400"] = PlotPhotons::MakeTrigTH1Fs("phdelayseedtime_hltdispho70_ht400","Most Delayed Photon Seed recHit Time",100,-5.f,20.f,"Most Delayed Photon Seed recHit Time [ns]","Events","HLT_DisplacedPhoton70_R9Id90_CaloIdL_IsoL_PFHT400_v","trigger");
+
+    fTrigPlots["pu_hltdispho60_ht350"] = PlotPhotons::MakeTrigTH1Fs("pu_hltdispho60_ht350","n Primary Vertices",80,0.f,80.f,"n Primary Vertices","Events","HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
 
     fTrigPlots2D["ph1seedtime_vs_ph1pt_hltdispho50_ht350"] = PlotPhotons::MakeTrigTH2Fs("ph1seedtime_vs_ph1pt_hltdispho50_ht350","Leading Photon Seed recHit Time vs Leading Photon p_{T}",25,0,1000,"Leading Photon p_{T}",25,-5.f,20.f,"Leading Photon Seed recHit Time [ns]","HLT_DisplacedPhoton50_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
     fTrigPlots2D["ph1seedtime_vs_ph1pt_hltdispho60_ht350"] = PlotPhotons::MakeTrigTH2Fs("ph1seedtime_vs_ph1pt_hltdispho60_ht350","Leading Photon Seed recHit Time vs Leading Photon p_{T}",25,0,1000,"Leading Photon p_{T}",25,-5.f,20.f,"Leading Photon Seed recHit Time [ns]","HLT_DisplacedPhoton60_R9Id90_CaloIdL_IsoL_PFHT350_v","trigger");
@@ -1493,7 +1617,7 @@ void PlotPhotons::InitTree()
   fInTree->SetBranchAddress("run", &run, &b_run);
   fInTree->SetBranchAddress("lumi", &lumi, &b_lumi);
 
-  if (Config::isHLT2 || Config::isHLT3 || Config::isHLT4)
+  if (Config::isHLT2 || Config::isHLT3 || Config::isHLT4 || Config::isuserHLT)
   {
     fInTree->SetBranchAddress("triggerBits", &triggerBits, &b_triggerBits);
   }
@@ -1670,6 +1794,9 @@ void PlotPhotons::InitHLTConfig(TString config)
     if (var.EqualTo("isHLT2")) Config::isHLT2 = val.Atoi();
     if (var.EqualTo("isHLT3")) Config::isHLT3 = val.Atoi();
     if (var.EqualTo("isHLT4")) Config::isHLT4 = val.Atoi();
+    if (var.EqualTo("isuserHLT")) Config::isuserHLT = val.Atoi();
+    if (var.EqualTo("ApplyHLTMatching")) Config::ApplyHLTMatching = val.Atoi();
+    if (var.EqualTo("filterIdx")) Config::filterIdx = val.Atoi();
   }
 }
 

@@ -49,23 +49,6 @@ void dostack(TFile *& file, TString dir, std::vector<TString> & histnames, TStri
   leg->Draw();
   legcanv->SaveAs(dir+"leg_"+output+".png");
 
-  if (output.Contains("breakdownstack",TString::kExact))
-  {
-    std::vector<TString> extralabels = {"Only L1","Add L1 Regional HLT EG Matching","Add EG E_{T} Filter","Add EG HoverE Filter","Add EG R9 Filter","Add EG #sigma_{i#eta i#eta} Filter","Add EG S_{Major} Filter","Add EG S_{Minor} Filter","Add EG Time Filter","Add EG Track Veto (Full Path)"};
-    TLegend * extraleg = new TLegend(0.0,0.0,1.0,1.0);
-    for (UInt_t ihist = 0; ihist < hists.size(); ihist++)
-    {
-      extraleg->AddEntry(hists[ihist],extralabels[ihist].Data(),"pl");
-    }
-
-    TCanvas * extralegcanv = new TCanvas(); extralegcanv->cd();
-    extraleg->Draw();
-    extralegcanv->SaveAs(dir+"extraleg_"+output+".png");
-
-    delete extralegcanv;
-    delete extraleg;
-  }
-
   // delete everything
   delete leg;
   delete legcanv;
@@ -74,19 +57,9 @@ void dostack(TFile *& file, TString dir, std::vector<TString> & histnames, TStri
   for (UInt_t ihist = 0; ihist < hists.size(); ihist++) {delete hists[ihist];}
 }
 
-void ptstack(TFile *& file, TString dir)
-{
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho45_eff","phdelayseedtime_hltdispho50_eff","phdelayseedtime_hltdispho60_eff","phdelayseedtime_hltdispho80_eff","phdelayseedtime_hltdispho100_eff"};
-
-  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
-  TString output = "ptstack";
-
-  dostack(file,dir,histnames,title,output);
-}
-
 void cmsmenustack(TFile *& file, TString dir)
 {
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho60_isoL_eff","phdelayseedtime_hltpho175_eff","phdelayseedtime_hltpho120_met40_eff","phdelayseedtime_hltdoublepho60_eff","phdelayseedtime_hltdoublepho42_25_m15_eff","phdelayseedtime_hltpho90_ht600_eff"};
+  std::vector<TString> histnames = {"phdelayseedtime_hltdispho60_ht350_eff","phdelayseedtime_hltpho175_eff","phdelayseedtime_hltpho120_met40_eff","phdelayseedtime_hltdoublepho60_eff","phdelayseedtime_hltdoublepho42_25_m15_eff","phdelayseedtime_hltpho90_ht600_eff"};
 
   TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
   TString output = "cmsmenustack";
@@ -94,83 +67,9 @@ void cmsmenustack(TFile *& file, TString dir)
   dostack(file,dir,histnames,title,output);
 }
 
-void dispho45stack(TFile *& file, TString dir)
-{
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho45_eff","phdelayseedtime_hltdispho45_jet50_eff","phdelayseedtime_hltdispho45_dijet50_eff","phdelayseedtime_hltdispho45_dijet35_eff","phdelayseedtime_hltdispho45_trijet35_eff"};
-
-  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
-  TString output = "dispho45stack";
-
-  dostack(file,dir,histnames,title,output);
-}
-
-void dispho60stack(TFile *& file, TString dir)
-{
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho60_eff","phdelayseedtime_hltdispho60_jet50_eff","phdelayseedtime_hltdispho60_dijet50_eff","phdelayseedtime_hltdispho60_dijet35_eff","phdelayseedtime_hltdispho60_trijet35_eff"};
-
-  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
-  TString output = "dispho60stack";
-
-  dostack(file,dir,histnames,title,output);
-}
-
-void seedtimebreakdownstack(TFile *& file, TString dir)
-{
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho45_eff","phdelayseedtime_hltdispho45_notkveto_eff","phdelayseedtime_hltdispho45_notime_eff","phdelayseedtime_hltdispho45_nosmaj_eff","phdelayseedtime_hltdispho45_nosmin_eff","phdelayseedtime_hltdispho45_nosieie_eff","phdelayseedtime_hltdispho45_nor9_eff","phdelayseedtime_hltdispho45_nohoe_eff","phdelayseedtime_hltdispho45_noet_eff","phdelayseedtime_hltdispho45_nol1match_eff"};
-  std::reverse(histnames.begin(),histnames.end());
-
-  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
-  TString output = "seedtimebreakdownstack";
-
-  dostack(file,dir,histnames,title,output);
-}
-
-void etabreakdownstack(TFile *& file, TString dir)
-{
-  std::vector<TString> histnames = {"phdelayeta_hltdispho45_eff","phdelayeta_hltdispho45_notkveto_eff","phdelayeta_hltdispho45_notime_eff","phdelayeta_hltdispho45_nosmaj_eff","phdelayeta_hltdispho45_nosmin_eff","phdelayeta_hltdispho45_nosieie_eff","phdelayeta_hltdispho45_nor9_eff","phdelayeta_hltdispho45_nohoe_eff","phdelayeta_hltdispho45_noet_eff","phdelayeta_hltdispho45_nol1match_eff"};
-  std::reverse(histnames.begin(),histnames.end());
-
-  TString title  = "Most Delayed Photon #eta";
-  TString output = "etabreakdownstack";
-
-  dostack(file,dir,histnames,title,output);
-}
-
-void phibreakdownstack(TFile *& file, TString dir)
-{
-  std::vector<TString> histnames = {"phdelayphi_hltdispho45_eff","phdelayphi_hltdispho45_notkveto_eff","phdelayphi_hltdispho45_notime_eff","phdelayphi_hltdispho45_nosmaj_eff","phdelayphi_hltdispho45_nosmin_eff","phdelayphi_hltdispho45_nosieie_eff","phdelayphi_hltdispho45_nor9_eff","phdelayphi_hltdispho45_nohoe_eff","phdelayphi_hltdispho45_noet_eff","phdelayphi_hltdispho45_nol1match_eff"};
-  std::reverse(histnames.begin(),histnames.end());
-
-  TString title  = "Most Delayed Photon #phi";
-  TString output = "phibreakdownstack";
-
-  dostack(file,dir,histnames,title,output);
-}
-
-void ptbreakdownstack(TFile *& file, TString dir)
-{
-  std::vector<TString> histnames = {"phdelaypt_hltdispho45_eff","phdelaypt_hltdispho45_notkveto_eff","phdelaypt_hltdispho45_notime_eff","phdelaypt_hltdispho45_nosmaj_eff","phdelaypt_hltdispho45_nosmin_eff","phdelaypt_hltdispho45_nosieie_eff","phdelaypt_hltdispho45_nor9_eff","phdelaypt_hltdispho45_nohoe_eff","phdelaypt_hltdispho45_noet_eff","phdelaypt_hltdispho45_nol1match_eff"};
-  std::reverse(histnames.begin(),histnames.end());
-
-  TString title  = "Most Delayed Photon p_{T}";
-  TString output = "ptbreakdownstack";
-
-  dostack(file,dir,histnames,title,output);
-}
-
-void pho60downstack(TFile *& file, TString dir)
-{
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho60_eff","phdelayseedtime_hltdispho60_r9Id90_eff","phdelayseedtime_hltdispho60_caloIdL_eff","phdelayseedtime_hltdispho60_isoL_eff"};
-
-  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
-  TString output = "pho60downstack";
-
-  dostack(file,dir,histnames,title,output);
-}
-
 void etstack(TFile *& file, TString dir)
 {
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho50_isoL_eff","phdelayseedtime_hltdispho60_isoL_eff","phdelayseedtime_hltdispho70_isoL_eff","phdelayseedtime_hltdispho80_isoL_eff"};
+  std::vector<TString> histnames = {"phdelayseedtime_hltdispho50_ht350_eff","phdelayseedtime_hltdispho60_ht350_eff","phdelayseedtime_hltdispho70_ht350_eff"};
 
   TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
   TString output = "etstack";
@@ -178,78 +77,17 @@ void etstack(TFile *& file, TString dir)
   dostack(file,dir,histnames,title,output);
 }
 
-void htet50stack(TFile *& file, TString dir)
-{
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho50_isoL_eff","phdelayseedtime_hltdispho50_ht100_eff","phdelayseedtime_hltdispho50_ht200_eff","phdelayseedtime_hltdispho50_ht300_eff","phdelayseedtime_hltdispho50_ht350_eff","phdelayseedtime_hltdispho50_ht400_eff"};
-
-  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
-  TString output = "htet50stack";
-
-  dostack(file,dir,histnames,title,output);
-}
-
-void htet60stack(TFile *& file, TString dir)
-{
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho60_isoL_eff","phdelayseedtime_hltdispho60_ht100_eff","phdelayseedtime_hltdispho60_ht200_eff","phdelayseedtime_hltdispho60_ht300_eff","phdelayseedtime_hltdispho60_ht350_eff","phdelayseedtime_hltdispho60_ht400_eff"};
-
-  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
-  TString output = "htet60stack";
-
-  dostack(file,dir,histnames,title,output);
-}
-
-void htet70stack(TFile *& file, TString dir)
-{
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho70_isoL_eff","phdelayseedtime_hltdispho70_ht100_eff","phdelayseedtime_hltdispho70_ht200_eff","phdelayseedtime_hltdispho70_ht300_eff","phdelayseedtime_hltdispho70_ht350_eff","phdelayseedtime_hltdispho70_ht400_eff"};
-
-  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
-  TString output = "htet70stack";
-
-  dostack(file,dir,histnames,title,output);
-}
-
-void htet80stack(TFile *& file, TString dir)
-{
-  std::vector<TString> histnames = {"phdelayseedtime_hltdispho80_isoL_eff","phdelayseedtime_hltdispho80_ht100_eff","phdelayseedtime_hltdispho80_ht200_eff","phdelayseedtime_hltdispho80_ht300_eff","phdelayseedtime_hltdispho80_ht350_eff","phdelayseedtime_hltdispho80_ht400_eff"};
-
-  TString title  = "Most Delayed Photon Seed RecHit Time [ns]";
-  TString output = "htet80stack";
-
-  dostack(file,dir,histnames,title,output);
-}
-
-
-
 void menustacks()
 {
+  Bool_t isFull = false;
+  Bool_t isGMSB = true;
 
-
-
-  TString dir  = "output/hlt4/MC/signal/GMSB/ctau6000/cuts_jetht300.0_minjetpt15.0_jetpt35.0_njets3_ph1pt10.0_phanypt10.0_rhE1.0_ecalaccept/";
-  //TString dir  = "output/trigger/MC/signal/GMSB/ctau6000/cuts_jetpt35.0_njets3_ph1pt50.0_ph1VIDmedium_phanypt10.0_phanyVIDloose_rhE1.0_EEOnly/";
-  //TString dir  = "output/trigger/MC/signal/GMSB/ctau100/cuts_jetpt35.0_njets3_ph1pt50.0_ph1VIDmedium_phanypt10.0_phanyVIDloose_rhE1.0_ecalaccept/";
+  TString cuts = (isFull) ? "cuts_jetht350.0_minjetpt15.0_ph1pt60.0_ph1VIDmedium_ph1r90.9_phanypt10.0_phanyVIDloose_phanyr90.9_rhE1.0_ecalaccept" : "cuts_jetht350.0_minjetpt15.0_phanypt10.0_rhE1.0_ecalaccept";
+  TString dir  = (isGMSB) ? Form("output/trigger/MC/signal/GMSB/ctau6000/%s/",cuts.Data()) : Form("output/trigger/MC/signal/HVDS/ctau1000/%s/",cuts.Data());
   TFile * file = TFile::Open(dir+"plots.root");
 
   cmsmenustack(file,dir);
-  pho60downstack(file,dir);
   etstack(file,dir);
-  htet50stack(file,dir);
-  htet60stack(file,dir);
-  htet70stack(file,dir);
-  htet80stack(file,dir);
-
-
-
-
-
-  //  cmsmenustack(file,dir);
-  //  ptstack(file,dir);
-  //  dispho45stack(file,dir);
-  //  dispho60stack(file,dir);
-//   seedtimebreakdownstack(file,dir);
-//   etabreakdownstack(file,dir);
-//   phibreakdownstack(file,dir);
-//   ptbreakdownstack(file,dir);
 
   delete file;
 }

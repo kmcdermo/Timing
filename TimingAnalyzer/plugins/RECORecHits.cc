@@ -2,19 +2,29 @@
 
 RECORecHits::RECORecHits(const edm::ParameterSet& iConfig): 
   //recHits
-  recHitsFullEBTAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitsFullEB" ))),
-  recHitsFullEETAG(consumes<EcalRecHitCollection>(iConfig.getParameter<edm::InputTag>( "recHitsFullEE" )))
+  recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
+  recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE"))
 {
   usesResource();
   usesResource("TFileService");
+
+  // rechits
+  recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
+  recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
 }
 
 RECORecHits::~RECORecHits() {}
 
 void RECORecHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
 {
-  // ECALELF tools
-  EcalClusterLazyTools * clustertools = new EcalClusterLazyTools (iEvent, iSetup, recHitsFullEBTAG, recHitsFullEETAG);
+  // RecHits
+  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
+  iEvent.getByToken(recHitsEBToken, recHitsEBH);
+  const EcalRecHitCollection * recHitsEB = recHitsEBH.product();
+
+  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
+  iEvent.getByToken(recHitsEEToken, recHitsEEH);
+  const EcalRecHitCollection * recHitsEE = recHitsEEH.product();
   
   // geometry (from ECAL ELF)
   edm::ESHandle<CaloGeometry> geoHandle;
@@ -23,29 +33,29 @@ void RECORecHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   const CaloSubdetectorGeometry * endcapGeometry = geoHandle->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
   // Event, lumi, run info
-  run   = iEvent.id().run();
-  lumi  = iEvent.luminosityBlock();
   event = iEvent.id().event();
+  lumi  = iEvent.luminosityBlock();
+  run   = iEvent.id().run();
 
-  RECORecHits::InitializeBranches();
+  RECORecHits::ClearBranches();
 
   /////////////////////
   //                 //
   // Full recHits EB //
   //                 //
   /////////////////////
-  const EcalRecHitCollection * recHitsEB = clustertools->getEcalEBRecHitCollection(); 
   nrhEB = recHitsEB->size();
   for (EcalRecHitCollection::const_iterator recHit = recHitsEB->begin(); recHit != recHitsEB->end(); ++recHit)
   {
     const DetId recHitId = recHit->detid();
     const auto recHitPos = barrelGeometry->getGeometry(recHitId)->getPosition();
-    rhEs   .push_back(recHit->energy());
-    rhphis .push_back(recHitPos.phi());
-    rhetas .push_back(recHitPos.eta());
-    rhtimes.push_back(recHit->time());
-    rhIDs  .push_back(int(recHitId.rawId()));
-    rhOOTs .push_back(int(recHit->checkFlag(EcalRecHit::kOutOfTime)));
+    rhE   .push_back(recHit->energy());
+    rhphi .push_back(recHitPos.phi());
+    rheta .push_back(recHitPos.eta());
+    rhtime.push_back(recHit->time());
+    rhID  .push_back(int(recHitId.rawId()));
+    rhOOT .push_back(int(recHit->checkFlag(EcalRecHit::kOutOfTime)));
+    rhisEB.push_back(1);
   }
 
   /////////////////////
@@ -53,57 +63,56 @@ void RECORecHits::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   // Full recHits EE //
   //                 //
   /////////////////////
-  const EcalRecHitCollection * recHitsEE = clustertools->getEcalEERecHitCollection(); 
   nrhEE = recHitsEE->size();
   for (EcalRecHitCollection::const_iterator recHit = recHitsEE->begin(); recHit != recHitsEE->end(); ++recHit)
   {
     const DetId recHitId = recHit->detid();
     const auto recHitPos = endcapGeometry->getGeometry(recHitId)->getPosition();
-    rhEs   .push_back(recHit->energy());
-    rhphis .push_back(recHitPos.phi());
-    rhetas .push_back(recHitPos.eta());
-    rhtimes.push_back(recHit->time());
-    rhIDs  .push_back(int(recHitId.rawId()));
-    rhOOTs .push_back(int(recHit->checkFlag(EcalRecHit::kOutOfTime)));
+    rhE   .push_back(recHit->energy());
+    rhphi .push_back(recHitPos.phi());
+    rheta .push_back(recHitPos.eta());
+    rhtime.push_back(recHit->time());
+    rhID  .push_back(int(recHitId.rawId()));
+    rhOOT .push_back(int(recHit->checkFlag(EcalRecHit::kOutOfTime)));
+    rhisEB.push_back(0);
   }
 
   // fill the tree
-  rhtree->Fill();
-
-  // delete cluster tools
-  delete clustertools;
+  tree->Fill();
 }
 
-void RECORecHits::InitializeBranches()
+void RECORecHits::ClearBranches()
 { 
-  rhEs   .clear();
-  rhphis .clear();
-  rhetas .clear();
-  rhtimes.clear();
-  rhIDs  .clear();
-  rhOOTs .clear();	  
+  rhE   .clear();
+  rhphi .clear();
+  rheta .clear();
+  rhtime.clear();
+  rhID  .clear();
+  rhOOT .clear();	  
+  rhisEB.clear();	  
 }
 
 void RECORecHits::beginJob() 
 {
   edm::Service<TFileService> fs;
 
-  // rh tree
-  rhtree = fs->make<TTree>("rhtree", "tree");
+  // tree
+  tree = fs->make<TTree>("tree", "tree");
 
   // event level info
-  rhtree->Branch("event"             , &event              , "event/I");
-  rhtree->Branch("run"               , &run                , "run/I");
-  rhtree->Branch("lumi"              , &lumi               , "lumi/I");
+  tree->Branch("event"             , &event              , "event/l");
+  tree->Branch("lumi"              , &lumi               , "lumi/i");
+  tree->Branch("run"               , &run                , "run/i");
 
-  rhtree->Branch("nrhEB"             , &nrhEB              , "nrhEB/I");
-  rhtree->Branch("nrhEE"             , &nrhEE              , "nrhEE/I");
-  rhtree->Branch("rhEs"              , &rhEs);
-  rhtree->Branch("rhphis"            , &rhphis);
-  rhtree->Branch("rhetas"            , &rhetas);
-  rhtree->Branch("rhtimes"           , &rhtimes);
-  rhtree->Branch("rhIDs"             , &rhIDs);
-  rhtree->Branch("rhOOTs"            , &rhOOTs);
+  tree->Branch("nrhEB"             , &nrhEB              , "nrhEB/I");
+  tree->Branch("nrhEE"             , &nrhEE              , "nrhEE/I");
+  tree->Branch("rhE"               , &rhE);
+  tree->Branch("rhphi"             , &rhphi);
+  tree->Branch("rheta"             , &rheta);
+  tree->Branch("rhtime"            , &rhtime);
+  tree->Branch("rhID"              , &rhID);
+  tree->Branch("rhOOT"             , &rhOOT);
+  tree->Branch("rhisEB"            , &rhisEB);
 }
 
 void RECORecHits::endJob() {}

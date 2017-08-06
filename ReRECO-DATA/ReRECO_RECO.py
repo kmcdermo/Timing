@@ -26,9 +26,15 @@ process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(100)
 )
 
+# include cpu timing
+process.Timing = cms.Service("Timing",
+  summaryOnly = cms.untracked.bool(False),
+  useJobReport = cms.untracked.bool(False)
+)
+
 # Input source
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/k/kmcdermo/files/RECO/test_2016B.root'),
+    fileNames = cms.untracked.vstring('file:/afs/cern.ch/work/k/kmcdermo/public/files/RECO/test_deg_2016B.root'),
     secondaryFileNames = cms.untracked.vstring()
 )
 
@@ -55,7 +61,7 @@ process.RECOoutput = cms.OutputModule("PoolOutputModule",
         filterName = cms.untracked.string('RECOfromRECO')
     ),
     eventAutoFlushCompressedSize = cms.untracked.int32(5242880),
-    fileName = cms.untracked.string('file:rereco_test.root'),
+    fileName = cms.untracked.string('file:rereco_deg_2016B.root'),
     outputCommands = process.RECOEventContent.outputCommands,
     splitLevel = cms.untracked.int32(0)
 )
