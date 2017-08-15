@@ -26,8 +26,11 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
   // jets
   jetsTag(iConfig.getParameter<edm::InputTag>("jets")),  
 
-  // photons + ids
+  // photons
   photonsTag(iConfig.getParameter<edm::InputTag>("photons")),  
+
+  // ootPhotons
+  ootPhotonsTag(iConfig.getParameter<edm::InputTag>("ootPhotons")),  
   
   //recHits
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
@@ -72,7 +75,6 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
     triggerObjectsByFilter.resize(filterNames.size());
   } // check to make sure text file exists
 
-
   //vertex
   verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
 
@@ -87,6 +89,7 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
 
   // photons
   photonsToken = consumes<std::vector<pat::Photon> > (photonsTag);
+  ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
 
   // rechits
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
@@ -125,7 +128,9 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // PHOTONS
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
-  std::vector<pat::Photon> photons; photons.reserve(photonsH->size());
+
+  edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
+  iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
 
   // RecHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
@@ -141,7 +146,9 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   // do some prepping of objects
   HLTDump::PrepJets(jetsH,jets);
-  HLTDump::PrepPhotons(photonsH,photons);
+
+  std::vector<PatPhoton> photons;
+  HLTDump::PrepPhotons(photonsH,ootPhotonsH,photons);
 
   ///////////////////////////
   //                       //
@@ -293,40 +300,43 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //              //
   //////////////////
   HLTDump::ClearRecoPhotonBranches();
-  if (photonsH.isValid()) // standard handle check
+  if (photonsH.isValid() && ootPhotonsH.isValid()) // standard handle check
   {
     nphotons = photons.size();
     if (nphotons > 0) HLTDump::InitializeRecoPhotonBranches();
 
     int iph = 0;
-    for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
+    for (std::vector<PatPhoton>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
     {
+      // from ootPhoton collection
+      phisOOT[iph] = phiter->isOOT_;
+      
       // standard photon branches
-      phE  [iph] = phiter->energy();
-      phpt [iph] = phiter->pt();
-      phphi[iph] = phiter->phi();
-      pheta[iph] = phiter->eta();
+      phE  [iph] = phiter->photon_.energy();
+      phpt [iph] = phiter->photon_.pt();
+      phphi[iph] = phiter->photon_.phi();
+      pheta[iph] = phiter->photon_.eta();
 
       // check for HLT filter matches!
       HLTDump::HLTToPATPhotonMatching(iph);
 
       // super cluster from photon
-      const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
+      const reco::SuperClusterRef& phsc = phiter->photon_.superCluster().isNonnull() ? phiter->photon_.superCluster() : phiter->photon_.parentSuperCluster();
       phscE  [iph] = phsc->energy();
       phsceta[iph] = phsc->eta();
       phscphi[iph] = phsc->phi();
 
       // Shower Shape Objects
-      const reco::Photon::ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
+      const reco::Photon::ShowerShape& phshape = phiter->photon_.full5x5_showerShapeVariables(); // phiter->photon_.showerShapeVariables();
 
       // ID-like variables
-      phHOvE   [iph] = phiter->hadronicOverEm(); // ID
-      phHTowOvE[iph] = phiter->hadTowOverEm(); // close to trigger
-      phr9     [iph] = phiter->r9();
+      phHOvE   [iph] = phiter->photon_.hadronicOverEm(); // ID
+      phHTowOvE[iph] = phiter->photon_.hadTowOverEm(); // close to trigger
+      phr9     [iph] = phiter->photon_.r9();
 
       // pseudo-track veto
-      phPixSeed[iph] = phiter->passElectronVeto();
-      phEleVeto[iph] = phiter->hasPixelSeed();
+      phPixSeed[iph] = phiter->photon_.passElectronVeto();
+      phEleVeto[iph] = phiter->photon_.hasPixelSeed();
 
       // cluster shape variables
       phsieie[iph] = phshape.sigmaIetaIeta;
@@ -335,16 +345,16 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       // PF Isolations
       const float sceta = std::abs(phsceta[iph]);
-      phChgIso[iph] = std::max(phiter->chargedHadronIso() - (rho * HLTDump::GetChargedHadronEA(sceta)),0.f);
-      phNeuIso[iph] = std::max(phiter->neutralHadronIso() - (rho * HLTDump::GetNeutralHadronEA(sceta)),0.f);
-      phIso   [iph] = std::max(phiter->photonIso()        - (rho * HLTDump::GetGammaEA        (sceta)),0.f);
+      phChgIso[iph] = std::max(phiter->photon_.chargedHadronIso() - (rho * HLTDump::GetChargedHadronEA(sceta)),0.f);
+      phNeuIso[iph] = std::max(phiter->photon_.neutralHadronIso() - (rho * HLTDump::GetNeutralHadronEA(sceta)),0.f);
+      phIso   [iph] = std::max(phiter->photon_.photonIso()        - (rho * HLTDump::GetGammaEA        (sceta)),0.f);
 
       // PF Cluster Isolations
-      phPFClEcalIso[iph] = phiter->ecalPFClusterIso();
-      phPFClHcalIso[iph] = phiter->hcalPFClusterIso();
+      phPFClEcalIso[iph] = phiter->photon_.ecalPFClusterIso();
+      phPFClHcalIso[iph] = phiter->photon_.hcalPFClusterIso();
 
       // Track Isolation (dR of outer cone < 0.3 as matching in trigger)
-      phHollowTkIso[iph] = phiter->trkSumPtHollowConeDR03();
+      phHollowTkIso[iph] = phiter->photon_.trkSumPtHollowConeDR03();
      
       // use seed to get geometry and recHits
       const DetId seedDetId = phsc->seed()->seed(); //seed detid
@@ -425,16 +435,39 @@ void HLTDump::PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::v
   }
 }  
 
-void HLTDump::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<pat::Photon> & photons)
+void HLTDump::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
+			  const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
+			  std::vector<PatPhoton> & photons)
 {
   if (photonsH.isValid()) // standard handle check
   {
-    for (const auto& photon : *photonsH)
+    int iph = 0;
+    photons.resize(photonsH->size());
+    for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter)
     {
-      if (photon.pt() > phpTmin) photons.push_back(photon);
+      photons[iph].photon_ = *phiter;
+      photons[iph].isOOT_  = false;
+      iph++;
     }
-    std::sort(photons.begin(),photons.end(),sortByPhotonPt);
   }
+
+  if (ootPhotonsH.isValid()) // standard handle check
+  {
+    int iph = photons.size();
+    photons.resize(photons.size()+ootPhotonsH->size());
+    for (std::vector<pat::Photon>::const_iterator phiter = ootPhotonsH->begin(); phiter != ootPhotonsH->end(); ++phiter)
+    {
+      photons[iph].photon_ = *phiter;
+      photons[iph].isOOT_  = true;
+      iph++;
+    }
+  }
+
+  std::sort(photons.begin(),photons.end(),sortByPhotonPt);
+  photons.erase(std::remove_if(photons.begin(),photons.end(),
+			       [=](const PatPhoton& photon)
+			       { return photon.photon_.pt()<phpTmin; }
+			       ),photons.end());
 }  
 
 void HLTDump::HLTToPATPhotonMatching(const int iph)
@@ -577,6 +610,8 @@ void HLTDump::ClearRecoPhotonBranches()
 {
   nphotons = -9999;
 
+  phisOOT.clear();
+
   phE.clear();
   phpt.clear();
   phphi.clear(); 
@@ -621,6 +656,8 @@ void HLTDump::ClearRecoPhotonBranches()
 
 void HLTDump::InitializeRecoPhotonBranches()
 {
+  phisOOT.resize(nphotons);
+
   phE.resize(nphotons);
   phpt.resize(nphotons);
   phphi.resize(nphotons);
@@ -664,6 +701,8 @@ void HLTDump::InitializeRecoPhotonBranches()
 
   for (int iph = 0; iph < nphotons; iph++)
   {
+    phisOOT[iph] = -9999.f;
+
     phE  [iph] = -9999.f; 
     phpt [iph] = -9999.f; 
     phphi[iph] = -9999.f; 
@@ -755,6 +794,8 @@ void HLTDump::beginJob()
 
   // Photon Info
   tree->Branch("nphotons"             , &nphotons             , "nphotons/I");
+
+  tree->Branch("phisOOT"              , &phisOOT);
 
   tree->Branch("phE"                  , &phE);
   tree->Branch("phpt"                 , &phpt);

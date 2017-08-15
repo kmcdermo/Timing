@@ -40,7 +40,7 @@ options.register (
 
 ## GT to be used    
 options.register (
-	'globalTag','92X_dataRun2_Prompt_v4',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'globalTag','92X_dataRun2_Prompt_v7',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'global tag to be used');
 
 ## do a demo run over only 100k events
@@ -79,9 +79,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-		#'root://xrootd-cms.infn.it//store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v2/000/296/174/00000/9A808125-6D4C-E711-80DA-02163E01A7A6.root',
-		#			'root://xrootd-cms.infn.it//store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v1/000/297/046/00000/74C3B1CB-B056-E711-A8A6-02163E01A737.root',
-		'root://xrootd-cms.infn.it//store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v1/000/297/468/00000/FC001FE4-DE5A-E711-AFDC-02163E01A4AE.root'
+		'root://xrootd-cms.infn.it//store/data/Run2017C/SinglePhoton/MINIAOD/PromptReco-v2/000/300/087/00000/2A8DF124-0977-E711-9E94-02163E0145A7.root'
 		))
 
 # Set the json locally 
@@ -126,6 +124,7 @@ process.tree = cms.EDAnalyzer("HLTDump",
    jets = cms.InputTag("slimmedJets"),
    ## photons		
    photons        = cms.InputTag("slimmedPhotons"),
+   ootPhotons     = cms.InputTag("slimmedOOTPhotons"),
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),

@@ -70,6 +70,12 @@
 // Common types
 #include "CommonTypes.h"
 
+struct PatPhoton
+{
+  pat::Photon photon_;
+  bool isOOT_;
+};
+
 inline bool file_exists(const std::string & filename){std::fstream input(filename.c_str()); return (bool)input;}
 
 inline bool sortByTrigObjPt(const pat::TriggerObjectStandAlone & trigobj1, const pat::TriggerObjectStandAlone & trigobj2)
@@ -82,9 +88,9 @@ inline bool sortByJetPt(const pat::Jet & jet1, const pat::Jet & jet2)
   return jet1.pt()>jet2.pt();
 }
 
-inline bool sortByPhotonPt(const pat::Photon & ph1, const pat::Photon & ph2)
+inline bool sortByPhotonPt(const PatPhoton & ph1, const PatPhoton & ph2)
 {
-  return ph1.pt()>ph2.pt();
+  return ph1.photon_.pt()>ph2.photon_.pt();
 }
 
 class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
@@ -95,8 +101,10 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
 
   void PrepTriggerObjects();
   void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::vector<pat::Jet> & jets);
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<pat::Photon> & photons);
-
+  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
+		   const edm::Handle<std::vector<pat::Photon> > & ootphotonsH, 
+		   std::vector<PatPhoton> & photons);
+  
   void HLTToPATPhotonMatching(const int iph);
   float GetChargedHadronEA(const float);
   float GetNeutralHadronEA(const float);
@@ -160,6 +168,9 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   const edm::InputTag photonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > photonsToken;
 
+  const edm::InputTag ootPhotonsTag;
+  edm::EDGetTokenT<std::vector<pat::Photon> > ootPhotonsToken;
+
   // ECAL RecHits
   const edm::InputTag recHitsEBTag;
   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBToken;
@@ -193,6 +204,7 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
 
   // photon info
   int nphotons;
+  std::vector<int> phisOOT;
   std::vector<float> phE, phpt, phphi, pheta;
   std::vector<float> phHOvE, phHTowOvE, phr9;
   std::vector<bool> phPixSeed, phEleVeto;
