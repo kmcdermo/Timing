@@ -89,7 +89,10 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
 
   // photons
   photonsToken = consumes<std::vector<pat::Photon> > (photonsTag);
-  ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
+  if (not ootPhotonsTag.label().empty())
+  {
+    ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
+  }
 
   // rechits
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
@@ -130,7 +133,10 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByToken(photonsToken, photonsH);
 
   edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
-  iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
+  if (not ootPhotonsToken.isUninitialized())
+  {
+    iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
+  }
 
   // RecHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
@@ -300,7 +306,7 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //              //
   //////////////////
   HLTDump::ClearRecoPhotonBranches();
-  if (photonsH.isValid() && ootPhotonsH.isValid()) // standard handle check
+  if (photonsH.isValid() || ootPhotonsH.isValid()) // standard handle check
   {
     nphotons = photons.size();
     if (nphotons > 0) HLTDump::InitializeRecoPhotonBranches();

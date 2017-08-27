@@ -48,6 +48,11 @@ options.register (
 	'demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to run over only 1k events as a demo');
 
+## flag to use ootPhoton collections (should be false if the collection is missing from the data!!
+options.register (
+	'useOOTPhotons',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
+	'flag to use ootPhoton collections in analyzer');
+
 ## parsing command line arguments
 options.parseArguments()
 
@@ -61,6 +66,7 @@ print "Running with processName         = ",options.processName
 print "Running with outputFileName      = ",options.outputFileName	
 print "Running with globalTag           = ",options.globalTag	
 print "Running with demoMode            = ",options.demoMode
+print "Running with useOOTPhotons       = ",options.useOOTPhotons
 print "#####################"
 
 ## Define the CMSSW process
@@ -80,6 +86,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 		'root://xrootd-cms.infn.it//store/data/Run2017C/SinglePhoton/MINIAOD/PromptReco-v2/000/300/087/00000/2A8DF124-0977-E711-9E94-02163E0145A7.root'
+#		'root://xrootd-cms.infn.it//store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v2/000/298/855/00000/56F16894-AA68-E711-8781-02163E01A456.root'
 		))
 
 # Set the json locally 
@@ -100,6 +107,10 @@ process.GlobalTag.globaltag = options.globalTag
 ## Setup the service to make a ROOT TTree
 process.TFileService = cms.Service("TFileService", 
 		                   fileName = cms.string(options.outputFileName))
+
+if options.useOOTPhotons : ootPhotonsTag = cms.InputTag("slimmedOOTPhotons")
+else                     : ootPhotonsTag = cms.InputTag("")
+
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("HLTDump",
@@ -124,7 +135,7 @@ process.tree = cms.EDAnalyzer("HLTDump",
    jets = cms.InputTag("slimmedJets"),
    ## photons		
    photons        = cms.InputTag("slimmedPhotons"),
-   ootPhotons     = cms.InputTag("slimmedOOTPhotons"),
+   ootPhotons     = ootPhotonsTag,
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
