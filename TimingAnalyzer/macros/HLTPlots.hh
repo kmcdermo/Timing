@@ -23,7 +23,7 @@ class HLTPlots
 {
 public :
   HLTPlots(const TString infile, const TString outdir, const TString runs, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
-	   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applylast, const Bool_t applyphpt);
+	   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applylast, const Bool_t apply2last, const Bool_t applyphpt);
   ~HLTPlots();
   
   void InitTree();
@@ -58,6 +58,7 @@ private :
   const Float_t fHTCut;
   const Bool_t fApplyPhDenom;
   const Bool_t fApplyLast;
+  const Bool_t fApply2Last;
   const Bool_t fApplyPhPt;
 
   // Declaration of leaf types
@@ -79,6 +80,7 @@ private :
   std::vector<Float_t> * jeteta;
   std::vector<Bool_t>  * jetidL;
   std::vector<Bool_t>  * triggerBits;
+  std::vector<Int_t>   * phisOOT;
   std::vector<Float_t> * phE;
   std::vector<Float_t> * phpt;
   std::vector<Float_t> * phphi;
@@ -131,6 +133,7 @@ private :
   TBranch * b_jeteta;
   TBranch * b_jetidL;
   TBranch * b_nphotons;
+  TBranch * b_phisOOT;
   TBranch * b_phE;
   TBranch * b_phpt;
   TBranch * b_phphi;

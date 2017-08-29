@@ -6,8 +6,9 @@
 #include <fstream>
 
 HLTPlots::HLTPlots(const TString infile, const TString outdir, const TString runs, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
-		   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applylast, const Bool_t applyphpt) :
-  fIsoPh(isoph), fIsIdL(isidL), fIsER(iser), fApplyHT(applyht), fHTCut(htcut), fApplyPhDenom(applyphdenom), fApplyLast(applylast), fApplyPhPt(applyphpt)
+		   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applylast, const Bool_t apply2last, const Bool_t applyphpt) :
+  fIsoPh(isoph), fIsIdL(isidL), fIsER(iser), fApplyHT(applyht), fHTCut(htcut), 
+  fApplyPhDenom(applyphdenom), fApplyLast(applylast), fApply2Last(apply2last), fApplyPhPt(applyphpt)
 {
   fInFile = TFile::Open(infile.Data());
   fInTree = (TTree*)fInFile->Get("tree/tree");
@@ -45,8 +46,9 @@ HLTPlots::HLTPlots(const TString infile, const TString outdir, const TString run
   if (fIsIdL) outstring += "_jetIdL";
   if (fIsER)  outstring += "_jetER";
   if (fApplyPhDenom) outstring += "_phden";
-  if (fApplyLast) outstring += "_last";
-  if (fApplyPhPt) outstring += "_phpt";
+  if (fApplyLast)  outstring += "_last";
+  if (fApply2Last) outstring += "_2last";
+  if (fApplyPhPt)  outstring += "_phpt";
   
   fOutDir = outdir+"/"+outstring;
   makeOutDir(fOutDir);
@@ -78,37 +80,43 @@ void HLTPlots::DoPlots()
     effptEEs[iera] = new TEfficiency(Form("effptEE_%i",iera),"HLT Efficiency vs Leading Photon p_{T} [EE];Photon Offline p_{T};Efficiency",nbinsx,xbins);
     effetas[iera] = new TEfficiency(Form("effeta_%i",iera),"HLT Efficiency vs Leading Photon #eta;Photon Offline #eta;Efficiency",30,-3.f,3.f);
     effphis[iera] = new TEfficiency(Form("effphi_%i",iera),"HLT Efficiency vs Leading Photon #phi;Photon Offline #phi;Efficiency",32,-3.2f,3.2f);
-    efftimes[iera] = new TEfficiency(Form("efftime_%i",iera),"HLT Efficiency vs Leading Photon Seed Time [ns];Photon Offline Seed Time [ns];Efficiency",100,-25.,25.);
+    efftimes[iera] = new TEfficiency(Form("efftime_%i",iera),"HLT Efficiency vs Leading Photon Seed Time [ns];Photon Offline Seed Time [ns];Efficiency",60,-5.,25.);
     effHTs[iera] = new TEfficiency(Form("effHT_%i",iera),"HLT Efficiency vs PF H_{T};Offline PF H_{T} (Min PFJet p_{T} > 15);Efficiency",nbinsxHT,xbinsHT);
   }
 
-  const Int_t idenom = 1;
-  const Int_t inumer = 2;
-  const Int_t ilast  = 9;
-  const Float_t ph1pt = 65.f;
+  const Int_t control  = 0;
+  const Int_t control2 = 1;
+  const Int_t controlHT= 2;
+  const Int_t signal = 3;
+
+  const Int_t i2last = 8; 
+  const Int_t ilast  = 9; 
 
   for (UInt_t ientry = 0; ientry < fInTree->GetEntries(); ientry++)
   {
     if (ientry%100000 == 0 || ientry == 0) std::cout << "Entry " << ientry << " out of " << fInTree->GetEntries() << std::endl;
 
     fInTree->GetEntry(ientry);
+    //    if (fApply2Last && !(*triggerBits)[control2]) continue;
+    //    if (fApply2Last && (!(*triggerBits)[control2] || !(*triggerBits)[controlHT])) continue;
+    //    if (fApply2Last && !(*triggerBits)[control]) continue;
 
-    Int_t goodpho = -1;
+    std::vector<Int_t> goodphos;
     for (Int_t iph = 0; iph < nphotons; iph++)
     {
       if (fApplyPhDenom)
       {
-	if ( fApplyLast && !(*phIsHLTMatched)[iph][ilast] ) continue; 
-	if (!fApplyLast && !(*phIsHLTMatched)[iph][idenom]) continue; 
+	//	if (fApplyLast && !(*phIsHLTMatched)[iph][]) continue; 
+	if (fApply2Last && !(*phIsHLTMatched)[iph][i2last]) continue; 
       }
 
       const Float_t pt = (*phpt)[iph];
-      if (fApplyPhPt && (pt < ph1pt)) continue;
+      if (fApplyPhPt && (pt < 65.f)) continue;
 
       if ((*phr9)[iph] < 0.95) continue;
       if ((*phsmaj)[iph] > 1.f) continue;
       if ((*phsmin)[iph] > 0.3) continue;
-      //if ((*phHollowTkIso)[iph] > (3.f + 0.002*pt)) continue;
+      if ((*phHollowTkIso)[iph] > (3.f + 0.002*pt)) continue;
 
       // track veto 
       //if (!(*phEleVeto)[iph]) continue;
@@ -121,8 +129,8 @@ void HLTPlots::DoPlots()
 	if ((*phChgIso)[iph] > 0.441) continue;
 	if ((*phNeuIso)[iph] > (2.725+0.0148*pt+0.000017*pt*pt)) continue;
 	if ((*phIso)[iph] > (2.571+0.0047*pt)) continue;
-// 	if ((*phPFClEcalIso)[iph] > (2.5 + 0.01*pt)) continue;
-// 	if ((*phPFClHcalIso)[iph] > (6.f + 0.03*pt + 0.00003*pt*pt)) continue;
+ 	if ((*phPFClEcalIso)[iph] > (2.5 + 0.01*pt)) continue;
+ 	if ((*phPFClHcalIso)[iph] > (6.f + 0.03*pt + 0.00003*pt*pt)) continue;
 
 	if (fApplyHT)
 	{
@@ -131,8 +139,7 @@ void HLTPlots::DoPlots()
 	  if (jetinfo.pfjetHT < fHTCut) continue;
 	}
 
-	goodpho = iph;
-	break;
+	goodphos.push_back(iph);
       } // end check over EB
       else if ((std::abs((*phsceta)[iph]) > ECAL::etaEEmin) && (std::abs((*phsceta)[iph]) < ECAL::etaEEmax))
       {
@@ -141,8 +148,8 @@ void HLTPlots::DoPlots()
 	if ((*phChgIso)[iph] > 0.442) continue;
 	if ((*phNeuIso)[iph] > (1.715+0.0163*pt+0.000014*pt*pt)) continue;
 	if ((*phIso)[iph] > (3.863+0.0034*pt)) continue;
-// 	if ((*phPFClEcalIso)[iph] > (4.f + 0.01*pt)) continue;
-// 	if ((*phPFClHcalIso)[iph] > (3.5 + 0.03*pt + 0.00003*pt*pt)) continue;
+ 	if ((*phPFClEcalIso)[iph] > (4.f + 0.01*pt)) continue;
+ 	if ((*phPFClHcalIso)[iph] > (3.5 + 0.03*pt + 0.00003*pt*pt)) continue;
 	
 	if (fApplyHT)
 	{
@@ -151,12 +158,25 @@ void HLTPlots::DoPlots()
 	  if (jetinfo.pfjetHT < fHTCut) continue;
 	}
 
-	goodpho = iph;
-	break;
+	goodphos.push_back(iph);
       } // end check over EE
     } // end loop over photons
 
-    if (goodpho < 0) continue;
+    if (goodphos.size() == 0) continue;
+    
+    Int_t goodpho = -1;
+    for (auto iph : goodphos)
+    {
+      if (fApplyPhDenom)
+      {
+	if (fApply2Last && (*phIsHLTMatched)[iph][ilast]) 
+	{
+	  goodpho = iph;
+	  break;
+	}
+      }
+    }
+    if (goodpho < 0) goodpho = goodphos[0];
 
     // Get era number
     Int_t era = -1;
@@ -166,12 +186,7 @@ void HLTPlots::DoPlots()
     Bool_t passed = false;
     if (fApplyPhDenom)
     {
-      if ( fApplyLast && (*triggerBits)[0])                  passed = true;
-      if (!fApplyLast && (*phIsHLTMatched)[goodpho][inumer]) passed = true;
-    }
-    else
-    {
-      if ((*triggerBits)[0]) passed = true;
+      if (fApply2Last && (*triggerBits)[control2]) passed = true;
     }
 
     if (std::abs((*phsceta)[goodpho]) < ECAL::etaEB)
@@ -295,6 +310,7 @@ void HLTPlots::InitTree()
   jetphi = 0;
   jeteta = 0;
   jetidL = 0;
+  phisOOT = 0;
   phE = 0;
   phpt = 0;
   phphi = 0;
@@ -347,6 +363,7 @@ void HLTPlots::InitTree()
   fInTree->SetBranchAddress("jetidL", &jetidL, &b_jetidL);
   fInTree->SetBranchAddress("nphotons", &nphotons, &b_nphotons);
   fInTree->SetBranchAddress("phE", &phE, &b_phE);
+  fInTree->SetBranchAddress("phisOOT", &phisOOT, &b_phisOOT);
   fInTree->SetBranchAddress("phpt", &phpt, &b_phpt);
   fInTree->SetBranchAddress("phphi", &phphi, &b_phphi);
   fInTree->SetBranchAddress("pheta", &pheta, &b_pheta);
