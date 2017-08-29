@@ -186,7 +186,7 @@ void HLTPlots::DoPlots()
     Bool_t passed = false;
     if (fApplyPhDenom)
     {
-      if (fApply2Last && (*triggerBits)[control2]) passed = true;
+      if (fApply2Last && (*phIsHLTMatched)[goodpho][ilast]) passed = true;
     }
 
     if (std::abs((*phsceta)[goodpho]) < ECAL::etaEB)
