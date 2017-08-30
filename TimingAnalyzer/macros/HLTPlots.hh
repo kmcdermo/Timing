@@ -13,6 +13,27 @@
 #include <vector>
 #include <map>
 
+namespace Config
+{
+  // triggerBits
+  const Int_t controlID0 = 0; 
+  const Int_t controlID1 = 1;
+  const Int_t controlHT  = 2;
+  const Int_t signal     = 3;
+
+  // Et filters
+  const Int_t iEtDenom = 1; 
+  const Int_t iEtNumer = 2; 
+
+  // Displaced filters
+  const Int_t iDispDenom = 8;
+  const Int_t iDispNumer = 9; 
+
+  // HT filters
+  const Int_t iHTDenom = iDispNumer;
+  const Int_t iHTNumer = signal;
+};
+
 struct JetInfo
 {
   Float_t pfjetHT = 0.f;
@@ -22,8 +43,8 @@ struct JetInfo
 class HLTPlots 
 {
 public :
-  HLTPlots(const TString infile, const TString outdir, const TString runs, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
-	   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applylast, const Bool_t apply2last, const Bool_t applyphpt);
+  HLTPlots(const TString infile, const UInt_t start, const UInt_t end, const TString outdir, const TString runs, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
+	   const Bool_t applyht, const Float_t htcut, const Bool_t eteff, const Bool_t dispeff, const Bool_t hteff);
   ~HLTPlots();
   
   void InitTree();
@@ -51,15 +72,17 @@ private :
   TEffVec efftimes; 
   TEffVec effHTs;
 
+  const UInt_t fStart;
+        UInt_t fEnd;
   const Bool_t fIsER;
   const Bool_t fIsoPh;
   const Bool_t fIsIdL;
   const Bool_t fApplyHT;
   const Float_t fHTCut;
-  const Bool_t fApplyPhDenom;
-  const Bool_t fApplyLast;
-  const Bool_t fApply2Last;
-  const Bool_t fApplyPhPt;
+  const Bool_t fEtEff;
+  const Bool_t fDispEff;
+  const Bool_t fHTEff;
+        Bool_t fApplyPhPt;
 
   // Declaration of leaf types
   ULong64_t event;

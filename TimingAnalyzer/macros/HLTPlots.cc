@@ -5,14 +5,18 @@
 #include <iostream>
 #include <fstream>
 
-HLTPlots::HLTPlots(const TString infile, const TString outdir, const TString runs, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
-		   const Bool_t applyht, const Float_t htcut, const Bool_t applyphdenom, const Bool_t applylast, const Bool_t apply2last, const Bool_t applyphpt) :
-  fIsoPh(isoph), fIsIdL(isidL), fIsER(iser), fApplyHT(applyht), fHTCut(htcut), 
-  fApplyPhDenom(applyphdenom), fApplyLast(applylast), fApply2Last(apply2last), fApplyPhPt(applyphpt)
+HLTPlots::HLTPlots(const TString infile, const UInt_t start, const UInt_t end, const TString outdir, const TString runs, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
+		   const Bool_t applyht, const Float_t htcut, const Bool_t eteff, const Bool_t dispeff, const Bool_t hteff) :
+  fStart(start), fIsoPh(isoph), fIsIdL(isidL), fIsER(iser), fApplyHT(applyht), fHTCut(htcut), fEtEff(eteff), fDispEff(dispeff), fHTEff(hteff)
 {
   fInFile = TFile::Open(infile.Data());
   fInTree = (TTree*)fInFile->Get("tree/tree");
+  fEnd = (end!=0?end:fInTree->GetEntries());
 
+  // Efficiency setups
+  if (fEtEff) fApplyPhPt = false;
+  else        fApplyPhPt = true;
+  
   // read in runs
   std::ifstream inputruns;
   inputruns.open(runs.Data(),std::ios::in);
@@ -42,14 +46,13 @@ HLTPlots::HLTPlots(const TString infile, const TString outdir, const TString run
   
   TString outstring = "cuts";
   if (fApplyHT) outstring += Form("_htcut_%i",Int_t(fHTCut));
-  if (fIsoPh) outstring += "_nopho";
-  if (fIsIdL) outstring += "_jetIdL";
-  if (fIsER)  outstring += "_jetER";
-  if (fApplyPhDenom) outstring += "_phden";
-  if (fApplyLast)  outstring += "_last";
-  if (fApply2Last) outstring += "_2last";
-  if (fApplyPhPt)  outstring += "_phpt";
-  
+  if (fIsoPh)   outstring += "_nopho";
+  if (fIsIdL)   outstring += "_jetIdL";
+  if (fIsER)    outstring += "_jetER";
+  if (fEtEff)   outstring += "_EtEff";
+  if (fDispEff) outstring += "_DispEff";
+  if (fHTEff)   outstring += "_HTEff";  
+
   fOutDir = outdir+"/"+outstring;
   makeOutDir(fOutDir);
 
@@ -84,31 +87,18 @@ void HLTPlots::DoPlots()
     effHTs[iera] = new TEfficiency(Form("effHT_%i",iera),"HLT Efficiency vs PF H_{T};Offline PF H_{T} (Min PFJet p_{T} > 15);Efficiency",nbinsxHT,xbinsHT);
   }
 
-  const Int_t control  = 0;
-  const Int_t control2 = 1;
-  const Int_t controlHT= 2;
-  const Int_t signal = 3;
-
-  const Int_t i2last = 8; 
-  const Int_t ilast  = 9; 
-
-  for (UInt_t ientry = 0; ientry < fInTree->GetEntries(); ientry++)
+  for (UInt_t ientry = fStart; ientry < fEnd; ientry++)
   {
-    if (ientry%100000 == 0 || ientry == 0) std::cout << "Entry " << ientry << " out of " << fInTree->GetEntries() << std::endl;
+    if (ientry%100000 == 0 || ientry == fStart) std::cout << "Entry " << ientry << " out of " << fEnd << std::endl;
 
     fInTree->GetEntry(ientry);
-    //    if (fApply2Last && !(*triggerBits)[control2]) continue;
-    //    if (fApply2Last && (!(*triggerBits)[control2] || !(*triggerBits)[controlHT])) continue;
-    //    if (fApply2Last && !(*triggerBits)[control]) continue;
 
     std::vector<Int_t> goodphos;
     for (Int_t iph = 0; iph < nphotons; iph++)
     {
-      if (fApplyPhDenom)
-      {
-	//	if (fApplyLast && !(*phIsHLTMatched)[iph][]) continue; 
-	if (fApply2Last && !(*phIsHLTMatched)[iph][i2last]) continue; 
-      }
+      if (fEtEff   && !(*phIsHLTMatched)[iph][Config::iEtDenom])   continue; 
+      if (fDispEff && !(*phIsHLTMatched)[iph][Config::iDispDenom]) continue; 
+      if (fHTEff   && !(*phIsHLTMatched)[iph][Config::iHTDenom])   continue; 
 
       const Float_t pt = (*phpt)[iph];
       if (fApplyPhPt && (pt < 65.f)) continue;
@@ -162,32 +152,51 @@ void HLTPlots::DoPlots()
       } // end check over EE
     } // end loop over photons
 
+    // must have at least one denom photon
     if (goodphos.size() == 0) continue;
     
-    Int_t goodpho = -1;
-    for (auto iph : goodphos)
+    // sort good photons by photon seed time if not photon Et efficiency
+    if (!fEtEff)
     {
-      if (fApplyPhDenom)
-      {
-	if (fApply2Last && (*phIsHLTMatched)[iph][ilast]) 
+      std::sort(goodphos.begin(),goodphos.end(),
+		[&](const int iph1, const int iph2)
+		{ return (*phseedtime)[iph1]>(*phseedtime)[iph2]; });
+    }
+
+    // Get numer photon + passed
+    Int_t goodpho = -1;
+    Bool_t passed = false;
+    if (!fHTEff)
+    {
+      // get the "leading" good photon if it exists
+      for (auto iph : goodphos)
+      { 
+	if (fEtEff && (*phIsHLTMatched)[iph][Config::iEtNumer]) 
 	{
 	  goodpho = iph;
+	  passed = true;
+	  break;
+	}
+	if (fDispEff && (*phIsHLTMatched)[iph][Config::iDispNumer]) 
+	{
+	  goodpho = iph;
+	  passed = true;
 	  break;
 	}
       }
     }
-    if (goodpho < 0) goodpho = goodphos[0];
+    else // HT efficiency
+    {
+      if ((*triggerBits)[Config::iHTNumer]) passed = true;
+    }
 
+    // Set denom photon if no numer photon found/HT efficiency
+    if (goodpho < 0) goodpho = goodphos[0];
+  
     // Get era number
     Int_t era = -1;
     if (fNEras != 1) era = fRunEraMap[run];
     else             era = 0;
-
-    Bool_t passed = false;
-    if (fApplyPhDenom)
-    {
-      if (fApply2Last && (*phIsHLTMatched)[goodpho][ilast]) passed = true;
-    }
 
     if (std::abs((*phsceta)[goodpho]) < ECAL::etaEB)
     {

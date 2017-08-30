@@ -1,8 +1,7 @@
 typedef std::vector<TEfficiency*> TEffVec;
+typedef std::vector<TString> TStrVec;
 
-static const Int_t N = 3;
-
-void Overplot(const TEffVec& teffs, const TString cname, const Bool_t isLogx, 
+void Overplot(const TEffVec& teffs, const TStrVec& eras, const TString cname, const Bool_t isLogx,
 	      const Float_t xlow, const Float_t xhigh, const Float_t ylow, const Float_t yhigh)
 {
   std::vector<Color_t> colors = {kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3,kBlack};
@@ -13,12 +12,12 @@ void Overplot(const TEffVec& teffs, const TString cname, const Bool_t isLogx,
   canv->SetGrid(1,1);
 
   TLegend * leg = new TLegend(0.9,0.9,0.99,0.99);
-  for (Int_t iv = 0; iv < N; iv++)
+  for (Int_t i = 0; i < eras.size(); i++)
   {
-    teffs[iv]->SetLineColor(colors[iv]);
-    teffs[iv]->SetMarkerColor(colors[iv]);
-    teffs[iv]->Draw(iv>0?"P same":"AP");
-    leg->AddEntry(teffs[iv],Form("RunC v%i",iv+1),"epl");
+    teffs[i]->SetLineColor(colors[i]);
+    teffs[i]->SetMarkerColor(colors[i]);
+    teffs[i]->Draw(i>0?"P same":"AP");
+    leg->AddEntry(teffs[i],Form("%s",eras[i].Data()),"epl");
   }
 
   gPad->Update(); 
@@ -36,26 +35,33 @@ void Overplot(const TEffVec& teffs, const TString cname, const Bool_t isLogx,
 
 void overplotHLT()
 {
+  TString eff = "HTEff";
+  TStrVec eras = {"2017B","2017C"};
+  const Int_t N = eras.size();
+
   std::vector<TFile*> files(N); 
   TEffVec effptEBs(N); 
   TEffVec effptEEs(N); 
   TEffVec effetas(N); 
   TEffVec effphis(N); 
   TEffVec efftimes(N); 
+  TEffVec effHTs(N); 
 
-  for (Int_t iv = 0; iv < N; iv++)
+  for (Int_t i = 0; i < N; i++)
   {
-    files   [iv] = TFile::Open(Form("runC-v%i-wdenom-noHT/cuts_nopho_jetER_phden_2last/plots.root",iv+1));
-    effptEBs[iv] = (TEfficiency*)files[iv]->Get("effptEB_0");
-    effptEEs[iv] = (TEfficiency*)files[iv]->Get("effptEE_0");
-    effetas [iv] = (TEfficiency*)files[iv]->Get("effeta_0");
-    effphis [iv] = (TEfficiency*)files[iv]->Get("effphi_0");
-    efftimes[iv] = (TEfficiency*)files[iv]->Get("efftime_0");
+    files   [i] = TFile::Open(Form("HLT_Golden_SP_%s/cuts_jetIdL_jetER_%s/plots.root",eras[i].Data(),eff.Data()));
+    effptEBs[i] = (TEfficiency*)files[i]->Get("effptEB_0");
+    effptEEs[i] = (TEfficiency*)files[i]->Get("effptEE_0");
+    effetas [i] = (TEfficiency*)files[i]->Get("effeta_0");
+    effphis [i] = (TEfficiency*)files[i]->Get("effphi_0");
+    efftimes[i] = (TEfficiency*)files[i]->Get("efftime_0");
+    effHTs  [i] = (TEfficiency*)files[i]->Get("effHT_0");
   }
 
-  Overplot(effptEBs,"cptEB",true,1,2000,0,1.05);
-  Overplot(effptEEs,"cptEE",true,1,2000,0,1.05);
-  Overplot(effetas,"ceta",false,-4.0,4,0.995,1.0005);
-  Overplot(effphis,"cphi",false,-4.0,4.0,0.995,1.0005);
-  Overplot(efftimes,"ctime",false,-30,30,0,1.05);
+  Overplot(effptEBs,eras,Form("cptEB_%s",eff.Data()),true,1,2000,0.0,1.05);
+  Overplot(effptEEs,eras,Form("cptEE_%s",eff.Data()),true,1,2000,0.0,1.05);
+  Overplot(effetas,eras,Form("ceta_%s",eff.Data()),false,-3.0,3,0.0,1.05);
+  Overplot(effphis,eras,Form("cphi_%s",eff.Data()),false,-3.5,3.5,0.0,1.05);
+  Overplot(efftimes,eras,Form("ctime_%s",eff.Data()),false,-30,30,0.8,1.005);
+  Overplot(effHTs,eras,Form("cHT_%s",eff.Data()),true,100,3000,0.0,1.05);
 }

@@ -21,21 +21,25 @@ void runHLTPlots()
 
   gROOT->LoadMacro("HLTPlots.cc+g");
 
-  const TString infile = "input/DATA/2017/HLT_CHECK/SP/hltdump-2017B.root";
-  const TString outdir = "HLT_Golden_2017B_SP";
+  const TString dataset = "SP";
+  const TString era = "2017C";
+  const Bool_t  eteff = false;
+  const Bool_t  dispeff = false;
+  const Bool_t  hteff = true;
+
+  const UInt_t  start = 0;
+  const UInt_t  end   = 0;
+  const TString infile = Form("input/DATA/2017/HLT_CHECK/%s/hltdump-%s.root",dataset.Data(),era.Data());
+  const TString outdir = Form("HLT_Golden_%s_%s",dataset.Data(),era.Data());
   const TString runs = "noruns.txt";
-  const Bool_t  isoph = true;
-  const Bool_t  isidL = false;
+  const Bool_t  isoph = false;
+  const Bool_t  isidL = true;
   const Bool_t  iser  = true;
   const Bool_t  applyht = false;
   const Float_t htcut = 400.f;
-  const Bool_t  applyphdenom = true;
-  const Bool_t  applylast = false;
-  const Bool_t  apply2last = true;
-  const Bool_t  applyphpt = true;
 
-  HLTPlots plots(infile,outdir,runs,isoph,isidL,iser,applyht,htcut,applyphdenom,applylast,apply2last,applyphpt);
+  HLTPlots plots(infile,start,end,outdir,runs,isoph,isidL,iser,applyht,htcut,eteff,dispeff,hteff);
   plots.DoPlots();
 
-  plots.DoOverplot();
+  //  plots.DoOverplot();
 }
