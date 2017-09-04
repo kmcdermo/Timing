@@ -8,7 +8,7 @@ inline float getcgrav(int lamb, const float ctau)
 
 void gencgrav()
 {
-  std::vector<float> ctaus = {0.1,10,200,400,800,1000,1200}; // cm
+  std::vector<float> ctaus = {0.1,10,200,400,600,800,1000,1200}; // cm
   std::vector<int>   lambs = {100,150,200,250,300,350,400}; // tev
 
   for (auto lamb : lambs)
