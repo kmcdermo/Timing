@@ -44,7 +44,7 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
   triggerObjectsToken = consumes<std::vector<pat::TriggerObjectStandAlone> > (triggerObjectsTag);
 
   //  read in from a stream the trigger paths for saving
-  if (file_exists(inputPaths))
+  if (Config::file_exists(inputPaths))
   {
     std::fstream pathStream;
     pathStream.open(inputPaths.c_str(),std::ios::in);
@@ -60,7 +60,7 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
   } // check to make sure text file exists
 
   // read in from a stream the hlt objects/labels to match to
-  if (file_exists(inputFilters))
+  if (Config::file_exists(inputFilters))
   {
     std::fstream filterStream;
     filterStream.open(inputFilters.c_str(),std::ios::in);
@@ -151,10 +151,10 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   const CaloSubdetectorGeometry * endcapGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
   // do some prepping of objects
-  HLTDump::PrepJets(jetsH,jets);
+  oot::PrepJets(jetsH,jets,jetpTmin);
 
-  std::vector<PatPhoton> photons;
-  HLTDump::PrepPhotons(photonsH,ootPhotonsH,photons);
+  std::vector<oot::Photon> photons;
+  oot::PrepPhotons(photonsH,ootPhotonsH,photons,phpTmin);
 
   ///////////////////////////
   //                       //
@@ -312,7 +312,7 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (nphotons > 0) HLTDump::InitializeRecoPhotonBranches();
 
     int iph = 0;
-    for (std::vector<PatPhoton>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
+    for (std::vector<oot::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
     {
       // from ootPhoton collection
       phisOOT[iph] = phiter->isOOT_;
@@ -351,9 +351,9 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       // PF Isolations
       const float sceta = std::abs(phsceta[iph]);
-      phChgIso[iph] = std::max(phiter->photon_.chargedHadronIso() - (rho * HLTDump::GetChargedHadronEA(sceta)),0.f);
-      phNeuIso[iph] = std::max(phiter->photon_.neutralHadronIso() - (rho * HLTDump::GetNeutralHadronEA(sceta)),0.f);
-      phIso   [iph] = std::max(phiter->photon_.photonIso()        - (rho * HLTDump::GetGammaEA        (sceta)),0.f);
+      phChgIso[iph] = std::max(phiter->photon_.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
+      phNeuIso[iph] = std::max(phiter->photon_.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);
+      phIso   [iph] = std::max(phiter->photon_.photonIso()        - (rho * oot::GetGammaEA        (sceta)),0.f);
 
       // PF Cluster Isolations
       phPFClEcalIso[iph] = phiter->photon_.ecalPFClusterIso();
@@ -424,57 +424,9 @@ void HLTDump::PrepTriggerObjects()
 {
   for (auto& triggerObjects : triggerObjectsByFilter)
   {
-    std::sort(triggerObjects.begin(),triggerObjects.end(),sortByTrigObjPt);
+    std::sort(triggerObjects.begin(),triggerObjects.end(),oot::sortByPt);
   }
 }
-
-void HLTDump::PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::vector<pat::Jet> & jets)
-{
-  if (jetsH.isValid()) // standard handle check
-  {
-    for (const auto& jet : *jetsH)
-    {
-      if (jet.pt() > jetpTmin) jets.push_back(jet);
-    }
-
-    std::sort(jets.begin(),jets.end(),sortByJetPt);
-  }
-}  
-
-void HLTDump::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
-			  const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
-			  std::vector<PatPhoton> & photons)
-{
-  if (photonsH.isValid()) // standard handle check
-  {
-    int iph = 0;
-    photons.resize(photonsH->size());
-    for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter)
-    {
-      photons[iph].photon_ = *phiter;
-      photons[iph].isOOT_  = false;
-      iph++;
-    }
-  }
-
-  if (ootPhotonsH.isValid()) // standard handle check
-  {
-    int iph = photons.size();
-    photons.resize(photons.size()+ootPhotonsH->size());
-    for (std::vector<pat::Photon>::const_iterator phiter = ootPhotonsH->begin(); phiter != ootPhotonsH->end(); ++phiter)
-    {
-      photons[iph].photon_ = *phiter;
-      photons[iph].isOOT_  = true;
-      iph++;
-    }
-  }
-
-  std::sort(photons.begin(),photons.end(),sortByPhotonPt);
-  photons.erase(std::remove_if(photons.begin(),photons.end(),
-			       [=](const PatPhoton& photon)
-			       { return photon.photon_.pt()<phpTmin; }
-			       ),photons.end());
-}  
 
 void HLTDump::HLTToPATPhotonMatching(const int iph)
 {
@@ -485,49 +437,13 @@ void HLTDump::HLTToPATPhotonMatching(const int iph)
       const pat::TriggerObjectStandAlone & triggerObject = triggerObjectsByFilter[ifilter][iobject];
       if (std::abs(triggerObject.pt()-phpt[iph])/phpt[iph] < pTres)
       {
-	if (deltaR(phphi[iph],pheta[iph],triggerObject.phi(),triggerObject.eta()) < dRmin)
+	if (Config::deltaR(phphi[iph],pheta[iph],triggerObject.phi(),triggerObject.eta()) < dRmin)
 	{
 	  phIsHLTMatched[iph][ifilter] = true;
 	}
       }
     }
   }
-}
-
-float HLTDump::GetChargedHadronEA(const float eta)
-{
-  if      (eta <  1.0)                  return 0.0360;
-  else if (eta >= 1.0   && eta < 1.479) return 0.0377;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0306;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.0283;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.0254;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.0217;
-  else if (eta >= 2.4)                  return 0.0167;
-  else                                  return 0.;
-}
-
-float HLTDump::GetNeutralHadronEA(const float eta) 
-{
-  if      (eta <  1.0)                  return 0.0597;
-  else if (eta >= 1.0   && eta < 1.479) return 0.0807;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0629;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.0197;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.0184;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.0284;
-  else if (eta >= 2.4)                  return 0.0591;
-  else                                  return 0.;
-}
-
-float HLTDump::GetGammaEA(const float eta) 
-{
-  if      (eta <  1.0)                  return 0.1210;
-  else if (eta >= 1.0   && eta < 1.479) return 0.1107;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0699;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.1056;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.1457;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.1719;
-  else if (eta >= 2.4)                  return 0.1998;
-  else                                  return 0.;
 }
 
 void HLTDump::InitializeTriggerBranches()

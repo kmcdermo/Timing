@@ -70,29 +70,6 @@
 // Common types
 #include "CommonTypes.h"
 
-struct PatPhoton
-{
-  pat::Photon photon_;
-  bool isOOT_;
-};
-
-inline bool file_exists(const std::string & filename){std::fstream input(filename.c_str()); return (bool)input;}
-
-inline bool sortByTrigObjPt(const pat::TriggerObjectStandAlone & trigobj1, const pat::TriggerObjectStandAlone & trigobj2)
-{
-  return trigobj1.pt()>trigobj2.pt();
-}
-
-inline bool sortByJetPt(const pat::Jet & jet1, const pat::Jet & jet2)
-{
-  return jet1.pt()>jet2.pt();
-}
-
-inline bool sortByPhotonPt(const PatPhoton & ph1, const PatPhoton & ph2)
-{
-  return ph1.photon_.pt()>ph2.photon_.pt();
-}
-
 class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
  public:
@@ -100,15 +77,8 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   ~HLTDump();
 
   void PrepTriggerObjects();
-  void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::vector<pat::Jet> & jets);
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
-		   const edm::Handle<std::vector<pat::Photon> > & ootphotonsH, 
-		   std::vector<PatPhoton> & photons);
   
   void HLTToPATPhotonMatching(const int iph);
-  float GetChargedHadronEA(const float);
-  float GetNeutralHadronEA(const float);
-  float GetGammaEA        (const float);
 
   void InitializeTriggerBranches();
   void ClearTriggerObjectBranches();
