@@ -1,6 +1,6 @@
-inline float getcgrav(int lamb, const float ctau)
+inline float getcgrav(const int lamb, const float ctau)
 {
-  return std::sqrt(ctau)*(1.561*std::sqrt(lamb)-5.461);
+  return std::sqrt(ctau)*(-10.7968+3.51482*std::pow(lamb,0.3871));
 }
 
 void gencgrav()

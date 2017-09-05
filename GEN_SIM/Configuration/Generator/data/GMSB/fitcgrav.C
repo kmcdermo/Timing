@@ -1,4 +1,4 @@
-static const std::vector<Color_t> colors = {kRed+1,kGreen+1,kMagenta,kOrange+1,kAzure+10,kBlack,kYellow-7,kViolet-1,kYellow+3};
+static const std::vector<Color_t> colors = {kRed+1,kGreen+1,kMagenta,kOrange+1,kAzure+10,kYellow-7,kViolet-1,kBlack,kYellow+3};
   
 struct lcg
 {
@@ -8,21 +8,39 @@ struct lcg
 
 typedef std::vector<lcg> vlcg;
 
-void fitGraph(TGraph *& graph, TF1 *& fit, const int i)
+void fitGraph(TGraph *& graph, TF1 *& fit, const int i, const TString & fitname)
 {
   Double_t minx,miny,maxx,maxy;
   graph->GetPoint(0,minx,miny);
   graph->GetPoint(graph->GetN()-1,maxx,maxy);
  
-  TFormula form("linear","[0]*x+[1]");
-  fit  = new TF1(Form("linear_fit_%i",i),"linear",minx,maxx);
-  fit->SetParName(0,"Slope"); 
-  fit->SetParameter(0,10.f);
-  fit->SetParName(1,"Intercept"); 
-  fit->SetParameter(1,0.f);
-  fit->SetLineColor(colors[i]);
+  if (fitname.Contains("linear",TString::kExact))
+  {
+    TFormula form(fitname.Data(),"[0]*x+[1]");
+    fit  = new TF1(Form("%s_fit_%i",fitname.Data(),i),fitname.Data(),minx,maxx);
+    fit->SetParName(0,"Slope"); 
+    fit->SetParameter(0,10.f);
+    fit->SetParName(1,"Intercept"); 
+    fit->SetParameter(1,0.f);
+  }
+  else if (fitname.Contains("power",TString::kExact))
+  { 
+    TFormula form(fitname.Data(),"[0]+[1]*x**[2]");
+    fit  = new TF1(Form("%s_fit_%i",fitname.Data(),i),fitname.Data(),minx,maxx);
+    fit->SetParName(0,"Intercept"); 
+    fit->SetParameter(0,0.f);
+    fit->SetParName(1,"Scale"); 
+    fit->SetParameter(1,1.f);
+    fit->SetParName(2,"Power"); 
+    fit->SetParameter(2,1.f);
+  }
+  else 
+  {
+    std::cerr << "FIT NAME NOT ACCEPTED: " << fitname.Data() << std::endl;
+  }
 
-  graph->Fit(fit->GetName(),"RBQ");
+  fit->SetLineColor(colors[i]);
+  graph->Fit(fit->GetName(),"RB");
 }  
 
 void fitcgrav()
@@ -53,8 +71,7 @@ void fitcgrav()
     i++; 
   }
 
-  TCanvas * canv = new TCanvas(); canv->cd();
-  TLegend * leg = new TLegend(0.6,0.2,0.85,0.45);
+  Double_t max = -1;
   i = 0;
   for (auto&& param : params)
   {
@@ -62,10 +79,19 @@ void fitcgrav()
     {
       auto&& point = param.second[j];
       graphs[i]->SetPoint(j,std::sqrt(1.973e-14/point.width),point.cgrav); // 1.973e-34 = hbar*c in GeV * cm
+      if (point.cgrav > max) max = point.cgrav;
     }
+    i++;
+  }
 
+  TCanvas * canv = new TCanvas(); canv->cd();
+  TLegend * leg = new TLegend(0.2,0.6,0.45,0.85);
+  i = 0;
+  for (auto&& param : params)
+  {
+    graphs[i]->SetMaximum(max*1.05);
     graphs[i]->Draw(i>0?"P same":"AP");
-    fitGraph(graphs[i],fits[i],i);
+    fitGraph(graphs[i],fits[i],i,"linear");
     leg->AddEntry(graphs[i],Form("#Lambda: %i, m: %4.2f, b: %5.2f",param.first,fits[i]->GetParameter(0),fits[i]->GetParameter(1)),"lp");
 
     i++;
@@ -76,7 +102,7 @@ void fitcgrav()
   delete leg;
 
   TGraph * graph = new TGraph(params.size());
-  graph->SetTitle("#alpha vs. #sqrt{#Lambda};#sqrt{#Lambda};#alpha");
+  graph->SetTitle("#alpha vs. #Lambda;#Lambda;#alpha");
   graph->SetName("graph_fit");
   graph->SetMarkerColor(colors[i]);
   graph->SetLineColor(colors[i]);
@@ -85,14 +111,16 @@ void fitcgrav()
   i = 0;
   for (auto&& param : params)
   {
-    graph->SetPoint(i,std::sqrt(param.first),fits[i]->GetParameter(0));
+    graph->SetPoint(i,param.first,fits[i]->GetParameter(0));
     i++;
   }
   graph->Draw("AP");
 
   gStyle->SetOptFit(1);
+  gStyle->SetStatX(0.5);
+  gStyle->SetStatY(0.85);
   TF1 * fit;
-  fitGraph(graph,fit,i);
+  fitGraph(graph,fit,i,"power");
 
   canv->SaveAs("alpha_fit.png");
   delete fit;
