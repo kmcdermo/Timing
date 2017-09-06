@@ -1,4 +1,4 @@
-#include "ZeeTnPTree.h"
+#include "Timing/TimingAnalyzer/plugins/ZeeTnPTree.hh"
 
 ZeeTnPTree::ZeeTnPTree(const edm::ParameterSet& iConfig): 
   // triggers
@@ -54,26 +54,22 @@ void ZeeTnPTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // ELECTRONS + ID
   edm::Handle<edm::ValueMap<bool> > electronVetoIdMapH;
   iEvent.getByToken(electronVetoIdMapToken, electronVetoIdMapH);
-  edm::ValueMap<bool> electronVetoIdMap = *electronVetoIdMapH;
 
   edm::Handle<edm::ValueMap<bool> > electronLooseIdMapH;
   iEvent.getByToken(electronLooseIdMapToken, electronLooseIdMapH);
-  edm::ValueMap<bool> electronLooseIdMap = *electronLooseIdMapH;
 
   edm::Handle<edm::ValueMap<bool> > electronMediumIdMapH;
   iEvent.getByToken(electronMediumIdMapToken, electronMediumIdMapH);
-  edm::ValueMap<bool> electronMediumIdMap = *electronMediumIdMapH;
 
   edm::Handle<edm::ValueMap<bool> > electronTightIdMapH;
   iEvent.getByToken(electronTightIdMapToken, electronTightIdMapH);
-  edm::ValueMap<bool> electronTightIdMap = *electronTightIdMapH;
 
   edm::Handle<std::vector<pat::Electron> > electronsH;
   iEvent.getByToken(electronsToken, electronsH);
   std::vector<pat::Electron> electrons = *electronsH;
 
   // Prep electrons
-  ZeeTnPTree::PrepElectrons(electronsH,electronVetoIdMap,electronLooseIdMap,electronMediumIdMap,electronTightIdMap,electrons);
+  oot::PrepElectrons(electronsH,electronVetoIdMapH,electronLooseIdMapH,electronMediumIdMapH,electronTightIdMapH,electrons);
 
   // recHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
@@ -189,11 +185,11 @@ void ZeeTnPTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	} // end check over seed id 
       } // end loop over all rec hits in SC
     } // end check over valid SC
-    if (saveElectron) tagelectrons.push_back(i); // save index of tag electron
+    if (saveElectron) tagelectrons.emplace_back(i); // save index of tag electron
   } // end loop over all electrons
 
   // Now build the tnppairs
-  tuplevec tnpelectrons;
+  triplevec tnpelectrons;
   for (std::size_t i = 0; i < tagelectrons.size(); i++)
   {
     // get the electron
@@ -243,7 +239,7 @@ void ZeeTnPTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       TLorentzVector el2vec; el2vec.SetPtEtaPhiE(   electron.pt(),    electron.eta(),    electron.phi(),    electron.energy());
       el1vec += el2vec;
       
-      tnpelectrons.push_back(std::make_tuple(tagelectrons[i],j,std::abs(el1vec.M()-91.1876))); // save diff from Z mass
+      tnpelectrons.emplace_back(std::make_tuple(tagelectrons[i],j,std::abs(el1vec.M()-91.1876))); // save diff from Z mass
     } // end loop over potential probes
   } // end loop over tags
 
@@ -251,7 +247,7 @@ void ZeeTnPTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   if (tnpelectrons.size()>0)
   {
     // For now, get the best pair
-    auto best = std::min_element(tnpelectrons.begin(),tnpelectrons.end(),minimizeByZmass); // keep the lowest! --> returns pointer to lowest element
+    auto best = std::min_element(tnpelectrons.begin(),tnpelectrons.end(),oot::minimizeByZmass); // keep the lowest! --> returns pointer to lowest element
 
     // Tag is el1
     pat::Electron el1 = electrons[std::get<0>(*best)];
@@ -286,7 +282,7 @@ void ZeeTnPTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     const GlobalPoint& el1recHitPos = el1isEB ? barrelGeometry->getGeometry(el1seedDetId)->getPosition() : endcapGeometry->getGeometry(el1seedDetId)->getPosition();
     EcalRecHitCollection::const_iterator el1recHit = el1isEB ? recHitsEB->find(el1seedDetId) : recHitsEE->find(el1seedDetId);
     
-    // push back the values
+    // emplace back the values
     el1seedX     = el1recHitPos.x();
     el1seedY     = el1recHitPos.y();
     el1seedZ     = el1recHitPos.z();
@@ -330,7 +326,7 @@ void ZeeTnPTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     const GlobalPoint& el2recHitPos = el2isEB ? barrelGeometry->getGeometry(el2seedDetId)->getPosition() : endcapGeometry->getGeometry(el2seedDetId)->getPosition();
     EcalRecHitCollection::const_iterator el2recHit = el2isEB ? recHitsEB->find(el2seedDetId) : recHitsEE->find(el2seedDetId);
 
-    // push back the values
+    // emplace back the values
     el2seedX     = el2recHitPos.x();
     el2seedY     = el2recHitPos.y();
     el2seedZ     = el2recHitPos.z();
@@ -359,53 +355,6 @@ void ZeeTnPTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // fill the tree!
   tree->Fill();    
 }    
-
-void ZeeTnPTree::PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
-			       const edm::ValueMap<bool> & electronVetoIdMap, 
-			       const edm::ValueMap<bool> & electronLooseIdMap, 
-			       const edm::ValueMap<bool> & electronMediumIdMap, 
-			       const edm::ValueMap<bool> & electronTightIdMap, 
-			       std::vector<pat::Electron> & electrons)
-{
-  if (electronsH.isValid()) // standard handle check
-  {
-    // create and initialize temp id-value vector
-    std::vector<std::vector<pat::Electron::IdPair> > idpairs(electrons.size());
-    for (size_t iel = 0; iel < idpairs.size(); iel++)
-    {
-      idpairs[iel].resize(4);
-      idpairs[iel][0] = {"veto"  ,false};
-      idpairs[iel][1] = {"loose" ,false};
-      idpairs[iel][2] = {"medium",false};
-      idpairs[iel][3] = {"tight" ,false};
-    }
-
-    int ielH = 0; // dumb counter because iterators only work with VID
-    for (std::vector<pat::Electron>::const_iterator phiter = electronsH->begin(); phiter != electronsH->end(); ++phiter) // loop over electron vector
-    {
-      // Get the VID of the electron
-      const edm::Ptr<pat::Electron> electronPtr(electronsH, phiter - electronsH->begin());
-
-      // store VID in temp struct
-      // veto < loose < medium < tight
-      if (electronVetoIdMap  [electronPtr]) idpairs[ielH][0].second = true;
-      if (electronLooseIdMap [electronPtr]) idpairs[ielH][1].second = true;
-      if (electronMediumIdMap[electronPtr]) idpairs[ielH][2].second = true;
-      if (electronTightIdMap [electronPtr]) idpairs[ielH][3].second = true;
-      
-      ielH++;
-    }
-    
-    // set the ID-value for each electron in other collection
-    for (size_t iel = 0; iel < electrons.size(); iel++)
-    {
-      electrons[iel].setElectronIDs(idpairs[iel]);
-    }
-    
-    // now finally sort vector by pT
-    std::sort(electrons.begin(),electrons.end(),sortByElectronPt);
-  }
-}  
 
 void ZeeTnPTree::beginJob() 
 {
@@ -494,11 +443,11 @@ void ZeeTnPTree::endJob() {}
 void ZeeTnPTree::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
 {
   // triggers for the Analysis -- all unprescaled till RunH
-  triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_L1JetTauSeeded_v");
-  triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v");
-  triggerPathsVector.push_back("HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v");
-  triggerPathsVector.push_back("HLT_DoubleEle33_CaloIdL_MW_v");
-  triggerPathsVector.push_back("HLT_DoubleEle37_Ele27_CaloIdL_GsfTrkIdVL_v");
+  triggerPathsVector.emplace_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_L1JetTauSeeded_v");
+  triggerPathsVector.emplace_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v");
+  triggerPathsVector.emplace_back("HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v");
+  triggerPathsVector.emplace_back("HLT_DoubleEle33_CaloIdL_MW_v");
+  triggerPathsVector.emplace_back("HLT_DoubleEle37_Ele27_CaloIdL_GsfTrkIdVL_v");
 
   HLTConfigProvider hltConfig;
   bool changedConfig = false;

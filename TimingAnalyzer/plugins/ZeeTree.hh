@@ -1,3 +1,6 @@
+#ifndef __ZeeTree__
+#define __ZeeTree__
+
 // basic C++ headers
 #include <iostream>
 #include <memory>
@@ -8,8 +11,6 @@
 #include <cmath>
 #include <algorithm>
 #include <tuple>
-
-#include "CommonTypes.h"
 
 // FWCore
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -53,19 +54,7 @@
 #include "TLorentzVector.h"
 #include "TPRegexp.h"
 
-typedef std::tuple<int, int, float> triple;
-typedef std::vector<triple> triplevec;
-typedef std::vector<std::pair<DetId,float> > DetIdPairVec;
-
-inline bool minimizeByZmass(const triple& elpair1, const triple& elpair2)
-{
-  return std::get<2>(elpair1)<std::get<2>(elpair2);
-}
-
-inline bool sortByElectronPt(const pat::Electron& el1, const pat::Electron& el2)
-{
-  return el1.pt()>el2.pt();
-}
+#include "Timing/TimingAnalyzer/plugins/CommonUtils.hh"
 
 class ZeeTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
@@ -83,9 +72,6 @@ private:
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
   
-  void PrepElectrons(const edm::Handle<std::vector<pat::Electron> >&, const edm::ValueMap<bool>&, const edm::ValueMap<bool>&, 
-		     const edm::ValueMap<bool>&, const edm::ValueMap<bool> &, std::vector<pat::Electron>&);
-   
   // Trigger
   const edm::InputTag triggerResultsTag;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
@@ -173,3 +159,5 @@ private:
   float genel1E,genel1p,genel1pt,genel1eta,genel1phi;
   float genel2E,genel2p,genel2pt,genel2eta,genel2phi;
 };
+
+#endif

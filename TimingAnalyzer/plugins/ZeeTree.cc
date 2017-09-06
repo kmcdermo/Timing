@@ -1,4 +1,4 @@
-#include "ZeeTree.h"
+#include "Timing/TimingAnalyzer/plugins/ZeeTree.hh"
 
 ZeeTree::ZeeTree(const edm::ParameterSet& iConfig): 
   ///////////// TRIGGER and filter info INFO
@@ -70,26 +70,22 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // ELECTRONS + ID
   edm::Handle<edm::ValueMap<bool> > electronVetoIdMapH;
   iEvent.getByToken(electronVetoIdMapToken, electronVetoIdMapH);
-  edm::ValueMap<bool> electronVetoIdMap = *electronVetoIdMapH;
 
   edm::Handle<edm::ValueMap<bool> > electronLooseIdMapH;
   iEvent.getByToken(electronLooseIdMapToken, electronLooseIdMapH);
-  edm::ValueMap<bool> electronLooseIdMap = *electronLooseIdMapH;
 
   edm::Handle<edm::ValueMap<bool> > electronMediumIdMapH;
   iEvent.getByToken(electronMediumIdMapToken, electronMediumIdMapH);
-  edm::ValueMap<bool> electronMediumIdMap = *electronMediumIdMapH;
 
   edm::Handle<edm::ValueMap<bool> > electronTightIdMapH;
   iEvent.getByToken(electronTightIdMapToken, electronTightIdMapH);
-  edm::ValueMap<bool> electronTightIdMap = *electronTightIdMapH;
 
   edm::Handle<std::vector<pat::Electron> > electronsH;
   iEvent.getByToken(electronsToken, electronsH);
   std::vector<pat::Electron> electrons = *electronsH;
 
   // Prep electrons
-  ZeeTree::PrepElectrons(electronsH,electronVetoIdMap,electronLooseIdMap,electronMediumIdMap,electronTightIdMap,electrons);
+  oot::PrepElectrons(electronsH,electronVetoIdMapH,electronLooseIdMapH,electronMediumIdMapH,electronTightIdMapH,electrons);
 
   // recHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
@@ -199,7 +195,7 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	} 
       }
     }
-    if (saveElectron) goodelectrons.push_back((*eliter));   
+    if (saveElectron) goodelectrons.emplace_back((*eliter));   
   }
 
   // Z matching + filling of variables
@@ -220,7 +216,7 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  TLorentzVector el1vec; el1vec.SetPtEtaPhiE(el1_tmp.pt(), el1_tmp.eta(), el1_tmp.phi(), el1_tmp.energy());
 	  TLorentzVector el2vec; el2vec.SetPtEtaPhiE(el2_tmp.pt(), el2_tmp.eta(), el2_tmp.phi(), el2_tmp.energy());
 	  el1vec += el2vec;
-	  invmasspairs.push_back(std::make_tuple(i,j,std::abs(el1vec.M()-91.1876))); 
+	  invmasspairs.emplace_back(std::make_tuple(i,j,std::abs(el1vec.M()-91.1876))); 
 	}
       }
     }
@@ -233,7 +229,7 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (invmasspairs.size()>0)
   {
     // Get the best pair (if it exists)
-    auto best = std::min_element(invmasspairs.begin(),invmasspairs.end(),minimizeByZmass); // keep the lowest! --> returns pointer to lowest element
+    auto best = std::min_element(invmasspairs.begin(),invmasspairs.end(),oot::minimizeByZmass); // keep the lowest! --> returns pointer to lowest element
     pat::Electron el1 = goodelectrons[std::get<0>(*best)];
     pat::Electron el2 = goodelectrons[std::get<1>(*best)];
   
@@ -287,16 +283,16 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	// get the position
 	const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
 
-	// push back the values
-	el1rhXs.push_back(recHitPos.x());
-	el1rhYs.push_back(recHitPos.y());
-	el1rhZs.push_back(recHitPos.z());
-	el1rhEs.push_back(recHit->energy());
-	el1rhtimes.push_back(recHit->time());	 
-	el1rhids.push_back(int(rhID));
-	el1rhOOTs.push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
-	el1rhgain1s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
-	el1rhgain6s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+	// emplace back the values
+	el1rhXs.emplace_back(recHitPos.x());
+	el1rhYs.emplace_back(recHitPos.y());
+	el1rhZs.emplace_back(recHitPos.z());
+	el1rhEs.emplace_back(recHit->energy());
+	el1rhtimes.emplace_back(recHit->time());	 
+	el1rhids.emplace_back(int(rhID));
+	el1rhOOTs.emplace_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
+	el1rhgain1s.emplace_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
+	el1rhgain6s.emplace_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
 	
 	// extra info from the SEED
 	if (seedDetId.rawId() == recHitId) 
@@ -348,16 +344,16 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	// get the position
 	const auto recHitPos = isEB ? barrelGeometry->getGeometry(recHitId)->getPosition() : endcapGeometry->getGeometry(recHitId)->getPosition();
 
-	// push back the values
-	el2rhXs.push_back(recHitPos.x());
-	el2rhYs.push_back(recHitPos.y());
-	el2rhZs.push_back(recHitPos.z());
-	el2rhEs.push_back(recHit->energy());
-	el2rhtimes.push_back(recHit->time());	 
-	el2rhids.push_back(int(rhID));
-	el2rhOOTs.push_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
-	el2rhgain1s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
-	el2rhgain6s.push_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
+	// emplace back the values
+	el2rhXs.emplace_back(recHitPos.x());
+	el2rhYs.emplace_back(recHitPos.y());
+	el2rhZs.emplace_back(recHitPos.z());
+	el2rhEs.emplace_back(recHit->energy());
+	el2rhtimes.emplace_back(recHit->time());	 
+	el2rhids.emplace_back(int(rhID));
+	el2rhOOTs.emplace_back(recHit->checkFlag(EcalRecHit::kOutOfTime));
+	el2rhgain1s.emplace_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain1));
+	el2rhgain6s.emplace_back(recHit->checkFlag(EcalRecHit::kHasSwitchToGain6));
 	
 	// extra info from the SEED
 	if (seedDetId.rawId() == recHitId) 
@@ -505,53 +501,6 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   tree->Fill();    
 }    
 
-void ZeeTree::PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
-			    const edm::ValueMap<bool> & electronVetoIdMap, 
-			    const edm::ValueMap<bool> & electronLooseIdMap, 
-			    const edm::ValueMap<bool> & electronMediumIdMap, 
-			    const edm::ValueMap<bool> & electronTightIdMap, 
-			    std::vector<pat::Electron> & electrons)
-{
-  if (electronsH.isValid()) // standard handle check
-  {
-    // create and initialize temp id-value vector
-    std::vector<std::vector<pat::Electron::IdPair> > idpairs(electrons.size());
-    for (size_t iph = 0; iph < idpairs.size(); iph++)
-    {
-      idpairs[iph].resize(4);
-      idpairs[iph][0] = {"veto"  ,false};
-      idpairs[iph][1] = {"loose" ,false};
-      idpairs[iph][2] = {"medium",false};
-      idpairs[iph][3] = {"tight" ,false};
-    }
-
-    int iphH = 0; // dumb counter because iterators only work with VID
-    for (std::vector<pat::Electron>::const_iterator phiter = electronsH->begin(); phiter != electronsH->end(); ++phiter) // loop over electron vector
-    {
-      // Get the VID of the electron
-      const edm::Ptr<pat::Electron> electronPtr(electronsH, phiter - electronsH->begin());
-
-      // store VID in temp struct
-      // veto < loose < medium < tight
-      if (electronVetoIdMap  [electronPtr]) idpairs[iphH][0].second = true;
-      if (electronLooseIdMap [electronPtr]) idpairs[iphH][1].second = true;
-      if (electronMediumIdMap[electronPtr]) idpairs[iphH][2].second = true;
-      if (electronTightIdMap [electronPtr]) idpairs[iphH][3].second = true;
-      
-      iphH++;
-    }
-    
-    // set the ID-value for each electron in other collection
-    for (size_t iph = 0; iph < electrons.size(); iph++)
-    {
-      electrons[iph].setElectronIDs(idpairs[iph]);
-    }
-    
-    // now finally sort vector by pT
-    std::sort(electrons.begin(),electrons.end(),sortByElectronPt);
-  }
-}  
-
 void ZeeTree::beginJob() 
 {
   edm::Service<TFileService> fs;
@@ -676,11 +625,11 @@ void ZeeTree::endJob() {}
 void ZeeTree::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
 {
   // triggers for the Analysis
-  triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_L1JetTauSeeded_v");
-  triggerPathsVector.push_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v");
-  triggerPathsVector.push_back("HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_v");
-  triggerPathsVector.push_back("HLT_DoubleEle33_CaloIdL_MW_v");
-  triggerPathsVector.push_back("HLT_DoubleEle37_Ele27_CaloIdL_GsfTrkIdVL");
+  triggerPathsVector.emplace_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_L1JetTauSeeded_v");
+  triggerPathsVector.emplace_back("HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v");
+  triggerPathsVector.emplace_back("HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_v");
+  triggerPathsVector.emplace_back("HLT_DoubleEle33_CaloIdL_MW_v");
+  triggerPathsVector.emplace_back("HLT_DoubleEle37_Ele27_CaloIdL_GsfTrkIdVL");
 
   HLTConfigProvider hltConfig;
   bool changedConfig = false;

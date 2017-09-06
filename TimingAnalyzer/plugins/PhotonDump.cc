@@ -1,4 +1,4 @@
-#include "PhotonDump.h"
+#include "Timing/TimingAnalyzer/plugins/PhotonDump.hh"
 
 PhotonDump::PhotonDump(const edm::ParameterSet& iConfig): 
   // dR matching criteria
@@ -6,11 +6,10 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   pTres(iConfig.existsAs<double>("pTres") ? iConfig.getParameter<double>("pTres") : 0.5),
 
   // triggers
-  dumpTriggerMenu  (iConfig.existsAs<bool>("dumpTriggerMenu")     ? iConfig.getParameter<bool>("dumpTriggerMenu") : false),
   inputPaths       (iConfig.existsAs<std::string>("inputPaths")   ? iConfig.getParameter<std::string>("inputPaths") : ""),
   inputFilters     (iConfig.existsAs<std::string>("inputFilters") ? iConfig.getParameter<std::string>("inputFilters") : ""),
   triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
-  triggerEventTag  (iConfig.getParameter<edm::InputTag>("triggerEvent")),
+  triggerObjectsTag(iConfig.getParameter<edm::InputTag>("triggerObjects")),
 
   // vertexes
   verticesTag(iConfig.getParameter<edm::InputTag>("vertices")),
@@ -25,10 +24,16 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   jetsTag(iConfig.getParameter<edm::InputTag>("jets")),  
 
   // photons + ids
-  photonLooseIdMapTag (iConfig.getParameter<edm::InputTag>("loosePhotonID")),  
-  photonMediumIdMapTag(iConfig.getParameter<edm::InputTag>("mediumPhotonID")),  
-  photonTightIdMapTag (iConfig.getParameter<edm::InputTag>("tightPhotonID")),  
-  photonsTag          (iConfig.getParameter<edm::InputTag>("photons")),  
+  photonsTag          (iConfig.getParameter<edm::InputTag>("photons")),
+  photonLooseIdMapTag (iConfig.getParameter<edm::InputTag>("photonLooseID")),
+  photonMediumIdMapTag(iConfig.getParameter<edm::InputTag>("photonMediumID")),
+  photonTightIdMapTag (iConfig.getParameter<edm::InputTag>("photonTightID")),
+
+  // ootPhotons + ids
+  ootPhotonsTag          (iConfig.getParameter<edm::InputTag>("ootPhotons")),
+  ootPhotonLooseIdMapTag (iConfig.getParameter<edm::InputTag>("ootPhotonLooseID")),
+  ootPhotonMediumIdMapTag(iConfig.getParameter<edm::InputTag>("ootPhotonMediumID")),
+  ootPhotonTightIdMapTag (iConfig.getParameter<edm::InputTag>("ootPhotonTightID")),
   
   //recHits
   dumpRHs     (iConfig.existsAs<bool>("dumpRHs") ? iConfig.getParameter<bool>("dumpRHs") : false),
@@ -46,42 +51,14 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   usesResource("TFileService");
 
   // triggers
-  triggerResultsToken = consumes<edm::TriggerResults>   (triggerResultsTag);
-  triggerEventToken   = consumes<trigger::TriggerEvent> (triggerEventTag);
+  triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
+  triggerObjectsToken = consumes<std::vector<pat::TriggerObjectStandAlone> > (triggerObjectsTag);
 
   // read in from a stream the trigger paths for saving
-  if (file_exists(inputPaths))
-  {
-    std::fstream pathStream;
-    pathStream.open(inputPaths.c_str(),std::ios::in);
-    int index;
-    std::string path;
-    while (pathStream >> index >> path)
-    {
-      if (path != "") pathNames.push_back(path);
-    }
-    pathStream.close();
-
-    // branch to store trigger info
-    triggerBits.resize(pathNames.size());
-  } // check to make sure text file exists
+  oot::ReadInTriggerNames(inputPaths,pathNames,triggerBits);
 
   // read in from a stream the hlt objects/labels to match to
-  if (file_exists(inputFilters))
-  {
-    std::fstream filterStream;
-    filterStream.open(inputFilters.c_str(),std::ios::in);
-    int index;
-    std::string label;// instance, processName;
-    while (filterStream >> index >> label)
-    {
-      if (label != "") filterTags.push_back(edm::InputTag(label));
-    }
-    filterStream.close();
-
-    // vector of vector of trigger objects
-    triggerObjectsByFilter.resize(filterTags.size());
-  } // check to make sure text file exists
+  oot::ReadInFilterNames(inputFilters,filterNames,triggerObjectsByFilter);
 
   //vertex
   verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
@@ -96,10 +73,19 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   jetsToken = consumes<std::vector<pat::Jet> > (jetsTag);
 
   // photons + ids
+  photonsToken           = consumes<std::vector<pat::Photon> > (photonsTag);
   photonLooseIdMapToken  = consumes<edm::ValueMap<bool> > (photonLooseIdMapTag);
   photonMediumIdMapToken = consumes<edm::ValueMap<bool> > (photonMediumIdMapTag);
   photonTightIdMapToken  = consumes<edm::ValueMap<bool> > (photonTightIdMapTag);
-  photonsToken           = consumes<std::vector<pat::Photon> > (photonsTag);
+
+  // ootPhotons + ids
+  if (not ootPhotonsTag.label().empty())
+  {
+    ootPhotonsToken           = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
+    ootPhotonLooseIdMapToken  = consumes<edm::ValueMap<bool> > (ootPhotonLooseIdMapTag);
+    ootPhotonMediumIdMapToken = consumes<edm::ValueMap<bool> > (ootPhotonMediumIdMapTag);
+    ootPhotonTightIdMapToken  = consumes<edm::ValueMap<bool> > (ootPhotonTightIdMapTag);
+  }
 
   // rechits
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
@@ -128,8 +114,8 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   edm::Handle<edm::TriggerResults> triggerResultsH;
   iEvent.getByToken(triggerResultsToken, triggerResultsH);
 
-  edm::Handle<trigger::TriggerEvent> triggerEventH;
-  iEvent.getByToken(triggerEventToken, triggerEventH);
+  edm::Handle<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsH;
+  iEvent.getByToken(triggerObjectsToken, triggerObjectsH);
 
   // VERTICES
   edm::Handle<std::vector<reco::Vertex> > verticesH;
@@ -146,24 +132,32 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // JETS
   edm::Handle<std::vector<pat::Jet> > jetsH;
   iEvent.getByToken(jetsToken, jetsH);
-  std::vector<pat::Jet> jets = *jetsH;
+  std::vector<pat::Jet> jets; jets.resize(jetsH->size());
 
   // PHOTONS + IDS
-  edm::Handle<edm::ValueMap<bool> > photonLooseIdMapH;
-  iEvent.getByToken(photonLooseIdMapToken, photonLooseIdMapH);
-  edm::ValueMap<bool> photonLooseIdMap = *photonLooseIdMapH;
-
-  edm::Handle<edm::ValueMap<bool> > photonMediumIdMapH;
-  iEvent.getByToken(photonMediumIdMapToken, photonMediumIdMapH);
-  edm::ValueMap<bool> photonMediumIdMap = *photonMediumIdMapH;
-
-  edm::Handle<edm::ValueMap<bool> > photonTightIdMapH;
-  iEvent.getByToken(photonTightIdMapToken, photonTightIdMapH);
-  edm::ValueMap<bool> photonTightIdMap = *photonTightIdMapH;
-
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
-  std::vector<pat::Photon> photons = *photonsH;
+  int phosize = photonsH->size();
+  edm::Handle<edm::ValueMap<bool> > photonLooseIdMapH;
+  iEvent.getByToken(photonLooseIdMapToken, photonLooseIdMapH);
+  edm::Handle<edm::ValueMap<bool> > photonMediumIdMapH;
+  iEvent.getByToken(photonMediumIdMapToken, photonMediumIdMapH);
+  edm::Handle<edm::ValueMap<bool> > photonTightIdMapH;
+  iEvent.getByToken(photonTightIdMapToken, photonTightIdMapH);
+
+  edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
+  edm::Handle<edm::ValueMap<bool> > ootPhotonLooseIdMapH;
+  edm::Handle<edm::ValueMap<bool> > ootPhotonMediumIdMapH;
+  edm::Handle<edm::ValueMap<bool> > ootPhotonTightIdMapH;
+  if (not ootPhotonsToken.isUninitialized())
+  {
+    iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
+    phosize += ootPhotonsH->size();
+    iEvent.getByToken(ootPhotonLooseIdMapToken, ootPhotonLooseIdMapH);
+    iEvent.getByToken(ootPhotonMediumIdMapToken, ootPhotonMediumIdMapH);
+    iEvent.getByToken(ootPhotonTightIdMapToken, ootPhotonTightIdMapH);
+  }
+  std::vector<oot::Photon> photons; photons.reserve(phosize);
 
   // RecHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
@@ -192,8 +186,10 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   }
 
   // do some prepping of objects
-  PhotonDump::PrepJets(jetsH,jets);
-  PhotonDump::PrepPhotons(photonsH,photonLooseIdMap,photonMediumIdMap,photonTightIdMap,photons);
+  oot::PrepJets(jetsH,jets);
+  oot::PrepPhotons(photonsH,photonLooseIdMapH,photonMediumIdMapH,photonTightIdMapH,
+		   ootPhotonsH,ootPhotonLooseIdMapH,ootPhotonMediumIdMapH,ootPhotonTightIdMapH,
+		   photons);
 
   ///////////////////////////
   //                       //
@@ -212,32 +208,23 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   PhotonDump::InitializeTriggerBranches();
   if (triggerResultsH.isValid())
   {
-    for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
+    const edm::TriggerNames &triggerNames = iEvent.triggerNames(*triggerResultsH);
+    for (std::size_t itrig = 0; itrig < triggerNames.size(); itrig++)
     {
-      if (pathIndex[pathNames[ipath]] == -1) continue;	
-      if (triggerResultsH->accept(pathIndex[pathNames[ipath]])) triggerBits[ipath] = true;
+      TString triggerName = triggerNames.triggerName(itrig);
+      for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
+      {
+	if (triggerName.Contains(pathNames[ipath],TString::kExact)) triggerBits[ipath] = triggerResultsH->accept(itrig);
+      } // end loop over user path names
     } // end loop over trigger names
   } // end check over valid TriggerResults
 
-  // store all the trigger objects needed to be checked later
-  if (triggerEventH.isValid())
-  {
-    // adapted from: https://github.com/prbbing/EXOTriggerTutorial/blob/master/TriggerEfficiencyMeasurement/plugins/TriggerEfficiencyAnalyzer.cc
-    // http://cmslxr.fnal.gov/source/DataFormats/HLTReco/interface/TriggerObject.h?v=CMSSW_8_0_24
-    const std::vector<trigger::TriggerObject> & triggerEventObjects = triggerEventH->getObjects();
-    for (std::size_t ifilter = 0; ifilter < filterTags.size(); ifilter++)
-    {
-      const size_t filterIndex = triggerEventH->filterIndex(filterTags[ifilter]);
-      if (filterIndex < triggerEventH->sizeFilters())
-      {
-	const std::vector<uint16_t> & objectKeys = triggerEventH->filterKeys(filterIndex);
-	for (std::size_t ikey = 0; ikey < objectKeys.size(); ikey++)
-	{
-	  triggerObjectsByFilter[ifilter].push_back(triggerEventObjects[objectKeys[ikey]]);
-	} // end loop over matching filter keys
-      } // end check over filter existing!!!
-    } // end loop over n filters by label
-  } // end check over valid TriggerEvent
+  /////////////////
+  //             //
+  // HLT Objects //
+  //             //
+  /////////////////
+  oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,filterNames,triggerObjectsByFilter);
 
   /////////////////////////
   //                     //   
@@ -320,7 +307,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  } // end conditional over neutralino id
 	} // end loop over gen particles
 
-	std::sort(neutralinos.begin(),neutralinos.end(),sortByGenParticlePt);
+	std::sort(neutralinos.begin(),neutralinos.end(),oot::sortByPt);
 
 	nNeutoPhGr = 0; // reuse
 	for (std::vector<reco::GenParticle>::const_iterator gpiter = neutralinos.begin(); gpiter != neutralinos.end(); ++gpiter) // loop over neutralinos
@@ -346,7 +333,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    genN1decayvz = gpiter->daughter(0)->vz();
 	    
 	    // set photon daughter stuff
-	    int phdaughter = (gpiter->daughter(0)->pdgId() == 22)?0:1;
+	    const int phdaughter = (gpiter->daughter(0)->pdgId() == 22)?0:1;
 	    
 	    genph1E    = gpiter->daughter(phdaughter)->energy();
 	    genph1pt   = gpiter->daughter(phdaughter)->pt();
@@ -354,11 +341,11 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    genph1eta  = gpiter->daughter(phdaughter)->eta();
 	    
 	    // check for a reco match!
-	    if (photonsH.isValid()) // standard check
+	    if (photonsH.isValid() || ootPhotonsH.isValid()) // standard check
 	    {
 	      int   iph   = 0;
 	      float mindR = dRmin;
-	      for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
+	      for (std::vector<oot::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
 	      {
 		if (std::abs(phiter->pt()-genph1pt)/genph1pt < pTres)
 		{
@@ -374,7 +361,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    } // end check for reco match
 
 	    // set gravitino daughter stuff
-	    int grdaughter = (gpiter->daughter(0)->pdgId() == 1000039)?0:1;
+	    const int grdaughter = (gpiter->daughter(0)->pdgId() == 1000039)?0:1;
 
 	    gengr1mass = gpiter->daughter(grdaughter)->mass();
 	    gengr1E    = gpiter->daughter(grdaughter)->energy();
@@ -402,7 +389,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    genN2decayvz = gpiter->daughter(0)->vz();
 
 	    // set photon daughter stuff
-	    int phdaughter = (gpiter->daughter(0)->pdgId() == 22)?0:1;
+	    const int phdaughter = (gpiter->daughter(0)->pdgId() == 22)?0:1;
 		
 	    genph2E    = gpiter->daughter(phdaughter)->energy();
 	    genph2pt   = gpiter->daughter(phdaughter)->pt();
@@ -410,11 +397,11 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    genph2eta  = gpiter->daughter(phdaughter)->eta();
 	      
 	    // check for a reco match!
-	    if (photonsH.isValid()) // standard check
+	    if (photonsH.isValid() || ootPhotonsH.isValid()) // standard check
 	    {
 	      int   iph   = 0;
 	      float mindR = dRmin;
-	      for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
+	      for (std::vector<oot::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
 	      {
 		if (std::abs(phiter->pt()-genph2pt)/genph2pt < pTres)
 		{
@@ -430,7 +417,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	    } // end check for reco match
 		
 	    // set gravitino daughter stuff
-	    int grdaughter = (gpiter->daughter(0)->pdgId() == 1000039)?0:1;
+	    const int grdaughter = (gpiter->daughter(0)->pdgId() == 1000039)?0:1;
 
 	    gengr2mass = gpiter->daughter(grdaughter)->mass();
 	    gengr2E    = gpiter->daughter(grdaughter)->energy();
@@ -463,7 +450,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  } // end check over vPions
 	} // end loop over gen particles
 
-	std::sort(vPions.begin(),vPions.end(),sortByGenParticlePt);
+	std::sort(vPions.begin(),vPions.end(),oot::sortByPt);
 
 	for (std::vector<reco::GenParticle>::const_iterator gpiter = vPions.begin(); gpiter != vPions.end(); ++gpiter)
 	{
@@ -484,8 +471,8 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  genvPiondecayvy.push_back(gpiter->daughter(0)->vy());
 	  genvPiondecayvz.push_back(gpiter->daughter(0)->vz());
 	  
-	  int leading    = (gpiter->daughter(0)->pt()>gpiter->daughter(1)->pt())?0:1;
-	  int subleading = (gpiter->daughter(0)->pt()>gpiter->daughter(1)->pt())?1:0;
+	  const int leading    = (gpiter->daughter(0)->pt()>gpiter->daughter(1)->pt())?0:1;
+	  const int subleading = (gpiter->daughter(0)->pt()>gpiter->daughter(1)->pt())?1:0;
 	  
 	  genHVph1E  .push_back(gpiter->daughter(leading)->energy());
 	  genHVph1pt .push_back(gpiter->daughter(leading)->pt());
@@ -498,12 +485,12 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  genHVph2eta.push_back(gpiter->daughter(subleading)->eta());
 	  
 	  // check for a reco match!
-	  if (photonsH.isValid()) // standard check
+	  if (photonsH.isValid() || ootPhotonsH.isValid()) // standard check
 	  {
 	    int   tmpph1 = -9999, tmpph2 = -9999;
 	    int   iph = 0;
 	    float mindR1 = dRmin, mindR2 = dRmin; // at least this much
-	    for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
+	    for (std::vector<oot::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector 
 	    {
 	      const float tmppt  = phiter->pt();
 	      const float tmpphi = phiter->phi();
@@ -672,22 +659,27 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   //              //
   //////////////////
   PhotonDump::ClearRecoPhotonBranches();
-  if (photonsH.isValid()) // standard handle check
+  if (photonsH.isValid() || ootPhotonsH.isValid()) // standard handle check
   {
     nphotons = photons.size();
     if (nphotons > 0) PhotonDump::InitializeRecoPhotonBranches();
 
     int iph = 0;
-    for (std::vector<pat::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
+    for (std::vector<oot::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
     {
+      const pat::Photon & photon = phiter->photon();
+
+      // from ootPhoton collection
+      phisOOT[iph] = phiter->isOOT();
+
       // standard photon branches
-      phE  [iph] = phiter->energy();
-      phpt [iph] = phiter->pt();
-      phphi[iph] = phiter->phi();
-      pheta[iph] = phiter->eta();
+      phE  [iph] = photon.energy();
+      phpt [iph] = photon.pt();
+      phphi[iph] = photon.phi();
+      pheta[iph] = photon.eta();
 
       // check for HLT filter matches!
-      PhotonDump::HLTToPATPhotonMatching(iph);
+      oot::HLTToObjectMatching(triggerObjectsByFilter,phIsHLTMatched,*phiter,iph,pTres,dRmin);
 
       // Check for gen level match
       if (isMC) 
@@ -729,25 +721,25 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	  else if (tmpph1match &&  tmpph2match) phmatch[iph] = 3; // 3 means "I am matched to some photon inside genHVph1match and some photon in genHVph2match" (i.e. the generator photons merged into a single reco photon)
 	  else                                  phmatch[iph] = 0; // no corresponding match
 	} // end block over HVDS
-	phIsGenMatched[iph] = PhotonDump::GenToPATPhotonMatching(iph,genparticlesH);
+	phIsGenMatched[iph] = oot::GenToObjectMatching(*phiter,genparticlesH,pTres,dRmin);
       }
 
       // super cluster from photon
-      const reco::SuperClusterRef& phsc = phiter->superCluster().isNonnull() ? phiter->superCluster() : phiter->parentSuperCluster();
+      const reco::SuperClusterRef& phsc = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
       phscE  [iph] = phsc->energy();
       phsceta[iph] = phsc->eta();
       phscphi[iph] = phsc->phi();
       const float sceta = std::abs(phsceta[iph]);
 
       // Shower Shape Objects
-      const reco::Photon::ShowerShape& phshape = phiter->full5x5_showerShapeVariables(); // phiter->showerShapeVariables();
+      const reco::Photon::ShowerShape& phshape = photon.full5x5_showerShapeVariables(); // photon.showerShapeVariables();
 
       // ID-like variables
-      phHoE   [iph] = phiter->hadronicOverEm(); // used in ID
-      phr9    [iph] = phiter->r9();
-      phChgIso[iph] = std::max(phiter->chargedHadronIso() - (rho * PhotonDump::GetChargedHadronEA(sceta)),0.f);
-      phNeuIso[iph] = std::max(phiter->neutralHadronIso() - (rho * PhotonDump::GetNeutralHadronEA(sceta)),0.f);
-      phIso   [iph] = std::max(phiter->photonIso()        - (rho * PhotonDump::GetGammaEA        (sceta)),0.f);
+      phHoE   [iph] = photon.hadronicOverEm(); // used in ID
+      phr9    [iph] = photon.r9();
+      phChgIso[iph] = std::max(photon.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
+      phNeuIso[iph] = std::max(photon.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);
+      phIso   [iph] = std::max(photon.photonIso()        - (rho * oot::GetGammaEA        (sceta)),0.f);
 
       // cluster shape variables
       phsieie[iph] = phshape.sigmaIetaIeta;
@@ -755,17 +747,17 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       phsieip[iph] = phshape.sigmaIetaIphi;
 
       // 0 --> did not pass anything, 1 --> loose pass, 2 --> medium pass, 3 --> tight pass
-      if      (phiter->photonID("tight"))  {phVID[iph] = 3;}
-      else if (phiter->photonID("medium")) {phVID[iph] = 2;}
-      else if (phiter->photonID("loose"))  {phVID[iph] = 1;}
+      if      (photon.photonID("tight"))  {phVID[iph] = 3;}
+      else if (photon.photonID("medium")) {phVID[iph] = 2;}
+      else if (photon.photonID("loose"))  {phVID[iph] = 1;}
       else                                 {phVID[iph] = 0;}
 
       // store similar ints if pass individual selections
-      phHoE_b   [iph] = PhotonDump::PassHoE   (sceta,phHoE   [iph]);
-      phsieie_b [iph] = PhotonDump::PassSieie (sceta,phsieie [iph]);
-      phChgIso_b[iph] = PhotonDump::PassChgIso(sceta,phChgIso[iph]);
-      phNeuIso_b[iph] = PhotonDump::PassNeuIso(sceta,phNeuIso[iph],phpt[iph]);
-      phIso_b   [iph] = PhotonDump::PassPhIso (sceta,phIso   [iph],phpt[iph]);
+      phHoE_b   [iph] = oot::PassHoE   (sceta,phHoE   [iph]);
+      phsieie_b [iph] = oot::PassSieie (sceta,phsieie [iph]);
+      phChgIso_b[iph] = oot::PassChgIso(sceta,phChgIso[iph]);
+      phNeuIso_b[iph] = oot::PassNeuIso(sceta,phNeuIso[iph],phpt[iph]);
+      phIso_b   [iph] = oot::PassPhIso (sceta,phIso   [iph],phpt[iph]);
    
       // if (true) PhotonDump::DumpVIDs((*phiter),iph,sceta);
 
@@ -841,249 +833,6 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   ///////////////
   tree->Fill();      
 }    
-
-void PhotonDump::PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::vector<pat::Jet> & jets)
-{
-  if (jetsH.isValid()) // standard handle check
-  {
-    std::sort(jets.begin(),jets.end(),sortByJetPt);
-  }
-}  
-
-void PhotonDump::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
-			     const edm::ValueMap<bool> & photonLooseIdMap, 
-			     const edm::ValueMap<bool> & photonMediumIdMap, 
-			     const edm::ValueMap<bool> & photonTightIdMap, 
-			     std::vector<pat::Photon> & photons)
-{
-  if (photonsH.isValid()) // standard handle check
-  {
-    // create and initialize temp id-value vector
-    std::vector<std::vector<pat::Photon::IdPair> > idpairs(photons.size());
-    for (std::size_t iph = 0; iph < idpairs.size(); iph++)
-    {
-      idpairs[iph].resize(3);
-      idpairs[iph][0] = {"loose" ,false};
-      idpairs[iph][1] = {"medium",false};
-      idpairs[iph][2] = {"tight" ,false};
-    }
-
-    int iphH = 0; // dumb counter because iterators only work with VID
-    for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter) // loop over photon vector
-    {
-      // Get the VID of the photon
-      const edm::Ptr<pat::Photon> photonPtr(photonsH, phiter - photonsH->begin());
-
-      // store VID in temp struct
-      // loose > medium > tight
-      if (photonLooseIdMap [photonPtr]) idpairs[iphH][0].second = true;
-      if (photonMediumIdMap[photonPtr]) idpairs[iphH][1].second = true;
-      if (photonTightIdMap [photonPtr]) idpairs[iphH][2].second = true;
-      
-      iphH++;
-    }
-    
-    // set the ID-value for each photon in other collection
-    for (std::size_t iph = 0; iph < photons.size(); iph++)
-    {
-      photons[iph].setPhotonIDs(idpairs[iph]);
-    }
-    
-    // now finally sort vector by pT
-    std::sort(photons.begin(),photons.end(),sortByPhotonPt);
-  }
-}  
-
-bool PhotonDump::GenToPATPhotonMatching(const int iph, const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH)
-{
-  if (genparticlesH.isValid()) // make sure gen particles exist
-  {
-    for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter)
-    {
-      if (gpiter->pdgId() == 22 && gpiter->isPromptFinalState())
-	{
-	  if (std::abs(gpiter->pt()-phpt[iph])/phpt[iph] < pTres)
-	  {
-	    const float dR = deltaR(phphi[iph],pheta[iph],gpiter->phi(),gpiter->eta());
-	    if (dR < dRmin) 
-	    {
-	      return true;
-	    } // end check over dRmin
-	  } // end check over pT resolution
-	} // end check over gen particle status 
-      } // end loop over gen particles
-    } // end check over gen particles exist
-
-  return false;      
-} 
-
-void PhotonDump::HLTToPATPhotonMatching(const int iph)
-{
-  for (std::size_t ifilter = 0; ifilter < triggerObjectsByFilter.size(); ifilter++)
-  {
-    for (std::size_t iobject = 0; iobject < triggerObjectsByFilter[ifilter].size(); iobject++)
-    {
-      const trigger::TriggerObject & triggerObject = triggerObjectsByFilter[ifilter][iobject];
-      if (std::abs(triggerObject.pt()-phpt[iph])/phpt[iph] < pTres)
-      {
-	if (deltaR(phphi[iph],pheta[iph],triggerObject.phi(),triggerObject.eta()) < dRmin)
-	{
-	  phIsHLTMatched[iph][ifilter] = true;
-	}
-      }
-    }
-  }
-}
-
-float PhotonDump::GetChargedHadronEA(const float eta)
-{
-  if      (eta <  1.0)                  return 0.0360;
-  else if (eta >= 1.0   && eta < 1.479) return 0.0377;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0306;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.0283;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.0254;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.0217;
-  else if (eta >= 2.4)                  return 0.0167;
-  else                                  return 0.;
-}
-
-float PhotonDump::GetNeutralHadronEA(const float eta) 
-{
-  if      (eta <  1.0)                  return 0.0597;
-  else if (eta >= 1.0   && eta < 1.479) return 0.0807;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0629;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.0197;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.0184;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.0284;
-  else if (eta >= 2.4)                  return 0.0591;
-  else                                  return 0.;
-}
-
-float PhotonDump::GetGammaEA(const float eta) 
-{
-  if      (eta <  1.0)                  return 0.1210;
-  else if (eta >= 1.0   && eta < 1.479) return 0.1107;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0699;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.1056;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.1457;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.1719;
-  else if (eta >= 2.4)                  return 0.1998;
-  else                                  return 0.;
-}
-
-int PhotonDump::PassHoE(const float eta, const float HoE)
-{ 
-  if (eta < 1.479) // 1.4442
-  {
-    if      (HoE < 0.0269) return 3; 
-    else if (HoE < 0.0396) return 2; 
-    else if (HoE < 0.0597) return 1; 
-    else                   return 0;
-  }
-  else if (eta > 1.479 && eta < 2.5) // 1.566
-  {
-    if      (HoE < 0.0213) return 3; 
-    else if (HoE < 0.0219) return 2; 
-    else if (HoE < 0.0481) return 1; 
-    else                   return 0;
-  }
-  else                     return 0;
-}
-
-int PhotonDump::PassSieie(const float eta, const float Sieie)
-{ 
-  if (eta < 1.479)
-  {
-    if      (Sieie < 0.00994) return 3; 
-    else if (Sieie < 0.01022) return 2; 
-    else if (Sieie < 0.01031) return 1; 
-    else                      return 0;
-  }
-  else if (eta > 1.479 && eta < 2.5)
-  {
-    if      (Sieie < 0.03000) return 3; 
-    else if (Sieie < 0.03001) return 2; 
-    else if (Sieie < 0.03013) return 1; 
-    else                      return 0;
-  }
-  else                        return 0;
-}
-
-int PhotonDump::PassChgIso(const float eta, const float ChgIso)
-{ 
-  if (eta < 1.479)
-  {
-    if      (ChgIso < 0.202) return 3; 
-    else if (ChgIso < 0.441) return 2; 
-    else if (ChgIso < 1.295) return 1; 
-    else                     return 0;
-  }
-  else if (eta > 1.479 && eta < 2.5)
-  {
-    if      (ChgIso < 0.034) return 3; 
-    else if (ChgIso < 0.442) return 2; 
-    else if (ChgIso < 1.011) return 1; 
-    else                     return 0;
-  }
-  else                       return 0;
-}
-
-int PhotonDump::PassNeuIso(const float eta, const float NeuIso, const float pt)
-{ 
-  if (eta < 1.479)
-  {
-    const float ptdep = 0.0148*pt+0.000017*pt*pt;
-    if      (NeuIso < (0.264 +ptdep)) return 3; 
-    else if (NeuIso < (2.725 +ptdep)) return 2; 
-    else if (NeuIso < (10.910+ptdep)) return 1; 
-    else                              return 0;
-  }
-  else if (eta > 1.479 && eta < 2.5)
-  {
-    const float ptdep = 0.0163*pt+0.000014*pt*pt;
-    if      (NeuIso < (0.586 +ptdep)) return 3; 
-    else if (NeuIso < (1.715 +ptdep)) return 2; 
-    else if (NeuIso < (5.931 +ptdep)) return 1; 
-    else                              return 0;
-  }
-  else                                return 0;
-}
-
-int PhotonDump::PassPhIso(const float eta, const float PhIso, const float pt)
-{ 
-  if (eta < 1.479)
-  {
-    const float ptdep = 0.0047*pt;
-    if      (PhIso < (2.362+ptdep)) return 3; 
-    else if (PhIso < (2.571+ptdep)) return 2; 
-    else if (PhIso < (3.630+ptdep)) return 1; 
-    else                            return 0;
-  }
-  else if (eta > 1.479 && eta < 2.5)
-  {
-    const float ptdep = 0.0034*pt;
-    if      (PhIso < (2.617+ptdep)) return 3; 
-    else if (PhIso < (3.863+ptdep)) return 2; 
-    else if (PhIso < (6.641+ptdep)) return 1; 
-    else                            return 0;
-  }
-  else                              return 0;
-}
-
-void PhotonDump::DumpTriggerMenu(const HLTConfigProvider& hltConfig, const std::vector<std::string>& pathNames, edm::Run const& iRun)
-{
-  std::cout << "Run Number: " << iRun.run() << std::endl;
-  for (std::size_t itrigger = 0; itrigger < pathNames.size(); itrigger++)
-  {
-    std::cout << "   " << pathNames[itrigger].c_str() << " : " << hltConfig.triggerIndex(pathNames[itrigger]) << " - " << itrigger << std::endl;
-  }
-  std::cout << "--------------------------" << std::endl;
-  for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
-  {
-    std::cout << "   " << pathNames[ipath].c_str() << " : " << ipath << " - " << pathIndex[pathNames[ipath]] << std::endl;
-  }
-  std::cout << "--------------------------" << std::endl;
-}
 
 void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH)
 {
@@ -1338,6 +1087,8 @@ void PhotonDump::ClearRecoPhotonBranches()
 {
   nphotons = -9999;
 
+  phisOOT.clear();
+
   phE.clear();
   phpt.clear();
   phphi.clear(); 
@@ -1387,6 +1138,8 @@ void PhotonDump::ClearRecoPhotonBranches()
 
 void PhotonDump::InitializeRecoPhotonBranches()
 {
+  phisOOT.resize(nphotons);
+
   phE.resize(nphotons);
   phpt.resize(nphotons);
   phphi.resize(nphotons);
@@ -1435,6 +1188,8 @@ void PhotonDump::InitializeRecoPhotonBranches()
 
   for (int iph = 0; iph < nphotons; iph++)
   {
+    phisOOT[iph] = -1;
+
     phE  [iph] = -9999.f; 
     phpt [iph] = -9999.f; 
     phphi[iph] = -9999.f; 
@@ -1472,8 +1227,8 @@ void PhotonDump::InitializeRecoPhotonBranches()
     phnrh    [iph] = -9999;
     phseedpos[iph] = -9999;
 
-    phIsHLTMatched[iph].resize(filterTags.size());
-    for (std::size_t ifilter = 0; ifilter < filterTags.size(); ifilter++)
+    phIsHLTMatched[iph].resize(filterNames.size());
+    for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
     {
       phIsHLTMatched[iph][ifilter] = 0; // false
     }
@@ -1647,6 +1402,7 @@ void PhotonDump::beginJob()
    
   // Photon Info
   tree->Branch("nphotons"             , &nphotons             , "nphotons/I");
+  tree->Branch("phisOOT"              , &phisOOT);
 
   tree->Branch("phE"                  , &phE);
   tree->Branch("phpt"                 , &phpt);
@@ -1697,39 +1453,9 @@ void PhotonDump::beginJob()
 
 void PhotonDump::endJob() {}
 
-void PhotonDump::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) 
-{
-  // initialize pathIndex, key: Name, value: Index 
-  for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
-  {
-    pathIndex[pathNames[ipath]] = -1;
-  }
+void PhotonDump::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
 
-  HLTConfigProvider hltConfig;
-  bool changed = false;
-  hltConfig.init(iRun, iSetup, triggerResultsTag.process(), changed);
-  const std::vector<std::string>& triggerNames = hltConfig.triggerNames();
-  for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
-  {
-    TPRegexp pattern(pathNames[ipath]);
-    for (std::size_t itrigger = 0; itrigger < triggerNames.size(); itrigger++)
-    {
-      if (TString(triggerNames[itrigger]).Contains(pattern))
-      {
-	pathIndex[pathNames[ipath]] = itrigger; //hltConfig.triggerIndex(pathNames[itrigger]);
-	break;
-      }
-    }
-  }
-
-  if (dumpTriggerMenu) PhotonDump::DumpTriggerMenu(hltConfig,pathNames,iRun);
-}
-
-void PhotonDump::endRun(edm::Run const&, edm::EventSetup const&) 
-{
-  // reset trigger info
-  pathIndex.clear();
-}
+void PhotonDump::endRun(edm::Run const&, edm::EventSetup const&) {}
 
 void PhotonDump::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
 {

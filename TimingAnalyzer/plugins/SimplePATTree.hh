@@ -1,3 +1,6 @@
+#ifndef __SimplePATTree__
+#define __SimplePATTree__
+
 // basic C++ headers
 #include <iostream>
 #include <fstream>
@@ -21,42 +24,34 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h" 
 
-// HLT + Trigger info
-#include "FWCore/Common/interface/TriggerNames.h"
-#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
-#include "DataFormats/Common/interface/TriggerResults.h"
-#include "DataFormats/HLTReco/interface/TriggerEvent.h"
-#include "DataFormats/HLTReco/interface/TriggerObject.h"
+// SimDataFormats
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
 // DataFormats
-#include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
-#include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
+#include "DataFormats/PatCandidates/interface/Photon.h"
 
-// DetIds 
+// Data Formats: ECAL
+#include "DataFormats/EgammaReco/interface/SuperCluster.h"
+#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
-
-// Ecal RecHits
 #include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
-
-// Supercluster info
-#include "DataFormats/EgammaReco/interface/SuperCluster.h"
-#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
 
 // EGamma Tools
 #include "RecoEcal/EgammaCoreTools/interface/EcalTools.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
-#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 
 // Geometry
-#include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "Geometry/CaloTopology/interface/CaloTopology.h"
+#include "Geometry/Records/interface/CaloTopologyRecord.h"
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
 #include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
 #include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
@@ -68,23 +63,16 @@
 #include "TPRegexp.h"
 
 // Common types
-#include "CommonTypes.h"
+#include "Timing/TimingAnalyzer/plugins/CommonUtils.hh"
 
-class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
+class SimplePATTree : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
  public:
-  explicit HLTDump(const edm::ParameterSet&);
-  ~HLTDump();
+  explicit SimplePATTree(const edm::ParameterSet&);
+  ~SimplePATTree();
 
-  void PrepTriggerObjects();
-  
-  void HLTToPATPhotonMatching(const int iph);
-
-  void InitializeTriggerBranches();
-  void ClearTriggerObjectBranches();
   void InitializePVBranches();
   void InitializeMETBranches();
-  void ClearJetBranches();
   void InitializeJetBranches();
   void ClearRecoPhotonBranches();
   void InitializeRecoPhotonBranches();
@@ -99,32 +87,17 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
 
-  const float phpTmin;
-
-  // dR matching criteria
-  const float jetpTmin;
-  const float dRmin;
-  const float pTres;
-  const bool  saveTrigObjs;
-
-  // triggers
-  const std::string inputPaths;
-  std::vector<std::string> pathNames;
-  const std::string inputFilters;
-  std::vector<std::string> filterNames;
-  const edm::InputTag triggerResultsTag;
-  edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
-  const edm::InputTag triggerObjectsTag;
-  edm::EDGetTokenT<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsToken;
-  std::vector<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsByFilter; // first index is filter label, second is trigger objects
-
-  // vertices
-  const edm::InputTag verticesTag;
-  edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken;
+  // MC info
+  const bool isMC;
+   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupToken;
 
   // rhos
   const edm::InputTag rhosTag;
   edm::EDGetTokenT<double> rhosToken;
+
+  // vertices
+  const edm::InputTag verticesTag;
+  edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken;
 
   // mets
   const edm::InputTag metsTag;
@@ -137,7 +110,6 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   // photons
   const edm::InputTag photonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > photonsToken;
-
   const edm::InputTag ootPhotonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > ootPhotonsToken;
 
@@ -154,43 +126,35 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   unsigned long int event;
   unsigned int run, lumi;  
 
-  // vertices
+  // true vertices (MC ONLY)
+  int npuobs, nputrue;
+
+  // rho
+  float rho;
+
+  // reco vertices
   int nvtx;
   float vtxX, vtxY, vtxZ;
-
-  // trigger info
-  std::vector<bool> triggerBits;
-
-  // trigger object
-  std::vector<std::vector<float> > trigobjE, trigobjeta, trigobjphi, trigobjpt;
 
   // MET
   float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
 
   // jets
-  int njets;
-  std::vector<float> jetE, jetpt, jetphi, jeteta;
-  std::vector<bool> jetidL;
+  int njets, njets15, njets30;
+  float jetHT15, jetHT30;
 
   // photon info
   int nphotons;
-  std::vector<int> phisOOT;
+  std::vector<int>   phIsOOT, phIsEB;
   std::vector<float> phE, phpt, phphi, pheta;
-  std::vector<float> phHOvE, phHTowOvE, phr9;
-  std::vector<bool> phPixSeed, phEleVeto;
-  std::vector<float> phChgIso, phNeuIso, phIso;
+  std::vector<float> phHoE, phr9, phsieie;
+  std::vector<float> phsmaj, phsmin, phalpha;
   std::vector<float> phPFClEcalIso, phPFClHcalIso, phHollowTkIso;
-  std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
-  std::vector<std::vector<int> > phIsHLTMatched; // first index is iph, second is for filter, true/false
 
-  // supercluster info 
-  std::vector<float> phscE, phsceta, phscphi;
-
-  // seed info
-  std::vector<float> phseedeta, phseedphi, phseedE, phseedtime;
-  std::vector<int> phseedID;
-  std::vector<int> phseedOOT;
-  
   // all rec hit info
-  std::vector<int> phnrh;
+  std::vector<int>   phnrh;
+  std::vector<float> phseedE, phseedtime;
+  std::vector<int>   phseedOOT;
 };
+
+#endif

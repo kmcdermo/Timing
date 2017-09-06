@@ -1,4 +1,4 @@
-#include "SimplePATTree.h"
+#include "Timing/TimingAnalyzer/plugins/SimplePATTree.hh"
 #include "FWCore/Utilities/interface/isFinite.h"
 
 SimplePATTree::SimplePATTree(const edm::ParameterSet& iConfig): 
@@ -19,7 +19,7 @@ SimplePATTree::SimplePATTree(const edm::ParameterSet& iConfig):
 
   //photons
   photonsTag   (iConfig.getParameter<edm::InputTag>("photons")),  
-  ootphotonsTag(iConfig.getParameter<edm::InputTag>("ootphotons")),  
+  ootPhotonsTag(iConfig.getParameter<edm::InputTag>("ootphotons")),  
   
   //recHits
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
@@ -47,7 +47,10 @@ SimplePATTree::SimplePATTree(const edm::ParameterSet& iConfig):
 
   // photons
   photonsToken    = consumes<std::vector<pat::Photon> > (photonsTag);
-  ootphotonsToken = consumes<std::vector<pat::Photon> > (ootphotonsTag);
+  if (not ootPhotonsTag.label().empty())
+  {
+    ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
+  }
 
   // rechits
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
@@ -80,16 +83,20 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   // JETS
   edm::Handle<std::vector<pat::Jet> > jetsH;
   iEvent.getByToken(jetsToken, jetsH);
-  std::vector<pat::Jet> jets = *jetsH;
+  std::vector<pat::Jet> jets; jets.reserve(jetsH->size());
 
   // PHOTONS
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
-  std::vector<PatPhoton> photons(photonsH->size());
+  int phosize = photonsH->size();
 
-  edm::Handle<std::vector<pat::Photon> > ootphotonsH;
-  iEvent.getByToken(ootphotonsToken, ootphotonsH);
-  std::vector<PatPhoton> ootphotons(ootphotonsH->size());
+  edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
+  if (not ootPhotonsToken.isUninitialized())
+  {
+    iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
+    phosize += ootPhotonsH->size();
+  }
+  std::vector<oot::Photon> photons; photons.reserve(phosize);
 
   // RecHits
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
@@ -98,10 +105,8 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   iEvent.getByToken(recHitsEEToken, recHitsEEH);
 
   // do some prepping of objects
-  SimplePATTree::PrepPhotons(photonsH,photons,false);
-  SimplePATTree::PrepPhotons(ootphotonsH,ootphotons,true);
-  photons.insert(photons.end(), ootphotons.begin(), ootphotons.end());
-  SimplePATTree::PrepJets(jetsH,jets);
+  oot::PrepJets(jetsH,jets);
+  oot::PrepPhotons(photonsH,ootPhotonsH,photons);
 
   ///////////////////////////
   //                       //
@@ -208,24 +213,26 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     if (nphotons > 0) SimplePATTree::InitializeRecoPhotonBranches();
 
     int iph = 0;
-    for (std::vector<PatPhoton>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
+    for (std::vector<oot::Photon>::const_iterator phiter = photons.begin(); phiter != photons.end(); ++phiter) // loop over photon vector
     {
+      const pat::Photon& photon = phiter->photon();
+
       // which photon collection
-      phIsOOT[iph] = phiter->isOOT_;
+      phIsOOT[iph] = phiter->isOOT();
 
       // standard photon branches
-      phE  [iph] = phiter->photon.energy();
-      phpt [iph] = phiter->photon.pt();
-      phphi[iph] = phiter->photon.phi();
-      pheta[iph] = phiter->photon.eta();
+      phE  [iph] = photon.energy();
+      phpt [iph] = photon.pt();
+      phphi[iph] = photon.phi();
+      pheta[iph] = photon.eta();
 
       // ID-like variables
-      phHoE  [iph] = phiter->photon.hadTowOverEm();
-      phr9   [iph] = phiter->photon.r9();
-      phsieie[iph] = phiter->photon.full5x5_sigmaIetaIeta();
+      phHoE  [iph] = photon.hadTowOverEm();
+      phr9   [iph] = photon.r9();
+      phsieie[iph] = photon.full5x5_sigmaIetaIeta();
 
       // super cluster from photon
-      const reco::SuperClusterRef& phsc = phiter->photon.superCluster().isNonnull() ? phiter->photon.superCluster() : phiter->photon.parentSuperCluster();
+      const reco::SuperClusterRef& phsc = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
       const reco::CaloClusterPtr& phbc = phsc->seed();
       const DetId seedDetId = phbc->seed(); //seed detid
 
@@ -253,11 +260,11 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       }
 
       // PF Cluster Isolations
-      phPFClEcalIso[iph] = phiter->photon.ecalPFClusterIso();
-      phPFClHcalIso[iph] = phiter->photon.hcalPFClusterIso();
+      phPFClEcalIso[iph] = photon.ecalPFClusterIso();
+      phPFClHcalIso[iph] = photon.hcalPFClusterIso();
 
       // Track Isolation (dR of outer cone < 0.3 as matching in trigger)
-      phHollowTkIso[iph] = phiter->photon.trkSumPtHollowConeDR03();
+      phHollowTkIso[iph] = photon.trkSumPtHollowConeDR03();
 
       // map of rec hit ids
       uiiumap phrhIDmap;
@@ -304,30 +311,6 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   ///////////////
   tree->Fill();      
 }
-
-void SimplePATTree::PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, std::vector<pat::Jet> & jets)
-{
-  if (jetsH.isValid()) // standard handle check
-  {
-    std::sort(jets.begin(),jets.end(),sortByJetPt);
-  }
-}  
-
-void SimplePATTree::PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, std::vector<PatPhoton> & photons, const bool isOOT)
-{
-  if (photonsH.isValid()) // standard handle check
-  {
-    int iph = 0;
-    for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter)
-    {
-      photons[iph].photon = (*phiter);
-      photons[iph].isOOT_ = isOOT;
-      iph++;
-    }
-
-    std::sort(photons.begin(),photons.end(),sortByPhotonPt);
-  }
-}  
 
 void SimplePATTree::InitializePVBranches()
 {
