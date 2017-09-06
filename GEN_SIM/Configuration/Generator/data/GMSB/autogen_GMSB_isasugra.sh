@@ -11,7 +11,7 @@ do
 	ctau=${array[0]}
 	cgrav=${array[1]}
 
- 	echo -e "temp.txt\n"GMSB_Lambda${lambda}TeV_CTau${ctau}cm.slha"\n/\n2\n"${lamb}" "${mess}" 1 15 1 175 "${cgrav}"\n0\n/" | ./isasugra.x
+ 	echo -e "temp.txt\n"GMSB_Lambda${lambda}TeV_CTau${ctau}cm.slha"\n/\n2\n"${lamb}" "${mess}" 1 15 1 173.1 "${cgrav}"\n0\n/" | ./isasugra.x
 	rm temp.txt
     done < Lambda${lambda}_cgrav.txt
 done

@@ -1,3 +1,5 @@
+static const std::vector<Color_t> colors = {kRed+1,kGreen+1,kMagenta,kOrange+1,kAzure+10,kYellow-7,kViolet-1,kBlack,kYellow+3};
+  
 struct lcg
 {
   float cgrav;
@@ -6,67 +8,122 @@ struct lcg
 
 typedef std::vector<lcg> vlcg;
 
-
-void fitGraph(TGraph *& graph, TF1 *& fit)
+void fitGraph(TGraph *& graph, TF1 *& fit, const int i, const TString & fitname)
 {
   Double_t minx,miny,maxx,maxy;
   graph->GetPoint(0,minx,miny);
   graph->GetPoint(graph->GetN()-1,maxx,maxy);
  
-  TFormula form("linear","[0]*x+[1]");
-  fit  = new TF1("linear_fit","linear",minx,maxx);
-  fit->SetParName(0,"Slope"); 
-  fit->SetParameter(0,1.f);
-  fit->SetParName(1,"Intercept"); 
-  fit->SetParameter(1,0.f);
-  
-  graph->Fit(fit->GetName(),"RBQ");
-}  
+  if (fitname.Contains("linear",TString::kExact))
+  {
+    TFormula form(fitname.Data(),"[0]*x+[1]");
+    fit  = new TF1(Form("%s_fit_%i",fitname.Data(),i),fitname.Data(),minx,maxx);
+    fit->SetParName(0,"Slope"); 
+    fit->SetParameter(0,10.f);
+    fit->SetParName(1,"Intercept"); 
+    fit->SetParameter(1,0.f);
+  }
+  else if (fitname.Contains("power",TString::kExact))
+  { 
+    TFormula form(fitname.Data(),"[0]+[1]*x**[2]");
+    fit  = new TF1(Form("%s_fit_%i",fitname.Data(),i),fitname.Data(),minx,maxx);
+    fit->SetParName(0,"Intercept"); 
+    fit->SetParameter(0,0.f);
+    fit->SetParName(1,"Scale"); 
+    fit->SetParameter(1,1.f);
+    fit->SetParName(2,"Power"); 
+    fit->SetParameter(2,1.f);
+  }
+  else 
+  {
+    std::cerr << "FIT NAME NOT ACCEPTED: " << fitname.Data() << std::endl;
+  }
 
+  fit->SetLineColor(colors[i]);
+  graph->Fit(fit->GetName(),"RB");
+}  
 
 void fitcgrav()
 {
+  gStyle->SetOptStat(0);
+  gStyle->SetOptFit(0);
+
   std::ifstream input("width_cgrav.txt",std::ios_base::in);
   std::map<int,vlcg> params;
-  
+
   float w, cg; int l;
   while(input >> cg >> l >> w)
   {
     params[l].push_back({cg,w});
   }
 
-  TGraph * final = new TGraph(params.size());
   Int_t i = 0;
+  std::vector<TGraph*> graphs(params.size());
+  std::vector<TF1 *> fits(params.size());
   for (auto&& param : params)
   {
-    TGraph * graph = new TGraph(param.second.size());
+    graphs[i] = new TGraph(param.second.size());
+    graphs[i]->SetTitle("c_{grav} vs. #sqrt{c#tau};#sqrt{c#tau};c_{grav}");
+    graphs[i]->SetName(Form("graph_%i",param.first));
+    graphs[i]->SetMarkerColor(colors[i]);
+    graphs[i]->SetLineColor(colors[i]);
+    graphs[i]->SetMarkerStyle(20);
+    i++; 
+  }
+
+  Double_t max = -1;
+  i = 0;
+  for (auto&& param : params)
+  {
     for (Int_t j = 0; j < param.second.size(); j++)
     {
       auto&& point = param.second[j];
-      graph->SetPoint(j,std::sqrt((1.973e-14/point.width)),point.cgrav); // 1.973e-34 = hbar*c in GeV * cm
+      graphs[i]->SetPoint(j,std::sqrt(1.973e-14/point.width),point.cgrav); // 1.973e-34 = hbar*c in GeV * cm
+      if (point.cgrav > max) max = point.cgrav;
     }
-    graph->Draw("AP");
+    i++;
+  }
 
-    TF1 * fit;
-    fitGraph(graph,fit);
-    final->SetPoint(i,param.first,fit->GetParameter(0));
-    
-    delete fit;
-    delete graph;
+  TCanvas * canv = new TCanvas(); canv->cd();
+  TLegend * leg = new TLegend(0.2,0.6,0.45,0.85);
+  i = 0;
+  for (auto&& param : params)
+  {
+    graphs[i]->SetMaximum(max*1.05);
+    graphs[i]->Draw(i>0?"P same":"AP");
+    fitGraph(graphs[i],fits[i],i,"linear");
+    leg->AddEntry(graphs[i],Form("#Lambda: %i, m: %4.2f, b: %5.2f",param.first,fits[i]->GetParameter(0),fits[i]->GetParameter(1)),"lp");
 
     i++;
   }
 
-  TCanvas * canv = new TCanvas();
-  canv->cd();
-  final->SetMarkerStyle(20);
-  final->Draw("AP");
-
-  TF1 * finalfit;
-  fitGraph(final,finalfit);
-
+  leg->Draw("same");
   canv->SaveAs("alphas.png");
-  delete finalfit;
+  delete leg;
+
+  TGraph * graph = new TGraph(params.size());
+  graph->SetTitle("#alpha vs. #Lambda;#Lambda;#alpha");
+  graph->SetName("graph_fit");
+  graph->SetMarkerColor(colors[i]);
+  graph->SetLineColor(colors[i]);
+  graph->SetMarkerStyle(20);
+
+  i = 0;
+  for (auto&& param : params)
+  {
+    graph->SetPoint(i,param.first,fits[i]->GetParameter(0));
+    i++;
+  }
+  graph->Draw("AP");
+
+  gStyle->SetOptFit(1);
+  gStyle->SetStatX(0.5);
+  gStyle->SetStatY(0.85);
+  TF1 * fit;
+  fitGraph(graph,fit,i,"power");
+
+  canv->SaveAs("alpha_fit.png");
+  delete fit;
+  delete graph;
   delete canv;
-  delete final;
 }
