@@ -1,3 +1,0 @@
-0 hltDisplacedPhoton50R9Id90CaloIdLIsoLDisplacedPhotonFilter::HLT4
-1 hltDisplacedPhoton60R9Id90CaloIdLIsoLDisplacedPhotonFilter::HLT4
-2 hltDisplacedPhoton70R9Id90CaloIdLIsoLDisplacedPhotonFilter::HLT4
