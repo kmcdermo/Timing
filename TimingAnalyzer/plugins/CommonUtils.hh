@@ -63,6 +63,13 @@ namespace Config
 typedef std::tuple<std::size_t, std::size_t, double> triple;
 typedef std::vector<triple> triplevec;
 
+///////////////////
+//               //
+// RecHit ID Map //
+//               //
+///////////////////
+typedef std::unordered_map<uint32_t,int> uiiumap;
+
 ////////////////////////
 //                    //
 // Object Definitions //
@@ -118,6 +125,9 @@ namespace oot
 			  std::vector<std::vector<pat::TriggerObjectStandAlone> > & triggerObjectsByFilter);
   void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, 
 		std::vector<pat::Jet> & jets, const float jetpTmin = 0.f, const int jetID = -1);
+  void PrepRecHits(const EcalRecHitCollection * recHitsEB, 
+		   const EcalRecHitCollection * recHitsEE,
+		   uiiumap & recHitMap);
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   const edm::Handle<edm::ValueMap<bool> > & photonLooseIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & photonMediumIdMapH, 
@@ -135,6 +145,7 @@ namespace oot
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
 		   std::vector<oot::Photon> & photons, const float phpTmin = 0.f);
+  void PrepTrigger(std::vector<bool> & triggerBits);
   void PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
 		     const edm::Handle<edm::ValueMap<bool> > & electronVetoIdMapH, 
 		     const edm::Handle<edm::ValueMap<bool> > & electronLooseIdMapH, 
@@ -211,6 +222,5 @@ namespace oot
 #include "DataFormats/DetId/interface/DetId.h"
 
 typedef std::vector<std::pair<DetId,float> > DetIdPairVec;
-typedef std::unordered_map<uint32_t,int> uiiumap;
 
 #endif

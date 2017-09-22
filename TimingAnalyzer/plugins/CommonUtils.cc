@@ -154,6 +154,21 @@ namespace oot
     std::sort(photons.begin(),photons.end(),oot::sortByPt);
   }
 
+  void PrepRecHits(const EcalRecHitCollection * recHitsEB,
+		   const EcalRecHitCollection * recHitsEE,
+		   uiiumap & recHitMap)
+  {
+    int i = 0;
+    for (const auto & recHit : *recHitsEB)
+    {
+      recHitMap[recHit.detid().rawId()] = i++;
+    }
+    for (const auto & recHit : *recHitsEE)
+    {
+      recHitMap[recHit.detid().rawId()] = i++;
+    }
+  }
+
   void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, 
 		std::vector<pat::Jet> & jets, const float jetpTmin, const int jetID)
   {
@@ -170,6 +185,11 @@ namespace oot
       std::sort(jets.begin(),jets.end(),oot::sortByPt);
     }
   }  
+
+  void PrepTrigger(std::vector<bool> & triggerBits)
+  {
+    for (auto triggerBit : triggerBits) triggerBit = false;
+  }
 
   void PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
 		     const edm::Handle<edm::ValueMap<bool> > & electronVetoIdMapH, 

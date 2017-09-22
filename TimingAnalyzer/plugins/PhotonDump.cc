@@ -132,7 +132,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // JETS
   edm::Handle<std::vector<pat::Jet> > jetsH;
   iEvent.getByToken(jetsToken, jetsH);
-  std::vector<pat::Jet> jets; jets.resize(jetsH->size());
+  std::vector<pat::Jet> jets; jets.reserve(jetsH->size());
 
   // PHOTONS + IDS
   edm::Handle<std::vector<pat::Photon> > photonsH;
