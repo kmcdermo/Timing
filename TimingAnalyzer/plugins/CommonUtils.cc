@@ -9,7 +9,7 @@ namespace oot
   /////////////////
 
   void ReadInTriggerNames(const std::string & inputPaths, std::vector<std::string> & pathNames, 
-			  std::vector<bool> & triggerBits)
+			  trigBitMap & triggerBitMap)
   {
     if (Config::file_exists(inputPaths))
     {
@@ -18,17 +18,18 @@ namespace oot
       std::string path;
       while (pathStream >> path)
       {
-	if (path != "") pathNames.emplace_back(path);
+	if (path != "") 
+	{
+	  pathNames.emplace_back(path);
+	  triggerBitMap[path] = false;
+	}
       }
       pathStream.close();
-      
-      // branch to store trigger info
-      triggerBits.resize(pathNames.size());
     } // check to make sure text file exists
   }
 
   void ReadInFilterNames(const std::string & inputFilters, std::vector<std::string> & filterNames, 
-			 std::vector<std::vector<pat::TriggerObjectStandAlone> > & triggerObjectsByFilter)
+			 trigObjVecMap & triggerObjectsByFilterMap)
   {
     if (Config::file_exists(inputFilters))
     {
@@ -37,20 +38,49 @@ namespace oot
       std::string label;// instance, processName;
       while (filterStream >> label)
       {
-	if (label != "") filterNames.emplace_back(label);
+	if (label != "") 
+	{
+	  filterNames.emplace_back(label);
+	  triggerObjectsByFilterMap[label].clear();
+	}
       }
       filterStream.close();
-      
-      // vector of vector of trigger objects
-      triggerObjectsByFilter.resize(filterNames.size());
     } // check to make sure text file exists
   }
 
+  void PrepTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, 
+		       const edm::Event & iEvent, trigBitMap & triggerBitMap)
+  {
+    for (auto & triggerBitPair : triggerBitMap) 
+    {
+      triggerBitPair.second = false;
+    }
+    
+    if (triggerResultsH.isValid())
+    {
+      const edm::TriggerNames &triggerNames = iEvent.triggerNames(*triggerResultsH);
+      for (std::size_t itrig = 0; itrig < triggerNames.size(); itrig++)
+      {
+	std::string triggerName = triggerNames.triggerName(itrig);
+      
+	for (auto & triggerBitPair : triggerBitMap) 
+	{
+	  if (triggerName.find(triggerBitPair.first)) triggerBitPair.second = triggerResultsH->accept(itrig);
+	} // end loop over user path names
+      } // end loop over trigger names
+    } // end check over valid TriggerResults
+  }
+  
   void PrepTriggerObjects(const edm::Handle<edm::TriggerResults> & triggerResultsH,
 			  const edm::Handle<std::vector<pat::TriggerObjectStandAlone> > & triggerObjectsH,
-			  const edm::Event& iEvent, const std::vector<std::string> & filterNames, 
-			  std::vector<std::vector<pat::TriggerObjectStandAlone> > & triggerObjectsByFilter)
+			  const edm::Event & iEvent, trigObjVecMap & triggerObjectsByFilterMap)
   {
+    // clear first
+    for (auto& triggerObjectsByFilterPair : triggerObjectsByFilterMap)
+    {
+      triggerObjectsByFilterPair.second.clear();
+    }
+    
     // store all the trigger objects needed to be checked later
     if (triggerObjectsH.isValid() && triggerResultsH.isValid())
     {
@@ -59,16 +89,15 @@ namespace oot
       {
 	triggerObject.unpackPathNames(triggerNames);
 	triggerObject.unpackFilterLabels(iEvent, *triggerResultsH);
-	for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
+	for (auto& triggerObjectsByFilterPair : triggerObjectsByFilterMap)
 	{	
-	  if (triggerObject.hasFilterLabel(filterNames[ifilter])) triggerObjectsByFilter[ifilter].emplace_back(triggerObject);
+	  if (triggerObject.hasFilterLabel(triggerObjectsByFilterPair.first)) triggerObjectsByFilterPair.second.emplace_back(triggerObject);
 	} // end loop over user filter names
       } // end loop over trigger objects
 
-
-      for (auto& triggerObjects : triggerObjectsByFilter)
+      for (auto& triggerObjectsByFilterPair : triggerObjectsByFilterMap)
       {
-	std::sort(triggerObjects.begin(),triggerObjects.end(),oot::sortByPt);
+	std::sort(triggerObjectsByFilterPair.second.begin(),triggerObjectsByFilterPair.second.end(),oot::sortByPt);
       }
     }
   }
@@ -104,9 +133,9 @@ namespace oot
 	  // set VID/isOOT of photon
 	  photons.emplace_back(*phiter,isOOT);
 	  photons.back().photon_nc().setPhotonIDs(idpair);
-	}
-      }
-    }
+	} // pt check
+      } // end loop over photons
+    } // isValid
   }
 
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
@@ -117,11 +146,16 @@ namespace oot
 		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonLooseIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonMediumIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonTightIdMapH,
-		   std::vector<oot::Photon> & photons, const float phpTmin)
+		   std::vector<oot::Photon> & photons, const float phpTmin, const std::string & phIDmin)
   {
     oot::PrepPhotons(photonsH,photonLooseIdMapH,photonMediumIdMapH,photonTightIdMapH,photons,false,phpTmin);
     oot::PrepPhotons(ootPhotonsH,ootPhotonLooseIdMapH,ootPhotonMediumIdMapH,ootPhotonTightIdMapH,photons,true,phpTmin);
-    
+
+    // final sorting
+    if (phIDmin != "")
+    {
+      photons.erase(std::remove_if(photons.begin(),photons.end(),[&](const oot::Photon & photon){return !photon.photon().photonID(phIDmin);}),photons.end());
+    }
     std::sort(photons.begin(),photons.end(),oot::sortByPt);
   }  
 

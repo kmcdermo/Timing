@@ -44,10 +44,10 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
   triggerObjectsToken = consumes<std::vector<pat::TriggerObjectStandAlone> > (triggerObjectsTag);
 
   // read in from a stream the trigger paths for saving
-  oot::ReadInTriggerNames(inputPaths,pathNames,triggerBits);
+  oot::ReadInTriggerNames(inputPaths,pathNames,triggerBitMap);
 
   // read in from a stream the hlt objects/labels to match to
-  oot::ReadInFilterNames(inputFilters,filterNames,triggerObjectsByFilter);
+  oot::ReadInFilterNames(inputFilters,filterNames,triggerObjectsByFilterMap);
 
   //vertex
   verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
@@ -127,6 +127,8 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   const CaloSubdetectorGeometry * endcapGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
   // do some prepping of objects
+  oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
+  oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
   oot::PrepJets(jetsH,jets,jetpTmin);
   oot::PrepPhotons(photonsH,ootPhotonsH,photons,phpTmin);
 
@@ -169,15 +171,10 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   HLTDump::InitializeTriggerBranches();
   if (triggerResultsH.isValid())
   {
-    const edm::TriggerNames &triggerNames = iEvent.triggerNames(*triggerResultsH);
-    for (std::size_t itrig = 0; itrig < triggerNames.size(); itrig++)
+    for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
     {
-      TString triggerName = triggerNames.triggerName(itrig);
-      for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
-      {
-	if (triggerName.Contains(pathNames[ipath],TString::kExact)) triggerBits[ipath] = triggerResultsH->accept(itrig);
-      } // end loop over user path names
-    } // end loop over trigger names
+      triggerBits[ipath] = triggerBitMap[pathNames[ipath]];
+    }
   } // end check over valid TriggerResults
 
   /////////////////
@@ -185,17 +182,14 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // HLT Objects //
   //             //
   /////////////////
-  oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,filterNames,triggerObjectsByFilter);
-
   if (saveTrigObjs) 
   {
     HLTDump::ClearTriggerObjectBranches();
-    for (std::size_t ifilter = 0; ifilter < triggerObjectsByFilter.size(); ifilter++)
+    for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
     {
-      for (std::size_t iobject = 0; iobject < triggerObjectsByFilter[ifilter].size(); iobject++)
+      for (std::size_t iobject = 0; iobject < triggerObjectsByFilterMap[filterNames[ifilter]].size(); iobject++)
       {
-	const pat::TriggerObjectStandAlone & triggerObject = triggerObjectsByFilter[ifilter][iobject];
-	
+	const auto & triggerObject = triggerObjectsByFilterMap[filterNames[ifilter]][iobject];
 	trigobjE  [ifilter][iobject] = triggerObject.energy();
 	trigobjeta[ifilter][iobject] = triggerObject.eta();
 	trigobjphi[ifilter][iobject] = triggerObject.phi();
@@ -286,7 +280,7 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       pheta[iph] = photon.eta();
 
       // check for HLT filter matches!
-      oot::HLTToObjectMatching(triggerObjectsByFilter,phIsHLTMatched,*phiter,iph,pTres,dRmin);
+      oot::HLTToObjectMatching(triggerObjectsByFilterMap,filterNames,phIsHLTMatched,*phiter,iph,pTres,dRmin);
 
       // super cluster from photon
       const reco::SuperClusterRef& phsc = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
@@ -388,12 +382,6 @@ void HLTDump::InitializeTriggerBranches()
   { 
     triggerBits[ipath] = false;
   }
-
-  // clear all old trigger objects
-  for (std::size_t ifilter = 0; ifilter < triggerObjectsByFilter.size(); ifilter++)
-  {
-    triggerObjectsByFilter[ifilter].clear();
-  }
 }
 
 void HLTDump::ClearTriggerObjectBranches()
@@ -403,18 +391,18 @@ void HLTDump::ClearTriggerObjectBranches()
   trigobjphi.clear();
   trigobjpt.clear();
 
-  trigobjE.resize(triggerObjectsByFilter.size());
-  trigobjeta.resize(triggerObjectsByFilter.size());
-  trigobjphi.resize(triggerObjectsByFilter.size());
-  trigobjpt.resize(triggerObjectsByFilter.size());
+  trigobjE.resize(triggerObjectsByFilterMap.size());
+  trigobjeta.resize(triggerObjectsByFilterMap.size());
+  trigobjphi.resize(triggerObjectsByFilterMap.size());
+  trigobjpt.resize(triggerObjectsByFilterMap.size());
 
-  for (std::size_t ifilter = 0; ifilter < triggerObjectsByFilter.size(); ifilter++)
+  for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
   {
-    trigobjE  [ifilter].resize(triggerObjectsByFilter[ifilter].size());
-    trigobjeta[ifilter].resize(triggerObjectsByFilter[ifilter].size());
-    trigobjphi[ifilter].resize(triggerObjectsByFilter[ifilter].size());
-    trigobjpt [ifilter].resize(triggerObjectsByFilter[ifilter].size());
-    for (std::size_t iobject = 0; iobject < triggerObjectsByFilter[ifilter].size(); iobject++)
+    trigobjE  [ifilter].resize(triggerObjectsByFilterMap[filterNames[ifilter]].size());
+    trigobjeta[ifilter].resize(triggerObjectsByFilterMap[filterNames[ifilter]].size());
+    trigobjphi[ifilter].resize(triggerObjectsByFilterMap[filterNames[ifilter]].size());
+    trigobjpt [ifilter].resize(triggerObjectsByFilterMap[filterNames[ifilter]].size());
+    for (std::size_t iobject = 0; iobject < triggerObjectsByFilterMap[filterNames[ifilter]].size(); iobject++)
     {
       trigobjE  [ifilter][iobject] = -9999.f;
       trigobjeta[ifilter][iobject] = -9999.f;

@@ -82,7 +82,17 @@ typedef std::unordered_map<uint32_t,int> uiiumap;
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/HLTReco/interface/TriggerObject.h"
+#include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
+#include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+
+/////////////////////////////
+//                         //
+// Trigger Object Typedefs //
+//                         //
+/////////////////////////////
+typedef std::map<std::string,bool> trigBitMap;
+typedef std::map<std::string,std::vector<pat::TriggerObjectStandAlone> > trigObjVecMap;
 
 namespace oot
 {
@@ -116,13 +126,14 @@ namespace oot
   }
 
   void ReadInTriggerNames(const std::string & inputPaths, std::vector<std::string> & pathNames, 
-			  std::vector<bool> & triggerBits);
+			  trigBitMap & triggerBits);
   void ReadInFilterNames(const std::string & inputFilters, std::vector<std::string> & filterNames, 
-			 std::vector<std::vector<pat::TriggerObjectStandAlone> > & triggerObjectsByFilter);
+			 trigObjVecMap & triggerObjectsByFilter);
+  void PrepTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, 
+		       const edm::Event & iEvent, trigBitMap & triggerBitMap);
   void PrepTriggerObjects(const edm::Handle<edm::TriggerResults> & triggerResultsH,
 			  const edm::Handle<std::vector<pat::TriggerObjectStandAlone> > & triggerObjectsH,
-			  const edm::Event& iEvent, const std::vector<std::string> & filterNames, 
-			  std::vector<std::vector<pat::TriggerObjectStandAlone> > & triggerObjectsByFilter);
+			  const edm::Event & iEvent, trigObjVecMap & triggerObjectsByFilterMap);
   void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, 
 		std::vector<pat::Jet> & jets, const float jetpTmin = 0.f, const int jetID = -1);
   void PrepRecHits(const EcalRecHitCollection * recHitsEB, 
@@ -141,7 +152,7 @@ namespace oot
 		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonLooseIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonMediumIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonTightIdMapH,
-		   std::vector<oot::Photon> & photons, const float phpTmin = 0.f);
+		   std::vector<oot::Photon> & photons, const float phpTmin = 0.f, const std::string & phIDmin = "");
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
 		   std::vector<oot::Photon> & photons, const float phpTmin = 0.f);
@@ -168,15 +179,16 @@ namespace oot
   ////////////////////////
 
   // templates MUST be in header if included elsewhere
-  template <typename VB, typename Obj>
-  void HLTToObjectMatching(const std::vector<std::vector<pat::TriggerObjectStandAlone> > & triggerObjectsByFilter, 
-			   VB& isHLTMatched, const Obj& obj, const int iobj, const float pTres, const float dRmin)
+  template <typename Obj>
+  void HLTToObjectMatching(const trigObjVecMap & triggerObjectsByFilterMap, const std::vector<std::string> & filterNames,
+			   std::vector<std::vector<int> > & isHLTMatched, 
+			   const Obj& obj, const int iobj, const float pTres, const float dRmin)
   {
-    for (std::size_t ifilter = 0; ifilter < triggerObjectsByFilter.size(); ifilter++)
+    for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
     {
-      for (std::size_t iobject = 0; iobject < triggerObjectsByFilter[ifilter].size(); iobject++)
+      for (std::size_t iobject = 0; iobject < triggerObjectsByFilterMap.at(filterNames[ifilter]).size(); iobject++)
       {
-	const pat::TriggerObjectStandAlone & triggerObject = triggerObjectsByFilter[ifilter][iobject];
+	const pat::TriggerObjectStandAlone & triggerObject = triggerObjectsByFilterMap.at(filterNames[ifilter]).at(iobject);
 	if (std::abs(triggerObject.pt()-obj.pt())/obj.pt() < pTres)
         {
 	  if (Config::deltaR(obj.phi(),obj.eta(),triggerObject.phi(),triggerObject.eta()) < dRmin)

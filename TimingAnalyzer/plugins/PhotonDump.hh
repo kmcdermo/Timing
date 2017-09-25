@@ -129,13 +129,14 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   // triggers
   const std::string inputPaths;
   std::vector<std::string> pathNames;
+  trigBitMap triggerBitMap;
   const std::string inputFilters;
   std::vector<std::string> filterNames;
   const edm::InputTag triggerResultsTag;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
   const edm::InputTag triggerObjectsTag;
   edm::EDGetTokenT<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsToken;
-  std::vector<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsByFilter; // first index is filter label, second is trigger objects
+  trigObjVecMap triggerObjectsByFilterMap; // first index is filter label, second is trigger objects
 
   // vertices
   const edm::InputTag verticesTag;

@@ -55,10 +55,10 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
   triggerObjectsToken = consumes<std::vector<pat::TriggerObjectStandAlone> > (triggerObjectsTag);
 
   // read in from a stream the trigger paths for saving
-  oot::ReadInTriggerNames(inputPaths,pathNames,triggerBits);
+  oot::ReadInTriggerNames(inputPaths,pathNames,triggerBitMap);
 
   // read in from a stream the hlt objects/labels to match to
-  oot::ReadInFilterNames(inputFilters,filterNames,triggerObjectsByFilter);
+  oot::ReadInFilterNames(inputFilters,filterNames,triggerObjectsByFilterMap);
 
   //vertex
   verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
@@ -186,6 +186,8 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   }
 
   // do some prepping of objects
+  oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
+  oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
   oot::PrepJets(jetsH,jets);
   oot::PrepPhotons(photonsH,photonLooseIdMapH,photonMediumIdMapH,photonTightIdMapH,
 		   ootPhotonsH,ootPhotonLooseIdMapH,ootPhotonMediumIdMapH,ootPhotonTightIdMapH,
@@ -208,23 +210,11 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   PhotonDump::InitializeTriggerBranches();
   if (triggerResultsH.isValid())
   {
-    const edm::TriggerNames &triggerNames = iEvent.triggerNames(*triggerResultsH);
-    for (std::size_t itrig = 0; itrig < triggerNames.size(); itrig++)
+    for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
     {
-      TString triggerName = triggerNames.triggerName(itrig);
-      for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
-      {
-	if (triggerName.Contains(pathNames[ipath],TString::kExact)) triggerBits[ipath] = triggerResultsH->accept(itrig);
-      } // end loop over user path names
-    } // end loop over trigger names
+      triggerBits[ipath] = triggerBitMap[pathNames[ipath]];
+    }
   } // end check over valid TriggerResults
-
-  /////////////////
-  //             //
-  // HLT Objects //
-  //             //
-  /////////////////
-  oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,filterNames,triggerObjectsByFilter);
 
   /////////////////////////
   //                     //   
@@ -679,7 +669,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       pheta[iph] = photon.eta();
 
       // check for HLT filter matches!
-      oot::HLTToObjectMatching(triggerObjectsByFilter,phIsHLTMatched,*phiter,iph,pTres,dRmin);
+      oot::HLTToObjectMatching(triggerObjectsByFilterMap,filterNames,phIsHLTMatched,*phiter,iph,pTres,dRmin);
 
       // Check for gen level match
       if (isMC) 
@@ -924,12 +914,6 @@ void PhotonDump::InitializeTriggerBranches()
   for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
   { 
     triggerBits[ipath] = false;
-  }
-
-  // clear all old trigger objects
-  for (std::size_t ifilter = 0; ifilter < triggerObjectsByFilter.size(); ifilter++)
-  {
-    triggerObjectsByFilter[ifilter].clear();
   }
 }
 
