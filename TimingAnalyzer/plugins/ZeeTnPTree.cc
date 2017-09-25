@@ -156,7 +156,7 @@ void ZeeTnPTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
     // fidicual cuts
     float eta = std::abs(electron.superCluster()->eta());
-    if (eta > 2.5 || (eta > 1.4442 && eta < 1.566)) continue;
+    if (eta > Config::etaEEmax || (eta > Config::etaEBmax && eta < Config::etaEEmin)) continue;
 
     // quality cuts
     if (electron.pt() < 35.f) continue;
@@ -202,7 +202,7 @@ void ZeeTnPTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
       // fidicual cuts
       float eta = std::abs(electron.superCluster()->eta());
-      if (eta > 2.5 || (eta > 1.4442 && eta < 1.566)) continue;
+      if (eta > Config::etaEEmax || (eta > Config::etaEBmax && eta < Config::etaEEmin)) continue;
       
       // only want opposite signed pairs
       if (tagelectron.pdgId() != -electron.pdgId()) continue;

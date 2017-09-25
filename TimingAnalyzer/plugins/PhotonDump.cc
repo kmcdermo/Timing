@@ -669,7 +669,13 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       pheta[iph] = photon.eta();
 
       // check for HLT filter matches!
-      oot::HLTToObjectMatching(triggerObjectsByFilterMap,filterNames,phIsHLTMatched,*phiter,iph,pTres,dRmin);
+      strBitMap isHLTMatched; 
+      for (const auto & filter : filterNames) isHLTMatched[filter] = false;
+      oot::HLTToObjectMatching(triggerObjectsByFilterMap,isHLTMatched,*phiter,pTres,dRmin);
+      for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
+      {
+	phIsHLTMatched[iph][ifilter] = isHLTMatched[filterNames[ifilter]];
+      }
 
       // Check for gen level match
       if (isMC) 
@@ -883,7 +889,7 @@ void PhotonDump::DumpRecHitInfo(const int iph, const DetIdPairVec & hitsAndFract
   std::cout << "event: " << event << std::endl;
   if (phE[iph] > 100.f && phmatch[iph] > 0 && phVID[iph] >= 2)
   { 
-    if (std::abs(pheta[iph]) < 2.5 && !(std::abs(pheta[iph]) > 1.4442 && std::abs(pheta[iph]) < 1.566))  
+    if ((std::abs(pheta[iph]) < Config::etaEEmax) && !(std::abs(pheta[iph]) > Config::etaEBmax && std::abs(pheta[iph]) < Config::etaEEmin))  
     {
       if (phnrh[iph] == 0)
       {

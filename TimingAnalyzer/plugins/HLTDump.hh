@@ -109,7 +109,7 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   // triggers
   const std::string inputPaths;
   std::vector<std::string> pathNames;
-  trigBitMap triggerBitMap;
+  strBitMap triggerBitMap;
   const std::string inputFilters;
   std::vector<std::string> filterNames;
   const edm::InputTag triggerResultsTag;

@@ -280,7 +280,13 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       pheta[iph] = photon.eta();
 
       // check for HLT filter matches!
-      oot::HLTToObjectMatching(triggerObjectsByFilterMap,filterNames,phIsHLTMatched,*phiter,iph,pTres,dRmin);
+      strBitMap isHLTMatched;
+      for (const auto & filter : filterNames) isHLTMatched[filter] = false;
+      oot::HLTToObjectMatching(triggerObjectsByFilterMap,isHLTMatched,*phiter,pTres,dRmin);
+      for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
+      {
+	phIsHLTMatched[iph][ifilter] = isHLTMatched[filterNames[ifilter]];
+      }
 
       // super cluster from photon
       const reco::SuperClusterRef& phsc = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();

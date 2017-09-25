@@ -25,6 +25,10 @@ namespace Config
   constexpr float PI    = 3.14159265358979323846;
   constexpr float TWOPI = 2.0*PI;
 
+  constexpr float etaEBmax = 1.4442;
+  constexpr float etaEEmin = 1.566;
+  constexpr float etaEEmax = 2.5;
+
   inline float rad2  (const float x, const float y){return x*x + y*y;}
   inline float phi   (const float x, const float y){return std::atan2(y,x);}
   inline float theta (const float r, const float z){return std::atan2(r,z);}
@@ -91,7 +95,7 @@ typedef std::unordered_map<uint32_t,int> uiiumap;
 // Trigger Object Typedefs //
 //                         //
 /////////////////////////////
-typedef std::map<std::string,bool> trigBitMap;
+typedef std::map<std::string,bool> strBitMap;
 typedef std::map<std::string,std::vector<pat::TriggerObjectStandAlone> > trigObjVecMap;
 
 namespace oot
@@ -126,11 +130,11 @@ namespace oot
   }
 
   void ReadInTriggerNames(const std::string & inputPaths, std::vector<std::string> & pathNames, 
-			  trigBitMap & triggerBits);
+			  strBitMap & triggerBits);
   void ReadInFilterNames(const std::string & inputFilters, std::vector<std::string> & filterNames, 
 			 trigObjVecMap & triggerObjectsByFilter);
   void PrepTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, 
-		       const edm::Event & iEvent, trigBitMap & triggerBitMap);
+		       const edm::Event & iEvent, strBitMap & triggerBitMap);
   void PrepTriggerObjects(const edm::Handle<edm::TriggerResults> & triggerResultsH,
 			  const edm::Handle<std::vector<pat::TriggerObjectStandAlone> > & triggerObjectsH,
 			  const edm::Event & iEvent, trigObjVecMap & triggerObjectsByFilterMap);
@@ -180,20 +184,18 @@ namespace oot
 
   // templates MUST be in header if included elsewhere
   template <typename Obj>
-  void HLTToObjectMatching(const trigObjVecMap & triggerObjectsByFilterMap, const std::vector<std::string> & filterNames,
-			   std::vector<std::vector<int> > & isHLTMatched, 
-			   const Obj& obj, const int iobj, const float pTres, const float dRmin)
+  void HLTToObjectMatching(const trigObjVecMap & triggerObjectsByFilterMap, strBitMap & isHLTMatched, 
+			   const Obj& obj, const float pTres = 1.f, const float dRmin = Config::TWOPI)
   {
-    for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
+    for (const auto & triggerObjectsByFilterPair : triggerObjectsByFilterMap)
     {
-      for (std::size_t iobject = 0; iobject < triggerObjectsByFilterMap.at(filterNames[ifilter]).size(); iobject++)
+      for (const auto & triggerObject : triggerObjectsByFilterPair.second)
       {
-	const pat::TriggerObjectStandAlone & triggerObject = triggerObjectsByFilterMap.at(filterNames[ifilter]).at(iobject);
 	if (std::abs(triggerObject.pt()-obj.pt())/obj.pt() < pTres)
         {
 	  if (Config::deltaR(obj.phi(),obj.eta(),triggerObject.phi(),triggerObject.eta()) < dRmin)
 	  {
-	    isHLTMatched[iobj][ifilter] = true;
+	    isHLTMatched[triggerObjectsByFilterPair.first] = true; break;
 	  }
 	}
       }
@@ -202,7 +204,7 @@ namespace oot
 
   template <typename Obj>
   bool GenToObjectMatching(const Obj& obj, const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH,
-			   const float pTres, const float dRmin)
+			   const float pTres = 1.f, const float dRmin = Config::TWOPI)
   {
     if (genparticlesH.isValid()) // make sure gen particles exist
     {

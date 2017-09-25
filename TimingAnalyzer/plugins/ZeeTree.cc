@@ -170,7 +170,7 @@ void ZeeTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   {
     bool saveElectron = false;
 
-    if (eliter->pt() > 35.f && std::abs(eliter->superCluster()->eta()) < 2.5 && eliter->electronID("tight"))  
+    if (eliter->pt() > 35.f && std::abs(eliter->superCluster()->eta()) < Config::etaEEmax && eliter->electronID("tight"))  
     {
       const reco::SuperClusterRef& elsc = eliter->superCluster().isNonnull() ? eliter->superCluster() : eliter->parentSuperCluster();
       if (eliter->ecalDrivenSeed() && elsc.isNonnull()) 

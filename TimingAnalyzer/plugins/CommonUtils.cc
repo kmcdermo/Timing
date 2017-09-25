@@ -9,7 +9,7 @@ namespace oot
   /////////////////
 
   void ReadInTriggerNames(const std::string & inputPaths, std::vector<std::string> & pathNames, 
-			  trigBitMap & triggerBitMap)
+			  strBitMap & triggerBitMap)
   {
     if (Config::file_exists(inputPaths))
     {
@@ -49,7 +49,7 @@ namespace oot
   }
 
   void PrepTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, 
-		       const edm::Event & iEvent, trigBitMap & triggerBitMap)
+		       const edm::Event & iEvent, strBitMap & triggerBitMap)
   {
     for (auto & triggerBitPair : triggerBitMap) 
     {
@@ -329,7 +329,7 @@ namespace oot
       else if (HoE < 0.0597) return 1; 
       else                   return 0;
     }
-    else if (eta > 1.479 && eta < 2.5) // 1.566
+    else if (eta > 1.479 && eta < 2.5)
     {
       if      (HoE < 0.0213) return 3; 
       else if (HoE < 0.0219) return 2; 
