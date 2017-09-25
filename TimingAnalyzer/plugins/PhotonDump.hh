@@ -211,7 +211,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   int genpuobs, genputrue;
 
   // Gen particle info: GMSB
-  int nNeutralino, nNeutoPhGr;
+  int nNeutoPhGr;
 
   float genN1mass, genN1E, genN1pt, genN1phi, genN1eta;
   float genN1prodvx, genN1prodvy, genN1prodvz;

@@ -64,6 +64,35 @@
 #include "Timing/TimingAnalyzer/plugins/CommonUtils.hh"
 
 // Unique structs
+struct gmsbStruct
+{
+  float genNmass_;
+  float genNE_;
+  float genNpt_;
+  float genNphi_;
+  float genNeta_;
+
+  float genNprodvx_;
+  float genNprodvy_;
+  float genNprodvz_;
+
+  float genNdecayvx_;
+  float genNdecayvy_;
+  float genNdecayvz_;
+  
+  float genphE_;
+  float genphpt_;
+  float genphphi_;
+  float genpheta_;
+  float genphmatch_;
+
+  float gengrmass_;
+  float gengrE_;
+  float gengrpt_;
+  float gengrphi_;
+  float gengreta_;
+};
+
 struct jetStruct
 {
   float E_;
@@ -116,9 +145,15 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   explicit DisPho(const edm::ParameterSet&);
   ~DisPho();
 
+  void MakeGMSBBranch(const int i, gmsbStruct& gmsbBranch);
   void MakeJetBranch(const int i, jetStruct& jetBranch);
   void MakePhoBranch(const int i, phoStruct& phoBranch);
 
+  void InitializeGenEvtBranches();
+  void InitializeGenPUBranches();
+  void InitializeGMSBBranches();
+  void InitializeGMSBBranch(gmsbStruct& gmsbBranch);
+  void SetGMSBBranch(const reco::GenParticle & neutralino, gmsbStruct & gmsbBranch, const std::vector<oot::Photon> & photons);
   void SetTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, const edm::Event & iEvent);
   void InitializePVBranches();
   void InitializeMETBranches();
@@ -228,6 +263,14 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // output event level ntuple
   TTree* tree;
+ 
+  // MC info
+  float genwgt;
+  int genpuobs, genputrue;
+
+  // gmsb
+  int nNeutoPhGr;
+  gmsbStruct gmsbBranch0, gmsbBranch1;
 
   // event info
   unsigned long int event;

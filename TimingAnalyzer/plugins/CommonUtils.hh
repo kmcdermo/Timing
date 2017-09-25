@@ -90,6 +90,13 @@ typedef std::unordered_map<uint32_t,int> uiiumap;
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
+//////////////
+//          //
+// MC Types //
+//          //
+//////////////
+typedef std::vector<reco::GenParticle> genPartVec;
+
 /////////////////////////////
 //                         //
 // Trigger Object Typedefs //
@@ -133,6 +140,7 @@ namespace oot
 			  strBitMap & triggerBits);
   void ReadInFilterNames(const std::string & inputFilters, std::vector<std::string> & filterNames, 
 			 trigObjVecMap & triggerObjectsByFilter);
+  void PrepNeutralinos(const edm::Handle<std::vector<reco::GenParticle> >& genparticlesH, genPartVec& neutralinos);
   void PrepTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, 
 		       const edm::Event & iEvent, strBitMap & triggerBitMap);
   void PrepTriggerObjects(const edm::Handle<edm::TriggerResults> & triggerResultsH,

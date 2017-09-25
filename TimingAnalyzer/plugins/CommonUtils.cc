@@ -48,6 +48,30 @@ namespace oot
     } // check to make sure text file exists
   }
 
+  void PrepNeutralinos(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, genPartVec& neutralinos)
+  {
+    if (genparticlesH.isValid())
+    {
+      int nNeutoPhGr = 0;
+      for (const auto & genpart : *genparticlesH) // loop over gen particles
+      {
+	if (nNeutoPhGr == 2) break;
+
+	if (genpart.pdgId() == 1000022 && genpart.numberOfDaughters() == 2)
+	{
+	  if ((genpart.daughter(0)->pdgId() == 22 && genpart.daughter(1)->pdgId() == 1000039) ||
+	      (genpart.daughter(1)->pdgId() == 22 && genpart.daughter(0)->pdgId() == 1000039)) 
+	  {
+	    nNeutoPhGr++;
+	    neutralinos.emplace_back(genpart);
+	  } // end conditional over matching daughter ids
+	} // end conditional over neutralino id
+      } // end loop over gen particles
+
+      std::sort(neutralinos.begin(),neutralinos.end(),oot::sortByPt);
+    } // end check over valid
+  }
+
   void PrepTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, 
 		       const edm::Event & iEvent, strBitMap & triggerBitMap)
   {

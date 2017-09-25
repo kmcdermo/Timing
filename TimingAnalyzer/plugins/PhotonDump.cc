@@ -176,7 +176,8 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   edm::Handle<std::vector<PileupSummaryInfo> > pileupInfoH;
   edm::Handle<std::vector<reco::GenParticle> > genparticlesH;
   edm::Handle<std::vector<reco::GenJet> > genjetsH;
-
+  genPartVec neutralinos;
+ 
   if (isMC)
   {
     iEvent.getByToken(genevtInfoToken, genevtInfoH);
@@ -192,7 +193,8 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   oot::PrepPhotons(photonsH,photonLooseIdMapH,photonMediumIdMapH,photonTightIdMapH,
 		   ootPhotonsH,ootPhotonLooseIdMapH,ootPhotonMediumIdMapH,ootPhotonTightIdMapH,
 		   photons);
-
+  if (isGMSB) oot::PrepNeutralinos(genparticlesH,neutralinos);
+	
   ///////////////////////////
   //                       //
   // Event, lumi, run info //
@@ -276,31 +278,9 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       {
 	// Dump gen particle pdgIds
 	if (dumpIds) PhotonDump::DumpGenIds(genparticlesH); 
-	
-	nNeutralino = 0;
-	nNeutoPhGr  = 0;
-	std::vector<reco::GenParticle> neutralinos;
-	for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter) // loop over gen particles
-        {
-	  if (nNeutoPhGr == 2) break;
 
-	  if (gpiter->pdgId() == 1000022 && gpiter->numberOfDaughters() == 2)
-	  {
-	    nNeutralino++;
-	    
-	    if ((gpiter->daughter(0)->pdgId() == 22 && gpiter->daughter(1)->pdgId() == 1000039) ||
-		(gpiter->daughter(1)->pdgId() == 22 && gpiter->daughter(0)->pdgId() == 1000039)) 
-	    {
-	      nNeutoPhGr++;
-	      neutralinos.push_back((*gpiter));
-	    } // end conditional over matching daughter ids
-	  } // end conditional over neutralino id
-	} // end loop over gen particles
-
-	std::sort(neutralinos.begin(),neutralinos.end(),oot::sortByPt);
-
-	nNeutoPhGr = 0; // reuse
-	for (std::vector<reco::GenParticle>::const_iterator gpiter = neutralinos.begin(); gpiter != neutralinos.end(); ++gpiter) // loop over neutralinos
+	nNeutoPhGr = 0;
+	for (genPartVec::const_iterator gpiter = neutralinos.begin(); gpiter != neutralinos.end(); ++gpiter) // loop over neutralinos
 	{
 	  nNeutoPhGr++;
 	  if (nNeutoPhGr == 1)
@@ -936,7 +916,6 @@ void PhotonDump::InitializeGenPUBranches()
 void PhotonDump::InitializeGMSBBranches()
 {
   // Gen particle info
-  nNeutralino = -9999;
   nNeutoPhGr  = -9999;
 
   genN1mass = -9999.f; genN1E = -9999.f; genN1pt = -9999.f; genN1phi = -9999.f; genN1eta = -9999.f;
@@ -1275,7 +1254,6 @@ void PhotonDump::beginJob()
   if (isGMSB)
   {
     // Gen particle info
-    tree->Branch("nNeutralino"          , &nNeutralino          , "nNeutralino/I");
     tree->Branch("nNeutoPhGr"           , &nNeutoPhGr           , "nNeutoPhGr/I");
 
     tree->Branch("genN1mass"            , &genN1mass            , "genN1mass/F");

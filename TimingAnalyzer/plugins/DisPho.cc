@@ -196,6 +196,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<GenEventInfoProduct> genevtInfoH;
   edm::Handle<std::vector<PileupSummaryInfo> > pileupInfoH;
   edm::Handle<std::vector<reco::GenParticle> > genparticlesH;
+  genPartVec neutralinos;
 
   if (isMC)
   {
@@ -209,6 +210,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Object Prepping //
   //                 //
   /////////////////////
+  if (isGMSB) oot::PrepNeutralinos(genparticlesH,neutralinos);
   oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
   oot::PrepJets(jetsH,jets,jetpTmin,jetIDmin);
@@ -261,6 +263,57 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     } 
   } // end check
   if (!isph1 && applyPh1) return;
+
+  /////////////
+  //         //
+  // MC Info //
+  //         //
+  /////////////
+
+  if (isMC) 
+  {
+    ///////////////////////
+    //                   //
+    // Event weight info //
+    //                   //
+    ///////////////////////
+    DisPho::InitializeGenEvtBranches();
+    if (genevtInfoH.isValid()) {genwgt = genevtInfoH->weight();}
+
+    /////////////////////
+    //                 //
+    // Gen pileup info //
+    //                 //
+    /////////////////////
+    DisPho::InitializeGenPUBranches();
+    if (pileupInfoH.isValid()) // standard check for pileup
+    {
+      for (const auto & puinfo : *pileupInfoH)
+      {
+	if (puinfo.getBunchCrossing() == 0) 
+	{
+	  genpuobs  = puinfo.getPU_NumInteractions();
+	  genputrue = puinfo.getTrueNumInteractions();
+	} // end check over correct BX
+      } // end loop over PU
+    } // end check over pileup
+
+    ///////////////////////
+    //                   //
+    // Gen particle info //
+    //                   //
+    ///////////////////////
+    if (isGMSB) 
+    {
+      DisPho::InitializeGMSBBranches();
+      if (genparticlesH.isValid()) // make sure gen particles exist --> only do this for GMSB
+      {
+	nNeutoPhGr = neutralinos.size();
+	if (nNeutoPhGr > 0) DisPho::SetGMSBBranch(neutralinos[0],gmsbBranch0,photons);
+	if (nNeutoPhGr > 1) DisPho::SetGMSBBranch(neutralinos[1],gmsbBranch1,photons);
+      } // check genparticles are okay
+    } // isGMSB
+  } // isMC
 
   ///////////////////////////
   //                       //
@@ -366,6 +419,88 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   ///////////////
   tree->Fill();      
 }
+
+void DisPho::InitializeGenEvtBranches()
+{
+  genwgt = -9999.f;
+}
+
+void DisPho::InitializeGenPUBranches()
+{
+  genpuobs = -9999; genputrue = -9999;
+}
+
+void DisPho::InitializeGMSBBranches()
+{
+  nNeutoPhGr = -9999;
+  DisPho::InitializeGMSBBranch(gmsbBranch0);
+  DisPho::InitializeGMSBBranch(gmsbBranch1);
+}
+
+void DisPho::InitializeGMSBBranch(gmsbStruct& gmsbBranch)
+{
+  gmsbBranch.genNmass_ = -9999.f; gmsbBranch.genNE_ = -9999.f; gmsbBranch.genNpt_ = -9999.f; gmsbBranch.genNphi_ = -9999.f; gmsbBranch.genNeta_ = -9999.f;
+  gmsbBranch.genNprodvx_ = -9999.f; gmsbBranch.genNprodvy_ = -9999.f; gmsbBranch.genNprodvz_ = -9999.f;
+  gmsbBranch.genNdecayvx_ = -9999.f; gmsbBranch.genNdecayvy_ = -9999.f; gmsbBranch.genNdecayvz_ = -9999.f;
+  
+  gmsbBranch.genphE_ = -9999.f; gmsbBranch.genphpt_ = -9999.f; gmsbBranch.genphphi_ = -9999.f; gmsbBranch.genpheta_ = -9999.f; gmsbBranch.genphmatch_ = -9999;
+  gmsbBranch.gengrmass_ = -9999.f; gmsbBranch.gengrE_ = -9999.f; gmsbBranch.gengrpt_ = -9999.f; gmsbBranch.gengrphi_ = -9999.f; gmsbBranch.gengreta_ = -9999.f;
+}
+
+void DisPho::SetGMSBBranch(const reco::GenParticle & neutralino, gmsbStruct & gmsbBranch, const std::vector<oot::Photon> & photons)
+{
+  // neutralino 4-vector
+  gmsbBranch.genNmass_ = neutralino.mass();
+  gmsbBranch.genNE_    = neutralino.energy();
+  gmsbBranch.genNpt_   = neutralino.pt();
+  gmsbBranch.genNphi_  = neutralino.phi();
+  gmsbBranch.genNeta_  = neutralino.eta();
+
+  // neutralino production vertex
+  gmsbBranch.genNprodvx_ = neutralino.vx();
+  gmsbBranch.genNprodvy_ = neutralino.vy();
+  gmsbBranch.genNprodvz_ = neutralino.vz();
+  
+  // neutralino decay vertex (same for both daughters unless really screwed up)
+  gmsbBranch.genNdecayvx_ = neutralino.daughter(0)->vx();
+  gmsbBranch.genNdecayvy_ = neutralino.daughter(0)->vy();
+  gmsbBranch.genNdecayvz_ = neutralino.daughter(0)->vz();
+  
+  // set photon daughter stuff
+  const int phdaughter = (neutralino.daughter(0)->pdgId() == 22)?0:1;
+	    
+  gmsbBranch.genphE_   = neutralino.daughter(phdaughter)->energy();
+  gmsbBranch.genphpt_  = neutralino.daughter(phdaughter)->pt();
+  gmsbBranch.genphphi_ = neutralino.daughter(phdaughter)->phi();
+  gmsbBranch.genpheta_ = neutralino.daughter(phdaughter)->eta();
+  
+  // check for a reco match!
+  int   iph   = 0;
+  float mindR = dRmin;
+  for (const auto & photon : photons)
+  {
+    if (iph > 4) break;
+    if (std::abs(photon.pt()-gmsbBranch.genphpt_)/gmsbBranch.genphpt_ < pTres)
+    {
+      const float delR = deltaR(gmsbBranch.genphphi_,gmsbBranch.genpheta_,photon.phi(),photon.eta());
+      if (delR < mindR) 
+      {
+	mindR = delR;
+	gmsbBranch.genphmatch_ = iph; 
+      } // end check over deltaR
+    } // end check over pt resolution
+    iph++;
+  } // end loop over reco photons
+  
+  // set gravitino daughter stuff
+  const int grdaughter = (neutralino.daughter(0)->pdgId() == 1000039)?0:1;
+
+  gmsbBranch.gengrmass_ = neutralino.daughter(grdaughter)->mass();
+  gmsbBranch.gengrE_    = neutralino.daughter(grdaughter)->energy();
+  gmsbBranch.gengrpt_   = neutralino.daughter(grdaughter)->pt();
+  gmsbBranch.gengrphi_  = neutralino.daughter(grdaughter)->phi();
+  gmsbBranch.gengreta_  = neutralino.daughter(grdaughter)->eta();
+} 
 
 void DisPho::InitializePVBranches()
 {
@@ -595,6 +730,22 @@ void DisPho::beginJob()
   edm::Service<TFileService> fs;
   tree = fs->make<TTree>("tree","tree");
 
+  // Generic MC Info
+  if (isMC)
+  {
+    tree->Branch("genwgt", &genwgt, "genwgt/F");
+    tree->Branch("genpuobs", &genpuobs, "genpuobs/I");
+    tree->Branch("genputrue", &genputrue, "genputrue/I");
+  }
+
+  // GMSB Info
+  if (isGMSB)
+  {
+    tree->Branch("nNeutoPhGr", &nNeutoPhGr, "nNeutoPhGr/I");
+    DisPho::MakeGMSBBranch(0,gmsbBranch0);
+    DisPho::MakeGMSBBranch(1,gmsbBranch1);
+  }
+
   // Run, Lumi, Event info
   tree->Branch("run", &run, "run/i");
   tree->Branch("lumi", &lumi, "lumi/i");
@@ -642,6 +793,35 @@ void DisPho::beginJob()
   DisPho::MakePhoBranch(1,phoBranch1);
   DisPho::MakePhoBranch(2,phoBranch2);
   DisPho::MakePhoBranch(3,phoBranch3);
+}
+
+void DisPho::MakeGMSBBranch(const int i, gmsbStruct& gmsbBranch)
+{
+  tree->Branch(Form("genNmass%i",i), &gmsbBranch.genNmass_, Form("genNmass%i/F",i));
+  tree->Branch(Form("genNE%i",i), &gmsbBranch.genNE_, Form("genNE%i/F",i));
+  tree->Branch(Form("genNpt%i",i), &gmsbBranch.genNpt_, Form("genNpt%i/F",i));
+  tree->Branch(Form("genNphi%i",i), &gmsbBranch.genNphi_, Form("genNphi%i/F",i));
+  tree->Branch(Form("genNeta%i",i), &gmsbBranch.genNeta_, Form("genNeta%i/F",i));
+
+  tree->Branch(Form("genNprodvx%i",i), &gmsbBranch.genNprodvx_, Form("genNprodvx%i/F",i));
+  tree->Branch(Form("genNprodvy%i",i), &gmsbBranch.genNprodvy_, Form("genNprodvy%i/F",i));
+  tree->Branch(Form("genNprodvz%i",i), &gmsbBranch.genNprodvz_, Form("genNprodvz%i/F",i));
+
+  tree->Branch(Form("genNdecayvx%i",i), &gmsbBranch.genNdecayvx_, Form("genNdecayvx%i/F",i));
+  tree->Branch(Form("genNdecayvy%i",i), &gmsbBranch.genNdecayvy_, Form("genNdecayvy%i/F",i));
+  tree->Branch(Form("genNdecayvz%i",i), &gmsbBranch.genNdecayvz_, Form("genNdecayvz%i/F",i));
+
+  tree->Branch(Form("genphE%i",i), &gmsbBranch.genphE_, Form("genphE%i/F",i));
+  tree->Branch(Form("genphpt%i",i), &gmsbBranch.genphpt_, Form("genphpt%i/F",i));
+  tree->Branch(Form("genphphi%i",i), &gmsbBranch.genphphi_, Form("genphphi%i/F",i));
+  tree->Branch(Form("genpheta%i",i), &gmsbBranch.genpheta_, Form("genpheta%i/F",i));
+  tree->Branch(Form("genphmatch%i",i), &gmsbBranch.genphmatch_, Form("genphmatch%i/I",i));
+
+  tree->Branch(Form("gengrmass%i",i), &gmsbBranch.gengrmass_, Form("gengrmass%i/F",i));
+  tree->Branch(Form("gengrE%i",i), &gmsbBranch.gengrE_, Form("gengrE%i/F",i));
+  tree->Branch(Form("gengrpt%i",i), &gmsbBranch.gengrpt_, Form("gengrpt%i/F",i));
+  tree->Branch(Form("gengrphi%i",i), &gmsbBranch.gengrphi_, Form("gengrphi%i/F",i));
+  tree->Branch(Form("gengreta%i",i), &gmsbBranch.gengreta_, Form("gengreta%i/F",i));
 }
 
 void DisPho::MakeJetBranch(const int i, jetStruct& jetBranch)
