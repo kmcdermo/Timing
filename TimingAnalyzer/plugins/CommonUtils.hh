@@ -127,7 +127,7 @@ namespace oot
 		std::vector<pat::Jet> & jets, const float jetpTmin = 0.f, const int jetID = -1);
   void PrepRecHits(const EcalRecHitCollection * recHitsEB, 
 		   const EcalRecHitCollection * recHitsEE,
-		   uiiumap & recHitMap);
+		   uiiumap & recHitMap, const float rhEmin = 0.f);
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   const edm::Handle<edm::ValueMap<bool> > & photonLooseIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & photonMediumIdMapH, 
@@ -145,7 +145,6 @@ namespace oot
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
 		   std::vector<oot::Photon> & photons, const float phpTmin = 0.f);
-  void PrepTrigger(std::vector<bool> & triggerBits);
   void PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
 		     const edm::Handle<edm::ValueMap<bool> > & electronVetoIdMapH, 
 		     const edm::Handle<edm::ValueMap<bool> > & electronLooseIdMapH, 

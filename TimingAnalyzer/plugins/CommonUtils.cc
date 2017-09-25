@@ -156,16 +156,16 @@ namespace oot
 
   void PrepRecHits(const EcalRecHitCollection * recHitsEB,
 		   const EcalRecHitCollection * recHitsEE,
-		   uiiumap & recHitMap)
+		   uiiumap & recHitMap, const float rhEmin)
   {
     int i = 0;
     for (const auto & recHit : *recHitsEB)
     {
-      recHitMap[recHit.detid().rawId()] = i++;
+      if (recHit.energy() > rhEmin) recHitMap[recHit.detid().rawId()] = i++;
     }
     for (const auto & recHit : *recHitsEE)
     {
-      recHitMap[recHit.detid().rawId()] = i++;
+      if (recHit.energy() > rhEmin) recHitMap[recHit.detid().rawId()] = i++;
     }
   }
 
@@ -185,11 +185,6 @@ namespace oot
       std::sort(jets.begin(),jets.end(),oot::sortByPt);
     }
   }  
-
-  void PrepTrigger(std::vector<bool> & triggerBits)
-  {
-    for (auto triggerBit : triggerBits) triggerBit = false;
-  }
 
   void PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
 		     const edm::Handle<edm::ValueMap<bool> > & electronVetoIdMapH, 
