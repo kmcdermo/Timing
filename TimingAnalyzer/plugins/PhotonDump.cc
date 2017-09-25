@@ -177,6 +177,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   edm::Handle<std::vector<reco::GenParticle> > genparticlesH;
   edm::Handle<std::vector<reco::GenJet> > genjetsH;
   genPartVec neutralinos;
+  genPartVec vPions;
  
   if (isMC)
   {
@@ -194,6 +195,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 		   ootPhotonsH,ootPhotonLooseIdMapH,ootPhotonMediumIdMapH,ootPhotonTightIdMapH,
 		   photons);
   if (isGMSB) oot::PrepNeutralinos(genparticlesH,neutralinos);
+  if (isHVDS) oot::PrepVPions(genparticlesH,vPions);
 	
   ///////////////////////////
   //                       //
@@ -407,21 +409,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	if (dumpIds) PhotonDump::DumpGenIds(genparticlesH); 
 
 	PhotonDump::InitializeHVDSBranches();
-	std::vector<reco::GenParticle> vPions;
-    	for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter) // loop over gen particles
-        {
-    	  if (gpiter->pdgId() == 4900111 && gpiter->numberOfDaughters() == 2)
-    	  {
-	    if (gpiter->daughter(0)->pdgId() == 22 && gpiter->daughter(1)->pdgId() == 22)
-	    {
-	      nvPions++;
-	      vPions.push_back((*gpiter));
-	    } // end check over both gen photons	
-	  } // end check over vPions
-	} // end loop over gen particles
-
-	std::sort(vPions.begin(),vPions.end(),oot::sortByPt);
-
+	nvPions = vPions.size();
 	for (std::vector<reco::GenParticle>::const_iterator gpiter = vPions.begin(); gpiter != vPions.end(); ++gpiter)
 	{
 	  // set neutralino parameters

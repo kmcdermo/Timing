@@ -72,6 +72,25 @@ namespace oot
     } // end check over valid
   }
 
+  void PrepVPions(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, genPartVec& vPions)
+  {
+    if (genparticlesH.isValid()) // make sure gen particles exist --> only do this for GMSB
+    {
+      for (const auto & genpart : *genparticlesH) // loop over gen particles
+      {
+	if (genpart.pdgId() == 4900111 && genpart.numberOfDaughters() == 2)
+    	{
+	  if (genpart.daughter(0)->pdgId() == 22 && genpart.daughter(1)->pdgId() == 22)
+	  {
+	    vPions.emplace_back(genpart);
+	  } // end check over both gen photons	
+	} // end check over vPions
+      } // end loop over gen particles
+
+      std::sort(vPions.begin(),vPions.end(),oot::sortByPt);
+    }
+  }
+
   void PrepTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, 
 		       const edm::Event & iEvent, strBitMap & triggerBitMap)
   {

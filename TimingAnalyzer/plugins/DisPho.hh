@@ -93,6 +93,35 @@ struct gmsbStruct
   float gengreta_;
 };
 
+struct hvdsStruct
+{
+  float genvPionmass_;
+  float genvPionE_;
+  float genvPionpt_;
+  float genvPionphi_;
+  float genvPioneta_;
+
+  float genvPionprodvx_;
+  float genvPionprodvy_;
+  float genvPionprodvz_;
+
+  float genvPiondecayvx_;
+  float genvPiondecayvy_;
+  float genvPiondecayvz_;
+
+  float genHVph1E_;
+  float genHVph1pt_;
+  float genHVph1phi_;
+  float genHVph1eta_;
+  int genHVph1match_;
+ 
+  float genHVph2E_;
+  float genHVph2pt_;
+  float genHVph2phi_;
+  float genHVph2eta_;
+  int genHVph2match_;
+};
+
 struct jetStruct
 {
   float E_;
@@ -146,6 +175,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   ~DisPho();
 
   void MakeGMSBBranch(const int i, gmsbStruct& gmsbBranch);
+  void MakeHVDSBranch(const int i, hvdsStruct& hvdsBranch);
   void MakeJetBranch(const int i, jetStruct& jetBranch);
   void MakePhoBranch(const int i, phoStruct& phoBranch);
 
@@ -154,6 +184,9 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void InitializeGMSBBranches();
   void InitializeGMSBBranch(gmsbStruct& gmsbBranch);
   void SetGMSBBranch(const reco::GenParticle & neutralino, gmsbStruct & gmsbBranch, const std::vector<oot::Photon> & photons);
+  void InitializeHVDSBranches();
+  void InitializeHVDSBranch(hvdsStruct& hvdsBranch);
+  void SetHVDSBranch(const reco::GenParticle & vPion, hvdsStruct & hvdsBranch, const std::vector<oot::Photon> & photons);
   void SetTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, const edm::Event & iEvent);
   void InitializePVBranches();
   void InitializeMETBranches();
@@ -271,6 +304,10 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // gmsb
   int nNeutoPhGr;
   gmsbStruct gmsbBranch0, gmsbBranch1;
+
+  // hvds
+  int nvPions;
+  hvdsStruct hvdsBranch0, hvdsBranch1, hvdsBranch2, hvdsBranch3;
 
   // event info
   unsigned long int event;
