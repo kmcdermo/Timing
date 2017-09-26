@@ -71,6 +71,7 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   // RHOS
   edm::Handle<double> rhosH;
   iEvent.getByToken(rhosToken, rhosH);
+  rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
 
   // VERTICES
   edm::Handle<std::vector<reco::Vertex> > verticesH;
@@ -106,7 +107,7 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   // do some prepping of objects
   oot::PrepJets(jetsH,jets);
-  oot::PrepPhotons(photonsH,ootPhotonsH,photons);
+  oot::PrepPhotons(photonsH,ootPhotonsH,photons,rho);
 
   ///////////////////////////
   //                       //
@@ -139,18 +140,6 @@ void SimplePATTree::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     } // end check over pileup info valid
   } // end block over MC only code
   
-  ///////////////////
-  //               //
-  // FixedGrid Rho //
-  //               //
-  ///////////////////
-
-  rho = -9999.f;
-  if (rhosH.isValid())
-  {
-    rho = *(rhosH.product());
-  }
-
   /////////////////////////
   //                     //   
   // Primary Vertex info //

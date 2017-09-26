@@ -40,16 +40,10 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
 
   // photons + ids
   photonsTag          (iConfig.getParameter<edm::InputTag>("photons")),
-  photonLooseIdMapTag (iConfig.getParameter<edm::InputTag>("photonLooseID")),
-  photonMediumIdMapTag(iConfig.getParameter<edm::InputTag>("photonMediumID")),
-  photonTightIdMapTag (iConfig.getParameter<edm::InputTag>("photonTightID")),
 
   // ootPhotons + ids
   ootPhotonsTag          (iConfig.getParameter<edm::InputTag>("ootPhotons")),
-  ootPhotonLooseIdMapTag (iConfig.getParameter<edm::InputTag>("ootPhotonLooseID")),
-  ootPhotonMediumIdMapTag(iConfig.getParameter<edm::InputTag>("ootPhotonMediumID")),
-  ootPhotonTightIdMapTag (iConfig.getParameter<edm::InputTag>("ootPhotonTightID")),
-  
+
   //recHits
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
   recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE")),
@@ -87,15 +81,9 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
 
   // photons + ids
   photonsToken = consumes<std::vector<pat::Photon> > (photonsTag);
-  photonLooseIdMapToken  = consumes<edm::ValueMap<bool> > (photonLooseIdMapTag);
-  photonMediumIdMapToken = consumes<edm::ValueMap<bool> > (photonMediumIdMapTag);
-  photonTightIdMapToken  = consumes<edm::ValueMap<bool> > (photonTightIdMapTag);
   if (not ootPhotonsTag.label().empty())
   {
     ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
-    ootPhotonLooseIdMapToken  = consumes<edm::ValueMap<bool> > (ootPhotonLooseIdMapTag);
-    ootPhotonMediumIdMapToken = consumes<edm::ValueMap<bool> > (ootPhotonMediumIdMapTag);
-    ootPhotonTightIdMapToken  = consumes<edm::ValueMap<bool> > (ootPhotonTightIdMapTag);
   }
 
   // rechits
@@ -140,6 +128,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // RHOS
   edm::Handle<double> rhosH;
   iEvent.getByToken(rhosToken, rhosH);
+  rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
 
   // MET
   edm::Handle<std::vector<pat::MET> > metsH;
@@ -154,25 +143,13 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
   int phosize = photonsH->size();
-  edm::Handle<edm::ValueMap<bool> > photonLooseIdMapH;
-  iEvent.getByToken(photonLooseIdMapToken, photonLooseIdMapH);
-  edm::Handle<edm::ValueMap<bool> > photonMediumIdMapH;
-  iEvent.getByToken(photonMediumIdMapToken, photonMediumIdMapH);
-  edm::Handle<edm::ValueMap<bool> > photonTightIdMapH;
-  iEvent.getByToken(photonTightIdMapToken, photonTightIdMapH);
 
   // OOTPHOTONS + IDS
   edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
-  edm::Handle<edm::ValueMap<bool> > ootPhotonLooseIdMapH;
-  edm::Handle<edm::ValueMap<bool> > ootPhotonMediumIdMapH;
-  edm::Handle<edm::ValueMap<bool> > ootPhotonTightIdMapH;
   if (not ootPhotonsToken.isUninitialized())
   {
     iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
     phosize += ootPhotonsH->size();
-    iEvent.getByToken(ootPhotonLooseIdMapToken, ootPhotonLooseIdMapH);
-    iEvent.getByToken(ootPhotonMediumIdMapToken, ootPhotonMediumIdMapH);
-    iEvent.getByToken(ootPhotonTightIdMapToken, ootPhotonTightIdMapH);
   }
   // total photons vector
   std::vector<oot::Photon> photons; photons.reserve(phosize);
@@ -217,9 +194,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
   oot::PrepJets(jetsH,jets,jetpTmin,jetIDmin);
   oot::PrepRecHits(recHitsEB,recHitsEE,recHitMap,rhEmin);
-  oot::PrepPhotons(photonsH,photonLooseIdMapH,photonMediumIdMapH,photonTightIdMapH,
-		   ootPhotonsH,ootPhotonLooseIdMapH,ootPhotonMediumIdMapH,ootPhotonTightIdMapH,
-		   photons,phpTmin);
+  oot::PrepPhotons(photonsH,ootPhotonsH,photons,rho,phpTmin,phIDmin);
 
   /////////////////////////
   //                     //
@@ -363,13 +338,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     vtxY = primevtx.position().y();
     vtxZ = primevtx.position().z();
   }
-
-  ///////////////////
-  //               //
-  // FixedGrid Rho //
-  //               //
-  ///////////////////
-  rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
 
   //////////////////
   //              //
@@ -719,8 +687,10 @@ void DisPho::InitializePhoBranch(phoStruct & phoBranch)
   phoBranch.scPhi_ = -9999.f;
   phoBranch.scEta_ = -9999.f;
 
-  phoBranch.HoE_ = -9999.f;
+  phoBranch.HadTowOE_ = -9999.f;
+  phoBranch.HadronOE_ = -9999.f;
   phoBranch.r9_ = -9999.f;
+  phoBranch.fullr9_ = -9999.f;
   phoBranch.ChgHadIso_ = -9999.f;
   phoBranch.NeuHadIso_ = -9999.f;
   phoBranch.PhoIso_ = -9999.f;
@@ -765,8 +735,10 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   const float sceta = std::abs(phoBranch.scEta_);
 
   // ID-like variables
-  phoBranch.HoE_       = pho.hadronicOverEm(); // used in ID
-  phoBranch.r9_        = pho.r9();
+  phoBranch.HadTowOE_  = pho.hadTowOverEm(); // used in ID + trigger
+  phoBranch.HadronOE_  = pho.hadronicOverEm(); 
+  phoBranch.r9_        = pho.r9(); // used in slimming in PAT + trigger
+  phoBranch.fullr9_    = pho.full5x5_r9();
   phoBranch.ChgHadIso_ = std::max(pho.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
   phoBranch.NeuHadIso_ = std::max(pho.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);
   phoBranch.PhoIso_    = std::max(pho.photonIso()        - (rho * oot::GetGammaEA        (sceta)),0.f);
@@ -1070,8 +1042,10 @@ void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
   tree->Branch(Form("phosceta%i",i), &phoBranch.scEta_, Form("phosceta%i/F",i));
   tree->Branch(Form("phoscphi%i",i), &phoBranch.scPhi_, Form("phoscphi%i/F",i));
 
-  tree->Branch(Form("phoHoE%i",i), &phoBranch.HoE_, Form("phoHoE%i/F",i));
+  tree->Branch(Form("phoHadTowOE%i",i), &phoBranch.HadTowOE_, Form("phoHadTowOE%i/F",i));
+  tree->Branch(Form("phoHadronOE%i",i), &phoBranch.HadronOE_, Form("phoHadronOE%i/F",i));
   tree->Branch(Form("phor9%i",i), &phoBranch.r9_, Form("phor9%i/F",i));
+  tree->Branch(Form("phofullr9%i",i), &phoBranch.fullr9_, Form("phofullr9%i/F",i));
   tree->Branch(Form("phoChgHadIso%i",i), &phoBranch.ChgHadIso_, Form("phoChgHadIso%i/F",i));
   tree->Branch(Form("phoNeuHadIso%i",i), &phoBranch.NeuHadIso_, Form("phoNeuHadIso%i/F",i));
   tree->Branch(Form("phoPhoIso%i",i), &phoBranch.PhoIso_, Form("phoPhoIso%i/F",i));

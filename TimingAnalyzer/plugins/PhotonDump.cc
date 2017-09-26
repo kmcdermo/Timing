@@ -699,7 +699,7 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       const reco::Photon::ShowerShape& phshape = photon.full5x5_showerShapeVariables(); // photon.showerShapeVariables();
 
       // ID-like variables
-      phHoE   [iph] = photon.hadronicOverEm(); // used in ID
+      phHoE   [iph] = photon.hadTowOverEm(); // used in ID
       phr9    [iph] = photon.r9();
       phChgIso[iph] = std::max(photon.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
       phNeuIso[iph] = std::max(photon.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);

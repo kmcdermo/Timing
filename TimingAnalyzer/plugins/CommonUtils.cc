@@ -145,42 +145,6 @@ namespace oot
     }
   }
 
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH,
-		   const edm::Handle<edm::ValueMap<bool> > & photonLooseIdMapH,
-		   const edm::Handle<edm::ValueMap<bool> > & photonMediumIdMapH,
-		   const edm::Handle<edm::ValueMap<bool> > & photonTightIdMapH,
-		   std::vector<oot::Photon> & photons, const bool isOOT, const float phpTmin)
-  {
-    if (photonsH.isValid()) // standard handle check
-    {
-      const edm::ValueMap<bool> photonLooseIdMap  = *photonLooseIdMapH;
-      const edm::ValueMap<bool> photonMediumIdMap = *photonMediumIdMapH;
-      const edm::ValueMap<bool> photonTightIdMap  = *photonTightIdMapH;
-
-      for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter)
-      {
-	if (phiter->pt() >= phpTmin) 
-	{
-	  // Initialize Id Pair
-	  std::vector<pat::Photon::IdPair> idpair = {{"loose",false}, {"medium",false}, {"tight",false}};
-
-	  // Get the VID of the photon
-	  const edm::Ptr<pat::Photon> photonPtr(photonsH, phiter - photonsH->begin());
-	  
-	  // store VID in temp struct
-	  // loose > medium > tight
-	  if (photonLooseIdMap [photonPtr]) idpair[0].second = true;
-	  if (photonMediumIdMap[photonPtr]) idpair[1].second = true;
-	  if (photonTightIdMap [photonPtr]) idpair[2].second = true;
-
-	  // set VID/isOOT of photon
-	  photons.emplace_back(*phiter,isOOT);
-	  photons.back().photon_nc().setPhotonIDs(idpair);
-	} // pt check
-      } // end loop over photons
-    } // isValid
-  }
-
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   const edm::Handle<edm::ValueMap<bool> > & photonLooseIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & photonMediumIdMapH, 
@@ -202,9 +166,56 @@ namespace oot
     std::sort(photons.begin(),photons.end(),oot::sortByPt);
   }  
 
+  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH,
+		   const edm::Handle<edm::ValueMap<bool> > & photonLooseIdMapH,
+		   const edm::Handle<edm::ValueMap<bool> > & photonMediumIdMapH,
+		   const edm::Handle<edm::ValueMap<bool> > & photonTightIdMapH,
+		   std::vector<oot::Photon> & photons, const bool isOOT, const float phpTmin)
+  {
+    if (photonsH.isValid()) // standard handle check
+    {
+      const edm::ValueMap<bool> photonLooseIdMap  = *photonLooseIdMapH;
+      const edm::ValueMap<bool> photonMediumIdMap = *photonMediumIdMapH;
+      const edm::ValueMap<bool> photonTightIdMap  = *photonTightIdMapH;
+
+      for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter)
+      {
+	if (phiter->pt() >= phpTmin) 
+	{
+	  // Initialize Id Pair
+	  idpVec idpairs = {{"loose",false}, {"medium",false}, {"tight",false}};
+
+	  // Get the VID of the photon
+	  const edm::Ptr<pat::Photon> photonPtr(photonsH, phiter - photonsH->begin());
+	  
+	  // store VID in temp struct
+	  // loose > medium > tight
+	  if (photonLooseIdMap [photonPtr]) idpairs[0].second = true;
+	  if (photonMediumIdMap[photonPtr]) idpairs[1].second = true;
+	  if (photonTightIdMap [photonPtr]) idpairs[2].second = true;
+
+	  // set VID/isOOT of photon
+	  photons.emplace_back(*phiter,isOOT);
+	  photons.back().photon_nc().setPhotonIDs(idpairs);
+	} // pt check
+      } // end loop over photons
+    } // isValid
+  }
+
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
-		   std::vector<oot::Photon> & photons, const float phpTmin)
+		   std::vector<oot::Photon> & photons, const float rho,
+		   const float phpTmin, const std::string & phIDmin)
+  {
+    oot::PrepPhotons(photonsH,photons,false,rho,phpTmin,phIDmin);
+    oot::PrepPhotons(ootPhotonsH,photons,true,rho,phpTmin,phIDmin);
+
+    std::sort(photons.begin(),photons.end(),oot::sortByPt);
+  }
+
+  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
+		   std::vector<oot::Photon> & photons, const bool isOOT,
+		   const float rho, const float phpTmin, const std::string & phIDmin)
   {
     if (photonsH.isValid()) // standard handle check
     {
@@ -212,23 +223,25 @@ namespace oot
       {
 	if (photon.pt() >= phpTmin) 
 	{
-	  photons.emplace_back(photon,false);
+	  idpVec idpairs = {{"loose",false}, {"medium",false}, {"tight",false}};
+	  oot::GetPhoVID(photon,idpairs,rho);
+
+	  if (phIDmin != "")
+	  {
+	    for (const auto & idpair : idpairs) 
+	    {
+	      if (idpair.first == phIDmin)
+	      {
+		if (!idpair.second) continue;
+	      }
+	    }
+	  }
+
+	  photons.emplace_back(photon,isOOT);
+	  photons.back().photon_nc().setPhotonIDs(idpairs);
 	}
       }
     }
-
-    if (ootPhotonsH.isValid()) // standard handle check
-    {
-      for (const auto & photon : *ootPhotonsH)
-      {
-	if (photon.pt() >= phpTmin) 
-	{
-	  photons.emplace_back(photon,true);
-	}
-      }
-    }
-
-    std::sort(photons.begin(),photons.end(),oot::sortByPt);
   }
 
   void PrepRecHits(const EcalRecHitCollection * recHitsEB,
@@ -359,20 +372,84 @@ namespace oot
 
   ////////////////
   //            //
-  // VID Checks //
+  // Photon VID //
   //            //
   ////////////////
 
+  void GetPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho)
+  {
+    // needed for cuts
+    const float eta = std::abs(photon.superCluster()->eta());
+    const float pt  = photon.pt();
+
+    // cut variables
+    const float HoverE = photon.hadTowOverEm();
+    const float Sieie  = photon.full5x5_sigmaIetaIeta();
+    // Isolations are currently wrong! need to recompute them apparently : 
+    // https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedPhotonIdentificationRun2#Selection_implementation_details
+    // https://twiki.cern.ch/twiki/bin/view/CMS/EgammaPFBasedIsolationRun2#Recipe_for_accessing_PF_isol_AN1
+    const float ChgHadIso = std::max(photon.chargedHadronIso() - (rho * oot::GetChargedHadronEA(eta)),0.f);
+    const float NeuHadIso = std::max(photon.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(eta)),0.f);
+    const float PhoIso    = std::max(photon.photonIso()        - (rho * oot::GetGammaEA        (eta)),0.f);
+
+    if (eta < Config::etaEBcutoff)
+    {
+      const float neupt = 0.0148*pt+0.000017*pt*pt;
+      const float phopt = 0.0047*pt;
+      if      ((HoverE < 0.0269) && (Sieie < 0.00994) && (ChgHadIso < 0.202) && (NeuHadIso < (0.264 +neupt)) && (PhoIso < (2.362+phopt))) 
+      {
+	idpairs[2].second = true;
+	idpairs[1].second = true;
+	idpairs[0].second = true;
+      }
+      else if ((HoverE < 0.0396) && (Sieie < 0.01022) && (ChgHadIso < 0.441) && (NeuHadIso < (2.725 +neupt)) && (PhoIso < (2.571+phopt))) 
+      {
+	idpairs[2].second = false;
+	idpairs[1].second = true;
+	idpairs[0].second = true;
+      }   
+      else if ((HoverE < 0.0597) && (Sieie < 0.01031) && (ChgHadIso < 1.295) && (NeuHadIso < (10.910+neupt)) && (PhoIso < (3.630+phopt))) 
+      {
+	idpairs[2].second = false;
+	idpairs[1].second = false;
+	idpairs[0].second = true;
+      }   
+    }
+    else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax)
+    {
+      const float neupt = 0.0163*pt+0.000014*pt*pt;
+      const float phopt = 0.0034*pt;
+      if      ((HoverE < 0.0213) && (Sieie < 0.03000) && (ChgHadIso < 0.034) && (NeuHadIso < (0.586 +neupt)) && (PhoIso < (2.617+phopt))) 
+      {
+	idpairs[2].second = true;
+	idpairs[1].second = true;
+	idpairs[0].second = true;
+      }
+      else if ((HoverE < 0.0219) && (Sieie < 0.03001) && (ChgHadIso < 0.442) && (NeuHadIso < (1.715 +neupt)) && (PhoIso < (3.863+phopt))) 
+      {
+	idpairs[2].second = false;
+	idpairs[1].second = true;
+	idpairs[0].second = true;
+      }   
+      else if ((HoverE < 0.0481) && (Sieie < 0.03013) && (ChgHadIso < 1.011) && (NeuHadIso < (5.931 +neupt)) && (PhoIso < (6.641+phopt))) 
+      {
+	idpairs[2].second = false;
+	idpairs[1].second = false;
+	idpairs[0].second = true;
+      }   
+    }
+  }
+
   int PassHoE(const float eta, const float HoE)
   {  
-    if (eta <= 1.479) // 1.4442
+    if (eta <= Config::etaEBcutoff)
     {
       if      (HoE < 0.0269) return 3; 
       else if (HoE < 0.0396) return 2; 
       else if (HoE < 0.0597) return 1; 
       else                   return 0;
     }
-    else if (eta > 1.479 && eta < 2.5)
+    else if (eta > Config::etaEBcutoff && eta < Config::etaEEmax)
     {
       if      (HoE < 0.0213) return 3; 
       else if (HoE < 0.0219) return 2; 
@@ -384,14 +461,14 @@ namespace oot
 
   int PassSieie(const float eta, const float Sieie)
   { 
-    if (eta <= 1.479)
+    if (eta <= Config::etaEBcutoff)
     {
       if      (Sieie < 0.00994) return 3; 
       else if (Sieie < 0.01022) return 2; 
       else if (Sieie < 0.01031) return 1; 
       else                      return 0;
     }
-    else if (eta > 1.479 && eta < 2.5)
+    else if (eta > Config::etaEBcutoff && eta < Config::etaEEmax)
     {
       if      (Sieie < 0.03000) return 3; 
       else if (Sieie < 0.03001) return 2; 
@@ -403,14 +480,14 @@ namespace oot
   
   int PassChgIso(const float eta, const float ChgIso)
   { 
-    if (eta < 1.479)
+    if (eta < Config::etaEBcutoff)
     {
       if      (ChgIso < 0.202) return 3; 
       else if (ChgIso < 0.441) return 2; 
       else if (ChgIso < 1.295) return 1; 
       else                     return 0;
     }
-    else if (eta > 1.479 && eta < 2.5)
+    else if (eta > Config::etaEBcutoff && eta < Config::etaEEmax)
     {
       if      (ChgIso < 0.034) return 3; 
       else if (ChgIso < 0.442) return 2; 
@@ -422,7 +499,7 @@ namespace oot
 
   int PassNeuIso(const float eta, const float NeuIso, const float pt)
   { 
-    if (eta < 1.479)
+    if (eta < Config::etaEBcutoff)
     {
       const float ptdep = 0.0148*pt+0.000017*pt*pt;
       if      (NeuIso < (0.264 +ptdep)) return 3; 
@@ -430,7 +507,7 @@ namespace oot
       else if (NeuIso < (10.910+ptdep)) return 1; 
       else                              return 0;
     }
-    else if (eta > 1.479 && eta < 2.5)
+    else if (eta > Config::etaEBcutoff && eta < Config::etaEEmax)
     {
       const float ptdep = 0.0163*pt+0.000014*pt*pt;
       if      (NeuIso < (0.586 +ptdep)) return 3; 
@@ -443,7 +520,7 @@ namespace oot
 
   int PassPhIso(const float eta, const float PhIso, const float pt)
   { 
-    if (eta < 1.479)
+    if (eta < Config::etaEBcutoff)
     {
       const float ptdep = 0.0047*pt;
       if      (PhIso < (2.362+ptdep)) return 3; 
@@ -451,7 +528,7 @@ namespace oot
       else if (PhIso < (3.630+ptdep)) return 1; 
       else                            return 0;
     }
-    else if (eta > 1.479 && eta < 2.5)
+    else if (eta > Config::etaEBcutoff && eta < Config::etaEEmax)
     {
       const float ptdep = 0.0034*pt;
       if      (PhIso < (2.617+ptdep)) return 3; 

@@ -25,6 +25,7 @@ namespace Config
   constexpr float PI    = 3.14159265358979323846;
   constexpr float TWOPI = 2.0*PI;
 
+  constexpr float etaEBcutoff = 1.479;
   constexpr float etaEBmax = 1.4442;
   constexpr float etaEEmin = 1.566;
   constexpr float etaEEmax = 2.5;
@@ -89,6 +90,13 @@ typedef std::unordered_map<uint32_t,int> uiiumap;
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+
+///////////////
+//           //
+// VID Pairs //
+//           //
+///////////////
+typedef std::vector<pat::Photon::IdPair> idpVec;
 
 //////////////
 //          //
@@ -156,19 +164,23 @@ namespace oot
 		   const edm::Handle<edm::ValueMap<bool> > & photonLooseIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & photonMediumIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & photonTightIdMapH,
-		   std::vector<oot::Photon> & photons, const bool isOOT, const float phpTmin = 0.f);
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
-		   const edm::Handle<edm::ValueMap<bool> > & photonLooseIdMapH, 
-		   const edm::Handle<edm::ValueMap<bool> > & photonMediumIdMapH, 
-		   const edm::Handle<edm::ValueMap<bool> > & photonTightIdMapH,
 		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
 		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonLooseIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonMediumIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonTightIdMapH,
 		   std::vector<oot::Photon> & photons, const float phpTmin = 0.f, const std::string & phIDmin = "");
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
+		   const edm::Handle<edm::ValueMap<bool> > & photonLooseIdMapH, 
+		   const edm::Handle<edm::ValueMap<bool> > & photonMediumIdMapH, 
+		   const edm::Handle<edm::ValueMap<bool> > & photonTightIdMapH,
+		   std::vector<oot::Photon> & photons, const bool isOOT, const float phpTmin = 0.f);
+  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
-		   std::vector<oot::Photon> & photons, const float phpTmin = 0.f);
+		   std::vector<oot::Photon> & photons, const float rho,
+		   const float phpTmin = 0.f, const std::string & phIDmin = "");
+  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
+		   std::vector<oot::Photon> & photons, const bool isOOT,
+		   const float rho, const float phpTmin = 0.f, const std::string & phIDmin = "");
   void PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
 		     const edm::Handle<edm::ValueMap<bool> > & electronVetoIdMapH, 
 		     const edm::Handle<edm::ValueMap<bool> > & electronLooseIdMapH, 
@@ -178,6 +190,7 @@ namespace oot
   float GetChargedHadronEA(const float eta);
   float GetNeutralHadronEA(const float eta);
   float GetGammaEA(const float eta);
+  void GetPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho);
   int PassHoE   (const float eta, const float HoE);
   int PassSieie (const float eta, const float Sieie);
   int PassChgIso(const float eta, const float ChgIso);

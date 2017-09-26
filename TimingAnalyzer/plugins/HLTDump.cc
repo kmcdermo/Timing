@@ -84,6 +84,7 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // RHOS
   edm::Handle<double> rhosH;
   iEvent.getByToken(rhosToken, rhosH);
+  const float rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
 
   // TRIGGERS
   edm::Handle<edm::TriggerResults> triggerResultsH;
@@ -130,7 +131,7 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
   oot::PrepJets(jetsH,jets,jetpTmin);
-  oot::PrepPhotons(photonsH,ootPhotonsH,photons,phpTmin);
+  oot::PrepPhotons(photonsH,ootPhotonsH,photons,rho,phpTmin);
 
   ///////////////////////////
   //                       //
@@ -155,13 +156,6 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     vtxY = primevtx.position().y();
     vtxZ = primevtx.position().z();
   }
-
-  ///////////////////
-  //               //
-  // FixedGrid Rho //
-  //               //
-  ///////////////////
-  const float rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
 
   //////////////////
   //              //
@@ -298,8 +292,8 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       const reco::Photon::ShowerShape& phshape = photon.full5x5_showerShapeVariables(); // photon.showerShapeVariables();
 
       // ID-like variables
-      phHOvE   [iph] = photon.hadronicOverEm(); // ID
-      phHTowOvE[iph] = photon.hadTowOverEm(); // close to trigger
+      phHOvE   [iph] = photon.hadronicOverEm(); // full hcal behind ecal cluster
+      phHTowOvE[iph] = photon.hadTowOverEm(); // ID + trigger == single tower
       phr9     [iph] = photon.r9();
 
       // pseudo-track veto

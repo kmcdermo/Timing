@@ -141,8 +141,10 @@ struct phoStruct
   float scPhi_;
   float scEta_;
 
-  float HoE_;
+  float HadTowOE_;
+  float HadronOE_;
   float r9_;
+  float fullr9_;
   float ChgHadIso_;
   float NeuHadIso_;
   float PhoIso_;
@@ -270,22 +272,10 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // photons + ids
   const edm::InputTag photonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > photonsToken;
-  const edm::InputTag photonLooseIdMapTag;
-  edm::EDGetTokenT<edm::ValueMap<bool> > photonLooseIdMapToken;
-  const edm::InputTag photonMediumIdMapTag;
-  edm::EDGetTokenT<edm::ValueMap<bool> > photonMediumIdMapToken;
-  const edm::InputTag photonTightIdMapTag;
-  edm::EDGetTokenT<edm::ValueMap<bool> > photonTightIdMapToken;
 
   // ootPhotons + ids
   const edm::InputTag ootPhotonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > ootPhotonsToken;
-  const edm::InputTag ootPhotonLooseIdMapTag;
-  edm::EDGetTokenT<edm::ValueMap<bool> > ootPhotonLooseIdMapToken;
-  const edm::InputTag ootPhotonMediumIdMapTag;
-  edm::EDGetTokenT<edm::ValueMap<bool> > ootPhotonMediumIdMapToken;
-  const edm::InputTag ootPhotonTightIdMapTag;
-  edm::EDGetTokenT<edm::ValueMap<bool> > ootPhotonTightIdMapToken;
 
   // ECAL RecHits
   const edm::InputTag recHitsEBTag;
