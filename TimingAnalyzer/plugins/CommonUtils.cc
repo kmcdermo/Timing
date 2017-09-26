@@ -251,14 +251,20 @@ namespace oot
     int i = 0;
     for (const auto & recHit : *recHitsEB)
     {
-      if (recHit.energy() > rhEmin) recHitMap[recHit.detid().rawId()] = i++;
+      if (recHit.energy() > rhEmin)
+      {
+	recHitMap[recHit.detid().rawId()] = i++;
+      }
     }
     for (const auto & recHit : *recHitsEE)
     {
-      if (recHit.energy() > rhEmin) recHitMap[recHit.detid().rawId()] = i++;
+      if (recHit.energy() > rhEmin)
+      {
+	recHitMap[recHit.detid().rawId()] = i++;
+      }
     }
   }
-
+    
   void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, 
 		std::vector<pat::Jet> & jets, const float jetpTmin, const int jetID)
   {

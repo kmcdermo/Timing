@@ -160,7 +160,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   const EcalRecHitCollection * recHitsEB = recHitsEBH.product();
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
   iEvent.getByToken(recHitsEEToken, recHitsEEH);
-  const EcalRecHitCollection * recHitsEE = recHitsEBH.product();
+  const EcalRecHitCollection * recHitsEE = recHitsEEH.product();
   uiiumap recHitMap;
 
   // geometry (from ECAL ELF)
