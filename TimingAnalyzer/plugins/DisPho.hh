@@ -221,7 +221,14 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
-  
+
+  // blinding
+  long long evcounter;
+  const long long blindSF;
+  const bool applyBlindSF;
+  const float blindMET;
+  const bool applyBlindMET;
+
   // object prep
   const float jetpTmin;
   const int jetIDmin;
@@ -269,6 +276,12 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const edm::InputTag jetsTag;
   edm::EDGetTokenT<std::vector<pat::Jet> > jetsToken;
 
+  // ECAL RecHits
+  const edm::InputTag recHitsEBTag;
+  edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBToken;
+  const edm::InputTag recHitsEETag;
+  edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEToken;
+
   // photons + ids
   const edm::InputTag photonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > photonsToken;
@@ -276,12 +289,6 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // ootPhotons + ids
   const edm::InputTag ootPhotonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > ootPhotonsToken;
-
-  // ECAL RecHits
-  const edm::InputTag recHitsEBTag;
-  edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBToken;
-  const edm::InputTag recHitsEETag;
-  edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEToken;
 
   // Gen Particles and MC info
   const bool isGMSB;

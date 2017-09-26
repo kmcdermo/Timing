@@ -1,6 +1,12 @@
 #include "Timing/TimingAnalyzer/plugins/DisPho.hh"
 
 DisPho::DisPho(const edm::ParameterSet& iConfig): 
+  // blinding cuts
+  blindSF(iConfig.existsAs<int>("blindSF") ? iConfig.getParameter<int>("blindSF") : 1000),
+  applyBlindSF(iConfig.existsAs<bool>("applyBlindSF") ? iConfig.getParameter<bool>("applyBlindSF") : false),
+  blindMET(iConfig.existsAs<double>("blindMET") ? iConfig.getParameter<double>("blindMET") : 100.f),
+  applyBlindMET(iConfig.existsAs<bool>("applyBlindMET") ? iConfig.getParameter<bool>("applyBlindMET") : false),
+
   // object prep cuts
   jetpTmin(iConfig.existsAs<double>("jetpTmin") ? iConfig.getParameter<double>("jetpTmin") : 15.f),
   jetIDmin(iConfig.existsAs<int>("jetIDmin") ? iConfig.getParameter<int>("jetIDmin") : 1),
@@ -38,15 +44,15 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // jets
   jetsTag(iConfig.getParameter<edm::InputTag>("jets")),  
 
+  //recHits
+  recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
+  recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE")),
+
   // photons + ids
   photonsTag          (iConfig.getParameter<edm::InputTag>("photons")),
 
   // ootPhotons + ids
   ootPhotonsTag          (iConfig.getParameter<edm::InputTag>("ootPhotons")),
-
-  //recHits
-  recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
-  recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE")),
 
   ///////////// GEN INFO
   // isMC or Data --> default Data
@@ -79,16 +85,16 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // jets
   jetsToken = consumes<std::vector<pat::Jet> > (jetsTag);
 
+  // rechits
+  recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
+  recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
+
   // photons + ids
   photonsToken = consumes<std::vector<pat::Photon> > (photonsTag);
   if (not ootPhotonsTag.label().empty())
   {
     ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
   }
-
-  // rechits
-  recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
-  recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
 
   // only for simulated samples
   if (isGMSB || isHVDS || isBkg)
@@ -139,6 +145,15 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByToken(jetsToken, jetsH);
   std::vector<pat::Jet> jets; jets.reserve(jetsH->size());
 
+  // RecHits
+  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
+  iEvent.getByToken(recHitsEBToken, recHitsEBH);
+  const EcalRecHitCollection * recHitsEB = recHitsEBH.product();
+  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
+  iEvent.getByToken(recHitsEEToken, recHitsEEH);
+  const EcalRecHitCollection * recHitsEE = recHitsEEH.product();
+  uiiumap recHitMap;
+
   // PHOTONS + IDS
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
@@ -153,15 +168,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
   // total photons vector
   std::vector<oot::Photon> photons; photons.reserve(phosize);
-
-  // RecHits
-  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
-  iEvent.getByToken(recHitsEBToken, recHitsEBH);
-  const EcalRecHitCollection * recHitsEB = recHitsEBH.product();
-  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
-  iEvent.getByToken(recHitsEEToken, recHitsEEH);
-  const EcalRecHitCollection * recHitsEE = recHitsEEH.product();
-  uiiumap recHitMap;
 
   // geometry (from ECAL ELF)
   edm::ESHandle<CaloGeometry> calogeoH;
@@ -182,6 +188,20 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     iEvent.getByToken(pileupInfoToken, pileupInfoH);
     iEvent.getByToken(genpartsToken,   genparticlesH);
   }
+
+  //////////////
+  //          //
+  // Blinding //
+  //          //
+  //////////////
+  evcounter++; 
+  if (evcounter%blindSF!=0 && applyBlindSF) return;
+
+  if (metsH.isValid())
+  {
+    const pat::MET & t1pfMET = (*metsH)[0];
+    if (t1pfMET.pt() > blindMET && applyBlindMET) return;
+  }  
 
   /////////////////////
   //                 //

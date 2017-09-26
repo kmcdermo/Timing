@@ -5,6 +5,12 @@ import FWCore.ParameterSet.Config as cms
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing('python')
 
+## blinding
+options.register('blindSF',1000,VarParsing.multiplicity.singleton,VarParsing.varType.int,'pick every nth SF event');
+options.register('applyBlindSF',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to apply event SF blinding');
+options.register('blindMET',100.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'blind events greater than MET cut');
+options.register('applyBlindMET',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to apply event MET blinding');
+
 ## object prep cuts
 options.register('jetpTmin',15.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'jet pT minimum cut');
 options.register('jetIDmin',1,VarParsing.multiplicity.singleton,VarParsing.varType.int,'jet ID minimum cut');
@@ -12,7 +18,7 @@ options.register('rhEmin',1.0,VarParsing.multiplicity.singleton,VarParsing.varTy
 options.register('phpTmin',20.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon pT minimum cut');
 options.register('phIDmin','loose',VarParsing.multiplicity.singleton,VarParsing.varType.string,'photon ID minimum cut');
 
-#pre-selection cuts
+## pre-selection cuts
 options.register('applyTrigger',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to apply trigger pre-selection');
 options.register('minHT',400.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'jet HT minimum cut');
 options.register('applyHT',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to apply HT pre-selection');
@@ -138,6 +144,11 @@ process.TFileService = cms.Service("TFileService",
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("DisPho",
+   ## blinding 
+   blindSF = cms.int32(options.blindSF),
+   applyBlindSF = cms.bool(options.applyBlindSF),
+   blindMET = cms.double(options.blindMET),
+   applyBlindMET = cms.bool(options.applyBlindMET),
    ## object prep cuts
    jetpTmin = cms.double(options.jetpTmin),
    jetIDmin = cms.int32(options.jetIDmin),
