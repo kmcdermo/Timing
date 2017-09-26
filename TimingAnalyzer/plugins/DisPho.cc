@@ -12,9 +12,9 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   applyTrigger(iConfig.existsAs<bool>("applyTrigger") ? iConfig.getParameter<bool>("applyTrigger") : false),
   minHT(iConfig.existsAs<double>("minHT") ? iConfig.getParameter<double>("minHT") : 400.f),
   applyHT(iConfig.existsAs<bool>("applyHT") ? iConfig.getParameter<bool>("applyHT") : false),
-  ph1pTmin(iConfig.existsAs<double>("ph1pTmin") ? iConfig.getParameter<double>("ph1pTmin") : 70.f),
-  ph1IDmin(iConfig.existsAs<std::string>("ph1IDmin") ? iConfig.getParameter<std::string>("ph1IDmin") : "medium"),
-  applyPh1(iConfig.existsAs<bool>("applyPh1") ? iConfig.getParameter<bool>("applyPh1") : false),
+  phgoodpTmin(iConfig.existsAs<double>("phgoodpTmin") ? iConfig.getParameter<double>("phgoodpTmin") : 70.f),
+  phgoodIDmin(iConfig.existsAs<std::string>("phgoodIDmin") ? iConfig.getParameter<std::string>("phgoodIDmin") : "medium"),
+  applyPhGood(iConfig.existsAs<bool>("applyPhGood") ? iConfig.getParameter<bool>("applyPhGood") : false),
 
   // matching criteria
   dRmin(iConfig.existsAs<double>("dRmin") ? iConfig.getParameter<double>("dRmin") : 0.4),
@@ -245,8 +245,8 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   } // end check over reco jets  
   if (jetHT < minHT && applyHT) return;
 
-  // photon pre-selection
-  bool isph1 = false;
+  // photon pre-selection: at least one good photon in event
+  bool isphgood = false;
   int  iph = 0;
   if (photonsH.isValid() || ootPhotonsH.isValid()) 
   {
@@ -255,16 +255,16 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if (iph >= 4) break;
       iph++;
       
-      if (photon.pt() < ph1pTmin) continue;
-      if (ph1IDmin != "")
+      if (photon.pt() < phgoodpTmin) continue;
+      if (phgoodIDmin != "")
       {
-	if (!photon.photon().photonID(ph1IDmin)) continue;
+	if (!photon.photon().photonID(phgoodIDmin)) continue;
       }
       
-      isph1 = true; break;
+      isphgood = true; break;
     } 
   } // end check
-  if (!isph1 && applyPh1) return;
+  if (!isphgood && applyPhGood) return;
 
   /////////////
   //         //
@@ -421,6 +421,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //              //
   //////////////////
   DisPho::InitializePhoBranches();
+  if (isMC) DisPho::InitializePhoBranchesMC();
   if (photonsH.isValid() || ootPhotonsH.isValid()) // standard handle check
   {
     nphotons = photons.size();
@@ -428,6 +429,14 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (nphotons > 1) DisPho::SetPhoBranch(photons[1],phoBranch1,recHitMap,recHitsEB,recHitsEE);
     if (nphotons > 2) DisPho::SetPhoBranch(photons[2],phoBranch2,recHitMap,recHitsEB,recHitsEE);
     if (nphotons > 3) DisPho::SetPhoBranch(photons[3],phoBranch3,recHitMap,recHitsEB,recHitsEE);
+
+    if (isMC)
+    {
+      if (nphotons > 0) DisPho::SetPhoBranchMC(0,photons[0],phoBranch0,genparticlesH);
+      if (nphotons > 1) DisPho::SetPhoBranchMC(1,photons[1],phoBranch1,genparticlesH);
+      if (nphotons > 2) DisPho::SetPhoBranchMC(2,photons[2],phoBranch2,genparticlesH);
+      if (nphotons > 3) DisPho::SetPhoBranchMC(3,photons[3],phoBranch3,genparticlesH);
+    }
   }
 
   ///////////////
@@ -435,7 +444,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Fill Tree //
   //           //
   ///////////////
-  tree->Fill();      
+  tree->Fill();
 }
 
 void DisPho::InitializeGenEvtBranches()
@@ -535,8 +544,8 @@ void DisPho::InitializeHVDSBranch(hvdsStruct& hvdsBranch)
   hvdsBranch.genvPionprodvx_ = -9999.f; hvdsBranch.genvPionprodvy_ = -9999.f; hvdsBranch.genvPionprodvz_ = -9999.f;
   hvdsBranch.genvPiondecayvx_ = -9999.f; hvdsBranch.genvPiondecayvy_ = -9999.f; hvdsBranch.genvPiondecayvz_ = -9999.f;
 
+  hvdsBranch.genHVph0E_ = -9999.f; hvdsBranch.genHVph0pt_ = -9999.f; hvdsBranch.genHVph0phi_ = -9999.f; hvdsBranch.genHVph0eta_ = -9999.f; hvdsBranch.genHVph0match_ = -9999;
   hvdsBranch.genHVph1E_ = -9999.f; hvdsBranch.genHVph1pt_ = -9999.f; hvdsBranch.genHVph1phi_ = -9999.f; hvdsBranch.genHVph1eta_ = -9999.f; hvdsBranch.genHVph1match_ = -9999;
-  hvdsBranch.genHVph2E_ = -9999.f; hvdsBranch.genHVph2pt_ = -9999.f; hvdsBranch.genHVph2phi_ = -9999.f; hvdsBranch.genHVph2eta_ = -9999.f; hvdsBranch.genHVph2match_ = -9999;
 }
 
 void DisPho::SetHVDSBranch(const reco::GenParticle & vPion, hvdsStruct & hvdsBranch, const std::vector<oot::Photon> & photons)
@@ -561,20 +570,20 @@ void DisPho::SetHVDSBranch(const reco::GenParticle & vPion, hvdsStruct & hvdsBra
   const int leading    = (vPion.daughter(0)->pt()>vPion.daughter(1)->pt())?0:1;
   const int subleading = (vPion.daughter(0)->pt()>vPion.daughter(1)->pt())?1:0;
   
-  hvdsBranch.genHVph1E_   = vPion.daughter(leading)->energy();
-  hvdsBranch.genHVph1pt_  = vPion.daughter(leading)->pt();
-  hvdsBranch.genHVph1phi_ = vPion.daughter(leading)->phi();
-  hvdsBranch.genHVph1eta_ = vPion.daughter(leading)->eta();
+  hvdsBranch.genHVph0E_   = vPion.daughter(leading)->energy();
+  hvdsBranch.genHVph0pt_  = vPion.daughter(leading)->pt();
+  hvdsBranch.genHVph0phi_ = vPion.daughter(leading)->phi();
+  hvdsBranch.genHVph0eta_ = vPion.daughter(leading)->eta();
   
-  hvdsBranch.genHVph2E_   = vPion.daughter(subleading)->energy();
-  hvdsBranch.genHVph2pt_  = vPion.daughter(subleading)->pt();
-  hvdsBranch.genHVph2phi_ = vPion.daughter(subleading)->phi();
-  hvdsBranch.genHVph2eta_ = vPion.daughter(subleading)->eta();
+  hvdsBranch.genHVph1E_   = vPion.daughter(subleading)->energy();
+  hvdsBranch.genHVph1pt_  = vPion.daughter(subleading)->pt();
+  hvdsBranch.genHVph1phi_ = vPion.daughter(subleading)->phi();
+  hvdsBranch.genHVph1eta_ = vPion.daughter(subleading)->eta();
   
   // check for a reco match!
-  int   tmpph1 = -9999, tmpph2 = -9999;
+  int   tmpph0 = -9999, tmpph1 = -9999;
   int   iph = 0;
-  float mindR1 = dRmin, mindR2 = dRmin; // at least this much
+  float mindR0 = dRmin, mindR1 = dRmin; // at least this much
   for (const auto & photon : photons)
   {
     if (iph > 4) break;
@@ -583,6 +592,17 @@ void DisPho::SetHVDSBranch(const reco::GenParticle & vPion, hvdsStruct & hvdsBra
     const float tmpeta = photon.eta();
     
     // check photon 1
+    if (std::abs(tmppt-hvdsBranch.genHVph0pt_)/hvdsBranch.genHVph0pt_ < pTres)
+    {
+      const float delR = deltaR(hvdsBranch.genHVph0phi_,hvdsBranch.genHVph0eta_,tmpphi,tmpeta);
+      if (delR < mindR0) 
+      {
+	mindR0 = delR;
+	tmpph0 = iph;
+      } // end check over deltaR
+    } // end check over pt resolution
+	      
+    // check photon 2
     if (std::abs(tmppt-hvdsBranch.genHVph1pt_)/hvdsBranch.genHVph1pt_ < pTres)
     {
       const float delR = deltaR(hvdsBranch.genHVph1phi_,hvdsBranch.genHVph1eta_,tmpphi,tmpeta);
@@ -592,25 +612,14 @@ void DisPho::SetHVDSBranch(const reco::GenParticle & vPion, hvdsStruct & hvdsBra
 	tmpph1 = iph;
       } // end check over deltaR
     } // end check over pt resolution
-	      
-    // check photon 2
-    if (std::abs(tmppt-hvdsBranch.genHVph2pt_)/hvdsBranch.genHVph2pt_ < pTres)
-    {
-      const float delR = deltaR(hvdsBranch.genHVph2phi_,hvdsBranch.genHVph2eta_,tmpphi,tmpeta);
-      if (delR < mindR2) 
-      {
-	mindR2 = delR;
-	tmpph2 = iph;
-      } // end check over deltaR
-    } // end check over pt resolution
     
     // now update iph
     iph++;
   } // end loop over reco photons
   
   // now save tmp photon iphs
+  hvdsBranch.genHVph0match_ = tmpph0;
   hvdsBranch.genHVph1match_ = tmpph1;
-  hvdsBranch.genHVph2match_ = tmpph2;
 } 
 
 void DisPho::InitializePVBranches()
@@ -836,6 +845,65 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   else                             {phoBranch.ID_ = 0;}
 }
 
+void DisPho::InitializePhoBranchesMC()
+{
+  DisPho::InitializePhoBranchMC(phoBranch0);
+  DisPho::InitializePhoBranchMC(phoBranch1);
+  DisPho::InitializePhoBranchMC(phoBranch2);
+  DisPho::InitializePhoBranchMC(phoBranch3);
+}
+
+void DisPho::InitializePhoBranchMC(phoStruct & phoBranch)
+{
+  if (isGMSB || isHVDS) phoBranch.isSignal_ = -9999;
+  phoBranch.isGen_ = false;
+}
+
+void DisPho::SetPhoBranchMC(const int iph, const oot::Photon& photon, phoStruct& phoBranch, 
+			    const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH)
+{
+  if (isGMSB)
+  {
+    // matched to photon from leading neutralino == 1
+    // matched to photon from subleading neutralino == 2
+    // matched to both photons from both neutralinos (probably will never happen) == 3
+    // no corresponding match == 0
+
+    if      (iph == gmsbBranch0.genphmatch_ && iph != gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 1;
+    else if (iph != gmsbBranch0.genphmatch_ && iph == gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 2;
+    else if (iph == gmsbBranch0.genphmatch_ && iph == gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 3; 
+    else                                                                       phoBranch.isSignal_ = 0;
+  } 
+
+  if (isHVDS) 
+  {
+    // since we have four vPions to explore, store the result as an int mask
+    // ones digit is leading vPion, tens as subleading, hundreds as subsub, etc.
+    // matched to leading photon and not to subleading photon == 1
+    // matched to subleading photon and not to leading photon == 2
+    // matched to both photons inside vPion == 3
+    // no corresponding match == 0
+
+    const int match0 = DisPho::CheckMatchHVDS(iph,hvdsBranch0);
+    const int match1 = DisPho::CheckMatchHVDS(iph,hvdsBranch1);
+    const int match2 = DisPho::CheckMatchHVDS(iph,hvdsBranch2);
+    const int match3 = DisPho::CheckMatchHVDS(iph,hvdsBranch3);
+
+    phoBranch.isSignal_ = match0 + 10*match1 + 100*match2 + 1000*match3;
+  }
+
+  // standard dR matching
+  phoBranch.isGen_ = oot::GenToObjectMatching(photon,genparticlesH,pTres,dRmin);
+}
+
+int DisPho::CheckMatchHVDS(const int iph, const hvdsStruct& hvdsBranch)
+{
+  if (iph == hvdsBranch.genHVph0match_ && iph != hvdsBranch.genHVph1match_) return 1;
+  if (iph != hvdsBranch.genHVph0match_ && iph == hvdsBranch.genHVph1match_) return 2;
+  if (iph == hvdsBranch.genHVph0match_ && iph == hvdsBranch.genHVph1match_) return 3;
+  else                                                                      return 0;
+}
+
 void DisPho::beginJob() 
 {
   edm::Service<TFileService> fs;
@@ -914,6 +982,15 @@ void DisPho::beginJob()
   DisPho::MakePhoBranch(1,phoBranch1);
   DisPho::MakePhoBranch(2,phoBranch2);
   DisPho::MakePhoBranch(3,phoBranch3);
+
+  // PhotonMC info
+  if (isMC)
+  {
+    DisPho::MakePhoBranchMC(0,phoBranch0);
+    DisPho::MakePhoBranchMC(1,phoBranch1);
+    DisPho::MakePhoBranchMC(2,phoBranch2);
+    DisPho::MakePhoBranchMC(3,phoBranch3);
+  }
 }
 
 void DisPho::MakeGMSBBranch(const int i, gmsbStruct& gmsbBranch)
@@ -961,17 +1038,17 @@ void DisPho::MakeHVDSBranch(const int i, hvdsStruct& hvdsBranch)
   tree->Branch(Form("genvPiondecayvy%i",i), &hvdsBranch.genvPiondecayvy_, Form("genvPiondecayvy%i/F",i));
   tree->Branch(Form("genvPiondecayvz%i",i), &hvdsBranch.genvPiondecayvz_, Form("genvPiondecayvz%i/F",i));
 
+  tree->Branch(Form("genHVph0E%i",i), &hvdsBranch.genHVph0E_, Form("genHVph0E%i/F",i));
+  tree->Branch(Form("genHVph0pt%i",i), &hvdsBranch.genHVph0pt_, Form("genHVph0pt%i/F",i));
+  tree->Branch(Form("genHVph0phi%i",i), &hvdsBranch.genHVph0phi_, Form("genHVph0phi%i/F",i));
+  tree->Branch(Form("genHVph0eta%i",i), &hvdsBranch.genHVph0eta_, Form("genHVph0eta%i/F",i));
+  tree->Branch(Form("genHVph0match%i",i), &hvdsBranch.genHVph0match_, Form("genHVph0match%i/I",i));
+
   tree->Branch(Form("genHVph1E%i",i), &hvdsBranch.genHVph1E_, Form("genHVph1E%i/F",i));
   tree->Branch(Form("genHVph1pt%i",i), &hvdsBranch.genHVph1pt_, Form("genHVph1pt%i/F",i));
   tree->Branch(Form("genHVph1phi%i",i), &hvdsBranch.genHVph1phi_, Form("genHVph1phi%i/F",i));
   tree->Branch(Form("genHVph1eta%i",i), &hvdsBranch.genHVph1eta_, Form("genHVph1eta%i/F",i));
   tree->Branch(Form("genHVph1match%i",i), &hvdsBranch.genHVph1match_, Form("genHVph1match%i/I",i));
-
-  tree->Branch(Form("genHVph2E%i",i), &hvdsBranch.genHVph2E_, Form("genHVph2E%i/F",i));
-  tree->Branch(Form("genHVph2pt%i",i), &hvdsBranch.genHVph2pt_, Form("genHVph2pt%i/F",i));
-  tree->Branch(Form("genHVph2phi%i",i), &hvdsBranch.genHVph2phi_, Form("genHVph2phi%i/F",i));
-  tree->Branch(Form("genHVph2eta%i",i), &hvdsBranch.genHVph2eta_, Form("genHVph2eta%i/F",i));
-  tree->Branch(Form("genHVph2match%i",i), &hvdsBranch.genHVph2match_, Form("genHVph2match%i/I",i));
 }
 
 void DisPho::MakeJetBranch(const int i, jetStruct& jetBranch)
@@ -1014,6 +1091,12 @@ void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
   tree->Branch(Form("phoisEB%i",i), &phoBranch.isEB_, Form("phoisEB%i/O",i));
   tree->Branch(Form("phoisHLT%i",i), &phoBranch.isHLT_, Form("phoisHLT%i/O",i));
   tree->Branch(Form("phoID%i",i), &phoBranch.ID_, Form("phoID%i/I",i));
+}
+
+void DisPho::MakePhoBranchMC(const int i, phoStruct& phoBranch)
+{
+  if (isGMSB || isHVDS) tree->Branch(Form("isSignal%i",i), &phoBranch.isSignal_, Form("isSignal%i/I",i));
+  tree->Branch(Form("isGen%i",i), &phoBranch.isGen_, Form("isGen%i/O",i));
 }
 
 void DisPho::endJob() {}

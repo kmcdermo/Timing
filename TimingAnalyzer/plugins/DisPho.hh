@@ -109,17 +109,17 @@ struct hvdsStruct
   float genvPiondecayvy_;
   float genvPiondecayvz_;
 
+  float genHVph0E_;
+  float genHVph0pt_;
+  float genHVph0phi_;
+  float genHVph0eta_;
+  int genHVph0match_;
+ 
   float genHVph1E_;
   float genHVph1pt_;
   float genHVph1phi_;
   float genHVph1eta_;
   int genHVph1match_;
- 
-  float genHVph2E_;
-  float genHVph2pt_;
-  float genHVph2phi_;
-  float genHVph2eta_;
-  int genHVph2match_;
 };
 
 struct jetStruct
@@ -166,6 +166,9 @@ struct phoStruct
   bool isEB_;
   bool isHLT_;
   int  ID_;
+
+  int  isSignal_;
+  bool isGen_;
 };
 
 class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
@@ -178,6 +181,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void MakeHVDSBranch(const int i, hvdsStruct& hvdsBranch);
   void MakeJetBranch(const int i, jetStruct& jetBranch);
   void MakePhoBranch(const int i, phoStruct& phoBranch);
+  void MakePhoBranchMC(const int i, phoStruct& phoBranch);
 
   void InitializeGenEvtBranches();
   void InitializeGenPUBranches();
@@ -200,6 +204,11 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void InitializePhoBranch(phoStruct & phoBranch);
   void SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, const uiiumap & recHitMap,
 		    const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE);
+  void InitializePhoBranchesMC();
+  void InitializePhoBranchMC(phoStruct & phoBranch);
+  void SetPhoBranchMC(const int iph, const oot::Photon& photon, phoStruct& phoBranch, 
+		      const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH);
+  int  CheckMatchHVDS(const int iph, const hvdsStruct& hvdsBranch);
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
   
@@ -222,9 +231,9 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const bool applyTrigger;
   const float minHT;
   const bool applyHT;
-  const float ph1pTmin;
-  const std::string ph1IDmin;
-  const bool applyPh1;
+  const float phgoodpTmin;
+  const std::string phgoodIDmin;
+  const bool applyPhGood;
 
   // dR matching criteria
   const float dRmin;
