@@ -58,6 +58,11 @@ options.parseArguments()
 if options.isGMSB or options.isHVDS or options.isBkg: options.isMC
 
 print "     ##### Settings ######"
+print "       -- Blinding --"
+print "blindSF        : ",options.blindSF
+print "applyBlindSF   : ",options.applyBlindSF
+print "blindMET       : ",options.blindMET
+print "applyBlindMET  : ",options.applyBlindMET
 print "      -- Object Prep --"
 print "jetpTmin       : ",options.jetpTmin
 print "jetIDmin       : ",options.jetIDmin
