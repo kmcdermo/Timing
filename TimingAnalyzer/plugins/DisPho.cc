@@ -49,10 +49,10 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE")),
 
   // photons + ids
-  photonsTag          (iConfig.getParameter<edm::InputTag>("photons")),
+  photonsTag(iConfig.getParameter<edm::InputTag>("photons")),
 
   // ootPhotons + ids
-  ootPhotonsTag          (iConfig.getParameter<edm::InputTag>("ootPhotons")),
+  ootPhotonsTag(iConfig.getParameter<edm::InputTag>("ootPhotons")),
 
   ///////////// GEN INFO
   // isMC or Data --> default Data
@@ -890,10 +890,10 @@ void DisPho::SetPhoBranchMC(const int iph, const oot::Photon& photon, phoStruct&
 
 int DisPho::CheckMatchHVDS(const int iph, const hvdsStruct& hvdsBranch)
 {
-  if (iph == hvdsBranch.genHVph0match_ && iph != hvdsBranch.genHVph1match_) return 1;
-  if (iph != hvdsBranch.genHVph0match_ && iph == hvdsBranch.genHVph1match_) return 2;
-  if (iph == hvdsBranch.genHVph0match_ && iph == hvdsBranch.genHVph1match_) return 3;
-  else                                                                      return 0;
+  if      (iph == hvdsBranch.genHVph0match_ && iph != hvdsBranch.genHVph1match_) return 1;
+  else if (iph != hvdsBranch.genHVph0match_ && iph == hvdsBranch.genHVph1match_) return 2;
+  else if (iph == hvdsBranch.genHVph0match_ && iph == hvdsBranch.genHVph1match_) return 3;
+  else                                                                           return 0;
 }
 
 void DisPho::beginJob() 
