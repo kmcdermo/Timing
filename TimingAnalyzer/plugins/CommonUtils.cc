@@ -108,7 +108,7 @@ namespace oot
       
 	for (auto & triggerBitPair : triggerBitMap) 
 	{
-	  if (triggerName.find(triggerBitPair.first)) triggerBitPair.second = triggerResultsH->accept(itrig);
+	  if (triggerName.find(triggerBitPair.first) != std::string::npos) triggerBitPair.second = triggerResultsH->accept(itrig);
 	} // end loop over user path names
       } // end loop over trigger names
     } // end check over valid TriggerResults
