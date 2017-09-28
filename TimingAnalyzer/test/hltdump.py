@@ -121,8 +121,8 @@ process.tree = cms.EDAnalyzer("HLTDump",
    pTres = cms.double(options.pTres),
    saveTrigObjs = cms.bool(options.saveTrigObjs),
    ## triggers
-   inputPaths     = cms.string("HLTpaths.txt"),
-   inputFilters   = cms.string("HLTfilters.txt"),
+   inputPaths     = cms.string("/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt"),
+   inputFilters   = cms.string("/afs/cern.ch/user/k/kmcdermo/public/input/HLTfilters.txt"),
    triggerResults = cms.InputTag("TriggerResults", "", "HLT"),
    triggerObjects = cms.InputTag("slimmedPatTrigger"),
    ## vertices

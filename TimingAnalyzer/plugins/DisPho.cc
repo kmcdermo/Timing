@@ -189,13 +189,21 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     iEvent.getByToken(genpartsToken,   genparticlesH);
   }
 
+  ///////////////////////////
+  //                       //
+  // Event, lumi, run info //
+  //                       //
+  ///////////////////////////
+  run   = iEvent.id().run();
+  lumi  = iEvent.luminosityBlock();
+  event = iEvent.id().event();
+
   //////////////
   //          //
   // Blinding //
   //          //
   //////////////
-  evcounter++; 
-  if (evcounter%blindSF!=0 && applyBlindSF) return;
+  if (event%blindSF!=0 && applyBlindSF) return;
 
   if (metsH.isValid())
   {
@@ -327,15 +335,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       } // check genparticles are okay
     } // isHVDS
   } // isMC
-
-  ///////////////////////////
-  //                       //
-  // Event, lumi, run info //
-  //                       //
-  ///////////////////////////
-  run   = iEvent.id().run();
-  lumi  = iEvent.luminosityBlock();
-  event = iEvent.id().event();
 
   //////////////////
   //              //

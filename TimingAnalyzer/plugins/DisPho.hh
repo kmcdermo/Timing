@@ -223,7 +223,6 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
 
   // blinding
-  long long evcounter;
   const long long blindSF;
   const bool applyBlindSF;
   const float blindMET;

@@ -69,7 +69,10 @@ def main():
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'hltdump.py'
         config.JobType.pyCfgParams = None
-        config.JobType.inputFiles  = ['HLTpaths.txt','HLTfilters.txt']
+        config.JobType.inputFiles  = [
+            '/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt',
+            '/afs/cern.ch/user/k/kmcdermo/public/input/HLTfilters.txt'
+            ]
 
         config.Data.inputDataset     = None
         config.Data.lumiMask         = 'golden2017.json'
