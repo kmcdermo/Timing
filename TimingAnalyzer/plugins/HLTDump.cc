@@ -45,6 +45,7 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
 
   // read in from a stream the trigger paths for saving
   oot::ReadInTriggerNames(inputPaths,pathNames,triggerBitMap);
+  triggerBits.resize(pathNames.size());
 
   // read in from a stream the hlt objects/labels to match to
   oot::ReadInFilterNames(inputFilters,filterNames,triggerObjectsByFilterMap);
@@ -584,7 +585,7 @@ void HLTDump::InitializeRecoPhotonBranches()
     phIsHLTMatched[iph].resize(filterNames.size());
     for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
     {
-      phIsHLTMatched[iph][ifilter] = 0; // false
+      phIsHLTMatched[iph][ifilter] = -1; // false
     }
 
     phseedeta [iph] = -9999.f;
