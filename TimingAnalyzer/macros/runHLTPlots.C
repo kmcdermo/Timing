@@ -15,21 +15,21 @@ void setupcpp11() // customize ACLiC's behavior ...
   gSystem->SetMakeExe(o.Data());
 } 
 
-void runHLTPlots() 
+void runHLTPlots(const TString & dataset = "SP", const TString & era = "2017B", const Int_t eff = 0) 
 {
   setupcpp11(); 
 
   gROOT->LoadMacro("HLTPlots.cc+g");
 
   const TString dataset = "SP";
-  const TString era = "2017C";
-  const Bool_t  eteff = false;
-  const Bool_t  dispeff = false;
-  const Bool_t  hteff = true;
+  const TString era     = "2017C";
+  const Bool_t  eteff   = (eff==0?true:false);
+  const Bool_t  dispeff = (eff==1?true:false);
+  const Bool_t  hteff   = (eff==2?true:false);
 
   const UInt_t  start = 0;
   const UInt_t  end   = 0;
-  const TString infile = Form("input/DATA/2017/HLT_CHECK/%s/hltdump-%s.root",dataset.Data(),era.Data());
+  const TString infile = Form("input/DATA/2017/HLT_CHECK/%s/hltdump_%s.root",dataset.Data(),era.Data());
   const TString outdir = Form("HLT_Golden_%s_%s",dataset.Data(),era.Data());
   const TString runs = "noruns.txt";
   const Bool_t  isoph = false;
