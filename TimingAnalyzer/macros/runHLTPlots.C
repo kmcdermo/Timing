@@ -20,9 +20,7 @@ void runHLTPlots(const TString & dataset = "SP", const TString & era = "2017B", 
   setupcpp11(); 
 
   gROOT->LoadMacro("HLTPlots.cc+g");
-
-  const TString dataset = "SP";
-  const TString era     = "2017C";
+  
   const Bool_t  eteff   = (eff==0?true:false);
   const Bool_t  dispeff = (eff==1?true:false);
   const Bool_t  hteff   = (eff==2?true:false);
