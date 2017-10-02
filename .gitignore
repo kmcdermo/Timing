@@ -3,6 +3,8 @@ main
 STDOUT
 LSFJOB
 *~
+*.back
+*.bak
 *.pdf
 *.png
 *.log

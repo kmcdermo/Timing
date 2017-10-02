@@ -1,5 +1,5 @@
 CPPFLAGS := $(shell root-config --cflags)
-CXXFLAGS := -std=c++11 -g -O3
+CXXFLAGS := -std=c++14 -g -O3
 LDFLAGS  := $(shell root-config --libs)
 
 TGTS := main
