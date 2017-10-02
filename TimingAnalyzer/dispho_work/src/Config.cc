@@ -18,6 +18,7 @@ namespace Config
   Bool_t  doStandard = false;
   Bool_t  dumpStatus = false;
   TString year       = "2017";
+  Bool_t  saveHists  = false;
   TString outtype    = "png";
 
   TStrBoolMap SampleMap;       // set in main.cc

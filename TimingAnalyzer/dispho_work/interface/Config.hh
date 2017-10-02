@@ -8,7 +8,7 @@ namespace Config
   // general config
   constexpr    Float_t Sqrt2 = 1.4121356237; 
   constexpr    Float_t PI    = 3.14159265358979323846;
-  constexpr    Float_t TWOPI = 2.f*3.14159265358979323846;
+  constexpr    Float_t TWOPI = 2.f*PI;
   constexpr    Float_t sol   = 29.9792458; // speed of light in cm / ns
 
   // output config
@@ -86,6 +86,7 @@ namespace Config
   extern Bool_t      doStandard;
   extern Bool_t      dumpStatus;
   extern TString     year;
+  extern Bool_t      saveHists;
   extern TString     outtype;
 
   extern TStrBoolMap SampleMap;
