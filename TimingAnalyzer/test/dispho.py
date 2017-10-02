@@ -117,6 +117,10 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+		# test GMSB 2016, GT: 92X_mcRun2_asymptotic_v2
+		#'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_10.root'
+		# test HVDS 2016, GT: 92X_mcRun2_asymptotic_v2
+		'file:/afs/cern.ch/user/k/kmcdermo/private/dispho/Analysis/CMSSW_9_2_8/src/Timing/GEN_SIM/HVDS/tmp/step3.root'
 		# 2017A-v1, GT: 92X_dataRun2_Prompt_v4
 		#'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v1/000/295/977/00000/9CAC61AF-094A-E711-BA62-02163E0138FA.root',
 		# 2017A-v2, GT: 92X_dataRun2_Prompt_v4
@@ -124,7 +128,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		# 2017A-v3, GT: 92X_dataRun2_Prompt_v4
 		#'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v3/000/296/888/00000/707282D6-8F55-E711-8BB3-02163E0146D5.root',
 		# 2017B-v1, GT: 92X_dataRun2_Prompt_v4 
-		'/store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v1/000/297/050/00000/1EFAAE6B-3D56-E711-B66E-02163E013854.root',
+		#'/store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v1/000/297/050/00000/1EFAAE6B-3D56-E711-B66E-02163E013854.root',
 		# 2017B-v2, GT: 92X_dataRun2_Prompt_v5
 		#'/store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v2/000/299/065/00000/EAF9EEDA-E96A-E711-9370-02163E011DD8.root',
 		# 2017C-v1, GT: 92X_dataRun2_Prompt_v6
