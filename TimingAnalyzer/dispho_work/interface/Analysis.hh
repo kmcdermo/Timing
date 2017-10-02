@@ -22,6 +22,9 @@ public:
   Analysis(TString sample, Bool_t isMC);
   ~Analysis();
   void InitTree();
+  void InitStructs();
+  void InitBranchVecs();
+  void InitBranches();
   void EventLoop();
   void SetupStandardPlots();
   void FillStandardPlots(const Float_t weight);

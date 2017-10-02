@@ -34,7 +34,7 @@ Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC)
   gROOT->ProcessLine("#include <vector>");
 
   // Set input
-  TString filename = Form("input/%s/%s/%s/%s", (fIsMC?"MC":"DATA"), Config::year.Data(), fSample.Data(), "skimmedtree.root");
+  TString filename = Form("input/%s/%s/%s/%s", Config::year.Data(), (fIsMC?"MC":"DATA"), fSample.Data(), "tree.root");
   fInFile  = TFile::Open(filename.Data());
   CheckValidFile(fInFile,filename);
 
@@ -256,8 +256,38 @@ void Analysis::DeleteTH2s(TH2Map & th2map)
   }
   th2map.clear();
 }
-  
+
 void Analysis::InitTree() 
+{
+  Analysis::InitStructs();
+  Analysis::InitBranchVecs();
+  Analysis::InitBranches();
+}
+
+void Analysis::InitStructs()
+{
+  if (fIsMC)
+  {
+    if (fIsGMSB)
+    {
+      gmsbs.clear(); 
+      gmsbs.resize(Config::nGMSBs);
+    }
+    if (fIsHVDS)
+    {
+      hvdss.clear(); 
+      hvdss.resize(Config::nHVDSs);
+    }
+  }
+
+  jets.clear();
+  jets.resize(Config::nJets);
+
+  phos.clear();
+  phos.resize(Config::nPhotons);
+}
+
+void Analysis::InitBranchVecs()
 {
   rheta = 0;
   rhphi = 0;
@@ -269,8 +299,11 @@ void Analysis::InitTree()
   for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++) 
   {
     phos[ipho].recHits = 0;
-  }
-  
+  }  
+}
+
+void Analysis::InitBranches()
+{
   if (fIsMC)
   {
     fInTree->SetBranchAddress("genwgt", &genwgt, &b_genwgt);
@@ -280,8 +313,6 @@ void Analysis::InitTree()
     if (fIsGMSB)
     {
       fInTree->SetBranchAddress("nNeutoPhGr", &nNeutoPhGr, &b_nNeutoPhGr);
-      gmsbs.clear(); 
-      gmsbs.resize(Config::nGMSBs);
       for (Int_t igmsb = 0; igmsb < Config::nGMSBs; igmsb++) 
       {
 	auto & gmsb = gmsbs[igmsb]; 
@@ -312,8 +343,6 @@ void Analysis::InitTree()
     if (fIsHVDS)
     {
       fInTree->SetBranchAddress("nvPions", &nvPions, &b_nvPions);
-      hvdss.clear();
-      hvdss.resize(Config::nHVDSs);
       for (Int_t ihvds = 0; ihvds < Config::nHVDSs; ihvds++) 
       {
 	auto & hvds = hvdss[ihvds]; 
@@ -357,8 +386,6 @@ void Analysis::InitTree()
   fInTree->SetBranchAddress("jetHT", &jetHT, &b_jetHT);
 
   fInTree->SetBranchAddress("njets", &njets, &b_njets);
-  jets.clear();
-  jets.resize(Config::nJets);
   for (Int_t ijet = 0; ijet < Config::nJets; ijet++) 
   {
     auto & jet = jets[ijet];
@@ -377,8 +404,6 @@ void Analysis::InitTree()
   fInTree->SetBranchAddress("rhID", &rhID, &b_rhID);
 
   fInTree->SetBranchAddress("nphotons", &nphotons, &b_nphotons);
-  phos.clear();
-  phos.resize(Config::nPhotons);
   for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++) 
   {
     auto & pho = phos[ipho];
