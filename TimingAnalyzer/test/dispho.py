@@ -34,6 +34,9 @@ options.register('pTres',0.5,VarParsing.multiplicity.singleton,VarParsing.varTyp
 options.register('inputPaths','/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input signal paths');
 options.register('inputFilters','/afs/cern.ch/user/k/kmcdermo/public/input/HLTfilters.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input signal filters');
 
+## ootphoton tags
+options.register('useOOTPhotons',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to use ootPhoton collections in analyzer');
+
 ## data or MC options
 options.register('isMC',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate data or MC');
 options.register('isGMSB',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate GMSB');
@@ -41,7 +44,7 @@ options.register('isHVDS',False,VarParsing.multiplicity.singleton,VarParsing.var
 options.register('isBkg',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate Background MC');
 
 ## GT to be used
-options.register('globalTag','92X_dataRun2_Prompt_v8',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
+options.register('globalTag','92X_dataRun2_Prompt_v4',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
 
 ## do a demo run over only 1k events
 options.register('demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to run over only 1k events');
@@ -82,6 +85,8 @@ print "pTres          : ",options.pTres
 print "        -- Trigger --"
 print "inputPaths     : ",options.inputPaths
 print "inputFilters   : ",options.inputFilters
+print "       -- ootPhotons --"
+print "useOOTPhotons  : ",options.useOOTPhotons
 if options.isMC:
 	print "        -- MC Info --"
 	print "isMC           : ",options.isMC
@@ -119,7 +124,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		# 2017A-v3, GT: 92X_dataRun2_Prompt_v4
 		#'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v3/000/296/888/00000/707282D6-8F55-E711-8BB3-02163E0146D5.root',
 		# 2017B-v1, GT: 92X_dataRun2_Prompt_v4 
-		#'/store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v1/000/297/050/00000/1EFAAE6B-3D56-E711-B66E-02163E013854.root',
+		'/store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v1/000/297/050/00000/1EFAAE6B-3D56-E711-B66E-02163E013854.root',
 		# 2017B-v2, GT: 92X_dataRun2_Prompt_v5
 		#'/store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v2/000/299/065/00000/EAF9EEDA-E96A-E711-9370-02163E011DD8.root',
 		# 2017C-v1, GT: 92X_dataRun2_Prompt_v6
@@ -129,7 +134,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		# 2017C-v3, GT: 92X_dataRun2_Prompt_v8
 		#'/store/data/Run2017C/SinglePhoton/MINIAOD/PromptReco-v3/000/300/777/00000/18694619-C67E-E711-9CBF-02163E01A6D1.root',
 		# 2017D-v1, GT: 92X_dataRun2_Prompt_v8 
-		'/store/data/Run2017D/SinglePhoton/MINIAOD/PromptReco-v1/000/302/042/00000/18838DB3-698F-E711-9D1B-02163E01192A.root',
+		#'/store/data/Run2017D/SinglePhoton/MINIAOD/PromptReco-v1/000/302/042/00000/18838DB3-698F-E711-9D1B-02163E01192A.root',
 		# 2017E-v1, GT: 92X_dataRun2_Prompt_v9
 		#'/store/data/Run2017E/SinglePhoton/MINIAOD/PromptReco-v1/000/303/819/00000/F8E8E7B5-68A2-E711-9655-02163E0138E0.root',
 		))
@@ -146,6 +151,9 @@ process.GlobalTag.globaltag = options.globalTag
 ## Setup the service to make a ROOT TTree
 process.TFileService = cms.Service("TFileService", 
 		                   fileName = cms.string(options.outputFileName))
+
+if options.useOOTPhotons : ootPhotonsTag = cms.InputTag("slimmedOOTPhotons")
+else                     : ootPhotonsTag = cms.InputTag("")
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("DisPho",
@@ -185,7 +193,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    jets = cms.InputTag("slimmedJets"),
    ## photons		
    photons    = cms.InputTag("slimmedPhotons"),
-   ootPhotons = cms.InputTag("slimmedOOTPhotons"),
+   ootPhotons = ootPhotonsTag,
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
