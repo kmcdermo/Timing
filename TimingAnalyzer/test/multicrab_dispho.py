@@ -25,7 +25,7 @@ def getOptions():
 
     parser.add_option('-w', '--workArea',
                       dest = 'workArea',
-                      default = '',
+                      default = 'multicrab_dispho',
                       help = "work area directory (only if CMD != 'submit')",
                       metavar = 'WAD')
 
@@ -63,14 +63,14 @@ def main():
         from CRABClient.UserUtilities import config
         config = config()
 
+        config.General.workArea    = options.workArea
         config.General.requestName = None
-        config.General.workArea    = 'multicrab_dispho'
 
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'dispho.py'
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [
-            '/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt',
+            '/afs/cern.ch/user/k/kmcdermo/public/input/HLTprescaledpaths.txt',
             '/afs/cern.ch/user/k/kmcdermo/public/input/HLTfilters.txt'
             ]
 
@@ -78,11 +78,11 @@ def main():
         config.Data.lumiMask         = '/afs/cern.ch/user/k/kmcdermo/public/input/golden2017.json'
         config.Data.splitting        = 'EventAwareLumiBased'
         config.Data.unitsPerJob      = 1000000
-        config.Data.outputDatasetTag = None
 
-        config.Data.publication   = False
-        config.Site.storageSite   = 'T2_CH_CERN'
-        config.Data.outLFNDirBase = '/store/group/phys_exotica/displacedPhotons/'
+        config.Data.outputDatasetTag = None
+        config.Data.publication      = False
+        config.Site.storageSite      = 'T2_CH_CERN'
+        config.Data.outLFNDirBase    = '/store/group/phys_exotica/displacedPhotons/'
         #--------------------------------------------------------
 
         # Will submit one task for each of these input datasets.
@@ -99,7 +99,7 @@ def main():
         for inDO in inputDataAndOpts:
             # inDO[0] is of the form /A/B/C. Since B is unique for each inDS, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[2]
-            config.JobType.pyCfgParams   = ['globalTag='+inDO[1],'useOOTPhotons='+inDO[2],'blindSF=100','applyBlindSF=True']
+            config.JobType.pyCfgParams   = ['globalTag='+inDO[1],'useOOTPhotons='+inDO[2],'phIDmin=""','applyTrigger=True']
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.
