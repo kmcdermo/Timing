@@ -55,7 +55,7 @@ options.register('outputFileName','dispho.root',VarParsing.multiplicity.singleto
 ## parsing command line arguments
 options.parseArguments()
 
-if options.isGMSB or options.isHVDS or options.isBkg: options.isMC
+if options.isGMSB or options.isHVDS or options.isBkg: options.isMC = True
 
 print "     ##### Settings ######"
 print "       -- Blinding --"
