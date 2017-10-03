@@ -56,9 +56,6 @@
 
 // ROOT
 #include "TTree.h"
-#include "TLorentzVector.h"
-#include "TString.h"
-#include "TPRegexp.h"
 
 // Common Utilities
 #include "Timing/TimingAnalyzer/plugins/CommonUtils.hh"

@@ -341,7 +341,8 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Trigger Info //
   //              //
   //////////////////
-  hltDisPho = triggerBitMap["HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_PFHT350MinPFJet15_v"];
+  const std::string path = "HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_PFHT350MinPFJet15_v";
+  hltDisPho = (triggerBitMap.count(path.c_str()) ? triggerBitMap[path.c_str()] : false);
 
   /////////////////////////
   //                     //   
@@ -827,7 +828,8 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   strBitMap isHLTMatched;
   for (const auto & filter : filterNames) isHLTMatched[filter] = false;
   oot::HLTToObjectMatching(triggerObjectsByFilterMap,isHLTMatched,photon,pTres,dRmin);
-  phoBranch.isHLT_ = isHLTMatched["hltEG60R9Id90CaloIdLIsoLDisplacedIdFilter"];
+  const std::string filter = "hltEG60R9Id90CaloIdLIsoLDisplacedIdFilter";
+  phoBranch.isHLT_ = (isHLTMatched.count(filter.c_str()) ? isHLTMatched[filter.c_str()] : false);
 
   // 0 --> did not pass anything, 1 --> loose pass, 2 --> medium pass, 3 --> tight pass
   if      (pho.photonID("tight"))  {phoBranch.ID_ = 3;}
