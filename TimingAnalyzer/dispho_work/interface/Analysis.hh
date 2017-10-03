@@ -35,6 +35,9 @@ public:
   void OutputStandardPlots();
   void OutputIsoPlots();
   void OutputIsoNvtxPlots();
+  void Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, const TString & name);
+  void Project2Dto1D(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrMap & subdir1dmap, TStrIntMap & th1dbinmap);
+  void ProduceMeanHist(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrIntMap & th1dbinmap);
   TH1F * MakeTH1Plot(const TString hname, const TString htitle, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh, 
 		     const TString xtitle, const TString ytitle, TStrMap& subdirmap, const TString subdir);
   TH2F * MakeTH2Plot(const TString hname, const TString htitle, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh, const TString xtitle,

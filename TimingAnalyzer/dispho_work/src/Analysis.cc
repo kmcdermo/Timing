@@ -578,7 +578,103 @@ void Analysis::OutputIsoNvtxPlots()
 {
   MakeSubDirs(isonvtxTH2SubMap,fOutDir);
   Analysis::SaveTH2s(isonvtxTH2Map,isonvtxTH2SubMap);
+  for (TH2MapIter mapiter = isonvtxTH2Map.begin(); mapiter != isonvtxTH2Map.end(); ++mapiter)
+  {
+    const TString name = mapiter->first;
+    Analysis::Make1DIsoPlots(mapiter->second,isonvtxTH2SubMap[name],name);
+  }
   Analysis::DeleteTH2s(isonvtxTH2Map);
+}
+
+void Analysis::Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, const TString & name)
+{
+   TH1Map th1dmap; TStrMap th1dsubmap; TStrIntMap th1dbinmap;
+   Analysis::Project2Dto1D(hist2d,subdir2d,th1dmap,th1dsubmap,th1dbinmap);
+   Analysis::ProduceMeanHist(hist2d,subdir2d,th1dmap,th1dbinmap);
+   if (Config::saveTempHists) Analysis::SaveTH1s(th1dmap,th1dsubmap);
+   Analysis::DeleteTH1s(th1dmap);
+}
+
+void Analysis::Project2Dto1D(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrMap & subdir1dmap, TStrIntMap & th1dbinmap) 
+{
+  const TString  basename = hist2d->GetName();
+  const Int_t    nBinsX   = hist2d->GetNbinsX();
+  const TString  xtitle   = hist2d->GetXaxis()->GetTitle();
+  const Int_t    nBinsY   = hist2d->GetNbinsY();
+  const Double_t ylow     = hist2d->GetYaxis()->GetXmin();
+  const Double_t yhigh    = hist2d->GetYaxis()->GetXmax();
+  const TString  ytitle   = hist2d->GetYaxis()->GetTitle();
+
+  // loop over all x bins to project out
+  for (Int_t ibinx = 1; ibinx <= nBinsX; ibinx++)
+  {  
+    // if no bins are filled, then continue to next plot
+    Bool_t isFilled = false;
+    for (Int_t ibiny = 0; ibiny <= nBinsY + 1; ibiny++) 
+    {
+      if (hist2d->GetBinContent(ibinx,ibiny) > 0) {isFilled = true; break;}
+    }
+    if (!isFilled) continue;
+
+    const Double_t xlow  = hist2d->GetXaxis()->GetBinLowEdge(ibinx); 
+    const Double_t xhigh = hist2d->GetXaxis()->GetBinUpEdge(ibinx);
+
+    TString histname = "";
+    // First create each histogram
+    const Int_t ixlow  = Int_t(xlow); 
+    const Int_t ixhigh = Int_t(xhigh); 
+    histname = Form("%s_%i_%i_bin%i",basename.Data(),ixlow,ixhigh,ibinx);
+    th1dmap[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nBinsY,ylow,yhigh,Form("%s in %s bin: %i to %i",ytitle.Data(),xtitle.Data(),ixlow,ixhigh),"Events",subdir1dmap,subdir2d);
+
+    th1dbinmap[histname.Data()] = ibinx; // universal pairing
+
+    // then fill corresponding bins from y
+    for (Int_t ibiny = 0; ibiny <= nBinsY + 1; ibiny++) 
+    {
+      th1dmap[histname.Data()]->SetBinContent(ibiny,hist2d->GetBinContent(ibinx,ibiny));
+      th1dmap[histname.Data()]->SetBinError(ibiny,hist2d->GetBinError(ibinx,ibiny)); 
+    }
+  }
+}
+
+void Analysis::ProduceMeanHist(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrIntMap & th1dbinmap) 
+{
+  // initialize new mean/sigma histograms
+  TH1F * outhist_mean = new TH1F(Form("%s_mean",hist2d->GetName()),"",hist2d->GetNbinsX(),hist2d->GetXaxis()->GetXmin(),hist2d->GetXaxis()->GetXmax());
+  outhist_mean->GetXaxis()->SetTitle(hist2d->GetXaxis()->GetTitle());
+  outhist_mean->GetYaxis()->SetTitle(Form("Mean of %s",hist2d->GetYaxis()->GetTitle()));
+  outhist_mean->SetLineColor(fColor);
+  outhist_mean->SetMarkerColor(fColor);
+  outhist_mean->GetYaxis()->SetTitleOffset(outhist_mean->GetYaxis()->GetTitleOffset() * Config::TitleFF);
+  outhist_mean->Sumw2();
+
+  // use this to store runs that by themselves produce bad fits
+  for (TH1MapIter mapiter = th1dmap.begin(); mapiter != th1dmap.end(); ++mapiter) 
+  { 
+    const Int_t ibin = th1dbinmap[mapiter->first]; // returns which bin each th1 corresponds to one the new plot
+    outhist_mean->SetBinContent(ibin,mapiter->second->GetMean());
+    outhist_mean->SetBinError(ibin,mapiter->second->GetMeanError());
+  } // end loop over th1s
+
+  // write output mean/sigma hists to file
+  fOutFile->cd();
+  outhist_mean->Write(outhist_mean->GetName(),TObject::kWriteDelete);
+  
+  if (Config::saveHists)
+  {
+    // save log/lin of each plot
+    TCanvas * canv = new TCanvas("canv","canv");
+    canv->cd();
+    canv->SetLogy(0);
+    
+    outhist_mean->Draw("PE");
+    CMSLumi(canv);
+    canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdir2d.Data(),outhist_mean->GetName(),Config::outtype.Data()));
+    
+    delete canv;
+  }
+
+  delete outhist_mean;
 }
 
 TH1F * Analysis::MakeTH1Plot(const TString hname, const TString htitle, const Int_t nbinsx, Double_t xlow, Double_t xhigh,

@@ -92,6 +92,7 @@ int main(int argc, const char* argv[])
 	"  --dump-status   <bool>        print out every N events in analysis loop (def: %s)\n"
 	"  --in-year       <string>      which year to process (def: %s)\n"
 	"  --save-hists    <bool>        save analysis histograms as images (def: %s)\n"
+	"  --save-tmphists <bool>        save histograms used in projections to root file (def: %s)\n"
 	"  --out-image     <string>      extension of file to save plots (def: %s)\n"
         ,
         argv[0],
@@ -112,6 +113,7 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::dumpStatus),
 	Config::year.Data(),
 	PrintBool(Config::saveHists),
+	PrintBool(Config::saveTempHists),
 	Config::outtype.Data()
       );
       exit(0);
@@ -133,6 +135,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--dump-status") { Config::doAnalysis = true; Config::dumpStatus = true; }
     else if (*i == "--in-year")     { next_arg_or_die(mArgs, i); Config::year     = i->c_str(); }
     else if (*i == "--save-hists")  { Config::saveHists  = true; }
+    else if (*i == "--save-tmphists") { Config::saveTempHists  = true; }
     else if (*i == "--out-image")   { next_arg_or_die(mArgs, i); Config::outtype  = i->c_str(); }
     else    { std::cerr << "Error: Unknown option/argument: " << i->c_str() << " ...exiting..." << std::endl; exit(1); }
     mArgs.erase(start, ++i);

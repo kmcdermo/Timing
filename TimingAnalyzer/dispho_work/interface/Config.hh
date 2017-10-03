@@ -89,6 +89,7 @@ namespace Config
   extern Bool_t      dumpStatus;
   extern TString     year;
   extern Bool_t      saveHists;
+  extern Bool_t      saveTempHists;
   extern TString     outtype;
 
   extern TStrBoolMap SampleMap;
