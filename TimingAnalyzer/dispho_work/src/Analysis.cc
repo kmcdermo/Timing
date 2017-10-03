@@ -28,7 +28,7 @@ inline Float_t TOF   (const Float_t x,  const Float_t y,  const Float_t z,
   return time + (std::sqrt(rad2(x,y,z))-std::sqrt(rad2((x-vx),(y-vy),(z-vz))))/Config::sol;
 }
 
-Analysis::Analysis(TString sample, Bool_t isMC) : fSample(sample), fIsMC(isMC)
+Analysis::Analysis(const TString sample, const Bool_t isMC) : fSample(sample), fIsMC(isMC)
 {
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
@@ -95,6 +95,8 @@ void Analysis::EventLoop()
 {
   // Set up hists first --> first in map is histo name, by design!
   if (Config::doStandard) Analysis::SetupStandardPlots();
+  if (Config::doIso)      Analysis::SetupIsoPlots();
+  if (Config::doIsoNvtx)  Analysis::SetupIsoNvtxPlots();
 
   // do loop over events, filling histos
   const UInt_t nEntries = (Config::doDemo?Config::demoNum:fInTree->GetEntries());
@@ -116,253 +118,275 @@ void Analysis::EventLoop()
     if   (fIsMC) {weight = (fXsec * Config::lumi * genwgt / fWgtsum) * fPUweights[genputrue];}
     else         {weight = 1.0;}
 
+
+    ////////////////////////////////
+    //                            // 
+    // Determine how many objects //
+    //                            // 
+    ////////////////////////////////
+    const Int_t Nphotons = std::min(nphotons,Config::nPhotons);
+    const Int_t Njets    = std::min(njets,Config::nJets);
+
     // fill the plots
-    if (Config::doStandard) Analysis::FillStandardPlots(weight);
+    if (Config::doStandard) Analysis::FillStandardPlots(Nphotons,weight);
+    if (Config::doIso)      Analysis::FillIsoPlots(Nphotons,weight);
+    if (Config::doIsoNvtx)  Analysis::FillIsoNvtxPlots(Nphotons,weight);
   } // end loop over events
 
    // output hists
   if (Config::doStandard) Analysis::OutputStandardPlots();
+  if (Config::doIso)      Analysis::OutputIsoPlots();
+  if (Config::doIsoNvtx)  Analysis::OutputIsoNvtxPlots();
 }
 
 void Analysis::SetupStandardPlots()
 {
   // event based variables
-  standardTH1Map["nvtx"] = Analysis::MakeTH1Plot("nvtx","",Config::nbinsvtx,0.,Double_t(Config::nbinsvtx),"nVertices","Events",standardTH1SubMap,"standard/vtx");
+  standardTH1Map["nvtx"] = Analysis::MakeTH1Plot("nvtx","",Config::nbinsvtx,0.,Double_t(Config::nbinsvtx),"nVertices","Events",standardTH1SubMap,"standard");
   
-  // proof of concept
   for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++)
   {
-    //inclusive
+    //inclusive on GED and OOT
     //EB
     standardTH1Map[Form("phopt_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phopt_%i_EB",ipho),"",50,0.,1000.f,Form("Photon %i p_{T} (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phochgiso_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phochgiso_%i_EB",ipho),"",50,0.,20.f,Form("Photon %i PF Charged Hadron Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoneuiso_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoneuiso_%i_EB",ipho),"",50,0.,20.f,Form("Photon %i PF Neutral Hadron Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phophoiso_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phophoiso_%i_EB",ipho),"",50,0.,20.f,Form("Photon %i PF Photon Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoecaliso_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoecaliso_%i_EB",ipho),"",50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phohcaliso_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phohcaliso_%i_EB",ipho),"",50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("photrkiso_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("photrkiso_%i_EB",ipho),"",50,0.,20.f,Form("Photon %i Track Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phochgiso_zoom_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phochgiso_zoom_%i_EB",ipho),"",50,0.,1.f,Form("Photon %i PF Charged Hadron Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoneuiso_zoom_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoneuiso_zoom_%i_EB",ipho),"",50,0.,1.f,Form("Photon %i PF Neutral Hadron Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phophoiso_zoom_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phophoiso_zoom_%i_EB",ipho),"",50,0.,1.f,Form("Photon %i PF Photon Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoecaliso_zoom_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoecaliso_zoom_%i_EB",ipho),"",50,0.,1.f,Form("Photon %i PFCluser ECAL Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phohcaliso_zoom_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phohcaliso_zoom_%i_EB",ipho),"",50,0.,1.f,Form("Photon %i PFCluser HCAL Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("photrkiso_zoom_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("photrkiso_zoom_%i_EB",ipho),"",50,0.,1.f,Form("Photon %i Track Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
+      Analysis::MakeTH1Plot(Form("phopt_%i_EB",ipho),"",50,0.,1000.f,Form("Photon %i p_{T} (EB)",ipho),"Events",standardTH1SubMap,"standard");
     standardTH1Map[Form("phoseedtime_%i_EB",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoseedtime_%i_EB",ipho),"",50,-25.f,25.f,Form("Photon %i Seed Time [ns] (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
+      Analysis::MakeTH1Plot(Form("phoseedtime_%i_EB",ipho),"",50,-25.f,25.f,Form("Photon %i Seed Time [ns] (EB)",ipho),"Events",standardTH1SubMap,"standard");
 
     //EE
     standardTH1Map[Form("phopt_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phopt_%i_EE",ipho),"",50,0.,1000.f,Form("Photon %i p_{T} (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phochgiso_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phochgiso_%i_EE",ipho),"",50,0.,20.f,Form("Photon %i PF Charged Hadron Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoneuiso_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoneuiso_%i_EE",ipho),"",50,0.,20.f,Form("Photon %i PF Neutral Hadron Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phophoiso_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phophoiso_%i_EE",ipho),"",50,0.,20.f,Form("Photon %i PF Photon Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoecaliso_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoecaliso_%i_EE",ipho),"",50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phohcaliso_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phohcaliso_%i_EE",ipho),"",50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("photrkiso_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("photrkiso_%i_EE",ipho),"",50,0.,20.f,Form("Photon %i Track Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phochgiso_zoom_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phochgiso_zoom_%i_EE",ipho),"",50,0.,1.f,Form("Photon %i PF Charged Hadron Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoneuiso_zoom_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoneuiso_zoom_%i_EE",ipho),"",50,0.,1.f,Form("Photon %i PF Neutral Hadron Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phophoiso_zoom_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phophoiso_zoom_%i_EE",ipho),"",50,0.,1.f,Form("Photon %i PF Photon Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoecaliso_zoom_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoecaliso_zoom_%i_EE",ipho),"",50,0.,1.f,Form("Photon %i PFCluser ECAL Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phohcaliso_zoom_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phohcaliso_zoom_%i_EE",ipho),"",50,0.,1.f,Form("Photon %i PFCluser HCAL Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("photrkiso_zoom_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("photrkiso_zoom_%i_EE",ipho),"",50,0.,1.f,Form("Photon %i Track Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
+      Analysis::MakeTH1Plot(Form("phopt_%i_EE",ipho),"",50,0.,1000.f,Form("Photon %i p_{T} (EE)",ipho),"Events",standardTH1SubMap,"standard");
     standardTH1Map[Form("phoseedtime_%i_EE",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoseedtime_%i_EE",ipho),"",50,-25.f,25.f,Form("Photon %i Seed Time [ns] (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
+      Analysis::MakeTH1Plot(Form("phoseedtime_%i_EE",ipho),"",50,-25.f,25.f,Form("Photon %i Seed Time [ns] (EE)",ipho),"Events",standardTH1SubMap,"standard");
 
     //GED: General Event Description, i.e. standard photons
     //EB
     standardTH1Map[Form("phopt_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phopt_%i_EB_ged",ipho),"",50,0.,1000.f,Form("GED Photon %i p_{T} (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phochgiso_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phochgiso_%i_EB_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PF Charged Hadron Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoneuiso_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoneuiso_%i_EB_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PF Neutral Hadron Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phophoiso_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phophoiso_%i_EB_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PF Photon Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoecaliso_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoecaliso_%i_EB_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PFCluser ECAL Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phohcaliso_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phohcaliso_%i_EB_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PFCluser HCAL Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("photrkiso_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("photrkiso_%i_EB_ged",ipho),"",50,0.,20.f,Form("GED Photon %i Track Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phochgiso_zoom_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phochgiso_zoom_%i_EB_ged",ipho),"",50,0.,1.f,Form("GED Photon %i PF Charged Hadron Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoneuiso_zoom_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoneuiso_zoom_%i_EB_ged",ipho),"",50,0.,1.f,Form("GED Photon %i PF Neutral Hadron Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phophoiso_zoom_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phophoiso_zoom_%i_EB_ged",ipho),"",50,0.,1.f,Form("GED Photon %i PF Photon Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoecaliso_zoom_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoecaliso_zoom_%i_EB_ged",ipho),"",50,0.,1.f,Form("GED Photon %i PFCluser ECAL Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phohcaliso_zoom_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phohcaliso_zoom_%i_EB_ged",ipho),"",50,0.,1.f,Form("GED Photon %i PFCluser HCAL Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("photrkiso_zoom_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("photrkiso_zoom_%i_EB_ged",ipho),"",50,0.,1.f,Form("GED Photon %i Track Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
+      Analysis::MakeTH1Plot(Form("phopt_%i_EB_ged",ipho),"",50,0.,1000.f,Form("GED Photon %i p_{T} (EB)",ipho),"Events",standardTH1SubMap,"standard");
     standardTH1Map[Form("phoseedtime_%i_EB_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoseedtime_%i_EB_ged",ipho),"",50,-25.f,25.f,Form("GED Photon %i Seed Time [ns] (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
+      Analysis::MakeTH1Plot(Form("phoseedtime_%i_EB_ged",ipho),"",50,-25.f,25.f,Form("GED Photon %i Seed Time [ns] (EB)",ipho),"Events",standardTH1SubMap,"standard");
 
     //EE
     standardTH1Map[Form("phopt_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phopt_%i_EE_ged",ipho),"",50,0.,1000.f,Form("GED Photon %i p_{T} (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phochgiso_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phochgiso_%i_EE_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PF Charged Hadron Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoneuiso_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoneuiso_%i_EE_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PF Neutral Hadron Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phophoiso_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phophoiso_%i_EE_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PF Photon Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoecaliso_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoecaliso_%i_EE_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PFCluser ECAL Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phohcaliso_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phohcaliso_%i_EE_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PFCluser HCAL Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("photrkiso_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("photrkiso_%i_EE_ged",ipho),"",50,0.,20.f,Form("GED Photon %i Track Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phochgiso_zoom_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phochgiso_zoom_%i_EE_ged",ipho),"",50,0.,1.f,Form("GED Photon %i PF Charged Hadron Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoneuiso_zoom_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoneuiso_zoom_%i_EE_ged",ipho),"",50,0.,1.f,Form("GED Photon %i PF Neutral Hadron Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phophoiso_zoom_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phophoiso_zoom_%i_EE_ged",ipho),"",50,0.,1.f,Form("GED Photon %i PF Photon Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoecaliso_zoom_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoecaliso_zoom_%i_EE_ged",ipho),"",50,0.,1.f,Form("GED Photon %i PFCluser ECAL Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phohcaliso_zoom_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phohcaliso_zoom_%i_EE_ged",ipho),"",50,0.,1.f,Form("GED Photon %i PFCluser HCAL Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("photrkiso_zoom_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("photrkiso_zoom_%i_EE_ged",ipho),"",50,0.,1.f,Form("GED Photon %i Track Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
+      Analysis::MakeTH1Plot(Form("phopt_%i_EE_ged",ipho),"",50,0.,1000.f,Form("GED Photon %i p_{T} (EE)",ipho),"Events",standardTH1SubMap,"standard");
     standardTH1Map[Form("phoseedtime_%i_EE_ged",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoseedtime_%i_EE_ged",ipho),"",50,-25.f,25.f,Form("GED Photon %i Seed Time [ns] (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
+      Analysis::MakeTH1Plot(Form("phoseedtime_%i_EE_ged",ipho),"",50,-25.f,25.f,Form("GED Photon %i Seed Time [ns] (EE)",ipho),"Events",standardTH1SubMap,"standard");
 
     //out-of-time: oot
     //EB
     standardTH1Map[Form("phopt_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phopt_%i_EB_oot",ipho),"",50,0.,1000.f,Form("OOT Photon %i p_{T} (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phochgiso_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phochgiso_%i_EB_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PF Charged Hadron Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoneuiso_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoneuiso_%i_EB_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PF Neutral Hadron Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phophoiso_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phophoiso_%i_EB_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PF Photon Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoecaliso_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoecaliso_%i_EB_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PFCluser ECAL Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phohcaliso_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phohcaliso_%i_EB_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PFCluser HCAL Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("photrkiso_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("photrkiso_%i_EB_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i Track Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phochgiso_zoom_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phochgiso_zoom_%i_EB_oot",ipho),"",50,0.,1.f,Form("OOT Photon %i PF Charged Hadron Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoneuiso_zoom_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoneuiso_zoom_%i_EB_oot",ipho),"",50,0.,1.f,Form("OOT Photon %i PF Neutral Hadron Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phophoiso_zoom_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phophoiso_zoom_%i_EB_oot",ipho),"",50,0.,1.f,Form("OOT Photon %i PF Photon Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoecaliso_zoom_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoecaliso_zoom_%i_EB_oot",ipho),"",50,0.,1.f,Form("OOT Photon %i PFCluser ECAL Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phohcaliso_zoom_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phohcaliso_zoom_%i_EB_oot",ipho),"",50,0.,1.f,Form("OOT Photon %i PFCluser HCAL Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("photrkiso_zoom_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("photrkiso_zoom_%i_EB_oot",ipho),"",50,0.,1.f,Form("OOT Photon %i Track Iso (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
+      Analysis::MakeTH1Plot(Form("phopt_%i_EB_oot",ipho),"",50,0.,1000.f,Form("OOT Photon %i p_{T} (EB)",ipho),"Events",standardTH1SubMap,"standard");
     standardTH1Map[Form("phoseedtime_%i_EB_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoseedtime_%i_EB_oot",ipho),"",50,-25.f,25.f,Form("OOT Photon %i Seed Time [ns] (EB)",ipho),"Events",standardTH1SubMap,"standard/pho");
+      Analysis::MakeTH1Plot(Form("phoseedtime_%i_EB_oot",ipho),"",50,-25.f,25.f,Form("OOT Photon %i Seed Time [ns] (EB)",ipho),"Events",standardTH1SubMap,"standard");
 
     //EE
     standardTH1Map[Form("phopt_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phopt_%i_EE_oot",ipho),"",50,0.,1000.f,Form("OOT Photon %i p_{T} (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phochgiso_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phochgiso_%i_EE_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PF Charged Hadron Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoneuiso_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoneuiso_%i_EE_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PF Neutral Hadron Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phophoiso_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phophoiso_%i_EE_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PF Photon Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoecaliso_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoecaliso_%i_EE_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PFCluser ECAL Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phohcaliso_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phohcaliso_%i_EE_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PFCluser HCAL Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("photrkiso_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("photrkiso_%i_EE_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i Track Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phochgiso_zoom_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phochgiso_zoom_%i_EE_oot",ipho),"",50,0.,1.f,Form("OOT Photon %i PF Charged Hadron Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoneuiso_zoom_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoneuiso_zoom_%i_EE_oot",ipho),"",50,0.,1.f,Form("OOT Photon %i PF Neutral Hadron Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phophoiso_zoom_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phophoiso_zoom_%i_EE_oot",ipho),"",50,0.,1.f,Form("OOT Photon %i PF Photon Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phoecaliso_zoom_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoecaliso_zoom_%i_EE_oot",ipho),"",50,0.,1.f,Form("OOT Photon %i PFCluser ECAL Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("phohcaliso_zoom_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phohcaliso_zoom_%i_EE_oot",ipho),"",50,0.,1.f,Form("OOT Photon %i PFCluser HCAL Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-    standardTH1Map[Form("photrkiso_zoom_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("photrkiso_zoom_%i_EE_oot",ipho),"",50,0.,1.f,Form("OOT Photon %i Track Iso (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
+      Analysis::MakeTH1Plot(Form("phopt_%i_EE_oot",ipho),"",50,0.,1000.f,Form("OOT Photon %i p_{T} (EE)",ipho),"Events",standardTH1SubMap,"standard");
     standardTH1Map[Form("phoseedtime_%i_EE_oot",ipho)] = 
-      Analysis::MakeTH1Plot(Form("phoseedtime_%i_EE_oot",ipho),"",50,-25.f,25.f,Form("OOT Photon %i Seed Time [ns] (EE)",ipho),"Events",standardTH1SubMap,"standard/pho");
-  }
+      Analysis::MakeTH1Plot(Form("phoseedtime_%i_EE_oot",ipho),"",50,-25.f,25.f,Form("OOT Photon %i Seed Time [ns] (EE)",ipho),"Events",standardTH1SubMap,"standard");
+  } // end loop over nphotons
 }
 
-void Analysis::FillStandardPlots(const Float_t weight)
+void Analysis::SetupIsoPlots()
+{
+  for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++)
+  {
+    // Inclusive EB
+    isoTH1Map[Form("phochgiso_%i_EB",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phochgiso_%i_EB",ipho),"",50,0.,20.f,Form("Photon %i PF Charged Hadron Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phoneuiso_%i_EB",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phoneuiso_%i_EB",ipho),"",50,0.,20.f,Form("Photon %i PF Neutral Hadron Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phophoiso_%i_EB",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phophoiso_%i_EB",ipho),"",50,0.,20.f,Form("Photon %i PF Photon Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phoecaliso_%i_EB",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phoecaliso_%i_EB",ipho),"",50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phohcaliso_%i_EB",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phohcaliso_%i_EB",ipho),"",50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("photrkiso_%i_EB",ipho)] = 
+      Analysis::MakeTH1Plot(Form("photrkiso_%i_EB",ipho),"",50,0.,20.f,Form("Photon %i Track Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+
+    // Inclusive EE
+    isoTH1Map[Form("phochgiso_%i_EE",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phochgiso_%i_EE",ipho),"",50,0.,20.f,Form("Photon %i PF Charged Hadron Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phoneuiso_%i_EE",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phoneuiso_%i_EE",ipho),"",50,0.,20.f,Form("Photon %i PF Neutral Hadron Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phophoiso_%i_EE",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phophoiso_%i_EE",ipho),"",50,0.,20.f,Form("Photon %i PF Photon Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phoecaliso_%i_EE",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phoecaliso_%i_EE",ipho),"",50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phohcaliso_%i_EE",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phohcaliso_%i_EE",ipho),"",50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("photrkiso_%i_EE",ipho)] = 
+      Analysis::MakeTH1Plot(Form("photrkiso_%i_EE",ipho),"",50,0.,20.f,Form("Photon %i Track Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+
+    // GED EB
+    isoTH1Map[Form("phochgiso_%i_EB_ged",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phochgiso_%i_EB_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PF Charged Hadron Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phoneuiso_%i_EB_ged",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phoneuiso_%i_EB_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PF Neutral Hadron Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phophoiso_%i_EB_ged",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phophoiso_%i_EB_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PF Photon Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phoecaliso_%i_EB_ged",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phoecaliso_%i_EB_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PFCluser ECAL Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phohcaliso_%i_EB_ged",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phohcaliso_%i_EB_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PFCluser HCAL Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("photrkiso_%i_EB_ged",ipho)] = 
+      Analysis::MakeTH1Plot(Form("photrkiso_%i_EB_ged",ipho),"",50,0.,20.f,Form("GED Photon %i Track Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    
+    // GED EE
+    isoTH1Map[Form("phochgiso_%i_EE_ged",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phochgiso_%i_EE_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PF Charged Hadron Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phoneuiso_%i_EE_ged",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phoneuiso_%i_EE_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PF Neutral Hadron Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phophoiso_%i_EE_ged",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phophoiso_%i_EE_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PF Photon Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phoecaliso_%i_EE_ged",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phoecaliso_%i_EE_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PFCluser ECAL Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phohcaliso_%i_EE_ged",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phohcaliso_%i_EE_ged",ipho),"",50,0.,20.f,Form("GED Photon %i PFCluser HCAL Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("photrkiso_%i_EE_ged",ipho)] = 
+      Analysis::MakeTH1Plot(Form("photrkiso_%i_EE_ged",ipho),"",50,0.,20.f,Form("GED Photon %i Track Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+
+    // OOT EB
+    isoTH1Map[Form("phochgiso_%i_EB_oot",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phochgiso_%i_EB_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PF Charged Hadron Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phoneuiso_%i_EB_oot",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phoneuiso_%i_EB_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PF Neutral Hadron Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phophoiso_%i_EB_oot",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phophoiso_%i_EB_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PF Photon Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phoecaliso_%i_EB_oot",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phoecaliso_%i_EB_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PFCluser ECAL Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phohcaliso_%i_EB_oot",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phohcaliso_%i_EB_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PFCluser HCAL Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("photrkiso_%i_EB_oot",ipho)] = 
+      Analysis::MakeTH1Plot(Form("photrkiso_%i_EB_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i Track Iso (EB)",ipho),"Events",isoTH1SubMap,"iso");
+
+    // OOT EE
+    isoTH1Map[Form("phochgiso_%i_EE_oot",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phochgiso_%i_EE_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PF Charged Hadron Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phoneuiso_%i_EE_oot",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phoneuiso_%i_EE_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PF Neutral Hadron Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phophoiso_%i_EE_oot",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phophoiso_%i_EE_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PF Photon Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phoecaliso_%i_EE_oot",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phoecaliso_%i_EE_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PFCluser ECAL Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("phohcaliso_%i_EE_oot",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phohcaliso_%i_EE_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i PFCluser HCAL Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+    isoTH1Map[Form("photrkiso_%i_EE_oot",ipho)] = 
+      Analysis::MakeTH1Plot(Form("photrkiso_%i_EE_oot",ipho),"",50,0.,20.f,Form("OOT Photon %i Track Iso (EE)",ipho),"Events",isoTH1SubMap,"iso");
+  } // loop over nphotons
+}
+
+void Analysis::SetupIsoNvtxPlots()
+{
+  for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++)
+  {
+    // Inclusive EB
+    isonvtxTH2Map[Form("phochgiso_%i_EB_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phochgiso_%i_EB_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("Photon %i PF Charged Hadron Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phoneuiso_%i_EB_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phoneuiso_%i_EB_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("Photon %i PF Neutral Hadron Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phophoiso_%i_EB_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phophoiso_%i_EB_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("Photon %i PF Photon Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phoecaliso_%i_EB_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phoecaliso_%i_EB_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phohcaliso_%i_EB_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phohcaliso_%i_EB_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("photrkiso_%i_EB_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("photrkiso_%i_EB_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("Photon %i Track Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+
+    // Inclusive EE
+    isonvtxTH2Map[Form("phochgiso_%i_EE_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phochgiso_%i_EE_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("Photon %i PF Charged Hadron Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phoneuiso_%i_EE_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phoneuiso_%i_EE_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("Photon %i PF Neutral Hadron Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phophoiso_%i_EE_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phophoiso_%i_EE_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("Photon %i PF Photon Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phoecaliso_%i_EE_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phoecaliso_%i_EE_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phohcaliso_%i_EE_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phohcaliso_%i_EE_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("photrkiso_%i_EE_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("photrkiso_%i_EE_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("Photon %i Track Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+
+    // GED EB
+    isonvtxTH2Map[Form("phochgiso_%i_EB_ged_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phochgiso_%i_EB_ged_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("GED Photon %i PF Charged Hadron Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phoneuiso_%i_EB_ged_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phoneuiso_%i_EB_ged_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("GED Photon %i PF Neutral Hadron Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phophoiso_%i_EB_ged_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phophoiso_%i_EB_ged_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("GED Photon %i PF Photon Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phoecaliso_%i_EB_ged_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phoecaliso_%i_EB_ged_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("GED Photon %i PFCluser ECAL Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phohcaliso_%i_EB_ged_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phohcaliso_%i_EB_ged_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("GED Photon %i PFCluser HCAL Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("photrkiso_%i_EB_ged_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("photrkiso_%i_EB_ged_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("GED Photon %i Track Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    
+    // GED EE
+    isonvtxTH2Map[Form("phochgiso_%i_EE_ged_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phochgiso_%i_EE_ged_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("GED Photon %i PF Charged Hadron Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phoneuiso_%i_EE_ged_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phoneuiso_%i_EE_ged_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("GED Photon %i PF Neutral Hadron Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phophoiso_%i_EE_ged_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phophoiso_%i_EE_ged_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("GED Photon %i PF Photon Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phoecaliso_%i_EE_ged_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phoecaliso_%i_EE_ged_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("GED Photon %i PFCluser ECAL Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phohcaliso_%i_EE_ged_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phohcaliso_%i_EE_ged_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("GED Photon %i PFCluser HCAL Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("photrkiso_%i_EE_ged_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("photrkiso_%i_EE_ged_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("GED Photon %i Track Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+
+    // OOT EB
+    isonvtxTH2Map[Form("phochgiso_%i_EB_oot_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phochgiso_%i_EB_oot_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("OOT Photon %i PF Charged Hadron Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phoneuiso_%i_EB_oot_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phoneuiso_%i_EB_oot_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("OOT Photon %i PF Neutral Hadron Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phophoiso_%i_EB_oot_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phophoiso_%i_EB_oot_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("OOT Photon %i PF Photon Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phoecaliso_%i_EB_oot_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phoecaliso_%i_EB_oot_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("OOT Photon %i PFCluser ECAL Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phohcaliso_%i_EB_oot_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phohcaliso_%i_EB_oot_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("OOT Photon %i PFCluser HCAL Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("photrkiso_%i_EB_oot_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("photrkiso_%i_EB_oot_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("OOT Photon %i Track Iso (EB)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+
+    // OOT EE
+    isonvtxTH2Map[Form("phochgiso_%i_EE_oot_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phochgiso_%i_EE_oot_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("OOT Photon %i PF Charged Hadron Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phoneuiso_%i_EE_oot_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phoneuiso_%i_EE_oot_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("OOT Photon %i PF Neutral Hadron Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phophoiso_%i_EE_oot_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phophoiso_%i_EE_oot_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("OOT Photon %i PF Photon Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phoecaliso_%i_EE_oot_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phoecaliso_%i_EE_oot_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("OOT Photon %i PFCluser ECAL Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("phohcaliso_%i_EE_oot_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("phohcaliso_%i_EE_oot_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("OOT Photon %i PFCluser HCAL Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+    isonvtxTH2Map[Form("photrkiso_%i_EE_oot_v_nvtx",ipho)] = 
+      Analysis::MakeTH2Plot(Form("photrkiso_%i_EE_oot_v_nvtx",ipho),"",Config::nbinsvtx/5,0,Double_t(Config::nbinsvtx),"nVertices",50,0.,20.f,Form("OOT Photon %i Track Iso (EE)",ipho),isonvtxTH2SubMap,"iso/nvtx");
+  } // loop over nphotons
+}
+
+void Analysis::FillStandardPlots(const Int_t Nphotons, const Float_t weight)
 {
   // standard "validation" and Z mass plots
   standardTH1Map["nvtx"]->Fill(nvtx,weight);
 
-  const Int_t nPhos = std::min(nphotons,Config::nPhotons);
-  for (Int_t ipho = 0; ipho < nPhos; ipho++)
+  for (Int_t ipho = 0; ipho < Nphotons; ipho++)
   {
     const auto & pho = phos[ipho];
     if (pho.isEB) // EB
     {
       // inclusive
       standardTH1Map[Form("phopt_%i_EB",ipho)]->Fill(pho.pt,weight);
-      standardTH1Map[Form("phochgiso_%i_EB",ipho)]->Fill(pho.ChgHadIso,weight);
-      standardTH1Map[Form("phoneuiso_%i_EB",ipho)]->Fill(pho.NeuHadIso,weight);
-      standardTH1Map[Form("phophoiso_%i_EB",ipho)]->Fill(pho.PhoIso,weight);
-      standardTH1Map[Form("phochgiso_zoom_%i_EB",ipho)]->Fill(pho.ChgHadIso,weight);
-      standardTH1Map[Form("phoneuiso_zoom_%i_EB",ipho)]->Fill(pho.NeuHadIso,weight);
-      standardTH1Map[Form("phophoiso_zoom_%i_EB",ipho)]->Fill(pho.PhoIso,weight);
-      standardTH1Map[Form("phoecaliso_%i_EB",ipho)]->Fill(pho.EcalPFClIso,weight);
-      standardTH1Map[Form("phohcaliso_%i_EB",ipho)]->Fill(pho.HcalPFClIso,weight);
-      standardTH1Map[Form("photrkiso_%i_EB",ipho)]->Fill(pho.TrkIso,weight);
-      standardTH1Map[Form("phoecaliso_zoom_%i_EB",ipho)]->Fill(pho.EcalPFClIso,weight);
-      standardTH1Map[Form("phohcaliso_zoom_%i_EB",ipho)]->Fill(pho.HcalPFClIso,weight);
-      standardTH1Map[Form("photrkiso_zoom_%i_EB",ipho)]->Fill(pho.TrkIso,weight);
       if (pho.seed >= 0)
       { 
 	standardTH1Map[Form("phoseedtime_%i_EB",ipho)]->Fill((*rhtime)[pho.seed],weight);
       } // end check over seed
-      
-      // GED
-      if (!ph.isOOT)
+
+      if (!pho.isOOT) // GED
       {
 	standardTH1Map[Form("phopt_%i_EB_ged",ipho)]->Fill(pho.pt,weight);
-	standardTH1Map[Form("phochgiso_%i_EB_ged",ipho)]->Fill(pho.ChgHadIso,weight);
-	standardTH1Map[Form("phoneuiso_%i_EB_ged",ipho)]->Fill(pho.NeuHadIso,weight);
-	standardTH1Map[Form("phophoiso_%i_EB_ged",ipho)]->Fill(pho.PhoIso,weight);
-	standardTH1Map[Form("phochgiso_zoom_%i_EB_ged",ipho)]->Fill(pho.ChgHadIso,weight);
-	standardTH1Map[Form("phoneuiso_zoom_%i_EB_ged",ipho)]->Fill(pho.NeuHadIso,weight);
-	standardTH1Map[Form("phophoiso_zoom_%i_EB_ged",ipho)]->Fill(pho.PhoIso,weight);
-	standardTH1Map[Form("phoecaliso_%i_EB_ged",ipho)]->Fill(pho.EcalPFClIso,weight);
-	standardTH1Map[Form("phohcaliso_%i_EB_ged",ipho)]->Fill(pho.HcalPFClIso,weight);
-	standardTH1Map[Form("photrkiso_%i_EB_ged",ipho)]->Fill(pho.TrkIso,weight);
-	standardTH1Map[Form("phoecaliso_zoom_%i_EB_ged",ipho)]->Fill(pho.EcalPFClIso,weight);
-	standardTH1Map[Form("phohcaliso_zoom_%i_EB_ged",ipho)]->Fill(pho.HcalPFClIso,weight);
-	standardTH1Map[Form("photrkiso_zoom_%i_EB_ged",ipho)]->Fill(pho.TrkIso,weight);
 	if (pho.seed >= 0)
         { 
 	  standardTH1Map[Form("phoseedtime_%i_EB_ged",ipho)]->Fill((*rhtime)[pho.seed],weight);
@@ -371,18 +395,6 @@ void Analysis::FillStandardPlots(const Float_t weight)
       else // OOT
       {
 	standardTH1Map[Form("phopt_%i_EB_oot",ipho)]->Fill(pho.pt,weight);
-	standardTH1Map[Form("phochgiso_%i_EB_oot",ipho)]->Fill(pho.ChgHadIso,weight);
-	standardTH1Map[Form("phoneuiso_%i_EB_oot",ipho)]->Fill(pho.NeuHadIso,weight);
-	standardTH1Map[Form("phophoiso_%i_EB_oot",ipho)]->Fill(pho.PhoIso,weight);
-	standardTH1Map[Form("phochgiso_zoom_%i_EB_oot",ipho)]->Fill(pho.ChgHadIso,weight);
-	standardTH1Map[Form("phoneuiso_zoom_%i_EB_oot",ipho)]->Fill(pho.NeuHadIso,weight);
-	standardTH1Map[Form("phophoiso_zoom_%i_EB_oot",ipho)]->Fill(pho.PhoIso,weight);
-	standardTH1Map[Form("phoecaliso_%i_EB_oot",ipho)]->Fill(pho.EcalPFClIso,weight);
-	standardTH1Map[Form("phohcaliso_%i_EB_oot",ipho)]->Fill(pho.HcalPFClIso,weight);
-	standardTH1Map[Form("photrkiso_%i_EB_oot",ipho)]->Fill(pho.TrkIso,weight);
-	standardTH1Map[Form("phoecaliso_zoom_%i_EB_oot",ipho)]->Fill(pho.EcalPFClIso,weight);
-	standardTH1Map[Form("phohcaliso_zoom_%i_EB_oot",ipho)]->Fill(pho.HcalPFClIso,weight);
-	standardTH1Map[Form("photrkiso_zoom_%i_EB_oot",ipho)]->Fill(pho.TrkIso,weight);
 	if (pho.seed >= 0)
         { 
 	  standardTH1Map[Form("phoseedtime_%i_EB_oot",ipho)]->Fill((*rhtime)[pho.seed],weight);
@@ -391,40 +403,16 @@ void Analysis::FillStandardPlots(const Float_t weight)
     } // end check over EB
     else // EE
     {
+      // inclusive
       standardTH1Map[Form("phopt_%i_EE",ipho)]->Fill(pho.pt,weight);
-      standardTH1Map[Form("phochgiso_%i_EE",ipho)]->Fill(pho.ChgHadIso,weight);
-      standardTH1Map[Form("phoneuiso_%i_EE",ipho)]->Fill(pho.NeuHadIso,weight);
-      standardTH1Map[Form("phophoiso_%i_EE",ipho)]->Fill(pho.PhoIso,weight);
-      standardTH1Map[Form("phochgiso_zoom_%i_EE",ipho)]->Fill(pho.ChgHadIso,weight);
-      standardTH1Map[Form("phoneuiso_zoom_%i_EE",ipho)]->Fill(pho.NeuHadIso,weight);
-      standardTH1Map[Form("phophoiso_zoom_%i_EE",ipho)]->Fill(pho.PhoIso,weight);
-      standardTH1Map[Form("phoecaliso_%i_EE",ipho)]->Fill(pho.EcalPFClIso,weight);
-      standardTH1Map[Form("phohcaliso_%i_EE",ipho)]->Fill(pho.HcalPFClIso,weight);
-      standardTH1Map[Form("photrkiso_%i_EE",ipho)]->Fill(pho.TrkIso,weight);
-      standardTH1Map[Form("phoecaliso_zoom_%i_EE",ipho)]->Fill(pho.EcalPFClIso,weight);
-      standardTH1Map[Form("phohcaliso_zoom_%i_EE",ipho)]->Fill(pho.HcalPFClIso,weight);
-      standardTH1Map[Form("photrkiso_zoom_%i_EE",ipho)]->Fill(pho.TrkIso,weight);
       if (pho.seed >= 0)
       { 
 	standardTH1Map[Form("phoseedtime_%i_EE",ipho)]->Fill((*rhtime)[pho.seed],weight);
       } // end check over seed
 
-      // GED
-      if (!ph.isOOT)
+      if (!pho.isOOT) // GED
       {
 	standardTH1Map[Form("phopt_%i_EE_ged",ipho)]->Fill(pho.pt,weight);
-	standardTH1Map[Form("phochgiso_%i_EE_ged",ipho)]->Fill(pho.ChgHadIso,weight);
-	standardTH1Map[Form("phoneuiso_%i_EE_ged",ipho)]->Fill(pho.NeuHadIso,weight);
-	standardTH1Map[Form("phophoiso_%i_EE_ged",ipho)]->Fill(pho.PhoIso,weight);
-	standardTH1Map[Form("phochgiso_zoom_%i_EE_ged",ipho)]->Fill(pho.ChgHadIso,weight);
-	standardTH1Map[Form("phoneuiso_zoom_%i_EE_ged",ipho)]->Fill(pho.NeuHadIso,weight);
-	standardTH1Map[Form("phophoiso_zoom_%i_EE_ged",ipho)]->Fill(pho.PhoIso,weight);
-	standardTH1Map[Form("phoecaliso_%i_EE_ged",ipho)]->Fill(pho.EcalPFClIso,weight);
-	standardTH1Map[Form("phohcaliso_%i_EE_ged",ipho)]->Fill(pho.HcalPFClIso,weight);
-	standardTH1Map[Form("photrkiso_%i_EE_ged",ipho)]->Fill(pho.TrkIso,weight);
-	standardTH1Map[Form("phoecaliso_zoom_%i_EE_ged",ipho)]->Fill(pho.EcalPFClIso,weight);
-	standardTH1Map[Form("phohcaliso_zoom_%i_EE_ged",ipho)]->Fill(pho.HcalPFClIso,weight);
-	standardTH1Map[Form("photrkiso_zoom_%i_EE_ged",ipho)]->Fill(pho.TrkIso,weight);
 	if (pho.seed >= 0)
         { 
 	  standardTH1Map[Form("phoseedtime_%i_EE_ged",ipho)]->Fill((*rhtime)[pho.seed],weight);
@@ -433,26 +421,142 @@ void Analysis::FillStandardPlots(const Float_t weight)
       else // OOT
       {
 	standardTH1Map[Form("phopt_%i_EE_oot",ipho)]->Fill(pho.pt,weight);
-	standardTH1Map[Form("phochgiso_%i_EE_oot",ipho)]->Fill(pho.ChgHadIso,weight);
-	standardTH1Map[Form("phoneuiso_%i_EE_oot",ipho)]->Fill(pho.NeuHadIso,weight);
-	standardTH1Map[Form("phophoiso_%i_EE_oot",ipho)]->Fill(pho.PhoIso,weight);
-	standardTH1Map[Form("phochgiso_zoom_%i_EE_oot",ipho)]->Fill(pho.ChgHadIso,weight);
-	standardTH1Map[Form("phoneuiso_zoom_%i_EE_oot",ipho)]->Fill(pho.NeuHadIso,weight);
-	standardTH1Map[Form("phophoiso_zoom_%i_EE_oot",ipho)]->Fill(pho.PhoIso,weight);
-	standardTH1Map[Form("phoecaliso_%i_EE_oot",ipho)]->Fill(pho.EcalPFClIso,weight);
-	standardTH1Map[Form("phohcaliso_%i_EE_oot",ipho)]->Fill(pho.HcalPFClIso,weight);
-	standardTH1Map[Form("photrkiso_%i_EE_oot",ipho)]->Fill(pho.TrkIso,weight);
-	standardTH1Map[Form("phoecaliso_zoom_%i_EE_oot",ipho)]->Fill(pho.EcalPFClIso,weight);
-	standardTH1Map[Form("phohcaliso_zoom_%i_EE_oot",ipho)]->Fill(pho.HcalPFClIso,weight);
-	standardTH1Map[Form("photrkiso_zoom_%i_EE_oot",ipho)]->Fill(pho.TrkIso,weight);
 	if (pho.seed >= 0)
         { 
 	  standardTH1Map[Form("phoseedtime_%i_EE_oot",ipho)]->Fill((*rhtime)[pho.seed],weight);
 	} // end check over seed
       } // end check over OOT
     } // end check over EE
-  } // end loop over nPhos
+  } // end loop over nphotons
 }
+
+void Analysis::FillIsoPlots(const Int_t Nphotons, const Float_t weight)
+{
+  for (Int_t ipho = 0; ipho < Nphotons; ipho++)
+  {
+    const auto & pho = phos[ipho];
+    if (pho.isEB) // EB
+    {
+      isoTH1Map[Form("phochgiso_%i_EB",ipho)]->Fill(pho.ChgHadIso,weight);
+      isoTH1Map[Form("phoneuiso_%i_EB",ipho)]->Fill(pho.NeuHadIso,weight);
+      isoTH1Map[Form("phophoiso_%i_EB",ipho)]->Fill(pho.PhoIso,weight);
+      isoTH1Map[Form("phoecaliso_%i_EB",ipho)]->Fill(pho.EcalPFClIso,weight);
+      isoTH1Map[Form("phohcaliso_%i_EB",ipho)]->Fill(pho.HcalPFClIso,weight);
+      isoTH1Map[Form("photrkiso_%i_EB",ipho)]->Fill(pho.TrkIso,weight);
+
+      if (!pho.isOOT) // GED
+      {
+	isoTH1Map[Form("phochgiso_%i_EB_ged",ipho)]->Fill(pho.ChgHadIso,weight);
+	isoTH1Map[Form("phoneuiso_%i_EB_ged",ipho)]->Fill(pho.NeuHadIso,weight);
+	isoTH1Map[Form("phophoiso_%i_EB_ged",ipho)]->Fill(pho.PhoIso,weight);
+	isoTH1Map[Form("phoecaliso_%i_EB_ged",ipho)]->Fill(pho.EcalPFClIso,weight);
+	isoTH1Map[Form("phohcaliso_%i_EB_ged",ipho)]->Fill(pho.HcalPFClIso,weight);
+	isoTH1Map[Form("photrkiso_%i_EB_ged",ipho)]->Fill(pho.TrkIso,weight);
+      } // end check over GED
+      else // OOT
+      {
+	isoTH1Map[Form("phochgiso_%i_EB_oot",ipho)]->Fill(pho.ChgHadIso,weight);
+	isoTH1Map[Form("phoneuiso_%i_EB_oot",ipho)]->Fill(pho.NeuHadIso,weight);
+	isoTH1Map[Form("phophoiso_%i_EB_oot",ipho)]->Fill(pho.PhoIso,weight);
+	isoTH1Map[Form("phoecaliso_%i_EB_oot",ipho)]->Fill(pho.EcalPFClIso,weight);
+	isoTH1Map[Form("phohcaliso_%i_EB_oot",ipho)]->Fill(pho.HcalPFClIso,weight);
+	isoTH1Map[Form("photrkiso_%i_EB_oot",ipho)]->Fill(pho.TrkIso,weight);
+      } // end check over OOT
+    } // end check over EB
+    else // EE
+    {
+      isoTH1Map[Form("phochgiso_%i_EE",ipho)]->Fill(pho.ChgHadIso,weight);
+      isoTH1Map[Form("phoneuiso_%i_EE",ipho)]->Fill(pho.NeuHadIso,weight);
+      isoTH1Map[Form("phophoiso_%i_EE",ipho)]->Fill(pho.PhoIso,weight);
+      isoTH1Map[Form("phoecaliso_%i_EE",ipho)]->Fill(pho.EcalPFClIso,weight);
+      isoTH1Map[Form("phohcaliso_%i_EE",ipho)]->Fill(pho.HcalPFClIso,weight);
+      isoTH1Map[Form("photrkiso_%i_EE",ipho)]->Fill(pho.TrkIso,weight);
+
+      if (!pho.isOOT) // GED
+      {
+	isoTH1Map[Form("phochgiso_%i_EE_ged",ipho)]->Fill(pho.ChgHadIso,weight);
+	isoTH1Map[Form("phoneuiso_%i_EE_ged",ipho)]->Fill(pho.NeuHadIso,weight);
+	isoTH1Map[Form("phophoiso_%i_EE_ged",ipho)]->Fill(pho.PhoIso,weight);
+	isoTH1Map[Form("phoecaliso_%i_EE_ged",ipho)]->Fill(pho.EcalPFClIso,weight);
+	isoTH1Map[Form("phohcaliso_%i_EE_ged",ipho)]->Fill(pho.HcalPFClIso,weight);
+	isoTH1Map[Form("photrkiso_%i_EE_ged",ipho)]->Fill(pho.TrkIso,weight);
+      } // end check over GED
+      else // OOT
+      {
+	isoTH1Map[Form("phochgiso_%i_EE_oot",ipho)]->Fill(pho.ChgHadIso,weight);
+	isoTH1Map[Form("phoneuiso_%i_EE_oot",ipho)]->Fill(pho.NeuHadIso,weight);
+	isoTH1Map[Form("phophoiso_%i_EE_oot",ipho)]->Fill(pho.PhoIso,weight);
+	isoTH1Map[Form("phoecaliso_%i_EE_oot",ipho)]->Fill(pho.EcalPFClIso,weight);
+	isoTH1Map[Form("phohcaliso_%i_EE_oot",ipho)]->Fill(pho.HcalPFClIso,weight);
+	isoTH1Map[Form("photrkiso_%i_EE_oot",ipho)]->Fill(pho.TrkIso,weight);
+      } // end check over OOT
+    } // end check over EE
+  } // end loop over nphotons
+}
+
+void Analysis::FillIsoNvtxPlots(const Int_t Nphotons, const Float_t weight)
+{
+  for (Int_t ipho = 0; ipho < Nphotons; ipho++)
+  {
+    const auto & pho = phos[ipho];
+    if (pho.isEB) // EB
+    {
+      isonvtxTH2Map[Form("phochgiso_%i_EB_v_nvtx",ipho)]->Fill(nvtx,pho.ChgHadIso,weight);
+      isonvtxTH2Map[Form("phoneuiso_%i_EB_v_nvtx",ipho)]->Fill(nvtx,pho.NeuHadIso,weight);
+      isonvtxTH2Map[Form("phophoiso_%i_EB_v_nvtx",ipho)]->Fill(nvtx,pho.PhoIso,weight);
+      isonvtxTH2Map[Form("phoecaliso_%i_EB_v_nvtx",ipho)]->Fill(nvtx,pho.EcalPFClIso,weight);
+      isonvtxTH2Map[Form("phohcaliso_%i_EB_v_nvtx",ipho)]->Fill(nvtx,pho.HcalPFClIso,weight);
+      isonvtxTH2Map[Form("photrkiso_%i_EB_v_nvtx",ipho)]->Fill(nvtx,pho.TrkIso,weight);
+ 
+      if (!pho.isOOT) // GED
+      {
+	isonvtxTH2Map[Form("phochgiso_%i_EB_ged_v_nvtx",ipho)]->Fill(nvtx,pho.ChgHadIso,weight);
+	isonvtxTH2Map[Form("phoneuiso_%i_EB_ged_v_nvtx",ipho)]->Fill(nvtx,pho.NeuHadIso,weight);
+	isonvtxTH2Map[Form("phophoiso_%i_EB_ged_v_nvtx",ipho)]->Fill(nvtx,pho.PhoIso,weight);
+	isonvtxTH2Map[Form("phoecaliso_%i_EB_ged_v_nvtx",ipho)]->Fill(nvtx,pho.EcalPFClIso,weight);
+	isonvtxTH2Map[Form("phohcaliso_%i_EB_ged_v_nvtx",ipho)]->Fill(nvtx,pho.HcalPFClIso,weight);
+	isonvtxTH2Map[Form("photrkiso_%i_EB_ged_v_nvtx",ipho)]->Fill(nvtx,pho.TrkIso,weight);
+      } // end check over GED
+      else // OOT
+      {
+	isonvtxTH2Map[Form("phochgiso_%i_EB_oot_v_nvtx",ipho)]->Fill(nvtx,pho.ChgHadIso,weight);
+	isonvtxTH2Map[Form("phoneuiso_%i_EB_oot_v_nvtx",ipho)]->Fill(nvtx,pho.NeuHadIso,weight);
+	isonvtxTH2Map[Form("phophoiso_%i_EB_oot_v_nvtx",ipho)]->Fill(nvtx,pho.PhoIso,weight);
+	isonvtxTH2Map[Form("phoecaliso_%i_EB_oot_v_nvtx",ipho)]->Fill(nvtx,pho.EcalPFClIso,weight);
+	isonvtxTH2Map[Form("phohcaliso_%i_EB_oot_v_nvtx",ipho)]->Fill(nvtx,pho.HcalPFClIso,weight);
+	isonvtxTH2Map[Form("photrkiso_%i_EB_oot_v_nvtx",ipho)]->Fill(nvtx,pho.TrkIso,weight);
+      } // end check over OOT
+    } // end check over EB
+    else // EE
+    {
+      isonvtxTH2Map[Form("phochgiso_%i_EE_v_nvtx",ipho)]->Fill(nvtx,pho.ChgHadIso,weight);
+      isonvtxTH2Map[Form("phoneuiso_%i_EE_v_nvtx",ipho)]->Fill(nvtx,pho.NeuHadIso,weight);
+      isonvtxTH2Map[Form("phophoiso_%i_EE_v_nvtx",ipho)]->Fill(nvtx,pho.PhoIso,weight);
+      isonvtxTH2Map[Form("phoecaliso_%i_EE_v_nvtx",ipho)]->Fill(nvtx,pho.EcalPFClIso,weight);
+      isonvtxTH2Map[Form("phohcaliso_%i_EE_v_nvtx",ipho)]->Fill(nvtx,pho.HcalPFClIso,weight);
+      isonvtxTH2Map[Form("photrkiso_%i_EE_v_nvtx",ipho)]->Fill(nvtx,pho.TrkIso,weight);
+ 
+      if (!pho.isOOT) // GED
+      {
+	isonvtxTH2Map[Form("phochgiso_%i_EE_ged_v_nvtx",ipho)]->Fill(nvtx,pho.ChgHadIso,weight);
+	isonvtxTH2Map[Form("phoneuiso_%i_EE_ged_v_nvtx",ipho)]->Fill(nvtx,pho.NeuHadIso,weight);
+	isonvtxTH2Map[Form("phophoiso_%i_EE_ged_v_nvtx",ipho)]->Fill(nvtx,pho.PhoIso,weight);
+	isonvtxTH2Map[Form("phoecaliso_%i_EE_ged_v_nvtx",ipho)]->Fill(nvtx,pho.EcalPFClIso,weight);
+	isonvtxTH2Map[Form("phohcaliso_%i_EE_ged_v_nvtx",ipho)]->Fill(nvtx,pho.HcalPFClIso,weight);
+	isonvtxTH2Map[Form("photrkiso_%i_EE_ged_v_nvtx",ipho)]->Fill(nvtx,pho.TrkIso,weight);
+      } // end check over GED
+      else // OOT
+      {
+	isonvtxTH2Map[Form("phochgiso_%i_EE_oot_v_nvtx",ipho)]->Fill(nvtx,pho.ChgHadIso,weight);
+	isonvtxTH2Map[Form("phoneuiso_%i_EE_oot_v_nvtx",ipho)]->Fill(nvtx,pho.NeuHadIso,weight);
+	isonvtxTH2Map[Form("phophoiso_%i_EE_oot_v_nvtx",ipho)]->Fill(nvtx,pho.PhoIso,weight);
+	isonvtxTH2Map[Form("phoecaliso_%i_EE_oot_v_nvtx",ipho)]->Fill(nvtx,pho.EcalPFClIso,weight);
+	isonvtxTH2Map[Form("phohcaliso_%i_EE_oot_v_nvtx",ipho)]->Fill(nvtx,pho.HcalPFClIso,weight);
+	isonvtxTH2Map[Form("photrkiso_%i_EE_oot_v_nvtx",ipho)]->Fill(nvtx,pho.TrkIso,weight);
+      } // end check over OOT
+    } // end check over EE
+  } // end loop over nphotons
+}      
 
 void Analysis::OutputStandardPlots() 
 {
@@ -462,10 +566,25 @@ void Analysis::OutputStandardPlots()
   Analysis::DeleteTH1s(standardTH1Map);
 }
 
-TH1F * Analysis::MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh,
-			     TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir) 
+void Analysis::OutputIsoPlots() 
 {
-  TH1F * hist = new TH1F(hname.Data(),htitle.Data(),nbins,xlow,xhigh);
+  MakeSubDirs(isoTH1SubMap,fOutDir);
+  Analysis::SaveTH1s(isoTH1Map,isoTH1SubMap);
+  if (!fIsMC) Analysis::DumpTH1Names(isoTH1Map,isoTH1SubMap);
+  Analysis::DeleteTH1s(isoTH1Map);
+}
+
+void Analysis::OutputIsoNvtxPlots() 
+{
+  MakeSubDirs(isonvtxTH2SubMap,fOutDir);
+  Analysis::SaveTH2s(isonvtxTH2Map,isonvtxTH2SubMap);
+  Analysis::DeleteTH2s(isonvtxTH2Map);
+}
+
+TH1F * Analysis::MakeTH1Plot(const TString hname, const TString htitle, const Int_t nbinsx, Double_t xlow, Double_t xhigh,
+			     const TString xtitle, const TString ytitle, TStrMap& subdirmap, const TString subdir) 
+{
+  TH1F * hist = new TH1F(hname.Data(),htitle.Data(),nbinsx,xlow,xhigh);
   hist->SetLineColor(kBlack);
   if (fIsMC)
   {
@@ -483,8 +602,22 @@ TH1F * Analysis::MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_
   return hist;
 }
 
-TH2F * Analysis::MakeTH2Plot(TString hname, TString htitle, const DblVec& vxbins, Int_t nbinsy, Double_t ylow, 
-			     Double_t yhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir) 
+TH2F * Analysis::MakeTH2Plot(const TString hname, const TString htitle, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh, const TString xtitle,
+			     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString ytitle, TStrMap& subdirmap, const TString subdir) 
+{
+  TH2F * hist = new TH2F(hname.Data(),htitle.Data(),nbinsx,xlow,xhigh,nbinsy,ylow,yhigh);
+  hist->GetXaxis()->SetTitle(xtitle.Data());
+  hist->GetYaxis()->SetTitle(ytitle.Data());
+  hist->Sumw2();
+
+  // cheat a bit and set subdir map here
+  subdirmap[hname] = subdir;
+  
+  return hist;
+}
+
+TH2F * Analysis::MakeTH2Plot(const TString hname, const TString htitle, const DblVec& vxbins, const TString xtitle, 
+			     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString ytitle, TStrMap& subdirmap, const TString subdir) 
 {
   // need to convert vectors into arrays per ROOT
   const Double_t * axbins = &vxbins[0]; // https://stackoverflow.com/questions/2923272/how-to-convert-vector-to-array-c
@@ -503,7 +636,8 @@ TH2F * Analysis::MakeTH2Plot(TString hname, TString htitle, const DblVec& vxbins
 void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) 
 {
   fOutFile->cd();
-
+  
+  TCanvas * canv = new TCanvas("canv","canv");
   for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
   { 
     // save to output file
@@ -512,22 +646,21 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap)
     if (Config::saveHists)
     {
       // now draw onto canvas to save as png
-      TCanvas * canv = new TCanvas("canv","canv");
       canv->cd();
       mapiter->second->Draw( fIsMC ? "HIST" : "PE" );
       
-      // first save as linear, then log
-      canv->SetLogy(0);
-      CMSLumi(canv);
-      canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),Config::outtype.Data()));
-
+      // first save as logY, then linearY
       canv->SetLogy(1);
       CMSLumi(canv);
       canv->SaveAs(Form("%s/%s/log/%s.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),Config::outtype.Data()));
     
-      delete canv;
-    }
-  }
+      canv->SetLogy(0);
+      CMSLumi(canv);
+      canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),Config::outtype.Data()));
+    } // end check on save hists
+  } // end loop over hists
+
+  delete canv;
 }
 
 void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap) 
@@ -539,15 +672,18 @@ void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap)
   { 
     mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete);; // map is map["hist name",TH1D*]
 
-    // now draw onto canvas to save as png
-    canv->cd();
-    mapiter->second->Draw("colz");
-    
-    // only save as linear
-    canv->SetLogy(0);
-    CMSLumi(canv);
-    canv->SaveAs(Form("%s/%s/%s_2D.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),Config::outtype.Data()));
-  }
+    if (Config::saveHists)
+    {
+      // now draw onto canvas to save as png
+      canv->cd();
+      mapiter->second->Draw("colz");
+      
+      // only save as linear
+      canv->SetLogy(0);
+      CMSLumi(canv);
+      canv->SaveAs(Form("%s/%s/%s_2D.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),Config::outtype.Data()));
+    } // end check on save hists
+  } // end loop over hists
 
   delete canv;
 }

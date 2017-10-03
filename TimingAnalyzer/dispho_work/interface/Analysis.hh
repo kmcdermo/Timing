@@ -19,7 +19,7 @@ class Analysis
 {
 public:
   // functions
-  Analysis(TString sample, Bool_t isMC);
+  Analysis(const TString sample, const Bool_t isMC);
   ~Analysis();
   void InitTree();
   void InitStructs();
@@ -27,11 +27,20 @@ public:
   void InitBranches();
   void EventLoop();
   void SetupStandardPlots();
-  void FillStandardPlots(const Float_t weight);
+  void SetupIsoPlots();
+  void SetupIsoNvtxPlots();
+  void FillStandardPlots(const Int_t Nphotons, const Float_t weight);
+  void FillIsoPlots(const Int_t Nphotons, const Float_t weight);
+  void FillIsoNvtxPlots(const Int_t Nphotons, const Float_t weight);
   void OutputStandardPlots();
-  TH1F * MakeTH1Plot(TString hname, TString htitle, Int_t nbins, Double_t xlow, Double_t xhigh, TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
-  TH2F * MakeTH2Plot(TString hname, TString htitle, const DblVec& vxbins, Int_t nbinsy, Double_t ylow, Double_t yhigh, 
-		     TString xtitle, TString ytitle, TStrMap& subdirmap, TString subdir);
+  void OutputIsoPlots();
+  void OutputIsoNvtxPlots();
+  TH1F * MakeTH1Plot(const TString hname, const TString htitle, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh, 
+		     const TString xtitle, const TString ytitle, TStrMap& subdirmap, const TString subdir);
+  TH2F * MakeTH2Plot(const TString hname, const TString htitle, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh, const TString xtitle,
+		     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString ytitle, TStrMap& subdirmap, const TString subdir);
+  TH2F * MakeTH2Plot(const TString hname, const TString htitle, const DblVec& vxbins, const TString xtitle, 
+		     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString ytitle, TStrMap& subdirmap, const TString subdir);
   void SaveTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
   void DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap);
@@ -61,13 +70,16 @@ private:
   // Output colors
   Color_t fColor;
 
-  ////////////////////////
-  // Standard plot maps //
-  ////////////////////////
+  ///////////////
+  // Plot maps //
+  ///////////////
   TH1Map standardTH1Map; TStrMap standardTH1SubMap;
+  TH1Map isoTH1Map; TStrMap isoTH1SubMap;
+  TH2Map isonvtxTH2Map; TStrMap isonvtxTH2SubMap;
 
-public:
-  // Declaration of leaf types
+  ///////////////////////////////
+  // Declaration of leaf types //
+  ///////////////////////////////
   Float_t   genwgt;
   Int_t     genpuobs;
   Int_t     genputrue;

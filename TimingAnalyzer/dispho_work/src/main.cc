@@ -87,6 +87,8 @@ int main(int argc, const char* argv[])
 	"  --use-QCD       <bool>        use QCD with MC (def: %s)\n"
 	"  --use-GJets     <bool>        use Gamma+Jets with MC (def: %s)\n"
 	"  --do-standard   <bool>        make standard validation plots (def: %s)\n"
+	"  --do-iso        <bool>        make isolation plots (def: %s)\n"
+	"  --do-isonvtx    <bool>        make isolation vs nvtx plots (def: %s)\n"
 	"  --dump-status   <bool>        print out every N events in analysis loop (def: %s)\n"
 	"  --in-year       <string>      which year to process (def: %s)\n"
 	"  --save-hists    <bool>        save analysis histograms as images (def: %s)\n"
@@ -105,6 +107,8 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::useQCD),
 	PrintBool(Config::useGJets),
 	PrintBool(Config::doStandard),
+	PrintBool(Config::doIso),
+	PrintBool(Config::doIsoNvtx),
 	PrintBool(Config::dumpStatus),
 	Config::year.Data(),
 	PrintBool(Config::saveHists),
@@ -124,6 +128,8 @@ int main(int argc, const char* argv[])
     else if (*i == "--use-QCD")     { Config::useQCD     = true; }
     else if (*i == "--use-GJets")   { Config::useGJets   = true; }
     else if (*i == "--do-standard") { Config::doAnalysis = true; Config::doStandard = true; }
+    else if (*i == "--do-iso")      { Config::doAnalysis = true; Config::doIso      = true; }
+    else if (*i == "--do-isonvtx")  { Config::doAnalysis = true; Config::doIsoNvtx  = true; }
     else if (*i == "--dump-status") { Config::doAnalysis = true; Config::dumpStatus = true; }
     else if (*i == "--in-year")     { next_arg_or_die(mArgs, i); Config::year     = i->c_str(); }
     else if (*i == "--save-hists")  { Config::saveHists  = true; }

@@ -84,6 +84,8 @@ namespace Config
   extern Bool_t      useQCD;
   extern Bool_t      useGJets;
   extern Bool_t      doStandard;
+  extern Bool_t      doIso;
+  extern Bool_t      doIsoNvtx;
   extern Bool_t      dumpStatus;
   extern TString     year;
   extern Bool_t      saveHists;
