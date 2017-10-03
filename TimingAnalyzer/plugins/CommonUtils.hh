@@ -168,7 +168,7 @@ namespace oot
 		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonLooseIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonMediumIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonTightIdMapH,
-		   std::vector<oot::Photon> & photons, const float phpTmin = 0.f, const std::string & phIDmin = "");
+		   std::vector<oot::Photon> & photons, const float phpTmin = 0.f, const std::string & phIDmin = "none");
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   const edm::Handle<edm::ValueMap<bool> > & photonLooseIdMapH, 
 		   const edm::Handle<edm::ValueMap<bool> > & photonMediumIdMapH, 
@@ -177,10 +177,10 @@ namespace oot
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
 		   std::vector<oot::Photon> & photons, const float rho,
-		   const float phpTmin = 0.f, const std::string & phIDmin = "");
+		   const float phpTmin = 0.f, const std::string & phIDmin = "none");
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   std::vector<oot::Photon> & photons, const bool isOOT,
-		   const float rho, const float phpTmin = 0.f, const std::string & phIDmin = "");
+		   const float rho, const float phpTmin = 0.f, const std::string & phIDmin = "none");
   void PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
 		     const edm::Handle<edm::ValueMap<bool> > & electronVetoIdMapH, 
 		     const edm::Handle<edm::ValueMap<bool> > & electronLooseIdMapH, 

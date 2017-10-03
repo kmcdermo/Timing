@@ -57,6 +57,12 @@ def main():
     # The submit command needs special treatment.
     if options.crabCmd == 'submit':
 
+        # External files needed by CRAB
+        inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
+        inputPaths   = 'HLTprescaledpaths.txt'
+        inputFilters = 'HLTfilters.txt'
+        inputJSON    = 'golden2017.json'
+         
         #--------------------------------------------------------
         # This is the base config:
         #--------------------------------------------------------
@@ -69,13 +75,10 @@ def main():
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'dispho.py'
         config.JobType.pyCfgParams = None
-        config.JobType.inputFiles  = [
-            '/afs/cern.ch/user/k/kmcdermo/public/input/HLTprescaledpaths.txt',
-            '/afs/cern.ch/user/k/kmcdermo/public/input/HLTfilters.txt'
-            ]
+        config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
 
         config.Data.inputDataset     = None
-        config.Data.lumiMask         = '/afs/cern.ch/user/k/kmcdermo/public/input/golden2017.json'
+        config.Data.lumiMask         = inputDir+inputJSON
         config.Data.splitting        = 'EventAwareLumiBased'
         config.Data.unitsPerJob      = 1000000
 
@@ -99,7 +102,8 @@ def main():
         for inDO in inputDataAndOpts:
             # inDO[0] is of the form /A/B/C. Since B is unique for each inDS, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[2]
-            config.JobType.pyCfgParams   = ['globalTag='+inDO[1],'useOOTPhotons='+inDO[2],'phIDmin=""','applyTrigger=True']
+            config.JobType.pyCfgParams   = ['globalTag='+inDO[1],'useOOTPhotons='+inDO[2],'phIDmin=none','applyTrigger=True',
+                                            'inputPaths='+inputPaths,'inputFilters='+inputFilters]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.

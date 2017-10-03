@@ -159,7 +159,7 @@ namespace oot
     oot::PrepPhotons(ootPhotonsH,ootPhotonLooseIdMapH,ootPhotonMediumIdMapH,ootPhotonTightIdMapH,photons,true,phpTmin);
 
     // final sorting
-    if (phIDmin != "")
+    if (phIDmin != "none")
     {
       photons.erase(std::remove_if(photons.begin(),photons.end(),[&](const oot::Photon & photon){return !photon.photon().photonID(phIDmin);}),photons.end());
     }
@@ -226,7 +226,7 @@ namespace oot
 	  idpVec idpairs = {{"loose",false}, {"medium",false}, {"tight",false}};
 	  oot::GetPhoVID(photon,idpairs,rho);
 
-	  if (phIDmin != "")
+	  if (phIDmin != "none")
 	  {
 	    for (const auto & idpair : idpairs) 
 	    {

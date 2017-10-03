@@ -259,7 +259,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       iph++;
       
       if (photon.pt() < phgoodpTmin) continue;
-      if (phgoodIDmin != "")
+      if (phgoodIDmin != "none")
       {
 	if (!photon.photon().photonID(phgoodIDmin)) continue;
       }
