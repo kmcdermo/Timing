@@ -1,5 +1,5 @@
-#ifndef _stackisonvtx_
-#define _stackisonvtx_
+#ifndef _stackgedoot_
+#define _stackgedoot_
 
 #include "CommonTypes.hh"
 #include "Config.hh"
@@ -18,10 +18,10 @@ typedef std::vector<TLegend*> TLegVec;
 typedef std::vector<TCanvas*> TCanvVec;
 typedef std::vector<TPad*>    TPadVec;
 
-class StackIsoNvtx
+class StackGEDOOT
 {
 public:
-  StackIsoNvtx(const TString & sample, const Bool_t isMC);
+  StackGEDOOT(const TString & sample, const Bool_t isMC);
 
   void InitTH1FNamesAndSubDNames();
   void InitInputPlots();
@@ -32,7 +32,7 @@ public:
 
   void DoStacks();
 
-  void MakeStackIsoNvtx();
+  void MakeStackGEDOOT();
   void MakeRatioPlots();
   void MakeOutputCanvas();
 
@@ -43,7 +43,7 @@ public:
   void SetLines(const Int_t th1f);
   void SaveCanvas(const Int_t th1f);
 
-  ~StackIsoNvtx();
+  ~StackGEDOOT();
 
 private:
   const TString fSample;

@@ -3,8 +3,8 @@
 #include "../interface/CommonUtils.hh"
 #include "../interface/PUReweight.hh"
 #include "../interface/Analysis.hh"
-#include "../interface/StackPlots.hh"
-#include "../interface/StackIsoNvtx.hh"
+#include "../interface/StackDataMC.hh"
+#include "../interface/StackGEDOOT.hh"
 
 #include "TROOT.h"
 #include "TVirtualFitter.h"
@@ -80,7 +80,7 @@ int main(int argc, const char* argv[])
 	"  --do-purw       <bool>        calculate pile-up weights (def: %s)\n"
 	"  --do-analysis   <bool>        make analysis plots (def: %s)\n"
 	"  --do-stacks     <bool>        stack data/MC plots (def: %s)\n"
-	"  --do-isostacks  <bool>        stack GED/OOT plots (def: %s)\n"
+	"  --do-phostacks  <bool>        stack GED/OOT plots (def: %s)\n"
 	"  --do-demo       <bool>        demo analysis (def: %s)\n"
 	"  --use-DEG       <bool>        use doubleEG for data (def: %s)\n"
 	"  --use-SPH       <bool>        use singlePh for data (def: %s)\n"
@@ -102,7 +102,7 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::doPURW),
 	PrintBool(Config::doAnalysis),
 	PrintBool(Config::doStacks),
-	PrintBool(Config::doIsoStacks),
+	PrintBool(Config::doPhoStacks),
 	PrintBool(Config::doDemo),
 	PrintBool(Config::useDEG),
 	PrintBool(Config::useSPH),
@@ -125,7 +125,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--do-purw")     { Config::doPURW     = true; }
     else if (*i == "--do-analysis") { Config::doAnalysis = true; }
     else if (*i == "--do-stacks")   { Config::doStacks   = true; }
-    else if (*i == "--do-isostacks") { Config::doIsoStacks = true; }
+    else if (*i == "--do-phostacks") { Config::doPhoStacks = true; }
     else if (*i == "--do-demo")     { Config::doDemo     = true; Config::doAnalysis = true; Config::doStandard = true; }
     else if (*i == "--use-DEG")     { Config::useDEG     = true; }
     else if (*i == "--use-SPH")     { Config::useSPH     = true; }
@@ -196,10 +196,10 @@ int main(int argc, const char* argv[])
 
   if (Config::doStacks) 
   {
-    std::cout << "Starting stacker" << std::endl;
-    StackPlots Stacker;
+    std::cout << "Starting data/MC stacker" << std::endl;
+    StackDataMC Stacker;
     Stacker.DoStacks(yields);
-    std::cout << "Finished stacking plots" << std::endl;
+    std::cout << "Finished stacking data/MC plots" << std::endl;
   }
   else 
   {
@@ -207,24 +207,24 @@ int main(int argc, const char* argv[])
   }
 
   ///////////////////
-  // Stack IsoNvtx //
+  // Stack GED/OOT //
   ///////////////////
 
-  if (Config::doIsoStacks) 
+  if (Config::doPhoStacks) 
   {
-    std::cout << "Starting Iso v Nvtx stacker section" << std::endl;
+    std::cout << "Starting GED/OOT photon stacker section" << std::endl;
     for (const auto & samplePair : Config::SampleMap)
     {
-      StackIsoNvtx Stacker(samplePair.first,samplePair.second);
+      StackGEDOOT Stacker(samplePair.first,samplePair.second);
       std::cout << "Stacking: " << (samplePair.second?"MC":"DATA") << " sample: " << samplePair.first << std::endl;
       Stacker.DoStacks();
       std::cout << "Done stacking: " << (samplePair.second?"MC":"DATA") << " sample: " << samplePair.first << std::endl;
     }
-    std::cout << "Finished Iso v Nvtx stacking plots" << std::endl;
+    std::cout << "Finished stacking GED/OOT photon plots" << std::endl;
   }
   else 
   {
-    std::cout << "Skipping stacking Nvtx vs Iso" << std::endl;
+    std::cout << "Skipping stacking GED/OOT photon plots" << std::endl;
   }
 
   // end of the line

@@ -1,6 +1,6 @@
-#include "../interface/StackPlots.hh"
+#include "../interface/StackDataMC.hh"
 
-StackPlots::StackPlots() 
+StackDataMC::StackDataMC() 
 {
   // input data members
   for (TStrBoolMapIter iter = Config::SampleMap.begin(); iter != Config::SampleMap.end(); ++iter) 
@@ -25,22 +25,22 @@ StackPlots::StackPlots()
   fOutFile = new TFile(Form("%s/stackplots_canvases.root",fOutDir.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
 
   // Read in names of plots to be stacked
-  StackPlots::InitTH1FNamesAndSubDNames();
+  StackDataMC::InitTH1FNamesAndSubDNames();
   
   // make stack outputs
   MakeSubDirs(fTH1FSubDMap,fOutDir);
 
   // with all that defined, initialize everything in constructor
-  StackPlots::OpenInputFiles();
-  StackPlots::InitInputPlots();
-  StackPlots::InitOutputPlots();
-  StackPlots::InitOutputLegends();
-  StackPlots::InitRatioPlots();
-  StackPlots::InitRatioLines();
-  StackPlots::InitOutputCanvPads();
+  StackDataMC::OpenInputFiles();
+  StackDataMC::InitInputPlots();
+  StackDataMC::InitOutputPlots();
+  StackDataMC::InitOutputLegends();
+  StackDataMC::InitRatioPlots();
+  StackDataMC::InitRatioLines();
+  StackDataMC::InitOutputCanvPads();
 }
 
-StackPlots::~StackPlots()
+StackDataMC::~StackDataMC()
 {
   // delete all pointers
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
@@ -80,14 +80,14 @@ StackPlots::~StackPlots()
   delete fOutFile;
 }
 
-void StackPlots::DoStacks(std::ofstream & yields) 
+void StackDataMC::DoStacks(std::ofstream & yields) 
 {
-  StackPlots::MakeStackPlots(yields);
-  StackPlots::MakeRatioPlots();
-  StackPlots::MakeOutputCanvas();
+  StackDataMC::MakeStackDataMC(yields);
+  StackDataMC::MakeRatioPlots();
+  StackDataMC::MakeOutputCanvas();
 }
 
-void StackPlots::MakeStackPlots(std::ofstream & yields)
+void StackDataMC::MakeStackDataMC(std::ofstream & yields)
 {
   // copy th1f plots into output hists/stacks
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++) //th1f hists
@@ -162,7 +162,7 @@ void StackPlots::MakeStackPlots(std::ofstream & yields)
   } // end loop over th1f plots
 }
 
-void StackPlots::MakeRatioPlots()
+void StackDataMC::MakeRatioPlots()
 {
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   { 
@@ -181,25 +181,25 @@ void StackPlots::MakeRatioPlots()
   }
 }
 
-void StackPlots::MakeOutputCanvas() 
+void StackDataMC::MakeOutputCanvas() 
 {
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   {
     // draw first with logy scale
     Bool_t isLogY = true;
-    StackPlots::DrawUpperPad(th1f,isLogY); // upper pad is stack
-    StackPlots::DrawLowerPad(th1f); // lower pad is ratio
-    StackPlots::SaveCanvas(th1f,isLogY);  // now save the canvas, w/ logy
+    StackDataMC::DrawUpperPad(th1f,isLogY); // upper pad is stack
+    StackDataMC::DrawLowerPad(th1f); // lower pad is ratio
+    StackDataMC::SaveCanvas(th1f,isLogY);  // now save the canvas, w/ logy
 
     // draw second with lin scale
     isLogY = false;
-    StackPlots::DrawUpperPad(th1f,isLogY); // upper pad is stack
-    StackPlots::DrawLowerPad(th1f); // lower pad is ratio
-    StackPlots::SaveCanvas(th1f,isLogY); // now save the canvas, w/o logy
+    StackDataMC::DrawUpperPad(th1f,isLogY); // upper pad is stack
+    StackDataMC::DrawLowerPad(th1f); // lower pad is ratio
+    StackDataMC::SaveCanvas(th1f,isLogY); // now save the canvas, w/o logy
   }
 }
 
-void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) 
+void StackDataMC::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) 
 {    
   // pad gymnastics
   fOutTH1FCanvases[th1f]->cd();
@@ -207,8 +207,8 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY)
   fOutTH1FStackPads[th1f]->cd(); // upper pad is current pad
   
   // set maximum by comparing added mc vs added data
-  Float_t min = StackPlots::GetMinimum(th1f);
-  Float_t max = StackPlots::GetMaximum(th1f);
+  Float_t min = StackDataMC::GetMinimum(th1f);
+  Float_t max = StackDataMC::GetMaximum(th1f);
 
   if (isLogY) // set min for log only... maybe consider min for linear eventually
   { 
@@ -241,7 +241,7 @@ void StackPlots::DrawUpperPad(const Int_t th1f, const Bool_t isLogY)
   fTH1FLegends[th1f]->Draw("SAME"); // make sure to include the legend!
 }
 
-Float_t StackPlots::GetMaximum(const Int_t th1f) 
+Float_t StackDataMC::GetMaximum(const Int_t th1f) 
 {
   Float_t max = -1e9;
   if (fOutDataTH1FHists[th1f]->GetBinContent(fOutDataTH1FHists[th1f]->GetMaximumBin()) > fOutMCTH1FHists[th1f]->GetBinContent(fOutMCTH1FHists[th1f]->GetMaximumBin())) 
@@ -255,7 +255,7 @@ Float_t StackPlots::GetMaximum(const Int_t th1f)
   return max;
 }
 
-Float_t StackPlots::GetMinimum(const Int_t th1f) 
+Float_t StackDataMC::GetMinimum(const Int_t th1f) 
 {
   // need to loop through to check bin != 0
   Float_t datamin  = 1e9;
@@ -295,7 +295,7 @@ Float_t StackPlots::GetMinimum(const Int_t th1f)
   return min;
 }
 
-void StackPlots::DrawLowerPad(const Int_t th1f) 
+void StackDataMC::DrawLowerPad(const Int_t th1f) 
 {    
   // pad gymnastics
   fOutTH1FCanvases[th1f]->cd();   // Go back to the main canvas before defining pad2
@@ -303,7 +303,7 @@ void StackPlots::DrawLowerPad(const Int_t th1f)
   fOutTH1FRatioPads[th1f]->cd(); // lower pad is current pad
 
   // make red line at ratio of 1.0
-  StackPlots::SetLines(th1f);
+  StackDataMC::SetLines(th1f);
 
   // draw th1 first so line can appear, then draw over it (and set Y axis divisions)
   fOutRatioTH1FHists[th1f]->Draw("EP"); // draw first so line can appear
@@ -332,7 +332,7 @@ void StackPlots::DrawLowerPad(const Int_t th1f)
   fOutRatioMCErrs[th1f]->Draw("E2 SAME");
 }
 
-void StackPlots::SetLines(const Int_t th1f)
+void StackDataMC::SetLines(const Int_t th1f)
 {
   // have line held at ratio of 1.0 over whole x range
   fOutTH1FRatioLines[th1f]->SetX1(fOutRatioTH1FHists[th1f]->GetXaxis()->GetXmin());
@@ -345,7 +345,7 @@ void StackPlots::SetLines(const Int_t th1f)
   fOutTH1FRatioLines[th1f]->SetLineWidth(2);
 }
 
-void StackPlots::SaveCanvas(const Int_t th1f, const Bool_t isLogY)
+void StackDataMC::SaveCanvas(const Int_t th1f, const Bool_t isLogY)
 {
   TString suffix;
 
@@ -363,7 +363,7 @@ void StackPlots::SaveCanvas(const Int_t th1f, const Bool_t isLogY)
   if (!isLogY) fOutTH1FCanvases[th1f]->Write(Form("%s",fTH1FNames[th1f].Data()));
 }
 
-void StackPlots::OpenInputFiles() 
+void StackDataMC::OpenInputFiles() 
 {
   // open input files into TFileVec --> data 
   fDataFiles.resize(fNData);
@@ -384,7 +384,7 @@ void StackPlots::OpenInputFiles()
   }
 }
 
-void StackPlots::InitInputPlots() 
+void StackDataMC::InitInputPlots() 
 {
   // init input th1f hists
   fInDataTH1FHists.resize(fNTH1F);
@@ -412,7 +412,7 @@ void StackPlots::InitInputPlots()
   }
 }
 
-void StackPlots::InitOutputPlots() 
+void StackDataMC::InitOutputPlots() 
 {
   fOutDataTH1FHists.resize(fNTH1F); // make enough space for data double hists
   fOutMCTH1FHists.resize(fNTH1F); // make enough space for MC double hists
@@ -423,7 +423,7 @@ void StackPlots::InitOutputPlots()
   }
 }
 
-void StackPlots::InitOutputLegends() 
+void StackDataMC::InitOutputLegends() 
 {
   fTH1FLegends.resize(fNTH1F);
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
@@ -434,7 +434,7 @@ void StackPlots::InitOutputLegends()
   }
 }
 
-void StackPlots::InitRatioPlots() 
+void StackDataMC::InitRatioPlots() 
 {
   // th1f hists
   fOutRatioTH1FHists.resize(fNTH1F);
@@ -443,7 +443,7 @@ void StackPlots::InitRatioPlots()
   fOutRatioMCErrs.resize(fNTH1F);
 }
 
-void StackPlots::InitRatioLines() 
+void StackDataMC::InitRatioLines() 
 {
   fOutTH1FRatioLines.resize(fNTH1F);
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
@@ -452,7 +452,7 @@ void StackPlots::InitRatioLines()
   }
 }
 
-void StackPlots::InitOutputCanvPads() 
+void StackDataMC::InitOutputCanvPads() 
 {
   fOutTH1FCanvases.resize(fNTH1F);
   fOutTH1FStackPads.resize(fNTH1F);
@@ -471,7 +471,7 @@ void StackPlots::InitOutputCanvPads()
   }
 }
 
-void StackPlots::InitTH1FNamesAndSubDNames()
+void StackDataMC::InitTH1FNamesAndSubDNames()
 {
   // will use the integral of nvtx to derive total yields as no additional cuts are placed on ntvx --> key on name for yields
   

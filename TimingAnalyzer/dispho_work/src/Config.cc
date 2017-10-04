@@ -7,7 +7,7 @@ namespace Config
   Bool_t  doPURW     = false;
   Bool_t  doAnalysis = false;
   Bool_t  doStacks   = false;
-  Bool_t  doIsoStacks = false;
+  Bool_t  doPhoStacks = false;
   Bool_t  doDemo     = false;
   Bool_t  useDEG     = false; 
   Bool_t  useSPH     = false; 

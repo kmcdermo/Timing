@@ -35,7 +35,7 @@ namespace Config
 
   // data config
   static const TString plotdumpname = "plotnames.txt";
-  static const TString isonvtxdumpname = "isonvtxnames.txt";
+  static const TString phoplotdumpname = "phoplotnames.txt";
 
   // TDRStyle Config --> needed by stacker
   constexpr    Float_t  TitleSize    = 0.035;
@@ -76,7 +76,7 @@ namespace Config
   extern Bool_t      doPURW;
   extern Bool_t      doAnalysis;
   extern Bool_t      doStacks;
-  extern Bool_t      doIsoStacks;
+  extern Bool_t      doPhoStacks;
   extern Bool_t      doDemo;
   extern Bool_t      useDEG;
   extern Bool_t      useSPH;

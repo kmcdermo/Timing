@@ -1,6 +1,6 @@
-#include "../interface/StackIsoNvtx.hh"
+#include "../interface/StackGEDOOT.hh"
 
-StackIsoNvtx::StackIsoNvtx(const TString & sample, const Bool_t isMC) : fSample(sample), fIsMC(isMC)  
+StackGEDOOT::StackGEDOOT(const TString & sample, const Bool_t isMC) : fSample(sample), fIsMC(isMC)  
 {
   // I/O dir
   fOutDir = Form("%s/%s/%s",Config::outdir.Data(),(fIsMC?"MC":"DATA"),fSample.Data());
@@ -11,20 +11,20 @@ StackIsoNvtx::StackIsoNvtx(const TString & sample, const Bool_t isMC) : fSample(
   CheckValidFile(fInFile,filename);
 
   // output data members
-  fOutFile = new TFile(Form("%s/stackisonvtx_canvases.root",fOutDir.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
+  fOutFile = new TFile(Form("%s/stackpho_canvases.root",fOutDir.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
 
   // Read in names of plots to be stacked
-  StackIsoNvtx::InitTH1FNamesAndSubDNames();
+  StackGEDOOT::InitTH1FNamesAndSubDNames();
   
   // with all that defined, initialize everything in constructor
-  StackIsoNvtx::InitInputPlots();
-  StackIsoNvtx::InitOutputLegends();
-  StackIsoNvtx::InitRatioPlots();
-  StackIsoNvtx::InitRatioLines();
-  StackIsoNvtx::InitOutputCanvPads();
+  StackGEDOOT::InitInputPlots();
+  StackGEDOOT::InitOutputLegends();
+  StackGEDOOT::InitRatioPlots();
+  StackGEDOOT::InitRatioLines();
+  StackGEDOOT::InitOutputCanvPads();
 }
 
-StackIsoNvtx::~StackIsoNvtx()
+StackGEDOOT::~StackGEDOOT()
 {
   // delete all pointers
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
@@ -42,14 +42,14 @@ StackIsoNvtx::~StackIsoNvtx()
   delete fInFile;
 }
 
-void StackIsoNvtx::DoStacks()
+void StackGEDOOT::DoStacks()
 {
-  StackIsoNvtx::MakeStackIsoNvtx();
-  StackIsoNvtx::MakeRatioPlots();
-  StackIsoNvtx::MakeOutputCanvas();
+  StackGEDOOT::MakeStackGEDOOT();
+  StackGEDOOT::MakeRatioPlots();
+  StackGEDOOT::MakeOutputCanvas();
 }
 
-void StackIsoNvtx::MakeStackIsoNvtx()
+void StackGEDOOT::MakeStackGEDOOT()
 {
   // common denom
   const TString dropGED = "GED ";
@@ -79,7 +79,7 @@ void StackIsoNvtx::MakeStackIsoNvtx()
   } // end loop over th1f plots
 }
 
-void StackIsoNvtx::MakeRatioPlots()
+void StackGEDOOT::MakeRatioPlots()
 {
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   { 
@@ -96,18 +96,18 @@ void StackIsoNvtx::MakeRatioPlots()
   }
 }
 
-void StackIsoNvtx::MakeOutputCanvas() 
+void StackGEDOOT::MakeOutputCanvas() 
 {
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   {
     // draw only linear
-    StackIsoNvtx::DrawUpperPad(th1f); // upper pad is stack
-    StackIsoNvtx::DrawLowerPad(th1f); // lower pad is ratio
-    StackIsoNvtx::SaveCanvas(th1f); // now save the canvas
+    StackGEDOOT::DrawUpperPad(th1f); // upper pad is stack
+    StackGEDOOT::DrawLowerPad(th1f); // lower pad is ratio
+    StackGEDOOT::SaveCanvas(th1f); // now save the canvas
   }
 }
 
-void StackIsoNvtx::DrawUpperPad(const Int_t th1f) 
+void StackGEDOOT::DrawUpperPad(const Int_t th1f) 
 {    
   // pad gymnastics
   fOutTH1FCanvases[th1f]->cd();
@@ -115,8 +115,8 @@ void StackIsoNvtx::DrawUpperPad(const Int_t th1f)
   fOutTH1FStackPads[th1f]->cd(); // upper pad is current pad
   
   // set maximum by comparing added mc vs added data
-  const Float_t min = StackIsoNvtx::GetMinimum(th1f);
-  const Float_t max = StackIsoNvtx::GetMaximum(th1f);
+  const Float_t min = StackGEDOOT::GetMinimum(th1f);
+  const Float_t max = StackGEDOOT::GetMaximum(th1f);
 
   fInGEDTH1FHists[th1f]->SetMaximum( max > 0 ? max*1.05 : max/1.05 );      
   fInGEDTH1FHists[th1f]->SetMinimum( min > 0 ? min/1.05 : min*1.05 );
@@ -134,17 +134,17 @@ void StackIsoNvtx::DrawUpperPad(const Int_t th1f)
   fTH1FLegends[th1f]->Draw("SAME"); 
 }
 
-Float_t StackIsoNvtx::GetMaximum(const Int_t th1f) 
+Float_t StackGEDOOT::GetMaximum(const Int_t th1f) 
 {
   return (fInGEDTH1FHists[th1f]->GetMaximum() > fInOOTTH1FHists[th1f]->GetMaximum() ? fInGEDTH1FHists[th1f]->GetMaximum() : fInOOTTH1FHists[th1f]->GetMaximum());
 }
 
-Float_t StackIsoNvtx::GetMinimum(const Int_t th1f) 
+Float_t StackGEDOOT::GetMinimum(const Int_t th1f) 
 {
   return (fInGEDTH1FHists[th1f]->GetMinimum() < fInOOTTH1FHists[th1f]->GetMinimum() ? fInGEDTH1FHists[th1f]->GetMinimum() : fInOOTTH1FHists[th1f]->GetMinimum());
 }
 
-void StackIsoNvtx::DrawLowerPad(const Int_t th1f) 
+void StackGEDOOT::DrawLowerPad(const Int_t th1f) 
 {    
   // pad gymnastics
   fOutTH1FCanvases[th1f]->cd();   // Go back to the main canvas before defining pad2
@@ -152,7 +152,7 @@ void StackIsoNvtx::DrawLowerPad(const Int_t th1f)
   fOutTH1FRatioPads[th1f]->cd(); // lower pad is current pad
 
   // make red line at ratio of 0.0
-  StackIsoNvtx::SetLines(th1f);
+  StackGEDOOT::SetLines(th1f);
 
   // draw th1 first so line can appear, then draw over it (and set Y axis divisions)
   fOutRatioTH1FHists[th1f]->Draw("EP"); // draw first so line can appear
@@ -174,7 +174,7 @@ void StackIsoNvtx::DrawLowerPad(const Int_t th1f)
   fOutRatioTH1FHists[th1f]->Draw("EP SAME"); 
 }
 
-void StackIsoNvtx::SetLines(const Int_t th1f)
+void StackGEDOOT::SetLines(const Int_t th1f)
 {
   // have line held at ratio of 1.0 over whole x range
   fOutTH1FRatioLines[th1f]->SetX1(fOutRatioTH1FHists[th1f]->GetXaxis()->GetXmin());
@@ -187,7 +187,7 @@ void StackIsoNvtx::SetLines(const Int_t th1f)
   fOutTH1FRatioLines[th1f]->SetLineWidth(2);
 }
 
-void StackIsoNvtx::SaveCanvas(const Int_t th1f)
+void StackGEDOOT::SaveCanvas(const Int_t th1f)
 {
   // Go back to the main canvas before saving
   fOutTH1FCanvases[th1f]->cd();    
@@ -203,12 +203,12 @@ void StackIsoNvtx::SaveCanvas(const Int_t th1f)
 }
 
 
-void StackIsoNvtx::InitTH1FNamesAndSubDNames()
+void StackGEDOOT::InitTH1FNamesAndSubDNames()
 {
   // will use the integral of nvtx to derive total yields as no additional cuts are placed on ntvx --> key on name for yields
   
   std::ifstream plotstoread;
-  plotstoread.open(Form("%s/%s",Config::outdir.Data(),Config::isonvtxdumpname.Data()),std::ios::in);
+  plotstoread.open(Form("%s/%s",Config::outdir.Data(),Config::phoplotdumpname.Data()),std::ios::in);
 
   TString plotname; TString subdir;
 
@@ -229,7 +229,7 @@ void StackIsoNvtx::InitTH1FNamesAndSubDNames()
   }
 }
 
-void StackIsoNvtx::InitInputPlots() 
+void StackGEDOOT::InitInputPlots() 
 {
   // common denom
   const TString marker = "_v_nvtx_mean";
@@ -259,7 +259,7 @@ void StackIsoNvtx::InitInputPlots()
   }
 }
 
-void StackIsoNvtx::InitOutputLegends() 
+void StackGEDOOT::InitOutputLegends() 
 {
   fTH1FLegends.resize(fNTH1F);
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
@@ -270,13 +270,13 @@ void StackIsoNvtx::InitOutputLegends()
   }
 }
 
-void StackIsoNvtx::InitRatioPlots() 
+void StackGEDOOT::InitRatioPlots() 
 {
   // th1f hists
   fOutRatioTH1FHists.resize(fNTH1F);
 }
 
-void StackIsoNvtx::InitRatioLines() 
+void StackGEDOOT::InitRatioLines() 
 {
   fOutTH1FRatioLines.resize(fNTH1F);
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
@@ -285,7 +285,7 @@ void StackIsoNvtx::InitRatioLines()
   }
 }
 
-void StackIsoNvtx::InitOutputCanvPads() 
+void StackGEDOOT::InitOutputCanvPads() 
 {
   fOutTH1FCanvases.resize(fNTH1F);
   fOutTH1FStackPads.resize(fNTH1F);

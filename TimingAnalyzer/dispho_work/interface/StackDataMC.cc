@@ -1,5 +1,5 @@
-#ifndef _stackplots_
-#define _stackplots_
+#ifndef _stackdatamc_
+#define _stackdatamc_
 
 #include "CommonTypes.hh"
 #include "Config.hh"
@@ -20,10 +20,10 @@ typedef std::vector<TLegend*> TLegVec;
 typedef std::vector<TCanvas*> TCanvVec;
 typedef std::vector<TPad*>    TPadVec;
 
-class StackPlots
+class StackDataMC
 {
 public:
-  StackPlots();
+  StackDataMC();
 
   void InitTH1FNamesAndSubDNames();
   void OpenInputFiles();
@@ -36,7 +36,7 @@ public:
 
   void DoStacks(std::ofstream & yields);
 
-  void MakeStackPlots(std::ofstream & yields);
+  void MakeStackDataMC(std::ofstream & yields);
   void MakeRatioPlots();
   void MakeOutputCanvas();
 
@@ -47,7 +47,7 @@ public:
   void SetLines(const Int_t th1f);
   void SaveCanvas(const Int_t th1f, const Bool_t isLogY);
 
-  ~StackPlots();
+  ~StackDataMC();
 
 private:
   TStrVec fDataNames;
