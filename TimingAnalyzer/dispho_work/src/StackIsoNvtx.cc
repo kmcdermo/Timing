@@ -141,7 +141,7 @@ Float_t StackIsoNvtx::GetMaximum(const Int_t th1f)
 
 Float_t StackIsoNvtx::GetMinimum(const Int_t th1f) 
 {
-  return (fInGEDTH1FHists[th1f]->GetMinimum() > fInOOTTH1FHists[th1f]->GetMinimum() ? fInGEDTH1FHists[th1f]->GetMinimum() : fInOOTTH1FHists[th1f]->GetMinimum());
+  return (fInGEDTH1FHists[th1f]->GetMinimum() < fInOOTTH1FHists[th1f]->GetMinimum() ? fInGEDTH1FHists[th1f]->GetMinimum() : fInOOTTH1FHists[th1f]->GetMinimum());
 }
 
 void StackIsoNvtx::DrawLowerPad(const Int_t th1f) 
