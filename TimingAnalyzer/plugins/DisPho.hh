@@ -139,9 +139,10 @@ struct phoStruct
   float scEta_;
 
   float HadTowOE_;
-  float HadronOE_;
   float r9_;
-  float fullr9_;
+  //  float HadronOE_;
+  //  float fullr9_;
+
   float ChgHadIso_;
   float NeuHadIso_;
   float PhoIso_;

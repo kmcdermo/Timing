@@ -708,9 +708,10 @@ void DisPho::InitializePhoBranch(phoStruct & phoBranch)
   phoBranch.scEta_ = -9999.f;
 
   phoBranch.HadTowOE_ = -9999.f;
-  phoBranch.HadronOE_ = -9999.f;
   phoBranch.r9_ = -9999.f;
-  phoBranch.fullr9_ = -9999.f;
+//   phoBranch.HadronOE_ = -9999.f;
+//   phoBranch.fullr9_ = -9999.f;
+
   phoBranch.ChgHadIso_ = -9999.f;
   phoBranch.NeuHadIso_ = -9999.f;
   phoBranch.PhoIso_ = -9999.f;
@@ -756,9 +757,10 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
 
   // ID-like variables
   phoBranch.HadTowOE_  = pho.hadTowOverEm(); // used in ID + trigger
-  phoBranch.HadronOE_  = pho.hadronicOverEm(); 
   phoBranch.r9_        = pho.r9(); // used in slimming in PAT + trigger
-  phoBranch.fullr9_    = pho.full5x5_r9();
+//   phoBranch.HadronOE_  = pho.hadronicOverEm(); 
+//   phoBranch.fullr9_    = pho.full5x5_r9();
+
   phoBranch.ChgHadIso_ = std::max(pho.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
   phoBranch.NeuHadIso_ = std::max(pho.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);
   phoBranch.PhoIso_    = std::max(pho.photonIso()        - (rho * oot::GetGammaEA        (sceta)),0.f);
@@ -1064,9 +1066,10 @@ void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
   tree->Branch(Form("phoscphi_%i",i), &phoBranch.scPhi_, Form("phoscphi_%i/F",i));
 
   tree->Branch(Form("phoHadTowOE_%i",i), &phoBranch.HadTowOE_, Form("phoHadTowOE_%i/F",i));
-  tree->Branch(Form("phoHadronOE_%i",i), &phoBranch.HadronOE_, Form("phoHadronOE_%i/F",i));
   tree->Branch(Form("phor9_%i",i), &phoBranch.r9_, Form("phor9_%i/F",i));
-  tree->Branch(Form("phofullr9_%i",i), &phoBranch.fullr9_, Form("phofullr9_%i/F",i));
+  //  tree->Branch(Form("phoHadronOE_%i",i), &phoBranch.HadronOE_, Form("phoHadronOE_%i/F",i));
+  //  tree->Branch(Form("phofullr9_%i",i), &phoBranch.fullr9_, Form("phofullr9_%i/F",i));
+
   tree->Branch(Form("phoChgHadIso_%i",i), &phoBranch.ChgHadIso_, Form("phoChgHadIso_%i/F",i));
   tree->Branch(Form("phoNeuHadIso_%i",i), &phoBranch.NeuHadIso_, Form("phoNeuHadIso_%i/F",i));
   tree->Branch(Form("phoPhoIso_%i",i), &phoBranch.PhoIso_, Form("phoPhoIso_%i/F",i));
@@ -1074,6 +1077,10 @@ void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
   tree->Branch(Form("phoEcalPFClIso_%i",i), &phoBranch.EcalPFClIso_, Form("phoEcalPFClIso_%i/F",i));
   tree->Branch(Form("phoHcalPFClIso_%i",i), &phoBranch.HcalPFClIso_, Form("phoHcalPFClIso_%i/F",i));
   tree->Branch(Form("phoTrkIso_%i",i), &phoBranch.TrkIso_, Form("phoTrkIso_%i/F",i));
+
+  tree->Branch(Form("phosieie_%i",i), &phoBranch.Sieie_, Form("phosieie_%i/F",i));
+  tree->Branch(Form("phosipip_%i",i), &phoBranch.Sipip_, Form("phosipip_%i/F",i));
+  tree->Branch(Form("phosieip_%i",i), &phoBranch.Sieip_, Form("phosieip_%i/F",i));
 
   tree->Branch(Form("phosmaj_%i",i), &phoBranch.Smaj_, Form("phosmaj_%i/F",i));
   tree->Branch(Form("phosmin_%i",i), &phoBranch.Smin_, Form("phosmin_%i/F",i));

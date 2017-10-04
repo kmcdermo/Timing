@@ -156,6 +156,16 @@ void Analysis::SetupStandardPlots()
     //EB
     standardTH1Map[Form("phopt_%i_EB",ipho)] = 
       Analysis::MakeTH1Plot(Form("phopt_%i_EB",ipho),"",50,0.,1000.f,Form("Photon %i p_{T} (EB)",ipho),"Events",standardTH1SubMap,"photon/standard");
+    standardTH1Map[Form("phophi_%i_EB",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phophi_%i_EB",ipho),"",32,-Config::PI,Config::PI,Form("Photon %i #phi (EB)",ipho),"Events",standardTH1SubMap,"photon/standard");
+    standardTH1Map[Form("phoeta_%i_EB",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phoeta_%i_EB",ipho),"",50,-5.f,5.f,Form("Photon %i #eta (EB)",ipho),"Events",standardTH1SubMap,"photon/standard");
+    standardTH1Map[Form("phor9_%i_EB",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phor9_%i_EB",ipho),"",50,0.f,1.2f,Form("Photon %i R_{9} (EB)",ipho),"Events",standardTH1SubMap,"photon/standard");
+    standardTH1Map[Form("phohoe_%i_EB",ipho)] = 
+      Analysis::MakeTH1Plot(Form("phohoe_%i_EB",ipho),"",50,0.f,0.2,Form("Photon %i H/E (EB)",ipho),"Events",standardTH1SubMap,"photon/standard");
+
+
     standardTH1Map[Form("phoseedtime_%i_EB",ipho)] = 
       Analysis::MakeTH1Plot(Form("phoseedtime_%i_EB",ipho),"",50,-25.f,25.f,Form("Photon %i Seed Time [ns] (EB)",ipho),"Events",standardTH1SubMap,"photon/standard");
 
