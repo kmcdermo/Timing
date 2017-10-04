@@ -336,6 +336,7 @@ void Analysis::OutputEventStandardPlots()
 void Analysis::OutputPhotonStandardPlots() 
 {
   MakeSubDirs(stdphoTH1SubMap,fOutDir);
+  Analysis::MakeInclusiveTH1s(stdphoTH1Map,stdphoTH1SubMap);
   Analysis::SaveTH1s(stdphoTH1Map,stdphoTH1SubMap);
   if (!fIsMC) Analysis::DumpTH1Names(stdphoTH1Map,stdphoTH1SubMap);
   Analysis::DeleteTH1s(stdphoTH1Map);
@@ -344,6 +345,7 @@ void Analysis::OutputPhotonStandardPlots()
 void Analysis::OutputIsoPlots() 
 {
   MakeSubDirs(isoTH1SubMap,fOutDir);
+  Analysis::MakeInclusiveTH1s(isoTH1Map,isoTH1SubMap);
   Analysis::SaveTH1s(isoTH1Map,isoTH1SubMap);
   if (!fIsMC) Analysis::DumpTH1Names(isoTH1Map,isoTH1SubMap);
   Analysis::DeleteTH1s(isoTH1Map);
@@ -352,6 +354,7 @@ void Analysis::OutputIsoPlots()
 void Analysis::OutputIsoNvtxPlots() 
 {
   MakeSubDirs(isonvtxTH2SubMap,fOutDir);
+  Analysis::MakeInclusiveTH2s(isonvtxTH2Map,isonvtxTH2SubMap);
   Analysis::SaveTH2s(isonvtxTH2Map,isonvtxTH2SubMap);
   for (TH2MapIter mapiter = isonvtxTH2Map.begin(); mapiter != isonvtxTH2Map.end(); ++mapiter)
   {
@@ -359,6 +362,83 @@ void Analysis::OutputIsoNvtxPlots()
     Analysis::Make1DIsoPlots(mapiter->second,isonvtxTH2SubMap[name],name);
   }
   Analysis::DeleteTH2s(isonvtxTH2Map);
+}
+
+void Analysis::MakeInclusiveTH1s(TH1Map & th1map, TStrMap & subdirmap) 
+{
+  // Use GED photons as the base
+  const TString drop = "GED";
+  TStrVec names;
+  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
+  {
+    TString name = mapiter->second->GetName();
+    if (name.Contains(drop,TString::kExact)) names.emplace_back(name);
+  }
+
+  // loop over names and adjust them accordingly
+  const Ssiz_t length = drop.Length();
+  const TString swap = "OOT";
+  for (auto & name : names)
+  {
+    // prep declaration of inclusive hist
+    TString hname = name; 
+    const Ssiz_t hnamepos = hname.Index(drop);
+    hname.Remove(hnamepos-1,length+1); // account for "_GED"
+    
+    TString xtitle = th1map[name]->GetXaxis()->GetTitle();
+    const Ssiz_t xtitlepos = xtitle.Index(drop);
+    xtitle.Remove(xtitlepos,length+3); // account for "GED - "
+
+    // make inclusive hist
+    th1map[hname] = Analysis::MakeTH1Plot(hname,"",th1map[name]->GetNbinsX(),th1map[name]->GetXaxis()->GetXmin(),th1map[name]->GetXaxis()->GetXmax(),
+					  xtitle,th1map[name]->GetYaxis()->GetTitle(),subdirmap,subdirmap[name]);
+
+    // add GED first
+    th1map[hname]->Add(th1map[name]);
+
+    // add OOT second
+    name.ReplaceAll(drop,swap);
+    th1map[hname]->Add(th1map[name]);
+  }
+}
+
+void Analysis::MakeInclusiveTH2s(TH2Map & th2map, TStrMap & subdirmap) 
+{
+  // Use GED photons as the base
+  const TString drop = "GED";
+  TStrVec names;
+  for (TH2MapIter mapiter = th2map.begin(); mapiter != th2map.end(); ++mapiter) 
+  {
+    TString name = mapiter->second->GetName();
+    if (name.Contains(drop,TString::kExact)) names.emplace_back(name);
+  }
+
+  // loop over names and adjust them accordingly
+  const Ssiz_t length = drop.Length();
+  const TString swap = "OOT";
+  for (auto & name : names)
+  {
+    // prep declaration of inclusive hist
+    TString hname = name; 
+    const Ssiz_t hnamepos = hname.Index(drop);
+    hname.Remove(hnamepos-1,length+1); // account for "_GED"
+    
+    TString ytitle = th2map[name]->GetYaxis()->GetTitle();
+    const Ssiz_t ytitlepos = ytitle.Index(drop);
+    ytitle.Remove(ytitlepos,length+3); // account for "GED - "
+
+    // make inclusive hist
+    th2map[hname] = Analysis::MakeTH2Plot(hname,"",th2map[name]->GetNbinsX(),th2map[name]->GetXaxis()->GetXmin(),th2map[name]->GetXaxis()->GetXmax(),
+					  th2map[name]->GetXaxis()->GetTitle(),th2map[name]->GetNbinsY(),th2map[name]->GetYaxis()->GetXmin(),th2map[name]->GetYaxis()->GetXmax(),
+					  ytitle,subdirmap,subdirmap[name]);
+
+    // add GED first
+    th2map[hname]->Add(th2map[name]);
+
+    // add OOT second
+    name.ReplaceAll(drop,swap);
+    th2map[hname]->Add(th2map[name]);
+  }
 }
 
 void Analysis::Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, const TString & name)
