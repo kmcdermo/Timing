@@ -28,17 +28,17 @@ inline Float_t TOF   (const Float_t x,  const Float_t y,  const Float_t z,
   return time + (std::sqrt(rad2(x,y,z))-std::sqrt(rad2((x-vx),(y-vy),(z-vz))))/Config::sol;
 }
 
-Analysis::Analysis(const TString sample, const Bool_t isMC) : fSample(sample), fIsMC(isMC)
+Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample), fIsMC(isMC)
 {
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
 
   // Set input
-  TString filename = Form("input/%s/%s/%s/%s", Config::year.Data(), (fIsMC?"MC":"DATA"), fSample.Data(), "tree.root");
+  const TString filename = Form("input/%s/%s/%s/%s", Config::year.Data(), (fIsMC?"MC":"DATA"), fSample.Data(), "tree.root");
   fInFile  = TFile::Open(filename.Data());
   CheckValidFile(fInFile,filename);
 
-  TString treename = "tree/tree";
+  const TString treename = "tree/tree";
   fInTree = (TTree*)fInFile->Get(treename.Data());
   CheckValidTree(fInTree,treename,filename);
   if (fIsMC)
@@ -58,7 +58,7 @@ Analysis::Analysis(const TString sample, const Bool_t isMC) : fSample(sample), f
   if (fIsMC) 
   { 
     // Get pile-up weights
-    TString purwfname = Form("%s/%s/%s",Config::outdir.Data(),Config::pusubdir.Data(),Config::pufilename.Data());
+    const TString purwfname = Form("%s/%s/%s",Config::outdir.Data(),Config::pusubdir.Data(),Config::pufilename.Data());
     TFile * purwfile  = TFile::Open(purwfname.Data());
     CheckValidFile(purwfile,purwfname);
 
@@ -79,7 +79,9 @@ Analysis::Analysis(const TString sample, const Bool_t isMC) : fSample(sample), f
   }  
   else 
   {
-    fTH1Dump.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios_base::trunc); // do this once, and just do it for data
+    // do this once, and just do it for data
+    fTH1Dump.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios_base::trunc);
+    if (Config::doIsoNvtx) fIsoNvtxTH1Dump.open(Form("%s/%s",Config::outdir.Data(),Config::isonvtxdumpname.Data()),std::ios_base::trunc);
   }
 }
 
@@ -88,7 +90,11 @@ Analysis::~Analysis()
   delete fInTree;
   delete fInFile;
   delete fOutFile;
-  if (!fIsMC) fTH1Dump.close();
+  if (!fIsMC)
+  { 
+    fTH1Dump.close();
+    if (Config::doIsoNvtx) fIsoNvtxTH1Dump.close();
+  }
 }
 
 void Analysis::EventLoop()
@@ -591,7 +597,11 @@ void Analysis::Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, con
    TH1Map th1dmap; TStrMap th1dsubmap; TStrIntMap th1dbinmap;
    Analysis::Project2Dto1D(hist2d,subdir2d,th1dmap,th1dsubmap,th1dbinmap);
    Analysis::ProduceMeanHist(hist2d,subdir2d,th1dmap,th1dbinmap);
-   if (Config::saveTempHists) Analysis::SaveTH1s(th1dmap,th1dsubmap);
+   if (Config::saveTempHists) 
+   {
+     Analysis::SaveTH1s(th1dmap,th1dsubmap);
+     if (!fIsMC) Analysis::DumpTH1Names(th1dmap,th1dsubmap);
+   }
    Analysis::DeleteTH1s(th1dmap);
 }
 
@@ -640,7 +650,8 @@ void Analysis::Project2Dto1D(const TH2F * hist2d, const TString & subdir2d, TH1M
 void Analysis::ProduceMeanHist(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrIntMap & th1dbinmap) 
 {
   // initialize new mean/sigma histograms
-  TH1F * outhist_mean = new TH1F(Form("%s_mean",hist2d->GetName()),"",hist2d->GetNbinsX(),hist2d->GetXaxis()->GetXmin(),hist2d->GetXaxis()->GetXmax());
+  const TString title = Form("%s_mean",hist2d->GetName());
+  TH1F * outhist_mean = new TH1F(title.Data(),"",hist2d->GetNbinsX(),hist2d->GetXaxis()->GetXmin(),hist2d->GetXaxis()->GetXmax());
   outhist_mean->GetXaxis()->SetTitle(hist2d->GetXaxis()->GetTitle());
   outhist_mean->GetYaxis()->SetTitle(Form("Mean of %s",hist2d->GetYaxis()->GetTitle()));
   outhist_mean->SetLineColor(fColor);
@@ -659,7 +670,14 @@ void Analysis::ProduceMeanHist(const TH2F * hist2d, const TString & subdir2d, TH
   // write output mean/sigma hists to file
   fOutFile->cd();
   outhist_mean->Write(outhist_mean->GetName(),TObject::kWriteDelete);
-  
+  if (!fIsMC)
+  {
+    if (!(title.Contains("_ged_",TString::kExact) || title.Contains("_oot_",TString::kExact)))
+    {
+      fIsoNvtxTH1Dump << title.Data() << " " << subdir2d.Data() << std::endl;
+    }
+  }
+
   if (Config::saveHists)
   {
     // save log/lin of each plot
@@ -677,8 +695,8 @@ void Analysis::ProduceMeanHist(const TH2F * hist2d, const TString & subdir2d, TH
   delete outhist_mean;
 }
 
-TH1F * Analysis::MakeTH1Plot(const TString hname, const TString htitle, const Int_t nbinsx, Double_t xlow, Double_t xhigh,
-			     const TString xtitle, const TString ytitle, TStrMap& subdirmap, const TString subdir) 
+TH1F * Analysis::MakeTH1Plot(const TString & hname, const TString & htitle, const Int_t nbinsx, Double_t xlow, Double_t xhigh,
+			     const TString & xtitle, const TString & ytitle, TStrMap& subdirmap, const TString & subdir) 
 {
   TH1F * hist = new TH1F(hname.Data(),htitle.Data(),nbinsx,xlow,xhigh);
   hist->SetLineColor(kBlack);
@@ -698,8 +716,8 @@ TH1F * Analysis::MakeTH1Plot(const TString hname, const TString htitle, const In
   return hist;
 }
 
-TH2F * Analysis::MakeTH2Plot(const TString hname, const TString htitle, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh, const TString xtitle,
-			     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString ytitle, TStrMap& subdirmap, const TString subdir) 
+TH2F * Analysis::MakeTH2Plot(const TString & hname, const TString & htitle, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh, const TString & xtitle,
+			     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString & ytitle, TStrMap& subdirmap, const TString & subdir) 
 {
   TH2F * hist = new TH2F(hname.Data(),htitle.Data(),nbinsx,xlow,xhigh,nbinsy,ylow,yhigh);
   hist->GetXaxis()->SetTitle(xtitle.Data());
@@ -712,8 +730,8 @@ TH2F * Analysis::MakeTH2Plot(const TString hname, const TString htitle, const In
   return hist;
 }
 
-TH2F * Analysis::MakeTH2Plot(const TString hname, const TString htitle, const DblVec& vxbins, const TString xtitle, 
-			     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString ytitle, TStrMap& subdirmap, const TString subdir) 
+TH2F * Analysis::MakeTH2Plot(const TString & hname, const TString & htitle, const DblVec& vxbins, const TString & xtitle, 
+			     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString & ytitle, TStrMap& subdirmap, const TString & subdir) 
 {
   // need to convert vectors into arrays per ROOT
   const Double_t * axbins = &vxbins[0]; // https://stackoverflow.com/questions/2923272/how-to-convert-vector-to-array-c
@@ -788,7 +806,7 @@ void Analysis::DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap)
 {
   for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
   { 
-    fTH1Dump << mapiter->first.Data()  << " " <<  subdirmap[mapiter->first].Data() << std::endl;
+    fTH1Dump << mapiter->first.Data() << " " << subdirmap[mapiter->first].Data() << std::endl;
   }
 }
 

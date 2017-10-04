@@ -4,6 +4,7 @@
 #include "../interface/PUReweight.hh"
 #include "../interface/Analysis.hh"
 #include "../interface/StackPlots.hh"
+#include "../interface/StackIsoNvtx.hh"
 
 #include "TROOT.h"
 #include "TVirtualFitter.h"
@@ -79,6 +80,7 @@ int main(int argc, const char* argv[])
 	"  --do-purw       <bool>        calculate pile-up weights (def: %s)\n"
 	"  --do-analysis   <bool>        make analysis plots (def: %s)\n"
 	"  --do-stacks     <bool>        stack data/MC plots (def: %s)\n"
+	"  --do-isostacks  <bool>        stack GED/OOT plots (def: %s)\n"
 	"  --do-demo       <bool>        demo analysis (def: %s)\n"
 	"  --use-DEG       <bool>        use doubleEG for data (def: %s)\n"
 	"  --use-SPH       <bool>        use singlePh for data (def: %s)\n"
@@ -100,6 +102,7 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::doPURW),
 	PrintBool(Config::doAnalysis),
 	PrintBool(Config::doStacks),
+	PrintBool(Config::doIsoStacks),
 	PrintBool(Config::doDemo),
 	PrintBool(Config::useDEG),
 	PrintBool(Config::useSPH),
@@ -122,6 +125,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--do-purw")     { Config::doPURW     = true; }
     else if (*i == "--do-analysis") { Config::doAnalysis = true; }
     else if (*i == "--do-stacks")   { Config::doStacks   = true; }
+    else if (*i == "--do-isostacks") { Config::doIsoStacks = true; }
     else if (*i == "--do-demo")     { Config::doDemo     = true; Config::doAnalysis = true; Config::doStandard = true; }
     else if (*i == "--use-DEG")     { Config::useDEG     = true; }
     else if (*i == "--use-SPH")     { Config::useSPH     = true; }
@@ -135,7 +139,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--dump-status") { Config::doAnalysis = true; Config::dumpStatus = true; }
     else if (*i == "--in-year")     { next_arg_or_die(mArgs, i); Config::year     = i->c_str(); }
     else if (*i == "--save-hists")  { Config::saveHists  = true; }
-    else if (*i == "--save-tmphists") { Config::saveTempHists  = true; }
+    else if (*i == "--save-tmphists") { Config::saveTempHists = true; }
     else if (*i == "--out-image")   { next_arg_or_die(mArgs, i); Config::outtype  = i->c_str(); }
     else    { std::cerr << "Error: Unknown option/argument: " << i->c_str() << " ...exiting..." << std::endl; exit(1); }
     mArgs.erase(start, ++i);
@@ -172,12 +176,12 @@ int main(int argc, const char* argv[])
   if (Config::doAnalysis) 
   {
     std::cout << "Starting analyis section" << std::endl;
-    for (TStrBoolMapIter mapiter = Config::SampleMap.begin(); mapiter != Config::SampleMap.end(); ++mapiter) 
+    for (const auto & samplePair : Config::SampleMap)
     {
-      Analysis analysis((*mapiter).first,(*mapiter).second);
-      std::cout << "Analyzing: " << ((*mapiter).second?"MC":"DATA") << " sample: " << (*mapiter).first << std::endl;
+      Analysis analysis(samplePair.first,samplePair.second);
+      std::cout << "Analyzing: " << (samplePair.second?"MC":"DATA") << " sample: " << samplePair.first << std::endl;
       analysis.EventLoop();
-      std::cout << "Done analyzing: " << ((*mapiter).second?"MC":"DATA") << " sample: " << (*mapiter).first << std::endl;
+      std::cout << "Done analyzing: " << (samplePair.second?"MC":"DATA") << " sample: " << samplePair.first << std::endl;
     }
     std::cout << "Finished analysis section" << std::endl;
   }
@@ -200,6 +204,27 @@ int main(int argc, const char* argv[])
   else 
   {
     std::cout << "Skipping stacking data over MC" << std::endl;
+  }
+
+  ///////////////////
+  // Stack IsoNvtx //
+  ///////////////////
+
+  if (Config::doIsoStacks) 
+  {
+    std::cout << "Starting Iso v Nvtx stacker section" << std::endl;
+    for (const auto & samplePair : Config::SampleMap)
+    {
+      StackIsoNvtx Stacker(samplePair.first,samplePair.second);
+      std::cout << "Stacking: " << (samplePair.second?"MC":"DATA") << " sample: " << samplePair.first << std::endl;
+      Stacker.DoStacks();
+      std::cout << "Done stacking: " << (samplePair.second?"MC":"DATA") << " sample: " << samplePair.first << std::endl;
+    }
+    std::cout << "Finished Iso v Nvtx stacking plots" << std::endl;
+  }
+  else 
+  {
+    std::cout << "Skipping stacking Nvtx vs Iso" << std::endl;
   }
 
   // end of the line

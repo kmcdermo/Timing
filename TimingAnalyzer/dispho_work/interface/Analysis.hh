@@ -19,7 +19,7 @@ class Analysis
 {
 public:
   // functions
-  Analysis(const TString sample, const Bool_t isMC);
+  Analysis(const TString & sample, const Bool_t isMC);
   ~Analysis();
   void InitTree();
   void InitStructs();
@@ -38,12 +38,12 @@ public:
   void Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, const TString & name);
   void Project2Dto1D(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrMap & subdir1dmap, TStrIntMap & th1dbinmap);
   void ProduceMeanHist(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrIntMap & th1dbinmap);
-  TH1F * MakeTH1Plot(const TString hname, const TString htitle, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh, 
-		     const TString xtitle, const TString ytitle, TStrMap& subdirmap, const TString subdir);
-  TH2F * MakeTH2Plot(const TString hname, const TString htitle, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh, const TString xtitle,
-		     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString ytitle, TStrMap& subdirmap, const TString subdir);
-  TH2F * MakeTH2Plot(const TString hname, const TString htitle, const DblVec& vxbins, const TString xtitle, 
-		     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString ytitle, TStrMap& subdirmap, const TString subdir);
+  TH1F * MakeTH1Plot(const TString & hname, const TString & htitle, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh, 
+		     const TString & xtitle, const TString & ytitle, TStrMap& subdirmap, const TString & subdir);
+  TH2F * MakeTH2Plot(const TString & hname, const TString & htitle, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh, const TString & xtitle,
+		     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString & ytitle, TStrMap& subdirmap, const TString & subdir);
+  TH2F * MakeTH2Plot(const TString & hname, const TString & htitle, const DblVec& vxbins, const TString & xtitle, 
+		     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString & ytitle, TStrMap& subdirmap, const TString & subdir);
   void SaveTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
   void DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap);
@@ -69,6 +69,7 @@ private:
   TString fOutDir;
   TFile*  fOutFile;
   std::ofstream fTH1Dump; 
+  std::ofstream fIsoNvtxTH1Dump; 
   
   // Output colors
   Color_t fColor;

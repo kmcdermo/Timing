@@ -367,7 +367,8 @@ void StackPlots::OpenInputFiles()
 {
   // open input files into TFileVec --> data 
   fDataFiles.resize(fNData);
-  for (Int_t data = 0; data < fNData; data++) {
+  for (Int_t data = 0; data < fNData; data++) 
+  {
     TString datafile = Form("%s/DATA/%s/plots.root",Config::outdir.Data(),fDataNames[data].Data());
     fDataFiles[data] = TFile::Open(datafile.Data());
     CheckValidFile(fDataFiles[data],datafile);
@@ -375,7 +376,8 @@ void StackPlots::OpenInputFiles()
 
   // open input files into TFileVec --> mc 
   fMCFiles.resize(fNMC);
-  for (Int_t mc = 0; mc < fNMC; mc++) {
+  for (Int_t mc = 0; mc < fNMC; mc++) 
+  {
     TString mcfile = Form("%s/MC/%s/plots.root",Config::outdir.Data(),fMCNames[mc].Data());
     fMCFiles[mc] = TFile::Open(mcfile.Data());
     CheckValidFile(fMCFiles[mc],mcfile);
@@ -410,25 +412,30 @@ void StackPlots::InitInputPlots()
   }
 }
 
-void StackPlots::InitOutputPlots() {
+void StackPlots::InitOutputPlots() 
+{
   fOutDataTH1FHists.resize(fNTH1F); // make enough space for data double hists
   fOutMCTH1FHists.resize(fNTH1F); // make enough space for MC double hists
   fOutMCTH1FStacks.resize(fNTH1F); // same with stack 
-  for (Int_t th1f = 0; th1f < fNTH1F; th1f++){
+  for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
+  {
     fOutMCTH1FStacks[th1f] = new THStack(Form("%s_stack",fTH1FNames[th1f].Data()),"");
   }
 }
 
-void StackPlots::InitOutputLegends() {
+void StackPlots::InitOutputLegends() 
+{
   fTH1FLegends.resize(fNTH1F);
-  for (Int_t th1f = 0; th1f < fNTH1F; th1f++){
+  for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
+  {
     fTH1FLegends[th1f] = new TLegend(0.682,0.7,0.825,0.92);
     fTH1FLegends[th1f]->SetBorderSize(1);
     fTH1FLegends[th1f]->SetLineColor(kBlack);
   }
 }
 
-void StackPlots::InitRatioPlots() {
+void StackPlots::InitRatioPlots() 
+{
   // th1f hists
   fOutRatioTH1FHists.resize(fNTH1F);
 
@@ -436,18 +443,22 @@ void StackPlots::InitRatioPlots() {
   fOutRatioMCErrs.resize(fNTH1F);
 }
 
-void StackPlots::InitRatioLines() {
+void StackPlots::InitRatioLines() 
+{
   fOutTH1FRatioLines.resize(fNTH1F);
-  for (Int_t th1f = 0; th1f < fNTH1F; th1f++){
+  for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
+  {
     fOutTH1FRatioLines[th1f] = new TLine();
   }
 }
 
-void StackPlots::InitOutputCanvPads() {
+void StackPlots::InitOutputCanvPads() 
+{
   fOutTH1FCanvases.resize(fNTH1F);
   fOutTH1FStackPads.resize(fNTH1F);
   fOutTH1FRatioPads.resize(fNTH1F);
-  for (Int_t th1f = 0; th1f < fNTH1F; th1f++){
+  for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
+  {
     fOutTH1FCanvases[th1f] = new TCanvas(Form("%s_canv",fTH1FNames[th1f].Data()),"");
     fOutTH1FCanvases[th1f]->cd();
     
@@ -460,7 +471,8 @@ void StackPlots::InitOutputCanvPads() {
   }
 }
 
-void StackPlots::InitTH1FNamesAndSubDNames(){
+void StackPlots::InitTH1FNamesAndSubDNames()
+{
   // will use the integral of nvtx to derive total yields as no additional cuts are placed on ntvx --> key on name for yields
   
   std::ifstream plotstoread;
@@ -468,7 +480,8 @@ void StackPlots::InitTH1FNamesAndSubDNames(){
 
   TString plotname; TString subdir;
 
-  while (plotstoread >> plotname >> subdir) {
+  while (plotstoread >> plotname >> subdir) 
+  {
     fTH1FNames.push_back(plotname);
     fTH1FSubDMap[plotname] = subdir;
   }
@@ -477,9 +490,9 @@ void StackPlots::InitTH1FNamesAndSubDNames(){
   // store the size of the number of plots
   fNTH1F = fTH1FNames.size();
 
-  if (fTH1FNames.size() == 0) {
+  if (fTH1FNames.size() == 0) 
+  {
     std::cerr << "Somehow, no plots were read in for the stacker ...exiting..." << std::endl;
     exit(1);
   }
 }
-
