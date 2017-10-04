@@ -33,6 +33,9 @@ namespace Config
   constexpr    Int_t   nJets    = 4;
   constexpr    Int_t   nPhotons = 4;
 
+  static const TStrVec regions = {"EB","EE"};
+  static const TStrVec splits = {"GED","OOT"};
+
   // data config
   static const TString plotdumpname = "plotnames.txt";
   static const TString phoplotdumpname = "phoplotnames.txt";
@@ -85,7 +88,8 @@ namespace Config
   extern Bool_t      useHVDS;
   extern Bool_t      useQCD;
   extern Bool_t      useGJets;
-  extern Bool_t      doStandard;
+  extern Bool_t      doEvStd;
+  extern Bool_t      doPhoStd;
   extern Bool_t      doIso;
   extern Bool_t      doIsoNvtx;
   extern Bool_t      dumpStatus;

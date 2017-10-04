@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 #include <map>
+#include <array>
 
 // global typedefs
 
@@ -26,6 +27,7 @@ typedef std::unordered_map<Int_t,Int_t> IntMap;
 typedef std::pair<Float_t,Float_t> FFPair;
 
 typedef std::vector<TString>  TStrVec;
+typedef std::vector<std::array<TString,2> > TStrArrVec;
 typedef std::vector<Int_t>    IntVec;
 typedef std::vector<Float_t>  FltVec;
 typedef std::vector<Double_t> DblVec;

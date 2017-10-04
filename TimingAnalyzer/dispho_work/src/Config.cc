@@ -16,7 +16,8 @@ namespace Config
   Bool_t  useHVDS    = false;
   Bool_t  useQCD     = false;
   Bool_t  useGJets   = false;
-  Bool_t  doStandard = false;
+  Bool_t  doEvStd    = false;
+  Bool_t  doPhoStd   = false;
   Bool_t  doIso      = false;
   Bool_t  doIsoNvtx  = false;
   Bool_t  dumpStatus = false;

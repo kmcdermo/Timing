@@ -26,13 +26,16 @@ public:
   void InitBranchVecs();
   void InitBranches();
   void EventLoop();
-  void SetupStandardPlots();
+  void SetupEventStandardPlots();
+  void SetupPhotonStandardPlots();
   void SetupIsoPlots();
   void SetupIsoNvtxPlots();
-  void FillStandardPlots(const Int_t Nphotons, const Float_t weight);
+  void FillEventStandardPlots(const Float_t weight);
+  void FillPhotonStandardPlots(const Int_t Nphotons, const Float_t weight);
   void FillIsoPlots(const Int_t Nphotons, const Float_t weight);
   void FillIsoNvtxPlots(const Int_t Nphotons, const Float_t weight);
-  void OutputStandardPlots();
+  void OutputEventStandardPlots();
+  void OutputPhotonStandardPlots();
   void OutputIsoPlots();
   void OutputIsoNvtxPlots();
   void Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, const TString & name);
@@ -69,7 +72,7 @@ private:
   TString fOutDir;
   TFile*  fOutFile;
   std::ofstream fTH1Dump; 
-  std::ofstream fIsoNvtxTH1Dump; 
+  std::ofstream fTH1PhoDump; 
   
   // Output colors
   Color_t fColor;
@@ -77,7 +80,8 @@ private:
   ///////////////
   // Plot maps //
   ///////////////
-  TH1Map standardTH1Map; TStrMap standardTH1SubMap;
+  TH1Map stdevTH1Map; TStrMap stdevTH1SubMap;
+  TH1Map stdphoTH1Map; TStrMap stdphoTH1SubMap;
   TH1Map isoTH1Map; TStrMap isoTH1SubMap;
   TH2Map isonvtxTH2Map; TStrMap isonvtxTH2SubMap;
 
