@@ -64,12 +64,18 @@ void StackIsoNvtx::MakeStackIsoNvtx()
     const Ssiz_t startposGED = ytitleGED.Index(dropGED);
     ytitleGED.Remove(startposGED,lengthGED);
     fInGEDTH1FHists[th1f]->GetYaxis()->SetTitle(ytitleGED.Data());
+    fInGEDTH1FHists[th1f]->SetLineColor(kRed);
+    fInGEDTH1FHists[th1f]->SetMarkerColor(kRed);
+    fTH1FLegends[th1f]->AddEntry(fInGEDTH1FHists[th1f],"GED","epl");
 
     // OOT first
     TString ytitleOOT = fInOOTTH1FHists[th1f]->GetYaxis()->GetTitle();
     const Ssiz_t startposOOT = ytitleOOT.Index(dropOOT);
     ytitleOOT.Remove(startposOOT,lengthOOT);
     fInOOTTH1FHists[th1f]->GetYaxis()->SetTitle(ytitleOOT.Data());    
+    fInOOTTH1FHists[th1f]->SetLineColor(kBlue);
+    fInOOTTH1FHists[th1f]->SetMarkerColor(kBlue);
+    fTH1FLegends[th1f]->AddEntry(fInOOTTH1FHists[th1f],"OOT","epl");
   } // end loop over th1f plots
 }
 
@@ -85,6 +91,7 @@ void StackIsoNvtx::MakeRatioPlots()
     fOutRatioTH1FHists[th1f]->SetMinimum(-2.f); // Define Y ..
     fOutRatioTH1FHists[th1f]->SetMaximum( 2.f); // .. range
     fOutRatioTH1FHists[th1f]->SetLineColor(kBlack);
+    fOutRatioTH1FHists[th1f]->SetMarkerColor(kBlack);
     fOutRatioTH1FHists[th1f]->SetStats(0);      // No statistics on lower plot
   }
 }
@@ -116,7 +123,7 @@ void StackIsoNvtx::DrawUpperPad(const Int_t th1f)
   
   // draw hists
   fInGEDTH1FHists[th1f]->Draw("PE"); // draw first so labels appear
-  fInOOTTH1FHists[th1f]->Draw("PE"); // draw first so labels appear
+  fInOOTTH1FHists[th1f]->Draw("PE SAME"); // draw first so labels appear
   
   // again, have to scale TDR style values by height of upper pad
   fInGEDTH1FHists[th1f]->GetYaxis()->SetLabelSize  (Config::LabelSize / Config::height_up); 
@@ -243,7 +250,7 @@ void StackIsoNvtx::InitInputPlots()
     ged.Replace(startpos,length,addged);
     fInGEDTH1FHists[th1f] = (TH1F*)fInFile->Get(Form("%s",ged.Data()));	
     CheckValidTH1F(fInGEDTH1FHists[th1f],ged,fInFile->GetName());
-    
+
     // OOT Second
     TString oot = fTH1FNames[th1f];
     oot.Replace(startpos,length,addoot);
