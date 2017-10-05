@@ -24,7 +24,7 @@ public:
   StackGEDOOT(const TString & sample, const Bool_t isMC);
 
   void InitTH1FNamesAndSubDNames();
-  void InitSubDirs(const TString & dir);
+  void InitSubDirs();
   void InitInputPlots();
   void InitOutputLegends();
   void InitRatioPlots();
@@ -37,12 +37,12 @@ public:
   void MakeRatioPlots();
   void MakeOutputCanvas();
 
-  void DrawUpperPad(const Int_t th1f);
+  void DrawUpperPad(const Int_t th1f, const Bool_t isLogy);
   Float_t GetMaximum(const Int_t th1f);
   Float_t GetMinimum(const Int_t th1f);
   void DrawLowerPad(const Int_t th1f);
   void SetLines(const Int_t th1f);
-  void SaveCanvas(const Int_t th1f);
+  void SaveCanvas(const Int_t th1f, const Bool_t isLogy);
 
   ~StackGEDOOT();
 

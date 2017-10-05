@@ -40,6 +40,9 @@ namespace Config
   static const TString plotdumpname = "plotnames.txt";
   static const TString phoplotdumpname = "phoplotnames.txt";
 
+  // pho stacking config
+  static const TString phosubdir = "gedootstacks";
+
   // TDRStyle Config --> needed by stacker
   constexpr    Float_t  TitleSize    = 0.035;
   constexpr    Float_t  TitleXOffset = 1.1;

@@ -16,7 +16,7 @@ StackGEDOOT::StackGEDOOT(const TString & sample, const Bool_t isMC) : fSample(sa
   // Read in names of plots to be stacked
   StackGEDOOT::InitTH1FNamesAndSubDNames();
   // Make subdirs as needed
-  StackGEDOOT::InitSubDirs("gedootstacks");
+  StackGEDOOT::InitSubDirs();
 
   // with all that defined, initialize everything in constructor
   StackGEDOOT::InitInputPlots();
@@ -107,14 +107,26 @@ void StackGEDOOT::MakeOutputCanvas()
 {
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   {
-    // draw only linear
-    StackGEDOOT::DrawUpperPad(th1f); // upper pad is stack
+    const Bool_t isV = (fTH1FNames[th1f].Contains("EB_v_",TString::kExact) || fTH1FNames[th1f].Contains("EE_v_",TString::kExact));
+
+    Bool_t isLogY = true;
+    if (!isV)
+    {
+      // LogY first
+      StackGEDOOT::DrawUpperPad(th1f,isLogY); // upper pad is stack
+      StackGEDOOT::DrawLowerPad(th1f); // lower pad is ratio
+      StackGEDOOT::SaveCanvas(th1f,isLogY); // now save the canvas
+    }
+
+    // LinearY second
+    isLogY = false;
+    StackGEDOOT::DrawUpperPad(th1f,isLogY); // upper pad is stack
     StackGEDOOT::DrawLowerPad(th1f); // lower pad is ratio
-    StackGEDOOT::SaveCanvas(th1f); // now save the canvas
+    StackGEDOOT::SaveCanvas(th1f,isLogY); // now save the canvas
   }
 }
 
-void StackGEDOOT::DrawUpperPad(const Int_t th1f) 
+void StackGEDOOT::DrawUpperPad(const Int_t th1f, const Bool_t isLogY) 
 {    
   // pad gymnastics
   fOutTH1FCanvases[th1f]->cd();
@@ -125,9 +137,17 @@ void StackGEDOOT::DrawUpperPad(const Int_t th1f)
   const Float_t min = StackGEDOOT::GetMinimum(th1f);
   const Float_t max = StackGEDOOT::GetMaximum(th1f);
 
-  fInGEDTH1FHists[th1f]->SetMaximum( max > 0 ? max*1.05 : max/1.05 );      
-  fInGEDTH1FHists[th1f]->SetMinimum( min > 0 ? min/1.05 : min*1.05 );
-  
+  if (isLogY)
+  {
+    fInGEDTH1FHists[th1f]->SetMaximum( max > 0 ? max*1.5 : max/1.5 );      
+    fInGEDTH1FHists[th1f]->SetMinimum( min > 0 ? min/1.5 : 0.00001 );
+  }
+  else 
+  {
+    fInGEDTH1FHists[th1f]->SetMaximum( max > 0 ? max*1.05 : max/1.05 );      
+    fInGEDTH1FHists[th1f]->SetMinimum( min > 0 ? min/1.05 : min*1.05 );
+  }
+
   // draw hists
   fInGEDTH1FHists[th1f]->Draw("PE"); // draw first so labels appear
   fInOOTTH1FHists[th1f]->Draw("PE SAME"); // draw first so labels appear
@@ -148,7 +168,38 @@ Float_t StackGEDOOT::GetMaximum(const Int_t th1f)
 
 Float_t StackGEDOOT::GetMinimum(const Int_t th1f) 
 {
-  return (fInGEDTH1FHists[th1f]->GetMinimum() < fInOOTTH1FHists[th1f]->GetMinimum() ? fInGEDTH1FHists[th1f]->GetMinimum() : fInOOTTH1FHists[th1f]->GetMinimum());
+  // GED First
+  Float_t gedmin  = 1e9;
+  Bool_t newgedmin = false;
+  for (Int_t ibin = 1; ibin <= fInGEDTH1FHists[th1f]->GetNbinsX(); ibin++)
+  {
+    const Float_t tmpmin = fInGEDTH1FHists[th1f]->GetBinContent(ibin);
+    if ((tmpmin < gedmin) && (tmpmin != 0.f))
+    {
+      gedmin    = tmpmin;
+      newgedmin = true;
+    }
+  }
+
+  // OOT Second
+  Float_t ootmin  = 1e9;
+  Bool_t newootmin = false;
+  for (Int_t ibin = 1; ibin <= fInOOTTH1FHists[th1f]->GetNbinsX(); ibin++)
+  {
+    const Float_t tmpmin = fInOOTTH1FHists[th1f]->GetBinContent(ibin);
+    if ((tmpmin < ootmin) && (tmpmin != 0.f))
+    {
+      ootmin    = tmpmin;
+      newootmin = true;
+    }
+  }
+  
+  Float_t min = 0.f;
+  if (newgedmin || newootmin)
+  {
+    min = (newgedmin<newootmin?newgedmin:newootmin);
+  }
+  return min;
 }
 
 void StackGEDOOT::DrawLowerPad(const Int_t th1f) 
@@ -196,8 +247,12 @@ void StackGEDOOT::SetLines(const Int_t th1f)
   fOutTH1FRatioLines[th1f]->SetLineWidth(2);
 }
 
-void StackGEDOOT::SaveCanvas(const Int_t th1f)
+void StackGEDOOT::SaveCanvas(const Int_t th1f, const Bool_t isLogY)
 {
+  // cd to upper pad to make it log or not
+  fOutTH1FStackPads[th1f]->cd(); // upper pad is current pad
+  fOutTH1FStackPads[th1f]->SetLogy(isLogY); //  set logy on this pad
+
   // Go back to the main canvas before saving
   fOutTH1FCanvases[th1f]->cd();    
 
@@ -205,10 +260,11 @@ void StackGEDOOT::SaveCanvas(const Int_t th1f)
   CMSLumi(fOutTH1FCanvases[th1f]); 
 
   // save image
-  fOutTH1FCanvases[th1f]->SaveAs(Form("%s/%s/%s.%s",fOutDir.Data(),fTH1FSubDMap[fTH1FNames[th1f]].Data(),fTH1FNames[th1f].Data(),Config::outtype.Data()));
+  fOutTH1FCanvases[th1f]->SaveAs(Form("%s/%s/%s/%s/%s.%s",fOutDir.Data(),fTH1FSubDMap[fTH1FNames[th1f]].Data(),
+				      Config::phosubdir.Data(),(isLogY?"log":"lin"),fTH1FNames[th1f].Data(),Config::outtype.Data()));
   
   fOutFile->cd();
-  fOutTH1FCanvases[th1f]->Write(Form("%s",fTH1FNames[th1f].Data()));
+  fOutTH1FCanvases[th1f]->Write(Form("%s",fTH1FNames[th1f].Data()),TObject::kWriteDelete);
 }
 
 
@@ -238,9 +294,9 @@ void StackGEDOOT::InitTH1FNamesAndSubDNames()
   }
 }
 
-void StackGEDOOT::InitSubDirs(const TString & dir)
+void StackGEDOOT::InitSubDirs()
 {
-  MakeSubDirs(fTH1FSubDMap,fOutDir,dir);
+  MakeSubDirs(fTH1FSubDMap,fOutDir,Config::phosubdir);
 }
 
 void StackGEDOOT::InitInputPlots() 
