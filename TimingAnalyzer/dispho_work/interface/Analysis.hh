@@ -52,6 +52,7 @@ public:
   void SaveTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
   void DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap);
+  void DumpTH1PhoNames(TH1Map & th1map, TStrMap & subdirmap);
   void DeleteTH1s(TH1Map & th1map);
   void DeleteTH2s(TH2Map & th2map);
 

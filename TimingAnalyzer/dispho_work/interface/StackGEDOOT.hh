@@ -24,6 +24,7 @@ public:
   StackGEDOOT(const TString & sample, const Bool_t isMC);
 
   void InitTH1FNamesAndSubDNames();
+  void InitSubDirs(const TString & dir);
   void InitInputPlots();
   void InitOutputLegends();
   void InitRatioPlots();

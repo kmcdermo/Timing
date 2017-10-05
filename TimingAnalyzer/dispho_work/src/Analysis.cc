@@ -338,7 +338,11 @@ void Analysis::OutputPhotonStandardPlots()
   MakeSubDirs(stdphoTH1SubMap,fOutDir);
   Analysis::MakeInclusiveTH1s(stdphoTH1Map,stdphoTH1SubMap);
   Analysis::SaveTH1s(stdphoTH1Map,stdphoTH1SubMap);
-  if (!fIsMC) Analysis::DumpTH1Names(stdphoTH1Map,stdphoTH1SubMap);
+  if (!fIsMC)
+  { 
+    Analysis::DumpTH1Names(stdphoTH1Map,stdphoTH1SubMap);
+    Analysis::DumpTH1PhoNames(stdphoTH1Map,stdphoTH1SubMap);
+  }
   Analysis::DeleteTH1s(stdphoTH1Map);
 }
 
@@ -347,7 +351,11 @@ void Analysis::OutputIsoPlots()
   MakeSubDirs(isoTH1SubMap,fOutDir);
   Analysis::MakeInclusiveTH1s(isoTH1Map,isoTH1SubMap);
   Analysis::SaveTH1s(isoTH1Map,isoTH1SubMap);
-  if (!fIsMC) Analysis::DumpTH1Names(isoTH1Map,isoTH1SubMap);
+  if (!fIsMC)
+  { 
+    Analysis::DumpTH1Names(stdphoTH1Map,stdphoTH1SubMap);
+    Analysis::DumpTH1PhoNames(stdphoTH1Map,stdphoTH1SubMap);
+  }
   Analysis::DeleteTH1s(isoTH1Map);
 }
 
@@ -443,15 +451,19 @@ void Analysis::MakeInclusiveTH2s(TH2Map & th2map, TStrMap & subdirmap)
 
 void Analysis::Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, const TString & name)
 {
-   TH1Map th1dmap; TStrMap th1dsubmap; TStrIntMap th1dbinmap;
-   Analysis::Project2Dto1D(hist2d,subdir2d,th1dmap,th1dsubmap,th1dbinmap);
-   Analysis::ProduceMeanHist(hist2d,subdir2d,th1dmap,th1dbinmap);
-   if (Config::saveTempHists) 
-   {
-     Analysis::SaveTH1s(th1dmap,th1dsubmap);
-     if (!fIsMC) Analysis::DumpTH1Names(th1dmap,th1dsubmap);
-   }
-   Analysis::DeleteTH1s(th1dmap);
+  TH1Map th1dmap; TStrMap th1dsubmap; TStrIntMap th1dbinmap;
+  Analysis::Project2Dto1D(hist2d,subdir2d,th1dmap,th1dsubmap,th1dbinmap);
+  Analysis::ProduceMeanHist(hist2d,subdir2d,th1dmap,th1dbinmap);
+  if (Config::saveTempHists) 
+  {
+    Analysis::SaveTH1s(th1dmap,th1dsubmap);
+    if (!fIsMC)
+    {
+      Analysis::DumpTH1Names(stdphoTH1Map,stdphoTH1SubMap);
+      Analysis::DumpTH1PhoNames(stdphoTH1Map,stdphoTH1SubMap);
+    }
+  }
+  Analysis::DeleteTH1s(th1dmap);
 }
 
 void Analysis::Project2Dto1D(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrMap & subdir1dmap, TStrIntMap & th1dbinmap) 
@@ -499,8 +511,8 @@ void Analysis::Project2Dto1D(const TH2F * hist2d, const TString & subdir2d, TH1M
 void Analysis::ProduceMeanHist(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrIntMap & th1dbinmap) 
 {
   // initialize new mean/sigma histograms
-  const TString title = Form("%s_mean",hist2d->GetName());
-  TH1F * outhist_mean = new TH1F(title.Data(),"",hist2d->GetNbinsX(),hist2d->GetXaxis()->GetXmin(),hist2d->GetXaxis()->GetXmax());
+  const TString name = Form("%s_mean",hist2d->GetName());
+  TH1F * outhist_mean = new TH1F(name.Data(),"",hist2d->GetNbinsX(),hist2d->GetXaxis()->GetXmin(),hist2d->GetXaxis()->GetXmax());
   outhist_mean->GetXaxis()->SetTitle(hist2d->GetXaxis()->GetTitle());
   outhist_mean->GetYaxis()->SetTitle(Form("Mean of %s",hist2d->GetYaxis()->GetTitle()));
   outhist_mean->SetLineColor(fColor);
@@ -521,10 +533,8 @@ void Analysis::ProduceMeanHist(const TH2F * hist2d, const TString & subdir2d, TH
   outhist_mean->Write(outhist_mean->GetName(),TObject::kWriteDelete);
   if (!fIsMC)
   {
-    if (!(title.Contains("_GED_",TString::kExact) || title.Contains("_OOT_",TString::kExact)))
-    {
-      fTH1PhoDump << title.Data() << " " << subdir2d.Data() << std::endl;
-    }
+    fTH1Dump << name.Data() << " " << subdir2d.Data() << std::endl;
+    if (name.Contains("GED",TString::kExact)) fTH1PhoDump << name.Data() << " " << subdir2d.Data() << std::endl;
   }
 
   if (Config::saveHists)
@@ -549,11 +559,8 @@ TH1F * Analysis::MakeTH1Plot(const TString & hname, const TString & htitle, cons
 {
   TH1F * hist = new TH1F(hname.Data(),htitle.Data(),nbinsx,xlow,xhigh);
   hist->SetLineColor(kBlack);
-  if (fIsMC)
-  {
-    hist->SetFillColor(fColor);
-    hist->SetMarkerColor(fColor);
-  }
+  hist->SetMarkerColor(fColor);
+  if (fIsMC) hist->SetFillColor(fColor);
   hist->GetXaxis()->SetTitle(xtitle.Data());
   hist->GetYaxis()->SetTitle(ytitle.Data());
   hist->GetYaxis()->SetTitleOffset(hist->GetYaxis()->GetTitleOffset() * Config::TitleFF);
@@ -656,6 +663,14 @@ void Analysis::DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap)
   for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
   { 
     fTH1Dump << mapiter->first.Data() << " " << subdirmap[mapiter->first].Data() << std::endl;
+  }
+}
+
+void Analysis::DumpTH1PhoNames(TH1Map & th1map, TStrMap & subdirmap) 
+{
+  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
+  { 
+    if (mapiter->first.Contains("GED")) fTH1PhoDump << mapiter->first.Data() << " " << subdirmap[mapiter->first].Data() << std::endl;
   }
 }
 

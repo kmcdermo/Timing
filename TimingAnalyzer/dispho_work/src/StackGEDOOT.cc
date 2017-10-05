@@ -11,11 +11,13 @@ StackGEDOOT::StackGEDOOT(const TString & sample, const Bool_t isMC) : fSample(sa
   CheckValidFile(fInFile,filename);
 
   // output data members
-  fOutFile = new TFile(Form("%s/stackpho_canvases.root",fOutDir.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
+  fOutFile = new TFile(Form("%s/stackplots_canvases.root",fOutDir.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
 
   // Read in names of plots to be stacked
   StackGEDOOT::InitTH1FNamesAndSubDNames();
-  
+  // Make subdirs as needed
+  StackGEDOOT::InitSubDirs("gedootstacks");
+
   // with all that defined, initialize everything in constructor
   StackGEDOOT::InitInputPlots();
   StackGEDOOT::InitOutputLegends();
@@ -51,45 +53,50 @@ void StackGEDOOT::DoStacks()
 
 void StackGEDOOT::MakeStackGEDOOT()
 {
-  // common denom
-  const TString dropGED = "GED ";
-  const TString dropOOT = "OOT ";
-  const Ssiz_t  lengthGED = dropGED.Length();
-  const Ssiz_t  lengthOOT = dropOOT.Length();
-
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++) //th1f hists
   {
+    const Bool_t isV = (fTH1FNames[th1f].Contains("EB_v_",TString::kExact) || fTH1FNames[th1f].Contains("EE_v_",TString::kExact));
+
     // GED first
     TString ytitleGED = fInGEDTH1FHists[th1f]->GetYaxis()->GetTitle();
-    const Ssiz_t startposGED = ytitleGED.Index(dropGED);
-    ytitleGED.Remove(startposGED,lengthGED);
+    ytitleGED.ReplaceAll("GED ","");
     fInGEDTH1FHists[th1f]->GetYaxis()->SetTitle(ytitleGED.Data());
     fInGEDTH1FHists[th1f]->SetLineColor(kRed);
     fInGEDTH1FHists[th1f]->SetMarkerColor(kRed);
+    // scale to unity
+    if (!isV) fInGEDTH1FHists[th1f]->Scale(1.f/fInGEDTH1FHists[th1f]->Integral());
+    // add to legend
     fTH1FLegends[th1f]->AddEntry(fInGEDTH1FHists[th1f],"GED","epl");
 
     // OOT first
     TString ytitleOOT = fInOOTTH1FHists[th1f]->GetYaxis()->GetTitle();
-    const Ssiz_t startposOOT = ytitleOOT.Index(dropOOT);
-    ytitleOOT.Remove(startposOOT,lengthOOT);
+    ytitleOOT.ReplaceAll("OOT ","");
     fInOOTTH1FHists[th1f]->GetYaxis()->SetTitle(ytitleOOT.Data());    
     fInOOTTH1FHists[th1f]->SetLineColor(kBlue);
     fInOOTTH1FHists[th1f]->SetMarkerColor(kBlue);
+    // scale to unity
+    if (!isV) fInOOTTH1FHists[th1f]->Scale(1.f/fInOOTTH1FHists[th1f]->Integral());
+    // add to legend
     fTH1FLegends[th1f]->AddEntry(fInOOTTH1FHists[th1f],"OOT","epl");
   } // end loop over th1f plots
 }
 
 void StackGEDOOT::MakeRatioPlots()
 {
+  // vs something : ratio is 1 - OOT/GED == (GED - OOT) / GED
+  // else, ratio is OOT/GED
+
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   { 
+    const Bool_t isV = (fTH1FNames[th1f].Contains("EB_v_",TString::kExact) || fTH1FNames[th1f].Contains("EE_v_",TString::kExact));
+
     // ratio value plot
-    fOutRatioTH1FHists[th1f] = (TH1F*)fInGEDTH1FHists[th1f]->Clone();
-    fOutRatioTH1FHists[th1f]->Add(fInOOTTH1FHists[th1f],-1);  
-    fOutRatioTH1FHists[th1f]->Divide(fInGEDTH1FHists[th1f]);  
-    fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitle("1-(OOT/GED)");
-    fOutRatioTH1FHists[th1f]->SetMinimum(-2.f); // Define Y ..
-    fOutRatioTH1FHists[th1f]->SetMaximum( 2.f); // .. range
+    fOutRatioTH1FHists[th1f] = (TH1F*)(isV?fInGEDTH1FHists[th1f]->Clone():fInOOTTH1FHists[th1f]);
+    if (isV) fOutRatioTH1FHists[th1f]->Add(fInOOTTH1FHists[th1f],-1);  
+    fOutRatioTH1FHists[th1f]->Divide(fInGEDTH1FHists[th1f]);
+    fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitle((isV?"1-(OOT/GED)":"OOT/GED"));
+    fOutRatioTH1FHists[th1f]->SetMinimum(isV?-2.f:0.5); // Define Y ..
+    fOutRatioTH1FHists[th1f]->SetMaximum(isV? 2.f:1.5); // .. range
     fOutRatioTH1FHists[th1f]->SetLineColor(kBlack);
     fOutRatioTH1FHists[th1f]->SetMarkerColor(kBlack);
     fOutRatioTH1FHists[th1f]->SetStats(0);      // No statistics on lower plot
@@ -176,11 +183,13 @@ void StackGEDOOT::DrawLowerPad(const Int_t th1f)
 
 void StackGEDOOT::SetLines(const Int_t th1f)
 {
-  // have line held at ratio of 1.0 over whole x range
+  const Bool_t isV = (fTH1FNames[th1f].Contains("EB_v_",TString::kExact) || fTH1FNames[th1f].Contains("EE_v_",TString::kExact));
+
+  // have line held at ratio of 1.0 or 0.0 over whole x range
   fOutTH1FRatioLines[th1f]->SetX1(fOutRatioTH1FHists[th1f]->GetXaxis()->GetXmin());
   fOutTH1FRatioLines[th1f]->SetX2(fOutRatioTH1FHists[th1f]->GetXaxis()->GetXmax());
-  fOutTH1FRatioLines[th1f]->SetY1(0.0);
-  fOutTH1FRatioLines[th1f]->SetY2(0.0);
+  fOutTH1FRatioLines[th1f]->SetY1(isV?0.f:1.f);
+  fOutTH1FRatioLines[th1f]->SetY2(isV?0.f:1.f);
 
   // customize appearance
   fOutTH1FRatioLines[th1f]->SetLineColor(kRed);
@@ -229,33 +238,35 @@ void StackGEDOOT::InitTH1FNamesAndSubDNames()
   }
 }
 
+void StackGEDOOT::InitSubDirs(const TString & dir)
+{
+  MakeSubDirs(fTH1FSubDMap,fOutDir,dir);
+}
+
 void StackGEDOOT::InitInputPlots() 
 {
-  // common denom
-  const TString marker = "_v_nvtx_mean";
-  const Ssiz_t  length = marker.Length();
-  const TString addged = "_ged"+marker;
-  const TString addoot = "_oot"+marker;
+  // GED as the base
+  const TString drop = "GED";
+  const TString swap = "OOT";
 
   // init input th1f hists
   fInGEDTH1FHists.resize(fNTH1F);
   fInOOTTH1FHists.resize(fNTH1F);
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   {
-    // common to each name
-    const Ssiz_t startpos = fTH1FNames[th1f].Index(marker);
-    
     // GED First
-    TString ged = fTH1FNames[th1f];
-    ged.Replace(startpos,length,addged);
-    fInGEDTH1FHists[th1f] = (TH1F*)fInFile->Get(Form("%s",ged.Data()));	
-    CheckValidTH1F(fInGEDTH1FHists[th1f],ged,fInFile->GetName());
+    fInGEDTH1FHists[th1f] = (TH1F*)fInFile->Get(Form("%s",fTH1FNames[th1f].Data()));	
+    CheckValidTH1F(fInGEDTH1FHists[th1f],fTH1FNames[th1f],fInFile->GetName());
+
+    // Replace GED with OOT...
+    fTH1FNames[th1f].ReplaceAll(drop,swap);
 
     // OOT Second
-    TString oot = fTH1FNames[th1f];
-    oot.Replace(startpos,length,addoot);
-    fInOOTTH1FHists[th1f] = (TH1F*)fInFile->Get(Form("%s",oot.Data()));	
-    CheckValidTH1F(fInOOTTH1FHists[th1f],oot,fInFile->GetName());
+    fInOOTTH1FHists[th1f] = (TH1F*)fInFile->Get(Form("%s",fTH1FNames[th1f].Data()));	
+    CheckValidTH1F(fInOOTTH1FHists[th1f],fTH1FNames[th1f],fInFile->GetName());
+
+    // Finally, drop OOT from name
+    fTH1FNames[th1f].ReplaceAll(swap+"_",""); // remove trailing "_"
   }
 }
 

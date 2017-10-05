@@ -20,7 +20,7 @@ StackDataMC::StackDataMC()
   fNMC   = fMCNames.size();
 
   // output data members
-  fOutDir = Form("%s/stackedplots",Config::outdir.Data()); // where to put output stack plots 
+  fOutDir = Form("%s/datamcstacks",Config::outdir.Data()); // where to put output stack plots 
   MakeOutDir(fOutDir); // make output directory 
   fOutFile = new TFile(Form("%s/stackplots_canvases.root",fOutDir.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
 
