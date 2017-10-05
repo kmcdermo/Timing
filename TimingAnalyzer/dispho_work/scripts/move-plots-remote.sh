@@ -3,7 +3,7 @@
 dir=${1:-output}
 
 host=kmcdermo@lxplus.cern.ch
-whost=${host}":~www/"
+whost=${host}":/afs/cern.ch/user/k/kmcdermo/www/"
 echo "Moving plots, root files, and text files remotely to ${whost}"
 scp -r ${dir} ${whost}
 
