@@ -64,7 +64,7 @@ void StackGEDOOT::MakeStackGEDOOT()
     fInGEDTH1FHists[th1f]->SetLineColor(kRed);
     fInGEDTH1FHists[th1f]->SetMarkerColor(kRed);
     // scale to unity
-    if (!isV) fInGEDTH1FHists[th1f]->Scale(1.f/fInGEDTH1FHists[th1f]->Integral());
+    if (!isV && fInGEDTH1FHists[th1f]->Integral() > 0) fInGEDTH1FHists[th1f]->Scale(1.f/fInGEDTH1FHists[th1f]->Integral());
     // add to legend
     fTH1FLegends[th1f]->AddEntry(fInGEDTH1FHists[th1f],"GED","epl");
 
@@ -75,7 +75,7 @@ void StackGEDOOT::MakeStackGEDOOT()
     fInOOTTH1FHists[th1f]->SetLineColor(kBlue);
     fInOOTTH1FHists[th1f]->SetMarkerColor(kBlue);
     // scale to unity
-    if (!isV) fInOOTTH1FHists[th1f]->Scale(1.f/fInOOTTH1FHists[th1f]->Integral());
+    if (!isV && fInOOTTH1FHists[th1f]->Integral() > 0) fInOOTTH1FHists[th1f]->Scale(1.f/fInOOTTH1FHists[th1f]->Integral());
     // add to legend
     fTH1FLegends[th1f]->AddEntry(fInOOTTH1FHists[th1f],"OOT","epl");
   } // end loop over th1f plots
@@ -91,7 +91,7 @@ void StackGEDOOT::MakeRatioPlots()
     const Bool_t isV = (fTH1FNames[th1f].Contains("EB_v_",TString::kExact) || fTH1FNames[th1f].Contains("EE_v_",TString::kExact));
 
     // ratio value plot
-    fOutRatioTH1FHists[th1f] = (TH1F*)(isV?fInGEDTH1FHists[th1f]->Clone():fInOOTTH1FHists[th1f]);
+    fOutRatioTH1FHists[th1f] = (TH1F*)(isV?fInGEDTH1FHists[th1f]:fInOOTTH1FHists[th1f])->Clone(Form("%s_ratio",fTH1FNames[th1f].Data()));
     if (isV) fOutRatioTH1FHists[th1f]->Add(fInOOTTH1FHists[th1f],-1);  
     fOutRatioTH1FHists[th1f]->Divide(fInGEDTH1FHists[th1f]);
     fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitle((isV?"1-(OOT/GED)":"OOT/GED"));
@@ -174,7 +174,7 @@ Float_t StackGEDOOT::GetMinimum(const Int_t th1f)
   for (Int_t ibin = 1; ibin <= fInGEDTH1FHists[th1f]->GetNbinsX(); ibin++)
   {
     const Float_t tmpmin = fInGEDTH1FHists[th1f]->GetBinContent(ibin);
-    if ((tmpmin < gedmin) && (tmpmin != 0.f))
+    if ((tmpmin < gedmin) && (tmpmin != 0))
     {
       gedmin    = tmpmin;
       newgedmin = true;
@@ -187,7 +187,7 @@ Float_t StackGEDOOT::GetMinimum(const Int_t th1f)
   for (Int_t ibin = 1; ibin <= fInOOTTH1FHists[th1f]->GetNbinsX(); ibin++)
   {
     const Float_t tmpmin = fInOOTTH1FHists[th1f]->GetBinContent(ibin);
-    if ((tmpmin < ootmin) && (tmpmin != 0.f))
+    if ((tmpmin < ootmin) && (tmpmin != 0))
     {
       ootmin    = tmpmin;
       newootmin = true;
@@ -197,7 +197,9 @@ Float_t StackGEDOOT::GetMinimum(const Int_t th1f)
   Float_t min = 0.f;
   if (newgedmin || newootmin)
   {
-    min = (newgedmin<newootmin?newgedmin:newootmin);
+    if      ( newgedmin &&  newootmin) min = (gedmin < ootmin ? gedmin : ootmin);
+    else if ( newgedmin && !newootmin) min = gedmin; 
+    else if (!newgedmin &&  newootmin) min = ootmin; 
   }
   return min;
 }
@@ -277,9 +279,11 @@ void StackGEDOOT::InitTH1FNamesAndSubDNames()
 
   TString plotname; TString subdir;
 
+  const TString drop = "_GED"; // use bare name in subdir
   while (plotstoread >> plotname >> subdir) 
   {
     fTH1FNames.push_back(plotname);
+    plotname.ReplaceAll(drop,"");
     fTH1FSubDMap[plotname] = subdir;
   }
   plotstoread.close();
@@ -322,7 +326,7 @@ void StackGEDOOT::InitInputPlots()
     CheckValidTH1F(fInOOTTH1FHists[th1f],fTH1FNames[th1f],fInFile->GetName());
 
     // Finally, drop OOT from name
-    fTH1FNames[th1f].ReplaceAll(swap+"_",""); // remove trailing "_"
+    fTH1FNames[th1f].ReplaceAll("_"+swap,""); // remove trailing "_"
   }
 }
 
@@ -331,7 +335,7 @@ void StackGEDOOT::InitOutputLegends()
   fTH1FLegends.resize(fNTH1F);
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   {
-    fTH1FLegends[th1f] = new TLegend(0.682,0.7,0.825,0.92);
+    fTH1FLegends[th1f] = new TLegend(0.75,0.8,0.83,0.92);
     fTH1FLegends[th1f]->SetBorderSize(1);
     fTH1FLegends[th1f]->SetLineColor(kBlack);
   }

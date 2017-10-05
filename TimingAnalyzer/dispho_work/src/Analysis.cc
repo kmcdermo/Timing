@@ -353,8 +353,8 @@ void Analysis::OutputIsoPlots()
   Analysis::SaveTH1s(isoTH1Map,isoTH1SubMap);
   if (!fIsMC)
   { 
-    Analysis::DumpTH1Names(stdphoTH1Map,stdphoTH1SubMap);
-    Analysis::DumpTH1PhoNames(stdphoTH1Map,stdphoTH1SubMap);
+    Analysis::DumpTH1Names(isoTH1Map,isoTH1SubMap);
+    Analysis::DumpTH1PhoNames(isoTH1Map,isoTH1SubMap);
   }
   Analysis::DeleteTH1s(isoTH1Map);
 }
