@@ -23,6 +23,7 @@
 
 // DataFormats
 #include "DataFormats/Common/interface/ValueMap.h"
+#include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
@@ -165,6 +166,7 @@ struct phoStruct
   bool isOOT_;
   bool isEB_;
   bool isHLT_;
+  bool isTrk_;
   int  ID_;
 
   int  isSignal_;
@@ -203,7 +205,8 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void InitializePhoBranches();
   void InitializePhoBranch(phoStruct & phoBranch);
   void SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, const uiiumap & recHitMap,
-		    const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE);
+		    const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE,
+		    const edm::Handle<std::vector<reco::Track> > & tracksH);
   void InitializePhoBranchesMC();
   void InitializePhoBranchMC(phoStruct & phoBranch);
   void SetPhoBranchMC(const int iph, const oot::Photon& photon, phoStruct& phoBranch, 
@@ -244,6 +247,8 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // dR matching criteria
   const float dRmin;
   const float pTres;
+  const float trackdRmin;
+  const float trackpTmin;
 
   // triggers
   const std::string inputPaths;
@@ -256,6 +261,10 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const edm::InputTag triggerObjectsTag;
   edm::EDGetTokenT<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsToken;
   trigObjVecMap triggerObjectsByFilterMap; // first index is filter label, second is trigger objects
+
+  // Tracks
+  const edm::InputTag tracksTag;
+  edm::EDGetTokenT<std::vector<reco::Track> > tracksToken;
 
   // vertices
   const edm::InputTag verticesTag;

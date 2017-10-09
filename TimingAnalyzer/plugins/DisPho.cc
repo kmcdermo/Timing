@@ -25,12 +25,17 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // matching criteria
   dRmin(iConfig.existsAs<double>("dRmin") ? iConfig.getParameter<double>("dRmin") : 0.4),
   pTres(iConfig.existsAs<double>("pTres") ? iConfig.getParameter<double>("pTres") : 0.5),
+  trackdRmin(iConfig.existsAs<double>("trackdRmin") ? iConfig.getParameter<double>("trackdRmin") : 0.2),
+  trackpTmin(iConfig.existsAs<double>("trackpTmin") ? iConfig.getParameter<double>("trackpTmin") : 5.f),
 
   // triggers
   inputPaths       (iConfig.existsAs<std::string>("inputPaths")   ? iConfig.getParameter<std::string>("inputPaths") : ""),
   inputFilters     (iConfig.existsAs<std::string>("inputFilters") ? iConfig.getParameter<std::string>("inputFilters") : ""),
   triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
   triggerObjectsTag(iConfig.getParameter<edm::InputTag>("triggerObjects")),
+
+  // tracks
+  tracksTag(iConfig.getParameter<edm::InputTag>("tracks")),
 
   // vertices
   verticesTag(iConfig.getParameter<edm::InputTag>("vertices")),
@@ -73,7 +78,10 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // read in from a stream the hlt objects/labels to match to
   oot::ReadInFilterNames(inputFilters,filterNames,triggerObjectsByFilterMap);
 
-  //vertex
+  // tracks 
+  tracksToken = consumes<std::vector<reco::Track> > (tracksTag);
+
+  // vertices
   verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
 
   // rhos
@@ -126,6 +134,10 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   edm::Handle<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsH;
   iEvent.getByToken(triggerObjectsToken, triggerObjectsH);
+
+  // TRACKS
+  edm::Handle<std::vector<reco::Track> > tracksH;
+  iEvent.getByToken(tracksToken, tracksH);
 
   // VERTICES
   edm::Handle<std::vector<reco::Vertex> > verticesH;
@@ -413,10 +425,10 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (photonsH.isValid() || ootPhotonsH.isValid()) // standard handle check
   {
     nphotons = photons.size();
-    if (nphotons > 0) DisPho::SetPhoBranch(photons[0],phoBranch0,recHitMap,recHitsEB,recHitsEE);
-    if (nphotons > 1) DisPho::SetPhoBranch(photons[1],phoBranch1,recHitMap,recHitsEB,recHitsEE);
-    if (nphotons > 2) DisPho::SetPhoBranch(photons[2],phoBranch2,recHitMap,recHitsEB,recHitsEE);
-    if (nphotons > 3) DisPho::SetPhoBranch(photons[3],phoBranch3,recHitMap,recHitsEB,recHitsEE);
+    if (nphotons > 0) DisPho::SetPhoBranch(photons[0],phoBranch0,recHitMap,recHitsEB,recHitsEE,tracksH);
+    if (nphotons > 1) DisPho::SetPhoBranch(photons[1],phoBranch1,recHitMap,recHitsEB,recHitsEE,tracksH);
+    if (nphotons > 2) DisPho::SetPhoBranch(photons[2],phoBranch2,recHitMap,recHitsEB,recHitsEE,tracksH);
+    if (nphotons > 3) DisPho::SetPhoBranch(photons[3],phoBranch3,recHitMap,recHitsEB,recHitsEE,tracksH);
 
     if (isMC)
     {
@@ -709,8 +721,6 @@ void DisPho::InitializePhoBranch(phoStruct & phoBranch)
 
   phoBranch.HadTowOE_ = -9999.f;
   phoBranch.r9_ = -9999.f;
-//   phoBranch.HadronOE_ = -9999.f;
-//   phoBranch.fullr9_ = -9999.f;
 
   phoBranch.ChgHadIso_ = -9999.f;
   phoBranch.NeuHadIso_ = -9999.f;
@@ -734,11 +744,13 @@ void DisPho::InitializePhoBranch(phoStruct & phoBranch)
   phoBranch.isOOT_ = false;
   phoBranch.isEB_ = false;
   phoBranch.isHLT_ = false;
+  phoBranch.isTrk_ = false;
   phoBranch.ID_ = -1;
 }
 
 void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, const uiiumap & recHitMap,
-			  const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE)
+			  const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE,
+			  const edm::Handle<std::vector<reco::Track> > & tracksH)
 {
   // basic kinematics
   const pat::Photon & pho = photon.photon(); 
@@ -758,8 +770,6 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   // ID-like variables
   phoBranch.HadTowOE_  = pho.hadTowOverEm(); // used in ID + trigger
   phoBranch.r9_        = pho.r9(); // used in slimming in PAT + trigger
-//   phoBranch.HadronOE_  = pho.hadronicOverEm(); 
-//   phoBranch.fullr9_    = pho.full5x5_r9();
 
   phoBranch.ChgHadIso_ = std::max(pho.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
   phoBranch.NeuHadIso_ = std::max(pho.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);
@@ -833,6 +843,9 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   const std::string filter = "hltEG60R9Id90CaloIdLIsoLDisplacedIdFilter";
   phoBranch.isHLT_ = (isHLTMatched.count(filter.c_str()) ? isHLTMatched[filter.c_str()] : false);
 
+  // check for simple track veto
+  phoBranch.isTrk_ = oot::TrackToObjectMatching(tracksH,photon,trackpTmin,trackdRmin);
+  
   // 0 --> did not pass anything, 1 --> loose pass, 2 --> medium pass, 3 --> tight pass
   if      (pho.photonID("tight"))  {phoBranch.ID_ = 3;}
   else if (pho.photonID("medium")) {phoBranch.ID_ = 2;}
@@ -1067,8 +1080,6 @@ void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
 
   tree->Branch(Form("phoHadTowOE_%i",i), &phoBranch.HadTowOE_, Form("phoHadTowOE_%i/F",i));
   tree->Branch(Form("phor9_%i",i), &phoBranch.r9_, Form("phor9_%i/F",i));
-  //  tree->Branch(Form("phoHadronOE_%i",i), &phoBranch.HadronOE_, Form("phoHadronOE_%i/F",i));
-  //  tree->Branch(Form("phofullr9_%i",i), &phoBranch.fullr9_, Form("phofullr9_%i/F",i));
 
   tree->Branch(Form("phoChgHadIso_%i",i), &phoBranch.ChgHadIso_, Form("phoChgHadIso_%i/F",i));
   tree->Branch(Form("phoNeuHadIso_%i",i), &phoBranch.NeuHadIso_, Form("phoNeuHadIso_%i/F",i));
@@ -1092,6 +1103,7 @@ void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
   tree->Branch(Form("phoisOOT_%i",i), &phoBranch.isOOT_, Form("phoisOOT_%i/O",i));
   tree->Branch(Form("phoisEB_%i",i), &phoBranch.isEB_, Form("phoisEB_%i/O",i));
   tree->Branch(Form("phoisHLT_%i",i), &phoBranch.isHLT_, Form("phoisHLT_%i/O",i));
+  tree->Branch(Form("phoisTrk_%i",i), &phoBranch.isTrk_, Form("phoisTrk_%i/O",i));
   tree->Branch(Form("phoID_%i",i), &phoBranch.ID_, Form("phoID_%i/I",i));
 }
 

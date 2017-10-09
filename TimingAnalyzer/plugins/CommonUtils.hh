@@ -233,8 +233,6 @@ namespace oot
     {
       for (const auto & track : *tracksH)
       {
-	std::cout << "HERE" << std::endl;
-
 	if (track.pt() < trackpTmin) continue;
 	if (Config::deltaR(obj.phi(),obj.eta(),track.phi(),track.eta()) < trackdRmin)
 	{

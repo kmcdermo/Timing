@@ -29,6 +29,8 @@ options.register('applyPhGood',False,VarParsing.multiplicity.singleton,VarParsin
 ## matching cuts
 options.register('dRmin',0.4,VarParsing.multiplicity.singleton,VarParsing.varType.float,'dR minimum cut');
 options.register('pTres',0.5,VarParsing.multiplicity.singleton,VarParsing.varType.float,'pT resolution cut');
+options.register('trackdRmin',0.2,VarParsing.multiplicity.singleton,VarParsing.varType.float,'track dR minimum cut');
+options.register('trackpTmin',5.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'track pT minimum cut');
 
 ## trigger input
 options.register('inputPaths','/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input signal paths');
@@ -44,7 +46,7 @@ options.register('isHVDS',False,VarParsing.multiplicity.singleton,VarParsing.var
 options.register('isBkg',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate Background MC');
 
 ## GT to be used
-options.register('globalTag','92X_dataRun2_Prompt_v4',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
+options.register('globalTag','92X_dataRun2_Prompt_v8',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
 
 ## do a demo run over only 1k events
 options.register('demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to run over only 1k events');
@@ -82,6 +84,8 @@ print "applyPhGood    : ",options.applyPhGood
 print "        -- Matching --"
 print "dRmin          : ",options.dRmin
 print "pTres          : ",options.pTres
+print "trackdRmin     : ",options.trackdRmin
+print "trackpTmin     : ",options.trackpTmin
 print "        -- Trigger --"
 print "inputPaths     : ",options.inputPaths
 print "inputFilters   : ",options.inputFilters
@@ -120,7 +124,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		# test GMSB 2016, GT: 92X_mcRun2_asymptotic_v2
 		#'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_10.root'
 		# test HVDS 2016, GT: 92X_mcRun2_asymptotic_v2
-		'file:/afs/cern.ch/user/k/kmcdermo/private/dispho/Analysis/CMSSW_9_2_8/src/Timing/GEN_SIM/HVDS/tmp/step3.root'
+		#'file:/afs/cern.ch/user/k/kmcdermo/private/dispho/Analysis/CMSSW_9_2_8/src/Timing/GEN_SIM/HVDS/tmp/step3.root'
 		# 2017A-v1, GT: 92X_dataRun2_Prompt_v4
 		#'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v1/000/295/977/00000/9CAC61AF-094A-E711-BA62-02163E0138FA.root',
 		# 2017A-v2, GT: 92X_dataRun2_Prompt_v4
@@ -138,7 +142,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		# 2017C-v3, GT: 92X_dataRun2_Prompt_v8
 		#'/store/data/Run2017C/SinglePhoton/MINIAOD/PromptReco-v3/000/300/777/00000/18694619-C67E-E711-9CBF-02163E01A6D1.root',
 		# 2017D-v1, GT: 92X_dataRun2_Prompt_v8 
-		#'/store/data/Run2017D/SinglePhoton/MINIAOD/PromptReco-v1/000/302/042/00000/18838DB3-698F-E711-9D1B-02163E01192A.root',
+		'/store/data/Run2017D/SinglePhoton/MINIAOD/PromptReco-v1/000/302/042/00000/18838DB3-698F-E711-9D1B-02163E01192A.root',
 		# 2017E-v1, GT: 92X_dataRun2_Prompt_v9
 		#'/store/data/Run2017E/SinglePhoton/MINIAOD/PromptReco-v1/000/303/819/00000/F8E8E7B5-68A2-E711-9655-02163E0138E0.root',
 		))
@@ -156,8 +160,13 @@ process.GlobalTag.globaltag = options.globalTag
 process.TFileService = cms.Service("TFileService", 
 		                   fileName = cms.string(options.outputFileName))
 
+## pick up ootPhotons if they exist
 if options.useOOTPhotons : ootPhotonsTag = cms.InputTag("slimmedOOTPhotons")
 else                     : ootPhotonsTag = cms.InputTag("")
+
+## generate track collection at miniAOD
+from PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi import unpackedTracksAndVertices
+process.unpackedTracksAndVertices = unpackedTracksAndVertices.clone()
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("DisPho",
@@ -182,11 +191,15 @@ process.tree = cms.EDAnalyzer("DisPho",
    ## matched criteria
    dRmin = cms.double(options.dRmin),
    pTres = cms.double(options.pTres),
+   trackdRmin = cms.double(options.trackdRmin),
+   trackpTmin = cms.double(options.trackpTmin),
    ## triggers
    inputPaths     = cms.string(options.inputPaths),
    inputFilters   = cms.string(options.inputFilters),
    triggerResults = cms.InputTag("TriggerResults", "", "HLT"),
    triggerObjects = cms.InputTag("slimmedPatTrigger"),
+   ## tracks
+   tracks = cms.InputTag("unpackedTracksAndVertices"),
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## rho
@@ -211,4 +224,4 @@ process.tree = cms.EDAnalyzer("DisPho",
 )
 
 # Set up the path
-process.treePath = cms.Path(process.tree)
+process.treePath = cms.Path(process.unpackedTracksAndVertices + process.tree)

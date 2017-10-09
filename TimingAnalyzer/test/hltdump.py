@@ -118,11 +118,14 @@ process.GlobalTag.globaltag = options.globalTag
 process.TFileService = cms.Service("TFileService", 
 		                   fileName = cms.string(options.outputFileName))
 
-if options.useOOTPhotons : ootPhotonsTag = cms.InputTag("slimmedOOTPhotons")
-else                     : ootPhotonsTag = cms.InputTag("")
+if   options.useOOTPhotons : ootPhotonsTag = cms.InputTag("slimmedOOTPhotons")
+else                       : ootPhotonsTag = cms.InputTag("")
 
 # make track collection
-process.load('PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi')
+#process.load('PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi')
+
+from PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi import unpackedTracksAndVertices
+process.unpackedTracksAndVertices = unpackedTracksAndVertices.clone()
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("HLTDump",
@@ -148,8 +151,8 @@ process.tree = cms.EDAnalyzer("HLTDump",
    ## jets			    	
    jets = cms.InputTag("slimmedJets"),
    ## photons		
-   photons        = cms.InputTag("slimmedPhotons"),
-   ootPhotons     = ootPhotonsTag,
+   photons    = cms.InputTag("slimmedPhotons"),
+   ootPhotons = ootPhotonsTag,
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
@@ -158,4 +161,4 @@ process.tree = cms.EDAnalyzer("HLTDump",
 )
 
 # Set up the path
-process.treePath = cms.Path(process.tree)
+process.treePath = cms.Path(process.unpackedTracksAndVertices + process.tree)
