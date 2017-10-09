@@ -77,10 +77,10 @@ def main():
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
 
-        config.Data.inputDataset     = None
-        config.Data.lumiMask         = inputDir+inputJSON
-        config.Data.splitting        = 'EventAwareLumiBased'
-        config.Data.unitsPerJob      = 1000000
+        config.Data.inputDataset = None
+        config.Data.lumiMask     = inputDir+inputJSON
+        config.Data.splitting    = 'EventAwareLumiBased'
+        config.Data.unitsPerJob  = 1000000
 
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
@@ -96,7 +96,7 @@ def main():
             ['/SinglePhoton/Run2017C-PromptReco-v2/MINIAOD', '92X_dataRun2_Prompt_v7', 'True'],
             ['/SinglePhoton/Run2017C-PromptReco-v3/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
             ['/SinglePhoton/Run2017D-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
-#            ['/SinglePhoton/Run2017E-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v9', 'True'],
+            ['/SinglePhoton/Run2017E-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v9', 'True'],
             ]
  
         for inDO in inputDataAndOpts:

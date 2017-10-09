@@ -25,7 +25,7 @@ def getOptions():
 
     parser.add_option('-w', '--workArea',
                       dest = 'workArea',
-                      default = '',
+                      default = 'multicrab_hltdump',
                       help = "work area directory (only if CMD != 'submit')",
                       metavar = 'WAD')
 
@@ -57,39 +57,39 @@ def main():
     # The submit command needs special treatment.
     if options.crabCmd == 'submit':
 
+        # External files needed by CRAB
+        inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
+        inputPaths   = 'HLTpaths.txt'
+        inputFilters = 'HLTfilters.txt'
+        inputJSON    = 'golden2017.json'
+
         #--------------------------------------------------------
         # This is the base config:
         #--------------------------------------------------------
         from CRABClient.UserUtilities import config
         config = config()
 
+        config.General.workArea    = options.workArea
         config.General.requestName = None
-        config.General.workArea    = 'multicrab_hltdump'
 
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'hltdump.py'
         config.JobType.pyCfgParams = None
-        config.JobType.inputFiles  = [
-            '/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt',
-            '/afs/cern.ch/user/k/kmcdermo/public/input/HLTfilters.txt'
-            ]
+        config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
 
-        config.Data.inputDataset     = None
-        config.Data.lumiMask         = 'golden2017.json'
-        config.Data.splitting        = 'EventAwareLumiBased'
-        config.Data.unitsPerJob      = 1000000
+        config.Data.inputDataset = None
+        config.Data.lumiMask     = inputDir+inputJSON
+        config.Data.splitting    = 'EventAwareLumiBased'
+        config.Data.unitsPerJob  = 1000000
+
         config.Data.outputDatasetTag = None
-
-        config.Data.publication   = False
-        config.Site.storageSite   = 'T2_CH_CERN'
-        config.Data.outLFNDirBase = '/store/group/phys_exotica/displacedPhotons/'
+        config.Data.publication      = False
+        config.Site.storageSite      = 'T2_CH_CERN'
+        config.Data.outLFNDirBase    = '/store/group/phys_exotica/displacedPhotons/'
         #--------------------------------------------------------
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/SinglePhoton/Run2017A-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v4', 'False'],
-            ['/SinglePhoton/Run2017A-PromptReco-v2/MINIAOD', '92X_dataRun2_Prompt_v4', 'False'],
-            ['/SinglePhoton/Run2017A-PromptReco-v3/MINIAOD', '92X_dataRun2_Prompt_v4', 'False'],
             ['/SinglePhoton/Run2017B-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v4', 'False'],
             ['/SinglePhoton/Run2017B-PromptReco-v2/MINIAOD', '92X_dataRun2_Prompt_v5', 'False'],
             ['/SinglePhoton/Run2017C-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v6', 'True'],
