@@ -48,6 +48,9 @@
 #include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 
+// Tracks
+#include "DataFormats/TrackReco/interface/Track.h"
+
 // Supercluster info
 #include "DataFormats/EgammaReco/interface/SuperCluster.h"
 #include "DataFormats/CaloRecHit/interface/CaloCluster.h"
@@ -105,6 +108,8 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   const float dRmin;
   const float pTres;
   const bool  saveTrigObjs;
+  const float trackpTmin;
+  const float trackdRmin;
 
   // triggers
   const std::string inputPaths;
@@ -147,6 +152,10 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   const edm::InputTag recHitsEETag;
   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEToken;
 
+  // Tracks
+  const edm::InputTag tracksTag;
+  edm::EDGetTokenT<std::vector<reco::Track> > tracksToken;
+
   // output event level ntuple
   TTree* tree;
 
@@ -182,6 +191,7 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   std::vector<float> phPFClEcalIso, phPFClHcalIso, phHollowTkIso;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
   std::vector<std::vector<int> > phIsHLTMatched; // first index is iph, second is for filter, true/false
+  std::vector<int> phIsTrack;
 
   // supercluster info 
   std::vector<float> phscE, phsceta, phscphi;

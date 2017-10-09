@@ -89,6 +89,7 @@ typedef std::unordered_map<uint32_t,int> uiiumap;
 #include "DataFormats/HLTReco/interface/TriggerObject.h"
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "FWCore/Common/interface/TriggerNames.h"
+#include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 ///////////////
@@ -218,10 +219,30 @@ namespace oot
 	  if (Config::deltaR(obj.phi(),obj.eta(),triggerObject.phi(),triggerObject.eta()) < dRmin)
 	  {
 	    isHLTMatched[triggerObjectsByFilterPair.first] = true; break;
-	  }
-	}
-      }
-    }
+	  } // end check deltaR
+	} // end check pt resolution
+      } // end loop over trigger objects 
+    } // end loop over filter names
+  }
+
+  template <typename Obj>
+  bool TrackToObjectMatching(const edm::Handle<std::vector<reco::Track> > & tracksH, const Obj& obj, 
+			     const float trackpTmin = 0.f, const float trackdRmin = Config::TWOPI)
+  {
+    if (tracksH.isValid())
+    {
+      for (const auto & track : *tracksH)
+      {
+	std::cout << "HERE" << std::endl;
+
+	if (track.pt() < trackpTmin) continue;
+	if (Config::deltaR(obj.phi(),obj.eta(),track.phi(),track.eta()) < trackdRmin)
+	{
+	  return true;
+	} // end check over deltaR
+      } // end loop over tracks
+    } // end check over valid tracks
+    return false;
   }
 
   template <typename Obj>
@@ -230,13 +251,13 @@ namespace oot
   {
     if (genparticlesH.isValid()) // make sure gen particles exist
     {
-      for (std::vector<reco::GenParticle>::const_iterator gpiter = genparticlesH->begin(); gpiter != genparticlesH->end(); ++gpiter)
+      for (const auto & genpart : *genparticlesH)
       {
-	if (gpiter->pdgId() == 22 && gpiter->isPromptFinalState())
+	if (genpart.pdgId() == 22 && genpart.isPromptFinalState())
 	{
-	  if (std::abs(gpiter->pt()-obj.pt())/obj.pt() < pTres)
+	  if (std::abs(genpart.pt()-obj.pt())/obj.pt() < pTres)
 	  {
-	    const float dR = Config::deltaR(obj.phi(),obj.eta(),gpiter->phi(),gpiter->eta());
+	    const float dR = Config::deltaR(obj.phi(),obj.eta(),genpart.phi(),genpart.eta());
 	    if (dR < dRmin) 
 	    {
 	      return true;

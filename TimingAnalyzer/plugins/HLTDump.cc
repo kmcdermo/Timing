@@ -7,6 +7,8 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
   dRmin(iConfig.existsAs<double>("dRmin") ? iConfig.getParameter<double>("dRmin") : 0.4),
   pTres(iConfig.existsAs<double>("pTres") ? iConfig.getParameter<double>("pTres") : 0.5),
   saveTrigObjs(iConfig.existsAs<bool>("saveTrigObjs") ? iConfig.getParameter<bool>("saveTrigObjs") : false),
+  trackpTmin(iConfig.existsAs<double>("trackpTmin") ? iConfig.getParameter<double>("trackpTmin") : 5.f),
+  trackdRmin(iConfig.existsAs<double>("trackdRmin") ? iConfig.getParameter<double>("trackdRmin") : 0.2),
   
   // triggers
   inputPaths       (iConfig.existsAs<std::string>("inputPaths")   ? iConfig.getParameter<std::string>("inputPaths") : ""),
@@ -32,9 +34,12 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
   // ootPhotons
   ootPhotonsTag(iConfig.getParameter<edm::InputTag>("ootPhotons")),  
   
-  //recHits
+  // recHits
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
-  recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE"))
+  recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE")),
+
+  // tracks
+  tracksTag(iConfig.getParameter<edm::InputTag>("tracks"))  
 {
   usesResource();
   usesResource("TFileService");
@@ -72,6 +77,9 @@ HLTDump::HLTDump(const edm::ParameterSet& iConfig):
   // rechits
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
   recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
+
+  // tracks 
+  tracksToken = consumes<std::vector<reco::Track> > (tracksTag);
 }
 
 HLTDump::~HLTDump() {}
@@ -121,6 +129,10 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByToken(recHitsEBToken, recHitsEBH);
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
   iEvent.getByToken(recHitsEEToken, recHitsEEH);
+
+  // Tracks
+  edm::Handle<std::vector<reco::Track> > tracksH;
+  iEvent.getByToken(tracksToken, tracksH);
 
   // geometry (from ECAL ELF)
   edm::ESHandle<CaloGeometry> calogeoH;
@@ -282,6 +294,9 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       {
 	phIsHLTMatched[iph][ifilter] = isHLTMatched[filterNames[ifilter]];
       }
+
+      // check for simple track veto
+      phIsTrack[iph] = oot::TrackToObjectMatching(tracksH,*phiter,trackpTmin,trackdRmin);
 
       // super cluster from photon
       const reco::SuperClusterRef& phsc = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
@@ -491,6 +506,8 @@ void HLTDump::ClearRecoPhotonBranches()
 
   phIsHLTMatched.clear();
 
+  phIsTrack.clear();
+
   phnrh.clear();
 
   phseedeta.clear(); 
@@ -536,6 +553,8 @@ void HLTDump::InitializeRecoPhotonBranches()
   phalpha.resize(nphotons);
 
   phIsHLTMatched.resize(nphotons);
+
+  phIsTrack.resize(nphotons);
 
   phnrh.resize(nphotons);
 
@@ -587,6 +606,8 @@ void HLTDump::InitializeRecoPhotonBranches()
     {
       phIsHLTMatched[iph][ifilter] = -1; // false
     }
+
+    phIsTrack [iph] = -1;
 
     phseedeta [iph] = -9999.f;
     phseedphi [iph] = -9999.f;
@@ -675,6 +696,8 @@ void HLTDump::beginJob()
   tree->Branch("phalpha"              , &phalpha);
 
   tree->Branch("phIsHLTMatched"       , &phIsHLTMatched);
+
+  tree->Branch("phIsTrack"            , &phIsTrack);
 
   tree->Branch("phnrh"                , &phnrh);
 

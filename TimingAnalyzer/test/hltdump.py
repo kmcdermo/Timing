@@ -25,6 +25,14 @@ options.register (
 	'pT resolution cut');
 
 options.register (
+	'trackpTmin',5.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,
+	'track pT minimum cut');
+
+options.register (
+	'trackdRmin',0.2,VarParsing.multiplicity.singleton,VarParsing.varType.float,
+	'track dR minimum cut');
+
+options.register (
 	'saveTrigObjs',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to save trigger objects from associated filters');
 
@@ -61,6 +69,8 @@ print "Running with phpTmin             = ",options.phpTmin
 print "Running with jetpTmin            = ",options.jetpTmin
 print "Running with dRmin               = ",options.dRmin
 print "Running with pTres               = ",options.pTres
+print "Running with trackpTmin          = ",options.trackpTmin
+print "Running with trackdRmin          = ",options.trackdRmin
 print "Running with saveTrigObjs        = ",options.saveTrigObjs
 print "Running with processName         = ",options.processName	
 print "Running with outputFileName      = ",options.outputFileName	
@@ -111,6 +121,8 @@ process.TFileService = cms.Service("TFileService",
 if options.useOOTPhotons : ootPhotonsTag = cms.InputTag("slimmedOOTPhotons")
 else                     : ootPhotonsTag = cms.InputTag("")
 
+# make track collection
+process.load('PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi')
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("HLTDump",
@@ -120,6 +132,8 @@ process.tree = cms.EDAnalyzer("HLTDump",
    dRmin = cms.double(options.dRmin),
    pTres = cms.double(options.pTres),
    saveTrigObjs = cms.bool(options.saveTrigObjs),
+   trackpTmin = cms.double(options.trackpTmin),
+   trackdRmin = cms.double(options.trackdRmin),
    ## triggers
    inputPaths     = cms.string("/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt"),
    inputFilters   = cms.string("/afs/cern.ch/user/k/kmcdermo/public/input/HLTfilters.txt"),
@@ -139,6 +153,8 @@ process.tree = cms.EDAnalyzer("HLTDump",
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
+   ## tracks
+   tracks = cms.InputTag("unpackedTracksAndVertices"),
 )
 
 # Set up the path
