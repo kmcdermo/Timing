@@ -185,7 +185,7 @@ class HLTDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   int nphotons;
   std::vector<int> phisOOT;
   std::vector<float> phE, phpt, phphi, pheta;
-  std::vector<float> phHOvE, phHTowOvE, phr9;
+  std::vector<float> phHoE, phr9;
   std::vector<bool> phPixSeed, phEleVeto;
   std::vector<float> phChgIso, phNeuIso, phIso;
   std::vector<float> phPFClEcalIso, phPFClHcalIso, phHollowTkIso;

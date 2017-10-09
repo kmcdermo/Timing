@@ -308,9 +308,8 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       const reco::Photon::ShowerShape& phshape = photon.full5x5_showerShapeVariables(); // photon.showerShapeVariables();
 
       // ID-like variables
-      phHOvE   [iph] = photon.hadronicOverEm(); // full hcal behind ecal cluster
-      phHTowOvE[iph] = photon.hadTowOverEm(); // ID + trigger == single tower
-      phr9     [iph] = photon.r9();
+      phHoE[iph] = photon.hadTowOverEm(); // ID + trigger == single tower
+      phr9 [iph] = photon.r9();
 
       // pseudo-track veto
       phPixSeed[iph] = photon.passElectronVeto();
@@ -483,8 +482,7 @@ void HLTDump::ClearRecoPhotonBranches()
   phsceta.clear(); 
   phscphi.clear(); 
 
-  phHOvE.clear();
-  phHTowOvE.clear();
+  phHoE.clear();
   phr9.clear();
 
   phPixSeed.clear();
@@ -531,8 +529,7 @@ void HLTDump::InitializeRecoPhotonBranches()
   phsceta.resize(nphotons);
   phscphi.resize(nphotons);
 
-  phHOvE.resize(nphotons);
-  phHTowOvE.resize(nphotons);
+  phHoE.resize(nphotons);
   phr9.resize(nphotons);
 
   phPixSeed.resize(nphotons);
@@ -578,9 +575,8 @@ void HLTDump::InitializeRecoPhotonBranches()
     phsceta[iph] = -9999.f; 
     phscphi[iph] = -9999.f; 
 
-    phHOvE   [iph] = -9999.f;
-    phHTowOvE[iph] = -9999.f;
-    phr9     [iph] = -9999.f;
+    phHoE[iph] = -9999.f;
+    phr9 [iph] = -9999.f;
 
     phPixSeed[iph] = false;
     phEleVeto[iph] = false;
@@ -674,8 +670,7 @@ void HLTDump::beginJob()
   tree->Branch("phsceta"              , &phsceta);
   tree->Branch("phscphi"              , &phscphi);
 
-  tree->Branch("phHOvE"               , &phHOvE);
-  tree->Branch("phHTowOvE"            , &phHTowOvE);
+  tree->Branch("phHoE"                , &phHoE);
   tree->Branch("phr9"                 , &phr9);
 
   tree->Branch("phPixSeed"            , &phPixSeed);
