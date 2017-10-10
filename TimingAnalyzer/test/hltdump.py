@@ -36,6 +36,15 @@ options.register (
 	'saveTrigObjs',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,
 	'flag to save trigger objects from associated filters');
 
+## trigger input
+options.register (
+        'inputPaths','/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+        'text file list of input signal paths');
+
+options.register (
+        'inputFilters','/afs/cern.ch/user/k/kmcdermo/public/input/HLTfilters.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+        'text file list of input signal filters');
+
 ## processName
 options.register (
 	'processName','TREE',VarParsing.multiplicity.singleton,VarParsing.varType.string,
@@ -72,6 +81,8 @@ print "Running with pTres               = ",options.pTres
 print "Running with trackpTmin          = ",options.trackpTmin
 print "Running with trackdRmin          = ",options.trackdRmin
 print "Running with saveTrigObjs        = ",options.saveTrigObjs
+print "Running with inputPaths          = ",options.inputPaths
+print "Running with inputFilters        = ",options.inputFilters
 print "Running with processName         = ",options.processName	
 print "Running with outputFileName      = ",options.outputFileName	
 print "Running with globalTag           = ",options.globalTag	
@@ -138,8 +149,8 @@ process.tree = cms.EDAnalyzer("HLTDump",
    trackpTmin = cms.double(options.trackpTmin),
    trackdRmin = cms.double(options.trackdRmin),
    ## triggers
-   inputPaths     = cms.string("/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt"),
-   inputFilters   = cms.string("/afs/cern.ch/user/k/kmcdermo/public/input/HLTfilters.txt"),
+   inputPaths     = cms.string(options.inputPaths),
+   inputFilters   = cms.string(options.inputFilters),
    triggerResults = cms.InputTag("TriggerResults", "", "HLT"),
    triggerObjects = cms.InputTag("slimmedPatTrigger"),
    ## vertices
