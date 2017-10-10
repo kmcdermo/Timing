@@ -156,6 +156,7 @@ void Analysis::SetupEventStandardPlots()
 
   // nVertices
   stdevTH1Map["nvtx"] = Analysis::MakeTH1Plot("nvtx","",Config::nbinsvtx,0.,Double_t(Config::nbinsvtx),"nVertices",ytitle,stdevTH1SubMap,dir);
+  stdevTH2Map["rho_v_nvtx"] = Analysis::MakeTH2Plot("rho_v_nvtx","",Config::nBinsX_iso,0,Config::xhigh_iso,"nVertices",55,0,55,"#rho",stdevTH2SubMap,dir);
 }
 
 void Analysis::SetupPhotonStandardPlots()
@@ -234,8 +235,6 @@ void Analysis::SetupIsoNvtxPlots()
 {
   // Photon Isolation vs nVertices
   const TString xtitle = "nVertices";
-  const Int_t nBinsX = Config::nbinsvtx/5;
-  const Double_t xhigh = Config::nbinsvtx;
   const TString dir = "photon/iso_v_nvtx";
   for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++)
   {
@@ -247,17 +246,17 @@ void Analysis::SetupIsoNvtxPlots()
 	const TString title = Form("%s - %s",split.Data(),region.Data());
 
 	isonvtxTH2Map[Form("phochgiso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("phochgiso_%s",name.Data()),"",nBinsX,0,xhigh,xtitle,50,0.,20.f,Form("Photon %i PF Charged Hadron Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("phochgiso_%s",name.Data()),"",Config::nBinsX_iso,0,Config::xhigh_iso,xtitle,50,0.,20.f,Form("Photon %i PF Charged Hadron Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
 	isonvtxTH2Map[Form("phoneuiso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("phoneuiso_%s",name.Data()),"",nBinsX,0,xhigh,xtitle,50,0.,20.f,Form("Photon %i PF Neutral Hadron Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("phoneuiso_%s",name.Data()),"",Config::nBinsX_iso,0,Config::xhigh_iso,xtitle,50,0.,20.f,Form("Photon %i PF Neutral Hadron Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
 	isonvtxTH2Map[Form("phophoiso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("phophoiso_%s",name.Data()),"",nBinsX,0,xhigh,xtitle,50,0.,20.f,Form("Photon %i PF Photon Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("phophoiso_%s",name.Data()),"",Config::nBinsX_iso,0,Config::xhigh_iso,xtitle,50,0.,20.f,Form("Photon %i PF Photon Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
 	isonvtxTH2Map[Form("phoecaliso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("phoecaliso_%s",name.Data()),"",nBinsX,0,xhigh,xtitle,50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("phoecaliso_%s",name.Data()),"",Config::nBinsX_iso,0,Config::xhigh_iso,xtitle,50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
 	isonvtxTH2Map[Form("phohcaliso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("phohcaliso_%s",name.Data()),"",nBinsX,0,xhigh,xtitle,50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("phohcaliso_%s",name.Data()),"",Config::nBinsX_iso,0,Config::xhigh_iso,xtitle,50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
 	isonvtxTH2Map[Form("photrkiso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("photrkiso_%s",name.Data()),"",nBinsX,0,xhigh,xtitle,50,0.,20.f,Form("Photon %i Track Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("photrkiso_%s",name.Data()),"",Config::nBinsX_iso,0,Config::xhigh_iso,xtitle,50,0.,20.f,Form("Photon %i Track Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
       } // end loop over split by type or inclusive
     } // end loop over regions
   } // end loop over nphotons
@@ -266,6 +265,7 @@ void Analysis::SetupIsoNvtxPlots()
 void Analysis::FillEventStandardPlots(const Float_t weight)
 {
   stdevTH1Map["nvtx"]->Fill(nvtx,weight);
+  stdevTH2Map["rho_v_nvtx"]->Fill(nvtx,rho,weight);
 }
 
 void Analysis::FillPhotonStandardPlots(const Int_t Nphotons, const Float_t weight)
@@ -331,6 +331,14 @@ void Analysis::OutputEventStandardPlots()
   Analysis::SaveTH1s(stdevTH1Map,stdevTH1SubMap);
   if (!fIsMC) Analysis::DumpTH1Names(stdevTH1Map,stdevTH1SubMap);
   Analysis::DeleteTH1s(stdevTH1Map);
+
+  Analysis::SaveTH2s(stdevTH2Map,stdevTH2SubMap);
+  for (TH2MapIter mapiter = stdevTH2Map.begin(); mapiter != stdevTH2Map.end(); ++mapiter)
+  {
+    const TString name = mapiter->first;
+    Analysis::Make1DIsoPlots(mapiter->second,stdevTH2SubMap[name],name);
+  }
+  Analysis::DeleteTH2s(stdevTH2Map);
 }
 
 void Analysis::OutputPhotonStandardPlots() 

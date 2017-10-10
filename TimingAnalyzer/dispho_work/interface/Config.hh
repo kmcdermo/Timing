@@ -19,10 +19,14 @@ namespace Config
   constexpr    Int_t   nEvCheck = 100000;
 
   // pu config
-  constexpr    Int_t   nbinsvtx   = 75;
+  constexpr    Int_t   nbinsvtx   = 80;
   static const TString pusubdir   = "purw";
   static const TString pufilename = "PURW.root";
   static const TString puplotname = "nvtx_dataOverMC";
+
+  // Iso config
+  constexpr    Int_t    nBinsX_iso = nbinsvtx/5;
+  constexpr    Double_t xhigh_iso  = Double_t(nbinsvtx);
 
   // selection config
   static const TString selection = Form("");
