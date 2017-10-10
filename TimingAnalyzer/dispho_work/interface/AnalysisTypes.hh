@@ -123,7 +123,7 @@ struct Pho
   Float_t scE;
   Float_t sceta;
   Float_t scphi;
-  Float_t HadTowOE;
+  Float_t HoE;
   Float_t r9;
   Float_t ChgHadIso;
   Float_t NeuHadIso;
@@ -142,6 +142,7 @@ struct Pho
   Bool_t  isOOT;
   Bool_t  isEB;
   Bool_t  isHLT;
+  Bool_t  isTrk;
   Int_t   ID;
   // MC types
   Int_t   isSignal;
@@ -154,7 +155,7 @@ struct Pho
   TBranch * b_scE;
   TBranch * b_sceta;
   TBranch * b_scphi;
-  TBranch * b_HadTowOE;
+  TBranch * b_HoE;
   TBranch * b_r9;
   TBranch * b_ChgHadIso;
   TBranch * b_NeuHadIso;
@@ -173,6 +174,7 @@ struct Pho
   TBranch * b_isOOT;
   TBranch * b_isEB;
   TBranch * b_isHLT;
+  TBranch * b_isTrk;
   TBranch * b_ID;
   // MC Types
   TBranch * b_isSignal;

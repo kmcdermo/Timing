@@ -88,8 +88,11 @@ int main(int argc, const char* argv[])
 	"  --use-HVDS      <bool>        use HVDS with MC (def: %s)\n"
 	"  --use-QCD       <bool>        use QCD with MC (def: %s)\n"
 	"  --use-GJets     <bool>        use Gamma+Jets with MC (def: %s)\n"
+	"  --splitOOT      <bool>        split OOT and GED photon collections (def: %s)\n"
+	"  --nPhotons      <int>         nPhotons to process [set by splitOOT] (def: %i)\n"
 	"  --do-evstd      <bool>        make standard event validation plots (def: %s)\n"
 	"  --do-phostd     <bool>        make standard photon validation plots (def: %s)\n"
+	"  --use-pfIsoEA   <bool>        use effective areas for PF isolations (def: %s)\n"
 	"  --do-iso        <bool>        make isolation plots (def: %s)\n"
 	"  --do-isonvtx    <bool>        make isolation vs nvtx plots (def: %s)\n"
 	"  --dump-status   <bool>        print out every N events in analysis loop (def: %s)\n"
@@ -111,8 +114,11 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::useHVDS),
 	PrintBool(Config::useQCD),
 	PrintBool(Config::useGJets),
+	PrintBool(Config::splitOOT),
+	Config::nPhotons,
 	PrintBool(Config::doEvStd),
 	PrintBool(Config::doPhoStd),
+	PrintBool(Config::pfIsoEA),
 	PrintBool(Config::doIso),
 	PrintBool(Config::doIsoNvtx),
 	PrintBool(Config::dumpStatus),
@@ -135,15 +141,18 @@ int main(int argc, const char* argv[])
     else if (*i == "--use-HVDS")    { Config::useHVDS    = true; }
     else if (*i == "--use-QCD")     { Config::useQCD     = true; }
     else if (*i == "--use-GJets")   { Config::useGJets   = true; }
+    else if (*i == "--splitOOT")    { Config::splitOOT   = true; Config::nPhotons   = 2;    }
+    else if (*i == "--nPhotons")    { next_arg_or_die(mArgs, i); Config::nPhotons   = std::atoi(i->c_str()); }
     else if (*i == "--do-evstd")    { Config::doAnalysis = true; Config::doEvStd    = true; }
     else if (*i == "--do-phostd")   { Config::doAnalysis = true; Config::doPhoStd   = true; }
+    else if (*i == "--use-pfIsoEA") { Config::pfIsoEA    = true; }
     else if (*i == "--do-iso")      { Config::doAnalysis = true; Config::doIso      = true; }
     else if (*i == "--do-isonvtx")  { Config::doAnalysis = true; Config::doIsoNvtx  = true; }
     else if (*i == "--dump-status") { Config::doAnalysis = true; Config::dumpStatus = true; }
-    else if (*i == "--in-year")     { next_arg_or_die(mArgs, i); Config::year     = i->c_str(); }
+    else if (*i == "--in-year")     { next_arg_or_die(mArgs, i); Config::year       = i->c_str(); }
     else if (*i == "--save-hists")  { Config::saveHists  = true; }
     else if (*i == "--save-tmphists") { Config::saveTempHists = true; }
-    else if (*i == "--out-image")   { next_arg_or_die(mArgs, i); Config::outtype  = i->c_str(); }
+    else if (*i == "--out-image")   { next_arg_or_die(mArgs, i); Config::outtype    = i->c_str(); }
     else    { std::cerr << "Error: Unknown option/argument: " << i->c_str() << " ...exiting..." << std::endl; exit(1); }
     mArgs.erase(start, ++i);
   }

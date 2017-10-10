@@ -84,6 +84,7 @@ private:
   // Plot maps //
   ///////////////
   TH1Map stdevTH1Map; TStrMap stdevTH1SubMap;
+  TH2Map stdevTH2Map; TStrMap stdevTH2SubMap;
   TH1Map stdphoTH1Map; TStrMap stdphoTH1SubMap;
   TH1Map isoTH1Map; TStrMap isoTH1SubMap;
   TH2Map isonvtxTH2Map; TStrMap isonvtxTH2SubMap;

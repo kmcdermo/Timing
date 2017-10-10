@@ -35,7 +35,6 @@ namespace Config
   constexpr    Int_t   nGMSBs   = 2;
   constexpr    Int_t   nHVDSs   = 4;
   constexpr    Int_t   nJets    = 4;
-  constexpr    Int_t   nPhotons = 4;
 
   static const TStrVec regions = {"EB","EE"};
   static const TStrVec splits = {"GED","OOT"};
@@ -95,8 +94,11 @@ namespace Config
   extern Bool_t      useHVDS;
   extern Bool_t      useQCD;
   extern Bool_t      useGJets;
+  extern Bool_t      splitOOT;
+  extern Int_t       nPhotons;
   extern Bool_t      doEvStd;
   extern Bool_t      doPhoStd;
+  extern Bool_t      pfIsoEA; 
   extern Bool_t      doIso;
   extern Bool_t      doIsoNvtx;
   extern Bool_t      dumpStatus;

@@ -1,32 +1,8 @@
 #include "../interface/Analysis.hh"
+#include "../interface/AnalysisUtils.hh"
 #include "TROOT.h"
 
-inline Float_t rad2  (const Float_t x, const Float_t y){return x*x + y*y;}
-inline Float_t theta (const Float_t r, const Float_t z){return std::atan2(r,z);}
-inline Float_t eta   (const Float_t x, const Float_t y, const Float_t z)
-{
-  return -1.0f*std::log(std::tan(theta(std::sqrt(rad2(x,y)),z)/2.f));
-}
-inline Float_t rad2  (const Float_t x, const Float_t y, const Float_t z)
-{
-  return x*x + y*y + z*z;
-}
-inline Float_t phi   (const Float_t x, const Float_t y){return std::atan2(y,x);}
-inline Float_t mphi  (Float_t phi)
-{    
-  while (phi >= Config::PI) phi -= Config::TWOPI;
-  while (phi < -Config::PI) phi += Config::TWOPI;
-  return phi;
-}
-inline Float_t deltaR(const Float_t eta1, const Float_t phi1, const Float_t eta2, const Float_t phi2)
-{
-  return std::sqrt(rad2(eta2-eta1,mphi(phi1-phi2)));
-}
-inline Float_t TOF   (const Float_t x,  const Float_t y,  const Float_t z, 
-		      const Float_t vx, const Float_t vy, const Float_t vz, const Float_t time)
-{
-  return time + (std::sqrt(rad2(x,y,z))-std::sqrt(rad2((x-vx),(y-vy),(z-vz))))/Config::sol;
-}
+#include <algorithm>
 
 Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample), fIsMC(isMC)
 {
@@ -270,15 +246,17 @@ void Analysis::FillEventStandardPlots(const Float_t weight)
 
 void Analysis::FillPhotonStandardPlots(const Int_t Nphotons, const Float_t weight)
 {
+  Int_t iged = 0, ioot = 0;
   for (Int_t ipho = 0; ipho < Nphotons; ipho++)
   {
     const auto & pho = phos[ipho];
-    const TString name = Form("%i_%s_%s", ipho, (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
+    const Int_t iPho = (!pho.isOOT ? iged++ : ioot++);
+    const TString name = Form("%i_%s_%s", (Config::splitOOT ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
     
     stdphoTH1Map[Form("phopt_%s",name.Data())]->Fill(pho.pt,weight);
     stdphoTH1Map[Form("phophi_%s",name.Data())]->Fill(pho.phi,weight);
     stdphoTH1Map[Form("phoeta_%s",name.Data())]->Fill(pho.eta,weight);
-    stdphoTH1Map[Form("phohoe_%s",name.Data())]->Fill(pho.HadTowOE,weight);
+    stdphoTH1Map[Form("phohoe_%s",name.Data())]->Fill(pho.HoE,weight);
     stdphoTH1Map[Form("phor9_%s",name.Data())]->Fill(pho.r9,weight); 
     stdphoTH1Map[Form("phosieie_%s",name.Data())]->Fill(pho.sieie,weight);
     stdphoTH1Map[Form("phosieip_%s",name.Data())]->Fill(pho.sipip,weight);
@@ -295,14 +273,20 @@ void Analysis::FillPhotonStandardPlots(const Int_t Nphotons, const Float_t weigh
 
 void Analysis::FillIsoPlots(const Int_t Nphotons, const Float_t weight)
 {
+  Int_t iged = 0, ioot = 0;
   for (Int_t ipho = 0; ipho < Nphotons; ipho++)
   {
     const auto & pho = phos[ipho];
-    const TString name = Form("%i_%s_%s", ipho, (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
+    const Int_t iPho = (!pho.isOOT ? iged++ : ioot++);
+    const TString name = Form("%i_%s_%s", (Config::splitOOT ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
 
-    isoTH1Map[Form("phochgiso_%s",name.Data())]->Fill(pho.ChgHadIso,weight);
-    isoTH1Map[Form("phoneuiso_%s",name.Data())]->Fill(pho.NeuHadIso,weight);
-    isoTH1Map[Form("phophoiso_%s",name.Data())]->Fill(pho.PhoIso,weight);
+    const float chgHadIso = (Config::pfIsoEA ? std::max(pho.ChgHadIso - rho * GetChargedHadronEA(pho.sceta),0.f) : pho.ChgHadIso);
+    const float neuHadIso = (Config::pfIsoEA ? std::max(pho.NeuHadIso - rho * GetNeutralHadronEA(pho.sceta),0.f) : pho.NeuHadIso);
+    const float phoIso    = (Config::pfIsoEA ? std::max(pho.PhoIso    - rho * GetGammaEA        (pho.sceta),0.f) : pho.PhoIso);
+
+    isoTH1Map[Form("phochgiso_%s",name.Data())]->Fill(chgHadIso,weight);
+    isoTH1Map[Form("phoneuiso_%s",name.Data())]->Fill(neuHadIso,weight);
+    isoTH1Map[Form("phophoiso_%s",name.Data())]->Fill(phoIso,weight);
     isoTH1Map[Form("phoecaliso_%s",name.Data())]->Fill(pho.EcalPFClIso,weight);
     isoTH1Map[Form("phohcaliso_%s",name.Data())]->Fill(pho.HcalPFClIso,weight);
     isoTH1Map[Form("photrkiso_%s",name.Data())]->Fill(pho.TrkIso,weight);
@@ -311,14 +295,20 @@ void Analysis::FillIsoPlots(const Int_t Nphotons, const Float_t weight)
 
 void Analysis::FillIsoNvtxPlots(const Int_t Nphotons, const Float_t weight)
 {
+  Int_t iged = 0, ioot = 0;
   for (Int_t ipho = 0; ipho < Nphotons; ipho++)
   {
     const auto & pho = phos[ipho];
-    const TString name = Form("%i_%s_%s_v_nvtx", ipho, (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
+    const Int_t iPho = (!pho.isOOT ? iged++ : ioot++);
+    const TString name = Form("%i_%s_%s", (Config::splitOOT ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
 
-    isonvtxTH2Map[Form("phochgiso_%s",name.Data())]->Fill(nvtx,pho.ChgHadIso,weight);
-    isonvtxTH2Map[Form("phoneuiso_%s",name.Data())]->Fill(nvtx,pho.NeuHadIso,weight);
-    isonvtxTH2Map[Form("phophoiso_%s",name.Data())]->Fill(nvtx,pho.PhoIso,weight);
+    const float chgHadIso = (Config::pfIsoEA ? std::max(pho.ChgHadIso - rho * GetChargedHadronEA(pho.sceta),0.f) : pho.ChgHadIso);
+    const float neuHadIso = (Config::pfIsoEA ? std::max(pho.NeuHadIso - rho * GetNeutralHadronEA(pho.sceta),0.f) : pho.NeuHadIso);
+    const float phoIso    = (Config::pfIsoEA ? std::max(pho.PhoIso    - rho * GetGammaEA        (pho.sceta),0.f) : pho.PhoIso);
+
+    isonvtxTH2Map[Form("phochgiso_%s",name.Data())]->Fill(nvtx,chgHadIso,weight);
+    isonvtxTH2Map[Form("phoneuiso_%s",name.Data())]->Fill(nvtx,neuHadIso,weight);
+    isonvtxTH2Map[Form("phophoiso_%s",name.Data())]->Fill(nvtx,phoIso,weight);
     isonvtxTH2Map[Form("phoecaliso_%s",name.Data())]->Fill(nvtx,pho.EcalPFClIso,weight);
     isonvtxTH2Map[Form("phohcaliso_%s",name.Data())]->Fill(nvtx,pho.HcalPFClIso,weight);
     isonvtxTH2Map[Form("photrkiso_%s",name.Data())]->Fill(nvtx,pho.TrkIso,weight);    
@@ -857,7 +847,7 @@ void Analysis::InitBranches()
     fInTree->SetBranchAddress(Form("phoscE_%i",ipho), &pho.scE, &pho.b_scE);
     fInTree->SetBranchAddress(Form("phosceta_%i",ipho), &pho.sceta, &pho.b_sceta);
     fInTree->SetBranchAddress(Form("phoscphi_%i",ipho), &pho.scphi, &pho.b_scphi);
-    fInTree->SetBranchAddress(Form("phoHadTowOE_%i",ipho), &pho.HadTowOE, &pho.b_HadTowOE);
+    fInTree->SetBranchAddress(Form("phoHoE_%i",ipho), &pho.HoE, &pho.b_HoE);
     fInTree->SetBranchAddress(Form("phor9_%i",ipho), &pho.r9, &pho.b_r9);
     fInTree->SetBranchAddress(Form("phoChgHadIso_%i",ipho), &pho.ChgHadIso, &pho.b_ChgHadIso);
     fInTree->SetBranchAddress(Form("phoNeuHadIso_%i",ipho), &pho.NeuHadIso, &pho.b_NeuHadIso);
@@ -876,6 +866,7 @@ void Analysis::InitBranches()
     fInTree->SetBranchAddress(Form("phoisOOT_%i",ipho), &pho.isOOT, &pho.b_isOOT);
     fInTree->SetBranchAddress(Form("phoisEB_%i",ipho), &pho.isEB, &pho.b_isEB);
     fInTree->SetBranchAddress(Form("phoisHLT_%i",ipho), &pho.isHLT, &pho.b_isHLT);
+    fInTree->SetBranchAddress(Form("phoisTrk_%i",ipho), &pho.isTrk, &pho.b_isTrk);
     fInTree->SetBranchAddress(Form("phoID_%i",ipho), &pho.ID, &pho.b_ID);
   }
 }
