@@ -87,6 +87,12 @@ void HLTPlots::DoPlots()
     effHTs[iera] = new TEfficiency(Form("effHT_%i",iera),"HLT Efficiency vs PF H_{T};Offline PF H_{T} (Min PFJet p_{T} > 15);Efficiency",nbinsxHT,xbinsHT);
   }
 
+  std::ofstream badinfo;
+  badinfo.open("badinfo.txt",std::ios_base::trunc);
+
+  std::ofstream goodinfo;
+  goodinfo.open("goodinfo.txt",std::ios_base::trunc);
+
   for (UInt_t ientry = fStart; ientry < fEnd; ientry++)
   {
     if (ientry%100000 == 0 || ientry == fStart) std::cout << "Entry " << ientry << " out of " << fEnd << std::endl;
@@ -114,7 +120,7 @@ void HLTPlots::DoPlots()
 
       if (std::abs((*phsceta)[iph]) < ECAL::etaEB)
       {
-	if ((*phHOvE)[iph] > 0.0396) continue;
+	if ((*phHoE)[iph] > 0.0396) continue;
 	if ((*phsieie)[iph] > 0.01022) continue;
 	if ((*phChgIso)[iph] > 0.441) continue;
 	if ((*phNeuIso)[iph] > (2.725+0.0148*pt+0.000017*pt*pt)) continue;
@@ -133,7 +139,7 @@ void HLTPlots::DoPlots()
       } // end check over EB
       else if ((std::abs((*phsceta)[iph]) > ECAL::etaEEmin) && (std::abs((*phsceta)[iph]) < ECAL::etaEEmax))
       {
-	if ((*phHOvE)[iph] > 0.0219) continue;
+	if ((*phHoE)[iph] > 0.0219) continue;
 	if ((*phsieie)[iph] > 0.03001) continue;
 	if ((*phChgIso)[iph] > 0.442) continue;
 	if ((*phNeuIso)[iph] > (1.715+0.0163*pt+0.000014*pt*pt)) continue;
@@ -211,6 +217,11 @@ void HLTPlots::DoPlots()
     effphis[era]->Fill(passed,(*phscphi)[goodpho]);
     efftimes[era]->Fill(passed,(*phseedtime)[goodpho]);
 
+    if ((*phseedtime)[goodpho] > 5.f)
+    {
+      (passed?goodinfo:badinfo) << ientry << " " << run << " " << lumi << " " << event << " " << goodpho << " " << (*phseedtime)[goodpho] << std::endl;
+    }
+
     JetInfo jetinfo;
     HLTPlots::HT(goodpho,jetinfo);
     effHTs[era]->Fill(passed,jetinfo.pfjetHT);
@@ -225,6 +236,9 @@ void HLTPlots::DoPlots()
     HLTPlots::OutputEfficiency(efftimes[iera],Form("htime_%i",iera));
     HLTPlots::OutputEfficiency(effHTs[iera],Form("hHT_%i",iera));
   }
+
+  badinfo.close();
+  goodinfo.close();
 }
 
 void HLTPlots::HT(const Int_t iph, JetInfo & jetinfo)
@@ -327,8 +341,7 @@ void HLTPlots::InitTree()
   phscE = 0;
   phsceta = 0;
   phscphi = 0;
-  phHOvE = 0;
-  phHTowOvE = 0;
+  phHoE = 0;
   phr9 = 0;
   phEleVeto = 0;  
   phPixSeed = 0;
@@ -345,6 +358,7 @@ void HLTPlots::InitTree()
   phsmin = 0;
   phalpha = 0;
   phIsHLTMatched = 0;
+  phIsTrack = 0;
   phnrh = 0;
   phseedeta = 0;
   phseedphi = 0;
@@ -379,8 +393,7 @@ void HLTPlots::InitTree()
   fInTree->SetBranchAddress("phscE", &phscE, &b_phscE);
   fInTree->SetBranchAddress("phsceta", &phsceta, &b_phsceta);
   fInTree->SetBranchAddress("phscphi", &phscphi, &b_phscphi);
-  fInTree->SetBranchAddress("phHOvE", &phHOvE, &b_phHOvE);
-  fInTree->SetBranchAddress("phHTowOvE", &phHTowOvE, &b_phHTowOvE);
+  fInTree->SetBranchAddress("phHoE", &phHoE, &b_phHoE);
   fInTree->SetBranchAddress("phr9", &phr9, &b_phr9);
   fInTree->SetBranchAddress("phEleVeto", &phEleVeto, &b_phEleVeto);
   fInTree->SetBranchAddress("phPixSeed", &phPixSeed, &b_phPixSeed);
@@ -397,6 +410,7 @@ void HLTPlots::InitTree()
   fInTree->SetBranchAddress("phsmin", &phsmin, &b_phsmin);
   fInTree->SetBranchAddress("phalpha", &phalpha, &b_phalpha);
   fInTree->SetBranchAddress("phIsHLTMatched", &phIsHLTMatched, &b_phIsHLTMatched);
+  fInTree->SetBranchAddress("phIsTrack", &phIsTrack, &b_phIsTrack);
   fInTree->SetBranchAddress("phnrh", &phnrh, &b_phnrh);
   fInTree->SetBranchAddress("phseedeta", &phseedeta, &b_phseedeta);
   fInTree->SetBranchAddress("phseedphi", &phseedphi, &b_phseedphi);

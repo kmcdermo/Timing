@@ -111,8 +111,7 @@ private :
   std::vector<Float_t> * phscE;
   std::vector<Float_t> * phsceta;
   std::vector<Float_t> * phscphi;
-  std::vector<Float_t> * phHOvE;
-  std::vector<Float_t> * phHTowOvE;
+  std::vector<Float_t> * phHoE;
   std::vector<Float_t> * phr9;
   std::vector<Bool_t>  * phEleVeto;
   std::vector<Bool_t>  * phPixSeed;
@@ -136,6 +135,7 @@ private :
   std::vector<Int_t>   * phseedID;
   std::vector<Int_t>   * phseedOOT;
   std::vector<std::vector<Int_t> > * phIsHLTMatched;
+  std::vector<Int_t>   * phIsTrack;
 
   // List of branches
   TBranch * b_event;
@@ -164,8 +164,7 @@ private :
   TBranch * b_phscE;
   TBranch * b_phsceta;
   TBranch * b_phscphi;
-  TBranch * b_phHOvE;
-  TBranch * b_phHTowOvE;
+  TBranch * b_phHoE;
   TBranch * b_phr9;
   TBranch * b_phEleVeto;
   TBranch * b_phPixSeed;
@@ -182,6 +181,7 @@ private :
   TBranch * b_phsmin;
   TBranch * b_phalpha;
   TBranch * b_phIsHLTMatched;
+  TBranch * b_phIsTrack;
   TBranch * b_phnrh;
   TBranch * b_phseedeta;
   TBranch * b_phseedphi;
