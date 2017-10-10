@@ -21,6 +21,9 @@ options.register('phIDmin','loose',VarParsing.multiplicity.singleton,VarParsing.
 ## object extra pruning cuts
 options.register('seedTimemin',-5.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon seed time minimum cut');
 
+## photon OOT splitting
+options.register('applySplitOOT',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store leading top two photons, OOT and GED');
+
 ## pre-selection cuts
 options.register('applyTrigger',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to apply trigger pre-selection');
 options.register('minHT',400.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'jet HT minimum cut');
@@ -79,6 +82,8 @@ print "phpTmin        : ",options.phpTmin
 print "phIDmin        : ",options.phIDmin
 print "     -- Extra Pruning --"
 print "seedTimemin    : ",options.seedTimemin
+print "     -- Split by OOT --"
+print "applySplitOOT  : ",options.applySplitOOT
 print "     -- Pre-Selection --"
 print "applyTrigger   : ",options.applyTrigger
 print "minHT          : ",options.minHT
@@ -186,8 +191,10 @@ process.tree = cms.EDAnalyzer("DisPho",
    rhEmin   = cms.double(options.rhEmin),
    phpTmin  = cms.double(options.phpTmin),
    phIDmin  = cms.string(options.phIDmin),
-   ## pre-selection
+   ## extra object pruning
    seedTimemin = cms.double(options.seedTimemin),
+   ## split OOT and GED photons
+   applySplitOOT = cms.double(options.applySplitOOT),
    ## pre-selection
    applyTrigger = cms.bool(options.applyTrigger),
    minHT        = cms.double(options.minHT),

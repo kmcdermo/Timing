@@ -17,6 +17,9 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // object extra pruning cuts
   seedTimemin(iConfig.existsAs<double>("seedTimemin") ? iConfig.getParameter<double>("seedTimemin") : -5.f),
 
+  // photon splitting
+  applySplitOOT(iConfig.existsAs<bool>("applySplitOOT") ? iConfig.getParameter<bool>("applySplitOOT") : false),
+
   // pre-selection
   applyTrigger(iConfig.existsAs<bool>("applyTrigger") ? iConfig.getParameter<bool>("applyTrigger") : false),
   minHT(iConfig.existsAs<double>("minHT") ? iConfig.getParameter<double>("minHT") : 400.f),
@@ -255,6 +258,46 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 				 const float seedTime = ((seedHit != recHits->end()) ? seedHit->time() : -9999.f);
 				 return (seedTime < seedTimemin);
 			       }),photons.end());
+
+  //////////////////
+  //              //
+  // Split by OOT //
+  //              //
+  //////////////////
+  if (applySplitOOT)
+  {
+    std::vector<int> gedphos;
+    std::vector<int> ootphos;
+
+    int ipho = 0;
+    for (const auto & photon : photons)
+    {
+      (photon.isOOT() ? ootphos : gedphos).emplace_back(ipho++);
+    }
+
+    std::vector<oot::Photon> tmpphotons;
+    if (gedphos.size() >= 1) 
+    {
+      tmpphotons.emplace_back(photons[gedphos[0]]);
+    }
+    
+    if (gedphos.size() >= 2) 
+    {
+      tmpphotons.emplace_back(photons[gedphos[1]]);
+    }
+
+    if (ootphos.size() >= 1) 
+    {
+      tmpphotons.emplace_back(photons[ootphos[0]]);
+    }
+    
+    if (ootphos.size() >= 2) 
+    {
+      tmpphotons.emplace_back(photons[ootphos[1]]);
+    }
+
+    photons.swap(tmpphotons);
+  }
 
   /////////////////////////
   //                     //
@@ -785,7 +828,7 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   phoBranch.scPhi_ = phosc->phi();
   phoBranch.scEta_ = phosc->eta();
 
-  const float sceta = std::abs(phoBranch.scEta_);
+  //  const float sceta = std::abs(phoBranch.scEta_);
 
   // ID-like variables
   phoBranch.HoE_ = pho.hadTowOverEm(); // used in ID + trigger (single tower HoverE)

@@ -237,6 +237,9 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // object extra pruning
   const float seedTimemin;
 
+  // photon oot split
+  const bool applySplitOOT;
+
   // pre-selection vars
   const bool applyTrigger;
   const float minHT;
