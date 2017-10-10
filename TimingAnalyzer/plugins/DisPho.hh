@@ -139,10 +139,8 @@ struct phoStruct
   float scPhi_;
   float scEta_;
 
-  float HadTowOE_;
+  float HoE_;
   float r9_;
-  //  float HadronOE_;
-  //  float fullr9_;
 
   float ChgHadIso_;
   float NeuHadIso_;
@@ -235,6 +233,9 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const float rhEmin;
   const float phpTmin;
   const std::string phIDmin;
+
+  // object extra pruning
+  const float seedTimemin;
 
   // pre-selection vars
   const bool applyTrigger;

@@ -14,6 +14,9 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   phpTmin(iConfig.existsAs<double>("phpTmin") ? iConfig.getParameter<double>("phpTmin") : 20.f),
   phIDmin(iConfig.existsAs<std::string>("phIDmin") ? iConfig.getParameter<std::string>("phIDmin") : "loose"),
 
+  // object extra pruning cuts
+  seedTimemin(iConfig.existsAs<double>("seedTimemin") ? iConfig.getParameter<double>("seedTimemin") : -5.f),
+
   // pre-selection
   applyTrigger(iConfig.existsAs<bool>("applyTrigger") ? iConfig.getParameter<bool>("applyTrigger") : false),
   minHT(iConfig.existsAs<double>("minHT") ? iConfig.getParameter<double>("minHT") : 400.f),
@@ -235,6 +238,23 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   oot::PrepJets(jetsH,jets,jetpTmin,jetIDmin);
   oot::PrepRecHits(recHitsEB,recHitsEE,recHitMap,rhEmin);
   oot::PrepPhotons(photonsH,ootPhotonsH,photons,rho,phpTmin,phIDmin);
+
+  ///////////////////
+  //               //
+  // Extra Pruning //
+  //               //
+  ///////////////////
+  photons.erase(std::remove_if(photons.begin(),photons.end(),
+			       [&](const oot::Photon & photon)
+			       {
+				 const pat::Photon & pho = photon.photon();
+				 const reco::SuperClusterRef& phosc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
+				 const DetId & seedDetId = phosc->seed()->seed(); // get seed detid
+				 const EcalRecHitCollection * recHits = ((seedDetId.subdetId() == EcalBarrel) ? recHitsEB : recHitsEE); // which recHits to use
+				 EcalRecHitCollection::const_iterator seedHit = recHits->find(seedDetId); // get the underlying rechit
+				 const float seedTime = ((seedHit != recHits->end()) ? seedHit->time() : -9999.f);
+				 return (seedTime < seedTimemin);
+			       }),photons.end());
 
   /////////////////////////
   //                     //
@@ -719,7 +739,7 @@ void DisPho::InitializePhoBranch(phoStruct & phoBranch)
   phoBranch.scPhi_ = -9999.f;
   phoBranch.scEta_ = -9999.f;
 
-  phoBranch.HadTowOE_ = -9999.f;
+  phoBranch.HoE_ = -9999.f;
   phoBranch.r9_ = -9999.f;
 
   phoBranch.ChgHadIso_ = -9999.f;
@@ -768,12 +788,16 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   const float sceta = std::abs(phoBranch.scEta_);
 
   // ID-like variables
-  phoBranch.HadTowOE_  = pho.hadTowOverEm(); // used in ID + trigger
-  phoBranch.r9_        = pho.r9(); // used in slimming in PAT + trigger
+  phoBranch.HoE_ = pho.hadTowOverEm(); // used in ID + trigger (single tower HoverE)
+  phoBranch.r9_  = pho.r9(); // used in slimming in PAT + trigger
 
-  phoBranch.ChgHadIso_ = std::max(pho.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
-  phoBranch.NeuHadIso_ = std::max(pho.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);
-  phoBranch.PhoIso_    = std::max(pho.photonIso()        - (rho * oot::GetGammaEA        (sceta)),0.f);
+  // phoBranch.ChgHadIso_ = std::max(pho.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
+  // phoBranch.NeuHadIso_ = std::max(pho.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);
+  // phoBranch.PhoIso_    = std::max(pho.photonIso()        - (rho * oot::GetGammaEA        (sceta)),0.f);
+
+  phoBranch.ChgHadIso_ = pho.chargedHadronIso();
+  phoBranch.NeuHadIso_ = pho.neutralHadronIso();
+  phoBranch.PhoIso_    = pho.photonIso();
 
   // More ID variables
   phoBranch.EcalPFClIso_ = pho.ecalPFClusterIso();
@@ -1078,7 +1102,7 @@ void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
   tree->Branch(Form("phosceta_%i",i), &phoBranch.scEta_, Form("phosceta_%i/F",i));
   tree->Branch(Form("phoscphi_%i",i), &phoBranch.scPhi_, Form("phoscphi_%i/F",i));
 
-  tree->Branch(Form("phoHadTowOE_%i",i), &phoBranch.HadTowOE_, Form("phoHadTowOE_%i/F",i));
+  tree->Branch(Form("phoHoE_%i",i), &phoBranch.HoE_, Form("phoHoE_%i/F",i));
   tree->Branch(Form("phor9_%i",i), &phoBranch.r9_, Form("phor9_%i/F",i));
 
   tree->Branch(Form("phoChgHadIso_%i",i), &phoBranch.ChgHadIso_, Form("phoChgHadIso_%i/F",i));

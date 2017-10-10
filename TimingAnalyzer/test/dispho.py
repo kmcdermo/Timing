@@ -18,6 +18,9 @@ options.register('rhEmin',1.0,VarParsing.multiplicity.singleton,VarParsing.varTy
 options.register('phpTmin',20.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon pT minimum cut');
 options.register('phIDmin','loose',VarParsing.multiplicity.singleton,VarParsing.varType.string,'photon ID minimum cut');
 
+## object extra pruning cuts
+options.register('seedTimemin',-5.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon seed time minimum cut');
+
 ## pre-selection cuts
 options.register('applyTrigger',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to apply trigger pre-selection');
 options.register('minHT',400.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'jet HT minimum cut');
@@ -74,6 +77,8 @@ print "jetIDmin       : ",options.jetIDmin
 print "rhEmin         : ",options.rhEmin
 print "phpTmin        : ",options.phpTmin
 print "phIDmin        : ",options.phIDmin
+print "     -- Extra Pruning --"
+print "seedTimemin    : ",options.seedTimemin
 print "     -- Pre-Selection --"
 print "applyTrigger   : ",options.applyTrigger
 print "minHT          : ",options.minHT
@@ -181,6 +186,8 @@ process.tree = cms.EDAnalyzer("DisPho",
    rhEmin   = cms.double(options.rhEmin),
    phpTmin  = cms.double(options.phpTmin),
    phIDmin  = cms.string(options.phIDmin),
+   ## pre-selection
+   seedTimemin = cms.double(options.seedTimemin),
    ## pre-selection
    applyTrigger = cms.bool(options.applyTrigger),
    minHT        = cms.double(options.minHT),

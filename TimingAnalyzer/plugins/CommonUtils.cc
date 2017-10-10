@@ -180,24 +180,23 @@ namespace oot
 
       for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter)
       {
-	if (phiter->pt() >= phpTmin) 
-	{
-	  // Initialize Id Pair
-	  idpVec idpairs = {{"loose",false}, {"medium",false}, {"tight",false}};
+	if (phiter->pt() < phpTmin) continue;
 
-	  // Get the VID of the photon
-	  const edm::Ptr<pat::Photon> photonPtr(photonsH, phiter - photonsH->begin());
-	  
-	  // store VID in temp struct
-	  // loose > medium > tight
-	  if (photonLooseIdMap [photonPtr]) idpairs[0].second = true;
-	  if (photonMediumIdMap[photonPtr]) idpairs[1].second = true;
-	  if (photonTightIdMap [photonPtr]) idpairs[2].second = true;
-
-	  // set VID/isOOT of photon
-	  photons.emplace_back(*phiter,isOOT);
-	  photons.back().photon_nc().setPhotonIDs(idpairs);
-	} // pt check
+	// Initialize Id Pair
+	idpVec idpairs = {{"loose",false}, {"medium",false}, {"tight",false}};
+	
+	// Get the VID of the photon
+	const edm::Ptr<pat::Photon> photonPtr(photonsH, phiter - photonsH->begin());
+	
+	// store VID in temp struct
+	// loose > medium > tight
+	if (photonLooseIdMap [photonPtr]) idpairs[0].second = true;
+	if (photonMediumIdMap[photonPtr]) idpairs[1].second = true;
+	if (photonTightIdMap [photonPtr]) idpairs[2].second = true;
+	
+	// set VID/isOOT of photon
+	photons.emplace_back(*phiter,isOOT);
+	photons.back().photon_nc().setPhotonIDs(idpairs);
       } // end loop over photons
     } // isValid
   }
@@ -221,27 +220,29 @@ namespace oot
     {
       for (const auto & photon : *photonsH)
       {
-	if (photon.pt() >= phpTmin) 
-	{
-	  idpVec idpairs = {{"loose",false}, {"medium",false}, {"tight",false}};
-	  oot::GetPhoVID(photon,idpairs,rho);
+	if (photon.pt() < phpTmin) continue;
 
-	  if (phIDmin != "none")
+	idpVec idpairs = {{"loose",false}, {"medium",false}, {"tight",false}};
+	oot::GetPhoVID(photon,idpairs,rho);
+	
+	bool isGoodID = true;
+	if (phIDmin != "none")
+	{
+	  for (const auto & idpair : idpairs) 
 	  {
-	    for (const auto & idpair : idpairs) 
+	    if (idpair.first == phIDmin)
 	    {
-	      if (idpair.first == phIDmin)
-	      {
-		if (!idpair.second) continue;
-	      }
+	      if (!idpair.second) isGoodID = false;
+	      break;
 	    }
 	  }
-
-	  photons.emplace_back(photon,isOOT);
-	  photons.back().photon_nc().setPhotonIDs(idpairs);
 	}
-      }
-    }
+	if (!isGoodID) continue;
+
+	photons.emplace_back(photon,isOOT);
+	photons.back().photon_nc().setPhotonIDs(idpairs);
+      } // end loop over photons
+    } // isValid
   }
 
   void PrepRecHits(const EcalRecHitCollection * recHitsEB,
