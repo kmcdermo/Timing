@@ -113,6 +113,7 @@ void HLTPlots::DoPlots()
       if ((*phHollowTkIso)[iph] > (3.f + 0.002*pt)) continue;
 
       // track veto 
+      if ((*phIsTrack)[iph]) continue;
       //if (!(*phEleVeto)[iph]) continue;
       //if ((*phPixSeed)[iph]) continue;
 
