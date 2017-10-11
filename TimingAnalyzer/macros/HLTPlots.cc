@@ -3,7 +3,6 @@
 #include "TLegend.h"
 
 #include <iostream>
-#include <fstream>
 
 HLTPlots::HLTPlots(const TString infile, const UInt_t start, const UInt_t end, const TString outdir, const TString runs, const Bool_t isoph, const Bool_t isidL, const Bool_t iser, 
 		   const Bool_t applyht, const Float_t htcut, const Bool_t eteff, const Bool_t dispeff, const Bool_t hteff) :
@@ -57,6 +56,8 @@ HLTPlots::HLTPlots(const TString infile, const UInt_t start, const UInt_t end, c
   makeOutDir(fOutDir);
 
   fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
+  badinfo.open(Form("%s/badinfo.txt",fOutDir.Data()),std::ios_base::trunc);
+  goodinfo.open(Form("%s/goodinfo.txt",fOutDir.Data()),std::ios_base::trunc);
 
   HLTPlots::InitTree();
 }
@@ -67,6 +68,9 @@ HLTPlots::~HLTPlots()
   delete fInFile;
 
   delete fOutFile;
+
+  badinfo.close();
+  goodinfo.close();
 }
 
 void HLTPlots::DoPlots()
@@ -86,12 +90,6 @@ void HLTPlots::DoPlots()
     efftimes[iera] = new TEfficiency(Form("efftime_%i",iera),"HLT Efficiency vs Leading Photon Seed Time [ns];Photon Offline Seed Time [ns];Efficiency",60,-5.,25.);
     effHTs[iera] = new TEfficiency(Form("effHT_%i",iera),"HLT Efficiency vs PF H_{T};Offline PF H_{T} (Min PFJet p_{T} > 15);Efficiency",nbinsxHT,xbinsHT);
   }
-
-  std::ofstream badinfo;
-  badinfo.open("badinfo.txt",std::ios_base::trunc);
-
-  std::ofstream goodinfo;
-  goodinfo.open("goodinfo.txt",std::ios_base::trunc);
 
   for (UInt_t ientry = fStart; ientry < fEnd; ientry++)
   {
@@ -236,9 +234,6 @@ void HLTPlots::DoPlots()
     HLTPlots::OutputEfficiency(efftimes[iera],Form("htime_%i",iera));
     HLTPlots::OutputEfficiency(effHTs[iera],Form("hHT_%i",iera));
   }
-
-  badinfo.close();
-  goodinfo.close();
 }
 
 void HLTPlots::HT(const Int_t iph, JetInfo & jetinfo)

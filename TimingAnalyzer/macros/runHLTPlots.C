@@ -28,7 +28,7 @@ void runHLTPlots(const TString & dataset = "SP", const TString & era = "2017C", 
   const UInt_t  start = 0;
   const UInt_t  end   = 0;
   const TString infile = Form("input/DATA/2017/HLT_CHECK/%s/hltdump_%s.root",dataset.Data(),era.Data());
-  const TString outdir = Form("IsTrack_%s_%s",dataset.Data(),era.Data());
+  const TString outdir = Form("IsTrackCheck_%s_%s",dataset.Data(),era.Data());
   //   const TString infile = Form("plus5.root");
   //   const TString outdir = Form("test");
   const TString runs = "noruns.txt";
