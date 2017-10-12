@@ -17,7 +17,8 @@ namespace Config
   Bool_t  useQCD     = false;
   Bool_t  useGJets   = false;
   Bool_t  splitOOT   = false;
-  Int_t   nPhotons   = 4;
+  Int_t   nTotalPhotons = 4;
+  Int_t   nPhotons   = nTotalPhotons;
   Bool_t  doEvStd    = false;
   Bool_t  doPhoStd   = false;
   Bool_t  pfIsoEA    = false;    

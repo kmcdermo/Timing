@@ -95,7 +95,8 @@ namespace Config
   extern Bool_t      useQCD;
   extern Bool_t      useGJets;
   extern Bool_t      splitOOT;
-  extern Int_t       nPhotons;
+  extern Int_t       nTotalPhotons; // total stored in the event
+  extern Int_t       nPhotons; // allowed photons per split
   extern Bool_t      doEvStd;
   extern Bool_t      doPhoStd;
   extern Bool_t      pfIsoEA; 

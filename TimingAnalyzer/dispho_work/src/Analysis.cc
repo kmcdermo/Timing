@@ -10,7 +10,7 @@ Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample),
   gROOT->ProcessLine("#include <vector>");
 
   // Set input
-  const TString filename = Form("input/%s/%s/%s/%s", Config::year.Data(), (fIsMC?"MC":"DATA"), fSample.Data(), "tree.root");
+  const TString filename = Form("input/%s/%s/%s/%s", Config::year.Data(), (fIsMC?"MC":"DATA"), fSample.Data(), "tmp2.root");
   fInFile  = TFile::Open(filename.Data());
   CheckValidFile(fInFile,filename);
 
@@ -101,13 +101,12 @@ void Analysis::EventLoop()
     if   (fIsMC) {weight = (fXsec * Config::lumi * genwgt / fWgtsum) * fPUweights[genputrue];}
     else         {weight = 1.0;}
 
-
     ////////////////////////////////
     //                            // 
     // Determine how many objects //
     //                            // 
     ////////////////////////////////
-    const Int_t Nphotons = std::min(nphotons,Config::nPhotons);
+    const Int_t Nphotons = std::min(nphotons,Config::nTotalPhotons);
     const Int_t Njets    = std::min(njets,Config::nJets);
 
     // fill the plots
@@ -252,7 +251,7 @@ void Analysis::FillPhotonStandardPlots(const Int_t Nphotons, const Float_t weigh
     const auto & pho = phos[ipho];
     const Int_t iPho = (!pho.isOOT ? iged++ : ioot++);
     const TString name = Form("%i_%s_%s", (Config::splitOOT ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
-    
+
     stdphoTH1Map[Form("phopt_%s",name.Data())]->Fill(pho.pt,weight);
     stdphoTH1Map[Form("phophi_%s",name.Data())]->Fill(pho.phi,weight);
     stdphoTH1Map[Form("phoeta_%s",name.Data())]->Fill(pho.eta,weight);
@@ -300,7 +299,7 @@ void Analysis::FillIsoNvtxPlots(const Int_t Nphotons, const Float_t weight)
   {
     const auto & pho = phos[ipho];
     const Int_t iPho = (!pho.isOOT ? iged++ : ioot++);
-    const TString name = Form("%i_%s_%s", (Config::splitOOT ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
+    const TString name = Form("%i_%s_%s_v_nvtx", (Config::splitOOT ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
 
     const float chgHadIso = (Config::pfIsoEA ? std::max(pho.ChgHadIso - rho * GetChargedHadronEA(pho.sceta),0.f) : pho.ChgHadIso);
     const float neuHadIso = (Config::pfIsoEA ? std::max(pho.NeuHadIso - rho * GetNeutralHadronEA(pho.sceta),0.f) : pho.NeuHadIso);
@@ -717,7 +716,7 @@ void Analysis::InitStructs()
   jets.resize(Config::nJets);
 
   phos.clear();
-  phos.resize(Config::nPhotons);
+  phos.resize(Config::nTotalPhotons);
 }
 
 void Analysis::InitBranchVecs()
@@ -729,7 +728,7 @@ void Analysis::InitBranchVecs()
   rhOOT = 0;
   rhID = 0;
 
-  for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++) 
+  for (Int_t ipho = 0; ipho < Config::nTotalPhotons; ipho++) 
   {
     phos[ipho].recHits = 0;
   }  
@@ -837,7 +836,7 @@ void Analysis::InitBranches()
   fInTree->SetBranchAddress("rhID", &rhID, &b_rhID);
 
   fInTree->SetBranchAddress("nphotons", &nphotons, &b_nphotons);
-  for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++) 
+  for (Int_t ipho = 0; ipho < Config::nTotalPhotons; ipho++) 
   {
     auto & pho = phos[ipho];
     fInTree->SetBranchAddress(Form("phoE_%i",ipho), &pho.E, &pho.b_E);
