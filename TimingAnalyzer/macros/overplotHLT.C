@@ -51,7 +51,7 @@ void overplotHLT()
     
     for (Int_t i = 0; i < N; i++)
     {
-      files   [i] = TFile::Open(Form("IsTrackCheck_SP_%s/cuts_jetIdL_jetER_%s/plots.root",eras[i].Data(),eff.Data()));
+      files   [i] = TFile::Open(Form("HLT_GOLDEN_SP_%s/cuts_jetIdL_jetER_%s/plots.root",eras[i].Data(),eff.Data()));
       effptEBs[i] = (TEfficiency*)files[i]->Get("effptEB_0");
       effptEEs[i] = (TEfficiency*)files[i]->Get("effptEE_0");
       effetas [i] = (TEfficiency*)files[i]->Get("effeta_0");
