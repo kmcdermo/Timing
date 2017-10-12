@@ -272,7 +272,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     int ipho = 0;
     for (const auto & photon : photons)
     {
-      (photon.isOOT() ? ootphos : gedphos).emplace_back(ipho++);
+      (!photon.isOOT() ? gedphos : ootphos).emplace_back(ipho++);
     }
 
     std::vector<oot::Photon> tmpphotons;

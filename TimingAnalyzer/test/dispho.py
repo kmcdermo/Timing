@@ -194,7 +194,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    ## extra object pruning
    seedTimemin = cms.double(options.seedTimemin),
    ## split OOT and GED photons
-   applySplitOOT = cms.double(options.applySplitOOT),
+   applySplitOOT = cms.bool(options.applySplitOOT),
    ## pre-selection
    applyTrigger = cms.bool(options.applyTrigger),
    minHT        = cms.double(options.minHT),
