@@ -10,6 +10,7 @@
 
 #include "common/common.h"
 
+#include <fstream>
 #include <vector>
 #include <map>
 
@@ -60,6 +61,9 @@ private :
 
   TString fOutDir;
   TFile * fOutFile;
+
+  std::ofstream badinfo;
+  std::ofstream goodinfo;
   
   std::map<UInt_t,Int_t> fRunEraMap;
   Int_t fNEras;

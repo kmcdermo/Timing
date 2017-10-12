@@ -36,7 +36,7 @@ void Overplot(const TEffVec& teffs, const TStrVec& eras, const TString cname, co
 void overplotHLT()
 {
   TStrVec effs  = {"EtEff","DispEff","HTEff"};
-  TStrVec eras  = {"2017B","2017C","2017D"};
+  TStrVec eras  = {"2017B","2017C","2017DE"};
   const Int_t N = eras.size();
 
   for (auto & eff : effs)
@@ -51,7 +51,7 @@ void overplotHLT()
     
     for (Int_t i = 0; i < N; i++)
     {
-      files   [i] = TFile::Open(Form("HLT_Golden_SP_%s/cuts_jetIdL_jetER_%s/plots.root",eras[i].Data(),eff.Data()));
+      files   [i] = TFile::Open(Form("HLT_GOLDEN_SP_%s/cuts_jetIdL_jetER_%s/plots.root",eras[i].Data(),eff.Data()));
       effptEBs[i] = (TEfficiency*)files[i]->Get("effptEB_0");
       effptEEs[i] = (TEfficiency*)files[i]->Get("effptEE_0");
       effetas [i] = (TEfficiency*)files[i]->Get("effeta_0");
