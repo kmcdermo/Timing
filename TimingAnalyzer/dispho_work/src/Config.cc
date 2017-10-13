@@ -24,6 +24,8 @@ namespace Config
   Bool_t  pfIsoEA    = false;    
   Bool_t  doIso      = false;
   Bool_t  doIsoNvtx  = false;
+  Bool_t  useMean    = false;
+  Float_t quantProb  = 0.9;
   Bool_t  dumpStatus = false;
   TString year       = "2017";
   Bool_t  saveHists  = false;

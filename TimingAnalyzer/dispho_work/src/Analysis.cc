@@ -456,8 +456,8 @@ void Analysis::Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, con
     Analysis::SaveTH1s(th1dmap,th1dsubmap);
     if (!fIsMC)
     {
-      Analysis::DumpTH1Names(stdphoTH1Map,stdphoTH1SubMap);
-      Analysis::DumpTH1PhoNames(stdphoTH1Map,stdphoTH1SubMap);
+      Analysis::DumpTH1Names(th1dmap,th1dsubmap);
+      Analysis::DumpTH1PhoNames(th1dmap,th1dsubmap);
     }
   }
   Analysis::DeleteTH1s(th1dmap);
@@ -492,7 +492,8 @@ void Analysis::Project2Dto1D(const TH2F * hist2d, const TString & subdir2d, TH1M
     const Int_t ixlow  = Int_t(xlow); 
     const Int_t ixhigh = Int_t(xhigh); 
     histname = Form("%s_%i_%i_bin%i",basename.Data(),ixlow,ixhigh,ibinx);
-    th1dmap[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nBinsY,ylow,yhigh,Form("%s in %s bin: %i to %i",ytitle.Data(),xtitle.Data(),ixlow,ixhigh),"Events",subdir1dmap,subdir2d);
+    th1dmap[histname.Data()] = Analysis::MakeTH1Plot(histname.Data(),"",nBinsY,ylow,yhigh,
+						     Form("%s in %s bin: %i to %i",ytitle.Data(),xtitle.Data(),ixlow,ixhigh),"Events",subdir1dmap,subdir2d);
 
     th1dbinmap[histname.Data()] = ibinx; // universal pairing
 
@@ -505,17 +506,34 @@ void Analysis::Project2Dto1D(const TH2F * hist2d, const TString & subdir2d, TH1M
   }
 }
 
+void Analysis::ProduceQuantile(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrIntMap & th1dbinmap) 
+{
+  // initialize new mean/sigma histograms
+  TH1F * outhist_quant = Analysis::MakeTH1PlotFromTH2(hist2d,Form("%s_quant_%4.2f",hist2d->GetName(),Config::quantProb),
+						      Form("%i%% Quantile of %s",Int_t(100*Config::quantProb),hist2d->GetYaxis()->GetTitle()));
+
+  // use this to store runs that by themselves produce bad fits
+  for (TH1MapIter mapiter = th1dmap.begin(); mapiter != th1dmap.end(); ++mapiter) 
+  { 
+    const Int_t ibin = th1dbinmap[mapiter->first]; // returns which bin each th1 corresponds to one the new plot
+
+    // Perform quantile analysis
+    Float_t x = 0.f, dx_dn = 0.f, dx_up = 0.f;
+    Analysis::GetQuantileX(mapiter->second,x,dx_dn,dx_up);
+
+    outhist_quant->SetBinContent(ibin,x);
+    outhist_quant->SetBinError(ibin,(dx_dn>dx_up?dx_dn:dx_up)); // really should set with tgraphasymmerrors
+  } // end loop over th1s
+
+  Analysis::SaveProjectedTH1(outhist_quant,subdir2d);
+
+  delete outhist_quant;
+}
+
 void Analysis::ProduceMeanHist(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrIntMap & th1dbinmap) 
 {
   // initialize new mean/sigma histograms
-  const TString name = Form("%s_mean",hist2d->GetName());
-  TH1F * outhist_mean = new TH1F(name.Data(),"",hist2d->GetNbinsX(),hist2d->GetXaxis()->GetXmin(),hist2d->GetXaxis()->GetXmax());
-  outhist_mean->GetXaxis()->SetTitle(hist2d->GetXaxis()->GetTitle());
-  outhist_mean->GetYaxis()->SetTitle(Form("Mean of %s",hist2d->GetYaxis()->GetTitle()));
-  outhist_mean->SetLineColor(fColor);
-  outhist_mean->SetMarkerColor(fColor);
-  outhist_mean->GetYaxis()->SetTitleOffset(outhist_mean->GetYaxis()->GetTitleOffset() * Config::TitleFF);
-  outhist_mean->Sumw2();
+  TH1F * outhist_mean = Analysis::MakeTH1PlotFromTH2(hist2d,Form("%s_mean",hist2d->GetName()),Form("Mean of %s",hist2d->GetYaxis()->GetTitle()));
 
   // use this to store runs that by themselves produce bad fits
   for (TH1MapIter mapiter = th1dmap.begin(); mapiter != th1dmap.end(); ++mapiter) 
@@ -525,32 +543,78 @@ void Analysis::ProduceMeanHist(const TH2F * hist2d, const TString & subdir2d, TH
     outhist_mean->SetBinError(ibin,mapiter->second->GetMeanError());
   } // end loop over th1s
 
-  // write output mean/sigma hists to file
-  fOutFile->cd();
-  outhist_mean->Write(outhist_mean->GetName(),TObject::kWriteDelete);
-  if (!fIsMC)
-  {
-    fTH1Dump << name.Data() << " " << subdir2d.Data() << std::endl;
-    if (name.Contains("GED",TString::kExact)) fTH1PhoDump << name.Data() << " " << subdir2d.Data() << std::endl;
-  }
-
-  if (Config::saveHists)
-  {
-    // save log/lin of each plot
-    TCanvas * canv = new TCanvas("canv","canv");
-    canv->cd();
-    canv->SetLogy(0);
-    
-    outhist_mean->Draw("PE");
-    CMSLumi(canv);
-    canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdir2d.Data(),outhist_mean->GetName(),Config::outtype.Data()));
-    
-    delete canv;
-  }
+  Analysis::SaveProjectedTH1(outhist_mean,subdir2d);
 
   delete outhist_mean;
 }
 
+void Analysis::GetQuantileX(const TH1F * hist, Float_t & x, Float_t & dx_dn, Float_t & dx_up)
+{
+  const Float_t integral = hist->Integral();
+  const Int_t   nBinsX   = hist->GetNbinsX();
+  
+  std::vector<Float_t> eff(nBinsX), eff_err(nBinsX), centers(nBinsX);
+  
+  Float_t sum = 0.f; 
+  for (Int_t ibin = 1; ibin <= nBinsX; ibin++)
+  { 
+    sum += hist->GetBinContent(ibin); 
+    centers[ibin-1] = hist->GetXaxis()->GetBinCenter(ibin);
+
+    if (sum != 0.f && integral != 0.f)
+    { 
+      eff    [ibin-1] = sum/integral;
+      eff_err[ibin-1] = std::sqrt(eff[ibin-1]*(1.f-eff[ibin-1])/integral); 
+    }
+    else
+    {
+      eff    [ibin-1] = 0.f;
+      eff_err[ibin-1] = 0.f; 
+    }
+  }
+
+  for (Int_t i = 0; i < nBinsX; i++)
+  {
+    if (eff[i] > Config::quantProb) x = centers[i];
+  }
+
+  dx_dn = Analysis::FluctuateX(eff,eff_err,centers,x,false);
+  dx_up = Analysis::FluctuateX(eff,eff_err,centers,x,true);
+}
+
+Float_t Analysis::FluctuateX(const FltVec & eff, const FltVec & eff_err, const FltVec & centers, const Float_t x, const Bool_t isUp)
+{
+  const Int_t nEffs = eff.size();
+  std::vector<Float_t> eff_v(nEffs); // v = variation
+  
+  Int_t i_v = -1;
+  for (Int_t i = 0; i < nEffs; i++)
+  {
+    eff_v[i] = eff[i] + ((isUp)?1.f:-1.f) * eff_err[i];
+    if (eff_v[i] > Config::quantProb) 
+    {
+      i_v = i;
+      break;
+    }
+  }
+
+  Float_t x_v = 0.f;
+  if (i_v != -1)
+  {
+    if (eff_v[i_v] > 0.f && eff_v[i_v-1] > 0.f && (centers[i_v]-centers[i_v-1]) > 0.f)
+    {
+      const Float_t slope = (eff_v[i_v]-eff_v[i_v-1])/(centers[i_v]-centers[i_v-1]);
+      if (slope > 0.f)
+      {
+	const Float_t intercept = eff_v[i_v]-slope*centers[i_v];
+	x_v = (Config::quantProb-intercept)/slope;
+      }
+    }
+  }
+
+  return ((i_v != -1) ? std::abs(x-x_v) : 0.f);
+}
+   
 TH1F * Analysis::MakeTH1Plot(const TString & hname, const TString & htitle, const Int_t nbinsx, Double_t xlow, Double_t xhigh,
 			     const TString & xtitle, const TString & ytitle, TStrMap& subdirmap, const TString & subdir) 
 {
@@ -565,6 +629,19 @@ TH1F * Analysis::MakeTH1Plot(const TString & hname, const TString & htitle, cons
 
   // cheat a bit and set subdir map here
   subdirmap[hname] = subdir;
+  
+  return hist;
+}
+
+TH1F * Analysis::MakeTH1PlotFromTH2(const TH2F * hist2d, const TString & name, const TString & ytitle)
+{
+  TH1F * hist = new TH1F(name.Data(),"",hist2d->GetNbinsX(),hist2d->GetXaxis()->GetXmin(),hist2d->GetXaxis()->GetXmax());
+  hist->GetXaxis()->SetTitle(hist2d->GetXaxis()->GetTitle());
+  hist->GetYaxis()->SetTitle(ytitle.Data());
+  hist->SetLineColor(fColor);
+  hist->SetMarkerColor(fColor);
+  hist->GetYaxis()->SetTitleOffset(hist->GetYaxis()->GetTitleOffset() * Config::TitleFF);
+  hist->Sumw2();
   
   return hist;
 }
@@ -628,6 +705,34 @@ void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap)
   } // end loop over hists
 
   delete canv;
+}
+
+void Analysis::SaveProjectedTH1(TH1F * hist, const TString & subdir2d)
+{
+  const TString name = hist->GetName();
+
+  // write output hist to file
+  fOutFile->cd();
+  hist->Write(hist->GetName(),TObject::kWriteDelete);
+  if (!fIsMC)
+  {
+    fTH1Dump << name.Data() << " " << subdir2d.Data() << std::endl;
+    if (name.Contains("GED",TString::kExact)) fTH1PhoDump << name.Data() << " " << subdir2d.Data() << std::endl;
+  }
+
+  if (Config::saveHists)
+  {
+    // save log/lin of each plot
+    TCanvas * canv = new TCanvas("canv","canv");
+    canv->cd();
+    canv->SetLogy(0);
+    
+    hist->Draw("PE");
+    CMSLumi(canv);
+    canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdir2d.Data(),hist->GetName(),Config::outtype.Data()));
+    
+    delete canv;
+  }
 }
 
 void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap) 

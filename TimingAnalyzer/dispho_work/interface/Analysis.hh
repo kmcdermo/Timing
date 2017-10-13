@@ -42,14 +42,19 @@ public:
   void MakeInclusiveTH2s(TH2Map & th2map, TStrMap & subdirmap);
   void Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, const TString & name);
   void Project2Dto1D(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrMap & subdir1dmap, TStrIntMap & th1dbinmap);
+  void ProduceQuantile(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrIntMap & th1dbinmap);
   void ProduceMeanHist(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrIntMap & th1dbinmap);
+  void GetQuantileX(const TH1F * hist, Float_t & x, Float_t & dx_dn, Float_t & dx_up);
+  Float_t FluctuateX(const FltVec & eff, const FltVec & eff_err, const FltVec & centers, const Float_t x, const Bool_t isUp);
   TH1F * MakeTH1Plot(const TString & hname, const TString & htitle, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh, 
 		     const TString & xtitle, const TString & ytitle, TStrMap& subdirmap, const TString & subdir);
+  TH1F * MakeTH1PlotFromTH2(const TH2F * hist2d, const TString & name, const TString & ytitle);
   TH2F * MakeTH2Plot(const TString & hname, const TString & htitle, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh, const TString & xtitle,
 		     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString & ytitle, TStrMap& subdirmap, const TString & subdir);
   TH2F * MakeTH2Plot(const TString & hname, const TString & htitle, const DblVec& vxbins, const TString & xtitle, 
 		     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString & ytitle, TStrMap& subdirmap, const TString & subdir);
   void SaveTH1s(TH1Map & th1map, TStrMap & subdirmap);
+  void SaveProjectedTH1(TH1F * hist, const TString & subdir2d);
   void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
   void DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap);
   void DumpTH1PhoNames(TH1Map & th1map, TStrMap & subdirmap);

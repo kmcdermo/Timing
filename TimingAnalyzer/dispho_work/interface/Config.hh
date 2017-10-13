@@ -102,6 +102,8 @@ namespace Config
   extern Bool_t      pfIsoEA; 
   extern Bool_t      doIso;
   extern Bool_t      doIsoNvtx;
+  extern Bool_t      useMean;
+  extern Float_t     quantProb;
   extern Bool_t      dumpStatus;
   extern TString     year;
   extern Bool_t      saveHists;
