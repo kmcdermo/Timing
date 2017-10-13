@@ -450,7 +450,14 @@ void Analysis::Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, con
 {
   TH1Map th1dmap; TStrMap th1dsubmap; TStrIntMap th1dbinmap;
   Analysis::Project2Dto1D(hist2d,subdir2d,th1dmap,th1dsubmap,th1dbinmap);
-  Analysis::ProduceMeanHist(hist2d,subdir2d,th1dmap,th1dbinmap);
+  if (Config::useMean)
+  {
+    Analysis::ProduceQuantile(hist2d,subdir2d,th1dmap,th1dbinmap);
+  }
+  else 
+  {
+    Analysis::ProduceMeanHist(hist2d,subdir2d,th1dmap,th1dbinmap);
+  }
   if (Config::saveTempHists) 
   {
     Analysis::SaveTH1s(th1dmap,th1dsubmap);

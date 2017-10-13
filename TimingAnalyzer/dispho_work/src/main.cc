@@ -3,6 +3,7 @@
 #include "../interface/CommonUtils.hh"
 #include "../interface/PUReweight.hh"
 #include "../interface/Analysis.hh"
+#include "../interface/EACalculator.hh"
 #include "../interface/StackDataMC.hh"
 #include "../interface/StackGEDOOT.hh"
 
@@ -79,6 +80,7 @@ int main(int argc, const char* argv[])
 	"  --outdir        <string>      name of ouput directory (def: %s)\n"
 	"  --do-purw       <bool>        calculate pile-up weights (def: %s)\n"
 	"  --do-analysis   <bool>        make analysis plots (def: %s)\n"
+	"  --do-EA         <bool>        calculate effective area for isolation (def: %s)\n"
 	"  --do-stacks     <bool>        stack data/MC plots (def: %s)\n"
 	"  --do-phostacks  <bool>        stack GED/OOT plots (def: %s)\n"
 	"  --do-demo       <bool>        demo analysis (def: %s)\n"
@@ -106,6 +108,7 @@ int main(int argc, const char* argv[])
         Config::outdir.Data(),
 	PrintBool(Config::doPURW),
 	PrintBool(Config::doAnalysis),
+	PrintBool(Config::doEACalc),
 	PrintBool(Config::doStacks),
 	PrintBool(Config::doPhoStacks),
 	PrintBool(Config::doDemo),
@@ -134,6 +137,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--outdir")      { next_arg_or_die(mArgs, i); Config::outdir = i->c_str(); }
     else if (*i == "--do-purw")     { Config::doPURW     = true; }
     else if (*i == "--do-analysis") { Config::doAnalysis = true; }
+    else if (*i == "--do-EA")       { Config::doEACalc   = true; }
     else if (*i == "--do-stacks")   { Config::doStacks   = true; }
     else if (*i == "--do-phostacks") { Config::doPhoStacks = true; }
     else if (*i == "--do-demo")     { Config::doDemo     = true; Config::doAnalysis = true; Config::doEvStd = true; Config::doPhoStd = true; }
@@ -183,7 +187,8 @@ int main(int argc, const char* argv[])
   {
     std::cout << "Skipping calculating pile-up weights" << std::endl;
   }
-  
+  std::cout << std::endl;
+
   ///////////////////
   // Main Analysis //
   ///////////////////
@@ -204,6 +209,28 @@ int main(int argc, const char* argv[])
   {
     std::cout << "Skipping analysis section" << std::endl;
   }
+  std::cout << std::endl;
+
+  /////////////////////////////
+  // Compute Effective Areas //
+  /////////////////////////////
+  if (Config::doEACalc)
+  {
+    std::cout << "Starting analyis section" << std::endl;
+    for (const auto & samplePair : Config::SampleMap)
+    {
+      EACalculator calc(samplePair.first,samplePair.second);
+      std::cout << "Calculating EA: " << (samplePair.second?"MC":"DATA") << " sample: " << samplePair.first << std::endl;
+      calc.ExtractEA();
+      std::cout << "Done calculating EA: " << (samplePair.second?"MC":"DATA") << " sample: " << samplePair.first << std::endl;
+    }
+    std::cout << "Finished EA calculation section" << std::endl;
+  }
+  else 
+  {
+    std::cout << "Skipping EA calculation section" << std::endl;
+  }
+  std::cout << std::endl;
 
   ///////////////////
   // Stack data/mc //
@@ -220,6 +247,7 @@ int main(int argc, const char* argv[])
   {
     std::cout << "Skipping stacking data over MC" << std::endl;
   }
+  std::cout << std::endl;
 
   ///////////////////
   // Stack GED/OOT //
@@ -241,6 +269,7 @@ int main(int argc, const char* argv[])
   {
     std::cout << "Skipping stacking GED/OOT photon plots" << std::endl;
   }
+  std::cout << std::endl;
 
   // end of the line
   DestroyMain(yields,tdrStyle);

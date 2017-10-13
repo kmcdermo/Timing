@@ -84,6 +84,7 @@ namespace Config
   extern TString     outdir;
   extern Bool_t      doPURW;
   extern Bool_t      doAnalysis;
+  extern Bool_t      doEACalc;
   extern Bool_t      doStacks;
   extern Bool_t      doPhoStacks;
   extern Bool_t      doDemo;

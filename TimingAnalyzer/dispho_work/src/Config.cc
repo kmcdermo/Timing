@@ -6,6 +6,7 @@ namespace Config
   TString outdir     = "output";
   Bool_t  doPURW     = false;
   Bool_t  doAnalysis = false;
+  Bool_t  doEACalc   = false;
   Bool_t  doStacks   = false;
   Bool_t  doPhoStacks = false;
   Bool_t  doDemo     = false;
