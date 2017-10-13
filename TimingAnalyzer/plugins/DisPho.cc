@@ -17,8 +17,10 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // object extra pruning cuts
   seedTimemin(iConfig.existsAs<double>("seedTimemin") ? iConfig.getParameter<double>("seedTimemin") : -5.f),
 
-  // photon splitting
-  applySplitOOT(iConfig.existsAs<bool>("applySplitOOT") ? iConfig.getParameter<bool>("applySplitOOT") : false),
+  // photon storing
+  splitPho(iConfig.existsAs<bool>("splitPho") ? iConfig.getParameter<bool>("splitPho") : false),
+  onlyGED (iConfig.existsAs<bool>("onlyGED")  ? iConfig.getParameter<bool>("onlyGED")  : false),
+  onlyOOT (iConfig.existsAs<bool>("onlyOOT")  ? iConfig.getParameter<bool>("onlyOOT")  : false),
 
   // pre-selection
   applyTrigger(iConfig.existsAs<bool>("applyTrigger") ? iConfig.getParameter<bool>("applyTrigger") : false),
@@ -133,7 +135,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Get Object Handles //
   //                    //
   ////////////////////////
-
   // TRIGGERS
   edm::Handle<edm::TriggerResults> triggerResultsH;
   iEvent.getByToken(triggerResultsToken, triggerResultsH);
@@ -259,52 +260,20 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 				 return (seedTime < seedTimemin);
 			       }),photons.end());
 
-  //////////////////
-  //              //
-  // Split by OOT //
-  //              //
-  //////////////////
-  if (applySplitOOT)
-  {
-    std::vector<int> gedphos;
-    std::vector<int> ootphos;
-
-    int ipho = 0;
-    for (const auto & photon : photons)
-    {
-      (!photon.isOOT() ? gedphos : ootphos).emplace_back(ipho++);
-    }
-
-    std::vector<oot::Photon> tmpphotons;
-    if (gedphos.size() >= 1) 
-    {
-      tmpphotons.emplace_back(photons[gedphos[0]]);
-    }
-    
-    if (gedphos.size() >= 2) 
-    {
-      tmpphotons.emplace_back(photons[gedphos[1]]);
-    }
-
-    if (ootphos.size() >= 1) 
-    {
-      tmpphotons.emplace_back(photons[ootphos[0]]);
-    }
-    
-    if (ootphos.size() >= 2) 
-    {
-      tmpphotons.emplace_back(photons[ootphos[1]]);
-    }
-
-    photons.swap(tmpphotons);
-  }
+  ///////////////////////////// 
+  //                         //
+  // Photon Storing Options  //
+  //                         //
+  /////////////////////////////
+  if (splitPho) oot::SplitPhotons(photons,2);       // split photons by OOT and GED (store at most two of each)
+  if (onlyGED)  oot::StoreOnlyPho(photons,4,false); // store only GED photons, top four only
+  if (onlyOOT)  oot::StoreOnlyPho(photons,4,true);  // store only OOT photons, top four only
 
   /////////////////////////
   //                     //
   // Apply pre-selection //
   //                     //
   /////////////////////////
-
   // trigger pre-selection
   bool triggered = false;
   for (const auto & triggerBitPair : triggerBitMap)
@@ -349,7 +318,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // MC Info //
   //         //
   /////////////
-
   if (isMC) 
   {
     ///////////////////////
@@ -383,7 +351,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     // Gen particle info //
     //                   //
     ///////////////////////
-    
     // GMSB
     if (isGMSB) 
     {
@@ -828,12 +795,11 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   phoBranch.scPhi_ = phosc->phi();
   phoBranch.scEta_ = phosc->eta();
 
-  //  const float sceta = std::abs(phoBranch.scEta_);
-
   // ID-like variables
   phoBranch.HoE_ = pho.hadTowOverEm(); // used in ID + trigger (single tower HoverE)
   phoBranch.r9_  = pho.r9(); // used in slimming in PAT + trigger
 
+  // const float sceta = std::abs(phoBranch.scEta_);
   // phoBranch.ChgHadIso_ = std::max(pho.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
   // phoBranch.NeuHadIso_ = std::max(pho.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);
   // phoBranch.PhoIso_    = std::max(pho.photonIso()        - (rho * oot::GetGammaEA        (sceta)),0.f);

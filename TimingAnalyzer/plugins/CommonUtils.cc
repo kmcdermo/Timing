@@ -591,4 +591,53 @@ namespace oot
       else                                  return 0; 
     }
   }
+
+  ///////////////////////
+  //                   //
+  // Storing Functions //
+  //                   //
+  ///////////////////////
+  void SplitPhotons(std::vector<oot::Photon>& photons, const int nmax)
+  {
+    std::vector<int> gedphos;
+    std::vector<int> ootphos;
+
+    int ipho = 0;
+    for (const auto & photon : photons)
+    {
+      (!photon.isOOT() ? gedphos : ootphos).emplace_back(ipho++);
+    }
+    
+    std::vector<oot::Photon> tmpphotons;
+
+    const int ngedphos = gedphos.size();
+    for (int i = 0; i < nmax; i++)
+    {
+      if (ngedphos > i) tmpphotons.emplace_back(photons[gedphos[i]]);
+    }
+
+    const int nootphos = ootphos.size();
+    for (int i = 0; i < nmax; i++)
+    {
+      if (nootphos > i) tmpphotons.emplace_back(photons[ootphos[i]]);
+    }
+
+    photons.swap(tmpphotons);
+  }
+
+  void StoreOnlyPho(std::vector<oot::Photon>& photons, const int nmax, const bool isOOT)
+  {
+    std::vector<oot::Photon> tmpphotons;
+
+    int ipho = 0;
+    for (const auto & photon : photons)
+    {
+      if (ipho >= nmax) break;
+      ipho++;
+
+      if (photon.isOOT() == isOOT) tmpphotons.emplace_back(photon);
+    }
+
+    photons.swap(tmpphotons);
+  }
 };

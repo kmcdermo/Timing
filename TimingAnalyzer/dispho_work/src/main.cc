@@ -90,7 +90,7 @@ int main(int argc, const char* argv[])
 	"  --use-HVDS      <bool>        use HVDS with MC (def: %s)\n"
 	"  --use-QCD       <bool>        use QCD with MC (def: %s)\n"
 	"  --use-GJets     <bool>        use Gamma+Jets with MC (def: %s)\n"
-	"  --splitOOT      <bool>        split OOT and GED photon collections (def: %s)\n"
+	"  --split-pho     <bool>        split OOT and GED photon collections (def: %s)\n"
 	"  --do-evstd      <bool>        make standard event validation plots (def: %s)\n"
 	"  --do-phostd     <bool>        make standard photon validation plots (def: %s)\n"
 	"  --use-pfIsoEA   <bool>        use effective areas for PF isolations (def: %s)\n"
@@ -118,7 +118,7 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::useHVDS),
 	PrintBool(Config::useQCD),
 	PrintBool(Config::useGJets),
-	PrintBool(Config::splitOOT),
+	PrintBool(Config::splitPho),
 	PrintBool(Config::doEvStd),
 	PrintBool(Config::doPhoStd),
 	PrintBool(Config::pfIsoEA),
@@ -147,7 +147,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--use-HVDS")    { Config::useHVDS    = true; }
     else if (*i == "--use-QCD")     { Config::useQCD     = true; }
     else if (*i == "--use-GJets")   { Config::useGJets   = true; }
-    else if (*i == "--splitOOT")    { Config::splitOOT   = true; Config::nPhotons   = Config::nTotalPhotons / 2; }
+    else if (*i == "--split-pho")   { Config::splitPho   = true; Config::nPhotons   = Config::nTotalPhotons / 2; }
     else if (*i == "--do-evstd")    { Config::doAnalysis = true; Config::doEvStd    = true; }
     else if (*i == "--do-phostd")   { Config::doAnalysis = true; Config::doPhoStd   = true; }
     else if (*i == "--use-pfIsoEA") { Config::pfIsoEA    = true; }

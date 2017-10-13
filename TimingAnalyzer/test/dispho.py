@@ -21,8 +21,10 @@ options.register('phIDmin','loose',VarParsing.multiplicity.singleton,VarParsing.
 ## object extra pruning cuts
 options.register('seedTimemin',-5.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon seed time minimum cut');
 
-## photon OOT splitting
-options.register('applySplitOOT',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store leading top two photons, OOT and GED');
+## photon storing options
+options.register('splitPho',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store leading top two photons, OOT and GED');
+options.register('onlyGED',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store only leading GED photons, at most four');
+options.register('onlyOOT',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store only leading OOT photons, at most four');
 
 ## pre-selection cuts
 options.register('applyTrigger',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to apply trigger pre-selection');
@@ -82,8 +84,10 @@ print "phpTmin        : ",options.phpTmin
 print "phIDmin        : ",options.phIDmin
 print "     -- Extra Pruning --"
 print "seedTimemin    : ",options.seedTimemin
-print "     -- Split by OOT --"
-print "applySplitOOT  : ",options.applySplitOOT
+print "     -- Photon Storing --"
+print "splitPho       : ",options.splitPho
+print "onlyGED        : ",options.onlyGED
+print "onlyOOT        : ",options.onlyOOT
 print "     -- Pre-Selection --"
 print "applyTrigger   : ",options.applyTrigger
 print "minHT          : ",options.minHT
@@ -193,8 +197,10 @@ process.tree = cms.EDAnalyzer("DisPho",
    phIDmin  = cms.string(options.phIDmin),
    ## extra object pruning
    seedTimemin = cms.double(options.seedTimemin),
-   ## split OOT and GED photons
-   applySplitOOT = cms.bool(options.applySplitOOT),
+   ## photon storing options
+   splitPho = cms.bool(options.splitPho),
+   onlyGED  = cms.bool(options.onlyGED),
+   onlyOOT  = cms.bool(options.onlyOOT),
    ## pre-selection
    applyTrigger = cms.bool(options.applyTrigger),
    minHT        = cms.double(options.minHT),

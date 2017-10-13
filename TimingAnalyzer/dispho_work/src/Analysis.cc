@@ -250,7 +250,7 @@ void Analysis::FillPhotonStandardPlots(const Int_t Nphotons, const Float_t weigh
   {
     const auto & pho = phos[ipho];
     const Int_t iPho = (!pho.isOOT ? iged++ : ioot++);
-    const TString name = Form("%i_%s_%s", (Config::splitOOT ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
+    const TString name = Form("%i_%s_%s", (Config::splitPho ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
 
     stdphoTH1Map[Form("phopt_%s",name.Data())]->Fill(pho.pt,weight);
     stdphoTH1Map[Form("phophi_%s",name.Data())]->Fill(pho.phi,weight);
@@ -277,7 +277,7 @@ void Analysis::FillIsoPlots(const Int_t Nphotons, const Float_t weight)
   {
     const auto & pho = phos[ipho];
     const Int_t iPho = (!pho.isOOT ? iged++ : ioot++);
-    const TString name = Form("%i_%s_%s", (Config::splitOOT ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
+    const TString name = Form("%i_%s_%s", (Config::splitPho ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
 
     const float chgHadIso = (Config::pfIsoEA ? std::max(pho.ChgHadIso - rho * GetChargedHadronEA(pho.sceta),0.f) : pho.ChgHadIso);
     const float neuHadIso = (Config::pfIsoEA ? std::max(pho.NeuHadIso - rho * GetNeutralHadronEA(pho.sceta),0.f) : pho.NeuHadIso);
@@ -299,7 +299,7 @@ void Analysis::FillIsoNvtxPlots(const Int_t Nphotons, const Float_t weight)
   {
     const auto & pho = phos[ipho];
     const Int_t iPho = (!pho.isOOT ? iged++ : ioot++);
-    const TString name = Form("%i_%s_%s_v_nvtx", (Config::splitOOT ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
+    const TString name = Form("%i_%s_%s_v_nvtx", (Config::splitPho ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
 
     const float chgHadIso = (Config::pfIsoEA ? std::max(pho.ChgHadIso - rho * GetChargedHadronEA(pho.sceta),0.f) : pho.ChgHadIso);
     const float neuHadIso = (Config::pfIsoEA ? std::max(pho.NeuHadIso - rho * GetNeutralHadronEA(pho.sceta),0.f) : pho.NeuHadIso);

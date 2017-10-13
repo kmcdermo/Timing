@@ -198,6 +198,8 @@ namespace oot
   int PassNeuIso(const float eta, const float NeuIso, const float pt);
   int PassPhIso (const float eta, const float PhIso,  const float pt);
   int GetPFJetID(const pat::Jet & jet);
+  void SplitPhotons(std::vector<oot::Photon>& photons, const int nmax);
+  void StoreOnlyPho(std::vector<oot::Photon>& photons, const int nmax, const bool isOOT);
 
   ////////////////////////
   //                    //
