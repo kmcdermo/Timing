@@ -177,6 +177,8 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   explicit DisPho(const edm::ParameterSet&);
   ~DisPho();
 
+  void MakeAndFillConfigTree();
+  void MakeEventTree();
   void MakeGMSBBranch(const int i, gmsbStruct& gmsbBranch);
   void MakeHVDSBranch(const int i, hvdsStruct& hvdsBranch);
   void MakeJetBranch(const int i, jetStruct& jetBranch);
@@ -222,7 +224,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
 
   // blinding
-  const long long blindSF;
+  const unsigned int blindSF;
   const bool applyBlindSF;
   const float blindMET;
   const bool applyBlindMET;
@@ -312,8 +314,11 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   edm::EDGetTokenT<std::vector<reco::GenParticle> > genpartsToken;
   edm::EDGetTokenT<std::vector<reco::GenJet> >      genjetsToken;
 
+  // output metadeta configs
+  TTree * configtree;
+
   // output event level ntuple
-  TTree* tree;
+  TTree * tree;
  
   // MC info
   float genwgt;
@@ -328,7 +333,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   hvdsStruct hvdsBranch0, hvdsBranch1, hvdsBranch2, hvdsBranch3;
 
   // event info
-  unsigned long int event;
+  unsigned long int event; // technically unsigned long long in Event.h...
   unsigned int run, lumi;  
 
   // trigger info

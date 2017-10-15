@@ -948,8 +948,91 @@ int DisPho::CheckMatchHVDS(const int iph, const hvdsStruct& hvdsBranch)
 void DisPho::beginJob() 
 {
   edm::Service<TFileService> fs;
-  tree = fs->make<TTree>("tree","tree");
+  
+  // Config tree, filled once
+  configtree = fs->make<TTree>("configtree","configtree");
+  DisPho::MakeAndFillConfigTree();
 
+  // Event tree
+  tree = fs->make<TTree>("tree","tree");
+  DisPho::MakeEventTree();
+}
+
+void DisPho::MakeAndFillConfigTree()
+{
+  // ROOT gets confused with things declared const...
+  // so have to "capture" configs in temps... has to be better way to do this
+
+  // blinding
+  unsigned int blindSF_tmp = blindSF;
+  bool applyBlindSF_tmp = applyBlindSF;
+  float blindMET_tmp = blindMET;
+  bool applyBlindMET_tmp = applyBlindMET;
+  configtree->Branch("blindSF", &blindSF_tmp, "blindSF/i");
+  configtree->Branch("applyBlindSF", &applyBlindSF_tmp, "applyBlindSF/O");
+  configtree->Branch("blindMET", &blindMET_tmp, "blindMET/F");
+  configtree->Branch("applyBlindMET", &applyBlindMET_tmp, "applyBlindMET/O");
+
+  // object prep
+  float jetpTmin_tmp = jetpTmin;
+  int jetIDmin_tmp = jetIDmin;
+  float rhEmin_tmp = rhEmin;
+  float phpTmin_tmp = phpTmin;
+  std::string phIDmin_tmp = phIDmin;
+  configtree->Branch("jetpTmin", &jetpTmin_tmp, "jetpTmin/F");
+  configtree->Branch("jetIDmin", &jetIDmin_tmp, "jetIDmin/I");
+  configtree->Branch("rhEmin", &rhEmin_tmp, "rhEmin/F");
+  configtree->Branch("phpTmin", &phpTmin_tmp, "phpTmin/F");
+  configtree->Branch("phIDmin", &phIDmin_tmp);
+
+  // object extra pruning
+  float seedTimemin_tmp = seedTimemin;
+  configtree->Branch("seedTimemin", &seedTimemin_tmp, "seedTimemin/F");
+
+  // photon storing options
+  bool splitPho_tmp = splitPho;
+  bool onlyGED_tmp = onlyGED;
+  bool onlyOOT_tmp = onlyOOT;
+  configtree->Branch("splitPho", &splitPho_tmp, "splitPho/O");
+  configtree->Branch("onlyGED", &onlyGED_tmp, "onlyGED/O");
+  configtree->Branch("onlyOOT", &onlyOOT_tmp, "onlyOOT/O");
+
+  // pre-selection vars
+  bool applyTrigger_tmp = applyTrigger;
+  float minHT_tmp = minHT;
+  bool applyHT_tmp = applyHT;
+  float phgoodpTmin_tmp = phgoodpTmin;
+  std::string phgoodIDmin_tmp = phgoodIDmin;
+  bool applyPhGood_tmp = applyPhGood;
+  configtree->Branch("applyTrigger", &applyTrigger_tmp, "applyTrigger/O");
+  configtree->Branch("minHT", &minHT_tmp, "minHT/F");
+  configtree->Branch("applyHT", &applyHT_tmp, "applyHT/O");
+  configtree->Branch("phgoodpTmin", &phgoodpTmin_tmp, "phgoodpTmin/F");
+  configtree->Branch("phgoodIDmin", &phgoodIDmin_tmp);
+  configtree->Branch("applyPhGood", &applyPhGood_tmp, "applyPhGood/O");
+
+  // dR matching criteria
+  float dRmin_tmp = dRmin;
+  float pTres_tmp = pTres;
+  float trackdRmin_tmp = trackdRmin;
+  float trackpTmin_tmp = trackpTmin;
+  configtree->Branch("dRmin", &dRmin_tmp, "dRmin/F");
+  configtree->Branch("pTres", &pTres_tmp, "pTres/F");
+  configtree->Branch("trackdRmin", &trackdRmin_tmp, "trackdRmin/F");
+  configtree->Branch("trackpTmin", &trackpTmin_tmp, "trackpTmin/F");
+
+  // trigger info
+  std::string inputPaths_tmp = inputPaths;
+  std::string inputFilters_tmp = inputFilters;
+  configtree->Branch("inputPaths", &inputPaths_tmp);
+  configtree->Branch("inputFilters", &inputFilters_tmp);
+
+  // Fill tree just once, after configs have been read in
+  configtree->Fill();
+}
+
+void DisPho::MakeEventTree()
+{
   // Generic MC Info
   if (isMC)
   {
