@@ -333,7 +333,7 @@ void Analysis::OutputEventStandardPlots()
 void Analysis::OutputPhotonStandardPlots() 
 {
   MakeSubDirs(stdphoTH1SubMap,fOutDir);
-  Analysis::MakeInclusiveTH1s(stdphoTH1Map,stdphoTH1SubMap);
+  Analysis::MakeInclusiveTH1s(stdphoTH1Map,stdphoTH1SubMap);  
   Analysis::SaveTH1s(stdphoTH1Map,stdphoTH1SubMap);
   if (!fIsMC)
   { 
@@ -369,7 +369,54 @@ void Analysis::OutputIsoNvtxPlots()
   Analysis::DeleteTH2s(isonvtxTH2Map);
 }
 
-void Analysis::MakeInclusiveTH1s(TH1Map & th1map, TStrMap & subdirmap) 
+void Analysis::MakeInclusiveTH1s(TH1Map & th1map, TStrMap & subdirmap)
+{
+  Analysis::MakeInclusiveNphoTH1s(th1map,subdirmap);
+  Analysis::MakeInclusiveSplitTH1s(th1map,subdirmap);
+  //  Analysis::MakeInclusiveRegionTH1s(th1map,subdirmap);
+}
+
+void Analysis::MakeInclusiveNphoTH1s(TH1Map & th1map, TStrMap & subdirmap) 
+{
+  // Use leading photon as base (i.e. pho0)
+  const TString drop = "0"; 
+  TStrVec names;
+  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
+  {
+    TString name = mapiter->second->GetName();
+    if (name.Contains(drop,TString::kExact)) names.emplace_back(name);
+  }
+
+  const Ssiz_t length = drop.Length();
+  for (auto & name : names)
+  {
+    // prep declaration of inclusive hist
+    TString hname = name; 
+    const Ssiz_t hnamepos = hname.Index(drop);
+    hname.Remove(hnamepos-1,length+1); // account for "_0"
+    
+    TString xtitle = th1map[name]->GetXaxis()->GetTitle();
+    const Ssiz_t xtitlepos = xtitle.Index(drop);
+
+    xtitle.Remove(xtitlepos-1,length+1); // account for " 0"
+    xtitle.ReplaceAll("Photon","All Photons");
+
+    // make inclusive hist
+    th1map[hname] = Analysis::MakeTH1Plot(hname,"",th1map[name]->GetNbinsX(),th1map[name]->GetXaxis()->GetXmin(),th1map[name]->GetXaxis()->GetXmax(),
+					  xtitle,th1map[name]->GetYaxis()->GetTitle(),subdirmap,subdirmap[name]);
+
+    TString tmpdrop = drop;
+    for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++)
+    {
+      const TString swap = Form("%i",ipho);
+      name.ReplaceAll(tmpdrop,swap);
+      th1map[hname]->Add(th1map[name]);
+      tmpdrop = swap;
+    }
+  }
+}
+
+void Analysis::MakeInclusiveSplitTH1s(TH1Map & th1map, TStrMap & subdirmap) 
 {
   // Use GED photons as the base
   const TString drop = "GED";
@@ -407,7 +454,91 @@ void Analysis::MakeInclusiveTH1s(TH1Map & th1map, TStrMap & subdirmap)
   }
 }
 
-void Analysis::MakeInclusiveTH2s(TH2Map & th2map, TStrMap & subdirmap) 
+void Analysis::MakeInclusiveRegionTH1s(TH1Map & th1map, TStrMap & subdirmap) 
+{
+  // Use EB as the base
+  const TString drop = "EB";
+  TStrVec names;
+  for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
+  {
+    TString name = mapiter->second->GetName();
+    if (name.Contains(drop,TString::kExact)) names.emplace_back(name);
+  }
+
+  // loop over names and adjust them accordingly
+  const Ssiz_t length = drop.Length();
+  const TString swap = "EE";
+  for (auto & name : names)
+  {
+    // prep declaration of inclusive hist
+    TString hname = name; 
+    const Ssiz_t hnamepos = hname.Index(drop);
+    hname.Remove(hnamepos-1,length+1); // account for "EB"
+    
+    TString xtitle = th1map[name]->GetXaxis()->GetTitle();
+    const Ssiz_t xtitlepos = xtitle.Index(drop);
+    xtitle.Remove(xtitlepos-1,length+2); // account for "(EB)"
+
+    // make inclusive hist
+    th1map[hname] = Analysis::MakeTH1Plot(hname,"",th1map[name]->GetNbinsX(),th1map[name]->GetXaxis()->GetXmin(),th1map[name]->GetXaxis()->GetXmax(),
+					  xtitle,th1map[name]->GetYaxis()->GetTitle(),subdirmap,subdirmap[name]);
+
+    // add EB first
+    th1map[hname]->Add(th1map[name]);
+
+    // add EE second
+    name.ReplaceAll(drop,swap);
+    th1map[hname]->Add(th1map[name]);
+  }
+}
+
+void Analysis::MakeInclusiveTH2s(TH2Map & th2map, TStrMap & subdirmap)
+{
+  Analysis::MakeInclusiveNphoTH2s(th2map,subdirmap);
+  Analysis::MakeInclusiveSplitTH2s(th2map,subdirmap);
+  //  Analysis::MakeInclusiveRegionTH2s(th2map,subdirmap);
+}
+
+void Analysis::MakeInclusiveNphoTH2s(TH2Map & th2map, TStrMap & subdirmap) 
+{
+  // Use leading photon as base (i.e. pho0)
+  TString drop = "0"; 
+  TStrVec names;
+  for (TH2MapIter mapiter = th2map.begin(); mapiter != th2map.end(); ++mapiter) 
+  {
+    TString name = mapiter->second->GetName();
+    if (name.Contains(drop,TString::kExact)) names.emplace_back(name);
+  }
+
+  const Ssiz_t length = drop.Length();
+  for (auto & name : names)
+  {
+    // prep declaration of inclusive hist
+    TString hname = name; 
+    const Ssiz_t hnamepos = hname.Index(drop);
+    hname.Remove(hnamepos-1,length+1); // account for "_0"
+    
+    TString ytitle = th2map[name]->GetYaxis()->GetTitle();
+    const Ssiz_t ytitlepos = ytitle.Index(drop);
+    ytitle.Remove(ytitlepos-1,length+1); // account for " 0"
+    ytitle.ReplaceAll("Photon","All Photons");
+
+    // make inclusive hist
+    th2map[hname] = Analysis::MakeTH2Plot(hname,"",th2map[name]->GetNbinsX(),th2map[name]->GetXaxis()->GetXmin(),th2map[name]->GetXaxis()->GetXmax(),
+					  th2map[name]->GetXaxis()->GetTitle(),th2map[name]->GetNbinsY(),th2map[name]->GetYaxis()->GetXmin(),
+					  th2map[name]->GetYaxis()->GetXmax(),ytitle,subdirmap,subdirmap[name]);
+
+    for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++)
+    {
+      const TString swap = Form("%i",ipho);
+      name.ReplaceAll(drop,swap);
+      th2map[hname]->Add(th2map[name]);
+      drop = swap;
+    }
+  }
+}
+
+void Analysis::MakeInclusiveSplitTH2s(TH2Map & th2map, TStrMap & subdirmap) 
 {
   // Use GED photons as the base
   const TString drop = "GED";
@@ -434,13 +565,52 @@ void Analysis::MakeInclusiveTH2s(TH2Map & th2map, TStrMap & subdirmap)
 
     // make inclusive hist
     th2map[hname] = Analysis::MakeTH2Plot(hname,"",th2map[name]->GetNbinsX(),th2map[name]->GetXaxis()->GetXmin(),th2map[name]->GetXaxis()->GetXmax(),
-					  th2map[name]->GetXaxis()->GetTitle(),th2map[name]->GetNbinsY(),th2map[name]->GetYaxis()->GetXmin(),th2map[name]->GetYaxis()->GetXmax(),
-					  ytitle,subdirmap,subdirmap[name]);
+					  th2map[name]->GetXaxis()->GetTitle(),th2map[name]->GetNbinsY(),th2map[name]->GetYaxis()->GetXmin(),
+					  th2map[name]->GetYaxis()->GetXmax(),ytitle,subdirmap,subdirmap[name]);
 
     // add GED first
     th2map[hname]->Add(th2map[name]);
 
     // add OOT second
+    name.ReplaceAll(drop,swap);
+    th2map[hname]->Add(th2map[name]);
+  }
+}
+
+void Analysis::MakeInclusiveRegionTH2s(TH2Map & th2map, TStrMap & subdirmap) 
+{
+  // Use EB as the base
+  const TString drop = "EB";
+  TStrVec names;
+  for (TH2MapIter mapiter = th2map.begin(); mapiter != th2map.end(); ++mapiter) 
+  {
+    TString name = mapiter->second->GetName();
+    if (name.Contains(drop,TString::kExact)) names.emplace_back(name);
+  }
+
+  // loop over names and adjust them accordingly
+  const Ssiz_t length = drop.Length();
+  const TString swap = "EE";
+  for (auto & name : names)
+  {
+    // prep declaration of inclusive hist
+    TString hname = name; 
+    const Ssiz_t hnamepos = hname.Index(drop);
+    hname.Remove(hnamepos-1,length+1); // account for "EB"
+    
+    TString ytitle = th2map[name]->GetYaxis()->GetTitle();
+    const Ssiz_t ytitlepos = ytitle.Index(drop);
+    ytitle.Remove(ytitlepos-1,length+2); // account for "(EB)"
+
+    // make inclusive hist
+    th2map[hname] = Analysis::MakeTH2Plot(hname,"",th2map[name]->GetNbinsX(),th2map[name]->GetXaxis()->GetXmin(),th2map[name]->GetXaxis()->GetXmax(),
+					  th2map[name]->GetXaxis()->GetTitle(),th2map[name]->GetNbinsY(),th2map[name]->GetYaxis()->GetXmin(),
+					  th2map[name]->GetYaxis()->GetXmax(),ytitle,subdirmap,subdirmap[name]);
+
+    // add EB first
+    th2map[hname]->Add(th2map[name]);
+
+    // add EE second
     name.ReplaceAll(drop,swap);
     th2map[hname]->Add(th2map[name]);
   }

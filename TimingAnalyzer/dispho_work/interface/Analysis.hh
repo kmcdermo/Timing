@@ -39,7 +39,13 @@ public:
   void OutputIsoPlots();
   void OutputIsoNvtxPlots();
   void MakeInclusiveTH1s(TH1Map & th1map, TStrMap & subdirmap);
+  void MakeInclusiveNphoTH1s(TH1Map & th1map, TStrMap & subdirmap);
+  void MakeInclusiveSplitTH1s(TH1Map & th1map, TStrMap & subdirmap);
+  void MakeInclusiveRegionTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void MakeInclusiveTH2s(TH2Map & th2map, TStrMap & subdirmap);
+  void MakeInclusiveNphoTH2s(TH2Map & th2map, TStrMap & subdirmap);
+  void MakeInclusiveSplitTH2s(TH2Map & th2map, TStrMap & subdirmap);
+  void MakeInclusiveRegionTH2s(TH2Map & th2map, TStrMap & subdirmap);
   void Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, const TString & name);
   void Project2Dto1D(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrMap & subdir1dmap, TStrIntMap & th1dbinmap);
   void ProduceQuantile(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrIntMap & th1dbinmap);
