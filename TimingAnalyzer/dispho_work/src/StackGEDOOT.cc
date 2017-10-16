@@ -55,11 +55,11 @@ void StackGEDOOT::MakeStackGEDOOT()
 {
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++) //th1f hists
   {
-    const Bool_t isV = (fTH1FNames[th1f].Contains("EB_v_",TString::kExact) || fTH1FNames[th1f].Contains("EE_v_",TString::kExact));
+    const Bool_t isV = fTH1FNames[th1f].Contains("_v_",TString::kExact);
 
     // GED first
     TString ytitleGED = fInGEDTH1FHists[th1f]->GetYaxis()->GetTitle();
-    ytitleGED.ReplaceAll("GED ","");
+    ytitleGED.ReplaceAll("GED - ","");
     fInGEDTH1FHists[th1f]->GetYaxis()->SetTitle(ytitleGED.Data());
     fInGEDTH1FHists[th1f]->SetLineColor(kRed);
     fInGEDTH1FHists[th1f]->SetMarkerColor(kRed);
@@ -70,7 +70,7 @@ void StackGEDOOT::MakeStackGEDOOT()
 
     // OOT first
     TString ytitleOOT = fInOOTTH1FHists[th1f]->GetYaxis()->GetTitle();
-    ytitleOOT.ReplaceAll("OOT ","");
+    ytitleOOT.ReplaceAll("OOT - ","");
     fInOOTTH1FHists[th1f]->GetYaxis()->SetTitle(ytitleOOT.Data());    
     fInOOTTH1FHists[th1f]->SetLineColor(kBlue);
     fInOOTTH1FHists[th1f]->SetMarkerColor(kBlue);
@@ -88,7 +88,7 @@ void StackGEDOOT::MakeRatioPlots()
 
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   { 
-    const Bool_t isV = (fTH1FNames[th1f].Contains("EB_v_",TString::kExact) || fTH1FNames[th1f].Contains("EE_v_",TString::kExact));
+    const Bool_t isV = fTH1FNames[th1f].Contains("_v_",TString::kExact);
 
     // ratio value plot
     fOutRatioTH1FHists[th1f] = (TH1F*)(isV?fInGEDTH1FHists[th1f]:fInOOTTH1FHists[th1f])->Clone(Form("%s_ratio",fTH1FNames[th1f].Data()));
@@ -107,7 +107,7 @@ void StackGEDOOT::MakeOutputCanvas()
 {
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   {
-    const Bool_t isV = (fTH1FNames[th1f].Contains("EB_v_",TString::kExact) || fTH1FNames[th1f].Contains("EE_v_",TString::kExact));
+    const Bool_t isV = fTH1FNames[th1f].Contains("_v_",TString::kExact);
 
     Bool_t isLogY = true;
     if (!isV)
@@ -236,7 +236,7 @@ void StackGEDOOT::DrawLowerPad(const Int_t th1f)
 
 void StackGEDOOT::SetLines(const Int_t th1f)
 {
-  const Bool_t isV = (fTH1FNames[th1f].Contains("EB_v_",TString::kExact) || fTH1FNames[th1f].Contains("EE_v_",TString::kExact));
+  const Bool_t isV = fTH1FNames[th1f].Contains("_v_",TString::kExact);
 
   // have line held at ratio of 1.0 or 0.0 over whole x range
   fOutTH1FRatioLines[th1f]->SetX1(fOutRatioTH1FHists[th1f]->GetXaxis()->GetXmin());

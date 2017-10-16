@@ -10,7 +10,7 @@ Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample),
   gROOT->ProcessLine("#include <vector>");
 
   // Set input
-  const TString filename = Form("input/%s/%s/%s/%s", Config::year.Data(), (fIsMC?"MC":"DATA"), fSample.Data(), "tmp2.root");
+  const TString filename = Form("input/%s/%s/%s/%s", Config::year.Data(), (fIsMC?"MC":"DATA"), fSample.Data(), "tree.root");
   fInFile  = TFile::Open(filename.Data());
   CheckValidFile(fInFile,filename);
 
@@ -502,7 +502,7 @@ void Analysis::MakeInclusiveTH2s(TH2Map & th2map, TStrMap & subdirmap)
 void Analysis::MakeInclusiveNphoTH2s(TH2Map & th2map, TStrMap & subdirmap) 
 {
   // Use leading photon as base (i.e. pho0)
-  TString drop = "0"; 
+  const TString drop = "0"; 
   TStrVec names;
   for (TH2MapIter mapiter = th2map.begin(); mapiter != th2map.end(); ++mapiter) 
   {
@@ -528,12 +528,13 @@ void Analysis::MakeInclusiveNphoTH2s(TH2Map & th2map, TStrMap & subdirmap)
 					  th2map[name]->GetXaxis()->GetTitle(),th2map[name]->GetNbinsY(),th2map[name]->GetYaxis()->GetXmin(),
 					  th2map[name]->GetYaxis()->GetXmax(),ytitle,subdirmap,subdirmap[name]);
 
+    TString tmpdrop = drop;
     for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++)
     {
       const TString swap = Form("%i",ipho);
-      name.ReplaceAll(drop,swap);
+      name.ReplaceAll(tmpdrop,swap);
       th2map[hname]->Add(th2map[name]);
-      drop = swap;
+      tmpdrop = swap;
     }
   }
 }
@@ -622,11 +623,11 @@ void Analysis::Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, con
   Analysis::Project2Dto1D(hist2d,subdir2d,th1dmap,th1dsubmap,th1dbinmap);
   if (Config::useMean)
   {
-    Analysis::ProduceQuantile(hist2d,subdir2d,th1dmap,th1dbinmap);
+    Analysis::ProduceMeanHist(hist2d,subdir2d,th1dmap,th1dbinmap);
   }
   else 
   {
-    Analysis::ProduceMeanHist(hist2d,subdir2d,th1dmap,th1dbinmap);
+    Analysis::ProduceQuantile(hist2d,subdir2d,th1dmap,th1dbinmap);
   }
   if (Config::saveTempHists) 
   {
@@ -752,7 +753,11 @@ void Analysis::GetQuantileX(const TH1F * hist, Float_t & x, Float_t & dx_dn, Flo
 
   for (Int_t i = 0; i < nBinsX; i++)
   {
-    if (eff[i] > Config::quantProb) x = centers[i];
+    if (eff[i] > Config::quantProb) 
+    {
+      x = centers[i];
+      break;
+    }
   }
 
   dx_dn = Analysis::FluctuateX(eff,eff_err,centers,x,false);
