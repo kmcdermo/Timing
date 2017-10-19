@@ -63,7 +63,7 @@ void EACalculator::ExtractEA()
     // compute the effective area
     const Double_t iso_ea = pho_slope / rho_slope;
 
-    fEAFile << iso_ea << std::endl;
+    fEAFile << fTH1FNames[th1f].Data() << " " << iso_ea << std::endl;
   }
   
   // Then finally output the canvases for safekeeping
@@ -72,7 +72,7 @@ void EACalculator::ExtractEA()
 
 void EACalculator::FitHist(TH1F *& hist, TCanvas *& canv, const TString & name)
 {
-  hist->Fit(Form("%s_%s_fit",name.Data(),Config::formname.Data()));
+  hist->Fit(Form("%s_%s_fit",name.Data(),Config::formname.Data()),"RQ");
   canv->cd();
   hist->Draw("ep");
 }
@@ -88,16 +88,16 @@ void EACalculator::OutputFitCanvases()
     fOutTH1FCanvases[th1f]->cd();
     CMSLumi(fOutTH1FCanvases[th1f]);
     fOutTH1FCanvases[th1f]->Write(fOutTH1FCanvases[th1f]->GetName(),TObject::kWriteDelete);
-    fOutTH1FCanvases[th1f]->SaveAs(Form("%s/%s/%s/lin/%s.%s",fOutDir.Data(),Config::easubdir.Data(),
-					fTH1FSubDMap[fTH1FNames[th1f]].Data(),fTH1FNames[th1f].Data(),Config::outtype.Data()));
+    fOutTH1FCanvases[th1f]->SaveAs(Form("%s/%s/%s/lin/%s.%s",fOutDir.Data(),fTH1FSubDMap[fTH1FNames[th1f]].Data(),
+					Config::easubdir.Data(),fTH1FNames[th1f].Data(),Config::outtype.Data()));
   }
 
   // do rho plots
   fOutRhoCanvas->cd();
   CMSLumi(fOutRhoCanvas);
   fOutRhoCanvas->Write(fOutRhoCanvas->GetName(),TObject::kWriteDelete);
-  fOutRhoCanvas->SaveAs(Form("%s/%s/%s/lin/%s.%s",fOutDir.Data(),Config::easubdir.Data(),
-			  fRhoSubD.Data(),fRhoName.Data(),Config::outtype.Data()));
+  fOutRhoCanvas->SaveAs(Form("%s/%s/%s/lin/%s.%s",fOutDir.Data(),fRhoSubD.Data(),
+			     Config::easubdir.Data(),fRhoName.Data(),Config::outtype.Data()));
 }
 
 void EACalculator::InitTH1FNamesAndSubDNames()
@@ -161,6 +161,7 @@ void EACalculator::InitFits()
   TFormula line(Config::formname.Data(),"[0]+x*[1]");
 
   // photons first
+  fOutTH1FTF1s.resize(fNTH1F);
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   {
     fOutTH1FTF1s[th1f] = new TF1(Form("%s_%s_fit",fTH1FNames[th1f].Data(),Config::formname.Data()),

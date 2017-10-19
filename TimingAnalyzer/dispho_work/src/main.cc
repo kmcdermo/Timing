@@ -222,7 +222,7 @@ int main(int argc, const char* argv[])
   /////////////////////////////
   if (Config::doEACalc)
   {
-    std::cout << "Starting analyis section" << std::endl;
+    std::cout << "Starting EA calculation section" << std::endl;
     for (const auto & samplePair : Config::SampleMap)
     {
       EACalculator calc(samplePair.first,samplePair.second);
