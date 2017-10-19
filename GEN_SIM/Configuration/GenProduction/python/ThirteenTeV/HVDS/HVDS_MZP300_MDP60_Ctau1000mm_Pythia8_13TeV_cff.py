@@ -12,6 +12,7 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
                 pythia8CUEP8M1SettingsBlock,
                 processParameters = cms.vstring(
                     'ParticleDecays:limitTau0 = off',
+                    'ParticleDecays:tau0Max = 10000000',
                     'HiddenValley:ffbar2Zv = on',
                     'HiddenValley:Ngauge = 3',
                     '4900023:mWidth = 0.01',
