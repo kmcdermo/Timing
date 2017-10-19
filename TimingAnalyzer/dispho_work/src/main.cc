@@ -97,7 +97,9 @@ int main(int argc, const char* argv[])
 	"  --do-iso        <bool>        make isolation plots (def: %s)\n"
 	"  --do-isonvtx    <bool>        make isolation vs nvtx plots (def: %s)\n"
 	"  --use-mean      <bool>        use mean of projected histo for isolation value (def: %s)\n"
-	"  --q-prob        <float>       which quantile to use (def: %4.2f)\n"
+	"  --use-mean-rho  <bool>        use mean of projected histo for rho (def: %s)\n"
+	"  --q-prob        <float>       which quantile to use for photons (def: %4.2f)\n"
+	"  --q-probrho     <float>       which quantile to use for rho (def: %4.2f)\n"
 	"  --dump-status   <bool>        print out every N events in analysis loop (def: %s)\n"
 	"  --in-year       <string>      which year to process (def: %s)\n"
 	"  --save-hists    <bool>        save analysis histograms as images (def: %s)\n"
@@ -125,7 +127,9 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::doIso),
 	PrintBool(Config::doIsoNvtx),
 	PrintBool(Config::useMean),
+	PrintBool(Config::useMeanRho),
 	Config::quantProb,
+	Config::quantProbRho,
 	PrintBool(Config::dumpStatus),
 	Config::year.Data(),
 	PrintBool(Config::saveHists),
@@ -139,7 +143,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--do-analysis") { Config::doAnalysis = true; }
     else if (*i == "--do-EA")       { Config::doEACalc   = true; }
     else if (*i == "--do-stacks")   { Config::doStacks   = true; }
-    else if (*i == "--do-phostacks") { Config::doPhoStacks = true; }
+    else if (*i == "--do-phostacks"){ Config::doPhoStacks = true; }
     else if (*i == "--do-demo")     { Config::doDemo     = true; Config::doAnalysis = true; Config::doEvStd = true; Config::doPhoStd = true; }
     else if (*i == "--use-DEG")     { Config::useDEG     = true; }
     else if (*i == "--use-SPH")     { Config::useSPH     = true; }
@@ -154,11 +158,13 @@ int main(int argc, const char* argv[])
     else if (*i == "--do-iso")      { Config::doAnalysis = true; Config::doIso      = true; }
     else if (*i == "--do-isonvtx")  { Config::doAnalysis = true; Config::doIsoNvtx  = true; }
     else if (*i == "--use-mean")    { Config::doAnalysis = true; Config::doIsoNvtx  = true; Config::useMean = true; }
+    else if (*i == "--use-mean-rho"){ Config::doAnalysis = true; Config::doEvStd    = true; Config::useMeanRho = true; }
     else if (*i == "--q-prob")      { next_arg_or_die(mArgs, i); Config::quantProb  = std::atof(i->c_str()); }
+    else if (*i == "--q-probrho")   { next_arg_or_die(mArgs, i); Config::quantProbRho = std::atof(i->c_str()); }
     else if (*i == "--dump-status") { Config::doAnalysis = true; Config::dumpStatus = true; }
     else if (*i == "--in-year")     { next_arg_or_die(mArgs, i); Config::year       = i->c_str(); }
     else if (*i == "--save-hists")  { Config::saveHists  = true; }
-    else if (*i == "--save-tmphists") { Config::saveTempHists = true; }
+    else if (*i == "--save-tmphists"){ Config::saveTempHists = true; }
     else if (*i == "--out-image")   { next_arg_or_die(mArgs, i); Config::outtype    = i->c_str(); }
     else    { std::cerr << "Error: Unknown option/argument: " << i->c_str() << " ...exiting..." << std::endl; exit(1); }
     mArgs.erase(start, ++i);

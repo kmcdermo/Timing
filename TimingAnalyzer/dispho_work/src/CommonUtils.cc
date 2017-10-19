@@ -49,15 +49,20 @@ void MakeOutDir(const TString & outdir)
   }
 }
 
+void MakeSubDir(const TString & subdir, const TString & outdir, const TString & extra)
+{
+  TString path = outdir+"/"+subdir;
+  if (extra != "") path += "/"+extra;
+  MakeOutDir(Form("%s/",path.Data()));
+  MakeOutDir(Form("%s/lin/",path.Data()));
+  MakeOutDir(Form("%s/log/",path.Data()));
+}
+
 void MakeSubDirs(TStrMap & subdirmap, const TString & outdir, const TString & extra)
 {
   for (TStrMapIter mapiter = subdirmap.begin(); mapiter != subdirmap.end(); mapiter++) 
   { 
-    TString path = outdir+"/"+mapiter->second;
-    if (extra != "") path += "/"+extra;
-    MakeOutDir(Form("%s/",path.Data()));
-    MakeOutDir(Form("%s/lin/",path.Data()));
-    MakeOutDir(Form("%s/log/",path.Data()));
+    MakeSubDir(mapiter->second,outdir,extra);
   }
 }
 

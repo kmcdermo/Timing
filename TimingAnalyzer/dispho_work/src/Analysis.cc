@@ -325,7 +325,7 @@ void Analysis::OutputEventStandardPlots()
   for (TH2MapIter mapiter = stdevTH2Map.begin(); mapiter != stdevTH2Map.end(); ++mapiter)
   {
     const TString name = mapiter->first;
-    Analysis::Make1DIsoPlots(mapiter->second,stdevTH2SubMap[name],name);
+    Analysis::Make1DFrom2DPlots(mapiter->second,stdevTH2SubMap[name],name);
   }
   Analysis::DeleteTH2s(stdevTH2Map);
 }
@@ -364,7 +364,7 @@ void Analysis::OutputIsoNvtxPlots()
   for (TH2MapIter mapiter = isonvtxTH2Map.begin(); mapiter != isonvtxTH2Map.end(); ++mapiter)
   {
     const TString name = mapiter->first;
-    Analysis::Make1DIsoPlots(mapiter->second,isonvtxTH2SubMap[name],name);
+    Analysis::Make1DFrom2DPlots(mapiter->second,isonvtxTH2SubMap[name],name);
   }
   Analysis::DeleteTH2s(isonvtxTH2Map);
 }
@@ -617,11 +617,13 @@ void Analysis::MakeInclusiveRegionTH2s(TH2Map & th2map, TStrMap & subdirmap)
   }
 }
 
-void Analysis::Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, const TString & name)
+void Analysis::Make1DFrom2DPlots(const TH2F * hist2d, const TString & subdir2d, const TString & name)
 {
   TH1Map th1dmap; TStrMap th1dsubmap; TStrIntMap th1dbinmap;
   Analysis::Project2Dto1D(hist2d,subdir2d,th1dmap,th1dsubmap,th1dbinmap);
-  if (Config::useMean)
+  const TString hname = hist2d->GetName();
+  if ( (Config::useMean && hname.Contains("pho")) ||
+       (Config::useMeanRho && hname.Contains("rho")) )
   {
     Analysis::ProduceMeanHist(hist2d,subdir2d,th1dmap,th1dbinmap);
   }
@@ -629,6 +631,8 @@ void Analysis::Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, con
   {
     Analysis::ProduceQuantile(hist2d,subdir2d,th1dmap,th1dbinmap);
   }
+
+  // store temp projected Hists?
   if (Config::saveTempHists) 
   {
     Analysis::SaveTH1s(th1dmap,th1dsubmap);
@@ -638,6 +642,8 @@ void Analysis::Make1DIsoPlots(const TH2F * hist2d, const TString & subdir2d, con
       Analysis::DumpTH1PhoNames(th1dmap,th1dsubmap);
     }
   }
+
+  // delete temporaries
   Analysis::DeleteTH1s(th1dmap);
 }
 
@@ -687,8 +693,10 @@ void Analysis::Project2Dto1D(const TH2F * hist2d, const TString & subdir2d, TH1M
 void Analysis::ProduceQuantile(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrIntMap & th1dbinmap) 
 {
   // initialize new mean/sigma histograms
-  TH1F * outhist_quant = Analysis::MakeTH1PlotFromTH2(hist2d,Form("%s_quant_%4.2f",hist2d->GetName(),Config::quantProb),
-						      Form("%i%% Quantile of %s",Int_t(100*Config::quantProb),hist2d->GetYaxis()->GetTitle()));
+  const TString hname = hist2d->GetName();
+  const Float_t qprob = (hname.Contains("pho",TString::kExact) ? Config::quantProb : Config::quantProbRho);
+  TH1F * outhist_quant = Analysis::MakeTH1PlotFromTH2(hist2d,Form("%s_quant_%4.2f",hname.Data(),qprob),
+						      Form("%i%% Quantile of %s",Int_t(100*qprob),hist2d->GetYaxis()->GetTitle()));
 
   // use this to store runs that by themselves produce bad fits
   for (TH1MapIter mapiter = th1dmap.begin(); mapiter != th1dmap.end(); ++mapiter) 
@@ -728,6 +736,8 @@ void Analysis::ProduceMeanHist(const TH2F * hist2d, const TString & subdir2d, TH
 
 void Analysis::GetQuantileX(const TH1F * hist, Float_t & x, Float_t & dx_dn, Float_t & dx_up)
 {
+  const TString hname = hist->GetName();
+  const Float_t qprob = (hname.Contains("pho",TString::kExact) ? Config::quantProb : Config::quantProbRho);
   const Float_t integral = hist->Integral();
   const Int_t   nBinsX   = hist->GetNbinsX();
   
@@ -753,18 +763,18 @@ void Analysis::GetQuantileX(const TH1F * hist, Float_t & x, Float_t & dx_dn, Flo
 
   for (Int_t i = 0; i < nBinsX; i++)
   {
-    if (eff[i] > Config::quantProb) 
+    if (eff[i] > qprob) 
     {
       x = centers[i];
       break;
     }
   }
 
-  dx_dn = Analysis::FluctuateX(eff,eff_err,centers,x,false);
-  dx_up = Analysis::FluctuateX(eff,eff_err,centers,x,true);
+  dx_dn = Analysis::FluctuateX(eff,eff_err,qprob,centers,x,false);
+  dx_up = Analysis::FluctuateX(eff,eff_err,qprob,centers,x,true);
 }
 
-Float_t Analysis::FluctuateX(const FltVec & eff, const FltVec & eff_err, const FltVec & centers, const Float_t x, const Bool_t isUp)
+Float_t Analysis::FluctuateX(const FltVec & eff, const FltVec & eff_err, const Float_t qprob, const FltVec & centers, const Float_t x, const Bool_t isUp)
 {
   const Int_t nEffs = eff.size();
   std::vector<Float_t> eff_v(nEffs); // v = variation
@@ -773,7 +783,7 @@ Float_t Analysis::FluctuateX(const FltVec & eff, const FltVec & eff_err, const F
   for (Int_t i = 0; i < nEffs; i++)
   {
     eff_v[i] = eff[i] + ((isUp)?1.f:-1.f) * eff_err[i];
-    if (eff_v[i] > Config::quantProb) 
+    if (eff_v[i] > qprob) 
     {
       i_v = i;
       break;
@@ -789,7 +799,7 @@ Float_t Analysis::FluctuateX(const FltVec & eff, const FltVec & eff_err, const F
       if (slope > 0.f)
       {
 	const Float_t intercept = eff_v[i_v]-slope*centers[i_v];
-	x_v = (Config::quantProb-intercept)/slope;
+	x_v = (qprob-intercept)/slope;
       }
     }
   }

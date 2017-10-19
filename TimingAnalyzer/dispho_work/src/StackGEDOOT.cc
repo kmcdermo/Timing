@@ -269,7 +269,6 @@ void StackGEDOOT::SaveCanvas(const Int_t th1f, const Bool_t isLogY)
   fOutTH1FCanvases[th1f]->Write(Form("%s",fTH1FNames[th1f].Data()),TObject::kWriteDelete);
 }
 
-
 void StackGEDOOT::InitTH1FNamesAndSubDNames()
 {
   // will use the integral of nvtx to derive total yields as no additional cuts are placed on ntvx --> key on name for yields

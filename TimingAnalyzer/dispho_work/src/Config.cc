@@ -26,7 +26,9 @@ namespace Config
   Bool_t  doIso      = false;
   Bool_t  doIsoNvtx  = false;
   Bool_t  useMean    = false;
+  Bool_t  useMeanRho = false;
   Float_t quantProb  = 0.9;
+  Float_t quantProbRho = 0.5; // 50% = median
   Bool_t  dumpStatus = false;
   TString year       = "2017";
   Bool_t  saveHists  = false;

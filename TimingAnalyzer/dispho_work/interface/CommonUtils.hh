@@ -19,6 +19,7 @@ const char* PrintBool(const Bool_t var);
 void next_arg_or_die(lStr_t& args, lStr_i& i, const Bool_t allow_single_minus=false);
 void ComputeRatioPlot(const TH1F * numer, const TH1F * denom, TH1F *& ratioPlot);
 void MakeOutDir(const TString & outdir);
+void MakeSubDir(const TString & subdir, const TString & outdir, const TString & extra = "");
 void MakeSubDirs(TStrMap & subdirmap, const TString & outdir, const TString & extra = "");
 void MoveInput(const TString & infile, const TString & outdir);
 void CheckValidFile(const TFile * file, const TString & fname);

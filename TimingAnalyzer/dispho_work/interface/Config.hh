@@ -39,12 +39,16 @@ namespace Config
   static const TStrVec regions = {"EB","EE"};
   static const TStrVec splits = {"GED","OOT"};
 
-  // data config
+  // data analysis config
   static const TString plotdumpname = "plotnames.txt";
   static const TString phoplotdumpname = "phoplotnames.txt";
 
   // pho stacking config
   static const TString phosubdir = "gedootstacks";
+
+  // EA config
+  static const TString easubdir = "effarea";
+  static const TString eadumpname = "effareas.txt";
 
   // TDRStyle Config --> needed by stacker
   constexpr    Float_t  TitleSize    = 0.035;
@@ -104,7 +108,9 @@ namespace Config
   extern Bool_t      doIso;
   extern Bool_t      doIsoNvtx;
   extern Bool_t      useMean;
+  extern Bool_t      useMeanRho;
   extern Float_t     quantProb;
+  extern Float_t     quantProbRho;
   extern Bool_t      dumpStatus;
   extern TString     year;
   extern Bool_t      saveHists;
