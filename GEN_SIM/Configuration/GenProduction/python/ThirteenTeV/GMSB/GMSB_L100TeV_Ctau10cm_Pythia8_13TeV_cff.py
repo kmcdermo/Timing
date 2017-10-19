@@ -13,6 +13,7 @@ generator = cms.EDFilter("Pythia8GeneratorFilter",
                 pythia8CommonSettingsBlock, 
                 pythia8CUEP8M1SettingsBlock, 
                 processParameters = cms.vstring(
+                    'ParticleDecays:limitTau0 = off',
         	    'SUSY:all on',
                 ),
                 parameterSets = cms.vstring('pythia8CommonSettings',
