@@ -1,8 +1,18 @@
 #ifndef _analysistypes_ 
 #define _analysistypes_ 
 
+#include "TH1F.h"
+#include "TH2F.h"
 #include "TBranch.h"
+
+#include <map>
 #include <vector>
+
+typedef std::map<TString,TH1F*> TH1Map;
+typedef TH1Map::iterator        TH1MapIter;
+
+typedef std::map<TString,TH2F*> TH2Map;
+typedef TH2Map::iterator        TH2MapIter;
 
 struct GMSB
 {

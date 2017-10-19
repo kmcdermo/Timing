@@ -15,19 +15,19 @@ EACalculator::EACalculator(const TString & sample, const Bool_t isMC) : fSample(
   fEAFile.open(Form("%s/%s",fOutDir.Data(),Config::eadumpname.Data()),std::ios_base::trunc);
 
   // Read in names of plots to be stacked
-  StackGEDOOT::InitTH1FNamesAndSubDNames();
+  EACalculator::InitTH1FNamesAndSubDNames();
   // Make subdirs as needed
-  StackGEDOOT::InitSubDirs();
+  EACalculator::InitSubDirs();
 
   // with all that defined, initialize everything in constructor
-  StackGEDOOT::InitInputPlots();
-  StackGEDOOT::InitFits();
-  StackGEDOOT::InitOutputCanvs();
+  EACalculator::InitInputPlots();
+  EACalculator::InitFits();
+  EACalculator::InitOutputCanvs();
 }
 
 EACalculator::~EACalculator()
 {
-  fEAfile.close();
+  fEAFile.close();
 
   // delete all pointers
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
@@ -47,13 +47,61 @@ EACalculator::~EACalculator()
 void EACalculator::ExtractEA()
 {
   // First compute the slope of rho vs nvtx
+  EACalculator::FitHist(fInRhoHist,fOutRhoCanvas,fRhoName);
+
+  // get the slope of the line
+  const Double_t rho_slope = fOutRhoTF1->GetParameter(1);
+
+  for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
+  {
+    // Then compute slope of pho iso vs nvtx.
+    EACalculator::FitHist(fInTH1FHists[th1f],fOutTH1FCanvases[th1f],fTH1FNames[th1f]);
+
+    // get the slope of the pho iso line
+    const Double_t pho_slope = fOutTH1FTF1s[th1f]->GetParameter(1);
+
+    // compute the effective area
+    const Double_t iso_ea = pho_slope / rho_slope;
+
+    fEAFile << iso_ea << std::endl;
+  }
   
+  // Then finally output the canvases for safekeeping
+  EACalculator::OutputFitCanvases();
 }
 
-void StackGEDOOT::InitTH1FNamesAndSubDNames()
+void EACalculator::FitHist(TH1F *& hist, TCanvas *& canv, const TString & name)
 {
-  // will use the integral of nvtx to derive total yields as no additional cuts are placed on ntvx --> key on name for yields
-  
+  hist->Fit(Form("%s_%s_fit",name.Data(),Config::formname.Data()));
+  canv->cd();
+  hist->Draw("ep");
+}
+
+void EACalculator::OutputFitCanvases()
+{
+  // cd to out file
+  fOutFile->cd();
+
+  // do pho iso plots first
+  for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
+  {
+    fOutTH1FCanvases[th1f]->cd();
+    CMSLumi(fOutTH1FCanvases[th1f]);
+    fOutTH1FCanvases[th1f]->Write(fOutTH1FCanvases[th1f]->GetName(),TObject::kWriteDelete);
+    fOutTH1FCanvases[th1f]->SaveAs(Form("%s/%s/%s/lin/%s.%s",fOutDir.Data(),Config::easubdir.Data(),
+					fTH1FSubDMap[fTH1FNames[th1f]].Data(),fTH1FNames[th1f].Data(),Config::outtype.Data()));
+  }
+
+  // do rho plots
+  fOutRhoCanvas->cd();
+  CMSLumi(fOutRhoCanvas);
+  fOutRhoCanvas->Write(fOutRhoCanvas->GetName(),TObject::kWriteDelete);
+  fOutRhoCanvas->SaveAs(Form("%s/%s/%s/lin/%s.%s",fOutDir.Data(),Config::easubdir.Data(),
+			  fRhoSubD.Data(),fRhoName.Data(),Config::outtype.Data()));
+}
+
+void EACalculator::InitTH1FNamesAndSubDNames()
+{
   std::ifstream plotstoread;
   plotstoread.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios::in);
 
@@ -87,13 +135,13 @@ void StackGEDOOT::InitTH1FNamesAndSubDNames()
   }
 }
 
-void StackGEDOOT::InitSubDirs()
+void EACalculator::InitSubDirs()
 {
   MakeSubDirs(fTH1FSubDMap,fOutDir,Config::easubdir);
   MakeSubDir(fRhoSubD,fOutDir,Config::easubdir);
 }
 
-void StackGEDOOT::InitInputPlots() 
+void EACalculator::InitInputPlots() 
 {
   // init input th1f hists
   fInTH1FHists.resize(fNTH1F);
@@ -108,12 +156,38 @@ void StackGEDOOT::InitInputPlots()
   CheckValidTH1F(fInRhoHist,fRhoName,fInFile->GetName());
 }
 
-void StackGEDOOT::InitOutputCanvPads() 
+void EACalculator::InitFits()
 {
+  TFormula line(Config::formname.Data(),"[0]+x*[1]");
+
+  // photons first
+  for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
+  {
+    fOutTH1FTF1s[th1f] = new TF1(Form("%s_%s_fit",fTH1FNames[th1f].Data(),Config::formname.Data()),
+				 Config::formname.Data(),Config::xmin_ea,Config::xmax_ea);
+    fOutTH1FTF1s[th1f]->SetParName(0,"intercept");
+    fOutTH1FTF1s[th1f]->SetParameter(0,0.);
+    fOutTH1FTF1s[th1f]->SetParName(1,"slope");
+    fOutTH1FTF1s[th1f]->SetParameter(1,1.);
+  }
+
+  // then rho
+  fOutRhoTF1 = new TF1(Form("%s_%s_fit",fRhoName.Data(),Config::formname.Data()),
+		       Config::formname.Data(),Config::xmin_ea,Config::xmax_ea);
+  fOutRhoTF1->SetParName(0,"intercept");
+  fOutRhoTF1->SetParameter(0,0.);
+  fOutRhoTF1->SetParName(1,"slope");
+  fOutRhoTF1->SetParameter(1,1.);
+}
+
+void EACalculator::InitOutputCanvs() 
+{
+  fOutFile->cd();
+
   fOutTH1FCanvases.resize(fNTH1F);
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   {
-    fOutTH1FCanvases[th1f] = new TCanvas(Form("%s_canv",fTH1FNames[th1f].Data()),"");
+    fOutTH1FCanvases[th1f] = new TCanvas(Form("%s_ea_canv",fTH1FNames[th1f].Data()),"");
     fOutTH1FCanvases[th1f]->cd();
   }
 

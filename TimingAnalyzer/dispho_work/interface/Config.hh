@@ -49,6 +49,9 @@ namespace Config
   // EA config
   static const TString easubdir = "effarea";
   static const TString eadumpname = "effareas.txt";
+  static const TString formname = "linear";
+  constexpr    Double_t xmin_ea = 0;
+  constexpr    Double_t xmax_ea = nbinsvtx;
 
   // TDRStyle Config --> needed by stacker
   constexpr    Float_t  TitleSize    = 0.035;

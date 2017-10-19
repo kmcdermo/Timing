@@ -2,7 +2,12 @@
 #define _commontypes_
 
 #include "TString.h"
+#include "TH1F.h"
+#include "TLine.h"
 #include "TColor.h"
+#include "TLegend.h"
+#include "TCanvas.h"
+#include "TPad.h"
 
 #include <list>
 #include <string>
@@ -39,5 +44,11 @@ typedef lStr_t::iterator      lStr_i;
 typedef TStrMap::iterator     TStrMapIter;
 typedef TStrBoolMap::iterator TStrBoolMapIter;
 typedef TStrFltMap::iterator  TStrFltMapIter;
+
+typedef std::vector<TH1F*>    TH1FVec;
+typedef std::vector<TLine*>   TLineVec;
+typedef std::vector<TLegend*> TLegVec;
+typedef std::vector<TCanvas*> TCanvVec;
+typedef std::vector<TPad*>    TPadVec;
 
 #endif

@@ -6,14 +6,9 @@
 #include "Config.hh"
 #include "CommonUtils.hh"
 
-#include "TH2F.h"
-#include "TF1.h"
-
-typedef std::map<TString,TH1F*> TH1Map;
-typedef TH1Map::iterator        TH1MapIter;
-
-typedef std::map<TString,TH2F*> TH2Map;
-typedef TH2Map::iterator        TH2MapIter;
+#include "TFile.h"
+#include "TTree.h"
+#include "TBranch.h"
 
 class Analysis 
 {

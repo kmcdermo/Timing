@@ -5,20 +5,12 @@
 #include "Config.hh"
 #include "CommonUtils.hh"
 
-#include "TPad.h"
+#include "TFile.h"
 #include "THStack.h"
-#include "TLegend.h"
-#include "TLine.h"
-#include "TLatex.h"
 
 typedef std::vector<TFile*>   TFileVec;
-typedef std::vector<TH1F*>    TH1FVec;
 typedef std::vector<TH1FVec>  TH1FVecVec;
 typedef std::vector<THStack*> THStackVec;
-typedef std::vector<TLine*>   TLineVec;
-typedef std::vector<TLegend*> TLegVec;
-typedef std::vector<TCanvas*> TCanvVec;
-typedef std::vector<TPad*>    TPadVec;
 
 class StackDataMC
 {

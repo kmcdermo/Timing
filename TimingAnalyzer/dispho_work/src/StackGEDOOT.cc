@@ -362,7 +362,7 @@ void StackGEDOOT::InitOutputCanvPads()
   fOutTH1FRatioPads.resize(fNTH1F);
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   {
-    fOutTH1FCanvases[th1f] = new TCanvas(Form("%s_canv",fTH1FNames[th1f].Data()),"");
+    fOutTH1FCanvases[th1f] = new TCanvas(Form("%s_gedoot_canv",fTH1FNames[th1f].Data()),"");
     fOutTH1FCanvases[th1f]->cd();
     
     fOutTH1FStackPads[th1f] = new TPad(Form("%s_upad",fTH1FNames[th1f].Data()),"", Config::left_up, Config::bottom_up, Config::right_up, Config::top_up);

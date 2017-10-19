@@ -5,18 +5,7 @@
 #include "Config.hh"
 #include "CommonUtils.hh"
 
-#include "TPad.h"
-#include "THStack.h"
-#include "TLegend.h"
-#include "TLine.h"
-#include "TLatex.h"
-
-typedef std::vector<TFile*>   TFileVec;
-typedef std::vector<TH1F*>    TH1FVec;
-typedef std::vector<TLine*>   TLineVec;
-typedef std::vector<TLegend*> TLegVec;
-typedef std::vector<TCanvas*> TCanvVec;
-typedef std::vector<TPad*>    TPadVec;
+#include "TFile.h"
 
 class StackGEDOOT
 {
