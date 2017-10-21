@@ -33,7 +33,7 @@ void plotdiffs(const TString & lambdas)
   for (auto&& param : params)
   {
     graphs[i] = new TGraph(param.second.size());
-    graphs[i]->SetTitle("Percent Diff. vs.c#tau;c#tau;Percent Diff.");
+    graphs[i]->SetTitle("Generated Percent Diff. vs. Actual c#tau;c#tau;Percent Diff.");
     graphs[i]->SetName(Form("graph_%i",param.first));
     graphs[i]->SetMarkerColor(colors[i]);
     graphs[i]->SetLineColor(colors[i]);
@@ -58,12 +58,11 @@ void plotdiffs(const TString & lambdas)
 
   TCanvas * canv = new TCanvas(); canv->cd();
   TLegend * leg = new TLegend(0.9,0.5,1.0,1.0);
-  //  leg->SetNColumns(2);
   i = 0;
   for (auto&& param : params)
   {
-    graphs[i]->SetMinimum(min*1.1);
-    graphs[i]->SetMaximum(max*1.1);
+    graphs[i]->SetMinimum(min<0?min*1.1:min/1.1);
+    graphs[i]->SetMaximum(max>0?max*1.1:max/1.1);
     graphs[i]->Draw(i>0?"P same":"AP");
     leg->AddEntry(graphs[i],Form("#Lambda: %i TeV",param.first),"lp");
 
@@ -71,6 +70,7 @@ void plotdiffs(const TString & lambdas)
   }
 
   leg->Draw("same");
+  canv->SetLogx(1);
   canv->SaveAs("diffs.png");
   delete leg;
   delete canv;
