@@ -1,22 +1,41 @@
+static const float tolerance = 1e-7;
+
 inline float getcgrav(const int lamb, const float ctau)
 {
-  return std::sqrt(ctau)*(-10.7968+3.51482*std::pow(lamb,0.3871));
+  return std::sqrt(ctau)*(-10.7968+3.51482*std::pow(lamb,0.3871)); // old: original tuning for 100-400 TeV
+  //  return std::sqrt(ctau)*(-5.857+1.893*std::pow(lamb,0.4652)); // new: better for L>400 TeV
 }
 
 void gencgrav()
 {
-  std::vector<float> ctaus = {0.1,10,200,400,600,800,1000,1200}; // cm
-  std::vector<int>   lambs = {100,150,200,250,300,350,400}; // tev
+  std::vector<float> ctaus = {0.001,0.01,0.1,1,5,10,25,50,100,200,300,500,750,1000,1500,2000,2500,3000}; // cm
+  std::vector<int>   lambs = {50,100,200,300,400,500,600,700,800,900,1000,1100,1200,1300,1400,1500}; // tev
 
+  TString outdir = "Lambda";
+  FileStat_t dummyFileStat;
+  if (gSystem->GetPathInfo(outdir.Data(), dummyFileStat) == 1)
+  {
+    TString mkDir = "mkdir -p ";
+    mkDir += outdir.Data();
+    gSystem->Exec(mkDir.Data());
+  }                                
   for (auto lamb : lambs)
   {
-    std::ofstream output(Form("Lambda%i_cgrav.txt",lamb),std::ios_base::trunc);
+    std::ofstream output(Form("Lambda/Lambda%iTeV_cgrav.txt",lamb),std::ios_base::trunc);
     for (auto ctau : ctaus)
     {
       TString CTau;
       if (ctau < 1)
       {
-	CTau = Form("%3.1f",ctau);
+	int n = -1;
+	float ictau = ctau;
+	while (ictau < (1.f-tolerance))
+	{
+	  ictau *= 10;
+	  n++;
+	}
+	const TString sub = Form("%i.%i",3+n,1+n);
+	CTau = Form(Form("%%%sf",sub.Data()),ctau);
       }
       else
       {

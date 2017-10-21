@@ -1,4 +1,4 @@
-static const std::vector<Color_t> colors = {kRed+1,kGreen+1,kMagenta,kOrange+1,kAzure+10,kYellow-7,kViolet-1,kBlack,kYellow+3};
+static const std::vector<Color_t> colors = {kRed,kGreen+1,kMagenta,kOrange+1,kGray,kAzure+10,kYellow-7,kViolet-1,kTeal-4,kBlack,kPink-4,kBlue,kOrange+3,kSpring-4,kRed+1,kCyan+2};
   
 struct lcg
 {
@@ -29,9 +29,9 @@ void fitGraph(TGraph *& graph, TF1 *& fit, const int i, const TString & fitname)
     fit  = new TF1(Form("%s_fit_%i",fitname.Data(),i),fitname.Data(),minx,maxx);
     fit->SetParName(0,"Intercept"); 
     fit->SetParameter(0,0.f);
-    fit->SetParName(1,"Scale"); 
+    fit->SetParName(1,"Scale0"); 
     fit->SetParameter(1,1.f);
-    fit->SetParName(2,"Power"); 
+    fit->SetParName(2,"Power0"); 
     fit->SetParameter(2,1.f);
   }
   else 
@@ -40,7 +40,7 @@ void fitGraph(TGraph *& graph, TF1 *& fit, const int i, const TString & fitname)
   }
 
   fit->SetLineColor(colors[i]);
-  graph->Fit(fit->GetName(),"RB");
+  graph->Fit(fit->GetName(),"RBQ");
 }  
 
 void fitcgrav()
@@ -85,7 +85,7 @@ void fitcgrav()
   }
 
   TCanvas * canv = new TCanvas(); canv->cd();
-  TLegend * leg = new TLegend(0.2,0.6,0.45,0.85);
+  TLegend * leg = new TLegend(0.15,0.5,0.42,0.88);
   i = 0;
   for (auto&& param : params)
   {
@@ -104,8 +104,8 @@ void fitcgrav()
   TGraph * graph = new TGraph(params.size());
   graph->SetTitle("#alpha vs. #Lambda;#Lambda;#alpha");
   graph->SetName("graph_fit");
-  graph->SetMarkerColor(colors[i]);
-  graph->SetLineColor(colors[i]);
+  graph->SetMarkerColor(kBlack);
+  graph->SetLineColor(kBlack);
   graph->SetMarkerStyle(20);
 
   i = 0;
@@ -115,6 +115,7 @@ void fitcgrav()
     i++;
   }
   graph->Draw("AP");
+  i = 0;
 
   gStyle->SetOptFit(1);
   gStyle->SetStatX(0.5);
