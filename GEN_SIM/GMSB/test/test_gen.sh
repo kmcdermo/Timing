@@ -1,13 +1,13 @@
 #!/bin/bash
 
-lambda=$1
-ctau=$2
+lambda=$1 #in TeV
+ctau=$2 #in cm
 
 root -l -b -q test/getCgrav.C\(${lambda},${ctau}\) > cgrav.txt
 cgrav=$(grep "cgrav" cgrav.txt | cut -d ' ' -f 2) 
 rm cgrav.txt
 
-lamb=$((${lambda}*1000))
+lamb=$((${lambda}*1000)) #convert to GeV
 mess=$((${lamb}*2)) # messenger mass is set to 2 * lambda in SPS8
 
 echo -e "temp.txt\ntemp.slha\n/\n2\n"${lamb}" "${mess}" 1 15 1 173.1 "${cgrav}"\n0\n/" | ./isasugra.x
