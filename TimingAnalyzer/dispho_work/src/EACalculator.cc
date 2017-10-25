@@ -11,7 +11,7 @@ EACalculator::EACalculator(const TString & sample, const Bool_t isMC) : fSample(
   CheckValidFile(fInFile,filename);
 
   // output data members
-  fOutFile = new TFile(Form("%s/effarea_canvases.root",fOutDir.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
+  fOutFile = new TFile(Form("%s/effarea_canvases.root",fOutDir.Data()),"UPDATE"); // make output tfile --> store canvas images here too, for quick editting
   fEAFile.open(Form("%s/%s",fOutDir.Data(),Config::eadumpname.Data()),std::ios_base::trunc);
 
   // Read in names of plots to be stacked
@@ -47,15 +47,15 @@ EACalculator::~EACalculator()
 void EACalculator::ExtractEA()
 {
   // First compute the slope of rho vs nvtx
-  EACalculator::FitHist(fInRhoHist,fOutRhoCanvas,fRhoName);
-
-  // get the slope of the line
+  fInRhoHist->Fit(Form("%s_%s_fit",fRhoName.Data(),Config::formname.Data()),"RQ");
+  
+  // get the slope of the rho iso line
   const Double_t rho_slope = fOutRhoTF1->GetParameter(1);
 
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   {
     // Then compute slope of pho iso vs nvtx.
-    EACalculator::FitHist(fInTH1FHists[th1f],fOutTH1FCanvases[th1f],fTH1FNames[th1f]);
+    fInTH1FHists[th1f]->Fit(Form("%s_%s_fit",fTH1FNames[th1f].Data(),Config::formname.Data()),"RQ");
 
     // get the slope of the pho iso line
     const Double_t pho_slope = fOutTH1FTF1s[th1f]->GetParameter(1);
@@ -65,16 +65,9 @@ void EACalculator::ExtractEA()
 
     fEAFile << fTH1FNames[th1f].Data() << " " << iso_ea << std::endl;
   }
-  
+
   // Then finally output the canvases for safekeeping
   EACalculator::OutputFitCanvases();
-}
-
-void EACalculator::FitHist(TH1F *& hist, TCanvas *& canv, const TString & name)
-{
-  hist->Fit(Form("%s_%s_fit",name.Data(),Config::formname.Data()),"RQ");
-  canv->cd();
-  hist->Draw("ep");
 }
 
 void EACalculator::OutputFitCanvases()
@@ -86,6 +79,7 @@ void EACalculator::OutputFitCanvases()
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   {
     fOutTH1FCanvases[th1f]->cd();
+    fInTH1FHists[th1f]->Draw("ep");
     CMSLumi(fOutTH1FCanvases[th1f]);
     fOutTH1FCanvases[th1f]->Write(fOutTH1FCanvases[th1f]->GetName(),TObject::kWriteDelete);
     fOutTH1FCanvases[th1f]->SaveAs(Form("%s/%s/%s/lin/%s.%s",fOutDir.Data(),fTH1FSubDMap[fTH1FNames[th1f]].Data(),
@@ -94,6 +88,7 @@ void EACalculator::OutputFitCanvases()
 
   // do rho plots
   fOutRhoCanvas->cd();
+  fInRhoHist->Draw("ep");
   CMSLumi(fOutRhoCanvas);
   fOutRhoCanvas->Write(fOutRhoCanvas->GetName(),TObject::kWriteDelete);
   fOutRhoCanvas->SaveAs(Form("%s/%s/%s/lin/%s.%s",fOutDir.Data(),fRhoSubD.Data(),
@@ -128,9 +123,9 @@ void EACalculator::InitTH1FNamesAndSubDNames()
   // store the size of the number of plots
   fNTH1F = fTH1FNames.size();
 
-  if (fTH1FNames.size() == 0) 
+  if (fTH1FNames.size() == 0 || fRhoName == "") 
   {
-    std::cerr << "Somehow, no plots were read in for the stacker ...exiting..." << std::endl;
+    std::cerr << "Somehow, no plots were read in for the EA calculator ...exiting..." << std::endl;
     exit(1);
   }
 }
@@ -158,8 +153,6 @@ void EACalculator::InitInputPlots()
 
 void EACalculator::InitFits()
 {
-  TFormula line(Config::formname.Data(),"[0]+x*[1]");
-
   // photons first
   fOutTH1FTF1s.resize(fNTH1F);
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
@@ -192,6 +185,6 @@ void EACalculator::InitOutputCanvs()
     fOutTH1FCanvases[th1f]->cd();
   }
 
-  fOutRhoCanvas = new TCanvas(Form("%s_canv",fRhoName.Data()),"");
+  fOutRhoCanvas = new TCanvas(Form("%s_ea_canv",fRhoName.Data()),"");
   fOutRhoCanvas->cd();
 }

@@ -11,7 +11,7 @@ StackGEDOOT::StackGEDOOT(const TString & sample, const Bool_t isMC) : fSample(sa
   CheckValidFile(fInFile,filename);
 
   // output data members
-  fOutFile = new TFile(Form("%s/stackplots_canvases.root",fOutDir.Data()),"RECREATE"); // make output tfile --> store canvas images here too, for quick editting
+  fOutFile = new TFile(Form("%s/stackplots_canvases.root",fOutDir.Data()),"UPDATE"); // make output tfile --> store canvas images here too, for quick editting
 
   // Read in names of plots to be stacked
   StackGEDOOT::InitTH1FNamesAndSubDNames();

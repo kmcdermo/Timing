@@ -49,7 +49,7 @@ namespace Config
   // EA config
   static const TString easubdir = "effarea";
   static const TString eadumpname = "effareas.txt";
-  static const TString formname = "linear";
+  static const TString formname = "pol1";
   constexpr    Double_t xmin_ea = 0;
   constexpr    Double_t xmax_ea = nbinsvtx;
 

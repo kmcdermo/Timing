@@ -31,7 +31,7 @@ Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample),
   fColor = (fIsMC?Config::colorMap[fSample]:kBlack);
 
   // extra setup for data and MC
-  if (fIsMC) 
+  if (fIsMC and false) 
   { 
     // Get pile-up weights
     const TString purwfname = Form("%s/%s/%s",Config::outdir.Data(),Config::pusubdir.Data(),Config::pufilename.Data());
@@ -66,7 +66,7 @@ Analysis::~Analysis()
   delete fInTree;
   delete fInFile;
   delete fOutFile;
-  if (!fIsMC)
+  if (!fIsMC or true)
   { 
     fTH1Dump.close();
     fTH1PhoDump.close();
@@ -98,7 +98,7 @@ void Analysis::EventLoop()
     //                        // 
     ////////////////////////////
     Float_t weight = -1.;
-    if   (fIsMC) {weight = (fXsec * Config::lumi * genwgt / fWgtsum) * fPUweights[genputrue];}
+    if   (fIsMC and false) {weight = (fXsec * Config::lumi * genwgt / fWgtsum) * fPUweights[genputrue];}
     else         {weight = 1.0;}
 
     ////////////////////////////////
@@ -318,7 +318,7 @@ void Analysis::OutputEventStandardPlots()
 {
   MakeSubDirs(stdevTH1SubMap,fOutDir);
   Analysis::SaveTH1s(stdevTH1Map,stdevTH1SubMap);
-  if (!fIsMC) Analysis::DumpTH1Names(stdevTH1Map,stdevTH1SubMap);
+  if (!fIsMC or true) Analysis::DumpTH1Names(stdevTH1Map,stdevTH1SubMap);
   Analysis::DeleteTH1s(stdevTH1Map);
 
   Analysis::SaveTH2s(stdevTH2Map,stdevTH2SubMap);
@@ -335,7 +335,7 @@ void Analysis::OutputPhotonStandardPlots()
   MakeSubDirs(stdphoTH1SubMap,fOutDir);
   Analysis::MakeInclusiveTH1s(stdphoTH1Map,stdphoTH1SubMap);  
   Analysis::SaveTH1s(stdphoTH1Map,stdphoTH1SubMap);
-  if (!fIsMC)
+  if (!fIsMC or true)
   { 
     Analysis::DumpTH1Names(stdphoTH1Map,stdphoTH1SubMap);
     Analysis::DumpTH1PhoNames(stdphoTH1Map,stdphoTH1SubMap);
@@ -348,7 +348,7 @@ void Analysis::OutputIsoPlots()
   MakeSubDirs(isoTH1SubMap,fOutDir);
   Analysis::MakeInclusiveTH1s(isoTH1Map,isoTH1SubMap);
   Analysis::SaveTH1s(isoTH1Map,isoTH1SubMap);
-  if (!fIsMC)
+  if (!fIsMC or true)
   { 
     Analysis::DumpTH1Names(isoTH1Map,isoTH1SubMap);
     Analysis::DumpTH1PhoNames(isoTH1Map,isoTH1SubMap);
@@ -636,7 +636,7 @@ void Analysis::Make1DFrom2DPlots(const TH2F * hist2d, const TString & subdir2d, 
   if (Config::saveTempHists) 
   {
     Analysis::SaveTH1s(th1dmap,th1dsubmap);
-    if (!fIsMC)
+    if (!fIsMC or true)
     {
       Analysis::DumpTH1Names(th1dmap,th1dsubmap);
       Analysis::DumpTH1PhoNames(th1dmap,th1dsubmap);
@@ -906,7 +906,7 @@ void Analysis::SaveProjectedTH1(TH1F * hist, const TString & subdir2d)
   // write output hist to file
   fOutFile->cd();
   hist->Write(hist->GetName(),TObject::kWriteDelete);
-  if (!fIsMC)
+  if (!fIsMC or true)
   {
     fTH1Dump << name.Data() << " " << subdir2d.Data() << std::endl;
     if (name.Contains("GED",TString::kExact)) fTH1PhoDump << name.Data() << " " << subdir2d.Data() << std::endl;

@@ -19,7 +19,6 @@ public:
   ~EACalculator();
 
   void ExtractEA();
-  void FitHist(TH1F *& hist, TCanvas *& canv, const TString & name);
   void OutputFitCanvases();
   void InitTH1FNamesAndSubDNames();
   void InitSubDirs();
