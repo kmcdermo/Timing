@@ -25,7 +25,7 @@ def getOptions():
 
     parser.add_option('-w', '--workArea',
                       dest = 'workArea',
-                      default = 'multicrab_dispho',
+                      default = 'multicrab_dispho_MC',
                       help = "work area directory (only if CMD != 'submit')",
                       metavar = 'WAD')
 
@@ -61,7 +61,6 @@ def main():
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
         inputPaths   = 'HLTprescaledpaths.txt'
         inputFilters = 'HLTfilters.txt'
-        inputJSON    = 'golden2017-oct11.json'
          
         #--------------------------------------------------------
         # This is the base config:
@@ -77,10 +76,10 @@ def main():
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
 
+        config.Data.inputDBS     = None
         config.Data.inputDataset = None
-        config.Data.lumiMask     = inputDir+inputJSON
         config.Data.splitting    = 'EventAwareLumiBased'
-        config.Data.unitsPerJob  = 1000000
+        config.Data.unitsPerJob  = 10000
 
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
@@ -90,20 +89,15 @@ def main():
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/SinglePhoton/Run2017B-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v4', 'False'],
-            ['/SinglePhoton/Run2017B-PromptReco-v2/MINIAOD', '92X_dataRun2_Prompt_v5', 'False'],
-            ['/SinglePhoton/Run2017C-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v6', 'True'],
-            ['/SinglePhoton/Run2017C-PromptReco-v2/MINIAOD', '92X_dataRun2_Prompt_v7', 'True'],
-            ['/SinglePhoton/Run2017C-PromptReco-v3/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
-            ['/SinglePhoton/Run2017D-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
-            ['/SinglePhoton/Run2017E-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v9', 'True'],
+            ['/GMSB_L200TeV_CTau400cm_930/kmcdermo-GMSB_L200TeV_CTau400cm_930_step3-23134fac048c68b5122d77328802e60f/USER', '92X_upgrade2017_realistic_v10', 'phys03'],
             ]
  
         for inDO in inputDataAndOpts:
-            # inDO[0] is of the form /A/B/C. Since B is unique for each inDS, use this in the CRAB request name.
+            # inDO[0] is of the form /A/B/C. Since B is unique for each inDO, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[2]
-            config.JobType.pyCfgParams   = ['globalTag='+inDO[1],'useOOTPhotons='+inDO[2],'phIDmin=none','applyTrigger=True','splitPho=True',
+            config.JobType.pyCfgParams   = ['globalTag='+inDO[1],'phIDmin=none','splitPho=True','isGMSB=True',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters]
+            config.Data.inputDBS         = inDO[2]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.
