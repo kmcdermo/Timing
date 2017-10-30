@@ -76,10 +76,9 @@ def main():
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
 
-        config.Data.inputDBS     = None
         config.Data.inputDataset = None
         config.Data.splitting    = 'EventAwareLumiBased'
-        config.Data.unitsPerJob  = 10000
+        config.Data.unitsPerJob  = 500000
 
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
@@ -100,8 +99,8 @@ def main():
             ]
  
         for inDO in inputDataAndOpts:
-            # inDO[0] is of the form /A/B/C. Since B is unique for each inDO, use this in the CRAB request name.
-            config.General.requestName   = inDO[0].split('/')[2]
+            # inDO[0] is of the form /A/B/C. Since A is unique for each inDO in Monte Carlo, use this in the CRAB request name.
+            config.General.requestName   = inDO[0].split('/')[1]
             config.JobType.pyCfgParams   = ['globalTag=92X_upgrade2017_realistic_v10','phIDmin=none','splitPho=True','isBkgd=True',
                                             'xsec='+inDO[1],'filterEff='+inDO[2],
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters]

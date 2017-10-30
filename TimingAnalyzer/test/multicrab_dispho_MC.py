@@ -93,8 +93,8 @@ def main():
             ]
  
         for inDO in inputDataAndOpts:
-            # inDO[0] is of the form /A/B/C. Since B is unique for each inDO, use this in the CRAB request name.
-            config.General.requestName   = inDO[0].split('/')[2]
+            # inDO[0] is of the form /A/B/C. Since A is unique for each inDO for Monte Carlo, use this in the CRAB request name.
+            config.General.requestName   = inDO[0].split('/')[1]
             config.JobType.pyCfgParams   = ['globalTag='+inDO[1],'phIDmin=none','splitPho=True','isGMSB=True',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters]
             config.Data.inputDBS         = inDO[2]
