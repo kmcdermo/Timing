@@ -51,7 +51,9 @@ options.register('useOOTPhotons',True,VarParsing.multiplicity.singleton,VarParsi
 options.register('isMC',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate data or MC');
 options.register('isGMSB',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate GMSB');
 options.register('isHVDS',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate HVDS');
-options.register('isBkg',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate Background MC');
+options.register('isBkgd',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate Background MC');
+options.register('xsec',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'cross section in pb');
+options.register('filterEff',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'filter efficiency of MC');
 
 ## GT to be used
 options.register('globalTag','92X_dataRun2_Prompt_v8',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
@@ -68,7 +70,7 @@ options.register('outputFileName','dispho.root',VarParsing.multiplicity.singleto
 ## parsing command line arguments
 options.parseArguments()
 
-if options.isGMSB or options.isHVDS or options.isBkg: options.isMC = True
+if options.isGMSB or options.isHVDS or options.isBkgd: options.isMC = True
 
 print "     ##### Settings ######"
 print "       -- Blinding --"
@@ -110,7 +112,9 @@ if options.isMC:
 	print "isMC           : ",options.isMC
 	print "isGMSB         : ",options.isGMSB
 	print "isHVDS         : ",options.isHVDS
-	print "isBkg          : ",options.isBkg
+	print "isBkgd         : ",options.isBkgd
+	print "xsec           : ",options.xsec
+	print "filterEff      : ",options.filterEff
 print "           -- GT --"
 print "globalTag      : ",options.globalTag	
 print "         -- Output --"
@@ -139,6 +143,8 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		#'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_10.root'
 		# test HVDS 2016, GT: 92X_mcRun2_asymptotic_v2
 		#'file:/afs/cern.ch/user/k/kmcdermo/private/dispho/Analysis/CMSSW_9_2_8/src/Timing/GEN_SIM/HVDS/tmp/step3.root'
+		# test QCD, GT: 92X_upgrade2017_realistic_v10
+		'/store/mc/RunIISummer17MiniAOD/QCD_Pt-170to300_EMEnriched_TuneCUETP8M1_13TeV_pythia8/MINIAODSIM/92X_upgrade2017_realistic_v10-v2/90000/02A98D4F-BF97-E711-950B-4C79BA1809E9.root'
 		# 2017A-v1, GT: 92X_dataRun2_Prompt_v4
 		#'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v1/000/295/977/00000/9CAC61AF-094A-E711-BA62-02163E0138FA.root',
 		# 2017A-v2, GT: 92X_dataRun2_Prompt_v4
@@ -156,7 +162,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		# 2017C-v3, GT: 92X_dataRun2_Prompt_v8
 		#'/store/data/Run2017C/SinglePhoton/MINIAOD/PromptReco-v3/000/300/777/00000/18694619-C67E-E711-9CBF-02163E01A6D1.root',
 		# 2017D-v1, GT: 92X_dataRun2_Prompt_v8 
-		'/store/data/Run2017D/SinglePhoton/MINIAOD/PromptReco-v1/000/302/042/00000/18838DB3-698F-E711-9D1B-02163E01192A.root',
+		#'/store/data/Run2017D/SinglePhoton/MINIAOD/PromptReco-v1/000/302/042/00000/18838DB3-698F-E711-9D1B-02163E01192A.root',
 		# 2017E-v1, GT: 92X_dataRun2_Prompt_v9
 		#'/store/data/Run2017E/SinglePhoton/MINIAOD/PromptReco-v1/000/303/819/00000/F8E8E7B5-68A2-E711-9655-02163E0138E0.root',
 		))
@@ -237,7 +243,9 @@ process.tree = cms.EDAnalyzer("DisPho",
    ## gen info			     
    isGMSB   = cms.bool(options.isGMSB),
    isHVDS   = cms.bool(options.isHVDS),
-   isBkg    = cms.bool(options.isBkg),
+   isBkgd   = cms.bool(options.isBkgd),
+   xsec     = cms.double(options.xsec),
+   filterEff= cms.double(options.filterEff),
    genevt   = cms.InputTag("generator"),
    pileup   = cms.InputTag("slimmedAddPileupInfo"),
    genparts = cms.InputTag("prunedGenParticles")

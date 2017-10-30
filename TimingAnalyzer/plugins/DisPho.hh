@@ -56,6 +56,7 @@
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 
 // ROOT
+#include "TH1F.h"
 #include "TTree.h"
 
 // Common Utilities
@@ -177,6 +178,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   explicit DisPho(const edm::ParameterSet&);
   ~DisPho();
 
+  void MakeHists();
   void MakeAndFillConfigTree();
   void MakeEventTree();
   void MakeGMSBBranch(const int i, gmsbStruct& gmsbBranch);
@@ -307,12 +309,17 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // Gen Particles and MC info
   const bool isGMSB;
   const bool isHVDS;
-  const bool isBkg;
+  const bool isBkgd;
+  const float xsec;
+  const float filterEff;
   bool isMC;
   edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
   edm::EDGetTokenT<std::vector<reco::GenParticle> > genpartsToken;
   edm::EDGetTokenT<std::vector<reco::GenJet> >      genjetsToken;
+
+  // output histograms
+  TH1F * h_cutflow;
 
   // output metadeta configs
   TTree * configtree;

@@ -71,7 +71,10 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // isMC or Data --> default Data
   isGMSB(iConfig.existsAs<bool>("isGMSB") ? iConfig.getParameter<bool>("isGMSB") : false),
   isHVDS(iConfig.existsAs<bool>("isHVDS") ? iConfig.getParameter<bool>("isHVDS") : false),
-  isBkg (iConfig.existsAs<bool>("isBkg")  ? iConfig.getParameter<bool>("isBkg")  : false)
+  isBkgd(iConfig.existsAs<bool>("isBkgd") ? iConfig.getParameter<bool>("isBkgd")  : false),
+  
+  xsec(iConfig.existsAs<double>("xsec") ? iConfig.getParameter<double>("xsec") : 1.0),
+  filterEff(iConfig.existsAs<double>("filterEff") ? iConfig.getParameter<double>("filterEff") : 1.0)
 {
   usesResource();
   usesResource("TFileService");
@@ -113,7 +116,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   }
 
   // only for simulated samples
-  if (isGMSB || isHVDS || isBkg)
+  if (isGMSB || isHVDS || isBkgd)
   {
     isMC = true;
     genevtInfoToken = consumes<GenEventInfoProduct>             (iConfig.getParameter<edm::InputTag>("genevt"));
@@ -206,7 +209,16 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     iEvent.getByToken(genevtInfoToken, genevtInfoH);
     iEvent.getByToken(pileupInfoToken, pileupInfoH);
     iEvent.getByToken(genpartsToken,   genparticlesH);
+
+    ///////////////////////
+    //                   //
+    // Event weight info //
+    //                   //
+    ///////////////////////
+    DisPho::InitializeGenEvtBranches();
+    if (genevtInfoH.isValid()) {genwgt = genevtInfoH->weight();}
   }
+  const Float_t evtwgt = (isMC ? genwgt : 1.f);
 
   ///////////////////////////
   //                       //
@@ -274,6 +286,8 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Apply pre-selection //
   //                     //
   /////////////////////////
+  h_cutflow->Fill(0.,evtwgt);
+
   // trigger pre-selection
   bool triggered = false;
   for (const auto & triggerBitPair : triggerBitMap)
@@ -281,6 +295,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (triggerBitPair.second) {triggered = true; break;}
   }
   if (!triggered && applyTrigger) return;
+  h_cutflow->Fill(1.,evtwgt);
 
   // HT pre-selection
   if (jetsH.isValid()) // check to make sure reco jets exist
@@ -291,6 +306,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
   } // end check over reco jets  
   if (jetHT < minHT && applyHT) return;
+  h_cutflow->Fill(2.,evtwgt);
 
   // photon pre-selection: at least one good photon in event
   bool isphgood = false;
@@ -312,6 +328,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     } 
   } // end check
   if (!isphgood && applyPhGood) return;
+  h_cutflow->Fill(3.,evtwgt);
 
   /////////////
   //         //
@@ -320,14 +337,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   /////////////
   if (isMC) 
   {
-    ///////////////////////
-    //                   //
-    // Event weight info //
-    //                   //
-    ///////////////////////
-    DisPho::InitializeGenEvtBranches();
-    if (genevtInfoH.isValid()) {genwgt = genevtInfoH->weight();}
-
     /////////////////////
     //                 //
     // Gen pileup info //
@@ -949,6 +958,10 @@ void DisPho::beginJob()
 {
   edm::Service<TFileService> fs;
   
+  // histograms needed
+  h_cutflow = fs->make<TH1F>("h_cutflow", "Cut Flow", 5, 0, 5);
+  DisPho::MakeHists();
+
   // Config tree, filled once
   configtree = fs->make<TTree>("configtree","configtree");
   DisPho::MakeAndFillConfigTree();
@@ -956,6 +969,20 @@ void DisPho::beginJob()
   // Event tree
   tree = fs->make<TTree>("tree","tree");
   DisPho::MakeEventTree();
+}
+
+void DisPho::MakeHists()
+{
+  // cut flow settings
+  std::vector<std::string> labels = {"All","Trigger","H_{T}","Good Photon"};
+  int i = 0;
+  for (const auto & label : labels)
+  {
+    i++;
+    h_cutflow->GetXaxis()->SetBinLabel(i,label.c_str());
+  }
+  h_cutflow->GetYaxis()->SetTitle("nEvents with weights");
+  h_cutflow->Sumw2();
 }
 
 void DisPho::MakeAndFillConfigTree()
@@ -1026,6 +1053,21 @@ void DisPho::MakeAndFillConfigTree()
   std::string inputFilters_tmp = inputFilters;
   configtree->Branch("inputPaths", &inputPaths_tmp);
   configtree->Branch("inputFilters", &inputFilters_tmp);
+
+  // MC info
+  if (isMC)
+  {
+    bool isGMSB_tmp = isGMSB;
+    bool isHVDS_tmp = isHVDS;
+    bool isBkgd_tmp = isBkgd;
+    float xsec_tmp = xsec;
+    float filterEff_tmp = filterEff;
+    configtree->Branch("isGMSB", &isGMSB_tmp, "isGMSB/O");
+    configtree->Branch("isHVDS", &isHVDS_tmp, "isHVDS/O");
+    configtree->Branch("isBkgd", &isBkgd_tmp, "isBkgd/O");
+    configtree->Branch("xsec", &xsec_tmp, "xsec/F");
+    configtree->Branch("filterEff", &filterEff_tmp, "filterEff/F");
+  }
 
   // Fill tree just once, after configs have been read in
   configtree->Fill();
