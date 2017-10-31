@@ -25,7 +25,7 @@ def getOptions():
 
     parser.add_option('-w', '--workArea',
                       dest = 'workArea',
-                      default = 'multicrab_dispho_MC',
+                      default = 'multicrab_dispho_Signal',
                       help = "work area directory (only if CMD != 'submit')",
                       metavar = 'WAD')
 
@@ -76,7 +76,7 @@ def main():
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
 
-        config.Data.inputDBS     = None
+        config.Data.inputDBS     = 'phys03'
         config.Data.inputDataset = None
         config.Data.splitting    = 'EventAwareLumiBased'
         config.Data.unitsPerJob  = 10000
@@ -89,15 +89,15 @@ def main():
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/GMSB_L200TeV_CTau400cm_930/kmcdermo-GMSB_L200TeV_CTau400cm_930_step3-23134fac048c68b5122d77328802e60f/USER', '92X_upgrade2017_realistic_v10', 'phys03'],
+            ['/GMSB_L200TeV_CTau400cm_930/kmcdermo-GMSB_L200TeV_CTau400cm_930_step3-23134fac048c68b5122d77328802e60f/USER', '1', '1'],
             ]
  
         for inDO in inputDataAndOpts:
             # inDO[0] is of the form /A/B/C. Since A is unique for each inDO for Monte Carlo, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[1]
-            config.JobType.pyCfgParams   = ['globalTag='+inDO[1],'phIDmin=none','splitPho=True','isGMSB=True',
+            config.JobType.pyCfgParams   = ['globalTag=92X_upgrade2017_realistic_v10','phIDmin=none','splitPho=True','isGMSB=True',
+                                            'xsec='+inDO[1],'filterEff='+inDO[2],
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters]
-            config.Data.inputDBS         = inDO[2]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.
