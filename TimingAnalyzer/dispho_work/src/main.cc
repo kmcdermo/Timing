@@ -45,14 +45,6 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
   Config::SampleTitleMap["hvds"]  = "HVDS";
   Config::SampleTitleMap["qcd"]   = "QCD";
   Config::SampleTitleMap["gamma"] = "#gamma + Jets";
-
-  // sample xsec map
-  Config::SampleXsecMap["gmsb"] = 1;
-  Config::SampleXsecMap["hvds"] = 1;
-
-  // sample wgtsum map
-  Config::SampleWgtsumMap["gmsb"] = 1;
-  Config::SampleWgtsumMap["hvds"] = 1;
 }
 
 void DestroyMain(std::ofstream & yields, TStyle *& tdrStyle) 
@@ -100,7 +92,6 @@ int main(int argc, const char* argv[])
 	"  --use-mean-rho  <bool>        use mean of projected histo for rho (def: %s)\n"
 	"  --q-prob        <float>       which quantile to use for photons (def: %4.2f)\n"
 	"  --q-probrho     <float>       which quantile to use for rho (def: %4.2f)\n"
-	"  --dump-status   <bool>        print out every N events in analysis loop (def: %s)\n"
 	"  --in-year       <string>      which year to process (def: %s)\n"
 	"  --save-hists    <bool>        save analysis histograms as images (def: %s)\n"
 	"  --save-tmphists <bool>        save histograms used in projections to root file (def: %s)\n"
@@ -130,7 +121,6 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::useMeanRho),
 	Config::quantProb,
 	Config::quantProbRho,
-	PrintBool(Config::dumpStatus),
 	Config::year.Data(),
 	PrintBool(Config::saveHists),
 	PrintBool(Config::saveTempHists),
@@ -161,7 +151,6 @@ int main(int argc, const char* argv[])
     else if (*i == "--use-mean-rho"){ Config::doAnalysis = true; Config::doEvStd    = true; Config::useMeanRho = true; }
     else if (*i == "--q-prob")      { next_arg_or_die(mArgs, i); Config::quantProb  = std::atof(i->c_str()); }
     else if (*i == "--q-probrho")   { next_arg_or_die(mArgs, i); Config::quantProbRho = std::atof(i->c_str()); }
-    else if (*i == "--dump-status") { Config::doAnalysis = true; Config::dumpStatus = true; }
     else if (*i == "--in-year")     { next_arg_or_die(mArgs, i); Config::year       = i->c_str(); }
     else if (*i == "--save-hists")  { Config::saveHists  = true; }
     else if (*i == "--save-tmphists"){ Config::saveTempHists = true; }

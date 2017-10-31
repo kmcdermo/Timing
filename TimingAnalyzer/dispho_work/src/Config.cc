@@ -29,7 +29,6 @@ namespace Config
   Bool_t  useMeanRho = false;
   Float_t quantProb  = 0.9;
   Float_t quantProbRho = 0.5; // 50% = median
-  Bool_t  dumpStatus = false;
   TString year       = "2017";
   Bool_t  saveHists  = false;
   Bool_t  saveTempHists = false;
@@ -38,6 +37,4 @@ namespace Config
   TStrBoolMap SampleMap;       // set in main.cc
   ColorMap    colorMap;        // set in main.cc
   TStrMap     SampleTitleMap;  // set in main.cc
-  TStrFltMap  SampleXsecMap;   // set in main.cc
-  TStrFltMap  SampleWgtsumMap; // set in main.cc
 }

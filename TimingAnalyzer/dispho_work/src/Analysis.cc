@@ -9,20 +9,34 @@ Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample),
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
 
-  // Set input
-  const TString filename = Form("input/%s/%s/%s/%s", Config::year.Data(), (fIsMC?"MC":"DATA"), fSample.Data(), "tree.root");
-  fInFile  = TFile::Open(filename.Data());
-  CheckValidFile(fInFile,filename);
-
-  const TString treename = "tree/tree";
-  fInTree = (TTree*)fInFile->Get(treename.Data());
-  CheckValidTree(fInTree,treename,filename);
+  // Set MC stuff right away
   if (fIsMC)
   {
     if (fSample.Contains("gmsb",TString::kExact)) fIsGMSB = true;
     if (fSample.Contains("hvds",TString::kExact)) fIsHVDS = true;
   }
+
+  // Get input
+  const TString filename = Form("input/%s/%s/%s/%s", Config::year.Data(), (fIsMC?"MC":"DATA"), fSample.Data(), "tree.root");
+  fInFile  = TFile::Open(filename.Data());
+  CheckValidFile(fInFile,filename);
+
+  // Get main tree and initialize everything
+  const TString treename = "tree/tree";
+  fInTree = (TTree*)fInFile->Get(treename.Data());
+  CheckValidTree(fInTree,treename,filename);
   Analysis::InitTree();
+
+  // Get config tree, initialize it, and set it to read the first entry!
+  const TString configtreename = "tree/configtree";
+  fConfigTree = (TTree*)fInFile->Get(configtreename.Data());
+  CheckValidTree(fConfigTree,configtreename,filename);
+  Analysis::InitAndReadConfigTree();
+
+  // Get the cut flow + event weight histogram
+  const TString histname = "h_cutflow";
+  fCutFlow = (TH1F*)fInFile->Get(histname.Data());
+  CheckValidTH1F(fCutFlow,histname,filename);
 
   // Set Output Stuff
   fOutDir = Form("%s/%s/%s",Config::outdir.Data(), (fIsMC?"MC":"DATA"), fSample.Data());
@@ -48,17 +62,11 @@ Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample),
     delete purwplot;
     delete purwfile;
     // end getting pile-up weights
-
-    // set sample xsec + wgtsum
-    fXsec   = Config::SampleXsecMap[fSample];
-    fWgtsum = Config::SampleWgtsumMap[fSample];
   }  
-  else 
-  {
-    // do this once, and just do it for data
-    fTH1Dump.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios_base::trunc);
-    fTH1PhoDump.open(Form("%s/%s",Config::outdir.Data(),Config::phoplotdumpname.Data()),std::ios_base::trunc);
-  }
+
+  // just do this everytime, who cares
+  fTH1Dump.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios_base::trunc);
+  fTH1PhoDump.open(Form("%s/%s",Config::outdir.Data(),Config::phoplotdumpname.Data()),std::ios_base::trunc);
 }
 
 Analysis::~Analysis()
@@ -66,11 +74,9 @@ Analysis::~Analysis()
   delete fInTree;
   delete fInFile;
   delete fOutFile;
-  if (!fIsMC or true)
-  { 
-    fTH1Dump.close();
-    fTH1PhoDump.close();
-  }
+
+  fTH1Dump.close();
+  fTH1PhoDump.close();
 }
 
 void Analysis::EventLoop()
@@ -85,21 +91,18 @@ void Analysis::EventLoop()
   const UInt_t nEntries = (Config::doDemo?Config::demoNum:fInTree->GetEntries());
   for (UInt_t entry = 0; entry < nEntries; entry++)
   {
+    // read in tree
     fInTree->GetEntry(entry);
 
-    if (Config::dumpStatus) 
-    {
-      if (entry%Config::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
-    } 
+    // dump status check
+    if (entry%Config::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
 
     ////////////////////////////
     //                        // 
     // Determine Event Weight //
     //                        // 
     ////////////////////////////
-    Float_t weight = -1.;
-    if   (fIsMC and false) {weight = (fXsec * Config::lumi * genwgt / fWgtsum) * fPUweights[genputrue];}
-    else         {weight = 1.0;}
+    Float_t weight = 1.;
 
     ////////////////////////////////
     //                            // 
@@ -318,7 +321,7 @@ void Analysis::OutputEventStandardPlots()
 {
   MakeSubDirs(stdevTH1SubMap,fOutDir);
   Analysis::SaveTH1s(stdevTH1Map,stdevTH1SubMap);
-  if (!fIsMC or true) Analysis::DumpTH1Names(stdevTH1Map,stdevTH1SubMap);
+  Analysis::DumpTH1Names(stdevTH1Map,stdevTH1SubMap);
   Analysis::DeleteTH1s(stdevTH1Map);
 
   Analysis::SaveTH2s(stdevTH2Map,stdevTH2SubMap);
@@ -335,11 +338,8 @@ void Analysis::OutputPhotonStandardPlots()
   MakeSubDirs(stdphoTH1SubMap,fOutDir);
   Analysis::MakeInclusiveTH1s(stdphoTH1Map,stdphoTH1SubMap);  
   Analysis::SaveTH1s(stdphoTH1Map,stdphoTH1SubMap);
-  if (!fIsMC or true)
-  { 
-    Analysis::DumpTH1Names(stdphoTH1Map,stdphoTH1SubMap);
-    Analysis::DumpTH1PhoNames(stdphoTH1Map,stdphoTH1SubMap);
-  }
+  Analysis::DumpTH1Names(stdphoTH1Map,stdphoTH1SubMap);
+  Analysis::DumpTH1PhoNames(stdphoTH1Map,stdphoTH1SubMap);
   Analysis::DeleteTH1s(stdphoTH1Map);
 }
 
@@ -348,11 +348,8 @@ void Analysis::OutputIsoPlots()
   MakeSubDirs(isoTH1SubMap,fOutDir);
   Analysis::MakeInclusiveTH1s(isoTH1Map,isoTH1SubMap);
   Analysis::SaveTH1s(isoTH1Map,isoTH1SubMap);
-  if (!fIsMC or true)
-  { 
-    Analysis::DumpTH1Names(isoTH1Map,isoTH1SubMap);
-    Analysis::DumpTH1PhoNames(isoTH1Map,isoTH1SubMap);
-  }
+  Analysis::DumpTH1Names(isoTH1Map,isoTH1SubMap);
+  Analysis::DumpTH1PhoNames(isoTH1Map,isoTH1SubMap);
   Analysis::DeleteTH1s(isoTH1Map);
 }
 
@@ -636,11 +633,8 @@ void Analysis::Make1DFrom2DPlots(const TH2F * hist2d, const TString & subdir2d, 
   if (Config::saveTempHists) 
   {
     Analysis::SaveTH1s(th1dmap,th1dsubmap);
-    if (!fIsMC or true)
-    {
-      Analysis::DumpTH1Names(th1dmap,th1dsubmap);
-      Analysis::DumpTH1PhoNames(th1dmap,th1dsubmap);
-    }
+    Analysis::DumpTH1Names(th1dmap,th1dsubmap);
+    Analysis::DumpTH1PhoNames(th1dmap,th1dsubmap);
   }
 
   // delete temporaries
@@ -906,11 +900,10 @@ void Analysis::SaveProjectedTH1(TH1F * hist, const TString & subdir2d)
   // write output hist to file
   fOutFile->cd();
   hist->Write(hist->GetName(),TObject::kWriteDelete);
-  if (!fIsMC or true)
-  {
-    fTH1Dump << name.Data() << " " << subdir2d.Data() << std::endl;
-    if (name.Contains("GED",TString::kExact)) fTH1PhoDump << name.Data() << " " << subdir2d.Data() << std::endl;
-  }
+
+  // save names to text file
+  fTH1Dump << name.Data() << " " << subdir2d.Data() << std::endl;
+  if (name.Contains("GED",TString::kExact)) fTH1PhoDump << name.Data() << " " << subdir2d.Data() << std::endl;
 
   if (Config::saveHists)
   {
@@ -1165,4 +1158,55 @@ void Analysis::InitBranches()
     fInTree->SetBranchAddress(Form("phoisTrk_%i",ipho), &pho.isTrk, &pho.b_isTrk);
     fInTree->SetBranchAddress(Form("phoID_%i",ipho), &pho.ID, &pho.b_ID);
   }
+}
+
+void Analysis::InitAndReadConfigTree()
+{
+  Analysis::InitConfigStrings();
+  Analysis::InitConfigBranches();
+
+  // read in first entry (will be the same for all entries in a given file
+  fConfigTree->GetEntry(0);
+}
+
+void Analysis::InitConfigStrings()
+{
+  phIDmin = 0;
+  phgoodIDmin = 0;
+  inputPaths = 0;
+  inputFilters = 0;
+}
+
+void Analysis::InitConfigBranches()
+{
+  fConfigTree->SetBranchAddress("blindSF", &blindSF, &b_blindSF);
+  fConfigTree->SetBranchAddress("applyBlindSF", &applyBlindSF, &b_applyBlindSF);
+  fConfigTree->SetBranchAddress("blindMET", &blindMET, &b_blindMET);
+  fConfigTree->SetBranchAddress("applyBlindMET", &applyBlindMET, &b_applyBlindMET);
+  fConfigTree->SetBranchAddress("jetpTmin", &jetpTmin, &b_jetpTmin);
+  fConfigTree->SetBranchAddress("jetIDmin", &jetIDmin, &b_jetIDmin);
+  fConfigTree->SetBranchAddress("rhEmin", &rhEmin, &b_rhEmin);
+  fConfigTree->SetBranchAddress("phpTmin", &phpTmin, &b_phpTmin);
+  fConfigTree->SetBranchAddress("phIDmin", &phIDmin, &b_phIDmin);
+  fConfigTree->SetBranchAddress("seedTimemin", &seedTimemin, &b_seedTimemin);
+  fConfigTree->SetBranchAddress("splitPho", &splitPho, &b_splitPho);
+  fConfigTree->SetBranchAddress("onlyGED", &onlyGED, &b_onlyGED);
+  fConfigTree->SetBranchAddress("onlyOOT", &onlyOOT, &b_onlyOOT);
+  fConfigTree->SetBranchAddress("applyTrigger", &applyTrigger, &b_applyTrigger);
+  fConfigTree->SetBranchAddress("minHT", &minHT, &b_minHT);
+  fConfigTree->SetBranchAddress("applyHT", &applyHT, &b_applyHT);
+  fConfigTree->SetBranchAddress("phgoodpTmin", &phgoodpTmin, &b_phgoodpTmin);
+  fConfigTree->SetBranchAddress("phgoodIDmin", &phgoodIDmin, &b_phgoodIDmin);
+  fConfigTree->SetBranchAddress("applyPhGood", &applyPhGood, &b_applyPhGood);
+  fConfigTree->SetBranchAddress("dRmin", &dRmin, &b_dRmin);
+  fConfigTree->SetBranchAddress("pTres", &pTres, &b_pTres);
+  fConfigTree->SetBranchAddress("trackdRmin", &trackdRmin, &b_trackdRmin);
+  fConfigTree->SetBranchAddress("trackpTmin", &trackpTmin, &b_trackpTmin);
+  fConfigTree->SetBranchAddress("inputPaths", &inputPaths, &b_inputPaths);
+  fConfigTree->SetBranchAddress("inputFilters", &inputFilters, &b_inputFilters);
+  fConfigTree->SetBranchAddress("isGMSB", &isGMSB, &b_isGMSB);
+  fConfigTree->SetBranchAddress("isHVDS", &isHVDS, &b_isHVDS);
+  fConfigTree->SetBranchAddress("isBkgd", &isBkgd, &b_isBkgd);
+  fConfigTree->SetBranchAddress("xsec", &xsec, &b_xsec);
+  fConfigTree->SetBranchAddress("filterEff", &filterEff, &b_filterEff);
 }

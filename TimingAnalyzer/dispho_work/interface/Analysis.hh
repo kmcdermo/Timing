@@ -20,6 +20,9 @@ public:
   void InitStructs();
   void InitBranchVecs();
   void InitBranches();
+  void InitAndReadConfigTree();
+  void InitConfigStrings();
+  void InitConfigBranches();
   void EventLoop();
   void SetupEventStandardPlots();
   void SetupPhotonStandardPlots();
@@ -69,13 +72,12 @@ private:
   Bool_t fIsGMSB;
   Bool_t fIsHVDS;
   TFile * fInFile;
-  TTree * fInTree;
-  
+  TTree * fInTree; 
+  TTree * fConfigTree;
+  TH1F  * fCutFlow;
+
   // MC weight input
-  //  FltVec  fPUweights;
   DblVec  fPUweights;
-  Float_t fXsec;
-  Float_t fWgtsum;
 
   // Output
   TString fOutDir;
@@ -95,9 +97,9 @@ private:
   TH1Map isoTH1Map; TStrMap isoTH1SubMap;
   TH2Map isonvtxTH2Map; TStrMap isonvtxTH2SubMap;
 
-  ///////////////////////////////
-  // Declaration of leaf types //
-  ///////////////////////////////
+  ///////////////////////////////////////////
+  // Declaration of leaf types for fInTree //
+  ///////////////////////////////////////////
   Float_t   genwgt;
   Int_t     genpuobs;
   Int_t     genputrue;
@@ -131,7 +133,9 @@ private:
   Int_t     nphotons;
   PhoVec    phos;
 
-  // List of branches
+  //////////////////////////////////
+  // List of branches for fInTree //
+  //////////////////////////////////
   TBranch * b_genwgt;
   TBranch * b_genpuobs;
   TBranch * b_genputrue;
@@ -159,6 +163,74 @@ private:
   TBranch * b_rhOOT;
   TBranch * b_rhID;
   TBranch * b_nphotons;
+
+  ///////////////////////////////////////////////
+  // Declaration of leaf types for fConfigTree //
+  ///////////////////////////////////////////////
+  UInt_t  blindSF;
+  Bool_t  applyBlindSF;
+  Float_t blindMET;
+  Bool_t  applyBlindMET;
+  Float_t jetpTmin;
+  Int_t   jetIDmin;
+  Float_t rhEmin;
+  Float_t phpTmin;
+  std::string * phIDmin;
+  Float_t seedTimemin;
+  Bool_t  splitPho;
+  Bool_t  onlyGED;
+  Bool_t  onlyOOT;
+  Bool_t  applyTrigger;
+  Float_t minHT;
+  Bool_t  applyHT;
+  Float_t phgoodpTmin;
+  std::string * phgoodIDmin;
+  Bool_t  applyPhGood;
+  Float_t dRmin;
+  Float_t pTres;
+  Float_t trackdRmin;
+  Float_t trackpTmin;
+  std::string * inputPaths;
+  std::string * inputFilters;
+  Bool_t  isGMSB;
+  Bool_t  isHVDS;
+  Bool_t  isBkgd;
+  Float_t xsec;
+  Float_t filterEff;
+
+  //////////////////////////////////////
+  // List of branches for fConfigTree //
+  //////////////////////////////////////
+  TBranch * b_blindSF;
+  TBranch * b_applyBlindSF;
+  TBranch * b_blindMET;
+  TBranch * b_applyBlindMET;
+  TBranch * b_jetpTmin;
+  TBranch * b_jetIDmin;
+  TBranch * b_rhEmin;
+  TBranch * b_phpTmin;
+  TBranch * b_phIDmin;
+  TBranch * b_seedTimemin;
+  TBranch * b_splitPho;
+  TBranch * b_onlyGED;
+  TBranch * b_onlyOOT;
+  TBranch * b_applyTrigger;
+  TBranch * b_minHT;
+  TBranch * b_applyHT;
+  TBranch * b_phgoodpTmin;
+  TBranch * b_phgoodIDmin;
+  TBranch * b_applyPhGood;
+  TBranch * b_dRmin;
+  TBranch * b_pTres;
+  TBranch * b_trackdRmin;
+  TBranch * b_trackpTmin;
+  TBranch * b_inputPaths;
+  TBranch * b_inputFilters;
+  TBranch * b_isGMSB;
+  TBranch * b_isHVDS;
+  TBranch * b_isBkgd;
+  TBranch * b_xsec;
+  TBranch * b_filterEff;
 };
 
 #endif

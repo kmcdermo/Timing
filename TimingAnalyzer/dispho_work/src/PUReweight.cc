@@ -1,8 +1,10 @@
 #include "../interface/PUReweight.hh"
 
-PUReweight::PUReweight() {
+PUReweight::PUReweight() 
+{
   // save samples for PU weighting
-  for (TStrBoolMapIter iter = Config::SampleMap.begin(); iter != Config::SampleMap.end(); ++iter) {
+  for (TStrBoolMapIter iter = Config::SampleMap.begin(); iter != Config::SampleMap.end(); ++iter) 
+  {
     if ((*iter).second) // isMC == true
     {
       fMCNames.push_back((*iter).first);
@@ -37,7 +39,8 @@ PUReweight::PUReweight() {
   fOutFile = new TFile(Form("%s/%s",fOutDir.Data(),Config::pufilename.Data()),"RECREATE");
 }
 
-PUReweight::~PUReweight() {
+PUReweight::~PUReweight() 
+{
   //delete hists
   delete fOutDataNvtx;
   delete fOutMCNvtx;
@@ -47,12 +50,14 @@ PUReweight::~PUReweight() {
   delete fOutFile;
 }
 
-void PUReweight::GetPUWeights(){
+void PUReweight::GetPUWeights()
+{
   // cut to be used in tree
   TString basecut = Config::selection;
   
   // get vtx distribution for data first
-  for (Int_t data = 0; data < fNData; data++){
+  for (Int_t data = 0; data < fNData; data++)
+  {
     TString cut = basecut.Data();
     cut.Append(" && (hltdoubleel33 || hltdoubleel37)");
 
@@ -81,11 +86,15 @@ void PUReweight::GetPUWeights(){
   }
 
   // get vtx distribution for mc second
-  for (Int_t mc = 0; mc < fNMC; mc++){
+  for (Int_t mc = 0; mc < fNMC; mc++)
+  {
+    const Float_t xsec = 1; // replace with config tree!
+    const Float_t weightsum = 1; // replace with cutflow bin0!
+
     // create appropriate selection cut
     TString cut = basecut;
     cut.Prepend("( ");
-    cut.Append(Form(" * (%f * %f * wgt / %f)",Config::SampleXsecMap[fMCNames[mc]], Config::lumi, Config::SampleWgtsumMap[fMCNames[mc]])); // make sure to add weights for all mc!
+    cut.Append(Form(" * (%f * %f * wgt / %f)", xsec, Config::lumi, weightsum)); // make sure to add weights for all mc!
     cut.Append(" )");
 
     // files + trees for mc + tmp hists
@@ -166,7 +175,8 @@ void PUReweight::GetPUWeights(){
   /////////////////////////////////////////////
 
   // copy fOutDataNvtx to save output of reweights properly
-  for (Int_t ibin = 1; ibin <= Config::nbinsvtx; ibin++) {
+  for (Int_t ibin = 1; ibin <= Config::nbinsvtx; ibin++) 
+  {
     fOutDataOverMCNvtx->SetBinContent(ibin,fOutDataNvtx->GetBinContent(ibin));
   }
 
@@ -183,7 +193,8 @@ void PUReweight::GetPUWeights(){
   fOutDataOverMCNvtx->Write();
 
   // scale MC to demonstrate that it works
-  for (Int_t ibin = 1; ibin <= Config::nbinsvtx; ibin++) {
+  for (Int_t ibin = 1; ibin <= Config::nbinsvtx; ibin++)
+  {
     Float_t tmp = fOutMCNvtx->GetBinContent(ibin);
     fOutMCNvtx->SetBinContent(ibin,fOutDataOverMCNvtx->GetBinContent(ibin)*tmp); 
   }

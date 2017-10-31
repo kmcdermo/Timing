@@ -114,7 +114,6 @@ namespace Config
   extern Bool_t      useMeanRho;
   extern Float_t     quantProb;
   extern Float_t     quantProbRho;
-  extern Bool_t      dumpStatus;
   extern TString     year;
   extern Bool_t      saveHists;
   extern Bool_t      saveTempHists;
@@ -123,8 +122,6 @@ namespace Config
   extern TStrBoolMap SampleMap;
   extern ColorMap    colorMap;
   extern TStrMap     SampleTitleMap;
-  extern TStrFltMap  SampleXsecMap;
-  extern TStrFltMap  SampleWgtsumMap;
 };
 
 #endif
