@@ -392,8 +392,11 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Trigger Info //
   //              //
   //////////////////
-  const std::string path = "HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_PFHT350MinPFJet15_v";
-  hltDisPho = (triggerBitMap.count(path.c_str()) ? triggerBitMap[path.c_str()] : false);
+  const std::string signalpath = "HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_PFHT350MinPFJet15_v";
+  hltDisPho = (triggerBitMap.count(signalpath.c_str()) ? triggerBitMap[signalpath.c_str()] : false);
+
+  const std::string prescalepath = "HLT_Photon50_v";
+  hltPho50 = (triggerBitMap.count(prescalepath.c_str()) ? triggerBitMap[prescalepath.c_str()] : false);
 
   /////////////////////////
   //                     //   
@@ -1108,6 +1111,7 @@ void DisPho::MakeEventTree()
    
   // Trigger Info
   tree->Branch("hltDisPho", &hltDisPho, "hltDisPho/O");
+  tree->Branch("hltPho50", &hltPho50, "hltPho50/O");
 
   // Vertex info
   tree->Branch("nvtx", &nvtx, "nvtx/I");

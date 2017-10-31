@@ -345,6 +345,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // trigger info
   bool hltDisPho;
+  bool hltPho50;
 
   // vertices
   int nvtx;

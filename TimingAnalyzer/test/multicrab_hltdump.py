@@ -61,7 +61,7 @@ def main():
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
         inputPaths   = 'HLTpaths.txt'
         inputFilters = 'HLTfilters.txt'
-        inputJSON    = 'golden2017.json'
+        inputJSON    = 'golden2017-oct25.json'
 
         #--------------------------------------------------------
         # This is the base config:
@@ -97,6 +97,7 @@ def main():
             ['/SinglePhoton/Run2017C-PromptReco-v3/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
             ['/SinglePhoton/Run2017D-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
             ['/SinglePhoton/Run2017E-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v9', 'True'],
+            ['/SinglePhoton/Run2017F-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v9', 'True'],
             ]
  
         for inDO in inputDataAndOpts:
