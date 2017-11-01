@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for era in 2017B 2017C 2017DE
+for era in 2017E 2017F
 do
     for eff in 0 1 2
     do
