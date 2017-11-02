@@ -31,17 +31,17 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
   Config::mcSampleMap["gmsb"]  = true; // isMC
   Config::mcSampleMap["hvds"]  = true; // isMC
   Config::mcSampleMap["qcd"]   = true; // isMC
-  Config::mcSampleMap["gamma"] = true; // isMC
+  Config::mcSampleMap["gjet"] = true; // isMC
 
   Config::mcColorMap["gmsb"]  = kBlue;
   Config::mcColorMap["hvds"]  = kRed;
   Config::mcColorMap["qcd"]   = kYellow;
-  Config::mcColorMap["gamma"] = kOrange+10;
+  Config::mcColorMap["gjet"] = kOrange+10;
 
   Config::mcTitleMap["gmsb"]  = "GMSB";
   Config::mcTitleMap["hvds"]  = "HVDS";
   Config::mcTitleMap["qcd"]   = "QCD";
-  Config::mcTitleMap["gamma"] = "#gamma + Jets";
+  Config::mcTitleMap["gjets"] = "#gamma + Jets";
 
   // set lists of samples
   Config::mcSampleVecMap["qcd-pt"] = {"15to20","20to30","30to50","50to80","80to120","120to170","170to300"};
@@ -84,7 +84,7 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
   }
   if (Config::useGJetsEM) 
   {
-    const TString sample = "gamma";
+    const TString sample = "gjets";
     const TString label  = "-EM";
     Config::SampleMap[sample+label] = Config::mcSampleMap[sample];
     Config::ColorMap [sample+label] = Config::mcColorMap [sample];
@@ -92,7 +92,7 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
   }
   if (Config::useGJetsFlatPt) 
   {
-    const TString sample = "gamma";
+    const TString sample = "gjets";
     const TString label  = "-flatpt";
     Config::SampleMap[sample+label] = Config::mcSampleMap[sample];
     Config::ColorMap [sample+label] = Config::mcColorMap [sample];
