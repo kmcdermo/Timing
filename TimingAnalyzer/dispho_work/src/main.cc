@@ -82,6 +82,14 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
       Config::TitleMap [sample+label+samplebin] = Config::mcTitleMap [sample];
     }
   }
+  if (Config::useGJetsEM) 
+  {
+    const TString sample = "gamma";
+    const TString label  = "-EM";
+    Config::SampleMap[sample+label] = Config::mcSampleMap[sample];
+    Config::ColorMap [sample+label] = Config::mcColorMap [sample];
+    Config::TitleMap [sample+label] = Config::mcTitleMap [sample];
+  }
   if (Config::useGJetsFlatPt) 
   {
     const TString sample = "gamma";
