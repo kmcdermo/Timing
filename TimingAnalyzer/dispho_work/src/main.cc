@@ -4,6 +4,7 @@
 #include "../interface/PUReweight.hh"
 #include "../interface/Analysis.hh"
 #include "../interface/EACalculator.hh"
+#include "../interface/PtCalculator.hh"
 #include "../interface/StackDataMC.hh"
 #include "../interface/StackGEDOOT.hh"
 
@@ -388,6 +389,28 @@ int main(int argc, const char* argv[])
   else 
   {
     std::cout << "Skipping EA calculation section" << std::endl;
+  }
+  std::cout << std::endl;
+
+  /////////////////////////////
+  // Compute Effective Areas //
+  /////////////////////////////
+
+  if (Config::doPtCalc)
+  {
+    std::cout << "Starting Iso Pt scaling calculation section" << std::endl;
+    for (const auto & samplePair : Config::SampleMap)
+    {
+      PtCalculator calc(samplePair.first,samplePair.second);
+      std::cout << "Calculating Pt scaling: " << (samplePair.second?"MC":"DATA") << " sample: " << samplePair.first << std::endl;
+      calc.ExtractPtScaling();
+      std::cout << "Done calculating Pt scaling: " << (samplePair.second?"MC":"DATA") << " sample: " << samplePair.first << std::endl;
+    }
+    std::cout << "Finished Iso Pt scaling calculation section" << std::endl;
+  }
+  else 
+  {
+    std::cout << "Skipping Iso Pt calculation section" << std::endl;
   }
   std::cout << std::endl;
 

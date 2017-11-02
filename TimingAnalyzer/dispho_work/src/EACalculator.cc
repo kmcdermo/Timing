@@ -47,7 +47,7 @@ EACalculator::~EACalculator()
 void EACalculator::ExtractEA()
 {
   // First compute the slope of rho vs nvtx
-  fInRhoHist->Fit(Form("%s_%s_fit",fRhoName.Data(),Config::formname.Data()),"RQ");
+  fInRhoHist->Fit(Form("%s_%s_fit",fRhoName.Data(),Config::eaformname.Data()),"RQ");
   
   // get the slope of the rho iso line
   const Double_t rho_slope = fOutRhoTF1->GetParameter(1);
@@ -55,7 +55,7 @@ void EACalculator::ExtractEA()
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   {
     // Then compute slope of pho iso vs nvtx.
-    fInTH1FHists[th1f]->Fit(Form("%s_%s_fit",fTH1FNames[th1f].Data(),Config::formname.Data()),"RQ");
+    fInTH1FHists[th1f]->Fit(Form("%s_%s_fit",fTH1FNames[th1f].Data(),Config::eaformname.Data()),"RQ");
 
     // get the slope of the pho iso line
     const Double_t pho_slope = fOutTH1FTF1s[th1f]->GetParameter(1);
@@ -98,7 +98,7 @@ void EACalculator::OutputFitCanvases()
 void EACalculator::InitTH1FNamesAndSubDNames()
 {
   std::ifstream plotstoread;
-  plotstoread.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios::in);
+  plotstoread.open(Form("%s/%i/%s",Config::outdir.Data(),Config::year,Config::plotdumpname.Data()),std::ios::in);
 
   TString plotname; TString subdir;
 
@@ -157,8 +157,8 @@ void EACalculator::InitFits()
   fOutTH1FTF1s.resize(fNTH1F);
   for (Int_t th1f = 0; th1f < fNTH1F; th1f++)
   {
-    fOutTH1FTF1s[th1f] = new TF1(Form("%s_%s_fit",fTH1FNames[th1f].Data(),Config::formname.Data()),
-				 Config::formname.Data(),Config::xmin_ea,Config::xmax_ea);
+    fOutTH1FTF1s[th1f] = new TF1(Form("%s_%s_fit",fTH1FNames[th1f].Data(),Config::eaformname.Data()),
+				 Config::eaformname.Data(),Config::xmin_ea,Config::xmax_ea);
     fOutTH1FTF1s[th1f]->SetParName(0,"intercept");
     fOutTH1FTF1s[th1f]->SetParameter(0,0.);
     fOutTH1FTF1s[th1f]->SetParName(1,"slope");
@@ -166,8 +166,8 @@ void EACalculator::InitFits()
   }
 
   // then rho
-  fOutRhoTF1 = new TF1(Form("%s_%s_fit",fRhoName.Data(),Config::formname.Data()),
-		       Config::formname.Data(),Config::xmin_ea,Config::xmax_ea);
+  fOutRhoTF1 = new TF1(Form("%s_%s_fit",fRhoName.Data(),Config::eaformname.Data()),
+		       Config::eaformname.Data(),Config::xmin_ea,Config::xmax_ea);
   fOutRhoTF1->SetParName(0,"intercept");
   fOutRhoTF1->SetParameter(0,0.);
   fOutRhoTF1->SetParName(1,"slope");

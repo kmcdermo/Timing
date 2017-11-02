@@ -253,11 +253,11 @@ void Analysis::SetupIsoPtPlots()
 	const TString title = Form("%s - %s",split.Data(),region.Data());
 
 	isonvtxTH2Map[Form("phoecaliso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("phoecaliso_%s",name.Data()),"",20,0,1000.f,xtitle,50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("phoecaliso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
 	isonvtxTH2Map[Form("phohcaliso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("phohcaliso_%s",name.Data()),"",20,0,1000.f,xtitle,50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("phohcaliso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
 	isonvtxTH2Map[Form("photrkiso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("photrkiso_%s",name.Data()),"",20,0,1000.f,xtitle,50,0.,20.f,Form("Photon %i Track Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("photrkiso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,0.,20.f,Form("Photon %i Track Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
       } // end loop over split by type or inclusive
     } // end loop over regions
   } // end loop over nphotons

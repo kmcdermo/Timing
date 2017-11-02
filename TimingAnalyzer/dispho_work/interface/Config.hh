@@ -19,7 +19,7 @@ namespace Config
   constexpr    Int_t   nEvCheck = 100000;
 
   // pu config
-  constexpr    Int_t   nbinsvtx   = 80;
+  constexpr    Int_t   nbinsvtx   = 70;
   static const TString pusubdir   = "purw";
   static const TString pufilename = "PURW.root";
   static const TString puplotname = "nvtx_dataOverMC";
@@ -27,6 +27,8 @@ namespace Config
   // Iso config
   constexpr    Int_t    nBinsX_iso = nbinsvtx/5;
   constexpr    Double_t xhigh_iso  = Double_t(nbinsvtx);
+  constexpr    Int_t    nBinsX_pt  = 20;
+  constexpr    Double_t xhigh_pt   = 1000;
 
   // selection config
   static const TString selection = Form("");
@@ -51,9 +53,16 @@ namespace Config
   // EA config
   static const TString easubdir = "effarea";
   static const TString eadumpname = "effareas.txt";
-  static const TString formname = "pol1";
+  static const TString eaformname = "pol1";
   constexpr    Double_t xmin_ea = 0;
-  constexpr    Double_t xmax_ea = nbinsvtx;
+  constexpr    Double_t xmax_ea = xhigh_iso;
+
+  // Pt config
+  static const TString ptsubdir = "ptscale";
+  static const TString ptdumpname = "ptscales.txt";
+  static const TString ptformname = "pol1";
+  constexpr    Double_t xmin_pt = 0;
+  constexpr    Double_t xmax_pt = xhigh_pt;
 
   // TDRStyle Config --> needed by stacker
   constexpr    Float_t  TitleSize    = 0.035;
