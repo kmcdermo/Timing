@@ -132,7 +132,7 @@ void StackDataMC::MakeStackDataMC(std::ofstream & yields)
 	fOutMCTH1FHists[th1f]->Add(fInMCTH1FHists[th1f][mc]);
       }
 
-      fTH1FLegends[th1f]->AddEntry(fInMCTH1FHists[th1f][mc],Config::SampleTitleMap[fMCNames[mc]],"f");
+      fTH1FLegends[th1f]->AddEntry(fInMCTH1FHists[th1f][mc],Config::TitleMap[fMCNames[mc]],"f");
 
       if (fTH1FNames[th1f].Contains("nvtx",TString::kExact))  // save individual contributions for yields for MC
       {
@@ -369,7 +369,7 @@ void StackDataMC::OpenInputFiles()
   fDataFiles.resize(fNData);
   for (Int_t data = 0; data < fNData; data++) 
   {
-    TString datafile = Form("%s/DATA/%s/plots.root",Config::outdir.Data(),fDataNames[data].Data());
+    TString datafile = Form("%s/DATA/%s/%s",Config::outdir.Data(),fDataNames[data].Data(),Config::AnOutName.Data());
     fDataFiles[data] = TFile::Open(datafile.Data());
     CheckValidFile(fDataFiles[data],datafile);
   }
@@ -378,7 +378,7 @@ void StackDataMC::OpenInputFiles()
   fMCFiles.resize(fNMC);
   for (Int_t mc = 0; mc < fNMC; mc++) 
   {
-    TString mcfile = Form("%s/MC/%s/plots.root",Config::outdir.Data(),fMCNames[mc].Data());
+    TString mcfile = Form("%s/MC/%s/%s",Config::outdir.Data(),fMCNames[mc].Data(),Config::AnOutName.Data());
     fMCFiles[mc] = TFile::Open(mcfile.Data());
     CheckValidFile(fMCFiles[mc],mcfile);
   }
@@ -405,8 +405,7 @@ void StackDataMC::InitInputPlots()
     {
       fInMCTH1FHists[th1f][mc] = (TH1F*)fMCFiles[mc]->Get(Form("%s",fTH1FNames[th1f].Data()));
       CheckValidTH1F(fInMCTH1FHists[th1f][mc],fTH1FNames[th1f],fMCFiles[mc]->GetName());
-      fInMCTH1FHists[th1f][mc]->SetFillColor(Config::colorMap[fMCNames[mc]]);
-
+      fInMCTH1FHists[th1f][mc]->SetFillColor(Config::ColorMap[fMCNames[mc]]);
       fInMCTH1FHists[th1f][mc]->SetLineColor(kBlack);
     }
   }

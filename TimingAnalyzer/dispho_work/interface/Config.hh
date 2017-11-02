@@ -32,9 +32,11 @@ namespace Config
   static const TString selection = Form("");
 
   // standard analysis config
-  constexpr    Int_t   nGMSBs   = 2;
-  constexpr    Int_t   nHVDSs   = 4;
-  constexpr    Int_t   nJets    = 4;
+  static const TString nTupleName = "tree.root";
+  static const TString AnOutName  = "plots.root";
+  constexpr    Int_t   nGMSBs = 2;
+  constexpr    Int_t   nHVDSs = 4;
+  constexpr    Int_t   nJets  = 4;
 
   static const TStrVec regions = {"EB","EE"};
   static const TStrVec splits = {"GED","OOT"};
@@ -91,6 +93,7 @@ namespace Config
   extern TString     outdir;
   extern Bool_t      doPURW;
   extern Bool_t      doAnalysis;
+  extern Bool_t      doHadd;
   extern Bool_t      doEACalc;
   extern Bool_t      doStacks;
   extern Bool_t      doPhoStacks;
@@ -100,14 +103,17 @@ namespace Config
   extern Bool_t      useDYll;
   extern Bool_t      useGMSB;
   extern Bool_t      useHVDS;
-  extern Bool_t      useQCD;
-  extern Bool_t      useGJets;
+  extern Bool_t      useQCDPt;
+  extern Bool_t      useGJetsHT;
+  extern Bool_t      useGJetsEM;
+  extern Bool_t      useGJetsFlatPt;
   extern Bool_t      splitPho;
   extern Int_t       nTotalPhotons; // total stored in the event
   extern Int_t       nPhotons; // allowed photons per split
   extern Bool_t      doEvStd;
   extern Bool_t      doPhoStd;
   extern Bool_t      pfIsoEA; 
+  extern Bool_t      detIsoEA; 
   extern Bool_t      doIso;
   extern Bool_t      doIsoNvtx;
   extern Bool_t      useMean;
@@ -119,9 +125,14 @@ namespace Config
   extern Bool_t      saveTempHists;
   extern TString     outtype;
 
+  // set in initialize of main
+  extern TStrBoolMap mcSampleMap;
+  extern TColorMap   mcColorMap;
+  extern TStrMap     mcTitleMap;
+  extern TStrVecMap  mcSampleVecMap;
   extern TStrBoolMap SampleMap;
-  extern ColorMap    colorMap;
-  extern TStrMap     SampleTitleMap;
+  extern TColorMap   ColorMap;
+  extern TStrMap     TitleMap;
 };
 
 #endif

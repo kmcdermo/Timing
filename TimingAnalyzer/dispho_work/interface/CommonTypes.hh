@@ -23,7 +23,7 @@ typedef std::list<std::string> lStr_t;
 
 typedef std::map<TString,TString>  TStrMap;
 typedef std::map<TString,Bool_t>   TStrBoolMap;
-typedef std::map<TString,Color_t>  ColorMap;
+typedef std::map<TString,Color_t>  TColorMap;
 typedef std::map<TString,Int_t>    TStrIntMap;
 typedef std::map<TString,Float_t>  TStrFltMap;
 typedef std::map<TString,Double_t> TStrDblMap;
@@ -38,6 +38,7 @@ typedef std::vector<Float_t>  FltVec;
 typedef std::vector<Double_t> DblVec;
 typedef std::vector<FFPair>   FFPairVec;
 
+typedef std::map<TString,TStrVec> TStrVecMap;
 typedef std::map<TString,DblVec> TStrDblVMap;
 
 typedef lStr_t::iterator      lStr_i;

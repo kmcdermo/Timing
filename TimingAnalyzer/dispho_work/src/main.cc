@@ -8,6 +8,7 @@
 #include "../interface/StackGEDOOT.hh"
 
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TVirtualFitter.h"
 
 void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle) 
@@ -26,31 +27,121 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
   // yields 
   yields.open(Form("%s/yields.txt",Config::outdir.Data()),std::ios_base::app);
 
-  // set sample map
-  if (Config::useDEG)   Config::SampleMap["doubleeg"] = false; // !isMC
-  if (Config::useSPH)   Config::SampleMap["singleph"] = false; // !isMC
-  if (Config::useGMSB)  Config::SampleMap["gmsb"]     = true;  //  isMC
-  if (Config::useHVDS)  Config::SampleMap["hvds"]     = true;  //  isMC
-  if (Config::useQCD)   Config::SampleMap["qcd"]      = true;  //  isMC
-  if (Config::useGJets) Config::SampleMap["gamma"]    = true;  //  isMC
+  // set common vars in sample maps
+  Config::mcSampleMap["gmsb"]  = true; // isMC
+  Config::mcSampleMap["hvds"]  = true; // isMC
+  Config::mcSampleMap["qcd"]   = true; // isMC
+  Config::mcSampleMap["gamma"] = true; // isMC
 
-  // Color for MC Stacks
-  Config::colorMap["gmsb"]  = kBlue;
-  Config::colorMap["hvds"]  = kRed;
-  Config::colorMap["qcd"]   = kYellow;
-  Config::colorMap["gamma"] = kOrange+10;
+  Config::mcColorMap["gmsb"]  = kBlue;
+  Config::mcColorMap["hvds"]  = kRed;
+  Config::mcColorMap["qcd"]   = kYellow;
+  Config::mcColorMap["gamma"] = kOrange+10;
 
-  // define title map
-  Config::SampleTitleMap["gmsb"]  = "GMSB";
-  Config::SampleTitleMap["hvds"]  = "HVDS";
-  Config::SampleTitleMap["qcd"]   = "QCD";
-  Config::SampleTitleMap["gamma"] = "#gamma + Jets";
+  Config::mcTitleMap["gmsb"]  = "GMSB";
+  Config::mcTitleMap["hvds"]  = "HVDS";
+  Config::mcTitleMap["qcd"]   = "QCD";
+  Config::mcTitleMap["gamma"] = "#gamma + Jets";
+
+  // set lists of samples
+  Config::mcSampleVecMap["qcd-pt"] = {"15to20","20to30","30to50","50to80","80to120","120to170","170to300"};
+
+  //////////////////////////////
+  // Now set up global config //
+  //////////////////////////////
+
+  // Data
+  if (Config::useDEG) Config::SampleMap["doubleeg"] = false; // !isMC
+  if (Config::useSPH) Config::SampleMap["singleph"] = false; // !isMC
+
+  // Signal MC
+  if (Config::useGMSB) // --> eventually expand to grid points!
+  {  
+    const TString sample = "gmsb";
+    Config::SampleMap[sample] = Config::mcSampleMap[sample];
+    Config::ColorMap [sample] = Config::mcColorMap [sample];
+    Config::TitleMap [sample] = Config::mcTitleMap [sample];
+  }
+  if (Config::useHVDS) // --> eventually expand to grid points!
+  {  
+    const TString sample = "hvds";
+    Config::SampleMap[sample] = Config::mcSampleMap[sample];
+    Config::ColorMap [sample] = Config::mcColorMap [sample];
+    Config::TitleMap [sample] = Config::mcTitleMap [sample];
+  }
+  
+  // Background MC
+  if (Config::useQCDPt) 
+  {
+    const TString sample = "qcd";
+    const TString label  = "/Pt-";
+    for (const auto & samplebin : Config::mcSampleVecMap[sample+label])
+    {
+      Config::SampleMap[sample+label+samplebin] = Config::mcSampleMap[sample];
+      Config::ColorMap [sample+label+samplebin] = Config::mcColorMap [sample];
+      Config::TitleMap [sample+label+samplebin] = Config::mcTitleMap [sample];
+    }
+  }
+  if (Config::useGJetsFlatPt) 
+  {
+    const TString sample = "gamma";
+    const TString label  = "-flatpt";
+    Config::SampleMap[sample+label] = Config::mcSampleMap[sample];
+    Config::ColorMap [sample+label] = Config::mcColorMap [sample];
+    Config::TitleMap [sample+label] = Config::mcTitleMap [sample];
+  }
 }
 
 void DestroyMain(std::ofstream & yields, TStyle *& tdrStyle) 
 {
   yields.close();
   delete tdrStyle;
+}
+
+void HaddSamples()
+{
+  // QCD Pt samples
+  if (Config::useQCDPt) 
+  {
+    std::cout << "Hadding QCD Pt binned samples..." << std::endl;
+
+    // Base strings
+    const TString iodir  = Form("input/%s/MC", Config::year.Data());
+    const TString sample = "qcd";
+    const TString label  = "/Pt-";
+    
+    // list of all files for shell
+    TString listOfInputs;
+    
+    for (const auto & samplebin : Config::mcSampleVecMap[sample+label])
+    {
+      // get the files needed and append to string
+      const TString subsample = sample+label+samplebin;
+      const TString filename = Form("%s/%s/%s", iodir.Data(), subsample.Data(), Config::AnOutName.Data());
+      
+      listOfInputs += Form(" %s",filename.Data());
+    }
+    
+    // name the output file
+    const TString outname = Form("%s/%s/%s", iodir.Data(), sample.Data(), Config::AnOutName.Data());
+    
+    // do the Hadd
+    gSystem->Exec(Form("hadd %s %s", outname.Data(), listOfInputs.Data()));
+
+    // remove the old samples from the global maps
+    for (const auto & samplebin : Config::mcSampleVecMap[sample+label])
+    {
+      const TString subsample = sample+label+samplebin;
+      Config::SampleMap.erase(subsample);
+      Config::ColorMap .erase(subsample);
+      Config::TitleMap .erase(subsample);
+    }
+
+    // now add in full sample
+    Config::SampleMap[sample] = Config::mcSampleMap[sample];
+    Config::ColorMap [sample] = Config::mcColorMap [sample];
+    Config::TitleMap [sample] = Config::mcTitleMap [sample];
+  } // end of QCDPt
 }
 
 int main(int argc, const char* argv[]) 
@@ -70,37 +161,42 @@ int main(int argc, const char* argv[])
         "Usage: %s [options]\n"
         "Options:\n"
 	"  --outdir        <string>      name of ouput directory (def: %s)\n"
-	"  --do-purw       <bool>        calculate pile-up weights (def: %s)\n"
-	"  --do-analysis   <bool>        make analysis plots (def: %s)\n"
-	"  --do-EA         <bool>        calculate effective area for isolation (def: %s)\n"
-	"  --do-stacks     <bool>        stack data/MC plots (def: %s)\n"
-	"  --do-phostacks  <bool>        stack GED/OOT plots (def: %s)\n"
-	"  --do-demo       <bool>        demo analysis (def: %s)\n"
-	"  --use-DEG       <bool>        use doubleEG for data (def: %s)\n"
-	"  --use-SPH       <bool>        use singlePh for data (def: %s)\n"
-	"  --use-GMSB      <bool>        use GMSB with MC (def: %s)\n"
-	"  --use-HVDS      <bool>        use HVDS with MC (def: %s)\n"
-	"  --use-QCD       <bool>        use QCD with MC (def: %s)\n"
-	"  --use-GJets     <bool>        use Gamma+Jets with MC (def: %s)\n"
-	"  --split-pho     <bool>        split OOT and GED photon collections (def: %s)\n"
-	"  --do-evstd      <bool>        make standard event validation plots (def: %s)\n"
-	"  --do-phostd     <bool>        make standard photon validation plots (def: %s)\n"
-	"  --use-pfIsoEA   <bool>        use effective areas for PF isolations (def: %s)\n"
-	"  --do-iso        <bool>        make isolation plots (def: %s)\n"
-	"  --do-isonvtx    <bool>        make isolation vs nvtx plots (def: %s)\n"
-	"  --use-mean      <bool>        use mean of projected histo for isolation value (def: %s)\n"
-	"  --use-mean-rho  <bool>        use mean of projected histo for rho (def: %s)\n"
+	"  --do-purw                     calculate pile-up weights (def: %s)\n"
+	"  --do-analysis                 make analysis plots (def: %s)\n"
+	"  --do-hadd                     hadd subsample plots after analysis (def: %s)\n"
+	"  --do-EA                       calculate effective area for isolation (def: %s)\n"
+	"  --do-stacks                   stack data/MC plots (def: %s)\n"
+	"  --do-phostacks                stack GED/OOT plots (def: %s)\n"
+	"  --do-demo                     demo analysis (def: %s)\n"
+	"  --use-DEG                     use doubleEG for data (def: %s)\n"
+	"  --use-SPH                     use singlePh for data (def: %s)\n"
+	"  --use-GMSB                    use GMSB with MC (def: %s)\n"
+	"  --use-HVDS                    use HVDS with MC (def: %s)\n"
+	"  --use-QCD-Pt                  use QCD Pt binned samples with MC (def: %s)\n"
+	"  --use-GJets-HT                use Gamma+Jets HT binned samples with MC (def: %s)\n"
+	"  --use-GJets-EM                use Gamma+Jets EM enriched samples with MC (def: %s)\n"
+	"  --use-GJets-FlatPt            use Gamma+Jets Flat pt samples with MC (def: %s)\n"
+	"  --split-pho                   split OOT and GED photon collections (def: %s)\n"
+	"  --do-evstd                    make standard event validation plots (def: %s)\n"
+	"  --do-phostd                   make standard photon validation plots (def: %s)\n"
+	"  --use-pfIsoEA                 use effective areas for PF isolations (def: %s)\n"
+	"  --use-detIsoEA                use effective areas for detector isolations (def: %s)\n"
+	"  --do-iso                      make isolation plots (def: %s)\n"
+	"  --do-isonvtx                  make isolation vs nvtx plots (def: %s)\n"
+	"  --use-mean                    use mean of projected histo for isolation value (def: %s)\n"
+	"  --use-mean-rho                use mean of projected histo for rho (def: %s)\n"
 	"  --q-prob        <float>       which quantile to use for photons (def: %4.2f)\n"
 	"  --q-probrho     <float>       which quantile to use for rho (def: %4.2f)\n"
 	"  --in-year       <string>      which year to process (def: %s)\n"
-	"  --save-hists    <bool>        save analysis histograms as images (def: %s)\n"
-	"  --save-tmphists <bool>        save histograms used in projections to root file (def: %s)\n"
+	"  --save-hists                  save analysis histograms as images (def: %s)\n"
+	"  --save-tmphists               save histograms used in projections to root file (def: %s)\n"
 	"  --out-image     <string>      extension of file to save plots (def: %s)\n"
         ,
         argv[0],
         Config::outdir.Data(),
 	PrintBool(Config::doPURW),
 	PrintBool(Config::doAnalysis),
+	PrintBool(Config::doHadd),
 	PrintBool(Config::doEACalc),
 	PrintBool(Config::doStacks),
 	PrintBool(Config::doPhoStacks),
@@ -109,12 +205,15 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::useSPH),
 	PrintBool(Config::useGMSB),
 	PrintBool(Config::useHVDS),
-	PrintBool(Config::useQCD),
-	PrintBool(Config::useGJets),
+	PrintBool(Config::useQCDPt),
+	PrintBool(Config::useGJetsHT),
+	PrintBool(Config::useGJetsEM),
+	PrintBool(Config::useGJetsFlatPt),
 	PrintBool(Config::splitPho),
 	PrintBool(Config::doEvStd),
 	PrintBool(Config::doPhoStd),
 	PrintBool(Config::pfIsoEA),
+	PrintBool(Config::detIsoEA),
 	PrintBool(Config::doIso),
 	PrintBool(Config::doIsoNvtx),
 	PrintBool(Config::useMean),
@@ -131,6 +230,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--outdir")      { next_arg_or_die(mArgs, i); Config::outdir = i->c_str(); }
     else if (*i == "--do-purw")     { Config::doPURW     = true; }
     else if (*i == "--do-analysis") { Config::doAnalysis = true; }
+    else if (*i == "--do-hadd")     { Config::doHadd     = true; }
     else if (*i == "--do-EA")       { Config::doEACalc   = true; }
     else if (*i == "--do-stacks")   { Config::doStacks   = true; }
     else if (*i == "--do-phostacks"){ Config::doPhoStacks = true; }
@@ -139,12 +239,15 @@ int main(int argc, const char* argv[])
     else if (*i == "--use-SPH")     { Config::useSPH     = true; }
     else if (*i == "--use-GMSB")    { Config::useGMSB    = true; }
     else if (*i == "--use-HVDS")    { Config::useHVDS    = true; }
-    else if (*i == "--use-QCD")     { Config::useQCD     = true; }
-    else if (*i == "--use-GJets")   { Config::useGJets   = true; }
+    else if (*i == "--use-QCD-Pt")  { Config::useQCDPt   = true; }
+    else if (*i == "--use-GJets-HT"){ Config::useGJetsHT = true; }
+    else if (*i == "--use-GJets-EM"){ Config::useGJetsEM = true; }
+    else if (*i == "--use-GJets-FlatPt") { Config::useGJetsFlatPt = true; }
     else if (*i == "--split-pho")   { Config::splitPho   = true; Config::nPhotons   = Config::nTotalPhotons / 2; }
     else if (*i == "--do-evstd")    { Config::doAnalysis = true; Config::doEvStd    = true; }
     else if (*i == "--do-phostd")   { Config::doAnalysis = true; Config::doPhoStd   = true; }
     else if (*i == "--use-pfIsoEA") { Config::pfIsoEA    = true; }
+    else if (*i == "--use-detIsoEA"){ Config::detIsoEA   = true; }
     else if (*i == "--do-iso")      { Config::doAnalysis = true; Config::doIso      = true; }
     else if (*i == "--do-isonvtx")  { Config::doAnalysis = true; Config::doIsoNvtx  = true; }
     else if (*i == "--use-mean")    { Config::doAnalysis = true; Config::doIsoNvtx  = true; Config::useMean = true; }
@@ -190,7 +293,7 @@ int main(int argc, const char* argv[])
 
   if (Config::doAnalysis) 
   {
-    std::cout << "Starting analyis section" << std::endl;
+    std::cout << "Starting analysis section" << std::endl;
     for (const auto & samplePair : Config::SampleMap)
     {
       Analysis analysis(samplePair.first,samplePair.second);
@@ -206,9 +309,26 @@ int main(int argc, const char* argv[])
   }
   std::cout << std::endl;
 
+  /////////////////////
+  // Hadd SubSamples //
+  /////////////////////
+
+  if (Config::doHadd) 
+  {
+    std::cout << "Starting hadd-ing of subsamples" << std::endl;
+    HaddSamples();
+    std::cout << "Finished hadd-ing of subsamples" << std::endl;
+  }
+  else 
+  {
+    std::cout << "Skipping hadd-ing of subsamples" << std::endl;
+  }
+  std::cout << std::endl;
+
   /////////////////////////////
   // Compute Effective Areas //
   /////////////////////////////
+
   if (Config::doEACalc)
   {
     std::cout << "Starting EA calculation section" << std::endl;

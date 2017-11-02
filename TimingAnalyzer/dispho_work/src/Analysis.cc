@@ -17,7 +17,7 @@ Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample),
   }
 
   // Get input
-  const TString filename = Form("input/%s/%s/%s/%s", Config::year.Data(), (fIsMC?"MC":"DATA"), fSample.Data(), "tree.root");
+  const TString filename = Form("input/%s/%s/%s/%s", Config::year.Data(), (fIsMC?"MC":"DATA"), fSample.Data(), Config::nTupleName.Data());
   fInFile  = TFile::Open(filename.Data());
   CheckValidFile(fInFile,filename);
 
@@ -37,12 +37,13 @@ Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample),
   const TString histname = "h_cutflow";
   fCutFlow = (TH1F*)fInFile->Get(histname.Data());
   CheckValidTH1F(fCutFlow,histname,filename);
+  fWgtSum = fCutFlow->GetBinContent(1); // bin 1 is the "all" bin
 
   // Set Output Stuff
   fOutDir = Form("%s/%s/%s",Config::outdir.Data(), (fIsMC?"MC":"DATA"), fSample.Data());
   MakeOutDir(fOutDir);
-  fOutFile = new TFile(Form("%s/plots.root",fOutDir.Data()),"UPDATE");
-  fColor = (fIsMC?Config::colorMap[fSample]:kBlack);
+  fOutFile = new TFile(Form("%s/%s",fOutDir.Data(),Config::AnOutName.Data()),"UPDATE");
+  fColor = (fIsMC?Config::ColorMap[fSample]:kBlack);
 
   // extra setup for data and MC
   if (fIsMC and false) 
@@ -103,6 +104,7 @@ void Analysis::EventLoop()
     //                        // 
     ////////////////////////////
     Float_t weight = 1.;
+    if (fIsMC) weight = xsec * filterEff / fWgtSum;
 
     ////////////////////////////////
     //                            // 

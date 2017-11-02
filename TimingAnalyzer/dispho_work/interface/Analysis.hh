@@ -77,6 +77,7 @@ private:
   TH1F  * fCutFlow;
 
   // MC weight input
+  Float_t fWgtSum;
   DblVec  fPUweights;
 
   // Output

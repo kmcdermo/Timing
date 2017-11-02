@@ -6,7 +6,7 @@ EACalculator::EACalculator(const TString & sample, const Bool_t isMC) : fSample(
   fOutDir = Form("%s/%s/%s",Config::outdir.Data(),(fIsMC?"MC":"DATA"),fSample.Data());
 
   // open input files
-  const TString filename = Form("%s/plots.root",fOutDir.Data());
+  const TString filename = Form("%s/%s",fOutDir.Data(),Config::AnOutName.Data());
   fInFile = TFile::Open(filename.Data());
   CheckValidFile(fInFile,filename);
 
