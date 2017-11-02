@@ -3,15 +3,15 @@
 StackGEDOOT::StackGEDOOT(const TString & sample, const Bool_t isMC) : fSample(sample), fIsMC(isMC)  
 {
   // I/O dir
-  fOutDir = Form("%s/%s/%s",Config::outdir.Data(),(fIsMC?"MC":"DATA"),fSample.Data());
+  fOutDir = Form("%s/%i/%s/%s", Config::outdir.Data(), Config::year, (fIsMC?"MC":"DATA"), fSample.Data());
 
   // open input files
-  const TString filename = Form("%s/%s",fOutDir.Data(),Config::AnOutName.Data());
+  const TString filename = Form("%s/%s", fOutDir.Data(), Config::AnOutName.Data());
   fInFile = TFile::Open(filename.Data());
   CheckValidFile(fInFile,filename);
 
   // output data members
-  fOutFile = new TFile(Form("%s/stackplots_canvases.root",fOutDir.Data()),"UPDATE"); // make output tfile --> store canvas images here too, for quick editting
+  fOutFile = new TFile(Form("%s/stackplots_canvases.root", fOutDir.Data()),"UPDATE"); // make output tfile --> store canvas images here too, for quick editting
 
   // Read in names of plots to be stacked
   StackGEDOOT::InitTH1FNamesAndSubDNames();

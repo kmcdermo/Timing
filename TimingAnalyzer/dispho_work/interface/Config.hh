@@ -32,7 +32,7 @@ namespace Config
   static const TString selection = Form("");
 
   // standard analysis config
-  static const TString nTupleName = "tree.root";
+  static const TString nTupleName = "dispho.root";
   static const TString AnOutName  = "plots.root";
   constexpr    Int_t   nGMSBs = 2;
   constexpr    Int_t   nHVDSs = 4;
@@ -120,7 +120,7 @@ namespace Config
   extern Bool_t      useMeanRho;
   extern Float_t     quantProb;
   extern Float_t     quantProbRho;
-  extern TString     year;
+  extern Int_t       year;
   extern Bool_t      saveHists;
   extern Bool_t      saveTempHists;
   extern TString     outtype;

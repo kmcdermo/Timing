@@ -12,12 +12,12 @@ Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample),
   // Set MC stuff right away
   if (fIsMC)
   {
-    if (fSample.Contains("gmsb",TString::kExact)) fIsGMSB = true;
-    if (fSample.Contains("hvds",TString::kExact)) fIsHVDS = true;
+    fIsGMSB = fSample.Contains("gmsb",TString::kExact);
+    fIsHVDS = fSample.Contains("hvds",TString::kExact);
   }
 
   // Get input
-  const TString filename = Form("input/%s/%s/%s/%s", Config::year.Data(), (fIsMC?"MC":"DATA"), fSample.Data(), Config::nTupleName.Data());
+  const TString filename = Form("input/%i/%s/%s/%s", Config::year, (fIsMC?"MC":"DATA"), fSample.Data(), Config::nTupleName.Data());
   fInFile  = TFile::Open(filename.Data());
   CheckValidFile(fInFile,filename);
 
@@ -34,13 +34,13 @@ Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample),
   Analysis::InitAndReadConfigTree();
 
   // Get the cut flow + event weight histogram
-  const TString histname = "h_cutflow";
+  const TString histname = "tree/h_cutflow";
   fCutFlow = (TH1F*)fInFile->Get(histname.Data());
   CheckValidTH1F(fCutFlow,histname,filename);
   fWgtSum = fCutFlow->GetBinContent(1); // bin 1 is the "all" bin
 
   // Set Output Stuff
-  fOutDir = Form("%s/%s/%s",Config::outdir.Data(), (fIsMC?"MC":"DATA"), fSample.Data());
+  fOutDir = Form("%s/%i/%s/%s", Config::outdir.Data(), Config::year, (fIsMC?"MC":"DATA"), fSample.Data());
   MakeOutDir(fOutDir);
   fOutFile = new TFile(Form("%s/%s",fOutDir.Data(),Config::AnOutName.Data()),"UPDATE");
   fColor = (fIsMC?Config::ColorMap[fSample]:kBlack);
@@ -49,7 +49,7 @@ Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample),
   if (fIsMC and false) 
   { 
     // Get pile-up weights
-    const TString purwfname = Form("%s/%s/%s",Config::outdir.Data(),Config::pusubdir.Data(),Config::pufilename.Data());
+    const TString purwfname = Form("%s/%i/%s/%s", Config::outdir.Data(), Config::year, Config::pusubdir.Data(), Config::pufilename.Data());
     TFile * purwfile  = TFile::Open(purwfname.Data());
     CheckValidFile(purwfile,purwfname);
 
@@ -66,8 +66,8 @@ Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample),
   }  
 
   // just do this everytime, who cares
-  fTH1Dump.open(Form("%s/%s",Config::outdir.Data(),Config::plotdumpname.Data()),std::ios_base::trunc);
-  fTH1PhoDump.open(Form("%s/%s",Config::outdir.Data(),Config::phoplotdumpname.Data()),std::ios_base::trunc);
+  fTH1Dump.open(Form("%s/%i/%s", Config::outdir.Data(), Config::year, Config::plotdumpname.Data()),std::ios_base::trunc);
+  fTH1PhoDump.open(Form("%s/%i/%s", Config::outdir.Data(), Config::year, Config::phoplotdumpname.Data()),std::ios_base::trunc);
 }
 
 Analysis::~Analysis()
@@ -103,8 +103,7 @@ void Analysis::EventLoop()
     // Determine Event Weight //
     //                        // 
     ////////////////////////////
-    Float_t weight = 1.;
-    if (fIsMC) weight = xsec * filterEff / fWgtSum;
+    const Float_t weight = (fIsMC ? filterEff * xsec * Config::lumi * genwgt / fWgtSum : 1.f);
 
     ////////////////////////////////
     //                            // 

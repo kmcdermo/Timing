@@ -3,16 +3,16 @@
 EACalculator::EACalculator(const TString & sample, const Bool_t isMC) : fSample(sample), fIsMC(isMC)
 {
   // I/O dir
-  fOutDir = Form("%s/%s/%s",Config::outdir.Data(),(fIsMC?"MC":"DATA"),fSample.Data());
+  fOutDir = Form("%s/%i/%s/%s",Config::outdir.Data(), Config::year, (fIsMC?"MC":"DATA"), fSample.Data());
 
   // open input files
-  const TString filename = Form("%s/%s",fOutDir.Data(),Config::AnOutName.Data());
+  const TString filename = Form("%s/%s", fOutDir.Data(), Config::AnOutName.Data());
   fInFile = TFile::Open(filename.Data());
   CheckValidFile(fInFile,filename);
 
   // output data members
   fOutFile = new TFile(Form("%s/effarea_canvases.root",fOutDir.Data()),"UPDATE"); // make output tfile --> store canvas images here too, for quick editting
-  fEAFile.open(Form("%s/%s",fOutDir.Data(),Config::eadumpname.Data()),std::ios_base::trunc);
+  fEAFile.open(Form("%s/%s", fOutDir.Data(), Config::eadumpname.Data()),std::ios_base::trunc);
 
   // Read in names of plots to be stacked
   EACalculator::InitTH1FNamesAndSubDNames();

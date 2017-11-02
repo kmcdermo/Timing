@@ -25,18 +25,18 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
   MakeOutDir(Config::outdir);
 
   // yields 
-  yields.open(Form("%s/yields.txt",Config::outdir.Data()),std::ios_base::app);
+  yields.open(Form("%s/%i/yields.txt", Config::outdir.Data(), Config::year),std::ios_base::app);
 
   // set common vars in sample maps
   Config::mcSampleMap["gmsb"]  = true; // isMC
   Config::mcSampleMap["hvds"]  = true; // isMC
   Config::mcSampleMap["qcd"]   = true; // isMC
-  Config::mcSampleMap["gjet"] = true; // isMC
+  Config::mcSampleMap["gjets"] = true; // isMC
 
   Config::mcColorMap["gmsb"]  = kBlue;
   Config::mcColorMap["hvds"]  = kRed;
   Config::mcColorMap["qcd"]   = kYellow;
-  Config::mcColorMap["gjet"] = kOrange+10;
+  Config::mcColorMap["gjets"] = kOrange+10;
 
   Config::mcTitleMap["gmsb"]  = "GMSB";
   Config::mcTitleMap["hvds"]  = "HVDS";
@@ -44,7 +44,7 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
   Config::mcTitleMap["gjets"] = "#gamma + Jets";
 
   // set lists of samples
-  Config::mcSampleVecMap["qcd-pt"] = {"15to20","20to30","30to50","50to80","80to120","120to170","170to300"};
+  Config::mcSampleVecMap["qcd/Pt-"] = {"15to20","20to30","30to50","50to80","80to120","120to170","170to300"};
 
   //////////////////////////////
   // Now set up global config //
@@ -74,12 +74,21 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
   if (Config::useQCDPt) 
   {
     const TString sample = "qcd";
-    const TString label  = "/Pt-";
-    for (const auto & samplebin : Config::mcSampleVecMap[sample+label])
+    if (Config::doHadd) // Be Careful!!!!! Enable when first processing analysis
     {
-      Config::SampleMap[sample+label+samplebin] = Config::mcSampleMap[sample];
-      Config::ColorMap [sample+label+samplebin] = Config::mcColorMap [sample];
-      Config::TitleMap [sample+label+samplebin] = Config::mcTitleMap [sample];
+      const TString label  = "/Pt-";
+      for (const auto & samplebin : Config::mcSampleVecMap[sample+label])
+      {
+	Config::SampleMap[sample+label+samplebin] = Config::mcSampleMap[sample];
+	Config::ColorMap [sample+label+samplebin] = Config::mcColorMap [sample];
+	Config::TitleMap [sample+label+samplebin] = Config::mcTitleMap [sample];
+      }
+    }
+    else // Be Careful!!!! Only do this after subsamples have gone through analysis processing + hadding
+    {
+      Config::SampleMap[sample] = Config::mcSampleMap[sample];
+      Config::ColorMap [sample] = Config::mcColorMap [sample];
+      Config::TitleMap [sample] = Config::mcTitleMap [sample];
     }
   }
   if (Config::useGJetsEM) 
@@ -114,7 +123,7 @@ void HaddSamples()
     std::cout << "Hadding QCD Pt binned samples..." << std::endl;
 
     // Base strings
-    const TString iodir  = Form("input/%s/MC", Config::year.Data());
+    const TString iodir  = Form("%s/%i/MC", Config::outdir.Data(), Config::year);
     const TString sample = "qcd";
     const TString label  = "/Pt-";
     
@@ -195,7 +204,7 @@ int main(int argc, const char* argv[])
 	"  --use-mean-rho                use mean of projected histo for rho (def: %s)\n"
 	"  --q-prob        <float>       which quantile to use for photons (def: %4.2f)\n"
 	"  --q-probrho     <float>       which quantile to use for rho (def: %4.2f)\n"
-	"  --in-year       <string>      which year to process (def: %s)\n"
+	"  --in-year       <int>         which year to process (def: %i)\n"
 	"  --save-hists                  save analysis histograms as images (def: %s)\n"
 	"  --save-tmphists               save histograms used in projections to root file (def: %s)\n"
 	"  --out-image     <string>      extension of file to save plots (def: %s)\n"
@@ -228,7 +237,7 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::useMeanRho),
 	Config::quantProb,
 	Config::quantProbRho,
-	Config::year.Data(),
+	Config::year,
 	PrintBool(Config::saveHists),
 	PrintBool(Config::saveTempHists),
 	Config::outtype.Data()
@@ -262,12 +271,21 @@ int main(int argc, const char* argv[])
     else if (*i == "--use-mean-rho"){ Config::doAnalysis = true; Config::doEvStd    = true; Config::useMeanRho = true; }
     else if (*i == "--q-prob")      { next_arg_or_die(mArgs, i); Config::quantProb  = std::atof(i->c_str()); }
     else if (*i == "--q-probrho")   { next_arg_or_die(mArgs, i); Config::quantProbRho = std::atof(i->c_str()); }
-    else if (*i == "--in-year")     { next_arg_or_die(mArgs, i); Config::year       = i->c_str(); }
+    else if (*i == "--in-year")     { next_arg_or_die(mArgs, i); Config::year       = std::atoi(i->c_str()); }
     else if (*i == "--save-hists")  { Config::saveHists  = true; }
     else if (*i == "--save-tmphists"){ Config::saveTempHists = true; }
     else if (*i == "--out-image")   { next_arg_or_die(mArgs, i); Config::outtype    = i->c_str(); }
     else    { std::cerr << "Error: Unknown option/argument: " << i->c_str() << " ...exiting..." << std::endl; exit(1); }
     mArgs.erase(start, ++i);
+  }
+
+  ////////////////////////////////////////
+  // Checks for improper input settings //
+  ////////////////////////////////////////
+  if (Config::doAnalysis && Config::useQCDPt && !Config::doHadd) 
+  {
+    std::cerr << "Cannot do analysis on hadded QCD! Exiting..." << std::endl;
+    exit(1);
   }
 
   ////////////////////

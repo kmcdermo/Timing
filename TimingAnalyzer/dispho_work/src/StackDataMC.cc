@@ -20,9 +20,9 @@ StackDataMC::StackDataMC()
   fNMC   = fMCNames.size();
 
   // output data members
-  fOutDir = Form("%s/datamcstacks",Config::outdir.Data()); // where to put output stack plots 
+  fOutDir = Form("%s/%i/datamcstacks", Config::outdir.Data(), Config::year); // where to put output stack plots 
   MakeOutDir(fOutDir); // make output directory 
-  fOutFile = new TFile(Form("%s/stackplots_canvases.root",fOutDir.Data()),"UPDATE"); // make output tfile --> store canvas images here too, for quick editting
+  fOutFile = new TFile(Form("%s/stackplots_canvases.root", fOutDir.Data()),"UPDATE"); // make output tfile --> store canvas images here too, for quick editting
 
   // Read in names of plots to be stacked
   StackDataMC::InitTH1FNamesAndSubDNames();
@@ -369,7 +369,7 @@ void StackDataMC::OpenInputFiles()
   fDataFiles.resize(fNData);
   for (Int_t data = 0; data < fNData; data++) 
   {
-    TString datafile = Form("%s/DATA/%s/%s",Config::outdir.Data(),fDataNames[data].Data(),Config::AnOutName.Data());
+    TString datafile = Form("%s/%i/DATA/%s/%s", Config::outdir.Data(), Config::year, fDataNames[data].Data(), Config::AnOutName.Data());
     fDataFiles[data] = TFile::Open(datafile.Data());
     CheckValidFile(fDataFiles[data],datafile);
   }
@@ -378,7 +378,7 @@ void StackDataMC::OpenInputFiles()
   fMCFiles.resize(fNMC);
   for (Int_t mc = 0; mc < fNMC; mc++) 
   {
-    TString mcfile = Form("%s/MC/%s/%s",Config::outdir.Data(),fMCNames[mc].Data(),Config::AnOutName.Data());
+    TString mcfile = Form("%s/%i/MC/%s/%s", Config::outdir.Data(), Config::year, fMCNames[mc].Data(), Config::AnOutName.Data());
     fMCFiles[mc] = TFile::Open(mcfile.Data());
     CheckValidFile(fMCFiles[mc],mcfile);
   }
