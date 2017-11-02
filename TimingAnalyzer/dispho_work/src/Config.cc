@@ -8,6 +8,7 @@ namespace Config
   Bool_t  doAnalysis = false;
   Bool_t  doHadd     = false;
   Bool_t  doEACalc   = false;
+  Bool_t  doPtCalc   = false;
   Bool_t  doStacks   = false;
   Bool_t  doPhoStacks = false;
   Bool_t  doDemo     = false;
@@ -27,12 +28,17 @@ namespace Config
   Bool_t  doPhoStd   = false;
   Bool_t  pfIsoEA    = false;    
   Bool_t  detIsoEA   = false;    
+  Bool_t  pfIsoPt    = false;    
+  Bool_t  detIsoPt   = false;    
   Bool_t  doIso      = false;
   Bool_t  doIsoNvtx  = false;
-  Bool_t  useMean    = false;
+  Bool_t  doIsoPt    = false;
+  Bool_t  useMeanIso = false;
   Bool_t  useMeanRho = false;
-  Float_t quantProb  = 0.9;
+  Bool_t  useMeanPt  = false;
+  Float_t quantProbIso = 0.9;
   Float_t quantProbRho = 0.5; // 50% = median
+  Float_t quantProbPt  = 0.9;
   Int_t   year       = 2017;
   Bool_t  saveHists  = false;
   Bool_t  saveTempHists = false;

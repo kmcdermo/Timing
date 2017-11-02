@@ -66,4 +66,64 @@ inline float GetGammaEA(const float eta)
   else                                  return 0.;
 }
 
+// PF Iso based pt corrections
+
+inline float GetChargedHadronPt(const bool isEB, const float pt)
+{
+  if   (isEB) return 0.f*pt;
+  else        return 0.f*pt;
+}
+
+inline float GetNeutralHadronPt(const bool isEB, const float pt)
+{
+  if   (isEB) return 0.0148*pt + 0.000017*pt*pt;
+  else        return 0.0163*pt + 0.000014*pt*pt;
+}
+
+inline float GetGammaPt(const bool isEB, const float pt)
+{
+  if   (isEB) return 0.0047*pt;
+  else        return 0.0034*pt;
+}
+
+// Detector based EAs
+
+inline float GetEcalPFClEA(const bool isEB)
+{
+  if   (isEB) return 0.1210;
+  else        return 0.;
+}
+  
+inline float GetHcalPFClEA(const bool isEB) 
+{
+  if   (isEB) return 0.1210;
+  else        return 0.;
+}
+  
+inline float GetTrackEA(const bool isEB) 
+{
+  if   (isEB) return 0.1210;
+  else        return 0.;
+}
+
+// Det Iso based pt corrections
+
+inline float GetEcalPFClPt(const bool isEB, const float pt)
+{
+  if   (isEB) return 0.f*pt;
+  else        return 0.f*pt;
+}
+
+inline float GetHcalPFClPt(const bool isEB, const float pt)
+{
+  if   (isEB) return 0.0148*pt + 0.000017*pt*pt;
+  else        return 0.0163*pt + 0.000014*pt*pt;
+}
+
+inline float GetTrackPt(const bool isEB, const float pt)
+{
+  if   (isEB) return 0.0047*pt;
+  else        return 0.0034*pt;
+}
+
 #endif

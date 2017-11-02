@@ -28,14 +28,17 @@ public:
   void SetupPhotonStandardPlots();
   void SetupIsoPlots();
   void SetupIsoNvtxPlots();
+  void SetupIsoPtPlots();
   void FillEventStandardPlots(const Float_t weight);
   void FillPhotonStandardPlots(const Int_t Nphotons, const Float_t weight);
   void FillIsoPlots(const Int_t Nphotons, const Float_t weight);
   void FillIsoNvtxPlots(const Int_t Nphotons, const Float_t weight);
+  void FillIsoPtPlots(const Int_t Nphotons, const Float_t weight);
   void OutputEventStandardPlots();
   void OutputPhotonStandardPlots();
   void OutputIsoPlots();
   void OutputIsoNvtxPlots();
+  void OutputIsoPtPlots();
   void MakeInclusiveTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void MakeInclusiveNphoTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void MakeInclusiveSplitTH1s(TH1Map & th1map, TStrMap & subdirmap);
@@ -97,6 +100,7 @@ private:
   TH1Map stdphoTH1Map; TStrMap stdphoTH1SubMap;
   TH1Map isoTH1Map; TStrMap isoTH1SubMap;
   TH2Map isonvtxTH2Map; TStrMap isonvtxTH2SubMap;
+  TH2Map isoptTH2Map; TStrMap isoptTH2SubMap;
 
   ///////////////////////////////////////////
   // Declaration of leaf types for fInTree //

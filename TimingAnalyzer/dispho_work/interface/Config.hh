@@ -95,6 +95,7 @@ namespace Config
   extern Bool_t      doAnalysis;
   extern Bool_t      doHadd;
   extern Bool_t      doEACalc;
+  extern Bool_t      doPtCalc;
   extern Bool_t      doStacks;
   extern Bool_t      doPhoStacks;
   extern Bool_t      doDemo;
@@ -114,12 +115,17 @@ namespace Config
   extern Bool_t      doPhoStd;
   extern Bool_t      pfIsoEA; 
   extern Bool_t      detIsoEA; 
+  extern Bool_t      pfIsoPt; 
+  extern Bool_t      detIsoPt; 
   extern Bool_t      doIso;
   extern Bool_t      doIsoNvtx;
-  extern Bool_t      useMean;
+  extern Bool_t      doIsoPt;
+  extern Bool_t      useMeanIso;
   extern Bool_t      useMeanRho;
-  extern Float_t     quantProb;
+  extern Bool_t      useMeanPt;
+  extern Float_t     quantProbIso;
   extern Float_t     quantProbRho;
+  extern Float_t     quantProbPt;
   extern Int_t       year;
   extern Bool_t      saveHists;
   extern Bool_t      saveTempHists;

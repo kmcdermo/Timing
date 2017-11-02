@@ -182,6 +182,7 @@ int main(int argc, const char* argv[])
 	"  --do-analysis                 make analysis plots (def: %s)\n"
 	"  --do-hadd                     hadd subsample plots after analysis (def: %s)\n"
 	"  --do-EA                       calculate effective area for isolation (def: %s)\n"
+	"  --do-Pt                       calculate pt scaling for isolation (def: %s)\n"
 	"  --do-stacks                   stack data/MC plots (def: %s)\n"
 	"  --do-phostacks                stack GED/OOT plots (def: %s)\n"
 	"  --do-demo                     demo analysis (def: %s)\n"
@@ -198,12 +199,17 @@ int main(int argc, const char* argv[])
 	"  --do-phostd                   make standard photon validation plots (def: %s)\n"
 	"  --use-pfIsoEA                 use effective areas for PF isolations (def: %s)\n"
 	"  --use-detIsoEA                use effective areas for detector isolations (def: %s)\n"
+	"  --use-pfIsoPt                 use pt corrections for PF isolations (def: %s)\n"
+	"  --use-detIsoPt                use pt corrections for detector isolations (def: %s)\n"
 	"  --do-iso                      make isolation plots (def: %s)\n"
 	"  --do-isonvtx                  make isolation vs nvtx plots (def: %s)\n"
-	"  --use-mean                    use mean of projected histo for isolation value (def: %s)\n"
+	"  --do-isopt                    make isolation vs pt plots (def: %s)\n"
+	"  --use-mean-iso                use mean of projected histo for isolation value (def: %s)\n"
 	"  --use-mean-rho                use mean of projected histo for rho (def: %s)\n"
-	"  --q-prob        <float>       which quantile to use for photons (def: %4.2f)\n"
+	"  --use-mean-pt                 use mean of projected histo for iso vs pt (def: %s)\n"
+	"  --q-probiso     <float>       which quantile to use for photons iso vs nvtx (def: %4.2f)\n"
 	"  --q-probrho     <float>       which quantile to use for rho (def: %4.2f)\n"
+	"  --q-probpt      <float>       which quantile to use for photons iso vs pt (def: %4.2f)\n"
 	"  --in-year       <int>         which year to process (def: %i)\n"
 	"  --save-hists                  save analysis histograms as images (def: %s)\n"
 	"  --save-tmphists               save histograms used in projections to root file (def: %s)\n"
@@ -215,6 +221,7 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::doAnalysis),
 	PrintBool(Config::doHadd),
 	PrintBool(Config::doEACalc),
+	PrintBool(Config::doPtCalc),
 	PrintBool(Config::doStacks),
 	PrintBool(Config::doPhoStacks),
 	PrintBool(Config::doDemo),
@@ -231,12 +238,17 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::doPhoStd),
 	PrintBool(Config::pfIsoEA),
 	PrintBool(Config::detIsoEA),
+	PrintBool(Config::pfIsoPt),
+	PrintBool(Config::detIsoPt),
 	PrintBool(Config::doIso),
 	PrintBool(Config::doIsoNvtx),
-	PrintBool(Config::useMean),
+	PrintBool(Config::doIsoPt),
+	PrintBool(Config::useMeanIso),
 	PrintBool(Config::useMeanRho),
-	Config::quantProb,
+	PrintBool(Config::useMeanPt),
+	Config::quantProbIso,
 	Config::quantProbRho,
+	Config::quantProbPt,
 	Config::year,
 	PrintBool(Config::saveHists),
 	PrintBool(Config::saveTempHists),
@@ -248,7 +260,8 @@ int main(int argc, const char* argv[])
     else if (*i == "--do-purw")     { Config::doPURW     = true; }
     else if (*i == "--do-analysis") { Config::doAnalysis = true; }
     else if (*i == "--do-hadd")     { Config::doHadd     = true; }
-    else if (*i == "--do-EA")       { Config::doEACalc   = true; }
+    else if (*i == "--do-EA")       { Config::doEACalc   = true;} 
+    else if (*i == "--do-Pt")       { Config::doPtCalc   = true; }
     else if (*i == "--do-stacks")   { Config::doStacks   = true; }
     else if (*i == "--do-phostacks"){ Config::doPhoStacks = true; }
     else if (*i == "--do-demo")     { Config::doDemo     = true; Config::doAnalysis = true; Config::doEvStd = true; Config::doPhoStd = true; }
@@ -265,12 +278,17 @@ int main(int argc, const char* argv[])
     else if (*i == "--do-phostd")   { Config::doAnalysis = true; Config::doPhoStd   = true; }
     else if (*i == "--use-pfIsoEA") { Config::pfIsoEA    = true; }
     else if (*i == "--use-detIsoEA"){ Config::detIsoEA   = true; }
+    else if (*i == "--use-pfIsoPt") { Config::pfIsoPt    = true; }
+    else if (*i == "--use-detIsoPt"){ Config::detIsoPt   = true; }
     else if (*i == "--do-iso")      { Config::doAnalysis = true; Config::doIso      = true; }
     else if (*i == "--do-isonvtx")  { Config::doAnalysis = true; Config::doIsoNvtx  = true; }
-    else if (*i == "--use-mean")    { Config::doAnalysis = true; Config::doIsoNvtx  = true; Config::useMean = true; }
+    else if (*i == "--do-isopt")    { Config::doAnalysis = true; Config::doIsoPt    = true; }
+    else if (*i == "--use-mean-iso"){ Config::doAnalysis = true; Config::doIsoNvtx  = true; Config::useMeanIso = true; }
     else if (*i == "--use-mean-rho"){ Config::doAnalysis = true; Config::doEvStd    = true; Config::useMeanRho = true; }
-    else if (*i == "--q-prob")      { next_arg_or_die(mArgs, i); Config::quantProb  = std::atof(i->c_str()); }
+    else if (*i == "--use-mean-pt") { Config::doAnalysis = true; Config::doIsoPt    = true; Config::useMeanPt  = true; }
+    else if (*i == "--q-probiso")   { next_arg_or_die(mArgs, i); Config::quantProbIso = std::atof(i->c_str()); }
     else if (*i == "--q-probrho")   { next_arg_or_die(mArgs, i); Config::quantProbRho = std::atof(i->c_str()); }
+    else if (*i == "--q-probpt")    { next_arg_or_die(mArgs, i); Config::quantProbPt  = std::atof(i->c_str()); }
     else if (*i == "--in-year")     { next_arg_or_die(mArgs, i); Config::year       = std::atoi(i->c_str()); }
     else if (*i == "--save-hists")  { Config::saveHists  = true; }
     else if (*i == "--save-tmphists"){ Config::saveTempHists = true; }
