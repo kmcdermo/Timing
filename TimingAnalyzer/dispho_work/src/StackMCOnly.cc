@@ -86,6 +86,9 @@ void StackMCOnly::MakeStackMCOnly()
     for (Int_t signal = 0; signal < fNSignal; signal++) 
     {
       fInSignalTH1FHists[th1f][signal]->Scale(1.f/fInSignalTH1FHists[th1f][signal]->Integral());
+      fInSignalTH1FHists[th1f][signal]->SetLineColor(Config::ColorMap[fSignalNames[signal]]);
+      fInSignalTH1FHists[th1f][signal]->SetFillStyle(0);
+      fInSignalTH1FHists[th1f][signal]->Scale(1.f/fInSignalTH1FHists[th1f][signal]->Integral());
       fTH1FLegends[th1f]->AddEntry(fInSignalTH1FHists[th1f][signal],Config::TitleMap[fSignalNames[signal]],"l"); // add data entry to legend
     } 
 
@@ -162,7 +165,7 @@ void StackMCOnly::DrawCanvas(const Int_t th1f, const Bool_t isLogY)
     }
   
     // draw first so labels appear
-    fInSignalTH1FHists[th1f][signal]->Draw(signal>0?"L SAME":"L"); 
+    fInSignalTH1FHists[th1f][signal]->Draw(signal>0?"HIST SAME":"HIST"); 
   }
 
   // now draw the stacks, and redo axes...
@@ -175,7 +178,7 @@ void StackMCOnly::DrawCanvas(const Int_t th1f, const Bool_t isLogY)
   // redraw signals as they disappeared
   for (Int_t signal = 0; signal < fNSignal; signal++) 
   {
-    fInSignalTH1FHists[th1f][signal]->Draw("L SAME"); // draw first so labels appear
+    fInSignalTH1FHists[th1f][signal]->Draw("HIST SAME"); // draw first so labels appear
   }
 
   // make sure to include the legend!

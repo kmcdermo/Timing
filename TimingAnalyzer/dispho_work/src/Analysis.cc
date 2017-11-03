@@ -252,12 +252,20 @@ void Analysis::SetupIsoPtPlots()
 	const TString name  = Form("%i_%s_%s_v_pt",ipho,region.Data(),split.Data());
 	const TString title = Form("%s - %s",split.Data(),region.Data());
 
+	isoptTH2Map[Form("phochgiso_%s",name.Data())] = 
+	  Analysis::MakeTH2Plot(Form("phochgiso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,-5.f,45.f,Form("Photon %i PF Charged Hadron Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
+	isoptTH2Map[Form("phoneuiso_%s",name.Data())] = 
+	  Analysis::MakeTH2Plot(Form("phoneuiso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,-5.f,45.f,Form("Photon %i PF Neutral Hadron Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
+	isoptTH2Map[Form("phophoiso_%s",name.Data())] = 
+	  Analysis::MakeTH2Plot(Form("phophoiso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,-5.f,45.f,Form("Photon %i Photon Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
+
 	isoptTH2Map[Form("phoecaliso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("phoecaliso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("phoecaliso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,-5.f,45.f,Form("Photon %i PFCluser ECAL Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
 	isoptTH2Map[Form("phohcaliso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("phohcaliso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("phohcaliso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,-5.f,45.f,Form("Photon %i PFCluser HCAL Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
 	isoptTH2Map[Form("photrkiso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("photrkiso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,0.,20.f,Form("Photon %i Track Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("photrkiso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,-5.f,45.f,Form("Photon %i Track Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
+
       } // end loop over split by type or inclusive
     } // end loop over regions
   } // end loop over nphotons
@@ -301,36 +309,38 @@ void Analysis::FillIsoPlots(const Int_t Nphotons, const Float_t weight)
   Int_t iged = 0, ioot = 0;
   for (Int_t ipho = 0; ipho < Nphotons; ipho++)
   {
-    const auto & pho = phos[ipho];
+    auto & pho = phos[ipho];
     const Int_t iPho = (!pho.isOOT ? iged++ : ioot++);
     const TString name = Form("%i_%s_%s", (Config::splitPho ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
 
+    const float abseta = std::abs(pho.sceta);
+    
     // PF Iso: Correct for EA?
-    float chgHadIso = (Config::pfIsoEA ? std::max(pho.ChgHadIso - rho * GetChargedHadronEA(pho.sceta),0.f) : pho.ChgHadIso);
-    float neuHadIso = (Config::pfIsoEA ? std::max(pho.NeuHadIso - rho * GetNeutralHadronEA(pho.sceta),0.f) : pho.NeuHadIso);
-    float phoIso    = (Config::pfIsoEA ? std::max(pho.PhoIso    - rho * GetGammaEA        (pho.sceta),0.f) : pho.PhoIso);
+    pho.ChgHadIso = (Config::pfIsoEA ? std::max(pho.ChgHadIso - rho * GetChargedHadronEA(abseta),0.f) : pho.ChgHadIso);
+    pho.NeuHadIso = (Config::pfIsoEA ? std::max(pho.NeuHadIso - rho * GetNeutralHadronEA(abseta),0.f) : pho.NeuHadIso);
+    pho.PhoIso    = (Config::pfIsoEA ? std::max(pho.PhoIso    - rho * GetGammaEA        (abseta),0.f) : pho.PhoIso);
 
     // PF Iso: Correct for pT?
-    chgHadIso = (Config::pfIsoPt ? std::max(chgHadIso - GetChargedHadronPt(pho.isEB,pho.pt),0.f) : chgHadIso);
-    neuHadIso = (Config::pfIsoPt ? std::max(neuHadIso - GetNeutralHadronPt(pho.isEB,pho.pt),0.f) : neuHadIso);
-    phoIso    = (Config::pfIsoPt ? std::max(phoIso    - GetGammaPt        (pho.isEB,pho.pt),0.f) : phoIso);
+    pho.ChgHadIso = (Config::pfIsoPt ? std::max(pho.ChgHadIso - GetChargedHadronPt(pho.isEB,pho.pt),0.f) : pho.ChgHadIso);
+    pho.NeuHadIso = (Config::pfIsoPt ? std::max(pho.NeuHadIso - GetNeutralHadronPt(pho.isEB,pho.pt),0.f) : pho.NeuHadIso);
+    pho.PhoIso    = (Config::pfIsoPt ? std::max(pho.PhoIso    - GetGammaPt        (pho.isEB,pho.pt),0.f) : pho.PhoIso);
 
     // Det Iso: Correct for EA?
-    float ecalPFClIso = (Config::detIsoEA ? std::max(pho.EcalPFClIso - rho * GetEcalPFClEA(pho.isEB),0.f) : pho.EcalPFClIso);
-    float hcalPFClIso = (Config::detIsoEA ? std::max(pho.HcalPFClIso - rho * GetHcalPFClEA(pho.isEB),0.f) : pho.HcalPFClIso);
-    float trkIso      = (Config::detIsoEA ? std::max(pho.TrkIso      - rho * GetTrackEA   (pho.isEB),0.f) : pho.TrkIso);
+    pho.EcalPFClIso = (Config::detIsoEA ? std::max(pho.EcalPFClIso - rho * GetEcalPFClEA(pho.isEB),0.f) : pho.EcalPFClIso);
+    pho.HcalPFClIso = (Config::detIsoEA ? std::max(pho.HcalPFClIso - rho * GetHcalPFClEA(pho.isEB),0.f) : pho.HcalPFClIso);
+    pho.TrkIso      = (Config::detIsoEA ? std::max(pho.TrkIso      - rho * GetTrackEA   (pho.isEB),0.f) : pho.TrkIso);
 
     // Det Iso: Correct for pT?
-    ecalPFClIso = (Config::detIsoPt ? std::max(ecalPFClIso - GetEcalPFClPt(pho.isEB,pho.pt),0.f) : ecalPFClIso);
-    hcalPFClIso = (Config::detIsoPt ? std::max(hcalPFClIso - GetHcalPFClPt(pho.isEB,pho.pt),0.f) : hcalPFClIso);
-    trkIso      = (Config::detIsoPt ? std::max(trkIso      - GetTrackPt   (pho.isEB,pho.pt),0.f) : trkIso);
+    pho.EcalPFClIso = (Config::detIsoPt ? std::max(pho.EcalPFClIso - GetEcalPFClPt(pho.isEB,pho.pt),0.f) : pho.EcalPFClIso);
+    pho.HcalPFClIso = (Config::detIsoPt ? std::max(pho.HcalPFClIso - GetHcalPFClPt(pho.isEB,pho.pt),0.f) : pho.HcalPFClIso);
+    pho.TrkIso      = (Config::detIsoPt ? std::max(pho.TrkIso      - GetTrackPt   (pho.isEB,pho.pt),0.f) : pho.TrkIso);
 
-    isoTH1Map[Form("phochgiso_%s",name.Data())]->Fill(chgHadIso,weight);
-    isoTH1Map[Form("phoneuiso_%s",name.Data())]->Fill(neuHadIso,weight);
-    isoTH1Map[Form("phophoiso_%s",name.Data())]->Fill(phoIso,weight);
-    isoTH1Map[Form("phoecaliso_%s",name.Data())]->Fill(ecalPFClIso,weight);
-    isoTH1Map[Form("phohcaliso_%s",name.Data())]->Fill(hcalPFClIso,weight);
-    isoTH1Map[Form("photrkiso_%s",name.Data())]->Fill(trkIso,weight);
+    isoTH1Map[Form("phochgiso_%s",name.Data())]->Fill(pho.ChgHadIso,weight);
+    isoTH1Map[Form("phoneuiso_%s",name.Data())]->Fill(pho.NeuHadIso,weight);
+    isoTH1Map[Form("phophoiso_%s",name.Data())]->Fill(pho.PhoIso,weight);
+    isoTH1Map[Form("phoecaliso_%s",name.Data())]->Fill(pho.EcalPFClIso,weight);
+    isoTH1Map[Form("phohcaliso_%s",name.Data())]->Fill(pho.HcalPFClIso,weight);
+    isoTH1Map[Form("photrkiso_%s",name.Data())]->Fill(pho.TrkIso,weight);
   } // end loop over photons
 }
 
@@ -357,10 +367,28 @@ void Analysis::FillIsoPtPlots(const Int_t Nphotons, const Float_t weight)
     const auto & pho = phos[ipho];
     const Int_t iPho = (!pho.isOOT ? iged++ : ioot++);
     const TString name = Form("%i_%s_%s_v_pt", (Config::splitPho ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
+    
+    const float abseta = std::abs(pho.sceta);
 
-    const float ecalPFClIso = std::max(pho.EcalPFClIso - rho * GetEcalPFClEA(pho.isEB),0.f);
-    const float hcalPFClIso = std::max(pho.HcalPFClIso - rho * GetHcalPFClEA(pho.isEB),0.f);
-    const float trkIso      = std::max(pho.TrkIso      - rho * GetTrackEA   (pho.isEB),0.f);
+//     const float chgHadIso = std::max(pho.ChgHadIso - rho * GetChargedHadronEA(abseta),0.f);
+//     const float neuHadIso = std::max(pho.NeuHadIso - rho * GetNeutralHadronEA(abseta),0.f);
+//     const float phoIso    = std::max(pho.PhoIso    - rho * GetGammaEA        (abseta),0.f);
+
+//     const float ecalPFClIso = std::max(pho.EcalPFClIso - rho * GetEcalPFClEA(pho.isEB),0.f);
+//     const float hcalPFClIso = std::max(pho.HcalPFClIso - rho * GetHcalPFClEA(pho.isEB),0.f);
+//     const float trkIso      = std::max(pho.TrkIso      - rho * GetTrackEA   (pho.isEB),0.f);
+
+    const float chgHadIso = pho.ChgHadIso;
+    const float neuHadIso = pho.NeuHadIso;
+    const float phoIso    = pho.PhoIso;
+
+    const float ecalPFClIso = pho.EcalPFClIso;
+    const float hcalPFClIso = pho.HcalPFClIso;
+    const float trkIso      = pho.TrkIso;
+
+    isoptTH2Map[Form("phochgiso_%s",name.Data())]->Fill(pho.pt,chgHadIso,weight);
+    isoptTH2Map[Form("phoneuiso_%s",name.Data())]->Fill(pho.pt,neuHadIso,weight);
+    isoptTH2Map[Form("phophoiso_%s",name.Data())]->Fill(pho.pt,phoIso,weight);    
 
     isoptTH2Map[Form("phoecaliso_%s",name.Data())]->Fill(pho.pt,ecalPFClIso,weight);
     isoptTH2Map[Form("phohcaliso_%s",name.Data())]->Fill(pho.pt,hcalPFClIso,weight);
