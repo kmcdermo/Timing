@@ -104,7 +104,7 @@ void Analysis::EventLoop()
     // Determine Event Weight //
     //                        // 
     ////////////////////////////
-    const Float_t weight = (fIsMC ? filterEff * xsec * Config::lumi * genwgt / fWgtSum : 1.f);
+    const Float_t weight = (fIsMC && !(Config::doIsoNvtx || Config::doIsoPt) ? filterEff * xsec * Config::lumi * genwgt / fWgtSum : 1.f);
 
     ////////////////////////////////
     //                            // 
@@ -252,12 +252,12 @@ void Analysis::SetupIsoPtPlots()
 	const TString name  = Form("%i_%s_%s_v_pt",ipho,region.Data(),split.Data());
 	const TString title = Form("%s - %s",split.Data(),region.Data());
 
-	isonvtxTH2Map[Form("phoecaliso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("phoecaliso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
-	isonvtxTH2Map[Form("phohcaliso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("phohcaliso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
-	isonvtxTH2Map[Form("photrkiso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("photrkiso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,0.,20.f,Form("Photon %i Track Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
+	isoptTH2Map[Form("phoecaliso_%s",name.Data())] = 
+	  Analysis::MakeTH2Plot(Form("phoecaliso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
+	isoptTH2Map[Form("phohcaliso_%s",name.Data())] = 
+	  Analysis::MakeTH2Plot(Form("phohcaliso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
+	isoptTH2Map[Form("photrkiso_%s",name.Data())] = 
+	  Analysis::MakeTH2Plot(Form("photrkiso_%s",name.Data()),"",Config::nBinsX_pt,0,Config::xhigh_pt,xtitle,50,0.,20.f,Form("Photon %i Track Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
       } // end loop over split by type or inclusive
     } // end loop over regions
   } // end loop over nphotons
@@ -362,9 +362,9 @@ void Analysis::FillIsoPtPlots(const Int_t Nphotons, const Float_t weight)
     const float hcalPFClIso = std::max(pho.HcalPFClIso - rho * GetHcalPFClEA(pho.isEB),0.f);
     const float trkIso      = std::max(pho.TrkIso      - rho * GetTrackEA   (pho.isEB),0.f);
 
-    isonvtxTH2Map[Form("phoecaliso_%s",name.Data())]->Fill(nvtx,ecalPFClIso,weight);
-    isonvtxTH2Map[Form("phohcaliso_%s",name.Data())]->Fill(nvtx,hcalPFClIso,weight);
-    isonvtxTH2Map[Form("photrkiso_%s",name.Data())]->Fill(nvtx,trkIso,weight);    
+    isoptTH2Map[Form("phoecaliso_%s",name.Data())]->Fill(pho.pt,ecalPFClIso,weight);
+    isoptTH2Map[Form("phohcaliso_%s",name.Data())]->Fill(pho.pt,hcalPFClIso,weight);
+    isoptTH2Map[Form("photrkiso_%s",name.Data())]->Fill(pho.pt,trkIso,weight);    
   } // end loop over nphotons
 }      
 

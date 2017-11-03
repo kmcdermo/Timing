@@ -90,19 +90,19 @@ inline float GetGammaPt(const bool isEB, const float pt)
 
 inline float GetEcalPFClEA(const bool isEB)
 {
-  if   (isEB) return 0.1210;
+  if   (isEB) return 0.1107;
   else        return 0.;
 }
   
 inline float GetHcalPFClEA(const bool isEB) 
 {
-  if   (isEB) return 0.1210;
+  if   (isEB) return 0.05502;
   else        return 0.;
 }
   
 inline float GetTrackEA(const bool isEB) 
 {
-  if   (isEB) return 0.1210;
+  if   (isEB) return 0.0206;
   else        return 0.;
 }
 
