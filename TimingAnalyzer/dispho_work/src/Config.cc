@@ -22,7 +22,7 @@ namespace Config
   Bool_t  useGJetsHT = false;
   Bool_t  useGJetsEM = false;
   Bool_t  useGJetsFlatPt = false;
-  Bool_t  splitPho   = false;
+  Bool_t  splitPho   = true; // eventually turn this off in main analysis
   Int_t   nTotalPhotons = 4;
   Int_t   nPhotons   = nTotalPhotons;
   Bool_t  doEvStd    = false;
@@ -35,7 +35,7 @@ namespace Config
   Bool_t  doIsoNvtx  = false;
   Bool_t  doIsoPt    = false;
   Bool_t  useMeanIso = false;
-  Bool_t  useMeanRho = false;
+  Bool_t  useMeanRho = true;
   Bool_t  useMeanPt  = false;
   Float_t quantProbIso = 0.9;
   Float_t quantProbRho = 0.5; // 50% = median

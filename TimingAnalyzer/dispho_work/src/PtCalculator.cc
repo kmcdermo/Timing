@@ -81,10 +81,11 @@ void PtCalculator::InitTH1FNamesAndSubDNames()
   TString plotname; TString subdir;
 
   const TString pho = "pho";
-  const TString pt  = "_v_pt_quant";
+  const TString pt  = "_v_pt";
+  const TString bin = "bin";
   while (plotstoread >> plotname >> subdir) 
   {
-    if      (plotname.Contains(pho,TString::kExact) && plotname.Contains(pt,TString::kExact))
+    if (plotname.Contains(pho,TString::kExact) && plotname.Contains(pt,TString::kExact) && !plotname.Contains(bin,TString::kExact))
     {
       fTH1FNames.push_back(plotname);
       fTH1FSubDMap[plotname] = subdir;
