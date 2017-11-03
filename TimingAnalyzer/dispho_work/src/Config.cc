@@ -23,7 +23,7 @@ namespace Config
   Bool_t  useGJetsEM = false;
   Bool_t  useGJetsFlatPt = false;
   Bool_t  splitPho   = true; // eventually turn this off in main analysis
-  Int_t   nTotalPhotons = 4;
+  Int_t   nTotalPhotons = 2;
   Int_t   nPhotons   = nTotalPhotons;
   Bool_t  doEvStd    = false;
   Bool_t  doPhoStd   = false;

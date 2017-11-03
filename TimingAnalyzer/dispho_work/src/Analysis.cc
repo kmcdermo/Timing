@@ -16,8 +16,10 @@ Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample),
     fIsHVDS = fSample.Contains("hvds",TString::kExact);
   }
 
+  const TString indir = "/afs/cern.ch/work/k/kmcdermo/public";
+
   // Get input
-  const TString filename = Form("input/%i/%s/%s/%s", Config::year, (fIsMC?"MC":"DATA"), fSample.Data(), Config::nTupleName.Data());
+  const TString filename = Form("%s/input/%i/%s/%s/%s", indir.Data(), Config::year, (fIsMC?"MC":"DATA"), fSample.Data(), Config::nTupleName.Data());
   fInFile  = TFile::Open(filename.Data());
   CheckValidFile(fInFile,filename);
 
