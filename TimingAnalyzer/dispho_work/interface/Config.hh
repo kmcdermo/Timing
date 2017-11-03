@@ -106,6 +106,7 @@ namespace Config
   extern Bool_t      doEACalc;
   extern Bool_t      doPtCalc;
   extern Bool_t      doStacks;
+  extern Bool_t      doMCStacks;
   extern Bool_t      doPhoStacks;
   extern Bool_t      doDemo;
   extern Bool_t      useDEG;

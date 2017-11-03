@@ -5,8 +5,6 @@
 #include "Config.hh"
 #include "CommonUtils.hh"
 
-#include "TFile.h"
-
 class StackGEDOOT
 {
 public:

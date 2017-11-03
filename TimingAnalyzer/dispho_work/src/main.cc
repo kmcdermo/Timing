@@ -6,6 +6,7 @@
 #include "../interface/EACalculator.hh"
 #include "../interface/PtCalculator.hh"
 #include "../interface/StackDataMC.hh"
+#include "../interface/StackMCOnly.hh"
 #include "../interface/StackGEDOOT.hh"
 
 #include "TROOT.h"
@@ -185,6 +186,7 @@ int main(int argc, const char* argv[])
 	"  --do-EA                       calculate effective area for isolation (def: %s)\n"
 	"  --do-Pt                       calculate pt scaling for isolation (def: %s)\n"
 	"  --do-stacks                   stack data/MC plots (def: %s)\n"
+	"  --do-mcstacks                 stack signal/bkgd plots (def: %s)\n"
 	"  --do-phostacks                stack GED/OOT plots (def: %s)\n"
 	"  --do-demo                     demo analysis (def: %s)\n"
 	"  --use-DEG                     use doubleEG for data (def: %s)\n"
@@ -224,6 +226,7 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::doEACalc),
 	PrintBool(Config::doPtCalc),
 	PrintBool(Config::doStacks),
+	PrintBool(Config::doMCStacks),
 	PrintBool(Config::doPhoStacks),
 	PrintBool(Config::doDemo),
 	PrintBool(Config::useDEG),
@@ -264,6 +267,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--do-EA")       { Config::doEACalc   = true;} 
     else if (*i == "--do-Pt")       { Config::doPtCalc   = true; }
     else if (*i == "--do-stacks")   { Config::doStacks   = true; }
+    else if (*i == "--do-mcstacks") { Config::doMCStacks = true; }
     else if (*i == "--do-phostacks"){ Config::doPhoStacks = true; }
     else if (*i == "--do-demo")     { Config::doDemo     = true; Config::doAnalysis = true; Config::doEvStd = true; Config::doPhoStd = true; }
     else if (*i == "--use-DEG")     { Config::useDEG     = true; }
@@ -428,6 +432,23 @@ int main(int argc, const char* argv[])
   else 
   {
     std::cout << "Skipping stacking data over MC" << std::endl;
+  }
+  std::cout << std::endl;
+
+  ///////////////////////
+  // Stack signal/bkgd //
+  ///////////////////////
+
+  if (Config::doMCStacks) 
+  {
+    std::cout << "Starting Signal/Bkgd stacker" << std::endl;
+    StackMCOnly Stacker;
+    Stacker.DoStacks();
+    std::cout << "Finished stacking Signal/Bkgd plots" << std::endl;
+  }
+  else 
+  {
+    std::cout << "Skipping stacking Signal/Bkgd" << std::endl;
   }
   std::cout << std::endl;
 

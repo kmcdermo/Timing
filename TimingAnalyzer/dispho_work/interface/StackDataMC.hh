@@ -5,13 +5,6 @@
 #include "Config.hh"
 #include "CommonUtils.hh"
 
-#include "TFile.h"
-#include "THStack.h"
-
-typedef std::vector<TFile*>   TFileVec;
-typedef std::vector<TH1FVec>  TH1FVecVec;
-typedef std::vector<THStack*> THStackVec;
-
 class StackDataMC
 {
 public:
@@ -70,7 +63,6 @@ private:
   TPadVec    fOutTH1FRatioPads;
 
   TString fOutDir;
-  TString fOutName;
   TFile * fOutFile;
 };
 

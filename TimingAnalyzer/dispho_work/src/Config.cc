@@ -10,6 +10,7 @@ namespace Config
   Bool_t  doEACalc   = false;
   Bool_t  doPtCalc   = false;
   Bool_t  doStacks   = false;
+  Bool_t  doMCStacks = false;
   Bool_t  doPhoStacks = false;
   Bool_t  doDemo     = false;
   Bool_t  useDEG     = false; 

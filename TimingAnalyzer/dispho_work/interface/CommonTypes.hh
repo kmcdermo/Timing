@@ -3,6 +3,8 @@
 
 #include "TString.h"
 #include "TH1F.h"
+#include "THStack.h"
+#include "TFile.h"
 #include "TLine.h"
 #include "TColor.h"
 #include "TLegend.h"
@@ -46,7 +48,10 @@ typedef TStrMap::iterator     TStrMapIter;
 typedef TStrBoolMap::iterator TStrBoolMapIter;
 typedef TStrFltMap::iterator  TStrFltMapIter;
 
+typedef std::vector<TFile*>   TFileVec;
 typedef std::vector<TH1F*>    TH1FVec;
+typedef std::vector<TH1FVec>  TH1FVecVec;
+typedef std::vector<THStack*> THStackVec;
 typedef std::vector<TLine*>   TLineVec;
 typedef std::vector<TLegend*> TLegVec;
 typedef std::vector<TCanvas*> TCanvVec;
