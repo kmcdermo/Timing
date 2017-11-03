@@ -298,6 +298,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   h_cutflow->Fill(1.,evtwgt);
 
   // HT pre-selection
+  jetHT = 0.f;
   if (jetsH.isValid()) // check to make sure reco jets exist
   {
     for (const auto& jet : jets)
