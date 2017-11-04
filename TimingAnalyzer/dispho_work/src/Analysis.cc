@@ -1578,9 +1578,13 @@ void Analysis::InitConfigBranches()
   fConfigTree->SetBranchAddress("trackpTmin", &trackpTmin, &b_trackpTmin);
   fConfigTree->SetBranchAddress("inputPaths", &inputPaths, &b_inputPaths);
   fConfigTree->SetBranchAddress("inputFilters", &inputFilters, &b_inputFilters);
-  fConfigTree->SetBranchAddress("isGMSB", &isGMSB, &b_isGMSB);
-  fConfigTree->SetBranchAddress("isHVDS", &isHVDS, &b_isHVDS);
-  fConfigTree->SetBranchAddress("isBkgd", &isBkgd, &b_isBkgd);
-  fConfigTree->SetBranchAddress("xsec", &xsec, &b_xsec);
-  fConfigTree->SetBranchAddress("filterEff", &filterEff, &b_filterEff);
+
+  if (fIsMC)
+  {
+    fConfigTree->SetBranchAddress("isGMSB", &isGMSB, &b_isGMSB);
+    fConfigTree->SetBranchAddress("isHVDS", &isHVDS, &b_isHVDS);
+    fConfigTree->SetBranchAddress("isBkgd", &isBkgd, &b_isBkgd);
+    fConfigTree->SetBranchAddress("xsec", &xsec, &b_xsec);
+    fConfigTree->SetBranchAddress("filterEff", &filterEff, &b_filterEff);
+  }
 }
