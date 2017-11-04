@@ -142,10 +142,10 @@ void StackEffs::DrawCanvas(const Int_t teff)
   for (Int_t sample = 0; sample < fNSample; sample++) 
   {
     fOutTGAEs[teff][sample]->SetMinimum(0.f);
-    fOutTGAEs[teff][sample]->SetMaximum(1.05);
+    fOutTGAEs[teff][sample]->SetMaximum(1.5);
 
     // draw first so labels appear
-    fOutTGAEs[teff][sample]->Draw(sample>0?"LP SAME":"ALP"); 
+    fOutTGAEs[teff][sample]->Draw(sample>0?"P SAME":"AP"); 
   }
 
   // make sure to include the legend!
