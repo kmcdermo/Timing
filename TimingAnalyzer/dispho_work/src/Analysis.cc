@@ -132,6 +132,24 @@ void Analysis::EventLoop()
   if (Config::doIsoPt)    Analysis::OutputIsoPtPlots();
 }
 
+Bool_t Analysis::IsGoodPho(const Pho & pho)
+{
+  if (fIsMC)
+  {
+    if (fIsGMSB || fIsHVDS)
+    {
+      if (!pho.isGen) return false;
+    }
+    else 
+    {
+      if (pho.isGen) return false;
+    }
+  }
+  if (pho.pt < 70.f) return false;
+  
+  return true;
+}
+
 void Analysis::SetupEventStandardPlots()
 {
   // event based variables
@@ -288,6 +306,8 @@ void Analysis::FillPhotonStandardPlots(const Int_t Nphotons, const Float_t weigh
     const Int_t iPho = (!pho.isOOT ? iged++ : ioot++);
     const TString name = Form("%i_%s_%s", (Config::splitPho ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
 
+    if (!Analysis::IsGoodPho(pho)) continue;
+
     stdphoTH1Map[Form("phopt_%s",name.Data())]->Fill(pho.pt,weight);
     stdphoTH1Map[Form("phophi_%s",name.Data())]->Fill(pho.phi,weight);
     stdphoTH1Map[Form("phoeta_%s",name.Data())]->Fill(pho.eta,weight);
@@ -315,8 +335,7 @@ void Analysis::FillIsoPlots(const Int_t Nphotons, const Float_t weight)
     const Int_t iPho = (!pho.isOOT ? iged++ : ioot++);
     const TString name = Form("%i_%s_%s", (Config::splitPho ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
 
-    if (!pho.isGen) continue;
-    if (pho.pt < 40.f) continue;
+    if (!Analysis::IsGoodPho(pho)) continue;
 
     const float abseta = std::abs(pho.sceta);
     
@@ -382,9 +401,6 @@ void Analysis::FillIsoPtPlots(const Int_t Nphotons, const Float_t weight)
 //     const float ecalPFClIso = std::max(pho.EcalPFClIso - rho * GetEcalPFClEA(pho.isEB),0.f);
 //     const float hcalPFClIso = std::max(pho.HcalPFClIso - rho * GetHcalPFClEA(pho.isEB),0.f);
 //     const float trkIso      = std::max(pho.TrkIso      - rho * GetTrackEA   (pho.isEB),0.f);
-
-    if (!pho.isGen) continue;
-    if (pho.pt < 40.f) continue;
 
     const float chgHadIso = pho.ChgHadIso;
     const float neuHadIso = pho.NeuHadIso;

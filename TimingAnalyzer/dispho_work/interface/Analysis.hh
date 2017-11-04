@@ -23,6 +23,7 @@ public:
   void InitConfigStrings();
   void InitConfigBranches();
   void EventLoop();
+  Bool_t IsGoodPho(const Pho & pho);
   void SetupEventStandardPlots();
   void SetupPhotonStandardPlots();
   void SetupIsoPlots();
