@@ -34,6 +34,7 @@ namespace Config
   Bool_t  doIso      = false;
   Bool_t  doIsoNvtx  = false;
   Bool_t  doIsoPt    = false;
+  Bool_t  doPhoEff   = false;
   Bool_t  useMeanIso = false;
   Bool_t  useMeanRho = true;
   Bool_t  useMeanPt  = false;

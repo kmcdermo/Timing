@@ -90,6 +90,7 @@ void Analysis::EventLoop()
   if (Config::doIso)      Analysis::SetupIsoPlots();
   if (Config::doIsoNvtx)  Analysis::SetupIsoNvtxPlots();
   if (Config::doIsoPt)    Analysis::SetupIsoPtPlots();
+  if (Config::doPhoEff)   Analysis::SetupPhotonEffPlots();
 
   // do loop over events, filling histos
   const UInt_t nEntries = (Config::doDemo?Config::demoNum:fInTree->GetEntries());
@@ -122,6 +123,7 @@ void Analysis::EventLoop()
     if (Config::doIso)      Analysis::FillIsoPlots(Nphotons,weight);
     if (Config::doIsoNvtx)  Analysis::FillIsoNvtxPlots(Nphotons,weight);
     if (Config::doIsoPt)    Analysis::FillIsoPtPlots(Nphotons,weight);
+    if (Config::doPhoEff)   Analysis::FillPhotonEffPlots(Nphotons,weight);
   } // end loop over events
 
    // output hists
@@ -130,6 +132,7 @@ void Analysis::EventLoop()
   if (Config::doIso)      Analysis::OutputIsoPlots();
   if (Config::doIsoNvtx)  Analysis::OutputIsoNvtxPlots();
   if (Config::doIsoPt)    Analysis::OutputIsoPtPlots();
+  if (Config::doPhoEff)   Analysis::OutputPhotonEffPlots();
 }
 
 Bool_t Analysis::IsGoodPho(const Pho & pho)
@@ -147,6 +150,23 @@ Bool_t Analysis::IsGoodPho(const Pho & pho)
   }
   if (pho.pt < 70.f) return false;
   
+  return true;
+}
+
+Bool_t Analysis::PassOOTID(const Pho & pho)
+{
+  if (pho.HoE > 0.0396) return false;
+  if (pho.sieie > 0.01022) return false;
+  
+  const Float_t ecalPFClIso = std::max(pho.EcalPFClIso - rho * GetEcalPFClEA(pho.isEB) - GetEcalPFClPt(pho.isEB,pho.pt),0.f);
+  if (ecalPFClIso > 8.f) return false;
+
+  const Float_t hcalPFClIso = std::max(pho.HcalPFClIso - rho * GetHcalPFClEA(pho.isEB) - GetHcalPFClPt(pho.isEB,pho.pt),0.f);
+  if (hcalPFClIso > 8.f) return false;
+
+  const Float_t trkIso      = std::max(pho.TrkIso      - rho * GetTrackEA   (pho.isEB) - GetTrackPt   (pho.isEB,pho.pt),0.f);
+  if (trkIso > 6.f) return false;
+
   return true;
 }
 
@@ -217,17 +237,17 @@ void Analysis::SetupIsoPlots()
 	const TString title = Form("%s - %s",split.Data(),region.Data());
 
 	isoTH1Map[Form("phochgiso_%s",name.Data())] = 
-	  Analysis::MakeTH1Plot(Form("phochgiso_%s",name.Data()),"",50,0.,20.f,Form("Photon %i PF Charged Hadron Iso (%s)",ipho,title.Data()),ytitle,isoTH1SubMap,dir);
+	  Analysis::MakeTH1Plot(Form("phochgiso_%s",name.Data()),"",60,0.f,30.f,Form("Photon %i PF Charged Hadron Iso (%s)",ipho,title.Data()),ytitle,isoTH1SubMap,dir);
 	isoTH1Map[Form("phoneuiso_%s",name.Data())] = 
-	  Analysis::MakeTH1Plot(Form("phoneuiso_%s",name.Data()),"",50,0.,20.f,Form("Photon %i PF Neutral Hadron Iso (%s)",ipho,title.Data()),ytitle,isoTH1SubMap,dir);
+	  Analysis::MakeTH1Plot(Form("phoneuiso_%s",name.Data()),"",60,0.f,30.f,Form("Photon %i PF Neutral Hadron Iso (%s)",ipho,title.Data()),ytitle,isoTH1SubMap,dir);
 	isoTH1Map[Form("phophoiso_%s",name.Data())] = 
-	  Analysis::MakeTH1Plot(Form("phophoiso_%s",name.Data()),"",50,0.,20.f,Form("Photon %i PF Photon Iso (%s)",ipho,title.Data()),ytitle,isoTH1SubMap,dir);
+	  Analysis::MakeTH1Plot(Form("phophoiso_%s",name.Data()),"",60,0.f,30.f,Form("Photon %i PF Photon Iso (%s)",ipho,title.Data()),ytitle,isoTH1SubMap,dir);
 	isoTH1Map[Form("phoecaliso_%s",name.Data())] = 
-	  Analysis::MakeTH1Plot(Form("phoecaliso_%s",name.Data()),"",50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (%s)",ipho,title.Data()),ytitle,isoTH1SubMap,dir);
+	  Analysis::MakeTH1Plot(Form("phoecaliso_%s",name.Data()),"",60,0.f,30.f,Form("Photon %i PFCluser ECAL Iso (%s)",ipho,title.Data()),ytitle,isoTH1SubMap,dir);
 	isoTH1Map[Form("phohcaliso_%s",name.Data())] = 
-	  Analysis::MakeTH1Plot(Form("phohcaliso_%s",name.Data()),"",50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (%s)",ipho,title.Data()),ytitle,isoTH1SubMap,dir);
+	  Analysis::MakeTH1Plot(Form("phohcaliso_%s",name.Data()),"",60,0.f,30.f,Form("Photon %i PFCluser HCAL Iso (%s)",ipho,title.Data()),ytitle,isoTH1SubMap,dir);
 	isoTH1Map[Form("photrkiso_%s",name.Data())] = 
-	  Analysis::MakeTH1Plot(Form("photrkiso_%s",name.Data()),"",50,0.,20.f,Form("Photon %i Track Iso (%s)",ipho,title.Data()),ytitle,isoTH1SubMap,dir);
+	  Analysis::MakeTH1Plot(Form("photrkiso_%s",name.Data()),"",60,0.f,30.f,Form("Photon %i Track Iso (%s)",ipho,title.Data()),ytitle,isoTH1SubMap,dir);
       } // end loop over split by type or inclusive
     } // end loop over regions
   } // end loop over nphotons
@@ -248,11 +268,11 @@ void Analysis::SetupIsoNvtxPlots()
 	const TString title = Form("%s - %s",split.Data(),region.Data());
 
 	isonvtxTH2Map[Form("phoecaliso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("phoecaliso_%s",name.Data()),"",Config::nBinsX_iso,0,Config::xhigh_iso,xtitle,50,0.,20.f,Form("Photon %i PFCluser ECAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("phoecaliso_%s",name.Data()),"",Config::nBinsX_iso,0,Config::xhigh_iso,xtitle,60,0.f,30.f,Form("Photon %i PFCluser ECAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
 	isonvtxTH2Map[Form("phohcaliso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("phohcaliso_%s",name.Data()),"",Config::nBinsX_iso,0,Config::xhigh_iso,xtitle,50,0.,20.f,Form("Photon %i PFCluser HCAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("phohcaliso_%s",name.Data()),"",Config::nBinsX_iso,0,Config::xhigh_iso,xtitle,60,0.f,30.f,Form("Photon %i PFCluser HCAL Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
 	isonvtxTH2Map[Form("photrkiso_%s",name.Data())] = 
-	  Analysis::MakeTH2Plot(Form("photrkiso_%s",name.Data()),"",Config::nBinsX_iso,0,Config::xhigh_iso,xtitle,50,0.,20.f,Form("Photon %i Track Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
+	  Analysis::MakeTH2Plot(Form("photrkiso_%s",name.Data()),"",Config::nBinsX_iso,0,Config::xhigh_iso,xtitle,60,0.f,30.f,Form("Photon %i Track Iso (%s)",ipho,title.Data()),isonvtxTH2SubMap,dir);
       } // end loop over split by type or inclusive
     } // end loop over regions
   } // end loop over nphotons
@@ -285,6 +305,32 @@ void Analysis::SetupIsoPtPlots()
 	  Analysis::MakeTH2Plot(Form("phohcaliso_%s",name.Data()),"",Config::nBinsX_pt,Config::xlow_pt,Config::xhigh_pt,xtitle,Config::nBinsX_pt,0,Config::xhigh_pt,Form("Photon %i PFCluser HCAL Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
 	isoptTH2Map[Form("photrkiso_%s",name.Data())] = 
 	  Analysis::MakeTH2Plot(Form("photrkiso_%s",name.Data()),"",Config::nBinsX_pt,Config::xlow_pt,Config::xhigh_pt,xtitle,Config::nBinsX_pt,0,Config::xhigh_pt,Form("Photon %i Track Iso (%s)",ipho,title.Data()),isoptTH2SubMap,dir);
+
+      } // end loop over split by type or inclusive
+    } // end loop over regions
+  } // end loop over nphotons
+}
+
+void Analysis::SetupPhotonEffPlots()
+{
+  // Photons
+  const TString ytitle = "Efficiency";
+  const TString dir = "photon/eff";
+  for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++)
+  {
+    for (const auto & region : Config::regions)
+    {
+      for (const auto & split : Config::splits)
+      {
+	const TString name  = Form("%i_%s_%s",ipho,region.Data(),split.Data());
+	const TString title = Form("%s - %s",split.Data(),region.Data());
+
+	phoTEffMap[Form("effpt_%s",name.Data())] = 
+	  Analysis::MakeTEffPlot(Form("effpt_%s",name.Data()),Form(";Photon %i p_{T} (%s);%s",ipho,title.Data(),ytitle.Data()),50,0.,1000.f,phoTEffSubMap,dir);
+	phoTEffMap[Form("effeta_%s",name.Data())] = 
+	  Analysis::MakeTEffPlot(Form("effeta_%s",name.Data()),Form(";Photon %i #eta (%s);%s",ipho,title.Data(),ytitle.Data()),32,-Config::PI,Config::PI,phoTEffSubMap,dir);
+	phoTEffMap[Form("effphi_%s",name.Data())] = 
+	  Analysis::MakeTEffPlot(Form("effphi_%s",name.Data()),Form(";Photon %i #phi (%s);%s",ipho,title.Data(),ytitle.Data()),50,-5.f,5.f,phoTEffSubMap,dir);
 
       } // end loop over split by type or inclusive
     } // end loop over regions
@@ -420,6 +466,24 @@ void Analysis::FillIsoPtPlots(const Int_t Nphotons, const Float_t weight)
   } // end loop over nphotons
 }      
 
+void Analysis::FillPhotonEffPlots(const Int_t Nphotons, const Float_t weight)
+{
+  Int_t iged = 0, ioot = 0;
+  for (Int_t ipho = 0; ipho < Nphotons; ipho++)
+  {
+    const auto & pho = phos[ipho];
+    const Int_t iPho = (!pho.isOOT ? iged++ : ioot++);
+    const TString name = Form("%i_%s_%s", (Config::splitPho ? iPho : ipho), (pho.isEB ? "EB" : "EE"), (!pho.isOOT ? "GED" : "OOT"));
+    
+    if (!Analysis::IsGoodPho(pho)) continue;
+    const Bool_t passed = Analysis::PassOOTID(pho);
+    
+    phoTEffMap[Form("effpt_%s",name.Data())]->FillWeighted(passed,weight,pho.pt);
+    phoTEffMap[Form("effeta_%s",name.Data())]->FillWeighted(passed,weight,pho.eta);
+    phoTEffMap[Form("effphi_%s",name.Data())]->FillWeighted(passed,weight,pho.phi);
+  }
+}
+
 void Analysis::OutputEventStandardPlots() 
 {
   MakeSubDirs(stdevTH1SubMap,fOutDir);
@@ -480,6 +544,14 @@ void Analysis::OutputIsoPtPlots()
     Analysis::Make1DFrom2DPlots(mapiter->second,isoptTH2SubMap[name],name);
   }
   Analysis::DeleteTH2s(isoptTH2Map);
+}
+
+void Analysis::OutputPhotonEffPlots() 
+{
+  MakeSubDirs(phoTEffSubMap,fOutDir);
+  Analysis::MakeInclusiveTEffs(phoTEffMap,phoTEffSubMap);
+  Analysis::SaveTEffs(phoTEffMap,phoTEffSubMap);
+  Analysis::DeleteTEffs(phoTEffMap);
 }
 
 void Analysis::MakeInclusiveTH1s(TH1Map & th1map, TStrMap & subdirmap)
@@ -727,6 +799,120 @@ void Analysis::MakeInclusiveRegionTH2s(TH2Map & th2map, TStrMap & subdirmap)
     // add EE second
     name.ReplaceAll(drop,swap);
     th2map[hname]->Add(th2map[name]);
+  }
+}
+
+void Analysis::MakeInclusiveTEffs(TEffMap & teffmap, TStrMap & subdirmap)
+{
+  Analysis::MakeInclusiveNphoTEffs(teffmap,subdirmap);
+  Analysis::MakeInclusiveSplitTEffs(teffmap,subdirmap);
+}
+
+void Analysis::MakeInclusiveNphoTEffs(TEffMap & teffmap, TStrMap & subdirmap) 
+{
+  // Use leading photon as base (i.e. pho0)
+  const TString drop = "0"; 
+  TStrVec names;
+  for (TEffMapIter mapiter = teffmap.begin(); mapiter != teffmap.end(); ++mapiter) 
+  {
+    TString name = mapiter->second->GetName();
+    if (name.Contains(drop,TString::kExact)) names.emplace_back(name);
+  }
+
+  const Ssiz_t length = drop.Length();
+  for (auto & name : names)
+  {
+    // prep declaration of inclusive hist
+    TString hname = name; 
+    const Ssiz_t hnamepos = hname.Index(drop);
+    hname.Remove(hnamepos-1,length+1); // account for "_0"
+    
+    // need a temp th1 to get axis info -__-
+    TH1F * tmphist = (TH1F*)teffmap[name]->GetCopyTotalHisto();
+
+    // get titles 
+    TString xtitle = tmphist->GetXaxis()->GetTitle();
+    const Ssiz_t xtitlepos = xtitle.Index(drop);
+    xtitle.Remove(xtitlepos-1,length+1); // account for " 0"
+    xtitle.ReplaceAll("Photon","All Photons");
+    const TString ytitle = tmphist->GetYaxis()->GetTitle();
+    const TString titles = ";"+xtitle+";"+ytitle;
+
+    // get bin info
+    const Int_t    nbinsx = tmphist->GetXaxis()->GetNbins();
+    const Double_t xlow   = tmphist->GetXaxis()->GetBinLowEdge(1);
+    const Double_t xhigh  = tmphist->GetXaxis()->GetBinUpEdge(nbinsx);
+    
+    // delete tmp hist
+    delete tmphist;
+
+    // make inclusive teff
+    teffmap[hname] = Analysis::MakeTEffPlot(hname,titles,nbinsx,xlow,xhigh,subdirmap,subdirmap[name]);
+
+    std::cout << teffmap[hname]->GetName() << std::endl;
+
+
+    TString tmpdrop = drop;
+    for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++)
+    {
+      const TString swap = Form("%i",ipho);
+      name.ReplaceAll(tmpdrop,swap);
+      teffmap[hname]->Add(*teffmap[name]);
+      tmpdrop = swap;
+    }
+  }
+}
+
+void Analysis::MakeInclusiveSplitTEffs(TEffMap & teffmap, TStrMap & subdirmap) 
+{
+  // Use GED photons as the base
+  const TString drop = "GED";
+  TStrVec names;
+  for (TEffMapIter mapiter = teffmap.begin(); mapiter != teffmap.end(); ++mapiter) 
+  {
+    TString name = mapiter->second->GetName();
+    if (name.Contains(drop,TString::kExact)) names.emplace_back(name);
+  }
+
+  // loop over names and adjust them accordingly
+  const Ssiz_t length = drop.Length();
+  const TString swap = "OOT";
+  for (auto & name : names)
+  {
+    // prep declaration of inclusive hist
+    TString hname = name; 
+    const Ssiz_t hnamepos = hname.Index(drop);
+    hname.Remove(hnamepos-1,length+1); // account for "_GED"
+    
+    // need a temp th2 to get axis info -__-
+    TH1F * tmphist = (TH1F*)teffmap[name]->GetCopyTotalHisto();
+
+    // get titles 
+    TString xtitle = tmphist->GetXaxis()->GetTitle();
+    const Ssiz_t xtitlepos = xtitle.Index(drop);
+    xtitle.Remove(xtitlepos,length+3); // account for "GED - "
+    const TString ytitle = tmphist->GetYaxis()->GetTitle();
+    const TString titles = ";"+xtitle+";"+ytitle;
+
+    // get bin info
+    const Int_t    nbinsx = tmphist->GetXaxis()->GetNbins();
+    const Double_t xlow   = tmphist->GetXaxis()->GetBinLowEdge(1);
+    const Double_t xhigh  = tmphist->GetXaxis()->GetBinUpEdge(nbinsx);
+    
+    // delete tmp hist
+    delete tmphist;
+
+    // make inclusive teff
+    teffmap[hname] = Analysis::MakeTEffPlot(hname,titles,nbinsx,xlow,xhigh,subdirmap,subdirmap[name]);
+
+    std::cout << teffmap[hname]->GetName() << std::endl;
+
+    // add GED first
+    teffmap[hname]->Add(*teffmap[name]);
+
+    // add OOT second
+    name.ReplaceAll(drop,swap);
+    teffmap[hname]->Add(*teffmap[name]);
   }
 }
 
@@ -980,6 +1166,18 @@ TH2F * Analysis::MakeTH2Plot(const TString & hname, const TString & htitle, cons
   return hist;
 }
 
+TEfficiency * Analysis::MakeTEffPlot(const TString & hname, const TString & titles, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh,
+				     TStrMap& subdirmap, const TString & subdir) 
+{
+  TEfficiency * eff = new TEfficiency(hname.Data(),titles.Data(),nbinsx,xlow,xhigh);
+  eff->SetUseWeightedEvents();
+
+  // cheat a bit and set subdir map here
+  subdirmap[hname] = subdir;
+  
+  return eff;
+}
+
 void Analysis::SaveTH1s(TH1Map & th1map, TStrMap & subdirmap) 
 {
   fOutFile->cd();
@@ -1062,6 +1260,38 @@ void Analysis::SaveTH2s(TH2Map & th2map, TStrMap & subdirmap)
   delete canv;
 }
 
+void Analysis::SaveTEffs(TEffMap & teffmap, TStrMap & subdirmap) 
+{
+  fOutFile->cd();
+  
+  TCanvas * canv = new TCanvas("canv","canv");
+  for (TEffMapIter mapiter = teffmap.begin(); mapiter != teffmap.end(); ++mapiter) 
+  { 
+    // save to output file
+    mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); // map is map["hist name",TEff*]
+
+    std::cout << mapiter->second->GetName() << std::endl;
+
+    if (Config::saveHists)
+    {
+      // now draw onto canvas to save as png
+      canv->cd();
+      mapiter->second->Draw( fIsMC ? "HIST" : "PE" );
+      
+      // first save as logY, then linearY
+      canv->SetLogy(1);
+      CMSLumi(canv);
+      canv->SaveAs(Form("%s/%s/log/%s.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),Config::outtype.Data()));
+    
+      canv->SetLogy(0);
+      CMSLumi(canv);
+      canv->SaveAs(Form("%s/%s/lin/%s.%s",fOutDir.Data(),subdirmap[mapiter->first].Data(),mapiter->first.Data(),Config::outtype.Data()));
+    } // end check on save hists
+  } // end loop over hists
+
+  delete canv;
+}
+
 void Analysis::DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap) 
 {
   for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
@@ -1094,6 +1324,15 @@ void Analysis::DeleteTH2s(TH2Map & th2map)
     delete (mapiter->second);
   }
   th2map.clear();
+}
+
+void Analysis::DeleteTEffs(TEffMap & teffmap) 
+{
+  for (TEffMapIter mapiter = teffmap.begin(); mapiter != teffmap.end(); ++mapiter) 
+  { 
+    delete (mapiter->second);
+  }
+  teffmap.clear();
 }
 
 void Analysis::InitTree() 

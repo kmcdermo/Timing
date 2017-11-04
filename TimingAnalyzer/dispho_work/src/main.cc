@@ -213,6 +213,7 @@ int main(int argc, const char* argv[])
 	"  --do-iso                      make isolation plots (def: %s)\n"
 	"  --do-isonvtx                  make isolation vs nvtx plots (def: %s)\n"
 	"  --do-isopt                    make isolation vs pt plots (def: %s)\n"
+	"  --do-pho-eff                  make photon efficiency calc (def: %s)\n"
 	"  --use-mean-iso                use mean of projected histo for isolation value (def: %s)\n"
 	"  --use-mean-rho                use mean of projected histo for rho (def: %s)\n"
 	"  --use-mean-pt                 use mean of projected histo for iso vs pt (def: %s)\n"
@@ -253,6 +254,7 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::doIso),
 	PrintBool(Config::doIsoNvtx),
 	PrintBool(Config::doIsoPt),
+	PrintBool(Config::doPhoEff),
 	PrintBool(Config::useMeanIso),
 	PrintBool(Config::useMeanRho),
 	PrintBool(Config::useMeanPt),
@@ -294,6 +296,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--do-iso")      { Config::doAnalysis = true; Config::doIso      = true; }
     else if (*i == "--do-isonvtx")  { Config::doAnalysis = true; Config::doIsoNvtx  = true; }
     else if (*i == "--do-isopt")    { Config::doAnalysis = true; Config::doIsoPt    = true; }
+    else if (*i == "--do-pho-eff")  { Config::doAnalysis = true; Config::doPhoEff   = true; }
     else if (*i == "--use-mean-iso"){ Config::doAnalysis = true; Config::doIsoNvtx  = true; Config::useMeanIso = true; }
     else if (*i == "--use-mean-rho"){ Config::doAnalysis = true; Config::doEvStd    = true; Config::useMeanRho = true; }
     else if (*i == "--use-mean-pt") { Config::doAnalysis = true; Config::doIsoPt    = true; Config::useMeanPt  = true; }

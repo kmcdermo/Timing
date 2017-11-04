@@ -118,7 +118,7 @@ void StackMCOnly::MakeStackMCOnly()
     // add stacks once renormalized
     for (Int_t bkgd = 0; bkgd < fNBkgd; bkgd++) 
     {
-      fInBkgdTH1FHists[th1f][bkgd]->Scale(fInBkgdTH1FHists[th1f][bkgd]->Integral() / bkgdIntegral);
+      fInBkgdTH1FHists[th1f][bkgd]->Scale(1.f/bkgdIntegral);
       fOutBkgdTH1FStacks[th1f]->Add(fInBkgdTH1FHists[th1f][bkgd]); // add scaled bkgds to stacks
       fTH1FLegends[th1f]->AddEntry(fInBkgdTH1FHists[th1f][bkgd],Config::TitleMap[fBkgdNames[bkgd]],"f");
     }
@@ -219,7 +219,7 @@ Double_t StackMCOnly::GetMinimum(const Int_t th1f)
     for (Int_t ibin = 1; ibin <= fInSignalTH1FHists[th1f][signal]->GetNbinsX(); ibin++)
     {     
       const Double_t content = fInSignalTH1FHists[th1f][signal]->GetBinContent(ibin);
-      if (content < min && min != 0.) min = content;
+      if (content < min && content != 0) min = content;
     }
   }
 
@@ -229,7 +229,7 @@ Double_t StackMCOnly::GetMinimum(const Int_t th1f)
     for (Int_t ibin = 1; ibin <= fInBkgdTH1FHists[th1f][bkgd]->GetNbinsX(); ibin++)
     {     
       const Double_t content = fInBkgdTH1FHists[th1f][bkgd]->GetBinContent(ibin);
-      if (content < min && min != 0.) min = content;
+      if (content < min && content != 0) min = content;
     }
   }
 

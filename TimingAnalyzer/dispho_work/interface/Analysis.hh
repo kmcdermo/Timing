@@ -24,21 +24,25 @@ public:
   void InitConfigBranches();
   void EventLoop();
   Bool_t IsGoodPho(const Pho & pho);
+  Bool_t PassOOTID(const Pho & pho);
   void SetupEventStandardPlots();
   void SetupPhotonStandardPlots();
   void SetupIsoPlots();
   void SetupIsoNvtxPlots();
   void SetupIsoPtPlots();
+  void SetupPhotonEffPlots();
   void FillEventStandardPlots(const Float_t weight);
   void FillPhotonStandardPlots(const Int_t Nphotons, const Float_t weight);
   void FillIsoPlots(const Int_t Nphotons, const Float_t weight);
   void FillIsoNvtxPlots(const Int_t Nphotons, const Float_t weight);
   void FillIsoPtPlots(const Int_t Nphotons, const Float_t weight);
+  void FillPhotonEffPlots(const Int_t Nphotons, const Float_t weight);
   void OutputEventStandardPlots();
   void OutputPhotonStandardPlots();
   void OutputIsoPlots();
   void OutputIsoNvtxPlots();
   void OutputIsoPtPlots();
+  void OutputPhotonEffPlots();
   void MakeInclusiveTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void MakeInclusiveNphoTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void MakeInclusiveSplitTH1s(TH1Map & th1map, TStrMap & subdirmap);
@@ -47,6 +51,9 @@ public:
   void MakeInclusiveNphoTH2s(TH2Map & th2map, TStrMap & subdirmap);
   void MakeInclusiveSplitTH2s(TH2Map & th2map, TStrMap & subdirmap);
   void MakeInclusiveRegionTH2s(TH2Map & th2map, TStrMap & subdirmap);
+  void MakeInclusiveTEffs(TEffMap & teffmap, TStrMap & subdirmap);
+  void MakeInclusiveNphoTEffs(TEffMap & teffmap, TStrMap & subdirmap);
+  void MakeInclusiveSplitTEffs(TEffMap & teffmap, TStrMap & subdirmap);
   void Make1DFrom2DPlots(const TH2F * hist2d, const TString & subdir2d, const TString & name);
   void Project2Dto1D(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrMap & subdir1dmap, TStrIntMap & th1dbinmap);
   void ProduceQuantile(const TH2F * hist2d, const TString & subdir2d, TH1Map & th1dmap, TStrIntMap & th1dbinmap);
@@ -60,13 +67,17 @@ public:
 		     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString & ytitle, TStrMap& subdirmap, const TString & subdir);
   TH2F * MakeTH2Plot(const TString & hname, const TString & htitle, const DblVec& vxbins, const TString & xtitle, 
 		     const Int_t nbinsy, const Double_t ylow, const Double_t yhigh, const TString & ytitle, TStrMap& subdirmap, const TString & subdir);
+  TEfficiency * MakeTEffPlot(const TString & hname, const TString & titles, const Int_t nbinsx, const Double_t xlow, const Double_t xhigh,
+			     TStrMap& subdirmap, const TString & subdir);
   void SaveTH1s(TH1Map & th1map, TStrMap & subdirmap);
   void SaveProjectedTH1(TH1F * hist, const TString & subdir2d);
   void SaveTH2s(TH2Map & th2map, TStrMap & subdirmap);
+  void SaveTEffs(TEffMap & teffmap, TStrMap & subdirmap);
   void DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap);
   void DumpTH1PhoNames(TH1Map & th1map, TStrMap & subdirmap);
   void DeleteTH1s(TH1Map & th1map);
   void DeleteTH2s(TH2Map & th2map);
+  void DeleteTEffs(TEffMap & teffmap);
 
 private:
   // Input
@@ -88,6 +99,7 @@ private:
   TFile*  fOutFile;
   std::ofstream fTH1Dump; 
   std::ofstream fTH1PhoDump; 
+  std::ofstream fPhoEff;
   
   // Output colors
   Color_t fColor;
@@ -101,7 +113,8 @@ private:
   TH1Map isoTH1Map; TStrMap isoTH1SubMap;
   TH2Map isonvtxTH2Map; TStrMap isonvtxTH2SubMap;
   TH2Map isoptTH2Map; TStrMap isoptTH2SubMap;
-
+  TEffMap phoTEffMap; TStrMap phoTEffSubMap;
+  
   ///////////////////////////////////////////
   // Declaration of leaf types for fInTree //
   ///////////////////////////////////////////

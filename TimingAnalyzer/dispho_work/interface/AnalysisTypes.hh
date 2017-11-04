@@ -3,6 +3,7 @@
 
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TEfficiency.h"
 #include "TBranch.h"
 
 #include <map>
@@ -13,6 +14,9 @@ typedef TH1Map::iterator        TH1MapIter;
 
 typedef std::map<TString,TH2F*> TH2Map;
 typedef TH2Map::iterator        TH2MapIter;
+
+typedef std::map<TString,TEfficiency*> TEffMap;
+typedef TEffMap::iterator              TEffMapIter;
 
 struct GMSB
 {

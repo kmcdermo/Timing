@@ -90,19 +90,19 @@ inline float GetGammaPt(const bool isEB, const float pt)
 
 inline float GetEcalPFClEA(const bool isEB)
 {
-  if   (isEB) return 0.1579;
+  if   (isEB) return 0.167;
   else        return 0.;
 }
   
 inline float GetHcalPFClEA(const bool isEB) 
 {
-  if   (isEB) return 0.0785;
+  if   (isEB) return 0.108;
   else        return 0.;
 }
   
 inline float GetTrackEA(const bool isEB) 
 {
-  if   (isEB) return 0.0294;
+  if   (isEB) return 0.113;
   else        return 0.;
 }
 
@@ -110,20 +110,20 @@ inline float GetTrackEA(const bool isEB)
 
 inline float GetEcalPFClPt(const bool isEB, const float pt)
 {
-  if   (isEB) return 0.f*pt;
+  if   (isEB) return 0.0028*pt;
   else        return 0.f*pt;
 }
 
 inline float GetHcalPFClPt(const bool isEB, const float pt)
 {
-  if   (isEB) return 0.0148*pt + 0.000017*pt*pt;
-  else        return 0.0163*pt + 0.000014*pt*pt;
+  if   (isEB) return 0.0087*pt;
+  else        return 0.f*pt;
 }
 
 inline float GetTrackPt(const bool isEB, const float pt)
 {
-  if   (isEB) return 0.0047*pt;
-  else        return 0.0034*pt;
+  if   (isEB) return 0.0056*pt;
+  else        return 0.f*pt;
 }
 
 #endif
