@@ -1108,7 +1108,7 @@ TH1F * Analysis::MakeTH1Plot(const TString & hname, const TString & htitle, cons
 			     const TString & xtitle, const TString & ytitle, TStrMap& subdirmap, const TString & subdir) 
 {
   TH1F * hist = new TH1F(hname.Data(),htitle.Data(),nbinsx,xlow,xhigh);
-  hist->SetLineColor(kBlack);
+  hist->SetLineColor(fColor);
   hist->SetMarkerColor(fColor);
   if (fIsMC) hist->SetFillColor(fColor);
   hist->GetXaxis()->SetTitle(xtitle.Data());
