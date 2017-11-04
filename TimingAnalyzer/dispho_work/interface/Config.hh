@@ -27,7 +27,8 @@ namespace Config
   // Iso config
   constexpr    Int_t    nBinsX_iso = nbinsvtx/5;
   constexpr    Double_t xhigh_iso  = Double_t(nbinsvtx);
-  constexpr    Int_t    nBinsX_pt  = 20;
+  constexpr    Int_t    nBinsX_pt  = 120;
+  constexpr    Double_t xlow_pt    = 40;
   constexpr    Double_t xhigh_pt   = 1000;
 
   // selection config
@@ -61,7 +62,7 @@ namespace Config
   static const TString ptsubdir = "ptscale";
   static const TString ptdumpname = "ptscales.txt";
   static const TString ptformname = "pol1";
-  constexpr    Double_t xmin_pt = 0;
+  constexpr    Double_t xmin_pt = xlow_pt;
   constexpr    Double_t xmax_pt = xhigh_pt;
 
   // TDRStyle Config --> needed by stacker

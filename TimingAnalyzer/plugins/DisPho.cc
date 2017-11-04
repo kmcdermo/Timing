@@ -1272,8 +1272,8 @@ void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
 
 void DisPho::MakePhoBranchMC(const int i, phoStruct& phoBranch)
 {
-  if (isGMSB || isHVDS) tree->Branch(Form("isSignal_%i",i), &phoBranch.isSignal_, Form("isSignal_%i/I",i));
-  tree->Branch(Form("isGen_%i",i), &phoBranch.isGen_, Form("isGen_%i/O",i));
+  if (isGMSB || isHVDS) tree->Branch(Form("phoisSignal_%i",i), &phoBranch.isSignal_, Form("phoisSignal_%i/I",i));
+  tree->Branch(Form("phoisGen_%i",i), &phoBranch.isGen_, Form("phoisGen_%i/O",i));
 }
 
 void DisPho::endJob() {}

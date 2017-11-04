@@ -109,6 +109,12 @@ void InitializeMain(std::ofstream & yields, TStyle *& tdrStyle)
     Config::ColorMap [sample+label] = Config::mcColorMap [sample];
     Config::TitleMap [sample+label] = Config::mcTitleMap [sample];
   }
+
+  // Check number of photons to process!
+  if (Config::splitPho)
+  {
+    Config::nPhotons = Config::nTotalPhotons / 2; 
+  }
 }
 
 void DestroyMain(std::ofstream & yields, TStyle *& tdrStyle) 
@@ -278,7 +284,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--use-GJets-HT"){ Config::useGJetsHT = true; }
     else if (*i == "--use-GJets-EM"){ Config::useGJetsEM = true; }
     else if (*i == "--use-GJets-FlatPt") { Config::useGJetsFlatPt = true; }
-    else if (*i == "--split-pho")   { Config::splitPho   = true; Config::nPhotons   = Config::nTotalPhotons / 2; }
+    else if (*i == "--split-pho")   { Config::splitPho   = true; }
     else if (*i == "--do-evstd")    { Config::doAnalysis = true; Config::doEvStd    = true; }
     else if (*i == "--do-phostd")   { Config::doAnalysis = true; Config::doPhoStd   = true; }
     else if (*i == "--use-pfIsoEA") { Config::pfIsoEA    = true; }
