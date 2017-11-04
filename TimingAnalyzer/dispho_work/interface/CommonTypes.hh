@@ -10,6 +10,7 @@
 #include "TLegend.h"
 #include "TCanvas.h"
 #include "TPad.h"
+#include "TEfficiency.h"
 
 #include <list>
 #include <string>

@@ -86,8 +86,6 @@ void StackMCOnly::MakeStackMCOnly()
     for (Int_t signal = 0; signal < fNSignal; signal++) 
     {
       fInSignalTH1FHists[th1f][signal]->Scale(1.f/fInSignalTH1FHists[th1f][signal]->Integral());
-      fInSignalTH1FHists[th1f][signal]->SetLineColor(Config::ColorMap[fSignalNames[signal]]);
-      fInSignalTH1FHists[th1f][signal]->SetFillStyle(0);
       fInSignalTH1FHists[th1f][signal]->Scale(1.f/fInSignalTH1FHists[th1f][signal]->Integral());
       fTH1FLegends[th1f]->AddEntry(fInSignalTH1FHists[th1f][signal],Config::TitleMap[fSignalNames[signal]],"l"); // add data entry to legend
     } 
@@ -98,6 +96,9 @@ void StackMCOnly::MakeStackMCOnly()
       if (bkgd == 0) // add first for ratio
       {
 	fOutBkgdTH1FHists[th1f] = (TH1F*)fInBkgdTH1FHists[th1f][bkgd]->Clone(Form("%s_clone",fInBkgdTH1FHists[th1f][bkgd]->GetName()));
+	fOutBkgdTH1FHists[th1f]->SetMarkerSize(0);
+	fOutBkgdTH1FHists[th1f]->SetFillStyle(3254);
+	fOutBkgdTH1FHists[th1f]->SetFillColor(kGray+3);
       }
       else // add first for ratio
       { 
@@ -110,9 +111,6 @@ void StackMCOnly::MakeStackMCOnly()
     fOutBkgdTH1FHists[th1f]->Scale(1.f/bkgdIntegral);
 
     // will use the output MC added Hists for plotting uncertainties and add it to legend once
-    fOutBkgdTH1FHists[th1f]->SetMarkerSize(0);
-    fOutBkgdTH1FHists[th1f]->SetFillStyle(3254);
-    fOutBkgdTH1FHists[th1f]->SetFillColor(kGray+3);
     fTH1FLegends[th1f]->AddEntry(fOutBkgdTH1FHists[th1f],"MC Unc.","f");
 
     // add stacks once renormalized
@@ -288,6 +286,7 @@ void StackMCOnly::InitInputPlots()
       fInSignalTH1FHists[th1f][signal] = (TH1F*)fSignalFiles[signal]->Get(Form("%s",fTH1FNames[th1f].Data()));	
       CheckValidTH1F(fInSignalTH1FHists[th1f][signal],fTH1FNames[th1f],fSignalFiles[signal]->GetName());
       fInSignalTH1FHists[th1f][signal]->SetLineColor(Config::ColorMap[fSignalNames[signal]]);
+      fInSignalTH1FHists[th1f][signal]->SetFillStyle(0);
     }
 
     // bkgd second

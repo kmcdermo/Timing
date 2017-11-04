@@ -26,6 +26,7 @@ void CheckValidFile(const TFile * file, const TString & fname);
 void CheckValidTree(const TTree * tree, const TString & tname, const TString & fname);
 void CheckValidTH1F(const TH1F * plot, const TString & pname, const TString & fname);
 void CheckValidTH1D(const TH1D * plot, const TString & pname, const TString & fname);
+void CheckValidTEff(const TEfficiency * plot, const TString & pname, const TString & fname);
 void CMSLumi(TCanvas *& canv, const Int_t iPosX = 10);
 void SetTDRStyle(TStyle *& tdrStyle);
 

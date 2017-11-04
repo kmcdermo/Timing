@@ -70,6 +70,11 @@ Analysis::Analysis(const TString & sample, const Bool_t isMC) : fSample(sample),
   // just do this everytime, who cares
   fTH1Dump.open(Form("%s/%i/%s", Config::outdir.Data(), Config::year, Config::plotdumpname.Data()),std::ios_base::trunc);
   fTH1PhoDump.open(Form("%s/%i/%s", Config::outdir.Data(), Config::year, Config::phoplotdumpname.Data()),std::ios_base::trunc);
+
+  if (Config::doPhoEff)
+  {
+    fTEffDump.open(Form("%s/%i/%s", Config::outdir.Data(), Config::year, Config::effdumpname.Data()),std::ios_base::trunc);
+  }
 }
 
 Analysis::~Analysis()
@@ -80,6 +85,8 @@ Analysis::~Analysis()
 
   fTH1Dump.close();
   fTH1PhoDump.close();
+
+  if (Config::doPhoEff) fTEffDump.close();
 }
 
 void Analysis::EventLoop()
@@ -158,13 +165,13 @@ Bool_t Analysis::PassOOTID(const Pho & pho)
   if (pho.HoE > 0.0396) return false;
   if (pho.sieie > 0.01022) return false;
   
-  const Float_t ecalPFClIso = std::max(pho.EcalPFClIso - rho * GetEcalPFClEA(pho.isEB) - GetEcalPFClPt(pho.isEB,pho.pt),0.f);
+  const Float_t ecalPFClIso = std::max(pho.EcalPFClIso - (rho * GetEcalPFClEA(pho.isEB)) - GetEcalPFClPt(pho.isEB,pho.pt),0.f);
   if (ecalPFClIso > 8.f) return false;
 
-  const Float_t hcalPFClIso = std::max(pho.HcalPFClIso - rho * GetHcalPFClEA(pho.isEB) - GetHcalPFClPt(pho.isEB,pho.pt),0.f);
+  const Float_t hcalPFClIso = std::max(pho.HcalPFClIso - (rho * GetHcalPFClEA(pho.isEB)) - GetHcalPFClPt(pho.isEB,pho.pt),0.f);
   if (hcalPFClIso > 8.f) return false;
 
-  const Float_t trkIso      = std::max(pho.TrkIso      - rho * GetTrackEA   (pho.isEB) - GetTrackPt   (pho.isEB,pho.pt),0.f);
+  const Float_t trkIso      = std::max(pho.TrkIso      - (rho * GetTrackEA   (pho.isEB)) - GetTrackPt   (pho.isEB,pho.pt),0.f);
   if (trkIso > 6.f) return false;
 
   return true;
@@ -551,6 +558,7 @@ void Analysis::OutputPhotonEffPlots()
   MakeSubDirs(phoTEffSubMap,fOutDir);
   Analysis::MakeInclusiveTEffs(phoTEffMap,phoTEffSubMap);
   Analysis::SaveTEffs(phoTEffMap,phoTEffSubMap);
+  Analysis::DumpTEffNames(phoTEffMap,phoTEffSubMap);
   Analysis::DeleteTEffs(phoTEffMap);
 }
 
@@ -849,9 +857,6 @@ void Analysis::MakeInclusiveNphoTEffs(TEffMap & teffmap, TStrMap & subdirmap)
     // make inclusive teff
     teffmap[hname] = Analysis::MakeTEffPlot(hname,titles,nbinsx,xlow,xhigh,subdirmap,subdirmap[name]);
 
-    std::cout << teffmap[hname]->GetName() << std::endl;
-
-
     TString tmpdrop = drop;
     for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++)
     {
@@ -904,8 +909,6 @@ void Analysis::MakeInclusiveSplitTEffs(TEffMap & teffmap, TStrMap & subdirmap)
 
     // make inclusive teff
     teffmap[hname] = Analysis::MakeTEffPlot(hname,titles,nbinsx,xlow,xhigh,subdirmap,subdirmap[name]);
-
-    std::cout << teffmap[hname]->GetName() << std::endl;
 
     // add GED first
     teffmap[hname]->Add(*teffmap[name]);
@@ -1270,8 +1273,6 @@ void Analysis::SaveTEffs(TEffMap & teffmap, TStrMap & subdirmap)
     // save to output file
     mapiter->second->Write(mapiter->second->GetName(),TObject::kWriteDelete); // map is map["hist name",TEff*]
 
-    std::cout << mapiter->second->GetName() << std::endl;
-
     if (Config::saveHists)
     {
       // now draw onto canvas to save as png
@@ -1305,6 +1306,14 @@ void Analysis::DumpTH1PhoNames(TH1Map & th1map, TStrMap & subdirmap)
   for (TH1MapIter mapiter = th1map.begin(); mapiter != th1map.end(); ++mapiter) 
   { 
     if (mapiter->first.Contains("GED")) fTH1PhoDump << mapiter->first.Data() << " " << subdirmap[mapiter->first].Data() << std::endl;
+  }
+}
+
+void Analysis::DumpTEffNames(TEffMap & teffmap, TStrMap & subdirmap)
+{ 
+  for (TEffMapIter mapiter = teffmap.begin(); mapiter != teffmap.end(); ++mapiter) 
+  { 
+    fTEffDump << mapiter->first.Data() << " " << subdirmap[mapiter->first].Data() << std::endl;
   }
 }
 

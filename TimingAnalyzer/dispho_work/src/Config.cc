@@ -12,6 +12,7 @@ namespace Config
   Bool_t  doStacks   = false;
   Bool_t  doMCStacks = false;
   Bool_t  doPhoStacks = false;
+  Bool_t  doEffStacks = false;
   Bool_t  doDemo     = false;
   Bool_t  useDEG     = false; 
   Bool_t  useSPH     = false; 

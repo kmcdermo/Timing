@@ -8,6 +8,7 @@
 #include "../interface/StackDataMC.hh"
 #include "../interface/StackMCOnly.hh"
 #include "../interface/StackGEDOOT.hh"
+#include "../interface/StackEffs.hh"
 
 #include "TROOT.h"
 #include "TSystem.h"
@@ -194,6 +195,7 @@ int main(int argc, const char* argv[])
 	"  --do-stacks                   stack data/MC plots (def: %s)\n"
 	"  --do-mcstacks                 stack signal/bkgd plots (def: %s)\n"
 	"  --do-phostacks                stack GED/OOT plots (def: %s)\n"
+	"  --do-effstacks                stack all efficiency plots (def: %s)\n"
 	"  --do-demo                     demo analysis (def: %s)\n"
 	"  --use-DEG                     use doubleEG for data (def: %s)\n"
 	"  --use-SPH                     use singlePh for data (def: %s)\n"
@@ -235,6 +237,7 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::doStacks),
 	PrintBool(Config::doMCStacks),
 	PrintBool(Config::doPhoStacks),
+	PrintBool(Config::doEffStacks),
 	PrintBool(Config::doDemo),
 	PrintBool(Config::useDEG),
 	PrintBool(Config::useSPH),
@@ -277,6 +280,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--do-stacks")   { Config::doStacks   = true; }
     else if (*i == "--do-mcstacks") { Config::doMCStacks = true; }
     else if (*i == "--do-phostacks"){ Config::doPhoStacks = true; }
+    else if (*i == "--do-effstacks"){ Config::doEffStacks = true; }
     else if (*i == "--do-demo")     { Config::doDemo     = true; Config::doAnalysis = true; Config::doEvStd = true; Config::doPhoStd = true; }
     else if (*i == "--use-DEG")     { Config::useDEG     = true; }
     else if (*i == "--use-SPH")     { Config::useSPH     = true; }
@@ -480,6 +484,23 @@ int main(int argc, const char* argv[])
   else 
   {
     std::cout << "Skipping stacking GED/OOT photon plots" << std::endl;
+  }
+  std::cout << std::endl;
+
+  ////////////////////////
+  // Stack efficiencies //
+  ////////////////////////
+
+  if (Config::doEffStacks) 
+  {
+    std::cout << "Starting efficiency stacker" << std::endl;
+    StackEffs Stacker;
+    Stacker.DoStacks();
+    std::cout << "Finished stacking efficiency plots" << std::endl;
+  }
+  else 
+  {
+    std::cout << "Skipping stacking efficiency plots" << std::endl;
   }
   std::cout << std::endl;
 

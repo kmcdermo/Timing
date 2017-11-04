@@ -75,6 +75,7 @@ public:
   void SaveTEffs(TEffMap & teffmap, TStrMap & subdirmap);
   void DumpTH1Names(TH1Map & th1map, TStrMap & subdirmap);
   void DumpTH1PhoNames(TH1Map & th1map, TStrMap & subdirmap);
+  void DumpTEffNames(TEffMap & phoTEffMap, TStrMap & phoTEffSubMap);
   void DeleteTH1s(TH1Map & th1map);
   void DeleteTH2s(TH2Map & th2map);
   void DeleteTEffs(TEffMap & teffmap);
@@ -99,7 +100,7 @@ private:
   TFile*  fOutFile;
   std::ofstream fTH1Dump; 
   std::ofstream fTH1PhoDump; 
-  std::ofstream fPhoEff;
+  std::ofstream fTEffDump;
   
   // Output colors
   Color_t fColor;

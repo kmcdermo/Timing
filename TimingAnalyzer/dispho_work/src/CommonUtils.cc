@@ -122,6 +122,15 @@ void CheckValidTH1D(const TH1D * plot, const TString & pname, const TString & fn
   }
 }
 
+void CheckValidTEff(const TEfficiency * plot, const TString & pname, const TString & fname)
+{
+  if (plot == (TEfficiency*) NULL) // check if valid plot
+  {  std::cerr << "Input TEfficiency is bad pointer: " << pname.Data() << " in input file: " << fname.Data() 
+	      << " ...exiting..." << std::endl;
+    exit(1);
+  }
+}
+
 void CMSLumi(TCanvas *& canv, const Int_t iPosX) 
 {
   const TString  cmsText     = "CMS";

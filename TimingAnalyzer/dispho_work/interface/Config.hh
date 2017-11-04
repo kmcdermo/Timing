@@ -47,7 +47,7 @@ namespace Config
   // data analysis config
   static const TString plotdumpname = "plotnames.txt";
   static const TString phoplotdumpname = "phoplotnames.txt";
-  static const TString phoeffname = "phoeff.txt";
+  static const TString effdumpname = "phoeff.txt";
 
   // pho stacking config
   static const TString phosubdir = "gedootstacks";
@@ -110,6 +110,7 @@ namespace Config
   extern Bool_t      doStacks;
   extern Bool_t      doMCStacks;
   extern Bool_t      doPhoStacks;
+  extern Bool_t      doEffStacks;
   extern Bool_t      doDemo;
   extern Bool_t      useDEG;
   extern Bool_t      useSPH;
