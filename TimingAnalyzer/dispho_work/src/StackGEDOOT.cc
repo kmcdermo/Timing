@@ -94,7 +94,17 @@ void StackGEDOOT::MakeRatioPlots()
     fOutRatioTH1FHists[th1f] = (TH1F*)(isV?fInGEDTH1FHists[th1f]:fInOOTTH1FHists[th1f])->Clone(Form("%s_ratio",fTH1FNames[th1f].Data()));
     if (isV) fOutRatioTH1FHists[th1f]->Add(fInOOTTH1FHists[th1f],-1);  
     fOutRatioTH1FHists[th1f]->Divide(fInGEDTH1FHists[th1f]);
+
+    // Titles
     fOutRatioTH1FHists[th1f]->GetYaxis()->SetTitle((isV?"1-(OOT/GED)":"OOT/GED"));
+    const TString drop = (isV?"GED":"OOT");
+    const Ssiz_t length = drop.Length();
+    TString xtitle = fOutRatioTH1FHists[th1f]->GetXaxis()->GetTitle();
+    const Ssiz_t index = xtitle.Index(drop);
+    xtitle.Remove(index,length+3); // account for " - "
+    fOutRatioTH1FHists[th1f]->GetXaxis()->SetTitle(xtitle.Data());
+
+    // Ranges, colors
     fOutRatioTH1FHists[th1f]->SetMinimum(isV?-2.f:0.5); // Define Y ..
     fOutRatioTH1FHists[th1f]->SetMaximum(isV? 2.f:1.5); // .. range
     fOutRatioTH1FHists[th1f]->SetLineColor(kBlack);
