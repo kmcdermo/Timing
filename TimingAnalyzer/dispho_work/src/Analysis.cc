@@ -114,7 +114,8 @@ void Analysis::EventLoop()
     // Determine Event Weight //
     //                        // 
     ////////////////////////////
-    const Float_t weight = (fIsMC && !(Config::doIsoNvtx || Config::doIsoPt) ? filterEff * xsec * Config::lumi * genwgt / fWgtSum : 1.f);
+    const Float_t ev_weight  = (fIsMC ? (filterEff * xsec * Config::lumi * genwgt / fWgtSum) : 1.f);
+    const Float_t eff_weight = (fIsMC ? (genwgt / fWgtSum) : 1.f);
 
     ////////////////////////////////
     //                            // 
@@ -125,12 +126,12 @@ void Analysis::EventLoop()
     const Int_t Njets    = std::min(njets,Config::nJets);
 
     // fill the plots
-    if (Config::doEvStd)    Analysis::FillEventStandardPlots(weight);
-    if (Config::doPhoStd)   Analysis::FillPhotonStandardPlots(Nphotons,weight);
-    if (Config::doIso)      Analysis::FillIsoPlots(Nphotons,weight);
-    if (Config::doIsoNvtx)  Analysis::FillIsoNvtxPlots(Nphotons,weight);
-    if (Config::doIsoPt)    Analysis::FillIsoPtPlots(Nphotons,weight);
-    if (Config::doPhoEff)   Analysis::FillPhotonEffPlots(Nphotons,weight);
+    if (Config::doEvStd)    Analysis::FillEventStandardPlots(ev_weight);
+    if (Config::doPhoStd)   Analysis::FillPhotonStandardPlots(Nphotons,ev_weight);
+    if (Config::doIso)      Analysis::FillIsoPlots(Nphotons,ev_weight);
+    if (Config::doIsoNvtx)  Analysis::FillIsoNvtxPlots(Nphotons,eff_weight);
+    if (Config::doIsoPt)    Analysis::FillIsoPtPlots(Nphotons,eff_weight);
+    if (Config::doPhoEff)   Analysis::FillPhotonEffPlots(Nphotons,eff_weight);
   } // end loop over events
 
    // output hists
@@ -335,9 +336,9 @@ void Analysis::SetupPhotonEffPlots()
 	phoTEffMap[Form("effpt_%s",name.Data())] = 
 	  Analysis::MakeTEffPlot(Form("effpt_%s",name.Data()),Form(";Photon %i p_{T} (%s);%s",ipho,title.Data(),ytitle.Data()),50,0.,1000.f,phoTEffSubMap,dir);
 	phoTEffMap[Form("effeta_%s",name.Data())] = 
-	  Analysis::MakeTEffPlot(Form("effeta_%s",name.Data()),Form(";Photon %i #eta (%s);%s",ipho,title.Data(),ytitle.Data()),32,-Config::PI,Config::PI,phoTEffSubMap,dir);
+	  Analysis::MakeTEffPlot(Form("effeta_%s",name.Data()),Form(";Photon %i #eta (%s);%s",ipho,title.Data(),ytitle.Data()),50,-5.f,5.f,phoTEffSubMap,dir);
 	phoTEffMap[Form("effphi_%s",name.Data())] = 
-	  Analysis::MakeTEffPlot(Form("effphi_%s",name.Data()),Form(";Photon %i #phi (%s);%s",ipho,title.Data(),ytitle.Data()),50,-5.f,5.f,phoTEffSubMap,dir);
+	  Analysis::MakeTEffPlot(Form("effphi_%s",name.Data()),Form(";Photon %i #phi (%s);%s",ipho,title.Data(),ytitle.Data()),32,-Config::PI,Config::PI,phoTEffSubMap,dir);
 
       } // end loop over split by type or inclusive
     } // end loop over regions
@@ -484,7 +485,7 @@ void Analysis::FillPhotonEffPlots(const Int_t Nphotons, const Float_t weight)
     
     if (!Analysis::IsGoodPho(pho)) continue;
     const Bool_t passed = Analysis::PassOOTID(pho);
-    
+
     phoTEffMap[Form("effpt_%s",name.Data())]->FillWeighted(passed,weight,pho.pt);
     phoTEffMap[Form("effeta_%s",name.Data())]->FillWeighted(passed,weight,pho.eta);
     phoTEffMap[Form("effphi_%s",name.Data())]->FillWeighted(passed,weight,pho.phi);
