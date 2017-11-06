@@ -176,7 +176,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 
 ## How many events to process
 if   options.demoMode : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
-else                  : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(options.maxEvents))
+else                  : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
 
 # Set the global tag depending on the sample type
 from Configuration.AlCa.GlobalTag import GlobalTag
@@ -263,5 +263,6 @@ process.tree = cms.EDAnalyzer("DisPho",
 )
 
 # Set up the path
-#process.treePath = cms.Path(process.unpackedTracksAndVertices + process.egmPhotonIDs + ootPhotonIDs + process.tree)
+#+ ootPhotonIDs
 process.treePath = cms.Path(process.unpackedTracksAndVertices + process.egmPhotonIDs + process.tree)
+#process.treePath = cms.Path(process.unpackedTracksAndVertices + process.tree)
