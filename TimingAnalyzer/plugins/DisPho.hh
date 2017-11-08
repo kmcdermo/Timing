@@ -312,6 +312,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const bool isBkgd;
   const float xsec;
   const float filterEff;
+  const float BR;
   bool isMC;
   edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
@@ -320,6 +321,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // output histograms
   TH1F * h_cutflow;
+  std::map<std::string,int> cutflowLabelMap;
 
   // output metadeta configs
   TTree * configtree;

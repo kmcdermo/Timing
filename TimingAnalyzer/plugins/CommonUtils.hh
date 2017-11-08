@@ -191,7 +191,16 @@ namespace oot
   float GetChargedHadronEA(const float eta);
   float GetNeutralHadronEA(const float eta);
   float GetGammaEA(const float eta);
+  float GetEcalPFClEA(const float eta);
+  float GetHcalPFClEA(const float eta);
+  float GetTrackEA(const float eta);
+  float GetNeutralHadronPtScale(const float eta, const float pt);
+  float GetGammaPtScale(const float eta, const float pt);
+  float GetEcalPFClPtScale(const float eta, const float pt);
+  float GetHcalPFClPtScale(const float eta, const float pt);
+  float GetTrackPtScale(const float eta, const float pt);
   void GetPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho);
+  void GetOOTPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho);
   int PassHoE   (const float eta, const float HoE);
   int PassSieie (const float eta, const float Sieie);
   int PassChgIso(const float eta, const float ChgIso);

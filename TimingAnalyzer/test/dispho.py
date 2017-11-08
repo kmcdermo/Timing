@@ -16,7 +16,7 @@ options.register('jetpTmin',15.0,VarParsing.multiplicity.singleton,VarParsing.va
 options.register('jetIDmin',1,VarParsing.multiplicity.singleton,VarParsing.varType.int,'jet ID minimum cut');
 options.register('rhEmin',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'recHit energy minimum cut');
 options.register('phpTmin',20.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon pT minimum cut');
-options.register('phIDmin','loose',VarParsing.multiplicity.singleton,VarParsing.varType.string,'photon ID minimum cut');
+options.register('phIDmin','none',VarParsing.multiplicity.singleton,VarParsing.varType.string,'photon ID minimum cut');
 
 ## object extra pruning cuts
 options.register('seedTimemin',-5.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon seed time minimum cut');
@@ -54,6 +54,7 @@ options.register('isHVDS',False,VarParsing.multiplicity.singleton,VarParsing.var
 options.register('isBkgd',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate Background MC');
 options.register('xsec',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'cross section in pb');
 options.register('filterEff',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'filter efficiency of MC');
+options.register('BR',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'branching ratio of MC');
 
 ## GT to be used
 options.register('globalTag','92X_dataRun2_Prompt_v8',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
@@ -115,6 +116,7 @@ if options.isMC:
 	print "isBkgd         : ",options.isBkgd
 	print "xsec           : ",options.xsec
 	print "filterEff      : ",options.filterEff
+	print "BR             : ",options.BR
 print "           -- GT --"
 print "globalTag      : ",options.globalTag	
 print "         -- Output --"
@@ -144,7 +146,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		# test HVDS 2016, GT: 92X_mcRun2_asymptotic_v2
 		#'file:/afs/cern.ch/user/k/kmcdermo/private/dispho/Analysis/CMSSW_9_2_8/src/Timing/GEN_SIM/HVDS/tmp/step3.root'
 		# test QCD, GT: 92X_upgrade2017_realistic_v10
-		'/store/mc/RunIISummer17MiniAOD/QCD_Pt-170to300_EMEnriched_TuneCUETP8M1_13TeV_pythia8/MINIAODSIM/92X_upgrade2017_realistic_v10-v2/90000/02A98D4F-BF97-E711-950B-4C79BA1809E9.root'
+		# '/store/mc/RunIISummer17MiniAOD/QCD_Pt-170to300_EMEnriched_TuneCUETP8M1_13TeV_pythia8/MINIAODSIM/92X_upgrade2017_realistic_v10-v2/90000/02A98D4F-BF97-E711-950B-4C79BA1809E9.root'
 		# 2017A-v1, GT: 92X_dataRun2_Prompt_v4
 		#'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v1/000/295/977/00000/9CAC61AF-094A-E711-BA62-02163E0138FA.root',
 		# 2017A-v2, GT: 92X_dataRun2_Prompt_v4
@@ -164,7 +166,9 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		# 2017D-v1, GT: 92X_dataRun2_Prompt_v8 
 		#'/store/data/Run2017D/SinglePhoton/MINIAOD/PromptReco-v1/000/302/042/00000/18838DB3-698F-E711-9D1B-02163E01192A.root',
 		# 2017E-v1, GT: 92X_dataRun2_Prompt_v9
-		#'/store/data/Run2017E/SinglePhoton/MINIAOD/PromptReco-v1/000/303/819/00000/F8E8E7B5-68A2-E711-9655-02163E0138E0.root',
+		# '/store/data/Run2017E/SinglePhoton/MINIAOD/PromptReco-v1/000/303/819/00000/F8E8E7B5-68A2-E711-9655-02163E0138E0.root',
+		###### Hacked 93X GMSB ctau = 4m sample, GT: 92X_upgrade2017_realistic_v10
+		'/store/group/phys_exotica/displacedPhotons/GMSB_L200TeV_CTau400cm_930/GMSB_L200TeV_CTau400cm_930_step3/171024_213911/0000/step3_1.root',
 		))
 
 ## How many events to process
@@ -246,6 +250,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    isBkgd   = cms.bool(options.isBkgd),
    xsec     = cms.double(options.xsec),
    filterEff= cms.double(options.filterEff),
+   BR       = cms.double(options.BR),
    genevt   = cms.InputTag("generator"),
    pileup   = cms.InputTag("slimmedAddPileupInfo"),
    genparts = cms.InputTag("prunedGenParticles")

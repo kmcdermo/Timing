@@ -74,10 +74,19 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   isBkgd(iConfig.existsAs<bool>("isBkgd") ? iConfig.getParameter<bool>("isBkgd")  : false),
   
   xsec(iConfig.existsAs<double>("xsec") ? iConfig.getParameter<double>("xsec") : 1.0),
-  filterEff(iConfig.existsAs<double>("filterEff") ? iConfig.getParameter<double>("filterEff") : 1.0)
+  filterEff(iConfig.existsAs<double>("filterEff") ? iConfig.getParameter<double>("filterEff") : 1.0),
+  BR(iConfig.existsAs<double>("BR") ? iConfig.getParameter<double>("BR") : 1.0)
 {
   usesResource();
   usesResource("TFileService");
+
+  // labels for cut flow histogram
+  std::vector<std::string> cutflowLabelVec = {"All","nEvBlinding","METBlinding","Trigger","H_{T}","Good Photon"};
+  int ibin = 0;
+  for (const auto & cutflowLabel : cutflowLabelVec)
+  {
+    cutflowLabelMap[cutflowLabel] = ibin++;
+  }
 
   // triggers
   triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
@@ -220,6 +229,9 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   }
   const Float_t evtwgt = (isMC ? genwgt : 1.f);
 
+  // Fill total cutflow regardless of cuts
+  h_cutflow->Fill(cutflowLabelMap["All"]*1.f,evtwgt);
+
   ///////////////////////////
   //                       //
   // Event, lumi, run info //
@@ -235,12 +247,14 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //          //
   //////////////
   if (event%blindSF!=0 && applyBlindSF) return;
+  h_cutflow->Fill(cutflowLabelMap["nEvBlinding"]*1.f,evtwgt);
 
   if (metsH.isValid())
   {
     const pat::MET & t1pfMET = (*metsH)[0];
     if (t1pfMET.pt() > blindMET && applyBlindMET) return;
   }  
+  h_cutflow->Fill(cutflowLabelMap["METBlinding"]*1.f,evtwgt);
 
   /////////////////////
   //                 //
@@ -286,7 +300,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Apply pre-selection //
   //                     //
   /////////////////////////
-  h_cutflow->Fill(0.,evtwgt);
 
   // trigger pre-selection
   bool triggered = false;
@@ -295,7 +308,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (triggerBitPair.second) {triggered = true; break;}
   }
   if (!triggered && applyTrigger) return;
-  h_cutflow->Fill(1.,evtwgt);
+  h_cutflow->Fill(cutflowLabelMap["Trigger"]*1.f,evtwgt);
 
   // HT pre-selection
   jetHT = 0.f;
@@ -307,7 +320,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     }
   } // end check over reco jets  
   if (jetHT < minHT && applyHT) return;
-  h_cutflow->Fill(2.,evtwgt);
+  h_cutflow->Fill(cutflowLabelMap["H_{T}"]*1.f,evtwgt);
 
   // photon pre-selection: at least one good photon in event
   bool isphgood = false;
@@ -329,7 +342,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     } 
   } // end check
   if (!isphgood && applyPhGood) return;
-  h_cutflow->Fill(3.,evtwgt);
+  h_cutflow->Fill(cutflowLabelMap["Good Photon"]*1.f,evtwgt);
 
   /////////////
   //         //
@@ -893,10 +906,18 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   phoBranch.isTrk_ = oot::TrackToObjectMatching(tracksH,photon,trackpTmin,trackdRmin);
   
   // 0 --> did not pass anything, 1 --> loose pass, 2 --> medium pass, 3 --> tight pass
-  if      (pho.photonID("tight"))  {phoBranch.ID_ = 3;}
-  else if (pho.photonID("medium")) {phoBranch.ID_ = 2;}
-  else if (pho.photonID("loose"))  {phoBranch.ID_ = 1;}
-  else                             {phoBranch.ID_ = 0;}
+  if (phoBranch.isOOT_) 
+  {
+    if      (pho.photonID("medium")) {phoBranch.ID_ = 2;}
+    else                             {phoBranch.ID_ = 0;}
+  }
+  else 
+  {
+    if      (pho.photonID("tight"))  {phoBranch.ID_ = 3;}
+    else if (pho.photonID("medium")) {phoBranch.ID_ = 2;}
+    else if (pho.photonID("loose"))  {phoBranch.ID_ = 1;}
+    else                             {phoBranch.ID_ = 0;}
+  }
 }
 
 void DisPho::InitializePhoBranchesMC()
@@ -963,7 +984,7 @@ void DisPho::beginJob()
   edm::Service<TFileService> fs;
   
   // histograms needed
-  h_cutflow = fs->make<TH1F>("h_cutflow", "Cut Flow", 5, 0, 5);
+  h_cutflow = fs->make<TH1F>("h_cutflow", "Cut Flow", cutflowLabelMap.size(), 0, cutflowLabelMap.size());
   DisPho::MakeHists();
 
   // Config tree, filled once
@@ -978,12 +999,9 @@ void DisPho::beginJob()
 void DisPho::MakeHists()
 {
   // cut flow settings
-  std::vector<std::string> labels = {"All","Trigger","H_{T}","Good Photon"};
-  int i = 0;
-  for (const auto & label : labels)
+  for (const auto & cutflowLabelPair : cutflowLabelMap)
   {
-    i++;
-    h_cutflow->GetXaxis()->SetBinLabel(i,label.c_str());
+    h_cutflow->GetXaxis()->SetBinLabel(cutflowLabelPair.second+1,cutflowLabelPair.first.c_str()); // +1 to account for bins in ROOT from [1,nBins]
   }
   h_cutflow->GetYaxis()->SetTitle("nEvents with weights");
   h_cutflow->Sumw2();
@@ -1066,11 +1084,13 @@ void DisPho::MakeAndFillConfigTree()
     bool isBkgd_tmp = isBkgd;
     float xsec_tmp = xsec;
     float filterEff_tmp = filterEff;
+    float BR_tmp = BR;
     configtree->Branch("isGMSB", &isGMSB_tmp, "isGMSB/O");
     configtree->Branch("isHVDS", &isHVDS_tmp, "isHVDS/O");
     configtree->Branch("isBkgd", &isBkgd_tmp, "isBkgd/O");
     configtree->Branch("xsec", &xsec_tmp, "xsec/F");
     configtree->Branch("filterEff", &filterEff_tmp, "filterEff/F");
+    configtree->Branch("BR", &BR_tmp, "BR/F");
   }
 
   // Fill tree just once, after configs have been read in
