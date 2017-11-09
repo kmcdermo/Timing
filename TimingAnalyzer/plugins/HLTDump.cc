@@ -142,6 +142,15 @@ void HLTDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   // do some prepping of objects
   oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
+
+  ///////////////////
+  //               //
+  // Pre-selection //
+  //               //
+  ///////////////////
+  if (!triggerBitMap["HLT_IsoMu27_v"]) return;
+
+  // prep everything else after pre-selection
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
   oot::PrepJets(jetsH,jets,jetpTmin);
   oot::PrepPhotons(photonsH,ootPhotonsH,photons,rho,phpTmin);

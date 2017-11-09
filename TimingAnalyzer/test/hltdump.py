@@ -38,7 +38,7 @@ options.register (
 
 ## trigger input
 options.register (
-        'inputPaths','/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+        'inputPaths','/afs/cern.ch/user/k/kmcdermo/public/input/HLTpathsWMu.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,
         'text file list of input signal paths');
 
 options.register (
@@ -57,7 +57,7 @@ options.register (
 
 ## GT to be used    
 options.register (
-	'globalTag','92X_dataRun2_Prompt_v7',VarParsing.multiplicity.singleton,VarParsing.varType.string,
+	'globalTag','92X_dataRun2_Prompt_v9',VarParsing.multiplicity.singleton,VarParsing.varType.string,
 	'global tag to be used');
 
 ## do a demo run over only 100k events
@@ -106,7 +106,8 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-		'root://xrootd-cms.infn.it//store/data/Run2017C/SinglePhoton/MINIAOD/PromptReco-v2/000/300/087/00000/2A8DF124-0977-E711-9E94-02163E0145A7.root'
+        '/store/data/Run2017F/SingleMuon/MINIAOD/PromptReco-v1/000/305/040/00000/20B42404-12B2-E711-9A88-02163E012830.root'
+#		'root://xrootd-cms.infn.it//store/data/Run2017C/SinglePhoton/MINIAOD/PromptReco-v2/000/300/087/00000/2A8DF124-0977-E711-9E94-02163E0145A7.root'
 #		'root://xrootd-cms.infn.it//store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v2/000/298/855/00000/56F16894-AA68-E711-8781-02163E01A456.root'
 		))
 

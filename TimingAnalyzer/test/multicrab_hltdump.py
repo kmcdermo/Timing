@@ -59,9 +59,9 @@ def main():
 
         # External files needed by CRAB
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
-        inputPaths   = 'HLTpaths.txt'
+        inputPaths   = 'HLTpathsWMu.txt'
         inputFilters = 'HLTfilters.txt'
-        inputJSON    = 'golden2017-oct25.json'
+        inputJSON    = 'golden2017-nov3.json'
 
         #--------------------------------------------------------
         # This is the base config:
@@ -90,14 +90,14 @@ def main():
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/SinglePhoton/Run2017B-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v4', 'False'],
-            ['/SinglePhoton/Run2017B-PromptReco-v2/MINIAOD', '92X_dataRun2_Prompt_v5', 'False'],
-            ['/SinglePhoton/Run2017C-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v6', 'True'],
-            ['/SinglePhoton/Run2017C-PromptReco-v2/MINIAOD', '92X_dataRun2_Prompt_v7', 'True'],
-            ['/SinglePhoton/Run2017C-PromptReco-v3/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
-            ['/SinglePhoton/Run2017D-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
-            ['/SinglePhoton/Run2017E-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v9', 'True'],
-            ['/SinglePhoton/Run2017F-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v9', 'True'],
+            ['/SingleMuon/Run2017B-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v4', 'False'],
+            ['/SingleMuon/Run2017B-PromptReco-v2/MINIAOD', '92X_dataRun2_Prompt_v5', 'False'],
+            ['/SingleMuon/Run2017C-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v6', 'True'],
+            ['/SingleMuon/Run2017C-PromptReco-v2/MINIAOD', '92X_dataRun2_Prompt_v7', 'True'],
+            ['/SingleMuon/Run2017C-PromptReco-v3/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
+            ['/SingleMuon/Run2017D-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
+            ['/SingleMuon/Run2017E-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v9', 'True'],
+            ['/SingleMuon/Run2017F-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v9', 'True'],
             ]
  
         for inDO in inputDataAndOpts:
