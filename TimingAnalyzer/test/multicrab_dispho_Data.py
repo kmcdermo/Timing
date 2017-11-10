@@ -59,9 +59,9 @@ def main():
 
         # External files needed by CRAB
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
-        inputPaths   = 'HLTprescaledpaths.txt'
+        inputPaths   = 'HLTpaths.txt'
         inputFilters = 'HLTfilters.txt'
-        inputJSON    = 'golden2017-oct25.json'
+        inputJSON    = 'golden2017-nov3.json'
          
         #--------------------------------------------------------
         # This is the base config:
@@ -85,7 +85,7 @@ def main():
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
         config.Site.storageSite      = 'T2_CH_CERN'
-        config.Data.outLFNDirBase    = '/store/group/phys_exotica/displacedPhotons/'
+        config.Data.outLFNDirBase    = '/store/user/kmcdermo/'
         #--------------------------------------------------------
 
         # Will submit one task for each of these input datasets.
@@ -103,7 +103,7 @@ def main():
         for inDO in inputDataAndOpts:
             # inDO[0] is of the form /A/B/C. Since B is unique for each inDS, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[2]
-            config.JobType.pyCfgParams   = ['globalTag='+inDO[1],'useOOTPhotons='+inDO[2],'phIDmin=none','applyTrigger=True','splitPho=False',
+            config.JobType.pyCfgParams   = ['globalTag='+inDO[1],'useOOTPhotons='+inDO[2],'phIDmin=none','splitPho=False',
                                             'applyBlindSF=True','blindSF=10',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters]
             config.Data.inputDataset     = inDO[0]

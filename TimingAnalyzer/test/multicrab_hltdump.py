@@ -85,7 +85,7 @@ def main():
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
         config.Site.storageSite      = 'T2_CH_CERN'
-        config.Data.outLFNDirBase    = '/store/group/phys_exotica/displacedPhotons/'
+        config.Data.outLFNDirBase    = '/store/user/kmcdermo/'
         #--------------------------------------------------------
 
         # Will submit one task for each of these input datasets.
