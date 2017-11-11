@@ -276,16 +276,18 @@ namespace oot
   }
     
   void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, 
-		std::vector<pat::Jet> & jets, const float jetpTmin, const int jetID)
+		std::vector<pat::Jet> & jets, const float jetpTmin, 
+		const int jetID, const float jetEtamax)
   {
     if (jetsH.isValid()) // standard handle check
     {
       for (const auto& jet : *jetsH)
       {
-	if (jet.pt() > jetpTmin) 
-	{
-	  if (oot::GetPFJetID(jet) >= jetID) jets.emplace_back(jet);
-	}
+	if (jet.pt() < jetpTmin) continue;
+	if (jet.eta() > jetEtamax) continue;
+	if (oot::GetPFJetID(jet) < jetID) continue;
+
+	jets.emplace_back(jet);
       }
       
       std::sort(jets.begin(),jets.end(),oot::sortByPt);
