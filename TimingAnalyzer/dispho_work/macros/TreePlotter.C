@@ -1,9 +1,8 @@
 #include "common/common.h"
 #include "TreePlotter.hh"
 
-void TreePlotter(const TString & var, const TString & title, 
-		 const Int_t nbinsx, const Float_t xlow, const Float_t xhigh,
-		 const TString & xtitle, const TString & ytitle)
+void TreePlotter(const TString & var, const TString & text, const Int_t nbinsx, const Float_t xlow, const Float_t xhigh,
+		 const TString & title, const TString & xtitle, const TString & ytitle)
 {
   ////////////////
   //            //
@@ -96,18 +95,18 @@ void TreePlotter(const TString & var, const TString & title,
   //               //
   ///////////////////
 
-  TLegend * OutLeg = new TLegend(0.682,0.7,0.825,0.92);
-  OutLeg->SetBorderSize(1);
-  OutLeg->SetLineColor(kBlack);
+  TLegend * Legend = new TLegend(0.682,0.7,0.825,0.92);
+  Legend->SetBorderSize(1);
+  Legend->SetLineColor(kBlack);
 
   for (const auto & HistPair : HistMap)
   {
     const auto & sample = HistPair.first;
     const Bool_t isMC = (sample != Data);
 
-    OutLeg->AddEntry(HistPair.second,LabelMap[sample],(isMC?"f":"epl"));
+    Legend->AddEntry(HistPair.second,LabelMap[sample],(isMC?"f":"epl"));
   }
-  OutLeg->AddEntry(BkgdHist,"MC Unc.","f");
+  Legend->AddEntry(BkgdHist,"MC Unc.","f");
   
   ///////////////////////////
   //                       //
@@ -115,15 +114,15 @@ void TreePlotter(const TString & var, const TString & title,
   //                       //
   ///////////////////////////
 
-  OutCanv = new TCanvas("OutCanv","");
+  TCanvas * OutCanv = new TCanvas("OutCanv","");
   OutCanv->cd();
   
-  OutUpPad = new TPad("OutUpPad","", left_up, bottom_up, right_up, top_up);
-  OutUpPad->SetBottomMargin(0); // Upper and lower plot are joined
+  TPad * UpperPad = new TPad("UpperPad","", left_up, bottom_up, right_up, top_up);
+  UpperPad->SetBottomMargin(0); // Upper and lower plot are joined
   
-  OutLowPad = new TPad("OutLowPad", "", left_lp, bottom_lp, right_lp, top_lp);
-  OutLowPad->SetTopMargin(0);
-  OutLowPad->SetBottomMargin(0.3);
+  TPad * LowerPad = new TPad("LowerPad", "", left_lp, bottom_lp, right_lp, top_lp);
+  LowerPad->SetTopMargin(0);
+  LowerPad->SetBottomMargin(0.3);
 
   ////////////////////
   //                //
@@ -133,14 +132,14 @@ void TreePlotter(const TString & var, const TString & title,
 
   // Pad Gymnastics
   OutCanv->cd();
-  OutUpPad->Draw();
-  OutUpPad->cd();
-  OutUpPad->SetLogx(isLogX);
-  OutUpPad->SetLogy(isLogY);
+  UpperPad->Draw();
+  UpperPad->cd();
+  UpperPad->SetLogx(isLogX);
+  UpperPad->SetLogy(isLogY);
   
   // Get and Set Maximum
-  const Float_t min = GetMinimum();
-  const Float_t max = GetMaximum();
+  const Float_t min = GetHistMinimum();
+  const Float_t max = GetHistMaximum(BkgdHist);
 
   if (isLogY) 
   { 
@@ -163,7 +162,7 @@ void TreePlotter(const TString & var, const TString & title,
   
   // Draw stack
   BkgdStack->Draw("HIST SAME"); 
-  OutUpPad->RedrawAxis("SAME"); // stack kills axis
+  UpperPad->RedrawAxis("SAME"); // stack kills axis
 
   // Draw MC sum total error as well on top of stack --> E2 makes error appear as rectangle
   BkgdHist->Draw("E2 SAME");
@@ -172,7 +171,7 @@ void TreePlotter(const TString & var, const TString & title,
   HistMap[Data]->Draw("PE SAME"); 
  
   // And lastly draw the legend
-  OutLeg->Draw("SAME"); 
+  Legend->Draw("SAME"); 
 
   ////////////////////
   //                //
@@ -182,8 +181,8 @@ void TreePlotter(const TString & var, const TString & title,
   
   // Pad gymnastics
   OutCanv->cd(); 
-  OutLowPad->Draw();
-  OutLowPad->cd(); 
+  LowerPad->Draw();
+  LowerPad->cd(); 
 
   // draw th1 first so line can appear, then draw over it (and set Y axis divisions)
   RatioHist->Draw("EP"); 
@@ -207,7 +206,40 @@ void TreePlotter(const TString & var, const TString & title,
   // plots MC error copy
   RatioMCErrs->Draw("E2 SAME");
 
+  /////////////////
+  //             //
+  // Save Output //
+  //             //
+  /////////////////
   
+  OutCanv->cd();    // Go back to the main canvas before saving
+  CMSLumi(OutCanv); // write out Lumi info
+  OutCanv->SaveAs(Form("%s.png",text.Data()));
+}
+
+void GetHistMinimum()
+{
+  Float_t min = 1e9;
+
+  // need to loop through to check bin != 0
+  for (const auto & HistPair : HistMap)
+  {
+    const auto & hist = HistPair.second;
+    for (Int_t bin = 1; bin <= hist->GetNbinsX(); bin++)
+    {
+      const Float_t tmpmin = hist->GetBinContent(bin);
+      if ((tmpmin < min) && (tmpmin > 0)) min = tmpmin;
+    }
+  }
+
+  return min;
+}
+
+void GetHistMaximum(const TH1F * BkgdHist)
+{
+  const Float_t datamax = HistMap[Data]->GetBinContent(HistMap[Data]->GetMaximumBin());
+  const Float_t bkgdmax = BkgdHist     ->GetBinContent(BkgdHist     ->GetMaximumBin());
+  return (datamax > bkgdmax ? datamax : bkgdmax);
 }
 
 TH1F * SetupHist(const TString & name, const TString & title, 

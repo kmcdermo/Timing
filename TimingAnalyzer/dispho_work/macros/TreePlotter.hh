@@ -24,16 +24,19 @@
 void InitPlotter(TStyle * tdrStyle, const TString & title, 
 		 const Int_t nbinsx, const Float_t xlow, const Float_t xhigh,
 		 const TString & xtitle, const TString & ytitle);
-Float_t GetSampleWeight(TFile * file);
 TH1F * SetupHist(const TString & name, const TString & title, 
 		 const Int_t nbinsx, const Float_t xlow, const Float_t xhigh,
 		 const TString & xtitle, const TString & ytitle);
+Float_t GetSampleWeight(TFile * file);
+void GetHistMinimum();
+void GetHistMaximum(const TH1F * BkgdHist);
 
 enum SampleType {Data, GMSB, QCD, GJets};
 
 namespace
 {
-  constexpr Bool_t isLogy = true;
+  constexpr Bool_t isLogX = false;
+  constexpr Bool_t isLogY = true;
   constexpr Float_t lumi = 35.0; // CMS lumi
 
   std::map<TString,SampleType> SampleMap;
