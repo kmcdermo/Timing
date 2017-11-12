@@ -10,8 +10,9 @@ LSFJOB
 *.log
 *.root
 crab_projects*
-multicrab_dispho*
-multicrab_hltdump*
+multicrab_dispho_*
+multicrab_hltdump_*
+multicrab_hltplots_*
 *.o
 *.so
 *.d

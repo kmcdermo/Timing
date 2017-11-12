@@ -25,7 +25,7 @@ def getOptions():
 
     parser.add_option('-w', '--workArea',
                       dest = 'workArea',
-                      default = 'multicrab_hltdump',
+                      default = 'multicrab_hltdump_Data',
                       help = "work area directory (only if CMD != 'submit')",
                       metavar = 'WAD')
 
