@@ -69,12 +69,15 @@ private:
   // Style
   TStyle * fTDRStyle;
 
-  // I/O
+  // Sample Information
   std::map<TString,SampleType> SampleMap;
   std::map<SampleType,Color_t> ColorMap;
   std::map<SampleType,TString> CutMap;
   std::map<SampleType,TH1F*>   HistMap;
   std::map<SampleType,TString> LabelMap;
+
+  // Output
+  TFile * fOutFile;
 };
 
 #endif

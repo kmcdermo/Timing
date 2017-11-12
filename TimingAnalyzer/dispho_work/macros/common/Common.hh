@@ -13,12 +13,12 @@ void CheckValidFile(const TFile * file, const TString & fname);
 void CheckValidTree(const TTree * tree, const TString & tname, const TString & fname);
 void CheckValidTH1F(const TH1F * plot, const TString & pname, const TString & fname);
 void CMSLumi(TCanvas * canv, Int_t iPosX = 10);
-void SetTDRStyle(TStyle *& tdrStyle);
+void SetTDRStyle(TStyle * tdrStyle);
 
 namespace Config
 {
   constexpr Float_t lumi = 35.0; // CMS lumi
-  static const TString extraText = "";
+  static const TString extraText = "Preliminary";
 
   // plotting style
   constexpr Float_t TitleSize    = 0.035;

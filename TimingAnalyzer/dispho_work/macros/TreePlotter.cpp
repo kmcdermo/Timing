@@ -22,6 +22,9 @@ TreePlotter::TreePlotter(const TString & var, const TString & commoncut, const T
   SetupCuts();
   SetupLabels();
   SetupHists();
+
+  // output root file for quick inspection
+  fOutFile = TFile::Open(Form("%s.root",text.Data()),"UPDATE");
 }
 
 TreePlotter::~TreePlotter() {}
@@ -40,12 +43,13 @@ void TreePlotter::MakePlot()
     const auto & input  = SamplePair.first;
     const auto & sample = SamplePair.second;
     const Bool_t isMC = (sample != Data);
-    std::cout << "Working on " << (isMC?"MC":"DATA") <<  " sample: " << input.Data() << std::endl;
+    std::cout << "Working on " << (isMC?"MC":"DATA") << " sample: " << input.Data() << std::endl;
 
     // Get File
     const TString filename = Form("/afs/cern.ch/work/k/kmcdermo/public/input/2017/%s/tree.root",input.Data());
     TFile * file = TFile::Open(Form("%s",filename.Data()));
     CheckValidFile(file,filename);
+    file->cd();
 	
     // Get TTree
     const TString treename = "tree/tree";
@@ -53,16 +57,22 @@ void TreePlotter::MakePlot()
     CheckValidTree(tree,treename,filename);
 
     // Make temp hist
-    TH1F  * hist = TreePlotter::SetupHist("tmp_hist");
-
+    TString histname = input;
+    histname.ReplaceAll("/","_");
+    TH1F * hist = TreePlotter::SetupHist(Form("%s_Hist",histname.Data()));
+    
     // Set weight
     const Float_t weight = (isMC ? GetSampleWeight(file) : 1.f);
 
     // Fill from tree
-    tree->Draw(Form("%s>>%s",fVar.Data(),hist->GetName()),Form("(%s) * (%f%s)",CutMap[sample].Data(),weight,isMC?Form("* genwgt *%f",Config::lumi):""),"goff");
+    tree->Draw(Form("%s>>%s",fVar.Data(),hist->GetName()),Form("(%s) * (%f%s)",CutMap[sample].Data(),weight,isMC?Form("* genwgt"):""),"goff");
     
     // Add to main hists
     HistMap[sample]->Add(hist);
+
+    // save to output file
+    fOutFile->cd();
+    hist->Write(hist->GetName(),TObject::kWriteDelete);
 
     // delete everything
     delete hist;
@@ -88,8 +98,13 @@ void TreePlotter::MakePlot()
 
   // Make Background Stack
   THStack * BkgdStack = new THStack("BkgdStack","");
-  BkgdHist->Add(HistMap[QCD]);
-  BkgdHist->Add(HistMap[GJets]);
+  BkgdStack->Add(HistMap[QCD]);
+  BkgdStack->Add(HistMap[GJets]);
+
+  // save to output file
+  fOutFile->cd();
+  BkgdHist->Write(BkgdHist->GetName(),TObject::kWriteDelete);
+  BkgdStack->Write(BkgdStack->GetName(),TObject::kWriteDelete);
 
   ///////////////////////
   //                   //
@@ -100,31 +115,43 @@ void TreePlotter::MakePlot()
   std::cout << "Making Ratio Output..." << std::endl;
 
   // ratio value plot
-  TH1F * RatioHist = (TH1F*)HistMap[Data]->Clone();
+  TH1F * RatioHist = TreePlotter::SetupHist("RatioHist");
+  RatioHist->Add(HistMap[Data]);
   RatioHist->Divide(BkgdHist);  
   RatioHist->GetYaxis()->SetTitle("Data/MC");
-  RatioHist->SetMinimum(-1.5); // Define Y ..
-  RatioHist->SetMaximum( 1.5); // .. range
+  RatioHist->SetMinimum(-0.1); // Define Y ..
+  RatioHist->SetMaximum( 2.1); // .. range
   RatioHist->SetLineColor(kBlack);
+  RatioHist->SetMarkerColor(kBlack);
   RatioHist->SetStats(0);      // No statistics on lower plot
   
   // ratio MC error plot
-  TH1F * RatioMCErrs = (TH1F*)BkgdHist->Clone();
+  TH1F * RatioMCErrs = TreePlotter::SetupHist("RatioMCErrs");
+  RatioMCErrs->Add(BkgdHist);
   RatioMCErrs->Divide(BkgdHist);
+  RatioMCErrs->SetMarkerSize(0);
+  RatioMCErrs->SetFillStyle(3254);
+  RatioMCErrs->SetFillColor(kGray+3);
+
   // don't display empty bins
   for (Int_t ibin = 1; ibin <= RatioMCErrs->GetNbinsX(); ibin++) 
   {
-    if (RatioMCErrs->GetBinContent(ibin) == 0) {RatioMCErrs->SetBinContent(ibin,-1000);} 
+    if (RatioMCErrs->GetBinContent(ibin) == 0) {RatioMCErrs->SetBinContent(ibin,-2);} 
   }
+
+  // save to output file
+  fOutFile->cd();
+  RatioHist->Write(RatioHist->GetName(),TObject::kWriteDelete);
+  RatioMCErrs->Write(RatioMCErrs->GetName(),TObject::kWriteDelete);
   
   // ratio line
   TLine * RatioLine = new TLine();
-  RatioLine->SetX1(RatioHist->GetXaxis()->GetXmin());
-  RatioLine->SetX2(RatioHist->GetXaxis()->GetXmax());
-  RatioLine->SetY1(0.0);
-  RatioLine->SetY2(0.0);
   RatioLine->SetLineColor(kRed);
   RatioLine->SetLineWidth(2);
+
+  // save to output file
+  fOutFile->cd();
+  RatioLine->Write(RatioLine->GetName(),TObject::kWriteDelete);
 
   ///////////////////
   //               //
@@ -135,18 +162,26 @@ void TreePlotter::MakePlot()
   std::cout << "Creating Legend..." << std::endl;
 
   TLegend * Legend = new TLegend(0.682,0.7,0.825,0.92);
+  //  Legend->SetNColumns(2);
   Legend->SetBorderSize(1);
   Legend->SetLineColor(kBlack);
 
   for (const auto & HistPair : HistMap)
   {
     const auto & sample = HistPair.first;
-    const Bool_t isMC = (sample != Data);
+    TString fillType;
+    if      (sample == Data) fillType = "epl";
+    else if (sample == GMSB) fillType = "l";
+    else                     fillType = "f";
 
-    Legend->AddEntry(HistPair.second,LabelMap[sample],(isMC?"f":"epl"));
+    Legend->AddEntry(HistPair.second,LabelMap[sample].Data(),fillType.Data());
   }
   Legend->AddEntry(BkgdHist,"MC Unc.","f");
-  
+
+  // save to output file
+  fOutFile->cd();
+  Legend->Write(Legend->GetName(),TObject::kWriteDelete);
+
   ///////////////////////////
   //                       //
   // Init Output Canv+Pads //
@@ -207,6 +242,9 @@ void TreePlotter::MakePlot()
   BkgdStack->Draw("HIST SAME"); 
   UpperPad->RedrawAxis("SAME"); // stack kills axis
 
+  // Draw Signal
+  HistMap[GMSB]->Draw("HIST SAME");
+
   // Draw MC sum total error as well on top of stack --> E2 makes error appear as rectangle
   BkgdHist->Draw("E2 SAME");
 
@@ -231,6 +269,10 @@ void TreePlotter::MakePlot()
 
   // draw th1 first so line can appear, then draw over it (and set Y axis divisions)
   RatioHist->Draw("EP"); 
+  RatioLine->SetX1(RatioHist->GetXaxis()->GetXmin());
+  RatioLine->SetX2(RatioHist->GetXaxis()->GetXmax());
+  RatioLine->SetY1(1.0);
+  RatioLine->SetY2(1.0);
   RatioLine->Draw("SAME");
 
   // some style since apparently TDR Style is crapping out
@@ -262,6 +304,10 @@ void TreePlotter::MakePlot()
   OutCanv->cd(); // Go back to the main canvas before saving
   CMSLumi(OutCanv,Config::lumi); // write out Lumi info
   OutCanv->SaveAs(Form("%s.png",fText.Data()));
+
+  // save to output file
+  fOutFile->cd();
+  OutCanv->Write(OutCanv->GetName(),TObject::kWriteDelete);
 }
 
 Float_t TreePlotter::GetHistMinimum()
@@ -316,7 +362,7 @@ Float_t TreePlotter::GetSampleWeight(TFile * file)
   Float_t BR = 0.f;        configtree->SetBranchAddress("BR",&BR);
   configtree->GetEntry(0);
 
-  const Float_t weight = h_cutflow->GetBinContent(1) * xsec * filterEff * BR;
+  const Float_t weight = Config::lumi * xsec * filterEff * BR / h_cutflow->GetBinContent(1);
 
   delete h_cutflow;
   delete configtree;
@@ -364,8 +410,8 @@ void TreePlotter::SetupCuts()
 void TreePlotter::SetupLabels()
 {
   LabelMap[QCD]   = "QCD";
-  LabelMap[GJets] = "#gamma + Jets (EM Enriched)";
-  LabelMap[GMSB]  = "GMSB c#tau = 4 m, #Lambda = 200 TeV";
+  LabelMap[GJets] = "#gamma+Jets"; //"#gamma + Jets (EM Enriched)";
+  LabelMap[GMSB]  = "GMSB c#tau=4m"; //"GMSB c#tau = 4m, #Lambda = 200 TeV";
   LabelMap[Data]  = "Data";
 }
 
@@ -380,10 +426,19 @@ void TreePlotter::SetupHists()
   {
     const auto & sample = HistPair.first;
     const auto & hist   = HistPair.second;
-    const Bool_t isMC   = (sample != Data);
-    
+    const Bool_t isSignal = (sample == GMSB);
+    const Bool_t isBkgd   = (sample == GJets || sample == QCD);
+
     hist->SetLineColor(ColorMap[sample]);
     hist->SetMarkerColor(ColorMap[sample]);
-    if (isMC) hist->SetFillColor(ColorMap[sample]);
+    if (isBkgd)
+    {
+      hist->SetFillColor(ColorMap[sample]);
+      hist->SetFillStyle(1001);
+    }
+    else if (isSignal)
+    {
+      hist->SetLineWidth(2);
+    }
   }
 }

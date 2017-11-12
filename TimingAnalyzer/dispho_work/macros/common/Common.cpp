@@ -155,7 +155,7 @@ void CMSLumi(TCanvas * canv, Int_t iPosX)
   }
 }
 
-void SetTDRStyle(TStyle *& tdrStyle)
+void SetTDRStyle(TStyle * tdrStyle)
 {  
   // For the canvas:
   tdrStyle->SetCanvasBorderMode(0);
