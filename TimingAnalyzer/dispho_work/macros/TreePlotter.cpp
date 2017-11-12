@@ -1,18 +1,33 @@
-#include "common/common.h"
 #include "TreePlotter.hh"
 
-void TreePlotter(const TString & var, const TString & text, const Int_t nbinsx, const Float_t xlow, const Float_t xhigh,
-		 const TString & title, const TString & xtitle, const TString & ytitle)
+TreePlotter::TreePlotter(const TString & var, const TString & commoncut, const TString & text, const Int_t nbinsx, const Float_t xlow, const Float_t xhigh,
+			 const Bool_t islogx, const Bool_t islogy, const TString & title, const TString & xtitle, const TString & ytitle) : 
+  fVar(var), fCommonCut(commoncut), fText(text), fNbinsX(nbinsx), fXLow(xlow), fXHigh(xhigh),
+  fIsLogX(islogx), fIsLogY(islogy), fTitle(title), fXTitle(xtitle), fYTitle(ytitle)
 {
+  std::cout << "Initializing..." << std::endl;
+
+  fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
+  SetTDRStyle(fTDRStyle);
+  gROOT->ForceStyle();
+
   ////////////////
   //            //
   // Initialize //
   //            //
   ////////////////
 
-  TStyle * tdrStyle;
-  InitPlotter(tdrStyle,title,nbinsx,xlow,xhigh,xtitle,ytitle);
-  
+  SetupSamples();
+  SetupColors();
+  SetupCuts();
+  SetupLabels();
+  SetupHists();
+}
+
+TreePlotter::~TreePlotter() {}
+
+void TreePlotter::MakePlot()
+{
   ////////////////////////////
   //                        //
   // Fill Hists from TTrees //
@@ -21,17 +36,35 @@ void TreePlotter(const TString & var, const TString & text, const Int_t nbinsx, 
 
   for (const auto & SamplePair : SampleMap)
   {
+    // Init
+    const auto & input  = SamplePair.first;
     const auto & sample = SamplePair.second;
     const Bool_t isMC = (sample != Data);
-    TFile * file = TFile::Open(Form("/afs/cern.ch/work/k/kmcdermo/public/input/2017/%s/tree.root",SamplePair.first.Data()));
-    TTree * tree = (TTree*)file->Get("tree/tree.root");
-    TH1F  * hist = SetupHist("tmp_hist",title,nbinsx,xlow,xhigh,xtitle,ytitle);
+    std::cout << "Working on " << (isMC?"MC":"DATA") <<  " sample: " << input.Data() << std::endl;
 
+    // Get File
+    const TString filename = Form("/afs/cern.ch/work/k/kmcdermo/public/input/2017/%s/tree.root",input.Data());
+    TFile * file = TFile::Open(Form("%s",filename.Data()));
+    CheckValidFile(file,filename);
+	
+    // Get TTree
+    const TString treename = "tree/tree";
+    TTree * tree = (TTree*)file->Get(Form("%s",treename.Data()));
+    CheckValidTree(tree,treename,filename);
+
+    // Make temp hist
+    TH1F  * hist = TreePlotter::SetupHist("tmp_hist");
+
+    // Set weight
     const Float_t weight = (isMC ? GetSampleWeight(file) : 1.f);
-    tree->Draw(Form("%s>>%s",var.Data(),hist->GetName()),Form("(%s) * (%f%s)",CutMap[sample].Data(),isMC?Form("* genwgt *%f",lumi):""),"goff");
+
+    // Fill from tree
+    tree->Draw(Form("%s>>%s",fVar.Data(),hist->GetName()),Form("(%s) * (%f%s)",CutMap[sample].Data(),weight,isMC?Form("* genwgt *%f",Config::lumi):""),"goff");
     
+    // Add to main hists
     HistMap[sample]->Add(hist);
 
+    // delete everything
     delete hist;
     delete tree;
     delete file;
@@ -43,8 +76,10 @@ void TreePlotter(const TString & var, const TString & text, const Int_t nbinsx, 
   //                  //
   //////////////////////
 
+  std::cout << "Making Bkgd Output..." << std::endl;
+
   // Make Total Bkgd Hist: for error plotting
-  TH1F * BkgdHist = SetupHist("BkgdHist",title,nbinsx,xlow,xhigh,xtitle,ytitle);
+  TH1F * BkgdHist = TreePlotter::SetupHist("BkgdHist");
   BkgdHist->Add(HistMap[QCD]);
   BkgdHist->Add(HistMap[GJets]);
   BkgdHist->SetMarkerSize(0);
@@ -61,6 +96,8 @@ void TreePlotter(const TString & var, const TString & text, const Int_t nbinsx, 
   // Make Ratio Output //
   //                   //
   ///////////////////////
+
+  std::cout << "Making Ratio Output..." << std::endl;
 
   // ratio value plot
   TH1F * RatioHist = (TH1F*)HistMap[Data]->Clone();
@@ -95,6 +132,8 @@ void TreePlotter(const TString & var, const TString & text, const Int_t nbinsx, 
   //               //
   ///////////////////
 
+  std::cout << "Creating Legend..." << std::endl;
+
   TLegend * Legend = new TLegend(0.682,0.7,0.825,0.92);
   Legend->SetBorderSize(1);
   Legend->SetLineColor(kBlack);
@@ -114,13 +153,15 @@ void TreePlotter(const TString & var, const TString & text, const Int_t nbinsx, 
   //                       //
   ///////////////////////////
 
+  std::cout << "Initializing canvas and pads..." << std::endl;
+
   TCanvas * OutCanv = new TCanvas("OutCanv","");
   OutCanv->cd();
   
-  TPad * UpperPad = new TPad("UpperPad","", left_up, bottom_up, right_up, top_up);
+  TPad * UpperPad = new TPad("UpperPad","", Config::left_up, Config::bottom_up, Config::right_up, Config::top_up);
   UpperPad->SetBottomMargin(0); // Upper and lower plot are joined
   
-  TPad * LowerPad = new TPad("LowerPad", "", left_lp, bottom_lp, right_lp, top_lp);
+  TPad * LowerPad = new TPad("LowerPad", "", Config::left_lp, Config::bottom_lp, Config::right_lp, Config::top_lp);
   LowerPad->SetTopMargin(0);
   LowerPad->SetBottomMargin(0.3);
 
@@ -130,18 +171,20 @@ void TreePlotter(const TString & var, const TString & text, const Int_t nbinsx, 
   //                //
   ////////////////////
 
+  std::cout << "Drawing upper pad..." << std::endl;
+
   // Pad Gymnastics
   OutCanv->cd();
   UpperPad->Draw();
   UpperPad->cd();
-  UpperPad->SetLogx(isLogX);
-  UpperPad->SetLogy(isLogY);
+  UpperPad->SetLogx(fIsLogX);
+  UpperPad->SetLogy(fIsLogY);
   
   // Get and Set Maximum
   const Float_t min = GetHistMinimum();
   const Float_t max = GetHistMaximum(BkgdHist);
 
-  if (isLogY) 
+  if (fIsLogY) 
   { 
     HistMap[Data]->SetMinimum(min/1.5);
     HistMap[Data]->SetMaximum(max*1.5);
@@ -156,9 +199,9 @@ void TreePlotter(const TString & var, const TString & text, const Int_t nbinsx, 
   HistMap[Data]->Draw("PE"); // draw first so labels appear
 
   // Have to scale TDR style values by height of upper pad
-  HistMap[Data]->GetYaxis()->SetLabelSize  (LabelSize / height_up); 
-  HistMap[Data]->GetYaxis()->SetTitleSize  (TitleSize / height_up);
-  HistMap[Data]->GetYaxis()->SetTitleOffset(TitleFF * TitleYOffset * height_up);
+  HistMap[Data]->GetYaxis()->SetLabelSize  (Config::LabelSize / Config::height_up); 
+  HistMap[Data]->GetYaxis()->SetTitleSize  (Config::TitleSize / Config::height_up);
+  HistMap[Data]->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_up);
   
   // Draw stack
   BkgdStack->Draw("HIST SAME"); 
@@ -179,6 +222,8 @@ void TreePlotter(const TString & var, const TString & text, const Int_t nbinsx, 
   //                //
   ////////////////////
   
+  std::cout << "Drawing lower pad..." << std::endl;
+
   // Pad gymnastics
   OutCanv->cd(); 
   LowerPad->Draw();
@@ -192,13 +237,13 @@ void TreePlotter(const TString & var, const TString & text, const Int_t nbinsx, 
   RatioHist->GetYaxis()->SetNdivisions(505);
 
   // sizes of titles is percent of height of pad --> want a constant size 
-  RatioHist->GetXaxis()->SetLabelSize  (LabelSize   / height_lp); 
-  RatioHist->GetXaxis()->SetLabelOffset(LabelOffset / height_lp); 
-  RatioHist->GetXaxis()->SetTitleSize  (TitleSize   / height_lp);
-  RatioHist->GetXaxis()->SetTickLength (TickLength  / height_lp);
-  RatioHist->GetYaxis()->SetLabelSize  (LabelSize   / height_lp); 
-  RatioHist->GetYaxis()->SetTitleSize  (TitleSize   / height_lp);
-  RatioHist->GetYaxis()->SetTitleOffset(TitleFF * TitleYOffset * height_lp);
+  RatioHist->GetXaxis()->SetLabelSize  (Config::LabelSize   / Config::height_lp); 
+  RatioHist->GetXaxis()->SetLabelOffset(Config::LabelOffset / Config::height_lp); 
+  RatioHist->GetXaxis()->SetTitleSize  (Config::TitleSize   / Config::height_lp);
+  RatioHist->GetXaxis()->SetTickLength (Config::TickLength  / Config::height_lp);
+  RatioHist->GetYaxis()->SetLabelSize  (Config::LabelSize   / Config::height_lp); 
+  RatioHist->GetYaxis()->SetTitleSize  (Config::TitleSize   / Config::height_lp);
+  RatioHist->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_lp);
 
   // redraw to go over line
   RatioHist->Draw("EP SAME"); 
@@ -212,12 +257,14 @@ void TreePlotter(const TString & var, const TString & text, const Int_t nbinsx, 
   //             //
   /////////////////
   
-  OutCanv->cd();    // Go back to the main canvas before saving
-  CMSLumi(OutCanv); // write out Lumi info
-  OutCanv->SaveAs(Form("%s.png",text.Data()));
+  std::cout << "Saving hist as png..." << std::endl;
+
+  OutCanv->cd(); // Go back to the main canvas before saving
+  CMSLumi(OutCanv,Config::lumi); // write out Lumi info
+  OutCanv->SaveAs(Form("%s.png",fText.Data()));
 }
 
-void GetHistMinimum()
+Float_t TreePlotter::GetHistMinimum()
 {
   Float_t min = 1e9;
 
@@ -235,29 +282,34 @@ void GetHistMinimum()
   return min;
 }
 
-void GetHistMaximum(const TH1F * BkgdHist)
+Float_t TreePlotter::GetHistMaximum(const TH1F * BkgdHist)
 {
   const Float_t datamax = HistMap[Data]->GetBinContent(HistMap[Data]->GetMaximumBin());
   const Float_t bkgdmax = BkgdHist     ->GetBinContent(BkgdHist     ->GetMaximumBin());
   return (datamax > bkgdmax ? datamax : bkgdmax);
 }
 
-TH1F * SetupHist(const TString & name, const TString & title, 
-		 const Int_t nbinsx, const Float_t xlow, const Float_t xhigh,
-		 const TString & xtitle, const TString & ytitle)
+TH1F * TreePlotter::SetupHist(const TString & name)
 {
-  TH1F * hist = new TH1F(name.Data(),title.Data(),nbinsx,xlow,xhigh);
-  hist->GetXaxis()->SetTitle(xtitle.Data());
-  hist->GetYaxis()->SetTitle(ytitle.Data());
+  TH1F * hist = new TH1F(name.Data(),fTitle.Data(),fNbinsX,fXLow,fXHigh);
+  hist->GetXaxis()->SetTitle(fXTitle.Data());
+  hist->GetYaxis()->SetTitle(fYTitle.Data());
   hist->Sumw2();
 
   return hist;
 }
 
-Float_t GetSampleWeight(TFile * file)
+Float_t TreePlotter::GetSampleWeight(TFile * file)
 {
-  TTree * configtree = (TTree*)file->Get("tree/configtree");
-  TH1F * h_cutflow = (TH1F*)file->Get("tree/h_cutflow");
+  // Get Configtree
+  const TString treename = "tree/configtree";
+  TTree * configtree = (TTree*)file->Get(Form("%s",treename.Data()));
+  CheckValidTree(configtree,treename,file->GetName());
+
+  // Get Historgram
+  const TString histname = "tree/h_cutflow";
+  TH1F * h_cutflow = (TH1F*) file->Get(Form("%s",histname.Data()));
+  CheckValidTH1F(h_cutflow,histname,file->GetName());
 
   Float_t xsec = 0.f;      configtree->SetBranchAddress("xsec",&xsec);
   Float_t filterEff = 0.f; configtree->SetBranchAddress("filterEff",&filterEff);
@@ -272,15 +324,66 @@ Float_t GetSampleWeight(TFile * file)
   return weight;
 }
 
-void InitPlotter(TStyle * tdrStyle, const TString & title, 
-		 const Int_t nbinsx, const Float_t xlow, const Float_t xhigh,
-		 const TString & xtitle, const TString & ytitle)
+void TreePlotter::SetupSamples()
 {
-  tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
-  SetTDRStyle(tdrStyle);
-  gROOT->ForceStyle();
+  // QCD
+  SampleMap["MC/qcd/Pt-15to20"] = QCD;
+  SampleMap["MC/qcd/Pt-20to30"] = QCD;
+  SampleMap["MC/qcd/Pt-30to50"] = QCD;
+  SampleMap["MC/qcd/Pt-50to80"] = QCD;
+  SampleMap["MC/qcd/Pt-80to120"] = QCD;
+  //    SampleMap["MC/qcd/Pt-120to170"] = QCD;
+  SampleMap["MC/qcd/Pt-170to300"] = QCD;
+  
+  // GJets
+  SampleMap["MC/gjets-EM"] = GJets;
+   
+  // GMSB
+  SampleMap["MC/gmsb"] = GMSB;
 
-  SetupSamples();
-  SetupColors();
-  SetupHists(title,nbinsx,xlow,xhigh,xtitle,ytitle);
+  // Data
+  SampleMap["DATA/singleph"] = Data;
+}
+
+void TreePlotter::SetupColors()
+{
+  ColorMap[QCD] = kGreen;
+  ColorMap[GJets] = kRed;
+  ColorMap[GMSB] = kBlue;
+  ColorMap[Data] = kBlack;
+}
+
+void TreePlotter::SetupCuts()
+{
+  CutMap[QCD]   = Form("%s",fCommonCut.Data());
+  CutMap[GJets] = Form("%s",fCommonCut.Data());
+  CutMap[GMSB]  = Form("%s",fCommonCut.Data());
+  CutMap[Data]  = Form("%s",fCommonCut.Data());
+}
+
+void TreePlotter::SetupLabels()
+{
+  LabelMap[QCD]   = "QCD";
+  LabelMap[GJets] = "#gamma + Jets (EM Enriched)";
+  LabelMap[GMSB]  = "GMSB c#tau = 4 m, #Lambda = 200 TeV";
+  LabelMap[Data]  = "Data";
+}
+
+void TreePlotter::SetupHists()
+{
+  HistMap[QCD]   = SetupHist("QCD_hist");
+  HistMap[GJets] = SetupHist("GJets_hist");
+  HistMap[GMSB]  = SetupHist("GMSB_hist");
+  HistMap[Data]  = SetupHist("Data_hist");
+  
+  for (auto & HistPair : HistMap)
+  {
+    const auto & sample = HistPair.first;
+    const auto & hist   = HistPair.second;
+    const Bool_t isMC   = (sample != Data);
+    
+    hist->SetLineColor(ColorMap[sample]);
+    hist->SetMarkerColor(ColorMap[sample]);
+    if (isMC) hist->SetFillColor(ColorMap[sample]);
+  }
 }

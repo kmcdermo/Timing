@@ -1,18 +1,56 @@
-#include "common.h"
+#include "Common.hh"
 #include "TLatex.h"
 #include "TColor.h"
 
-void CMSLumi(TCanvas *& canv, TString extraText, Int_t iPosX) {
+#include <iostream>
+
+void CheckValidFile(const TFile * file, const TString & fname)
+{
+  if (file == (TFile*) NULL) // check if valid file
+  {
+    std::cerr << "Input file is bad pointer: " << fname.Data()
+	      << " ...exiting..." << std::endl;
+    exit(1);
+  }
+  else 
+  {
+    std::cout << "Successfully opened file: " << fname.Data() << std::endl;
+  }
+}
+
+void CheckValidTree(const TTree * tree, const TString & tname, const TString & fname)
+{
+  if (tree == (TTree*) NULL) // check if valid plot
+  {
+    std::cerr << "Input TTree is bad pointer: " << tname.Data() << " in input file: " << fname.Data()
+	      << " ...exiting..." << std::endl;
+    exit(1);
+  }
+  else 
+  {
+    std::cout << "Successfully opened tree: " << tname.Data() << " in input file: " << fname.Data() << std::endl;
+  }
+}
+
+void CheckValidTH1F(const TH1F * plot, const TString & pname, const TString & fname)
+{
+  if (plot == (TH1F*) NULL) // check if valid plot
+  {  std::cerr << "Input TH1F is bad pointer: " << pname.Data() << " in input file: " << fname.Data() 
+	      << " ...exiting..." << std::endl;
+    exit(1);
+  }
+}
+
+void CMSLumi(TCanvas * canv, Int_t iPosX) 
+{
   TString  cmsText     = "CMS";
   Double_t cmsTextFont = 61;  // default is helvetic-bold
   
   // extraText is either "Simulation" or "Preliminary"
-  Bool_t   writeExtraText  = (extraText.EqualTo("",TString::kExact)?false:true);
+  Bool_t   writeExtraText  = (Config::extraText.EqualTo("",TString::kExact)?false:true);
   Double_t extraTextFont   = 52;  // default is helvetica-italics
 
-  Double_t lumi = 20.00;
-
-  TString lumiText = Form("%5.2f fb^{-1} (13 TeV)", lumi); // must change this spec once we are in fb range!
+  TString lumiText = Form("%5.2f fb^{-1} (13 TeV)", Config::lumi); // must change this spec once we are in fb range!
   
   // text sizes and text offsets with respect to the top frame
   // in unit of the top margin size
@@ -29,7 +67,8 @@ void CMSLumi(TCanvas *& canv, TString extraText, Int_t iPosX) {
   Double_t extraOverCmsTextSize  = 0.76;
  
   Bool_t outOfFrame    = false;
-  if ( iPosX/10 == 0 ) {
+  if ( iPosX/10 == 0 ) 
+  {
     outOfFrame = true;
   }
 
@@ -62,7 +101,8 @@ void CMSLumi(TCanvas *& canv, TString extraText, Int_t iPosX) {
   latex.SetTextSize(lumiTextSize*t);    
   latex.DrawLatex(1-r,1-t+lumiTextOffset*t,lumiText);
 
-  if (outOfFrame) {
+  if (outOfFrame) 
+  {
     latex.SetTextFont(cmsTextFont);
     latex.SetTextAlign(11); 
     latex.SetTextSize(cmsTextSize*t);    
@@ -70,45 +110,53 @@ void CMSLumi(TCanvas *& canv, TString extraText, Int_t iPosX) {
   }
   
   Double_t posX_ = 0;
-  if (iPosX%10 <= 1) {
+  if (iPosX%10 <= 1)  
+  {
     posX_ =   l + relPosX*(1-l-r);
   }
-  else if (iPosX%10 == 2) {
+  else if (iPosX%10 == 2) 
+  {
     posX_ =  l + 0.5*(1-l-r);
   }
-  else if (iPosX%10 == 3) {
+  else if (iPosX%10 == 3) 
+  {
     posX_ =  1-r - relPosX*(1-l-r);
   }
 
   Double_t posY_ = 1-t - relPosY*(1-t-b);
 
-  if (!outOfFrame) {
+  if (!outOfFrame) 
+  {
     latex.SetTextFont(cmsTextFont);
     latex.SetTextSize(cmsTextSize*t);
     latex.SetTextAlign(align_);
     latex.DrawLatex(posX_, posY_, cmsText);
     
-    if (writeExtraText) {
+    if (writeExtraText) 
+    {
       latex.SetTextFont(extraTextFont);
       latex.SetTextAlign(align_);
       latex.SetTextSize(extraTextSize*t);
-      latex.DrawLatex(posX_, posY_- relExtraDY*cmsTextSize*t,extraText);
+      latex.DrawLatex(posX_, posY_- relExtraDY*cmsTextSize*t,Config::extraText);
     }
   }
   
-  else if (outOfFrame && writeExtraText){
-    if (iPosX == 0) {
+  else if (outOfFrame && writeExtraText)
+  {
+    if (iPosX == 0) 
+    {
       posX_ = l +  relPosX*(1-l-r)+0.05;
       posY_ = 1-t+lumiTextOffset*t;
     }
     latex.SetTextFont(extraTextFont);
     latex.SetTextSize(extraTextSize*t);
     latex.SetTextAlign(align_);
-    latex.DrawLatex(posX_, posY_,extraText);      
+    latex.DrawLatex(posX_, posY_,Config::extraText);      
   }
 }
 
-void SetTDRStyle(TStyle *& tdrStyle){  
+void SetTDRStyle(TStyle *& tdrStyle)
+{  
   // For the canvas:
   tdrStyle->SetCanvasBorderMode(0);
   tdrStyle->SetCanvasColor(kWhite);
@@ -193,24 +241,23 @@ void SetTDRStyle(TStyle *& tdrStyle){
   // For the axis titles:
   tdrStyle->SetTitleColor(1, "XYZ");
   tdrStyle->SetTitleFont(42, "XYZ");
-  tdrStyle->SetTitleSize(0.035, "XYZ");
-  tdrStyle->SetTitleXOffset(1.1);
-  tdrStyle->SetTitleYOffset(1.1);
+  tdrStyle->SetTitleSize(Config::TitleSize, "XYZ");
+  tdrStyle->SetTitleXOffset(Config::TitleXOffset);
+  tdrStyle->SetTitleYOffset(Config::TitleYOffset);
 
   // For the axis labels:
 
   tdrStyle->SetLabelColor(1, "XYZ");
   tdrStyle->SetLabelFont(42, "XYZ");
-  tdrStyle->SetLabelOffset(0.007, "XYZ");
-  tdrStyle->SetLabelSize(0.03, "XYZ");
+  tdrStyle->SetLabelOffset(Config::LabelOffset, "XYZ");
+  tdrStyle->SetLabelSize(Config::LabelSize, "XYZ");
 
   // For the axis:
 
   tdrStyle->SetAxisColor(1, "XYZ");
   tdrStyle->SetStripDecimals(kTRUE);
-  tdrStyle->SetTickLength(0.03, "XYZ");
-  //  tdrStyle->SetNdivisions(510, "XYZ");
-  tdrStyle->SetNdivisions(505, "X");
+  tdrStyle->SetTickLength(Config::TickLength, "XYZ");
+  tdrStyle->SetNdivisions(Config::Ndivisions, "X");
   tdrStyle->SetPadTickX(1);  // To get tick marks on the opposite side of the frame
   tdrStyle->SetPadTickY(1);
 
