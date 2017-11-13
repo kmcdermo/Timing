@@ -2,7 +2,7 @@
 # using: 
 # Revision: 1.19 
 # Source: /local/reps/CMSSW/CMSSW/Configuration/Applications/python/ConfigBuilder.py,v 
-# with command line options: step1 --mc --eventcontent PREMIXRAW --datatier GEN-SIM-RAW --conditions 93X_mc2017_realistic_v3 --step DIGIPREMIX_S2,DATAMIX,L1,DIGI2RAW,HLT:Fake2 --nThreads 4 --datamix PreMix --era Run2_2017 --pileup_input dbs:/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv1_92X_upgrade2017_realistic_v8-v1/GEN-SIM-DIGI-RAW --filein file:step0.root --fileout file:step1.root
+# with command line options: step1 --mc --eventcontent PREMIXRAW --datatier GEN-SIM-RAW --conditions 93X_mc2017_realistic_v3 --step DIGIPREMIX_S2,DATAMIX,L1,DIGI2RAW,HLT:Fake2 --nThreads 4 --datamix PreMix --era Run2_2017 --pileup_input dbs:/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv1_92X_upgrade2017_realistic_v8-v1/GEN-SIM-DIGI-RAW --filein file:step0.root --fileout file:step1.root --no_exec
 import FWCore.ParameterSet.Config as cms
 
 from Configuration.StandardSequences.Eras import eras

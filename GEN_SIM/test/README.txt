@@ -49,9 +49,9 @@ cmsRun step0_GEN_SIM.py
 ## Step1: Premixing+RAW+Trigger ##
 ##################################
 
-## Now we use the test step0.root from the previous step as input. We are using a Fake HLT Menu here (a hack to get things running). As this is a private production on signals, we do not really care too much about the trigger menu.
+## Now we use the test step0.root from the previous step as input. We are using the Global Run menu in this release
 
-cmsDriver.py step1 --mc --eventcontent PREMIXRAW --datatier GEN-SIM-RAW --conditions 92X_upgrade2017_realistic_v10 --step DIGIPREMIX_S2,DATAMIX,L1,DIGI2RAW,HLT:Fake2 --nThreads 4 --datamix PreMix --era Run2_2017 --pileup_input dbs:/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv1_92X_upgrade2017_realistic_v8-v1/GEN-SIM-DIGI-RAW --filein file:step0.root --fileout file:step1.root --no_exec
+cmsDriver.py step1 --mc --eventcontent PREMIXRAW --datatier GEN-SIM-RAW --conditions 93X_mc2017_realistic_v3 --step DIGIPREMIX_S2,DATAMIX,L1,DIGI2RAW,HLT:GRun --nThreads 4 --datamix PreMix --era Run2_2017 --pileup_input dbs:/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv1_92X_upgrade2017_realistic_v8-v1/GEN-SIM-DIGI-RAW --filein file:step0.root --fileout file:step1.root --no_exec
 
 ## again test the file to make sure it runs properly
 
