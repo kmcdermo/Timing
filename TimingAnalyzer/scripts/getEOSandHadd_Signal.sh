@@ -4,6 +4,7 @@ base=${1}
 
 gmsb="GMSB_L200TeV_CTau400cm_930"
 dir=tmp
+mkdir -p ${dir}
 
 path=/store/user/kmcdermo/${gmsb}/${base}_${gmsb}
 timestamp=$(eos ls ${path})

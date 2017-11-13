@@ -4,6 +4,7 @@ base=${1}
 
 gtune="DoubleEMEnriched_13TeV_pythia8"
 dir=tmp
+mkdir -p ${dir}
 
 path=/store/user/kmcdermo/GJet_${gtune}/${base}_GJet_${gtune}
 timestamp=$(eos ls ${path})
