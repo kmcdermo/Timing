@@ -362,7 +362,7 @@ Float_t TreePlotter::GetSampleWeight(TFile * file)
   Float_t BR = 0.f;        configtree->SetBranchAddress("BR",&BR);
   configtree->GetEntry(0);
 
-  const Float_t weight = Config::lumi * xsec * filterEff * BR / h_cutflow->GetBinContent(1);
+  const Float_t weight = Config::lumi * Config::invfbToinvpb *xsec * filterEff * BR / h_cutflow->GetBinContent(1);
 
   delete h_cutflow;
   delete configtree;
