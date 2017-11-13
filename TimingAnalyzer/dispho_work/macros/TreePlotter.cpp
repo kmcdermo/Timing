@@ -395,8 +395,9 @@ void TreePlotter::SetupSamples()
   SampleMap["MC/qcd/Pt-30to50"] = QCD;
   SampleMap["MC/qcd/Pt-50to80"] = QCD;
   SampleMap["MC/qcd/Pt-80to120"] = QCD;
-  //    SampleMap["MC/qcd/Pt-120to170"] = QCD;
+  //  SampleMap["MC/qcd/Pt-120to170"] = QCD;
   SampleMap["MC/qcd/Pt-170to300"] = QCD;
+  //  SampleMap["MC/qcd/Pt-300toInf"] = QCD;
   
   // GJets
   SampleMap["MC/gjets-EM"] = GJets;
@@ -466,7 +467,7 @@ void TreePlotter::SetupDataSF()
   TString input = "";
   for (const auto & SamplePair : SampleMap)
   {
-    if (SamplePair.second == Data) input = SamplePair.first;
+    if (SamplePair.second == Data) {input = SamplePair.first; break;}
   }
 
   const TString filename = Form("/afs/cern.ch/work/k/kmcdermo/public/input/2017/%s/tree.root",input.Data());

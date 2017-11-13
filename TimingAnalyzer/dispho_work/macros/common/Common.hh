@@ -17,7 +17,7 @@ void SetTDRStyle(TStyle * tdrStyle);
 
 namespace Config
 {
-  constexpr Float_t lumi = 35.0; // CMS lumi
+  constexpr Float_t lumi = 35.883; // CMS lumi (as of Nov 9 PR JSON)
   constexpr Float_t invfbToinvpb = 1000.f; // conversion for the world's dumbest unit
   static const TString extraText = "Preliminary";
 
