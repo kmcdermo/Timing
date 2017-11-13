@@ -401,10 +401,10 @@ void TreePlotter::SetupColors()
 
 void TreePlotter::SetupCuts()
 {
-  CutMap[QCD]   = Form("%s",fCommonCut.Data());
-  CutMap[GJets] = Form("%s",fCommonCut.Data());
+  CutMap[QCD]   = Form("%s&&hltDisPho",fCommonCut.Data());
+  CutMap[GJets] = Form("%s&&hltDisPho",fCommonCut.Data());
   CutMap[GMSB]  = Form("%s",fCommonCut.Data());
-  CutMap[Data]  = Form("%s",fCommonCut.Data());
+  CutMap[Data]  = Form("%s&&hltDisPho",fCommonCut.Data());
 }
 
 void TreePlotter::SetupLabels()

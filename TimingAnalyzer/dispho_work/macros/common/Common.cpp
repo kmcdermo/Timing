@@ -119,7 +119,7 @@ void CMSLumi(TCanvas * canv, const Int_t iPosX)
     posX_ =  1-r - relPosX*(1-l-r);
   }
 
-  const Double_t posY_ = 1-t - relPosY*(1-t-b);
+  Double_t posY_ = 1-t - relPosY*(1-t-b);
 
   if (!outOfFrame) 
   {
