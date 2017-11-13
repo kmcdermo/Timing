@@ -137,7 +137,7 @@ void CMSLumi(TCanvas *& canv, const Int_t iPosX)
   const Double_t cmsTextFont = 61;  // default is helvetic-bold
   
   // extraText is either "Simulation" or "Preliminary"
-  const Bool_t   writeExtraText  = (Config::extraText.EqualTo("",TString::kExact)?false:true);
+  const Bool_t   writeExtraText  = !(Config::extraText.EqualTo("",TString::kExact));
   const Double_t extraTextFont   = 52;  // default is helvetica-italics
 
   const TString lumiText = Form("%5.2f fb^{-1} (13 TeV)", Config::lumi);
@@ -156,19 +156,15 @@ void CMSLumi(TCanvas *& canv, const Int_t iPosX)
   // ratio of "CMS" and extra text size
   const Double_t extraOverCmsTextSize  = 0.76;
  
-  Bool_t outOfFrame = false;
-  if ( iPosX/10 == 0 ) 
-  {
-    outOfFrame = true;
-  }
+  const Bool_t outOfFrame = (iPosX/10 == 0);
 
   Int_t alignY_=3;
   Int_t alignX_=2;
-  if (iPosX/10 == 0) {alignX_ = 1;}
-  if (iPosX == 0)    {alignY_ = 1;}
-  if (iPosX/10 == 1) {alignX_ = 1;}
-  if (iPosX/10 == 2) {alignX_ = 2;}
-  if (iPosX/10 == 3) {alignX_ = 3;}
+  if      (iPosX    == 0) {alignY_ = 1;}
+  else if (iPosX/10 == 0) {alignX_ = 1;}
+  else if (iPosX/10 == 1) {alignX_ = 1;}
+  else if (iPosX/10 == 2) {alignX_ = 2;}
+  else if (iPosX/10 == 3) {alignX_ = 3;}
   const Int_t align_ = 10*alignX_ + alignY_;
 
   const Double_t H = canv->GetWh();
@@ -184,7 +180,7 @@ void CMSLumi(TCanvas *& canv, const Int_t iPosX)
   latex.SetTextAngle(0);
   latex.SetTextColor(kBlack);    
 
-  Double_t extraTextSize = extraOverCmsTextSize*cmsTextSize;
+  const Double_t extraTextSize = extraOverCmsTextSize*cmsTextSize;
 
   latex.SetTextFont(42);
   latex.SetTextAlign(31); 
@@ -199,10 +195,10 @@ void CMSLumi(TCanvas *& canv, const Int_t iPosX)
     latex.DrawLatex(l,1-t+lumiTextOffset*t,cmsText);
   }
   
-  Double_t posX_;
+  Double_t posX_ = 0;
   if (iPosX%10 <= 1) 
   {
-    posX_ =   l + relPosX*(1-l-r);
+    posX_ =  l + relPosX*(1-l-r);
   }
   else if (iPosX%10 == 2) 
   {
@@ -213,7 +209,7 @@ void CMSLumi(TCanvas *& canv, const Int_t iPosX)
     posX_ =  1-r - relPosX*(1-l-r);
   }
 
-  Double_t posY_ = 1-t - relPosY*(1-t-b);
+  const Double_t posY_ = 1-t - relPosY*(1-t-b);
 
   if (!outOfFrame)
   {

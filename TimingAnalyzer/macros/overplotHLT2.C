@@ -20,8 +20,8 @@ void Overplot(const TEffVec& teffs, const TStrVec& eras, const TString outname, 
   TLegend * leg = new TLegend(0.9,0.8,0.99,0.99);
   for (Int_t i = 0; i < eras.size(); i++)
   {
-    teffs[i]->SetLineColor(colors[i]);
-    teffs[i]->SetMarkerColor(colors[i]);
+    teffs[i]->SetLineColor(colors[i+1]);
+    teffs[i]->SetMarkerColor(colors[i+1]);
     teffs[i]->Draw(i>0?"P same":"AP");
     leg->AddEntry(teffs[i],Form("%s",eras[i].Data()),"epl");
   }
@@ -41,8 +41,10 @@ void Overplot(const TEffVec& teffs, const TStrVec& eras, const TString outname, 
 
 void overplotHLT2()
 {
-  TestInfoVec effs = { {"SM","L1"}, {"SM","ET"}, {"SM","DispID"}, {"SM","HT"}, {"SP_STD","DispID"}, {"SP_Disp","HT"} };
-  TStrVec eras = {"2017B","2017C","2017D","2017E","2017F"};
+//   TestInfoVec effs = { {"SM","L1"}, {"SM","ET"}, {"SM","DispID"}, {"SM","HT"}, {"SP_STD","DispID"}, {"SP_Disp","HT"} };
+//   TStrVec eras = {"2017B","2017C","2017D","2017E","2017F"};
+  TestInfoVec effs = { {"SP_STD","DispID"}, {"SP_Disp","HT"} };
+  TStrVec eras = { "2017C", "2017D","2017E","2017F"};
   const Int_t N = eras.size();
 
   for (auto & eff : effs)
