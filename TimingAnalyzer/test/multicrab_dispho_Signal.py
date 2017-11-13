@@ -59,7 +59,7 @@ def main():
 
         # External files needed by CRAB
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
-        inputPaths   = 'HLTpaths.txt'
+        inputPaths   = 'HLTpathsWPho50.txt'
         inputFilters = 'HLTfilters.txt'
          
         #--------------------------------------------------------
