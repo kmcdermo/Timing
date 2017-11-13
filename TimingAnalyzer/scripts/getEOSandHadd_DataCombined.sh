@@ -13,5 +13,4 @@ do echo $label | while read -r era version
     done
 done
 
-hadd -O -k tree.root 2017?/v?/*.root
-rm -rf 2017?/v?/*
+./hadd_DataCombined.sh
