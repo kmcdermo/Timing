@@ -42,6 +42,7 @@ public:
   void SetupCuts();
   void SetupLabels();
   void SetupHists();
+  void SetupDataSF();
 
   // Main call
   void MakePlot();
@@ -65,6 +66,9 @@ private:
   const TString fTitle;
   const TString fXTitle;
   const TString fYTitle;
+
+  // Other variables
+  Float_t fDataSF;
 
   // Style
   TStyle * fTDRStyle;

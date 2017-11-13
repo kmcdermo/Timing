@@ -17,17 +17,23 @@ TreePlotter::TreePlotter(const TString & var, const TString & commoncut, const T
   //            //
   ////////////////
 
-  SetupSamples();
-  SetupColors();
-  SetupCuts();
-  SetupLabels();
-  SetupHists();
+  TreePlotter::SetupSamples();
+  TreePlotter::SetupColors();
+  TreePlotter::SetupCuts();
+  TreePlotter::SetupLabels();
+  TreePlotter::SetupHists();
+  TreePlotter::SetupDataSF();
 
   // output root file for quick inspection
   fOutFile = TFile::Open(Form("%s.root",text.Data()),"UPDATE");
 }
 
-TreePlotter::~TreePlotter() {}
+TreePlotter::~TreePlotter() 
+{
+  delete fOutFile;
+  for (auto & HistPair : HistMap) delete HistPair.second;
+  delete fTDRStyle;
+}
 
 void TreePlotter::MakePlot()
 {
@@ -62,7 +68,7 @@ void TreePlotter::MakePlot()
     TH1F * hist = TreePlotter::SetupHist(Form("%s_Hist",histname.Data()));
     
     // Set weight
-    const Float_t weight = (isMC ? GetSampleWeight(file) : 1.f);
+    const Float_t weight = (isMC ? TreePlotter::GetSampleWeight(file) : 1.f);
 
     // Fill from tree
     tree->Draw(Form("%s>>%s",fVar.Data(),hist->GetName()),Form("(%s) * (%f%s)",CutMap[sample].Data(),weight,isMC?Form("* genwgt"):""),"goff");
@@ -90,16 +96,16 @@ void TreePlotter::MakePlot()
 
   // Make Total Bkgd Hist: for error plotting
   TH1F * BkgdHist = TreePlotter::SetupHist("BkgdHist");
-  BkgdHist->Add(HistMap[QCD]);
   BkgdHist->Add(HistMap[GJets]);
+  BkgdHist->Add(HistMap[QCD]);
   BkgdHist->SetMarkerSize(0);
   BkgdHist->SetFillStyle(3254);
   BkgdHist->SetFillColor(kGray+3);
 
   // Make Background Stack
   THStack * BkgdStack = new THStack("BkgdStack","");
-  BkgdStack->Add(HistMap[QCD]);
   BkgdStack->Add(HistMap[GJets]);
+  BkgdStack->Add(HistMap[QCD]);
 
   // save to output file
   fOutFile->cd();
@@ -308,6 +314,17 @@ void TreePlotter::MakePlot()
   // save to output file
   fOutFile->cd();
   OutCanv->Write(OutCanv->GetName(),TObject::kWriteDelete);
+  
+  // delete everything
+  delete LowerPad;
+  delete UpperPad;
+  delete OutCanv;
+  delete Legend;
+  delete RatioLine;
+  delete RatioMCErrs;
+  delete RatioHist;
+  delete BkgdStack;
+  delete BkgdHist;
 }
 
 Float_t TreePlotter::GetHistMinimum()
@@ -362,7 +379,7 @@ Float_t TreePlotter::GetSampleWeight(TFile * file)
   Float_t BR = 0.f;        configtree->SetBranchAddress("BR",&BR);
   configtree->GetEntry(0);
 
-  const Float_t weight = Config::lumi * Config::invfbToinvpb *xsec * filterEff * BR / h_cutflow->GetBinContent(1);
+  const Float_t weight = (1/fDataSF) * Config::lumi * Config::invfbToinvpb * xsec * filterEff * BR / h_cutflow->GetBinContent(1);
 
   delete h_cutflow;
   delete configtree;
@@ -441,4 +458,32 @@ void TreePlotter::SetupHists()
       hist->SetLineWidth(2);
     }
   }
+}
+
+void TreePlotter::SetupDataSF()
+{
+  // Get Data file
+  TString input = "";
+  for (const auto & SamplePair : SampleMap)
+  {
+    if (SamplePair.second == Data) input = SamplePair.first;
+  }
+
+  const TString filename = Form("/afs/cern.ch/work/k/kmcdermo/public/input/2017/%s/tree.root",input.Data());
+  TFile * file = TFile::Open(Form("%s",filename.Data()));
+  CheckValidFile(file,filename);
+  file->cd();
+
+  // Get Configtree
+  const TString treename = "tree/configtree";
+  TTree * configtree = (TTree*)file->Get(Form("%s",treename.Data()));
+  CheckValidTree(configtree,treename,file->GetName());
+
+  UInt_t blindSF = 0; configtree->SetBranchAddress("blindSF",&blindSF);
+  configtree->GetEntry(0);
+
+  fDataSF = Float_t(blindSF);
+
+  delete configtree;
+  delete file;
 }
