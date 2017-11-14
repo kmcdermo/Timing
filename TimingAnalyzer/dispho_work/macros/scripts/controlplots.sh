@@ -15,9 +15,9 @@ for cut in gjetscut qcdcut
 do echo ${!cut} | while read -r text commoncut
     do 
 	for plot in phopt_0 phoeta_0 phoseedtime_0 met
-	do echo ${!plot} | while read -r var plotinfo
+	do echo ${!plot} | while read -r var vartext plotinfo
 	    do
-		./scripts/runTreePlotter.sh ${var} ${commoncut} ${text}_${var} ${plotinfo}
+		./scripts/runTreePlotter.sh ${var} ${commoncut} ${text}_${vartext} ${plotinfo}
 	    done
 	done
     done
