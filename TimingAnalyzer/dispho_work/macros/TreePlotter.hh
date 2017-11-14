@@ -48,6 +48,7 @@ public:
   void MakePlot();
 
   // subroutines for plotting
+  void MakeHistFromHaddTree();
   TH1F * SetupHist(const TString & name);
   Float_t GetSampleWeight(TFile * file);
   Float_t GetHistMinimum();

@@ -17,10 +17,16 @@ void SetTDRStyle(TStyle * tdrStyle);
 
 namespace Config
 {
+  // basics
   constexpr Float_t lumi = 35.883; // CMS lumi (as of Nov 9 PR JSON)
   constexpr Float_t invfbToinvpb = 1000.f; // conversion for the world's dumbest unit
   static const TString extraText = "Preliminary";
 
+  // input
+  static const TString baseDir = "/store/user/kmcdermo/nTuples/2017";
+  static const TString puwgtFileName = "puweights";
+  static const TString puwgtHistName = "PUWeightsHist";
+    
   // plotting style
   constexpr Float_t TitleSize    = 0.035;
   constexpr Float_t TitleXOffset = 1.1;

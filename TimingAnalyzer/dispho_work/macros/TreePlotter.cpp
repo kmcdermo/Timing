@@ -42,49 +42,7 @@ void TreePlotter::MakePlot()
   // Fill Hists from TTrees //
   //                        //
   ////////////////////////////
-
-  for (const auto & SamplePair : SampleMap)
-  {
-    // Init
-    const auto & input  = SamplePair.first;
-    const auto & sample = SamplePair.second;
-    const Bool_t isMC = (sample != Data);
-    std::cout << "Working on " << (isMC?"MC":"DATA") << " sample: " << input.Data() << std::endl;
-
-    // Get File
-    const TString filename = Form("/afs/cern.ch/work/k/kmcdermo/public/input/2017/%s/tree.root",input.Data());
-    TFile * file = TFile::Open(Form("%s",filename.Data()));
-    CheckValidFile(file,filename);
-    file->cd();
-	
-    // Get TTree
-    const TString treename = "tree/tree";
-    TTree * tree = (TTree*)file->Get(Form("%s",treename.Data()));
-    CheckValidTree(tree,treename,filename);
-
-    // Make temp hist
-    TString histname = input;
-    histname.ReplaceAll("/","_");
-    TH1F * hist = TreePlotter::SetupHist(Form("%s_Hist",histname.Data()));
-    
-    // Set weight
-    const Float_t weight = (isMC ? TreePlotter::GetSampleWeight(file) : 1.f);
-
-    // Fill from tree
-    tree->Draw(Form("%s>>%s",fVar.Data(),hist->GetName()),Form("(%s) * (%f%s)",CutMap[sample].Data(),weight,isMC?Form("* genwgt"):""),"goff");
-    
-    // Add to main hists
-    HistMap[sample]->Add(hist);
-
-    // save to output file
-    fOutFile->cd();
-    hist->Write(hist->GetName(),TObject::kWriteDelete);
-
-    // delete everything
-    delete hist;
-    delete tree;
-    delete file;
-  }
+  TreePlotter::MakeHistFromHaddTree();
 
   //////////////////////
   //                  //
@@ -308,7 +266,7 @@ void TreePlotter::MakePlot()
   std::cout << "Saving hist as png..." << std::endl;
 
   OutCanv->cd(); // Go back to the main canvas before saving
-  CMSLumi(OutCanv,Config::lumi); // write out Lumi info
+  CMSLumi(OutCanv); // write out Lumi info
   OutCanv->SaveAs(Form("%s.png",fText.Data()));
 
   // save to output file
@@ -325,6 +283,52 @@ void TreePlotter::MakePlot()
   delete RatioHist;
   delete BkgdStack;
   delete BkgdHist;
+}
+
+void TreePlotter::MakeHistFromHaddTree()
+{
+  for (const auto & SamplePair : SampleMap)
+  {
+    // Init
+    const auto & input  = SamplePair.first;
+    const auto & sample = SamplePair.second;
+    const Bool_t isMC = (sample != Data);
+    std::cout << "Working on " << (isMC?"MC":"DATA") << " sample: " << input.Data() << std::endl;
+
+    // Get File
+    const TString filename = Form("root://eoscms/%s/%s/tree.root",Config::baseDir.Data(),input.Data());
+    TFile * file = TFile::Open(Form("%s",filename.Data()));
+    CheckValidFile(file,filename);
+    file->cd();
+	
+    // Get TTree
+    const TString treename = "tree/tree";
+    TTree * tree = (TTree*)file->Get(Form("%s",treename.Data()));
+    CheckValidTree(tree,treename,filename);
+
+    // Make temp hist
+    TString histname = input;
+    histname.ReplaceAll("/","_");
+    TH1F * hist = TreePlotter::SetupHist(Form("%s_Hist",histname.Data()));
+    
+    // Set weight
+    const Float_t weight = (isMC ? TreePlotter::GetSampleWeight(file) : 1.f);
+
+    // Fill from tree
+    tree->Draw(Form("%s>>%s",fVar.Data(),hist->GetName()),Form("(%s) * (%f%s)",CutMap[sample].Data(),weight,isMC?Form("* genwgt"):""),"goff");
+    
+    // Add to main hists
+    HistMap[sample]->Add(hist);
+
+    // save to output file
+    fOutFile->cd();
+    hist->Write(hist->GetName(),TObject::kWriteDelete);
+
+    // delete everything
+    delete hist;
+    delete tree;
+    delete file;
+  }
 }
 
 Float_t TreePlotter::GetHistMinimum()
@@ -395,9 +399,9 @@ void TreePlotter::SetupSamples()
   SampleMap["MC/qcd/Pt-30to50"] = QCD;
   SampleMap["MC/qcd/Pt-50to80"] = QCD;
   SampleMap["MC/qcd/Pt-80to120"] = QCD;
-  //  SampleMap["MC/qcd/Pt-120to170"] = QCD;
+  SampleMap["MC/qcd/Pt-120to170"] = QCD;
   SampleMap["MC/qcd/Pt-170to300"] = QCD;
-  //  SampleMap["MC/qcd/Pt-300toInf"] = QCD;
+  SampleMap["MC/qcd/Pt-300toInf"] = QCD;
   
   // GJets
   SampleMap["MC/gjets-EM"] = GJets;
@@ -406,7 +410,7 @@ void TreePlotter::SetupSamples()
   SampleMap["MC/gmsb"] = GMSB;
 
   // Data
-  SampleMap["DATA/singleph"] = Data;
+  SampleMap["Data/singleph"] = Data;
 }
 
 void TreePlotter::SetupColors()
@@ -419,10 +423,10 @@ void TreePlotter::SetupColors()
 
 void TreePlotter::SetupCuts()
 {
-  CutMap[QCD]   = Form("%s&&hltDisPho",fCommonCut.Data());
-  CutMap[GJets] = Form("%s&&hltDisPho",fCommonCut.Data());
+  CutMap[QCD]   = Form("%s",fCommonCut.Data());
+  CutMap[GJets] = Form("%s",fCommonCut.Data());
   CutMap[GMSB]  = Form("%s",fCommonCut.Data());
-  CutMap[Data]  = Form("%s&&hltDisPho",fCommonCut.Data());
+  CutMap[Data]  = Form("%s",fCommonCut.Data());
 }
 
 void TreePlotter::SetupLabels()
@@ -470,7 +474,7 @@ void TreePlotter::SetupDataSF()
     if (SamplePair.second == Data) {input = SamplePair.first; break;}
   }
 
-  const TString filename = Form("/afs/cern.ch/work/k/kmcdermo/public/input/2017/%s/tree.root",input.Data());
+  const TString filename = Form("root://eoscms/%s/%s/tree.root",Config::baseDir.Data(),input.Data());
   TFile * file = TFile::Open(Form("%s",filename.Data()));
   CheckValidFile(file,filename);
   file->cd();

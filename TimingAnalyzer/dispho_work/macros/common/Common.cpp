@@ -70,11 +70,10 @@ void CMSLumi(TCanvas * canv, const Int_t iPosX)
 
   Int_t alignY_=3;
   Int_t alignX_=2;
-  if      (iPosX    == 0) {alignY_ = 1;}
-  if      (iPosX/10 == 0) {alignX_ = 1;}
-  else if (iPosX/10 == 1) {alignX_ = 1;}
-  else if (iPosX/10 == 2) {alignX_ = 2;}
-  else if (iPosX/10 == 3) {alignX_ = 3;}
+  if (iPosX    == 0) {alignY_ = 1;}
+  if (iPosX/10 <= 1) {alignX_ = 1;}
+  if (iPosX/10 == 2) {alignX_ = 2;}
+  if (iPosX/10 == 3) {alignX_ = 3;}
   const Int_t align_ = 10*alignX_ + alignY_;
 
   const Double_t H = canv->GetWh();
