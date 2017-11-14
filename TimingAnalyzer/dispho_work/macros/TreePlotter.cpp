@@ -60,6 +60,13 @@ void TreePlotter::MakePlot()
   BkgdHist->SetFillStyle(3254);
   BkgdHist->SetFillColor(kGray+3);
 
+  // ****** TEMP HACK : SCALE TO AREA OF DATA ******* //
+  const Float_t data_int = HistMap[Data]->Integral();
+  const Float_t bkgd_int = BkgdHist     ->Integral();
+  BkgdHist      ->Scale(data_int/bkgd_int);
+  HistMap[GJets]->Scale(data_int/bkgd_int);
+  HistMap[QCD]  ->Scale(data_int/bkgd_int);
+
   // Make Background Stack
   THStack * BkgdStack = new THStack("BkgdStack","");
   BkgdStack->Add(HistMap[GJets]);
