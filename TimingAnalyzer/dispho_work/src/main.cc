@@ -206,6 +206,7 @@ int main(int argc, const char* argv[])
 	"  --use-GJets-EM                use Gamma+Jets EM enriched samples with MC (def: %s)\n"
 	"  --use-GJets-FlatPt            use Gamma+Jets Flat pt samples with MC (def: %s)\n"
 	"  --split-pho                   split OOT and GED photon collections (def: %s)\n"
+	"  --read-rechits                read rechits, otherwise use seed vars directly (def: %s)\n"
 	"  --do-evstd                    make standard event validation plots (def: %s)\n"
 	"  --do-phostd                   make standard photon validation plots (def: %s)\n"
 	"  --use-pfIsoEA                 use effective areas for PF isolations (def: %s)\n"
@@ -248,6 +249,7 @@ int main(int argc, const char* argv[])
 	PrintBool(Config::useGJetsEM),
 	PrintBool(Config::useGJetsFlatPt),
 	PrintBool(Config::splitPho),
+	PrintBool(Config::readRecHits),
 	PrintBool(Config::doEvStd),
 	PrintBool(Config::doPhoStd),
 	PrintBool(Config::pfIsoEA),
@@ -291,6 +293,7 @@ int main(int argc, const char* argv[])
     else if (*i == "--use-GJets-EM"){ Config::useGJetsEM = true; }
     else if (*i == "--use-GJets-FlatPt") { Config::useGJetsFlatPt = true; }
     else if (*i == "--split-pho")   { Config::splitPho   = true; }
+    else if (*i == "--read-rechits"){ Config::readRecHits= true; }
     else if (*i == "--do-evstd")    { Config::doAnalysis = true; Config::doEvStd    = true; }
     else if (*i == "--do-phostd")   { Config::doAnalysis = true; Config::doPhoStd   = true; }
     else if (*i == "--use-pfIsoEA") { Config::pfIsoEA    = true; }

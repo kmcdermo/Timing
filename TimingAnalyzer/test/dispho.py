@@ -26,6 +26,9 @@ options.register('splitPho',False,VarParsing.multiplicity.singleton,VarParsing.v
 options.register('onlyGED',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store only leading GED photons, at most four');
 options.register('onlyOOT',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store only leading OOT photons, at most four');
 
+## rechit storing options
+options.register('storeRecHits',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store all rechits above rhEmin');
+
 ## pre-selection cuts
 options.register('applyTrigger',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to apply trigger pre-selection');
 options.register('minHT',400.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'jet HT minimum cut');
@@ -91,7 +94,9 @@ print "     -- Photon Storing --"
 print "splitPho       : ",options.splitPho
 print "onlyGED        : ",options.onlyGED
 print "onlyOOT        : ",options.onlyOOT
-print "     -- Pre-Selection --"
+print "     -- RecHit Storing --"
+print "storeRecHits   : ",options.storeRecHits
+print "   -- Event Pre-Selection --"
 print "applyTrigger   : ",options.applyTrigger
 print "minHT          : ",options.minHT
 print "applyHT        : ",options.applyHT
@@ -211,6 +216,8 @@ process.tree = cms.EDAnalyzer("DisPho",
    splitPho = cms.bool(options.splitPho),
    onlyGED  = cms.bool(options.onlyGED),
    onlyOOT  = cms.bool(options.onlyOOT),
+   ## recHit storing options
+   storeRecHits = cms.bool(options.storeRecHits),
    ## pre-selection
    applyTrigger = cms.bool(options.applyTrigger),
    minHT        = cms.double(options.minHT),

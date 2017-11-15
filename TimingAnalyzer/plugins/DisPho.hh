@@ -161,6 +161,9 @@ struct phoStruct
 
   int seed_;
   std::vector<int> recHits_;
+  float seedtime_;
+  float seedE_;
+  unsigned int seedID_;
 
   bool isOOT_;
   bool isEB_;
@@ -245,6 +248,9 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const bool splitPho;
   const bool onlyGED;
   const bool onlyOOT;
+
+  // rechit storing options
+  const bool storeRecHits;
 
   // pre-selection vars
   const bool applyTrigger;

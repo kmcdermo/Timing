@@ -373,10 +373,20 @@ void Analysis::FillPhotonStandardPlots(const Int_t Nphotons, const Float_t weigh
     stdphoTH1Map[Form("phosmaj_%s",name.Data())]->Fill(pho.smaj,weight);
     stdphoTH1Map[Form("phosmin_%s",name.Data())]->Fill(pho.smin,weight);
 
-    if (pho.seed >= 0)
-    { 
-      stdphoTH1Map[Form("phoseedtime_%s",name.Data())]->Fill((*rhtime)[pho.seed],weight);
-    } // end check over seed
+    if (Config::readRecHits)
+    {
+      if (pho.seed >= 0)
+      { 
+	stdphoTH1Map[Form("phoseedtime_%s",name.Data())]->Fill((*rhtime)[pho.seed],weight);
+      } // end check over seed
+    }
+    else
+    {
+      if (pho.seedID > 0) // and imperfect check
+      { 
+	stdphoTH1Map[Form("phoseedtime_%s",name.Data())]->Fill(pho.seedtime,weight);
+      } // end check over seed
+    }
   } // end loop over nphotons
 }
 
@@ -1348,7 +1358,7 @@ void Analysis::DeleteTEffs(TEffMap & teffmap)
 void Analysis::InitTree() 
 {
   Analysis::InitStructs();
-  Analysis::InitBranchVecs();
+  if (Config::readRecHits) Analysis::InitBranchVecs();
   Analysis::InitBranches();
 }
 
@@ -1484,12 +1494,15 @@ void Analysis::InitBranches()
   }
 
   fInTree->SetBranchAddress("nrechits", &nrechits, &b_nrechits);
-  fInTree->SetBranchAddress("rheta", &rheta, &b_rheta);
-  fInTree->SetBranchAddress("rhphi", &rhphi, &b_rhphi);
-  fInTree->SetBranchAddress("rhE", &rhE, &b_rhE);
-  fInTree->SetBranchAddress("rhtime", &rhtime, &b_rhtime);
-  fInTree->SetBranchAddress("rhOOT", &rhOOT, &b_rhOOT);
-  fInTree->SetBranchAddress("rhID", &rhID, &b_rhID);
+  if (Config::readRecHits)
+  {
+    fInTree->SetBranchAddress("rheta", &rheta, &b_rheta);
+    fInTree->SetBranchAddress("rhphi", &rhphi, &b_rhphi);
+    fInTree->SetBranchAddress("rhE", &rhE, &b_rhE);
+    fInTree->SetBranchAddress("rhtime", &rhtime, &b_rhtime);
+    fInTree->SetBranchAddress("rhOOT", &rhOOT, &b_rhOOT);
+    fInTree->SetBranchAddress("rhID", &rhID, &b_rhID);
+  }
 
   fInTree->SetBranchAddress("nphotons", &nphotons, &b_nphotons);
   for (Int_t ipho = 0; ipho < Config::nTotalPhotons; ipho++) 
@@ -1516,8 +1529,17 @@ void Analysis::InitBranches()
     fInTree->SetBranchAddress(Form("phosmaj_%i",ipho), &pho.smaj, &pho.b_smaj);
     fInTree->SetBranchAddress(Form("phosmin_%i",ipho), &pho.smin, &pho.b_smin);
     fInTree->SetBranchAddress(Form("phoalpha_%i",ipho), &pho.alpha, &pho.b_alpha);
-    fInTree->SetBranchAddress(Form("phoseed_%i",ipho), &pho.seed, &pho.b_seed);
-    fInTree->SetBranchAddress(Form("phorecHits_%i",ipho), &pho.recHits, &pho.b_recHits);
+    if (Config::readRecHits)
+    {
+      fInTree->SetBranchAddress(Form("phoseed_%i",ipho), &pho.seed, &pho.b_seed);
+      fInTree->SetBranchAddress(Form("phorecHits_%i",ipho), &pho.recHits, &pho.b_recHits);
+    }
+    else
+    {
+      fInTree->SetBranchAddress(Form("phoseedtime_%i",ipho), &pho.seedtime, &pho.b_seedtime);
+      fInTree->SetBranchAddress(Form("phoseedE_%i",ipho), &pho.seedE, &pho.b_seedE);
+      fInTree->SetBranchAddress(Form("phoseedID_%i",ipho), &pho.seedID, &pho.b_seedID);;
+    }
     fInTree->SetBranchAddress(Form("phoisOOT_%i",ipho), &pho.isOOT, &pho.b_isOOT);
     fInTree->SetBranchAddress(Form("phoisEB_%i",ipho), &pho.isEB, &pho.b_isEB);
     fInTree->SetBranchAddress(Form("phoisHLT_%i",ipho), &pho.isHLT, &pho.b_isHLT);
@@ -1526,10 +1548,10 @@ void Analysis::InitBranches()
     
     if (fIsMC)
     {
-      fInTree->SetBranchAddress(Form("isGen_%i",ipho), &pho.isGen, &pho.b_isGen);
+      fInTree->SetBranchAddress(Form("phoisGen_%i",ipho), &pho.isGen, &pho.b_isGen);
       if (fIsGMSB || fIsHVDS)
       {
-	fInTree->SetBranchAddress(Form("isSignal_%i",ipho), &pho.isSignal, &pho.b_isSignal);
+	fInTree->SetBranchAddress(Form("phoisSignal_%i",ipho), &pho.isSignal, &pho.b_isSignal);
       }
     }
   }

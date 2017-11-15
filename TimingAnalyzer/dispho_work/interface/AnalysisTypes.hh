@@ -153,6 +153,9 @@ struct Pho
   Float_t alpha;
   Int_t   seed;
   std::vector<Int_t> * recHits;
+  Float_t seedtime;
+  Float_t seedE;
+  UInt_t  seedID;
   Bool_t  isOOT;
   Bool_t  isEB;
   Bool_t  isHLT;
@@ -185,6 +188,9 @@ struct Pho
   TBranch * b_alpha;
   TBranch * b_seed;
   TBranch * b_recHits;
+  TBranch * b_seedtime;
+  TBranch * b_seedE;
+  TBranch * b_seedID;
   TBranch * b_isOOT;
   TBranch * b_isEB;
   TBranch * b_isHLT;

@@ -22,6 +22,9 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   onlyGED (iConfig.existsAs<bool>("onlyGED")  ? iConfig.getParameter<bool>("onlyGED")  : false),
   onlyOOT (iConfig.existsAs<bool>("onlyOOT")  ? iConfig.getParameter<bool>("onlyOOT")  : false),
 
+  // recHits storing
+  storeRecHits(iConfig.existsAs<bool>("storeRecHits") ? iConfig.getParameter<bool>("storeRecHits") : true),
+
   // pre-selection
   applyTrigger(iConfig.existsAs<bool>("applyTrigger") ? iConfig.getParameter<bool>("applyTrigger") : false),
   minHT(iConfig.existsAs<double>("minHT") ? iConfig.getParameter<double>("minHT") : 400.f),
@@ -464,11 +467,14 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //          //
   //////////////
   nrechits = recHitMap.size();
-  DisPho::InitializeRecHitBranches();
-  if (recHitsEBH.isValid() && recHitsEEH.isValid())
+  if (storeRecHits)
   {
-    DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,recHitMap);
-    DisPho::SetRecHitBranches(recHitsEE,endcapGeometry,recHitMap);
+    DisPho::InitializeRecHitBranches();
+    if (recHitsEBH.isValid() && recHitsEEH.isValid())
+    {
+      DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,recHitMap);
+      DisPho::SetRecHitBranches(recHitsEE,endcapGeometry,recHitMap);
+    }
   }
 
   //////////////////
@@ -686,8 +692,8 @@ void DisPho::InitializePVBranches()
 
 void DisPho::InitializeMETBranches()
 {
-  t1pfMETpt    = -9999.f; 
-  t1pfMETphi   = -9999.f; 
+  t1pfMETpt    = -9999.f;
+  t1pfMETphi   = -9999.f;
   t1pfMETsumEt = -9999.f;
 }
 
@@ -794,8 +800,17 @@ void DisPho::InitializePhoBranch(phoStruct & phoBranch)
   phoBranch.Smin_ = -9999.f;
   phoBranch.alpha_ = -9999.f;
 
-  phoBranch.seed_ = -1;
-  phoBranch.recHits_.clear();
+  if (storeRecHits)
+  {
+    phoBranch.seed_ = -1;
+    phoBranch.recHits_.clear();
+  }
+  else
+  {
+    phoBranch.seedtime_ = -9999.f;
+    phoBranch.seedE_    = -9999.f;
+    phoBranch.seedID_   = 0; // non-ideal
+  }
 
   phoBranch.isOOT_ = false;
   phoBranch.isEB_ = false;
@@ -825,11 +840,6 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   phoBranch.HoE_ = pho.hadTowOverEm(); // used in ID + trigger (single tower HoverE)
   phoBranch.r9_  = pho.r9(); // used in slimming in PAT + trigger
 
-  // const float sceta = std::abs(phoBranch.scEta_);
-  // phoBranch.ChgHadIso_ = std::max(pho.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
-  // phoBranch.NeuHadIso_ = std::max(pho.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);
-  // phoBranch.PhoIso_    = std::max(pho.photonIso()        - (rho * oot::GetGammaEA        (sceta)),0.f);
-
   phoBranch.ChgHadIso_ = pho.chargedHadronIso();
   phoBranch.NeuHadIso_ = pho.neutralHadronIso();
   phoBranch.PhoIso_    = pho.photonIso();
@@ -848,8 +858,9 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   phoBranch.Sieip_ = phoshape.sigmaIetaIphi;
 
   // use seed to get geometry and recHits
-  const DetId & seedDetId = phosc->seed()->seed(); //seed detid
-  const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
+  const DetId & seedDetId = phosc->seed()->seed(); // seed detid
+  const uint32_t seedRawId = seedDetId.rawId(); // crystal number
+  const bool isEB = (seedDetId.subdetId() == EcalBarrel); // which subdet
   const EcalRecHitCollection * recHits = (isEB ? recHitsEB : recHitsEE); 
 
   // 2nd moments from official calculation
@@ -880,15 +891,33 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   } // end loop over hits and fractions
 
   // store the position inside the recHits vector 
-  for (uiiumap::const_iterator rhiter = phrhIDmap.begin(); rhiter != phrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
+  if (storeRecHits)
   {
-    phoBranch.recHits_.emplace_back(rhiter->first);
+    for (uiiumap::const_iterator rhiter = phrhIDmap.begin(); rhiter != phrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
+    {
+      phoBranch.recHits_.emplace_back(rhiter->first);
+    }
   }
 
-  // save seed id pos
-  if (recHitMap.count(seedDetId.rawId())) 
+  // save seed info
+  if (recHitMap.count(seedRawId)) 
   {
-    phoBranch.seed_ = recHitMap.at(seedDetId.rawId());
+    if (storeRecHits) 
+    {
+      // store just the seed for accessing through recHit branches
+      phoBranch.seed_ = recHitMap.at(seedRawId);
+    }
+    else
+    {
+      // store basic info about the seed
+      EcalRecHitCollection::const_iterator seedRecHit = recHits->find(seedDetId);
+      if (seedRecHit != recHits->end()) // standard check (redundant)
+      {
+	phoBranch.seedtime_  = seedRecHit->time();
+	phoBranch.seedE_     = seedRecHit->energy();
+	phoBranch.seedID_    = seedRawId;
+      }
+    }
   }
 
   // some standard booleans
@@ -1160,12 +1189,15 @@ void DisPho::MakeEventTree()
 
   // RecHit Info
   tree->Branch("nrechits", &nrechits, "nrechits/I");
-  tree->Branch("rheta", &rheta);
-  tree->Branch("rhphi", &rhphi);
-  tree->Branch("rhE", &rhE);
-  tree->Branch("rhtime", &rhtime);
-  tree->Branch("rhOOT", &rhOOT);
-  tree->Branch("rhID", &rhID);
+  if (storeRecHits)
+  {
+    tree->Branch("rheta", &rheta);
+    tree->Branch("rhphi", &rhphi);
+    tree->Branch("rhE", &rhE);
+    tree->Branch("rhtime", &rhtime);
+    tree->Branch("rhOOT", &rhOOT);
+    tree->Branch("rhID", &rhID);
+  }
 
   // Photon Info
   tree->Branch("nphotons", &nphotons, "nphotons/I");
@@ -1280,8 +1312,17 @@ void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
   tree->Branch(Form("phosmin_%i",i), &phoBranch.Smin_, Form("phosmin_%i/F",i));
   tree->Branch(Form("phoalpha_%i",i), &phoBranch.alpha_, Form("phoalpha_%i/F",i));
 
-  tree->Branch(Form("phoseed_%i",i), &phoBranch.seed_, Form("phoseed_%i/I",i));
-  tree->Branch(Form("phorecHits_%i",i), &phoBranch.recHits_);
+  if (storeRecHits)
+  {
+    tree->Branch(Form("phoseed_%i",i), &phoBranch.seed_, Form("phoseed_%i/I",i));
+    tree->Branch(Form("phorecHits_%i",i), &phoBranch.recHits_);
+  }
+  else 
+  {
+    tree->Branch(Form("phoseedtime_%i",i), &phoBranch.seedtime_, Form("phoseedtime_%i/F",i));
+    tree->Branch(Form("phoseedE_%i",i), &phoBranch.seedE_, Form("phoseedE_%i/F",i));
+    tree->Branch(Form("phoseedID_%i",i), &phoBranch.seedID_, Form("phoseedID_%i/i",i));
+  }
 
   tree->Branch(Form("phoisOOT_%i",i), &phoBranch.isOOT_, Form("phoisOOT_%i/O",i));
   tree->Branch(Form("phoisEB_%i",i), &phoBranch.isEB_, Form("phoisEB_%i/O",i));

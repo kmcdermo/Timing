@@ -122,6 +122,7 @@ namespace Config
   extern Bool_t      useGJetsEM;
   extern Bool_t      useGJetsFlatPt;
   extern Bool_t      splitPho;
+  extern Bool_t      readRecHits;
   extern Int_t       nTotalPhotons; // total stored in the event
   extern Int_t       nPhotons; // allowed photons per split
   extern Bool_t      doEvStd;
