@@ -3,13 +3,19 @@
 TreePlotter::TreePlotter(const TString & var, const TString & commoncut, const TString & text, const Int_t nbinsx, const Float_t xlow, const Float_t xhigh,
 			 const Bool_t islogx, const Bool_t islogy, const TString & title, const TString & xtitle, const TString & ytitle) : 
   fVar(var), fCommonCut(commoncut), fText(text), fNbinsX(nbinsx), fXLow(xlow), fXHigh(xhigh),
-  fIsLogX(islogx), fIsLogY(islogy), fTitle(title), fXTitle(xtitle), fYTitle(ytitle)
+  fIsLogX(islogx), fIsLogY(islogy)
 {
   std::cout << "Initializing..." << std::endl;
 
-  fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
-  SetTDRStyle(fTDRStyle);
-  gROOT->ForceStyle();
+  // setup up titles
+  fTitle = title;
+  fTitle.ReplaceAll("XXX"," ");
+
+  fXTitle = xtitle;
+  fXTitle.ReplaceAll("XXX"," ");
+
+  fYTitle = ytitle;
+  fYTitle.ReplaceAll("XXX"," ");
 
   ////////////////
   //            //
@@ -17,6 +23,12 @@ TreePlotter::TreePlotter(const TString & var, const TString & commoncut, const T
   //            //
   ////////////////
 
+  // set style
+  fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
+  SetTDRStyle(fTDRStyle);
+  gROOT->ForceStyle();
+
+  // setup hists
   TreePlotter::SetupSamples();
   TreePlotter::SetupColors();
   TreePlotter::SetupCuts();

@@ -64,9 +64,9 @@ private:
   const Float_t fXHigh;
   const Bool_t  fIsLogX;
   const Bool_t  fIsLogY;
-  const TString fTitle;
-  const TString fXTitle;
-  const TString fYTitle;
+  TString fTitle;
+  TString fXTitle;
+  TString fYTitle;
 
   // Other variables
   Float_t fDataSF;
