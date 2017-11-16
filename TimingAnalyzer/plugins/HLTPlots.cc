@@ -61,10 +61,12 @@ HLTPlots::HLTPlots(const edm::ParameterSet& iConfig):
   
   // set test options
   const TestResults initResults = {false,-1};
-  effTestMap["L1"] = {{"","hltL1sSingleEGNonIsoOrWithJetAndTauNoPS",-1,-1},initResults};
-  effTestMap["ET"] = {{"hltEGL1SingleEGNonIsoOrWithJetAndTauNoPSFilter","hltEG60EtFilter",-1,-1},initResults};
-  effTestMap["DispID"] = {{"hltEG60R9Id90CaloIdLIsoLHollowTrackIsoFilter","hltEG60R9Id90CaloIdLIsoLDisplacedIdFilter",-1,-1},initResults};
-  effTestMap["HT"] = {{"hltEG60R9Id90CaloIdLIsoLDisplacedIdFilter","HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_PFHT350MinPFJet15_v",-1,-1},initResults};
+  effTestMap["L1"]      = {{""                                              ,"hltL1sSingleEGNonIsoOrWithJetAndTauNoPS"                          ,-1,-1},initResults};
+  effTestMap["L1toHLT"] = {{"hltL1sSingleEGNonIsoOrWithJetAndTauNoPS"       ,"hltEGL1SingleEGNonIsoOrWithJetAndTauNoPSFilter"                   ,-1,-1},initResults};
+  effTestMap["ET"]      = {{"hltEGL1SingleEGNonIsoOrWithJetAndTauNoPSFilter","hltEG60EtFilter"                                                  ,-1,-1},initResults};
+  effTestMap["PhoID"]   = {{"hltEG60EtFilter"                               ,"hltEG60R9Id90CaloIdLIsoLHollowTrackIsoFilter"                     ,-1,-1},initResults};
+  effTestMap["DispID"]  = {{"hltEG60R9Id90CaloIdLIsoLHollowTrackIsoFilter"  ,"hltEG60R9Id90CaloIdLIsoLDisplacedIdFilter"                        ,-1,-1},initResults};
+  effTestMap["HT"]      = {{"hltEG60R9Id90CaloIdLIsoLDisplacedIdFilter"     ,"HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_PFHT350MinPFJet15_v",-1,-1},initResults};
   for (auto & effTestPair : effTestMap)
   {
     // init options
@@ -383,14 +385,17 @@ void HLTPlots::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   HLTPlots::ResetTestResults();
 
   // Get Results
-  HLTPlots::GetL1Result(goodphs);
-  HLTPlots::GetETResult(goodphs);
+  HLTPlots::GetFirstLegResult(goodphs,"L1");
+  HLTPlots::GetStandardLegResult(goodphs,"L1toHLT",false);
+  HLTPlots::GetStandardLegResult(goodphs,"ET",false);
 
-  // filter photons below pt < 65
-  goodphs.erase(std::remove_if(goodphs.begin(),goodphs.end(),[&](const auto iph){return phpt[iph] < 65.f;}),goodphs.end());
+  // filter photons below pt < threshold
+  const float ptcut = 70.f;
+  goodphs.erase(std::remove_if(goodphs.begin(),goodphs.end(),[&](const auto iph){return phpt[iph] < ptcut;}),goodphs.end());
 
-  HLTPlots::GetDispIDResult(goodphs);
-  HLTPlots::GetHTResult(goodphs);
+  HLTPlots::GetStandardLegResult(goodphs,"PhoID",false);
+  HLTPlots::GetStandardLegResult(goodphs,"DispID",true);
+  HLTPlots::GetLastLegResult(goodphs,"HT");
   
   // fill in the plots!
   for (const auto & effTestPair : effTestMap)
@@ -412,10 +417,14 @@ void HLTPlots::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       effETEEs[label]->Fill(passed,phpt[iph]);
     }
 
-    effetas [label]->Fill(passed,pheta[iph]);
-    effphis [label]->Fill(passed,phphi[iph]);
-    efftimes[label]->Fill(passed,phseedtime[iph]);
-    effHTs  [label]->Fill(passed,pfJetHT);
+    // want to see flat in phi/eta, so factor out offline ET turn-on
+    if (phpt[iph] > ptcut)
+    {
+      effetas [label]->Fill(passed,pheta[iph]);
+      effphis [label]->Fill(passed,phphi[iph]);
+      efftimes[label]->Fill(passed,phseedtime[iph]);
+      effHTs  [label]->Fill(passed,pfJetHT);
+    }
   }
 }
 
@@ -430,9 +439,29 @@ void HLTPlots::ResetTestResults()
   }
 }
 
-void HLTPlots::GetL1Result(const std::vector<int> & goodphs)
+void HLTPlots::GetDenomPhs(const std::vector<int> & goodphs, const int idenom, std::vector<int> & denomphos)
 {
-  const std::string label = "L1";
+  // get potential denom
+  std::vector<int> denomphs;
+  for (const auto iph : goodphs)
+  {
+    bool isGoodDenom = true;
+    for (auto ifilter = 0; ifilter <= idenom; ifilter++)
+    { 
+      if (!phIsHLTMatched[iph][ifilter]) 
+      {
+	isGoodDenom = false;
+	break;
+      }
+    }
+    if (!isGoodDenom) continue;
+
+    denomphs.emplace_back(iph);
+  }
+}
+
+void HLTPlots::GetFirstLegResult(const std::vector<int> & goodphs, const std::string & label)
+{
   const auto & options = effTestMap[label].options;
   auto       & results = effTestMap[label].results;
 
@@ -448,57 +477,20 @@ void HLTPlots::GetL1Result(const std::vector<int> & goodphs)
   if (results.goodph < 0) results.goodph = goodphs[0];
 }
 
-void HLTPlots::GetETResult(const std::vector<int> & goodphs)
+void HLTPlots::GetStandardLegResult(const std::vector<int> & goodphs, const std::string & label, const bool sortByTime)
 {
-  const std::string label = "ET";
   const auto & options = effTestMap[label].options;
   auto       & results = effTestMap[label].results;
   
   // get potential denom
   std::vector<int> denomphs;
-  for (const auto iph : goodphs)
-  {
-    if (!phIsHLTMatched[iph][options.idenom]) continue;
-    denomphs.emplace_back(iph);
-  }
+  HLTPlots::GetDenomPhs(goodphs,options.idenom,denomphs);
   
-  // need at least on match!
+  // need at least one match!
   if (denomphs.size() == 0) return;
 
-  // get numer
-  for (const auto iph : denomphs)
-  {
-    if (phIsHLTMatched[iph][options.inumer])
-    {
-      results.passed = true;
-      results.goodph = iph;
-      break;
-    }
-  }
-
-  // set to leading photon if no good one
-  if (results.goodph < 0) results.goodph = denomphs[0];
-}
-
-void HLTPlots::GetDispIDResult(const std::vector<int> & goodphs)
-{
-  const std::string label = "DispID";
-  const auto & options = effTestMap[label].options;
-  auto       & results = effTestMap[label].results;
-  
-  // get potential denom
-  std::vector<int> denomphs;
-  for (const auto iph : goodphs)
-  {
-    if (!phIsHLTMatched[iph][options.idenom]) continue;
-    denomphs.emplace_back(iph);
-  }
-  
-  // need at least on match!
-  if (denomphs.size() == 0) return;
-  
   // sort by most delayed photon
-  std::sort(denomphs.begin(),denomphs.end(),[&](const int iph1, const int iph2){return phseedtime[iph1]>phseedtime[iph2];});
+  if (sortByTime) std::sort(denomphs.begin(),denomphs.end(),[&](const int iph1, const int iph2){return phseedtime[iph1]>phseedtime[iph2];});
 
   // get numer
   for (const auto iph : denomphs)
@@ -515,23 +507,18 @@ void HLTPlots::GetDispIDResult(const std::vector<int> & goodphs)
   if (results.goodph < 0) results.goodph = denomphs[0];
 }
 
-void HLTPlots::GetHTResult(const std::vector<int> & goodphs)
+void HLTPlots::GetLastLegResult(const std::vector<int> & goodphs, const std::string & label)
 {
-  const std::string label = "HT";
   const auto & options = effTestMap[label].options;
   auto       & results = effTestMap[label].results;
   
   // get potential denom
   std::vector<int> denomphs;
-  for (const auto iph : goodphs)
-  {
-    if (!phIsHLTMatched[iph][options.idenom]) continue;
-    denomphs.emplace_back(iph);
-  }
+  HLTPlots::GetDenomPhs(goodphs,options.idenom,denomphs);
   
-  // need at least on match!
+  // need at least one match!
   if (denomphs.size() == 0) return;
-
+  
   // get numer
   if (triggerBitMap.count(options.numerName))
   {
@@ -543,8 +530,7 @@ void HLTPlots::GetHTResult(const std::vector<int> & goodphs)
 
   // set to leading photon
   results.goodph = denomphs[0];
-}
-    
+}    
 
 void HLTPlots::InitializeTriggerBranches()
 {
@@ -736,6 +722,9 @@ void HLTPlots::beginJob()
   const int nbinsxET = 20;
   double xbinsET[nbinsxET+1] = {20,30,40,45,50,52,54,56,58,60,62,64,66,68,70,75,80,100,200,500,1000};
 
+  const int nbinsxTime = 18;
+  double xbinsTime[nbinsxTime+1] = {-10,-5,-3,-2.5,-2,-1.5,-1,-0.5,0,0.5,1,1.5,2,2.5,3,5,10,15,25};
+
   const int nbinsxHT = 23;
   double xbinsHT[nbinsxHT+1] = {100,150,200,250,300,325,350,375,400,425,450,475,500,525,550,575,600,625,650,700,750,1000,1500,2000};
   
@@ -747,7 +736,7 @@ void HLTPlots::beginJob()
     effETEEs[label] = fs->make<TEfficiency>(Form("effETEE_%s",label.c_str()),"HLT Efficiency vs Leading Photon E_{T} [EE];Photon Offline E_{T};Efficiency",nbinsxET,xbinsET);
     effetas [label] = fs->make<TEfficiency>(Form("effeta_%s",label.c_str()),"HLT Efficiency vs Leading Photon #eta;Photon Offline #eta;Efficiency",30,-3.f,3.f);
     effphis [label] = fs->make<TEfficiency>(Form("effphi_%s",label.c_str()),"HLT Efficiency vs Leading Photon #phi;Photon Offline #phi;Efficiency",32,-3.2f,3.2f);
-    efftimes[label] = fs->make<TEfficiency>(Form("efftime_%s",label.c_str()),"HLT Efficiency vs Leading Photon Seed Time [ns];Photon Offline Seed Time [ns];Efficiency",60,-5.,25.);
+    efftimes[label] = fs->make<TEfficiency>(Form("efftime_%s",label.c_str()),"HLT Efficiency vs Leading Photon Seed Time [ns];Photon Offline Seed Time [ns];Efficiency",nbinsxTime,xbinsTime);
     effHTs  [label] = fs->make<TEfficiency>(Form("effHT_%s",label.c_str()),"HLT Efficiency vs PF H_{T};Offline PF H_{T} (Min PFJet p_{T} > 15);Efficiency",nbinsxHT,xbinsHT);
   }
 }

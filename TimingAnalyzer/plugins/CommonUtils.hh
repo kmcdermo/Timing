@@ -224,15 +224,16 @@ namespace oot
   {
     for (const auto & triggerObjectsByFilterPair : triggerObjectsByFilterMap)
     {
+      const auto & filterName = triggerObjectsByFilterPair.first;
+      const bool isL1 = (filterName.find("L1") != std::string::npos);
       for (const auto & triggerObject : triggerObjectsByFilterPair.second)
       {
-	if (std::abs(triggerObject.pt()-obj.pt())/obj.pt() < pTres)
-        {
-	  if (Config::deltaR(obj.phi(),obj.eta(),triggerObject.phi(),triggerObject.eta()) < dRmin)
-	  {
-	    isHLTMatched[triggerObjectsByFilterPair.first] = true; break;
-	  } // end check deltaR
-	} // end check pt resolution
+	if (!isL1 && (std::abs(triggerObject.pt()-obj.pt())/obj.pt() > pTres)) continue;
+	if (Config::deltaR(obj.phi(),obj.eta(),triggerObject.phi(),triggerObject.eta()) < dRmin)
+	{
+	  isHLTMatched[filterName] = true; 
+	  break;
+	} // end check deltaR
       } // end loop over trigger objects 
     } // end loop over filter names
   }
