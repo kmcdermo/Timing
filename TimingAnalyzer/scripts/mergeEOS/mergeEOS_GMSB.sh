@@ -6,7 +6,7 @@ label=${1}
 ## global vars
 base="2017/MC/gmsb"
 gridpt="L200TeV_CTau400cm_930"
-eosbase="/store/user/kmcdermo"
+eosbase="/store/user/${USER}"
 rootbase="root://eoscms"
 
 ## filenames
@@ -15,7 +15,7 @@ outfile="tree.root"
 
 ## directories needed
 indir="${eosbase}/GMSB_${gridpt}/${label}_GJet_{gridpt}"
-tmpdir="/tmp/kmcdermo/${base}"
+tmpdir="/tmp/${USER}/${base}"
 outdir="${eosbase}/nTuples/${base}"
 
 ## make tmp dir

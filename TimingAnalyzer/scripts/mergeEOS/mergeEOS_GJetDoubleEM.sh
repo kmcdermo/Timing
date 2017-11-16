@@ -6,7 +6,7 @@ label=${1}
 ## global vars
 base="2017/MC/gjet_DoubleEM"
 tune="DoubleEMEnriched_13TeV_pythia8"
-eosbase="/store/user/kmcdermo"
+eosbase="/store/user/${USER}"
 rootbase="root://eoscms"
 
 ## filenames
@@ -15,7 +15,7 @@ outfile="tree.root"
 
 ## directories needed
 indir="${eosbase}/GJet_${tune}/${label}_GJet_${tune}"
-tmpdir="/tmp/kmcdermo/${base}"
+tmpdir="/tmp/${USER}/${base}"
 outdir="${eosbase}/nTuples/${base}"
 
 ## make tmp dir

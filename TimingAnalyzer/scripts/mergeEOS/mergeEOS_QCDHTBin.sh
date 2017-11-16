@@ -5,7 +5,7 @@ label=${1}
 bin=${2}
 
 ## global vars
-base="2017/MC/qcd_Pt"
+base="2017/MC/qcd_HT"
 tune="EMEnriched_TuneCUETP8M1_13TeV_pythia8"
 eosbase="/store/user/${USER}"
 rootbase="root://eoscms"
@@ -15,7 +15,7 @@ infiles="dispho_*.root"
 outfile="tree.root"
 
 ## directories needed
-indir="${eosbase}/QCD_Pt-${bin}_${tune}/${label}_QCD_Pt-${bin}_${tune}"
+indir="${eosbase}/QCD_HT-${bin}_${tune}/${label}_QCD_HT-${bin}_${tune}"
 tmpdir="/tmp/${USER}/${base}"
 outdir="${eosbase}/nTuples/${base}/${bin}"
 

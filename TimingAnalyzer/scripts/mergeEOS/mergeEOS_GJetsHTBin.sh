@@ -7,7 +7,7 @@ bin=${2}
 ## global vars
 base="2017/MC/gjets_HT"
 tune="TuneCUETP8M1_13TeV-madgraphMLM-pythia8"
-eosbase="/store/user/kmcdermo"
+eosbase="/store/user/${USER}"
 rootbase="root://eoscms"
 
 ## filenames
@@ -16,7 +16,7 @@ outfile="tree.root"
 
 ## directories needed
 indir="${eosbase}/GJets_HT-${bin}_${tune}/${label}_GJets_HT-${bin}_${tune}"
-tmpdir="/tmp/kmcdermo/${base}"
+tmpdir="/tmp/${USER}/${base}"
 outdir="${eosbase}/nTuples/${base}/${bin}"
 
 ## make tmp dir
