@@ -14,20 +14,23 @@ do echo ${subera} | while read -r era version
     done
 done
 
-## QCD second
-qcdtune="EMEnriched_TuneCUETP8M1_13TeV_pythia8"
-for bin in "15to20" "20to30" "30to50" "50to80" "80to120" "120to170" "170to300"
+## QCD HT
+qcdtune="TuneCUETP8M1_13TeV-madgraphMLM-pythia8"
+for bin in 100to200 200to300 300to500 500to700 700to1000 1000to1500 1500to2000 2000toInf
 do
-    dataset="QCD_Pt-"${bin}
+    dataset=QCD_HT${bin}
     ./scripts/getListOfFilesMC.sh ${label}_Bkgd ${outdir} ${dataset} ${qcdtune}
 done
 
-## GJets
-dataset="GJet"
-gjettune="DoubleEMEnriched_13TeV_pythia8"
-./scripts/getListOfFilesMC.sh ${label}_Bkgd ${outdir} ${dataset} ${gjettune}
+## GJets HT
+gjetstune="TuneCUETP8M1_13TeV-madgraphMLM-pythia8"
+for bin in 40To100 100To200 200To400 400To600 600ToInf
+do
+    dataset=GJets_HT-${bin}
+    ./scripts/getListOfFilesMC.sh ${label}_Bkgd ${outdir} ${dataset} ${gjetstune}
+done
 
 ## GMSB
-dataset="GMSB"
+dataset=GMSB
 gmsbtune="L200TeV_CTau400cm_930"
 ./scripts/getListOfFilesMC.sh ${label}_Signal ${outdir} ${dataset} ${gmsbtune}

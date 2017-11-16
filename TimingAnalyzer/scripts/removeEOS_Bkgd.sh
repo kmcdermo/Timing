@@ -2,13 +2,18 @@
 
 base=${1}
 
-# QCD
-qtune="EMEnriched_TuneCUETP8M1_13TeV_pythia8"
-for range in "15to20" "20to30" "30to50" "50to80" "80to120" "120to170" "170to300"
+# QCD HT
+qcdtune="TuneCUETP8M1_13TeV-madgraphMLM-pythia8"
+for bin in 100to200 200to300 300to500 500to700 700to1000 1000to1500 1500to2000 2000toInf
 do
-    eos rm -r /store/user/kmcdermo/QCD_Pt-${range}_${qtune}/${base}_QCD_Pt-${range}_${qtune}
+    dataset=QCD_HT${bin}
+    eos rm -r /store/user/kmcdermo/${dataset}_${qcdtune}/${base}_${dataset}_${qcdtune}
 done
 
-# GJets
-gtune="DoubleEMEnriched_13TeV_pythia8"
-eos rm -r /store/user/kmcdermo/GJet_${gtune}/${base}_GJet_${gtune}
+# GJets HT
+gjetstune="TuneCUETP8M1_13TeV-madgraphMLM-pythia8"
+for bin in 40To100 100To200 200To400 400To600 600ToInf
+do
+    dataset=GJets_HT-${bin}
+    eos rm -r /store/user/kmcdermo/${dataset}_${gjetstune}/${base}_${dataset}_${gjetstune}
+done

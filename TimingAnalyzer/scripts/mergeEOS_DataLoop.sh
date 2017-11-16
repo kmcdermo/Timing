@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source exportDataVars.sh
-
 ## input
 label=${1}
 
@@ -11,5 +9,3 @@ do echo ${subera} | while read -r era version
 	./mergeEOS_DataEra.sh ${label} ${era} ${version}
     done
 done
-
-

@@ -7,7 +7,7 @@ dataset=${3}
 era=${4}
 version=${5}
 
-eosbase="/store/user/kmcdermo"
+eosbase="/store/user/${USER}"
 eosdir="${eosbase}/${dataset}/${label}_Data_Run2017${era}-PromptReco-${version}"
 timestamp=$(eos ls ${eosdir})
 eos ls ${eosdir}/${timestamp}/0000/ > tmp.txt

@@ -3,7 +3,7 @@
 ## input
 label=${1}
 
-for bin in 15to20 20to30 30to50 50to80 80to120 120to170 170to300 300toInf
+for bin in 100to200 200to300 300to500 500to700 700to1000 1000to1500 1500to2000 2000toInf
 do
     echo "Processing:" ${bin}
     ./mergeEOS_QCDHTBin.sh ${label} ${bin}
