@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ## define cuts
-basecut="abs(phosceta_0)<1.4442&&phopt_0>70"
+basecut="phoisEB&&phopt_0>70"
 
-gjetscut="gjets_ctrl ${basecut}&&njets<=2&&phoID_0==3&&abs(TVector2::Phi_mpi_pi(jetphi_0-phophi_0))>2.1&&(jetpt_0/phopt_0>0.6)&&(jetpt_0/phopt_0<1.4)"
-qcdcut="qcd_ctrl ${basecut}&&njets>2&&phoID_0==1"
+gjetscut="gjets_ctrl ${basecut}&&njets<=2&&phoID_0==3&&abs(TVector2::Phi_mpi_pi(jetphi_0-phophi_0))>2.1&&(jetpt_0/phopt_0>0.6)&&(jetpt_0/phopt_0<1.4)&&phor9_0>0.95&&hltPho50"
+qcdcut="qcd_ctrl ${basecut}&&njets>2&&(((phoID_0==1||phoID_0==2)&&!phoisOOT_0)||(phoID_0==0&&phoisOOT_0))&&hltPho50"
 
 ## define plots
 logaxis="0 1" # !islogx && !islogy
