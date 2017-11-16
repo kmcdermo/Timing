@@ -61,12 +61,12 @@ HLTPlots::HLTPlots(const edm::ParameterSet& iConfig):
   
   // set test options
   const TestResults initResults = {false,-1};
-  effTestMap["L1"]      = {{""                                              ,"hltL1sSingleEGNonIsoOrWithJetAndTauNoPS"                          ,-1,-1},initResults};
-  effTestMap["L1toHLT"] = {{"hltL1sSingleEGNonIsoOrWithJetAndTauNoPS"       ,"hltEGL1SingleEGNonIsoOrWithJetAndTauNoPSFilter"                   ,-1,-1},initResults};
-  effTestMap["ET"]      = {{"hltEGL1SingleEGNonIsoOrWithJetAndTauNoPSFilter","hltEG60EtFilter"                                                  ,-1,-1},initResults};
-  effTestMap["PhoID"]   = {{"hltEG60EtFilter"                               ,"hltEG60R9Id90CaloIdLIsoLHollowTrackIsoFilter"                     ,-1,-1},initResults};
-  effTestMap["DispID"]  = {{"hltEG60R9Id90CaloIdLIsoLHollowTrackIsoFilter"  ,"hltEG60R9Id90CaloIdLIsoLDisplacedIdFilter"                        ,-1,-1},initResults};
-  effTestMap["HT"]      = {{"hltEG60R9Id90CaloIdLIsoLDisplacedIdFilter"     ,"HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_PFHT350MinPFJet15_v",-1,-1},initResults};
+  effTestMap["L1"]      = {{""                             ,Config::L1Trigger.c_str()      ,-1,-1},initResults};
+  effTestMap["L1toHLT"] = {{Config::L1Trigger.c_str()      ,Config::L1toHLTFilter.c_str()  ,-1,-1},initResults};
+  effTestMap["ET"]      = {{Config::L1toHLTFilter.c_str()  ,Config::ETFilter.c_str()       ,-1,-1},initResults};
+  effTestMap["PhoID"]   = {{Config::ETFilter.c_str()       ,Config::PhoIDLastFilter.c_str(),-1,-1},initResults};
+  effTestMap["DispID"]  = {{Config::PhoIDLastFilter.c_str(),Config::DispIDFilter.c_str()   ,-1,-1},initResults};
+  effTestMap["HT"]      = {{Config::DispIDFilter.c_str()   ,Config::SignalPath.c_str()     ,-1,-1},initResults};
   for (auto & effTestPair : effTestMap)
   {
     // init options

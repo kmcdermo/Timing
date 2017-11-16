@@ -25,10 +25,25 @@ namespace Config
   constexpr float PI    = 3.14159265358979323846;
   constexpr float TWOPI = 2.0*PI;
 
+  // ECAL size
   constexpr float etaEBcutoff = 1.479;
   constexpr float etaEBmax = 1.4442;
   constexpr float etaEEmin = 1.566;
   constexpr float etaEEmax = 2.5;
+  
+  // trigger name related strings
+  static const std::string SignalPath = "HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_PFHT350MinPFJet15_v";
+  static const std::string RefPhoIDPath = "HLT_Photon60_R9Id90_CaloIdL_IsoL_v";
+  static const std::string RefDispIDPath = "HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v";
+  static const std::string RefHTPath = "HLT_PFHT350MinPFJet15_v";
+  static const std::string Pho50Path = "HLT_Photon50_v";
+
+  // trigger filter related strings
+  static const std::string L1Trigger = "hltL1sSingleEGNonIsoOrWithJetAndTauNoPS";
+  static const std::string L1toHLTFilter = "hltEGL1SingleEGNonIsoOrWithJetAndTauNoPSFilter";  
+  static const std::string ETFilter = "hltEG60EtFilter";
+  static const std::string PhoIDLastFilter = "hltEG60R9Id90CaloIdLIsoLHollowTrackIsoFilter";
+  static const std::string DispIDFilter = "hltEG60R9Id90CaloIdLIsoLDisplacedIdFilter";
 
   inline float rad2  (const float x, const float y){return x*x + y*y;}
   inline float phi   (const float x, const float y){return std::atan2(y,x);}

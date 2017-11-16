@@ -333,7 +333,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   TTree * configtree;
 
   // output event level ntuple
-  TTree * tree;
+  TTree * disphotree;
  
   // MC info
   float genwgt;
@@ -352,7 +352,10 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   unsigned int run, lumi;  
 
   // trigger info
-  bool hltDisPho;
+  bool hltSignal;
+  bool hltRefPhoID;
+  bool hltRefDispID;
+  bool hltRefHT;
   bool hltPho50;
 
   // vertices

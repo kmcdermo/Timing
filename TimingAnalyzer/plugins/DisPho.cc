@@ -409,11 +409,12 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Trigger Info //
   //              //
   //////////////////
-  const std::string signalpath = "HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_PFHT350MinPFJet15_v";
-  hltDisPho = (triggerBitMap.count(signalpath.c_str()) ? triggerBitMap[signalpath.c_str()] : false);
 
-  const std::string prescalepath = "HLT_Photon50_v";
-  hltPho50 = (triggerBitMap.count(prescalepath.c_str()) ? triggerBitMap[prescalepath.c_str()] : false);
+  hltSignal = (triggerBitMap.count(Config::SignalPath.c_str()) ? triggerBitMap[Config::SignalPath.c_str()] : false);
+  hltRefPhoID = (triggerBitMap.count(Config::RefPhoIDPath.c_str()) ? triggerBitMap[Config::RefPhoIDPath.c_str()] : false);
+  hltRefDispID = (triggerBitMap.count(Config::RefDispIDPath.c_str()) ? triggerBitMap[Config::RefDispIDPath.c_str()] : false);
+  hltRefHT = (triggerBitMap.count(Config::RefHTPath.c_str()) ? triggerBitMap[Config::RefHTPath.c_str()] : false);
+  hltPho50 = (triggerBitMap.count(Config::Pho50Path.c_str()) ? triggerBitMap[Config::Pho50Path.c_str()] : false);
 
   /////////////////////////
   //                     //   
@@ -506,7 +507,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Fill Tree //
   //           //
   ///////////////
-  tree->Fill();
+  disphotree->Fill();
 }
 
 void DisPho::InitializeGenEvtBranches()
@@ -1021,7 +1022,7 @@ void DisPho::beginJob()
   DisPho::MakeAndFillConfigTree();
 
   // Event tree
-  tree = fs->make<TTree>("tree","tree");
+  disphotree = fs->make<TTree>("disphotree","disphotree");
   DisPho::MakeEventTree();
 }
 
@@ -1074,6 +1075,10 @@ void DisPho::MakeAndFillConfigTree()
   configtree->Branch("splitPho", &splitPho_tmp, "splitPho/O");
   configtree->Branch("onlyGED", &onlyGED_tmp, "onlyGED/O");
   configtree->Branch("onlyOOT", &onlyOOT_tmp, "onlyOOT/O");
+
+  // rec hit storing options
+  bool storeRecHits_tmp = storeRecHits;
+  configtree->Branch("storeRecHits", &storeRecHits_tmp, "storeRecHits/O");
 
   // pre-selection vars
   bool applyTrigger_tmp = applyTrigger;
@@ -1131,15 +1136,15 @@ void DisPho::MakeEventTree()
   // Generic MC Info
   if (isMC)
   {
-    tree->Branch("genwgt", &genwgt, "genwgt/F");
-    tree->Branch("genpuobs", &genpuobs, "genpuobs/I");
-    tree->Branch("genputrue", &genputrue, "genputrue/I");
+    disphotree->Branch("genwgt", &genwgt, "genwgt/F");
+    disphotree->Branch("genpuobs", &genpuobs, "genpuobs/I");
+    disphotree->Branch("genputrue", &genputrue, "genputrue/I");
   }
 
   // GMSB Info
   if (isGMSB)
   {
-    tree->Branch("nNeutoPhGr", &nNeutoPhGr, "nNeutoPhGr/I");
+    disphotree->Branch("nNeutoPhGr", &nNeutoPhGr, "nNeutoPhGr/I");
     DisPho::MakeGMSBBranch(0,gmsbBranch0);
     DisPho::MakeGMSBBranch(1,gmsbBranch1);
   }
@@ -1147,7 +1152,7 @@ void DisPho::MakeEventTree()
   // HVDS Info
   if (isHVDS)
   {
-    tree->Branch("nvPions", &nvPions, "nvPions/I");
+    disphotree->Branch("nvPions", &nvPions, "nvPions/I");
     DisPho::MakeHVDSBranch(0,hvdsBranch0);
     DisPho::MakeHVDSBranch(1,hvdsBranch1);
     DisPho::MakeHVDSBranch(2,hvdsBranch2);
@@ -1155,52 +1160,55 @@ void DisPho::MakeEventTree()
   }
 
   // Run, Lumi, Event info
-  tree->Branch("run", &run, "run/i");
-  tree->Branch("lumi", &lumi, "lumi/i");
-  tree->Branch("event", &event, "event/l");
+  disphotree->Branch("run", &run, "run/i");
+  disphotree->Branch("lumi", &lumi, "lumi/i");
+  disphotree->Branch("event", &event, "event/l");
    
   // Trigger Info
-  tree->Branch("hltDisPho", &hltDisPho, "hltDisPho/O");
-  tree->Branch("hltPho50", &hltPho50, "hltPho50/O");
+  disphotree->Branch("hltSignal", &hltSignal, "hltSignal/O");
+  disphotree->Branch("hltRefPhoID", &hltRefPhoID, "hltRefPhoID/O");
+  disphotree->Branch("hltRefDispID", &hltRefDispID, "hltRefDispID/O");
+  disphotree->Branch("hltRefHT", &hltRefHT, "hltRefHT/O");
+  disphotree->Branch("hltPho50", &hltPho50, "hltPho50/O");
 
   // Vertex info
-  tree->Branch("nvtx", &nvtx, "nvtx/I");
-  tree->Branch("vtxX", &vtxX, "vtxX/F");
-  tree->Branch("vtxY", &vtxY, "vtxY/F");
-  tree->Branch("vtxZ", &vtxZ, "vtxZ/F");
+  disphotree->Branch("nvtx", &nvtx, "nvtx/I");
+  disphotree->Branch("vtxX", &vtxX, "vtxX/F");
+  disphotree->Branch("vtxY", &vtxY, "vtxY/F");
+  disphotree->Branch("vtxZ", &vtxZ, "vtxZ/F");
 
   // rho info
-  tree->Branch("rho", &rho, "rho/F");
+  disphotree->Branch("rho", &rho, "rho/F");
 
   // MET info
-  tree->Branch("t1pfMETpt", &t1pfMETpt, "t1pfMETpt/F");
-  tree->Branch("t1pfMETphi", &t1pfMETphi, "t1pfMETphi/F");
-  tree->Branch("t1pfMETsumEt", &t1pfMETsumEt, "t1pfMETsumEt/F");
+  disphotree->Branch("t1pfMETpt", &t1pfMETpt, "t1pfMETpt/F");
+  disphotree->Branch("t1pfMETphi", &t1pfMETphi, "t1pfMETphi/F");
+  disphotree->Branch("t1pfMETsumEt", &t1pfMETsumEt, "t1pfMETsumEt/F");
 
   // HT Info
-  tree->Branch("jetHT", &jetHT, "jetHT/F");  
+  disphotree->Branch("jetHT", &jetHT, "jetHT/F");  
 
   // Jet Info
-  tree->Branch("njets", &njets, "njets/I");
+  disphotree->Branch("njets", &njets, "njets/I");
   DisPho::MakeJetBranch(0,jetBranch0);
   DisPho::MakeJetBranch(1,jetBranch1);
   DisPho::MakeJetBranch(2,jetBranch2);
   DisPho::MakeJetBranch(3,jetBranch3);
 
   // RecHit Info
-  tree->Branch("nrechits", &nrechits, "nrechits/I");
+  disphotree->Branch("nrechits", &nrechits, "nrechits/I");
   if (storeRecHits)
   {
-    tree->Branch("rheta", &rheta);
-    tree->Branch("rhphi", &rhphi);
-    tree->Branch("rhE", &rhE);
-    tree->Branch("rhtime", &rhtime);
-    tree->Branch("rhOOT", &rhOOT);
-    tree->Branch("rhID", &rhID);
+    disphotree->Branch("rheta", &rheta);
+    disphotree->Branch("rhphi", &rhphi);
+    disphotree->Branch("rhE", &rhE);
+    disphotree->Branch("rhtime", &rhtime);
+    disphotree->Branch("rhOOT", &rhOOT);
+    disphotree->Branch("rhID", &rhID);
   }
 
   // Photon Info
-  tree->Branch("nphotons", &nphotons, "nphotons/I");
+  disphotree->Branch("nphotons", &nphotons, "nphotons/I");
   DisPho::MakePhoBranch(0,phoBranch0);
   DisPho::MakePhoBranch(1,phoBranch1);
   DisPho::MakePhoBranch(2,phoBranch2);
@@ -1218,123 +1226,123 @@ void DisPho::MakeEventTree()
 
 void DisPho::MakeGMSBBranch(const int i, gmsbStruct& gmsbBranch)
 {
-  tree->Branch(Form("genNmass_%i",i), &gmsbBranch.genNmass_, Form("genNmass_%i/F",i));
-  tree->Branch(Form("genNE_%i",i), &gmsbBranch.genNE_, Form("genNE_%i/F",i));
-  tree->Branch(Form("genNpt_%i",i), &gmsbBranch.genNpt_, Form("genNpt_%i/F",i));
-  tree->Branch(Form("genNphi_%i",i), &gmsbBranch.genNphi_, Form("genNphi_%i/F",i));
-  tree->Branch(Form("genNeta_%i",i), &gmsbBranch.genNeta_, Form("genNeta_%i/F",i));
+  disphotree->Branch(Form("genNmass_%i",i), &gmsbBranch.genNmass_, Form("genNmass_%i/F",i));
+  disphotree->Branch(Form("genNE_%i",i), &gmsbBranch.genNE_, Form("genNE_%i/F",i));
+  disphotree->Branch(Form("genNpt_%i",i), &gmsbBranch.genNpt_, Form("genNpt_%i/F",i));
+  disphotree->Branch(Form("genNphi_%i",i), &gmsbBranch.genNphi_, Form("genNphi_%i/F",i));
+  disphotree->Branch(Form("genNeta_%i",i), &gmsbBranch.genNeta_, Form("genNeta_%i/F",i));
 
-  tree->Branch(Form("genNprodvx_%i",i), &gmsbBranch.genNprodvx_, Form("genNprodvx_%i/F",i));
-  tree->Branch(Form("genNprodvy_%i",i), &gmsbBranch.genNprodvy_, Form("genNprodvy_%i/F",i));
-  tree->Branch(Form("genNprodvz_%i",i), &gmsbBranch.genNprodvz_, Form("genNprodvz_%i/F",i));
+  disphotree->Branch(Form("genNprodvx_%i",i), &gmsbBranch.genNprodvx_, Form("genNprodvx_%i/F",i));
+  disphotree->Branch(Form("genNprodvy_%i",i), &gmsbBranch.genNprodvy_, Form("genNprodvy_%i/F",i));
+  disphotree->Branch(Form("genNprodvz_%i",i), &gmsbBranch.genNprodvz_, Form("genNprodvz_%i/F",i));
 
-  tree->Branch(Form("genNdecayvx_%i",i), &gmsbBranch.genNdecayvx_, Form("genNdecayvx_%i/F",i));
-  tree->Branch(Form("genNdecayvy_%i",i), &gmsbBranch.genNdecayvy_, Form("genNdecayvy_%i/F",i));
-  tree->Branch(Form("genNdecayvz_%i",i), &gmsbBranch.genNdecayvz_, Form("genNdecayvz_%i/F",i));
+  disphotree->Branch(Form("genNdecayvx_%i",i), &gmsbBranch.genNdecayvx_, Form("genNdecayvx_%i/F",i));
+  disphotree->Branch(Form("genNdecayvy_%i",i), &gmsbBranch.genNdecayvy_, Form("genNdecayvy_%i/F",i));
+  disphotree->Branch(Form("genNdecayvz_%i",i), &gmsbBranch.genNdecayvz_, Form("genNdecayvz_%i/F",i));
 
-  tree->Branch(Form("genphE_%i",i), &gmsbBranch.genphE_, Form("genphE_%i/F",i));
-  tree->Branch(Form("genphpt_%i",i), &gmsbBranch.genphpt_, Form("genphpt_%i/F",i));
-  tree->Branch(Form("genphphi_%i",i), &gmsbBranch.genphphi_, Form("genphphi_%i/F",i));
-  tree->Branch(Form("genpheta_%i",i), &gmsbBranch.genpheta_, Form("genpheta_%i/F",i));
-  tree->Branch(Form("genphmatch_%i",i), &gmsbBranch.genphmatch_, Form("genphmatch_%i/I",i));
+  disphotree->Branch(Form("genphE_%i",i), &gmsbBranch.genphE_, Form("genphE_%i/F",i));
+  disphotree->Branch(Form("genphpt_%i",i), &gmsbBranch.genphpt_, Form("genphpt_%i/F",i));
+  disphotree->Branch(Form("genphphi_%i",i), &gmsbBranch.genphphi_, Form("genphphi_%i/F",i));
+  disphotree->Branch(Form("genpheta_%i",i), &gmsbBranch.genpheta_, Form("genpheta_%i/F",i));
+  disphotree->Branch(Form("genphmatch_%i",i), &gmsbBranch.genphmatch_, Form("genphmatch_%i/I",i));
 
-  tree->Branch(Form("gengrmass_%i",i), &gmsbBranch.gengrmass_, Form("gengrmass_%i/F",i));
-  tree->Branch(Form("gengrE_%i",i), &gmsbBranch.gengrE_, Form("gengrE_%i/F",i));
-  tree->Branch(Form("gengrpt_%i",i), &gmsbBranch.gengrpt_, Form("gengrpt_%i/F",i));
-  tree->Branch(Form("gengrphi_%i",i), &gmsbBranch.gengrphi_, Form("gengrphi_%i/F",i));
-  tree->Branch(Form("gengreta_%i",i), &gmsbBranch.gengreta_, Form("gengreta_%i/F",i));
+  disphotree->Branch(Form("gengrmass_%i",i), &gmsbBranch.gengrmass_, Form("gengrmass_%i/F",i));
+  disphotree->Branch(Form("gengrE_%i",i), &gmsbBranch.gengrE_, Form("gengrE_%i/F",i));
+  disphotree->Branch(Form("gengrpt_%i",i), &gmsbBranch.gengrpt_, Form("gengrpt_%i/F",i));
+  disphotree->Branch(Form("gengrphi_%i",i), &gmsbBranch.gengrphi_, Form("gengrphi_%i/F",i));
+  disphotree->Branch(Form("gengreta_%i",i), &gmsbBranch.gengreta_, Form("gengreta_%i/F",i));
 }
 
 void DisPho::MakeHVDSBranch(const int i, hvdsStruct& hvdsBranch)
 {
-  tree->Branch(Form("genvPionmass_%i",i), &hvdsBranch.genvPionmass_, Form("genvPionmass_%i/F",i));
-  tree->Branch(Form("genvPionE_%i",i), &hvdsBranch.genvPionE_, Form("genvPionE_%i/F",i));
-  tree->Branch(Form("genvPionpt_%i",i), &hvdsBranch.genvPionpt_, Form("genvPionpt_%i/F",i));
-  tree->Branch(Form("genvPionphi_%i",i), &hvdsBranch.genvPionphi_, Form("genvPionphi_%i/F",i));
-  tree->Branch(Form("genvPioneta_%i",i), &hvdsBranch.genvPioneta_, Form("genvPioneta_%i/F",i));
+  disphotree->Branch(Form("genvPionmass_%i",i), &hvdsBranch.genvPionmass_, Form("genvPionmass_%i/F",i));
+  disphotree->Branch(Form("genvPionE_%i",i), &hvdsBranch.genvPionE_, Form("genvPionE_%i/F",i));
+  disphotree->Branch(Form("genvPionpt_%i",i), &hvdsBranch.genvPionpt_, Form("genvPionpt_%i/F",i));
+  disphotree->Branch(Form("genvPionphi_%i",i), &hvdsBranch.genvPionphi_, Form("genvPionphi_%i/F",i));
+  disphotree->Branch(Form("genvPioneta_%i",i), &hvdsBranch.genvPioneta_, Form("genvPioneta_%i/F",i));
 
-  tree->Branch(Form("genvPionprodvx_%i",i), &hvdsBranch.genvPionprodvx_, Form("genvPionprodvx_%i/F",i));
-  tree->Branch(Form("genvPionprodvy_%i",i), &hvdsBranch.genvPionprodvy_, Form("genvPionprodvy_%i/F",i));
-  tree->Branch(Form("genvPionprodvz_%i",i), &hvdsBranch.genvPionprodvz_, Form("genvPionprodvz_%i/F",i));
+  disphotree->Branch(Form("genvPionprodvx_%i",i), &hvdsBranch.genvPionprodvx_, Form("genvPionprodvx_%i/F",i));
+  disphotree->Branch(Form("genvPionprodvy_%i",i), &hvdsBranch.genvPionprodvy_, Form("genvPionprodvy_%i/F",i));
+  disphotree->Branch(Form("genvPionprodvz_%i",i), &hvdsBranch.genvPionprodvz_, Form("genvPionprodvz_%i/F",i));
 
-  tree->Branch(Form("genvPiondecayvx_%i",i), &hvdsBranch.genvPiondecayvx_, Form("genvPiondecayvx_%i/F",i));
-  tree->Branch(Form("genvPiondecayvy_%i",i), &hvdsBranch.genvPiondecayvy_, Form("genvPiondecayvy_%i/F",i));
-  tree->Branch(Form("genvPiondecayvz_%i",i), &hvdsBranch.genvPiondecayvz_, Form("genvPiondecayvz_%i/F",i));
+  disphotree->Branch(Form("genvPiondecayvx_%i",i), &hvdsBranch.genvPiondecayvx_, Form("genvPiondecayvx_%i/F",i));
+  disphotree->Branch(Form("genvPiondecayvy_%i",i), &hvdsBranch.genvPiondecayvy_, Form("genvPiondecayvy_%i/F",i));
+  disphotree->Branch(Form("genvPiondecayvz_%i",i), &hvdsBranch.genvPiondecayvz_, Form("genvPiondecayvz_%i/F",i));
 
-  tree->Branch(Form("genHVph0E_%i",i), &hvdsBranch.genHVph0E_, Form("genHVph0E_%i/F",i));
-  tree->Branch(Form("genHVph0pt_%i",i), &hvdsBranch.genHVph0pt_, Form("genHVph0pt_%i/F",i));
-  tree->Branch(Form("genHVph0phi_%i",i), &hvdsBranch.genHVph0phi_, Form("genHVph0phi_%i/F",i));
-  tree->Branch(Form("genHVph0eta_%i",i), &hvdsBranch.genHVph0eta_, Form("genHVph0eta_%i/F",i));
-  tree->Branch(Form("genHVph0match_%i",i), &hvdsBranch.genHVph0match_, Form("genHVph0match_%i/I",i));
+  disphotree->Branch(Form("genHVph0E_%i",i), &hvdsBranch.genHVph0E_, Form("genHVph0E_%i/F",i));
+  disphotree->Branch(Form("genHVph0pt_%i",i), &hvdsBranch.genHVph0pt_, Form("genHVph0pt_%i/F",i));
+  disphotree->Branch(Form("genHVph0phi_%i",i), &hvdsBranch.genHVph0phi_, Form("genHVph0phi_%i/F",i));
+  disphotree->Branch(Form("genHVph0eta_%i",i), &hvdsBranch.genHVph0eta_, Form("genHVph0eta_%i/F",i));
+  disphotree->Branch(Form("genHVph0match_%i",i), &hvdsBranch.genHVph0match_, Form("genHVph0match_%i/I",i));
 
-  tree->Branch(Form("genHVph1E_%i",i), &hvdsBranch.genHVph1E_, Form("genHVph1E_%i/F",i));
-  tree->Branch(Form("genHVph1pt_%i",i), &hvdsBranch.genHVph1pt_, Form("genHVph1pt_%i/F",i));
-  tree->Branch(Form("genHVph1phi_%i",i), &hvdsBranch.genHVph1phi_, Form("genHVph1phi_%i/F",i));
-  tree->Branch(Form("genHVph1eta_%i",i), &hvdsBranch.genHVph1eta_, Form("genHVph1eta_%i/F",i));
-  tree->Branch(Form("genHVph1match_%i",i), &hvdsBranch.genHVph1match_, Form("genHVph1match_%i/I",i));
+  disphotree->Branch(Form("genHVph1E_%i",i), &hvdsBranch.genHVph1E_, Form("genHVph1E_%i/F",i));
+  disphotree->Branch(Form("genHVph1pt_%i",i), &hvdsBranch.genHVph1pt_, Form("genHVph1pt_%i/F",i));
+  disphotree->Branch(Form("genHVph1phi_%i",i), &hvdsBranch.genHVph1phi_, Form("genHVph1phi_%i/F",i));
+  disphotree->Branch(Form("genHVph1eta_%i",i), &hvdsBranch.genHVph1eta_, Form("genHVph1eta_%i/F",i));
+  disphotree->Branch(Form("genHVph1match_%i",i), &hvdsBranch.genHVph1match_, Form("genHVph1match_%i/I",i));
 }
 
 void DisPho::MakeJetBranch(const int i, jetStruct& jetBranch)
 {
-  tree->Branch(Form("jetE_%i",i), &jetBranch.E_, Form("jetE_%i/F",i));
-  tree->Branch(Form("jetpt_%i",i), &jetBranch.Pt_, Form("jetpt_%i/F",i));
-  tree->Branch(Form("jeteta_%i",i), &jetBranch.Eta_, Form("jeteta_%i/F",i));
-  tree->Branch(Form("jetphi_%i",i), &jetBranch.Phi_, Form("jetphi_%i/F",i));
+  disphotree->Branch(Form("jetE_%i",i), &jetBranch.E_, Form("jetE_%i/F",i));
+  disphotree->Branch(Form("jetpt_%i",i), &jetBranch.Pt_, Form("jetpt_%i/F",i));
+  disphotree->Branch(Form("jeteta_%i",i), &jetBranch.Eta_, Form("jeteta_%i/F",i));
+  disphotree->Branch(Form("jetphi_%i",i), &jetBranch.Phi_, Form("jetphi_%i/F",i));
 }
 
 void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
 {
-  tree->Branch(Form("phoE_%i",i), &phoBranch.E_, Form("phoE_%i/F",i));
-  tree->Branch(Form("phopt_%i",i), &phoBranch.Pt_, Form("phopt_%i/F",i));
-  tree->Branch(Form("phoeta_%i",i), &phoBranch.Eta_, Form("phoeta_%i/F",i));
-  tree->Branch(Form("phophi_%i",i), &phoBranch.Phi_, Form("phophi_%i/F",i));
+  disphotree->Branch(Form("phoE_%i",i), &phoBranch.E_, Form("phoE_%i/F",i));
+  disphotree->Branch(Form("phopt_%i",i), &phoBranch.Pt_, Form("phopt_%i/F",i));
+  disphotree->Branch(Form("phoeta_%i",i), &phoBranch.Eta_, Form("phoeta_%i/F",i));
+  disphotree->Branch(Form("phophi_%i",i), &phoBranch.Phi_, Form("phophi_%i/F",i));
 
-  tree->Branch(Form("phoscE_%i",i), &phoBranch.scE_, Form("phoscE_%i/F",i));
-  tree->Branch(Form("phosceta_%i",i), &phoBranch.scEta_, Form("phosceta_%i/F",i));
-  tree->Branch(Form("phoscphi_%i",i), &phoBranch.scPhi_, Form("phoscphi_%i/F",i));
+  disphotree->Branch(Form("phoscE_%i",i), &phoBranch.scE_, Form("phoscE_%i/F",i));
+  disphotree->Branch(Form("phosceta_%i",i), &phoBranch.scEta_, Form("phosceta_%i/F",i));
+  disphotree->Branch(Form("phoscphi_%i",i), &phoBranch.scPhi_, Form("phoscphi_%i/F",i));
 
-  tree->Branch(Form("phoHoE_%i",i), &phoBranch.HoE_, Form("phoHoE_%i/F",i));
-  tree->Branch(Form("phor9_%i",i), &phoBranch.r9_, Form("phor9_%i/F",i));
+  disphotree->Branch(Form("phoHoE_%i",i), &phoBranch.HoE_, Form("phoHoE_%i/F",i));
+  disphotree->Branch(Form("phor9_%i",i), &phoBranch.r9_, Form("phor9_%i/F",i));
 
-  tree->Branch(Form("phoChgHadIso_%i",i), &phoBranch.ChgHadIso_, Form("phoChgHadIso_%i/F",i));
-  tree->Branch(Form("phoNeuHadIso_%i",i), &phoBranch.NeuHadIso_, Form("phoNeuHadIso_%i/F",i));
-  tree->Branch(Form("phoPhoIso_%i",i), &phoBranch.PhoIso_, Form("phoPhoIso_%i/F",i));
+  disphotree->Branch(Form("phoChgHadIso_%i",i), &phoBranch.ChgHadIso_, Form("phoChgHadIso_%i/F",i));
+  disphotree->Branch(Form("phoNeuHadIso_%i",i), &phoBranch.NeuHadIso_, Form("phoNeuHadIso_%i/F",i));
+  disphotree->Branch(Form("phoPhoIso_%i",i), &phoBranch.PhoIso_, Form("phoPhoIso_%i/F",i));
 
-  tree->Branch(Form("phoEcalPFClIso_%i",i), &phoBranch.EcalPFClIso_, Form("phoEcalPFClIso_%i/F",i));
-  tree->Branch(Form("phoHcalPFClIso_%i",i), &phoBranch.HcalPFClIso_, Form("phoHcalPFClIso_%i/F",i));
-  tree->Branch(Form("phoTrkIso_%i",i), &phoBranch.TrkIso_, Form("phoTrkIso_%i/F",i));
+  disphotree->Branch(Form("phoEcalPFClIso_%i",i), &phoBranch.EcalPFClIso_, Form("phoEcalPFClIso_%i/F",i));
+  disphotree->Branch(Form("phoHcalPFClIso_%i",i), &phoBranch.HcalPFClIso_, Form("phoHcalPFClIso_%i/F",i));
+  disphotree->Branch(Form("phoTrkIso_%i",i), &phoBranch.TrkIso_, Form("phoTrkIso_%i/F",i));
 
-  tree->Branch(Form("phosieie_%i",i), &phoBranch.Sieie_, Form("phosieie_%i/F",i));
-  tree->Branch(Form("phosipip_%i",i), &phoBranch.Sipip_, Form("phosipip_%i/F",i));
-  tree->Branch(Form("phosieip_%i",i), &phoBranch.Sieip_, Form("phosieip_%i/F",i));
+  disphotree->Branch(Form("phosieie_%i",i), &phoBranch.Sieie_, Form("phosieie_%i/F",i));
+  disphotree->Branch(Form("phosipip_%i",i), &phoBranch.Sipip_, Form("phosipip_%i/F",i));
+  disphotree->Branch(Form("phosieip_%i",i), &phoBranch.Sieip_, Form("phosieip_%i/F",i));
 
-  tree->Branch(Form("phosmaj_%i",i), &phoBranch.Smaj_, Form("phosmaj_%i/F",i));
-  tree->Branch(Form("phosmin_%i",i), &phoBranch.Smin_, Form("phosmin_%i/F",i));
-  tree->Branch(Form("phoalpha_%i",i), &phoBranch.alpha_, Form("phoalpha_%i/F",i));
+  disphotree->Branch(Form("phosmaj_%i",i), &phoBranch.Smaj_, Form("phosmaj_%i/F",i));
+  disphotree->Branch(Form("phosmin_%i",i), &phoBranch.Smin_, Form("phosmin_%i/F",i));
+  disphotree->Branch(Form("phoalpha_%i",i), &phoBranch.alpha_, Form("phoalpha_%i/F",i));
 
   if (storeRecHits)
   {
-    tree->Branch(Form("phoseed_%i",i), &phoBranch.seed_, Form("phoseed_%i/I",i));
-    tree->Branch(Form("phorecHits_%i",i), &phoBranch.recHits_);
+    disphotree->Branch(Form("phoseed_%i",i), &phoBranch.seed_, Form("phoseed_%i/I",i));
+    disphotree->Branch(Form("phorecHits_%i",i), &phoBranch.recHits_);
   }
   else 
   {
-    tree->Branch(Form("phoseedtime_%i",i), &phoBranch.seedtime_, Form("phoseedtime_%i/F",i));
-    tree->Branch(Form("phoseedE_%i",i), &phoBranch.seedE_, Form("phoseedE_%i/F",i));
-    tree->Branch(Form("phoseedID_%i",i), &phoBranch.seedID_, Form("phoseedID_%i/i",i));
+    disphotree->Branch(Form("phoseedtime_%i",i), &phoBranch.seedtime_, Form("phoseedtime_%i/F",i));
+    disphotree->Branch(Form("phoseedE_%i",i), &phoBranch.seedE_, Form("phoseedE_%i/F",i));
+    disphotree->Branch(Form("phoseedID_%i",i), &phoBranch.seedID_, Form("phoseedID_%i/i",i));
   }
 
-  tree->Branch(Form("phoisOOT_%i",i), &phoBranch.isOOT_, Form("phoisOOT_%i/O",i));
-  tree->Branch(Form("phoisEB_%i",i), &phoBranch.isEB_, Form("phoisEB_%i/O",i));
-  tree->Branch(Form("phoisHLT_%i",i), &phoBranch.isHLT_, Form("phoisHLT_%i/O",i));
-  tree->Branch(Form("phoisTrk_%i",i), &phoBranch.isTrk_, Form("phoisTrk_%i/O",i));
-  tree->Branch(Form("phoID_%i",i), &phoBranch.ID_, Form("phoID_%i/I",i));
+  disphotree->Branch(Form("phoisOOT_%i",i), &phoBranch.isOOT_, Form("phoisOOT_%i/O",i));
+  disphotree->Branch(Form("phoisEB_%i",i), &phoBranch.isEB_, Form("phoisEB_%i/O",i));
+  disphotree->Branch(Form("phoisHLT_%i",i), &phoBranch.isHLT_, Form("phoisHLT_%i/O",i));
+  disphotree->Branch(Form("phoisTrk_%i",i), &phoBranch.isTrk_, Form("phoisTrk_%i/O",i));
+  disphotree->Branch(Form("phoID_%i",i), &phoBranch.ID_, Form("phoID_%i/I",i));
 }
 
 void DisPho::MakePhoBranchMC(const int i, phoStruct& phoBranch)
 {
-  if (isGMSB || isHVDS) tree->Branch(Form("phoisSignal_%i",i), &phoBranch.isSignal_, Form("phoisSignal_%i/I",i));
-  tree->Branch(Form("phoisGen_%i",i), &phoBranch.isGen_, Form("phoisGen_%i/O",i));
+  if (isGMSB || isHVDS) disphotree->Branch(Form("phoisSignal_%i",i), &phoBranch.isSignal_, Form("phoisSignal_%i/I",i));
+  disphotree->Branch(Form("phoisGen_%i",i), &phoBranch.isGen_, Form("phoisGen_%i/O",i));
 }
 
 void DisPho::endJob() {}
