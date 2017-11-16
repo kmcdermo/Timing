@@ -105,6 +105,7 @@ void StackEffs::PrintTotalEff(const Int_t teff, const Int_t sample)
   const Float_t total  = fInTEffs[teff][sample]->GetTotalHistogram()->Integral();
   
   TEfficiency * tmp_eff = new TEfficiency("tmp_eff","tmp_eff",1,0,1);
+  //  tmp_eff->SetUseWeightedEvents();
   tmp_eff->SetTotalEvents(1,total);
   tmp_eff->SetPassedEvents(1,passed);
 

@@ -115,7 +115,7 @@ void Analysis::EventLoop()
     //                        // 
     ////////////////////////////
     const Float_t ev_weight  = (fIsMC ? (filterEff * xsec * Config::lumi * genwgt / fWgtSum) : 1.f);
-    const Float_t eff_weight = (fIsMC ? (genwgt / fWgtSum) : 1.f);
+    const Float_t eff_weight = (fIsMC ? (genwgt / fWgtSum) * nEntries : 1.f);
 
     ////////////////////////////////
     //                            // 
@@ -163,8 +163,13 @@ Bool_t Analysis::IsGoodPho(const Pho & pho)
 
 Bool_t Analysis::PassOOTID(const Pho & pho)
 {
+  // For original ":medium:" id
   if (pho.HoE > 0.0396) return false;
   if (pho.sieie > 0.01022) return false;
+  
+  // for tight id --> just replace H/E sieie
+  //  if (pho.HoE > 0.0269) return false;
+  //  if (pho.sieie > 0.00994) return false;
   
   const Float_t ecalPFClIso = std::max(pho.EcalPFClIso - (rho * GetEcalPFClEA(pho.isEB)) - GetEcalPFClPt(pho.isEB,pho.pt),0.f);
   if (ecalPFClIso > 8.f) return false;
