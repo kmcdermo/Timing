@@ -61,7 +61,7 @@ def main():
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
         inputPaths   = 'HLTpaths.txt'
         inputFilters = 'HLTfilters.txt'
-        inputJSON    = 'golden2017-nov9.json'
+        inputJSON    = 'golden2017-nov16.json'
 
         #--------------------------------------------------------
         # This is the base config:
@@ -104,7 +104,7 @@ def main():
             # inDO[0] is of the form /A/B/C. Since B is unique for each inDS, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[2]
             config.JobType.pyCfgParams   = ['globalTag='+inDO[1],'useOOTPhotons='+inDO[2],
-                                            'applyTriggerPS=True','psPath=HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v',
+                                            'applyTriggerPS=True','psPath=HLT_Photon60_R9Id90_CaloIdL_IsoL_v',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
