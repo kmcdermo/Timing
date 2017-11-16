@@ -8,7 +8,7 @@ era=${2}
 version=${3}
 
 ## dirs needed
-indir="${eosdir}/${dataset}/${label}_Run2017${era}-PromptReco-${version}"
+indir="${eosbase}/${dataset}/${label}_Run2017${era}-PromptReco-${version}"
 
 ## make tmp dir
 mkdir -p ${tmpdir}/2017${era}/${version}

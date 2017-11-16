@@ -14,9 +14,9 @@ infiles="dispho_*.root"
 outfile="tree.root"
 
 ## directories needed
-indir="${eosdir}/GJet_${tune}/${label}_GJet_${tune}"
+indir="${eosbase}/GJet_${tune}/${label}_GJet_${tune}"
 tmpdir="/tmp/kmcdermo/${base}"
-outdir="${eosdir}/nTuples/${base}"
+outdir="${eosbase}/nTuples/${base}"
 
 ## make tmp dir
 mkdir -p ${tmpdir}/

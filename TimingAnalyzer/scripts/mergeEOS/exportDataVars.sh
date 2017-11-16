@@ -12,4 +12,4 @@ export outfile="tree.root"
 
 ## directories needed
 export tmpdir="/tmp/kmcdermo/${base}"
-export outdir="${eosdir}/nTuples/${base}"
+export outdir="${eosbase}/nTuples/${base}"
