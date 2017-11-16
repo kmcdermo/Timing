@@ -4,7 +4,7 @@
 label=${1}
 
 ## global vars
-base="2017/MC/gjet-EM"
+base="2017/MC/gjet_DoubleEM"
 tune="DoubleEMEnriched_13TeV_pythia8"
 eosbase="/store/user/kmcdermo"
 rootbase="root://eoscms"

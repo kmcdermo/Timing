@@ -34,7 +34,7 @@ TreePlotter::TreePlotter(const TString & var, const TString & commoncut, const T
   TreePlotter::SetupCuts();
   TreePlotter::SetupLabels();
   TreePlotter::SetupHists();
-  TreePlotter::SetupDataSF();
+  //  TreePlotter::SetupDataSF();
 
   // output root file for quick inspection
   fOutFile = TFile::Open(Form("%s.root",text.Data()),"UPDATE");
@@ -72,12 +72,12 @@ void TreePlotter::MakePlot()
   BkgdHist->SetFillStyle(3254);
   BkgdHist->SetFillColor(kGray+3);
 
-  // ****** TEMP HACK : SCALE TO AREA OF DATA ******* //
-  const Float_t data_int = HistMap[Data]->Integral();
-  const Float_t bkgd_int = BkgdHist     ->Integral();
-  BkgdHist      ->Scale(data_int/bkgd_int);
-  HistMap[GJets]->Scale(data_int/bkgd_int);
-  HistMap[QCD]  ->Scale(data_int/bkgd_int);
+  // // ****** TEMP HACK : SCALE TO AREA OF DATA ******* //
+  // const Float_t data_int = HistMap[Data]->Integral();
+  // const Float_t bkgd_int = BkgdHist     ->Integral();
+  // BkgdHist      ->Scale(data_int/bkgd_int);
+  // HistMap[GJets]->Scale(data_int/bkgd_int);
+  // HistMap[QCD]  ->Scale(data_int/bkgd_int);
 
   // Make Background Stack
   THStack * BkgdStack = new THStack("BkgdStack","");
@@ -402,7 +402,8 @@ Float_t TreePlotter::GetSampleWeight(TFile * file)
   Float_t BR = 0.f;        configtree->SetBranchAddress("BR",&BR);
   configtree->GetEntry(0);
 
-  const Float_t weight = (1/fDataSF) * Config::lumi * Config::invfbToinvpb * xsec * filterEff * BR / h_cutflow->GetBinContent(1);
+  //  const Float_t weight = (1/fDataSF) * Config::lumi * Config::invfbToinvpb * xsec * filterEff * BR / h_cutflow->GetBinContent(1);
+  const Float_t weight = Config::lumi * Config::invfbToinvpb * xsec * filterEff * BR / h_cutflow->GetBinContent(1);
 
   delete h_cutflow;
   delete configtree;
@@ -412,18 +413,25 @@ Float_t TreePlotter::GetSampleWeight(TFile * file)
 
 void TreePlotter::SetupSamples()
 {
-  // QCD
-  SampleMap["MC/qcd/Pt-15to20"] = QCD;
-  SampleMap["MC/qcd/Pt-20to30"] = QCD;
-  SampleMap["MC/qcd/Pt-30to50"] = QCD;
-  SampleMap["MC/qcd/Pt-50to80"] = QCD;
-  SampleMap["MC/qcd/Pt-80to120"] = QCD;
-  SampleMap["MC/qcd/Pt-120to170"] = QCD;
-  SampleMap["MC/qcd/Pt-170to300"] = QCD;
-  SampleMap["MC/qcd/Pt-300toInf"] = QCD;
+  // QCD Pt binned
+  SampleMap["MC/qcd_Pt/15to20"] = QCD;
+  SampleMap["MC/qcd_Pt/20to30"] = QCD;
+  SampleMap["MC/qcd_Pt/30to50"] = QCD;
+  SampleMap["MC/qcd_Pt/50to80"] = QCD;
+  SampleMap["MC/qcd_Pt/80to120"] = QCD;
+  SampleMap["MC/qcd_Pt/120to170"] = QCD;
+  SampleMap["MC/qcd_Pt/170to300"] = QCD;
+  SampleMap["MC/qcd_Pt/300toInf"] = QCD;
   
-  // GJets
-  SampleMap["MC/gjets-EM"] = GJets;
+  // GJets-DoubleEM
+  // SampleMap["MC/gjets_DoubleEM"] = GJets;
+
+  // GJets HT binned
+  SampleMap["MC/gjets_HT/40To100"] = GJets;
+  SampleMap["MC/gjets_HT/100To200"] = GJets;
+  SampleMap["MC/gjets_HT/200To400"] = GJets;
+  SampleMap["MC/gjets_HT/400To600"] = GJets;
+  SampleMap["MC/gjets_HT/600ToInf"] = GJets;
    
   // GMSB
   SampleMap["MC/gmsb"] = GMSB;
@@ -442,10 +450,10 @@ void TreePlotter::SetupColors()
 
 void TreePlotter::SetupCuts()
 {
-  CutMap[QCD]   = Form("%s",fCommonCut.Data());
-  CutMap[GJets] = Form("%s",fCommonCut.Data());
+  CutMap[QCD]   = Form("%s&&hltPho50",fCommonCut.Data());
+  CutMap[GJets] = Form("%s&&hltPho50",fCommonCut.Data());
   CutMap[GMSB]  = Form("%s",fCommonCut.Data());
-  CutMap[Data]  = Form("%s",fCommonCut.Data());
+  CutMap[Data]  = Form("%s&&hltPho50",fCommonCut.Data());
 }
 
 void TreePlotter::SetupLabels()
