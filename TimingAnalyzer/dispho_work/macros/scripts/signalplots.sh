@@ -7,7 +7,7 @@
 #####
 
 ## setup cuts
-basecut="phoisEB&&((phoID_0==3&&!phoisOOT_0)||(phoID_0==2&&phoisOOT_0))&&phopt_0>70&&phor9_0>0.95&&phosmaj_0<1.0&&phosmin_0<0.3"
+basecut="phoisEB_0&&((phoID_0==3&&!phoisOOT_0)||(phoID_0==2&&phoisOOT_0))&&phopt_0>70&&phor9_0>0.95&&phosmaj_0<1.0&&phosmin_0<0.3"
 
 fullcut="signal ${basecut}&&njets>2&&jetHT>600"
 nojetcut="signal ${basecut}"

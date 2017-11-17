@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ## define cuts
-basecut="phoisEB&&phopt_0>70"
+basecut="phoisEB_0&&phopt_0>70"
 
 gjetscut="gjets_ctrl ${basecut}&&njets<=2&&phoID_0==3&&abs(TVector2::Phi_mpi_pi(jetphi_0-phophi_0))>2.1&&(jetpt_0/phopt_0>0.6)&&(jetpt_0/phopt_0<1.4)&&phor9_0>0.95&&hltPho50"
-qcdcut="qcd_ctrl ${basecut}&&njets>2&&(((phoID_0==1||phoID_0==2)&&!phoisOOT_0)||(phoID_0==0&&phoisOOT_0))&&hltPho50"
+qcdcut="qcd_ctrl ${basecut}&&njets>2&&((phoID_0==1&&!phoisOOT_0)||(phoID_0==0&&phoisOOT_0))&&hltPho50"
 
 ## define plots
 logaxis="0 1" # !islogx && !islogy
@@ -17,12 +17,12 @@ phoseedtime_0="rhtime[phoseed_0] phoseedtime_0 60 -5 25 ${logaxis} phoseedtime_0
 met="t1pfMETpt met 100 0 300 ${logaxis} met METXXX[GeV] ${ytitle}"
 
 ## loop over cuts
-for cut in gjetscut qcdcut
-do echo ${!cut} | while read -r text commoncut
-    do 
-	for plot in phopt_0 phoeta_0 phoseedtime_0 met
-	do echo ${!plot} | while read -r var vartext plotinfo
-	    do
+for plot in phopt_0 phoeta_0 phoseedtime_0 met
+do echo ${!plot} | while read -r var vartext plotinfo
+    do
+	for cut in qcdcut gjetscut
+	do echo ${!cut} | while read -r text commoncut
+	    do 
 		if [ "${vartext}" == "phoseedtime_0" ] ; 
 		then 
 		    ./scripts/runTreePlotter.sh ${var} "${commoncut}&&phoseed_0>=0" ${text}_${vartext} ${plotinfo}

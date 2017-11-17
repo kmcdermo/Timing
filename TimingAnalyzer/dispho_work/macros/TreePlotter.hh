@@ -47,12 +47,21 @@ public:
   // Main call
   void MakePlot();
 
-  // subroutines for plotting
-  void MakeHistFromHaddTree();
+  // Subroutines for plotting
+  void MakeHistFromTrees();
+  void MakeBkgdOutput();
+  void MakeRatioOutput();
+  void MakeLegend();
+  void InitOutputCanvPads();
+  void DrawUpperPad();
+  void DrawLowerPad();
+  void SaveOutput();
+
+  // Helper functions
   TH1F * SetupHist(const TString & name);
   Float_t GetSampleWeight(TFile * file);
   Float_t GetHistMinimum();
-  Float_t GetHistMaximum(const TH1F * BkgdHist);
+  Float_t GetHistMaximum();
   
 private:
   // Settings
@@ -68,9 +77,6 @@ private:
   TString fXTitle;
   TString fYTitle;
 
-  // Other variables
-  Float_t fDataSF;
-
   // Style
   TStyle * fTDRStyle;
 
@@ -80,9 +86,19 @@ private:
   std::map<SampleType,TString> CutMap;
   std::map<SampleType,TH1F*>   HistMap;
   std::map<SampleType,TString> LabelMap;
+  Float_t fDataSF;
 
   // Output
   TFile * fOutFile;
+  TH1F * BkgdHist;
+  THStack * BkgdStack;
+  TH1F * RatioHist;
+  TH1F * RatioMCErrs;
+  TLine * RatioLine;
+  TLegend * Legend;
+  TCanvas * OutCanv;
+  TPad * UpperPad;
+  TPad * LowerPad;
 };
 
 #endif
