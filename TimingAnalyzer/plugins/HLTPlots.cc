@@ -439,13 +439,12 @@ void HLTPlots::ResetTestResults()
   }
 }
 
-void HLTPlots::GetDenomPhs(const std::vector<int> & goodphs, const int idenom, std::vector<int> & denomphos)
+void HLTPlots::GetDenomPhs(const std::vector<int> & goodphs, const int idenom, std::vector<int> & denomphs)
 {
-  // get potential denom
-  std::vector<int> denomphs;
   for (const auto iph : goodphs)
   {
     bool isGoodDenom = true;
+
     for (auto ifilter = 0; ifilter <= idenom; ifilter++)
     { 
       if (!phIsHLTMatched[iph][ifilter]) 
@@ -454,8 +453,8 @@ void HLTPlots::GetDenomPhs(const std::vector<int> & goodphs, const int idenom, s
 	break;
       }
     }
-    if (!isGoodDenom) continue;
 
+    if (!isGoodDenom) continue;
     denomphs.emplace_back(iph);
   }
 }
@@ -465,6 +464,7 @@ void HLTPlots::GetFirstLegResult(const std::vector<int> & goodphs, const std::st
   const auto & options = effTestMap[label].options;
   auto       & results = effTestMap[label].results;
 
+  // get numer
   for (const auto iph : goodphs)
   {
     if (phIsHLTMatched[iph][options.inumer])
@@ -474,6 +474,8 @@ void HLTPlots::GetFirstLegResult(const std::vector<int> & goodphs, const std::st
       break;
     }
   }
+
+  // set to leading photon if no good one
   if (results.goodph < 0) results.goodph = goodphs[0];
 }
 
@@ -485,7 +487,7 @@ void HLTPlots::GetStandardLegResult(const std::vector<int> & goodphs, const std:
   // get potential denom
   std::vector<int> denomphs;
   HLTPlots::GetDenomPhs(goodphs,options.idenom,denomphs);
-  
+
   // need at least one match!
   if (denomphs.size() == 0) return;
 

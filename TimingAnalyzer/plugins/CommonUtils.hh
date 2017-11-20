@@ -240,10 +240,11 @@ namespace oot
     for (const auto & triggerObjectsByFilterPair : triggerObjectsByFilterMap)
     {
       const auto & filterName = triggerObjectsByFilterPair.first;
-      const bool isL1 = (filterName.find("L1") != std::string::npos);
+      const bool isL1T = (filterName == Config::L1Trigger.c_str());
+
       for (const auto & triggerObject : triggerObjectsByFilterPair.second)
       {
-	if (!isL1 && (std::abs(triggerObject.pt()-obj.pt())/obj.pt() > pTres)) continue;
+	if (!isL1T && (std::abs(triggerObject.pt()-obj.pt())/obj.pt() > pTres)) continue;
 	if (Config::deltaR(obj.phi(),obj.eta(),triggerObject.phi(),triggerObject.eta()) < dRmin)
 	{
 	  isHLTMatched[filterName] = true; 

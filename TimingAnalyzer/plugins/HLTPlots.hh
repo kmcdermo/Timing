@@ -109,7 +109,7 @@ class HLTPlots : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
   void InitializeRecoPhotonBranches();
 
   void ResetTestResults();
-  void GetDenomPhs(const std::vector<int> & goodphs, const int idenom, std::vector<int> & denomphos);
+  void GetDenomPhs(const std::vector<int> & goodphs, const int idenom, std::vector<int> & denomphs);
   void GetFirstLegResult(const std::vector<int> & goodphs, const std::string & label);
   void GetStandardLegResult(const std::vector<int> & goodphs, const std::string & label, const bool sortByTime);
   void GetLastLegResult(const std::vector<int> & goodphs, const std::string & label);
