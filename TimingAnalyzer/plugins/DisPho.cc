@@ -84,7 +84,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   usesResource("TFileService");
 
   // labels for cut flow histogram
-  std::vector<std::string> cutflowLabelVec = {"All","nEvBlinding","METBlinding","Trigger","H_{T}","Good Photon"};
+  std::vector<std::string> cutflowLabelVec = {"All","nEvBlinding","METBlinding","Trigger","H_{T}","Good Photon","Post-Processing"};
   int ibin = 0;
   for (const auto & cutflowLabel : cutflowLabelVec)
   {
@@ -929,7 +929,7 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   strBitMap isHLTMatched;
   for (const auto & filter : filterNames) isHLTMatched[filter] = false;
   oot::HLTToObjectMatching(triggerObjectsByFilterMap,isHLTMatched,photon,pTres,dRmin);
-  const std::string filter = "hltEG60R9Id90CaloIdLIsoLDisplacedIdFilter";
+  const std::string filter = Config::DispIDFilter.c_str();
   phoBranch.isHLT_ = (isHLTMatched.count(filter.c_str()) ? isHLTMatched[filter.c_str()] : false);
 
   // check for simple track veto
