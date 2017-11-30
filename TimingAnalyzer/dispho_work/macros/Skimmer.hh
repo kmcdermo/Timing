@@ -9,24 +9,51 @@
 #include "TTree.h"
 #include "TBranch.h"
 
+namespace Config
+{
+  constexpr Int_t nEvCheck = 10000;
+  constexpr Int_t nGMSBs = 2;
+  constexpr Int_t nHVDSs = 4;
+  constexpr Int_t nJets = 4;
+  constexpr Int_t nPhotons = 4;
+};
+
 class Skimmer 
 {
 public:
   // functions
   Skimmer(const TString & dir);
   ~Skimmer();
-  void InitTree();
-  void InitStructs();
-  void InitBranchVecs();
-  void InitBranches();
-  void InitAndReadConfigTree();
-  void InitConfigStrings();
-  void InitConfigBranches();
+
+  // setup config inputs
+  void GetInConfig();
+  void InitInConfigStrings();
+  void InitInConfigBranches();
+
+  // setup tree inputs
+  void InitInTree();
+  void InitInStructs();
+  void InitInBranchVecs();
+  void InitInBranches();
+
+  // setup outputs
+  void InitAndSetOutConfig();
+  void InitOutTree();
+  void InitOutCutFlow();
+
+  // skim and fill outputs
   void EventLoop();
+  void FillOutGMSBs();
+  void FillOutHVDSs();
+  void FillOutEvent();
+  void FillOutJets();
+  void FillOutPhos();
 
 private:
   // I/O
-  const TString fDir;
+  const TString fFile;
+  std::map<std::string> cutLabels;
+  Bool_t fIsMC;
 
   // Input
   TFile * fInFile;
@@ -41,8 +68,8 @@ private:
   JetVec  fInJets;
   PhoVec  fInPhos;
 
-  Configuration fInconfig;
-
+  Configuration fInConfig;
+  
   // Output
   TFile * fOutFile;
   TTree * fOutTree; 
@@ -55,7 +82,7 @@ private:
   JetVec  fOutJets;
   PhoVec  fOutPhos;
 
-  Configuration fOutconfig;
+  Configuration fOutConfig;
 };
 
 #endif

@@ -74,7 +74,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // isMC or Data --> default Data
   isGMSB(iConfig.existsAs<bool>("isGMSB") ? iConfig.getParameter<bool>("isGMSB") : false),
   isHVDS(iConfig.existsAs<bool>("isHVDS") ? iConfig.getParameter<bool>("isHVDS") : false),
-  isBkgd(iConfig.existsAs<bool>("isBkgd") ? iConfig.getParameter<bool>("isBkgd")  : false),
+  isBkgd(iConfig.existsAs<bool>("isBkgd") ? iConfig.getParameter<bool>("isBkgd") : false),
   
   xsec(iConfig.existsAs<double>("xsec") ? iConfig.getParameter<double>("xsec") : 1.0),
   filterEff(iConfig.existsAs<double>("filterEff") ? iConfig.getParameter<double>("filterEff") : 1.0),
@@ -1111,21 +1111,18 @@ void DisPho::MakeAndFillConfigTree()
   configtree->Branch("inputFilters", &inputFilters_tmp);
 
   // MC info
-  if (isMC)
-  {
-    bool isGMSB_tmp = isGMSB;
-    bool isHVDS_tmp = isHVDS;
-    bool isBkgd_tmp = isBkgd;
-    float xsec_tmp = xsec;
-    float filterEff_tmp = filterEff;
-    float BR_tmp = BR;
-    configtree->Branch("isGMSB", &isGMSB_tmp, "isGMSB/O");
-    configtree->Branch("isHVDS", &isHVDS_tmp, "isHVDS/O");
-    configtree->Branch("isBkgd", &isBkgd_tmp, "isBkgd/O");
-    configtree->Branch("xsec", &xsec_tmp, "xsec/F");
-    configtree->Branch("filterEff", &filterEff_tmp, "filterEff/F");
-    configtree->Branch("BR", &BR_tmp, "BR/F");
-  }
+  bool isGMSB_tmp = isGMSB;
+  bool isHVDS_tmp = isHVDS;
+  bool isBkgd_tmp = isBkgd;
+  float xsec_tmp = xsec;
+  float filterEff_tmp = filterEff;
+  float BR_tmp = BR;
+  configtree->Branch("isGMSB", &isGMSB_tmp, "isGMSB/O");
+  configtree->Branch("isHVDS", &isHVDS_tmp, "isHVDS/O");
+  configtree->Branch("isBkgd", &isBkgd_tmp, "isBkgd/O");
+  configtree->Branch("xsec", &xsec_tmp, "xsec/F");
+  configtree->Branch("filterEff", &filterEff_tmp, "filterEff/F");
+  configtree->Branch("BR", &BR_tmp, "BR/F");
 
   // Fill tree just once, after configs have been read in
   configtree->Fill();
