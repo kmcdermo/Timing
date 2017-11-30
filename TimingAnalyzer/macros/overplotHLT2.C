@@ -20,6 +20,8 @@ void Overplot(const TEffVec& teffs, const TStrVec& eras, const TString outname, 
   TLegend * leg = new TLegend(0.9,0.8,0.99,0.99);
   for (Int_t i = 0; i < eras.size(); i++)
   {
+    //teffs[i]->SetLineColor(colors[i]);
+    //teffs[i]->SetMarkerColor(colors[i]);
     teffs[i]->SetLineColor(colors[i+1]);
     teffs[i]->SetMarkerColor(colors[i+1]);
     teffs[i]->Draw(i>0?"P same":"AP");
@@ -41,9 +43,9 @@ void Overplot(const TEffVec& teffs, const TStrVec& eras, const TString outname, 
 
 void overplotHLT2()
 {
-//   TestInfoVec effs = { {"SM","L1"}, {"SM","ET"}, {"SM","DispID"}, {"SM","HT"}, {"SP_STD","DispID"}, {"SP_Disp","HT"} };
+//   TestInfoVec effs = { {"SM","L1"}, {"SM", "L1toHLT"}, {"SM","ET"}, {"SM","PhoID"}, {"SM","DispID"}, {"SM","HT"} };
 //   TStrVec eras = {"2017B","2017C","2017D","2017E","2017F"};
-  TestInfoVec effs = { {"SP_STD","DispID"}, {"SP_Disp","HT"} };
+  TestInfoVec effs = { {"SP_PhoID","DispID"}, {"SP_DispID","HT"} };
   TStrVec eras = { "2017C", "2017D","2017E","2017F"};
   const Int_t N = eras.size();
 
@@ -59,7 +61,7 @@ void overplotHLT2()
     
     for (Int_t i = 0; i < N; i++)
     {
-      files   [i] = TFile::Open(Form("input/DATA/2017/HLT_CHECK/12_11_17/%s/%s/hltplots-%s.root",eff.dir.Data(),eras[i].Data(),eras[i].Data()));
+      files   [i] = TFile::Open(Form("input/DATA/2017/HLT_CHECK/21_11_17/%s/%s/hltplots-%s.root",eff.dir.Data(),eras[i].Data(),eras[i].Data()));
       effETEBs[i] = (TEfficiency*)files[i]->Get(Form("tree/effETEB_%s",eff.test.Data()));
       effETEEs[i] = (TEfficiency*)files[i]->Get(Form("tree/effETEE_%s",eff.test.Data()));
       effetas [i] = (TEfficiency*)files[i]->Get(Form("tree/effeta_%s",eff.test.Data()));
