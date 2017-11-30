@@ -77,8 +77,6 @@ struct Configuration
   std::string s_xsec = "xsec";
   std::string s_filterEff = "filterEff";
   std::string s_BR = "BR";
-
-
 };
 
 struct Event
