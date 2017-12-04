@@ -1,39 +1,42 @@
 #include "Skimmer.hh"
 #include "TROOT.h"
 
-Skimmer::Skimmer(const TString & file) : fFile(file)
+#include <iostream>
+
+Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & filename) : fInDir(indir), fOutDir(outdir), fFileName(filename)
 {
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
 
   // Get input
-  const TString filename = Form("%s", fFile.Data());
-  fInFile  = TFile::Open(filename.Data());
-  CheckValidFile(fInFile,filename);
+  const TString infilename = Form("%s/%s", fInDir.Data(), fFileName.Data());
+  fInFile = TFile::Open(infilename.Data());
+  CheckValidFile(fInFile,infilename);
 
   // Get input config tree
-  const TString configtreename = "tree/configtree";
-  fInConfigTree = (TTree*)fInFile->Get(configtreename.Data());
-  CheckValidTree(fInConfigTree,configtreename,filename);
+  const TString inconfigtreename = Form("%s%s",Config::rootdir.Data(),Config::configtreename.Data());
+  fInConfigTree = (TTree*)fInFile->Get(inconfigtreename.Data());
+  CheckValidTree(fInConfigTree,inconfigtreename,infilename);
   Skimmer::GetInConfig();
 
   // Get main input tree and initialize it
-  const TString treename = "tree/tree";
-  fInTree = (TTree*)fInFile->Get(treename.Data());
-  CheckValidTree(fInTree,treename,filename);
+  const TString indisphotreename = Form("%s%s",Config::rootdir.Data(),Config::disphotreename.Data());
+  fInTree = (TTree*)fInFile->Get(indisphotreename.Data());
+  CheckValidTree(fInTree,indisphotreename,infilename);
   Skimmer::InitInTree();
 
   // Get the cut flow + event weight histogram
-  const TString histname = "tree/h_cutflow";
-  fInCutFlow = (TH1F*)fInFile->Get(histname.Data());
-  CheckValidTH1F(fInCutFlow,histname,filename);
+  const TString inh_cutflowname = Form("%s%s",Config::rootdir.Data(),Config::h_cutflowname.Data());
+  fInCutFlow = (TH1F*)fInFile->Get(inh_cutflowname.Data());
+  CheckValidTH1F(fInCutFlow,inh_cutflowname,infilename);
 
   // Set Output Stuff
   // Make the output file, make trees, then init them
-  fOutFile;
+  fOutFile = TFile::Open(Form("%s/%s", fOutDir.Data(), fFileName.Data()),"recreate");
   fOutFile->cd();
-  fOutConfigTree;
-  fOutTree;
+  
+  fOutConfigTree = new TTree(Config::configtreename.Data(),Config::configtreename.Data());
+  fOutTree = new TTree(Config::disphotreename.Data(),Config::disphotreename.Data());
   
   Skimmer::InitAndSetOutConfig();
   Skimmer::InitOutTree();
@@ -56,7 +59,8 @@ Skimmer::~Skimmer()
 void Skimmer::EventLoop()
 {
   // do loop over events, filling histos
-  for (UInt_t entry = 0; entry < fInTree->GetEntries(); entry++)
+  const UInt_t nEntries = fInTree->GetEntries();
+  for (UInt_t entry = 0; entry < nEntries; entry++)
   {
     // read in tree
     fInTree->GetEntry(entry);
@@ -65,17 +69,17 @@ void Skimmer::EventLoop()
     if (entry%Config::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
     
     // get event weight
-    const Float_t weight = (fIsMC?fInEvent.genwgt:1.f);
+    const Float_t evtwgt = (fIsMC ? fInEvent.genwgt : 1.f);
 
     // perform skim
-    if (fInEvent.njets < 0) continue;
+    if (fInEvent.njets < 5) continue;
 
     // fill cutflow
-    fOutCutFlow->Fill(cutLabels["skim"],weight);
+    fOutCutFlow->Fill((cutLabels["skim"]*1.f)-0.5f,evtwgt);
   
     // end of skim, now copy... dropping rechits
-    Skimmer::FillOutGMSBs();
-    Skimmer::FillOutHVDSs();
+    if (fOutConfig.isGMSB) Skimmer::FillOutGMSBs();
+    if (fOutConfig.isHVDS) Skimmer::FillOutHVDSs();
     Skimmer::FillOutEvent();
     Skimmer::FillOutJets();
     Skimmer::FillOutPhos();
@@ -232,7 +236,7 @@ void Skimmer::FillOutPhos()
     outpho.TrkIso = inpho.TrkIso;
     outpho.sieie = inpho.sieie;
     outpho.sipip = inpho.sipip;
-    outpho.sieip = inpho.sipie;
+    outpho.sieip = inpho.sieip;
     outpho.smaj = inpho.smaj;
     outpho.smin = inpho.smin;
     outpho.alpha = inpho.alpha;
@@ -311,6 +315,7 @@ void Skimmer::InitInConfigBranches()
   fInConfigTree->SetBranchAddress(fInConfig.s_splitPho.c_str(), &fInConfig.splitPho);
   fInConfigTree->SetBranchAddress(fInConfig.s_onlyGED.c_str(), &fInConfig.onlyGED);
   fInConfigTree->SetBranchAddress(fInConfig.s_onlyOOT.c_str(), &fInConfig.onlyOOT);
+  fInConfigTree->SetBranchAddress(fInConfig.s_storeRecHits.c_str(), &fInConfig.storeRecHits);
   fInConfigTree->SetBranchAddress(fInConfig.s_applyTrigger.c_str(), &fInConfig.applyTrigger);
   fInConfigTree->SetBranchAddress(fInConfig.s_minHT.c_str(), &fInConfig.minHT);
   fInConfigTree->SetBranchAddress(fInConfig.s_applyHT.c_str(), &fInConfig.applyHT);
@@ -328,6 +333,7 @@ void Skimmer::InitInConfigBranches()
   fInConfigTree->SetBranchAddress(fInConfig.s_isBkgd.c_str(), &fInConfig.isBkgd);
   fInConfigTree->SetBranchAddress(fInConfig.s_xsec.c_str(), &fInConfig.xsec);
   fInConfigTree->SetBranchAddress(fInConfig.s_filterEff.c_str(), &fInConfig.filterEff);
+  fInConfigTree->SetBranchAddress(fInConfig.s_BR.c_str(), &fInConfig.BR);
 }
 
 void Skimmer::InitInTree() 
@@ -388,7 +394,7 @@ void Skimmer::InitInBranches()
     
     if (fInConfig.isGMSB)
     {
-      fInTree->SetBranchAddress(fInEvent.s_nNeutoPhGr.c_str(), &nNeutoPhGr);
+      fInTree->SetBranchAddress(fInEvent.s_nNeutoPhGr.c_str(), &fInEvent.nNeutoPhGr);
       for (Int_t igmsb = 0; igmsb < Config::nGMSBs; igmsb++) 
       {
 	auto & gmsb = fInGMSBs[igmsb];
@@ -418,7 +424,7 @@ void Skimmer::InitInBranches()
 
     if (fInConfig.isHVDS)
     {
-      fInTree->SetBranchAddress("nvPions", &nvPions, &b_nvPions);
+      fInTree->SetBranchAddress(fInEvent.s_nvPions.c_str(), &fInEvent.nvPions);
       for (Int_t ihvds = 0; ihvds < Config::nHVDSs; ihvds++) 
       {
 	auto & hvds = fInHVDSs[ihvds]; 
@@ -450,7 +456,10 @@ void Skimmer::InitInBranches()
   fInTree->SetBranchAddress(fInEvent.s_run.c_str(), &fInEvent.run);
   fInTree->SetBranchAddress(fInEvent.s_lumi.c_str(), &fInEvent.lumi);
   fInTree->SetBranchAddress(fInEvent.s_event.c_str(), &fInEvent.event);
-  fInTree->SetBranchAddress(fInEvent.s_hltDisPho.c_str(), &fInEvent.hltDisPho);
+  fInTree->SetBranchAddress(fInEvent.s_hltSignal.c_str(), &fInEvent.hltSignal);
+  fInTree->SetBranchAddress(fInEvent.s_hltRefPhoID.c_str(), &fInEvent.hltRefPhoID);
+  fInTree->SetBranchAddress(fInEvent.s_hltRefDispID.c_str(), &fInEvent.hltRefDispID);
+  fInTree->SetBranchAddress(fInEvent.s_hltPho50.c_str(), &fInEvent.hltPho50);
   fInTree->SetBranchAddress(fInEvent.s_nvtx.c_str(), &fInEvent.nvtx);
   fInTree->SetBranchAddress(fInEvent.s_vtxX.c_str(), &fInEvent.vtxX);
   fInTree->SetBranchAddress(fInEvent.s_vtxY.c_str(), &fInEvent.vtxY);
@@ -461,28 +470,28 @@ void Skimmer::InitInBranches()
   fInTree->SetBranchAddress(fInEvent.s_t1pfMETsumEt.c_str(), &fInEvent.t1pfMETsumEt);
   fInTree->SetBranchAddress(fInEvent.s_jetHT.c_str(), &fInEvent.jetHT);
 
-  fInTree->SetBranchAddress(fInEvent.s_.c_str(), &fInEvent.njets);
+  fInTree->SetBranchAddress(fInEvent.s_njets.c_str(), &fInEvent.njets);
   for (Int_t ijet = 0; ijet < Config::nJets; ijet++) 
   {
     auto & jet = fInJets[ijet];
-    fInTree->SetBranchAddress(Form("%s_%i",jet.s_jetE.c_str(),ijet), &jet.E);    
-    fInTree->SetBranchAddress(Form("%s_%i",jet.s_jetpt.c_str(),ijet), &jet.pt);    
-    fInTree->SetBranchAddress(Form("%s_%i",jet.s_jetphi.c_str(),ijet), &jet.phi);    
-    fInTree->SetBranchAddress(Form("%s_%i",jet.s_jeteta.c_str(),ijet), &jet.eta);    
+    fInTree->SetBranchAddress(Form("%s_%i",jet.s_E.c_str(),ijet), &jet.E);    
+    fInTree->SetBranchAddress(Form("%s_%i",jet.s_pt.c_str(),ijet), &jet.pt);    
+    fInTree->SetBranchAddress(Form("%s_%i",jet.s_phi.c_str(),ijet), &jet.phi);    
+    fInTree->SetBranchAddress(Form("%s_%i",jet.s_eta.c_str(),ijet), &jet.eta);    
   }
 
-  fInTree->SetBranchAddress(fInEvent.s_.c_str(), &nrechits);
+  fInTree->SetBranchAddress(fInEvent.s_nrechits.c_str(), &fInEvent.nrechits);
   if (fInConfig.storeRecHits)
   {
-    fInTree->SetBranchAddress(fInEvent.s_rheta.c_str(), &rheta);
-    fInTree->SetBranchAddress(fInEvent.s_rhphi.c_str(), &rhphi);
-    fInTree->SetBranchAddress(fInEvent.s_rhE.c_str(), &rhE);
-    fInTree->SetBranchAddress(fInEvent.s_rhtime.c_str(), &rhtime);
-    fInTree->SetBranchAddress(fInEvent.s_rhtime.c_str(), &rhOOT);
-    fInTree->SetBranchAddress(fInEvent.s_rhID.c_str(), &rhID);
+    fInTree->SetBranchAddress(fInRecHits.s_eta.c_str(), &fInRecHits.eta);
+    fInTree->SetBranchAddress(fInRecHits.s_phi.c_str(), &fInRecHits.phi);
+    fInTree->SetBranchAddress(fInRecHits.s_E.c_str(), &fInRecHits.E);
+    fInTree->SetBranchAddress(fInRecHits.s_time.c_str(), &fInRecHits.time);
+    fInTree->SetBranchAddress(fInRecHits.s_OOT.c_str(), &fInRecHits.OOT);
+    fInTree->SetBranchAddress(fInRecHits.s_ID.c_str(), &fInRecHits.ID);
   }
 
-  fInTree->SetBranchAddress(fInEvent.s_nphotons.c_str(), &nphotons);
+  fInTree->SetBranchAddress(fInEvent.s_nphotons.c_str(), &fInEvent.nphotons);
   for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++) 
   {
     auto & pho = fInPhos[ipho];
@@ -545,28 +554,30 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfigTree->Branch(fOutConfig.s_jetIDmin.c_str(), &fOutConfig.jetIDmin);
   fOutConfigTree->Branch(fOutConfig.s_rhEmin.c_str(), &fOutConfig.rhEmin);
   fOutConfigTree->Branch(fOutConfig.s_phpTmin.c_str(), &fOutConfig.phpTmin);
-  fOutConfigTree->Branch(fOutConfig.s_phIDmin.c_str(), &fOutConfig.phIDmin);
+  fOutConfigTree->Branch(fOutConfig.s_phIDmin.c_str(), &fOutConfig.phIDmin_s);
   fOutConfigTree->Branch(fOutConfig.s_seedTimemin.c_str(), &fOutConfig.seedTimemin);
   fOutConfigTree->Branch(fOutConfig.s_splitPho.c_str(), &fOutConfig.splitPho);
   fOutConfigTree->Branch(fOutConfig.s_onlyGED.c_str(), &fOutConfig.onlyGED);
   fOutConfigTree->Branch(fOutConfig.s_onlyOOT.c_str(), &fOutConfig.onlyOOT);
+  fOutConfigTree->Branch(fOutConfig.s_storeRecHits.c_str(), &fOutConfig.storeRecHits);
   fOutConfigTree->Branch(fOutConfig.s_applyTrigger.c_str(), &fOutConfig.applyTrigger);
   fOutConfigTree->Branch(fOutConfig.s_minHT.c_str(), &fOutConfig.minHT);
   fOutConfigTree->Branch(fOutConfig.s_applyHT.c_str(), &fOutConfig.applyHT);
   fOutConfigTree->Branch(fOutConfig.s_phgoodpTmin.c_str(), &fOutConfig.phgoodpTmin);
-  fOutConfigTree->Branch(fOutConfig.s_phgoodIDmin.c_str(), &fOutConfig.phgoodIDmin);
+  fOutConfigTree->Branch(fOutConfig.s_phgoodIDmin.c_str(), &fOutConfig.phgoodIDmin_s);
   fOutConfigTree->Branch(fOutConfig.s_applyPhGood.c_str(), &fOutConfig.applyPhGood);
   fOutConfigTree->Branch(fOutConfig.s_dRmin.c_str(), &fOutConfig.dRmin);
   fOutConfigTree->Branch(fOutConfig.s_pTres.c_str(), &fOutConfig.pTres);
   fOutConfigTree->Branch(fOutConfig.s_trackdRmin.c_str(), &fOutConfig.trackdRmin);
   fOutConfigTree->Branch(fOutConfig.s_trackpTmin.c_str(), &fOutConfig.trackpTmin);
-  fOutConfigTree->Branch(fOutConfig.s_inputPaths.c_str(), &fOutConfig.inputPaths);
-  fOutConfigTree->Branch(fOutConfig.s_inputFilters.c_str(), &fOutConfig.inputFilters);
+  fOutConfigTree->Branch(fOutConfig.s_inputPaths.c_str(), &fOutConfig.inputPaths_s);
+  fOutConfigTree->Branch(fOutConfig.s_inputFilters.c_str(), &fOutConfig.inputFilters_s);
   fOutConfigTree->Branch(fOutConfig.s_isGMSB.c_str(), &fOutConfig.isGMSB);
   fOutConfigTree->Branch(fOutConfig.s_isHVDS.c_str(), &fOutConfig.isHVDS);
   fOutConfigTree->Branch(fOutConfig.s_isBkgd.c_str(), &fOutConfig.isBkgd);
   fOutConfigTree->Branch(fOutConfig.s_xsec.c_str(), &fOutConfig.xsec);
   fOutConfigTree->Branch(fOutConfig.s_filterEff.c_str(), &fOutConfig.filterEff);
+  fOutConfigTree->Branch(fOutConfig.s_BR.c_str(), &fOutConfig.BR);
   
   fOutConfig.blindSF = fInConfig.blindSF;
   fOutConfig.applyBlindSF = fInConfig.applyBlindSF;
@@ -576,7 +587,7 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfig.jetIDmin = fInConfig.jetIDmin;
   fOutConfig.rhEmin = fInConfig.rhEmin;
   fOutConfig.phpTmin = fInConfig.phpTmin;
-  fOutConfig.phIDmin = fInConfig.phIDmin;
+  fOutConfig.phIDmin_s = fInConfig.phIDmin->c_str();
   fOutConfig.seedTimemin = fInConfig.seedTimemin;
   fOutConfig.splitPho = fInConfig.splitPho;
   fOutConfig.onlyGED = fInConfig.onlyGED;
@@ -586,14 +597,14 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfig.minHT = fInConfig.minHT;
   fOutConfig.applyHT = fInConfig.applyHT;
   fOutConfig.phgoodpTmin = fInConfig.phgoodpTmin;
-  fOutConfig.phgoodIDmin = fInConfig.phgoodIDmin;
+  fOutConfig.phgoodIDmin_s = fInConfig.phgoodIDmin->c_str();
   fOutConfig.applyPhGood = fInConfig.applyPhGood;
   fOutConfig.dRmin = fInConfig.dRmin;
   fOutConfig.pTres = fInConfig.pTres;
   fOutConfig.trackdRmin = fInConfig.trackdRmin;
   fOutConfig.trackpTmin = fInConfig.trackpTmin;
-  fOutConfig.inputPaths = fInConfig.inputPaths;
-  fOutConfig.inputFilters = fInConfig.inputFilters;
+  fOutConfig.inputPaths_s = fInConfig.inputPaths->c_str();
+  fOutConfig.inputFilters_s = fInConfig.inputFilters->c_str();
   fOutConfig.isGMSB = fInConfig.isGMSB;
   fOutConfig.isHVDS = fInConfig.isHVDS;
   fOutConfig.isBkgd = fInConfig.isBkgd;
@@ -601,7 +612,7 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfig.filterEff = fInConfig.filterEff;
   fOutConfig.BR = fInConfig.BR;
   
-  fOutConfig->Fill();
+  fOutConfigTree->Fill();
 }
 
 void Skimmer::InitOutTree()
@@ -614,7 +625,8 @@ void Skimmer::InitOutTree()
     
     if (fOutConfig.isGMSB)
     {
-      fOutTree->Branch(fOutEvent.s_nNeutoPhGr.c_str(), &nNeutoPhGr);
+      fOutTree->Branch(fOutEvent.s_nNeutoPhGr.c_str(), &fOutEvent.nNeutoPhGr);
+      fOutGMSBs.resize(Config::nGMSBs);
       for (Int_t igmsb = 0; igmsb < Config::nGMSBs; igmsb++) 
       {
 	auto & gmsb = fOutGMSBs[igmsb];
@@ -644,7 +656,8 @@ void Skimmer::InitOutTree()
 
     if (fOutConfig.isHVDS)
     {
-      fOutTree->Branch("nvPions", &nvPions, &b_nvPions);
+      fOutTree->Branch(fOutEvent.s_nvPions.c_str(), &fOutEvent.nvPions);
+      fOutHVDSs.resize(Config::nHVDSs);
       for (Int_t ihvds = 0; ihvds < Config::nHVDSs; ihvds++) 
       {
 	auto & hvds = fOutHVDSs[ihvds]; 
@@ -676,7 +689,10 @@ void Skimmer::InitOutTree()
   fOutTree->Branch(fOutEvent.s_run.c_str(), &fOutEvent.run);
   fOutTree->Branch(fOutEvent.s_lumi.c_str(), &fOutEvent.lumi);
   fOutTree->Branch(fOutEvent.s_event.c_str(), &fOutEvent.event);
-  fOutTree->Branch(fOutEvent.s_hltDisPho.c_str(), &fOutEvent.hltDisPho);
+  fOutTree->Branch(fOutEvent.s_hltSignal.c_str(), &fOutEvent.hltSignal);
+  fOutTree->Branch(fOutEvent.s_hltRefPhoID.c_str(), &fOutEvent.hltRefPhoID);
+  fOutTree->Branch(fOutEvent.s_hltRefDispID.c_str(), &fOutEvent.hltRefDispID);
+  fOutTree->Branch(fOutEvent.s_hltPho50.c_str(), &fOutEvent.hltPho50);
   fOutTree->Branch(fOutEvent.s_nvtx.c_str(), &fOutEvent.nvtx);
   fOutTree->Branch(fOutEvent.s_vtxX.c_str(), &fOutEvent.vtxX);
   fOutTree->Branch(fOutEvent.s_vtxY.c_str(), &fOutEvent.vtxY);
@@ -687,19 +703,21 @@ void Skimmer::InitOutTree()
   fOutTree->Branch(fOutEvent.s_t1pfMETsumEt.c_str(), &fOutEvent.t1pfMETsumEt);
   fOutTree->Branch(fOutEvent.s_jetHT.c_str(), &fOutEvent.jetHT);
 
-  fOutTree->Branch(fOutEvent.s_.c_str(), &fOutEvent.njets);
+  fOutTree->Branch(fOutEvent.s_njets.c_str(), &fOutEvent.njets);
+  fOutJets.resize(Config::nJets);
   for (Int_t ijet = 0; ijet < Config::nJets; ijet++) 
   {
     auto & jet = fOutJets[ijet];
-    fOutTree->Branch(Form("%s_%i",jet.s_jetE.c_str(),ijet), &jet.E);    
-    fOutTree->Branch(Form("%s_%i",jet.s_jetpt.c_str(),ijet), &jet.pt);    
-    fOutTree->Branch(Form("%s_%i",jet.s_jetphi.c_str(),ijet), &jet.phi);    
-    fOutTree->Branch(Form("%s_%i",jet.s_jeteta.c_str(),ijet), &jet.eta);    
+    fOutTree->Branch(Form("%s_%i",jet.s_E.c_str(),ijet), &jet.E);    
+    fOutTree->Branch(Form("%s_%i",jet.s_pt.c_str(),ijet), &jet.pt);    
+    fOutTree->Branch(Form("%s_%i",jet.s_phi.c_str(),ijet), &jet.phi);    
+    fOutTree->Branch(Form("%s_%i",jet.s_eta.c_str(),ijet), &jet.eta);    
   }
 
-  fOutTree->Branch(fOutEvent.s_.c_str(), &nrechits);
+  fOutTree->Branch(fOutEvent.s_nrechits.c_str(), &fOutEvent.nrechits);
 
-  fOutTree->Branch(fOutEvent.s_nphotons.c_str(), &nphotons);
+  fOutTree->Branch(fOutEvent.s_nphotons.c_str(), &fOutEvent.nphotons);
+  fOutPhos.resize(Config::nPhotons);
   for (Int_t ipho = 0; ipho < Config::nPhotons; ipho++) 
   {
     auto & pho = fOutPhos[ipho];
@@ -732,7 +750,7 @@ void Skimmer::InitOutTree()
     fOutTree->Branch(Form("%s_%i",pho.s_isHLT.c_str(),ipho), &pho.isHLT);
     fOutTree->Branch(Form("%s_%i",pho.s_isTrk.c_str(),ipho), &pho.isTrk);
     fOutTree->Branch(Form("%s_%i",pho.s_ID.c_str(),ipho), &pho.ID);
-    
+
     if (fIsMC)
     {
       fOutTree->Branch(Form("%s_%i",pho.s_isGen.c_str(),ipho), &pho.isGen);
@@ -746,22 +764,28 @@ void Skimmer::InitOutTree()
 
 void Skimmer::InitOutCutFlow()
 {
-  // set cut flow
+  // get cut flow labels
   const Int_t inNbinsX = fInCutFlow->GetNbinsX();
   for (Int_t ibin = 1; ibin <= inNbinsX; ibin++)
   {
     cutLabels[fInCutFlow->GetXaxis()->GetBinLabel(ibin)] = ibin;
-    fOutCutFlow->SetBinContent(ibin,fInCutFlow->GetBinContent(ibin));
-    fOutCutFlow->SetBinError(ibin,fInCutFlow->GetBinError(ibin));
   }
   cutLabels["skim"] = inNbinsX+1;
 
-  fOutCutFlow = new TH1F(Form("%s_wskim",fInCutFlow->GetName()),fInCutFlow->GetTitle(),
-			 fInCutFlow->GetNbinsX()+cutLabels.size(),0,fInCutFlow->GetNbinsX()+cutLabels.size());
+  // make new cut flow
+  fOutCutFlow = new TH1F(Config::h_cutflowname.Data(),fInCutFlow->GetTitle(),cutLabels.size(),0,cutLabels.size());
+  fOutCutFlow->Sumw2();
+
   for (const auto & cutlabel : cutLabels)
   {
-    fOutCutFlow->GetXaxis()->SetBinLabel(cutlabel.second,cutlabel.first.c_str());
+    const Int_t ibin = cutlabel.second;
+
+    fOutCutFlow->GetXaxis()->SetBinLabel(ibin,cutlabel.first.c_str());
+
+    if (ibin > inNbinsX) continue;
+
+    fOutCutFlow->SetBinContent(ibin,fInCutFlow->GetBinContent(ibin));
+    fOutCutFlow->SetBinError(ibin,fInCutFlow->GetBinError(ibin));
   }
   fOutCutFlow->GetYaxis()->SetTitle(fInCutFlow->GetYaxis()->GetTitle());
-  fOutCutFlow->Sumw2();
 }

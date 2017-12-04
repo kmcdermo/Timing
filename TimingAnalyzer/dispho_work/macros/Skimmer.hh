@@ -2,27 +2,33 @@
 #define _skimmer_ 
 
 #include "SkimmerTypes.hh"
-#include "CommonTypes.hh"
-#include "Config.hh"
-#include "CommonUtils.hh"
+#include "common/Common.hh"
 
 #include "TTree.h"
-#include "TBranch.h"
+#include "TFile.h"
+
+#include <vector>
+#include <map>
 
 namespace Config
 {
-  constexpr Int_t nEvCheck = 10000;
+  constexpr UInt_t nEvCheck = 10000;
   constexpr Int_t nGMSBs = 2;
   constexpr Int_t nHVDSs = 4;
   constexpr Int_t nJets = 4;
   constexpr Int_t nPhotons = 4;
+  
+  static const TString rootdir        = "tree/";
+  static const TString configtreename = "configtree";
+  static const TString disphotreename = "disphotree";
+  static const TString h_cutflowname  = "h_cutflow";
 };
 
 class Skimmer 
 {
 public:
   // functions
-  Skimmer(const TString & dir);
+  Skimmer(const TString & indir, const TString & outdir, const TString & filename);
   ~Skimmer();
 
   // setup config inputs
@@ -51,15 +57,17 @@ public:
 
 private:
   // I/O
-  const TString fFile;
-  std::map<std::string> cutLabels;
+  const TString fInDir;
+  const TString fOutDir;
+  const TString fFileName;
+  std::map<std::string,int> cutLabels;
   Bool_t fIsMC;
 
   // Input
   TFile * fInFile;
   TTree * fInTree; 
   TTree * fInConfigTree;
-  TH1F  * fCutFlow;
+  TH1F  * fInCutFlow;
 
   GMSBVec fInGMSBs;
   HVDSVec fInHVDSs;

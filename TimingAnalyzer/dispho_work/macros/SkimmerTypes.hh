@@ -19,6 +19,7 @@ struct Configuration
   Float_t rhEmin;
   Float_t phpTmin;
   std::string * phIDmin;
+  std::string phIDmin_s;
   Float_t seedTimemin;
   Bool_t  splitPho;
   Bool_t  onlyGED;
@@ -29,13 +30,16 @@ struct Configuration
   Bool_t  applyHT;
   Float_t phgoodpTmin;
   std::string * phgoodIDmin;
+  std::string phgoodIDmin_s;
   Bool_t  applyPhGood;
   Float_t dRmin;
   Float_t pTres;
   Float_t trackdRmin;
   Float_t trackpTmin;
   std::string * inputPaths;
+  std::string inputPaths_s;
   std::string * inputFilters;
+  std::string inputFilters_s;
   Bool_t  isGMSB;
   Bool_t  isHVDS;
   Bool_t  isBkgd;
@@ -224,7 +228,7 @@ struct Pho
   std::string s_r9 = "phor9";
   std::string s_ChgHadIso = "phoChgHadIso";
   std::string s_NeuHadIso = "phoNeuHadIso";
-  std::string s_PhoIso = "phoPhoIs";
+  std::string s_PhoIso = "phoPhoIso";
   std::string s_EcalPFClIso = "phoEcalPFClIso";
   std::string s_HcalPFClIso = "phoHcalPFClIso";
   std::string s_TrkIso = "phoTrkIso";
@@ -283,7 +287,7 @@ struct GMSB
   std::string s_genNprodvx = "genNprodvx";
   std::string s_genNprodvy = "genNprodvy";
   std::string s_genNprodvz = "genNprodvz";
-  std::string s_genNdecayvx = "genNedcayvx";
+  std::string s_genNdecayvx = "genNdecayvx";
   std::string s_genNdecayvy = "genNdecayvy";
   std::string s_genNdecayvz = "genNdecayvz";
   std::string s_genphE = "genphE";
@@ -291,7 +295,7 @@ struct GMSB
   std::string s_genphphi = "genphphi";
   std::string s_genpheta = "genpheta";
   std::string s_genphmatch = "genphmatch";
-  std::string s_gengrmass = "gengrmatch";
+  std::string s_gengrmass = "gengrmass";
   std::string s_gengrE = "gengrE";
   std::string s_gengrpt = "gengrpt";
   std::string s_gengrphi = "gengrphi";
