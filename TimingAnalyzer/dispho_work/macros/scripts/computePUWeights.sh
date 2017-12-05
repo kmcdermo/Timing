@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## first run plotter
-var="nvtx"
+var=${1:-"nvtx"}
 commoncut=${2:-"(phopt_0>70.0&&phoID_0>=2)&&hltPho50"}
 text=${3:-"puweights"}
 nbinsx=${4:-120}
@@ -13,7 +13,7 @@ title=${9:-${var}}
 xtitle=${10:-${var}}
 ytitle=${11:-"Events"}
 
-#root -l -b -q runTreePlotter.C\(\"${var}\",\"${commoncut}\",\"${text}\",${nbinsx},${xlow},${xhigh},${islogx},${islogy},\"${title}\",\"${xtitle}\",\"${ytitle}\"\)
+root -l -b -q runTreePlotter.C\(\"${var}\",\"${commoncut}\",\"${text}\",${nbinsx},${xlow},${xhigh},${islogx},${islogy},\"${title}\",\"${xtitle}\",\"${ytitle}\"\)
 
 ## then run pu computation
 

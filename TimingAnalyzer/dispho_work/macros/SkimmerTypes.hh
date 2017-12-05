@@ -145,7 +145,7 @@ struct Event
   std::string s_genwgt = "genwgt";
   std::string s_genpuobs = "genpuobs";
   std::string s_genputrue = "genputrue";
-  std::string s_putwgt = "puwgt";
+  std::string s_puwgt = "puwgt";
   // GMSB
   std::string s_nNeutoPhGr = "nNeutoPhGr";
   // HVDS

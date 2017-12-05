@@ -12,3 +12,4 @@ rm common/*.d
 rm common/*.pcm
 rm *.root
 rm *.png
+rm *.txt

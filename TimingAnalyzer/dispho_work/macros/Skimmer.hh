@@ -43,7 +43,7 @@ public:
   void InitInBranches();
 
   // setup gen inputs
-  void GetSampleWeights();
+  void GetSampleWeight();
   void GetPUWeights();
 
   // setup outputs

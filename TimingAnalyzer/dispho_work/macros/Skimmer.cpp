@@ -31,7 +31,7 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   CheckValidTH1F(fInCutFlow,inh_cutflowname,infilename);
 
   // Get PU weights input
-  const TString pufilename = Form("root:/%s//%s.root",Config::baseDir.Data(),Config::puwgtFileName.Data());
+  const TString pufilename = Form("root://eoscms/%s/%s.root",Config::baseDir.Data(),Config::puwgtFileName.Data());
   fInPUWgtFile = TFile::Open(pufilename.Data());
   CheckValidFile(fInPUWgtFile,pufilename);
   fInPUWgtHist = (TH1F*)fInPUWgtFile->Get(Config::puwgtHistName.Data());
@@ -85,7 +85,9 @@ void Skimmer::EventLoop()
     const Float_t evtwgt = (fIsMC ? fInEvent.genwgt : 1.f);
 
     // perform skim
-    // continue;
+    if (fInEvent.nphotons <= 0) continue;
+    if (!fInPhos[0].isEB) continue;
+    if (fInPhos[0].pt < 70.f) continue;
 
     // fill cutflow
     fOutCutFlow->Fill((cutLabels["skim"]*1.f)-0.5f,evtwgt);
@@ -813,6 +815,6 @@ void Skimmer::GetPUWeights()
   fPUWeights.clear();
   for (Int_t ibin = 1; ibin <= fInPUWgtHist->GetNbinsX(); ibin++)
   {
-    fPUWeights.emplace_back(fInPUWgtHist->GetBinContent(i));
+    fPUWeights.emplace_back(fInPUWgtHist->GetBinContent(ibin));
   }
 }
