@@ -42,6 +42,10 @@ public:
   void InitInBranchVecs();
   void InitInBranches();
 
+  // setup gen inputs
+  void GetSampleWeights();
+  void GetPUWeights();
+
   // setup outputs
   void InitAndSetOutConfig();
   void InitOutTree();
@@ -68,7 +72,11 @@ private:
   TTree * fInTree; 
   TTree * fInConfigTree;
   TH1F  * fInCutFlow;
-
+  TFile * fInPUWgtFile;
+  TH1F  * fInPUWgtHist;
+  Float_t fSampleWeight;
+  std::vector<Float_t> fPUWeights;
+  
   GMSBVec fInGMSBs;
   HVDSVec fInHVDSs;
   Event   fInEvent;

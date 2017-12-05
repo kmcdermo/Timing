@@ -14,7 +14,7 @@ infiles="dispho_*.root"
 outfile="tree.root"
 
 ## directories needed
-indir="${eosbase}/GMSB_${gridpt}/${label}_GJet_{gridpt}"
+indir="${eosbase}/GMSB_${gridpt}/${label}_GMSB_{gridpt}"
 tmpdir="/tmp/${USER}/${base}"
 outdir="${eosbase}/nTuples/${base}"
 

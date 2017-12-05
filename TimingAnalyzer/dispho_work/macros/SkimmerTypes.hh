@@ -106,11 +106,13 @@ struct Event
   Int_t     njets;
   Int_t     nrechits;
   Int_t     nphotons;
+  Float_t   evtwgt;
 
   // MC Types
   Float_t   genwgt;
   Int_t     genpuobs;
   Int_t     genputrue;
+  Float_t   puwgt;
   // GMSB
   Int_t     nNeutoPhGr;
   // HVDS
@@ -137,11 +139,13 @@ struct Event
   std::string s_njets = "njets";
   std::string s_nrechits = "nrechits";
   std::string s_nphotons = "nphotons";
+  std::string s_evtwgt = "evtwgt";
 
   // MC types
   std::string s_genwgt = "genwgt";
   std::string s_genpuobs = "genpuobs";
   std::string s_genputrue = "genputrue";
+  std::string s_putwgt = "puwgt";
   // GMSB
   std::string s_nNeutoPhGr = "nNeutoPhGr";
   // HVDS

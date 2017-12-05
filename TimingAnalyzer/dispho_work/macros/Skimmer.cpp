@@ -25,11 +25,18 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   CheckValidTree(fInTree,indisphotreename,infilename);
   Skimmer::InitInTree();
 
-  // Get the cut flow + event weight histogram
+  // Get the cut flow + event weight histogram --> set the wgtsum
   const TString inh_cutflowname = Form("%s%s",Config::rootdir.Data(),Config::h_cutflowname.Data());
   fInCutFlow = (TH1F*)fInFile->Get(inh_cutflowname.Data());
   CheckValidTH1F(fInCutFlow,inh_cutflowname,infilename);
 
+  // Get PU weights input
+  const TString pufilename = Form("root:/%s//%s.root",Config::baseDir.Data(),Config::puwgtFileName.Data());
+  fInPUWgtFile = TFile::Open(pufilename.Data());
+  CheckValidFile(fInPUWgtFile,pufilename);
+  fInPUWgtHist = (TH1F*)fInPUWgtFile->Get(Config::puwgtHistName.Data());
+  CheckValidTH1F(fInPUWgtHist,Config::puwgtHistName,pufilename);
+ 
   // Set Output Stuff
   // Make the output file, make trees, then init them
   fOutFile = TFile::Open(Form("%s/%s", fOutDir.Data(), fFileName.Data()),"recreate");
@@ -37,14 +44,20 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   
   fOutConfigTree = new TTree(Config::configtreename.Data(),Config::configtreename.Data());
   fOutTree = new TTree(Config::disphotreename.Data(),Config::disphotreename.Data());
-  
+
+  // Init output info
   Skimmer::InitAndSetOutConfig();
   Skimmer::InitOutTree();
   Skimmer::InitOutCutFlow();
+  Skimmer::GetSampleWeight();
+  Skimmer::GetPUWeights();
 }
 
 Skimmer::~Skimmer()
 {
+  fPUWeights.clear();
+  delete fInPUWgtFile;
+  delete fInPUWgtHist;
   delete fInCutFlow;
   delete fInTree;
   delete fInConfigTree;
@@ -68,11 +81,11 @@ void Skimmer::EventLoop()
     // dump status check
     if (entry%Config::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
     
-    // get event weight
+    // get event weight: no scaling by BR, xsec, lumi, etc.
     const Float_t evtwgt = (fIsMC ? fInEvent.genwgt : 1.f);
 
     // perform skim
-    if (fInEvent.njets < 5) continue;
+    // continue;
 
     // fill cutflow
     fOutCutFlow->Fill((cutLabels["skim"]*1.f)-0.5f,evtwgt);
@@ -159,39 +172,38 @@ void Skimmer::FillOutHVDSs()
 
 void Skimmer::FillOutEvent()
 {
-  fOutEvent.run = fOutEvent.run;
-  fOutEvent.lumi = fOutEvent.lumi;
-  fOutEvent.event = fOutEvent.event;
-  fOutEvent.hltSignal = fOutEvent.hltSignal;
-  fOutEvent.hltRefPhoID = fOutEvent.hltRefPhoID;
-  fOutEvent.hltRefDispID = fOutEvent.hltRefDispID;
-  fOutEvent.hltRefHT = fOutEvent.hltRefHT;
-  fOutEvent.hltPho50 = fOutEvent.hltPho50;
-  fOutEvent.nvtx = fOutEvent.nvtx;
-  fOutEvent.vtxX = fOutEvent.vtxX;
-  fOutEvent.vtxY = fOutEvent.vtxY;
-  fOutEvent.vtxZ = fOutEvent.vtxZ;
-  fOutEvent.rho = fOutEvent.rho;
-  fOutEvent.t1pfMETpt = fOutEvent.t1pfMETpt;
-  fOutEvent.t1pfMETphi = fOutEvent.t1pfMETphi;
-  fOutEvent.t1pfMETsumEt = fOutEvent.t1pfMETsumEt;
-  fOutEvent.jetHT = fOutEvent.jetHT;
-  fOutEvent.njets = fOutEvent.njets;
-  fOutEvent.nrechits = fOutEvent.nrechits;
-  fOutEvent.nphotons = fOutEvent.nphotons;
-    
+  fOutEvent.run = fInEvent.run;
+  fOutEvent.lumi = fInEvent.lumi;
+  fOutEvent.event = fInEvent.event;
+  fOutEvent.hltSignal = fInEvent.hltSignal;
+  fOutEvent.hltRefPhoID = fInEvent.hltRefPhoID;
+  fOutEvent.hltRefDispID = fInEvent.hltRefDispID;
+  fOutEvent.hltRefHT = fInEvent.hltRefHT;
+  fOutEvent.hltPho50 = fInEvent.hltPho50;
+  fOutEvent.nvtx = fInEvent.nvtx;
+  fOutEvent.vtxX = fInEvent.vtxX;
+  fOutEvent.vtxY = fInEvent.vtxY;
+  fOutEvent.vtxZ = fInEvent.vtxZ;
+  fOutEvent.rho = fInEvent.rho;
+  fOutEvent.t1pfMETpt = fInEvent.t1pfMETpt;
+  fOutEvent.t1pfMETphi = fInEvent.t1pfMETphi;
+  fOutEvent.t1pfMETsumEt = fInEvent.t1pfMETsumEt;
+  fOutEvent.jetHT = fInEvent.jetHT;
+  fOutEvent.njets = fInEvent.njets;
+  fOutEvent.nrechits = fInEvent.nrechits;
+  fOutEvent.nphotons = fInEvent.nphotons;
+  fOutEvent.evtwgt = (fIsMC ? fSampleWeight * fInEvent.genwgt : 1.f);
+  
   if (fIsMC)
   {
-    fOutEvent.genwgt = fOutEvent.genwgt;
-    fOutEvent.genpuobs = fOutEvent.genpuobs;
-    fOutEvent.genputrue = fOutEvent.genputrue;
+    fOutEvent.puwgt = fPUWeights[fInEvent.genputrue];
     if (fOutConfig.isGMSB)
     {
-      fOutEvent.nNeutoPhGr = fOutEvent.nNeutoPhGr;
+      fOutEvent.nNeutoPhGr = fInEvent.nNeutoPhGr;
     }
     if (fOutConfig.isHVDS)
     {
-      fOutEvent.nvPions = fOutEvent.nvPions;
+      fOutEvent.nvPions = fInEvent.nvPions;
     }
   }
 }
@@ -619,9 +631,7 @@ void Skimmer::InitOutTree()
 {
   if (fIsMC)
   {
-    fOutTree->Branch(fOutEvent.s_genwgt.c_str(), &fOutEvent.genwgt);
-    fOutTree->Branch(fOutEvent.s_genpuobs.c_str(), &fOutEvent.genpuobs);
-    fOutTree->Branch(fOutEvent.s_genputrue.c_str(), &fOutEvent.genputrue);
+    fOutTree->Branch(fOutEvent.s_puwgt.c_str(), &fOutEvent.puwgt);
     
     if (fOutConfig.isGMSB)
     {
@@ -759,6 +769,9 @@ void Skimmer::InitOutTree()
 	fOutTree->Branch(Form("%s_%i",pho.s_isSignal.c_str(),ipho), &pho.isSignal);
       }
     }
+
+    // add event weight
+    fOutTree->Branch(fOutEvent.s_evtwgt.c_str(), &fOutEvent.evtwgt);
   }
 } 
 
@@ -788,4 +801,18 @@ void Skimmer::InitOutCutFlow()
     fOutCutFlow->SetBinError(ibin,fInCutFlow->GetBinError(ibin));
   }
   fOutCutFlow->GetYaxis()->SetTitle(fInCutFlow->GetYaxis()->GetTitle());
+}
+
+void Skimmer::GetSampleWeight()
+{
+  fSampleWeight = fOutConfig.xsec * fOutConfig.filterEff * fOutConfig.BR / fOutCutFlow->GetBinContent(1); // Config::lumi * Config::invfbToinvpb *
+}
+
+void Skimmer::GetPUWeights()
+{
+  fPUWeights.clear();
+  for (Int_t ibin = 1; ibin <= fInPUWgtHist->GetNbinsX(); ibin++)
+  {
+    fPUWeights.emplace_back(fInPUWgtHist->GetBinContent(i));
+  }
 }
