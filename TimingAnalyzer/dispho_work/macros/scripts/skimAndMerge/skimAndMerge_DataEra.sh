@@ -11,7 +11,6 @@ version=${3}
 dataset="SinglePhoton"
 database="Run2017${era}-PromptReco-${version}"
 text="${dataset}_2017${era}_${version}"
-tmptxt="${text}_files.txt"
 
 ## directories needed
 indir="${eosbase}/${dataset}/${label}_${database}"
@@ -19,4 +18,4 @@ tmpdir="${tmpbase}/${dataset}/${era}/${version}"
 outdir="${outbase}/Data/${dataset}/${era}/{version}"
 	
 ## process subera
-./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} ${tmptxt}
+./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir}

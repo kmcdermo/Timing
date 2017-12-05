@@ -56,8 +56,8 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
 Skimmer::~Skimmer()
 {
   fPUWeights.clear();
-  delete fInPUWgtFile;
   delete fInPUWgtHist;
+  delete fInPUWgtFile;
   delete fInCutFlow;
   delete fInTree;
   delete fInConfigTree;
