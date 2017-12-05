@@ -27,8 +27,12 @@ rm ${tmpfiles}
 mkdir -p ${tmpdir}
 
 ## read in each file and skim
+nfiles=$(wc -l ${files})
+counter="1"
 while IFS='' read -r line || [[ -n "${line}" ]]; do
+    echo "Working on file" ${counter} "out of" ${nfiles} "[filename: ${line}]"
     ./scripts/runSkimmer.sh ${rootbase}/${eosdir} ${tmpdir} ${line}
+    counter=$((${counter} + 1))
 done < "${files}"
 
 ## remove list of files
