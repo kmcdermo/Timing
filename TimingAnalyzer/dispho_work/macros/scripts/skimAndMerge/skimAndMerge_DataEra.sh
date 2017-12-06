@@ -15,7 +15,7 @@ text="${dataset}_2017${era}_${version}"
 ## directories needed
 indir="${eosbase}/${dataset}/${label}_${database}"
 tmpdir="${tmpbase}/${dataset}/${era}/${version}"
-outdir="${outbase}/Data/${dataset}/${era}/{version}"
+outdir="${outbase}/Data/${dataset}/${era}/${version}"
 	
 ## process subera
 ./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir}
