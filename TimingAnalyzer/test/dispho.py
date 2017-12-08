@@ -41,6 +41,7 @@ options.register('applyPhGood',False,VarParsing.multiplicity.singleton,VarParsin
 ## matching cuts
 options.register('dRmin',0.3,VarParsing.multiplicity.singleton,VarParsing.varType.float,'dR minimum cut');
 options.register('pTres',100.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'pT resolution cut');
+options.register('genpTres',0.5,VarParsing.multiplicity.singleton,VarParsing.varType.float,'gen pT resolution cut');
 options.register('trackdRmin',0.2,VarParsing.multiplicity.singleton,VarParsing.varType.float,'track dR minimum cut');
 options.register('trackpTmin',5.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'track pT minimum cut');
 
@@ -61,7 +62,7 @@ options.register('filterEff',1.0,VarParsing.multiplicity.singleton,VarParsing.va
 options.register('BR',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'branching ratio of MC');
 
 ## GT to be used
-options.register('globalTag','92X_dataRun2_Prompt_v8',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
+options.register('globalTag','92X_upgrade2017_realistic_v10',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
 
 ## do a demo run over only 1k events
 options.register('demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to run over only 1k events');
@@ -108,6 +109,7 @@ print "applyPhGood    : ",options.applyPhGood
 print "        -- Matching --"
 print "dRmin          : ",options.dRmin
 print "pTres          : ",options.pTres
+print "genpTres       : ",options.genpTres
 print "trackdRmin     : ",options.trackdRmin
 print "trackpTmin     : ",options.trackpTmin
 print "        -- Trigger --"
@@ -209,6 +211,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    ## matched criteria
    dRmin = cms.double(options.dRmin),
    pTres = cms.double(options.pTres),
+   genpTres = cms.double(options.genpTres),
    trackdRmin = cms.double(options.trackdRmin),
    trackpTmin = cms.double(options.trackpTmin),
    ## triggers

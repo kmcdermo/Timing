@@ -76,7 +76,7 @@ def main():
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
 
-        config.Data.inputDBS     = 'phys03'
+        config.Data.inputDBS     = None
         config.Data.inputDataset = None
         config.Data.splitting    = 'EventAwareLumiBased'
         config.Data.unitsPerJob  = None
@@ -89,8 +89,8 @@ def main():
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/GMSB_L200TeV_CTau400cm_930/kmcdermo-GMSB_L200TeV_CTau400cm_930_step3-23134fac048c68b5122d77328802e60f/USER'       , '0.04'  , '1', '0.81418', 'isGMSB=True', 10000],
-            ['/GJet_Pt-15To6000_TuneCUETP8M1-Flat_13TeV_pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v1/MINIAODSIM', '365896', '1', '1'      , 'isBkgd=True', 500000]
+            ['/GMSB_L200TeV_CTau400cm_930/kmcdermo-GMSB_L200TeV_CTau400cm_930_step3-23134fac048c68b5122d77328802e60f/USER'       , '0.04'  , '1', '0.81418', 'isGMSB=True', 10000, 'phys03'],
+            ['/GJet_Pt-15To6000_TuneCUETP8M1-Flat_13TeV_pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v1/MINIAODSIM', '365896', '1', '1'      , 'isBkgd=True', 500000, 'global']
             ]
  
         for inDO in inputDataAndOpts:
@@ -99,7 +99,8 @@ def main():
             config.JobType.pyCfgParams   = ['globalTag=92X_upgrade2017_realistic_v10','phIDmin=none','splitPho=True','storeRecHits=False',
                                             'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],inDO[4],
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters]
-            confif.Data.unitsPerJob      = inDO[5]
+            config.Data.unitsPerJob      = inDO[5]
+            config.Data.inputDBS         = inDO[6]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.

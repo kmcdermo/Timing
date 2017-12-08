@@ -61,7 +61,7 @@ def main():
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
         inputPaths   = 'HLTpathsWExtras.txt'
         inputFilters = 'HLTfilters.txt'
-        inputJSON    = 'golden2017-nov16.json'
+        inputJSON    = 'golden2017-nov30.json'
          
         #--------------------------------------------------------
         # This is the base config:

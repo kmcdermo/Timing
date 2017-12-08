@@ -253,9 +253,8 @@ namespace oot
       {
 	if (!isL1T)
 	{
-	  const float pt = obj.pt();
-	  if (triggerObject.pt() < ((1.f-pTres) * pt)) continue;
-	  if (triggerObject.pt() > ((1.f+pTres) * pt)) continue;
+	  if (triggerObject.pt() < ((1.f-pTres) * obj.pt())) continue;
+	  if (triggerObject.pt() > ((1.f+pTres) * obj.pt())) continue;
 	}
 	if (Config::deltaR(obj.phi(),obj.eta(),triggerObject.phi(),triggerObject.eta()) < dRmin)
 	{
@@ -292,17 +291,16 @@ namespace oot
     {
       for (const auto & genpart : *genparticlesH)
       {
-	if (genpart.pdgId() == 22 && genpart.isPromptFinalState())
+	if (genpart.pdgId() != 22 || !genpart.isPromptFinalState()) continue;
+
+	if (genpart.pt() < ((1.f-pTres) * obj.pt())) continue;
+	if (genpart.pt() > ((1.f+pTres) * obj.pt())) continue;
+	
+	const float dR = Config::deltaR(obj.phi(),obj.eta(),genpart.phi(),genpart.eta());
+	if (dR < dRmin) 
 	{
-	  if (std::abs(genpart.pt()-obj.pt())/obj.pt() < pTres)
-	  {
-	    const float dR = Config::deltaR(obj.phi(),obj.eta(),genpart.phi(),genpart.eta());
-	    if (dR < dRmin) 
-	    {
-	      return true;
-	    } // end check over dRmin
-	  } // end check over pT resolution
-	} // end check over gen particle status 
+	  return true;
+	} // end check over dRmin
       } // end loop over gen particles
     } // end check over gen particles exist
     return false;      

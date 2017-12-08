@@ -15,7 +15,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   phIDmin(iConfig.existsAs<std::string>("phIDmin") ? iConfig.getParameter<std::string>("phIDmin") : "loose"),
 
   // object extra pruning cuts
-  seedTimemin(iConfig.existsAs<double>("seedTimemin") ? iConfig.getParameter<double>("seedTimemin") : -5.f),
+  seedTimemin(iConfig.existsAs<double>("seedTimemin") ? iConfig.getParameter<double>("seedTimemin") : -25.f),
   jetIDStoremin(iConfig.existsAs<int>("jetIDStoremin") ? iConfig.getParameter<int>("jetIDStoremin") : 3),
 
   // photon storing
@@ -35,8 +35,9 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   applyPhGood(iConfig.existsAs<bool>("applyPhGood") ? iConfig.getParameter<bool>("applyPhGood") : false),
 
   // matching criteria
-  dRmin(iConfig.existsAs<double>("dRmin") ? iConfig.getParameter<double>("dRmin") : 0.4),
-  pTres(iConfig.existsAs<double>("pTres") ? iConfig.getParameter<double>("pTres") : 0.5),
+  dRmin(iConfig.existsAs<double>("dRmin") ? iConfig.getParameter<double>("dRmin") : 0.3),
+  pTres(iConfig.existsAs<double>("pTres") ? iConfig.getParameter<double>("pTres") : 100.0),
+  genpTres(iConfig.existsAs<double>("genpTres") ? iConfig.getParameter<double>("genpTres") : 0.5),
   trackdRmin(iConfig.existsAs<double>("trackdRmin") ? iConfig.getParameter<double>("trackdRmin") : 0.2),
   trackpTmin(iConfig.existsAs<double>("trackpTmin") ? iConfig.getParameter<double>("trackpTmin") : 5.f),
 
@@ -629,15 +630,17 @@ void DisPho::SetGMSBBranch(const reco::GenParticle & neutralino, gmsbStruct & gm
   for (const auto & photon : photons)
   {
     if (iph > 4) break;
-    if (std::abs(photon.pt()-gmsbBranch.genphpt_)/gmsbBranch.genphpt_ < pTres)
+    
+    if (photon.pt() < ((1.f-genpTres) * gmsbBranch.genphpt_)) continue;
+    if (photon.pt() > ((1.f+genpTres) * gmsbBranch.genphpt_)) continue;
+
+    const float delR = Config::deltaR(gmsbBranch.genphphi_,gmsbBranch.genpheta_,photon.phi(),photon.eta());
+    if (delR < mindR) 
     {
-      const float delR = deltaR(gmsbBranch.genphphi_,gmsbBranch.genpheta_,photon.phi(),photon.eta());
-      if (delR < mindR) 
-      {
-	mindR = delR;
-	gmsbBranch.genphmatch_ = iph; 
-      } // end check over deltaR
-    } // end check over pt resolution
+      mindR = delR;
+      gmsbBranch.genphmatch_ = iph; 
+    } // end check over deltaR
+
     iph++;
   } // end loop over reco photons
   
@@ -714,26 +717,26 @@ void DisPho::SetHVDSBranch(const reco::GenParticle & vPion, hvdsStruct & hvdsBra
     const float tmpeta = photon.eta();
     
     // check photon 1
-    if (std::abs(tmppt-hvdsBranch.genHVph0pt_)/hvdsBranch.genHVph0pt_ < pTres)
+    if (tmppt < ((1.f-genpTres) * hvdsBranch.genHVph0pt_)) continue;
+    if (tmppt > ((1.f+genpTres) * hvdsBranch.genHVph0pt_)) continue;
+
+    const float delR0 = Config::deltaR(hvdsBranch.genHVph0phi_,hvdsBranch.genHVph0eta_,tmpphi,tmpeta);
+    if (delR0 < mindR0) 
     {
-      const float delR = deltaR(hvdsBranch.genHVph0phi_,hvdsBranch.genHVph0eta_,tmpphi,tmpeta);
-      if (delR < mindR0) 
-      {
-	mindR0 = delR;
-	tmpph0 = iph;
-      } // end check over deltaR
-    } // end check over pt resolution
+      mindR0 = delR0;
+      tmpph0 = iph;
+    } // end check over deltaR
 	      
     // check photon 2
-    if (std::abs(tmppt-hvdsBranch.genHVph1pt_)/hvdsBranch.genHVph1pt_ < pTres)
+    if (tmppt < ((1.f-genpTres) * hvdsBranch.genHVph1pt_)) continue;
+    if (tmppt > ((1.f+genpTres) * hvdsBranch.genHVph1pt_)) continue;
+
+    const float delR1 = Config::deltaR(hvdsBranch.genHVph1phi_,hvdsBranch.genHVph1eta_,tmpphi,tmpeta);
+    if (delR1 < mindR1) 
     {
-      const float delR = deltaR(hvdsBranch.genHVph1phi_,hvdsBranch.genHVph1eta_,tmpphi,tmpeta);
-      if (delR < mindR1) 
-      {
-	mindR1 = delR;
-	tmpph1 = iph;
-      } // end check over deltaR
-    } // end check over pt resolution
+      mindR1 = delR1;
+      tmpph1 = iph;
+    } // end check over deltaR
     
     // now update iph
     iph++;
@@ -1062,7 +1065,7 @@ void DisPho::SetPhoBranchMC(const int iph, const oot::Photon& photon, phoStruct&
   }
 
   // standard dR matching
-  phoBranch.isGen_ = oot::GenToObjectMatching(photon,genparticlesH,pTres,dRmin);
+  phoBranch.isGen_ = oot::GenToObjectMatching(photon,genparticlesH,genpTres,dRmin);
 }
 
 int DisPho::CheckMatchHVDS(const int iph, const hvdsStruct& hvdsBranch)
@@ -1163,10 +1166,12 @@ void DisPho::MakeAndFillConfigTree()
   // dR matching criteria
   float dRmin_tmp = dRmin;
   float pTres_tmp = pTres;
+  float genpTres_tmp = genpTres;
   float trackdRmin_tmp = trackdRmin;
   float trackpTmin_tmp = trackpTmin;
   configtree->Branch("dRmin", &dRmin_tmp, "dRmin/F");
   configtree->Branch("pTres", &pTres_tmp, "pTres/F");
+  configtree->Branch("genpTres", &genpTres_tmp, "genpTres/F");
   configtree->Branch("trackdRmin", &trackdRmin_tmp, "trackdRmin/F");
   configtree->Branch("trackpTmin", &trackpTmin_tmp, "trackpTmin/F");
 
