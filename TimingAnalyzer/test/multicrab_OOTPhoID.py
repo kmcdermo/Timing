@@ -25,7 +25,7 @@ def getOptions():
 
     parser.add_option('-w', '--workArea',
                       dest = 'workArea',
-                      default = 'multicrab_dispho_Bkgd',
+                      default = 'multicrab_OOTPhoID',
                       help = "work area directory (only if CMD != 'submit')",
                       metavar = 'WAD')
 
@@ -59,7 +59,7 @@ def main():
 
         # External files needed by CRAB
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
-        inputPaths   = 'HLTpathsWExtras.txt'
+        inputPaths   = 'HLTpaths.txt'
         inputFilters = 'HLTfilters.txt'
          
         #--------------------------------------------------------
@@ -76,9 +76,10 @@ def main():
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
 
+        config.Data.inputDBS     = 'phys03'
         config.Data.inputDataset = None
         config.Data.splitting    = 'EventAwareLumiBased'
-        config.Data.unitsPerJob  = 500000
+        config.Data.unitsPerJob  = None
 
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
@@ -88,27 +89,17 @@ def main():
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/GJets_HT-40To100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM' , '20890'   , '1', '1'],
-            ['/GJets_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM', '9277'    , '1', '1'],
-            ['/GJets_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM', '2314'    , '1', '1'],
-            ['/GJets_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM', '276'     , '1', '1'],
-            ['/GJets_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM', '93.61'   , '1', '1'],
-            ['/QCD_HT100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM'   , '27600000', '1', '1'],
-            ['/QCD_HT200to300_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM'   , '1762000' , '1', '1'],
-            ['/QCD_HT300to500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM'   , '354100'  , '1', '1'],
-            ['/QCD_HT500to700_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM'   , '32270'   , '1', '1'],
-            ['/QCD_HT700to1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM'  , '6822'    , '1', '1'],
-            ['/QCD_HT1000to1500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM' , '1202'    , '1', '1'],
-            ['/QCD_HT1500to2000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM' , '119.7'   , '1', '1'],
-            ['/QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v3/MINIAODSIM'  , '25.14'   , '1', '1'],
+            ['/GMSB_L200TeV_CTau400cm_930/kmcdermo-GMSB_L200TeV_CTau400cm_930_step3-23134fac048c68b5122d77328802e60f/USER'       , '0.04'  , '1', '0.81418', 'isGMSB=True', 10000],
+            ['/GJet_Pt-15To6000_TuneCUETP8M1-Flat_13TeV_pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v1/MINIAODSIM', '365896', '1', '1'      , 'isBkgd=True', 500000]
             ]
-        
+ 
         for inDO in inputDataAndOpts:
-            # inDO[0] is of the form /A/B/C. Since A is unique for each inDO in Monte Carlo, use this in the CRAB request name.
+            # inDO[0] is of the form /A/B/C. Since A is unique for each inDO for Monte Carlo, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[1]
-            config.JobType.pyCfgParams   = ['globalTag=92X_upgrade2017_realistic_v10','phIDmin=none','splitPho=False','isBkgd=True',
-                                            'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],
+            config.JobType.pyCfgParams   = ['globalTag=92X_upgrade2017_realistic_v10','phIDmin=none','splitPho=True','storeRecHits=False',
+                                            'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],inDO[4],
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters]
+            confif.Data.unitsPerJob      = inDO[5]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.
