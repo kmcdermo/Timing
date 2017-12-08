@@ -37,6 +37,13 @@ namespace Config
   static const std::string RefDispIDPath = "HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v";
   static const std::string RefHTPath = "HLT_PFHT350MinPFJet15_v";
   static const std::string Pho50Path = "HLT_Photon50_v";
+  static const std::string Pho200Path = "HLT_Photon200_v";
+  static const std::string DiPho70Path = "HLT_DoublePhoton70_v";
+  static const std::string DiPho3022M90Path = "HLT_Diphoton30_22_R9Id_OR_IsoCaloId_AND_HE_R9Id_Mass90_v";
+  static const std::string DiPho30PV18PVPath = "HLT_Diphoton30PV_18PV_R9Id_AND_IsoCaloId_AND_HE_R9Id_PixelVeto_Mass55_v";
+  static const std::string DiEle33MWPath = "HLT_DoubleEle33_CaloIdL_MW_v";
+  static const std::string DiEle27WPTPath = "HLT_DiEle27_WPTightCaloOnly_L1DoubleEG_v";
+  static const std::string Jet500Path = "HLT_PFJet500_v";
 
   // trigger filter related strings
   static const std::string L1Trigger = "hltL1sSingleEGNonIsoOrWithJetAndTauNoPS";
@@ -215,7 +222,7 @@ namespace oot
   float GetEcalPFClPtScale(const float eta, const float pt);
   float GetHcalPFClPtScale(const float eta, const float pt);
   float GetTrackPtScale(const float eta, const float pt);
-  void GetPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho);
+  void GetGEDPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho);
   void GetOOTPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho);
   int PassHoE   (const float eta, const float HoE);
   int PassSieie (const float eta, const float Sieie);
@@ -244,7 +251,12 @@ namespace oot
 
       for (const auto & triggerObject : triggerObjectsByFilterPair.second)
       {
-	if (!isL1T && (std::abs(triggerObject.pt()-obj.pt())/obj.pt() > pTres)) continue;
+	if (!isL1T)
+	{
+	  const float pt = obj.pt();
+	  if (triggerObject.pt() < ((1.f-pTres) * pt)) continue;
+	  if (triggerObject.pt() > ((1.f+pTres) * pt)) continue;
+	}
 	if (Config::deltaR(obj.phi(),obj.eta(),triggerObject.phi(),triggerObject.eta()) < dRmin)
 	{
 	  isHLTMatched[filterName] = true; 

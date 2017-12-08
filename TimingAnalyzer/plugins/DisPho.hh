@@ -168,8 +168,13 @@ struct phoStruct
   bool isOOT_;
   bool isEB_;
   bool isHLT_;
+
   bool isTrk_;
-  int  ID_;
+  bool passEleVeto_;
+  bool hasPixSeed_;
+
+  int  gedID_;
+  int  ootID_;
 
   int  isSignal_;
   bool isGen_;
@@ -243,6 +248,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // object extra pruning
   const float seedTimemin;
+  const int jetIDStoremin;
 
   // photon storing options
   const bool splitPho;
@@ -357,6 +363,13 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   bool hltRefDispID;
   bool hltRefHT;
   bool hltPho50;
+  bool hltPho200;
+  bool hltDiPho70;
+  bool hltDiPho3022M90;
+  bool hltDiPho30PV18PV;
+  bool hltDiEle33MW;
+  bool hltDiEle27WPT;
+  bool hltJet500;
 
   // vertices
   int nvtx;
@@ -372,7 +385,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   float jetHT;
 
   // jets
-  int njets;
+  int njetsL, njetsT;
   jetStruct jetBranch0, jetBranch1, jetBranch2, jetBranch3;
 
   // RecHits

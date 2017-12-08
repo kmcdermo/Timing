@@ -223,26 +223,22 @@ namespace oot
 	if (photon.pt() < phpTmin) continue;
 
 	idpVec idpairs;
-	if (isOOT)
-	{
-	  idpairs = {{"medium",false}};
-	  oot::GetOOTPhoVID(photon,idpairs,rho);
-	}
-	else
-	{
-	  idpairs = {{"loose",false}, {"medium",false}, {"tight",false}};
-	  oot::GetPhoVID(photon,idpairs,rho);
-	}
+	idpairs = {{"loose-ged",false}, {"medium-ged",false}, {"tight-ged",false}, {"loose-oot",false}, {"tight-oot",false}};
+	oot::GetGEDPhoVID(photon,idpairs,rho);	  
+	oot::GetOOTPhoVID(photon,idpairs,rho);
 	
 	bool isGoodID = true;
 	if (phIDmin != "none")
 	{
 	  for (const auto & idpair : idpairs) 
 	  {
-	    if (idpair.first == phIDmin)
+	    if (idpair.first.find(phIDmin) != std::string::npos) // correct for GED or OOT!
 	    {
-	      if (!idpair.second) isGoodID = false;
-	      break;
+	      if ((isOOT && idpair.first.find("oot")) || (!isOOT && idpair.first.find("ged")))
+	      {
+		if (!idpair.second) isGoodID = false;
+		break;
+	      }
 	    }
 	  }
 	}
@@ -444,13 +440,13 @@ namespace oot
     else                              return 0.f;
   }
 
-  ////////////////
-  //            //
-  // Photon VID //
-  //            //
-  ////////////////
+  ////////////////////
+  //                //
+  // GED Photon VID //
+  //                //
+  ////////////////////
 
-  void GetPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho)
+  void GetGEDPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho)
   {
     // needed for cuts
     const float eta = std::abs(photon.superCluster()->eta());
@@ -631,16 +627,28 @@ namespace oot
 
     if (eta < Config::etaEBcutoff)
     {
-      if ((HoverE < 0.0396) && (Sieie < 0.01022) && (EcalPFClIso < 8.f) && (HcalPFClIso < 8.f) && (TrkIso < 6.f)) 
+      if      ((HoverE < 0.0269) && (Sieie < 0.00994) && (EcalPFClIso < 2.f) && (HcalPFClIso < 5.f) && (TrkIso < 3.f)) 
       {
-	idpairs[0].second = true;
+	idpairs[4].second = true;
+	idpairs[3].second = true;
+      }   
+      else if ((HoverE < 0.0597) && (Sieie < 0.01031) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 6.f)) 
+      {
+	idpairs[4].second = false;
+	idpairs[3].second = true;
       }   
     }
     else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax)
     {
-      if ((HoverE < 0.0219) && (Sieie < 0.03001) && (EcalPFClIso < 8.f) && (HcalPFClIso < 8.f) && (TrkIso < 6.f)) 
+      if      ((HoverE < 0.0213) && (Sieie < 0.03000) && (EcalPFClIso < 2.f) && (HcalPFClIso < 5.f) && (TrkIso < 3.f)) 
       {
-	idpairs[0].second = true;
+	idpairs[4].second = true;
+	idpairs[3].second = true;
+      }   
+      else if ((HoverE < 0.0481) && (Sieie < 0.03013) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 6.f)) 
+      {
+	idpairs[4].second = false;
+	idpairs[3].second = true;
       }   
     }
   }

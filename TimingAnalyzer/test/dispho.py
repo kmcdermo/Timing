@@ -19,7 +19,8 @@ options.register('phpTmin',20.0,VarParsing.multiplicity.singleton,VarParsing.var
 options.register('phIDmin','none',VarParsing.multiplicity.singleton,VarParsing.varType.string,'photon ID minimum cut');
 
 ## object extra pruning cuts
-options.register('seedTimemin',-5.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon seed time minimum cut');
+options.register('seedTimemin',-25.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon seed time minimum cut');
+options.register('jetIDStoremin',3,VarParsing.multiplicity.singleton,VarParsing.varType.int,'jet ID for storing jet info minimum cut');
 
 ## photon storing options
 options.register('splitPho',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store leading top two photons, OOT and GED');
@@ -34,12 +35,12 @@ options.register('applyTrigger',False,VarParsing.multiplicity.singleton,VarParsi
 options.register('minHT',400.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'jet HT minimum cut');
 options.register('applyHT',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to apply HT pre-selection');
 options.register('phgoodpTmin',70.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'good photon pT minimum cut');
-options.register('phgoodIDmin','medium',VarParsing.multiplicity.singleton,VarParsing.varType.string,'good photon ID minimum cut');
+options.register('phgoodIDmin','loose',VarParsing.multiplicity.singleton,VarParsing.varType.string,'good photon ID minimum cut');
 options.register('applyPhGood',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to require at least one good photon in pre-selection');
 
 ## matching cuts
-options.register('dRmin',0.4,VarParsing.multiplicity.singleton,VarParsing.varType.float,'dR minimum cut');
-options.register('pTres',0.5,VarParsing.multiplicity.singleton,VarParsing.varType.float,'pT resolution cut');
+options.register('dRmin',0.3,VarParsing.multiplicity.singleton,VarParsing.varType.float,'dR minimum cut');
+options.register('pTres',100.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'pT resolution cut');
 options.register('trackdRmin',0.2,VarParsing.multiplicity.singleton,VarParsing.varType.float,'track dR minimum cut');
 options.register('trackpTmin',5.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'track pT minimum cut');
 
@@ -90,6 +91,7 @@ print "phpTmin        : ",options.phpTmin
 print "phIDmin        : ",options.phIDmin
 print "     -- Extra Pruning --"
 print "seedTimemin    : ",options.seedTimemin
+print "jetIDStoremin  : ",options.jetIDStoremin
 print "     -- Photon Storing --"
 print "splitPho       : ",options.splitPho
 print "onlyGED        : ",options.onlyGED
@@ -146,32 +148,10 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-		# test GMSB 2016, GT: 92X_mcRun2_asymptotic_v2
-		#'/store/user/kmcdermo/GMSB_L180_Ctau6000_Pythia8_13TeV_cff_py_GEN_SIM/GMSB_L180_Ctau6000_userHLT_legacy_PAT-MINIAODSIM-v1/170625_184255/0000/step3_mc_10.root'
-		# test HVDS 2016, GT: 92X_mcRun2_asymptotic_v2
-		#'file:/afs/cern.ch/user/k/kmcdermo/private/dispho/Analysis/CMSSW_9_2_8/src/Timing/GEN_SIM/HVDS/tmp/step3.root'
 		# test QCD, GT: 92X_upgrade2017_realistic_v10
 		# '/store/mc/RunIISummer17MiniAOD/QCD_Pt-170to300_EMEnriched_TuneCUETP8M1_13TeV_pythia8/MINIAODSIM/92X_upgrade2017_realistic_v10-v2/90000/02A98D4F-BF97-E711-950B-4C79BA1809E9.root'
-		# 2017A-v1, GT: 92X_dataRun2_Prompt_v4
-		#'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v1/000/295/977/00000/9CAC61AF-094A-E711-BA62-02163E0138FA.root',
-		# 2017A-v2, GT: 92X_dataRun2_Prompt_v4
-		#'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v2/000/296/173/00000/D8A4F64B-6A4C-E711-9068-02163E01A6DE.root',
-		# 2017A-v3, GT: 92X_dataRun2_Prompt_v4
-		#'/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v3/000/296/888/00000/707282D6-8F55-E711-8BB3-02163E0146D5.root',
-		# 2017B-v1, GT: 92X_dataRun2_Prompt_v4 
-		#'/store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v1/000/297/050/00000/1EFAAE6B-3D56-E711-B66E-02163E013854.root',
-		# 2017B-v2, GT: 92X_dataRun2_Prompt_v5
-		#'/store/data/Run2017B/SinglePhoton/MINIAOD/PromptReco-v2/000/299/065/00000/EAF9EEDA-E96A-E711-9370-02163E011DD8.root',
-		# 2017C-v1, GT: 92X_dataRun2_Prompt_v6
-		#'/store/data/Run2017C/SinglePhoton/MINIAOD/PromptReco-v1/000/299/370/00000/20A7ED55-C66D-E711-B7D5-02163E019C2A.root',
-		# 2017C-v2, GT: 92X_dataRun2_Prompt_v7 
-		#'/store/data/Run2017C/SinglePhoton/MINIAOD/PromptReco-v2/000/300/087/00000/DC73481C-0477-E711-BE6F-02163E012551.root',
-		# 2017C-v3, GT: 92X_dataRun2_Prompt_v8
-		#'/store/data/Run2017C/SinglePhoton/MINIAOD/PromptReco-v3/000/300/777/00000/18694619-C67E-E711-9CBF-02163E01A6D1.root',
 		# 2017D-v1, GT: 92X_dataRun2_Prompt_v8 
 		#'/store/data/Run2017D/SinglePhoton/MINIAOD/PromptReco-v1/000/302/042/00000/18838DB3-698F-E711-9D1B-02163E01192A.root',
-		# 2017E-v1, GT: 92X_dataRun2_Prompt_v9
-		# '/store/data/Run2017E/SinglePhoton/MINIAOD/PromptReco-v1/000/303/819/00000/F8E8E7B5-68A2-E711-9655-02163E0138E0.root',
 		###### Hacked 93X GMSB ctau = 4m sample, GT: 92X_upgrade2017_realistic_v10
 		'/store/group/phys_exotica/displacedPhotons/GMSB_L200TeV_CTau400cm_930/GMSB_L200TeV_CTau400cm_930_step3/171024_213911/0000/step3_1.root',
 		))
@@ -212,6 +192,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    phIDmin  = cms.string(options.phIDmin),
    ## extra object pruning
    seedTimemin = cms.double(options.seedTimemin),
+   jetIDStoremin = cms.int32(options.jetIDStoremin),
    ## photon storing options
    splitPho = cms.bool(options.splitPho),
    onlyGED  = cms.bool(options.onlyGED),

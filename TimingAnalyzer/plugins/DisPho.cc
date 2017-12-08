@@ -16,6 +16,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
 
   // object extra pruning cuts
   seedTimemin(iConfig.existsAs<double>("seedTimemin") ? iConfig.getParameter<double>("seedTimemin") : -5.f),
+  jetIDStoremin(iConfig.existsAs<int>("jetIDStoremin") ? iConfig.getParameter<int>("jetIDStoremin") : 3),
 
   // photon storing
   splitPho(iConfig.existsAs<bool>("splitPho") ? iConfig.getParameter<bool>("splitPho") : false),
@@ -30,7 +31,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   minHT(iConfig.existsAs<double>("minHT") ? iConfig.getParameter<double>("minHT") : 400.f),
   applyHT(iConfig.existsAs<bool>("applyHT") ? iConfig.getParameter<bool>("applyHT") : false),
   phgoodpTmin(iConfig.existsAs<double>("phgoodpTmin") ? iConfig.getParameter<double>("phgoodpTmin") : 70.f),
-  phgoodIDmin(iConfig.existsAs<std::string>("phgoodIDmin") ? iConfig.getParameter<std::string>("phgoodIDmin") : "medium"),
+  phgoodIDmin(iConfig.existsAs<std::string>("phgoodIDmin") ? iConfig.getParameter<std::string>("phgoodIDmin") : "loose"),
   applyPhGood(iConfig.existsAs<bool>("applyPhGood") ? iConfig.getParameter<bool>("applyPhGood") : false),
 
   // matching criteria
@@ -84,7 +85,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   usesResource("TFileService");
 
   // labels for cut flow histogram
-  std::vector<std::string> cutflowLabelVec = {"All","nEvBlinding","METBlinding","Trigger","H_{T}","Good Photon","Post-Processing"};
+  std::vector<std::string> cutflowLabelVec = {"All","nEvBlinding","METBlinding","Trigger","H_{T}","Good Photon"};
   int ibin = 0;
   for (const auto & cutflowLabel : cutflowLabelVec)
   {
@@ -277,6 +278,8 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Extra Pruning //
   //               //
   ///////////////////
+
+  // first remove early photons
   photons.erase(std::remove_if(photons.begin(),photons.end(),
 			       [&](const oot::Photon & photon)
 			       {
@@ -289,6 +292,60 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 				 return (seedTime < seedTimemin);
 			       }),photons.end());
 
+  // now remove jets too close to the photons
+  jets.erase(std::remove_if(jets.begin(),jets.end(),
+			    [&](const pat::Jet & jet)
+			    {
+			      bool isNearPhoton = false;
+			      for (const auto & photon : photons)
+			      {
+				if (Config::deltaR(jet.phi(),jet.eta(),photon.phi(),photon.eta()) < dRmin)
+				{
+				  isNearPhoton = true;
+				  break;
+				}
+			      }
+			      return isNearPhoton;
+			    }),jets.end());
+
+  // remove photons to close to the jets...
+  photons.erase(std::remove_if(photons.begin(),photons.end(),
+			       [&](const oot::Photon & photon)
+			       {
+				 bool isNearJet = false;
+				 for (const auto & jet : jets)
+			         {
+				   if (Config::deltaR(jet.phi(),jet.eta(),photon.phi(),photon.eta()) < dRmin)
+				   {
+				     isNearJet = true;
+				     break;
+				   }
+				 }
+				 return isNearJet;
+			       }),photons.end());
+
+  //////////////////////////////////////
+  // compute HT first with loose jets //
+  //////////////////////////////////////
+
+  jetHT = 0.f;
+  njetsL = jets.size();
+  if (jetsH.isValid()) // check to make sure reco jets exist
+  {
+    for (const auto& jet : jets)
+    {
+      jetHT += jet.pt();
+    }
+  } // end check over reco jets  
+
+  // now remove jets without tight ID
+  jets.erase(std::remove_if(jets.begin(),jets.end(),
+			    [&](const pat::Jet & jet)
+			    {
+			      const int jetID = oot::GetPFJetID(jet);
+			      return (jetID < jetIDStoremin);
+			    }),jets.end());
+				 
   ///////////////////////////// 
   //                         //
   // Photon Storing Options  //
@@ -314,14 +371,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   h_cutflow->Fill(cutflowLabelMap["Trigger"]*1.f,evtwgt);
 
   // HT pre-selection
-  jetHT = 0.f;
-  if (jetsH.isValid()) // check to make sure reco jets exist
-  {
-    for (const auto& jet : jets)
-    {
-      jetHT += jet.pt();
-    }
-  } // end check over reco jets  
   if (jetHT < minHT && applyHT) return;
   h_cutflow->Fill(cutflowLabelMap["H_{T}"]*1.f,evtwgt);
 
@@ -332,13 +381,16 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   {
     for (const auto & photon : photons)
     {
+      const auto & pho = photon.photon();
+
       if (iph >= 4) break;
       iph++;
       
-      if (photon.pt() < phgoodpTmin) continue;
+      if (pho.pt() < phgoodpTmin) continue;
       if (phgoodIDmin != "none")
       {
-	if (!photon.photon().photonID(phgoodIDmin)) continue;
+	if (!photon.isOOT() && !pho.photonID(phgoodIDmin+"-ged")) continue;
+	if ( photon.isOOT() && !pho.photonID(phgoodIDmin+"-oot")) continue;
       }
       
       isphgood = true; break;
@@ -415,6 +467,13 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   hltRefDispID = (triggerBitMap.count(Config::RefDispIDPath.c_str()) ? triggerBitMap[Config::RefDispIDPath.c_str()] : false);
   hltRefHT = (triggerBitMap.count(Config::RefHTPath.c_str()) ? triggerBitMap[Config::RefHTPath.c_str()] : false);
   hltPho50 = (triggerBitMap.count(Config::Pho50Path.c_str()) ? triggerBitMap[Config::Pho50Path.c_str()] : false);
+  hltPho200 = (triggerBitMap.count(Config::Pho200Path.c_str()) ? triggerBitMap[Config::Pho200Path.c_str()] : false);
+  hltDiPho70 = (triggerBitMap.count(Config::DiPho70Path.c_str()) ? triggerBitMap[Config::DiPho70Path.c_str()] : false);
+  hltDiPho3022M90 = (triggerBitMap.count(Config::DiPho3022M90Path.c_str()) ? triggerBitMap[Config::DiPho3022M90Path.c_str()] : false);
+  hltDiPho30PV18PV = (triggerBitMap.count(Config::DiPho30PV18PVPath.c_str()) ? triggerBitMap[Config::DiPho30PV18PVPath.c_str()] : false);
+  hltDiEle33MW = (triggerBitMap.count(Config::DiEle33MWPath.c_str()) ? triggerBitMap[Config::DiEle33MWPath.c_str()] : false);
+  hltDiEle27WPT = (triggerBitMap.count(Config::DiEle27WPTPath.c_str()) ? triggerBitMap[Config::DiEle27WPTPath.c_str()] : false);
+  hltJet500 = (triggerBitMap.count(Config::Jet500Path.c_str()) ? triggerBitMap[Config::Jet500Path.c_str()] : false);
 
   /////////////////////////
   //                     //   
@@ -455,11 +514,11 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   DisPho::InitializeJetBranches();
   if (jetsH.isValid()) // check to make sure reco jets exist
   {
-    njets = jets.size();
-    if (njets > 0) DisPho::SetJetBranch(jets[0],jetBranch0);
-    if (njets > 1) DisPho::SetJetBranch(jets[1],jetBranch1);
-    if (njets > 2) DisPho::SetJetBranch(jets[2],jetBranch2);
-    if (njets > 3) DisPho::SetJetBranch(jets[3],jetBranch3);
+    njetsT = jets.size();
+    if (njetsT > 0) DisPho::SetJetBranch(jets[0],jetBranch0);
+    if (njetsT > 1) DisPho::SetJetBranch(jets[1],jetBranch1);
+    if (njetsT > 2) DisPho::SetJetBranch(jets[2],jetBranch2);
+    if (njetsT > 3) DisPho::SetJetBranch(jets[3],jetBranch3);
   }
 
   //////////////
@@ -814,10 +873,14 @@ void DisPho::InitializePhoBranch(phoStruct & phoBranch)
   }
 
   phoBranch.isOOT_ = false;
-  phoBranch.isEB_ = false;
+  phoBranch.isEB_  = false;
   phoBranch.isHLT_ = false;
   phoBranch.isTrk_ = false;
-  phoBranch.ID_ = -1;
+  phoBranch.passEleVeto_ = false;
+  phoBranch.hasPixSeed_  = false;
+
+  phoBranch.gedID_ = -1;
+  phoBranch.ootID_ = -1;
 }
 
 void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, const uiiumap & recHitMap,
@@ -848,7 +911,7 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   // More ID variables
   phoBranch.EcalPFClIso_ = pho.ecalPFClusterIso();
   phoBranch.HcalPFClIso_ = pho.hcalPFClusterIso();
-  phoBranch.TrkIso_      = pho.trackIso();
+  phoBranch.TrkIso_      = pho.trkSumPtHollowConeDR03();
 
   // Shower Shape Objects
   const reco::Photon::ShowerShape& phoshape = pho.full5x5_showerShapeVariables(); 
@@ -934,20 +997,21 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
 
   // check for simple track veto
   phoBranch.isTrk_ = oot::TrackToObjectMatching(tracksH,photon,trackpTmin,trackdRmin);
+
+  // other track vetoes
+  phoBranch.passEleVeto_ = pho.passElectronVeto();
+  phoBranch.hasPixSeed_  = pho.hasPixelSeed();
   
   // 0 --> did not pass anything, 1 --> loose pass, 2 --> medium pass, 3 --> tight pass
-  if (phoBranch.isOOT_) 
-  {
-    if      (pho.photonID("medium")) {phoBranch.ID_ = 2;}
-    else                             {phoBranch.ID_ = 0;}
-  }
-  else 
-  {
-    if      (pho.photonID("tight"))  {phoBranch.ID_ = 3;}
-    else if (pho.photonID("medium")) {phoBranch.ID_ = 2;}
-    else if (pho.photonID("loose"))  {phoBranch.ID_ = 1;}
-    else                             {phoBranch.ID_ = 0;}
-  }
+  // GED first
+  if      (pho.photonID("tight-ged"))  {phoBranch.gedID_ = 3;}
+  else if (pho.photonID("medium-ged")) {phoBranch.gedID_ = 2;}
+  else if (pho.photonID("loose-ged"))  {phoBranch.gedID_ = 1;}
+  else                                 {phoBranch.gedID_ = 0;}
+  // OOT second
+  if      (pho.photonID("tight-oot"))  {phoBranch.ootID_ = 3;}
+  else if (pho.photonID("loose-oot"))  {phoBranch.ootID_ = 1;}
+  else                                 {phoBranch.ootID_ = 0;}
 }
 
 void DisPho::InitializePhoBranchesMC()
@@ -1066,7 +1130,9 @@ void DisPho::MakeAndFillConfigTree()
 
   // object extra pruning
   float seedTimemin_tmp = seedTimemin;
+  int jetIDStoremin_tmp = jetIDStoremin;
   configtree->Branch("seedTimemin", &seedTimemin_tmp, "seedTimemin/F");
+  configtree->Branch("jetIDStoremin", &jetIDStoremin_tmp, "jetIDStoremin/I");
 
   // photon storing options
   bool splitPho_tmp = splitPho;
@@ -1167,6 +1233,13 @@ void DisPho::MakeEventTree()
   disphotree->Branch("hltRefDispID", &hltRefDispID, "hltRefDispID/O");
   disphotree->Branch("hltRefHT", &hltRefHT, "hltRefHT/O");
   disphotree->Branch("hltPho50", &hltPho50, "hltPho50/O");
+  disphotree->Branch("hltPho200", &hltPho200, "hltPho200/O");
+  disphotree->Branch("hltDiPho70", &hltDiPho70, "hltDiPho70/O");
+  disphotree->Branch("hltDiPho3022M90", &hltDiPho3022M90, "hltDiPho3022M90/O");
+  disphotree->Branch("hltDiPho30PV18PV", &hltDiPho30PV18PV, "hltDiPho30PV18PV/O");
+  disphotree->Branch("hltDiEle33MW", &hltDiEle33MW, "hltDiEle33MW/O");
+  disphotree->Branch("hltDiEle27WPT", &hltDiEle27WPT, "hltDiEle27WPT/O");
+  disphotree->Branch("hltJet500", &hltJet500, "hltJet500/O");
 
   // Vertex info
   disphotree->Branch("nvtx", &nvtx, "nvtx/I");
@@ -1186,7 +1259,8 @@ void DisPho::MakeEventTree()
   disphotree->Branch("jetHT", &jetHT, "jetHT/F");  
 
   // Jet Info
-  disphotree->Branch("njets", &njets, "njets/I");
+  disphotree->Branch("njetsL", &njetsL, "njetsL/I");
+  disphotree->Branch("njetsT", &njetsT, "njetsT/I");
   DisPho::MakeJetBranch(0,jetBranch0);
   DisPho::MakeJetBranch(1,jetBranch1);
   DisPho::MakeJetBranch(2,jetBranch2);
@@ -1333,7 +1407,10 @@ void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
   disphotree->Branch(Form("phoisEB_%i",i), &phoBranch.isEB_, Form("phoisEB_%i/O",i));
   disphotree->Branch(Form("phoisHLT_%i",i), &phoBranch.isHLT_, Form("phoisHLT_%i/O",i));
   disphotree->Branch(Form("phoisTrk_%i",i), &phoBranch.isTrk_, Form("phoisTrk_%i/O",i));
-  disphotree->Branch(Form("phoID_%i",i), &phoBranch.ID_, Form("phoID_%i/I",i));
+  disphotree->Branch(Form("phopassEleVeto_%i",i), &phoBranch.passEleVeto_, Form("phopassEleVeto_%i/O",i));
+  disphotree->Branch(Form("phohasPixSeed_%i",i), &phoBranch.hasPixSeed_, Form("phohasPixSeed_%i/O",i));
+  disphotree->Branch(Form("phogedID_%i",i), &phoBranch.gedID_, Form("phogedID_%i/I",i));
+  disphotree->Branch(Form("phoootID_%i",i), &phoBranch.ootID_, Form("phoootID_%i/I",i));
 }
 
 void DisPho::MakePhoBranchMC(const int i, phoStruct& phoBranch)
