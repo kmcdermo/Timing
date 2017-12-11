@@ -12,13 +12,16 @@ void computePUWeights(const TString & text)
   CheckValidFile(file,filename);
   file->cd();
   
-  const TString dataname = "Data_singleph_Hist";
+  const TString dataname = "Data_Hist";
   TH1F * dataHist = (TH1F*)file->Get(Form("%s",dataname.Data()));
   CheckValidTH1F(dataHist,dataname,filename);
 
-  const TString bkgdname = "BkgdHist";
+  const TString bkgdname = "Bkgd_Hist";
   TH1F * bkgdHist = (TH1F*)file->Get(Form("%s",bkgdname.Data()));
   CheckValidTH1F(bkgdHist,bkgdname,filename);
+
+  std::cout << "Data: " << dataHist->Integral() << std::endl;
+  std::cout << "Bkgd: " << bkgdHist->Integral() << std::endl;
 
   // normalize
   dataHist->Scale(1.0/dataHist->Integral());

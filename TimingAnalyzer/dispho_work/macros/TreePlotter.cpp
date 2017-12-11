@@ -34,7 +34,6 @@ TreePlotter::TreePlotter(const TString & var, const TString & commoncut, const T
   TreePlotter::SetupCuts();
   TreePlotter::SetupLabels();
   TreePlotter::SetupHists();
-  //  TreePlotter::SetupDataSF();
 
   // output root file for quick inspection
   fOutFile = TFile::Open(Form("%s.root",text.Data()),"UPDATE");
@@ -102,7 +101,7 @@ void TreePlotter::MakeHistFromTrees()
     file->cd();
 	
     // Get TTree
-    const TString treename = "tree/tree";
+    const TString treename = "disphotree";
     TTree * tree = (TTree*)file->Get(Form("%s",treename.Data()));
     CheckValidTree(tree,treename,filename);
 
@@ -111,11 +110,11 @@ void TreePlotter::MakeHistFromTrees()
     histname.ReplaceAll("/","_");
     TH1F * hist = TreePlotter::SetupHist(Form("%s_Hist",histname.Data()));
     
-    // Set weight
-    const Float_t weight = (isMC ? TreePlotter::GetSampleWeight(file) : 1.f);
+    // weight
+    const TString weight = (isMC ? Form("evtwgt * puwgt * %f * %f", Config::lumi, Config::invfbToinvpb) : "1.0");
 
     // Fill from tree
-    tree->Draw(Form("%s>>%s",fVar.Data(),hist->GetName()),Form("(%s) * (%f%s)",CutMap[sample].Data(),weight,isMC?Form("* genwgt"):""),"goff");
+    tree->Draw(Form("%s>>%s",fVar.Data(),hist->GetName()),Form("(%s) * (%s)",CutMap[sample].Data(),weight.Data()),"goff");
     
     // Add to main hists
     HistMap[sample]->Add(hist);
@@ -144,7 +143,7 @@ void TreePlotter::MakeBkgdOutput()
   std::cout << "Making Bkgd Output..." << std::endl;
 
   // Make Total Bkgd Hist: for ratio and error plotting
-  BkgdHist = TreePlotter::SetupHist("BkgdHist");
+  BkgdHist = TreePlotter::SetupHist("Bkgd_Hist");
   BkgdHist->Add(HistMap[GJets]);
   BkgdHist->Add(HistMap[QCD]);
   BkgdHist->SetMarkerSize(0);
@@ -159,7 +158,7 @@ void TreePlotter::MakeBkgdOutput()
   // HistMap[QCD]  ->Scale(data_int/bkgd_int);
 
   // Make Background Stack
-  BkgdStack = new THStack("BkgdStack","");
+  BkgdStack = new THStack("Bkgd_Stack","");
   if (fText.Contains("gjets_ctrl",TString::kExact) || fText.Contains("signal",TString::kExact))
   {
     BkgdStack->Add(HistMap[QCD]);
@@ -182,7 +181,7 @@ void TreePlotter::MakeRatioOutput()
   std::cout << "Making Ratio Output..." << std::endl;
 
   // ratio value plot
-  RatioHist = TreePlotter::SetupHist("RatioHist");
+  RatioHist = TreePlotter::SetupHist("Ratio_Hist");
   RatioHist->Add(HistMap[Data]);
   RatioHist->Divide(BkgdHist);  
   RatioHist->GetYaxis()->SetTitle("Data/MC");
@@ -193,7 +192,7 @@ void TreePlotter::MakeRatioOutput()
   RatioHist->SetStats(0);      // No statistics on lower plot
   
   // ratio MC error plot
-  RatioMCErrs = TreePlotter::SetupHist("RatioMCErrs");
+  RatioMCErrs = TreePlotter::SetupHist("Ratio_MCErrs");
   RatioMCErrs->Add(BkgdHist);
   RatioMCErrs->Divide(BkgdHist);
   RatioMCErrs->SetMarkerSize(0);
@@ -362,33 +361,6 @@ void TreePlotter::SaveOutput()
   OutCanv->Write(OutCanv->GetName(),TObject::kWriteDelete);
 }  
 
-Float_t TreePlotter::GetSampleWeight(TFile * file)
-{
-  // Get Configtree
-  const TString treename = "tree/configtree";
-  TTree * configtree = (TTree*)file->Get(Form("%s",treename.Data()));
-  CheckValidTree(configtree,treename,file->GetName());
-
-  // Get Historgram
-  const TString histname = "tree/h_cutflow";
-  TH1F * h_cutflow = (TH1F*) file->Get(Form("%s",histname.Data()));
-  CheckValidTH1F(h_cutflow,histname,file->GetName());
-
-  Float_t xsec = 0.f;      configtree->SetBranchAddress("xsec",&xsec);
-  Float_t filterEff = 0.f; configtree->SetBranchAddress("filterEff",&filterEff);
-  Float_t BR = 0.f;        configtree->SetBranchAddress("BR",&BR);
-  configtree->GetEntry(0);
-
-  //  const Float_t weight = (1/fDataSF) * Config::lumi * Config::invfbToinvpb * xsec * filterEff * BR / h_cutflow->GetBinContent(1);
-  //  const Float_t weight = (1/10.f) * Config::lumi * Config::invfbToinvpb * xsec * filterEff * BR / h_cutflow->GetBinContent(1);
-  const Float_t weight = Config::lumi * Config::invfbToinvpb * xsec * filterEff * BR / h_cutflow->GetBinContent(1);
-
-  delete h_cutflow;
-  delete configtree;
-
-  return weight;
-}
-
 Float_t TreePlotter::GetHistMinimum()
 {
   Float_t min = 1e9;
@@ -427,37 +399,34 @@ TH1F * TreePlotter::SetupHist(const TString & name)
 void TreePlotter::SetupSamples()
 {
   // QCD HT binned
-  SampleMap["MC/qcd_HT/100to200"] = QCD;
-  SampleMap["MC/qcd_HT/200to300"] = QCD;
-  SampleMap["MC/qcd_HT/300to500"] = QCD;
-  SampleMap["MC/qcd_HT/500to700"] = QCD;
-  SampleMap["MC/qcd_HT/700to1000"] = QCD;
-  SampleMap["MC/qcd_HT/1000to1500"] = QCD;
-  SampleMap["MC/qcd_HT/1500to2000"] = QCD;
-  SampleMap["MC/qcd_HT/2000toInf"] = QCD;
+  SampleMap["MC/QCD_HT/100to200"] = QCD;
+  SampleMap["MC/QCD_HT/200to300"] = QCD;
+  SampleMap["MC/QCD_HT/300to500"] = QCD;
+  SampleMap["MC/QCD_HT/500to700"] = QCD;
+  SampleMap["MC/QCD_HT/700to1000"] = QCD;
+  SampleMap["MC/QCD_HT/1000to1500"] = QCD;
+  SampleMap["MC/QCD_HT/1500to2000"] = QCD;
+  SampleMap["MC/QCD_HT/2000toInf"] = QCD;
   
   // GJets HT binned
-  SampleMap["MC/gjets_HT/40To100"] = GJets;
-  SampleMap["MC/gjets_HT/100To200"] = GJets;
-  SampleMap["MC/gjets_HT/200To400"] = GJets;
-  SampleMap["MC/gjets_HT/400To600"] = GJets;
-  SampleMap["MC/gjets_HT/600ToInf"] = GJets;
+  SampleMap["MC/GJets_HT/40To100"] = GJets;
+  SampleMap["MC/GJets_HT/100To200"] = GJets;
+  SampleMap["MC/GJets_HT/200To400"] = GJets;
+  SampleMap["MC/GJets_HT/400To600"] = GJets;
+  SampleMap["MC/GJets_HT/600ToInf"] = GJets;
    
   // GMSB
-  SampleMap["MC/gmsb"] = GMSB;
+  SampleMap["MC/GMSB/L200TeV_CTau400cm"] = GMSB;
 
   // Data
-  SampleMap["Data/singleph"] = Data;
-
-  // by era
-  //  SampleMap["Data/singleph/2017B_v1"] = Data;
-  //  SampleMap["Data/singleph/2017B_v2"] = Data;
-  //  SampleMap["Data/singleph/2017C_v1"] = Data;
-  //  SampleMap["Data/singleph/2017C_v2"] = Data;
-  //  SampleMap["Data/singleph/2017C_v3"] = Data;
-  //  SampleMap["Data/singleph/2017D_v1"] = Data;
-  //  SampleMap["Data/singleph/2017E_v1"] = Data;
-  //  SampleMap["Data/singleph/2017F_v1"] = Data;
+  SampleMap["Data/SinglePhoton/B/v1"] = Data;
+  SampleMap["Data/SinglePhoton/B/v2"] = Data;
+  SampleMap["Data/SinglePhoton/C/v1"] = Data;
+  SampleMap["Data/SinglePhoton/C/v2"] = Data;
+  SampleMap["Data/SinglePhoton/C/v3"] = Data;
+  SampleMap["Data/SinglePhoton/D/v1"] = Data;
+  SampleMap["Data/SinglePhoton/E/v1"] = Data;
+  SampleMap["Data/SinglePhoton/F/v1"] = Data;
 }
 
 void TreePlotter::SetupColors()
@@ -484,18 +453,18 @@ void TreePlotter::SetupCuts()
 
 void TreePlotter::SetupLabels()
 {
-  LabelMap[QCD]   = "QCD";
-  LabelMap[GJets] = "#gamma+Jets"; //"#gamma + Jets (EM Enriched)";
+  LabelMap[QCD]   = "QCD"; //"#QCD (H_{T} Binned)";
+  LabelMap[GJets] = "#gamma+Jets"; //"#gamma + Jets (H_{T} Binned)";
   LabelMap[GMSB]  = "GMSB c#tau=4m"; //"GMSB c#tau = 4m, #Lambda = 200 TeV";
   LabelMap[Data]  = "Data";
 }
 
 void TreePlotter::SetupHists()
 {
-  HistMap[QCD]   = SetupHist("QCD_hist");
-  HistMap[GJets] = SetupHist("GJets_hist");
-  HistMap[GMSB]  = SetupHist("GMSB_hist");
-  HistMap[Data]  = SetupHist("Data_hist");
+  HistMap[QCD]   = SetupHist("QCD_Hist");
+  HistMap[GJets] = SetupHist("GJets_Hist");
+  HistMap[GMSB]  = SetupHist("GMSB_Hist");
+  HistMap[Data]  = SetupHist("Data_Hist");
   
   for (auto & HistPair : HistMap)
   {
@@ -533,7 +502,7 @@ void TreePlotter::SetupDataSF()
   file->cd();
 
   // Get Configtree
-  const TString treename = "tree/configtree";
+  const TString treename = "configtree";
   TTree * configtree = (TTree*)file->Get(Form("%s",treename.Data()));
   CheckValidTree(configtree,treename,file->GetName());
 

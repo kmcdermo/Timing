@@ -18,12 +18,12 @@ void SetTDRStyle(TStyle * tdrStyle);
 namespace Config
 {
   // basics
-  constexpr Float_t lumi = 38.72; // CMS lumi (as of Nov 16 PR JSON)
+  constexpr Float_t lumi = 41.96; // CMS lumi (as of Nov 30 PR JSON)
   constexpr Float_t invfbToinvpb = 1000.f; // conversion for the world's dumbest unit
   static const TString extraText = "Preliminary";
 
   // input
-  static const TString baseDir = "/store/user/kmcdermo/nTuples/2017";
+  static const TString baseDir = "/store/user/kmcdermo/nTuples/skims/2017";
   static const TString puwgtFileName = "puweights";
   static const TString puwgtHistName = "PUWeightsHist";
     

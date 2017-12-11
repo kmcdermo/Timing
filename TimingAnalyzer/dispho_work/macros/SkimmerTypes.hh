@@ -21,6 +21,7 @@ struct Configuration
   std::string * phIDmin;
   std::string phIDmin_s;
   Float_t seedTimemin;
+  Int_t   jetIDStoremin;
   Bool_t  splitPho;
   Bool_t  onlyGED;
   Bool_t  onlyOOT;
@@ -34,6 +35,7 @@ struct Configuration
   Bool_t  applyPhGood;
   Float_t dRmin;
   Float_t pTres;
+  Float_t genpTres;
   Float_t trackdRmin;
   Float_t trackpTmin;
   std::string * inputPaths;
@@ -58,6 +60,7 @@ struct Configuration
   std::string s_phpTmin = "phpTmin";
   std::string s_phIDmin = "phIDmin";
   std::string s_seedTimemin = "seedTimemin";
+  std::string s_jetIDStoremin = "jetIDStoremin";
   std::string s_splitPho = "splitPho";
   std::string s_onlyGED = "onlyGED";
   std::string s_onlyOOT = "onlyOOT";
@@ -70,6 +73,7 @@ struct Configuration
   std::string s_applyPhGood = "applyPhGood";
   std::string s_dRmin = "dRmin";
   std::string s_pTres = "pTres";
+  std::string s_genpTres = "genpTres";
   std::string s_trackdRmin = "trackdRmin";
   std::string s_trackpTmin = "trackpTmin";
   std::string s_inputPaths = "inputPaths";
@@ -94,6 +98,13 @@ struct Event
   Bool_t    hltRefDispID;
   Bool_t    hltRefHT;
   Bool_t    hltPho50;
+  Bool_t    hltPho200;
+  Bool_t    hltDiPho70;
+  Bool_t    hltDiPho3022M90;
+  Bool_t    hltDiPho30PV18PV;
+  Bool_t    hltDiEle33MW;
+  Bool_t    hltDiEle27WPT;
+  Bool_t    hltJet500;
   Int_t     nvtx;
   Float_t   vtxX;
   Float_t   vtxY;
@@ -103,7 +114,8 @@ struct Event
   Float_t   t1pfMETphi;
   Float_t   t1pfMETsumEt;
   Float_t   jetHT;
-  Int_t     njets;
+  Int_t     njetsL;
+  Int_t     njetsT;
   Int_t     nrechits;
   Int_t     nphotons;
   Float_t   evtwgt;
@@ -127,6 +139,13 @@ struct Event
   std::string s_hltRefDispID = "hltRefDispID";
   std::string s_hltRefHT = "hltRefHT";
   std::string s_hltPho50 = "hltPho50";
+  std::string s_hltPho200 = "hltPho200";
+  std::string s_hltDiPho70 = "hltDiPho70";
+  std::string s_hltDiPho3022M90 = "hltDiPho3022M90";
+  std::string s_hltDiPho30PV18PV = "hltDiPho30PV18PV";
+  std::string s_hltDiEle33MW = "hltDiEle33MW";
+  std::string s_hltDiEle27WPT = "hltDiEle27WPT";  
+  std::string s_hltJet500 = "hltJet500";
   std::string s_nvtx = "nvtx";
   std::string s_vtxX = "vtxX";
   std::string s_vtxY = "vtxY";
@@ -136,7 +155,8 @@ struct Event
   std::string s_t1pfMETphi = "t1pfMETphi";
   std::string s_t1pfMETsumEt = "t1pfMETsumEt";
   std::string s_jetHT = "jetHT";
-  std::string s_njets = "njets";
+  std::string s_njetsL = "njetsL";
+  std::string s_njetsT = "njetsT";
   std::string s_nrechits = "nrechits";
   std::string s_nphotons = "nphotons";
   std::string s_evtwgt = "evtwgt";
@@ -212,7 +232,10 @@ struct Pho
   Bool_t  isEB;
   Bool_t  isHLT;
   Bool_t  isTrk;
-  Int_t   ID;
+  Bool_t  passEleVeto;
+  Bool_t  hasPixSeed;
+  Int_t   gedID;
+  Int_t   ootID;
   // !storeRecHits
   Float_t seedtime;
   Float_t seedE;
@@ -248,7 +271,10 @@ struct Pho
   std::string s_isEB = "phoisEB";
   std::string s_isHLT = "phoisHLT";
   std::string s_isTrk = "phoisTrk";
-  std::string s_ID = "phoID";
+  std::string s_passEleVeto = "phopassEleVeto";
+  std::string s_hasPixSeed = "phohasPixSeed";
+  std::string s_gedID = "phogedID";
+  std::string s_ootID = "phoootID";
   // !storeRecHits
   std::string s_seedtime = "phoseedtime";
   std::string s_seedE = "phoseedE";

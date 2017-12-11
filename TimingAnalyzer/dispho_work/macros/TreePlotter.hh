@@ -59,7 +59,6 @@ public:
 
   // Helper functions
   TH1F * SetupHist(const TString & name);
-  Float_t GetSampleWeight(TFile * file);
   Float_t GetHistMinimum();
   Float_t GetHistMaximum();
   

@@ -2,7 +2,7 @@
 
 ## first run plotter
 var=${1:-"nvtx"}
-commoncut=${2:-"(phopt_0>70.0&&phoID_0>=2)&&hltPho50"}
+commoncut=${2:-"(phopt_0>70.0&&phoID_0>=2)&&hltSignal"}
 text=${3:-"puweights"}
 nbinsx=${4:-120}
 xlow=${5:-0}
@@ -21,4 +21,4 @@ root -l -b -q computePUWeights.C\(\"${text}\"\)
 
 ## move it somewhere SAFE
 
-xrdcp ${text}.root root://eoscms//store/user/kmcdermo/nTuples/2017/
+xrdcp ${text}.root root://eoscms//store/user/kmcdermo/nTuples/
