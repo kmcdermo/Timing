@@ -25,7 +25,7 @@ def getOptions():
 
     parser.add_option('-w', '--workArea',
                       dest = 'workArea',
-                      default = 'multicrab_dispho_Bkgd',
+                      default = 'multicrab_dispho_Data',
                       help = "work area directory (only if CMD != 'submit')",
                       metavar = 'WAD')
 
@@ -61,6 +61,7 @@ def main():
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
         inputPaths   = 'HLTpathsWExtras.txt'
         inputFilters = 'HLTfilters.txt'
+        inputJSON    = 'golden2017-nov30.json'
          
         #--------------------------------------------------------
         # This is the base config:
@@ -77,8 +78,9 @@ def main():
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
 
         config.Data.inputDataset = None
+        config.Data.lumiMask     = inputDir+inputJSON
         config.Data.splitting    = 'EventAwareLumiBased'
-        config.Data.unitsPerJob  = 500000
+        config.Data.unitsPerJob  = 1000000
 
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
@@ -88,27 +90,20 @@ def main():
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/GJets_HT-40To100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM' , '20890'   , '1', '1'],
-            ['/GJets_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM', '9277'    , '1', '1'],
-            ['/GJets_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM', '2314'    , '1', '1'],
-            ['/GJets_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM', '276'     , '1', '1'],
-            ['/GJets_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM', '93.61'   , '1', '1'],
-            ['/QCD_HT100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM'   , '27600000', '1', '1'],
-            ['/QCD_HT200to300_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM'   , '1762000' , '1', '1'],
-            ['/QCD_HT300to500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM'   , '354100'  , '1', '1'],
-            ['/QCD_HT500to700_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM'   , '32270'   , '1', '1'],
-            ['/QCD_HT700to1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM'  , '6822'    , '1', '1'],
-            ['/QCD_HT1000to1500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM' , '1202'    , '1', '1'],
-            ['/QCD_HT1500to2000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v2/MINIAODSIM' , '119.7'   , '1', '1'],
-            ['/QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v3/MINIAODSIM'  , '25.14'   , '1', '1'],
-            ['/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10_ext1-v2/MINIAODSIM', '4956' , '1', '1']
+            ['/DoubleEG/Run2017B-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v4', 'False'],
+            ['/DoubleEG/Run2017B-PromptReco-v2/MINIAOD', '92X_dataRun2_Prompt_v5', 'False'],
+            ['/DoubleEG/Run2017C-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v6', 'True'],
+            ['/DoubleEG/Run2017C-PromptReco-v2/MINIAOD', '92X_dataRun2_Prompt_v7', 'True'],
+            ['/DoubleEG/Run2017C-PromptReco-v3/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
+            ['/DoubleEG/Run2017D-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
+            ['/DoubleEG/Run2017E-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v9', 'True'],
+            ['/DoubleEG/Run2017F-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v9', 'True'],
             ]
-        
+ 
         for inDO in inputDataAndOpts:
-            # inDO[0] is of the form /A/B/C. Since A is unique for each inDO in Monte Carlo, use this in the CRAB request name.
-            config.General.requestName   = inDO[0].split('/')[1]
-            config.JobType.pyCfgParams   = ['globalTag=92X_upgrade2017_realistic_v10','phIDmin=none','splitPho=False','isBkgd=True',
-                                            'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],
+            # inDO[0] is of the form /A/B/C. Since B is unique for each inDS, use this in the CRAB request name.
+            config.General.requestName   = inDO[0].split('/')[2]
+            config.JobType.pyCfgParams   = ['globalTag='+inDO[1],'useOOTPhotons='+inDO[2],'phIDmin=none','splitPho=False',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)

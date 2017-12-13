@@ -11,6 +11,7 @@ outdir=${4}
 
 ## global vars
 files="${text}_files.txt"
+wgtfile="${text}_wgt.txt"
 tmpfiles="tmp_${files}"
 timestamp=$(eos ls ${indir})
 eosdir="${indir}/${timestamp}/0000"
@@ -26,12 +27,16 @@ rm ${tmpfiles}
 ## make tmp dir
 mkdir -p ${tmpdir}
 
+## produce sum of weights
+./scripts/runSumWeights.sh ${rootbase}/${eosdir} ${files} ${wgtfile}
+sumwgts=$(grep "Sum of weights: " ${wgtfile} | cut -d " " -f 4)
+
 ## read in each file and skim
 nfiles=$(wc -l ${files})
 counter="1"
 while IFS='' read -r line || [[ -n "${line}" ]]; do
     echo "Working on file" ${counter} "out of" ${nfiles} "[filename: ${line}]"
-    ./scripts/runSkimmer.sh ${rootbase}/${eosdir} ${tmpdir} ${line}
+    ./scripts/runSkimmer.sh ${rootbase}/${eosdir} ${tmpdir} ${line} ${sumwgts}
     counter=$((${counter} + 1))
 done < "${files}"
 

@@ -23,10 +23,21 @@ namespace Config
   static const TString extraText = "Preliminary";
 
   // input
-  static const TString baseDir = "/store/user/kmcdermo/nTuples/skims/2017";
-  static const TString puwgtFileName = "puweights";
-  static const TString puwgtHistName = "PUWeightsHist";
-    
+  static const TString baseDir        = "/store/user/kmcdermo/nTuples/skims/2017";
+  static const TString puwgtFileName  = "puweights";
+  static const TString puwgtHistName  = "PUWeightsHist";
+  static const TString rootdir        = "tree/";
+  static const TString configtreename = "configtree";
+  static const TString disphotreename = "disphotree";
+  static const TString h_cutflowname  = "h_cutflow";
+  
+  // skim input
+  constexpr UInt_t nEvCheck = 10000;
+  constexpr Int_t nGMSBs = 2;
+  constexpr Int_t nHVDSs = 4;
+  constexpr Int_t nJets = 4;
+  constexpr Int_t nPhotons = 4;
+
   // plotting style
   constexpr Float_t TitleSize    = 0.035;
   constexpr Float_t TitleXOffset = 1.1;

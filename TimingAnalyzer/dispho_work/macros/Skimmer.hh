@@ -10,25 +10,11 @@
 #include <vector>
 #include <map>
 
-namespace Config
-{
-  constexpr UInt_t nEvCheck = 10000;
-  constexpr Int_t nGMSBs = 2;
-  constexpr Int_t nHVDSs = 4;
-  constexpr Int_t nJets = 4;
-  constexpr Int_t nPhotons = 4;
-  
-  static const TString rootdir        = "tree/";
-  static const TString configtreename = "configtree";
-  static const TString disphotreename = "disphotree";
-  static const TString h_cutflowname  = "h_cutflow";
-};
-
 class Skimmer 
 {
 public:
   // functions
-  Skimmer(const TString & indir, const TString & outdir, const TString & filename);
+  Skimmer(const TString & indir, const TString & outdir, const TString & filename, const Float_t sumwgts);
   ~Skimmer();
 
   // setup config inputs
@@ -64,9 +50,10 @@ private:
   const TString fInDir;
   const TString fOutDir;
   const TString fFileName;
+  const Float_t fSumWgts;
   std::map<std::string,int> cutLabels;
   Bool_t fIsMC;
-
+  
   // Input
   TFile * fInFile;
   TTree * fInTree; 

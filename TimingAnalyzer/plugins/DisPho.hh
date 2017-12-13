@@ -126,6 +126,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // object prep
   const float jetpTmin;
+  const float jetEtamax;
   const int jetIDmin;
   const float rhEmin;
   const float phpTmin;
@@ -267,11 +268,11 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // MET
   float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
 
-  // HT
-  float jetHT;
+  // HT + njets
+  float jetHT, jetHTpt15, jetHTeta3, jetHTidL, jetHTnopho, jetHTidT;
+  int   njets, njetspt15, njetseta3, njetsidL, njetsnopho, njetsidT; 
 
   // jets
-  int njetsL, njetsT;
   jetStruct jetBranch0, jetBranch1, jetBranch2, jetBranch3;
 
   // RecHits

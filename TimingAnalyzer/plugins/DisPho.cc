@@ -9,6 +9,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
 
   // object prep cuts
   jetpTmin(iConfig.existsAs<double>("jetpTmin") ? iConfig.getParameter<double>("jetpTmin") : 15.f),
+  jetEtamax(iConfig.existsAs<double>("jetEtamax") ? iConfig.getParameter<double>("jetEtamax") : 3.f),
   jetIDmin(iConfig.existsAs<int>("jetIDmin") ? iConfig.getParameter<int>("jetIDmin") : 1),
   rhEmin(iConfig.existsAs<double>("rhEmin") ? iConfig.getParameter<double>("rhEmin") : 1.f),
   phpTmin(iConfig.existsAs<double>("phpTmin") ? iConfig.getParameter<double>("phpTmin") : 20.f),
@@ -270,7 +271,8 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (isHVDS) oot::PrepVPions(genparticlesH,vPions);
   oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
-  oot::PrepJets(jetsH,jets,jetpTmin,jetIDmin);
+  //  oot::PrepJets(jetsH,jets,jetpTmin,jetIDmin,jetEtamax);
+  oot::PrepJets(jetsH,jets); // FIXME -- HACK!!!
   oot::PrepRecHits(recHitsEB,recHitsEE,recHitMap,rhEmin);
   oot::PrepPhotons(photonsH,ootPhotonsH,photons,rho,phpTmin,phIDmin);
 
@@ -293,6 +295,47 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 				 return (seedTime < seedTimemin);
 			       }),photons.end());
 
+  // first compute HT without any requirements
+  jetHT = 0.f;
+  njets = jets.size();
+  for (const auto jet : jets) jetHT += jet.pt();
+
+  // apply pt requirement
+  jets.erase(std::remove_if(jets.begin(),jets.end(),
+			    [&](const pat::Jet & jet)
+			    {
+			      return jet.pt() < jetpTmin;
+			    }),jets.end());
+
+  // HT with pt > 15
+  jetHTpt15 = 0.f;
+  njetspt15 = jets.size();
+  for (const auto jet : jets) jetHTpt15 += jet.pt();
+
+  // apply eta requirement
+  jets.erase(std::remove_if(jets.begin(),jets.end(),
+			    [&](const pat::Jet & jet)
+			    {
+			      return std::abs(jet.eta()) > jetEtamax;
+			    }),jets.end());
+  
+  // HT with pt > 15, eta < 3.0
+  jetHTeta3 = 0.f;
+  njetseta3 = jets.size();
+  for (const auto jet : jets) jetHTeta3 += jet.pt();
+
+  // apply loose requirement
+  jets.erase(std::remove_if(jets.begin(),jets.end(),
+			    [&](const pat::Jet & jet)
+			    {
+			      return oot::GetPFJetID(jet) < jetIDmin;
+			    }),jets.end());
+  
+  // HT with pt > 15, eta < 3.0, loose ID
+  jetHTidL = 0.f;
+  njetsidL = jets.size();
+  for (const auto jet : jets) jetHTidL += jet.pt();
+
   // now remove jets too close to the photons
   jets.erase(std::remove_if(jets.begin(),jets.end(),
 			    [&](const pat::Jet & jet)
@@ -309,6 +352,23 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 			      return isNearPhoton;
 			    }),jets.end());
 
+  // HT with pt > 15, eta < 3.0, loose ID, no phos
+  jetHTnopho = 0.f;
+  njetsnopho = jets.size();
+  for (const auto jet : jets) jetHTnopho += jet.pt();
+
+  // apply tight requirement
+  jets.erase(std::remove_if(jets.begin(),jets.end(),
+			    [&](const pat::Jet & jet)
+			    {
+			      return oot::GetPFJetID(jet) < jetIDStoremin;
+			    }),jets.end());
+  
+  // HT with pt > 15, eta < 3.0, loose ID, no phos, tight ID
+  jetHTidT = 0.f;
+  njetsidT = jets.size();
+  for (const auto jet : jets) jetHTidT += jet.pt();
+  
   // remove photons to close to the jets...
   photons.erase(std::remove_if(photons.begin(),photons.end(),
 			       [&](const oot::Photon & photon)
@@ -329,23 +389,23 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // compute HT first with loose jets //
   //////////////////////////////////////
 
-  jetHT = 0.f;
-  njetsL = jets.size();
-  if (jetsH.isValid()) // check to make sure reco jets exist
-  {
-    for (const auto& jet : jets)
-    {
-      jetHT += jet.pt();
-    }
-  } // end check over reco jets  
+  // jetHT = 0.f;
+  // njetsL = jets.size();
+  // if (jetsH.isValid()) // check to make sure reco jets exist
+  // {
+  //   for (const auto& jet : jets)
+  //   {
+  //     jetHT += jet.pt();
+  //   }
+  // } // end check over reco jets  
 
-  // now remove jets without tight ID
-  jets.erase(std::remove_if(jets.begin(),jets.end(),
-			    [&](const pat::Jet & jet)
-			    {
-			      const int jetID = oot::GetPFJetID(jet);
-			      return (jetID < jetIDStoremin);
-			    }),jets.end());
+  // // now remove jets without tight ID
+  // jets.erase(std::remove_if(jets.begin(),jets.end(),
+  // 			    [&](const pat::Jet & jet)
+  // 			    {
+  // 			      const int jetID = oot::GetPFJetID(jet);
+  // 			      return (jetID < jetIDStoremin);
+  // 			    }),jets.end());
 				 
   ///////////////////////////// 
   //                         //
@@ -515,11 +575,10 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   DisPho::InitializeJetBranches();
   if (jetsH.isValid()) // check to make sure reco jets exist
   {
-    njetsT = jets.size();
-    if (njetsT > 0) DisPho::SetJetBranch(jets[0],jetBranch0);
-    if (njetsT > 1) DisPho::SetJetBranch(jets[1],jetBranch1);
-    if (njetsT > 2) DisPho::SetJetBranch(jets[2],jetBranch2);
-    if (njetsT > 3) DisPho::SetJetBranch(jets[3],jetBranch3);
+    if (njetsidT > 0) DisPho::SetJetBranch(jets[0],jetBranch0);
+    if (njetsidT > 1) DisPho::SetJetBranch(jets[1],jetBranch1);
+    if (njetsidT > 2) DisPho::SetJetBranch(jets[2],jetBranch2);
+    if (njetsidT > 3) DisPho::SetJetBranch(jets[3],jetBranch3);
   }
 
   //////////////
@@ -1121,11 +1180,13 @@ void DisPho::MakeAndFillConfigTree()
 
   // object prep
   float jetpTmin_tmp = jetpTmin;
+  float jetEtamax_tmp = jetEtamax;
   int jetIDmin_tmp = jetIDmin;
   float rhEmin_tmp = rhEmin;
   float phpTmin_tmp = phpTmin;
   std::string phIDmin_tmp = phIDmin;
   configtree->Branch("jetpTmin", &jetpTmin_tmp, "jetpTmin/F");
+  configtree->Branch("jetEtamax", &jetEtamax_tmp, "jetEtamax/F");
   configtree->Branch("jetIDmin", &jetIDmin_tmp, "jetIDmin/I");
   configtree->Branch("rhEmin", &rhEmin_tmp, "rhEmin/F");
   configtree->Branch("phpTmin", &phpTmin_tmp, "phpTmin/F");
@@ -1261,11 +1322,20 @@ void DisPho::MakeEventTree()
   disphotree->Branch("t1pfMETsumEt", &t1pfMETsumEt, "t1pfMETsumEt/F");
 
   // HT Info
-  disphotree->Branch("jetHT", &jetHT, "jetHT/F");  
+  disphotree->Branch("jetHT", &jetHT, "jetHT/F");
+  disphotree->Branch("njets", &njets, "njets/I");
+  disphotree->Branch("jetHTpt15", &jetHTpt15, "jetHTpt15/F");
+  disphotree->Branch("njetspt15", &njetspt15, "njetspt15/I");
+  disphotree->Branch("jetHTeta3", &jetHTeta3, "jetHTeta3/F");
+  disphotree->Branch("njetseta3", &njetseta3, "njetseta3/I");
+  disphotree->Branch("jetHTidL", &jetHTidL, "jetHTidL/F");
+  disphotree->Branch("njetsidL", &njetsidL, "njetsidL/I");
+  disphotree->Branch("jetHTnopho", &jetHTnopho, "jetHTnopho/F");
+  disphotree->Branch("njetsnopho", &njetsnopho, "njetsnopho/I");
+  disphotree->Branch("jetHTidT", &jetHTidT, "jetHTidT/F");
+  disphotree->Branch("njetsidT", &njetsidT, "njetsidT/I");
 
   // Jet Info
-  disphotree->Branch("njetsL", &njetsL, "njetsL/I");
-  disphotree->Branch("njetsT", &njetsT, "njetsT/I");
   DisPho::MakeJetBranch(0,jetBranch0);
   DisPho::MakeJetBranch(1,jetBranch1);
   DisPho::MakeJetBranch(2,jetBranch2);

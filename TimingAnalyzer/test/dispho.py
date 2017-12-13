@@ -13,6 +13,7 @@ options.register('applyBlindMET',False,VarParsing.multiplicity.singleton,VarPars
 
 ## object prep cuts
 options.register('jetpTmin',15.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'jet pT minimum cut');
+options.register('jetEtamax',3.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'jet eta maximum cut');
 options.register('jetIDmin',1,VarParsing.multiplicity.singleton,VarParsing.varType.int,'jet ID minimum cut');
 options.register('rhEmin',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'recHit energy minimum cut');
 options.register('phpTmin',20.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon pT minimum cut');
@@ -86,6 +87,7 @@ print "blindMET       : ",options.blindMET
 print "applyBlindMET  : ",options.applyBlindMET
 print "      -- Object Prep --"
 print "jetpTmin       : ",options.jetpTmin
+print "jetEtamax      : ",options.jetEtamax
 print "jetIDmin       : ",options.jetIDmin
 print "rhEmin         : ",options.rhEmin
 print "phpTmin        : ",options.phpTmin
@@ -187,11 +189,12 @@ process.tree = cms.EDAnalyzer("DisPho",
    blindMET = cms.double(options.blindMET),
    applyBlindMET = cms.bool(options.applyBlindMET),
    ## object prep cuts
-   jetpTmin = cms.double(options.jetpTmin),
-   jetIDmin = cms.int32(options.jetIDmin),
-   rhEmin   = cms.double(options.rhEmin),
-   phpTmin  = cms.double(options.phpTmin),
-   phIDmin  = cms.string(options.phIDmin),
+   jetpTmin  = cms.double(options.jetpTmin),
+   jetEtamax = cms.double(options.jetEtamax),
+   jetIDmin  = cms.int32(options.jetIDmin),
+   rhEmin    = cms.double(options.rhEmin),
+   phpTmin   = cms.double(options.phpTmin),
+   phIDmin   = cms.string(options.phIDmin),
    ## extra object pruning
    seedTimemin = cms.double(options.seedTimemin),
    jetIDStoremin = cms.int32(options.jetIDStoremin),

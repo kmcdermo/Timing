@@ -3,7 +3,8 @@
 
 #include <iostream>
 
-Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & filename) : fInDir(indir), fOutDir(outdir), fFileName(filename)
+Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & filename, const Float_t sumwgts) :
+  fInDir(indir), fOutDir(outdir), fFileName(filename), fSumWgts(sumwgts)
 {
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
@@ -198,8 +199,17 @@ void Skimmer::FillOutEvent()
   fOutEvent.t1pfMETphi = fInEvent.t1pfMETphi;
   fOutEvent.t1pfMETsumEt = fInEvent.t1pfMETsumEt;
   fOutEvent.jetHT = fInEvent.jetHT;
-  fOutEvent.njetsL = fInEvent.njetsL;
-  fOutEvent.njetsT = fInEvent.njetsT;
+  fOutEvent.njets = fInEvent.njets;
+  fOutEvent.jetHTpt15 = fInEvent.jetHTpt15;
+  fOutEvent.njetspt15 = fInEvent.njetspt15;
+  fOutEvent.jetHTeta3 = fInEvent.jetHTeta3;
+  fOutEvent.njetseta3 = fInEvent.njetseta3;
+  fOutEvent.jetHTidL = fInEvent.jetHTidL;
+  fOutEvent.njetsidL = fInEvent.njetsidL;
+  fOutEvent.jetHTnopho = fInEvent.jetHTnopho;
+  fOutEvent.njetsnopho = fInEvent.njetsnopho;
+  fOutEvent.jetHTidT = fInEvent.jetHTidT;
+  fOutEvent.njetsidT = fInEvent.njetsidT;
   fOutEvent.nrechits = fInEvent.nrechits;
   fOutEvent.nphotons = fInEvent.nphotons;
   fOutEvent.evtwgt = (fIsMC ? fSampleWeight * fInEvent.genwgt : 1.f);
@@ -310,7 +320,7 @@ void Skimmer::GetInConfig()
   Skimmer::InitInConfigStrings();
   Skimmer::InitInConfigBranches();
 
-  // read in first entry (will be the same for all entries in a given file
+  // read in first entry (will be the same for all entries in a given file)
   fInConfigTree->GetEntry(0);
 
   // set isMC
@@ -332,6 +342,7 @@ void Skimmer::InitInConfigBranches()
   fInConfigTree->SetBranchAddress(fInConfig.s_blindMET.c_str(), &fInConfig.blindMET);
   fInConfigTree->SetBranchAddress(fInConfig.s_applyBlindMET.c_str(), &fInConfig.applyBlindMET);
   fInConfigTree->SetBranchAddress(fInConfig.s_jetpTmin.c_str(), &fInConfig.jetpTmin);
+  fInConfigTree->SetBranchAddress(fInConfig.s_jetEtamax.c_str(), &fInConfig.jetEtamax);
   fInConfigTree->SetBranchAddress(fInConfig.s_jetIDmin.c_str(), &fInConfig.jetIDmin);
   fInConfigTree->SetBranchAddress(fInConfig.s_rhEmin.c_str(), &fInConfig.rhEmin);
   fInConfigTree->SetBranchAddress(fInConfig.s_phpTmin.c_str(), &fInConfig.phpTmin);
@@ -504,9 +515,18 @@ void Skimmer::InitInBranches()
   fInTree->SetBranchAddress(fInEvent.s_t1pfMETphi.c_str(), &fInEvent.t1pfMETphi);
   fInTree->SetBranchAddress(fInEvent.s_t1pfMETsumEt.c_str(), &fInEvent.t1pfMETsumEt);
   fInTree->SetBranchAddress(fInEvent.s_jetHT.c_str(), &fInEvent.jetHT);
+  fInTree->SetBranchAddress(fInEvent.s_njets.c_str(), &fInEvent.njets);
+  fInTree->SetBranchAddress(fInEvent.s_jetHTpt15.c_str(), &fInEvent.jetHTpt15);
+  fInTree->SetBranchAddress(fInEvent.s_njetspt15.c_str(), &fInEvent.njetspt15);
+  fInTree->SetBranchAddress(fInEvent.s_jetHTeta3.c_str(), &fInEvent.jetHTeta3);
+  fInTree->SetBranchAddress(fInEvent.s_njetseta3.c_str(), &fInEvent.njetseta3);
+  fInTree->SetBranchAddress(fInEvent.s_jetHTidL.c_str(), &fInEvent.jetHTidL);
+  fInTree->SetBranchAddress(fInEvent.s_njetsidL.c_str(), &fInEvent.njetsidL);
+  fInTree->SetBranchAddress(fInEvent.s_jetHTnopho.c_str(), &fInEvent.jetHTnopho);
+  fInTree->SetBranchAddress(fInEvent.s_njetsnopho.c_str(), &fInEvent.njetsnopho);
+  fInTree->SetBranchAddress(fInEvent.s_jetHTidT.c_str(), &fInEvent.jetHTidT);
+  fInTree->SetBranchAddress(fInEvent.s_njetsidT.c_str(), &fInEvent.njetsidT);
 
-  fInTree->SetBranchAddress(fInEvent.s_njetsL.c_str(), &fInEvent.njetsL);
-  fInTree->SetBranchAddress(fInEvent.s_njetsT.c_str(), &fInEvent.njetsT);
   for (Int_t ijet = 0; ijet < Config::nJets; ijet++) 
   {
     auto & jet = fInJets[ijet];
@@ -591,6 +611,7 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfigTree->Branch(fOutConfig.s_blindMET.c_str(), &fOutConfig.blindMET);
   fOutConfigTree->Branch(fOutConfig.s_applyBlindMET.c_str(), &fOutConfig.applyBlindMET);
   fOutConfigTree->Branch(fOutConfig.s_jetpTmin.c_str(), &fOutConfig.jetpTmin);
+  fOutConfigTree->Branch(fOutConfig.s_jetEtamax.c_str(), &fOutConfig.jetEtamax);
   fOutConfigTree->Branch(fOutConfig.s_jetIDmin.c_str(), &fOutConfig.jetIDmin);
   fOutConfigTree->Branch(fOutConfig.s_rhEmin.c_str(), &fOutConfig.rhEmin);
   fOutConfigTree->Branch(fOutConfig.s_phpTmin.c_str(), &fOutConfig.phpTmin);
@@ -627,6 +648,7 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfig.blindMET = fInConfig.blindMET;
   fOutConfig.applyBlindMET = fInConfig.applyBlindMET;
   fOutConfig.jetpTmin = fInConfig.jetpTmin;
+  fOutConfig.jetEtamax = fInConfig.jetEtamax;
   fOutConfig.jetIDmin = fInConfig.jetIDmin;
   fOutConfig.rhEmin = fInConfig.rhEmin;
   fOutConfig.phpTmin = fInConfig.phpTmin;
@@ -754,9 +776,18 @@ void Skimmer::InitOutTree()
   fOutTree->Branch(fOutEvent.s_t1pfMETphi.c_str(), &fOutEvent.t1pfMETphi);
   fOutTree->Branch(fOutEvent.s_t1pfMETsumEt.c_str(), &fOutEvent.t1pfMETsumEt);
   fOutTree->Branch(fOutEvent.s_jetHT.c_str(), &fOutEvent.jetHT);
+  fOutTree->Branch(fOutEvent.s_njets.c_str(), &fOutEvent.njets);
+  fOutTree->Branch(fOutEvent.s_jetHTpt15.c_str(), &fOutEvent.jetHTpt15);
+  fOutTree->Branch(fOutEvent.s_njetspt15.c_str(), &fOutEvent.njetspt15);
+  fOutTree->Branch(fOutEvent.s_jetHTeta3.c_str(), &fOutEvent.jetHTeta3);
+  fOutTree->Branch(fOutEvent.s_njetseta3.c_str(), &fOutEvent.njetseta3);
+  fOutTree->Branch(fOutEvent.s_jetHTidL.c_str(), &fOutEvent.jetHTidL);
+  fOutTree->Branch(fOutEvent.s_njetsidL.c_str(), &fOutEvent.njetsidL);
+  fOutTree->Branch(fOutEvent.s_jetHTnopho.c_str(), &fOutEvent.jetHTnopho);
+  fOutTree->Branch(fOutEvent.s_njetsnopho.c_str(), &fOutEvent.njetsnopho);
+  fOutTree->Branch(fOutEvent.s_jetHTidT.c_str(), &fOutEvent.jetHTidT);
+  fOutTree->Branch(fOutEvent.s_njetsidT.c_str(), &fOutEvent.njetsidT);
 
-  fOutTree->Branch(fOutEvent.s_njetsL.c_str(), &fOutEvent.njetsL);
-  fOutTree->Branch(fOutEvent.s_njetsT.c_str(), &fOutEvent.njetsT);
   fOutJets.resize(Config::nJets);
   for (Int_t ijet = 0; ijet < Config::nJets; ijet++) 
   {
@@ -851,7 +882,7 @@ void Skimmer::InitOutCutFlow()
 
 void Skimmer::GetSampleWeight()
 {
-  fSampleWeight = fOutConfig.xsec * fOutConfig.filterEff * fOutConfig.BR / fOutCutFlow->GetBinContent(1); // Config::lumi * Config::invfbToinvpb *
+  fSampleWeight = fOutConfig.xsec * fOutConfig.filterEff * fOutConfig.BR / fSumWgts; // Config::lumi * Config::invfbToinvpb *
 }
 
 void Skimmer::GetPUWeights()
