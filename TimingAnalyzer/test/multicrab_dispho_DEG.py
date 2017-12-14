@@ -25,7 +25,7 @@ def getOptions():
 
     parser.add_option('-w', '--workArea',
                       dest = 'workArea',
-                      default = 'multicrab_dispho_Data',
+                      default = 'multicrab_dispho_DEG',
                       help = "work area directory (only if CMD != 'submit')",
                       metavar = 'WAD')
 

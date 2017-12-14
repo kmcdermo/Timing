@@ -4,11 +4,11 @@ source scripts/common_variables.sh
 
 ## input
 label=${1}
-era=${2}
-version=${3}
+dataset=${2}
+era=${3}
+version=${4}
 
 ## global vars
-dataset="SinglePhoton"
 database="Run2017${era}-PromptReco-${version}"
 text="${dataset}_2017${era}_${version}"
 

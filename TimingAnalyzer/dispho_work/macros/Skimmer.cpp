@@ -9,7 +9,12 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
 
-  // Get input
+  ////////////////////////
+  // Get all the inputs //
+  ////////////////////////
+  std::cout << "Setting up inputs for skim" << std::endl;
+
+  // Get input file
   const TString infilename = Form("%s/%s", fInDir.Data(), fFileName.Data());
   fInFile = TFile::Open(infilename.Data());
   CheckValidFile(fInFile,infilename);
@@ -38,7 +43,11 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   fInPUWgtHist = (TH1F*)fInPUWgtFile->Get(Config::puwgtHistName.Data());
   CheckValidTH1F(fInPUWgtHist,Config::puwgtHistName,pufilename);
  
-  // Set Output Stuff
+  ////////////////////////
+  // Get all the inputs //
+  ////////////////////////
+  std::cout << "Setting up output skim" << std::endl;
+
   // Make the output file, make trees, then init them
   fOutFile = TFile::Open(Form("%s/%s", fOutDir.Data(), fFileName.Data()),"recreate");
   fOutFile->cd();

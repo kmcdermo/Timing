@@ -23,7 +23,7 @@ namespace Config
   static const TString extraText = "Preliminary";
 
   // input
-  static const TString baseDir        = "/store/user/kmcdermo/nTuples/skims/2017";
+  static const TString baseDir        = "/store/user/kmcdermo/nTuples/skimmed/2017";
   static const TString puwgtFileName  = "puweights";
   static const TString puwgtHistName  = "PUWeightsHist";
   static const TString rootdir        = "tree/";
