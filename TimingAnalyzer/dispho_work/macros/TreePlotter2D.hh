@@ -8,12 +8,6 @@
 #include "TTree.h"
 #include "TH2F.h"
 #include "TString.h"
-#include "TColor.h"
-#include "TPad.h"
-#include "TCanvas.h"
-#include "TLegend.h"
-#include "TLine.h"
-#include "THStack.h"
 
 // STL includes
 #include <iostream>
@@ -43,7 +37,6 @@ public:
   void MakeHistFromTrees();
   void MakeBkgdOutput();
   void MakeRatioOutput();
-  void SaveOutput();
 
   // Helper functions
   TH2F * SetupHist(const TString & name);

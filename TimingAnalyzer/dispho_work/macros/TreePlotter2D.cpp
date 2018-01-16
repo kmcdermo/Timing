@@ -45,9 +45,6 @@ void TreePlotter2D::MakePlot()
 
   // Make Ratio Output
   TreePlotter2D::MakeRatioOutput();
-
-  // Save Output
-  TreePlotter2D::SaveOutput();
 }
 
 void TreePlotter2D::MakeHistFromTrees()
@@ -97,6 +94,47 @@ void TreePlotter2D::MakeHistFromTrees()
     const auto & hist = HistPair.second;
     hist->Write(hist->GetName(),TObject::kWriteDelete);
   }
+}
+
+void TreePlotter2D::MakeBkgdOutput()
+{
+  std::cout << "Making Bkgd Output..." << std::endl;
+
+  // Make Total Bkgd Hist: for ratio and error plotting
+  BkgdHist = TreePlotter2D::SetupHist("Bkgd_Hist");
+  BkgdHist->Add(HistMap[GJets]);
+  BkgdHist->Add(HistMap[QCD]);
+  BkgdHist->SetMarkerSize(0);
+  BkgdHist->SetFillStyle(3254);
+  BkgdHist->SetFillColor(kGray+3);
+
+  // save to output file
+  fOutFile->cd();
+  BkgdHist->Write(BkgdHist->GetName(),TObject::kWriteDelete);
+}
+
+void TreePlotter2D::MakeRatioOutput()
+{
+  std::cout << "Making Ratio Output..." << std::endl;
+
+  // ratio value plot
+  RatioHist = TreePlotter2D::SetupHist("Ratio_Hist");
+  RatioHist->Add(HistMap[Data]);
+  RatioHist->Divide(BkgdHist);  
+  RatioHist->SetStats(0);      // No statistics on lower plot
+  
+  // ratio MC error plot
+  RatioMCErrs = TreePlotter2D::SetupHist("Ratio_MCErrs");
+  RatioMCErrs->Add(BkgdHist);
+  RatioMCErrs->Divide(BkgdHist);
+
+  // save to output file
+  fOutFile->cd();
+  RatioHist->Write(RatioHist->GetName(),TObject::kWriteDelete);
+  RatioMCErrs->Write(RatioMCErrs->GetName(),TObject::kWriteDelete);
+  
+  // save to output file
+  fOutFile->cd();
 }
 
 void TreePlotter2D::InitConfig()
