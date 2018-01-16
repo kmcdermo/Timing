@@ -31,7 +31,7 @@ class TreePlotter
 {
 public:
   TreePlotter(const TString & var, const TString & commoncut, const TString & text, const Int_t nbinsx, const Float_t xlow, const Float_t xhigh,
-	      const Bool_t islogx, const Bool_t islogy, const TString & title, const TString & xtitle, const TString & ytitle);
+	      const Bool_t islogx, const Bool_t islogy, const TString & title, const TString & xtitle, const TString & ytitle, const TString & delim);
   ~TreePlotter();
 
   // Initialize
@@ -66,6 +66,7 @@ private:
   const Float_t fXHigh;
   const Bool_t  fIsLogX;
   const Bool_t  fIsLogY;
+  const TString fDelim;
   TString fTitle;
   TString fXTitle;
   TString fYTitle;

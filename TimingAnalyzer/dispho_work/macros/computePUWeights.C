@@ -9,16 +9,16 @@ void computePUWeights(const TString & text)
   // get input
   const TString filename = Form("%s.root",text.Data());
   TFile * file = TFile::Open(Form("%s",filename.Data()),"UPDATE");
-  CheckValidFile(file,filename);
+  Config::CheckValidFile(file,filename);
   file->cd();
   
   const TString dataname = "Data_Hist";
   TH1F * dataHist = (TH1F*)file->Get(Form("%s",dataname.Data()));
-  CheckValidTH1F(dataHist,dataname,filename);
+  Config::CheckValidTH1F(dataHist,dataname,filename);
 
   const TString bkgdname = "Bkgd_Hist";
   TH1F * bkgdHist = (TH1F*)file->Get(Form("%s",bkgdname.Data()));
-  CheckValidTH1F(bkgdHist,bkgdname,filename);
+  Config::CheckValidTH1F(bkgdHist,bkgdname,filename);
 
   std::cout << "Data: " << dataHist->Integral() << std::endl;
   std::cout << "Bkgd: " << bkgdHist->Integral() << std::endl;

@@ -15,14 +15,15 @@ nojetcut="signal ${basecut}"
 ## setup plots
 logaxis="0 1" # !islogx && !islogy
 ytitle="Events"
+delim="XXX"
 
 ## blanks in titles need XXX
-phopt_0="phopt_0 phopt_0 100 0 1000 ${logaxis} phopt_0 LeadingXXXPhotonXXXp_{T}XXX[GeV/c] ${ytitle}"
-phoeta_0="phoeta_0 phoeta_0 30 -1.5 1.5 ${logaxis} phoeta_0 LeadingXXXPhotonXXX#eta ${ytitle}"
-phoseedtime_0="rhtime[phoseed_0] phoseedtime_0 60 -5 25 ${logaxis} phoseedtime_0 LeadingXXXPhotonXXXSeedXXXTimeXXX[ns] ${ytitle}"
-met="t1pfMETpt met 100 0 600 ${logaxis} met METXXX[GeV] ${ytitle}"
-njets="njets njets_pt15 25 0 25 ${logaxis} njets nJetsXXX[p_{T}>15XXXGeV/c] ${ytitle}"
-HT="jetHT HT 100 0 5000 ${logaxis} HT H_{T}XXX[GeV],XXXjetXXXp_{T}>15XXXGeV/c ${ytitle} "
+phopt_0="phopt_0 phopt_0 100 0 1000 ${logaxis} phopt_0 LeadingXXXPhotonXXXp_{T}XXX[GeV/c] ${ytitle} ${delim}"
+phoeta_0="phoeta_0 phoeta_0 30 -1.5 1.5 ${logaxis} phoeta_0 LeadingXXXPhotonXXX#eta ${ytitle} ${delim}"
+phoseedtime_0="rhtime[phoseed_0] phoseedtime_0 60 -5 25 ${logaxis} phoseedtime_0 LeadingXXXPhotonXXXSeedXXXTimeXXX[ns] ${ytitle} ${delim}"
+met="t1pfMETpt met 100 0 600 ${logaxis} met METXXX[GeV] ${ytitle} ${delim}"
+njets="njets njets_pt15 25 0 25 ${logaxis} njets nJetsXXX[p_{T}>15XXXGeV/c] ${ytitle} ${delim}"
+HT="jetHT HT 100 0 5000 ${logaxis} HT H_{T}XXX[GeV],XXXjetXXXp_{T}>15XXXGeV/c ${ytitle} ${delim}"
 
 ## do full cuts first
 echo ${fullcut} | while read -r text commoncut

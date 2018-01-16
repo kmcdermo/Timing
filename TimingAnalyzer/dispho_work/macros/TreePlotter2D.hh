@@ -11,6 +11,7 @@
 
 // STL includes
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include <map>
 #include <vector>
@@ -23,11 +24,12 @@
 class TreePlotter2D
 {
 public:
-  TreePlotter2D(const TString & text, const TString & commoncut, const TString & inconfig);
+  TreePlotter2D(const TString & commoncut, const TString & text, const TString & inconfig);
   ~TreePlotter2D();
 
   // Initialize
   void InitConfig();
+  void ReadInConfig();
   void SetupHists();
 
   // Main call
@@ -43,10 +45,12 @@ public:
   
 private:
   // Settings
-  const TString fText;
   const TString fCommonCut;
+  const TString fText;
   const TString fInConfig;
 
+  TString fTitleDelim;
+  TString fBinDelim;
   TString fXVar;
   TString fYVar;
   TString fTitle;

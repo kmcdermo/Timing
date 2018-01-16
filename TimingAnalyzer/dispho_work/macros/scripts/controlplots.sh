@@ -9,12 +9,13 @@ qcdcut="qcd_ctrl ${basecut}&&njets>2&&((phoID_0==1&&!phoisOOT_0)||(phoID_0==0&&p
 ## define plots
 logaxis="0 1" # !islogx && !islogy
 ytitle="Events"
+delim="XXX"
 
 ## blank spaces in titles use XXX
-phopt_0="phopt_0 phopt_0 100 0 1000 ${logaxis} phopt_0 LeadingXXXPhotonXXXp_{T}XXX[GeV/c] ${ytitle}"
-phoeta_0="phoeta_0 phoeta_0 30 -1.5 1.5 ${logaxis} phoeta_0 LeadingXXXPhotonXXX#eta ${ytitle}"
-phoseedtime_0="rhtime[phoseed_0] phoseedtime_0 60 -5 25 ${logaxis} phoseedtime_0 LeadingXXXPhotonXXXSeedXXXTimeXXX[ns] ${ytitle}"
-met="t1pfMETpt met 100 0 300 ${logaxis} met METXXX[GeV] ${ytitle}"
+phopt_0="phopt_0 phopt_0 100 0 1000 ${logaxis} phopt_0 LeadingXXXPhotonXXXp_{T}XXX[GeV/c] ${ytitle} ${delim}"
+phoeta_0="phoeta_0 phoeta_0 30 -1.5 1.5 ${logaxis} phoeta_0 LeadingXXXPhotonXXX#eta ${ytitle} ${delim}"
+phoseedtime_0="rhtime[phoseed_0] phoseedtime_0 60 -5 25 ${logaxis} phoseedtime_0 LeadingXXXPhotonXXXSeedXXXTimeXXX[ns] ${ytitle} ${delim}"
+met="t1pfMETpt met 100 0 300 ${logaxis} met METXXX[GeV] ${ytitle} ${delim}"
 
 ## loop over cuts
 for plot in phopt_0 phoeta_0 phoseedtime_0 met

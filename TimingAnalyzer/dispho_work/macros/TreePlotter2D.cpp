@@ -1,7 +1,7 @@
 #include "TreePlotter2D.hh"
 
-TreePlotter2D::TreePlotter2D(const TString & text, const TString & commoncut, const TString & inconfig) 
-  : fText(text), fCommonCut(commoncut), fInConfig(inconfig) 
+TreePlotter2D::TreePlotter2D(const TString & commoncut, const TString & text, const TString & inconfig) 
+  : fCommonCut(commoncut), fText(text), fInConfig(inconfig) 
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -68,7 +68,7 @@ void TreePlotter2D::MakeHistFromTrees()
     Config::CheckValidTree(tree,Config::disphotreename,filename);
 
     // Make temp hist
-    TString histname = Config::ReplaceSlashWithUndescore(input);
+    TString histname = Config::ReplaceSlashWithUnderscore(input);
     TH2F * hist = TreePlotter2D::SetupHist(Form("%s_Hist",histname.Data()));
     
     // Fill from tree
@@ -145,7 +145,7 @@ void TreePlotter2D::InitConfig()
 
 void TreePlotter2D::ReadInConfig()
 {
-  std::fstream infile;
+  std::ifstream infile;
   infile.open(Form("%s",fInConfig.Data()),std::ios::in);
 
   TString tmp;
@@ -157,58 +157,63 @@ void TreePlotter2D::ReadInConfig()
   {
     if (counter == 0)
     {
-      fXVar = tmp;
+      fTitleDelim = tmp;
       counter++;
     }
     else if (counter == 1)
     {
+      fBinDelim = tmp;
+      counter++;
+    }
+    else if (counter == 2)
+    {
+      fXVar = tmp;
+      counter++;
+    }
+    else if (counter == 3)
+    {
       fYVar = tmp;
       counter++;
     }
-    else if (counter == 2) 
+    else if (counter == 4) 
     {
-      fName = Config::ReplaceXXX(tmp);
+      fTitle = Config::ReplaceDelimWithSpace(tmp,fTitleDelim);
       counter++;
     }
-    else if (counter == 3) 
-    {
-      fName = Config::ReplaceXXX(tmp);
-      counter++;
-    }
-    else if (counter == 4 && tmp == "" && !readFloats)
+    else if (counter == 5 && tmp == fBinDelim && !readFloats)
     {
       readFloats = true;
     }
-    else if (counter == 4 && readFloats)
+    else if (counter == 5 && tmp != fBinDelim && readFloats)
     {
       fXBins.push_back(tmp.Atof());
     }
-    else if (counter == 4 && tmp == "" && readFloats)
+    else if (counter == 5 && tmp == fBinDelim && readFloats)
     {
       readFloats = false;
       counter++;
     }
-    else if (counter == 5)
+    else if (counter == 6)
     {
-      fXTitle = Config::ReplaceXXX(tmp);
+      fXTitle = Config::ReplaceDelimWithSpace(tmp,fTitleDelim);
       counter++;
     }
-    else if (counter == 6 && tmp == "" && !readFloats)
+    else if (counter == 7 && tmp == fBinDelim && !readFloats)
     {
       readFloats = true;
     }
-    else if (counter == 6 && readFloats)
+    else if (counter == 7 && tmp != fBinDelim && readFloats)
     {
       fYBins.push_back(tmp.Atof());
     }
-    else if (counter == 6 && tmp == "" && readFloats)
+    else if (counter == 7 && tmp == fBinDelim && readFloats)
     {
       readFloats = false;
       counter++;
     }
-    else if (counter == 7)
+    else if (counter == 8)
     {
-      fYTitle = Config::ReplaceXXX(tmp);
+      fYTitle = Config::ReplaceDelimWithSpace(tmp,fTitleDelim);
       counter++;
     }
     else 
@@ -234,7 +239,7 @@ TH2F * TreePlotter2D::SetupHist(const TString & name)
   const Double_t * xbins = &fXBins[0];
   const Double_t * ybins = &fYBins[0];
 
-  TH2F * hist = new TH2F(name.Data(),fTitle.Data(),fBinsX.size()-1,xbins,fBinsY.size()-1,ybins);
+  TH2F * hist = new TH2F(name.Data(),fTitle.Data(),fXBins.size()-1,xbins,fYBins.size()-1,ybins);
   hist->GetXaxis()->SetTitle(fXTitle.Data());
   hist->GetYaxis()->SetTitle(fYTitle.Data());
   hist->Sumw2();

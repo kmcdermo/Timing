@@ -11,7 +11,8 @@ islogy=${8:-1}
 title=${9:-${var}}
 xtitle=${10:-${var}}
 ytitle=${11:-"Events"}
+delim=${12:-"XXX"}
 
-root -l -b -q runTreePlotter.C\(\"${var}\",\"${commoncut}\",\"${text}\",${nbinsx},${xlow},${xhigh},${islogx},${islogy},\"${title}\",\"${xtitle}\",\"${ytitle}\"\)
+root -l -b -q runTreePlotter.C\(\"${var}\",\"${commoncut}\",\"${text}\",${nbinsx},${xlow},${xhigh},${islogx},${islogy},\"${title}\",\"${xtitle}\",\"${ytitle}\",\"${delim}\"\)
 
 cp ${text}.png  ~/www/quick/
