@@ -52,7 +52,7 @@ namespace Config
     ColorMap[Data]  = kBlack;
   }
 
-  void SetupCuts(const TString commoncut)
+  void SetupCuts(const TString & commoncut)
   {
     CutMap[QCD]   = Form("%s",commoncut.Data());
     CutMap[GJets] = Form("%s",commoncut.Data());

@@ -13,7 +13,7 @@ TreePlotter2D::TreePlotter2D(const TString & text, const TString & commoncut, co
 
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
-  SetTDRStyle(fTDRStyle);
+  Config::SetTDRStyle(fTDRStyle);
   gROOT->ForceStyle();
 
   // setup hists
