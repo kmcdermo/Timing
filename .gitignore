@@ -23,3 +23,4 @@ multicrab*/
 #*#
 *.pcm
 *.php
+.DS_STORE

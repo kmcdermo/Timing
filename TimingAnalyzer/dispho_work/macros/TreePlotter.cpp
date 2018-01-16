@@ -8,14 +8,9 @@ TreePlotter::TreePlotter(const TString & var, const TString & commoncut, const T
   std::cout << "Initializing..." << std::endl;
 
   // setup up titles
-  fTitle = title;
-  fTitle.ReplaceAll("XXX"," ");
-
-  fXTitle = xtitle;
-  fXTitle.ReplaceAll("XXX"," ");
-
-  fYTitle = ytitle;
-  fYTitle.ReplaceAll("XXX"," ");
+  fTitle  = Config::ReplaceXXX(title);
+  fXTitle = Config::ReplaceXXX(xtitle);
+  fYTitle = Config::ReplaceXXX(ytitle);
 
   ////////////////
   //            //
@@ -29,14 +24,11 @@ TreePlotter::TreePlotter(const TString & var, const TString & commoncut, const T
   gROOT->ForceStyle();
 
   // setup hists
-  TreePlotter::SetupSamples();
-  TreePlotter::SetupColors();
-  TreePlotter::SetupCuts();
-  TreePlotter::SetupLabels();
+  TreePlotter::InitConfig();
   TreePlotter::SetupHists();
 
   // output root file for quick inspection
-  fOutFile = TFile::Open(Form("%s.root",text.Data()),"UPDATE");
+  fOutFile = TFile::Open(Form("%s.root",fText.Data()),"UPDATE");
 }
 
 TreePlotter::~TreePlotter() 
@@ -86,7 +78,7 @@ void TreePlotter::MakePlot()
 
 void TreePlotter::MakeHistFromTrees()
 {
-  for (const auto & SamplePair : SampleMap)
+  for (const auto & SamplePair : Config::SampleMap)
   {
     // Init
     const auto & input  = SamplePair.first;
@@ -95,26 +87,21 @@ void TreePlotter::MakeHistFromTrees()
     std::cout << "Working on " << (isMC?"MC":"DATA") << " sample: " << input.Data() << std::endl;
 
     // Get File
-    const TString filename = Form("root://eoscms/%s/%s/tree.root",Config::baseDir.Data(),input.Data());
+    const TString filename = Form("%s/%s/%s/%s",Config::eosDir.Data(),Config::baseDir.Data(),input.Data(),Config::tupleFileName.Data());
     TFile * file = TFile::Open(Form("%s",filename.Data()));
-    CheckValidFile(file,filename);
+    Config::CheckValidFile(file,filename);
     file->cd();
 	
     // Get TTree
-    const TString treename = "disphotree";
-    TTree * tree = (TTree*)file->Get(Form("%s",treename.Data()));
-    CheckValidTree(tree,treename,filename);
+    TTree * tree = (TTree*)file->Get(Form("%s",Config::disphotreename.Data()));
+    Config::CheckValidTree(tree,Config::disphotreename,filename);
 
     // Make temp hist
-    TString histname = input;
-    histname.ReplaceAll("/","_");
+    TString histname = Config::ReplaceSlashWithUnderscore(input);
     TH1F * hist = TreePlotter::SetupHist(Form("%s_Hist",histname.Data()));
     
-    // weight
-    const TString weight = (isMC ? Form("evtwgt * puwgt * %f * %f", Config::lumi, Config::invfbToinvpb) : "1.0");
-
     // Fill from tree
-    tree->Draw(Form("%s>>%s",fVar.Data(),hist->GetName()),Form("(%s) * (%s)",CutMap[sample].Data(),weight.Data()),"goff");
+    tree->Draw(Form("%s>>%s",fVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(isMC).Data()),"goff");
     
     // Add to main hists
     HistMap[sample]->Add(hist);
@@ -237,7 +224,7 @@ void TreePlotter::MakeLegend()
     else if (sample == GMSB) fillType = "l";
     else                     fillType = "f";
 
-    Legend->AddEntry(HistPair.second,LabelMap[sample].Data(),fillType.Data());
+    Legend->AddEntry(HistPair.second,Config::LabelMap[sample].Data(),fillType.Data());
   }
   Legend->AddEntry(BkgdHist,"MC Unc.","f");
 
@@ -353,7 +340,7 @@ void TreePlotter::SaveOutput()
   std::cout << "Saving hist as png..." << std::endl;
 
   OutCanv->cd(); // Go back to the main canvas before saving
-  CMSLumi(OutCanv,0); // write out Lumi info
+  Config::CMSLumi(OutCanv,0); // write out Lumi info
   OutCanv->SaveAs(Form("%s.png",fText.Data()));
 
   // save to output file
@@ -386,77 +373,12 @@ Float_t TreePlotter::GetHistMaximum()
   return (datamax > bkgdmax ? datamax : bkgdmax);
 }
 
-TH1F * TreePlotter::SetupHist(const TString & name)
+void TreePlotter::InitConfig()
 {
-  TH1F * hist = new TH1F(name.Data(),fTitle.Data(),fNbinsX,fXLow,fXHigh);
-  hist->GetXaxis()->SetTitle(fXTitle.Data());
-  hist->GetYaxis()->SetTitle(fYTitle.Data());
-  hist->Sumw2();
-
-  return hist;
-}
-
-void TreePlotter::SetupSamples()
-{
-  // QCD HT binned
-  SampleMap["MC/QCD_HT/100to200"] = QCD;
-  SampleMap["MC/QCD_HT/200to300"] = QCD;
-  SampleMap["MC/QCD_HT/300to500"] = QCD;
-  SampleMap["MC/QCD_HT/500to700"] = QCD;
-  SampleMap["MC/QCD_HT/700to1000"] = QCD;
-  SampleMap["MC/QCD_HT/1000to1500"] = QCD;
-  SampleMap["MC/QCD_HT/1500to2000"] = QCD;
-  SampleMap["MC/QCD_HT/2000toInf"] = QCD;
-  
-  // GJets HT binned
-  SampleMap["MC/GJets_HT/40To100"] = GJets;
-  SampleMap["MC/GJets_HT/100To200"] = GJets;
-  SampleMap["MC/GJets_HT/200To400"] = GJets;
-  SampleMap["MC/GJets_HT/400To600"] = GJets;
-  SampleMap["MC/GJets_HT/600ToInf"] = GJets;
-   
-  // GMSB
-  SampleMap["MC/GMSB/L200TeV_CTau400cm"] = GMSB;
-
-  // Data
-  SampleMap["Data/SinglePhoton/B/v1"] = Data;
-  SampleMap["Data/SinglePhoton/B/v2"] = Data;
-  SampleMap["Data/SinglePhoton/C/v1"] = Data;
-  SampleMap["Data/SinglePhoton/C/v2"] = Data;
-  SampleMap["Data/SinglePhoton/C/v3"] = Data;
-  SampleMap["Data/SinglePhoton/D/v1"] = Data;
-  SampleMap["Data/SinglePhoton/E/v1"] = Data;
-  SampleMap["Data/SinglePhoton/F/v1"] = Data;
-}
-
-void TreePlotter::SetupColors()
-{
-  ColorMap[QCD] = kGreen;
-  ColorMap[GJets] = kRed;
-  ColorMap[GMSB] = kBlue;
-  ColorMap[Data] = kBlack;
-}
-
-void TreePlotter::SetupCuts()
-{
-  CutMap[QCD]   = Form("%s",fCommonCut.Data());
-  CutMap[GJets] = Form("%s",fCommonCut.Data());
-  CutMap[GMSB]  = Form("%s",fCommonCut.Data());
-  CutMap[Data]  = Form("%s",fCommonCut.Data());
-
-  // signal region cuts
-  // CutMap[QCD]   = Form("%s&&hltDisPho",fCommonCut.Data());
-  // CutMap[GJets] = Form("%s&&hltDisPho",fCommonCut.Data());
-  // CutMap[GMSB]  = Form("%s",fCommonCut.Data());
-  // CutMap[Data]  = Form("%s&&hltDisPho&&%s",fCommonCut.Data(),"event%10==0");
-}
-
-void TreePlotter::SetupLabels()
-{
-  LabelMap[QCD]   = "QCD"; //"#QCD (H_{T} Binned)";
-  LabelMap[GJets] = "#gamma+Jets"; //"#gamma + Jets (H_{T} Binned)";
-  LabelMap[GMSB]  = "GMSB c#tau=4m"; //"GMSB c#tau = 4m, #Lambda = 200 TeV";
-  LabelMap[Data]  = "Data";
+  Config::SetupSamples();
+  Config::SetupColors();
+  Config::SetupCuts(fCommonCut);
+  Config::SetupLabels();
 }
 
 void TreePlotter::SetupHists()
@@ -472,12 +394,12 @@ void TreePlotter::SetupHists()
     const auto & hist   = HistPair.second;
     const Bool_t isSignal = (sample == GMSB);
     const Bool_t isBkgd   = (sample == GJets || sample == QCD);
-
-    hist->SetLineColor(ColorMap[sample]);
-    hist->SetMarkerColor(ColorMap[sample]);
+    
+    hist->SetLineColor(Config::ColorMap[sample]);
+    hist->SetMarkerColor(Config::ColorMap[sample]);
     if (isBkgd)
     {
-      hist->SetFillColor(ColorMap[sample]);
+      hist->SetFillColor(Config::ColorMap[sample]);
       hist->SetFillStyle(1001);
     }
     else if (isSignal)
@@ -487,30 +409,12 @@ void TreePlotter::SetupHists()
   }
 }
 
-void TreePlotter::SetupDataSF()
+TH1F * TreePlotter::SetupHist(const TString & name)
 {
-  // Get Data file
-  TString input = "";
-  for (const auto & SamplePair : SampleMap)
-  {
-    if (SamplePair.second == Data) {input = SamplePair.first; break;}
-  }
-
-  const TString filename = Form("root://eoscms/%s/%s/tree.root",Config::baseDir.Data(),input.Data());
-  TFile * file = TFile::Open(Form("%s",filename.Data()));
-  CheckValidFile(file,filename);
-  file->cd();
-
-  // Get Configtree
-  const TString treename = "configtree";
-  TTree * configtree = (TTree*)file->Get(Form("%s",treename.Data()));
-  CheckValidTree(configtree,treename,file->GetName());
-
-  UInt_t blindSF = 0; configtree->SetBranchAddress("blindSF",&blindSF);
-  configtree->GetEntry(0);
-
-  fDataSF = Float_t(blindSF);
-
-  delete configtree;
-  delete file;
+  TH1F * hist = new TH1F(name.Data(),fTitle.Data(),fNbinsX,fXLow,fXHigh);
+  hist->GetXaxis()->SetTitle(fXTitle.Data());
+  hist->GetYaxis()->SetTitle(fYTitle.Data());
+  hist->Sumw2();
+  
+  return hist;
 }

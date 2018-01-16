@@ -17,31 +17,31 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   // Get input file
   const TString infilename = Form("%s/%s", fInDir.Data(), fFileName.Data());
   fInFile = TFile::Open(infilename.Data());
-  CheckValidFile(fInFile,infilename);
+  Config::CheckValidFile(fInFile,infilename);
 
   // Get input config tree
   const TString inconfigtreename = Form("%s%s",Config::rootdir.Data(),Config::configtreename.Data());
   fInConfigTree = (TTree*)fInFile->Get(inconfigtreename.Data());
-  CheckValidTree(fInConfigTree,inconfigtreename,infilename);
+  Config::CheckValidTree(fInConfigTree,inconfigtreename,infilename);
   Skimmer::GetInConfig();
 
   // Get main input tree and initialize it
   const TString indisphotreename = Form("%s%s",Config::rootdir.Data(),Config::disphotreename.Data());
   fInTree = (TTree*)fInFile->Get(indisphotreename.Data());
-  CheckValidTree(fInTree,indisphotreename,infilename);
+  Config::CheckValidTree(fInTree,indisphotreename,infilename);
   Skimmer::InitInTree();
 
   // Get the cut flow + event weight histogram --> set the wgtsum
   const TString inh_cutflowname = Form("%s%s",Config::rootdir.Data(),Config::h_cutflowname.Data());
   fInCutFlow = (TH1F*)fInFile->Get(inh_cutflowname.Data());
-  CheckValidTH1F(fInCutFlow,inh_cutflowname,infilename);
+  Config::CheckValidTH1F(fInCutFlow,inh_cutflowname,infilename);
 
   // Get PU weights input
   const TString pufilename = Form("root://eoscms//store/user/kmcdermo/nTuples/%s.root",Config::puwgtFileName.Data());
   fInPUWgtFile = TFile::Open(pufilename.Data());
-  CheckValidFile(fInPUWgtFile,pufilename);
+  Config::CheckValidFile(fInPUWgtFile,pufilename);
   fInPUWgtHist = (TH1F*)fInPUWgtFile->Get(Config::puwgtHistName.Data());
-  CheckValidTH1F(fInPUWgtHist,Config::puwgtHistName,pufilename);
+  Config::CheckValidTH1F(fInPUWgtHist,Config::puwgtHistName,pufilename);
  
   ////////////////////////
   // Get all the inputs //

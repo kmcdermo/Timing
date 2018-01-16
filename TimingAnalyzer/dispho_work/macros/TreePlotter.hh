@@ -27,8 +27,6 @@
 // Common include
 #include "common/Common.hh"
 
-enum SampleType {Data, GMSB, QCD, GJets};
-
 class TreePlotter
 {
 public:
@@ -37,12 +35,8 @@ public:
   ~TreePlotter();
 
   // Initialize
-  void SetupSamples();
-  void SetupColors();
-  void SetupCuts();
-  void SetupLabels();
+  void InitConfig();
   void SetupHists();
-  void SetupDataSF();
 
   // Main call
   void MakePlot();
@@ -79,16 +73,9 @@ private:
   // Style
   TStyle * fTDRStyle;
 
-  // Sample Information
-  std::map<TString,SampleType> SampleMap;
-  std::map<SampleType,Color_t> ColorMap;
-  std::map<SampleType,TString> CutMap;
-  std::map<SampleType,TH1F*>   HistMap;
-  std::map<SampleType,TString> LabelMap;
-  Float_t fDataSF;
-
   // Output
   TFile * fOutFile;
+  std::map<SampleType,TH1F*> HistMap;
   TH1F * BkgdHist;
   THStack * BkgdStack;
   TH1F * RatioHist;

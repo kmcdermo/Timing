@@ -1,20 +1,22 @@
 #ifndef __Common__
 #define __Common__
 
+// ROOT includes
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1F.h"
+#include "TH2F.h"
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TString.h"
 
-// global functions
-void CheckValidFile(const TFile * file, const TString & fname);
-void CheckValidTree(const TTree * tree, const TString & tname, const TString & fname);
-void CheckValidTH1F(const TH1F * plot, const TString & pname, const TString & fname);
-void CMSLumi(TCanvas * canv, const Int_t iPosX = 10);
-void SetTDRStyle(TStyle * tdrStyle);
+// STL includes
+#include <map>
 
+// Sample Enum
+enum SampleType {Data, GMSB, QCD, GJets};
+
+// Configuration parameters
 namespace Config
 {
   // basics
@@ -23,13 +25,27 @@ namespace Config
   static const TString extraText = "Preliminary";
 
   // input
+  static const TString eosDir         = "root://eoscms";
   static const TString baseDir        = "/store/user/kmcdermo/nTuples/skimmed/2017";
+  static const TString tupleFileName  = "tree.root";
   static const TString puwgtFileName  = "puweights";
   static const TString puwgtHistName  = "PUWeightsHist";
   static const TString rootdir        = "tree/";
   static const TString configtreename = "configtree";
   static const TString disphotreename = "disphotree";
   static const TString h_cutflowname  = "h_cutflow";
+
+  // Sample Information
+  extern std::map<TString,SampleType> SampleMap;
+  extern std::map<SampleType,Color_t> ColorMap;
+  extern std::map<SampleType,TString> CutMap;
+  extern std::map<SampleType,TString> LabelMap;
+
+  // Sample setup functions
+  void SetupSamples();
+  void SetupColors();
+  void SetupCuts(const TString &);
+  void SetupLabels();
   
   // skim input
   constexpr UInt_t nEvCheck = 10000;
@@ -60,6 +76,21 @@ namespace Config
   constexpr Float_t right_lp  = right_up;
   constexpr Float_t top_lp    = bottom_up;
   constexpr Float_t height_lp = top_lp - bottom_lp;
+
+  // String formatting
+  TString ReplaceXXX(TString tmp){return tmp.ReplaceAll("XXX"," ");}
+  TString ReplaceSlashWithUnderscore(TString tmp){return tmp.ReplaceAll("/","_");}
+  TString WeightString(const Bool_t isMC){return (isMC ? Form("evtwgt * puwgt * %f * %f", Config::lumi, Config::invfbToinvpb) : "1.0");}
+
+  // Check inputs
+  void CheckValidFile(const TFile * file, const TString & fname);
+  void CheckValidTree(const TTree * tree, const TString & tname, const TString & fname);
+  void CheckValidTH1F(const TH1F * plot, const TString & pname, const TString & fname);
+  void CheckValidTH2F(const TH2F * plot, const TString & pname, const TString & fname);
+
+  // ROOT Formatting
+  void CMSLumi(TCanvas * canv, const Int_t iPosX = 10);
+  void SetTDRStyle(TStyle * tdrStyle);
 };
 
 #endif
