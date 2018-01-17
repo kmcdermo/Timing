@@ -7,6 +7,7 @@
 namespace Config
 {
   std::map<TString,SampleType> SampleMap;
+  std::map<SampleType,TString> HistNameMap;
   std::map<SampleType,Color_t> ColorMap;
   std::map<SampleType,TString> CutMap;
   std::map<SampleType,TString> LabelMap;
@@ -42,6 +43,14 @@ namespace Config
     SampleMap["Data/SinglePhoton/D/v1"] = Data;
     SampleMap["Data/SinglePhoton/E/v1"] = Data;
     SampleMap["Data/SinglePhoton/F/v1"] = Data;
+  }
+
+  void SetupHistNames()
+  {
+    HistNameMap[QCD]   = "QCD_Hist";
+    HistNameMap[GJets] = "GJets_Hist";
+    HistNameMap[GMSB]  = "GMSB_Hist";
+    HistNameMap[Data]  = "Data_Hist";
   }
 
   void SetupColors()

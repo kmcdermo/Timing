@@ -376,6 +376,7 @@ Float_t TreePlotter::GetHistMaximum()
 void TreePlotter::InitConfig()
 {
   Config::SetupSamples();
+  Config::SetupHistNames();
   Config::SetupColors();
   Config::SetupCuts(fCommonCut);
   Config::SetupLabels();
@@ -383,10 +384,10 @@ void TreePlotter::InitConfig()
 
 void TreePlotter::SetupHists()
 {
-  HistMap[QCD]   = SetupHist("QCD_Hist");
-  HistMap[GJets] = SetupHist("GJets_Hist");
-  HistMap[GMSB]  = SetupHist("GMSB_Hist");
-  HistMap[Data]  = SetupHist("Data_Hist");
+  HistMap[QCD]   = SetupHist(Config::HistNameMap[QCD]);
+  HistMap[GJets] = SetupHist(Config::HistNameMap[GJets]);
+  HistMap[GMSB]  = SetupHist(Config::HistNameMap[GMSB]);
+  HistMap[Data]  = SetupHist(Config::HistNameMap[Data]);
   
   for (auto & HistPair : HistMap)
   {

@@ -140,6 +140,7 @@ void TreePlotter2D::MakeRatioOutput()
 void TreePlotter2D::InitConfig()
 {
   Config::SetupSamples();
+  Config::SetupHistNames();
   Config::SetupCuts(fCommonCut);
 }
 
@@ -228,10 +229,10 @@ void TreePlotter2D::ReadInConfig()
 
 void TreePlotter2D::SetupHists()
 {
-  HistMap[QCD]   = SetupHist("QCD_Hist");
-  HistMap[GJets] = SetupHist("GJets_Hist");
-  HistMap[GMSB]  = SetupHist("GMSB_Hist");
-  HistMap[Data]  = SetupHist("Data_Hist");
+  HistMap[QCD]   = SetupHist(Config::HistNameMap[QCD]);
+  HistMap[GJets] = SetupHist(Config::HistNameMap[GJets]);
+  HistMap[GMSB]  = SetupHist(Config::HistNameMap[GMSB]);
+  HistMap[Data]  = SetupHist(Config::HistNameMap[Data]);
 }
 
 TH2F * TreePlotter2D::SetupHist(const TString & name)

@@ -37,12 +37,14 @@ namespace Config
 
   // Sample Information
   extern std::map<TString,SampleType> SampleMap;
+  extern std::map<SampleType,TString> HistNameMap;
   extern std::map<SampleType,Color_t> ColorMap;
   extern std::map<SampleType,TString> CutMap;
   extern std::map<SampleType,TString> LabelMap;
 
   // Sample setup functions
   void SetupSamples();
+  void SetupHistNames();
   void SetupColors();
   void SetupCuts(const TString &);
   void SetupLabels();
