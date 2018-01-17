@@ -82,6 +82,8 @@ void Fitter2D::MakeFit()
 
 void Fitter2D::GetInputHists()
 {
+  std::cout << "Getting input histograms..." << std::endl;
+
   for (const auto & HistNamePair : Config::HistNameMap)
   {
     const auto & sample = HistNamePair.first;
@@ -93,6 +95,8 @@ void Fitter2D::GetInputHists()
 
 void Fitter2D::GetMinMax()
 {
+  std::cout << "Getting min and max of x,y range..." << std::endl;
+
   fXmin = HistMap[Data]->GetXaxis()->GetBinLowEdge(1);
   fXmax = HistMap[Data]->GetXaxis()->GetBinUpEdge(HistMap[Data]->GetXaxis()->GetNbins());
   fYmin = HistMap[Data]->GetYaxis()->GetBinLowEdge(1);
@@ -101,12 +105,16 @@ void Fitter2D::GetMinMax()
 
 void Fitter2D::DeclareVars()
 {
+  std::cout << "Declaring RooFit variables..." << std::endl;
+
   fX = new RooRealVar("x",HistMap[Data]->GetXaxis()->GetTitle(),fXmin,fXmax);
   fY = new RooRealVar("y",HistMap[Data]->GetYaxis()->GetTitle(),fYmin,fYmax);
 }
   
 void Fitter2D::DeclareDatasets()
 {
+  std::cout << "Setting datasets..." << std::endl;
+
   for (const auto & HistPair : HistMap)
   {
     const auto & sample = HistPair.first;
@@ -117,6 +125,8 @@ void Fitter2D::DeclareDatasets()
 
 void Fitter2D::MakeSamplePdfs()
 {
+  std::cout << "Setting Pdfs..." << std::endl;
+
   for (auto & RooDHPair : RooDHMap)
   {
     const auto & sample = RooDHPair.first;
@@ -130,6 +140,8 @@ void Fitter2D::MakeSamplePdfs()
 
 void Fitter2D::DeclareFractions()
 {
+  std::cout << "Init fractions..." << std::endl;
+
   for (auto & RooHPdfPair : RooHPdfMap)
   {
     const auto & sample = RooHPdfPair.first;
@@ -143,12 +155,16 @@ void Fitter2D::DeclareFractions()
 
 void Fitter2D::FitModel()
 {
+  std::cout << "Build and fit to model..." << std::endl;
+
   ModelPdf = new RooAddPdf("modelpdf","modelpdf",RooArgList(*RooHPdfMap[GJets],*RooHPdfMap[QCD]),RooArgList(*FracMap[GJets],*FracMap[QCD]));
   ModelPdf->fitTo(*RooDHMap[Data]);
 }
 
 void Fitter2D::DrawProjectedFits()
 {
+  std::cout << "Draw fits projected into 1D..." << std::endl;
+
   // Draw 1D stuff
   TCanvas * canv = new TCanvas();
   canv->cd();
@@ -176,6 +192,8 @@ void Fitter2D::DrawProjectedFits()
 
 void Fitter2D::ImportToWS()
 {
+  std::cout << "Make workspace..." << std::endl;
+
   fWorkspace = new RooWorkspace("workspace","workspace");
 
   fWorkspace->import(*ModelPdf);
