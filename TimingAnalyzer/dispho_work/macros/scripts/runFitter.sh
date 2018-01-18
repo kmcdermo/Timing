@@ -5,4 +5,4 @@ outfilename=${2:-"fitresults.root"}
 
 root -b -q -l runFitter.C\(\"${infilename}\",\"${outfilename}\"\)
 
-cp xframe_projfit.png yframe_projfit.png ~/www/quick/
+cp xfit_2D.png yfit_2D.png fit_projX.png fit_projY.png ${outfilename} ~/www/quick/

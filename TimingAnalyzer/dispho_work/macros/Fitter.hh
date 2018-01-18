@@ -63,6 +63,9 @@ public:
 
   // Deleting
   template <typename T>
+  void Delete(T & HistMap, RDHMap & RooDHMap, RHPMap & RooHPdfMap, RRVMap & FracMap,
+	      RooAddPdf *& ModelPdf, RooWorkspace *& Workspace);
+  template <typename T>
   void DeleteMap(T & Map);
 
   // Main calls

@@ -35,17 +35,19 @@ Fitter::Fitter(const TString & infilename, const TString & outfilename)
 
 Fitter::~Fitter()
 {
-  Fitter::DeleteMap(RooDHMap2D);
-  Fitter::DeleteMap(RooHPdfMap2D);
-  Fitter::DeleteMap(FracMap2D);
-  Fitter::DeleteMap(HistMap2D);
-  
+  // 2D
+  Fitter::Delete(HistMap2D,RooDHMap2D,RooHPdfMap2D,FracMap2D,ModelPdf2D,Workspace2D);
+
+  // 1D -- X
+  Fitter::Delete(HistMapX,RooDHMapX,RooHPdfMapX,FracMapX,ModelPdfX,WorkspaceX);
+
+  // 1D -- Y
+  Fitter::Delete(HistMapY,RooDHMapY,RooHPdfMapY,FracMapY,ModelPdfY,WorkspaceY);
+
   delete fY;
   delete fX;
 
   delete fInFile;
-
-  delete Workspace2D;
   delete fOutFile;
 }
 
@@ -229,6 +231,7 @@ void Fitter::DrawFit(RooRealVar *& var, const RDHMap & RooDHMap, RooAddPdf *& Mo
   RooDHMap.at(Data)->plotOn(frame);
   ModelPdf->plotOn(frame);
   frame->Draw();
+  Config::CMSLumi(canv);
   canv->SaveAs(Form("%s_%s.png",title.Data(),fitInfo.Text_.Data()));
 
   // delete it
@@ -251,6 +254,18 @@ void Fitter::ImportToWS(RooWorkspace *& Workspace, RooAddPdf *& ModelPdf, const 
 void Fitter::InitConfig()
 {
   Config::SetupHistNames();
+}
+
+template <typename T>
+void Fitter::Delete(T & HistMap, RDHMap & RooDHMap, RHPMap & RooHPdfMap, RRVMap & FracMap,
+		    RooAddPdf *& ModelPdf, RooWorkspace *& Workspace)
+{
+  Fitter::DeleteMap(HistMap);
+  Fitter::DeleteMap(RooDHMap);
+  Fitter::DeleteMap(RooHPdfMap);
+  Fitter::DeleteMap(FracMap);
+  delete ModelPdf;
+  delete Workspace;
 }
 
 template <typename T>
