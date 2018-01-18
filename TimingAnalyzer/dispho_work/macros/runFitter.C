@@ -5,5 +5,5 @@
 void runFitter(const TString & infilename, const TString & outfilename)
 {
   Fitter fitter(infilename,outfilename);
-  fitter.MakeFit();
+  fitter.MakeFits();
 }

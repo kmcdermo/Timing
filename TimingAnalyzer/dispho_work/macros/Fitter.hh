@@ -33,9 +33,24 @@
 
 // Typedefs needed
 typedef std::map<SampleType,TH2F*>        TH2Map;
+typedef std::map<SampleType,TH1F*>        TH1Map;
+
 typedef std::map<SampleType,RooDataHist*> RDHMap;
 typedef std::map<SampleType,RooHistPdf*>  RHPMap;
 typedef std::map<SampleType,RooRealVar*>  RRVMap;
+
+// Special enum for type of fit
+enum FitType {TwoD, X, Y};
+
+// Special struct for each fit
+struct FitInfo
+{
+  FitInfo(const RooArgList & ArgList, const TString & Text, const FitType & Fit)
+    : ArgList_(ArgList), Text_(Text), Fit_(Fit) {}
+  const RooArgList ArgList_;
+  const TString Text_;
+  const FitType Fit_;
+};
 
 class Fitter
 {
@@ -51,9 +66,12 @@ public:
   void DeleteMap(T & Map);
 
   // Main calls
-  void MakeFit();
+  void MakeFits();
   void PrepareFits();
-  void Fit2D();
+  void Project2DHistTo1D();
+  template <typename T>
+  void MakeFit(const T & HistMap, RDHMap & RooDHMap, RHPMap & RooHPdfMap, RRVMap & FracMap,
+	       RooAddPdf *& ModelPdf, RooWorkspace *& Workspace, const FitInfo & fitInfo);
 
   // Prep for fits
   void GetInputHists();
@@ -62,12 +80,12 @@ public:
 
   // Subroutine for fitting
   template <typename T>
-  void DeclareDatasets(const T & HistMap, RDHMap & RooDHMap, const RooArgList & ArgList, const TString & text);
-  void MakeSamplePdfs(const RDHMap & RooDHMap, RHPMap & RooHPdfMap, const RooArgList & ArgList, const TString & text);
-  void DeclareFractions(const RHPMap & RooHPdfMap, RRVMap & FracMap, const TString & text);
-  void FitModel(RooAddPdf *& ModelPdf, const RHPMap & RooHPdfMap, const RRVMap & FracMap, const RDHMap & RooDHmap, const TString & text);
-  void DrawFit(RooRealVar *& var, const RDHMap & RooDHMap, RooAddPdf *& ModelPdf, const TString & text);
-  void ImportToWS(RooWorkspace *& Workspace, RooAddPdf *& ModelPdf, const RDHMap & RooDHMap, const TString & text);
+  void DeclareDatasets(const T & HistMap, RDHMap & RooDHMap, const FitInfo & fitInfo);
+  void MakeSamplePdfs(const RDHMap & RooDHMap, RHPMap & RooHPdfMap, const FitInfo & fitInfo);
+  void DeclareFractions(const RHPMap & RooHPdfMap, RRVMap & FracMap, const FitInfo & fitInfo);
+  void FitModel(RooAddPdf *& ModelPdf, const RHPMap & RooHPdfMap, const RRVMap & FracMap, const RDHMap & RooDHmap, const FitInfo & fitInfo);
+  void DrawFit(RooRealVar *& var, const RDHMap & RooDHMap, RooAddPdf *& ModelPdf, const TString & title, const FitInfo & fitInfo);
+  void ImportToWS(RooWorkspace *& Workspace, RooAddPdf *& ModelPdf, const RDHMap & RooDHMap, const FitInfo & fitInfo);
 
 private:
   // settings
@@ -90,14 +108,32 @@ private:
   // Roo vars
   RooRealVar * fX;
   RooRealVar * fY;
-  RDHMap       RooDHMap2D;
-  RHPMap       RooHPdfMap2D;
-  RRVMap       FracMap2D;
-  RooAddPdf  * ModelPdf2D;
+
+  // 2D Fit
+  RDHMap         RooDHMap2D;
+  RHPMap         RooHPdfMap2D;
+  RRVMap         FracMap2D;
+  RooAddPdf    * ModelPdf2D;
+  RooWorkspace * Workspace2D;
+
+  // 1D Fit X
+  TH1Map         HistMapX;
+  RDHMap         RooDHMapX;
+  RHPMap         RooHPdfMapX;
+  RRVMap         FracMapX;
+  RooAddPdf    * ModelPdfX;
+  RooWorkspace * WorkspaceX;
+
+  // 1D Fit Y
+  TH1Map         HistMapY;
+  RDHMap         RooDHMapY;
+  RHPMap         RooHPdfMapY;
+  RRVMap         FracMapY;
+  RooAddPdf    * ModelPdfY;
+  RooWorkspace * WorkspaceY;
 
   // Output
   TFile        * fOutFile;
-  RooWorkspace * Workspace2D;
 };
 
 #endif
