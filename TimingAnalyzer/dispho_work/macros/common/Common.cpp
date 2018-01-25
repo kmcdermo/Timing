@@ -73,7 +73,7 @@ namespace Config
       CutMap[QCD]   += Form("&&%s",bkgdcut.Data());
       CutMap[GJets] += Form("&&%s",bkgdcut.Data());
     }
-    if (bkgdcut != "NONE")
+    if (signalcut != "NONE")
     {
       CutMap[GMSB]  += Form("&&%s",signcut.Data());
     }
