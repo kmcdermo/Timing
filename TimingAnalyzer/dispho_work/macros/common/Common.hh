@@ -46,7 +46,7 @@ namespace Config
   void SetupSamples();
   void SetupHistNames();
   void SetupColors();
-  void SetupCuts(const TString &);
+  void SetupCuts(const TString & common, const TString & bkgd = "", const TString & signal = "", const TString & data = "");
   void SetupLabels();
   
   // skim input

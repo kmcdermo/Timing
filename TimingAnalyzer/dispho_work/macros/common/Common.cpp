@@ -61,18 +61,26 @@ namespace Config
     ColorMap[Data]  = kBlack;
   }
 
-  void SetupCuts(const TString & commoncut)
+  void SetupCuts(const TString & commoncut, const TString & bkgdcut, const TString & signcut, const TString & datacut)
   {
     CutMap[QCD]   = Form("%s",commoncut.Data());
     CutMap[GJets] = Form("%s",commoncut.Data());
     CutMap[GMSB]  = Form("%s",commoncut.Data());
     CutMap[Data]  = Form("%s",commoncut.Data());
 
-    // signal region cuts
-    // CutMap[QCD]   = Form("%s&&hltDisPho",commoncut.Data());
-    // CutMap[GJets] = Form("%s&&hltDisPho",commoncut.Data());
-    // CutMap[GMSB]  = Form("%s",commoncut.Data());
-    // CutMap[Data]  = Form("%s&&hltDisPho&&%s",commoncut.Data(),"event%10==0");
+    if (bkgdcut != "NONE")
+    {
+      CutMap[QCD]   += Form("&&%s",bkgdcut.Data());
+      CutMap[GJets] += Form("&&%s",bkgdcut.Data());
+    }
+    if (bkgdcut != "NONE")
+    {
+      CutMap[GMSB]  += Form("&&%s",signcut.Data());
+    }
+    if (datacut != "NONE")
+    {
+      CutMap[Data]  += Form("&&%s",datacut.Data());
+    }
   }
 
   void SetupLabels()

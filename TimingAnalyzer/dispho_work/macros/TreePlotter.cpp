@@ -1,9 +1,10 @@
 #include "TreePlotter.hh"
 
-TreePlotter::TreePlotter(const TString & var, const TString & commoncut, const TString & text, const Int_t nbinsx, const Float_t xlow, const Float_t xhigh,
-			 const Bool_t islogx, const Bool_t islogy, const TString & title, const TString & xtitle, const TString & ytitle, const TString & delim) : 
-  fVar(var), fCommonCut(commoncut), fText(text), fNbinsX(nbinsx), fXLow(xlow), fXHigh(xhigh),
-  fIsLogX(islogx), fIsLogY(islogy), fDelim(delim)
+TreePlotter::TreePlotter(const TString & var, const TString & commoncut, const TString & bkgdcut, const TString & signcut, const TString & datacut,
+			 const TString & text, const Int_t nbinsx, const Float_t xlow, const Float_t xhigh, const Bool_t islogx, const Bool_t islogy, 
+			 const TString & title, const TString & xtitle, const TString & ytitle, const TString & delim) : 
+  fVar(var), fCommonCut(commoncut), fBkgdCut(bkgdcut), fSignCut(signcut), fDataCut(datacut),
+  fText(text), fNbinsX(nbinsx), fXLow(xlow), fXHigh(xhigh), fIsLogX(islogx), fIsLogY(islogy), fDelim(delim)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -378,7 +379,7 @@ void TreePlotter::InitConfig()
   Config::SetupSamples();
   Config::SetupHistNames();
   Config::SetupColors();
-  Config::SetupCuts(fCommonCut);
+  Config::SetupCuts(fCommonCut,fBkgdCut,fSignCut,fDataCut);
   Config::SetupLabels();
 }
 
