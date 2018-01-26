@@ -80,6 +80,8 @@ namespace Config
   constexpr Float_t height_lp = top_lp - bottom_lp;
 
   // String formatting
+  std::string RemoveDelim(std::string tmp, const std::string & delim){return str.erase(str.find(delim),delim.size_length());}
+
   TString ReplaceDelimWithSpace(TString tmp, const TString & delim){return tmp.ReplaceAll(delim," ");}
   TString ReplaceSlashWithUnderscore(TString tmp){return tmp.ReplaceAll("/","_");}
   TString WeightString(const Bool_t isMC){return (isMC ? Form("evtwgt * puwgt * %f * %f", Config::lumi, Config::invfbToinvpb) : "1.0");}
