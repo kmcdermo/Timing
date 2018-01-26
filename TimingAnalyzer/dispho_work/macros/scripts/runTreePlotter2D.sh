@@ -1,13 +1,19 @@
 #!/bin/bash
 
-basecut="phoisEB_0&&phopt_0>70"
-gjetscut="${basecut}&&njets<=2&&((phogedID_0==3&&!phoisOOT_0)||(phoootID_0==3&&phoisOOT_0))&&abs(TVector2::Phi_mpi_pi(jetphi_0-phophi_0))>2.1&&(jetpt_0/phopt_0>0.6)&&(jetpt_0/phopt_0<1.4)&&phor9_0>0.95&&hltPho50"
-qcdcut="${basecut}&&njets>2&&((phogedID_0==1&&!phoisOOT_0)||(phoootID_0==1&&phoisOOT_0))&&hltPho50"
+cutconfig=${1:-"cut_config/signal.txt"}
+plotconfig=${2:-"plot_config/met_vs_time.txt"}
+outfilename=${3:-"met_vs_time.root"}
+dir=${4:-"dispho/2Dplots"}
 
-commoncut=${1:-"${qcdcut}"}
-text=${2:-"met_vs_time"}
-inconfig=${3:-"plot_config/met_vs_time.txt"}
+root -l -b -q runTreePlotter2D.C\(\"${cutconfig}\",\"${plotconfig}\",\"${outfilename}\"\)
 
-root -l -b -q runTreePlotter2D.C\(\"${commoncut}\",\"${text}\",\"${inconfig}\"\)
+## copy out
+topdir=/afs/cern.ch/user/k/kmcdermo/www
+fulldir=${topdir}/${dir}
 
-cp ${text}.root ~/www/quick/
+mkdir -p ${fulldir}
+pushd ${topdir}
+./makereadable.sh ${dir}
+popd
+
+cp ${text}.png ${fulldir}

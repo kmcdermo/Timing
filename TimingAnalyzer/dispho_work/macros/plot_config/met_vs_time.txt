@@ -1,35 +1,9 @@
-XXX
-+++++
+plot_title=MET [GeV/c] vs Photon Seed Time [ns]
 
-phoseedtime_0
-t1pfMETpt
-METXXX[GeV/c]XXXvsXXXPhotonXXXSeedXXXTimeXXX[ns]
+x_title=Photon Seed Time [ns]
+x_var=phoseedtime_0
+x_bins=-5 -2 -1 0 2 5 10 25
 
-+++++
-
--5
--2
--1
-0
-1
-2
-5
-10
-25
-
-+++++
-
-PhotonXXXSeedXXXTimeXXX[ns]
-
-+++++
-
-0
-50
-100
-200
-500
-1000
-
-+++++
-
-METXXX[GeV/c]
+y_title=MET [GeV/c]
+y_var=t1pfMETpt
+y_bins=0 50 100 200 500 1000

@@ -1,7 +1,7 @@
 #include "TreePlotter2D.hh"
 
-TreePlotter2D::TreePlotter2D(const TString & commoncut, const TString & text, const TString & inconfig) 
-  : fCommonCut(commoncut), fText(text), fInConfig(inconfig) 
+TreePlotter2D::TreePlotter2D(const TString & cutconfig, const TString & plotconfig, const TString & outfilename) 
+  : fCutConfig(cutconfig), fPlotConfig(plotconfig), fOutFileName(outfilename)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -17,12 +17,13 @@ TreePlotter2D::TreePlotter2D(const TString & commoncut, const TString & text, co
   gROOT->ForceStyle();
 
   // setup hists
+  TreePlotter2D::SetupDump();
   TreePlotter2D::InitConfig();
-  TreePlotter2D::ReadInConfig();
+  TreePlotter2D::ReadPlotConfig();
   TreePlotter2D::SetupHists();
 
   // output root file
-  fOutFile = TFile::Open(Form("%s.root",fText.Data()),"UPDATE");
+  fOutFile = TFile::Open(Form("%s",fOutFileName.Data()),"UPDATE");
 }
 
 TreePlotter2D::~TreePlotter2D()
@@ -30,6 +31,7 @@ TreePlotter2D::~TreePlotter2D()
   delete RatioMCErrs;
   delete RatioHist;
   delete BkgdHist;
+  delete fConfigPave;
   delete fOutFile;
   for (auto & HistPair : HistMap) delete HistPair.second;
   delete fTDRStyle;
@@ -45,6 +47,9 @@ void TreePlotter2D::MakePlot()
 
   // Make Ratio Output
   TreePlotter2D::MakeRatioOutput();
+
+  // Write Out Config
+  TreePlotter2D::WriteDump();
 }
 
 void TreePlotter2D::MakeHistFromTrees()
@@ -132,99 +137,118 @@ void TreePlotter2D::MakeRatioOutput()
   fOutFile->cd();
   RatioHist->Write(RatioHist->GetName(),TObject::kWriteDelete);
   RatioMCErrs->Write(RatioMCErrs->GetName(),TObject::kWriteDelete);
-  
+}
+
+void TreePlotter2D::WriteDump()
+{
   // save to output file
   fOutFile->cd();
+  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+}
+
+void TreePlotter2D::SetupDump()
+{
+  fConfigPave = new TPaveText();
+  fConfigPave->SetName("Config");
 }
 
 void TreePlotter2D::InitConfig()
 {
   Config::SetupSamples();
   Config::SetupHistNames();
-  Config::SetupCuts(fCommonCut);
+  
+  TreePlotter2D::ReadCutConfig();
+  Config::SetupCuts();
 }
 
-void TreePlotter2D::ReadInConfig()
+void TreePlotter2D::ReadCutConfig()
 {
-  std::ifstream infile;
-  infile.open(Form("%s",fInConfig.Data()),std::ios::in);
+  std::cout << "Reading cut config..." << std::endl;
+  fConfigPave->AddText("Cut Config");
 
-  TString tmp;
-
-  Int_t counter = 0;
-  Bool_t readFloats = false;
-
-  while (infile >> tmp)
+  std::ifstream infile(Form("%s",fCutConfig.Data()),std::ios::in);
+  std::string tmp;
+  while (std::getline(infile,tmp))
   {
-    if (counter == 0)
+    fConfigPave->AddText(tmp.c_str());
+
+    if (str == "") continue;
+    else if (str.find("common_cut=") != std::string::npos)
     {
-      fTitleDelim = tmp;
-      counter++;
+      fCommonCut = Config::RemoveDelim(str,"common_cut=");
     }
-    else if (counter == 1)
+    else if (str.find("bkgd_cut=") != std::string::npos)
     {
-      fBinDelim = tmp;
-      counter++;
+      fBkgdCut = Config::RemoveDelim(str,"bkgd_cut=");
     }
-    else if (counter == 2)
+    else if (str.find("sign_cut=") != std::string::npos)
     {
-      fXVar = tmp;
-      counter++;
+      fSignCut = Config::RemoveDelim(str,"sign_cut=");
     }
-    else if (counter == 3)
+    else if (str.find("data_cut=") != std::string::npos)
     {
-      fYVar = tmp;
-      counter++;
-    }
-    else if (counter == 4) 
-    {
-      fTitle = Config::ReplaceDelimWithSpace(tmp,fTitleDelim);
-      counter++;
-    }
-    else if (counter == 5 && tmp == fBinDelim && !readFloats)
-    {
-      readFloats = true;
-    }
-    else if (counter == 5 && tmp != fBinDelim && readFloats)
-    {
-      fXBins.push_back(tmp.Atof());
-    }
-    else if (counter == 5 && tmp == fBinDelim && readFloats)
-    {
-      readFloats = false;
-      counter++;
-    }
-    else if (counter == 6)
-    {
-      fXTitle = Config::ReplaceDelimWithSpace(tmp,fTitleDelim);
-      counter++;
-    }
-    else if (counter == 7 && tmp == fBinDelim && !readFloats)
-    {
-      readFloats = true;
-    }
-    else if (counter == 7 && tmp != fBinDelim && readFloats)
-    {
-      fYBins.push_back(tmp.Atof());
-    }
-    else if (counter == 7 && tmp == fBinDelim && readFloats)
-    {
-      readFloats = false;
-      counter++;
-    }
-    else if (counter == 8)
-    {
-      fYTitle = Config::ReplaceDelimWithSpace(tmp,fTitleDelim);
-      counter++;
+      fDataCut = Config::RemoveDelim(str,"data_cut=");
     }
     else 
     {
-      std::cerr << "Aye... your config is messed up, try again!" << std::endl;
+      std::cerr << "Aye... your cut config is messed up, try again!" << std::endl;
       exit(1);
     }
   }
+}
 
-  infile.close();
+void TreePlotter2D::ReadPLotConfig()
+{
+  std::cout << "Reading plot config..." << std::endl;
+  fConfigPave->AddText("Plot Config");
+
+  std::ifstream infile(Form("%s",fPlotConfig.Data()),std::ios::in);
+  std::string tmp;
+  while (std::getline(infile,tmp))
+  {
+    fConfigPave->AddText(tmp.c_str());
+
+    if (str == "") continue;
+    else if (str.find("plot_title=") != std::string::npos)
+    {
+      fTitle = Config::RemoveDelim(str,"plot_title=");
+    }
+    else if (str.find("x_title=") != std::string::npos)
+    {
+      fXTitle = Config::RemoveDelim(str,"x_title=");
+    }
+    else if (str.find("x_var=") != std::string::npos)
+    {
+      fXVar = Config::RemoveDelim(str,"x_var=");
+    }
+    else if (str.Contains("x_bins=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"x_bins=");
+      std::stringstream ss(str);
+      Float_t bin_edge;
+      while (ss >> bin_edge) fXBins.push_back(bin_edge);
+    }
+    else if (str.find("y_title=") != std::string::npos)
+    {
+      fYTitle = Config::RemoveDelim(str,"y_title=");
+    }
+    else if (str.find("y_var=") != std::string::npos)
+    {
+      fYVar = Config::RemoveDelim(str,"y_var=");
+    }
+    else if (str.Contains("y_bins=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"y_bins=");
+      std::stringstream ss(str);
+      Float_t bin_edge;
+      while (ss >> bin_edge) fYBins.push_back(bin_edge);
+    }
+    else 
+    {
+      std::cerr << "Aye... your plot config is messed up, try again!" << std::endl;
+      exit(1);
+    }
+  }
 }
 
 void TreePlotter2D::SetupHists()

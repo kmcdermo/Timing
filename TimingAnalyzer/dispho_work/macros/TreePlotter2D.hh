@@ -8,10 +8,12 @@
 #include "TTree.h"
 #include "TH2F.h"
 #include "TString.h"
+#include "TPaveText.h"
 
 // STL includes
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <cmath>
 #include <map>
 #include <vector>
@@ -24,12 +26,14 @@
 class TreePlotter2D
 {
 public:
-  TreePlotter2D(const TString & commoncut, const TString & text, const TString & inconfig);
+  TreePlotter2D(const TString & cutconfig, const TString & plotconfig, const TString & outfilename);
   ~TreePlotter2D();
 
   // Initialize
+  void SetupDump();
   void InitConfig();
-  void ReadInConfig();
+  void ReadCutConfig();
+  void ReadPlotConfig();
   void SetupHists();
 
   // Main call
@@ -42,15 +46,21 @@ public:
 
   // Helper functions
   TH2F * SetupHist(const TString & name);
-  
+  void WriteDump();
+
 private:
   // Settings
-  const TString fCommonCut;
-  const TString fText;
-  const TString fInConfig;
+  const TString fCutConfig;
+  const TString fPlotConfig;
+  const TString fOutFileName;
 
-  TString fTitleDelim;
-  TString fBinDelim;
+  // cut vars
+  TString fCommonCut;
+  TString fBkgdCut;
+  TString fSignCut;
+  TString fDataCut;
+
+  // plot vars
   TString fXVar;
   TString fYVar;
   TString fTitle;
@@ -64,6 +74,7 @@ private:
 
   // Output
   TFile * fOutFile;
+  TPaveText * fConfigPave;
   std::map<SampleType,TH2F*> HistMap;
   TH2F * BkgdHist;
   TH2F * RatioHist;
