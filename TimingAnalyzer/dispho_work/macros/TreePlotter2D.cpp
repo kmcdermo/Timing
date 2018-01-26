@@ -158,7 +158,7 @@ void TreePlotter2D::InitConfig()
   Config::SetupHistNames();
   
   TreePlotter2D::ReadCutConfig();
-  Config::SetupCuts();
+  Config::SetupCuts(fCommonCut,fBkgdCut,fSignCut,fDataCut);
 }
 
 void TreePlotter2D::ReadCutConfig()
@@ -167,10 +167,10 @@ void TreePlotter2D::ReadCutConfig()
   fConfigPave->AddText("Cut Config");
 
   std::ifstream infile(Form("%s",fCutConfig.Data()),std::ios::in);
-  std::string tmp;
-  while (std::getline(infile,tmp))
+  std::string str;
+  while (std::getline(infile,str))
   {
-    fConfigPave->AddText(tmp.c_str());
+    fConfigPave->AddText(str.c_str());
 
     if (str == "") continue;
     else if (str.find("common_cut=") != std::string::npos)
@@ -197,16 +197,16 @@ void TreePlotter2D::ReadCutConfig()
   }
 }
 
-void TreePlotter2D::ReadPLotConfig()
+void TreePlotter2D::ReadPlotConfig()
 {
   std::cout << "Reading plot config..." << std::endl;
   fConfigPave->AddText("Plot Config");
 
   std::ifstream infile(Form("%s",fPlotConfig.Data()),std::ios::in);
-  std::string tmp;
-  while (std::getline(infile,tmp))
+  std::string str;
+  while (std::getline(infile,str))
   {
-    fConfigPave->AddText(tmp.c_str());
+    fConfigPave->AddText(str.c_str());
 
     if (str == "") continue;
     else if (str.find("plot_title=") != std::string::npos)
@@ -221,7 +221,7 @@ void TreePlotter2D::ReadPLotConfig()
     {
       fXVar = Config::RemoveDelim(str,"x_var=");
     }
-    else if (str.Contains("x_bins=") != std::string::npos)
+    else if (str.find("x_bins=") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"x_bins=");
       std::stringstream ss(str);
@@ -236,7 +236,7 @@ void TreePlotter2D::ReadPLotConfig()
     {
       fYVar = Config::RemoveDelim(str,"y_var=");
     }
-    else if (str.Contains("y_bins=") != std::string::npos)
+    else if (str.find("y_bins=") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"y_bins=");
       std::stringstream ss(str);

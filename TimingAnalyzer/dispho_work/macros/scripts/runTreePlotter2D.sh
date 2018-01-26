@@ -1,9 +1,9 @@
 #!/bin/bash
 
-cutconfig=${1:-"cut_config/signal.txt"}
+cutconfig=${1:-"cut_config/signal_blinded.txt"}
 plotconfig=${2:-"plot_config/met_vs_time.txt"}
 outfilename=${3:-"met_vs_time.root"}
-dir=${4:-"dispho/2Dplots"}
+dir=${4:-"dispho/plots2D"}
 
 root -l -b -q runTreePlotter2D.C\(\"${cutconfig}\",\"${plotconfig}\",\"${outfilename}\"\)
 
@@ -16,4 +16,4 @@ pushd ${topdir}
 ./makereadable.sh ${dir}
 popd
 
-cp ${text}.png ${fulldir}
+cp ${outfilename} ${fulldir}

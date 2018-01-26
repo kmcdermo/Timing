@@ -68,16 +68,16 @@ namespace Config
     CutMap[GMSB]  = Form("%s",commoncut.Data());
     CutMap[Data]  = Form("%s",commoncut.Data());
 
-    if (bkgdcut != "NONE")
+    if (bkgdcut != "")
     {
       CutMap[QCD]   += Form("&&%s",bkgdcut.Data());
       CutMap[GJets] += Form("&&%s",bkgdcut.Data());
     }
-    if (signalcut != "NONE")
+    if (signcut != "")
     {
       CutMap[GMSB]  += Form("&&%s",signcut.Data());
     }
-    if (datacut != "NONE")
+    if (datacut != "")
     {
       CutMap[Data]  += Form("&&%s",datacut.Data());
     }

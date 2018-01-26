@@ -80,7 +80,7 @@ namespace Config
   constexpr Float_t height_lp = top_lp - bottom_lp;
 
   // String formatting
-  std::string RemoveDelim(std::string tmp, const std::string & delim){return str.erase(str.find(delim),delim.size_length());}
+  std::string RemoveDelim(std::string tmp, const std::string & delim){return tmp.erase(tmp.find(delim),delim.length());}
 
   TString ReplaceDelimWithSpace(TString tmp, const TString & delim){return tmp.ReplaceAll(delim," ");}
   TString ReplaceSlashWithUnderscore(TString tmp){return tmp.ReplaceAll("/","_");}
