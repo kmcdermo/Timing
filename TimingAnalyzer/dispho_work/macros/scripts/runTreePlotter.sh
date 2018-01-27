@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cutconfig=${1:-"cut_config/signal_blinded.txt"}
+cutconfig=${1:-"cut_config/signal_blinded_hlt.txt"}
 plotconfig=${2:-"plot_config/phopt_0.txt"}
 outfiletext=${3:-"phopt_0"}
 dir=${4:-"plots"}
