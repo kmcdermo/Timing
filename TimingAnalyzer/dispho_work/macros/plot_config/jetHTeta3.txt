@@ -1,0 +1,9 @@
+plot_title=H_{T} [GeV/c]
+
+x_title=H_{T} [GeV/c] (#Sigma p_{T}^{jet}, p_{T}^{jet} > 15, |#eta^{jet}| < 3)  
+x_scale=LIN
+x_var=jetHTeta3
+x_bins=CONSTANT 100 0 5000
+
+y_title=Events
+y_scale=LOG

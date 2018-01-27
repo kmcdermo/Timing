@@ -27,5 +27,11 @@ do
     done
 done
 
-#HT="jetHTeta3 HT 100 0 5000 ${logaxis} HT H_{T}XXX[GeV],XXXjetXXXp_{T}>15XXXGeV/c ${ytitle} ${delim}"
-#njets="njets njets_pt15 25 0 25 ${logaxis} njets nJetsXXX[p_{T}>15XXXGeV/c] ${ytitle} ${delim}"
+## do nJets, with jet cuts removed
+for sel in nohlt hlt
+do
+    for plot in jetHTeta3 njetseta3
+    do
+	./scripts/runTreePlotter.sh "cut_config/signal_unblinded_nojetcut_${sel}.txt" "plot_config/${plot}.txt" ${plot} "plots/${sel}"
+    done
+done
