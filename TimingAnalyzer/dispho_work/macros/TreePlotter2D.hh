@@ -30,10 +30,7 @@ public:
   ~TreePlotter2D();
 
   // Initialize
-  void SetupDump();
-  void InitConfig();
-  void ReadCutConfig();
-  void ReadPlotConfig();
+  void SetupConfig();
   void SetupHists();
 
   // Main call
@@ -45,8 +42,11 @@ public:
   void MakeRatioOutput();
 
   // Helper functions
+  void ReadPlotConfig();
   TH2F * SetupHist(const TString & name);
-  void WriteDump();
+
+  // Meta data
+  void MakeConfigPave();
 
 private:
   // Settings
@@ -54,19 +54,13 @@ private:
   const TString fPlotConfig;
   const TString fOutFileName;
 
-  // cut vars
-  TString fCommonCut;
-  TString fBkgdCut;
-  TString fSignCut;
-  TString fDataCut;
-
   // plot vars
-  TString fXVar;
-  TString fYVar;
   TString fTitle;
   TString fXTitle;
-  TString fYTitle;
+  TString fXVar;
   std::vector<Double_t> fXBins;
+  TString fYTitle;
+  TString fYVar;
   std::vector<Double_t> fYBins;
 
   // Style
@@ -74,11 +68,11 @@ private:
 
   // Output
   TFile * fOutFile;
-  TPaveText * fConfigPave;
   std::map<SampleType,TH2F*> HistMap;
   TH2F * BkgdHist;
   TH2F * RatioHist;
   TH2F * RatioMCErrs;
+  TPaveText * fConfigPave;
 };
 
 #endif

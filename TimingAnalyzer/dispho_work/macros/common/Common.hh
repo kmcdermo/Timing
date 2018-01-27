@@ -12,6 +12,11 @@
 
 // STL includes
 #include <map>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <string>
+#include <vector>
 
 // Sample Enum
 enum SampleType {Data, GMSB, QCD, GJets};
@@ -46,9 +51,13 @@ namespace Config
   void SetupSamples();
   void SetupHistNames();
   void SetupColors();
-  void SetupCuts(const TString & common, const TString & bkgd = "", const TString & signal = "", const TString & data = "");
   void SetupLabels();
-  
+  void SetupCuts(const TString & cutconfig);
+
+  // Setup hists
+  void SetupBins(const std::string & str, std::vector<Float_t> & bins);
+  void SetupScale(const std::string & str, Bool_t & scale);
+
   // skim input
   constexpr UInt_t nEvCheck = 10000;
   constexpr Int_t nGMSBs = 2;

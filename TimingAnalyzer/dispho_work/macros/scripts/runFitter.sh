@@ -2,12 +2,12 @@
 
 infilename=${1:-"met_vs_time.root"}
 outfilename=${2:-"fitresults.root"}
-dir=${3:-"dispho/fits"}
+dir=${3:-"fits"}
 
 root -b -q -l runFitter.C\(\"${infilename}\",\"${outfilename}\"\)
 
 ## copy out
-topdir=/afs/cern.ch/user/k/kmcdermo/www
+topdir=/afs/cern.ch/user/k/kmcdermo/www/dispho
 fulldir=${topdir}/${dir}
 
 mkdir -p ${fulldir}

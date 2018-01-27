@@ -17,9 +17,7 @@ TreePlotter2D::TreePlotter2D(const TString & cutconfig, const TString & plotconf
   gROOT->ForceStyle();
 
   // setup hists
-  TreePlotter2D::SetupDump();
-  TreePlotter2D::InitConfig();
-  TreePlotter2D::ReadPlotConfig();
+  TreePlotter2D::SetupConfig();
   TreePlotter2D::SetupHists();
 
   // output root file
@@ -28,10 +26,10 @@ TreePlotter2D::TreePlotter2D(const TString & cutconfig, const TString & plotconf
 
 TreePlotter2D::~TreePlotter2D()
 {
+  delete fConfigPave;
   delete RatioMCErrs;
   delete RatioHist;
   delete BkgdHist;
-  delete fConfigPave;
   delete fOutFile;
   for (auto & HistPair : HistMap) delete HistPair.second;
   delete fTDRStyle;
@@ -49,7 +47,7 @@ void TreePlotter2D::MakePlot()
   TreePlotter2D::MakeRatioOutput();
 
   // Write Out Config
-  TreePlotter2D::WriteDump();
+  TreePlotter2D::MakeConfigPave();
 }
 
 void TreePlotter2D::MakeHistFromTrees()
@@ -139,75 +137,51 @@ void TreePlotter2D::MakeRatioOutput()
   RatioMCErrs->Write(RatioMCErrs->GetName(),TObject::kWriteDelete);
 }
 
-void TreePlotter2D::WriteDump()
+void TreePlotter2D::MakeConfigPave()
 {
+  std::cout << "Dumping config to a pave..." << std::endl;
+
+  // create the pave
+  fConfigPave = new TPaveText();
+  fConfigPave->SetName("Config");
+  std::string str; // tmp string
+  
+  // dump cut config first
+  fConfigPave->AddText("Cut Config");
+  std::ifstream cutfile(Form("%s",fCutConfig.Data()),std::ios::in);
+  while (std::getline(cutfile,str))
+  {
+    fConfigPave->AddText(str.c_str());
+  }
+
+  // dump plot config second
+  fConfigPave->AddText("Plot Config");
+  std::ifstream plotfile(Form("%s",fPlotConfig.Data()),std::ios::in);
+  while (std::getline(plotfile,str))
+  {
+    fConfigPave->AddText(str.c_str());
+  }
+
   // save to output file
   fOutFile->cd();
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
-void TreePlotter2D::SetupDump()
-{
-  fConfigPave = new TPaveText();
-  fConfigPave->SetName("Config");
-}
-
-void TreePlotter2D::InitConfig()
+void TreePlotter2D::SetupConfig()
 {
   Config::SetupSamples();
   Config::SetupHistNames();
-  
-  TreePlotter2D::ReadCutConfig();
-  Config::SetupCuts(fCommonCut,fBkgdCut,fSignCut,fDataCut);
-}
-
-void TreePlotter2D::ReadCutConfig()
-{
-  std::cout << "Reading cut config..." << std::endl;
-  fConfigPave->AddText("Cut Config");
-
-  std::ifstream infile(Form("%s",fCutConfig.Data()),std::ios::in);
-  std::string str;
-  while (std::getline(infile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-
-    if (str == "") continue;
-    else if (str.find("common_cut=") != std::string::npos)
-    {
-      fCommonCut = Config::RemoveDelim(str,"common_cut=");
-    }
-    else if (str.find("bkgd_cut=") != std::string::npos)
-    {
-      fBkgdCut = Config::RemoveDelim(str,"bkgd_cut=");
-    }
-    else if (str.find("sign_cut=") != std::string::npos)
-    {
-      fSignCut = Config::RemoveDelim(str,"sign_cut=");
-    }
-    else if (str.find("data_cut=") != std::string::npos)
-    {
-      fDataCut = Config::RemoveDelim(str,"data_cut=");
-    }
-    else 
-    {
-      std::cerr << "Aye... your cut config is messed up, try again!" << std::endl;
-      exit(1);
-    }
-  }
+  Config::SetupCuts(fCutConfig);
 }
 
 void TreePlotter2D::ReadPlotConfig()
 {
   std::cout << "Reading plot config..." << std::endl;
-  fConfigPave->AddText("Plot Config");
 
   std::ifstream infile(Form("%s",fPlotConfig.Data()),std::ios::in);
   std::string str;
   while (std::getline(infile,str))
   {
-    fConfigPave->AddText(str.c_str());
-
     if (str == "") continue;
     else if (str.find("plot_title=") != std::string::npos)
     {
@@ -224,9 +198,7 @@ void TreePlotter2D::ReadPlotConfig()
     else if (str.find("x_bins=") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"x_bins=");
-      std::stringstream ss(str);
-      Float_t bin_edge;
-      while (ss >> bin_edge) fXBins.push_back(bin_edge);
+      Config::SetupBins(str,fXBins);
     }
     else if (str.find("y_title=") != std::string::npos)
     {
@@ -239,9 +211,7 @@ void TreePlotter2D::ReadPlotConfig()
     else if (str.find("y_bins=") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"y_bins=");
-      std::stringstream ss(str);
-      Float_t bin_edge;
-      while (ss >> bin_edge) fYBins.push_back(bin_edge);
+      Config::SetupBins(str,fYBins);
     }
     else 
     {
@@ -253,6 +223,8 @@ void TreePlotter2D::ReadPlotConfig()
 
 void TreePlotter2D::SetupHists()
 {
+  TreePlotter2D::ReadPlotConfig();
+
   HistMap[QCD]   = SetupHist(Config::HistNameMap[QCD]);
   HistMap[GJets] = SetupHist(Config::HistNameMap[GJets]);
   HistMap[GMSB]  = SetupHist(Config::HistNameMap[GMSB]);

@@ -1,0 +1,9 @@
+plot_title=Leading Photon #eta
+
+x_title=Leading Photon #eta
+x_scale=LIN
+x_var=phoeta_0
+x_bins=CONSTANT 50 -2.5 2.5
+
+y_title=Events
+y_scale=LOG

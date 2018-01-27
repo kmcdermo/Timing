@@ -14,10 +14,12 @@
 #include "TLegend.h"
 #include "TLine.h"
 #include "THStack.h"
+#include "TPaveText.h"
 
 // STL includes
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <cmath>
 #include <map>
 #include <vector>
@@ -30,13 +32,11 @@
 class TreePlotter
 {
 public:
-  TreePlotter(const TString & var, const TString & commoncut, const TString & bkgdcut, const TString & signcut, const TString & datacut,
-	      const TString & text, const Int_t nbinsx, const Float_t xlow, const Float_t xhigh, const Bool_t islogx, const Bool_t islogy, 
-	      const TString & title, const TString & xtitle, const TString & ytitle, const TString & delim);
+  TreePlotter(const TString & cutconfig, const TString & plotconfig, const TString & outfiletext);
   ~TreePlotter();
 
   // Initialize
-  void InitConfig();
+  void SetupConfig();
   void SetupHists();
 
   // Main call
@@ -53,27 +53,28 @@ public:
   void SaveOutput();
 
   // Helper functions
+  void ReadPlotConfig();
   TH1F * SetupHist(const TString & name);
   Float_t GetHistMinimum();
   Float_t GetHistMaximum();
+
+  // Meta data
+  void MakeConfigPave();
   
 private:
   // Settings
-  const TString fVar;
-  const TString fCommonCut;
-  const TString fBkgdCut;
-  const TString fSignCut;
-  const TString fDataCut;
-  const TString fText;
-  const Int_t   fNbinsX;
-  const Float_t fXLow;
-  const Float_t fXHigh;
-  const Bool_t  fIsLogX;
-  const Bool_t  fIsLogY;
-  const TString fDelim;
+  const TString fCutConfig;
+  const TString fPlofConfig;
+  const TString fOutFileText;
+
+  // plot vars
   TString fTitle;
   TString fXTitle;
+  Bool_t  fIsLogX;
+  TString fXVar;
+  std::vector<Double_t> fXBins;
   TString fYTitle;
+  Bool_t  fIsLogY;
 
   // Style
   TStyle * fTDRStyle;
@@ -90,6 +91,7 @@ private:
   TCanvas * OutCanv;
   TPad * UpperPad;
   TPad * LowerPad;
+  TPaveText * fConfigPave;
 };
 
 #endif

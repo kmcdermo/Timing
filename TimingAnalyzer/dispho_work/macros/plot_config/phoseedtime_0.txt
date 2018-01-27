@@ -1,0 +1,9 @@
+plot_title=Leading Photon Seed Time [ns]
+
+x_title=Leading Photon Seed Time [ns]
+x_scale=LIN
+x_var=phoseedtime_0
+x_bins=VARIABLE -5 -3 -2 -1.5 -1 -0.75 -0.5 -0.25 0 0.25 0.5 0.75 1 1.5 2 3 5 10 15 25
+
+y_title=Events
+y_scale=LOG

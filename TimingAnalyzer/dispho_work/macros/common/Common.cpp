@@ -6,12 +6,6 @@
 
 namespace Config
 {
-  std::map<TString,SampleType> SampleMap;
-  std::map<SampleType,TString> HistNameMap;
-  std::map<SampleType,Color_t> ColorMap;
-  std::map<SampleType,TString> CutMap;
-  std::map<SampleType,TString> LabelMap;
-
   void SetupSamples()
   {
     // QCD HT binned
@@ -61,34 +55,114 @@ namespace Config
     ColorMap[Data]  = kBlack;
   }
 
-  void SetupCuts(const TString & commoncut, const TString & bkgdcut, const TString & signcut, const TString & datacut)
-  {
-    CutMap[QCD]   = Form("%s",commoncut.Data());
-    CutMap[GJets] = Form("%s",commoncut.Data());
-    CutMap[GMSB]  = Form("%s",commoncut.Data());
-    CutMap[Data]  = Form("%s",commoncut.Data());
-
-    if (bkgdcut != "")
-    {
-      CutMap[QCD]   += Form("&&%s",bkgdcut.Data());
-      CutMap[GJets] += Form("&&%s",bkgdcut.Data());
-    }
-    if (signcut != "")
-    {
-      CutMap[GMSB]  += Form("&&%s",signcut.Data());
-    }
-    if (datacut != "")
-    {
-      CutMap[Data]  += Form("&&%s",datacut.Data());
-    }
-  }
-
   void SetupLabels()
   {
     LabelMap[QCD]   = "QCD"; //"#QCD (H_{T} Binned)";
     LabelMap[GJets] = "#gamma+Jets"; //"#gamma + Jets (H_{T} Binned)";
     LabelMap[GMSB]  = "GMSB c#tau=4m"; //"GMSB c#tau = 4m, #Lambda = 200 TeV";
     LabelMap[Data]  = "Data";
+  }
+
+  void SetupCuts(const TString & cutconfig)
+  {
+    std::cout << "Reading cut config..." << std::endl;
+
+    std::ifstream infile(Form("%s",fCutConfig.Data()),std::ios::in);
+    std::string str;
+    while (std::getline(infile,str))
+    {
+      if (str == "") continue;
+      else if (str.find("common_cut=") != std::string::npos)
+      {
+	const TString cut = Config::RemoveDelim(str,"common_cut=");
+
+	if (cut != "")
+	{
+	  CutMap[QCD]   += Form("%s",cut.Data());
+	  CutMap[GJets] += Form("%s",cut.Data());
+	  CutMap[GMSB]  += Form("%s",cut.Data());
+	  CutMap[Data]  += Form("%s",cut.Data());
+	}
+      }
+      else if (str.find("bkgd_cut=") != std::string::npos)
+      {
+	const TString cut = Config::RemoveDelim(str,"bkgd_cut=");
+
+	if (cut != "")
+	{
+	  CutMap[QCD]   += Form("&&%s",cut.Data());
+	  CutMap[GJets] += Form("&&%s",cut.Data());
+	}
+      }
+      else if (str.find("sign_cut=") != std::string::npos)
+      {
+	const TString cut = Config::RemoveDelim(str,"sign_cut=");
+
+	if (cut != "")
+	{
+	  CutMap[GMSB]  += Form("&&%s",cut.Data());	  
+	}
+      }
+      else if (str.find("data_cut=") != std::string::npos)
+      {
+	const TString cut = Config::RemoveDelim(str,"data_cut=");
+
+	if (cut != "")
+	{
+	  CutMap[Data]  += Form("&&%s",cut.Data());
+	}
+      }
+      else 
+      {
+	std::cerr << "Aye... your cut config is messed up, try again!" << std::endl;
+	exit(1);
+      }
+    }
+  }
+
+  void SetupBins(const std::string & str, std::vector<Float_t> & bins)
+  {
+    if      (str.find("CONSTANT") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"CONSTANT");
+      Int_t nbins = 0; Float_t low = 0.f, high = 0.f;
+      std::stringstream ss(str);
+      ss >> nbins >> low >> high;
+      Float_t bin_width = (high-low)/bins;
+      for (Int_t ibin = 0; ibin <= nbins; ibin++)
+      {
+	bins.push_back(low+ibin*bin_width);
+      }
+    } 
+    else if (str.find("VARIABLE") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"VARIABLE");
+      Float_t bin_edge;
+      std::stringstream ss(str);
+      while (ss >> bin_edge) bins.push_back(bin_edge);
+    }
+    else 
+    {
+      std::cerr << "Aye... bins are either VARIABLE or CONSTANT! Exiting..." << std::endl;
+      exit(1);
+    }
+  }
+    
+  void SetupScale(const std::string & str, Bool_t & scale)
+  {
+    if      (str.find("LOG") != std::string::npos)
+    {
+      scale = true;
+    }
+    else if (str.find("LIN") != std::string::npos)
+    {
+      scale = false;
+    }
+    else 
+    {
+      std::cerr << "Aye, scale is either LOG or LIN! Exiting..." << std::endl;
+      exit(1);
+    }
   }
 
   void CheckValidFile(const TFile * file, const TString & fname)

@@ -1,17 +1,9 @@
 #include "TreePlotter.hh"
 
-TreePlotter::TreePlotter(const TString & var, const TString & commoncut, const TString & bkgdcut, const TString & signcut, const TString & datacut,
-			 const TString & text, const Int_t nbinsx, const Float_t xlow, const Float_t xhigh, const Bool_t islogx, const Bool_t islogy, 
-			 const TString & title, const TString & xtitle, const TString & ytitle, const TString & delim) : 
-  fVar(var), fCommonCut(commoncut), fBkgdCut(bkgdcut), fSignCut(signcut), fDataCut(datacut),
-  fText(text), fNbinsX(nbinsx), fXLow(xlow), fXHigh(xhigh), fIsLogX(islogx), fIsLogY(islogy), fDelim(delim)
+TreePlotter::TreePlotter(const TString & cutconfig, const TString & plotconfig, const TString & outfiletext) 
+  : fCutConfig(cutconfig), fPlotConfig(plotconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
-
-  // setup up titles
-  fTitle  = Config::ReplaceDelimWithSpace(title,fDelim);
-  fXTitle = Config::ReplaceDelimWithSpace(xtitle,fDelim);
-  fYTitle = Config::ReplaceDelimWithSpace(ytitle,fDelim);
 
   ////////////////
   //            //
@@ -25,16 +17,19 @@ TreePlotter::TreePlotter(const TString & var, const TString & commoncut, const T
   gROOT->ForceStyle();
 
   // setup hists
-  TreePlotter::InitConfig();
+  TreePlotter::SetupDump();
+  TreePlotter::SetupConfig();
   TreePlotter::SetupHists();
 
   // output root file for quick inspection
-  fOutFile = TFile::Open(Form("%s.root",fText.Data()),"UPDATE");
+  fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
 }
 
 TreePlotter::~TreePlotter() 
 {
   // delete everything
+  delete fConfigPave;
+
   delete LowerPad;
   delete UpperPad;
   delete OutCanv;
@@ -75,6 +70,9 @@ void TreePlotter::MakePlot()
 
   // Save Output
   TreePlotter::SaveOutput();
+  
+  // Write Out Config
+  TreePlotter::MakeConfigPave();
 }
 
 void TreePlotter::MakeHistFromTrees()
@@ -147,7 +145,7 @@ void TreePlotter::MakeBkgdOutput()
 
   // Make Background Stack
   BkgdStack = new THStack("Bkgd_Stack","");
-  if (fText.Contains("gjets_ctrl",TString::kExact) || fText.Contains("signal",TString::kExact))
+  if (fOufFileText.Contains("gjets_ctrl",TString::kExact) || fOutFileText.Contains("signal",TString::kExact))
   {
     BkgdStack->Add(HistMap[QCD]);
     BkgdStack->Add(HistMap[GJets]);
@@ -342,12 +340,42 @@ void TreePlotter::SaveOutput()
 
   OutCanv->cd(); // Go back to the main canvas before saving
   Config::CMSLumi(OutCanv,0); // write out Lumi info
-  OutCanv->SaveAs(Form("%s.png",fText.Data()));
+  OutCanv->SaveAs(Form("%s.png",fOutFileText.Data()));
 
   // save to output file
   fOutFile->cd();
   OutCanv->Write(OutCanv->GetName(),TObject::kWriteDelete);
 }  
+
+void TreePlotter::MakeConfigPave()
+{
+  std::cout << "Dumping config to a pave..." << std::endl;
+
+  // create the pave
+  fConfigPave = new TPaveText();
+  fConfigPave->SetName("Config");
+  std::string str; // tmp string
+  
+  // dump cut config first
+  fConfigPave->AddText("Cut Config");
+  std::ifstream cutfile(Form("%s",fCutConfig.Data()),std::ios::in);
+  while (std::getline(cutfile,str))
+  {
+    fConfigPave->AddText(str.c_str());
+  }
+
+  // dump plot config second
+  fConfigPave->AddText("Plot Config");
+  std::ifstream plotfile(Form("%s",fPlotConfig.Data()),std::ios::in);
+  while (std::getline(plotfile,str))
+  {
+    fConfigPave->AddText(str.c_str());
+  }
+
+  // save to output file
+  fOutFile->cd();
+  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+}
 
 Float_t TreePlotter::GetHistMinimum()
 {
@@ -374,17 +402,65 @@ Float_t TreePlotter::GetHistMaximum()
   return (datamax > bkgdmax ? datamax : bkgdmax);
 }
 
-void TreePlotter::InitConfig()
+void TreePlotter::SetupConfig()
 {
   Config::SetupSamples();
   Config::SetupHistNames();
   Config::SetupColors();
-  Config::SetupCuts(fCommonCut,fBkgdCut,fSignCut,fDataCut);
   Config::SetupLabels();
+  Config::SetupCuts(fCutConfig);
+}
+
+void TreePlotter::ReadPlotConfig()
+{
+  std::cout << "Reading plot config..." << std::endl;
+
+  std::ifstream infile(Form("%s",fPlotConfig.Data()),std::ios::in);
+  std::string str;
+  while (std::getline(infile,str))
+  {
+    if (str == "") continue;
+    else if (str.find("plot_title=") != std::string::npos)
+    {
+      fTitle = Config::RemoveDelim(str,"plot_title=");
+    }
+    else if (str.find("x_title=") != std::string::npos)
+    {
+      fXTitle = Config::RemoveDelim(str,"x_title=");
+    }
+    else if (str.find("x_scale=") != std::string::npos)
+    {
+      Config::SetupScale(str,fIsLogX);
+    }
+    else if (str.find("x_var=") != std::string::npos)
+    {
+      fXVar = Config::RemoveDelim(str,"x_var=");
+    }
+    else if (str.find("x_bins=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"x_bins=");
+      Config::SetupBins(str,fXBins);
+    }
+    else if (str.find("y_title=") != std::string::npos)
+    {
+      fYTitle = Config::RemoveDelim(str,"y_title=");
+    }
+    else if (str.find("y_scale=") != std::string::npos)
+    {
+      Config::SetupScale(str,fIsLogY);
+    }
+    else 
+    {
+      std::cerr << "Aye... your plot config is messed up, try again!" << std::endl;
+      exit(1);
+    }
+  }
 }
 
 void TreePlotter::SetupHists()
 {
+  TreePlotter::ReadPlotConfig();
+
   HistMap[QCD]   = SetupHist(Config::HistNameMap[QCD]);
   HistMap[GJets] = SetupHist(Config::HistNameMap[GJets]);
   HistMap[GMSB]  = SetupHist(Config::HistNameMap[GMSB]);
@@ -413,7 +489,9 @@ void TreePlotter::SetupHists()
 
 TH1F * TreePlotter::SetupHist(const TString & name)
 {
-  TH1F * hist = new TH1F(name.Data(),fTitle.Data(),fNbinsX,fXLow,fXHigh);
+  const Double_t * xbins = &fXBins[0];
+
+  TH1F * hist = new TH1F(name.Data(),fTitle.Data(),fXBins.size()-1,xbins);
   hist->GetXaxis()->SetTitle(fXTitle.Data());
   hist->GetYaxis()->SetTitle(fYTitle.Data());
   hist->Sumw2();

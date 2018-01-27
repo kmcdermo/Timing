@@ -2,8 +2,10 @@
 
 rm *~
 rm */*~
+rm */*/*~
 rm *#
 rm */*#
+rm */*/*#
 rm *.so
 rm *.d
 rm *.pcm
