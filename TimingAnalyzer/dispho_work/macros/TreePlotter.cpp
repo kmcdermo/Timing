@@ -305,7 +305,7 @@ void TreePlotter::DrawLowerPad()
   OutCanv->cd(); 
   LowerPad->Draw();
   LowerPad->cd(); 
-  UpperPad->SetLogx(fIsLogX);
+  LowerPad->SetLogx(fIsLogX);
 
   // draw th1 first so line can appear, then draw over it (and set Y axis divisions)
   RatioHist->Draw("EP"); 
