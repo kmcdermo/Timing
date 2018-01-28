@@ -6,6 +6,12 @@
 
 namespace Config
 {
+  std::map<TString,SampleType> SampleMap;
+  std::map<SampleType,TString> HistNameMap;
+  std::map<SampleType,Color_t> ColorMap;
+  std::map<SampleType,TString> LabelMap;
+  std::map<SampleType,TString> CutMap;
+  
   void SetupSamples()
   {
     // QCD HT binned
@@ -67,7 +73,7 @@ namespace Config
   {
     std::cout << "Reading cut config..." << std::endl;
 
-    std::ifstream infile(Form("%s",fCutConfig.Data()),std::ios::in);
+    std::ifstream infile(Form("%s",cutconfig.Data()),std::ios::in);
     std::string str;
     while (std::getline(infile,str))
     {
@@ -120,15 +126,15 @@ namespace Config
     }
   }
 
-  void SetupBins(const std::string & str, std::vector<Float_t> & bins)
+  void SetupBins(std::string & str, std::vector<Double_t> & bins)
   {
     if      (str.find("CONSTANT") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"CONSTANT");
-      Int_t nbins = 0; Float_t low = 0.f, high = 0.f;
+      Int_t nbins = 0; Double_t low = 0.f, high = 0.f;
       std::stringstream ss(str);
       ss >> nbins >> low >> high;
-      Float_t bin_width = (high-low)/bins;
+      Double_t bin_width = (high-low)/nbins;
       for (Int_t ibin = 0; ibin <= nbins; ibin++)
       {
 	bins.push_back(low+ibin*bin_width);

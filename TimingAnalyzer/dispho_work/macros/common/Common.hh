@@ -44,8 +44,8 @@ namespace Config
   extern std::map<TString,SampleType> SampleMap;
   extern std::map<SampleType,TString> HistNameMap;
   extern std::map<SampleType,Color_t> ColorMap;
-  extern std::map<SampleType,TString> CutMap;
   extern std::map<SampleType,TString> LabelMap;
+  extern std::map<SampleType,TString> CutMap;
 
   // Sample setup functions
   void SetupSamples();
@@ -55,7 +55,7 @@ namespace Config
   void SetupCuts(const TString & cutconfig);
 
   // Setup hists
-  void SetupBins(const std::string & str, std::vector<Float_t> & bins);
+  void SetupBins(std::string & str, std::vector<Double_t> & bins);
   void SetupScale(const std::string & str, Bool_t & scale);
 
   // skim input

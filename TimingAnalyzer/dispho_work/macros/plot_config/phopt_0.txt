@@ -3,7 +3,7 @@ plot_title=Leading Photon p_{T} [GeV/c]
 x_title=Leading Photon p_{T} [GeV/c]
 x_scale=LOG
 x_var=phopt_0
-x_bins=CONSTANT 100 0 2000
+x_bins=CONSTANT 100 0 5000
 
 y_title=Events
 y_scale=LOG

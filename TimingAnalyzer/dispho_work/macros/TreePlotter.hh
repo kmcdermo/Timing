@@ -64,7 +64,7 @@ public:
 private:
   // Settings
   const TString fCutConfig;
-  const TString fPlofConfig;
+  const TString fPlotConfig;
   const TString fOutFileText;
 
   // plot vars

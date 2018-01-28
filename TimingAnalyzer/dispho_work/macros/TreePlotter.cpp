@@ -17,7 +17,6 @@ TreePlotter::TreePlotter(const TString & cutconfig, const TString & plotconfig, 
   gROOT->ForceStyle();
 
   // setup hists
-  TreePlotter::SetupDump();
   TreePlotter::SetupConfig();
   TreePlotter::SetupHists();
 
@@ -100,7 +99,7 @@ void TreePlotter::MakeHistFromTrees()
     TH1F * hist = TreePlotter::SetupHist(Form("%s_Hist",histname.Data()));
     
     // Fill from tree
-    tree->Draw(Form("%s>>%s",fVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(isMC).Data()),"goff");
+    tree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(isMC).Data()),"goff");
     
     // Add to main hists
     HistMap[sample]->Add(hist);
@@ -145,7 +144,7 @@ void TreePlotter::MakeBkgdOutput()
 
   // Make Background Stack
   BkgdStack = new THStack("Bkgd_Stack","");
-  if (fOufFileText.Contains("gjets_ctrl",TString::kExact) || fOutFileText.Contains("signal",TString::kExact))
+  if (fOutFileText.Contains("gjets_ctrl",TString::kExact) || fOutFileText.Contains("signal",TString::kExact))
   {
     BkgdStack->Add(HistMap[QCD]);
     BkgdStack->Add(HistMap[GJets]);
@@ -306,6 +305,7 @@ void TreePlotter::DrawLowerPad()
   OutCanv->cd(); 
   LowerPad->Draw();
   LowerPad->cd(); 
+  UpperPad->SetLogx(fIsLogX);
 
   // draw th1 first so line can appear, then draw over it (and set Y axis divisions)
   RatioHist->Draw("EP"); 
