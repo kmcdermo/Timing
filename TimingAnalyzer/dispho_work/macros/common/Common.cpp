@@ -6,11 +6,12 @@
 
 namespace Config
 {
-  std::map<TString,SampleType> SampleMap;
-  std::map<SampleType,TString> HistNameMap;
-  std::map<SampleType,Color_t> ColorMap;
-  std::map<SampleType,TString> LabelMap;
-  std::map<SampleType,TString> CutMap;
+  std::map<TString,SampleType>     SampleMap;
+  std::map<SampleType,SampleGroup> GroupMap;
+  std::map<SampleType,TString>     HistNameMap;
+  std::map<SampleType,Color_t>     ColorMap;
+  std::map<SampleType,TString>     LabelMap;
+  std::map<SampleType,TString>     CutMap;
   
   void SetupSamples()
   {
@@ -31,6 +32,9 @@ namespace Config
     SampleMap["MC/GJets_HT/400To600"] = GJets;
     SampleMap["MC/GJets_HT/600ToInf"] = GJets;
     
+    // DYLL
+    SampleMap["MC/DYJetsToLL/M-50"] = DYLL;
+
     // GMSB
     SampleMap["MC/GMSB/L200TeV_CTau400cm"] = GMSB;
     
@@ -45,10 +49,20 @@ namespace Config
     SampleMap["Data/SinglePhoton/F/v1"] = Data;
   }
 
+  void SetupGroups()
+  {
+    GroupMap[QCD]   = isBkgd;
+    GroupMap[GJets] = isBkgd;
+    GroupMap[DYLL]  = isBkgd;
+    GroupMap[GMSB]  = isSignal;
+    GroupMap[Data]  = isData;
+  }
+
   void SetupHistNames()
   {
     HistNameMap[QCD]   = "QCD_Hist";
     HistNameMap[GJets] = "GJets_Hist";
+    HistNameMap[DYLL]  = "DYLL_Hist";
     HistNameMap[GMSB]  = "GMSB_Hist";
     HistNameMap[Data]  = "Data_Hist";
   }
@@ -57,6 +71,7 @@ namespace Config
   {
     ColorMap[QCD]   = kGreen;
     ColorMap[GJets] = kRed;
+    ColorMap[DYLL]  = kMagenta;
     ColorMap[GMSB]  = kBlue;
     ColorMap[Data]  = kBlack;
   }
@@ -65,6 +80,7 @@ namespace Config
   {
     LabelMap[QCD]   = "QCD"; //"#QCD (H_{T} Binned)";
     LabelMap[GJets] = "#gamma+Jets"; //"#gamma + Jets (H_{T} Binned)";
+    LabelMap[DYLL]  = "DY#rightarrowLL+Jets";
     LabelMap[GMSB]  = "GMSB c#tau=4m"; //"GMSB c#tau = 4m, #Lambda = 200 TeV";
     LabelMap[Data]  = "Data";
   }
@@ -84,10 +100,10 @@ namespace Config
 
 	if (cut != "")
 	{
-	  CutMap[QCD]   += Form("%s",cut.Data());
-	  CutMap[GJets] += Form("%s",cut.Data());
-	  CutMap[GMSB]  += Form("%s",cut.Data());
-	  CutMap[Data]  += Form("%s",cut.Data());
+	  for (const auto & GroupPair : GroupMap)
+	  {
+	    CutMap[GroupPair.first] += Form("%s",cut.Data());
+	  }
 	}
       }
       else if (str.find("bkgd_cut=") != std::string::npos)
@@ -96,8 +112,13 @@ namespace Config
 
 	if (cut != "")
 	{
-	  CutMap[QCD]   += Form("&&%s",cut.Data());
-	  CutMap[GJets] += Form("&&%s",cut.Data());
+	  for (const auto & GroupPair : GroupMap)
+	  {
+	    if (GroupPair.second == isBkgd)
+	    {
+	      CutMap[GroupPair.first] += Form("&&%s",cut.Data());
+	    }
+	  }
 	}
       }
       else if (str.find("sign_cut=") != std::string::npos)
@@ -106,7 +127,13 @@ namespace Config
 
 	if (cut != "")
 	{
-	  CutMap[GMSB]  += Form("&&%s",cut.Data());	  
+	  for (const auto & GroupPair : GroupMap)
+	  {
+	    if (GroupPair.second == isSignal)
+	    {
+	      CutMap[GroupPair.first] += Form("&&%s",cut.Data());
+	    }
+	  }
 	}
       }
       else if (str.find("data_cut=") != std::string::npos)
@@ -115,7 +142,13 @@ namespace Config
 
 	if (cut != "")
 	{
-	  CutMap[Data]  += Form("&&%s",cut.Data());
+	  for (const auto & GroupPair : GroupMap)
+	  {
+	    if (GroupPair.second == isData)
+	    {
+	      CutMap[GroupPair.first] += Form("&&%s",cut.Data());
+	    }
+	  }
 	}
       }
       else 

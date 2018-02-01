@@ -81,7 +81,7 @@ void TreePlotter::MakeHistFromTrees()
     // Init
     const auto & input  = SamplePair.first;
     const auto & sample = SamplePair.second;
-    const Bool_t isMC = (sample != Data);
+    const Bool_t isMC   = (Config::GroupMap[sample] != isData);
     std::cout << "Working on " << (isMC?"MC":"DATA") << " sample: " << input.Data() << std::endl;
 
     // Get File
@@ -129,30 +129,37 @@ void TreePlotter::MakeBkgdOutput()
 
   // Make Total Bkgd Hist: for ratio and error plotting
   BkgdHist = TreePlotter::SetupHist("Bkgd_Hist");
-  BkgdHist->Add(HistMap[GJets]);
-  BkgdHist->Add(HistMap[QCD]);
+  for (const auto & HistPair : HistMap)
+  {
+    if (Config::GroupMap[HistPair.first] == isBkgd)
+    {
+      BkgdHist->Add(HistPair.second);
+    }
+  }
   BkgdHist->SetMarkerSize(0);
   BkgdHist->SetFillStyle(3254);
   BkgdHist->SetFillColor(kGray+3);
 
-  // ****** TEMP HACK : SCALE TO AREA OF DATA ******* //
-  // const Float_t data_int = HistMap[Data]->Integral();
-  // const Float_t bkgd_int = BkgdHist     ->Integral();
-  // BkgdHist      ->Scale(data_int/bkgd_int);
-  // HistMap[GJets]->Scale(data_int/bkgd_int);
-  // HistMap[QCD]  ->Scale(data_int/bkgd_int);
-
   // Make Background Stack
   BkgdStack = new THStack("Bkgd_Stack","");
-  if (fOutFileText.Contains("gjets_ctrl",TString::kExact) || fOutFileText.Contains("signal",TString::kExact))
+  
+  // sort by smallest to biggest, then add
+  std::vector<SampleType> StackOrder;
+  for (const auto & GroupPair : Config::GroupMap)
   {
-    BkgdStack->Add(HistMap[QCD]);
-    BkgdStack->Add(HistMap[GJets]);
+    if (GroupPair.second == isBkgd)
+    {
+      StackOrder.push_back(GroupPair.first);
+    }
   }
-  else
+  std::sort(StackOrder.begin(),StackOrder.end(),
+	    [&](const auto & sample1, const auto & sample2)
+	    { return HistMap[sample1]->Integral() < HistMap[sample2]->Integral(); });
+  
+  // add hists to stack from smallest to biggest
+  for (const auto & Sample : StackOrder)
   {
-    BkgdStack->Add(HistMap[GJets]);
-    BkgdStack->Add(HistMap[QCD]);
+    BkgdStack->Add(HistMap[Sample]);
   }
 
   // save to output file
@@ -218,9 +225,9 @@ void TreePlotter::MakeLegend()
   {
     const auto & sample = HistPair.first;
     TString fillType;
-    if      (sample == Data) fillType = "epl";
-    else if (sample == GMSB) fillType = "l";
-    else                     fillType = "f";
+    if      (Config::GroupMap[sample] == isData) fillType = "epl";
+    else if (Config::GroupMap[sample] == isBkgd) fillType = "f";
+    else                                         fillType = "l";
 
     Legend->AddEntry(HistPair.second,Config::LabelMap[sample].Data(),fillType.Data());
   }
@@ -405,6 +412,7 @@ Float_t TreePlotter::GetHistMaximum()
 void TreePlotter::SetupConfig()
 {
   Config::SetupSamples();
+  Config::SetupGroups();
   Config::SetupHistNames();
   Config::SetupColors();
   Config::SetupLabels();
@@ -460,27 +468,25 @@ void TreePlotter::ReadPlotConfig()
 void TreePlotter::SetupHists()
 {
   TreePlotter::ReadPlotConfig();
-
-  HistMap[QCD]   = SetupHist(Config::HistNameMap[QCD]);
-  HistMap[GJets] = SetupHist(Config::HistNameMap[GJets]);
-  HistMap[GMSB]  = SetupHist(Config::HistNameMap[GMSB]);
-  HistMap[Data]  = SetupHist(Config::HistNameMap[Data]);
+  
+  for (const auto & HistNamePair : Config::HistNameMap)
+  {
+    HistMap[HistNamePair.first] = SetupHist(HistNamePair.second);
+  }
   
   for (auto & HistPair : HistMap)
   {
     const auto & sample = HistPair.first;
     const auto & hist   = HistPair.second;
-    const Bool_t isSignal = (sample == GMSB);
-    const Bool_t isBkgd   = (sample == GJets || sample == QCD);
     
     hist->SetLineColor(Config::ColorMap[sample]);
     hist->SetMarkerColor(Config::ColorMap[sample]);
-    if (isBkgd)
+    if (Config::GroupMap[sample] == isBkgd)
     {
       hist->SetFillColor(Config::ColorMap[sample]);
       hist->SetFillStyle(1001);
     }
-    else if (isSignal)
+    else if (Config::GroupMap[sample] == isSignal)
     {
       hist->SetLineWidth(2);
     }

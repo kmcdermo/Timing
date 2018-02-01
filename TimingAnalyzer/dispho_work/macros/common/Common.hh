@@ -18,8 +18,9 @@
 #include <string>
 #include <vector>
 
-// Sample Enum
-enum SampleType {Data, GMSB, QCD, GJets};
+// Sample Enums
+enum SampleType  {Data, GMSB, QCD, GJets, DYLL};
+enum SampleGroup {isData, isBkgd, isSignal};
 
 // Configuration parameters
 namespace Config
@@ -41,14 +42,16 @@ namespace Config
   static const TString h_cutflowname  = "h_cutflow";
 
   // Sample Information
-  extern std::map<TString,SampleType> SampleMap;
-  extern std::map<SampleType,TString> HistNameMap;
-  extern std::map<SampleType,Color_t> ColorMap;
-  extern std::map<SampleType,TString> LabelMap;
-  extern std::map<SampleType,TString> CutMap;
+  extern std::map<TString,SampleType>     SampleMap;
+  extern std::map<SampleType,SampleGroup> GroupMap;
+  extern std::map<SampleType,TString>     HistNameMap;
+  extern std::map<SampleType,Color_t>     ColorMap;
+  extern std::map<SampleType,TString>     LabelMap;
+  extern std::map<SampleType,TString>     CutMap;
 
   // Sample setup functions
   void SetupSamples();
+  void SetupGroups();
   void SetupHistNames();
   void SetupColors();
   void SetupLabels();
