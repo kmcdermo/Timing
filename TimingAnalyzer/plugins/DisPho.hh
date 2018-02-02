@@ -58,12 +58,16 @@
 // ROOT
 #include "TH1F.h"
 #include "TTree.h"
+#include "Math/PositionVector3D.h"
 
 // Common Utilities
 #include "Timing/TimingAnalyzer/plugins/CommonUtils.hh"
 
 // Unique structs
 #include "Timing/TimingAnalyzer/plugins/DisPhoTypes.hh"
+
+// Unique typedef
+typedef ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<float>,ROOT::Math::DefaultCoordinateSystemTag> Point3D;
 
 class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
@@ -81,6 +85,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void MakePhoBranchMC(const int i, phoStruct& phoBranch);
 
   void InitializeGenEvtBranches();
+  void InitializeGenPointBranches();
   void InitializeGenPUBranches();
   void InitializeGMSBBranches();
   void InitializeGMSBBranch(gmsbStruct& gmsbBranch);
@@ -209,11 +214,14 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const bool isGMSB;
   const bool isHVDS;
   const bool isBkgd;
+  const bool isToy;
   const float xsec;
   const float filterEff;
   const float BR;
   bool isMC;
   edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
+  edm::EDGetTokenT<Point3D>                         genxyz0Token;
+  edm::EDGetTokenT<float>                           gent0Token;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
   edm::EDGetTokenT<std::vector<reco::GenParticle> > genpartsToken;
   edm::EDGetTokenT<std::vector<reco::GenJet> >      genjetsToken;
@@ -230,6 +238,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
  
   // MC info
   float genwgt;
+  float genx0,geny0,genz0,gent0;
   int genpuobs, genputrue;
 
   // gmsb

@@ -58,12 +58,13 @@ options.register('isMC',False,VarParsing.multiplicity.singleton,VarParsing.varTy
 options.register('isGMSB',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate GMSB');
 options.register('isHVDS',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate HVDS');
 options.register('isBkgd',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate Background MC');
+options.register('isToy',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate Toy MC');
 options.register('xsec',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'cross section in pb');
 options.register('filterEff',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'filter efficiency of MC');
 options.register('BR',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'branching ratio of MC');
 
 ## GT to be used
-options.register('globalTag','92X_upgrade2017_realistic_v10',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
+options.register('globalTag','94X_mc2017_realistic_v10',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
 
 ## do a demo run over only 1k events
 options.register('demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to run over only 1k events');
@@ -77,7 +78,7 @@ options.register('outputFileName','dispho.root',VarParsing.multiplicity.singleto
 ## parsing command line arguments
 options.parseArguments()
 
-if options.isGMSB or options.isHVDS or options.isBkgd: options.isMC = True
+if options.isGMSB or options.isHVDS or options.isBkgd or options.isToy: options.isMC = True
 
 print "     ##### Settings ######"
 print "       -- Blinding --"
@@ -125,6 +126,7 @@ if options.isMC:
 	print "isGMSB         : ",options.isGMSB
 	print "isHVDS         : ",options.isHVDS
 	print "isBkgd         : ",options.isBkgd
+	print "isToy          : ",options.isToy
 	print "xsec           : ",options.xsec
 	print "filterEff      : ",options.filterEff
 	print "BR             : ",options.BR
@@ -242,12 +244,15 @@ process.tree = cms.EDAnalyzer("DisPho",
    isGMSB   = cms.bool(options.isGMSB),
    isHVDS   = cms.bool(options.isHVDS),
    isBkgd   = cms.bool(options.isBkgd),
+   isToy    = cms.bool(options.isToy),
    xsec     = cms.double(options.xsec),
    filterEff= cms.double(options.filterEff),
    BR       = cms.double(options.BR),
    genevt   = cms.InputTag("generator"),
+   gent0    = cms.InputTag("genParticles", "t0"),
+   genxyz0  = cms.InputTag("genParticles", "xyz0"),
    pileup   = cms.InputTag("slimmedAddPileupInfo"),
-   genparts = cms.InputTag("prunedGenParticles")
+   genparts = cms.InputTag("prunedGenParticles"),
 )
 
 # Set up the path

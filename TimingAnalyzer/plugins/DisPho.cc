@@ -78,6 +78,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   isGMSB(iConfig.existsAs<bool>("isGMSB") ? iConfig.getParameter<bool>("isGMSB") : false),
   isHVDS(iConfig.existsAs<bool>("isHVDS") ? iConfig.getParameter<bool>("isHVDS") : false),
   isBkgd(iConfig.existsAs<bool>("isBkgd") ? iConfig.getParameter<bool>("isBkgd") : false),
+  isToy (iConfig.existsAs<bool>("isToy")  ? iConfig.getParameter<bool>("isToy")  : false),
   
   xsec(iConfig.existsAs<double>("xsec") ? iConfig.getParameter<double>("xsec") : 1.0),
   filterEff(iConfig.existsAs<double>("filterEff") ? iConfig.getParameter<double>("filterEff") : 1.0),
@@ -131,10 +132,12 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   }
 
   // only for simulated samples
-  if (isGMSB || isHVDS || isBkgd)
+  if (isGMSB || isHVDS || isBkgd || isToy)
   {
     isMC = true;
     genevtInfoToken = consumes<GenEventInfoProduct>             (iConfig.getParameter<edm::InputTag>("genevt"));
+    gent0Token      = consumes<float>                           (iConfig.getParameter<edm::InputTag>("gent0"));
+    genxyz0Token    = consumes<Point3D>                         (iConfig.getParameter<edm::InputTag>("genxyz0"));
     pileupInfoToken = consumes<std::vector<PileupSummaryInfo> > (iConfig.getParameter<edm::InputTag>("pileup"));
     genpartsToken   = consumes<std::vector<reco::GenParticle> > (iConfig.getParameter<edm::InputTag>("genparts"));   
   }
@@ -214,6 +217,8 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   // GEN INFO
   edm::Handle<GenEventInfoProduct> genevtInfoH;
+  edm::Handle<float>   gent0H;
+  edm::Handle<Point3D> genxyz0H;
   edm::Handle<std::vector<PileupSummaryInfo> > pileupInfoH;
   edm::Handle<std::vector<reco::GenParticle> > genparticlesH;
   genPartVec neutralinos;
@@ -222,8 +227,10 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (isMC)
   {
     iEvent.getByToken(genevtInfoToken, genevtInfoH);
+    iEvent.getByToken(genxyz0Token   , genxyz0H);
+    iEvent.getByToken(gent0Token     , gent0H);
     iEvent.getByToken(pileupInfoToken, pileupInfoH);
-    iEvent.getByToken(genpartsToken,   genparticlesH);
+    iEvent.getByToken(genpartsToken  , genparticlesH);
 
     ///////////////////////
     //                   //
@@ -369,7 +376,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   njetsidT = jets.size();
   for (const auto jet : jets) jetHTidT += jet.pt();
   
-  // remove photons to close to the jets...
+  // remove photons too close to the jets...
   photons.erase(std::remove_if(photons.begin(),photons.end(),
 			       [&](const oot::Photon & photon)
 			       {
@@ -467,6 +474,24 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   /////////////
   if (isMC) 
   {
+    ////////////////
+    //            //
+    // xyzt0 info //
+    //            //
+    ////////////////
+    DisPho::InitializeGenPointBranches();
+    if (genxyz0H.isValid()) // standard check 3D point
+    {
+      const Point3D xyz0 = *(genxyz0H.product());
+      genx0 = xyz0.X();
+      geny0 = xyz0.Y();
+      genz0 = xyz0.Z();
+    }
+    if (gent0H.isValid()) // standard check on t0
+    {
+      gent0 = *(gent0H.product());
+    }
+    
     /////////////////////
     //                 //
     // Gen pileup info //
@@ -632,6 +657,14 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 void DisPho::InitializeGenEvtBranches()
 {
   genwgt = -9999.f;
+}
+
+void DisPho::InitializeGenPointBranches()
+{
+  genx0 = -9999.f;
+  geny0 = -9999.f;
+  genz0 = -9999.f;
+  gent0 = -9999.f;
 }
 
 void DisPho::InitializeGenPUBranches()
@@ -1246,12 +1279,14 @@ void DisPho::MakeAndFillConfigTree()
   bool isGMSB_tmp = isGMSB;
   bool isHVDS_tmp = isHVDS;
   bool isBkgd_tmp = isBkgd;
+  bool isToy_tmp  = isToy;
   float xsec_tmp = xsec;
   float filterEff_tmp = filterEff;
   float BR_tmp = BR;
   configtree->Branch("isGMSB", &isGMSB_tmp, "isGMSB/O");
   configtree->Branch("isHVDS", &isHVDS_tmp, "isHVDS/O");
   configtree->Branch("isBkgd", &isBkgd_tmp, "isBkgd/O");
+  configtree->Branch("isToy ", &isToy_tmp , "isToy/O");
   configtree->Branch("xsec", &xsec_tmp, "xsec/F");
   configtree->Branch("filterEff", &filterEff_tmp, "filterEff/F");
   configtree->Branch("BR", &BR_tmp, "BR/F");
@@ -1266,6 +1301,10 @@ void DisPho::MakeEventTree()
   if (isMC)
   {
     disphotree->Branch("genwgt", &genwgt, "genwgt/F");
+    disphotree->Branch("genx0", &genx0, "genx0/F");
+    disphotree->Branch("geny0", &geny0, "geny0/F");
+    disphotree->Branch("genz0", &genz0, "genz0/F");
+    disphotree->Branch("gent0", &gent0, "gent0/F");
     disphotree->Branch("genpuobs", &genpuobs, "genpuobs/I");
     disphotree->Branch("genputrue", &genputrue, "genputrue/I");
   }
