@@ -67,7 +67,7 @@ options.register('filterEff',1.0,VarParsing.multiplicity.singleton,VarParsing.va
 options.register('BR',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'branching ratio of MC');
 
 ## GT to be used
-options.register('globalTag','94X_mc2017_realistic_v10',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
+options.register('globalTag','94X_dataRun2_ReReco_EOY17_v2',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
 
 ## do a demo run over only 1k events
 options.register('demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to run over only 1k events');
@@ -159,12 +159,13 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-		# test QCD, GT: 92X_upgrade2017_realistic_v10
-		# '/store/mc/RunIISummer17MiniAOD/QCD_Pt-170to300_EMEnriched_TuneCUETP8M1_13TeV_pythia8/MINIAODSIM/92X_upgrade2017_realistic_v10-v2/90000/02A98D4F-BF97-E711-950B-4C79BA1809E9.root'
-		# 2017D-v1, GT: 92X_dataRun2_Prompt_v8 
-		#'/store/data/Run2017D/SinglePhoton/MINIAOD/PromptReco-v1/000/302/042/00000/18838DB3-698F-E711-9D1B-02163E01192A.root',
+		# test GJets, GT: 94X_mc2017_realistic_v10
+		#'/store/mc/RunIIFall17MiniAOD/GJets_HT-400To600_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/94X_mc2017_realistic_v10-v2/10000/2EB3F025-5DF8-E711-BCBE-90B11C27F610.root'
+		# EOY ReReco 2017D-v1; GT: 94X_dataRun2_ReReco_EOY17_v2
+		'root://cms-xrd-global.cern.ch//store/data/Run2017D/SinglePhoton/MINIAOD/17Nov2017-v1/20000/029AE74D-B8D2-E711-9F13-0025905A6122.root'
 		###### Hacked 93X GMSB ctau = 4m sample, GT: 92X_upgrade2017_realistic_v10
-		'/store/group/phys_exotica/displacedPhotons/GMSB_L200TeV_CTau400cm_930/GMSB_L200TeV_CTau400cm_930_step3/171024_213911/0000/step3_1.root',
+		#'/store/group/phys_exotica/displacedPhotons/GMSB_L200TeV_CTau400cm_930/GMSB_L200TeV_CTau400cm_930_step3/171024_213911/0000/step3_1.root',
+		#'file:/afs/cern.ch/work/k/kmcdermo/private/dispho/timegun/CMSSW_9_4_0/src/sample/step3.root'
 		))
 
 ## How many events to process
@@ -179,6 +180,10 @@ process.GlobalTag.globaltag = options.globalTag
 ## Setup the service to make a ROOT TTree
 process.TFileService = cms.Service("TFileService", 
 		                   fileName = cms.string(options.outputFileName))
+
+## Decide which label to use for MET Flags
+if   options.isMC : triggerFlagsProcess = "PAT"
+else              : triggerFlagsProcess = "RECO"
 
 ## pick up ootPhotons if they exist
 if options.useOOTPhotons : ootPhotonsTag = cms.InputTag("slimmedOOTPhotons")
@@ -231,7 +236,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    triggerObjects = cms.InputTag("slimmedPatTrigger"),
    ## met filters
    inputFlags   = cms.string(options.inputFlags),
-   triggerFlags = cms.InputTag("TriggerResults", "", "RECO"),
+   triggerFlags = cms.InputTag("TriggerResults", "", triggerFlagsProcess),
    ## tracks
    tracks = cms.InputTag("unpackedTracksAndVertices"),
    ## vertices
