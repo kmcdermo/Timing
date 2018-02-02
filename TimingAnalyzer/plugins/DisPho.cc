@@ -47,6 +47,10 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   inputFilters     (iConfig.existsAs<std::string>("inputFilters") ? iConfig.getParameter<std::string>("inputFilters") : ""),
   triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
   triggerObjectsTag(iConfig.getParameter<edm::InputTag>("triggerObjects")),
+  
+  // MET flags
+  inputFlags     (iConfig.existsAs<std::string>("inputFlags") ? iConfig.getParameter<std::string>("inputFlags") : ""),
+  triggerFlagsTag(iConfig.getParameter<edm::InputTag>("triggerFlags")),
 
   // tracks
   tracksTag(iConfig.getParameter<edm::InputTag>("tracks")),
@@ -105,6 +109,12 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // read in from a stream the hlt objects/labels to match to
   oot::ReadInFilterNames(inputFilters,filterNames,triggerObjectsByFilterMap);
 
+  // MET flags
+  triggerFlagsToken = consumes<edm::TriggerResults> (triggerFlagsTag);
+
+  // read in from a stream the trigger paths for saving
+  oot::ReadInTriggerNames(inputFlags,flagNames,triggerFlagMap);
+
   // tracks 
   tracksToken = consumes<std::vector<reco::Track> > (tracksTag);
 
@@ -162,6 +172,10 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   edm::Handle<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsH;
   iEvent.getByToken(triggerObjectsToken, triggerObjectsH);
+
+  // MET FLAGS
+  edm::Handle<edm::TriggerResults> triggerFlagsH;
+  iEvent.getByToken(triggerFlagsToken, triggerFlagsH);
 
   // TRACKS
   edm::Handle<std::vector<reco::Track> > tracksH;
@@ -277,6 +291,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (isGMSB) oot::PrepNeutralinos(genparticlesH,neutralinos);
   if (isHVDS) oot::PrepVPions(genparticlesH,vPions);
   oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
+  oot::PrepTriggerBits(triggerFlagsH,iEvent,triggerFlagMap);
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
   //  oot::PrepJets(jetsH,jets,jetpTmin,jetIDmin,jetEtamax);
   oot::PrepJets(jetsH,jets); // FIXME -- HACK!!!
@@ -391,28 +406,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 				 }
 				 return isNearJet;
 			       }),photons.end());
-
-  //////////////////////////////////////
-  // compute HT first with loose jets //
-  //////////////////////////////////////
-
-  // jetHT = 0.f;
-  // njetsL = jets.size();
-  // if (jetsH.isValid()) // check to make sure reco jets exist
-  // {
-  //   for (const auto& jet : jets)
-  //   {
-  //     jetHT += jet.pt();
-  //   }
-  // } // end check over reco jets  
-
-  // // now remove jets without tight ID
-  // jets.erase(std::remove_if(jets.begin(),jets.end(),
-  // 			    [&](const pat::Jet & jet)
-  // 			    {
-  // 			      const int jetID = oot::GetPFJetID(jet);
-  // 			      return (jetID < jetIDStoremin);
-  // 			    }),jets.end());
 				 
   ///////////////////////////// 
   //                         //
@@ -560,6 +553,22 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   hltDiEle33MW = (triggerBitMap.count(Config::DiEle33MWPath.c_str()) ? triggerBitMap[Config::DiEle33MWPath.c_str()] : false);
   hltDiEle27WPT = (triggerBitMap.count(Config::DiEle27WPTPath.c_str()) ? triggerBitMap[Config::DiEle27WPTPath.c_str()] : false);
   hltJet500 = (triggerBitMap.count(Config::Jet500Path.c_str()) ? triggerBitMap[Config::Jet500Path.c_str()] : false);
+
+  /////////////////////
+  //                 //
+  // MET Filter Info //
+  //                 //
+  /////////////////////
+
+  metPV = (triggerFlagMap.count(Config::PVFlag.c_str()) ? triggerFlagMap[Config::PVFlag.c_str()] : false);
+  metBeamHalo = (triggerFlagMap.count(Config::BeamHaloFlag.c_str()) ? triggerFlagMap[Config::BeamHaloFlag.c_str()] : false);
+  metHBHENoise = (triggerFlagMap.count(Config::HBHENoiseFlag.c_str()) ? triggerFlagMap[Config::HBHENoiseFlag.c_str()] : false);
+  metHBHEisoNoise = (triggerFlagMap.count(Config::HBHEisoNoiseFlag.c_str()) ? triggerFlagMap[Config::HBHEisoNoiseFlag.c_str()] : false);
+  metECALTP = (triggerFlagMap.count(Config::ECALTPFlag.c_str()) ? triggerFlagMap[Config::ECALTPFlag.c_str()] : false);
+  metPFMuon = (triggerFlagMap.count(Config::PFMuonFlag.c_str()) ? triggerFlagMap[Config::PFMuonFlag.c_str()] : false);
+  metPFChgHad = (triggerFlagMap.count(Config::PFChgHadFlag.c_str()) ? triggerFlagMap[Config::PFChgHadFlag.c_str()] : false);
+  metEESC = (triggerFlagMap.count(Config::EESCFlag.c_str()) ? triggerFlagMap[Config::EESCFlag.c_str()] : false);
+  metECALCalib = (triggerFlagMap.count(Config::ECALCalibFlag.c_str()) ? triggerFlagMap[Config::ECALCalibFlag.c_str()] : false);
 
   /////////////////////////
   //                     //   
@@ -1275,6 +1284,10 @@ void DisPho::MakeAndFillConfigTree()
   configtree->Branch("inputPaths", &inputPaths_tmp);
   configtree->Branch("inputFilters", &inputFilters_tmp);
 
+  // met flag info
+  std::string inputFlags_tmp = inputFlags;
+  configtree->Branch("inputFlags", &inputFlags_tmp);
+
   // MC info
   bool isGMSB_tmp = isGMSB;
   bool isHVDS_tmp = isHVDS;
@@ -1345,6 +1358,17 @@ void DisPho::MakeEventTree()
   disphotree->Branch("hltDiEle33MW", &hltDiEle33MW, "hltDiEle33MW/O");
   disphotree->Branch("hltDiEle27WPT", &hltDiEle27WPT, "hltDiEle27WPT/O");
   disphotree->Branch("hltJet500", &hltJet500, "hltJet500/O");
+
+  // MET Filter Info
+  disphotree->Branch("metPV", &metPV, "metPV/O");
+  disphotree->Branch("metBeamHalo", &metBeamHalo, "metBeamHalo/O");
+  disphotree->Branch("metHBHENoise", &metHBHENoise, "metHBHENoise/O");
+  disphotree->Branch("metHBHEisoNoise", &metHBHEisoNoise, "metHBHEisoNoise/O");
+  disphotree->Branch("metECALTP", &metECALTP, "metECALTP/O");
+  disphotree->Branch("metPFMuon", &metPFMuon, "metPFMuon/O");
+  disphotree->Branch("metPFChgHad", &metPFChgHad, "metPFChgHad/O");
+  disphotree->Branch("metEESC", &metEESC, "metEESC/O");
+  disphotree->Branch("metECALCalib", &metECALCalib, "metECALCalib/O");
 
   // Vertex info
   disphotree->Branch("nvtx", &nvtx, "nvtx/I");

@@ -176,6 +176,13 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   edm::EDGetTokenT<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsToken;
   trigObjVecMap triggerObjectsByFilterMap; // first index is filter label, second is trigger objects
 
+  // met filters
+  const std::string inputFlags;
+  std::vector<std::string> flagNames;
+  strBitMap triggerFlagMap;
+  const edm::InputTag triggerFlagsTag;
+  edm::EDGetTokenT<edm::TriggerResults> triggerFlagsToken;
+
   // Tracks
   const edm::InputTag tracksTag;
   edm::EDGetTokenT<std::vector<reco::Track> > tracksToken;
@@ -266,6 +273,17 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   bool hltDiEle33MW;
   bool hltDiEle27WPT;
   bool hltJet500;
+
+  // met filter info
+  bool metPV;
+  bool metBeamHalo;
+  bool metHBHENoise;
+  bool metHBHEisoNoise;
+  bool metECALTP;
+  bool metPFMuon;
+  bool metPFChgHad;
+  bool metEESC;
+  bool metECALCalib;
 
   // vertices
   int nvtx;

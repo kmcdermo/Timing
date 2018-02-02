@@ -50,6 +50,9 @@ options.register('trackpTmin',5.0,VarParsing.multiplicity.singleton,VarParsing.v
 options.register('inputPaths','/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input signal paths');
 options.register('inputFilters','/afs/cern.ch/user/k/kmcdermo/public/input/HLTfilters.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input signal filters');
 
+## met filter input
+options.register('inputFlags','/afs/cern.ch/user/k/kmcdermo/public/input/METflags.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input MET filter flags');
+
 ## ootphoton tags
 options.register('useOOTPhotons',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to use ootPhoton collections in analyzer');
 
@@ -118,6 +121,8 @@ print "trackpTmin     : ",options.trackpTmin
 print "        -- Trigger --"
 print "inputPaths     : ",options.inputPaths
 print "inputFilters   : ",options.inputFilters
+print "       -- MET Filters --"
+print "inputFlags     : ",options.inputFlags
 print "       -- ootPhotons --"
 print "useOOTPhotons  : ",options.useOOTPhotons
 if options.isMC:
@@ -224,6 +229,9 @@ process.tree = cms.EDAnalyzer("DisPho",
    inputFilters   = cms.string(options.inputFilters),
    triggerResults = cms.InputTag("TriggerResults", "", "HLT"),
    triggerObjects = cms.InputTag("slimmedPatTrigger"),
+   ## met filters
+   inputFlags   = cms.string(options.inputFlags),
+   triggerFlags = cms.InputTag("TriggerResults", "", "RECO"),
    ## tracks
    tracks = cms.InputTag("unpackedTracksAndVertices"),
    ## vertices

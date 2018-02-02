@@ -19,9 +19,11 @@
 // Standard Definitions //
 //                      //
 //////////////////////////
+#include "TVector2.h"
 
 namespace Config
 {
+  // Useful math constants
   constexpr float PI    = 3.14159265358979323846;
   constexpr float TWOPI = 2.0*PI;
 
@@ -52,30 +54,29 @@ namespace Config
   static const std::string PhoIDLastFilter = "hltEG60R9Id90CaloIdLIsoLHollowTrackIsoFilter";
   static const std::string DispIDFilter = "hltEG60R9Id90CaloIdLIsoLDisplacedIdFilter";
 
-  inline float rad2  (const float x, const float y){return x*x + y*y;}
+  // MET Filter flag names
+  static const std::string PVFlag = "Flag_goodVertices";
+  static const std::string BeamHaloFlag = "Flag_globalTightHalo2016Filter";
+  static const std::string HBHENoiseFlag = "Flag_HBHENoiseFilter";
+  static const std::string HBHEisoNoiseFlag = "Flag_HBHENoiseIsoFilter";
+  static const std::string ECALTPFlag = "Flag_EcalDeadCellTriggerPrimitiveFilter";
+  static const std::string PFMuonFlag = "Flag_BadPFMuonFilter";
+  static const std::string PFChgHadFlag = "Flag_BadChargedCandidateFilter";
+  static const std::string EESCFlag = "Flag_eeBadScFilter";
+  static const std::string ECALCalibFlag = "Flag_ecalBadCalibFilter";
+
+  // inline math functions
+  inline float rad2  (const float x, const float y, const float z = 0.f){return x*x + y*y + z*z;}
+  inline float hypo  (const float x, const float y, const float z = 0.f){return std::sqrt(Config::rad2(x,y,z));}
   inline float phi   (const float x, const float y){return std::atan2(y,x);}
   inline float theta (const float r, const float z){return std::atan2(r,z);}
   inline float eta   (const float x, const float y, const float z)
   {
-    return -1.0f*std::log(std::tan(Config::theta(std::sqrt(Config::rad2(x,y)),z)/2.f));
+    return -1.0f*std::log(std::tan(Config::theta(Config::hypo(x,y),z)/2.f));
   }
   inline float deltaR(const float phi1, const float eta1, const float phi2, const float eta2)
   {
-    if   (std::abs(phi2-phi1)<Config::PI) 
-    {
-      return std::sqrt(Config::rad2(eta2-eta1,phi2-phi1));
-    }
-    else 
-    {
-      if (phi2-phi1>0.f) 
-      {
-	return std::sqrt(Config::rad2(eta2-eta1,  Config::TWOPI-(phi2-phi1) ));
-      }
-      else // technically, the last sign flip is unnecessary here
-      {
-	return std::sqrt(Config::rad2(eta2-eta1,-(Config::TWOPI+(phi2-phi1))));
-      }
-    }
+    return Config::hypo(TVector2::Phi_mpi_pi(phi1-phi2),eta1-eta2);
   }
 
   // check to see if file exists
