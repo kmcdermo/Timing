@@ -84,7 +84,7 @@ def main():
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
         config.Site.storageSite      = 'T2_CH_CERN'
-        config.Data.outLFNDirBase    = '/store/user/kmcdermo/'
+        config.Data.outLFNDirBase    = '/store/user/kmcdermo/nTuples/unskimmed/analysis/'
         #--------------------------------------------------------
 
         # Will submit one task for each of these input datasets.
@@ -95,7 +95,7 @@ def main():
         for inDO in inputDataAndOpts:
             # inDO[0] is of the form /A/B/C. Since A is unique for each inDO for Monte Carlo, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[1]
-            config.JobType.pyCfgParams   = ['globalTag=92X_upgrade2017_realistic_v10','phIDmin=none','splitPho=False','isGMSB=True',
+            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v10','splitPho=False','isGMSB=True',
                                             'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters]
             config.Data.inputDataset     = inDO[0]

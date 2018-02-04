@@ -61,7 +61,7 @@ def main():
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
         inputPaths   = 'HLTpathsWExtras.txt'
         inputFilters = 'HLTfilters.txt'
-        inputJSON    = 'golden2017-nov30.json'
+        inputJSON    = 'golden2017.json'
          
         #--------------------------------------------------------
         # This is the base config:
@@ -85,26 +85,22 @@ def main():
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
         config.Site.storageSite      = 'T2_CH_CERN'
-        config.Data.outLFNDirBase    = '/store/user/kmcdermo/'
+        config.Data.outLFNDirBase    = '/store/user/kmcdermo/nTuples/unskimmed/analysis/'
         #--------------------------------------------------------
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/SinglePhoton/Run2017B-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v4', 'False'],
-            ['/SinglePhoton/Run2017B-PromptReco-v2/MINIAOD', '92X_dataRun2_Prompt_v5', 'False'],
-            ['/SinglePhoton/Run2017C-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v6', 'True'],
-            ['/SinglePhoton/Run2017C-PromptReco-v2/MINIAOD', '92X_dataRun2_Prompt_v7', 'True'],
-            ['/SinglePhoton/Run2017C-PromptReco-v3/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
-            ['/SinglePhoton/Run2017D-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v8', 'True'],
-            ['/SinglePhoton/Run2017E-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v9', 'True'],
-            ['/SinglePhoton/Run2017F-PromptReco-v1/MINIAOD', '92X_dataRun2_Prompt_v9', 'True'],
+            ['/SinglePhoton/Run2017B-17Nov2017-v1/MINIAOD'],
+            ['/SinglePhoton/Run2017C-17Nov2017-v1/MINIAOD'],
+            ['/SinglePhoton/Run2017D-17Nov2017-v1/MINIAOD'],
+            ['/SinglePhoton/Run2017E-17Nov2017-v1/MINIAOD'],
+            ['/SinglePhoton/Run2017F-17Nov2017-v1/MINIAOD']
             ]
  
         for inDO in inputDataAndOpts:
             # inDO[0] is of the form /A/B/C. Since B is unique for each inDS, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[2]
-            config.JobType.pyCfgParams   = ['globalTag='+inDO[1],'useOOTPhotons='+inDO[2],'phIDmin=none','splitPho=False',
-                                            'inputPaths='+inputPaths,'inputFilters='+inputFilters]
+            config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_ReReco_EOY17_v2','splitPho=False','inputPaths='+inputPaths,'inputFilters='+inputFilters]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.

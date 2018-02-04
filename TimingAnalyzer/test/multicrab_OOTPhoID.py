@@ -59,7 +59,7 @@ def main():
 
         # External files needed by CRAB
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
-        inputPaths   = 'HLTpaths.txt'
+        inputPaths   = 'HLTpathsWExtras.txt'
         inputFilters = 'HLTfilters.txt'
          
         #--------------------------------------------------------
@@ -84,19 +84,19 @@ def main():
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
         config.Site.storageSite      = 'T2_CH_CERN'
-        config.Data.outLFNDirBase    = '/store/user/kmcdermo/'
+        config.Data.outLFNDirBase    = '/store/user/kmcdermo/nTuples/unskimmed/ootID'
         #--------------------------------------------------------
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/GMSB_L200TeV_CTau400cm_930/kmcdermo-GMSB_L200TeV_CTau400cm_930_step3-23134fac048c68b5122d77328802e60f/USER'       , '0.04'  , '1', '0.81418', 'isGMSB=True', 10000, 'phys03'],
-            ['/GJet_Pt-15To6000_TuneCUETP8M1-Flat_13TeV_pythia8/RunIISummer17MiniAOD-92X_upgrade2017_realistic_v10-v1/MINIAODSIM', '365896', '1', '1'      , 'isBkgd=True', 500000, 'global']
+            ['/GMSB_L200TeV_CTau400cm_930/kmcdermo-GMSB_L200TeV_CTau400cm_930_step3-23134fac048c68b5122d77328802e60f/USER'     , '0.04'  , '1', '0.81418', 'isGMSB=True', 10000, 'phys03'],
+            ['/GJet_Pt-15To6000_TuneCP5-Flat_13TeV_pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM', '283200', '1', '1'      , 'isBkgd=True', 500000, 'global']
             ]
  
         for inDO in inputDataAndOpts:
             # inDO[0] is of the form /A/B/C. Since A is unique for each inDO for Monte Carlo, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[1]
-            config.JobType.pyCfgParams   = ['globalTag=92X_upgrade2017_realistic_v10','phIDmin=none','splitPho=True','storeRecHits=False',
+            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v10','splitPho=True','storeRecHits=False',
                                             'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],inDO[4],
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters]
             config.Data.unitsPerJob      = inDO[5]

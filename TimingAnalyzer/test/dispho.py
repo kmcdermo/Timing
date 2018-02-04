@@ -47,7 +47,7 @@ options.register('trackdRmin',0.2,VarParsing.multiplicity.singleton,VarParsing.v
 options.register('trackpTmin',5.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'track pT minimum cut');
 
 ## trigger input
-options.register('inputPaths','/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input signal paths');
+options.register('inputPaths','/afs/cern.ch/user/k/kmcdermo/public/input/HLTpathsWExtras.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input signal paths');
 options.register('inputFilters','/afs/cern.ch/user/k/kmcdermo/public/input/HLTfilters.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input signal filters');
 
 ## met filter input
@@ -162,7 +162,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		# test GJets, GT: 94X_mc2017_realistic_v10
 		#'/store/mc/RunIIFall17MiniAOD/GJets_HT-400To600_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/94X_mc2017_realistic_v10-v2/10000/2EB3F025-5DF8-E711-BCBE-90B11C27F610.root'
 		# EOY ReReco 2017D-v1; GT: 94X_dataRun2_ReReco_EOY17_v2
-		'root://cms-xrd-global.cern.ch//store/data/Run2017D/SinglePhoton/MINIAOD/17Nov2017-v1/20000/029AE74D-B8D2-E711-9F13-0025905A6122.root'
+		#'root://cms-xrd-global.cern.ch//store/data/Run2017D/SinglePhoton/MINIAOD/17Nov2017-v1/20000/029AE74D-B8D2-E711-9F13-0025905A6122.root'
 		###### Hacked 93X GMSB ctau = 4m sample, GT: 92X_upgrade2017_realistic_v10
 		#'/store/group/phys_exotica/displacedPhotons/GMSB_L200TeV_CTau400cm_930/GMSB_L200TeV_CTau400cm_930_step3/171024_213911/0000/step3_1.root',
 		#'file:/afs/cern.ch/work/k/kmcdermo/private/dispho/timegun/CMSSW_9_4_0/src/sample/step3.root'
@@ -186,8 +186,8 @@ if   options.isMC : triggerFlagsProcess = "PAT"
 else              : triggerFlagsProcess = "RECO"
 
 ## pick up ootPhotons if they exist
-if options.useOOTPhotons : ootPhotonsTag = cms.InputTag("slimmedOOTPhotons")
-else                     : ootPhotonsTag = cms.InputTag("")
+if   options.useOOTPhotons : ootPhotonsTag = cms.InputTag("slimmedOOTPhotons")
+else                       : ootPhotonsTag = cms.InputTag("")
 
 ## generate track collection at miniAOD
 from PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi import unpackedTracksAndVertices
