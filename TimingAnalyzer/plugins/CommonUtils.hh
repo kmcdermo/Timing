@@ -10,6 +10,7 @@
 #include <map>
 #include <unordered_map>
 #include <cmath>
+#include <limits>
 #include <algorithm>
 #include <memory>
 #include <tuple>
@@ -76,7 +77,8 @@ namespace Config
   }
   inline float deltaR(const float phi1, const float eta1, const float phi2, const float eta2)
   {
-    return Config::hypo(TVector2::Phi_mpi_pi(phi1-phi2),eta1-eta2);
+    if (std::isnan(phi1) or std::isnan(phi2)) return std::numeric_limits<float>::quiet_NaN();
+    else return Config::hypo(TVector2::Phi_mpi_pi(phi1-phi2),eta1-eta2);
   }
 
   // check to see if file exists
