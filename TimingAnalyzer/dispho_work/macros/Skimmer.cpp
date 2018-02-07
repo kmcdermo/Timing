@@ -101,6 +101,14 @@ void Skimmer::EventLoop()
 
     // fill cutflow
     fOutCutFlow->Fill((cutLabels["skim"]*1.f)-0.5f,evtwgt);
+
+    // filter on MET Flags
+    if (!fInEvent.metPV || !fInEvent.metBeamHalo || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || 
+	!fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad || !fInEvent.metECALCalib) continue;
+    if (!fIsMC && !fInEvent.metEESC) continue;
+
+    // fill cutflow
+    fOutCutFlow->Fill((cutLabels{"METFlag"]*1.f)-0.5f,evtwgt);
   
     // end of skim, now copy... dropping rechits
     if (fOutConfig.isGMSB) Skimmer::FillOutGMSBs();
@@ -221,10 +229,14 @@ void Skimmer::FillOutEvent()
   fOutEvent.njetsidT = fInEvent.njetsidT;
   fOutEvent.nrechits = fInEvent.nrechits;
   fOutEvent.nphotons = fInEvent.nphotons;
-  fOutEvent.evtwgt = (fIsMC ? fSampleWeight * fInEvent.genwgt : 1.f);
-  
+  fOutEvent.evtwgt   = (fIsMC ? fSampleWeight * fInEvent.genwgt : 1.f);
+
   if (fIsMC)
   {
+    fOutEvent.genx0 = fInEvent.genx0;
+    fOutEvent.geny0 = fInEvent.geny0;
+    fOutEvent.genz0 = fInEvent.genz0;
+    fOutEvent.gent0 = fInEvent.gent0;
     fOutEvent.puwgt = fPUWeights[fInEvent.genputrue];
     if (fOutConfig.isGMSB)
     {
@@ -333,7 +345,7 @@ void Skimmer::GetInConfig()
   fInConfigTree->GetEntry(0);
 
   // set isMC
-  fIsMC = (fInConfig.isGMSB || fInConfig.isHVDS || fInConfig.isBkgd);
+  fIsMC = (fInConfig.isGMSB || fInConfig.isHVDS || fInConfig.isBkgd || fInConfig.isToy);
 }
 
 void Skimmer::InitInConfigStrings()
@@ -342,6 +354,7 @@ void Skimmer::InitInConfigStrings()
   fInConfig.phgoodIDmin = 0;
   fInConfig.inputPaths = 0;
   fInConfig.inputFilters = 0;
+  fInConfig.inputFlags = 0;
 }
 
 void Skimmer::InitInConfigBranches()
@@ -375,9 +388,11 @@ void Skimmer::InitInConfigBranches()
   fInConfigTree->SetBranchAddress(fInConfig.s_trackpTmin.c_str(), &fInConfig.trackpTmin);
   fInConfigTree->SetBranchAddress(fInConfig.s_inputPaths.c_str(), &fInConfig.inputPaths);
   fInConfigTree->SetBranchAddress(fInConfig.s_inputFilters.c_str(), &fInConfig.inputFilters);
+  fInConfigTree->SetBranchAddress(fInConfig.s_inputFlags.c_str(), &fInConfig.inputFlags);
   fInConfigTree->SetBranchAddress(fInConfig.s_isGMSB.c_str(), &fInConfig.isGMSB);
   fInConfigTree->SetBranchAddress(fInConfig.s_isHVDS.c_str(), &fInConfig.isHVDS);
   fInConfigTree->SetBranchAddress(fInConfig.s_isBkgd.c_str(), &fInConfig.isBkgd);
+  fInConfigTree->SetBranchAddress(fInConfig.s_isToy.c_str(), &fInConfig.isToy);
   fInConfigTree->SetBranchAddress(fInConfig.s_xsec.c_str(), &fInConfig.xsec);
   fInConfigTree->SetBranchAddress(fInConfig.s_filterEff.c_str(), &fInConfig.filterEff);
   fInConfigTree->SetBranchAddress(fInConfig.s_BR.c_str(), &fInConfig.BR);
@@ -436,6 +451,10 @@ void Skimmer::InitInBranches()
   if (fIsMC)
   {
     fInTree->SetBranchAddress(fInEvent.s_genwgt.c_str(), &fInEvent.genwgt);
+    fInTree->SetBranchAddress(fInEvent.s_genx0.c_str(), &fInEvent.genx0);
+    fInTree->SetBranchAddress(fInEvent.s_geny0.c_str(), &fInEvent.geny0);
+    fInTree->SetBranchAddress(fInEvent.s_genz0.c_str(), &fInEvent.genz0);
+    fInTree->SetBranchAddress(fInEvent.s_gent0.c_str(), &fInEvent.gent0);
     fInTree->SetBranchAddress(fInEvent.s_genpuobs.c_str(), &fInEvent.genpuobs);
     fInTree->SetBranchAddress(fInEvent.s_genputrue.c_str(), &fInEvent.genputrue);
     
@@ -503,6 +522,7 @@ void Skimmer::InitInBranches()
   fInTree->SetBranchAddress(fInEvent.s_run.c_str(), &fInEvent.run);
   fInTree->SetBranchAddress(fInEvent.s_lumi.c_str(), &fInEvent.lumi);
   fInTree->SetBranchAddress(fInEvent.s_event.c_str(), &fInEvent.event);
+
   fInTree->SetBranchAddress(fInEvent.s_hltSignal.c_str(), &fInEvent.hltSignal);
   fInTree->SetBranchAddress(fInEvent.s_hltRefPhoID.c_str(), &fInEvent.hltRefPhoID);
   fInTree->SetBranchAddress(fInEvent.s_hltRefDispID.c_str(), &fInEvent.hltRefDispID);
@@ -515,6 +535,17 @@ void Skimmer::InitInBranches()
   fInTree->SetBranchAddress(fInEvent.s_hltDiEle33MW.c_str(), &fInEvent.hltDiEle33MW);
   fInTree->SetBranchAddress(fInEvent.s_hltDiEle27WPT.c_str(), &fInEvent.hltDiEle27WPT);
   fInTree->SetBranchAddress(fInEvent.s_hltJet500.c_str(), &fInEvent.hltJet500);
+  
+  fInTree->SetBranchAddress(fInEvent.s_metPV.c_str(), &fInEvent.metPV);
+  fInTree->SetBranchAddress(fInEvent.s_metBeamHalo.c_str(), &fInEvent.metBeamHalo);
+  fInTree->SetBranchAddress(fInEvent.s_metHBHENoise.c_str(), &fInEvent.metHBHENoise);
+  fInTree->SetBranchAddress(fInEvent.s_metHBHEisoNoise.c_str(), &fInEvent.metHBHEisoNoise);
+  fInTree->SetBranchAddress(fInEvent.s_metECALTP.c_str(), &fInEvent.metECALTP);
+  fInTree->SetBranchAddress(fInEvent.s_metPFMuon.c_str(), &fInEvent.metPFMuon);
+  fInTree->SetBranchAddress(fInEvent.s_metPFChgHad.c_str(), &fInEvent.metPFChgHad);
+  fInTree->SetBranchAddress(fInEvent.s_metEESC.c_str(), &fInEvent.metEESC);
+  fInTree->SetBranchAddress(fInEvent.s_metECALCalib.c_str(), &fInEvent.metECALCalib);
+
   fInTree->SetBranchAddress(fInEvent.s_nvtx.c_str(), &fInEvent.nvtx);
   fInTree->SetBranchAddress(fInEvent.s_vtxX.c_str(), &fInEvent.vtxX);
   fInTree->SetBranchAddress(fInEvent.s_vtxY.c_str(), &fInEvent.vtxY);
@@ -523,6 +554,7 @@ void Skimmer::InitInBranches()
   fInTree->SetBranchAddress(fInEvent.s_t1pfMETpt.c_str(), &fInEvent.t1pfMETpt);
   fInTree->SetBranchAddress(fInEvent.s_t1pfMETphi.c_str(), &fInEvent.t1pfMETphi);
   fInTree->SetBranchAddress(fInEvent.s_t1pfMETsumEt.c_str(), &fInEvent.t1pfMETsumEt);
+
   fInTree->SetBranchAddress(fInEvent.s_jetHT.c_str(), &fInEvent.jetHT);
   fInTree->SetBranchAddress(fInEvent.s_njets.c_str(), &fInEvent.njets);
   fInTree->SetBranchAddress(fInEvent.s_jetHTpt15.c_str(), &fInEvent.jetHTpt15);
@@ -644,9 +676,11 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfigTree->Branch(fOutConfig.s_trackpTmin.c_str(), &fOutConfig.trackpTmin);
   fOutConfigTree->Branch(fOutConfig.s_inputPaths.c_str(), &fOutConfig.inputPaths_s);
   fOutConfigTree->Branch(fOutConfig.s_inputFilters.c_str(), &fOutConfig.inputFilters_s);
+  fOutConfigTree->Branch(fOutConfig.s_inputFlags.c_str(), &fOutConfig.inputFlags_s);
   fOutConfigTree->Branch(fOutConfig.s_isGMSB.c_str(), &fOutConfig.isGMSB);
   fOutConfigTree->Branch(fOutConfig.s_isHVDS.c_str(), &fOutConfig.isHVDS);
   fOutConfigTree->Branch(fOutConfig.s_isBkgd.c_str(), &fOutConfig.isBkgd);
+  fOutConfigTree->Branch(fOutConfig.s_isToy.c_str(), &fOutConfig.isToy);
   fOutConfigTree->Branch(fOutConfig.s_xsec.c_str(), &fOutConfig.xsec);
   fOutConfigTree->Branch(fOutConfig.s_filterEff.c_str(), &fOutConfig.filterEff);
   fOutConfigTree->Branch(fOutConfig.s_BR.c_str(), &fOutConfig.BR);
@@ -681,9 +715,11 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfig.trackpTmin = fInConfig.trackpTmin;
   fOutConfig.inputPaths_s = fInConfig.inputPaths->c_str();
   fOutConfig.inputFilters_s = fInConfig.inputFilters->c_str();
+  fOutConfig.inputFlags_s = fInConfig.inputFlags->c_str();
   fOutConfig.isGMSB = fInConfig.isGMSB;
   fOutConfig.isHVDS = fInConfig.isHVDS;
   fOutConfig.isBkgd = fInConfig.isBkgd;
+  fOutConfig.isToy = fInConfig.isToy;
   fOutConfig.xsec = fInConfig.xsec;
   fOutConfig.filterEff = fInConfig.filterEff;
   fOutConfig.BR = fInConfig.BR;
@@ -697,6 +733,10 @@ void Skimmer::InitOutTree()
   if (fIsMC)
   {
     fOutTree->Branch(fOutEvent.s_puwgt.c_str(), &fOutEvent.puwgt);
+    fOutTree->Branch(fOutEvent.s_genx0.c_str(), &fOutEvent.genx0);
+    fOutTree->Branch(fOutEvent.s_geny0.c_str(), &fOutEvent.geny0);
+    fOutTree->Branch(fOutEvent.s_genz0.c_str(), &fOutEvent.genz0);
+    fOutTree->Branch(fOutEvent.s_gent0.c_str(), &fOutEvent.gent0);
     
     if (fOutConfig.isGMSB)
     {
@@ -869,7 +909,9 @@ void Skimmer::InitOutCutFlow()
   {
     cutLabels[fInCutFlow->GetXaxis()->GetBinLabel(ibin)] = ibin;
   }
-  cutLabels["skim"] = inNbinsX+1;
+  Int_t inNbinsX_new = inNbinsX;
+  cutLabels["skim"] = ++inNbinsX_new;
+  cutLabels["METFlag"] = ++inNbinsX_new;
 
   // make new cut flow
   fOutCutFlow = new TH1F(Config::h_cutflowname.Data(),fInCutFlow->GetTitle(),cutLabels.size(),0,cutLabels.size());

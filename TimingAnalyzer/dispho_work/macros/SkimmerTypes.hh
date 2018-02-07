@@ -43,9 +43,12 @@ struct Configuration
   std::string inputPaths_s;
   std::string * inputFilters;
   std::string inputFilters_s;
+  std::string * inputFlags;
+  std::string inputFlags_s;
   Bool_t  isGMSB;
   Bool_t  isHVDS;
   Bool_t  isBkgd;
+  Bool_t  isToy;
   Float_t xsec;
   Float_t filterEff;
   Float_t BR;
@@ -80,10 +83,12 @@ struct Configuration
   std::string s_trackpTmin = "trackpTmin";
   std::string s_inputPaths = "inputPaths";
   std::string s_inputFilters = "inputFilters";
+  std::string s_inputFlags = "inputFlags";
   // MC types
   std::string s_isGMSB = "isGMSB";
   std::string s_isHVDS = "isHVDS";
   std::string s_isBkgd = "isBkgd";
+  std::string s_isToy  = "isToy";
   std::string s_xsec = "xsec";
   std::string s_filterEff = "filterEff";
   std::string s_BR = "BR";
@@ -107,6 +112,16 @@ struct Event
   Bool_t    hltDiEle33MW;
   Bool_t    hltDiEle27WPT;
   Bool_t    hltJet500;
+  Bool_t    metPV;
+  Bool_t    metBeamHalo;
+  Bool_t    metHBHENoise;
+  Bool_t    metHBHEisoNoise;
+  Bool_t    metECALTP;
+  Bool_t    metPFMuon;
+  Bool_t    metPFChgHad;
+  Bool_t    metEESC;
+  Bool_t    metECALCalib;
+
   Int_t     nvtx;
   Float_t   vtxX;
   Float_t   vtxY;
@@ -133,6 +148,10 @@ struct Event
 
   // MC Types
   Float_t   genwgt;
+  Float_t   genx0;
+  Float_t   geny0;
+  Float_t   genz0;
+  Float_t   gent0;
   Int_t     genpuobs;
   Int_t     genputrue;
   Float_t   puwgt;
@@ -157,6 +176,15 @@ struct Event
   std::string s_hltDiEle33MW = "hltDiEle33MW";
   std::string s_hltDiEle27WPT = "hltDiEle27WPT";  
   std::string s_hltJet500 = "hltJet500";
+  std::string s_metPV = "metPV";
+  std::string s_metBeamHalo = "metBeamHalo";
+  std::string s_metHBHENoise = "metHBHENoise";
+  std::string s_metHBHEisoNoise = "metHBHEisoNoise";
+  std::string s_metECALTP = "metECALTP";
+  std::string s_metPFMuon = "metPFMuon";
+  std::string s_metPFChgHad = "metPFChgHad";
+  std::string s_metEESC = "metEESC";
+  std::string s_metECALCalib = "metECALCalib";
   std::string s_nvtx = "nvtx";
   std::string s_vtxX = "vtxX";
   std::string s_vtxY = "vtxY";
@@ -182,7 +210,11 @@ struct Event
   std::string s_evtwgt = "evtwgt";
 
   // MC types
-  std::string s_genwgt = "genwgt";
+  std::string s_genwgt = "genwgt";  
+  std::string s_genx0 = "genx0";
+  std::string s_geny0 = "geny0";
+  std::string s_genz0 = "genz0";
+  std::string s_gent0 = "gent0";
   std::string s_genpuobs = "genpuobs";
   std::string s_genputrue = "genputrue";
   std::string s_puwgt = "puwgt";
