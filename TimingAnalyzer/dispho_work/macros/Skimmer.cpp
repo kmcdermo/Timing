@@ -354,6 +354,7 @@ void Skimmer::GetInConfig()
   fInConfigTree->GetEntry(0);
 
   // set isMC
+  fInConfig.isToy = false; // HACK HACK HACK FIXME HACK HACK HACK
   fIsMC = (fInConfig.isGMSB || fInConfig.isHVDS || fInConfig.isBkgd || fInConfig.isToy);
 }
 
