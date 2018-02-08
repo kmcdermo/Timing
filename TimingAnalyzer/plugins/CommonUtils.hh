@@ -227,11 +227,6 @@ namespace oot
   float GetTrackPtScale(const float eta, const float pt);
   void GetGEDPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho);
   void GetOOTPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho);
-  int PassHoE   (const float eta, const float HoE);
-  int PassSieie (const float eta, const float Sieie);
-  int PassChgIso(const float eta, const float ChgIso);
-  int PassNeuIso(const float eta, const float NeuIso, const float pt);
-  int PassPhIso (const float eta, const float PhIso,  const float pt);
   int GetPFJetID(const pat::Jet & jet);
   void SplitPhotons(std::vector<oot::Photon>& photons, const int nmax);
   void StoreOnlyPho(std::vector<oot::Photon>& photons, const int nmax, const bool isOOT);

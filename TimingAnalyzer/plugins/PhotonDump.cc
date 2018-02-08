@@ -714,15 +714,8 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       if      (photon.photonID("tight"))  {phVID[iph] = 3;}
       else if (photon.photonID("medium")) {phVID[iph] = 2;}
       else if (photon.photonID("loose"))  {phVID[iph] = 1;}
-      else                                 {phVID[iph] = 0;}
+      else                                {phVID[iph] = 0;}
 
-      // store similar ints if pass individual selections
-      phHoE_b   [iph] = oot::PassHoE   (sceta,phHoE   [iph]);
-      phsieie_b [iph] = oot::PassSieie (sceta,phsieie [iph]);
-      phChgIso_b[iph] = oot::PassChgIso(sceta,phChgIso[iph]);
-      phNeuIso_b[iph] = oot::PassNeuIso(sceta,phNeuIso[iph],phpt[iph]);
-      phIso_b   [iph] = oot::PassPhIso (sceta,phIso   [iph],phpt[iph]);
-   
       // if (true) PhotonDump::DumpVIDs((*phiter),iph,sceta);
 
       // use seed to get geometry and recHits
@@ -1074,12 +1067,6 @@ void PhotonDump::ClearRecoPhotonBranches()
 
   phVID.clear();
 
-  phHoE_b.clear();
-  phsieie_b.clear();
-  phChgIso_b.clear();
-  phNeuIso_b.clear();
-  phIso_b.clear();
-
   phIsHLTMatched.clear();
 
   phnrh.clear();
@@ -1125,12 +1112,6 @@ void PhotonDump::InitializeRecoPhotonBranches()
 
   phVID.resize(nphotons);
 
-  phHoE_b.resize(nphotons);
-  phsieie_b.resize(nphotons);
-  phChgIso_b.resize(nphotons);
-  phNeuIso_b.resize(nphotons);
-  phIso_b.resize(nphotons);
-
   phIsHLTMatched.resize(nphotons);
 
   phnrh.resize(nphotons);
@@ -1174,12 +1155,6 @@ void PhotonDump::InitializeRecoPhotonBranches()
     phalpha[iph] = -9999.f;
 
     phVID     [iph] = -9999;
-
-    phHoE_b   [iph] = -9999;
-    phsieie_b [iph] = -9999;
-    phChgIso_b[iph] = -9999;
-    phNeuIso_b[iph] = -9999;
-    phIso_b   [iph] = -9999;
 
     phnrh    [iph] = -9999;
     phseedpos[iph] = -9999;
@@ -1387,12 +1362,6 @@ void PhotonDump::beginJob()
   tree->Branch("phalpha"              , &phalpha);
 
   tree->Branch("phVID"                , &phVID);
-
-  tree->Branch("phHoE_b"              , &phHoE_b);
-  tree->Branch("phsieie_b"            , &phsieie_b);
-  tree->Branch("phChgIso_b"           , &phChgIso_b);
-  tree->Branch("phNeuIso_b"           , &phNeuIso_b);
-  tree->Branch("phIso_b"              , &phIso_b);
 
   tree->Branch("phIsHLTMatched"       , &phIsHLTMatched);
 

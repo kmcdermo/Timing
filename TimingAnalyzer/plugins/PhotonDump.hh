@@ -262,7 +262,7 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   std::vector<bool>  phIsGenMatched;
   std::vector<float> phHoE, phr9, phChgIso, phNeuIso, phIso, phsuisseX;
   std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
-  std::vector<int>   phVID, phHoE_b, phsieie_b, phChgIso_b, phNeuIso_b, phIso_b;
+  std::vector<int>   phVID;
   std::vector<std::vector<int> > phIsHLTMatched; // first index is iph, second is for filter, true/false
 
   // supercluster info 

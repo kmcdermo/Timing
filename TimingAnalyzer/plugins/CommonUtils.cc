@@ -350,37 +350,37 @@ namespace oot
 
   float GetChargedHadronEA(const float eta)
   {
-    if      (eta <  1.0)                  return 0.0360;
-    else if (eta >= 1.0   && eta < 1.479) return 0.0377;
-    else if (eta >= 1.479 && eta < 2.0  ) return 0.0306;
-    else if (eta >= 2.0   && eta < 2.2  ) return 0.0283;
-    else if (eta >= 2.2   && eta < 2.3  ) return 0.0254;
-    else if (eta >= 2.3   && eta < 2.4  ) return 0.0217;
-    else if (eta >= 2.4)                  return 0.0167;
+    if      (eta <  1.0)                  return 0.0385;
+    else if (eta >= 1.0   && eta < 1.479) return 0.0468;
+    else if (eta >= 1.479 && eta < 2.0  ) return 0.0435;
+    else if (eta >= 2.0   && eta < 2.2  ) return 0.0378;
+    else if (eta >= 2.2   && eta < 2.3  ) return 0.0338;
+    else if (eta >= 2.3   && eta < 2.4  ) return 0.0314;
+    else if (eta >= 2.4)                  return 0.0269;
     else                                  return 0.;
   }
   
   float GetNeutralHadronEA(const float eta) 
   {
-    if      (eta <  1.0)                  return 0.0597;
-    else if (eta >= 1.0   && eta < 1.479) return 0.0807;
-    else if (eta >= 1.479 && eta < 2.0  ) return 0.0629;
-    else if (eta >= 2.0   && eta < 2.2  ) return 0.0197;
-    else if (eta >= 2.2   && eta < 2.3  ) return 0.0184;
-    else if (eta >= 2.3   && eta < 2.4  ) return 0.0284;
-    else if (eta >= 2.4)                  return 0.0591;
+    if      (eta <  1.0)                  return 0.0636;
+    else if (eta >= 1.0   && eta < 1.479) return 0.1103;
+    else if (eta >= 1.479 && eta < 2.0  ) return 0.0759;
+    else if (eta >= 2.0   && eta < 2.2  ) return 0.0236;
+    else if (eta >= 2.2   && eta < 2.3  ) return 0.0151;
+    else if (eta >= 2.3   && eta < 2.4  ) return 0.00007;
+    else if (eta >= 2.4)                  return 0.0132;
     else                                  return 0.;
   }
   
   float GetGammaEA(const float eta) 
   {
-    if      (eta <  1.0)                  return 0.1210;
-    else if (eta >= 1.0   && eta < 1.479) return 0.1107;
-    else if (eta >= 1.479 && eta < 2.0  ) return 0.0699;
-    else if (eta >= 2.0   && eta < 2.2  ) return 0.1056;
-    else if (eta >= 2.2   && eta < 2.3  ) return 0.1457;
-    else if (eta >= 2.3   && eta < 2.4  ) return 0.1719;
-    else if (eta >= 2.4)                  return 0.1998;
+    if      (eta <  1.0)                  return 0.1240;
+    else if (eta >= 1.0   && eta < 1.479) return 0.1093;
+    else if (eta >= 1.479 && eta < 2.0  ) return 0.0631;
+    else if (eta >= 2.0   && eta < 2.2  ) return 0.0779;
+    else if (eta >= 2.2   && eta < 2.3  ) return 0.0999;
+    else if (eta >= 2.3   && eta < 2.4  ) return 0.1155;
+    else if (eta >= 2.4)                  return 0.1373;
     else                                  return 0.;
   }
 
@@ -410,15 +410,15 @@ namespace oot
 
   float GetNeutralHadronPtScale(const float eta, const float pt)
   {
-    if      (eta <  Config::etaEBcutoff)                           return 0.0148*pt+0.000017*pt*pt;
-    else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax) return 0.0163*pt+0.000014*pt*pt;
+    if      (eta <  Config::etaEBcutoff)                           return 0.0126*pt+0.000026*pt*pt;
+    else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax) return 0.0119*pt+0.000025*pt*pt;
     else                                                           return 0.f;
   }
 
   float GetGammaPtScale(const float eta, const float pt)
   {
-    if      (eta <  Config::etaEBcutoff)                           return 0.0047*pt;
-    else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax) return 0.0034*pt;
+    if      (eta <  Config::etaEBcutoff)                           return 0.0035*pt;
+    else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax) return 0.0040*pt;
     else                                                           return 0.f;
   }
 
@@ -465,19 +465,19 @@ namespace oot
 
     if (eta < Config::etaEBcutoff)
     {
-      if      ((HoverE < 0.0269) && (Sieie < 0.00994) && (ChgHadIso < 0.202) && (NeuHadIso < 0.264) && (PhoIso < 2.362)) 
+      if      ((HoverE < 0.020) && (Sieie < 0.0103) && (ChgHadIso < 1.158) && (NeuHadIso < 1.267) && (PhoIso < 2.065)) 
       {
 	idpairs[2].second = true;
 	idpairs[1].second = true;
 	idpairs[0].second = true;
       }
-      else if ((HoverE < 0.0396) && (Sieie < 0.01022) && (ChgHadIso < 0.441) && (NeuHadIso < 2.725) && (PhoIso < 2.571)) 
+      else if ((HoverE < 0.035) && (Sieie < 0.0103) && (ChgHadIso < 1.416) && (NeuHadIso < 2.491) && (PhoIso < 2.952)) 
       {
 	idpairs[2].second = false;
 	idpairs[1].second = true;
 	idpairs[0].second = true;
       }   
-      else if ((HoverE < 0.0597) && (Sieie < 0.01031) && (ChgHadIso < 1.295) && (NeuHadIso < 10.910) && (PhoIso < 3.630)) 
+      else if ((HoverE < 0.105) && (Sieie < 0.0103) && (ChgHadIso < 2.839) && (NeuHadIso < 9.188) && (PhoIso < 2.956)) 
       {
 	idpairs[2].second = false;
 	idpairs[1].second = false;
@@ -486,124 +486,25 @@ namespace oot
     }
     else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax)
     {
-      if      ((HoverE < 0.0213) && (Sieie < 0.03000) && (ChgHadIso < 0.034) && (NeuHadIso < 0.586) && (PhoIso < 2.61)) 
+      if      ((HoverE < 0.025) && (Sieie < 0.0271) && (ChgHadIso < 0.575) && (NeuHadIso < 8.916) && (PhoIso < 3.272)) 
       {
 	idpairs[2].second = true;
 	idpairs[1].second = true;
 	idpairs[0].second = true;
       }
-      else if ((HoverE < 0.0219) && (Sieie < 0.03001) && (ChgHadIso < 0.442) && (NeuHadIso < 1.715) && (PhoIso < 3.863)) 
+      else if ((HoverE < 0.027) && (Sieie < 0.0271) && (ChgHadIso < 1.012) && (NeuHadIso < 9.131) && (PhoIso < 4.095)) 
       {
 	idpairs[2].second = false;
 	idpairs[1].second = true;
 	idpairs[0].second = true;
       }   
-      else if ((HoverE < 0.0481) && (Sieie < 0.03013) && (ChgHadIso < 1.011) && (NeuHadIso < 5.931) && (PhoIso < 6.641)) 
+      else if ((HoverE < 0.029) && (Sieie < 0.0276) && (ChgHadIso < 2.150) && (NeuHadIso < 10.471) && (PhoIso < 4.895)) 
       {
 	idpairs[2].second = false;
 	idpairs[1].second = false;
 	idpairs[0].second = true;
       }   
     }
-  }
-
-  int PassHoE(const float eta, const float HoE)
-  {  
-    if (eta <= Config::etaEBcutoff)
-    {
-      if      (HoE < 0.0269) return 3; 
-      else if (HoE < 0.0396) return 2; 
-      else if (HoE < 0.0597) return 1; 
-      else                   return 0;
-    }
-    else if (eta > Config::etaEBcutoff && eta < Config::etaEEmax)
-    {
-      if      (HoE < 0.0213) return 3; 
-      else if (HoE < 0.0219) return 2; 
-      else if (HoE < 0.0481) return 1; 
-      else                   return 0;
-    }
-    else                     return 0;
-  }
-
-  int PassSieie(const float eta, const float Sieie)
-  { 
-    if (eta <= Config::etaEBcutoff)
-    {
-      if      (Sieie < 0.00994) return 3; 
-      else if (Sieie < 0.01022) return 2; 
-      else if (Sieie < 0.01031) return 1; 
-      else                      return 0;
-    }
-    else if (eta > Config::etaEBcutoff && eta < Config::etaEEmax)
-    {
-      if      (Sieie < 0.03000) return 3; 
-      else if (Sieie < 0.03001) return 2; 
-      else if (Sieie < 0.03013) return 1; 
-      else                      return 0;
-    }
-    else                        return 0;
-  }
-  
-  int PassChgIso(const float eta, const float ChgIso)
-  { 
-    if (eta < Config::etaEBcutoff)
-    {
-      if      (ChgIso < 0.202) return 3; 
-      else if (ChgIso < 0.441) return 2; 
-      else if (ChgIso < 1.295) return 1; 
-      else                     return 0;
-    }
-    else if (eta > Config::etaEBcutoff && eta < Config::etaEEmax)
-    {
-      if      (ChgIso < 0.034) return 3; 
-      else if (ChgIso < 0.442) return 2; 
-      else if (ChgIso < 1.011) return 1; 
-      else                     return 0;
-    }
-    else                       return 0;
-  }
-
-  int PassNeuIso(const float eta, const float NeuIso, const float pt)
-  { 
-    if (eta < Config::etaEBcutoff)
-    {
-      const float ptdep = 0.0148*pt+0.000017*pt*pt;
-      if      (NeuIso < (0.264 +ptdep)) return 3; 
-      else if (NeuIso < (2.725 +ptdep)) return 2; 
-      else if (NeuIso < (10.910+ptdep)) return 1; 
-      else                              return 0;
-    }
-    else if (eta > Config::etaEBcutoff && eta < Config::etaEEmax)
-    {
-      const float ptdep = 0.0163*pt+0.000014*pt*pt;
-      if      (NeuIso < (0.586 +ptdep)) return 3; 
-      else if (NeuIso < (1.715 +ptdep)) return 2; 
-      else if (NeuIso < (5.931 +ptdep)) return 1; 
-      else                              return 0;
-    }
-    else                                return 0;
-  }
-
-  int PassPhIso(const float eta, const float PhIso, const float pt)
-  { 
-    if (eta < Config::etaEBcutoff)
-    {
-      const float ptdep = 0.0047*pt;
-      if      (PhIso < (2.362+ptdep)) return 3; 
-      else if (PhIso < (2.571+ptdep)) return 2; 
-      else if (PhIso < (3.630+ptdep)) return 1; 
-      else                            return 0;
-    }
-    else if (eta > Config::etaEBcutoff && eta < Config::etaEEmax)
-    {
-      const float ptdep = 0.0034*pt;
-      if      (PhIso < (2.617+ptdep)) return 3; 
-      else if (PhIso < (3.863+ptdep)) return 2; 
-      else if (PhIso < (6.641+ptdep)) return 1; 
-      else                            return 0;
-    }
-    else                              return 0;
   }
 
   ///////////////////
