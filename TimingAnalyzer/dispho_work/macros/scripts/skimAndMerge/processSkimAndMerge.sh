@@ -9,6 +9,8 @@ indir=${2}
 tmpdir=${3}
 outdir=${4}
 
+redophoid=${redoPhotonID}
+
 ## global vars
 files="${text}_files.txt"
 wgtfile="${text}_wgt.txt"
@@ -40,7 +42,7 @@ nfiles=$(wc -l ${files})
 counter="1"
 while IFS='' read -r line || [[ -n "${line}" ]]; do
     echo "Working on file" ${counter} "out of" ${nfiles} "[filename: ${line}]"
-    ./scripts/runSkimmer.sh ${rootbase}/${eosdir} ${tmpdir} ${line} ${sumwgts}
+    ./scripts/runSkimmer.sh ${rootbase}/${eosdir} ${tmpdir} ${line} ${sumwgts} ${redophoid}
     counter=$((${counter} + 1))
 done < "${files}"
 

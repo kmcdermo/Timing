@@ -26,9 +26,13 @@ enum SampleGroup {isData, isBkgd, isSignal};
 namespace Config
 {
   // basics
-  constexpr Float_t lumi = 41.96; // CMS lumi (as of Nov 30 PR JSON)
+  constexpr Float_t lumi = 41.37; // CMS lumi : golden for ReReco
   constexpr Float_t invfbToinvpb = 1000.f; // conversion for the world's dumbest unit
   static const TString extraText = "Preliminary";
+
+  // ECAL info
+  constexpr Float_t etaEBcutoff = 1.479;
+  constexpr Float_t etaEEmax    = 2.5;
 
   // input
   static const TString eosDir         = "root://eoscms";

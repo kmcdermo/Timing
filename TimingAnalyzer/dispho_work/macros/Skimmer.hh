@@ -14,7 +14,7 @@ class Skimmer
 {
 public:
   // functions
-  Skimmer(const TString & indir, const TString & outdir, const TString & filename, const Float_t sumwgts);
+  Skimmer(const TString & indir, const TString & outdir, const TString & filename, const Float_t sumwgts, const Bool_t redophoid = false);
   ~Skimmer();
 
   // setup config inputs
@@ -45,12 +45,28 @@ public:
   void FillOutJets();
   void FillOutPhos();
 
+  // helper functions for output
+  void GetGEDPhoVID(Pho & outpho);
+  void GetOOTPhoVID(Pho & outpho);
+  Float_t GetChargedHadronEA(const Float_t eta);
+  Float_t GetNeutralHadronEA(const Float_t eta); 
+  Float_t GetGammaEA(const Float_t eta); 
+  Float_t GetEcalPFClEA(const Float_t eta);
+  Float_t GetHcalPFClEA(const Float_t eta);
+  Float_t GetTrackEA(const Float_t eta);
+  Float_t GetNeutralHadronPtScale(const Float_t eta, const Float_t pt);
+  Float_t GetGammaPtScale(const Float_t eta, const Float_t pt);
+  Float_t GetEcalPFClPtScale(const Float_t eta, const Float_t pt);
+  Float_t GetHcalPFClPtScale(const Float_t eta, const Float_t pt);
+  Float_t GetTrackPtScale(const Float_t eta, const Float_t pt);
+
 private:
   // I/O
   const TString fInDir;
   const TString fOutDir;
   const TString fFileName;
   const Float_t fSumWgts;
+  const Bool_t  fRedoPhoID;
   std::map<std::string,int> cutLabels;
   Bool_t fIsMC;
   

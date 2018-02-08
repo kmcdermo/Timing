@@ -3,8 +3,8 @@
 
 #include <iostream>
 
-Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & filename, const Float_t sumwgts) :
-  fInDir(indir), fOutDir(outdir), fFileName(filename), fSumWgts(sumwgts)
+Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & filename, const Float_t sumwgts, const Bool_t redophoid) :
+  fInDir(indir), fOutDir(outdir), fFileName(filename), fSumWgts(sumwgts), fRedoPhoID(redophoid)
 {
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
@@ -299,8 +299,17 @@ void Skimmer::FillOutPhos()
     outpho.isTrk = inpho.isTrk;
     outpho.passEleVeto = inpho.passEleVeto;
     outpho.hasPixSeed = inpho.hasPixSeed;
-    outpho.gedID = inpho.gedID;
-    outpho.ootID = inpho.ootID;
+
+    if (fRedoPhoID)
+    {
+      inpho.gedID >= 0 ? Skimmer::GetGEDPhoVID(outpho) : -1;
+      inpho.ootID >= 0 ? Skimmer::GetOOTPhoVID(outpho) : -1;
+    }
+    else
+    {
+      outpho.gedID = inpho.gedID;
+      outpho.ootID = inpho.ootID;
+    }
 
     if (fInConfig.storeRecHits)
     {
@@ -942,5 +951,221 @@ void Skimmer::GetPUWeights()
   for (Int_t ibin = 1; ibin <= fInPUWgtHist->GetNbinsX(); ibin++)
   {
     fPUWeights.emplace_back(fInPUWgtHist->GetBinContent(ibin));
+  }
+}
+
+/////////////////////
+//                 //
+// Effective Areas //
+//                 //
+/////////////////////
+
+Float_t Skimmer::GetChargedHadronEA(const Float_t eta)
+{
+  if      (eta <  1.0)                  return 0.0385;
+  else if (eta >= 1.0   && eta < 1.479) return 0.0468;
+  else if (eta >= 1.479 && eta < 2.0  ) return 0.0435;
+  else if (eta >= 2.0   && eta < 2.2  ) return 0.0378;
+  else if (eta >= 2.2   && eta < 2.3  ) return 0.0338;
+  else if (eta >= 2.3   && eta < 2.4  ) return 0.0314;
+  else if (eta >= 2.4)                  return 0.0269;
+  else                                  return 0.;
+}
+  
+Float_t Skimmer::GetNeutralHadronEA(const Float_t eta) 
+{
+  if      (eta <  1.0)                  return 0.0636;
+  else if (eta >= 1.0   && eta < 1.479) return 0.1103;
+  else if (eta >= 1.479 && eta < 2.0  ) return 0.0759;
+  else if (eta >= 2.0   && eta < 2.2  ) return 0.0236;
+  else if (eta >= 2.2   && eta < 2.3  ) return 0.0151;
+  else if (eta >= 2.3   && eta < 2.4  ) return 0.00007;
+  else if (eta >= 2.4)                  return 0.0132;
+  else                                  return 0.;
+}
+  
+Float_t Skimmer::GetGammaEA(const Float_t eta) 
+{
+  if      (eta <  1.0)                  return 0.1240;
+  else if (eta >= 1.0   && eta < 1.479) return 0.1093;
+  else if (eta >= 1.479 && eta < 2.0  ) return 0.0631;
+  else if (eta >= 2.0   && eta < 2.2  ) return 0.0779;
+  else if (eta >= 2.2   && eta < 2.3  ) return 0.0999;
+  else if (eta >= 2.3   && eta < 2.4  ) return 0.1155;
+  else if (eta >= 2.4)                  return 0.1373;
+  else                                  return 0.;
+}
+
+Float_t Skimmer::GetEcalPFClEA(const Float_t eta)
+{
+  if   (eta < Config::etaEBcutoff) return 0.167;
+  else                             return 0.f;
+}
+
+Float_t Skimmer::GetHcalPFClEA(const Float_t eta)
+{
+  if   (eta < Config::etaEBcutoff) return 0.108;
+  else                             return 0.f;
+}
+
+Float_t Skimmer::GetTrackEA(const Float_t eta)
+{
+  if   (eta < Config::etaEBcutoff) return 0.113;
+  else                             return 0.f;
+}
+
+////////////////
+//            //
+// pT scaling //
+//            //
+////////////////
+
+Float_t Skimmer::GetNeutralHadronPtScale(const Float_t eta, const Float_t pt)
+{
+  if      (eta <  Config::etaEBcutoff)                           return 0.0126*pt+0.000026*pt*pt;
+  else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax) return 0.0119*pt+0.000025*pt*pt;
+  else                                                           return 0.f;
+}
+
+Float_t Skimmer::GetGammaPtScale(const Float_t eta, const Float_t pt)
+{
+  if      (eta <  Config::etaEBcutoff)                           return 0.0035*pt;
+  else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax) return 0.0040*pt;
+  else                                                           return 0.f;
+}
+
+Float_t Skimmer::GetEcalPFClPtScale(const Float_t eta, const Float_t pt)
+{
+  if   (eta <  Config::etaEBcutoff) return 0.0028*pt;
+  else                              return 0.f;
+}
+
+Float_t Skimmer::GetHcalPFClPtScale(const Float_t eta, const Float_t pt)
+{
+  if   (eta <  Config::etaEBcutoff) return 0.0087*pt;
+  else                              return 0.f;
+}
+
+Float_t Skimmer::GetTrackPtScale(const Float_t eta, const Float_t pt)
+{
+  if   (eta <  Config::etaEBcutoff) return 0.0056*pt;
+  else                              return 0.f;
+}
+
+////////////////////
+//                //
+// GED Photon VID //
+//                //
+////////////////////
+
+void Skimmer::GetGEDPhoVID(Pho & outpho)
+{
+  // needed for cuts
+  const Float_t eta = std::abs(outpho.sceta);
+  const Float_t pt  = outpho.pt;
+  
+  // cut variables
+  const Float_t HoverE    = outpho.HoE;
+  const Float_t Sieie     = outpho.sieie;
+  const Float_t ChgHadIso = std::max(outpho.ChgHadIso - (fOutEvent.rho * Skimmer::GetChargedHadronEA(eta))                                         ,0.f);
+  const Float_t NeuHadIso = std::max(outpho.NeuHadIso - (fOutEvent.rho * Skimmer::GetNeutralHadronEA(eta)) - (Skimmer::GetNeutralHadronPtScale(eta,pt)),0.f);
+  const Float_t PhoIso    = std::max(outpho.PhoIso    - (fOutEvent.rho * Skimmer::GetGammaEA        (eta)) - (Skimmer::GetGammaPtScale        (eta,pt)),0.f);
+  
+  if (eta < Config::etaEBcutoff)
+  {
+    if      ((HoverE < 0.020) && (Sieie < 0.0103) && (ChgHadIso < 1.158) && (NeuHadIso < 1.267) && (PhoIso < 2.065)) 
+    {
+      outpho.gedID = 3;
+    }
+    else if ((HoverE < 0.035) && (Sieie < 0.0103) && (ChgHadIso < 1.416) && (NeuHadIso < 2.491) && (PhoIso < 2.952)) 
+    {
+      outpho.gedID = 2;
+    }   
+    else if ((HoverE < 0.105) && (Sieie < 0.0103) && (ChgHadIso < 2.839) && (NeuHadIso < 9.188) && (PhoIso < 2.956)) 
+    {
+      outpho.gedID = 1;
+    } 
+    else
+    {
+      outpho.gedID = 0;
+    }
+  }
+  else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax)
+  {
+    if      ((HoverE < 0.025) && (Sieie < 0.0271) && (ChgHadIso < 0.575) && (NeuHadIso < 8.916) && (PhoIso < 3.272)) 
+    {
+      outpho.gedID = 3;
+    }
+    else if ((HoverE < 0.027) && (Sieie < 0.0271) && (ChgHadIso < 1.012) && (NeuHadIso < 9.131) && (PhoIso < 4.095)) 
+    {
+      outpho.gedID = 2;
+    }   
+    else if ((HoverE < 0.029) && (Sieie < 0.0276) && (ChgHadIso < 2.150) && (NeuHadIso < 10.471) && (PhoIso < 4.895)) 
+    {
+      outpho.gedID = 1;
+    }   
+    else
+    {
+      outpho.gedID = 0;
+    }
+  }
+  else
+  {
+    outpho.gedID = -1;
+  }
+}
+
+///////////////////
+//               //
+// OOT Photon ID //
+//               //
+///////////////////
+
+void Skimmer::GetOOTPhoVID(Pho & outpho)
+{
+  // needed for cuts
+  const Float_t eta = std::abs(outpho.sceta);
+  const Float_t pt  = outpho.pt;
+  
+  // cut variables
+  const Float_t HoverE      = outpho.HoE;
+  const Float_t Sieie       = outpho.sieie;
+  const Float_t EcalPFClIso = std::max(outpho.EcalPFClIso - (fOutEvent.rho * Skimmer::GetEcalPFClEA(eta)) - (Skimmer::GetEcalPFClPtScale(eta,pt)),0.f);
+  const Float_t HcalPFClIso = std::max(photon.HcalPFClIso - (fOutEvent.rho * Skimmer::GetHcalPFClEA(eta)) - (Skimmer::GetHcalPFClPtScale(eta,pt)),0.f);
+  const Float_t TrkIso      = std::max(photon.TrkIso      - (fOutEvent.rho * Skimmer::GetTrackEA   (eta)) - (Skimmer::GetTrackPtScale   (eta,pt)),0.f);
+  
+  if (eta < Config::etaEBcutoff)
+  {
+    if      ((HoverE < 0.020) && (Sieie < 0.0103) && (EcalPFClIso < 2.f) && (HcalPFClIso < 5.f) && (TrkIso < 3.f)) 
+    {
+      outpho.ootID = 3;
+    }   
+    else if ((HoverE < 0.105) && (Sieie < 0.0103) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 6.f)) 
+    {
+      outpho.ootID = 1;
+    }   
+    else
+    {
+      outpho.ootID = 0;
+    }
+  }
+  else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax)
+  {
+    if      ((HoverE < 0.025) && (Sieie < 0.0271) && (EcalPFClIso < 2.f) && (HcalPFClIso < 5.f) && (TrkIso < 3.f)) 
+    {
+      outpho.ootID = 3;
+    }   
+    else if ((HoverE < 0.029) && (Sieie < 0.0276) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 6.f)) 
+    {
+      outpho.ootID = 1;
+    }   
+    else
+    {
+      outpho.ootID = 0;
+    }
+  }
+  else
+  {
+    outpho.ootID = -1;
   }
 }
