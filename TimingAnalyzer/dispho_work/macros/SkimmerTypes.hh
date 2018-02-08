@@ -337,7 +337,7 @@ struct Pho
 };
 typedef std::vector<Pho> PhoVec;
 
-struct GMSB
+struct Gmsb
 {
   Float_t genNmass;
   Float_t genNE;
@@ -383,9 +383,9 @@ struct GMSB
   std::string s_gengrphi = "gengrphi";
   std::string s_gengreta = "gengreta";
 };
-typedef std::vector<GMSB> GMSBVec;
+typedef std::vector<Gmsb> GmsbVec;
 
-struct HVDS
+struct Hvds
 {
   Float_t genvPionmass;
   Float_t genvPionE;
@@ -431,6 +431,6 @@ struct HVDS
   std::string s_genHVph1eta = "genHVph1eta";
   std::string s_genHVph1match = "genHVph1match";
 };
-typedef std::vector<HVDS> HVDSVec;
+typedef std::vector<Hvds> HvdsVec;
 
 #endif

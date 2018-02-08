@@ -80,8 +80,8 @@ private:
   Float_t fSampleWeight;
   std::vector<Float_t> fPUWeights;
   
-  GMSBVec fInGMSBs;
-  HVDSVec fInHVDSs;
+  GmsbVec fInGMSBs;
+  HvdsVec fInHVDSs;
   Event   fInEvent;
   RecHits fInRecHits;
   JetVec  fInJets;
@@ -95,8 +95,8 @@ private:
   TTree * fOutConfigTree;
   TH1F  * fOutCutFlow;
 
-  GMSBVec fOutGMSBs;
-  HVDSVec fOutHVDSs;
+  GmsbVec fOutGMSBs;
+  HvdsVec fOutHVDSs;
   Event   fOutEvent;
   JetVec  fOutJets;
   PhoVec  fOutPhos;
