@@ -528,12 +528,12 @@ namespace oot
 
     if (eta < Config::etaEBcutoff)
     {
-      if      ((HoverE < 0.0269) && (Sieie < 0.00994) && (EcalPFClIso < 2.f) && (HcalPFClIso < 5.f) && (TrkIso < 3.f)) 
+      if      ((HoverE < 0.020) && (Sieie < 0.0103) && (EcalPFClIso < 2.f) && (HcalPFClIso < 5.f) && (TrkIso < 3.f)) 
       {
 	idpairs[4].second = true;
 	idpairs[3].second = true;
       }   
-      else if ((HoverE < 0.0597) && (Sieie < 0.01031) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 6.f)) 
+      else if ((HoverE < 0.105) && (Sieie < 0.0103) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 6.f)) 
       {
 	idpairs[4].second = false;
 	idpairs[3].second = true;
@@ -541,12 +541,12 @@ namespace oot
     }
     else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax)
     {
-      if      ((HoverE < 0.0213) && (Sieie < 0.03000) && (EcalPFClIso < 2.f) && (HcalPFClIso < 5.f) && (TrkIso < 3.f)) 
+      if      ((HoverE < 0.025) && (Sieie < 0.0271) && (EcalPFClIso < 2.f) && (HcalPFClIso < 5.f) && (TrkIso < 3.f)) 
       {
 	idpairs[4].second = true;
 	idpairs[3].second = true;
       }   
-      else if ((HoverE < 0.0481) && (Sieie < 0.03013) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 6.f)) 
+      else if ((HoverE < 0.029) && (Sieie < 0.0271) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 6.f)) 
       {
 	idpairs[4].second = false;
 	idpairs[3].second = true;
