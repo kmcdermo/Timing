@@ -9,11 +9,11 @@ era=${3}
 version=${4}
 
 ## global vars
-database="Run2017${era}-PromptReco-${version}"
+database="Run2017${era}-17Nov2017-${version}"
 text="${dataset}_2017${era}_${version}"
 
 ## directories needed
-indir="${eosbase}/${dataset}/${label}_${database}"
+indir="${inbase}/analysis/${dataset}/${label}_${database}"
 tmpdir="${tmpbase}/${dataset}/${era}/${version}"
 outdir="${outbase}/Data/${dataset}/${era}/${version}"
 	

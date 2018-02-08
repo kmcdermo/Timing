@@ -4,14 +4,15 @@ source scripts/common_variables.sh
 
 ## input
 label=${1}
+tune=${2}
+bin=${3}
 
 ## global vars
-mcbase="DYJetsToLL"
-bin="M-50"
+mcbase="DYJetsToLL_M-50_HT"
 text="${mcbase}_${bin}"
 
 ## directories needed
-indir="${eosbase}/${mcbase}_${bin}_${bkgdtune}/${label}_${mcbase}_${bin}_${bkgdtune}"
+indir="${inbase}/${mcbase}-${bin}_${tune}/${label}_${mcbase}-${bin}_${tune}"
 tmpdir="${tmpbase}/${mcbase}/${bin}"
 outdir="${outbase}/MC/${mcbase}/${bin}"
 

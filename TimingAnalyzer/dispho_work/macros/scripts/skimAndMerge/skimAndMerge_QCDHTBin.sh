@@ -4,14 +4,15 @@ source scripts/common_variables.sh
 
 ## input
 label=${1}
-bin=${2}
+tune=${2}
+bin=${3}
 
 ## global vars
 mcbase="QCD_HT"
 text="${mcbase}_${bin}"
 
 ## directories needed
-indir="${eosbase}/${mcbase}${bin}_${bkgdtune}/${label}_${mcbase}${bin}_${bkgdtune}"
+indir="${inbase}/analysis/${mcbase}${bin}_${tune}/${label}_${mcbase}${bin}_${tune}"
 tmpdir="${tmpbase}/${mcbase}/${bin}"
 outdir="${outbase}/MC/${mcbase}/${bin}"
 

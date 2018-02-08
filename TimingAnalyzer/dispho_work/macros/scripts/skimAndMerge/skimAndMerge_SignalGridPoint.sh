@@ -13,7 +13,7 @@ mcbase="${model}"
 text="${mcbase}_${gridpoint}"
 
 ## directories needed
-indir="${eosbase}/${mcbase}_${gridpoint}${extra}/${label}_${mcbase}_${gridpoint}${extra}"
+indir="${inbase}/analysis/${mcbase}_${gridpoint}${extra}/${label}_${mcbase}_${gridpoint}${extra}"
 tmpdir="${tmpbase}/${mcbase}/${gridpoint}"
 outdir="${outbase}/MC/${mcbase}/${gridpoint}"
 

@@ -46,8 +46,8 @@ public:
   void FillOutPhos();
 
   // helper functions for output
-  void GetGEDPhoVID(Pho & outpho);
-  void GetOOTPhoVID(Pho & outpho);
+  Int_t GetGEDPhoVID(const Pho & outpho);
+  Int_t GetOOTPhoVID(const Pho & outpho);
   Float_t GetChargedHadronEA(const Float_t eta);
   Float_t GetNeutralHadronEA(const Float_t eta); 
   Float_t GetGammaEA(const Float_t eta); 
