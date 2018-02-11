@@ -1299,7 +1299,7 @@ void DisPho::MakeAndFillConfigTree()
   configtree->Branch("isGMSB", &isGMSB_tmp, "isGMSB/O");
   configtree->Branch("isHVDS", &isHVDS_tmp, "isHVDS/O");
   configtree->Branch("isBkgd", &isBkgd_tmp, "isBkgd/O");
-  configtree->Branch("isToy ", &isToy_tmp , "isToy/O");
+  configtree->Branch("isToy" , &isToy_tmp , "isToy/O");
   configtree->Branch("xsec", &xsec_tmp, "xsec/F");
   configtree->Branch("filterEff", &filterEff_tmp, "filterEff/F");
   configtree->Branch("BR", &BR_tmp, "BR/F");
