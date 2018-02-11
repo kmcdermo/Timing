@@ -19,11 +19,12 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   fInFile = TFile::Open(infilename.Data());
   Config::CheckValidFile(fInFile,infilename);
 
-  // Get input config tree
+  // Get input config tree + sample weight
   const TString inconfigtreename = Form("%s%s",Config::rootdir.Data(),Config::configtreename.Data());
   fInConfigTree = (TTree*)fInFile->Get(inconfigtreename.Data());
   Config::CheckValidTree(fInConfigTree,inconfigtreename,infilename);
   Skimmer::GetInConfig();
+  if (fIsMC) Skimmer::GetSampleWeight();
 
   // Get main input tree and initialize it
   const TString indisphotreename = Form("%s%s",Config::rootdir.Data(),Config::disphotreename.Data());
@@ -37,15 +38,19 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   Config::CheckValidTH1F(fInCutFlow,inh_cutflowname,infilename);
 
   // Get PU weights input
-  const TString pufilename = Form("root://eoscms//store/user/kmcdermo/nTuples/%s.root",Config::puwgtFileName.Data());
-  fInPUWgtFile = TFile::Open(pufilename.Data());
-  Config::CheckValidFile(fInPUWgtFile,pufilename);
-  fInPUWgtHist = (TH1F*)fInPUWgtFile->Get(Config::puwgtHistName.Data());
-  Config::CheckValidTH1F(fInPUWgtHist,Config::puwgtHistName,pufilename);
- 
-  ////////////////////////
-  // Get all the inputs //
-  ////////////////////////
+  if (fIsMC)
+  {
+    const TString pufilename = Form("root://eoscms//store/user/kmcdermo/nTuples/%s.root",Config::puwgtFileName.Data());
+    fInPUWgtFile = TFile::Open(pufilename.Data());
+    Config::CheckValidFile(fInPUWgtFile,pufilename);
+    fInPUWgtHist = (TH1F*)fInPUWgtFile->Get(Config::puwgtHistName.Data());
+    Config::CheckValidTH1F(fInPUWgtHist,Config::puwgtHistName,pufilename);
+    Skimmer::GetPUWeights();
+  }
+
+  /////////////////////////
+  // Set all the outputs //
+  /////////////////////////
   std::cout << "Setting up output skim" << std::endl;
 
   // Make the output file, make trees, then init them
@@ -59,15 +64,17 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   Skimmer::InitAndSetOutConfig();
   Skimmer::InitOutTree();
   Skimmer::InitOutCutFlow();
-  Skimmer::GetSampleWeight();
-  Skimmer::GetPUWeights();
 }
 
 Skimmer::~Skimmer()
 {
-  fPUWeights.clear();
-  delete fInPUWgtHist;
-  delete fInPUWgtFile;
+  if (fIsMC)
+  {
+    fPUWeights.clear();
+    delete fInPUWgtHist;
+    delete fInPUWgtFile;
+  }
+
   delete fInCutFlow;
   delete fInTree;
   delete fInConfigTree;
@@ -943,7 +950,7 @@ void Skimmer::InitOutCutFlow()
 
 void Skimmer::GetSampleWeight()
 {
-  fSampleWeight = fOutConfig.xsec * fOutConfig.filterEff * fOutConfig.BR * Config::lumi * Config::invfbToinvpb / fSumWgts; // include normalization to lumi!!!
+  fSampleWeight = fInConfig.xsec * fInConfig.filterEff * Config::lumi * Config::invfbToinvpb / fSumWgts; // include normalization to lumi!!! ( do we need to multiply by * fInConfig.BR)
 }
 
 void Skimmer::GetPUWeights()
