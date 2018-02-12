@@ -61,7 +61,8 @@ def main():
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
         inputPaths   = 'HLTpathsWExtras.txt'
         inputFilters = 'HLTfilters.txt'
-         
+        inputFlags   = 'METflags.txt'
+
         #--------------------------------------------------------
         # This is the base config:
         #--------------------------------------------------------
@@ -74,7 +75,7 @@ def main():
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'dispho.py'
         config.JobType.pyCfgParams = None
-        config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
+        config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters , inputDir+inputFlags ]
 
         config.Data.inputDataset = None
         config.Data.splitting    = 'EventAwareLumiBased'
@@ -95,14 +96,18 @@ def main():
             ['/GJets_HT-600ToInf_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM', '85.18'   , '1', '1'],
 
             ['/QCD_HT100to200_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'   , '23670000', '1', '1'],
-            ['/QCD_HT200to300_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'   , '1554000' , '1', '1'],
-            ['/QCD_HT300to500_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'   , '323800'  , '1', '1'],
-            ['/QCD_HT500to700_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'   , '30010'   , '1', '1'],
-            ['/QCD_HT700to1000_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'  , '6352'    , '1', '1'],
-            ['/QCD_HT1000to1500_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM' , '1096'    , '1', '1'],
-            ['/QCD_HT1500to2000_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM' , '99.12'   , '1', '1'],
-#            ['/QCD_HT2000toInf_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'  , '25.14'   , '1', '1'],
+            ['/QCD_HT200to300_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'   ,  '1554000', '1', '1'],
+            ['/QCD_HT300to500_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'   ,   '323800', '1', '1'],
+            ['/QCD_HT500to700_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'   ,    '30010', '1', '1'],
+            ['/QCD_HT700to1000_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'  ,     '6352', '1', '1'],
+            ['/QCD_HT1000to1500_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM' ,     '1096', '1', '1'],
+            ['/QCD_HT1500to2000_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM' ,    '99.12', '1', '1'],
+            ['/QCD_HT2000toInf_TuneCP5_13TeV-madgraph-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'  ,    '20.20', '1', '1'],
 
+            ['/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM', '6485', '1', '1'],
+            ['/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17MiniAOD-RECOSIMstep_94X_mc2017_realistic_v10-v1/MINIAODSIM', '5349', '1', '1'],
+            ['/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17MiniAOD-RECOSIMstep_94X_mc2017_realistic_v10_ext1-v1/MINIAODSIM', '5349', '1', '1'],
+            
             ['/DYJetsToLL_M-50_HT-100to200_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM', '161.0' , '1', '1'],
             ['/DYJetsToLL_M-50_HT-200to400_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM', '48.71' , '1', '1'],
             ['/DYJetsToLL_M-50_HT-400to600_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM', '6.979' , '1', '1'],
@@ -113,11 +118,14 @@ def main():
             ]
         
         for inDO in inputDataAndOpts:
-            # inDO[0] is of the form /A/B/C. Since A is unique for each inDO in Monte Carlo, use this in the CRAB request name.
-            config.General.requestName   = inDO[0].split('/')[1]
+            # inDO[0] is of the form /A/B/C. Since A is (mostly) unique for each inDO in Monte Carlo, use this in the CRAB request name.
+            datasetName = inDO[0].split('/')[1]
+            if "_ext" in inDO[0] : datasetName += "_ext"
+
+            config.General.requestName   = datasetName
             config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v10','splitPho=False','isBkgd=True',
                                             'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],
-                                            'inputPaths='+inputPaths,'inputFilters='+inputFilters]
+                                            'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.

@@ -108,7 +108,6 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
 
   void ClearRecoPhotonBranches();
   void InitializeRecoPhotonBranches();
-  void DumpVIDs(const pat::Photon &, const int, const float);
   void InitializeRecoRecHitBranches(const int iph);
   void DumpRecHitInfo(const int, const DetIdPairVec &, const EcalRecHitCollection *&);
 

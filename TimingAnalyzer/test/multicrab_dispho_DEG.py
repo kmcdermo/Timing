@@ -61,6 +61,7 @@ def main():
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
         inputPaths   = 'HLTpathsWExtras.txt'
         inputFilters = 'HLTfilters.txt'
+        inputFlags   = 'METflags.txt'
         inputJSON    = 'golden2017.json'
          
         #--------------------------------------------------------
@@ -75,7 +76,7 @@ def main():
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'dispho.py'
         config.JobType.pyCfgParams = None
-        config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
+        config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters , inputDir+inputFlags ]
 
         config.Data.inputDataset = None
         config.Data.lumiMask     = inputDir+inputJSON
@@ -100,7 +101,8 @@ def main():
         for inDO in inputDataAndOpts:
             # inDO[0] is of the form /A/B/C. Since B is unique for each inDS, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[2]
-            config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_ReReco_EOY17_v2','splitPho=False','inputPaths='+inputPaths,'inputFilters='+inputFilters]
+            config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_ReReco_EOY17_v2','splitPho=False',
+                                            'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.

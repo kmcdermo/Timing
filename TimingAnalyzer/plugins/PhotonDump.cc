@@ -716,8 +716,6 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       else if (photon.photonID("loose"))  {phVID[iph] = 1;}
       else                                {phVID[iph] = 0;}
 
-      // if (true) PhotonDump::DumpVIDs((*phiter),iph,sceta);
-
       // use seed to get geometry and recHits
       const DetId seedDetId = phsc->seed()->seed(); //seed detid
       const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
@@ -819,30 +817,6 @@ void PhotonDump::DumpGenIds(const edm::Handle<std::vector<reco::GenParticle> > &
   } // end loop over gen particles
 
   std::cout << "---------------------------------" << std::endl << std::endl;
-}
-
-void PhotonDump::DumpVIDs(const pat::Photon & photon, const int iph, const float sceta)
-{
-  int VIDval = 0;
-  TString VIDstr = "loose";
-  if      (VIDstr.EqualTo("loose"))  VIDval = 1;
-  else if (VIDstr.EqualTo("medium")) VIDval = 2;
-  else if (VIDstr.EqualTo("tight"))  VIDval = 3;
-  
-  if (photon.photonID(VIDstr.Data()))
-  {
-    bool check = (phHoE_b[iph] >= VIDval && phsieie_b[iph] >= VIDval && phChgIso_b[iph] >= VIDval && phNeuIso_b[iph] >= VIDval && phIso_b[iph] >= VIDval);
-    if (!check)
-    {
-      std::cout << "VID: "     << phVID[iph]      << " eta: " << sceta         << std::endl
-		<< " HoE:    " << phHoE_b[iph]    << " val: " << phHoE[iph]    << std::endl
-		<< " Sieie:  " << phsieie_b[iph]  << " val: " << phsieie[iph]  << std::endl
-		<< " chgIso: " << phChgIso_b[iph] << " val: " << phChgIso[iph] << std::endl
-		<< " neuIso: " << phNeuIso_b[iph] << " val: " << phNeuIso[iph] << std::endl
-		<< " phIso:  " << phIso_b[iph]    << " val: " << phIso[iph]    << std::endl 
-		<< std::endl;
-    }
-  }
 }  
 
 void PhotonDump::DumpRecHitInfo(const int iph, const DetIdPairVec & hitsAndFractions, const EcalRecHitCollection *& recHits)

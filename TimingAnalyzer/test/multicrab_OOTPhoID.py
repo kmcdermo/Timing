@@ -61,7 +61,8 @@ def main():
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
         inputPaths   = 'HLTpathsWExtras.txt'
         inputFilters = 'HLTfilters.txt'
-         
+        inputFlags   = 'METflags.txt'
+ 
         #--------------------------------------------------------
         # This is the base config:
         #--------------------------------------------------------
@@ -74,7 +75,7 @@ def main():
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'dispho.py'
         config.JobType.pyCfgParams = None
-        config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
+        config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters , inputDir+inputFlags ]
 
         config.Data.inputDBS     = None
         config.Data.inputDataset = None
@@ -98,7 +99,7 @@ def main():
             config.General.requestName   = inDO[0].split('/')[1]
             config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v10','splitPho=True','storeRecHits=False',
                                             'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],inDO[4],
-                                            'inputPaths='+inputPaths,'inputFilters='+inputFilters]
+                                            'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.unitsPerJob      = inDO[5]
             config.Data.inputDBS         = inDO[6]
             config.Data.inputDataset     = inDO[0]
