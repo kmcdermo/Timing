@@ -33,7 +33,8 @@ namespace Config
     SampleMap["MC/GJets_HT/600ToInf"] = GJets;
     
     // DYLL
-    SampleMap["MC/DYJetsToLL/M-50"] = DYLL;
+    SampleMap["MC/DYJetsToLL/base"] = DYLL;
+    SampleMap["MC/DYJetsToLL/ext"]  = DYLL;
 
     // GMSB
     SampleMap["MC/GMSB/L200TeV_CTau400cm"] = GMSB;

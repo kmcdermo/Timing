@@ -8,11 +8,13 @@ tune=${2}
 sample=${3}
 
 ## global vars
-mcbase="DYJetsToLL_M-50"
-text="${mcbase}_${sample}"
+mcbase="DYJetsToLL"
+extra="M-50"
+mcfull="${mcbase}_${extra}"
+text="${mcfull}_${sample}"
 
 ## directories needed
-indir="${inbase}/${mcbase}_${tune}/${label}_${mcbase}_${tune}"
+indir="${inbase}/${mcfull}_${tune}/${label}_${mcfull}_${tune}"
 if [ "${sample}" == "ext" ] ; then
     indir+="_"${sample}
 fi
