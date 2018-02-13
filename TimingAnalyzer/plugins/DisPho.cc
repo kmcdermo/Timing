@@ -576,6 +576,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //                     //
   /////////////////////////
   DisPho::InitializePVBranches();
+  DisPho::InitializeTrackBranches();
   if (verticesH.isValid()) 
   {
     nvtx = verticesH->size();
@@ -583,7 +584,42 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     vtxX = primevtx.position().x();
     vtxY = primevtx.position().y();
     vtxZ = primevtx.position().z();
-  }
+    
+    //////////////////////
+    //                  //
+    // Tracks for Livia //
+    //                  //
+    //////////////////////
+    
+    for (const auto & vertex : *verticesH)
+    {
+      vtx_z.push_back(vertex.z());
+      vtx_nTks.push_back(vertex.tracksSize());
+
+      int nTks =0;
+      int nTks_09_B = 0;
+      int nTks_p09_E = 0;
+      int nTks_p2_E = 0;
+      int nTks_pt09_E = 0;
+      int nTks_pt2_E = 0;
+      for (reco::Vertex::trackRef_iterator ti = vertex.tracks_begin(); ti!=vertex.tracks_end(); ++ti)
+      {
+	nTks++;
+	if ( (*ti) -> pt() > 0.9 && fabs( (*ti) -> eta() ) < 1.5 ) nTks_09_B++;
+	if ( (*ti) -> p()  > 0.9 && fabs( (*ti) -> eta() ) > 1.5 && fabs( (*ti) -> eta() ) < 3.0 ) nTks_p09_E++;
+	if ( (*ti) -> p()  > 2.0 && fabs( (*ti) -> eta() ) > 1.5 && fabs( (*ti) -> eta() ) < 3.0 ) nTks_p2_E++;
+	if ( (*ti) -> pt() > 0.9 && fabs( (*ti) -> eta() ) > 1.5 && fabs( (*ti) -> eta() ) < 3.0 ) nTks_pt09_E++;
+	if ( (*ti) -> pt() > 2.0 && fabs( (*ti) -> eta() ) > 1.5 && fabs( (*ti) -> eta() ) < 3.0 ) nTks_pt2_E++;
+      }
+      std::cout << (vertex.tracksSize()) << "   " << nTks << "   " << nTks_09_B << std::endl;
+      
+      vtx_nTks_pt09_B.push_back(nTks_09_B);
+      vtx_nTks_p09_E.push_back(nTks_p09_E);
+      vtx_nTks_p2_E.push_back(nTks_p2_E);
+      vtx_nTks_pt09_E.push_back(nTks_pt09_E);
+      vtx_nTks_pt2_E.push_back(nTks_pt2_E);
+    }
+  } // end check on verticesH valid
 
   //////////////////
   //              //
@@ -852,6 +888,17 @@ void DisPho::InitializePVBranches()
 {
   nvtx = -9999; 
   vtxX = -9999.f; vtxY = -9999.f; vtxZ = -9999.f;
+}
+
+void DisPho::InitializeTrackBranches()
+{
+  vtx_z.clear();
+  vtx_nTks.clear();
+  vtx_nTks_pt09_B.clear();
+  vtx_nTks_p09_E.clear();
+  vtx_nTks_p2_E.clear();
+  vtx_nTks_pt09_E.clear();
+  vtx_nTks_pt2_E.clear();
 }
 
 void DisPho::InitializeMETBranches()

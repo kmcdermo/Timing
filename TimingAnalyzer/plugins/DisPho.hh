@@ -95,6 +95,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void SetHVDSBranch(const reco::GenParticle & vPion, hvdsStruct & hvdsBranch, const std::vector<oot::Photon> & photons);
   void SetTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, const edm::Event & iEvent);
   void InitializePVBranches();
+  void InitializeTrackBranches();
   void InitializeMETBranches();
   void InitializeJetBranches();
   void InitializeJetBranch(jetStruct & jetBranch);
@@ -288,6 +289,10 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // vertices
   int nvtx;
   float vtxX, vtxY, vtxZ;
+
+  // extra track info
+  std::vector<float> vtx_z;
+  std::vector<int> vtx_nTks, vtx_nTks_pt09_B, vtx_nTks_p09_E, vtx_nTks_p2_E, vtx_nTks_pt09_E, vtx_nTks_pt2_E;
 
   // rho
   float rho;
