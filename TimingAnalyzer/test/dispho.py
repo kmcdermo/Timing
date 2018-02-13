@@ -58,7 +58,7 @@ options.register('useOOTPhotons',True,VarParsing.multiplicity.singleton,VarParsi
 
 ## data or MC options
 options.register('isMC',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate data or MC');
-options.register('isGMSB',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate GMSB');
+options.register('isGMSB',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate GMSB');
 options.register('isHVDS',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate HVDS');
 options.register('isBkgd',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate Background MC');
 options.register('isToy',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate Toy MC');
@@ -67,7 +67,7 @@ options.register('filterEff',1.0,VarParsing.multiplicity.singleton,VarParsing.va
 options.register('BR',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'branching ratio of MC');
 
 ## GT to be used
-options.register('globalTag','94X_dataRun2_ReReco_EOY17_v2',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
+options.register('globalTag','94X_mc2017_realistic_v10',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
 
 ## do a demo run over only 1k events
 options.register('demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to run over only 1k events');
@@ -77,6 +77,11 @@ options.register('processName','TREE',VarParsing.multiplicity.singleton,VarParsi
 
 ## outputFile Name
 options.register('outputFileName','dispho.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,'output file name created by cmsRun');
+
+## etra bits
+options.register('nThreads',8,VarParsing.multiplicity.singleton,VarParsing.varType.int,'number of threads per job');
+options.register('deleteEarly',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'delete temp products early if not needed');
+options.register('runUnscheduled',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'run unscheduled for products');
 
 ## parsing command line arguments
 options.parseArguments()
@@ -125,9 +130,9 @@ print "       -- MET Filters --"
 print "inputFlags     : ",options.inputFlags
 print "       -- ootPhotons --"
 print "useOOTPhotons  : ",options.useOOTPhotons
+print "        -- MC Info --"
+print "isMC           : ",options.isMC
 if options.isMC:
-	print "        -- MC Info --"
-	print "isMC           : ",options.isMC
 	print "isGMSB         : ",options.isGMSB
 	print "isHVDS         : ",options.isHVDS
 	print "isBkgd         : ",options.isBkgd
@@ -141,6 +146,10 @@ print "         -- Output --"
 print "demoMode       : ",options.demoMode
 print "processName    : ",options.processName	
 print "outputFileName : ",options.outputFileName	
+print "        -- Extra bits --"
+print "nThreads       : ",options.nThreads
+print "runUnscheduled : ",options.runUnscheduled
+print "deleteEarly    : ",options.deleteEarly
 print "     #####################"
 
 ## Define the CMSSW process
@@ -166,6 +175,13 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		###### Hacked 93X GMSB ctau = 4m sample, GT: 92X_upgrade2017_realistic_v10
 		#'/store/group/phys_exotica/displacedPhotons/GMSB_L200TeV_CTau400cm_930/GMSB_L200TeV_CTau400cm_930_step3/171024_213911/0000/step3_1.root',
 		#'file:/afs/cern.ch/work/k/kmcdermo/private/dispho/timegun/CMSSW_9_4_0/src/sample/step3.root'
+
+		'/store/group/phys_exotica/displacedPhotons/GMSB_L200TeV_CTau400cm_930/GMSB_L200TeV_CTau400cm_930_step3/171024_213911/0000/step3_1.root',
+		'/store/group/phys_exotica/displacedPhotons/GMSB_L200TeV_CTau400cm_930/GMSB_L200TeV_CTau400cm_930_step3/171024_213911/0000/step3_2.root',
+		'/store/group/phys_exotica/displacedPhotons/GMSB_L200TeV_CTau400cm_930/GMSB_L200TeV_CTau400cm_930_step3/171024_213911/0000/step3_3.root',
+		'/store/group/phys_exotica/displacedPhotons/GMSB_L200TeV_CTau400cm_930/GMSB_L200TeV_CTau400cm_930_step3/171024_213911/0000/step3_4.root',
+		'/store/group/phys_exotica/displacedPhotons/GMSB_L200TeV_CTau400cm_930/GMSB_L200TeV_CTau400cm_930_step3/171024_213911/0000/step3_5.root',
+
 		))
 
 ## How many events to process
@@ -240,7 +256,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    ## tracks
    tracks = cms.InputTag("unpackedTracksAndVertices"),
    ## vertices
-   vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
+   vertices = cms.InputTag("unpackedTracksAndVertices"),
    ## rho
    rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## MET
@@ -270,3 +286,17 @@ process.tree = cms.EDAnalyzer("DisPho",
 
 # Set up the path
 process.treePath = cms.Path(process.unpackedTracksAndVertices + process.tree)
+
+### Extra bits from other configs
+process.options = cms.untracked.PSet(
+	numberOfThreads=cms.untracked.uint32(options.nThreads)
+)
+
+from FWCore.ParameterSet.Utilities import convertToUnscheduled
+if options.runUnscheduled : 
+	process = convertToUnscheduled(process)
+
+from Configuration.StandardSequences.earlyDeleteSettings_cff import customiseEarlyDelete
+if options.deleteEarly:
+	process = customiseEarlyDelete(process)
+
