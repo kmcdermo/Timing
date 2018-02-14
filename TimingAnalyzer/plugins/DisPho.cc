@@ -596,29 +596,34 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       vtx_z.push_back(vertex.z());
       vtx_nTks.push_back(vertex.tracksSize());
 
-      int nTks =0;
-      int nTks_09_B = 0;
+      int nTks_pt09_B = 0;
       int nTks_p09_E = 0;
       int nTks_p2_E = 0;
       int nTks_pt09_E = 0;
       int nTks_pt2_E = 0;
       for (reco::Vertex::trackRef_iterator ti = vertex.tracks_begin(); ti!=vertex.tracks_end(); ++ti)
       {
-	nTks++;
-	if ( (*ti) -> pt() > 0.9 && fabs( (*ti) -> eta() ) < 1.5 ) nTks_09_B++;
+	if ( (*ti) -> pt() > 0.9 && fabs( (*ti) -> eta() ) < 1.5 ) nTks_pt09_B++;
 	if ( (*ti) -> p()  > 0.9 && fabs( (*ti) -> eta() ) > 1.5 && fabs( (*ti) -> eta() ) < 3.0 ) nTks_p09_E++;
 	if ( (*ti) -> p()  > 2.0 && fabs( (*ti) -> eta() ) > 1.5 && fabs( (*ti) -> eta() ) < 3.0 ) nTks_p2_E++;
 	if ( (*ti) -> pt() > 0.9 && fabs( (*ti) -> eta() ) > 1.5 && fabs( (*ti) -> eta() ) < 3.0 ) nTks_pt09_E++;
 	if ( (*ti) -> pt() > 2.0 && fabs( (*ti) -> eta() ) > 1.5 && fabs( (*ti) -> eta() ) < 3.0 ) nTks_pt2_E++;
       }
-      std::cout << (vertex.tracksSize()) << "   " << nTks << "   " << nTks_09_B << std::endl;
-      
-      vtx_nTks_pt09_B.push_back(nTks_09_B);
+
+      vtx_nTks_pt09_B.push_back(nTks_pt09_B);
       vtx_nTks_p09_E.push_back(nTks_p09_E);
       vtx_nTks_p2_E.push_back(nTks_p2_E);
       vtx_nTks_pt09_E.push_back(nTks_pt09_E);
       vtx_nTks_pt2_E.push_back(nTks_pt2_E);
     }
+
+    for (const auto nTks : vtx_nTks) sum_nTks += nTks;
+    for (const auto nTks_pt09_B : vtx_nTks_pt09_B) sum_nTks_pt09_B += nTks_pt09_B;
+    for (const auto nTks_p09_E : vtx_nTks_p09_E) sum_nTks_p09_E += nTks_p09_E;
+    for (const auto nTks_p2_E : vtx_nTks_p2_E) sum_nTks_p2_E += nTks_p2_E;
+    for (const auto nTks_pt09_E : vtx_nTks_pt09_E) sum_nTks_pt09_E += nTks_pt09_E;
+    for (const auto nTks_pt2_E : vtx_nTks_pt2_E) sum_nTks_pt2_E += nTks_pt2_E;
+
   } // end check on verticesH valid
 
   //////////////////
@@ -899,6 +904,13 @@ void DisPho::InitializeTrackBranches()
   vtx_nTks_p2_E.clear();
   vtx_nTks_pt09_E.clear();
   vtx_nTks_pt2_E.clear();
+
+  sum_nTks = 0.f;
+  sum_nTks_pt09_B = 0.f;;
+  sum_nTks_p09_E = 0.f;;
+  sum_nTks_p2_E = 0.f;;
+  sum_nTks_pt09_E = 0.f;;
+  sum_nTks_pt2_E = 0.f;;
 }
 
 void DisPho::InitializeMETBranches()
@@ -1422,6 +1434,21 @@ void DisPho::MakeEventTree()
   disphotree->Branch("vtxX", &vtxX, "vtxX/F");
   disphotree->Branch("vtxY", &vtxY, "vtxY/F");
   disphotree->Branch("vtxZ", &vtxZ, "vtxZ/F");
+
+  // Track info 
+  disphotree->Branch("vtx_z", &vtx_z);
+  disphotree->Branch("vtx_nTks", &vtx_nTks);
+  disphotree->Branch("vtx_nTks_pt09_B", &vtx_nTks_pt09_B);
+  disphotree->Branch("vtx_nTks_p09_E", &vtx_nTks_p09_E);
+  disphotree->Branch("vtx_nTks_p2_E", &vtx_nTks_p2_E);
+  disphotree->Branch("vtx_nTks_pt09_E", &vtx_nTks_pt09_E);
+  disphotree->Branch("vtx_nTks_pt2_E", &vtx_nTks_pt2_E);
+  disphotree->Branch("sum_nTks", &sum_nTks, "sum_nTks/I");
+  disphotree->Branch("sum_nTks_pt09_B", &sum_nTks_pt09_B, "sum_nTks_pt09_B/I");
+  disphotree->Branch("sum_nTks_p09_E", &sum_nTks_p09_E, "sum_nTks_p09_E/I");
+  disphotree->Branch("sum_nTks_p2_E", &sum_nTks_p2_E, "sum_nTks_p2_E/I");
+  disphotree->Branch("sum_nTks_pt09_E", &sum_nTks_pt09_E, "sum_nTks_pt09_E/I");
+  disphotree->Branch("sum_nTks_pt2_E", &sum_nTks_pt2_E, "sum_nTks_pt2_E/I");
 
   // rho info
   disphotree->Branch("rho", &rho, "rho/F");

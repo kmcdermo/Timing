@@ -293,6 +293,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // extra track info
   std::vector<float> vtx_z;
   std::vector<int> vtx_nTks, vtx_nTks_pt09_B, vtx_nTks_p09_E, vtx_nTks_p2_E, vtx_nTks_pt09_E, vtx_nTks_pt2_E;
+  int sum_nTks, sum_nTks_pt09_B, sum_nTks_p09_E, sum_nTks_p2_E, sum_nTks_pt09_E, sum_nTks_pt2_E;
 
   // rho
   float rho;
