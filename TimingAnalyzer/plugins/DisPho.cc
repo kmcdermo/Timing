@@ -864,6 +864,7 @@ void DisPho::SetHVDSBranch(const reco::GenParticle & vPion, hvdsStruct & hvdsBra
 
 void DisPho::InitializeToyBranches()
 {
+  nToyPhs = -9999;
   DisPho::InitializeToyBranch(toyBranch0);
   DisPho::InitializeToyBranch(toyBranch1);
 }

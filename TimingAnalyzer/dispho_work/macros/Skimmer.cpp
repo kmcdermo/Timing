@@ -869,7 +869,7 @@ void Skimmer::InitOutTree()
 
     if (fOutConfig.isToy)
     {
-      fOutTree->Branch(fOutEvent.s_nvPions.c_str(), &fOutEvent.nvPions);
+      fOutTree->Branch(fOutEvent.s_nToyPhs.c_str(), &fOutEvent.nToyPhs);
       fOutToys.resize(Config::nToys);
       for (Int_t itoy = 0; itoy < Config::nToys; itoy++) 
       {
