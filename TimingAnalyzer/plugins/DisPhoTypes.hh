@@ -23,7 +23,7 @@ struct gmsbStruct
   float genphpt_;
   float genphphi_;
   float genpheta_;
-  float genphmatch_;
+  int   genphmatch_;
 
   float gengrmass_;
   float gengrE_;
@@ -68,9 +68,9 @@ struct toyStruct
   float genphphi_;
   float genpheta_;
 
-  float genphmatch_;
-  float genphmatch_ptres_;
-  float genphmatch_status_;
+  int genphmatch_;
+  int genphmatch_ptres_;
+  int genphmatch_status_;
 };
 
 struct jetStruct
