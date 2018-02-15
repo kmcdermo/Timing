@@ -53,17 +53,17 @@ namespace oot
     if (genparticlesH.isValid())
     {
       int nNeutoPhGr = 0;
-      for (const auto & genpart : *genparticlesH) // loop over gen particles
+      for (const auto & genparticle : *genparticlesH) // loop over gen particles
       {
 	if (nNeutoPhGr == 2) break;
 
-	if (genpart.pdgId() == 1000022 && genpart.numberOfDaughters() == 2)
+	if (genparticle.pdgId() == 1000022 && genparticle.numberOfDaughters() == 2)
 	{
-	  if ((genpart.daughter(0)->pdgId() == 22 && genpart.daughter(1)->pdgId() == 1000039) ||
-	      (genpart.daughter(1)->pdgId() == 22 && genpart.daughter(0)->pdgId() == 1000039)) 
+	  if ((genparticle.daughter(0)->pdgId() == 22 && genparticle.daughter(1)->pdgId() == 1000039) ||
+	      (genparticle.daughter(1)->pdgId() == 22 && genparticle.daughter(0)->pdgId() == 1000039)) 
 	  {
 	    nNeutoPhGr++;
-	    neutralinos.emplace_back(genpart);
+	    neutralinos.emplace_back(genparticle);
 	  } // end conditional over matching daughter ids
 	} // end conditional over neutralino id
       } // end loop over gen particles
@@ -76,18 +76,34 @@ namespace oot
   {
     if (genparticlesH.isValid()) // make sure gen particles exist --> only do this for GMSB
     {
-      for (const auto & genpart : *genparticlesH) // loop over gen particles
+      for (const auto & genparticle : *genparticlesH) // loop over gen particles
       {
-	if (genpart.pdgId() == 4900111 && genpart.numberOfDaughters() == 2)
+	if (genparticle.pdgId() == 4900111 && genparticle.numberOfDaughters() == 2)
     	{
-	  if (genpart.daughter(0)->pdgId() == 22 && genpart.daughter(1)->pdgId() == 22)
+	  if (genparticle.daughter(0)->pdgId() == 22 && genparticle.daughter(1)->pdgId() == 22)
 	  {
-	    vPions.emplace_back(genpart);
+	    vPions.emplace_back(genparticle);
 	  } // end check over both gen photons	
 	} // end check over vPions
       } // end loop over gen particles
 
       std::sort(vPions.begin(),vPions.end(),oot::sortByPt);
+    }
+  }
+
+  void PrepToys(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, genPartVec& toys)
+  {
+    if (genparticlesH.isValid()) // make sure gen particles exist --> only do this for GMSB
+    {
+      for (const auto & genparticle : *genparticlesH) // loop over gen particles
+      {
+	if (genparticle.pdgId() == 22)
+	{
+	  toys.emplace_back(genparticle);
+	} // end check over photons
+      } // end loop over gen particles
+
+      std::sort(toys.begin(),toys.end(),oot::sortByPt);
     }
   }
 

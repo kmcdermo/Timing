@@ -41,6 +41,7 @@ public:
   void EventLoop();
   void FillOutGMSBs();
   void FillOutHVDSs();
+  void FillOutToys();
   void FillOutEvent();
   void FillOutJets();
   void FillOutPhos();
@@ -82,6 +83,7 @@ private:
   
   GmsbVec fInGMSBs;
   HvdsVec fInHVDSs;
+  ToyVec  fInToys;
   Event   fInEvent;
   RecHits fInRecHits;
   JetVec  fInJets;
@@ -97,6 +99,7 @@ private:
 
   GmsbVec fOutGMSBs;
   HvdsVec fOutHVDSs;
+  ToyVec  fOutToys;
   Event   fOutEvent;
   JetVec  fOutJets;
   PhoVec  fOutPhos;

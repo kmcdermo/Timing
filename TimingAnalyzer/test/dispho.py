@@ -58,7 +58,7 @@ options.register('useOOTPhotons',True,VarParsing.multiplicity.singleton,VarParsi
 
 ## data or MC options
 options.register('isMC',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate data or MC');
-options.register('isGMSB',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate GMSB');
+options.register('isGMSB',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate GMSB');
 options.register('isHVDS',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate HVDS');
 options.register('isBkgd',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate Background MC');
 options.register('isToy',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate Toy MC');

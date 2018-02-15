@@ -174,8 +174,9 @@ namespace oot
 			  strBitMap & triggerBits);
   void ReadInFilterNames(const std::string & inputFilters, std::vector<std::string> & filterNames, 
 			 trigObjVecMap & triggerObjectsByFilter);
-  void PrepVPions(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, genPartVec& vPions);
   void PrepNeutralinos(const edm::Handle<std::vector<reco::GenParticle> >& genparticlesH, genPartVec& neutralinos);
+  void PrepVPions(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, genPartVec& vPions);
+  void PrepToys(const edm::Handle<std::vector<reco::GenParticle> >& genparticlesH, genPartVec& toys);
   void PrepTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, 
 		       const edm::Event & iEvent, strBitMap & triggerBitMap);
   void PrepTriggerObjects(const edm::Handle<edm::TriggerResults> & triggerResultsH,

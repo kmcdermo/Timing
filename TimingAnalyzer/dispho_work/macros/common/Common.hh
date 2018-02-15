@@ -19,8 +19,8 @@
 #include <vector>
 
 // Sample Enums
-enum SampleType  {Data, GMSB, HVDS, QCD, GJets, DYLL};
-enum SampleGroup {isData, isBkgd, isSignal};
+enum SampleType  {Data, GMSB, HVDS, QCD, GJets, DYLL, ToyMC};
+enum SampleGroup {isData, isBkgd, isSignal, isToy};
 
 // Configuration parameters
 namespace Config
@@ -69,6 +69,7 @@ namespace Config
   constexpr UInt_t nEvCheck = 10000;
   constexpr Int_t nGMSBs = 2;
   constexpr Int_t nHVDSs = 4;
+  constexpr Int_t nToys = 2;
   constexpr Int_t nJets = 4;
   constexpr Int_t nPhotons = 4;
 

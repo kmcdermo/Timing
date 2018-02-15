@@ -14,7 +14,7 @@ mcfull="${mcbase}_${extra}"
 text="${mcfull}_${sample}"
 
 ## directories needed
-indir="${inbase}/${mcfull}_${tune}/${label}_${mcfull}_${tune}"
+indir="${inbase}/analysis/${mcfull}_${tune}/${label}_${mcfull}_${tune}"
 if [ "${sample}" == "ext" ] ; then
     indir+="_"${sample}
 fi

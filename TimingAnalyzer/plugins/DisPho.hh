@@ -80,6 +80,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void MakeEventTree();
   void MakeGMSBBranch(const int i, gmsbStruct& gmsbBranch);
   void MakeHVDSBranch(const int i, hvdsStruct& hvdsBranch);
+  void MakeToyBranch(const int i, toyStruct& toyBranch);
   void MakeJetBranch(const int i, jetStruct& jetBranch);
   void MakePhoBranch(const int i, phoStruct& phoBranch);
   void MakePhoBranchMC(const int i, phoStruct& phoBranch);
@@ -93,6 +94,9 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void InitializeHVDSBranches();
   void InitializeHVDSBranch(hvdsStruct& hvdsBranch);
   void SetHVDSBranch(const reco::GenParticle & vPion, hvdsStruct & hvdsBranch, const std::vector<oot::Photon> & photons);
+  void InitializeToyBranches();
+  void InitializeToyBranch(toyStruct& toyBranch);
+  void SetToyBranch(const reco::GenParticle & toy, toyStruct & toyBranch, const std::vector<oot::Photon> & photons);
   void SetTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, const edm::Event & iEvent);
   void InitializePVBranches();
   void InitializeMETBranches();
@@ -255,6 +259,10 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // hvds
   int nvPions;
   hvdsStruct hvdsBranch0, hvdsBranch1, hvdsBranch2, hvdsBranch3;
+
+  // toyMC
+  int nToyPhs;
+  toyStruct toyBranch0, toyBranch1;
 
   // event info
   unsigned long int event; // technically unsigned long long in Event.h...

@@ -237,6 +237,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<std::vector<reco::GenParticle> > genparticlesH;
   genPartVec neutralinos;
   genPartVec vPions;
+  genPartVec toys;
 
   if (isMC)
   {
@@ -290,6 +291,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   /////////////////////
   if (isGMSB) oot::PrepNeutralinos(genparticlesH,neutralinos);
   if (isHVDS) oot::PrepVPions(genparticlesH,vPions);
+  if (isToy) oot::PrepToys(genparticlesH,toys);
   oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
   oot::PrepTriggerBits(triggerFlagsH,iEvent,triggerFlagMap);
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
@@ -532,6 +534,18 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	if (nvPions > 2) DisPho::SetHVDSBranch(vPions[2],hvdsBranch2,photons);
 	if (nvPions > 3) DisPho::SetHVDSBranch(vPions[3],hvdsBranch3,photons);
       } // check genparticles are okay
+    } // isHVDS
+
+    // ToyMC
+    if (isToy) 
+    {
+      DisPho::InitializeToyBranches();
+      if (genparticlesH.isValid())
+      {
+	nToyPhs = toys.size();
+	if (nToyPhs > 0) DisPho::SetToyBranch(toys[0],toyBranch0,photons);
+	if (nToyPhs > 1) DisPho::SetToyBranch(toys[1],toyBranch1,photons);
+      }
     } // isHVDS
   } // isMC
 
@@ -847,6 +861,68 @@ void DisPho::SetHVDSBranch(const reco::GenParticle & vPion, hvdsStruct & hvdsBra
   hvdsBranch.genHVph0match_ = tmpph0;
   hvdsBranch.genHVph1match_ = tmpph1;
 } 
+
+void DisPho::InitializeToyBranches()
+{
+  DisPho::InitializeToyBranch(toyBranch0);
+  DisPho::InitializeToyBranch(toyBranch1);
+}
+
+void DisPho::InitializeToyBranch(toyStruct & toyBranch)
+{
+  toyBranch.genphE_   = -9999.f;
+  toyBranch.genphpt_  = -9999.f;
+  toyBranch.genphphi_ = -9999.f;
+  toyBranch.genpheta_ = -9999.f;
+
+  toyBranch.genphmatch_ = -9999;
+  toyBranch.genphmatch_ptres_ = -9999;
+  toyBranch.genphmatch_status_ = -9999;
+}
+
+void DisPho::SetToyBranch(const reco::GenParticle & toy, toyStruct & toyBranch, const std::vector<oot::Photon> & photons)
+{
+  toyBranch.genphE_   = toy.energy();
+  toyBranch.genphpt_  = toy.pt();
+  toyBranch.genphphi_ = toy.phi();
+  toyBranch.genpheta_ = toy.eta();
+
+  int iph = 0;
+  float mindR = dRmin, mindR_ptres = dRmin, mindR_status = dRmin;
+  for (const auto & photon : photons)
+  {
+    if (iph > 4) break;
+    
+    const float delR = Config::deltaR(toyBranch.genphphi_,toyBranch.genpheta_,photon.phi(),photon.eta());
+    if (delR < mindR) 
+    {
+      mindR = delR;
+      toyBranch.genphmatch_ = iph; 
+    } // end check over deltaR
+
+    if ( (photon.pt() >= ((1.f-genpTres) * toyBranch.genphpt_)) && (photon.pt() <= ((1.f+genpTres) * toyBranch.genphpt_)) )
+    {
+      const float delR_ptres = Config::deltaR(toyBranch.genphphi_,toyBranch.genpheta_,photon.phi(),photon.eta());
+      if (delR_ptres < mindR_ptres) 
+      {
+	mindR_ptres = delR_ptres;
+	toyBranch.genphmatch_ptres_ = iph; 
+      } // end check over deltaR
+      
+      if (toy.isPromptFinalState())
+      {
+	const float delR_status = Config::deltaR(toyBranch.genphphi_,toyBranch.genpheta_,photon.phi(),photon.eta());
+	if (delR_status < mindR_status) 
+	{
+	  mindR_status = delR_status;
+	  toyBranch.genphmatch_status_ = iph; 
+	} // end check over deltaR
+      } // end check over final state
+    } // end check over pt res
+
+    iph++;
+  } // end loop over reco photons
+}
 
 void DisPho::InitializePVBranches()
 {
@@ -1340,6 +1416,14 @@ void DisPho::MakeEventTree()
     DisPho::MakeHVDSBranch(3,hvdsBranch3);
   }
 
+  // ToyMC Info
+  if (isToy)
+  {
+    disphotree->Branch("nToyPhs", &nToyPhs, "nToyPhs/I");
+    DisPho::MakeToyBranch(0,toyBranch0);
+    DisPho::MakeToyBranch(1,toyBranch1);
+  }
+
   // Run, Lumi, Event info
   disphotree->Branch("run", &run, "run/i");
   disphotree->Branch("lumi", &lumi, "lumi/i");
@@ -1489,6 +1573,18 @@ void DisPho::MakeHVDSBranch(const int i, hvdsStruct& hvdsBranch)
   disphotree->Branch(Form("genHVph1phi_%i",i), &hvdsBranch.genHVph1phi_, Form("genHVph1phi_%i/F",i));
   disphotree->Branch(Form("genHVph1eta_%i",i), &hvdsBranch.genHVph1eta_, Form("genHVph1eta_%i/F",i));
   disphotree->Branch(Form("genHVph1match_%i",i), &hvdsBranch.genHVph1match_, Form("genHVph1match_%i/I",i));
+}
+
+void DisPho::MakeToyBranch(const int i, toyStruct& toyBranch)
+{
+  disphotree->Branch(Form("genphE_%i",i), &toyBranch.genphE_, Form("genphE_%i/F",i));
+  disphotree->Branch(Form("genphpt_%i",i), &toyBranch.genphpt_, Form("genphpt_%i/F",i));
+  disphotree->Branch(Form("genphphi_%i",i), &toyBranch.genphphi_, Form("genphphi_%i/F",i));
+  disphotree->Branch(Form("genpheta_%i",i), &toyBranch.genpheta_, Form("genpheta_%i/F",i));
+
+  disphotree->Branch(Form("genphmatch_%i",i), &toyBranch.genphmatch_, Form("genphmatch_%i/I",i));
+  disphotree->Branch(Form("genphmatch_ptres_%i",i), &toyBranch.genphmatch_ptres_, Form("genphmatch_ptres_%i/I",i));
+  disphotree->Branch(Form("genphmatch_status_%i",i), &toyBranch.genphmatch_status_, Form("genphmatch_status_%i/I",i));
 }
 
 void DisPho::MakeJetBranch(const int i, jetStruct& jetBranch)

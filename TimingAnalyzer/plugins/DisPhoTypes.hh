@@ -61,6 +61,18 @@ struct hvdsStruct
   int genHVph1match_;
 };
 
+struct toyStruct
+{
+  float genphE_;
+  float genphpt_;
+  float genphphi_;
+  float genpheta_;
+
+  float genphmatch_;
+  float genphmatch_ptres_;
+  float genphmatch_status_;
+};
+
 struct jetStruct
 {
   float E_;

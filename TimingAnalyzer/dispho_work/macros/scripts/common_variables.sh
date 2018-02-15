@@ -12,4 +12,4 @@ export infiles="dispho_*.root"
 export outfile="tree.root"
 
 ## redo photon id
-export redoPhotonID=1
+export redoPhotonID=0

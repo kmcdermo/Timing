@@ -102,24 +102,34 @@ void Skimmer::EventLoop()
     const Float_t evtwgt = (fIsMC ? fInEvent.genwgt : 1.f);
 
     // perform skim
-    if (fInEvent.nphotons <= 0) continue;
-    if (!fInPhos[0].isEB) continue;
-    if (fInPhos[0].pt < 70.f) continue;
+    if (!fInConfig.isToy)
+    {
+      if (fInEvent.nphotons <= 0) continue;
+      if (!fInPhos[0].isEB) continue;
+      if (fInPhos[0].pt < 70.f) continue;
+      
+      // fill cutflow
+      fOutCutFlow->Fill((cutLabels["skim"]*1.f)-0.5f,evtwgt);
+      
+      // filter on MET Flags
+      if (!fInEvent.metPV || !fInEvent.metBeamHalo || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || 
+	  !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad || !fInEvent.metECALCalib) continue;
+      if (!fIsMC && !fInEvent.metEESC) continue;
+      
+      // fill cutflow
+      fOutCutFlow->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
+      
+      // cut on crappy pileup... assume this is due to the multithreaded pre mix issue
+      if (fIsMC && ((fInEvent.genputrue < 0) || UInt_t(fInEvent.genputrue) > fPUWeights.size())) continue;
+      
+      // fill cutflow
+      fOutCutFlow->Fill((cutLabels["badPU"]*1.f)-0.5f,evtwgt);
+    }
 
-    // fill cutflow
-    fOutCutFlow->Fill((cutLabels["skim"]*1.f)-0.5f,evtwgt);
-
-    // filter on MET Flags
-    if (!fInEvent.metPV || !fInEvent.metBeamHalo || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || 
-	!fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad || !fInEvent.metECALCalib) continue;
-    if (!fIsMC && !fInEvent.metEESC) continue;
-
-    // fill cutflow
-    fOutCutFlow->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
-  
     // end of skim, now copy... dropping rechits
     if (fOutConfig.isGMSB) Skimmer::FillOutGMSBs();
     if (fOutConfig.isHVDS) Skimmer::FillOutHVDSs();
+    if (fOutConfig.isToy)  Skimmer::FillOutToys();
     Skimmer::FillOutEvent();
     Skimmer::FillOutJets();
     Skimmer::FillOutPhos();
@@ -197,6 +207,24 @@ void Skimmer::FillOutHVDSs()
   }
 }
 
+void Skimmer::FillOutToys()
+{
+  for (Int_t itoy = 0; itoy < Config::nToys; itoy++)
+  {
+    const auto & intoy = fInToys[itoy];
+    auto & outtoy = fOutToys[itoy];
+
+    outtoy.genphE = intoy.genphE;
+    outtoy.genphpt = intoy.genphpt;
+    outtoy.genphphi = intoy.genphphi;
+    outtoy.genpheta = intoy.genpheta;
+
+    outtoy.genphmatch = intoy.genphmatch;
+    outtoy.genphmatch_ptres = intoy.genphmatch_ptres;
+    outtoy.genphmatch_status = intoy.genphmatch_status;
+  }
+}
+
 void Skimmer::FillOutEvent()
 {
   fOutEvent.run = fInEvent.run;
@@ -244,7 +272,7 @@ void Skimmer::FillOutEvent()
     fOutEvent.geny0 = fInEvent.geny0;
     fOutEvent.genz0 = fInEvent.genz0;
     fOutEvent.gent0 = fInEvent.gent0;
-    fOutEvent.puwgt = fPUWeights[fInEvent.genputrue];
+    fOutEvent.puwgt = fPUWeights[fInEvent.genputrue]; // == 0 for tmp skims
     if (fOutConfig.isGMSB)
     {
       fOutEvent.nNeutoPhGr = fInEvent.nNeutoPhGr;
@@ -435,6 +463,11 @@ void Skimmer::InitInStructs()
       fInHVDSs.clear(); 
       fInHVDSs.resize(Config::nHVDSs);
     }
+    if (fInConfig.isToy)
+    {
+      fInToys.clear(); 
+      fInToys.resize(Config::nToys);
+    }
   }
 
   fInJets.clear();
@@ -533,6 +566,23 @@ void Skimmer::InitInBranches()
 	fInTree->SetBranchAddress(Form("%s_%i",hvds.s_genHVph1match.c_str(),ihvds), &hvds.genHVph1match);
       } // end loop over nvpions 
     } // end block over hvds
+
+    if (fInConfig.isToy)
+    {
+      fInTree->SetBranchAddress(fInEvent.s_nToyPhs.c_str(), &fInEvent.nToyPhs);
+      for (Int_t itoy = 0; itoy < Config::nToys; itoy++) 
+      {
+	auto & toy = fInToys[itoy]; 
+	fInTree->SetBranchAddress(Form("%s_%i",toy.s_genphE.c_str(),itoy), &toy.genphE);
+	fInTree->SetBranchAddress(Form("%s_%i",toy.s_genphpt.c_str(),itoy), &toy.genphpt);
+	fInTree->SetBranchAddress(Form("%s_%i",toy.s_genphphi.c_str(),itoy), &toy.genphphi);
+	fInTree->SetBranchAddress(Form("%s_%i",toy.s_genpheta.c_str(),itoy), &toy.genpheta);
+	fInTree->SetBranchAddress(Form("%s_%i",toy.s_genphmatch.c_str(),itoy), &toy.genphmatch);
+	fInTree->SetBranchAddress(Form("%s_%i",toy.s_genphmatch_ptres.c_str(),itoy), &toy.genphmatch_ptres);
+	fInTree->SetBranchAddress(Form("%s_%i",toy.s_genphmatch_status.c_str(),itoy), &toy.genphmatch_status);
+      } // end loop over toy phos
+    } // end block over toyMC
+
   } // end block over isMC
 
   fInTree->SetBranchAddress(fInEvent.s_run.c_str(), &fInEvent.run);
@@ -567,6 +617,7 @@ void Skimmer::InitInBranches()
   fInTree->SetBranchAddress(fInEvent.s_vtxY.c_str(), &fInEvent.vtxY);
   fInTree->SetBranchAddress(fInEvent.s_vtxZ.c_str(), &fInEvent.vtxZ);
   fInTree->SetBranchAddress(fInEvent.s_rho.c_str(), &fInEvent.rho);
+
   fInTree->SetBranchAddress(fInEvent.s_t1pfMETpt.c_str(), &fInEvent.t1pfMETpt);
   fInTree->SetBranchAddress(fInEvent.s_t1pfMETphi.c_str(), &fInEvent.t1pfMETphi);
   fInTree->SetBranchAddress(fInEvent.s_t1pfMETsumEt.c_str(), &fInEvent.t1pfMETsumEt);
@@ -815,11 +866,30 @@ void Skimmer::InitOutTree()
 	fOutTree->Branch(Form("%s_%i",hvds.s_genHVph1match.c_str(),ihvds), &hvds.genHVph1match);
       } // end loop over nvpions 
     } // end block over hvds
+
+    if (fOutConfig.isToy)
+    {
+      fOutTree->Branch(fOutEvent.s_nvPions.c_str(), &fOutEvent.nvPions);
+      fOutToys.resize(Config::nToys);
+      for (Int_t itoy = 0; itoy < Config::nToys; itoy++) 
+      {
+	auto & toy = fOutToys[itoy]; 
+	fOutTree->Branch(Form("%s_%i",toy.s_genphE.c_str(),itoy), &toy.genphE);
+	fOutTree->Branch(Form("%s_%i",toy.s_genphpt.c_str(),itoy), &toy.genphpt);
+	fOutTree->Branch(Form("%s_%i",toy.s_genphphi.c_str(),itoy), &toy.genphphi);
+	fOutTree->Branch(Form("%s_%i",toy.s_genpheta.c_str(),itoy), &toy.genpheta);
+	fOutTree->Branch(Form("%s_%i",toy.s_genphmatch.c_str(),itoy), &toy.genphmatch);
+	fOutTree->Branch(Form("%s_%i",toy.s_genphmatch_ptres.c_str(),itoy), &toy.genphmatch_ptres);
+	fOutTree->Branch(Form("%s_%i",toy.s_genphmatch_status.c_str(),itoy), &toy.genphmatch_status);
+      } // end loop over toy phos
+    } // end block over toyMC
+
   } // end block over isMC
 
   fOutTree->Branch(fOutEvent.s_run.c_str(), &fOutEvent.run);
   fOutTree->Branch(fOutEvent.s_lumi.c_str(), &fOutEvent.lumi);
   fOutTree->Branch(fOutEvent.s_event.c_str(), &fOutEvent.event);
+
   fOutTree->Branch(fOutEvent.s_hltSignal.c_str(), &fOutEvent.hltSignal);
   fOutTree->Branch(fOutEvent.s_hltRefPhoID.c_str(), &fOutEvent.hltRefPhoID);
   fOutTree->Branch(fOutEvent.s_hltRefDispID.c_str(), &fOutEvent.hltRefDispID);
@@ -832,14 +902,17 @@ void Skimmer::InitOutTree()
   fOutTree->Branch(fOutEvent.s_hltDiEle33MW.c_str(), &fOutEvent.hltDiEle33MW);
   fOutTree->Branch(fOutEvent.s_hltDiEle27WPT.c_str(), &fOutEvent.hltDiEle27WPT);
   fOutTree->Branch(fOutEvent.s_hltJet500.c_str(), &fOutEvent.hltJet500);
+
   fOutTree->Branch(fOutEvent.s_nvtx.c_str(), &fOutEvent.nvtx);
   fOutTree->Branch(fOutEvent.s_vtxX.c_str(), &fOutEvent.vtxX);
   fOutTree->Branch(fOutEvent.s_vtxY.c_str(), &fOutEvent.vtxY);
   fOutTree->Branch(fOutEvent.s_vtxZ.c_str(), &fOutEvent.vtxZ);
   fOutTree->Branch(fOutEvent.s_rho.c_str(), &fOutEvent.rho);
+
   fOutTree->Branch(fOutEvent.s_t1pfMETpt.c_str(), &fOutEvent.t1pfMETpt);
   fOutTree->Branch(fOutEvent.s_t1pfMETphi.c_str(), &fOutEvent.t1pfMETphi);
   fOutTree->Branch(fOutEvent.s_t1pfMETsumEt.c_str(), &fOutEvent.t1pfMETsumEt);
+
   fOutTree->Branch(fOutEvent.s_jetHT.c_str(), &fOutEvent.jetHT);
   fOutTree->Branch(fOutEvent.s_njets.c_str(), &fOutEvent.njets);
   fOutTree->Branch(fOutEvent.s_jetHTpt15.c_str(), &fOutEvent.jetHTpt15);
@@ -928,6 +1001,7 @@ void Skimmer::InitOutCutFlow()
   Int_t inNbinsX_new = inNbinsX;
   cutLabels["skim"] = ++inNbinsX_new;
   cutLabels["METFlag"] = ++inNbinsX_new;
+  cutLabels["badPU"] = ++inNbinsX_new;
 
   // make new cut flow
   fOutCutFlow = new TH1F(Config::h_cutflowname.Data(),fInCutFlow->GetTitle(),cutLabels.size(),0,cutLabels.size());

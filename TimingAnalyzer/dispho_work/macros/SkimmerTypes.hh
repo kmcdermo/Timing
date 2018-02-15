@@ -1,9 +1,6 @@
 #ifndef _skimmertypes_ 
 #define _skimmertypes_ 
 
-#include "TH1F.h"
-#include "TBranch.h"
-
 #include <string>
 #include <vector>
 
@@ -159,6 +156,8 @@ struct Event
   Int_t     nNeutoPhGr;
   // HVDS
   Int_t     nvPions;
+  // ToyMC 
+  Int_t     nToyPhs;
 
   // branch names
   std::string s_run = "run";
@@ -222,6 +221,8 @@ struct Event
   std::string s_nNeutoPhGr = "nNeutoPhGr";
   // HVDS
   std::string s_nvPions = "nvPions";
+  // ToyMC
+  std::string s_nToyPhs = "nToyPhs";
 };
 
 struct Jet
@@ -432,5 +433,25 @@ struct Hvds
   std::string s_genHVph1match = "genHVph1match";
 };
 typedef std::vector<Hvds> HvdsVec;
+
+struct Toy
+{
+  Float_t genphE;
+  Float_t genphpt;
+  Float_t genphphi;
+  Float_t genpheta;
+  Int_t   genphmatch;
+  Int_t   genphmatch_ptres;
+  Int_t   genphmatch_status;
+
+  std::string s_genphE = "genphE";
+  std::string s_genphpt = "genphpt";
+  std::string s_genphphi = "genphphi";
+  std::string s_genpheta = "genpheta";
+  std::string s_genphmatch = "genphmatch";
+  std::string s_genphmatch_ptres = "genphmatch_ptres";
+  std::string s_genphmatch_status = "genphmatch_status";
+};
+typedef std::vector<Toy> ToyVec;
 
 #endif

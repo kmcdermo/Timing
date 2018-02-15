@@ -8,5 +8,5 @@ tune=${2}
 
 for sample in base ext
 do
-    ./scripts/skimAndMerge/skimAndMerge_DYLLHTBin.sh ${label} ${tune} ${sample}
+    ./scripts/skimAndMerge/skimAndMerge_DYLLInclusiveSample.sh ${label} ${tune} ${sample}
 done
