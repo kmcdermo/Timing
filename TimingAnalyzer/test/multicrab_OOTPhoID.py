@@ -74,6 +74,7 @@ def main():
 
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'dispho.py'
+        config.JobType.numCores    = 8
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters , inputDir+inputFlags ]
 
@@ -90,15 +91,15 @@ def main():
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/GMSB_L200TeV_CTau400cm_930/kmcdermo-GMSB_L200TeV_CTau400cm_930_step3-23134fac048c68b5122d77328802e60f/USER'     , '0.04'  , '1', '0.81418', 'isGMSB=True', 10000, 'phys03'],
-            ['/GJet_Pt-15To6000_TuneCP5-Flat_13TeV_pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM', '283200', '1', '1'      , 'isBkgd=True', 500000, 'global']
+            ['/GMSB_L200TeV_CTau400cm_930/kmcdermo-GMSB_L200TeV_CTau400cm_930_step3-23134fac048c68b5122d77328802e60f/USER', '0.04'  , '1', '0.81418', 'isGMSB', 10000 , 'phys03'],
+            ['/GJet_Pt-15To6000_TuneCP5-Flat_13TeV_pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'     , '283200', '1', '1'      , 'isBkgd', 500000, 'global']
             ]
  
         for inDO in inputDataAndOpts:
             # inDO[0] is of the form /A/B/C. Since A is unique for each inDO for Monte Carlo, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[1]
-            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v10','splitPho=True','storeRecHits=False',
-                                            'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],inDO[4],
+            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v10','splitPho=True','storeRecHits=False','nThreads='+str(config.JobType.numCores),
+                                            'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],inDO[4]+'=True',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.unitsPerJob      = inDO[5]
             config.Data.inputDBS         = inDO[6]

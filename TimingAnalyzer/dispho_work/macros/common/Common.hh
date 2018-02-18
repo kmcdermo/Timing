@@ -101,7 +101,7 @@ namespace Config
 
   TString ReplaceDelimWithSpace(TString tmp, const TString & delim){return tmp.ReplaceAll(delim," ");}
   TString ReplaceSlashWithUnderscore(TString tmp){return tmp.ReplaceAll("/","_");}
-  TString WeightString(const Bool_t isMC){return (isMC ? Form("evtwgt * puwgt * %f * %f", Config::lumi, Config::invfbToinvpb) : "1.0");}
+  TString WeightString(const Bool_t isMC){return (isMC ? "evtwgt * puwgt" : "1.0");}
 
   // Check inputs
   void CheckValidFile(const TFile * file, const TString & fname);

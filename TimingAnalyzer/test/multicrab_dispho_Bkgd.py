@@ -74,6 +74,7 @@ def main():
 
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'dispho.py'
+        config.JobType.numCores    = 8
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters , inputDir+inputFlags ]
 
@@ -123,8 +124,8 @@ def main():
             if "_ext" in inDO[0] : datasetName += "_ext"
 
             config.General.requestName   = datasetName
-            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v10','splitPho=False','isBkgd=True',
-                                            'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],
+            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v10','splitPho=False','nThreads='+str(config.JobType.numCores),
+                                            'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],'isBkgd=True',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)

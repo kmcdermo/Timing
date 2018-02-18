@@ -102,7 +102,7 @@ void Skimmer::EventLoop()
     const Float_t evtwgt = (fIsMC ? fInEvent.genwgt : 1.f);
 
     // perform skim
-    if (!fInConfig.isToy)
+    if (!fInConfig.isToy) // do not apply skim selection on toy config
     {
       if (fInEvent.nphotons <= 0) continue;
       if (!fInPhos[0].isEB) continue;
@@ -281,6 +281,10 @@ void Skimmer::FillOutEvent()
     {
       fOutEvent.nvPions = fInEvent.nvPions;
     }
+    if (fOutConfig.isToy)
+    {
+      fOutEvent.nToyPhs = fInEvent.nToyPhs;
+    }
   }
 }
 
@@ -354,7 +358,7 @@ void Skimmer::FillOutPhos()
 	outpho.seedE    = (*fInRecHits.E)   [inpho.seed];
 	outpho.seedID   = (*fInRecHits.ID)  [inpho.seed];
       }
-      else 
+      else
       {
 	outpho.seedtime = -9999.f;
 	outpho.seedE    = -9999.f;
