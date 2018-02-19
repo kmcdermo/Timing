@@ -281,6 +281,7 @@ struct Pho
   Float_t alpha;
   Int_t   seed;
   std::vector<Int_t> * recHits;
+  Float_t suisseX;
   Bool_t  isOOT;
   Bool_t  isEB;
   Bool_t  isHLT;
@@ -320,6 +321,7 @@ struct Pho
   std::string s_alpha = "phoalpha";
   std::string s_seed = "phoseed";
   std::string s_recHits = "phorecHits";
+  std::string s_suisseX = "suisseX";
   std::string s_isOOT = "phoisOOT";
   std::string s_isEB = "phoisEB";
   std::string s_isHLT = "phoisHLT";
