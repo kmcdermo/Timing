@@ -1,0 +1,4 @@
+common_cut=((phopt_0>70&&phoisEB_0&&phosmaj_0<1.&&phosmin_0<0.25&&((phogedID_0==3 && phoisOOT_0==0)||(phoootID_0==3 && phoisOOT_0)))&&(njetsidT<3)&&(phopt_1>40)&&(sqrt(pow(abs(TVector2::Phi_mpi_pi(jetphi_0-phophi_0)),2) + pow(jeteta_0-phoeta_0,2))>2.1))
+bkgd_cut=(hltDiPho3022M90)
+sign_cut=
+data_cut=(hltDiPho3022M90)

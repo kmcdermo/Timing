@@ -1,0 +1,4 @@
+common_cut=((phopt_0>70&&phoisEB_0&&((phogedID_0==0 && phoisOOT_0==0)||(phoootID_0==0 && phoisOOT_0)))&&(njetsidT>=3)&&(phopt_1>40))
+bkgd_cut=(hltDiPho3022M90)
+sign_cut=
+data_cut=(hltDiPho3022M90)

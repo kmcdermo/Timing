@@ -1,0 +1,9 @@
+plot_title=nVertices
+
+x_title=nVertices
+x_scale=LIN
+x_var=nvtx
+x_bins=CONSTANT 150 0 150
+
+y_title=Events
+y_scale=LOG
