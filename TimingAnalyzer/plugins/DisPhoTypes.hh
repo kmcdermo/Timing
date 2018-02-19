@@ -117,6 +117,8 @@ struct phoStruct
   float seedE_;
   unsigned int seedID_;
 
+  float suisseX_;
+  
   bool isOOT_;
   bool isEB_;
   bool isHLT_;

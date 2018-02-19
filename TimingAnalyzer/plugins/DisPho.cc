@@ -1052,6 +1052,8 @@ void DisPho::InitializePhoBranch(phoStruct & phoBranch)
     phoBranch.seedE_    = -9999.f;
     phoBranch.seedID_   = 0; // non-ideal
   }
+  
+  phoBranch.suisseX_ = -9999.f;
 
   phoBranch.isOOT_ = false;
   phoBranch.isEB_  = false;
@@ -1144,7 +1146,7 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
     }
   }
 
-  // save seed info
+  // save seed info + swiss cross
   if (recHitMap.count(seedRawId)) 
   {
     if (storeRecHits) 
@@ -1163,6 +1165,9 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
 	phoBranch.seedID_    = seedRawId;
       }
     }
+    
+    // swiss cross
+    if (recHits->size() > 0) phoBranch.suisseX_ = EcalTools::swissCross(seedDetId, *recHits, rhEmin);
   }
 
   // some standard booleans
@@ -1637,6 +1642,8 @@ void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
     disphotree->Branch(Form("phoseedE_%i",i), &phoBranch.seedE_, Form("phoseedE_%i/F",i));
     disphotree->Branch(Form("phoseedID_%i",i), &phoBranch.seedID_, Form("phoseedID_%i/i",i));
   }
+
+  disphotree->Branch(Form("phosuisseX_%i",i), &phoBranch.suisseX_, Form("phosuisseX_%i/F",i));
 
   disphotree->Branch(Form("phoisOOT_%i",i), &phoBranch.isOOT_, Form("phoisOOT_%i/O",i));
   disphotree->Branch(Form("phoisEB_%i",i), &phoBranch.isEB_, Form("phoisEB_%i/O",i));
