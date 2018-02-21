@@ -8,8 +8,8 @@
 cd ${dir}
 
 ## and copy these commands below
-cmsrel CMSSW_9_3_3
-cd CMSSW_9_3_3/src
+cmsrel CMSSW_9_3_6_patch1
+cd CMSSW_9_3_6_patch1/src
 cmsenv
 git cms-init
 
@@ -32,13 +32,13 @@ source /cvmfs/cms.cern.ch/crab3/crab.sh
 ## then do the following below
 
 cd Timing/GEN_SIM/test
-cmsDriver.py ${path}/${to}/${fragment} --mc --eventcontent RAWSIM --datatier GEN-SIM --conditions 93X_mc2017_realistic_v3 --beamspot Realistic25ns13TeVEarly2017Collision --step GEN,SIM --geometry DB:Extended --era Run2_2017 --fileout file:step0.root --no_exec --python_filename step0_GEN_SIM.py
+cmsDriver.py ${path}/${to}/${fragment} --mc --eventcontent RAWSIM --datatier GEN-SIM --conditions 93X_mc2017_realistic_v3 --beamspot Realistic25ns13TeVEarly2017Collision --step GEN,SIM --geometry DB:Extended --era Run2_2017 --nThreads 4 --fileout file:step0.root --no_exec --python_filename step0.py 
 
 ## At this point test the config:
 
-cmsRun step0_GEN_SIM.py
+cmsRun step0.py
 
-## if it works set up a crab config that is like examples/crab_step0.py
+## if it works set up a crab config that is like examples/crab_step0.py (also make sure Ncores = nThreads)
 ## check that you are producing the correct total amount of events (NJOBS * unitsPerJob)
 ## make sure the output site and LFN to where you have access to write to
 ## also make sure the base_name is something sensible!
@@ -49,13 +49,25 @@ cmsRun step0_GEN_SIM.py
 ## Step1: Premixing+RAW+Trigger ##
 ##################################
 
-## Now we use the test step0.root from the previous step as input. We are using the Global Run menu in this release
+SWITCH RELEASES!
+cmsrel CMSSW_9_4_4
+cd CMSSW_9_4_4/src
+cmsenv
+git cms-init
 
-cmsDriver.py step1 --mc --eventcontent PREMIXRAW --datatier GEN-SIM-RAW --conditions 93X_mc2017_realistic_v3 --step DIGIPREMIX_S2,DATAMIX,L1,DIGI2RAW,HLT:GRun --nThreads 4 --datamix PreMix --era Run2_2017 --pileup_input dbs:/Neutrino_E-10_gun/RunIISummer17PrePremix-MCv1_92X_upgrade2017_realistic_v8-v1/GEN-SIM-DIGI-RAW --filein file:step0.root --fileout file:step1.root --no_exec
+git clone https://github.com/kmcdermo/Timing.git
+cp -r Timing/GEN_SIM/Configuration .
+scram b -j 8
+
+## Now we use the test step0.root from the previous step as input. We are using a slimmed trigger menu in this release
+
+cmsDriver.py step1 --mc --eventcontent PREMIXRAW --datatier GEN-SIM-RAW --conditions 94X_mc2017_realistic_v10 --step DIGIPREMIX_S2,DATAMIX,L1,DIGI2RAW,HLT:hltdev:/users/kmcdermo/HLTSlimDispho92X/HLTSlimDispho/V1 --nThreads 8 --datamix PreMix--pileup_input dbs:/Neutrino_E-10_gun/RunIISummer17PrePremix-MC_v2_94X_mc2017_realistic_v9-v1/GEN-SIM-DIGI-RAW --era Run2_2017 --filein file:step0.root --fileout file:step1.root -n -1 --no_exec --python_filename step1.py 
+
+## nthreads = 8 will most likely fail, unless you raise the memory for CRAB -- I used 6000 MB on CRAB and 4 threads
 
 ## again test the file to make sure it runs properly
 
-cmsRun step1_DIGIPREMIX_S2_DATAMIX_L1_DIGI2RAW_HLT.py
+cmsRun step1.py
 
 ## check out examples/crab_step1.py for an example grid submission for this step
 ## the trick here is get the output dataset name from crab status of the last step and use it as the input dataset for this step.
@@ -67,11 +79,11 @@ cmsRun step1_DIGIPREMIX_S2_DATAMIX_L1_DIGI2RAW_HLT.py
 
 ## standard stuff here.  this step generates our out-of-time photon collection
 
-cmsDriver.py step2 --mc --eventcontent AODSIM --datatier AODSIM --conditions 93X_mc2017_realistic_v3 --step RAW2DIGI,RECO,EI --nThreads 4 --era Run2_2017 --filein file:step1.root --fileout file:step2.root --no_exec
+cmsDriver.py step2 --step RAW2DIGI,RECO --eventcontent AODSIM --datatier AODSIM --mc --conditions 94X_mc2017_realistic_v10 --era Run2_2017 --filein file:step1.root --fileout file:step2.root runUnscheduled --nThreads 8 -n -1 --no_exec  --python_filename step2.py 
 
 ## Run it
 
-cmsRun step2_RAW2DIGI_RECO_EI.py
+cmsRun step2.py
 
 ## and get the appropriate grid submission script: examples/crab_step2.py
 
@@ -81,11 +93,11 @@ cmsRun step2_RAW2DIGI_RECO_EI.py
 
 ## get things in miniAOD format
 
-cmsDriver.py step3 --mc --eventcontent MINIAODSIM --runUnscheduled --datatier MINIAODSIM --conditions 93X_mc2017_realistic_v3 --step PAT --nThreads 4 --era Run2_2017 --filein file:step2.root --fileout file:step3.root --no_exec
+cmsDriver.py step3 --mc --eventcontent MINIAODSIM --runUnscheduled --datatier MINIAODSIM --conditions 94X_mc2017_realistic_v10 --step PAT --nThreads 8 --era Run2_2017 --filein file:step2.root --fileout file:step3.root -n -1 --no_exec --python_filename step3.py
 
 ## test
 
-cmsRun step3_PAT.py
+cmsRun step3.py
 
 ## and send to the grid, examples/crab_step3.py
 
