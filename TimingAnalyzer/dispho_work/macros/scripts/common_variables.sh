@@ -5,7 +5,7 @@ export rootbase="root://eoscms"
 export eosbase="/store/user/${USER}"
 export inbase="${eosbase}/nTuples/unskimmed"
 export tmpbase="/tmp/${USER}"
-export outbase="${eosbase}/nTuples/skims/2017/rereco"
+export outbase="${eosbase}/nTuples/skims/2017/rereco_v2"
 
 ## filenames
 export infiles="dispho_*.root"

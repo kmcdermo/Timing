@@ -249,7 +249,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    ## tracks
    tracks = cms.InputTag("unpackedTracksAndVertices"),
    ## vertices
-   vertices = cms.InputTag("unpackedTracksAndVertices"),
+   vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## rho
    rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## MET
@@ -292,4 +292,3 @@ if options.runUnscheduled :
 from Configuration.StandardSequences.earlyDeleteSettings_cff import customiseEarlyDelete
 if options.deleteEarly:
 	process = customiseEarlyDelete(process)
-
