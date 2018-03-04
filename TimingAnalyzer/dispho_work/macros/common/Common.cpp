@@ -40,14 +40,11 @@ namespace Config
     SampleMap["MC/GMSB/L200TeV_CTau400cm"] = GMSB;
     
     // Data
-    SampleMap["Data/SinglePhoton/B/v1"] = Data;
-    SampleMap["Data/SinglePhoton/B/v2"] = Data;
-    SampleMap["Data/SinglePhoton/C/v1"] = Data;
-    SampleMap["Data/SinglePhoton/C/v2"] = Data;
-    SampleMap["Data/SinglePhoton/C/v3"] = Data;
-    SampleMap["Data/SinglePhoton/D/v1"] = Data;
-    SampleMap["Data/SinglePhoton/E/v1"] = Data;
-    SampleMap["Data/SinglePhoton/F/v1"] = Data;
+    SampleMap[Form("Data/%s/B/v1",Config::dataSample.Data())] = Data;
+    SampleMap[Form("Data/%s/C/v1",Config::dataSample.Data())] = Data;
+    SampleMap[Form("Data/%s/D/v1",Config::dataSample.Data())] = Data;
+    SampleMap[Form("Data/%s/E/v1",Config::dataSample.Data())] = Data;
+    SampleMap[Form("Data/%s/F/v1",Config::dataSample.Data())] = Data;
   }
 
   void SetupGroups()

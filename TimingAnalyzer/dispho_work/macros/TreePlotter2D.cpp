@@ -57,8 +57,7 @@ void TreePlotter2D::MakeHistFromTrees()
     // Init
     const auto & input  = SamplePair.first;
     const auto & sample = SamplePair.second;
-    const Bool_t isMC = (sample != Data);
-    std::cout << "Working on " << (isMC?"MC":"DATA") << " sample: " << input.Data() << std::endl;
+    std::cout << "Working on input: " << input.Data() << std::endl;
 
     // Get File
     const TString filename = Form("%s/%s/%s/%s",Config::eosDir.Data(),Config::baseDir.Data(),input.Data(),Config::tupleFileName.Data());
@@ -75,7 +74,7 @@ void TreePlotter2D::MakeHistFromTrees()
     TH2F * hist = TreePlotter2D::SetupHist(Form("%s_Hist",histname.Data()));
     
     // Fill from tree
-    tree->Draw(Form("%s:%s>>%s",fYVar.Data(),fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(isMC).Data()),"goff");
+    tree->Draw(Form("%s:%s>>%s",fYVar.Data(),fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(input,sample).Data()),"goff");
     
     // Add to main hists
     HistMap[sample]->Add(hist);

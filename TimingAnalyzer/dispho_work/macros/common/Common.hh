@@ -36,7 +36,7 @@ namespace Config
 
   // input
   static const TString eosDir         = "root://eoscms";
-  static const TString baseDir        = "/store/user/kmcdermo/nTuples/skims/2017";
+  static const TString baseDir        = "/store/user/kmcdermo/nTuples/skims/2017/rereco_v2";
   static const TString tupleFileName  = "tree.root";
   static const TString puwgtFileName  = "puweights";
   static const TString puwgtHistName  = "PUWeightsHist";
@@ -44,6 +44,7 @@ namespace Config
   static const TString configtreename = "configtree";
   static const TString disphotreename = "disphotree";
   static const TString h_cutflowname  = "h_cutflow";
+  static const TString dataSample     = "DoubleEG";
 
   // Sample Information
   extern std::map<TString,SampleType>     SampleMap;
@@ -98,10 +99,27 @@ namespace Config
 
   // String formatting
   std::string RemoveDelim(std::string tmp, const std::string & delim){return tmp.erase(tmp.find(delim),delim.length());}
-
   TString ReplaceDelimWithSpace(TString tmp, const TString & delim){return tmp.ReplaceAll(delim," ");}
   TString ReplaceSlashWithUnderscore(TString tmp){return tmp.ReplaceAll("/","_");}
-  TString WeightString(const Bool_t isMC){return (isMC ? "evtwgt * puwgt" : "1.0");}
+
+  // Weight for sample
+  TString WeightString(const TString & input, const SampleType sample)
+  {
+    // Get the appropriate weight 
+    TString weight = (Config::GroupMap[sample] != isData ? "evtwgt * puwgt" : "1.0");
+    if (sample == DYLL)
+    {
+      if      (input.Contains("base")) weight += " * 0.4982";
+      else if (input.Contains("ext"))  weight += " * 0.5018";
+      else    
+      {
+	std::cerr << "Somehow you specified a DYLL sample that does not exist: " << input.Data() << " ...exiting..." << std::endl;
+	exit(1);
+      }
+    }
+
+    return weight;
+  }
 
   // Check inputs
   void CheckValidFile(const TFile * file, const TString & fname);
