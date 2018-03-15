@@ -19,7 +19,7 @@
 #include <vector>
 
 // Sample Enums
-enum SampleType  {Data, GMSB, HVDS, QCD, GJets, DYLL, ToyMC};
+enum SampleType  {Data, GMSB, HVDS, QCD, GJets, DYLL, DiPho, ToyMC};
 enum SampleGroup {isData, isBkgd, isSignal, isToy};
 
 // Configuration parameters

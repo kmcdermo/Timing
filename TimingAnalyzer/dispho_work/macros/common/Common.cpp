@@ -36,6 +36,10 @@ namespace Config
     SampleMap["MC/DYJetsToLL/base"] = DYLL;
     SampleMap["MC/DYJetsToLL/ext"]  = DYLL;
 
+    // DiPhoBox
+    SampleMap["MC/DiPhotonJetsBox/M40_80"]  = DiPho;
+    SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = DiPho;
+
     // GMSB
     SampleMap["MC/GMSB/L200TeV_CTau400cm"] = GMSB;
     
@@ -52,6 +56,7 @@ namespace Config
     GroupMap[QCD]   = isBkgd;
     GroupMap[GJets] = isBkgd;
     GroupMap[DYLL]  = isBkgd;
+    GroupMap[DiPho] = isBkgd;
     GroupMap[GMSB]  = isSignal;
     GroupMap[Data]  = isData;
   }
@@ -61,6 +66,7 @@ namespace Config
     HistNameMap[QCD]   = "QCD_Hist";
     HistNameMap[GJets] = "GJets_Hist";
     HistNameMap[DYLL]  = "DYLL_Hist";
+    HistNameMap[DiPho] = "DiPho_Hist";
     HistNameMap[GMSB]  = "GMSB_Hist";
     HistNameMap[Data]  = "Data_Hist";
   }
@@ -70,6 +76,7 @@ namespace Config
     ColorMap[QCD]   = kGreen;
     ColorMap[GJets] = kRed;
     ColorMap[DYLL]  = kMagenta;
+    ColorMap[DiPho] = kCyan;
     ColorMap[GMSB]  = kBlue;
     ColorMap[Data]  = kBlack;
   }
@@ -79,6 +86,7 @@ namespace Config
     LabelMap[QCD]   = "QCD"; //"#QCD (H_{T} Binned)";
     LabelMap[GJets] = "#gamma+Jets"; //"#gamma + Jets (H_{T} Binned)";
     LabelMap[DYLL]  = "DY#rightarrowLL+Jets";
+    LabelMap[DiPho] = "2#gamma";
     LabelMap[GMSB]  = "GMSB c#tau=4m"; //"GMSB c#tau = 4m, #Lambda = 200 TeV";
     LabelMap[Data]  = "Data";
   }
