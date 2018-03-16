@@ -106,7 +106,8 @@ namespace Config
   TString WeightString(const TString & input, const SampleType sample)
   {
     // Get the appropriate weight 
-    TString weight = (Config::GroupMap[sample] != isData ? "evtwgt * puwgt" : "1.0");
+    //    TString weight = (Config::GroupMap[sample] != isData ? "evtwgt * puwgt" : "1.0");
+    TString weight = (Config::GroupMap[sample] != isData ? "evtwgt" : "1.0");
     if (sample == DYLL)
     {
       if      (input.Contains("base")) weight += " * 0.4982";

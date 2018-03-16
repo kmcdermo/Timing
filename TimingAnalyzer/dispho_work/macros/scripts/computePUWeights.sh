@@ -1,7 +1,9 @@
 #!/bin/bash
 
+## Make sure to turn of pu wgt in common weight string!
+
 ## first run plotter
-cutconfig=${1:-"cut_config/signal_deg.txt"}
+cutconfig=${1:-"cut_config/control_gjets.txt"}
 plotconfig=${2:-"plot_config/nvtx.txt"}
 outfiletext=${3:-"puweights"}
 

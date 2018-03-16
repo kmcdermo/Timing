@@ -120,7 +120,7 @@ void Skimmer::EventLoop()
       fOutCutFlow->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
       
       // cut on crappy pileup... assume this is due to the multithreaded pre mix issue
-      if (fIsMC && ((fInEvent.genputrue < 0) || UInt_t(fInEvent.genputrue) > fPUWeights.size())) continue;
+      if (fIsMC && ((fInEvent.genputrue < 0) || (UInt_t(fInEvent.genputrue) > fPUWeights.size()))) continue;
       
       // fill cutflow
       fOutCutFlow->Fill((cutLabels["badPU"]*1.f)-0.5f,evtwgt);
@@ -332,7 +332,7 @@ void Skimmer::FillOutPhos()
     outpho.smaj = inpho.smaj;
     outpho.smin = inpho.smin;
     outpho.alpha = inpho.alpha;
-    outpho.suisseX = inpho.suisseX;
+    //    outpho.suisseX = inpho.suisseX;
     outpho.isOOT = inpho.isOOT;
     outpho.isEB = inpho.isEB;
     outpho.isHLT = inpho.isHLT;
@@ -696,7 +696,7 @@ void Skimmer::InitInBranches()
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID);;
     }
-    fInTree->SetBranchAddress(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX);
+    //    fInTree->SetBranchAddress(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_isOOT.c_str(),ipho), &pho.isOOT);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_isEB.c_str(),ipho), &pho.isEB);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_isHLT.c_str(),ipho), &pho.isHLT);
@@ -970,7 +970,7 @@ void Skimmer::InitOutTree()
     fOutTree->Branch(Form("%s_%i",pho.s_smaj.c_str(),ipho), &pho.smaj);
     fOutTree->Branch(Form("%s_%i",pho.s_smin.c_str(),ipho), &pho.smin);
     fOutTree->Branch(Form("%s_%i",pho.s_alpha.c_str(),ipho), &pho.alpha);
-    fOutTree->Branch(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX);
+    //    fOutTree->Branch(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX);
     fOutTree->Branch(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime);
     fOutTree->Branch(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE);
     fOutTree->Branch(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID);;

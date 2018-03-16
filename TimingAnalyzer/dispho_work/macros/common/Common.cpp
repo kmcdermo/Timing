@@ -16,32 +16,32 @@ namespace Config
   void SetupSamples()
   {
     // QCD HT binned
-    SampleMap["MC/QCD_HT/100to200"]   = QCD;
-    SampleMap["MC/QCD_HT/200to300"]   = QCD;
-    SampleMap["MC/QCD_HT/300to500"]   = QCD;
-    SampleMap["MC/QCD_HT/500to700"]   = QCD;
-    SampleMap["MC/QCD_HT/700to1000"]  = QCD;
-    SampleMap["MC/QCD_HT/1000to1500"] = QCD;
-    SampleMap["MC/QCD_HT/1500to2000"] = QCD;
-    SampleMap["MC/QCD_HT/2000toInf"]  = QCD;
+    SampleMap["backup/QCD_HT/100to200"]   = QCD;
+    SampleMap["backup/QCD_HT/200to300"]   = QCD;
+    SampleMap["backup/QCD_HT/300to500"]   = QCD;
+    SampleMap["backup/QCD_HT/500to700"]   = QCD;
+    SampleMap["backup/QCD_HT/700to1000"]  = QCD;
+    SampleMap["backup/QCD_HT/1000to1500"] = QCD;
+    SampleMap["backup/QCD_HT/1500to2000"] = QCD;
+    SampleMap["backup/QCD_HT/2000toInf"]  = QCD;
   
     // GJets HT binned
-    SampleMap["MC/GJets_HT/40To100"]  = GJets;
-    SampleMap["MC/GJets_HT/100To200"] = GJets;
-    SampleMap["MC/GJets_HT/200To400"] = GJets;
-    SampleMap["MC/GJets_HT/400To600"] = GJets;
-    SampleMap["MC/GJets_HT/600ToInf"] = GJets;
+    SampleMap["backup/GJets_HT/40To100"]  = GJets;
+    SampleMap["backup/GJets_HT/100To200"] = GJets;
+    SampleMap["backup/GJets_HT/200To400"] = GJets;
+    SampleMap["backup/GJets_HT/400To600"] = GJets;
+    SampleMap["backup/GJets_HT/600ToInf"] = GJets;
     
     // DYLL
-    SampleMap["MC/DYJetsToLL/base"] = DYLL;
-    SampleMap["MC/DYJetsToLL/ext"]  = DYLL;
+    SampleMap["backup/DYJetsToLL/base"] = DYLL;
+    SampleMap["backup/DYJetsToLL/ext"]  = DYLL;
 
     // DiPhoBox
-    SampleMap["MC/DiPhotonJetsBox/M40_80"]  = DiPho;
-    SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = DiPho;
+    SampleMap["backup/DiPhotonJetsBox/M40_80"]  = DiPho;
+    SampleMap["backup/DiPhotonJetsBox/M80_Inf"] = DiPho;
 
     // GMSB
-    SampleMap["MC/GMSB/L200TeV_CTau400cm"] = GMSB;
+    //    SampleMap["backup/GMSB/L200TeV_CTau400cm"] = GMSB;
     
     // Data
     SampleMap[Form("Data/%s/B/v1",Config::dataSample.Data())] = Data;

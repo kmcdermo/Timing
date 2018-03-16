@@ -1,4 +1,5 @@
 #include "TreePlotter.hh"
+#include "TVector2.h"
 
 TreePlotter::TreePlotter(const TString & cutconfig, const TString & plotconfig, const TString & outfiletext) 
   : fCutConfig(cutconfig), fPlotConfig(plotconfig), fOutFileText(outfiletext)
@@ -93,12 +94,156 @@ void TreePlotter::MakeHistFromTrees()
     TTree * tree = (TTree*)file->Get(Form("%s",Config::disphotreename.Data()));
     Config::CheckValidTree(tree,Config::disphotreename,filename);
 
+    // relevant variables
+    float e0,pt0,phi0,eta0;
+    TBranch * b_e0, * b_pt0, * b_phi0, * b_eta0;
+    int gedid0,ootid0;
+    TBranch * b_gedid0, * b_ootid0;
+    bool isoot0;
+    TBranch * b_isoot0;
+
+    float e1,pt1,phi1,eta1;
+    TBranch * b_e1, * b_pt1, * b_phi1, * b_eta1;
+    int gedid1,ootid1;
+    TBranch * b_gedid1, * b_ootid1;
+    bool isoot1;
+    TBranch * b_isoot1;
+
+    float jphi0,jeta0;
+    TBranch * b_jphi0, * b_jeta0;
+
+    int njets;
+    TBranch * b_njets;
+
+    int nvtx;
+    TBranch * b_nvtx;
+
+    bool hlt;
+    TBranch * b_hlt;
+    
+    float evtwgt;
+    TBranch * b_evtwgt;
+
+    tree->SetBranchAddress("phoE_0",&e0,&b_e0);
+    tree->SetBranchAddress("phopt_0",&pt0,&b_pt0);
+    tree->SetBranchAddress("phophi_0",&phi0,&b_phi0);
+    tree->SetBranchAddress("phoeta_0",&eta0,&b_eta0);
+    tree->SetBranchAddress("phogedID_0",&gedid0,&b_gedid0);
+    tree->SetBranchAddress("phoootID_0",&ootid0,&b_ootid0);
+    tree->SetBranchAddress("phoisOOT_0",&isoot0,&b_isoot0);
+
+    tree->SetBranchAddress("phoE_1",&e1,&b_e1);
+    tree->SetBranchAddress("phopt_1",&pt1,&b_pt1);
+    tree->SetBranchAddress("phophi_1",&phi1,&b_phi1);
+    tree->SetBranchAddress("phoeta_1",&eta1,&b_eta1);
+    tree->SetBranchAddress("phogedID_1",&gedid1,&b_gedid1);
+    tree->SetBranchAddress("phoootID_1",&ootid1,&b_ootid1);
+    tree->SetBranchAddress("phoisOOT_1",&isoot1,&b_isoot1);
+
+    tree->SetBranchAddress("jetphi_0",&jphi0,&b_jphi0);
+    tree->SetBranchAddress("jeteta_0",&jeta0,&b_jeta0);
+
+    tree->SetBranchAddress("njetsidL",&njets,&b_njets);
+    tree->SetBranchAddress("nvtx",&nvtx,&b_nvtx);
+    tree->SetBranchAddress("hltDiPho3022M90",&hlt,&b_hlt);
+
+    const bool isMC = (Config::GroupMap[sample] != isData);
+
+    std::vector<float> puweights;
+    if (isMC)
+    { 
+      tree->SetBranchAddress("evtwgt",&evtwgt,&b_evtwgt);
+
+      // Get puweights file for now
+      const TString pufilename = Config::puwgtFileName+".root";
+      TFile * pufile = TFile::Open(Form("%s",pufilename.Data()));
+      Config::CheckValidFile(pufile,pufilename);
+      TH1F * puhist = (TH1F*)pufile->Get(Config::puwgtHistName.Data());
+      Config::CheckValidTH1F(puhist,Config::puwgtHistName,pufilename);
+
+      puweights.clear();
+      for (Int_t ibin = 1; ibin <= puhist->GetNbinsX(); ibin++)
+      {
+	puweights.emplace_back(puhist->GetBinContent(ibin));
+      }
+
+      delete puhist;
+      delete pufile;
+    }
+
     // Make temp hist
     TString histname = Config::ReplaceSlashWithUnderscore(input);
     TH1F * hist = TreePlotter::SetupHist(Form("%s_Hist",histname.Data()));
-    
+
+    const UInt_t entries = tree->GetEntries();
+    for (UInt_t ientry = 0; ientry < entries; ientry++)
+    {
+      if (ientry % 10000 == 0 || ientry == 0) std::cout << ientry << " out of " << entries << std::endl;
+
+      b_hlt->GetEntry(ientry);
+      if (!hlt) continue;
+
+      b_njets->GetEntry(ientry);
+      if (njets>=3) continue;
+      
+      b_pt0->GetEntry(ientry);
+      if (pt0<=70) continue;
+
+      b_isoot0->GetEntry(ientry);
+      b_gedid0->GetEntry(ientry);
+      b_ootid0->GetEntry(ientry);
+      if (!isoot0 && gedid0<3) continue;
+      if ( isoot0 && ootid0<3) continue;
+
+      b_pt1->GetEntry(ientry);
+      if (pt1<=40) continue;
+
+      b_isoot1->GetEntry(ientry);
+      b_gedid1->GetEntry(ientry);
+      b_ootid1->GetEntry(ientry);
+      if (!isoot1 && gedid1<1) continue;
+      if ( isoot1 && ootid1<1) continue;
+      
+      b_e0->GetEntry(ientry);
+      b_phi0->GetEntry(ientry);
+      b_eta0->GetEntry(ientry);
+      b_e1->GetEntry(ientry);
+      b_phi1->GetEntry(ientry);
+      b_eta1->GetEntry(ientry);
+      if (std::sqrt(std::pow(e0+e1,2)
+    		    -std::pow(pt0*std::cos (phi0)+pt1*std::cos (phi1),2)
+    		    -std::pow(pt0*std::sin (phi0)+pt1*std::sin (phi1),2)
+    		    -std::pow(pt0*std::sinh(eta0)+pt1*std::sinh(eta1),2)
+    		    )<=90) continue;
+
+      b_jphi0->GetEntry(ientry);
+      b_jeta0->GetEntry(ientry);
+      if (std::sqrt(std::pow(TVector2::Phi_mpi_pi(jphi0-phi0),2)+std::pow(jeta0-eta0,2))<=2.1) continue;
+
+      b_nvtx->GetEntry(ientry);
+      
+      float weight = 1.0;
+      if (isMC)
+      {
+    	b_evtwgt->GetEntry(ientry);
+    	weight = evtwgt * puweights[nvtx-1];
+    	if (sample == DYLL)
+    	{
+    	  if      (input.Contains("base")) weight *= 0.4982;
+    	  else if (input.Contains("ext"))  weight *= 0.5018;
+    	  else    
+    	  {
+    	    std::cerr << "Somehow you specified a DYLL sample that does not exist: " << input.Data() << " ...exiting..." << std::endl;
+    	    exit(1);
+    	  }
+    	}
+      }
+      
+      hist->Fill(nvtx,weight);
+    }
+
     // Fill from tree
-    tree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(input,sample).Data()),"goff");
+    //    tree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(input,sample).Data()),"goff");
     
     // Add to main hists
     HistMap[sample]->Add(hist);
