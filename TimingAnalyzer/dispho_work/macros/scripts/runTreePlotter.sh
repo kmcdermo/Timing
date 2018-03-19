@@ -8,12 +8,12 @@ dir=${4:-"plots"}
 root -l -b -q runTreePlotter.C\(\"${cutconfig}\",\"${plotconfig}\",\"${outfiletext}\"\)
 
 ## copy out
-topdir=/afs/cern.ch/user/k/kmcdermo/www/dispho
-fulldir=${topdir}/${dir}
+topdir=/afs/cern.ch/user/k/kmcdermo/www
+fulldir=${topdir}/dispho/${dir}
 
 mkdir -p ${fulldir}
 pushd ${topdir}
-./makereadable.sh ${dir}
+./makereadable.sh ${fulldir}
 popd
 
 cp ${outfiletext}.png ${outfiletext}.root ${fulldir}

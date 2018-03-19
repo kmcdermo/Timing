@@ -113,7 +113,8 @@ void Skimmer::EventLoop()
       
       // filter on MET Flags
       if (!fInEvent.metPV || !fInEvent.metBeamHalo || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || 
-	  !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad || !fInEvent.metECALCalib) continue;
+	  !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad) continue;
+      if (!fInConfig.isGMSB && !fInEvent.metECALCalib) continue;
       if (!fIsMC && !fInEvent.metEESC) continue;
       
       // fill cutflow
