@@ -1,0 +1,9 @@
+plot_title=Invariant Mass [GeV/c^{2}]
+
+x_title=Diphoton Invariant Mass [GeV/c^{2}]
+x_scale=LIN
+x_var=(sqrt(pow(phoE_0+phoE_1,2)-pow(phopt_0*cos(phophi_0)+phopt_1*cos(phophi_1),2)-pow(phopt_0*sin(phophi_0)+phopt_1*sin(phophi_1),2)-pow(phopt_0*sinh(phoeta_0)+phopt_1*sinh(phoeta_1),2)))
+x_bins=CONSTANT 100 0 1000 
+
+y_title=Events
+y_scale=LOG

@@ -1,0 +1,9 @@
+plot_title=Leading Photon #sigma_{i#eta i#eta}
+
+x_title=Leading Photon #sigma_{i#eta i#eta}
+x_scale=LIN
+x_var=phosieie_0
+x_bins=CONSTANT 50 0 0.1
+
+y_title=Events
+y_scale=LOG

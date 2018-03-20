@@ -1,0 +1,9 @@
+plot_title=Leading Photon ECAL PF Cluster Isolation
+
+x_title=Leading Photon ECAL PF Cluster Isolation
+x_scale=LIN
+x_var=phoEcalPFClIso_0
+x_bins=CONSTANT 100 0 20
+
+y_title=Events
+y_scale=LOG

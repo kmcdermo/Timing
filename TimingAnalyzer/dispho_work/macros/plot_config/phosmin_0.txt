@@ -1,0 +1,9 @@
+plot_title=Leading Photon S_{minor}
+
+x_title=Leading Photon S_{minor}
+x_scale=LIN
+x_var=phosmin_0
+x_bins=CONSTANT 100 0 1
+
+y_title=Events
+y_scale=LOG
