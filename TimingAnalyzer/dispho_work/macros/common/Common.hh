@@ -63,7 +63,7 @@ namespace Config
   void SetupCuts(const TString & cutconfig);
 
   // Setup hists
-  void SetupBins(std::string & str, std::vector<Double_t> & bins);
+  void SetupBins(std::string & str, std::vector<Double_t> & bins, Bool_t & var_bins);
   void SetupScale(const std::string & str, Bool_t & scale);
 
   // skim input
