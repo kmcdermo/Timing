@@ -1,0 +1,4 @@
+common_cut=( (phopt_0>70&&phoisEB_0&&((phogedID_0==3&&!phoisOOT_0&&!phohasPixSeed_0)||(phoootID_0==3&&phoisOOT_0&&!phoisTrk_0))) && (sqrt(pow(TVector2::Phi_mpi_pi(jetphi_0-phophi_0),2)+pow(jeteta_0-phoeta_0,2))>2.1) && (jetpt_0>50) && (njetsidL<3) )
+bkgd_cut=(hltDiPho3022M90)
+sign_cut=
+data_cut=(hltDiPho3022M90)
