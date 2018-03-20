@@ -165,10 +165,11 @@ namespace Config
     }
   }
 
-  void SetupBins(std::string & str, std::vector<Double_t> & bins)
+  void SetupBins(std::string & str, std::vector<Double_t> & bins, Bool_t & var_bins)
   {
     if      (str.find("CONSTANT") != std::string::npos)
     {
+      var_bins = false;
       str = Config::RemoveDelim(str,"CONSTANT");
       Int_t nbins = 0; Double_t low = 0.f, high = 0.f;
       std::stringstream ss(str);
@@ -181,6 +182,7 @@ namespace Config
     } 
     else if (str.find("VARIABLE") != std::string::npos)
     {
+      var_bins = true;
       str = Config::RemoveDelim(str,"VARIABLE");
       Float_t bin_edge;
       std::stringstream ss(str);

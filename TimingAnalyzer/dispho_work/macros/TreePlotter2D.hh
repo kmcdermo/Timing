@@ -59,9 +59,11 @@ private:
   TString fXTitle;
   TString fXVar;
   std::vector<Double_t> fXBins;
+  Bool_t fXVarBins;
   TString fYTitle;
   TString fYVar;
   std::vector<Double_t> fYBins;
+  Bool_t fYVarBins;
 
   // Style
   TStyle * fTDRStyle;

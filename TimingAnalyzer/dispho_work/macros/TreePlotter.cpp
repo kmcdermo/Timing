@@ -113,6 +113,22 @@ void TreePlotter::MakeHistFromTrees()
     delete file;
   }
 
+  // rescale bins by widths if variable size
+  if (fXVarBins)
+  {
+    for (auto & HistPair : HistMap)
+    {
+      auto & hist = HistPair.second;
+      const UInt_t nbinsX = hist->GetXaxis()->GetNbins();
+      for (UInt_t ibinX = 1; ibinX <= nbinsX; ibinX++)
+      {
+	const Float_t binwidthX = hist->GetXaxis()->GetBinWidth(ibinX);
+	hist->SetBinContent(ibinX,(hist->GetBinContent(ibinX)/binwidthX));
+	hist->SetBinError  (ibinX,(hist->GetBinError  (ibinX)/binwidthX));
+      }
+    }
+  }
+
   // save totals to output file
   fOutFile->cd();
   for (const auto & HistPair : HistMap)
@@ -446,7 +462,7 @@ void TreePlotter::ReadPlotConfig()
     else if (str.find("x_bins=") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"x_bins=");
-      Config::SetupBins(str,fXBins);
+      Config::SetupBins(str,fXBins,fXVarBins);
     }
     else if (str.find("y_title=") != std::string::npos)
     {

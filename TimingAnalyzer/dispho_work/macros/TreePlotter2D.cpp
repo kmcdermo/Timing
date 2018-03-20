@@ -89,6 +89,33 @@ void TreePlotter2D::MakeHistFromTrees()
     delete file;
   }
 
+  // rescale bins by widths if variable size
+  if (fXVarBins || fYVarBins)
+  {
+    for (auto & HistPair : HistMap)
+    {
+      auto & hist = HistPair.second;
+      const UInt_t nbinsX = hist->GetXaxis()->GetNbins();
+      const UInt_t nbinsY = hist->GetYaxis()->GetNbins();
+      for (UInt_t ibinX = 1; ibinX <= nbinsX; ibinX++)
+      {
+	const Float_t binwidthX = hist->GetXaxis()->GetBinWidth(ibinX);
+	for (UInt_t ibinY = 1; ibinY <= nbinsY; ibinY++)
+        {
+	  const Float_t binwidthY = hist->GetYaxis()->GetBinWidth(ibinY);
+	  
+	  Float_t divisor = 1.f;
+	  if (fXVarBins) divisor *= binwidthX;
+	  if (fYVarBins) divisor *= binwidthY;
+
+	  hist->SetBinContent(ibinX,ibinY,(hist->GetBinContent(ibinX,ibinY)/divisor));
+	  hist->SetBinError  (ibinX,ibinY,(hist->GetBinError  (ibinX,ibinY)/divisor));
+	}
+      }
+    }
+  }
+
+
   // save totals to output file
   fOutFile->cd();
   for (const auto & HistPair : HistMap)
@@ -197,7 +224,7 @@ void TreePlotter2D::ReadPlotConfig()
     else if (str.find("x_bins=") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"x_bins=");
-      Config::SetupBins(str,fXBins);
+      Config::SetupBins(str,fXBins,fXVarBins);
     }
     else if (str.find("y_title=") != std::string::npos)
     {
@@ -210,7 +237,7 @@ void TreePlotter2D::ReadPlotConfig()
     else if (str.find("y_bins=") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"y_bins=");
-      Config::SetupBins(str,fYBins);
+      Config::SetupBins(str,fYBins,fYVarBins);
     }
     else 
     {
