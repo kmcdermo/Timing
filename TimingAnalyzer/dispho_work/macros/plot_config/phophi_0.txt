@@ -6,4 +6,4 @@ x_var=phophi_0
 x_bins=CONSTANT 64 -3.2 3.2
 
 y_title=Events
-y_scale=LOG
+y_scale=LIN

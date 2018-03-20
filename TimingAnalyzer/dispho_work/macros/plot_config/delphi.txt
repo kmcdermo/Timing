@@ -1,0 +1,9 @@
+plot_title=#Delta#phi(Jet_{0},#gamma_{0})
+
+x_title=#Delta#phi(Jet_{0},#gamma_{0})
+x_scale=LIN
+x_var=(TVector2::Phi_mpi_pi(jetphi_0-phophi_0))
+x_bins=CONSTANT 64 -3.2 3.2
+
+y_title=Events
+y_scale=LIN
