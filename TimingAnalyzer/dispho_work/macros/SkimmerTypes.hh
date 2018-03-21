@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "TBranch.h"
+
 struct Configuration
 {
   // branches
@@ -81,7 +83,6 @@ struct Configuration
   std::string s_inputPaths = "inputPaths";
   std::string s_inputFilters = "inputFilters";
   std::string s_inputFlags = "inputFlags";
-  // MC types
   std::string s_isGMSB = "isGMSB";
   std::string s_isHVDS = "isHVDS";
   std::string s_isBkgd = "isBkgd";
@@ -207,8 +208,6 @@ struct Event
   std::string s_nrechits = "nrechits";
   std::string s_nphotons = "nphotons";
   std::string s_evtwgt = "evtwgt";
-
-  // MC types
   std::string s_genwgt = "genwgt";  
   std::string s_genx0 = "genx0";
   std::string s_geny0 = "geny0";
@@ -217,12 +216,69 @@ struct Event
   std::string s_genpuobs = "genpuobs";
   std::string s_genputrue = "genputrue";
   std::string s_puwgt = "puwgt";
-  // GMSB
   std::string s_nNeutoPhGr = "nNeutoPhGr";
-  // HVDS
   std::string s_nvPions = "nvPions";
-  // ToyMC
   std::string s_nToyPhs = "nToyPhs";
+
+  // tbranches
+  TBranch * b_run;
+  TBranch * b_lumi;
+  TBranch * b_event;
+  TBranch * b_hltSignal;
+  TBranch * b_hltRefPhoID;
+  TBranch * b_hltRefDispID;
+  TBranch * b_hltRefHT;
+  TBranch * b_hltPho50;
+  TBranch * b_hltPho200;
+  TBranch * b_hltDiPho70;
+  TBranch * b_hltDiPho3022M90;
+  TBranch * b_hltDiPho30PV18PV;
+  TBranch * b_hltDiEle33MW;
+  TBranch * b_hltDiEle27WPT;  
+  TBranch * b_hltJet500;
+  TBranch * b_metPV;
+  TBranch * b_metBeamHalo;
+  TBranch * b_metHBHENoise;
+  TBranch * b_metHBHEisoNoise;
+  TBranch * b_metECALTP;
+  TBranch * b_metPFMuon;
+  TBranch * b_metPFChgHad;
+  TBranch * b_metEESC;
+  TBranch * b_metECALCalib;
+  TBranch * b_nvtx;
+  TBranch * b_vtxX;
+  TBranch * b_vtxY;
+  TBranch * b_vtxZ;
+  TBranch * b_rho;
+  TBranch * b_t1pfMETpt;
+  TBranch * b_t1pfMETphi;
+  TBranch * b_t1pfMETsumEt;
+  TBranch * b_jetHT;
+  TBranch * b_njets;
+  TBranch * b_jetHTpt15;
+  TBranch * b_njetspt15;
+  TBranch * b_jetHTeta3;
+  TBranch * b_njetseta3;
+  TBranch * b_jetHTidL;
+  TBranch * b_njetsidL;
+  TBranch * b_jetHTnopho;
+  TBranch * b_njetsnopho;
+  TBranch * b_jetHTidT;
+  TBranch * b_njetsidT;
+  TBranch * b_nrechits;
+  TBranch * b_nphotons;
+  TBranch * b_evtwgt;
+  TBranch * b_genwgt;  
+  TBranch * b_genx0;
+  TBranch * b_geny0;
+  TBranch * b_genz0;
+  TBranch * b_gent0;
+  TBranch * b_genpuobs;
+  TBranch * b_genputrue;
+  TBranch * b_puwgt;
+  TBranch * b_nNeutoPhGr;
+  TBranch * b_nvPions;
+  TBranch * b_nToyPhs;
 };
 
 struct Jet
@@ -236,6 +292,11 @@ struct Jet
   std::string s_pt = "jetpt";
   std::string s_eta = "jeteta";
   std::string s_phi = "jetphi";
+
+  TBranch * b_E;
+  TBranch * b_pt;
+  TBranch * b_eta;
+  TBranch * b_phi;
 };
 typedef std::vector<Jet> JetVec;
 
@@ -254,6 +315,13 @@ struct RecHits
   std::string s_time = "rhtime";
   std::string s_OOT = "rhOOT";
   std::string s_ID = "rhID";
+
+  TBranch * b_eta;
+  TBranch * b_phi;
+  TBranch * b_E;
+  TBranch * b_time;
+  TBranch * b_OOT;
+  TBranch * b_ID;
 };
 
 struct Pho
@@ -298,6 +366,7 @@ struct Pho
   Bool_t  isGen;
   Int_t   isSignal;
 
+  // branch names
   std::string s_E = "phoE";
   std::string s_pt = "phopt";
   std::string s_eta = "phoeta";
@@ -330,13 +399,50 @@ struct Pho
   std::string s_hasPixSeed = "phohasPixSeed";
   std::string s_gedID = "phogedID";
   std::string s_ootID = "phoootID";
-  // !storeRecHits
   std::string s_seedtime = "phoseedtime";
   std::string s_seedE = "phoseedE";
   std::string s_seedID = "phoseedID";
-  // MC Types
   std::string s_isGen = "phoisGen";
   std::string s_isSignal = "phoisSignal";
+
+  // tbranches
+  TBranch * b_E;
+  TBranch * b_pt;
+  TBranch * b_eta;
+  TBranch * b_phi;
+  TBranch * b_scE;
+  TBranch * b_sceta;
+  TBranch * b_scphi;
+  TBranch * b_HoE;
+  TBranch * b_r9;
+  TBranch * b_ChgHadIso;
+  TBranch * b_NeuHadIso;
+  TBranch * b_PhoIso;
+  TBranch * b_EcalPFClIso;
+  TBranch * b_HcalPFClIso;
+  TBranch * b_TrkIso;
+  TBranch * b_sieie;
+  TBranch * b_sipip;
+  TBranch * b_sieip;
+  TBranch * b_smaj;
+  TBranch * b_smin;
+  TBranch * b_alpha;
+  TBranch * b_seed;
+  TBranch * b_recHits;
+  TBranch * b_suisseX;
+  TBranch * b_isOOT;
+  TBranch * b_isEB;
+  TBranch * b_isHLT;
+  TBranch * b_isTrk;
+  TBranch * b_passEleVeto;
+  TBranch * b_hasPixSeed;
+  TBranch * b_gedID;
+  TBranch * b_ootID;
+  TBranch * b_seedtime;
+  TBranch * b_seedE;
+  TBranch * b_seedID;
+  TBranch * b_isGen;
+  TBranch * b_isSignal;
 };
 typedef std::vector<Pho> PhoVec;
 
@@ -385,6 +491,28 @@ struct Gmsb
   std::string s_gengrpt = "gengrpt";
   std::string s_gengrphi = "gengrphi";
   std::string s_gengreta = "gengreta";
+
+  TBranch * b_genNmass;
+  TBranch * b_genNE;
+  TBranch * b_genNpt;
+  TBranch * b_genNphi;
+  TBranch * b_genNeta;
+  TBranch * b_genNprodvx;
+  TBranch * b_genNprodvy;
+  TBranch * b_genNprodvz;
+  TBranch * b_genNdecayvx;
+  TBranch * b_genNdecayvy;
+  TBranch * b_genNdecayvz;
+  TBranch * b_genphE;
+  TBranch * b_genphpt;
+  TBranch * b_genphphi;
+  TBranch * b_genpheta;
+  TBranch * b_genphmatch;
+  TBranch * b_gengrmass;
+  TBranch * b_gengrE;
+  TBranch * b_gengrpt;
+  TBranch * b_gengrphi;
+  TBranch * b_gengreta;
 };
 typedef std::vector<Gmsb> GmsbVec;
 
@@ -433,6 +561,28 @@ struct Hvds
   std::string s_genHVph1phi = "genHVph1phi";
   std::string s_genHVph1eta = "genHVph1eta";
   std::string s_genHVph1match = "genHVph1match";
+
+  TBranch * b_genvPionmass;
+  TBranch * b_genvPionE;
+  TBranch * b_genvPionpt;
+  TBranch * b_genvPionphi;
+  TBranch * b_genvPioneta;
+  TBranch * b_genvPionprodvx;
+  TBranch * b_genvPionprodvy;
+  TBranch * b_genvPionprodvz;
+  TBranch * b_genvPiondecayvx;
+  TBranch * b_genvPiondecayvy;
+  TBranch * b_genvPiondecayvz;
+  TBranch * b_genHVph0E;
+  TBranch * b_genHVph0pt;
+  TBranch * b_genHVph0phi;
+  TBranch * b_genHVph0eta;
+  TBranch * b_genHVph0match;
+  TBranch * b_genHVph1E;
+  TBranch * b_genHVph1pt;
+  TBranch * b_genHVph1phi;
+  TBranch * b_genHVph1eta;
+  TBranch * b_genHVph1match;
 };
 typedef std::vector<Hvds> HvdsVec;
 
@@ -453,6 +603,14 @@ struct Toy
   std::string s_genphmatch = "genphmatch";
   std::string s_genphmatch_ptres = "genphmatch_ptres";
   std::string s_genphmatch_status = "genphmatch_status";
+
+  TBranch * b_genphE;
+  TBranch * b_genphpt;
+  TBranch * b_genphphi;
+  TBranch * b_genpheta;
+  TBranch * b_genphmatch;
+  TBranch * b_genphmatch_ptres;
+  TBranch * b_genphmatch_status;
 };
 typedef std::vector<Toy> ToyVec;
 

@@ -39,12 +39,12 @@ public:
 
   // skim and fill outputs
   void EventLoop();
-  void FillOutGMSBs();
-  void FillOutHVDSs();
-  void FillOutToys();
-  void FillOutEvent();
-  void FillOutJets();
-  void FillOutPhos();
+  void FillOutGMSBs(const UInt_t entry);
+  void FillOutHVDSs(const UInt_t entry);
+  void FillOutToys(const UInt_t entry);
+  void FillOutEvent(const UInt_t entry);
+  void FillOutJets(const UInt_t entry);
+  void FillOutPhos(const UInt_t entry);
 
   // helper functions for output
   Int_t GetGEDPhoVID(const Pho & outpho);
