@@ -1247,6 +1247,10 @@ void Skimmer::InitOutBranches()
   fOutTree->Branch(fOutEvent.s_jetHTidTLV.c_str(), &fOutEvent.jetHTidTLV);
   fOutTree->Branch(fOutEvent.s_njetsidTLV.c_str(), &fOutEvent.njetsidTLV);
 
+  Skimmer::InitOutJets("L",fOutJetsL);
+  Skimmer::InitOutJets("T",fOutJetsT);
+  Skimmer::InitOutJets("TLV",fOutJetsTLV);
+
   fOutTree->Branch(fOutEvent.s_nrechits.c_str(), &fOutEvent.nrechits);
 
   fOutTree->Branch(fOutEvent.s_nphotons.c_str(), &fOutEvent.nphotons);
