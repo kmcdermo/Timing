@@ -27,6 +27,7 @@ public:
   void InitInStructs();
   void InitInBranchVecs();
   void InitInBranches();
+  void InitInJets(const TString & label, JetVec & jet);
 
   // setup gen inputs
   void GetSampleWeight();
@@ -35,6 +36,9 @@ public:
   // setup outputs
   void InitAndSetOutConfig();
   void InitOutTree();
+  void InitOutStructs();
+  void InitOutBranches();
+  void InitOutJets(const TString & label, JetVec & jet);
   void InitOutCutFlow();
 
   // skim and fill outputs
@@ -44,6 +48,8 @@ public:
   void FillOutToys(const UInt_t entry);
   void FillOutEvent(const UInt_t entry);
   void FillOutJets(const UInt_t entry);
+  void GetInJetBranches(const UInt_t entry, JetVec & injets);
+  void SetOutJetBranches(const JetVec & injets, JetVec & outjets);
   void FillOutPhos(const UInt_t entry);
 
   // helper functions for output
@@ -86,7 +92,9 @@ private:
   ToyVec  fInToys;
   Event   fInEvent;
   RecHits fInRecHits;
-  JetVec  fInJets;
+  JetVec  fInJetsL;
+  JetVec  fInJetsT;
+  JetVec  fInJetsTLV;
   PhoVec  fInPhos;
 
   Configuration fInConfig;
@@ -101,7 +109,9 @@ private:
   HvdsVec fOutHVDSs;
   ToyVec  fOutToys;
   Event   fOutEvent;
-  JetVec  fOutJets;
+  JetVec  fOutJetsL;
+  JetVec  fOutJetsT;
+  JetVec  fOutJetsTLV;
   PhoVec  fOutPhos;
 
   Configuration fOutConfig;
