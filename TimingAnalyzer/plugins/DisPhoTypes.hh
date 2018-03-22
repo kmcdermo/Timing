@@ -107,6 +107,10 @@ struct phoStruct
   float Sipip_;
   float Sieip_;
 
+  float e2x2_;
+  float e3x3_;
+  float e5x5_;
+
   float Smaj_;
   float Smin_;
   float alpha_;

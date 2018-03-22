@@ -81,7 +81,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void MakeGMSBBranch(const int i, gmsbStruct& gmsbBranch);
   void MakeHVDSBranch(const int i, hvdsStruct& hvdsBranch);
   void MakeToyBranch(const int i, toyStruct& toyBranch);
-  void MakeJetBranch(const int i, jetStruct& jetBranch);
+  void MakeJetBranch(const int i, const TString & label, jetStruct& jetBranch);
   void MakePhoBranch(const int i, phoStruct& phoBranch);
   void MakePhoBranchMC(const int i, phoStruct& phoBranch);
 
@@ -304,11 +304,13 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
 
   // HT + njets
-  float jetHT, jetHTpt15, jetHTeta3, jetHTidL, jetHTnopho, jetHTidT;
-  int   njets, njetspt15, njetseta3, njetsidL, njetsnopho, njetsidT; 
+  float jetHT, jetHTpt15, jetHTeta3, jetHTnopho, jetHTidL, jetHTidT, jetHTidTLV;
+  int   njets, njetspt15, njetseta3, njetsnopho, njetsidL, njetsidT, njetsidTLV; 
 
   // jets
-  jetStruct jetBranch0, jetBranch1, jetBranch2, jetBranch3;
+  jetStruct jetBranch0L, jetBranch1L, jetBranch2L, jetBranch3L;
+  jetStruct jetBranch0T, jetBranch1T, jetBranch2T, jetBranch3T;
+  jetStruct jetBranch0TLV, jetBranch1TLV, jetBranch2TLV, jetBranch3TLV;
 
   // RecHits
   int nrechits;

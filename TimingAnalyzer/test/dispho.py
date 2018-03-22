@@ -21,7 +21,7 @@ options.register('phIDmin','none',VarParsing.multiplicity.singleton,VarParsing.v
 
 ## object extra pruning cuts
 options.register('seedTimemin',-25.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon seed time minimum cut');
-options.register('jetIDStoremin',3,VarParsing.multiplicity.singleton,VarParsing.varType.int,'jet ID for storing jet info minimum cut');
+options.register('jetIDStoremin',2,VarParsing.multiplicity.singleton,VarParsing.varType.int,'jet ID for storing jet info minimum cut');
 
 ## photon storing options
 options.register('splitPho',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store leading top two photons, OOT and GED');

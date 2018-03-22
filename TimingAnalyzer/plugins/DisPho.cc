@@ -306,61 +306,41 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //               //
   ///////////////////
 
-  // first remove early photons
-  photons.erase(std::remove_if(photons.begin(),photons.end(),
-			       [&](const oot::Photon & photon)
-			       {
-				 const pat::Photon & pho = photon.photon();
-				 const reco::SuperClusterRef& phosc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
-				 const DetId & seedDetId = phosc->seed()->seed(); // get seed detid
-				 const EcalRecHitCollection * recHits = ((seedDetId.subdetId() == EcalBarrel) ? recHitsEB : recHitsEE); // which recHits to use
-				 EcalRecHitCollection::const_iterator seedHit = recHits->find(seedDetId); // get the underlying rechit
-				 const float seedTime = ((seedHit != recHits->end()) ? seedHit->time() : -9999.f);
-				 return (seedTime < seedTimemin);
-			       }),photons.end());
-
-  // first compute HT without any requirements
-  jetHT = 0.f;
+  /////////////////////////
+  // No jet requirements //
+  /////////////////////////
   njets = jets.size();
+  jetHT = 0.f;
   for (const auto jet : jets) jetHT += jet.pt();
 
-  // apply pt requirement
+
+  ////////////////
+  // Jet pt min //
+  ////////////////
   jets.erase(std::remove_if(jets.begin(),jets.end(),
 			    [&](const pat::Jet & jet)
 			    {
 			      return jet.pt() < jetpTmin;
 			    }),jets.end());
-
-  // HT with pt > 15
-  jetHTpt15 = 0.f;
   njetspt15 = jets.size();
+  jetHTpt15 = 0.f;
   for (const auto jet : jets) jetHTpt15 += jet.pt();
 
-  // apply eta requirement
+  /////////////////
+  // Jet eta max //
+  /////////////////
   jets.erase(std::remove_if(jets.begin(),jets.end(),
 			    [&](const pat::Jet & jet)
 			    {
 			      return std::abs(jet.eta()) > jetEtamax;
 			    }),jets.end());
-  
-  // HT with pt > 15, eta < 3.0
-  jetHTeta3 = 0.f;
   njetseta3 = jets.size();
+  jetHTeta3 = 0.f;
   for (const auto jet : jets) jetHTeta3 += jet.pt();
 
-  // apply loose requirement
-  jets.erase(std::remove_if(jets.begin(),jets.end(),
-			    [&](const pat::Jet & jet)
-			    {
-			      return oot::GetPFJetID(jet) < jetIDmin;
-			    }),jets.end());
-  
-  // HT with pt > 15, eta < 3.0, loose ID
-  jetHTidL = 0.f;
-  njetsidL = jets.size();
-  for (const auto jet : jets) jetHTidL += jet.pt();
-
-  // now remove jets too close to the photons
+  ///////////////////////////
+  // Photon,Jet DeltaR min //
+  ///////////////////////////
   jets.erase(std::remove_if(jets.begin(),jets.end(),
 			    [&](const pat::Jet & jet)
 			    {
@@ -375,38 +355,23 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 			      }
 			      return isNearPhoton;
 			    }),jets.end());
-
-  // HT with pt > 15, eta < 3.0, loose ID, no phos
-  jetHTnopho = 0.f;
   njetsnopho = jets.size();
+  jetHTnopho = 0.f;
   for (const auto jet : jets) jetHTnopho += jet.pt();
 
-  // apply tight requirement
-  jets.erase(std::remove_if(jets.begin(),jets.end(),
-			    [&](const pat::Jet & jet)
-			    {
-			      return oot::GetPFJetID(jet) < jetIDStoremin;
-			    }),jets.end());
-  
-  // HT with pt > 15, eta < 3.0, loose ID, no phos, tight ID
-  jetHTidT = 0.f;
-  njetsidT = jets.size();
-  for (const auto jet : jets) jetHTidT += jet.pt();
-  
-  // remove photons too close to the jets...
+  ///////////////////////////////
+  // Remove early time photons //
+  ///////////////////////////////
   photons.erase(std::remove_if(photons.begin(),photons.end(),
 			       [&](const oot::Photon & photon)
 			       {
-				 bool isNearJet = false;
-				 for (const auto & jet : jets)
-			         {
-				   if (Config::deltaR(jet.phi(),jet.eta(),photon.phi(),photon.eta()) < dRmin)
-				   {
-				     isNearJet = true;
-				     break;
-				   }
-				 }
-				 return isNearJet;
+				 const pat::Photon & pho = photon.photon();
+				 const reco::SuperClusterRef& phosc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
+				 const DetId & seedDetId = phosc->seed()->seed(); // get seed detid
+				 const EcalRecHitCollection * recHits = ((seedDetId.subdetId() == EcalBarrel) ? recHitsEB : recHitsEE); // which recHits to use
+				 EcalRecHitCollection::const_iterator seedHit = recHits->find(seedDetId); // get the underlying rechit
+				 const float seedTime = ((seedHit != recHits->end()) ? seedHit->time() : -9999.f);
+				 return (seedTime < seedTimemin);
 			       }),photons.end());
 				 
   ///////////////////////////// 
@@ -621,12 +586,72 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //                     //
   /////////////////////////
   DisPho::InitializeJetBranches();
+
+  ////////////////
+  //            //
+  // Loose Jets //
+  //            //
+  ////////////////
+
+  jets.erase(std::remove_if(jets.begin(),jets.end(),
+			    [&](const pat::Jet & jet)
+			    {
+			      return oot::GetPFJetID(jet) < 1; // 1 == loose
+			    }),jets.end());
+  njetsidL = jets.size();
+  jetHTidL = 0.f;
+  for (const auto jet : jets) jetHTidL += jet.pt();
+
   if (jetsH.isValid()) // check to make sure reco jets exist
   {
-    if (njetsidT > 0) DisPho::SetJetBranch(jets[0],jetBranch0);
-    if (njetsidT > 1) DisPho::SetJetBranch(jets[1],jetBranch1);
-    if (njetsidT > 2) DisPho::SetJetBranch(jets[2],jetBranch2);
-    if (njetsidT > 3) DisPho::SetJetBranch(jets[3],jetBranch3);
+    if (njetsidL > 0) DisPho::SetJetBranch(jets[0],jetBranch0L);
+    if (njetsidL > 1) DisPho::SetJetBranch(jets[1],jetBranch1L);
+    if (njetsidL > 2) DisPho::SetJetBranch(jets[2],jetBranch2L);
+    if (njetsidL > 3) DisPho::SetJetBranch(jets[3],jetBranch3L);
+  }
+
+  ////////////////
+  //            //
+  // Tight Jets //
+  //            //
+  ////////////////
+  jets.erase(std::remove_if(jets.begin(),jets.end(),
+			    [&](const pat::Jet & jet)
+			    {
+			      return oot::GetPFJetID(jet) < 2; // 2 == tight
+			    }),jets.end());
+  njetsidT = jets.size();
+  jetHTidT = 0.f;
+  for (const auto jet : jets) jetHTidT += jet.pt();
+
+  if (jetsH.isValid()) // check to make sure reco jets exist
+  {
+    if (njetsidT > 0) DisPho::SetJetBranch(jets[0],jetBranch0T);
+    if (njetsidT > 1) DisPho::SetJetBranch(jets[1],jetBranch1T);
+    if (njetsidT > 2) DisPho::SetJetBranch(jets[2],jetBranch2T);
+    if (njetsidT > 3) DisPho::SetJetBranch(jets[3],jetBranch3T);
+  }
+
+  /////////////////////////
+  //                     //
+  // Tight Lep Veto Jets //
+  //                     //
+  /////////////////////////
+  jets.erase(std::remove_if(jets.begin(),jets.end(),
+			    [&](const pat::Jet & jet)
+			    {
+			      return oot::GetPFJetID(jet) < 3; // 3 == tight lep veto
+			    }),jets.end());
+  njetsidTLV = jets.size();
+  jetHTidTLV = 0.f;
+  for (const auto jet : jets) jetHTidTLV += jet.pt();
+
+  if (jetsH.isValid()) // check to make sure reco jets exist
+  {
+    if (njetsidTLV > 0) DisPho::SetJetBranch(jets[0],jetBranch0TLV);
+    if (njetsidTLV > 1) DisPho::SetJetBranch(jets[1],jetBranch1TLV);
+    if (njetsidTLV > 2) DisPho::SetJetBranch(jets[2],jetBranch2TLV);
+    if (njetsidTLV > 3) DisPho::SetJetBranch(jets[3],jetBranch3TLV);
   }
 
   //////////////
@@ -940,10 +965,20 @@ void DisPho::InitializeMETBranches()
 
 void DisPho::InitializeJetBranches()
 {
-  DisPho::InitializeJetBranch(jetBranch0);
-  DisPho::InitializeJetBranch(jetBranch1);
-  DisPho::InitializeJetBranch(jetBranch2);
-  DisPho::InitializeJetBranch(jetBranch3);
+  DisPho::InitializeJetBranch(jetBranch0L);
+  DisPho::InitializeJetBranch(jetBranch1L);
+  DisPho::InitializeJetBranch(jetBranch2L);
+  DisPho::InitializeJetBranch(jetBranch3L);
+
+  DisPho::InitializeJetBranch(jetBranch0T);
+  DisPho::InitializeJetBranch(jetBranch1T);
+  DisPho::InitializeJetBranch(jetBranch2T);
+  DisPho::InitializeJetBranch(jetBranch3T);
+
+  DisPho::InitializeJetBranch(jetBranch0TLV);
+  DisPho::InitializeJetBranch(jetBranch1TLV);
+  DisPho::InitializeJetBranch(jetBranch2TLV);
+  DisPho::InitializeJetBranch(jetBranch3TLV);
 }
 
 void DisPho::InitializeJetBranch(jetStruct & jetBranch)
@@ -1103,6 +1138,11 @@ void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, cons
   phoBranch.Sieie_ = phoshape.sigmaIetaIeta;
   phoBranch.Sipip_ = phoshape.sigmaIphiIphi;
   phoBranch.Sieip_ = phoshape.sigmaIetaIphi;
+
+  // other cluster shape variables
+  phoBranch.e2x2_ = phoshape.e2x2;
+  phoBranch.e3x3_ = phoshape.e3x3;
+  phoBranch.e5x5_ = phoshape.e5x5;
 
   // use seed to get geometry and recHits
   const DetId & seedDetId = phosc->seed()->seed(); // seed detid
@@ -1481,18 +1521,30 @@ void DisPho::MakeEventTree()
   disphotree->Branch("njetspt15", &njetspt15, "njetspt15/I");
   disphotree->Branch("jetHTeta3", &jetHTeta3, "jetHTeta3/F");
   disphotree->Branch("njetseta3", &njetseta3, "njetseta3/I");
-  disphotree->Branch("jetHTidL", &jetHTidL, "jetHTidL/F");
-  disphotree->Branch("njetsidL", &njetsidL, "njetsidL/I");
   disphotree->Branch("jetHTnopho", &jetHTnopho, "jetHTnopho/F");
   disphotree->Branch("njetsnopho", &njetsnopho, "njetsnopho/I");
+  disphotree->Branch("jetHTidL", &jetHTidL, "jetHTidL/F");
+  disphotree->Branch("njetsidL", &njetsidL, "njetsidL/I");
   disphotree->Branch("jetHTidT", &jetHTidT, "jetHTidT/F");
   disphotree->Branch("njetsidT", &njetsidT, "njetsidT/I");
+  disphotree->Branch("jetHTidTLV", &jetHTidTLV, "jetHTidTLV/F");
+  disphotree->Branch("njetsidTLV", &njetsidTLV, "njetsidTLV/I");
 
   // Jet Info
-  DisPho::MakeJetBranch(0,jetBranch0);
-  DisPho::MakeJetBranch(1,jetBranch1);
-  DisPho::MakeJetBranch(2,jetBranch2);
-  DisPho::MakeJetBranch(3,jetBranch3);
+  DisPho::MakeJetBranch(0,"L",jetBranch0L);
+  DisPho::MakeJetBranch(1,"L",jetBranch1L);
+  DisPho::MakeJetBranch(2,"L",jetBranch2L);
+  DisPho::MakeJetBranch(3,"L",jetBranch3L);
+
+  DisPho::MakeJetBranch(0,"T",jetBranch0T);
+  DisPho::MakeJetBranch(1,"T",jetBranch1T);
+  DisPho::MakeJetBranch(2,"T",jetBranch2T);
+  DisPho::MakeJetBranch(3,"T",jetBranch3T);
+
+  DisPho::MakeJetBranch(0,"TLV",jetBranch0TLV);
+  DisPho::MakeJetBranch(1,"TLV",jetBranch1TLV);
+  DisPho::MakeJetBranch(2,"TLV",jetBranch2TLV);
+  DisPho::MakeJetBranch(3,"TLV",jetBranch3TLV);
 
   // RecHit Info
   disphotree->Branch("nrechits", &nrechits, "nrechits/I");
@@ -1593,12 +1645,12 @@ void DisPho::MakeToyBranch(const int i, toyStruct& toyBranch)
   disphotree->Branch(Form("genphmatch_status_%i",i), &toyBranch.genphmatch_status_, Form("genphmatch_status_%i/I",i));
 }
 
-void DisPho::MakeJetBranch(const int i, jetStruct& jetBranch)
+void DisPho::MakeJetBranch(const int i, const TString& label, jetStruct& jetBranch)
 {
-  disphotree->Branch(Form("jetE_%i",i), &jetBranch.E_, Form("jetE_%i/F",i));
-  disphotree->Branch(Form("jetpt_%i",i), &jetBranch.Pt_, Form("jetpt_%i/F",i));
-  disphotree->Branch(Form("jeteta_%i",i), &jetBranch.Eta_, Form("jeteta_%i/F",i));
-  disphotree->Branch(Form("jetphi_%i",i), &jetBranch.Phi_, Form("jetphi_%i/F",i));
+  disphotree->Branch(Form("jetE_%i_%s",i,label.Data()), &jetBranch.E_, Form("jetE_%i_%s/F",i,label.Data()));
+  disphotree->Branch(Form("jetpt_%i_%s",i,label.Data()), &jetBranch.Pt_, Form("jetpt_%i_%s/F",i,label.Data()));
+  disphotree->Branch(Form("jeteta_%i_%s",i,label.Data()), &jetBranch.Eta_, Form("jeteta_%i_%s/F",i,label.Data()));
+  disphotree->Branch(Form("jetphi_%i_%s",i,label.Data()), &jetBranch.Phi_, Form("jetphi_%i_%s/F",i,label.Data()));
 }
 
 void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
@@ -1626,6 +1678,10 @@ void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
   disphotree->Branch(Form("phosieie_%i",i), &phoBranch.Sieie_, Form("phosieie_%i/F",i));
   disphotree->Branch(Form("phosipip_%i",i), &phoBranch.Sipip_, Form("phosipip_%i/F",i));
   disphotree->Branch(Form("phosieip_%i",i), &phoBranch.Sieip_, Form("phosieip_%i/F",i));
+
+  disphotree->Branch(Form("phoe2x2_%i",i), &phoBranch.e2x2_, Form("phoe2x2_%i/F",i));
+  disphotree->Branch(Form("phoe3x3_%i",i), &phoBranch.e3x3_, Form("phoe3x3_%i/F",i));
+  disphotree->Branch(Form("phoe5x5_%i",i), &phoBranch.e5x5_, Form("phoe5x5_%i/F",i));
 
   disphotree->Branch(Form("phosmaj_%i",i), &phoBranch.Smaj_, Form("phosmaj_%i/F",i));
   disphotree->Branch(Form("phosmin_%i",i), &phoBranch.Smin_, Form("phosmin_%i/F",i));

@@ -588,6 +588,10 @@ namespace oot
     const float SHM  = jet.chargedMultiplicity()+jet.neutralMultiplicity();
     const float MUF  = jet.muonEnergyFraction();
     
+    // 3 == TightLepVeto
+    // 2 == Tight
+    // 1 == Loose
+
     if (eta <= 2.4)
     {
       if      ((NHF < 0.90) && (NEMF < 0.90) && (CHF > 0) && (CEMF < 0.90) && (CHM > 0) && (SHM > 1) && (MUF < 0.8)) return 3;
