@@ -33,6 +33,6 @@ mkdir -p ${tmpdir}
 
 ## produce sum of weights
 echo "Getting sum of weights"
-./scripts/runSumWeights.sh ${rootbase}/${eosdir} ${files} ${wgtfile}
+./scripts/runSumWeights.sh ${rootbase}/${eosdir} ${files} ${wgtfile} "tree/"
 
 rm ${files}

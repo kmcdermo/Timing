@@ -6,7 +6,7 @@
 
 #include <fstream>
 
-void runSumWeights(const TString & indir, const TString & files, const TString & wgtfile)
+void runSumWeights(const TString & indir, const TString & files, const TString & wgtfile, const TString extra)
 {
   // get list of files
   std::ifstream infiles(files.Data(),std::ios::in);
@@ -22,7 +22,7 @@ void runSumWeights(const TString & indir, const TString & files, const TString &
     Config::CheckValidFile(file,infilename);
 
     // Get the cut histogram
-    const TString inh_cutflowname = Form("%s%s",Config::rootdir.Data(),Config::h_cutflowname.Data());
+    const TString inh_cutflowname = Form("%s%s",extra.Data(),Config::h_cutflowname.Data());
     TH1F * cutflow = (TH1F*)file->Get(inh_cutflowname.Data());
     Config::CheckValidTH1F(cutflow,inh_cutflowname,infilename);
 
