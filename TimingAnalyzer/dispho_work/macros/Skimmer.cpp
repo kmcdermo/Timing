@@ -96,7 +96,7 @@ void Skimmer::EventLoop()
     if (entry%Config::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
     
     // get event weight: no scaling by BR, xsec, lumi, etc.
-    fInEvent.b_genwgt->GetEntry(entry);
+    if (fIsMC) fInEvent.b_genwgt->GetEntry(entry);
     const Float_t evtwgt = (fIsMC ? fInEvent.genwgt : 1.f);
 
     // perform skim
