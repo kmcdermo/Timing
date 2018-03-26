@@ -69,7 +69,7 @@ void TreePlotter::MakePlot()
 
   // Save Output
   TreePlotter::SaveOutput();
-  
+
   // Write Out Config
   TreePlotter::MakeConfigPave();
 }
@@ -259,10 +259,10 @@ void TreePlotter::InitOutputCanvPads()
 
   OutCanv = new TCanvas("OutCanv","");
   OutCanv->cd();
-  
+
   UpperPad = new TPad("UpperPad","", Config::left_up, Config::bottom_up, Config::right_up, Config::top_up);
   UpperPad->SetBottomMargin(0); // Upper and lower plot are joined
-  
+
   LowerPad = new TPad("LowerPad", "", Config::left_lp, Config::bottom_lp, Config::right_lp, Config::top_lp);
   LowerPad->SetTopMargin(0);
   LowerPad->SetBottomMargin(0.35); 
@@ -277,23 +277,14 @@ void TreePlotter::DrawUpperPad()
   UpperPad->Draw();
   UpperPad->cd();
   UpperPad->SetLogx(fIsLogX);
-  UpperPad->SetLogy(fIsLogY);
+
+  // Get and Set Global Maximum and Minimum
+  fMinY = TreePlotter::GetHistMinimum();
+  fMaxY = TreePlotter::GetHistMaximum();
+
+  HistMap[Data]->SetMinimum(fMinY);
+  HistMap[Data]->SetMaximum(fMaxY);
   
-  // Get and Set Maximum
-  const Float_t min = TreePlotter::GetHistMinimum();
-  const Float_t max = TreePlotter::GetHistMaximum();
-
-  if (fIsLogY) 
-  { 
-    HistMap[Data]->SetMinimum(min/1.5);
-    HistMap[Data]->SetMaximum(max*1.5);
-  }
-  else 
-  {
-    HistMap[Data]->SetMaximum( max > 0 ? max*1.05 : max/1.05 );      
-    HistMap[Data]->SetMinimum( min > 0 ? min/1.05 : min*1.05 );
-  }
-
   // now draw the plots for upper pad in absurd order because ROOT is dumb
   HistMap[Data]->Draw("PE"); // draw first so labels appear
 
@@ -360,14 +351,44 @@ void TreePlotter::SaveOutput()
 {
   std::cout << "Saving hist as png..." << std::endl;
 
-  OutCanv->cd(); // Go back to the main canvas before saving
-  Config::CMSLumi(OutCanv,0); // write out Lumi info
-  OutCanv->SaveAs(Form("%s.png",fOutFileText.Data()));
+  // Go back to the main canvas before saving and write out lumi info
+  OutCanv->cd();
+  Config::CMSLumi(OutCanv,0);
+
+  // Save a log version first
+  TreePlotter::PrintCanvas(true);
+
+  // Save a linear version second
+  TreePlotter::PrintCanvas(false);
 
   // save to output file
   fOutFile->cd();
   OutCanv->Write(OutCanv->GetName(),TObject::kWriteDelete);
 }  
+
+void TreePlotter::PrintCanvas(const Bool_t isLogy)
+{
+  // pad gymnastics
+  OutCanv->cd();
+  UpperPad->cd();
+  UpperPad->SetLogy(isLogy);
+
+  // set min and max
+  if (isLogy)
+  {
+    HistMap[Data]->SetMinimum(fMinY/1.5);
+    HistMap[Data]->SetMaximum(fMaxY*1.5);
+  }
+  else 
+  {
+    HistMap[Data]->SetMinimum( fMinY > 0 ? fMinY/1.05 : fMinY*1.05 );
+    HistMap[Data]->SetMaximum( fMaxY > 0 ? fMaxY*1.05 : fMaxY/1.05 );      
+  }
+
+  // save canvas as png
+  OutCanv->cd();
+  OutCanv->SaveAs(Form("%s_%s.png",fOutFileText.Data(),(isLogy?"log":"lin")));
+}
 
 void TreePlotter::MakeConfigPave()
 {

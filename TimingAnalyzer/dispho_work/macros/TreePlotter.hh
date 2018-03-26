@@ -57,7 +57,8 @@ public:
   TH1F * SetupHist(const TString & name);
   Float_t GetHistMinimum();
   Float_t GetHistMaximum();
-
+  void PrintCanvas(const Bool_t isLogy);
+  
   // Meta data
   void MakeConfigPave();
   
@@ -93,6 +94,8 @@ private:
   TPad * UpperPad;
   TPad * LowerPad;
   TPaveText * fConfigPave;
+  Float_t fMinY;
+  Float_t fMaxY;
 };
 
 #endif

@@ -1,4 +1,0 @@
-common_cut=( (phopt_0>70&&phoisEB_0&&((phogedID_0==3&&!phoisOOT_0&&!phohasPixSeed_0)||(phoootID_0==3&&phoisOOT_0&&!phoisTrk_0))) && (phopt_1>40) && (sqrt(pow(phoE_0+phoE_1,2)-pow(phopt_0*cos(phophi_0)+phopt_1*cos(phophi_1),2)-pow(phopt_0*sin(phophi_0)+phopt_1*sin(phophi_1),2)-pow(phopt_0*sinh(phoeta_0)+phopt_1*sinh(phoeta_1),2))>90) && (TVector2::Phi_mpi_pi(jetphi_0-phophi_0)>2.1) && (jetpt_0>50) && (njetsidL<3) )
-bkgd_cut=(hltDiPho3022M90)
-sign_cut=
-data_cut=(hltDiPho3022M90)

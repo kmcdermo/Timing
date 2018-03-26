@@ -16,4 +16,4 @@ pushd ${topdir}
 ./makereadable.sh ${fulldir}
 popd
 
-cp ${outfiletext}.png ${outfiletext}.root ${fulldir}
+cp ${outfiletext}_log.png ${outfiletext}_lin.png ${outfiletext}.root ${fulldir}
