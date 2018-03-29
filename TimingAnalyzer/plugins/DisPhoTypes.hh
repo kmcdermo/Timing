@@ -79,6 +79,7 @@ struct jetStruct
   float Pt_;
   float Phi_;
   float Eta_;
+  int   ID_;
 };
 
 struct phoStruct

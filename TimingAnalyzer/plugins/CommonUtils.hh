@@ -33,6 +33,13 @@ namespace Config
   constexpr float etaEBmax = 1.4442;
   constexpr float etaEEmin = 1.566;
   constexpr float etaEEmax = 2.5;
+
+  // nObjects
+  constexpr float nGMSBs = 2;
+  constexpr float nHVDSs = 4;
+  constexpr float nToys  = 2;
+  constexpr float nPhotons = 4;
+  constexpr float nJets = 10;
   
   // trigger name related strings
   static const std::string SignalPath = "HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_PFHT350MinPFJet15_v";
@@ -215,6 +222,12 @@ namespace oot
 		     const edm::Handle<edm::ValueMap<bool> > & electronMediumIdMapH, 
 		     const edm::Handle<edm::ValueMap<bool> > & electronTightIdMapH, 
 		     std::vector<pat::Electron> & electrons);
+  void PrunePhotons(std::vector<oot::Photon> & photons,
+		    const EcalRecHitCollection * recHitsEB,
+		    const EcalRecHitCollection * recHitsEE,
+		    const float seedTimemin = -10000.f);
+  void PruneJets(std::vector<pat::Jet> & jet, const std::vector<oot::Photon> & photons, 
+		 const float dRmin = 100.f);
   float GetChargedHadronEA(const float eta);
   float GetNeutralHadronEA(const float eta);
   float GetGammaEA(const float eta);
@@ -241,7 +254,7 @@ namespace oot
   // templates MUST be in header if included elsewhere
   template <typename Obj>
   void HLTToObjectMatching(const trigObjVecMap & triggerObjectsByFilterMap, strBitMap & isHLTMatched, 
-			   const Obj& obj, const float pTres = 1.f, const float dRmin = Config::TWOPI)
+			   const Obj& obj, const float pTres = 1.f, const float dRmin = 100.f)
   {
     for (const auto & triggerObjectsByFilterPair : triggerObjectsByFilterMap)
     {
@@ -266,7 +279,7 @@ namespace oot
 
   template <typename Obj>
   bool TrackToObjectMatching(const edm::Handle<std::vector<reco::Track> > & tracksH, const Obj& obj, 
-			     const float trackpTmin = 0.f, const float trackdRmin = Config::TWOPI)
+			     const float trackpTmin = 0.f, const float trackdRmin = 100.f)
   {
     if (tracksH.isValid())
     {
@@ -284,7 +297,7 @@ namespace oot
 
   template <typename Obj>
   bool GenToObjectMatching(const Obj& obj, const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH,
-			   const float pTres = 1.f, const float dRmin = Config::TWOPI)
+			   const float pTres = 1.f, const float dRmin = 100.f)
   {
     if (genparticlesH.isValid()) // make sure gen particles exist
     {

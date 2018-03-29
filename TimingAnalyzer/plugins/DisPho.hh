@@ -303,14 +303,9 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // MET
   float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
 
-  // HT + njets
-  float jetHT, jetHTpt15, jetHTeta3, jetHTnopho, jetHTidL, jetHTidT, jetHTidTLV;
-  int   njets, njetspt15, njetseta3, njetsnopho, njetsidL, njetsidT, njetsidTLV; 
-
   // jets
-  jetStruct jetBranch0L, jetBranch1L, jetBranch2L, jetBranch3L;
-  jetStruct jetBranch0T, jetBranch1T, jetBranch2T, jetBranch3T;
-  jetStruct jetBranch0TLV, jetBranch1TLV, jetBranch2TLV, jetBranch3TLV;
+  int njets;
+  std::vector<jetStruct> jetBranches;
 
   // RecHits
   int nrechits;
@@ -320,7 +315,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // photon info
   int nphotons;
-  phoStruct phoBranch0, phoBranch1, phoBranch2, phoBranch3;
+  std::vector<phoStruct> phoBranches;
 };
 
 #endif

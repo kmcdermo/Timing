@@ -358,6 +358,44 @@ namespace oot
     }
   }  
 
+  ///////////////////
+  //               //
+  // Extra Pruning //
+  //               //
+  ///////////////////
+
+  void PrunePhotons(std::vector<oot::Photon> & photons,
+		    const EcalRecHitCollection * recHitsEB,
+		    const EcalRecHitCollection * recHitsEE,
+		    const float seedTimemin)
+  {
+    photons.erase(std::remove_if(photons.begin(),photons.end(),
+				 [&](const oot::Photon & photon)
+				 {
+				   const pat::Photon & pho = photon.photon();
+				   const reco::SuperClusterRef& phosc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
+				   const DetId & seedDetId = phosc->seed()->seed(); // get seed detid
+				   const EcalRecHitCollection * recHits = ((seedDetId.subdetId() == EcalBarrel) ? recHitsEB : recHitsEE); // which recHits to use
+				   EcalRecHitCollection::const_iterator seedHit = recHits->find(seedDetId); // get the underlying rechit
+				   const float seedTime = ((seedHit != recHits->end()) ? seedHit->time() : -9999.f);
+				   return (seedTime < seedTimemin);
+				 }),photons.end());
+  }
+
+  void PruneJets(std::vector<pat::Jet> jets, const std::vector<oot::Photon> & photons,
+		 const float dRmin)
+  {
+    if (photons.size() > 0)
+    {
+      const auto & photon = photons[0]; // only clean out w.r.t. to leading photon... can do more later
+      jets.erase(std::remove_if(jets.begin(),jets.end(),
+				[&](const pat::Jet & jet)
+				{
+				  return (Config::deltaR(jet.phi(),jet.eta(),photon.phi(),photon.eta()) < dRmin);
+				}),jets.end());
+    }
+  }
+
   /////////////////////
   //                 //
   // Effective Areas //
@@ -575,7 +613,7 @@ namespace oot
   // PFJet ID //
   //          //
   //////////////
-  int GetPFJetID(const pat::Jet & jet) //https://twiki.cern.ch/twiki/bin/view/CMS/JetID13TeVRun2016
+  int GetPFJetID(const pat::Jet & jet) // https://twiki.cern.ch/twiki/bin/view/CMS/JetID13TeVRun2017
   {
     const float eta = std::abs(jet.eta());
     
@@ -588,35 +626,30 @@ namespace oot
     const float SHM  = jet.chargedMultiplicity()+jet.neutralMultiplicity();
     const float MUF  = jet.muonEnergyFraction();
     
-    // 3 == TightLepVeto
-    // 2 == Tight
-    // 1 == Loose
+    // 2 == TightLepVeto
+    // 1 == Tight
 
     if (eta <= 2.4)
     {
-      if      ((NHF < 0.90) && (NEMF < 0.90) && (CHF > 0) && (CEMF < 0.90) && (CHM > 0) && (SHM > 1) && (MUF < 0.8)) return 3;
-      else if ((NHF < 0.90) && (NEMF < 0.90) && (CHF > 0) && (CEMF < 0.99) && (CHM > 0) && (SHM > 1))                return 2;
-      else if ((NHF < 0.99) && (NEMF < 0.99) && (CHF > 0) && (CEMF < 0.99) && (CHM > 0) && (SHM > 1))                return 1;
-      else                                                                                                           return 0; 
+      if      ((NHF < 0.90) && (NEMF < 0.90) && (SHM > 1) && (MUF < 0.80) && (CHF > 0) && (CHM > 0) && (CEMF < 0.80)) return 2;
+      else if ((NHF < 0.90) && (NEMF < 0.90) && (SHM > 1) &&                 (CHF > 0) && (CHM > 0))                  return 1;
+      else                                                                                                            return 0; 
     }
     else if (eta > 2.4 && eta <= 2.7)
     {
-      if      ((NHF < 0.90) && (NEMF < 0.90) && (SHM > 1) && (MUF < 0.8)) return 3;
-      else if ((NHF < 0.90) && (NEMF < 0.90) && (SHM > 1))                return 2;
-      else if ((NHF < 0.99) && (NEMF < 0.99) && (SHM > 1))                return 1;
-      else                                                                return 0; 
+      if      ((NHF < 0.90) && (NEMF < 0.90) && (SHM > 1) && (MUF < 0.80)) return 2;
+      else if ((NHF < 0.90) && (NEMF < 0.90) && (SHM > 1))                 return 1;
+      else                                                                 return 0; 
     }
     else if (eta > 2.7 && eta <= 3.0)
     {
-      if      ((NHF < 0.98) && (NEMF > 0.01) && (NHM > 2)) return 2;
-      else if ((NHF < 0.98) && (NEMF > 0.01) && (NHM > 2)) return 1;
-      else                                                 return 0; 
+      if   ((NEMF > 0.02) && (NEMF < 0.99) && (NHM > 2)) return 1;
+      else                                               return 0; 
     }
     else 
     {
-      if      ((NEMF < 0.90) && (NHM > 10)) return 2;
-      else if ((NEMF < 0.90) && (NHM > 10)) return 1;
-      else                                  return 0; 
+      if   ((NEMF < 0.90) && (NHF > 0.02) && (NHM > 10)) return 1;
+      else                                               return 0; 
     }
   }
 
