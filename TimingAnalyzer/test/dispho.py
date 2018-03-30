@@ -102,7 +102,6 @@ print "phpTmin        : ",options.phpTmin
 print "phIDmin        : ",options.phIDmin
 print "     -- Extra Pruning --"
 print "seedTimemin    : ",options.seedTimemin
-print "jetIDStoremin  : ",options.jetIDStoremin
 print "     -- Photon Storing --"
 print "splitPho       : ",options.splitPho
 print "onlyGED        : ",options.onlyGED

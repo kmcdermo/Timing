@@ -308,7 +308,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   ///////////////////
   oot::PrunePhotons(photons,recHitsEB,recHitsEE,seedTimemin);
   oot::PruneJets(jets,photons,dRmin);
-				 
+		
   /////////////////////////////
   //                         //
   // Photon Storing Options  //
@@ -1399,6 +1399,7 @@ void DisPho::MakeEventTree()
   {
     disphotree->Branch("nNeutoPhGr", &nNeutoPhGr, "nNeutoPhGr/I");
 
+    gmsbBranches.resize(Config::nGMSBs);
     for (int igmsb = 0; igmsb < Config::nGMSBs; igmsb++)
     {
       auto & gmsbBranch = gmsbBranches[igmsb];
@@ -1436,6 +1437,7 @@ void DisPho::MakeEventTree()
   {
     disphotree->Branch("nvPions", &nvPions, "nvPions/I");
 
+    hvdsBranches.resize(Config::nHVDSs);
     for (int ihvds = 0; ihvds < Config::nHVDSs; ihvds++)
     {
       auto & hvdsBranch = hvdsBranches[ihvds];
@@ -1473,6 +1475,7 @@ void DisPho::MakeEventTree()
   {
     disphotree->Branch("nToyPhs", &nToyPhs, "nToyPhs/I");
 
+    toyBranches.resize(Config::nToys);
     for (int itoy = 0; itoy < Config::nToys; itoy++)
     {
       auto & toyBranch = toyBranches[itoy];
@@ -1551,6 +1554,8 @@ void DisPho::MakeEventTree()
 
   // Photon Info
   disphotree->Branch("nphotons", &nphotons, "nphotons/I");
+
+  phoBranches.resize(Config::nPhotons);
   for (int iphoton = 0; iphoton < Config::nPhotons; iphoton++)
   {
     auto & phoBranch = phoBranches[iphoton];
