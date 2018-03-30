@@ -1,4 +1,5 @@
 #include "Timing/TimingAnalyzer/plugins/CommonUtils.hh"
+#include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
 
 namespace oot
 {
@@ -382,7 +383,7 @@ namespace oot
 				 }),photons.end());
   }
 
-  void PruneJets(std::vector<pat::Jet> jets, const std::vector<oot::Photon> & photons,
+  void PruneJets(std::vector<pat::Jet> & jets, const std::vector<oot::Photon> & photons,
 		 const float dRmin)
   {
     if (photons.size() > 0)
@@ -622,6 +623,7 @@ namespace oot
     const float CHF  = jet.chargedHadronEnergyFraction();
     const float CEMF = jet.chargedEmEnergyFraction();
     const float NHM  = jet.neutralMultiplicity();
+    const float CHM  = jet.chargedMultiplicity();
     const float SHM  = jet.chargedMultiplicity()+jet.neutralMultiplicity();
     const float MUF  = jet.muonEnergyFraction();
     
@@ -650,6 +652,8 @@ namespace oot
       if   ((NEMF < 0.90) && (NHF > 0.02) && (NHM > 10)) return 1;
       else                                               return 0; 
     }
+
+    return -1; // should not happen
   }
 
   ///////////////////////

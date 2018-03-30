@@ -80,7 +80,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void MakeEventTree();
 
   void InitializeRhoBranches();
-  void SetRhoBranches(const edm::Handle<float> & rhosH);
+  void SetRhoBranches(const edm::Handle<double> & rhosH);
 
   void InitializeGenEvtBranches();
   void SetGenEvtBranches(const edm::Handle<GenEventInfoProduct> & genevtInfoH);
@@ -99,13 +99,17 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void SetHVDSBranches(const std::vector<reco::GenParticle> & vPions, const std::vector<oot::Photon> & photons, const int nPhotons);
  
   void InitializeToyBranches();
-  void SetToyBranch(const std::vector<reco::GenParticle> & toys, const std::vector<oot::Photon> & photons, const int nPhotons);
+  void SetToyBranches(const std::vector<reco::GenParticle> & toys, const std::vector<oot::Photon> & photons, const int nPhotons);
+
+  void SetRecordInfo(const edm::Event& iEvent);
+  void SetTriggerBranches();
+  void SetMETFilterBranches();
 
   void InitializePVBranches();
-  void SetPVBranches(const edm::Handle<reco::Vertex> & verticesH);
+  void SetPVBranches(const edm::Handle<std::vector<reco::Vertex> > & verticesH);
 
   void InitializeMETBranches();
-  void SetMETBranches(const edm::Handle<pat::MET> & metsH);
+  void SetMETBranches(const edm::Handle<std::vector<pat::MET> > & metsH);
 
   void InitializeJetBranches(const int nJets);
   void SetJetBranches(const std::vector<pat::Jet> & jet, const int nJets);

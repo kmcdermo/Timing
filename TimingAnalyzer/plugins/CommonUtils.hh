@@ -35,11 +35,11 @@ namespace Config
   constexpr float etaEEmax = 2.5;
 
   // nObjects
-  constexpr float nGMSBs = 2;
-  constexpr float nHVDSs = 4;
-  constexpr float nToys  = 2;
-  constexpr float nPhotons = 4;
-  constexpr float nJets = 10;
+  constexpr int nGMSBs = 2;
+  constexpr int nHVDSs = 4;
+  constexpr int nToys  = 2;
+  constexpr int nPhotons = 4;
+  constexpr int nJets = 10;
   
   // trigger name related strings
   static const std::string SignalPath = "HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_PFHT350MinPFJet15_v";
@@ -226,7 +226,7 @@ namespace oot
 		    const EcalRecHitCollection * recHitsEB,
 		    const EcalRecHitCollection * recHitsEE,
 		    const float seedTimemin = -10000.f);
-  void PruneJets(std::vector<pat::Jet> & jet, const std::vector<oot::Photon> & photons, 
+  void PruneJets(std::vector<pat::Jet> & jets, const std::vector<oot::Photon> & photons, 
 		 const float dRmin = 100.f);
   float GetChargedHadronEA(const float eta);
   float GetNeutralHadronEA(const float eta);

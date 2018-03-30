@@ -323,9 +323,9 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Object Counts for Storing //
   //                           //
   ///////////////////////////////
-  const int nJets = std::min(jets.size(),Config::nJets);
+  const int nJets = std::min(int(jets.size()),Config::nJets);
   const int nRecHits = recHitMap.size();
-  const int nPhotons = std::min(photons.size(),Config::nPhotons);
+  const int nPhotons = std::min(int(photons.size()),Config::nPhotons);
 
   /////////////////////////
   //                     //
@@ -342,6 +342,8 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   h_cutflow->Fill(cutflowLabelMap["Trigger"]*1.f,evtwgt);
 
   // HT pre-selection
+  float jetHT = 0.f;
+  for (int ijet = 0; ijet < nJets; ijet++) jetHT += jets[ijet].pt();
   if (jetHT < minHT && applyHT) return;
   h_cutflow->Fill(cutflowLabelMap["H_{T}"]*1.f,evtwgt);
 
@@ -411,7 +413,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       DisPho::InitializeGMSBBranches();
       if (genparticlesH.isValid()) 
       {
-	DisPho::SetGMSBBranches(neutralinos,photons);
+	DisPho::SetGMSBBranches(neutralinos,photons,nPhotons);
       } // check genparticles are okay
     } // isGMSB
 
@@ -421,7 +423,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       DisPho::InitializeHVDSBranches();
       if (genparticlesH.isValid()) 
       {
-	DisPho::SetHVDSBranches(vPions,photons);
+	DisPho::SetHVDSBranches(vPions,photons,nPhotons);
       } // check genparticles are okay
     } // isHVDS
 
@@ -431,7 +433,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       DisPho::InitializeToyBranches();
       if (genparticlesH.isValid())
       {
-	DisPho::SetToyBranches(toys,photons);
+	DisPho::SetToyBranches(toys,photons,nPhotons);
       } // check genparticles are okay
     } // isHVDS
   } // isMC
@@ -512,7 +514,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   DisPho::InitializePhoBranches();
   if (photonsH.isValid() || ootPhotonsH.isValid()) // standard handle check
   {
-    DisPho::SetPhoBranches(photons,recHitMap,recHitsEB,recHitsEE,tracksH,genparticlesH);
+    DisPho::SetPhoBranches(photons,nPhotons,recHitMap,recHitsEB,recHitsEE,tracksH,genparticlesH);
   }
 
   ///////////////
@@ -528,7 +530,7 @@ void DisPho::InitializeRhoBranches()
   rho = 0.f;
 }
 
-void DisPho::SetRhoBranches(const edm::Handle<float> & rhosH)
+void DisPho::SetRhoBranches(const edm::Handle<double> & rhosH)
 {
   rho = *(rhosH.product());
 }
@@ -560,7 +562,7 @@ void DisPho::SetGenXYZ0Branches(const edm::Handle<Point3D> & genxyz0H)
   genz0 = genxyz0.Z();
 }
 
-void DisPho::SetGenT0Branch(const edm::Handle<float> & gent0H)
+void DisPho::SetGenT0Branches(const edm::Handle<float> & gent0H)
 {
   gent0 = *(gent0H.product());
 }
@@ -651,7 +653,7 @@ void DisPho::SetGMSBBranches(const std::vector<reco::GenParticle> & neutralinos,
       if (delR < mindR) 
       {
 	mindR = delR;
-	gmsbBranch.genphmatch_ = iph; 
+	gmsbBranch.genphmatch_ = iphoton;
       } // end check over deltaR
     } // end loop over reco photons
   
@@ -743,7 +745,7 @@ void DisPho::SetHVDSBranches(const std::vector<reco::GenParticle> & vPions, cons
       if (delR0 < mindR0) 
       {
 	mindR0 = delR0;
-	tmpph0 = iph;
+	tmpph0 = iphoton;
       } // end check over deltaR
       
       // check photon 2
@@ -754,7 +756,7 @@ void DisPho::SetHVDSBranches(const std::vector<reco::GenParticle> & vPions, cons
       if (delR1 < mindR1) 
       {
 	mindR1 = delR1;
-	tmpph1 = iph;
+	tmpph1 = iphoton;
       } // end check over deltaR
     } // end loop over reco photons
     
@@ -801,11 +803,13 @@ void DisPho::SetToyBranches(const std::vector<reco::GenParticle> & toys, const s
     float mindR = dRmin, mindR_ptres = dRmin, mindR_status = dRmin;
     for (int iphoton = 0; iphoton < nPhotons; iphoton++)
     {
+      const auto & photon = photons[iphoton];
+
       const float delR = Config::deltaR(toyBranch.genphphi_,toyBranch.genpheta_,photon.phi(),photon.eta());
       if (delR < mindR) 
       {
 	mindR = delR;
-	toyBranch.genphmatch_ = iph; 
+	toyBranch.genphmatch_ = iphoton; 
       } // end check over deltaR
       
       if ( (photon.pt() >= ((1.f-genpTres) * toyBranch.genphpt_)) && (photon.pt() <= ((1.f+genpTres) * toyBranch.genphpt_)) )
@@ -814,7 +818,7 @@ void DisPho::SetToyBranches(const std::vector<reco::GenParticle> & toys, const s
 	if (delR_ptres < mindR_ptres) 
 	{
 	  mindR_ptres = delR_ptres;
-	  toyBranch.genphmatch_ptres_ = iph; 
+	  toyBranch.genphmatch_ptres_ = iphoton; 
 	} // end check over deltaR
 	
 	if (toy.isPromptFinalState())
@@ -823,7 +827,7 @@ void DisPho::SetToyBranches(const std::vector<reco::GenParticle> & toys, const s
 	  if (delR_status < mindR_status) 
 	  {
 	    mindR_status = delR_status;
-	    toyBranch.genphmatch_status_ = iph; 
+	    toyBranch.genphmatch_status_ = iphoton; 
 	  } // end check over deltaR
 	} // end check over final state
       } // end check over pt res
@@ -875,7 +879,7 @@ void DisPho::InitializePVBranches()
   vtxZ = -9999.f;
 }
 
-void DisPho::SetPVBranches(const edm::Handle<reco::Vertex> & verticesH)
+void DisPho::SetPVBranches(const edm::Handle<std::vector<reco::Vertex> > & verticesH)
 {
   nvtx = verticesH->size();
   
@@ -893,7 +897,7 @@ void DisPho::InitializeMETBranches()
   t1pfMETsumEt = -9999.f;
 }
 
-void DisPho::SetMETBranches(const edm::Handle<pat::MET> & metsH)
+void DisPho::SetMETBranches(const edm::Handle<std::vector<pat::MET> > & metsH)
 {
   const auto & t1pfMET = (*metsH)[0];
 
@@ -1397,7 +1401,7 @@ void DisPho::MakeEventTree()
 
     for (int igmsb = 0; igmsb < Config::nGMSBs; igmsb++)
     {
-      auto & gsmbBranch = gmsbBranches[igmsb];
+      auto & gmsbBranch = gmsbBranches[igmsb];
 
       disphotree->Branch(Form("genNmass_%i",igmsb), &gmsbBranch.genNmass_, Form("genNmass_%i/F",igmsb));
       disphotree->Branch(Form("genNE_%i",igmsb), &gmsbBranch.genNE_, Form("genNE_%i/F",igmsb));

@@ -21,7 +21,6 @@ options.register('phIDmin','none',VarParsing.multiplicity.singleton,VarParsing.v
 
 ## object extra pruning cuts
 options.register('seedTimemin',-25.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon seed time minimum cut');
-options.register('jetIDStoremin',2,VarParsing.multiplicity.singleton,VarParsing.varType.int,'jet ID for storing jet info minimum cut');
 
 ## photon storing options
 options.register('splitPho',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store leading top two photons, OOT and GED');
@@ -218,7 +217,6 @@ process.tree = cms.EDAnalyzer("DisPho",
    phIDmin   = cms.string(options.phIDmin),
    ## extra object pruning
    seedTimemin = cms.double(options.seedTimemin),
-   jetIDStoremin = cms.int32(options.jetIDStoremin),
    ## photon storing options
    splitPho = cms.bool(options.splitPho),
    onlyGED  = cms.bool(options.onlyGED),
