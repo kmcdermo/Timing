@@ -187,7 +187,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // RHOS
   edm::Handle<double> rhosH;
   iEvent.getByToken(rhosToken, rhosH);
-  rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
 
   // MET
   edm::Handle<std::vector<pat::MET> > metsH;
@@ -276,6 +275,17 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   }  
   h_cutflow->Fill(cutflowLabelMap["METBlinding"]*1.f,evtwgt);
 
+  /////////
+  //     //
+  // Rho //
+  //     //
+  /////////
+  DisPho::InitializeRhoBranches();
+  if (rhosH.isValid())
+  {
+    DisPho::SetRhoBranches(rhosH);
+  }
+
   /////////////////////
   //                 //
   // Object Prepping //
@@ -299,7 +309,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   oot::PrunePhotons(photons,recHitsEB,recHitsEE,seedTimemin);
   oot::PruneJets(jets,photons,dRmin);
 				 
-  ///////////////////////////// 
+  /////////////////////////////
   //                         //
   // Photon Storing Options  //
   //                         //
@@ -307,6 +317,15 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (splitPho) oot::SplitPhotons(photons,Config::nPhotons/2);     // split photons by OOT and GED (store at most nPhotons/2 of each)
   if (onlyGED)  oot::StoreOnlyPho(photons,Config::nPhotons,false); // store only GED photons, top nPhotons only
   if (onlyOOT)  oot::StoreOnlyPho(photons,Config::nPhotons,true);  // store only OOT photons, top nPhotons only
+  
+  ///////////////////////////////
+  //                           //
+  // Object Counts for Storing //
+  //                           //
+  ///////////////////////////////
+  const int nJets = std::min(jets.size(),Config::nJets);
+  const int nRecHits = recHitMap.size();
+  const int nPhotons = std::min(photons.size(),Config::nPhotons);
 
   /////////////////////////
   //                     //
@@ -328,11 +347,9 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   // photon pre-selection: at least one good photon in event
   bool isphgood = false;
-  int  iph = 0;
   if (photonsH.isValid() || ootPhotonsH.isValid()) 
   {
-    const int nphotons = std::min(photons.size(),Config::nPhotons);
-    for (int iphoton = 0; iphoton < nphotons; iphoton++)
+    for (int iphoton = 0; iphoton < nPhotons; iphoton++)
     {
       const auto & photon = photons[iphoton];
       const auto & pho = photon.photon();
@@ -467,7 +484,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Jets (AK4 standard) //
   //                     //
   /////////////////////////
-  const int nJets = std::min(jets.size(),Config::nJets);
   DisPho::InitializeJetBranches(nJets);
   if (jetsH.isValid()) // check to make sure reco jets exist
   {
@@ -481,7 +497,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //////////////
   if (storeRecHits)
   {
-    const int nRecHits = recHitMap.size();
     DisPho::InitializeRecHitBranches(nRecHits);
     if (recHitsEBH.isValid() && recHitsEEH.isValid())
     {
@@ -506,6 +521,16 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //           //
   ///////////////
   disphotree->Fill();
+}
+
+void DisPho::InitializeRhoBranches()
+{
+  rho = 0.f;
+}
+
+void DisPho::SetRhoBranches(const edm::Handle<float> & rhosH)
+{
+  rho = *(rhosH.product());
 }
 
 void DisPho::InitializeGenEvtBranches()
@@ -546,7 +571,7 @@ void DisPho::InitializeGenPUBranches()
   genputrue = -9999;
 }
 
-void DisPho::SetGenPUBranches()
+void DisPho::SetGenPUBranches(edm::Handle<std::vector<PileupSummaryInfo> > & pileupInfoH)
 {
   for (const auto & puinfo : *pileupInfoH)
   {
@@ -566,89 +591,80 @@ void DisPho::InitializeGMSBBranches()
 
   for (int igmsb = 0; igmsb < Config::nGMSBs; igmsb++)
   {
-    DisPho::InitializeGMSBBranch(gmsbBranches[igmsb]);
+    auto & gmsbBranch = gmsbBranches[igmsb];
+ 
+    gmsbBranch.genNmass_ = -9999.f; gmsbBranch.genNE_ = -9999.f; gmsbBranch.genNpt_ = -9999.f; gmsbBranch.genNphi_ = -9999.f; gmsbBranch.genNeta_ = -9999.f;
+    gmsbBranch.genNprodvx_ = -9999.f; gmsbBranch.genNprodvy_ = -9999.f; gmsbBranch.genNprodvz_ = -9999.f;
+    gmsbBranch.genNdecayvx_ = -9999.f; gmsbBranch.genNdecayvy_ = -9999.f; gmsbBranch.genNdecayvz_ = -9999.f;
+    
+    gmsbBranch.genphE_ = -9999.f; gmsbBranch.genphpt_ = -9999.f; gmsbBranch.genphphi_ = -9999.f; gmsbBranch.genpheta_ = -9999.f; gmsbBranch.genphmatch_ = -9999;
+    gmsbBranch.gengrmass_ = -9999.f; gmsbBranch.gengrE_ = -9999.f; gmsbBranch.gengrpt_ = -9999.f; gmsbBranch.gengrphi_ = -9999.f; gmsbBranch.gengreta_ = -9999.f;
   }
-}
+} 
 
-void DisPho::InitializeGMSBBranch(gmsbStruct& gmsbBranch)
-{
-  gmsbBranch.genNmass_ = -9999.f; gmsbBranch.genNE_ = -9999.f; gmsbBranch.genNpt_ = -9999.f; gmsbBranch.genNphi_ = -9999.f; gmsbBranch.genNeta_ = -9999.f;
-  gmsbBranch.genNprodvx_ = -9999.f; gmsbBranch.genNprodvy_ = -9999.f; gmsbBranch.genNprodvz_ = -9999.f;
-  gmsbBranch.genNdecayvx_ = -9999.f; gmsbBranch.genNdecayvy_ = -9999.f; gmsbBranch.genNdecayvz_ = -9999.f;
-  
-  gmsbBranch.genphE_ = -9999.f; gmsbBranch.genphpt_ = -9999.f; gmsbBranch.genphphi_ = -9999.f; gmsbBranch.genpheta_ = -9999.f; gmsbBranch.genphmatch_ = -9999;
-  gmsbBranch.gengrmass_ = -9999.f; gmsbBranch.gengrE_ = -9999.f; gmsbBranch.gengrpt_ = -9999.f; gmsbBranch.gengrphi_ = -9999.f; gmsbBranch.gengreta_ = -9999.f;
-}
-
-void DisPho::SetGMSBBranches(const std::vector<reco::GenParticle> & neutralinos, const std::vector<oot::Photon> & photons)
+void DisPho::SetGMSBBranches(const std::vector<reco::GenParticle> & neutralinos, const std::vector<oot::Photon> & photons, const int nPhotons)
 {
   nNeutoPhGr = neutralinos.size();
   
   const int nGmsbs = std::min(nNeutoPhGr,Config::nGMSBs);
   for (int igmsb = 0; igmsb < nGmsbs; igmsb++)
   {
-    Dispho::SetGMSBBranch(neutralinos[igmsb],gmsbBranches[igmsb],photons);
-  }
-}
+    const auto & neutralino = neutralinos[igmsb];
+    auto & gmsbBranch = gmsbBranches[igmsb];
 
-void DisPho::SetGMSBBranch(const reco::GenParticle & neutralino, gmsbStruct & gmsbBranch, const std::vector<oot::Photon> & photons)
-{
-  // neutralino 4-vector
-  gmsbBranch.genNmass_ = neutralino.mass();
-  gmsbBranch.genNE_    = neutralino.energy();
-  gmsbBranch.genNpt_   = neutralino.pt();
-  gmsbBranch.genNphi_  = neutralino.phi();
-  gmsbBranch.genNeta_  = neutralino.eta();
-
-  // neutralino production vertex
-  gmsbBranch.genNprodvx_ = neutralino.vx();
-  gmsbBranch.genNprodvy_ = neutralino.vy();
-  gmsbBranch.genNprodvz_ = neutralino.vz();
-  
-  // neutralino decay vertex (same for both daughters unless really screwed up)
-  gmsbBranch.genNdecayvx_ = neutralino.daughter(0)->vx();
-  gmsbBranch.genNdecayvy_ = neutralino.daughter(0)->vy();
-  gmsbBranch.genNdecayvz_ = neutralino.daughter(0)->vz();
-  
-  // set photon daughter stuff
-  const int phdaughter = (neutralino.daughter(0)->pdgId() == 22)?0:1;
-	    
-  gmsbBranch.genphE_   = neutralino.daughter(phdaughter)->energy();
-  gmsbBranch.genphpt_  = neutralino.daughter(phdaughter)->pt();
-  gmsbBranch.genphphi_ = neutralino.daughter(phdaughter)->phi();
-  gmsbBranch.genpheta_ = neutralino.daughter(phdaughter)->eta();
-  
-  // check for a reco match!
-  int   iph   = 0;
-  float mindR = dRmin;
-
-  const int nPhotons = std::min(photons.size(),Config::nPhotons);
-  for (int iphoton = 0; iphoton < nPhotons; iphoton++)
-  {
-    const auto & photon = photons[iphoton];
+    // neutralino 4-vector
+    gmsbBranch.genNmass_ = neutralino.mass();
+    gmsbBranch.genNE_    = neutralino.energy();
+    gmsbBranch.genNpt_   = neutralino.pt();
+    gmsbBranch.genNphi_  = neutralino.phi();
+    gmsbBranch.genNeta_  = neutralino.eta();
     
-    if (photon.pt() < ((1.f-genpTres) * gmsbBranch.genphpt_)) continue;
-    if (photon.pt() > ((1.f+genpTres) * gmsbBranch.genphpt_)) continue;
-
-    const float delR = Config::deltaR(gmsbBranch.genphphi_,gmsbBranch.genpheta_,photon.phi(),photon.eta());
-    if (delR < mindR) 
-    {
-      mindR = delR;
-      gmsbBranch.genphmatch_ = iph; 
-    } // end check over deltaR
-
-    iph++;
-  } // end loop over reco photons
+    // neutralino production vertex
+    gmsbBranch.genNprodvx_ = neutralino.vx();
+    gmsbBranch.genNprodvy_ = neutralino.vy();
+    gmsbBranch.genNprodvz_ = neutralino.vz();
   
-  // set gravitino daughter stuff
-  const int grdaughter = (neutralino.daughter(0)->pdgId() == 1000039)?0:1;
-
-  gmsbBranch.gengrmass_ = neutralino.daughter(grdaughter)->mass();
-  gmsbBranch.gengrE_    = neutralino.daughter(grdaughter)->energy();
-  gmsbBranch.gengrpt_   = neutralino.daughter(grdaughter)->pt();
-  gmsbBranch.gengrphi_  = neutralino.daughter(grdaughter)->phi();
-  gmsbBranch.gengreta_  = neutralino.daughter(grdaughter)->eta();
-} 
+    // neutralino decay vertex (same for both daughters unless really screwed up)
+    gmsbBranch.genNdecayvx_ = neutralino.daughter(0)->vx();
+    gmsbBranch.genNdecayvy_ = neutralino.daughter(0)->vy();
+    gmsbBranch.genNdecayvz_ = neutralino.daughter(0)->vz();
+    
+    // set photon daughter stuff
+    const int phdaughter = (neutralino.daughter(0)->pdgId() == 22)?0:1;
+    
+    gmsbBranch.genphE_   = neutralino.daughter(phdaughter)->energy();
+    gmsbBranch.genphpt_  = neutralino.daughter(phdaughter)->pt();
+    gmsbBranch.genphphi_ = neutralino.daughter(phdaughter)->phi();
+    gmsbBranch.genpheta_ = neutralino.daughter(phdaughter)->eta();
+    
+    // check for a reco match!
+    float mindR = dRmin;
+    
+    for (int iphoton = 0; iphoton < nPhotons; iphoton++)
+    {
+      const auto & photon = photons[iphoton];
+      
+      if (photon.pt() < ((1.f-genpTres) * gmsbBranch.genphpt_)) continue;
+      if (photon.pt() > ((1.f+genpTres) * gmsbBranch.genphpt_)) continue;
+      
+      const float delR = Config::deltaR(gmsbBranch.genphphi_,gmsbBranch.genpheta_,photon.phi(),photon.eta());
+      if (delR < mindR) 
+      {
+	mindR = delR;
+	gmsbBranch.genphmatch_ = iph; 
+      } // end check over deltaR
+    } // end loop over reco photons
+  
+    // set gravitino daughter stuff
+    const int grdaughter = (neutralino.daughter(0)->pdgId() == 1000039)?0:1;
+    
+    gmsbBranch.gengrmass_ = neutralino.daughter(grdaughter)->mass();
+    gmsbBranch.gengrE_    = neutralino.daughter(grdaughter)->energy();
+    gmsbBranch.gengrpt_   = neutralino.daughter(grdaughter)->pt();
+    gmsbBranch.gengrphi_  = neutralino.daughter(grdaughter)->phi();
+    gmsbBranch.gengreta_  = neutralino.daughter(grdaughter)->eta();
+  } // end loop over GMSBs 
+}
 
 void DisPho::InitializeHVDSBranches()
 {
@@ -656,107 +672,97 @@ void DisPho::InitializeHVDSBranches()
 
   for (int ihvds = 0; ihvds < Config::nHVDSs; ihvds++)
   {
-    DisPho::InitializeHVDSBranch(hvdsBranches[ihvds]);
+    auto & hvdsBranch = hvdsBranches[ihvds];
+
+    hvdsBranch.genvPionmass_ = -9999.f; hvdsBranch.genvPionE_ = -9999.f; hvdsBranch.genvPionpt_ = -9999.f; hvdsBranch.genvPionphi_ = -9999.f; hvdsBranch.genvPioneta_ = -9999.f;
+    hvdsBranch.genvPionprodvx_ = -9999.f; hvdsBranch.genvPionprodvy_ = -9999.f; hvdsBranch.genvPionprodvz_ = -9999.f;
+    hvdsBranch.genvPiondecayvx_ = -9999.f; hvdsBranch.genvPiondecayvy_ = -9999.f; hvdsBranch.genvPiondecayvz_ = -9999.f;
+    
+    hvdsBranch.genHVph0E_ = -9999.f; hvdsBranch.genHVph0pt_ = -9999.f; hvdsBranch.genHVph0phi_ = -9999.f; hvdsBranch.genHVph0eta_ = -9999.f; hvdsBranch.genHVph0match_ = -9999;
+    hvdsBranch.genHVph1E_ = -9999.f; hvdsBranch.genHVph1pt_ = -9999.f; hvdsBranch.genHVph1phi_ = -9999.f; hvdsBranch.genHVph1eta_ = -9999.f; hvdsBranch.genHVph1match_ = -9999;
   }
 }
 
-void DisPho::InitializeHVDSBranch(hvdsStruct& hvdsBranch)
-{
-  hvdsBranch.genvPionmass_ = -9999.f; hvdsBranch.genvPionE_ = -9999.f; hvdsBranch.genvPionpt_ = -9999.f; hvdsBranch.genvPionphi_ = -9999.f; hvdsBranch.genvPioneta_ = -9999.f;
-  hvdsBranch.genvPionprodvx_ = -9999.f; hvdsBranch.genvPionprodvy_ = -9999.f; hvdsBranch.genvPionprodvz_ = -9999.f;
-  hvdsBranch.genvPiondecayvx_ = -9999.f; hvdsBranch.genvPiondecayvy_ = -9999.f; hvdsBranch.genvPiondecayvz_ = -9999.f;
-
-  hvdsBranch.genHVph0E_ = -9999.f; hvdsBranch.genHVph0pt_ = -9999.f; hvdsBranch.genHVph0phi_ = -9999.f; hvdsBranch.genHVph0eta_ = -9999.f; hvdsBranch.genHVph0match_ = -9999;
-  hvdsBranch.genHVph1E_ = -9999.f; hvdsBranch.genHVph1pt_ = -9999.f; hvdsBranch.genHVph1phi_ = -9999.f; hvdsBranch.genHVph1eta_ = -9999.f; hvdsBranch.genHVph1match_ = -9999;
-}
-
-void DisPho::SetHVDSBranches(const std::vector<reco::GenParticle> & vPions, const std::vector<oot::Photon> & photons)
+void DisPho::SetHVDSBranches(const std::vector<reco::GenParticle> & vPions, const std::vector<oot::Photon> & photons, const int nPhotons)
 {
   nvPions = vPions.size();
   
   const int nHvdss = std::min(nvPions,Config::nHVDSs); 
   for (int ihvds = 0; ihvds < nHvdss; ihvds++)
   {
-    DisPho::SetHVDSBranch(vPions[ihvds],hvdsBranches[ihvds],photons);
-  }
+    const auto & vPion = vPions[ihvds];
+    auto & hvdsBranch = hvdsBranches[ihvds];
+
+    // set neutralino parameters
+    hvdsBranch.genvPionmass_ = vPion.mass();
+    hvdsBranch.genvPionE_    = vPion.energy();
+    hvdsBranch.genvPionpt_   = vPion.pt();
+    hvdsBranch.genvPionphi_  = vPion.phi();
+    hvdsBranch.genvPioneta_  = vPion.eta();
+    
+    // vPion production vertex
+    hvdsBranch.genvPionprodvx_ = vPion.vx();
+    hvdsBranch.genvPionprodvy_ = vPion.vy();
+    hvdsBranch.genvPionprodvz_ = vPion.vz();
+    
+    // vPion decay vertex (same for both daughters unless really screwed up)
+    hvdsBranch.genvPiondecayvx_ = vPion.daughter(0)->vx();
+    hvdsBranch.genvPiondecayvy_ = vPion.daughter(0)->vy();
+    hvdsBranch.genvPiondecayvz_ = vPion.daughter(0)->vz();
+    
+    const int leading    = (vPion.daughter(0)->pt()>vPion.daughter(1)->pt())?0:1;
+    const int subleading = (vPion.daughter(0)->pt()>vPion.daughter(1)->pt())?1:0;
+    
+    hvdsBranch.genHVph0E_   = vPion.daughter(leading)->energy();
+    hvdsBranch.genHVph0pt_  = vPion.daughter(leading)->pt();
+    hvdsBranch.genHVph0phi_ = vPion.daughter(leading)->phi();
+    hvdsBranch.genHVph0eta_ = vPion.daughter(leading)->eta();
+    
+    hvdsBranch.genHVph1E_   = vPion.daughter(subleading)->energy();
+    hvdsBranch.genHVph1pt_  = vPion.daughter(subleading)->pt();
+    hvdsBranch.genHVph1phi_ = vPion.daughter(subleading)->phi();
+    hvdsBranch.genHVph1eta_ = vPion.daughter(subleading)->eta();
+  
+    // check for a reco match!
+    int   tmpph0 = -9999, tmpph1 = -9999;
+    float mindR0 = dRmin, mindR1 = dRmin; // at least this much
+    
+    for (int iphoton = 0; iphoton < nPhotons; iphoton++)
+    {
+      const auto & photon = photons[iphoton];
+      
+      const float tmppt  = photon.pt();
+      const float tmpphi = photon.phi();
+      const float tmpeta = photon.eta();
+      
+      // check photon 1
+      if (tmppt < ((1.f-genpTres) * hvdsBranch.genHVph0pt_)) continue;
+      if (tmppt > ((1.f+genpTres) * hvdsBranch.genHVph0pt_)) continue;
+
+      const float delR0 = Config::deltaR(hvdsBranch.genHVph0phi_,hvdsBranch.genHVph0eta_,tmpphi,tmpeta);
+      if (delR0 < mindR0) 
+      {
+	mindR0 = delR0;
+	tmpph0 = iph;
+      } // end check over deltaR
+      
+      // check photon 2
+      if (tmppt < ((1.f-genpTres) * hvdsBranch.genHVph1pt_)) continue;
+      if (tmppt > ((1.f+genpTres) * hvdsBranch.genHVph1pt_)) continue;
+      
+      const float delR1 = Config::deltaR(hvdsBranch.genHVph1phi_,hvdsBranch.genHVph1eta_,tmpphi,tmpeta);
+      if (delR1 < mindR1) 
+      {
+	mindR1 = delR1;
+	tmpph1 = iph;
+      } // end check over deltaR
+    } // end loop over reco photons
+    
+    // now save tmp photon iphs
+    hvdsBranch.genHVph0match_ = tmpph0;
+    hvdsBranch.genHVph1match_ = tmpph1;
+  } // end loop over HVDSs
 }
-
-void DisPho::SetHVDSBranch(const reco::GenParticle & vPion, hvdsStruct & hvdsBranch, const std::vector<oot::Photon> & photons)
-{
-  // set neutralino parameters
-  hvdsBranch.genvPionmass_ = vPion.mass();
-  hvdsBranch.genvPionE_    = vPion.energy();
-  hvdsBranch.genvPionpt_   = vPion.pt();
-  hvdsBranch.genvPionphi_  = vPion.phi();
-  hvdsBranch.genvPioneta_  = vPion.eta();
-	  
-  // vPion production vertex
-  hvdsBranch.genvPionprodvx_ = vPion.vx();
-  hvdsBranch.genvPionprodvy_ = vPion.vy();
-  hvdsBranch.genvPionprodvz_ = vPion.vz();
-  
-  // vPion decay vertex (same for both daughters unless really screwed up)
-  hvdsBranch.genvPiondecayvx_ = vPion.daughter(0)->vx();
-  hvdsBranch.genvPiondecayvy_ = vPion.daughter(0)->vy();
-  hvdsBranch.genvPiondecayvz_ = vPion.daughter(0)->vz();
-
-  const int leading    = (vPion.daughter(0)->pt()>vPion.daughter(1)->pt())?0:1;
-  const int subleading = (vPion.daughter(0)->pt()>vPion.daughter(1)->pt())?1:0;
-  
-  hvdsBranch.genHVph0E_   = vPion.daughter(leading)->energy();
-  hvdsBranch.genHVph0pt_  = vPion.daughter(leading)->pt();
-  hvdsBranch.genHVph0phi_ = vPion.daughter(leading)->phi();
-  hvdsBranch.genHVph0eta_ = vPion.daughter(leading)->eta();
-  
-  hvdsBranch.genHVph1E_   = vPion.daughter(subleading)->energy();
-  hvdsBranch.genHVph1pt_  = vPion.daughter(subleading)->pt();
-  hvdsBranch.genHVph1phi_ = vPion.daughter(subleading)->phi();
-  hvdsBranch.genHVph1eta_ = vPion.daughter(subleading)->eta();
-  
-  // check for a reco match!
-  int   tmpph0 = -9999, tmpph1 = -9999;
-  int   iph = 0;
-  float mindR0 = dRmin, mindR1 = dRmin; // at least this much
-
-  const int nPhotons = std::min(photons.size(),Config::nPhotons);
-  for (int iphoton = 0; iphoton < nPhotons; iphoton++)
-  {
-    const auto & photon = photons[iphoton];
-
-    const float tmppt  = photon.pt();
-    const float tmpphi = photon.phi();
-    const float tmpeta = photon.eta();
-    
-    // check photon 1
-    if (tmppt < ((1.f-genpTres) * hvdsBranch.genHVph0pt_)) continue;
-    if (tmppt > ((1.f+genpTres) * hvdsBranch.genHVph0pt_)) continue;
-
-    const float delR0 = Config::deltaR(hvdsBranch.genHVph0phi_,hvdsBranch.genHVph0eta_,tmpphi,tmpeta);
-    if (delR0 < mindR0) 
-    {
-      mindR0 = delR0;
-      tmpph0 = iph;
-    } // end check over deltaR
-	      
-    // check photon 2
-    if (tmppt < ((1.f-genpTres) * hvdsBranch.genHVph1pt_)) continue;
-    if (tmppt > ((1.f+genpTres) * hvdsBranch.genHVph1pt_)) continue;
-
-    const float delR1 = Config::deltaR(hvdsBranch.genHVph1phi_,hvdsBranch.genHVph1eta_,tmpphi,tmpeta);
-    if (delR1 < mindR1) 
-    {
-      mindR1 = delR1;
-      tmpph1 = iph;
-    } // end check over deltaR
-    
-    // now update iph
-    iph++;
-  } // end loop over reco photons
-  
-  // now save tmp photon iphs
-  hvdsBranch.genHVph0match_ = tmpph0;
-  hvdsBranch.genHVph1match_ = tmpph1;
-} 
 
 void DisPho::InitializeToyBranches()
 {
@@ -764,74 +770,65 @@ void DisPho::InitializeToyBranches()
 
   for (int itoy = 0; itoy < Config::nToys; itoy++)
   {
-    DisPho::InitializeToyBranch(toyBranches[itoy]);
+    auto & toyBranch = toyBranches[itoy];
+
+    toyBranch.genphE_   = -9999.f;
+    toyBranch.genphpt_  = -9999.f;
+    toyBranch.genphphi_ = -9999.f;
+    toyBranch.genpheta_ = -9999.f;
+
+    toyBranch.genphmatch_ = -9999;
+    toyBranch.genphmatch_ptres_ = -9999;
+    toyBranch.genphmatch_status_ = -9999;
   }
 }
 
-void DisPho::InitializeToyBranch(toyStruct & toyBranch)
-{
-  toyBranch.genphE_   = -9999.f;
-  toyBranch.genphpt_  = -9999.f;
-  toyBranch.genphphi_ = -9999.f;
-  toyBranch.genpheta_ = -9999.f;
-
-  toyBranch.genphmatch_ = -9999;
-  toyBranch.genphmatch_ptres_ = -9999;
-  toyBranch.genphmatch_status_ = -9999;
-}
-
-void DisPho::SetToyBranches(const std::vector<reco::GenParticle> & toys, const std::vector<oot::Photon> & photons)
+void DisPho::SetToyBranches(const std::vector<reco::GenParticle> & toys, const std::vector<oot::Photon> & photons, const int nPhotons)
 {
   nToyPhs = toys.size();
   
   const int nToys = std::min(nToyPhs,Config::nToys);
   for (int itoy = 0; itoy < nToys; itoy++)
   {
-    DisPho::SetToyBranch(toys[itoy],toyBranches[itoy],photons);
-  }
-}
+    const auto & toy = toys[itoy];
+    auto & toyBranch = toyBranches[itoy];
 
-void DisPho::SetToyBranch(const reco::GenParticle & toy, toyStruct & toyBranch, const std::vector<oot::Photon> & photons)
-{
-  toyBranch.genphE_   = toy.energy();
-  toyBranch.genphpt_  = toy.pt();
-  toyBranch.genphphi_ = toy.phi();
-  toyBranch.genpheta_ = toy.eta();
-
-  int iph = 0;
-  float mindR = dRmin, mindR_ptres = dRmin, mindR_status = dRmin;
-  const int nPhotons = std::min(photons.size(),Config::nPhotons);
-  for (int iphoton = 0; iphoton < nPhotons; iphoton++)
-  {
-    const float delR = Config::deltaR(toyBranch.genphphi_,toyBranch.genpheta_,photon.phi(),photon.eta());
-    if (delR < mindR) 
+    toyBranch.genphE_   = toy.energy();
+    toyBranch.genphpt_  = toy.pt();
+    toyBranch.genphphi_ = toy.phi();
+    toyBranch.genpheta_ = toy.eta();
+    
+    float mindR = dRmin, mindR_ptres = dRmin, mindR_status = dRmin;
+    for (int iphoton = 0; iphoton < nPhotons; iphoton++)
     {
-      mindR = delR;
-      toyBranch.genphmatch_ = iph; 
-    } // end check over deltaR
-
-    if ( (photon.pt() >= ((1.f-genpTres) * toyBranch.genphpt_)) && (photon.pt() <= ((1.f+genpTres) * toyBranch.genphpt_)) )
-    {
-      const float delR_ptres = Config::deltaR(toyBranch.genphphi_,toyBranch.genpheta_,photon.phi(),photon.eta());
-      if (delR_ptres < mindR_ptres) 
+      const float delR = Config::deltaR(toyBranch.genphphi_,toyBranch.genpheta_,photon.phi(),photon.eta());
+      if (delR < mindR) 
       {
-	mindR_ptres = delR_ptres;
-	toyBranch.genphmatch_ptres_ = iph; 
+	mindR = delR;
+	toyBranch.genphmatch_ = iph; 
       } // end check over deltaR
       
-      if (toy.isPromptFinalState())
+      if ( (photon.pt() >= ((1.f-genpTres) * toyBranch.genphpt_)) && (photon.pt() <= ((1.f+genpTres) * toyBranch.genphpt_)) )
       {
-	const float delR_status = Config::deltaR(toyBranch.genphphi_,toyBranch.genpheta_,photon.phi(),photon.eta());
-	if (delR_status < mindR_status) 
+	const float delR_ptres = Config::deltaR(toyBranch.genphphi_,toyBranch.genpheta_,photon.phi(),photon.eta());
+	if (delR_ptres < mindR_ptres) 
 	{
-	  mindR_status = delR_status;
-	  toyBranch.genphmatch_status_ = iph; 
+	  mindR_ptres = delR_ptres;
+	  toyBranch.genphmatch_ptres_ = iph; 
 	} // end check over deltaR
-      } // end check over final state
-    } // end check over pt res
-
-    iph++;
-  } // end loop over reco photons
+	
+	if (toy.isPromptFinalState())
+	{
+	  const float delR_status = Config::deltaR(toyBranch.genphphi_,toyBranch.genpheta_,photon.phi(),photon.eta());
+	  if (delR_status < mindR_status) 
+	  {
+	    mindR_status = delR_status;
+	    toyBranch.genphmatch_status_ = iph; 
+	  } // end check over deltaR
+	} // end check over final state
+      } // end check over pt res
+    } // end loop over reco photons
+  } // end loop over nToys
 }
 
 void DisPho::SetRecordInfo(const edm::Event & iEvent)
@@ -953,8 +950,8 @@ void DisPho::InitializeRecHitBranches(const int nRecHits)
   rhID.resize(nRecHits);
 }
 
-void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHitsEB, const CaloSubdetectorGeometry * barrelGeometry, 
-			       const EcalRecHitCollection * recHitsEE, const CaloSubdetectorGeometry * endcapGeometry, 
+void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHitsEB, const CaloSubdetectorGeometry * barrelGeometry,
+			       const EcalRecHitCollection * recHitsEE, const CaloSubdetectorGeometry * endcapGeometry,
 			       const uiiumap & recHitMap)
 {
   nrechits = recHitMap.size();
@@ -991,272 +988,259 @@ void DisPho::InitializePhoBranches()
 {
   for (int iphoton = 0; iphoton < Config::nPhotons; iphoton++)
   {
-    DisPho::InitializePhoBranch(phoBranches[iphoton]);
-    if (isMC) DisPho::InitializePhoBranchesMC(phoBranches[iphoton]);
-  }
-}
+    auto & phoBranch = phoBranches[iphoton];
 
-void DisPho::InitializePhoBranch(phoStruct & phoBranch)
-{
-  phoBranch.E_ = -9999.f;
-  phoBranch.Pt_ = -9999.f;
-  phoBranch.Eta_ = -9999.f;
-  phoBranch.Phi_ = -9999.f;
+    phoBranch.E_ = -9999.f;
+    phoBranch.Pt_ = -9999.f;
+    phoBranch.Eta_ = -9999.f;
+    phoBranch.Phi_ = -9999.f;
 
-  phoBranch.scE_ = -9999.f;
-  phoBranch.scPhi_ = -9999.f;
-  phoBranch.scEta_ = -9999.f;
+    phoBranch.scE_ = -9999.f;
+    phoBranch.scPhi_ = -9999.f;
+    phoBranch.scEta_ = -9999.f;
 
-  phoBranch.HoE_ = -9999.f;
-  phoBranch.r9_ = -9999.f;
+    phoBranch.HoE_ = -9999.f;
+    phoBranch.r9_ = -9999.f;
 
-  phoBranch.ChgHadIso_ = -9999.f;
-  phoBranch.NeuHadIso_ = -9999.f;
-  phoBranch.PhoIso_ = -9999.f;
+    phoBranch.ChgHadIso_ = -9999.f;
+    phoBranch.NeuHadIso_ = -9999.f;
+    phoBranch.PhoIso_ = -9999.f;
 
-  phoBranch.EcalPFClIso_ = -9999.f;
-  phoBranch.HcalPFClIso_ = -9999.f;
-  phoBranch.TrkIso_ = -9999.f;
+    phoBranch.EcalPFClIso_ = -9999.f;
+    phoBranch.HcalPFClIso_ = -9999.f;
+    phoBranch.TrkIso_ = -9999.f;
 
-  phoBranch.Sieie_ = -9999.f;
-  phoBranch.Sipip_ = -9999.f;
-  phoBranch.Sieip_ = -9999.f;
+    phoBranch.Sieie_ = -9999.f;
+    phoBranch.Sipip_ = -9999.f;
+    phoBranch.Sieip_ = -9999.f;
 
-  phoBranch.Smaj_ = -9999.f;
-  phoBranch.Smin_ = -9999.f;
-  phoBranch.alpha_ = -9999.f;
+    phoBranch.Smaj_ = -9999.f;
+    phoBranch.Smin_ = -9999.f;
+    phoBranch.alpha_ = -9999.f;
 
-  if (storeRecHits)
-  {
-    phoBranch.seed_ = -1;
-    phoBranch.recHits_.clear();
-  }
-  else
-  {
-    phoBranch.seedtime_ = -9999.f;
-    phoBranch.seedE_    = -9999.f;
-    phoBranch.seedID_   = 0; // non-ideal
-  }
+    if (storeRecHits)
+    {
+      phoBranch.seed_ = -1;
+      phoBranch.recHits_.clear();
+    }
+    else
+    {
+      phoBranch.seedtime_ = -9999.f;
+      phoBranch.seedE_    = -9999.f;
+      phoBranch.seedID_   = 0; // non-ideal
+    }
   
-  phoBranch.suisseX_ = -9999.f;
+    phoBranch.suisseX_ = -9999.f;
 
-  phoBranch.isOOT_ = false;
-  phoBranch.isEB_  = false;
-  phoBranch.isHLT_ = false;
-  phoBranch.isTrk_ = false;
-  phoBranch.passEleVeto_ = false;
-  phoBranch.hasPixSeed_  = false;
+    phoBranch.isOOT_ = false;
+    phoBranch.isEB_  = false;
+    phoBranch.isHLT_ = false;
+    phoBranch.isTrk_ = false;
+    phoBranch.passEleVeto_ = false;
+    phoBranch.hasPixSeed_  = false;
 
-  phoBranch.gedID_ = -1;
-  phoBranch.ootID_ = -1;
+    phoBranch.gedID_ = -1;
+    phoBranch.ootID_ = -1;
+
+    if (isMC)
+    {
+      if (isGMSB || isHVDS) phoBranch.isSignal_ = -9999;
+      phoBranch.isGen_ = false;
+    }
+  }
 }
 
-void DisPho::InitializePhoBranchMC(phoStruct & phoBranch)
-{
-  if (isGMSB || isHVDS) phoBranch.isSignal_ = -9999;
-  phoBranch.isGen_ = false;
-}
-
-void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const uiiumap & recHitMap,
+void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nPhotons, const uiiumap & recHitMap,
 			    const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE,
 			    const edm::Handle<std::vector<reco::Track> > & tracksH,
 			    const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH)
 {
   nphotons = photons.size();
   
-  const int nPhotons = std::min(nphotons,Config::nPhotons);
   for (int iphoton = 0; iphoton < nPhotons; iphoton++)
   {
     const auto & photon = photons[iphoton];
     auto & phoBranch = phoBranches[iphoton];
     
-    DisPho::SetPhoBranch(photon,phoBranch,recHitMap,recHitsEB,recHitsEE,tracksH);
-    if (isMC) DisPho::SetPhoBranchMC(iphoton,photon,phoBranch,genparticlesH);
-  }
-}
+    // basic kinematics
+    const pat::Photon & pho = photon.photon(); 
+    phoBranch.E_   = pho.energy();
+    phoBranch.Pt_  = pho.pt();
+    phoBranch.Phi_ = pho.phi();
+    phoBranch.Eta_ = pho.eta();
 
-void DisPho::SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, const uiiumap & recHitMap,
-			  const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE,
-			  const edm::Handle<std::vector<reco::Track> > & tracksH)
-{
-  // basic kinematics
-  const pat::Photon & pho = photon.photon(); 
-  phoBranch.E_   = pho.energy();
-  phoBranch.Pt_  = pho.pt();
-  phoBranch.Phi_ = pho.phi();
-  phoBranch.Eta_ = pho.eta();
+    // super cluster from photon
+    const reco::SuperClusterRef& phosc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
+    phoBranch.scE_   = phosc->energy();
+    phoBranch.scPhi_ = phosc->phi();
+    phoBranch.scEta_ = phosc->eta();
 
-  // super cluster from photon
-  const reco::SuperClusterRef& phosc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
-  phoBranch.scE_   = phosc->energy();
-  phoBranch.scPhi_ = phosc->phi();
-  phoBranch.scEta_ = phosc->eta();
+    // ID-like variables
+    phoBranch.HoE_ = pho.hadTowOverEm(); // used in ID + trigger (single tower HoverE)
+    phoBranch.r9_  = pho.r9(); // used in slimming in PAT + trigger
 
-  // ID-like variables
-  phoBranch.HoE_ = pho.hadTowOverEm(); // used in ID + trigger (single tower HoverE)
-  phoBranch.r9_  = pho.r9(); // used in slimming in PAT + trigger
+    phoBranch.ChgHadIso_ = pho.chargedHadronIso();
+    phoBranch.NeuHadIso_ = pho.neutralHadronIso();
+    phoBranch.PhoIso_    = pho.photonIso();
 
-  phoBranch.ChgHadIso_ = pho.chargedHadronIso();
-  phoBranch.NeuHadIso_ = pho.neutralHadronIso();
-  phoBranch.PhoIso_    = pho.photonIso();
+    // More ID variables
+    phoBranch.EcalPFClIso_ = pho.ecalPFClusterIso();
+    phoBranch.HcalPFClIso_ = pho.hcalPFClusterIso();
+    phoBranch.TrkIso_      = pho.trkSumPtHollowConeDR03();
 
-  // More ID variables
-  phoBranch.EcalPFClIso_ = pho.ecalPFClusterIso();
-  phoBranch.HcalPFClIso_ = pho.hcalPFClusterIso();
-  phoBranch.TrkIso_      = pho.trkSumPtHollowConeDR03();
+    // Shower Shape Objects
+    const reco::Photon::ShowerShape& phoshape = pho.full5x5_showerShapeVariables(); 
 
-  // Shower Shape Objects
-  const reco::Photon::ShowerShape& phoshape = pho.full5x5_showerShapeVariables(); 
+    // cluster shape variables
+    phoBranch.Sieie_ = phoshape.sigmaIetaIeta;
+    phoBranch.Sipip_ = phoshape.sigmaIphiIphi;
+    phoBranch.Sieip_ = phoshape.sigmaIetaIphi;
 
-  // cluster shape variables
-  phoBranch.Sieie_ = phoshape.sigmaIetaIeta;
-  phoBranch.Sipip_ = phoshape.sigmaIphiIphi;
-  phoBranch.Sieip_ = phoshape.sigmaIetaIphi;
+    // other cluster shape variables
+    phoBranch.e2x2_ = phoshape.e2x2;
+    phoBranch.e3x3_ = phoshape.e3x3;
+    phoBranch.e5x5_ = phoshape.e5x5;
 
-  // other cluster shape variables
-  phoBranch.e2x2_ = phoshape.e2x2;
-  phoBranch.e3x3_ = phoshape.e3x3;
-  phoBranch.e5x5_ = phoshape.e5x5;
+    // use seed to get geometry and recHits
+    const DetId & seedDetId = phosc->seed()->seed(); // seed detid
+    const uint32_t seedRawId = seedDetId.rawId(); // crystal number
+    const bool isEB = (seedDetId.subdetId() == EcalBarrel); // which subdet
+    const EcalRecHitCollection * recHits = (isEB ? recHitsEB : recHitsEE); 
 
-  // use seed to get geometry and recHits
-  const DetId & seedDetId = phosc->seed()->seed(); // seed detid
-  const uint32_t seedRawId = seedDetId.rawId(); // crystal number
-  const bool isEB = (seedDetId.subdetId() == EcalBarrel); // which subdet
-  const EcalRecHitCollection * recHits = (isEB ? recHitsEB : recHitsEE); 
-
-  // 2nd moments from official calculation
-  if (recHits->size() > 0)
-  {
-    const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phosc, *recHits);
-    // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
-    phoBranch.Smaj_  = ph2ndMoments.sMaj;
-    phoBranch.Smin_  = ph2ndMoments.sMin;
-    phoBranch.alpha_ = ph2ndMoments.alpha;
-  }
-
-  // map of rec hit ids
-  uiiumap phrhIDmap;
-  const DetIdPairVec & hitsAndFractions = phosc->hitsAndFractions();
-  for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) // loop over all rec hits in SC
-  {
-    const DetId & recHitId = hafitr->first; // get detid of crystal
-    const uint32_t rawId = recHitId.rawId();
-    if (recHitMap.count(rawId))
+    // 2nd moments from official calculation
+    if (recHits->size() > 0)
     {
-      EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
-      if (recHit != recHits->end()) // standard check
-      { 
-	phrhIDmap[recHitMap.at(rawId)]++;
-      } // end standard check recHit
-    } // end check over if recHit is in map
-  } // end loop over hits and fractions
-
-  // store the position inside the recHits vector 
-  if (storeRecHits)
-  {
-    for (uiiumap::const_iterator rhiter = phrhIDmap.begin(); rhiter != phrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
-    {
-      phoBranch.recHits_.emplace_back(rhiter->first);
+      const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phosc, *recHits);
+      // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
+      phoBranch.Smaj_  = ph2ndMoments.sMaj;
+      phoBranch.Smin_  = ph2ndMoments.sMin;
+      phoBranch.alpha_ = ph2ndMoments.alpha;
     }
-  }
 
-  // save seed info + swiss cross
-  if (recHitMap.count(seedRawId)) 
-  {
-    if (storeRecHits) 
+    // map of rec hit ids
+    uiiumap phrhIDmap;
+    const DetIdPairVec & hitsAndFractions = phosc->hitsAndFractions();
+    for (DetIdPairVec::const_iterator hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr) // loop over all rec hits in SC
     {
-      // store just the seed for accessing through recHit branches
-      phoBranch.seed_ = recHitMap.at(seedRawId);
-    }
-    else
-    {
-      // store basic info about the seed
-      EcalRecHitCollection::const_iterator seedRecHit = recHits->find(seedDetId);
-      if (seedRecHit != recHits->end()) // standard check (redundant)
+      const DetId & recHitId = hafitr->first; // get detid of crystal
+      const uint32_t rawId = recHitId.rawId();
+      if (recHitMap.count(rawId))
       {
-	phoBranch.seedtime_  = seedRecHit->time();
-	phoBranch.seedE_     = seedRecHit->energy();
-	phoBranch.seedID_    = seedRawId;
+	EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
+	if (recHit != recHits->end()) // standard check
+        { 
+	  phrhIDmap[recHitMap.at(rawId)]++;
+	} // end standard check recHit
+      } // end check over if recHit is in map
+    } // end loop over hits and fractions
+    
+    // store the position inside the recHits vector 
+    if (storeRecHits)
+    {
+      for (uiiumap::const_iterator rhiter = phrhIDmap.begin(); rhiter != phrhIDmap.end(); ++rhiter) // loop over only good rec hit ids
+      {
+	phoBranch.recHits_.emplace_back(rhiter->first);
       }
     }
     
-    // swiss cross
-    if (recHits->size() > 0) phoBranch.suisseX_ = EcalTools::swissCross(seedDetId, *recHits, rhEmin);
-  }
-
-  // some standard booleans
-  phoBranch.isOOT_ = photon.isOOT();
-  phoBranch.isEB_  = isEB;
-
-  // HLT Matching!
-  strBitMap isHLTMatched;
-  for (const auto & filter : filterNames) isHLTMatched[filter] = false;
-  oot::HLTToObjectMatching(triggerObjectsByFilterMap,isHLTMatched,photon,pTres,dRmin);
-  const std::string filter = Config::DispIDFilter.c_str();
-  phoBranch.isHLT_ = (isHLTMatched.count(filter.c_str()) ? isHLTMatched[filter.c_str()] : false);
-
-  // check for simple track veto
-  phoBranch.isTrk_ = oot::TrackToObjectMatching(tracksH,photon,trackpTmin,trackdRmin);
-
-  // other track vetoes
-  phoBranch.passEleVeto_ = pho.passElectronVeto();
-  phoBranch.hasPixSeed_  = pho.hasPixelSeed();
-  
-  // 0 --> did not pass anything, 1 --> loose pass, 2 --> medium pass, 3 --> tight pass
-  // GED first
-  if      (pho.photonID("tight-ged"))  {phoBranch.gedID_ = 3;}
-  else if (pho.photonID("medium-ged")) {phoBranch.gedID_ = 2;}
-  else if (pho.photonID("loose-ged"))  {phoBranch.gedID_ = 1;}
-  else                                 {phoBranch.gedID_ = 0;}
-  // OOT second
-  if      (pho.photonID("tight-oot"))  {phoBranch.ootID_ = 3;}
-  else if (pho.photonID("loose-oot"))  {phoBranch.ootID_ = 1;}
-  else                                 {phoBranch.ootID_ = 0;}
-}
-
-void DisPho::SetPhoBranchMC(const int iph, const oot::Photon& photon, phoStruct& phoBranch, 
-			    const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH)
-{
-  if (isGMSB)
-  {
-    // matched to photon from leading neutralino == 1
-    // matched to photon from subleading neutralino == 2
-    // matched to both photons from both neutralinos (probably will never happen) == 3
-    // no corresponding match == 0
-
-    const auto & gmsbBranch0 = gmsbBranches[0];
-    const auto & gmsbBranch1 = gmsbBranches[1];
-
-    if      (iph == gmsbBranch0.genphmatch_ && iph != gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 1;
-    else if (iph != gmsbBranch0.genphmatch_ && iph == gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 2;
-    else if (iph == gmsbBranch0.genphmatch_ && iph == gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 3; 
-    else                                                                       phoBranch.isSignal_ = 0;
-  } 
-
-  if (isHVDS) 
-  {
-    // since we have N vPions to explore, store the result as an int mask
-    // ones digit is leading vPion, tens as subleading, hundreds as subsub, etc.
-    // matched to leading photon and not to subleading photon == 1
-    // matched to subleading photon and not to leading photon == 2
-    // matched to both photons inside vPion == 3
-    // no corresponding match == 0
-
-    for (int ihvds = 0; ihvds < Config::nHVDSs; ihvds++)
+    // save seed info + swiss cross
+    if (recHitMap.count(seedRawId)) 
     {
-      phoBranch.isSignal_ += (DisPho::CheckMatchHVDS(iph,hvdsBranches[ihvds]) * std::pow(10,ihvds));
+      if (storeRecHits) 
+      {
+	// store just the seed for accessing through recHit branches
+	phoBranch.seed_ = recHitMap.at(seedRawId);
+      }
+      else
+      {
+	// store basic info about the seed
+	EcalRecHitCollection::const_iterator seedRecHit = recHits->find(seedDetId);
+	if (seedRecHit != recHits->end()) // standard check (redundant)
+	{
+	  phoBranch.seedtime_  = seedRecHit->time();
+	  phoBranch.seedE_     = seedRecHit->energy();
+	  phoBranch.seedID_    = seedRawId;
+	}
+      }
+    
+      // swiss cross
+      if (recHits->size() > 0) phoBranch.suisseX_ = EcalTools::swissCross(seedDetId, *recHits, rhEmin);
     }
-  }
+    
+    // some standard booleans
+    phoBranch.isOOT_ = photon.isOOT();
+    phoBranch.isEB_  = isEB;
 
-  // standard dR matching
-  phoBranch.isGen_ = oot::GenToObjectMatching(photon,genparticlesH,genpTres,dRmin);
+    // HLT Matching!
+    strBitMap isHLTMatched;
+    for (const auto & filter : filterNames) isHLTMatched[filter] = false;
+    oot::HLTToObjectMatching(triggerObjectsByFilterMap,isHLTMatched,photon,pTres,dRmin);
+    const std::string filter = Config::DispIDFilter.c_str();
+    phoBranch.isHLT_ = (isHLTMatched.count(filter.c_str()) ? isHLTMatched[filter.c_str()] : false);
+
+    // check for simple track veto
+    phoBranch.isTrk_ = oot::TrackToObjectMatching(tracksH,photon,trackpTmin,trackdRmin);
+
+    // other track vetoes
+    phoBranch.passEleVeto_ = pho.passElectronVeto();
+    phoBranch.hasPixSeed_  = pho.hasPixelSeed();
+  
+    // 0 --> did not pass anything, 1 --> loose pass, 2 --> medium pass, 3 --> tight pass
+    // GED first
+    if      (pho.photonID("tight-ged"))  {phoBranch.gedID_ = 3;}
+    else if (pho.photonID("medium-ged")) {phoBranch.gedID_ = 2;}
+    else if (pho.photonID("loose-ged"))  {phoBranch.gedID_ = 1;}
+    else                                 {phoBranch.gedID_ = 0;}
+    // OOT second
+    if      (pho.photonID("tight-oot"))  {phoBranch.ootID_ = 3;}
+    else if (pho.photonID("loose-oot"))  {phoBranch.ootID_ = 1;}
+    else                                 {phoBranch.ootID_ = 0;}
+
+    // extra info for gen matching
+    if (isMC)
+    {
+      if (isGMSB)
+      {
+	// matched to photon from leading neutralino == 1
+	// matched to photon from subleading neutralino == 2
+	// matched to both photons from both neutralinos (probably will never happen) == 3
+	// no corresponding match == 0
+
+	const auto & gmsbBranch0 = gmsbBranches[0];
+	const auto & gmsbBranch1 = gmsbBranches[1];
+	
+	if      (iphoton == gmsbBranch0.genphmatch_ && iphoton != gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 1;
+	else if (iphoton != gmsbBranch0.genphmatch_ && iphoton == gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 2;
+	else if (iphoton == gmsbBranch0.genphmatch_ && iphoton == gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 3; 
+	else                                                                       phoBranch.isSignal_ = 0;
+      } // end block over isGMSB
+      
+      if (isHVDS) 
+      {
+	// since we have N vPions to explore, store the result as an int mask
+	// ones digit is leading vPion, tens as subleading, hundreds as subsub, etc.
+	// matched to leading photon and not to subleading photon == 1
+	// matched to subleading photon and not to leading photon == 2
+	// matched to both photons inside vPion == 3
+	// no corresponding match == 0
+	
+	for (int ihvds = 0; ihvds < Config::nHVDSs; ihvds++)
+	{
+	  phoBranch.isSignal_ += (DisPho::CheckMatchHVDS(iphoton,hvdsBranches[ihvds]) * std::pow(10,ihvds));
+	} // end loop over all possible HVDSs
+      } // end block over is HVDS
+      
+      // standard dR matching
+      phoBranch.isGen_ = oot::GenToObjectMatching(photon,genparticlesH,genpTres,dRmin);
+    } // end block over is MC
+  } // end loop over nPhotons
 }
 
-int DisPho::CheckMatchHVDS(const int iph, const hvdsStruct& hvdsBranch)
+int DisPho::CheckMatchHVDS(const int iphoton, const hvdsStruct& hvdsBranch)
 {
-  if      (iph == hvdsBranch.genHVph0match_ && iph != hvdsBranch.genHVph1match_) return 1;
-  else if (iph != hvdsBranch.genHVph0match_ && iph == hvdsBranch.genHVph1match_) return 2;
-  else if (iph == hvdsBranch.genHVph0match_ && iph == hvdsBranch.genHVph1match_) return 3;
+  if      (iphoton == hvdsBranch.genHVph0match_ && iphoton != hvdsBranch.genHVph1match_) return 1;
+  else if (iphoton != hvdsBranch.genHVph0match_ && iphoton == hvdsBranch.genHVph1match_) return 2;
+  else if (iphoton == hvdsBranch.genHVph0match_ && iphoton == hvdsBranch.genHVph1match_) return 3;
   else                                                                           return 0;
 }
 
@@ -1391,6 +1375,9 @@ void DisPho::MakeAndFillConfigTree()
 
 void DisPho::MakeEventTree()
 {
+  // rho info
+  disphotree->Branch("rho", &rho, "rho/F");
+
   // Generic MC Info
   if (isMC)
   {
@@ -1407,29 +1394,95 @@ void DisPho::MakeEventTree()
   if (isGMSB)
   {
     disphotree->Branch("nNeutoPhGr", &nNeutoPhGr, "nNeutoPhGr/I");
+
     for (int igmsb = 0; igmsb < Config::nGMSBs; igmsb++)
     {
-      DisPho::MakeGMSBBranch(1,gmsbBranch1);
-    }
-  }
+      auto & gsmbBranch = gmsbBranches[igmsb];
+
+      disphotree->Branch(Form("genNmass_%i",igmsb), &gmsbBranch.genNmass_, Form("genNmass_%i/F",igmsb));
+      disphotree->Branch(Form("genNE_%i",igmsb), &gmsbBranch.genNE_, Form("genNE_%i/F",igmsb));
+      disphotree->Branch(Form("genNpt_%i",igmsb), &gmsbBranch.genNpt_, Form("genNpt_%i/F",igmsb));
+      disphotree->Branch(Form("genNphi_%i",igmsb), &gmsbBranch.genNphi_, Form("genNphi_%i/F",igmsb));
+      disphotree->Branch(Form("genNeta_%i",igmsb), &gmsbBranch.genNeta_, Form("genNeta_%i/F",igmsb));
+      
+      disphotree->Branch(Form("genNprodvx_%i",igmsb), &gmsbBranch.genNprodvx_, Form("genNprodvx_%i/F",igmsb));
+      disphotree->Branch(Form("genNprodvy_%i",igmsb), &gmsbBranch.genNprodvy_, Form("genNprodvy_%i/F",igmsb));
+      disphotree->Branch(Form("genNprodvz_%i",igmsb), &gmsbBranch.genNprodvz_, Form("genNprodvz_%i/F",igmsb));
+      
+      disphotree->Branch(Form("genNdecayvx_%i",igmsb), &gmsbBranch.genNdecayvx_, Form("genNdecayvx_%i/F",igmsb));
+      disphotree->Branch(Form("genNdecayvy_%i",igmsb), &gmsbBranch.genNdecayvy_, Form("genNdecayvy_%i/F",igmsb));
+      disphotree->Branch(Form("genNdecayvz_%i",igmsb), &gmsbBranch.genNdecayvz_, Form("genNdecayvz_%i/F",igmsb));
+
+      disphotree->Branch(Form("genphE_%i",igmsb), &gmsbBranch.genphE_, Form("genphE_%i/F",igmsb));
+      disphotree->Branch(Form("genphpt_%i",igmsb), &gmsbBranch.genphpt_, Form("genphpt_%i/F",igmsb));
+      disphotree->Branch(Form("genphphi_%i",igmsb), &gmsbBranch.genphphi_, Form("genphphi_%i/F",igmsb));
+      disphotree->Branch(Form("genpheta_%i",igmsb), &gmsbBranch.genpheta_, Form("genpheta_%i/F",igmsb));
+      disphotree->Branch(Form("genphmatch_%i",igmsb), &gmsbBranch.genphmatch_, Form("genphmatch_%i/I",igmsb));
+      
+      disphotree->Branch(Form("gengrmass_%i",igmsb), &gmsbBranch.gengrmass_, Form("gengrmass_%i/F",igmsb));
+      disphotree->Branch(Form("gengrE_%i",igmsb), &gmsbBranch.gengrE_, Form("gengrE_%i/F",igmsb));
+      disphotree->Branch(Form("gengrpt_%i",igmsb), &gmsbBranch.gengrpt_, Form("gengrpt_%i/F",igmsb));
+      disphotree->Branch(Form("gengrphi_%i",igmsb), &gmsbBranch.gengrphi_, Form("gengrphi_%i/F",igmsb));
+      disphotree->Branch(Form("gengreta_%i",igmsb), &gmsbBranch.gengreta_, Form("gengreta_%i/F",igmsb));
+    } // end loop over nGBMBs
+  } // end block over isGMSB
 
   // HVDS Info
   if (isHVDS)
   {
     disphotree->Branch("nvPions", &nvPions, "nvPions/I");
-    DisPho::MakeHVDSBranch(0,hvdsBranch0);
-    DisPho::MakeHVDSBranch(1,hvdsBranch1);
-    DisPho::MakeHVDSBranch(2,hvdsBranch2);
-    DisPho::MakeHVDSBranch(3,hvdsBranch3);
-  }
+
+    for (int ihvds = 0; ihvds < Config::nHVDSs; ihvds++)
+    {
+      auto & hvdsBranch = hvdsBranches[ihvds];
+
+      disphotree->Branch(Form("genvPionmass_%i",ihvds), &hvdsBranch.genvPionmass_, Form("genvPionmass_%i/F",ihvds));
+      disphotree->Branch(Form("genvPionE_%i",ihvds), &hvdsBranch.genvPionE_, Form("genvPionE_%i/F",ihvds));
+      disphotree->Branch(Form("genvPionpt_%i",ihvds), &hvdsBranch.genvPionpt_, Form("genvPionpt_%i/F",ihvds));
+      disphotree->Branch(Form("genvPionphi_%i",ihvds), &hvdsBranch.genvPionphi_, Form("genvPionphi_%i/F",ihvds));
+      disphotree->Branch(Form("genvPioneta_%i",ihvds), &hvdsBranch.genvPioneta_, Form("genvPioneta_%i/F",ihvds));
+      
+      disphotree->Branch(Form("genvPionprodvx_%i",ihvds), &hvdsBranch.genvPionprodvx_, Form("genvPionprodvx_%i/F",ihvds));
+      disphotree->Branch(Form("genvPionprodvy_%i",ihvds), &hvdsBranch.genvPionprodvy_, Form("genvPionprodvy_%i/F",ihvds));
+      disphotree->Branch(Form("genvPionprodvz_%i",ihvds), &hvdsBranch.genvPionprodvz_, Form("genvPionprodvz_%i/F",ihvds));
+      
+      disphotree->Branch(Form("genvPiondecayvx_%i",ihvds), &hvdsBranch.genvPiondecayvx_, Form("genvPiondecayvx_%i/F",ihvds));
+      disphotree->Branch(Form("genvPiondecayvy_%i",ihvds), &hvdsBranch.genvPiondecayvy_, Form("genvPiondecayvy_%i/F",ihvds));
+      disphotree->Branch(Form("genvPiondecayvz_%i",ihvds), &hvdsBranch.genvPiondecayvz_, Form("genvPiondecayvz_%i/F",ihvds));
+      
+      disphotree->Branch(Form("genHVph0E_%i",ihvds), &hvdsBranch.genHVph0E_, Form("genHVph0E_%i/F",ihvds));
+      disphotree->Branch(Form("genHVph0pt_%i",ihvds), &hvdsBranch.genHVph0pt_, Form("genHVph0pt_%i/F",ihvds));
+      disphotree->Branch(Form("genHVph0phi_%i",ihvds), &hvdsBranch.genHVph0phi_, Form("genHVph0phi_%i/F",ihvds));
+      disphotree->Branch(Form("genHVph0eta_%i",ihvds), &hvdsBranch.genHVph0eta_, Form("genHVph0eta_%i/F",ihvds));
+      disphotree->Branch(Form("genHVph0match_%i",ihvds), &hvdsBranch.genHVph0match_, Form("genHVph0match_%i/I",ihvds));
+      
+      disphotree->Branch(Form("genHVph1E_%i",ihvds), &hvdsBranch.genHVph1E_, Form("genHVph1E_%i/F",ihvds));
+      disphotree->Branch(Form("genHVph1pt_%i",ihvds), &hvdsBranch.genHVph1pt_, Form("genHVph1pt_%i/F",ihvds));
+      disphotree->Branch(Form("genHVph1phi_%i",ihvds), &hvdsBranch.genHVph1phi_, Form("genHVph1phi_%i/F",ihvds));
+      disphotree->Branch(Form("genHVph1eta_%i",ihvds), &hvdsBranch.genHVph1eta_, Form("genHVph1eta_%i/F",ihvds));
+      disphotree->Branch(Form("genHVph1match_%i",ihvds), &hvdsBranch.genHVph1match_, Form("genHVph1match_%i/I",ihvds));
+    } // end loop over nHVDSs
+  } // end block over HVDS
 
   // ToyMC Info
   if (isToy)
   {
     disphotree->Branch("nToyPhs", &nToyPhs, "nToyPhs/I");
-    DisPho::MakeToyBranch(0,toyBranch0);
-    DisPho::MakeToyBranch(1,toyBranch1);
-  }
+
+    for (int itoy = 0; itoy < Config::nToys; itoy++)
+    {
+      auto & toyBranch = toyBranches[itoy];
+
+      disphotree->Branch(Form("genphE_%i",itoy), &toyBranch.genphE_, Form("genphE_%i/F",itoy));
+      disphotree->Branch(Form("genphpt_%i",itoy), &toyBranch.genphpt_, Form("genphpt_%i/F",itoy));
+      disphotree->Branch(Form("genphphi_%i",itoy), &toyBranch.genphphi_, Form("genphphi_%i/F",itoy));
+      disphotree->Branch(Form("genpheta_%i",itoy), &toyBranch.genpheta_, Form("genpheta_%i/F",itoy));
+      
+      disphotree->Branch(Form("genphmatch_%i",itoy), &toyBranch.genphmatch_, Form("genphmatch_%i/I",itoy));
+      disphotree->Branch(Form("genphmatch_ptres_%i",itoy), &toyBranch.genphmatch_ptres_, Form("genphmatch_ptres_%i/I",itoy));
+      disphotree->Branch(Form("genphmatch_status_%i",itoy), &toyBranch.genphmatch_status_, Form("genphmatch_status_%i/I",itoy));
+    } // end loop over nToys
+  } // end block over ToyMC
 
   // Run, Lumi, Event info
   disphotree->Branch("run", &run, "run/i");
@@ -1467,45 +1520,18 @@ void DisPho::MakeEventTree()
   disphotree->Branch("vtxY", &vtxY, "vtxY/F");
   disphotree->Branch("vtxZ", &vtxZ, "vtxZ/F");
 
-  // rho info
-  disphotree->Branch("rho", &rho, "rho/F");
-
   // MET info
   disphotree->Branch("t1pfMETpt", &t1pfMETpt, "t1pfMETpt/F");
   disphotree->Branch("t1pfMETphi", &t1pfMETphi, "t1pfMETphi/F");
   disphotree->Branch("t1pfMETsumEt", &t1pfMETsumEt, "t1pfMETsumEt/F");
 
-  // HT Info
-  disphotree->Branch("jetHT", &jetHT, "jetHT/F");
+  // Jet info
   disphotree->Branch("njets", &njets, "njets/I");
-  disphotree->Branch("jetHTpt15", &jetHTpt15, "jetHTpt15/F");
-  disphotree->Branch("njetspt15", &njetspt15, "njetspt15/I");
-  disphotree->Branch("jetHTeta3", &jetHTeta3, "jetHTeta3/F");
-  disphotree->Branch("njetseta3", &njetseta3, "njetseta3/I");
-  disphotree->Branch("jetHTnopho", &jetHTnopho, "jetHTnopho/F");
-  disphotree->Branch("njetsnopho", &njetsnopho, "njetsnopho/I");
-  disphotree->Branch("jetHTidL", &jetHTidL, "jetHTidL/F");
-  disphotree->Branch("njetsidL", &njetsidL, "njetsidL/I");
-  disphotree->Branch("jetHTidT", &jetHTidT, "jetHTidT/F");
-  disphotree->Branch("njetsidT", &njetsidT, "njetsidT/I");
-  disphotree->Branch("jetHTidTLV", &jetHTidTLV, "jetHTidTLV/F");
-  disphotree->Branch("njetsidTLV", &njetsidTLV, "njetsidTLV/I");
-
-  // Jet Info
-  DisPho::MakeJetBranch(0,"L",jetBranch0L);
-  DisPho::MakeJetBranch(1,"L",jetBranch1L);
-  DisPho::MakeJetBranch(2,"L",jetBranch2L);
-  DisPho::MakeJetBranch(3,"L",jetBranch3L);
-
-  DisPho::MakeJetBranch(0,"T",jetBranch0T);
-  DisPho::MakeJetBranch(1,"T",jetBranch1T);
-  DisPho::MakeJetBranch(2,"T",jetBranch2T);
-  DisPho::MakeJetBranch(3,"T",jetBranch3T);
-
-  DisPho::MakeJetBranch(0,"TLV",jetBranch0TLV);
-  DisPho::MakeJetBranch(1,"TLV",jetBranch1TLV);
-  DisPho::MakeJetBranch(2,"TLV",jetBranch2TLV);
-  DisPho::MakeJetBranch(3,"TLV",jetBranch3TLV);
+  disphotree->Branch("jetE", &jetE);
+  disphotree->Branch("jetpt", &jetpt);
+  disphotree->Branch("jeteta", &jeteta);
+  disphotree->Branch("jetphi", &jetphi);
+  disphotree->Branch("jetID", &jetID);
 
   // RecHit Info
   disphotree->Branch("nrechits", &nrechits, "nrechits/I");
@@ -1523,164 +1549,69 @@ void DisPho::MakeEventTree()
   disphotree->Branch("nphotons", &nphotons, "nphotons/I");
   for (int iphoton = 0; iphoton < Config::nPhotons; iphoton++)
   {
-    DisPho::MakePhoBranch(iphoton,phoBranches[iphoton]);
-  }
+    auto & phoBranch = phoBranches[iphoton];
 
-  // PhotonMC info
-  if (isMC)
-  {
-    for (int iphoton = 0; iphoton < Config::nPhotons; iphoton++)
+    disphotree->Branch(Form("phoE_%i",iphoton), &phoBranch.E_, Form("phoE_%i/F",iphoton));
+    disphotree->Branch(Form("phopt_%i",iphoton), &phoBranch.Pt_, Form("phopt_%i/F",iphoton));
+    disphotree->Branch(Form("phoeta_%i",iphoton), &phoBranch.Eta_, Form("phoeta_%i/F",iphoton));
+    disphotree->Branch(Form("phophi_%i",iphoton), &phoBranch.Phi_, Form("phophi_%i/F",iphoton));
+
+    disphotree->Branch(Form("phoscE_%i",iphoton), &phoBranch.scE_, Form("phoscE_%i/F",iphoton));
+    disphotree->Branch(Form("phosceta_%i",iphoton), &phoBranch.scEta_, Form("phosceta_%i/F",iphoton));
+    disphotree->Branch(Form("phoscphi_%i",iphoton), &phoBranch.scPhi_, Form("phoscphi_%i/F",iphoton));
+
+    disphotree->Branch(Form("phoHoE_%i",iphoton), &phoBranch.HoE_, Form("phoHoE_%i/F",iphoton));
+    disphotree->Branch(Form("phor9_%i",iphoton), &phoBranch.r9_, Form("phor9_%i/F",iphoton));
+
+    disphotree->Branch(Form("phoChgHadIso_%i",iphoton), &phoBranch.ChgHadIso_, Form("phoChgHadIso_%i/F",iphoton));
+    disphotree->Branch(Form("phoNeuHadIso_%i",iphoton), &phoBranch.NeuHadIso_, Form("phoNeuHadIso_%i/F",iphoton));
+    disphotree->Branch(Form("phoPhoIso_%i",iphoton), &phoBranch.PhoIso_, Form("phoPhoIso_%i/F",iphoton));
+
+    disphotree->Branch(Form("phoEcalPFClIso_%i",iphoton), &phoBranch.EcalPFClIso_, Form("phoEcalPFClIso_%i/F",iphoton));
+    disphotree->Branch(Form("phoHcalPFClIso_%i",iphoton), &phoBranch.HcalPFClIso_, Form("phoHcalPFClIso_%i/F",iphoton));
+    disphotree->Branch(Form("phoTrkIso_%i",iphoton), &phoBranch.TrkIso_, Form("phoTrkIso_%i/F",iphoton));
+
+    disphotree->Branch(Form("phosieie_%i",iphoton), &phoBranch.Sieie_, Form("phosieie_%i/F",iphoton));
+    disphotree->Branch(Form("phosipip_%i",iphoton), &phoBranch.Sipip_, Form("phosipip_%i/F",iphoton));
+    disphotree->Branch(Form("phosieip_%i",iphoton), &phoBranch.Sieip_, Form("phosieip_%i/F",iphoton));
+
+    disphotree->Branch(Form("phoe2x2_%i",iphoton), &phoBranch.e2x2_, Form("phoe2x2_%i/F",iphoton));
+    disphotree->Branch(Form("phoe3x3_%i",iphoton), &phoBranch.e3x3_, Form("phoe3x3_%i/F",iphoton));
+    disphotree->Branch(Form("phoe5x5_%i",iphoton), &phoBranch.e5x5_, Form("phoe5x5_%i/F",iphoton));
+
+    disphotree->Branch(Form("phosmaj_%i",iphoton), &phoBranch.Smaj_, Form("phosmaj_%i/F",iphoton));
+    disphotree->Branch(Form("phosmin_%i",iphoton), &phoBranch.Smin_, Form("phosmin_%i/F",iphoton));
+    disphotree->Branch(Form("phoalpha_%i",iphoton), &phoBranch.alpha_, Form("phoalpha_%i/F",iphoton));
+
+    if (storeRecHits)
     {
-      DisPho::MakePhoBranchMC(iphoton,phoBranches[iphoton]);
+      disphotree->Branch(Form("phoseed_%i",iphoton), &phoBranch.seed_, Form("phoseed_%i/I",iphoton));
+      disphotree->Branch(Form("phorecHits_%i",iphoton), &phoBranch.recHits_);
+    }
+    else 
+    {
+      disphotree->Branch(Form("phoseedtime_%i",iphoton), &phoBranch.seedtime_, Form("phoseedtime_%i/F",iphoton));
+      disphotree->Branch(Form("phoseedE_%i",iphoton), &phoBranch.seedE_, Form("phoseedE_%i/F",iphoton));
+      disphotree->Branch(Form("phoseedID_%i",iphoton), &phoBranch.seedID_, Form("phoseedID_%i/i",iphoton));
     }
 
-    DisPho::MakePhoBranchMC(0,phoBranch0);
-    DisPho::MakePhoBranchMC(1,phoBranch1);
-    DisPho::MakePhoBranchMC(2,phoBranch2);
-    DisPho::MakePhoBranchMC(3,phoBranch3);
-  }
-}
+    disphotree->Branch(Form("phosuisseX_%i",iphoton), &phoBranch.suisseX_, Form("phosuisseX_%i/F",iphoton));
 
-void DisPho::MakeGMSBBranch(const int i, gmsbStruct& gmsbBranch)
-{
-  disphotree->Branch(Form("genNmass_%i",i), &gmsbBranch.genNmass_, Form("genNmass_%i/F",i));
-  disphotree->Branch(Form("genNE_%i",i), &gmsbBranch.genNE_, Form("genNE_%i/F",i));
-  disphotree->Branch(Form("genNpt_%i",i), &gmsbBranch.genNpt_, Form("genNpt_%i/F",i));
-  disphotree->Branch(Form("genNphi_%i",i), &gmsbBranch.genNphi_, Form("genNphi_%i/F",i));
-  disphotree->Branch(Form("genNeta_%i",i), &gmsbBranch.genNeta_, Form("genNeta_%i/F",i));
+    disphotree->Branch(Form("phoisOOT_%i",iphoton), &phoBranch.isOOT_, Form("phoisOOT_%i/O",iphoton));
+    disphotree->Branch(Form("phoisEB_%i",iphoton), &phoBranch.isEB_, Form("phoisEB_%i/O",iphoton));
+    disphotree->Branch(Form("phoisHLT_%i",iphoton), &phoBranch.isHLT_, Form("phoisHLT_%i/O",iphoton));
+    disphotree->Branch(Form("phoisTrk_%i",iphoton), &phoBranch.isTrk_, Form("phoisTrk_%i/O",iphoton));
+    disphotree->Branch(Form("phopassEleVeto_%i",iphoton), &phoBranch.passEleVeto_, Form("phopassEleVeto_%i/O",iphoton));
+    disphotree->Branch(Form("phohasPixSeed_%i",iphoton), &phoBranch.hasPixSeed_, Form("phohasPixSeed_%i/O",iphoton));
+    disphotree->Branch(Form("phogedID_%i",iphoton), &phoBranch.gedID_, Form("phogedID_%i/I",iphoton));
+    disphotree->Branch(Form("phoootID_%i",iphoton), &phoBranch.ootID_, Form("phoootID_%i/I",iphoton));
 
-  disphotree->Branch(Form("genNprodvx_%i",i), &gmsbBranch.genNprodvx_, Form("genNprodvx_%i/F",i));
-  disphotree->Branch(Form("genNprodvy_%i",i), &gmsbBranch.genNprodvy_, Form("genNprodvy_%i/F",i));
-  disphotree->Branch(Form("genNprodvz_%i",i), &gmsbBranch.genNprodvz_, Form("genNprodvz_%i/F",i));
-
-  disphotree->Branch(Form("genNdecayvx_%i",i), &gmsbBranch.genNdecayvx_, Form("genNdecayvx_%i/F",i));
-  disphotree->Branch(Form("genNdecayvy_%i",i), &gmsbBranch.genNdecayvy_, Form("genNdecayvy_%i/F",i));
-  disphotree->Branch(Form("genNdecayvz_%i",i), &gmsbBranch.genNdecayvz_, Form("genNdecayvz_%i/F",i));
-
-  disphotree->Branch(Form("genphE_%i",i), &gmsbBranch.genphE_, Form("genphE_%i/F",i));
-  disphotree->Branch(Form("genphpt_%i",i), &gmsbBranch.genphpt_, Form("genphpt_%i/F",i));
-  disphotree->Branch(Form("genphphi_%i",i), &gmsbBranch.genphphi_, Form("genphphi_%i/F",i));
-  disphotree->Branch(Form("genpheta_%i",i), &gmsbBranch.genpheta_, Form("genpheta_%i/F",i));
-  disphotree->Branch(Form("genphmatch_%i",i), &gmsbBranch.genphmatch_, Form("genphmatch_%i/I",i));
-
-  disphotree->Branch(Form("gengrmass_%i",i), &gmsbBranch.gengrmass_, Form("gengrmass_%i/F",i));
-  disphotree->Branch(Form("gengrE_%i",i), &gmsbBranch.gengrE_, Form("gengrE_%i/F",i));
-  disphotree->Branch(Form("gengrpt_%i",i), &gmsbBranch.gengrpt_, Form("gengrpt_%i/F",i));
-  disphotree->Branch(Form("gengrphi_%i",i), &gmsbBranch.gengrphi_, Form("gengrphi_%i/F",i));
-  disphotree->Branch(Form("gengreta_%i",i), &gmsbBranch.gengreta_, Form("gengreta_%i/F",i));
-}
-
-void DisPho::MakeHVDSBranch(const int i, hvdsStruct& hvdsBranch)
-{
-  disphotree->Branch(Form("genvPionmass_%i",i), &hvdsBranch.genvPionmass_, Form("genvPionmass_%i/F",i));
-  disphotree->Branch(Form("genvPionE_%i",i), &hvdsBranch.genvPionE_, Form("genvPionE_%i/F",i));
-  disphotree->Branch(Form("genvPionpt_%i",i), &hvdsBranch.genvPionpt_, Form("genvPionpt_%i/F",i));
-  disphotree->Branch(Form("genvPionphi_%i",i), &hvdsBranch.genvPionphi_, Form("genvPionphi_%i/F",i));
-  disphotree->Branch(Form("genvPioneta_%i",i), &hvdsBranch.genvPioneta_, Form("genvPioneta_%i/F",i));
-
-  disphotree->Branch(Form("genvPionprodvx_%i",i), &hvdsBranch.genvPionprodvx_, Form("genvPionprodvx_%i/F",i));
-  disphotree->Branch(Form("genvPionprodvy_%i",i), &hvdsBranch.genvPionprodvy_, Form("genvPionprodvy_%i/F",i));
-  disphotree->Branch(Form("genvPionprodvz_%i",i), &hvdsBranch.genvPionprodvz_, Form("genvPionprodvz_%i/F",i));
-
-  disphotree->Branch(Form("genvPiondecayvx_%i",i), &hvdsBranch.genvPiondecayvx_, Form("genvPiondecayvx_%i/F",i));
-  disphotree->Branch(Form("genvPiondecayvy_%i",i), &hvdsBranch.genvPiondecayvy_, Form("genvPiondecayvy_%i/F",i));
-  disphotree->Branch(Form("genvPiondecayvz_%i",i), &hvdsBranch.genvPiondecayvz_, Form("genvPiondecayvz_%i/F",i));
-
-  disphotree->Branch(Form("genHVph0E_%i",i), &hvdsBranch.genHVph0E_, Form("genHVph0E_%i/F",i));
-  disphotree->Branch(Form("genHVph0pt_%i",i), &hvdsBranch.genHVph0pt_, Form("genHVph0pt_%i/F",i));
-  disphotree->Branch(Form("genHVph0phi_%i",i), &hvdsBranch.genHVph0phi_, Form("genHVph0phi_%i/F",i));
-  disphotree->Branch(Form("genHVph0eta_%i",i), &hvdsBranch.genHVph0eta_, Form("genHVph0eta_%i/F",i));
-  disphotree->Branch(Form("genHVph0match_%i",i), &hvdsBranch.genHVph0match_, Form("genHVph0match_%i/I",i));
-
-  disphotree->Branch(Form("genHVph1E_%i",i), &hvdsBranch.genHVph1E_, Form("genHVph1E_%i/F",i));
-  disphotree->Branch(Form("genHVph1pt_%i",i), &hvdsBranch.genHVph1pt_, Form("genHVph1pt_%i/F",i));
-  disphotree->Branch(Form("genHVph1phi_%i",i), &hvdsBranch.genHVph1phi_, Form("genHVph1phi_%i/F",i));
-  disphotree->Branch(Form("genHVph1eta_%i",i), &hvdsBranch.genHVph1eta_, Form("genHVph1eta_%i/F",i));
-  disphotree->Branch(Form("genHVph1match_%i",i), &hvdsBranch.genHVph1match_, Form("genHVph1match_%i/I",i));
-}
-
-void DisPho::MakeToyBranch(const int i, toyStruct& toyBranch)
-{
-  disphotree->Branch(Form("genphE_%i",i), &toyBranch.genphE_, Form("genphE_%i/F",i));
-  disphotree->Branch(Form("genphpt_%i",i), &toyBranch.genphpt_, Form("genphpt_%i/F",i));
-  disphotree->Branch(Form("genphphi_%i",i), &toyBranch.genphphi_, Form("genphphi_%i/F",i));
-  disphotree->Branch(Form("genpheta_%i",i), &toyBranch.genpheta_, Form("genpheta_%i/F",i));
-
-  disphotree->Branch(Form("genphmatch_%i",i), &toyBranch.genphmatch_, Form("genphmatch_%i/I",i));
-  disphotree->Branch(Form("genphmatch_ptres_%i",i), &toyBranch.genphmatch_ptres_, Form("genphmatch_ptres_%i/I",i));
-  disphotree->Branch(Form("genphmatch_status_%i",i), &toyBranch.genphmatch_status_, Form("genphmatch_status_%i/I",i));
-}
-
-void DisPho::MakeJetBranch(const int i, const TString& label, jetStruct& jetBranch)
-{
-  disphotree->Branch(Form("jetE_%i_%s",i,label.Data()), &jetBranch.E_, Form("jetE_%i_%s/F",i,label.Data()));
-  disphotree->Branch(Form("jetpt_%i_%s",i,label.Data()), &jetBranch.Pt_, Form("jetpt_%i_%s/F",i,label.Data()));
-  disphotree->Branch(Form("jeteta_%i_%s",i,label.Data()), &jetBranch.Eta_, Form("jeteta_%i_%s/F",i,label.Data()));
-  disphotree->Branch(Form("jetphi_%i_%s",i,label.Data()), &jetBranch.Phi_, Form("jetphi_%i_%s/F",i,label.Data()));
-}
-
-void DisPho::MakePhoBranch(const int i, phoStruct& phoBranch)
-{
-  disphotree->Branch(Form("phoE_%i",i), &phoBranch.E_, Form("phoE_%i/F",i));
-  disphotree->Branch(Form("phopt_%i",i), &phoBranch.Pt_, Form("phopt_%i/F",i));
-  disphotree->Branch(Form("phoeta_%i",i), &phoBranch.Eta_, Form("phoeta_%i/F",i));
-  disphotree->Branch(Form("phophi_%i",i), &phoBranch.Phi_, Form("phophi_%i/F",i));
-
-  disphotree->Branch(Form("phoscE_%i",i), &phoBranch.scE_, Form("phoscE_%i/F",i));
-  disphotree->Branch(Form("phosceta_%i",i), &phoBranch.scEta_, Form("phosceta_%i/F",i));
-  disphotree->Branch(Form("phoscphi_%i",i), &phoBranch.scPhi_, Form("phoscphi_%i/F",i));
-
-  disphotree->Branch(Form("phoHoE_%i",i), &phoBranch.HoE_, Form("phoHoE_%i/F",i));
-  disphotree->Branch(Form("phor9_%i",i), &phoBranch.r9_, Form("phor9_%i/F",i));
-
-  disphotree->Branch(Form("phoChgHadIso_%i",i), &phoBranch.ChgHadIso_, Form("phoChgHadIso_%i/F",i));
-  disphotree->Branch(Form("phoNeuHadIso_%i",i), &phoBranch.NeuHadIso_, Form("phoNeuHadIso_%i/F",i));
-  disphotree->Branch(Form("phoPhoIso_%i",i), &phoBranch.PhoIso_, Form("phoPhoIso_%i/F",i));
-
-  disphotree->Branch(Form("phoEcalPFClIso_%i",i), &phoBranch.EcalPFClIso_, Form("phoEcalPFClIso_%i/F",i));
-  disphotree->Branch(Form("phoHcalPFClIso_%i",i), &phoBranch.HcalPFClIso_, Form("phoHcalPFClIso_%i/F",i));
-  disphotree->Branch(Form("phoTrkIso_%i",i), &phoBranch.TrkIso_, Form("phoTrkIso_%i/F",i));
-
-  disphotree->Branch(Form("phosieie_%i",i), &phoBranch.Sieie_, Form("phosieie_%i/F",i));
-  disphotree->Branch(Form("phosipip_%i",i), &phoBranch.Sipip_, Form("phosipip_%i/F",i));
-  disphotree->Branch(Form("phosieip_%i",i), &phoBranch.Sieip_, Form("phosieip_%i/F",i));
-
-  disphotree->Branch(Form("phoe2x2_%i",i), &phoBranch.e2x2_, Form("phoe2x2_%i/F",i));
-  disphotree->Branch(Form("phoe3x3_%i",i), &phoBranch.e3x3_, Form("phoe3x3_%i/F",i));
-  disphotree->Branch(Form("phoe5x5_%i",i), &phoBranch.e5x5_, Form("phoe5x5_%i/F",i));
-
-  disphotree->Branch(Form("phosmaj_%i",i), &phoBranch.Smaj_, Form("phosmaj_%i/F",i));
-  disphotree->Branch(Form("phosmin_%i",i), &phoBranch.Smin_, Form("phosmin_%i/F",i));
-  disphotree->Branch(Form("phoalpha_%i",i), &phoBranch.alpha_, Form("phoalpha_%i/F",i));
-
-  if (storeRecHits)
-  {
-    disphotree->Branch(Form("phoseed_%i",i), &phoBranch.seed_, Form("phoseed_%i/I",i));
-    disphotree->Branch(Form("phorecHits_%i",i), &phoBranch.recHits_);
-  }
-  else 
-  {
-    disphotree->Branch(Form("phoseedtime_%i",i), &phoBranch.seedtime_, Form("phoseedtime_%i/F",i));
-    disphotree->Branch(Form("phoseedE_%i",i), &phoBranch.seedE_, Form("phoseedE_%i/F",i));
-    disphotree->Branch(Form("phoseedID_%i",i), &phoBranch.seedID_, Form("phoseedID_%i/i",i));
-  }
-
-  disphotree->Branch(Form("phosuisseX_%i",i), &phoBranch.suisseX_, Form("phosuisseX_%i/F",i));
-
-  disphotree->Branch(Form("phoisOOT_%i",i), &phoBranch.isOOT_, Form("phoisOOT_%i/O",i));
-  disphotree->Branch(Form("phoisEB_%i",i), &phoBranch.isEB_, Form("phoisEB_%i/O",i));
-  disphotree->Branch(Form("phoisHLT_%i",i), &phoBranch.isHLT_, Form("phoisHLT_%i/O",i));
-  disphotree->Branch(Form("phoisTrk_%i",i), &phoBranch.isTrk_, Form("phoisTrk_%i/O",i));
-  disphotree->Branch(Form("phopassEleVeto_%i",i), &phoBranch.passEleVeto_, Form("phopassEleVeto_%i/O",i));
-  disphotree->Branch(Form("phohasPixSeed_%i",i), &phoBranch.hasPixSeed_, Form("phohasPixSeed_%i/O",i));
-  disphotree->Branch(Form("phogedID_%i",i), &phoBranch.gedID_, Form("phogedID_%i/I",i));
-  disphotree->Branch(Form("phoootID_%i",i), &phoBranch.ootID_, Form("phoootID_%i/I",i));
-}
-
-void DisPho::MakePhoBranchMC(const int i, phoStruct& phoBranch)
-{
-  if (isGMSB || isHVDS) disphotree->Branch(Form("phoisSignal_%i",i), &phoBranch.isSignal_, Form("phoisSignal_%i/I",i));
-  disphotree->Branch(Form("phoisGen_%i",i), &phoBranch.isGen_, Form("phoisGen_%i/O",i));
+    if (isMC)
+    {
+      if (isGMSB || isHVDS) disphotree->Branch(Form("phoisSignal_%i",iphoton), &phoBranch.isSignal_, Form("phoisSignal_%i/I",iphoton));
+      disphotree->Branch(Form("phoisGen_%i",iphoton), &phoBranch.isGen_, Form("phoisGen_%i/O",iphoton));
+    } // end block over isMC
+  } // end loop over nPhotons
 }
 
 void DisPho::endJob() {}

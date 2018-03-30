@@ -78,44 +78,51 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void MakeHists();
   void MakeAndFillConfigTree();
   void MakeEventTree();
-  void MakeGMSBBranch(const int i, gmsbStruct& gmsbBranch);
-  void MakeHVDSBranch(const int i, hvdsStruct& hvdsBranch);
-  void MakeToyBranch(const int i, toyStruct& toyBranch);
-  void MakeJetBranch(const int i, const TString & label, jetStruct& jetBranch);
-  void MakePhoBranch(const int i, phoStruct& phoBranch);
-  void MakePhoBranchMC(const int i, phoStruct& phoBranch);
+
+  void InitializeRhoBranches();
+  void SetRhoBranches(const edm::Handle<float> & rhosH);
 
   void InitializeGenEvtBranches();
+  void SetGenEvtBranches(const edm::Handle<GenEventInfoProduct> & genevtInfoH);
+
   void InitializeGenPointBranches();
+  void SetGenXYZ0Branches(const edm::Handle<Point3D> & genxyz0H);
+  void SetGenT0Branches(const edm::Handle<float> & gent0H);
+
   void InitializeGenPUBranches();
+  void SetGenPUBranches(edm::Handle<std::vector<PileupSummaryInfo> > & pileupInfoH);
+
   void InitializeGMSBBranches();
-  void InitializeGMSBBranch(gmsbStruct& gmsbBranch);
-  void SetGMSBBranch(const reco::GenParticle & neutralino, gmsbStruct & gmsbBranch, const std::vector<oot::Photon> & photons);
+  void SetGMSBBranches(const std::vector<reco::GenParticle> & neutralinos, const std::vector<oot::Photon> & photons, const int nPhotons);
+
   void InitializeHVDSBranches();
-  void InitializeHVDSBranch(hvdsStruct& hvdsBranch);
-  void SetHVDSBranch(const reco::GenParticle & vPion, hvdsStruct & hvdsBranch, const std::vector<oot::Photon> & photons);
+  void SetHVDSBranches(const std::vector<reco::GenParticle> & vPions, const std::vector<oot::Photon> & photons, const int nPhotons);
+ 
   void InitializeToyBranches();
-  void InitializeToyBranch(toyStruct& toyBranch);
-  void SetToyBranch(const reco::GenParticle & toy, toyStruct & toyBranch, const std::vector<oot::Photon> & photons);
-  void SetTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, const edm::Event & iEvent);
+  void SetToyBranch(const std::vector<reco::GenParticle> & toys, const std::vector<oot::Photon> & photons, const int nPhotons);
+
   void InitializePVBranches();
+  void SetPVBranches(const edm::Handle<reco::Vertex> & verticesH);
+
   void InitializeMETBranches();
-  void InitializeJetBranches();
-  void InitializeJetBranch(jetStruct & jetBranch);
-  void SetJetBranch(const pat::Jet & jet, jetStruct & jetBranch);
-  void InitializeRecHitBranches();
+  void SetMETBranches(const edm::Handle<pat::MET> & metsH);
+
+  void InitializeJetBranches(const int nJets);
+  void SetJetBranches(const std::vector<pat::Jet> & jet, const int nJets);
+
+  void InitializeRecHitBranches(const int nRecHits);
+  void SetRecHitBranches(const EcalRecHitCollection * recHitsEB, const CaloSubdetectorGeometry * barrelGeometry,
+			 const EcalRecHitCollection * recHitsEE, const CaloSubdetectorGeometry * endcapGeometry,
+			 const uiiumap & recHitMap);
   void SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloSubdetectorGeometry * geometry,
 			 const uiiumap& recHitMap);
+
   void InitializePhoBranches();
-  void InitializePhoBranch(phoStruct & phoBranch);
-  void SetPhoBranch(const oot::Photon& photon, phoStruct & phoBranch, const uiiumap & recHitMap,
-		    const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE,
-		    const edm::Handle<std::vector<reco::Track> > & tracksH);
-  void InitializePhoBranchesMC();
-  void InitializePhoBranchMC(phoStruct & phoBranch);
-  void SetPhoBranchMC(const int iph, const oot::Photon& photon, phoStruct& phoBranch, 
+  void SetPhoBranches(const std::vector<oot::Photon> photons, const int nPhotons, const uiiumap & recHitMap,
+		      const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE,
+		      const edm::Handle<std::vector<reco::Track> > & tracksH,
 		      const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH);
-  int  CheckMatchHVDS(const int iph, const hvdsStruct& hvdsBranch);
+  int  CheckMatchHVDS(const int iphoton, const hvdsStruct& hvdsBranch);
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
   
@@ -143,7 +150,6 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // object extra pruning
   const float seedTimemin;
-  const int jetIDStoremin;
 
   // photon storing options
   const bool splitPho;
@@ -254,15 +260,15 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // gmsb
   int nNeutoPhGr;
-  gmsbStruct gmsbBranch0, gmsbBranch1;
+  std::vector<gmsbStruct> gmsbBranches;
 
   // hvds
   int nvPions;
-  hvdsStruct hvdsBranch0, hvdsBranch1, hvdsBranch2, hvdsBranch3;
+  std::vector<hvdsStruct> hvdsBranches;
 
   // toyMC
   int nToyPhs;
-  toyStruct toyBranch0, toyBranch1;
+  std::vector<toyStruct> toyBranches;
 
   // event info
   unsigned long int event; // technically unsigned long long in Event.h...
@@ -305,7 +311,11 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // jets
   int njets;
-  std::vector<jetStruct> jetBranches;
+  std::vector<float> jetE;
+  std::vector<float> jetpt;
+  std::vector<float> jetphi;
+  std::vector<float> jeteta;
+  std::vector<int>   jetID;
 
   // RecHits
   int nrechits;

@@ -622,7 +622,6 @@ namespace oot
     const float CHF  = jet.chargedHadronEnergyFraction();
     const float CEMF = jet.chargedEmEnergyFraction();
     const float NHM  = jet.neutralMultiplicity();
-    const float CHM  = jet.chargedMultiplicity(); 
     const float SHM  = jet.chargedMultiplicity()+jet.neutralMultiplicity();
     const float MUF  = jet.muonEnergyFraction();
     
