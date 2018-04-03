@@ -21,7 +21,6 @@ struct Configuration
   std::string * phIDmin;
   std::string phIDmin_s;
   Float_t seedTimemin;
-  Int_t   jetIDStoremin;
   Bool_t  splitPho;
   Bool_t  onlyGED;
   Bool_t  onlyOOT;
@@ -64,7 +63,6 @@ struct Configuration
   std::string s_phpTmin = "phpTmin";
   std::string s_phIDmin = "phIDmin";
   std::string s_seedTimemin = "seedTimemin";
-  std::string s_jetIDStoremin = "jetIDStoremin";
   std::string s_splitPho = "splitPho";
   std::string s_onlyGED = "onlyGED";
   std::string s_onlyOOT = "onlyOOT";
@@ -129,21 +127,7 @@ struct Event
   Float_t   t1pfMETphi;
   Float_t   t1pfMETsumEt;
 
-  Float_t   jetHT;
   Int_t     njets;
-  Float_t   jetHTpt15;
-  Int_t     njetspt15;
-  Float_t   jetHTeta3;
-  Int_t     njetseta3;
-  Float_t   jetHTnopho;
-  Int_t     njetsnopho;
-  Float_t   jetHTidL;
-  Int_t     njetsidL;
-  Float_t   jetHTidT;
-  Int_t     njetsidT;
-  Float_t   jetHTidTLV;
-  Int_t     njetsidTLV;
-
   Int_t     nrechits;
   Int_t     nphotons;
   Float_t   evtwgt;
@@ -197,20 +181,7 @@ struct Event
   std::string s_t1pfMETpt = "t1pfMETpt";
   std::string s_t1pfMETphi = "t1pfMETphi";
   std::string s_t1pfMETsumEt = "t1pfMETsumEt";
-  std::string s_jetHT = "jetHT";
   std::string s_njets = "njets";
-  std::string s_jetHTpt15 = "jetHTpt15";
-  std::string s_njetspt15 = "njetspt15";
-  std::string s_jetHTeta3 = "jetHTeta3";
-  std::string s_njetseta3 = "njetseta3";
-  std::string s_jetHTnopho = "jetHTnopho";
-  std::string s_njetsnopho = "njetsnopho";
-  std::string s_jetHTidL = "jetHTidL";
-  std::string s_njetsidL = "njetsidL";
-  std::string s_jetHTidT = "jetHTidT";
-  std::string s_njetsidT = "njetsidT";
-  std::string s_jetHTidTLV = "jetHTidTLV";
-  std::string s_njetsidTLV = "njetsidTLV";
   std::string s_nrechits = "nrechits";
   std::string s_nphotons = "nphotons";
   std::string s_evtwgt = "evtwgt";
@@ -259,20 +230,7 @@ struct Event
   TBranch * b_t1pfMETpt;
   TBranch * b_t1pfMETphi;
   TBranch * b_t1pfMETsumEt;
-  TBranch * b_jetHT;
   TBranch * b_njets;
-  TBranch * b_jetHTpt15;
-  TBranch * b_njetspt15;
-  TBranch * b_jetHTeta3;
-  TBranch * b_njetseta3;
-  TBranch * b_jetHTnopho;
-  TBranch * b_njetsnopho;
-  TBranch * b_jetHTidL;
-  TBranch * b_njetsidL;
-  TBranch * b_jetHTidT;
-  TBranch * b_njetsidT;
-  TBranch * b_jetHTidTLV;
-  TBranch * b_njetsidTLV;
   TBranch * b_nrechits;
   TBranch * b_nphotons;
   TBranch * b_evtwgt;
@@ -291,22 +249,30 @@ struct Event
 
 struct Jet
 {
-  Float_t E;
-  Float_t pt;
-  Float_t eta;
-  Float_t phi;
+  std::vector<Float_t> * E;
+  std::vector<Float_t> * pt;
+  std::vector<Float_t> * phi;
+  std::vector<Float_t> * eta;
+  std::vector<Int_t>   * ID;
+
+  std::vector<Float_t> E_f;
+  std::vector<Float_t> pt_f;
+  std::vector<Float_t> phi_f;
+  std::vector<Float_t> eta_f;
+  std::vector<Int_t>   ID_i;
   
   std::string s_E = "jetE";
   std::string s_pt = "jetpt";
-  std::string s_eta = "jeteta";
   std::string s_phi = "jetphi";
+  std::string s_eta = "jeteta";
+  std::string s_ID = "jetID";
 
   TBranch * b_E;
   TBranch * b_pt;
-  TBranch * b_eta;
   TBranch * b_phi;
+  TBranch * b_eta;
+  TBranch * b_ID;
 };
-typedef std::vector<Jet> JetVec;
 
 struct RecHits
 {
