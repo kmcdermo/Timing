@@ -36,7 +36,7 @@ namespace Config
 
   // input
   static const TString eosDir         = "root://eoscms";
-  static const TString baseDir        = "/store/user/kmcdermo/nTuples/skims/2017/rereco_v2";
+  static const TString baseDir        = "/store/user/kmcdermo/nTuples/skims/2017/rereco_v3";
   static const TString tupleFileName  = "tree.root";
   static const TString puwgtFileName  = "puweights";
   static const TString puwgtHistName  = "PUWeightsHist";
