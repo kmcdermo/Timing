@@ -1,0 +1,9 @@
+plot_title=MET [GeV/c]
+
+x_title=MET [GeV/c]
+x_scale=LIN
+x_var=t1pfMETpt
+x_bins=VARIABLE 0 10 20 30 40 50 60 70 80 90 100 120 140 160 180 200 225 250 275 300 325 350 375 400 450 500
+
+y_title=Events/GeV/c
+y_scale=LOG

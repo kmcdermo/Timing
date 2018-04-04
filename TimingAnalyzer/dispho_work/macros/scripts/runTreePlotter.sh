@@ -2,10 +2,11 @@
 
 cutconfig=${1:-"cut_config/signal_blinded_hlt.txt"}
 plotconfig=${2:-"plot_config/phopt_0.txt"}
-outfiletext=${3:-"phopt_0"}
-dir=${4:-"plots"}
+scalearea=${3:-0}
+outfiletext=${4:-"phopt_0"}
+dir=${5:-"plots"}
 
-root -l -b -q runTreePlotter.C\(\"${cutconfig}\",\"${plotconfig}\",\"${outfiletext}\"\)
+root -l -b -q runTreePlotter.C\(\"${cutconfig}\",\"${plotconfig}\",${scalearea},\"${outfiletext}\"\)
 
 ## copy out
 topdir=/afs/cern.ch/user/k/kmcdermo/www

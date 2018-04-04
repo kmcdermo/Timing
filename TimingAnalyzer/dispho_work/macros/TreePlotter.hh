@@ -32,7 +32,7 @@
 class TreePlotter
 {
 public:
-  TreePlotter(const TString & cutconfig, const TString & plotconfig, const TString & outfiletext);
+  TreePlotter(const TString & cutconfig, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext);
   ~TreePlotter();
 
   // Initialize
@@ -55,6 +55,7 @@ public:
   // Helper functions
   void ReadPlotConfig();
   TH1F * SetupHist(const TString & name);
+  void ScaleToArea();
   Float_t GetHistMinimum();
   Float_t GetHistMaximum();
   void PrintCanvas(const Bool_t isLogy);
@@ -66,6 +67,7 @@ private:
   // Settings
   const TString fCutConfig;
   const TString fPlotConfig;
+  const Bool_t  fScaleArea;
   const TString fOutFileText;
 
   // plot vars

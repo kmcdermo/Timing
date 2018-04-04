@@ -1,7 +1,7 @@
 #include "TreePlotter.hh"
 
-TreePlotter::TreePlotter(const TString & cutconfig, const TString & plotconfig, const TString & outfiletext) 
-  : fCutConfig(cutconfig), fPlotConfig(plotconfig), fOutFileText(outfiletext)
+TreePlotter::TreePlotter(const TString & cutconfig, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext) 
+  : fCutConfig(cutconfig), fPlotConfig(plotconfig), fScaleArea(scalearea), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -154,6 +154,9 @@ void TreePlotter::MakeBkgdOutput()
   BkgdHist->SetMarkerSize(0);
   BkgdHist->SetFillStyle(3254);
   BkgdHist->SetFillColor(kGray+3);
+
+  // ***** SCALE TO AREA OF DATA ***** //
+  if (fScaleArea) TreePlotter::ScaleToArea();
 
   // Make Background Stack
   BkgdStack = new THStack("Bkgd_Stack","");
@@ -415,9 +418,26 @@ void TreePlotter::MakeConfigPave()
     fConfigPave->AddText(str.c_str());
   }
 
+  // dump scaling choices
+  fConfigPave->AddText(fScaleArea?"Scale MC to data area":"Scale MC to luminosity");
+
   // save to output file
   fOutFile->cd();
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+}
+
+void TreePlotter::ScaleToArea()
+{
+  const Float_t area_sf = HistMap[Data]->Integral()/BkgdHist->Integral();
+
+  for (auto & HistPair : HistMap)
+  {
+    if (Config::GroupMap[HistPair.first] == isBkgd)
+    {
+      HistPair.second->Scale(area_sf);
+    }
+  }
+  BkgdHist->Scale(area_sf);
 }
 
 Float_t TreePlotter::GetHistMinimum()
