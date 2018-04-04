@@ -1,4 +1,4 @@
-common_cut=( (phopt_0>70&&phoisEB_0&&((phogedID_0==0&&!phoisOOT_0)||(phoootID_0==0&&phoisOOT_0))) && (sqrt(pow(phoE_0+phoE_1,2)-pow(phopt_0*cos(phophi_0)+phopt_1*cos(phophi_1),2)-pow(phopt_0*sin(phophi_0)+phopt_1*sin(phophi_1),2)-pow(phopt_0*sinh(phoeta_0)+phopt_1*sinh(phoeta_1),2))>90) && (njetsidL>=3) )
+common_cut=( (phopt_0>70&&phoisEB_0&&((phogedID_0==0&&!phoisOOT_0)||(phoootID_0==0&&phoisOOT_0))) && (sqrt(pow(phoE_0+phoE_1,2)-pow(phopt_0*cos(phophi_0)+phopt_1*cos(phophi_1),2)-pow(phopt_0*sin(phophi_0)+phopt_1*sin(phophi_1),2)-pow(phopt_0*sinh(phoeta_0)+phopt_1*sinh(phoeta_1),2))>90) && (njets>=3) && (jetpt[0]>30) )
 bkgd_cut=(hltDiPho3022M90)
 sign_cut=
 data_cut=(hltDiPho3022M90)
