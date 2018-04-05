@@ -6,7 +6,11 @@ scalearea=${3:-0}
 outfiletext=${4:-"phopt_0"}
 dir=${5:-"plots"}
 
+## first make plot
 root -l -b -q runTreePlotter.C\(\"${cutconfig}\",\"${plotconfig}\",${scalearea},\"${outfiletext}\"\)
+
+## then compute integral
+root -l -b -q runDumpIntegrals.C\(\"${outfiletext}\"\)
 
 ## copy out
 topdir=/afs/cern.ch/user/k/kmcdermo/www
@@ -17,4 +21,4 @@ pushd ${topdir}
 ./makereadable.sh ${fulldir}
 popd
 
-cp ${outfiletext}_log.png ${outfiletext}_lin.png ${outfiletext}.root ${fulldir}
+cp ${outfiletext}_log.png ${outfiletext}_lin.png ${outfiletext}.root ${outfiletext}_integrals.txt ${fulldir}
