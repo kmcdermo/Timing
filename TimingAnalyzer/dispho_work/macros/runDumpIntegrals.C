@@ -5,6 +5,7 @@
 #include "TH1F.h"
 
 #include <fstream>
+#include <cmath>
 
 void runDumpIntegrals(const TString & outfiletext)
 {
@@ -29,18 +30,19 @@ void runDumpIntegrals(const TString & outfiletext)
   {
     if (Config::GroupMap[HistPair.first] == isBkgd)
     {
-      outfile << HistPair.second->GetName() << " : " << HistPair.second->Integral() << std::endl;
+      const Float_t bkgd_int = HistPair.second->Integral();
+      outfile << HistPair.second->GetName() << " : " << bkgd_int << " +/- " << std::sqrt(bkgd_int) << std::endl;
     }
   }
   outfile << "-------------------------------------" << std::endl;
   
   // Sum MC second
   const Float_t mc_int = BkgdHist->Integral();
-  outfile << BkgdHist->GetName() << " : " << mc_int << std::endl;
+  outfile << BkgdHist->GetName() << " : " << mc_int << " +/- " << std::sqrt(mc_int) << std::endl;
 
   // Data third
   const Float_t data_int = HistMap[Data]->Integral();
-  outfile << HistMap[Data]->GetName() << " : " << data_int << std::endl;
+  outfile << HistMap[Data]->GetName() << " : " << data_int << " +/- " << std::sqrt(data_int) << std::endl;
   outfile << "-------------------------------------" << std::endl;
 
   // Make ratio
