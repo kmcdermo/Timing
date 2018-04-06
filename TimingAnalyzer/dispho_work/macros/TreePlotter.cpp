@@ -72,6 +72,9 @@ void TreePlotter::MakePlot()
 
   // Write Out Config
   TreePlotter::MakeConfigPave();
+
+  // Dump integrals into text file
+  TreePlotter::DumpIntegrals();
 }
 
 void TreePlotter::MakeHistFromTrees()
@@ -426,9 +429,12 @@ void TreePlotter::MakeConfigPave()
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
-void TreePlotter::DumpIntegral()
+void TreePlotter::DumpIntegrals()
 {
-  std::ofstream dumpfile(Form("%s_integrals.txt",outfiletext.Data()),std::ios_base::out);
+  std::cout << "Dumping integrals into text file..." << std::endl;
+
+  // make dumpfile object
+  std::ofstream dumpfile(Form("%s_integrals.txt",fOutFileText.Data()),std::ios_base::out);
 
   // Individual MC first
   for (const auto & HistPair : HistMap)
@@ -436,7 +442,7 @@ void TreePlotter::DumpIntegral()
     if (Config::GroupMap[HistPair.first] == isBkgd)
     {
       Double_t bkgd_err = 0.;
-      const Double_t bkgd_int = HistPair.second->IntegralAndError(1,HistPair->GetXaxis()->GetNbinsX(),bkgd_err,(fXVarBins?"width":""));
+      const Double_t bkgd_int = HistPair.second->IntegralAndError(1,HistPair.second->GetXaxis()->GetNbins(),bkgd_err,(fXVarBins?"width":""));
       dumpfile << HistPair.second->GetName() << " : " << bkgd_int << " +/- " << bkgd_err << std::endl;
     }
   }
@@ -444,12 +450,12 @@ void TreePlotter::DumpIntegral()
   
   // Sum MC second
   Double_t mc_err = 0;
-  const Double_t mc_int = BkgdHist->IntegralAndError(1,Bkgd_Hist->GetXaxis()->GetNbinsX(),mc_err,(fXVarBins?"width":""));
+  const Double_t mc_int = BkgdHist->IntegralAndError(1,BkgdHist->GetXaxis()->GetNbins(),mc_err,(fXVarBins?"width":""));
   dumpfile << BkgdHist->GetName() << " : " << mc_int << " +/- " << mc_err << std::endl;
 
   // Data third
   Double_t data_err = 0;
-  const Double_t data_int = HistMap[Data]->IntegralAndError(1,HistMap[Data]->GetXaxis()->GetNbinsX(),data_err,(fXVarBins?"width":""));
+  const Double_t data_int = HistMap[Data]->IntegralAndError(1,HistMap[Data]->GetXaxis()->GetNbins(),data_err,(fXVarBins?"width":""));
   dumpfile << HistMap[Data]->GetName() << " : " << data_int << " +/- " << data_err << std::endl;
   dumpfile << "-------------------------------------" << std::endl;
 

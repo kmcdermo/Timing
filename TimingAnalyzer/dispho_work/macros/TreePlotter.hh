@@ -60,8 +60,9 @@ public:
   Float_t GetHistMaximum();
   void PrintCanvas(const Bool_t isLogy);
   
-  // Meta data
+  // Meta data and extra info
   void MakeConfigPave();
+  void DumpIntegrals();
   
 private:
   // Settings
