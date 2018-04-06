@@ -2,7 +2,7 @@ plot_title=#Delta#phi(Jet_{0},#gamma_{0})
 
 x_title=#Delta#phi(Jet_{0},#gamma_{0})
 x_scale=LIN
-x_var=(TVector2::Phi_mpi_pi(jetphi[0]-phophi_0))
+x_var=(abs(TVector2::Phi_mpi_pi(jetphi[0]-phophi_0)))
 x_bins=CONSTANT 32 0 3.2
 
 y_title=Events

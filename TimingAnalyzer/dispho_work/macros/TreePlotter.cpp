@@ -426,6 +426,39 @@ void TreePlotter::MakeConfigPave()
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
+void TreePlotter::DumpIntegral()
+{
+  std::ofstream dumpfile(Form("%s_integrals.txt",outfiletext.Data()),std::ios_base::out);
+
+  // Individual MC first
+  for (const auto & HistPair : HistMap)
+  {
+    if (Config::GroupMap[HistPair.first] == isBkgd)
+    {
+      Double_t bkgd_err = 0.;
+      const Double_t bkgd_int = HistPair.second->IntegralAndError(1,HistPair->GetXaxis()->GetNbinsX(),bkgd_err,(fXVarBins?"width":""));
+      dumpfile << HistPair.second->GetName() << " : " << bkgd_int << " +/- " << bkgd_err << std::endl;
+    }
+  }
+  dumpfile << "-------------------------------------" << std::endl;
+  
+  // Sum MC second
+  Double_t mc_err = 0;
+  const Double_t mc_int = BkgdHist->IntegralAndError(1,Bkgd_Hist->GetXaxis()->GetNbinsX(),mc_err,(fXVarBins?"width":""));
+  dumpfile << BkgdHist->GetName() << " : " << mc_int << " +/- " << mc_err << std::endl;
+
+  // Data third
+  Double_t data_err = 0;
+  const Double_t data_int = HistMap[Data]->IntegralAndError(1,HistMap[Data]->GetXaxis()->GetNbinsX(),data_err,(fXVarBins?"width":""));
+  dumpfile << HistMap[Data]->GetName() << " : " << data_int << " +/- " << data_err << std::endl;
+  dumpfile << "-------------------------------------" << std::endl;
+
+  // Make ratio
+  const Double_t ratio = data_int/mc_int;
+  const Double_t ratio_err = ratio*std::sqrt(std::pow(data_err/data_int,2)+std::pow(mc_err/mc_int,2));
+  dumpfile << "Data/MC : " << ratio << " +/- " << ratio_err << std::endl;
+}
+
 void TreePlotter::ScaleToArea()
 {
   const Float_t area_sf = HistMap[Data]->Integral()/BkgdHist->Integral();

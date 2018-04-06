@@ -9,16 +9,15 @@ dir=${5:-"plots"}
 ## first make plot
 root -l -b -q runTreePlotter.C\(\"${cutconfig}\",\"${plotconfig}\",${scalearea},\"${outfiletext}\"\)
 
-## then compute integral
-root -l -b -q runDumpIntegrals.C\(\"${outfiletext}\"\)
-
-## copy out
+## make out dirs
 topdir=/afs/cern.ch/user/k/kmcdermo/www
 fulldir=${topdir}/dispho/${dir}
 
+## make them readable
 mkdir -p ${fulldir}
 pushd ${topdir}
 ./makereadable.sh ${fulldir}
 popd
 
+## copy everything
 cp ${outfiletext}_log.png ${outfiletext}_lin.png ${outfiletext}.root ${outfiletext}_integrals.txt ${fulldir}

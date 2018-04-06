@@ -115,7 +115,6 @@ void TreePlotter2D::MakeHistFromTrees()
     }
   }
 
-
   // save totals to output file
   fOutFile->cd();
   for (const auto & HistPair : HistMap)
