@@ -230,7 +230,7 @@ void TreePlotter::MakeRatioOutput()
 
   // save to output file
   fOutFile->cd();
-  RatioLine->Write(RatioLine->GetName(),TObject::kWriteDelete);
+  RatioLine->Write("RatioLine",TObject::kWriteDelete);
 }
 
 void TreePlotter::MakeLegend()
@@ -238,6 +238,7 @@ void TreePlotter::MakeLegend()
   std::cout << "Creating Legend..." << std::endl;
 
   Legend = new TLegend(0.682,0.7,0.825,0.92);
+  Legend->SetName("Legend");
   //  Legend->SetNColumns(2);
   Legend->SetBorderSize(1);
   Legend->SetLineColor(kBlack);
