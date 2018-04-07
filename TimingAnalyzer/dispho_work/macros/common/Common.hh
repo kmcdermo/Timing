@@ -44,7 +44,7 @@ namespace Config
   static const TString configtreename = "configtree";
   static const TString disphotreename = "disphotree";
   static const TString h_cutflowname  = "h_cutflow";
-  static const TString dataSample     = "DoubleEG";
+  static const TString dataSample     = "SinglePhoton";
 
   // Sample Information
   extern std::map<TString,SampleType>     SampleMap;

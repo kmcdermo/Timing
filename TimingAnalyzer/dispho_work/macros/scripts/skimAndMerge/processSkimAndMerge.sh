@@ -15,7 +15,7 @@ redophoid=${redoPhotonID}
 files="${text}_files.txt"
 wgtfile="${text}_wgt.txt"
 tmpfiles="tmp_${files}"
-timestamp=$(eos ls ${indir})
+timestamp=$(ls ${indir})
 eosdir="${indir}/${timestamp}/0000"
 
 ## holla back
@@ -23,7 +23,7 @@ echo "Processing:" ${text}
 
 ## first get list of files
 echo "Getting list of files on EOS"
-eos ls ${eosdir} > ${tmpfiles}
+ls ${eosdir} > ${tmpfiles}
 grep ".root" ${tmpfiles} > ${files}
 rm ${tmpfiles}
 
@@ -33,7 +33,7 @@ mkdir -p ${tmpdir}
 
 ## produce sum of weights
 echo "Getting sum of weights"
-./scripts/runSumWeights.sh ${rootbase}/${eosdir} ${files} ${wgtfile}
+./scripts/runSumWeights.sh ${eosdir} ${files} ${wgtfile}
 sumwgts=$(grep "Sum of weights: " ${wgtfile} | cut -d " " -f 4)
 
 ## read in each file and skim
@@ -42,7 +42,7 @@ nfiles=$(wc -l ${files})
 counter="1"
 while IFS='' read -r line || [[ -n "${line}" ]]; do
     echo "Working on file" ${counter} "out of" ${nfiles} "[filename: ${line}]"
-    ./scripts/runSkimmer.sh ${rootbase}/${eosdir} ${tmpdir} ${line} ${sumwgts} ${redophoid}
+    ./scripts/runSkimmer.sh ${eosdir} ${tmpdir} ${line} ${sumwgts} ${redophoid}
     counter=$((${counter} + 1))
 done < "${files}"
 
@@ -58,6 +58,6 @@ rm -rf ${tmpdir}/${infiles}
 
 ## Copy back to EOS
 echo "Copy hadded skim to EOS"
-eos mkdir -p ${outdir}
-xrdcp -r ${tmpdir}/${outfile} ${rootbase}/${outdir}
+mkdir -p ${outdir}
+mv ${tmpdir}/${outfile} ${outdir}
 rm -rf ${tmpdir}/${outfile}

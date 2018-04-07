@@ -297,7 +297,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
   oot::PrepTriggerBits(triggerFlagsH,iEvent,triggerFlagMap);
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
-  oot::PrepJets(jetsH,jets,jetpTmin,jetIDmin,jetEtamax);
+  oot::PrepJets(jetsH,jets,jetpTmin,jetEtamax,jetIDmin);
   oot::PrepRecHits(recHitsEB,recHitsEE,recHitMap,rhEmin);
   oot::PrepPhotons(photonsH,ootPhotonsH,photons,rho,phpTmin,phIDmin);
 
