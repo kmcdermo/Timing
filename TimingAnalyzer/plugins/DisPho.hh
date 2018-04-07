@@ -315,6 +315,10 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // jets
   int njets;
+  int njetspt15;
+  int njetseta3;
+  int njetsidT;
+  int njetsdR0p3;
   std::vector<float> jetE;
   std::vector<float> jetpt;
   std::vector<float> jetphi;

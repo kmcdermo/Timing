@@ -297,9 +297,24 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
   oot::PrepTriggerBits(triggerFlagsH,iEvent,triggerFlagMap);
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
-  oot::PrepJets(jetsH,jets,jetpTmin,jetIDmin,jetEtamax);
+  //  oot::PrepJets(jetsH,jets,jetpTmin,jetEtamax,jetIDmin);
+  oot::PrepJets(jetsH,jets);
   oot::PrepRecHits(recHitsEB,recHitsEE,recHitMap,rhEmin);
   oot::PrepPhotons(photonsH,ootPhotonsH,photons,rho,phpTmin,phIDmin);
+
+  njets = jets.size();
+  
+  jets.erase(std::remove_if(jets.begin(),jets.end(),[=](const auto & jet){return jet.pt() < jetpTmin;}),jets.end());
+
+  njetspt15 = jets.size();
+
+  jets.erase(std::remove_if(jets.begin(),jets.end(),[=](const auto & jet){return std::abs(jet.eta()) > jetEtamax;}),jets.end());
+
+  njetseta3 = jets.size();
+
+  jets.erase(std::remove_if(jets.begin(),jets.end(),[=](const auto & jet){return oot::GetPFJetID(jet) < jetIDmin;}),jets.end());
+
+  njetsidT = jets.size();
 
   ///////////////////
   //               //
@@ -309,6 +324,8 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   oot::PrunePhotons(photons,recHitsEB,recHitsEE,seedTimemin);
   oot::PruneJets(jets,photons,dRmin);
 		
+  njetsdR0p3 = jets.size();
+  
   /////////////////////////////
   //                         //
   // Photon Storing Options  //
@@ -923,7 +940,7 @@ void DisPho::InitializeJetBranches(const int nJets)
 
 void DisPho::SetJetBranches(const std::vector<pat::Jet> & jets, const int nJets)
 {
-  njets = jets.size();
+  //  njets = jets.size();
 
   for (int ijet = 0; ijet < nJets; ijet++)
   {
@@ -1534,6 +1551,10 @@ void DisPho::MakeEventTree()
 
   // Jet info
   disphotree->Branch("njets", &njets, "njets/I");
+  disphotree->Branch("njetspt15", &njetspt15, "njetspt15/I");
+  disphotree->Branch("njetseta3", &njetseta3, "njetseta3/I");
+  disphotree->Branch("njetsidT", &njetsidT, "njetsidT/I");
+  disphotree->Branch("njetsdR0p3", &njetsdR0p3, "njetsdR0p3/I");
   disphotree->Branch("jetE", &jetE);
   disphotree->Branch("jetpt", &jetpt);
   disphotree->Branch("jeteta", &jeteta);
