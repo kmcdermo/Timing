@@ -178,7 +178,11 @@ namespace oot
     // final sorting
     if (phIDmin != "none")
     {
-      photons.erase(std::remove_if(photons.begin(),photons.end(),[&](const oot::Photon & photon){return !photon.photon().photonID(phIDmin);}),photons.end());
+      photons.erase(std::remove_if(photons.begin(),photons.end(),
+				   [&phIDmin](const auto & photon)
+				   {
+				     return !photon.photon().photonID(phIDmin);
+				   }),photons.end());
     }
     std::sort(photons.begin(),photons.end(),oot::sortByPt);
   }  
@@ -290,14 +294,14 @@ namespace oot
     
   void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, 
 		std::vector<pat::Jet> & jets, const float jetpTmin, 
-		const int jetID, const float jetEtamax)
+		const float jetEtamax, const int jetID)
   {
     if (jetsH.isValid()) // standard handle check
     {
       for (const auto& jet : *jetsH)
       {
 	if (jet.pt() < jetpTmin) continue;
-	if (jet.eta() > jetEtamax) continue;
+	if (std::abs(jet.eta()) > jetEtamax) continue;
 	if (oot::GetPFJetID(jet) < jetID) continue;
 
 	jets.emplace_back(jet);
@@ -371,7 +375,7 @@ namespace oot
 		    const float seedTimemin)
   {
     photons.erase(std::remove_if(photons.begin(),photons.end(),
-				 [&](const oot::Photon & photon)
+				 [seedTimemin,&recHitsEB,&recHitsEE](const auto & photon)
 				 {
 				   const pat::Photon & pho = photon.photon();
 				   const reco::SuperClusterRef& phosc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
@@ -390,7 +394,7 @@ namespace oot
     {
       const auto & photon = photons[0]; // only clean out w.r.t. to leading photon... can do more later
       jets.erase(std::remove_if(jets.begin(),jets.end(),
-				[&](const pat::Jet & jet)
+				[dRmin,&photon](const auto & jet)
 				{
 				  return (Config::deltaR(jet.phi(),jet.eta(),photon.phi(),photon.eta()) < dRmin);
 				}),jets.end());

@@ -191,7 +191,7 @@ namespace oot
 			  const edm::Event & iEvent, trigObjVecMap & triggerObjectsByFilterMap);
   void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, 
 		std::vector<pat::Jet> & jets, const float jetpTmin = 0.f, 
-		const int jetID = -1, const float jetEtamax = 100.f);
+		const float jetEtamax = 100.f, const int jetID = -1);
   void PrepRecHits(const EcalRecHitCollection * recHitsEB, 
 		   const EcalRecHitCollection * recHitsEE,
 		   uiiumap & recHitMap, const float rhEmin = 0.f);
