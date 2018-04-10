@@ -35,8 +35,8 @@ namespace Config
   constexpr Float_t etaEEmax    = 2.5;
 
   // input
-  static const TString eosDir         = "root://eoscms";
-  static const TString baseDir        = "/store/user/kmcdermo/nTuples/skims/2017/rereco_v3";
+  static const TString eosDir         = "/eos/cms/store/user/kmcdermo";
+  static const TString baseDir        = "nTuples/skims/2017/rereco_v3";
   static const TString tupleFileName  = "tree.root";
   static const TString puwgtFileName  = "puweights";
   static const TString puwgtHistName  = "PUWeightsHist";
