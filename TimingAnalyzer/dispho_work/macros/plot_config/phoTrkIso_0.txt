@@ -3,7 +3,7 @@ plot_title=Leading Photon Track Isolation
 x_title=Leading Photon Track Isolation
 x_scale=LIN
 x_var=phoTrkIso_0
-x_bins=CONSTANT 100 0 20
+x_bins=CONSTANT 80 0 20
 
 y_title=Events
 y_scale=LOG
