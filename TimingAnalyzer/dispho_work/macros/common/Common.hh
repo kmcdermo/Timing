@@ -44,9 +44,9 @@ namespace Config
   static const TString configtreename = "configtree";
   static const TString disphotreename = "disphotree";
   static const TString h_cutflowname  = "h_cutflow";
-  static const TString dataSample     = "SinglePhoton";
 
   // Sample Information
+  extern TString                          PrimaryDataset;
   extern std::map<TString,SampleType>     SampleMap;
   extern std::map<SampleType,SampleGroup> GroupMap;
   extern std::map<SampleType,TString>     HistNameMap;
@@ -55,6 +55,7 @@ namespace Config
   extern std::map<SampleType,TString>     CutMap;
 
   // Sample setup functions
+  void SetupPrimaryDataset(const TString & pdname);
   void SetupSamples();
   void SetupGroups();
   void SetupHistNames();

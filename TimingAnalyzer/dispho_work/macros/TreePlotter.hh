@@ -32,7 +32,7 @@
 class TreePlotter
 {
 public:
-  TreePlotter(const TString & cutconfig, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext);
+  TreePlotter(const TString & cutconfig, const TString & plotconfig, const TString & pdname, const Bool_t scalearea, const TString & outfiletext);
   ~TreePlotter();
 
   // Initialize
@@ -68,6 +68,7 @@ private:
   // Settings
   const TString fCutConfig;
   const TString fPlotConfig;
+  const TString fPDName;
   const Bool_t  fScaleArea;
   const TString fOutFileText;
 

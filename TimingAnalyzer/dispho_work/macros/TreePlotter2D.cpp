@@ -1,7 +1,7 @@
 #include "TreePlotter2D.hh"
 
-TreePlotter2D::TreePlotter2D(const TString & cutconfig, const TString & plotconfig, const TString & outfilename) 
-  : fCutConfig(cutconfig), fPlotConfig(plotconfig), fOutFileName(outfilename)
+TreePlotter2D::TreePlotter2D(const TString & cutconfig, const TString & plotconfig, const TString & pdname, const TString & outfilename) 
+  : fCutConfig(cutconfig), fPlotConfig(plotconfig), fPDName(pdname), fOutFileName(outfilename)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -194,6 +194,7 @@ void TreePlotter2D::MakeConfigPave()
 
 void TreePlotter2D::SetupConfig()
 {
+  Config::SetupPrimaryDataset(fPDName);
   Config::SetupSamples();
   Config::SetupHistNames();
   Config::SetupCuts(fCutConfig);

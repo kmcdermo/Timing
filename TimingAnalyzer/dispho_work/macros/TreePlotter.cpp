@@ -1,7 +1,7 @@
 #include "TreePlotter.hh"
 
-TreePlotter::TreePlotter(const TString & cutconfig, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext) 
-  : fCutConfig(cutconfig), fPlotConfig(plotconfig), fScaleArea(scalearea), fOutFileText(outfiletext)
+TreePlotter::TreePlotter(const TString & cutconfig, const TString & plotconfig, const TStrig pdname, const Bool_t scalearea, const TString & outfiletext) 
+  : fCutConfig(cutconfig), fPlotConfig(plotconfig), fPDName(pdname), fScaleArea(scalearea), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -507,6 +507,7 @@ Float_t TreePlotter::GetHistMaximum()
 
 void TreePlotter::SetupConfig()
 {
+  Config::SetupPrimaryDataset(fPDName);
   Config::SetupSamples();
   Config::SetupGroups();
   Config::SetupHistNames();

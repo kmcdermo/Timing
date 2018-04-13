@@ -6,6 +6,7 @@
 
 namespace Config
 {
+  TString                          PrimaryDataset;
   std::map<TString,SampleType>     SampleMap;
   std::map<SampleType,SampleGroup> GroupMap;
   std::map<SampleType,TString>     HistNameMap;
@@ -13,6 +14,11 @@ namespace Config
   std::map<SampleType,TString>     LabelMap;
   std::map<SampleType,TString>     CutMap;
   
+  void SetupPrimaryDataset(const TString & pdname)
+  {
+    PrimaryDataset = pdname;
+  }
+
   void SetupSamples()
   {
     // QCD HT binned
@@ -44,11 +50,11 @@ namespace Config
     SampleMap["MC/GMSB/L200TeV_CTau400cm"] = GMSB;
     
     // Data
-    SampleMap[Form("Data/%s/B/v1",Config::dataSample.Data())] = Data;
-    SampleMap[Form("Data/%s/C/v1",Config::dataSample.Data())] = Data;
-    SampleMap[Form("Data/%s/D/v1",Config::dataSample.Data())] = Data;
-    SampleMap[Form("Data/%s/E/v1",Config::dataSample.Data())] = Data;
-    SampleMap[Form("Data/%s/F/v1",Config::dataSample.Data())] = Data;
+    SampleMap[Form("Data/%s/B/v1",Config::PrimaryDataset.Data())] = Data;
+    SampleMap[Form("Data/%s/C/v1",Config::PrimaryDataset.Data())] = Data;
+    SampleMap[Form("Data/%s/D/v1",Config::PrimaryDataset.Data())] = Data;
+    SampleMap[Form("Data/%s/E/v1",Config::PrimaryDataset.Data())] = Data;
+    SampleMap[Form("Data/%s/F/v1",Config::PrimaryDataset.Data())] = Data;
   }
 
   void SetupGroups()

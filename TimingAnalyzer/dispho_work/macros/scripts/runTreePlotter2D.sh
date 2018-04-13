@@ -2,10 +2,11 @@
 
 cutconfig=${1:-"cut_config/signal_blinded.txt"}
 plotconfig=${2:-"plot_config/met_vs_time.txt"}
-outfilename=${3:-"met_vs_time.root"}
-dir=${4:-"plots2D"}
+pdname=${3:-"SinglePhoton"}
+outfilename=${4:-"met_vs_time.root"}
+dir=${5:-"plots2D"}
 
-root -l -b -q runTreePlotter2D.C\(\"${cutconfig}\",\"${plotconfig}\",\"${outfilename}\"\)
+root -l -b -q runTreePlotter2D.C\(\"${cutconfig}\",\"${plotconfig}\",\"${pdname}\",\"${outfilename}\"\)
 
 ## copy out
 topdir=/afs/cern.ch/user/k/kmcdermo/www/dispho
