@@ -1,4 +1,4 @@
 common_cut=( (phopt_0>70&&phoisEB_0&&((phogedID_0==3&&!phoisOOT_0&&!phohasPixSeed_0)||(phoootID_0==3&&phoisOOT_0&&!phoisTrk_0))) && (Sum$(1*((jetpt>30)*(abs(jeteta)<3)))>=3) && (Sum$(jetpt*((jetpt>30)*(abs(jeteta)<3)))>400) )
 bkgd_cut=(hltSignal)
 sign_cut=
-data_cut=(hltSignal)
+data_cut=(hltSignal&&t1pfMETpt<200)
