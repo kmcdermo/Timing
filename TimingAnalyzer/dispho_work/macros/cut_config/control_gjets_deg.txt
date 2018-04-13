@@ -1,4 +1,4 @@
-common_cut=( (phopt_0>70&&phoisEB_0&&((phogedID_0==3&&phoisOOT_0==0&&!phohasPixSeed_0)||(phoootID_0==3&&phoisOOT_0==1&&!phoisTrk_0))) && (Sum$(1*((jetpt>30)*(abs(jeteta)<3)))><3) && (abs(TVector2::Phi_mpi_pi(jetphi[0]-phophi_0))>2.1) )
+common_cut=( (phopt_0>70&&phoisEB_0&&((phogedID_0==3&&phoisOOT_0==0&&!phohasPixSeed_0)||(phoootID_0==3&&phoisOOT_0==1&&!phoisTrk_0))) && (Sum$(1*((jetpt>30)*(abs(jeteta)<3)))<3) && (abs(TVector2::Phi_mpi_pi(jetphi[0]-phophi_0))>2.1) )
 bkgd_cut=(hltDiPho3022M90)
 sign_cut=
 data_cut=(hltDiPho3022M90)

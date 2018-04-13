@@ -1,6 +1,6 @@
 #include "TreePlotter.hh"
 
-TreePlotter::TreePlotter(const TString & cutconfig, const TString & plotconfig, const TStrig pdname, const Bool_t scalearea, const TString & outfiletext) 
+TreePlotter::TreePlotter(const TString & cutconfig, const TString & plotconfig, const TString & pdname, const Bool_t scalearea, const TString & outfiletext) 
   : fCutConfig(cutconfig), fPlotConfig(plotconfig), fPDName(pdname), fScaleArea(scalearea), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
