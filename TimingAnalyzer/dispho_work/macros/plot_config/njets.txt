@@ -1,9 +1,0 @@
-plot_title=nJets
-
-x_title=nJets (p_{T}^{jet}>15, |#eta^{jet}|<3, #DeltaR(#gamma_{0},jet)>0.3, ID#geqTight)
-x_scale=LIN
-x_var=njets
-x_bins=CONSTANT 40 0 40
-
-y_title=Events
-y_scale=LOG

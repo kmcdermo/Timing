@@ -1,0 +1,9 @@
+plot_title=Leading Photon ID
+
+x_title=Leading Photon ID
+x_scale=LIN
+x_var=(((phoisOOT_0==0)*(phohasPixSeed_0))+((phoisOOT_0==1)*(phoisTrk_0)))
+x_bins=CONSTANT 2 0 2
+
+y_title=Events
+y_scale=LOG
