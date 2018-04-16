@@ -203,7 +203,7 @@ namespace Config
     
   void SetupBinLabels(std::string & str, std::vector<TString> & binlabels)
   {
-    TString binlabel;
+    std::string binlabel;
     std::stringstream ss(str);
     while (ss >> binlabel) binlabels.push_back(binlabel);
   }
