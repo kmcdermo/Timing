@@ -1,0 +1,9 @@
+plot_title=Signal Trigger Bool
+
+x_title=Signal Trigger Bool
+x_scale=LIN
+x_var=hltSignal
+x_bins=CONSTANT 2 0 2
+
+y_title=Events
+y_scale=LOG

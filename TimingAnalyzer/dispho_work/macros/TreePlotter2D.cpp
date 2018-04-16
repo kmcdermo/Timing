@@ -130,11 +130,13 @@ void TreePlotter2D::MakeBkgdOutput()
 
   // Make Total Bkgd Hist: for ratio and error plotting
   BkgdHist = TreePlotter2D::SetupHist("Bkgd_Hist");
-  BkgdHist->Add(HistMap[GJets]);
-  BkgdHist->Add(HistMap[QCD]);
-  BkgdHist->SetMarkerSize(0);
-  BkgdHist->SetFillStyle(3254);
-  BkgdHist->SetFillColor(kGray+3);
+  for (const auto & HistPair : HistMap)
+  {
+    if (Config::GroupMap[HistPair.first] == isBkgd)
+    {
+      BkgdHist->Add(HistPair.second);
+    }
+  }
 
   // save to output file
   fOutFile->cd();
@@ -149,7 +151,6 @@ void TreePlotter2D::MakeRatioOutput()
   RatioHist = TreePlotter2D::SetupHist("Ratio_Hist");
   RatioHist->Add(HistMap[Data]);
   RatioHist->Divide(BkgdHist);  
-  RatioHist->SetStats(0);      // No statistics on lower plot
   
   // ratio MC error plot
   RatioMCErrs = TreePlotter2D::SetupHist("Ratio_MCErrs");
@@ -186,6 +187,9 @@ void TreePlotter2D::MakeConfigPave()
   {
     fConfigPave->AddText(str.c_str());
   }
+
+  // dump with PD
+  fConfigPave->AddText(Form("Primary Dataset: %s",fPDName.Data()));
 
   // save to output file
   fOutFile->cd();
@@ -226,6 +230,11 @@ void TreePlotter2D::ReadPlotConfig()
       str = Config::RemoveDelim(str,"x_bins=");
       Config::SetupBins(str,fXBins,fXVarBins);
     }
+    else if (str.find("x_labels=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"x_labels=");
+      Config::SetupBinLabels(str,fXLabels);
+    }
     else if (str.find("y_title=") != std::string::npos)
     {
       fYTitle = Config::RemoveDelim(str,"y_title=");
@@ -239,6 +248,11 @@ void TreePlotter2D::ReadPlotConfig()
       str = Config::RemoveDelim(str,"y_bins=");
       Config::SetupBins(str,fYBins,fYVarBins);
     }
+    else if (str.find("y_labels=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"y_labels=");
+      Config::SetupBinLabels(str,fYLabels);
+    }
     else 
     {
       std::cerr << "Aye... your plot config is messed up, try again!" << std::endl;
@@ -251,20 +265,45 @@ void TreePlotter2D::SetupHists()
 {
   TreePlotter2D::ReadPlotConfig();
 
-  HistMap[QCD]   = SetupHist(Config::HistNameMap[QCD]);
-  HistMap[GJets] = SetupHist(Config::HistNameMap[GJets]);
-  HistMap[GMSB]  = SetupHist(Config::HistNameMap[GMSB]);
-  HistMap[Data]  = SetupHist(Config::HistNameMap[Data]);
+  // instantiate each histogram
+  for (const auto & HistNamePair : Config::HistNameMap)
+  {
+    HistMap[HistNamePair.first] = SetupHist(HistNamePair.second);
+  }
 }
 
 TH2F * TreePlotter2D::SetupHist(const TString & name)
 {
+  // get the bins in a struct for ROOT
   const Double_t * xbins = &fXBins[0];
   const Double_t * ybins = &fYBins[0];
 
+  // initialize new histogram
   TH2F * hist = new TH2F(name.Data(),fTitle.Data(),fXBins.size()-1,xbins,fYBins.size()-1,ybins);
+
+  // set axis titles
   hist->GetXaxis()->SetTitle(fXTitle.Data());
   hist->GetYaxis()->SetTitle(fYTitle.Data());
+
+  // set x-axis labels only if read in
+  if (fXLabels.size() > 0)
+  {
+    for (Int_t ibin = 1; ibin <= hist->GetXaxis()->GetNbins(); ibin++)
+    {
+      hist->GetXaxis()->SetBinLabel(ibin,fXLabels[ibin-1].Data());
+    }
+  }
+
+  // set y-axis labels only if read in
+  if (fYLabels.size() > 0)
+  {
+    for (Int_t ibin = 1; ibin <= hist->GetYaxis()->GetNbins(); ibin++)
+    {
+      hist->GetYaxis()->SetBinLabel(ibin,fYLabels[ibin-1].Data());
+    }
+  }
+
+  // still do not understand why ROOT does not do this by default...
   hist->Sumw2();
   
   return hist;

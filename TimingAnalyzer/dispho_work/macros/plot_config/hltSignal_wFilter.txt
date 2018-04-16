@@ -1,0 +1,10 @@
+plot_title=Trigger Matching
+
+x_title=Trigger Matching
+x_scale=LIN
+x_var=( ((hltSignal==0&&phoisHLT_0==0)*0) + ((hltSignal==0&&phoisHLT_0==1)*1) + ((hltSignal==1&&phoisHLT_0==0)*2) + ((hltSignal==1&&phoisHLT_0==1)*3) )
+x_bins=CONSTANT 4 0 4 
+x_labels=!HLT&&!Pho0 !HLT&&Pho0 HLT&&!Pho0 HLT&&Pho0
+
+y_title=Events
+y_scale=LOG

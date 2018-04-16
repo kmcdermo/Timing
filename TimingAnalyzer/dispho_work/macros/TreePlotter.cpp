@@ -237,12 +237,14 @@ void TreePlotter::MakeLegend()
 {
   std::cout << "Creating Legend..." << std::endl;
 
+  // instantiate the legend
   Legend = new TLegend(0.682,0.7,0.825,0.92);
   Legend->SetName("Legend");
   //  Legend->SetNColumns(2);
   Legend->SetBorderSize(1);
   Legend->SetLineColor(kBlack);
 
+  // add all bkgd samples and data to legend
   for (const auto & HistPair : HistMap)
   {
     const auto & sample = HistPair.first;
@@ -253,6 +255,8 @@ void TreePlotter::MakeLegend()
 
     Legend->AddEntry(HistPair.second,Config::LabelMap[sample].Data(),fillType.Data());
   }
+
+  // add the mc unc. to legend
   Legend->AddEntry(BkgdHist,"MC Unc.","f");
 
   // save to output file
@@ -422,6 +426,9 @@ void TreePlotter::MakeConfigPave()
     fConfigPave->AddText(str.c_str());
   }
 
+  // dump with PD
+  fConfigPave->AddText(Form("Primary Dataset: %s",fPDName.Data()));
+
   // dump scaling choices
   fConfigPave->AddText(fScaleArea?"Scale MC to data area":"Scale MC to luminosity");
 
@@ -470,6 +477,7 @@ void TreePlotter::ScaleToArea()
 {
   const Float_t area_sf = HistMap[Data]->Integral()/BkgdHist->Integral();
 
+  // first scale each individual sample
   for (auto & HistPair : HistMap)
   {
     if (Config::GroupMap[HistPair.first] == isBkgd)
@@ -477,6 +485,8 @@ void TreePlotter::ScaleToArea()
       HistPair.second->Scale(area_sf);
     }
   }
+
+  // lastly, scale combo bkgd hist
   BkgdHist->Scale(area_sf);
 }
 
@@ -546,6 +556,11 @@ void TreePlotter::ReadPlotConfig()
       str = Config::RemoveDelim(str,"x_bins=");
       Config::SetupBins(str,fXBins,fXVarBins);
     }
+    else if (str.find("x_labels=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"x_labels=");
+      Config::SetupBinLabels(str,fXLabels);
+    }
     else if (str.find("y_title=") != std::string::npos)
     {
       fYTitle = Config::RemoveDelim(str,"y_title=");
@@ -564,13 +579,16 @@ void TreePlotter::ReadPlotConfig()
 
 void TreePlotter::SetupHists()
 {
+  // read in configuration file
   TreePlotter::ReadPlotConfig();
   
+  // instantiate each histogram
   for (const auto & HistNamePair : Config::HistNameMap)
   {
     HistMap[HistNamePair.first] = SetupHist(HistNamePair.second);
   }
   
+  // set colors for each histogram
   for (auto & HistPair : HistMap)
   {
     const auto & sample = HistPair.first;
@@ -592,11 +610,26 @@ void TreePlotter::SetupHists()
 
 TH1F * TreePlotter::SetupHist(const TString & name)
 {
+  // get the bins in a struct for ROOT
   const Double_t * xbins = &fXBins[0];
-
+  
+  // initialize new histogram
   TH1F * hist = new TH1F(name.Data(),fTitle.Data(),fXBins.size()-1,xbins);
+
+  // set axis titles
   hist->GetXaxis()->SetTitle(fXTitle.Data());
   hist->GetYaxis()->SetTitle(fYTitle.Data());
+
+  // set axis labels only if read in
+  if (fXLabels.size() > 0)
+  {
+    for (Int_t ibin = 1; ibin <= hist->GetXaxis()->GetNbins(); ibin++)
+    {
+      hist->GetXaxis()->SetBinLabel(ibin,fXLabels[ibin-1].Data());
+    }
+  }
+
+  // still do not understand why ROOT does not do this by default...
   hist->Sumw2();
   
   return hist;

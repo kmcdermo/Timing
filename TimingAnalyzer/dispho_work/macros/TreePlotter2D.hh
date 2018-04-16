@@ -61,10 +61,12 @@ private:
   TString fXVar;
   std::vector<Double_t> fXBins;
   Bool_t fXVarBins;
+  std::vector<TString> fXLabels;
   TString fYTitle;
   TString fYVar;
   std::vector<Double_t> fYBins;
   Bool_t fYVarBins;
+  std::vector<TString> fYLabels;
 
   // Style
   TStyle * fTDRStyle;

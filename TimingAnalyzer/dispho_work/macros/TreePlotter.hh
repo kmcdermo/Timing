@@ -79,6 +79,7 @@ private:
   TString fXVar;
   std::vector<Double_t> fXBins;
   Bool_t fXVarBins;
+  std::vector<TString> fXLabels;
   TString fYTitle;
   Bool_t  fIsLogY;
 
