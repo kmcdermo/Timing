@@ -5,6 +5,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
+#include "TEntryList.h"
 #include "TList.h"
 #include "TPaveText.h"
 
@@ -29,9 +30,10 @@ public:
   // Main call
   void MakeSkim();
 
-  // Subroutines for plotting
-  void MakeSkimFromTrees();
-  void MergeSkims();
+  // Subroutines for skimming
+  void MakeListFromTrees();
+  void MakeMergedSkims();
+  void MakeSkimsFromEntryLists(std::map<TString,TTree*> & TreeMap, TList *& TreeList, const SampleType & sample);
   
   // Meta data and extra info
   void MakeConfigPave();
@@ -44,8 +46,7 @@ private:
 
   // Output
   TFile * fOutFile;
-  std::map<SampleType,TList*> ListMap;
-  std::map<TString,TTree*> TreeMap;
+  std::map<TString,TEntryList*> ListMap;
   TPaveText * fConfigPave;
 };
 
