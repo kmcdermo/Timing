@@ -127,6 +127,7 @@ void FastSkimmer::SetupConfig()
 {
   Config::SetupPrimaryDataset(fPDName);
   Config::SetupSamples();
+  Config::SetupGroups();
   Config::SetupTreeNames();
   Config::SetupCuts(fCutConfig);
 }

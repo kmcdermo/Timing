@@ -63,6 +63,7 @@ void EntryLister::MakeListFromTrees()
 
     // Write out list
     fOutFile->cd();
+    list->SetTitle(listname.Data());
     list->Write(list->GetName(),TObject::kWriteDelete);
 
     // delete everything
@@ -101,5 +102,6 @@ void EntryLister::SetupConfig()
 {
   Config::SetupPrimaryDataset(fPDName);
   Config::SetupSamples();
+  Config::SetupGroups();
   Config::SetupCuts(fCutConfig);
 }
