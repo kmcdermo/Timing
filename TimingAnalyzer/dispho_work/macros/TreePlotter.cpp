@@ -3,7 +3,7 @@
 TreePlotter::TreePlotter(const TString & cutconfig, const TString & plotconfig, const TString & pdname, const Bool_t scalearea, const TString & outfiletext) 
   : fCutConfig(cutconfig), fPlotConfig(plotconfig), fPDName(pdname), fScaleArea(scalearea), fOutFileText(outfiletext)
 {
-  std::cout << "Initializing..." << std::endl;
+  std::cout << "Initializing TreePlotter..." << std::endl;
 
   ////////////////
   //            //
@@ -99,6 +99,8 @@ void TreePlotter::MakeHistFromTrees()
     // Make temp hist
     TString histname = Config::ReplaceSlashWithUnderscore(input);
     TH1F * hist = TreePlotter::SetupHist(Form("%s_Hist",histname.Data()));
+
+    std::cout << "Filling hist from tree..." << std::endl;
     
     // Fill from tree
     tree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(input,sample).Data()),"goff");

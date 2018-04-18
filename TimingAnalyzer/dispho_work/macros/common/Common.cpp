@@ -9,6 +9,7 @@ namespace Config
   TString                          PrimaryDataset;
   std::map<TString,SampleType>     SampleMap;
   std::map<SampleType,SampleGroup> GroupMap;
+  std::map<SampleType,TString>     TreeNameMap;
   std::map<SampleType,TString>     HistNameMap;
   std::map<SampleType,Color_t>     ColorMap;
   std::map<SampleType,TString>     LabelMap;
@@ -65,6 +66,16 @@ namespace Config
     GroupMap[DiPho] = isBkgd;
     GroupMap[GMSB]  = isSignal;
     GroupMap[Data]  = isData;
+  }
+
+  void SetupTreeNames()
+  {
+    TreeNameMap[QCD]   = "QCD_Tree";
+    TreeNameMap[GJets] = "GJets_Tree";
+    TreeNameMap[DYLL]  = "DYLL_Tree";
+    TreeNameMap[DiPho] = "DiPho_Tree";
+    TreeNameMap[GMSB]  = "GMSB_Tree";
+    TreeNameMap[Data]  = "Data_Tree";
   }
 
   void SetupHistNames()

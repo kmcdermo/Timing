@@ -49,6 +49,7 @@ namespace Config
   extern TString                          PrimaryDataset;
   extern std::map<TString,SampleType>     SampleMap;
   extern std::map<SampleType,SampleGroup> GroupMap;
+  extern std::map<SampleType,TString>     TreeNameMap;
   extern std::map<SampleType,TString>     HistNameMap;
   extern std::map<SampleType,Color_t>     ColorMap;
   extern std::map<SampleType,TString>     LabelMap;
@@ -58,6 +59,7 @@ namespace Config
   void SetupPrimaryDataset(const TString & pdname);
   void SetupSamples();
   void SetupGroups();
+  void SetupTreeNames();
   void SetupHistNames();
   void SetupColors();
   void SetupLabels();
