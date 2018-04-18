@@ -2,8 +2,8 @@
 #include "common/Common.cpp+"
 #include "FastSkimmer.cpp+"
 
-void runFastSkimmer(const TString & cutconfig, const TString & pdname)
+void runFastSkimmer(const TString & cutconfig, const TString & pdname, const TString outfiletext)
 {
-  FastSkimmer skimmer(cutconfig,pdname);
+  FastSkimmer skimmer(cutconfig,pdname,outfiletext);
   skimmer.MakeSkim();
 }

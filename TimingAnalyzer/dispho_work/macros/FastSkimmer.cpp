@@ -60,10 +60,11 @@ void FastSkimmer::MakeSkimFromTrees()
     std::cout << "Skimming into a smaller tree..." << std::endl;
 
     // Fill from tree into smaller tree
+    fOutFile->cd();
     TreeMap[input] = tree->CopyTree(Form("%s",Config::CutMap[sample].Data()));
     
     // Add tree to list
-    ListMap[sample]->Add(TreeMap[subsample]);
+    ListMap[sample]->Add(TreeMap[input]);
 
     delete tree;
     delete file;
@@ -78,6 +79,7 @@ void FastSkimmer::MergeSkims()
   for (auto & ListPair : ListMap)
   {
     // merge trees for all subsamples in sample
+    fOutFile->cd();
     TTree * outtree = TTree::MergeTrees(ListPair.second);
     outtree->SetName(Form("%s",Config::TreeNameMap[ListPair.first].Data()));
 
@@ -96,7 +98,7 @@ void FastSkimmer::MergeSkims()
   }
 }
 
-void TreePlotter::MakeConfigPave()
+void FastSkimmer::MakeConfigPave()
 {
   std::cout << "Dumping config to a pave..." << std::endl;
 
