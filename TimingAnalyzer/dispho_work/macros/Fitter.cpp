@@ -228,6 +228,7 @@ void Fitter::DrawFit(RooRealVar *& var, const RDHMap & RooDHMap, RooAddPdf *& Mo
 
   // Draw 1D stuff
   RooPlot * frame = var->frame();
+  //  RooDHMap.at(Data)->reduce(RooFit::Cut(Form("%s",var->GetName())));
   RooDHMap.at(Data)->plotOn(frame);
   ModelPdf->plotOn(frame);
   frame->Draw();

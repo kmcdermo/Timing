@@ -36,6 +36,7 @@ public:
   ~TreePlotter();
 
   // Initialize
+  void SetupDefaultBools();
   void SetupConfig();
   void SetupHists();
 
@@ -44,6 +45,7 @@ public:
 
   // Subroutines for plotting
   void MakeHistFromTrees();
+  void MakeDataOutput();
   void MakeBkgdOutput();
   void MakeRatioOutput();
   void MakeLegend();
@@ -79,6 +81,10 @@ private:
   TString fXVar;
   std::vector<Double_t> fXBins;
   Bool_t fXVarBins;
+  Bool_t fXBlindedLow;
+  Float_t fXLowCut;
+  Bool_t fXBlindedUp;
+  Float_t fXUpCut;
   std::vector<TString> fXLabels;
   TString fYTitle;
   Bool_t  fIsLogY;
@@ -89,6 +95,7 @@ private:
   // Output
   TFile * fOutFile;
   std::map<SampleType,TH1F*> HistMap;
+  TH1F * DataHist;
   TH1F * BkgdHist;
   THStack * BkgdStack;
   TH1F * RatioHist;

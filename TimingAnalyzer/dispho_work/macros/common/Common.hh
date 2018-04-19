@@ -17,6 +17,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cstdlib>
 
 // Sample Enums
 enum SampleType  {Data, GMSB, HVDS, QCD, GJets, DYLL, DiPho, ToyMC};
@@ -68,6 +69,7 @@ namespace Config
   // Setup hists
   void SetupBins(std::string & str, std::vector<Double_t> & bins, Bool_t & var_bins);
   void SetupBinLabels(std::string & str, std::vector<TString> & binlabels);
+  void SetupBlinding(std::string & str, Float_t & cut, Bool_t & isblind);
   void SetupScale(const std::string & str, Bool_t & scale);
 
   // skim input

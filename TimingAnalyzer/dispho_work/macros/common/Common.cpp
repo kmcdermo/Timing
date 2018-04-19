@@ -219,6 +219,12 @@ namespace Config
     while (ss >> binlabel) binlabels.push_back(binlabel);
   }
 
+  void SetupBlinding(std::string & str, Float_t & cut, Bool_t & isblind)
+  {
+    isblind = true;
+    cut = std::atof(str.c_str());
+  } 
+
   void SetupScale(const std::string & str, Bool_t & scale)
   {
     if      (str.find("LOG") != std::string::npos)

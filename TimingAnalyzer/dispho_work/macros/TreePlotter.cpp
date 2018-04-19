@@ -17,6 +17,7 @@ TreePlotter::TreePlotter(const TString & cutconfig, const TString & plotconfig, 
   gROOT->ForceStyle();
 
   // setup hists
+  TreePlotter::SetupDefaultBools();
   TreePlotter::SetupConfig();
   TreePlotter::SetupHists();
 
@@ -38,6 +39,7 @@ TreePlotter::~TreePlotter()
   delete RatioHist;
   delete BkgdStack;
   delete BkgdHist;
+  delete DataHist;
 
   delete fOutFile;
   for (auto & HistPair : HistMap) delete HistPair.second;
@@ -48,6 +50,9 @@ void TreePlotter::MakePlot()
 {
   // Fill Hists from TTrees
   TreePlotter::MakeHistFromTrees();
+
+  // Make Data Output
+  TreePlotter::MakeDataOutput();
 
   // Make Bkgd Output
   TreePlotter::MakeBkgdOutput();
@@ -143,6 +148,31 @@ void TreePlotter::MakeHistFromTrees()
   }
 }
 
+void TreePlotter::MakeDataOutput()
+{
+  std::cout << "Making Data Output..." << std::endl;
+
+  // Make new data hist in case we are blinded
+  DataHist = TreePlotter::SetupHist("Data_Hist_Plotted");
+
+  for (auto ibin = 0; ibin <= DataHist->GetNbinsX()+1; ibin++) 
+  {
+    const auto lowEdge = DataHist->GetXaxis()->GetBinLowEdge(ibin);
+    const auto upEdge  = DataHist->GetXaxis()->GetBinUpEdge (ibin);
+    
+    if (fXBlindedLow && upEdge  <= fXLowCut) continue; 
+    if (fXBlindedUp  && lowEdge >= fXUpCut ) continue; 
+    
+    const auto content = HistMap[Data]->GetBinContent(ibin);
+    const auto error   = HistMap[Data]->GetBinError  (ibin);
+    
+    DataHist->SetBinContent(ibin,content);
+    DataHist->SetBinError  (ibin,error);
+  }
+
+  DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
+}
+
 void TreePlotter::MakeBkgdOutput()
 {
   std::cout << "Making Bkgd Output..." << std::endl;
@@ -197,7 +227,7 @@ void TreePlotter::MakeRatioOutput()
 
   // ratio value plot
   RatioHist = TreePlotter::SetupHist("Ratio_Hist");
-  RatioHist->Add(HistMap[Data]);
+  RatioHist->Add(DataHist);
   RatioHist->Divide(BkgdHist);  
   RatioHist->GetYaxis()->SetTitle("Data/MC");
   RatioHist->SetMinimum(-0.1); // Define Y ..
@@ -295,16 +325,16 @@ void TreePlotter::DrawUpperPad()
   fMinY = TreePlotter::GetHistMinimum();
   fMaxY = TreePlotter::GetHistMaximum();
 
-  HistMap[Data]->SetMinimum(fMinY);
-  HistMap[Data]->SetMaximum(fMaxY);
+  DataHist->SetMinimum(fMinY);
+  DataHist->SetMaximum(fMaxY);
   
   // now draw the plots for upper pad in absurd order because ROOT is dumb
-  HistMap[Data]->Draw("PE"); // draw first so labels appear
+  DataHist->Draw("PE"); // draw first so labels appear
 
   // Have to scale TDR style values by height of upper pad
-  HistMap[Data]->GetYaxis()->SetLabelSize  (Config::LabelSize / Config::height_up); 
-  HistMap[Data]->GetYaxis()->SetTitleSize  (Config::TitleSize / Config::height_up);
-  HistMap[Data]->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_up);
+  DataHist->GetYaxis()->SetLabelSize  (Config::LabelSize / Config::height_up); 
+  DataHist->GetYaxis()->SetTitleSize  (Config::TitleSize / Config::height_up);
+  DataHist->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_up);
   
   // Draw stack
   BkgdStack->Draw("HIST SAME"); 
@@ -317,7 +347,7 @@ void TreePlotter::DrawUpperPad()
   BkgdHist->Draw("E2 SAME");
 
   // Redraw data to make it appear again!
-  HistMap[Data]->Draw("PE SAME"); 
+  DataHist->Draw("PE SAME"); 
  
   // And lastly draw the legend
   Legend->Draw("SAME"); 
@@ -389,13 +419,13 @@ void TreePlotter::PrintCanvas(const Bool_t isLogy)
   // set min and max
   if (isLogy)
   {
-    HistMap[Data]->SetMinimum(fMinY/1.5);
-    HistMap[Data]->SetMaximum(fMaxY*1.5);
+    DataHist->SetMinimum(fMinY/1.5);
+    DataHist->SetMaximum(fMaxY*1.5);
   }
   else 
   {
-    HistMap[Data]->SetMinimum( fMinY > 0 ? fMinY/1.05 : fMinY*1.05 );
-    HistMap[Data]->SetMaximum( fMaxY > 0 ? fMaxY*1.05 : fMaxY/1.05 );      
+    DataHist->SetMinimum( fMinY > 0 ? fMinY/1.05 : fMinY*1.05 );
+    DataHist->SetMaximum( fMaxY > 0 ? fMaxY*1.05 : fMaxY/1.05 );      
   }
 
   // save canvas as png
@@ -465,8 +495,8 @@ void TreePlotter::DumpIntegrals()
 
   // Data third
   Double_t data_err = 0;
-  const Double_t data_int = HistMap[Data]->IntegralAndError(1,HistMap[Data]->GetXaxis()->GetNbins(),data_err,(fXVarBins?"width":""));
-  dumpfile << HistMap[Data]->GetName() << " : " << data_int << " +/- " << data_err << std::endl;
+  const Double_t data_int = DataHist->IntegralAndError(1,DataHist->GetXaxis()->GetNbins(),data_err,(fXVarBins?"width":""));
+  dumpfile << DataHist->GetName() << " : " << data_int << " +/- " << data_err << std::endl;
   dumpfile << "-------------------------------------" << std::endl;
 
   // Make ratio
@@ -477,7 +507,7 @@ void TreePlotter::DumpIntegrals()
 
 void TreePlotter::ScaleToArea()
 {
-  const Float_t area_sf = HistMap[Data]->Integral()/BkgdHist->Integral();
+  const Float_t area_sf = DataHist->Integral()/BkgdHist->Integral();
 
   // first scale each individual sample
   for (auto & HistPair : HistMap)
@@ -512,9 +542,18 @@ Float_t TreePlotter::GetHistMinimum()
 
 Float_t TreePlotter::GetHistMaximum()
 {
-  const Float_t datamax = HistMap[Data]->GetBinContent(HistMap[Data]->GetMaximumBin());
-  const Float_t bkgdmax = BkgdHist     ->GetBinContent(BkgdHist     ->GetMaximumBin());
+  const Float_t datamax = DataHist->GetBinContent(DataHist->GetMaximumBin());
+  const Float_t bkgdmax = BkgdHist->GetBinContent(BkgdHist->GetMaximumBin());
   return (datamax > bkgdmax ? datamax : bkgdmax);
+}
+
+void TreePlotter::SetupDefaultBools()
+{
+  fIsLogX      = false;
+  fXVarBins    = false;
+  fXBlindedLow = false;
+  fXBlindedUp  = false;
+  fIsLogY      = false;
 }
 
 void TreePlotter::SetupConfig()
@@ -562,6 +601,16 @@ void TreePlotter::ReadPlotConfig()
     {
       str = Config::RemoveDelim(str,"x_labels=");
       Config::SetupBinLabels(str,fXLabels);
+    }
+    else if (str.find("x_blindlow=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"x_blindlow=");
+      Config::SetupBlinding(str,fXLowCut,fXBlindedLow);
+    }
+    else if (str.find("x_blindup=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"x_blindup=");
+      Config::SetupBlinding(str,fXUpCut,fXBlindedUp);
     }
     else if (str.find("y_title=") != std::string::npos)
     {
