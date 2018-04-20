@@ -22,7 +22,6 @@ Fitter::Fitter(const TString & fitconfig, const TString & outfiletext)
   gROOT->ForceStyle();
 
   // init configuration, set minimizer
-  Fitter::SetupDefaultBools();
   Fitter::SetupConfig();
   Fitter::ReadInFitConfig();
   TVirtualFitter::SetDefaultFitter("Minuit2");
@@ -98,56 +97,6 @@ void Fitter::PrepareFits()
   Fitter::DeclareVars();
 }
 
-void Fitter::Project2DHistTo1D()
-{
-  for (auto & HistPair2D : HistMap2D)
-  {
-    const auto & sample = HistPair2D.first;
-    HistMapX[sample] = (TH1F*)HistPair2D.second->ProjectionX(Form("%s_projX",Config::HistNameMap[sample].Data()));
-    HistMapY[sample] = (TH1F*)HistPair2D.second->ProjectionY(Form("%s_projY",Config::HistNameMap[sample].Data()));
-  }
-}
-
-template <typename T>
-void Fitter::MakeFit(const T & HistMap, RDHMap & RooDHMap, RHPMap & RooHPdfMap, RRVMap & FracMap,
-		     RooAddPdf *& ModelPdf, RooWorkspace *& Workspace, const FitInfo & fitInfo)
-{
-  // Declare datasets with input histograms
-  Fitter::DeclareDatasets(HistMap,RooDHMap,fitInfo);
-
-  // Make pdfs from histograms
-  Fitter::MakeSamplePdfs(RooDHMap,RooHPdfMap,fitInfo);
-
-  // Declare fractions for pdfs
-  Fitter::DeclareFractions(RooHPdfMap,FracMap,fitInfo);
-
-  // Fit Model
-  Fitter::FitModel(ModelPdf,RooHPdfMap,FracMap,RooDHMap,fitInfo);
-
-  // Draw fit(s) in 1D
-  if (fitInfo.Fit_ == TwoD)
-  {
-    Fitter::DrawFit(fX,RooDHMap,ModelPdf,"xfit",fitInfo);
-    Fitter::DrawFit(fY,RooDHMap,ModelPdf,"yfit",fitInfo);
-  }
-  else if (fitInfo.Fit_ == X)
-  {
-    Fitter::DrawFit(fX,RooDHMap,ModelPdf,"fit",fitInfo);
-  }
-  else if (fitInfo.Fit_ == Y)
-  {
-    Fitter::DrawFit(fY,RooDHMap,ModelPdf,"fit",fitInfo);
-  }
-  else
-  {
-    std::cerr << "Not sure how, but you provided an incorrect enum for FitType! Exiting..." << std::endl;
-    exit(1);
-  }
-
-  // Save in a workspace
-  Fitter::ImportToWS(Workspace,ModelPdf,RooDHMap,fitInfo);
-}
-
 void Fitter::GetInputHists()
 {
   std::cout << "Getting input histograms..." << std::endl;
@@ -199,6 +148,14 @@ void Fitter::GetConstants()
   for (const auto & NPredPair : NPredMap) NPredTotal += NPredPair.second;
 }
 
+void Fitter::DeclareVars()
+{
+  std::cout << "Declaring RooFit variables..." << std::endl;
+
+  fX = new RooRealVar("x",HistMap2D[Data]->GetXaxis()->GetTitle(),fXmin,fXmax);
+  fY = new RooRealVar("y",HistMap2D[Data]->GetYaxis()->GetTitle(),fYmin,fYmax);
+}
+
 void Fitter::GetMinMax()
 {
   std::cout << "Getting min and max of x,y range..." << std::endl;
@@ -209,18 +166,62 @@ void Fitter::GetMinMax()
   fYmax = HistMap2D[Data]->GetYaxis()->GetBinUpEdge(HistMap2D[Data]->GetYaxis()->GetNbins());
 }
 
-void Fitter::DeclareVars()
+void Fitter::Project2DHistTo1D()
 {
-  std::cout << "Declaring RooFit variables..." << std::endl;
+  for (auto & HistPair2D : HistMap2D)
+  {
+    const auto & sample = HistPair2D.first;
+    HistMapX[sample] = (TH1F*)HistPair2D.second->ProjectionX(Form("%s_projX",Config::HistNameMap[sample].Data()));
+    HistMapY[sample] = (TH1F*)HistPair2D.second->ProjectionY(Form("%s_projY",Config::HistNameMap[sample].Data()));
+  }
+}
 
-  fX = new RooRealVar("x",HistMap2D[Data]->GetXaxis()->GetTitle(),fXmin,fXmax);
-  fY = new RooRealVar("y",HistMap2D[Data]->GetYaxis()->GetTitle(),fYmin,fYmax);
+template <typename T>
+void Fitter::MakeFit(const T & HistMap, RDHMap & RooDHMap, RHPMap & RooHPdfMap, RRVMap & FracMap,
+		     RooAddPdf *& ModelPdf, RooWorkspace *& Workspace, const FitInfo & fitInfo)
+{
+  std::cout << "Doing full chain of fit for: " << fitInfo.Text_.Data() << std::endl;
+
+  // Declare datasets with input histograms
+  Fitter::DeclareDatasets(HistMap,RooDHMap,fitInfo);
+
+  // Make pdfs from histograms
+  Fitter::MakeSamplePdfs(RooDHMap,RooHPdfMap,fitInfo);
+
+  // Declare fractions for pdfs
+  Fitter::DeclareFractions(RooHPdfMap,FracMap,fitInfo);
+
+  // Fit Model
+  Fitter::FitModel(ModelPdf,RooHPdfMap,FracMap,RooDHMap,fitInfo);
+
+  // Draw fit(s) in 1D
+  if (fitInfo.Fit_ == TwoD)
+  {
+    Fitter::DrawFit(fX,RooDHMap,ModelPdf,"xfit",fitInfo);
+    Fitter::DrawFit(fY,RooDHMap,ModelPdf,"yfit",fitInfo);
+  }
+  else if (fitInfo.Fit_ == X)
+  {
+    Fitter::DrawFit(fX,RooDHMap,ModelPdf,"fit",fitInfo);
+  }
+  else if (fitInfo.Fit_ == Y)
+  {
+    Fitter::DrawFit(fY,RooDHMap,ModelPdf,"fit",fitInfo);
+  }
+  else
+  {
+    std::cerr << "Not sure how, but you provided an incorrect enum for FitType! Exiting..." << std::endl;
+    exit(1);
+  }
+
+  // Save in a workspace
+  Fitter::ImportToWS(Workspace,ModelPdf,RooDHMap,fitInfo);
 }
 
 template <typename T>  
 void Fitter::DeclareDatasets(const T & HistMap, RDHMap & RooDHMap, const FitInfo & fitInfo)
 {
-  std::cout << "Setting datasets..." << std::endl;
+  std::cout << "Setting datasets for: " << fitInfo.Text_.Data() << std::endl;
   
   for (const auto & HistPair : HistMap)
   {
@@ -232,7 +233,7 @@ void Fitter::DeclareDatasets(const T & HistMap, RDHMap & RooDHMap, const FitInfo
 
 void Fitter::MakeSamplePdfs(const RDHMap & RooDHMap, RHPMap & RooHPdfMap, const FitInfo & fitInfo)
 {
-  std::cout << "Setting Pdfs..." << std::endl;
+  std::cout << "Setting Pdfs for: " << fitInfo.Text_.Data() << std::endl;
 
   for (const auto & RooDHPair : RooDHMap)
   {
@@ -246,7 +247,7 @@ void Fitter::MakeSamplePdfs(const RDHMap & RooDHMap, RHPMap & RooHPdfMap, const 
 
 void Fitter::DeclareFractions(const RHPMap & RooHPdfMap, RRVMap & FracMap, const FitInfo & fitInfo)
 {
-  std::cout << "Init fractions..." << std::endl;
+  std::cout << "Init fractions for: " << fitInfo.Text_.Data() << std::endl;
 
   for (const auto & RooHPdfPair : RooHPdfMap)
   {
@@ -260,7 +261,7 @@ void Fitter::DeclareFractions(const RHPMap & RooHPdfMap, RRVMap & FracMap, const
 
 void Fitter::FitModel(RooAddPdf *& ModelPdf, const RHPMap & RooHPdfMap, const RRVMap & FracMap, const RDHMap & RooDHMap, const FitInfo & fitInfo)
 {
-  std::cout << "Build and fit to model..." << std::endl;
+  std::cout << "Build and fit to model for: " << fitInfo.Text_.Data() << std::endl;
 
   const TString name = Form("modelpdf_%s",fitInfo.Text_.Data());
   ModelPdf = new RooAddPdf(Form("%s",name.Data()),Form("%s",name.Data()),RooArgList(*RooHPdfMap.at(GJets),*RooHPdfMap.at(QCD)),RooArgList(*FracMap.at(GJets),*FracMap.at(QCD)));
@@ -269,36 +270,35 @@ void Fitter::FitModel(RooAddPdf *& ModelPdf, const RHPMap & RooHPdfMap, const RR
 
 void Fitter::DrawFit(RooRealVar *& var, const RDHMap & RooDHMap, RooAddPdf *& ModelPdf, const TString & title, const FitInfo & fitInfo)
 {
-  std::cout << "Draw fits projected into 1D..." << std::endl;
+  std::cout << "Draw fits projected into 1D for: " << fitInfo.Text_.Data() << std::endl;
 
   // Get Canvas
   auto canv = new TCanvas();
   canv->cd();
   canv->SetLogy();
+  
+  // Draw 1D frame
+  auto frame = var->frame();
 
   // Blind the data!
   const TString varname = var->GetName();
-  if      (varname.EqualTo("x",TString::kExact))
+  if      (varname.EqualTo("x",TString::kExact)) RooDHMap.at(Data)->plotOn(frame,RooFit::Cut(Form("%s",fXCut.Data())));
+  else if (varname.EqualTo("y",TString::kExact)) RooDHMap.at(Data)->plotOn(frame,RooFit::Cut(Form("%s",fYCut.Data())));
+  else 
   {
-    if (fXBlindedLow) RooDHMap.at(Data)->reduce(RooFit::Cut(Form("x>%f",fXLowCut)));
-    if (fXBlindedUp ) RooDHMap.at(Data)->reduce(RooFit::Cut(Form("x<%f",fXUpCut)));
-  }
-  else if (varname.EqualTo("y",TString::kExact))
-  {
-    if (fYBlindedLow) RooDHMap.at(Data)->reduce(RooFit::Cut(Form("y>%f",fYLowCut)));
-    if (fYBlindedUp ) RooDHMap.at(Data)->reduce(RooFit::Cut(Form("y<%f",fYUpCut)));
-  }
-  else
-  {
-    std::cerr << "How did this happen?? Variable name is not one that is predefined... exiting..." << std::endl;
+    std::cerr << "How did this happen?? Specified a variable that is not predefined... exiting.." << std::endl;
     exit(1);
   }
-  
-  // Draw 1D stuff
-  auto frame = var->frame();
-  RooDHMap.at(Data)->plotOn(frame);
+
+  // Plot the fitted pdf
   ModelPdf->plotOn(frame);
+  
+  // make the rooplot nice
+  frame->SetMinimum(1e-2);
+  frame->SetMaximum(1e5);
   frame->Draw();
+
+  // make the canvas nice and save
   Config::CMSLumi(canv);
   canv->SaveAs(Form("%s_%s.png",title.Data(),fitInfo.Text_.Data()));
 
@@ -309,14 +309,15 @@ void Fitter::DrawFit(RooRealVar *& var, const RDHMap & RooDHMap, RooAddPdf *& Mo
 
 void Fitter::ImportToWS(RooWorkspace *& Workspace, RooAddPdf *& ModelPdf, const RDHMap & RooDHMap, const FitInfo & fitInfo)
 {
-  std::cout << "Make workspace..." << std::endl;
+  std::cout << "Make workspace for " << fitInfo.Text_.Data() << std::endl;
 
   Workspace = new RooWorkspace(Form("workspace_%s",fitInfo.Text_.Data()),Form("workspace_%s",fitInfo.Text_.Data()));
 
   Workspace->import(*ModelPdf);
   Workspace->import(*RooDHMap.at(Data));
 
-  Workspace->writeToFile(Form("%s.root",fOutFileText.Data()));
+  fOutFile->cd();
+  Workspace->Write(Workspace->GetName(),TObject::kWriteDelete);
 }
 
 void Fitter::MakeConfigPave()
@@ -339,15 +340,6 @@ void Fitter::MakeConfigPave()
   // save to output file
   fOutFile->cd();
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
-}
-
-
-void Fitter::SetupDefaultBools()
-{
-  fXBlindedLow = false;
-  fXBlindedUp  = false;
-  fYBlindedLow = false;
-  fYBlindedUp  = false;
 }
 
 void Fitter::SetupConfig()
@@ -381,25 +373,13 @@ void Fitter::ReadInFitConfig()
     {
       fPlotName = Config::RemoveDelim(str,"Plot=");
     }
-    else if (str.find("x_blindlow=") != std::string::npos)
+    else if (str.find("x_cut=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"x_blindlow=");
-      Config::SetupBlinding(str,fXLowCut,fXBlindedLow);
+      fXCut = Config::RemoveDelim(str,"x_cut=");
     }
-    else if (str.find("x_blindup=") != std::string::npos)
+    else if (str.find("y_cut=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"x_blindup=");
-      Config::SetupBlinding(str,fXUpCut,fXBlindedUp);
-    }
-    else if (str.find("y_blindlow=") != std::string::npos)
-    {
-      str = Config::RemoveDelim(str,"y_blindlow=");
-      Config::SetupBlinding(str,fYLowCut,fYBlindedLow);
-    }
-    else if (str.find("y_blindup=") != std::string::npos)
-    {
-      str = Config::RemoveDelim(str,"y_blindup=");
-      Config::SetupBlinding(str,fYUpCut,fYBlindedUp);
+      fYCut = Config::RemoveDelim(str,"y_cut=");
     }
     else 
     {

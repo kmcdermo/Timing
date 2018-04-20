@@ -61,7 +61,6 @@ public:
   ~Fitter();
 
   // Initialize
-  void SetupDefaultBools();
   void SetupConfig();
   void ReadInFitConfig();
 
@@ -135,15 +134,8 @@ private:
   Float_t fYmax;
 
   // Blinding
-  Bool_t fXBlindedLow;
-  Float_t fXLowCut;
-  Bool_t fXBlindedUp;
-  Float_t fXUpCut;
-
-  Bool_t fYBlindedLow;
-  Float_t fYLowCut;
-  Bool_t fYBlindedUp;
-  Float_t fYUpCut;
+  TString fXCut;
+  TString fYCut;
 
   // Roo vars
   RooRealVar * fX;
