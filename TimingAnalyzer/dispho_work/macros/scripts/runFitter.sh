@@ -1,18 +1,19 @@
 #!/bin/bash
 
-infilename=${1:-"met_vs_time.root"}
-outfilename=${2:-"fitresults.root"}
+fitconfig=${1:-"fit_config/standard.txt"}
+outfiletext=${2:-"fitresults"}
 dir=${3:-"fits"}
 
-root -b -q -l runFitter.C\(\"${infilename}\",\"${outfilename}\"\)
+root -b -q -l runFitter.C\(\"${fitconfig}\",\"${outfiletext}\"\)
 
-## copy out
-topdir=/afs/cern.ch/user/k/kmcdermo/www/dispho
-fulldir=${topdir}/${dir}
+## make out dirs
+topdir=/afs/cern.ch/user/k/kmcdermo/www
+fulldir=${topdir}/dispho/${dir}
 
+## make them readable
 mkdir -p ${fulldir}
 pushd ${topdir}
-./makereadable.sh ${dir}
+./makereadable.sh ${fulldir}
 popd
 
-cp xfit_2D.png yfit_2D.png fit_projX.png fit_projY.png ${outfilename} ${fulldir}
+cp xfit_2D.png yfit_2D.png fit_projX.png fit_projY.png ${outfiletext}.root ${fulldir}

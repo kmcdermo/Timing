@@ -5,8 +5,8 @@
 #include "TVirtualFitter.h"
 #include "RooPlot.h"
 
-Fitter::Fitter(const TString & infilename, const TString & outfilename) 
-  : fInFileName(infilename), fOutFileName(outfilename)
+Fitter::Fitter(const TString & fitconfig, const TString & outfiletext)
+  : fFitConfig(fitconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -22,19 +22,19 @@ Fitter::Fitter(const TString & infilename, const TString & outfilename)
   gROOT->ForceStyle();
 
   // init configuration, set minimizer
-  Fitter::InitConfig();
+  Fitter::SetupDefaultBools();
+  Fitter::SetupConfig();
+  Fitter::ReadInFitConfig();
   TVirtualFitter::SetDefaultFitter("Minuit2");
-
-  // get input root file
-  fInFile = TFile::Open(Form("%s",fInFileName.Data()));
-  Config::CheckValidFile(fInFile,fInFileName);
   
   // output root file for quick inspection
-  fOutFile = TFile::Open(Form("%s",fOutFileName.Data()),"RECREATE");
+  fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"RECREATE");
 }
 
 Fitter::~Fitter()
 {
+  delete fConfigPave;
+
   // 2D
   Fitter::Delete(HistMap2D,RooDHMap2D,RooHPdfMap2D,FracMap2D,ModelPdf2D,Workspace2D);
 
@@ -47,7 +47,15 @@ Fitter::~Fitter()
   delete fY;
   delete fX;
 
-  delete fInFile;
+  delete QCDHistMC_CR;
+  delete GJetsHistMC_CR;
+  delete QCDHistMC_SR;
+  delete GJetsHistMC_SR;
+  
+  delete SRFile;
+  delete QCDFile;
+  delete GJetsFile;
+
   delete fOutFile;
 }
 
@@ -70,12 +78,18 @@ void Fitter::MakeFits()
   // Do the fit in 1D -- Y
   FitInfo FitInfoY(RooArgList(*fY),"projY",Y);
   Fitter::MakeFit(HistMapY,RooDHMapY,RooHPdfMapY,FracMapY,ModelPdfY,WorkspaceY,FitInfoY);
+
+  // Save MetaData
+  Fitter::MakeConfigPave();
 }
 
 void Fitter::PrepareFits()
 {
   // Get the input 2D histograms
   Fitter::GetInputHists();
+
+  // Get constants as needed
+  Fitter::GetConstants();
 
   // Get mins and maxes
   Fitter::GetMinMax();
@@ -138,14 +152,52 @@ void Fitter::GetInputHists()
 {
   std::cout << "Getting input histograms..." << std::endl;
 
-  for (const auto & HistNamePair : Config::HistNameMap)
-  {
-    const auto & sample = HistNamePair.first;
-    const TString histname = HistNamePair.second;
-    HistMap2D[sample] = (TH2F*)fInFile->Get(Form("%s",histname.Data())); 
-    Config::CheckValidTH2F(HistMap2D[sample],histname,fInFileName);
-  }
+  // GJets CR
+  const TString gjetsfilename = Form("%s_%s.root",fPlotName.Data(),fGJetsFileBase.Data());
+  GJetsFile = TFile::Open(Form("%s",gjetsfilename.Data()));
+  Config::CheckValidFile(GJetsFile,gjetsfilename);
+
+  HistMap2D[GJets] = (TH2F*)GJetsFile->Get(Form("%s",Config::HistNameMap[Data].Data()));
+  GJetsHistMC_CR   = (TH2F*)GJetsFile->Get(Form("%s",Config::HistNameMap[GJets].Data()));
+  Config::CheckValidTH2F(HistMap2D[GJets],Config::HistNameMap[Data] ,gjetsfilename);
+  Config::CheckValidTH2F(GJetsHistMC_CR  ,Config::HistNameMap[GJets],gjetsfilename);
+
+  // QCD CR
+  const TString qcdfilename = Form("%s_%s.root",fPlotName.Data(),fQCDFileBase.Data());
+  QCDFile = TFile::Open(Form("%s",qcdfilename.Data()));
+  Config::CheckValidFile(QCDFile,qcdfilename);
+
+  HistMap2D[QCD] = (TH2F*)QCDFile->Get(Form("%s",Config::HistNameMap[Data].Data()));
+  QCDHistMC_CR   = (TH2F*)QCDFile->Get(Form("%s",Config::HistNameMap[QCD].Data()));
+  Config::CheckValidTH2F(HistMap2D[QCD],Config::HistNameMap[Data],qcdfilename);
+  Config::CheckValidTH2F(QCDHistMC_CR  ,Config::HistNameMap[QCD] ,qcdfilename);
+
+  // SR
+  const TString srfilename = Form("%s_%s.root",fPlotName.Data(),fSRFileBase.Data()); 
+  SRFile = TFile::Open(Form("%s",srfilename.Data()));
+  Config::CheckValidFile(QCDFile,qcdfilename);
+
+  HistMap2D[Data] = (TH2F*)SRFile->Get(Form("%s",Config::HistNameMap[Data].Data()));
+  HistMap2D[GMSB] = (TH2F*)SRFile->Get(Form("%s",Config::HistNameMap[GMSB].Data()));
+  GJetsHistMC_SR  = (TH2F*)SRFile->Get(Form("%s",Config::HistNameMap[GJets].Data()));
+  QCDHistMC_SR    = (TH2F*)SRFile->Get(Form("%s",Config::HistNameMap[QCD].Data()));
+  Config::CheckValidTH2F(HistMap2D[Data],Config::HistNameMap[Data] ,srfilename);
+  Config::CheckValidTH2F(HistMap2D[GMSB],Config::HistNameMap[GMSB] ,srfilename);
+  Config::CheckValidTH2F(GJetsHistMC_SR ,Config::HistNameMap[GJets],srfilename);
+  Config::CheckValidTH2F(QCDHistMC_SR   ,Config::HistNameMap[QCD]  ,srfilename);
 }  
+
+void Fitter::GetConstants()
+{
+  std::cout << "Getting integral counts..." << std::endl;
+
+  NPredMap[GJets] = HistMap2D[GJets]->Integral("widths")*GJetsHistMC_SR->Integral("widths")/GJetsHistMC_CR->Integral("widths");
+  NPredMap[QCD] = HistMap2D[QCD]->Integral("widths")*QCDHistMC_SR->Integral("widths")/QCDHistMC_CR->Integral("widths");
+  NPredMap[GMSB] = HistMap2D[GMSB]->Integral("widths");
+
+  NPredTotal = 0.f;
+  for (const auto & NPredPair : NPredMap) NPredTotal += NPredPair.second;
+}
 
 void Fitter::GetMinMax()
 {
@@ -186,7 +238,6 @@ void Fitter::MakeSamplePdfs(const RDHMap & RooDHMap, RHPMap & RooHPdfMap, const 
   {
     const auto & sample = RooDHPair.first;
     if (sample == Data) continue;
-    if (sample == GMSB) continue;
     
     const TString name = Form("%s_PDF_%s",Config::HistNameMap[sample].Data(),fitInfo.Text_.Data());
     RooHPdfMap[sample] = new RooHistPdf(Form("%s",name.Data()),Form("%s",name.Data()),fitInfo.ArgList_,*RooDHPair.second);
@@ -201,10 +252,9 @@ void Fitter::DeclareFractions(const RHPMap & RooHPdfMap, RRVMap & FracMap, const
   {
     const auto & sample = RooHPdfPair.first;
     if (sample == Data) continue;
-    if (sample == GMSB) continue;
     
     const TString name = Form("%s_frac_%s",Config::HistNameMap[sample].Data(),fitInfo.Text_.Data());
-    FracMap[sample] = new RooRealVar(Form("%s",name.Data()),Form("%s",name.Data()),0.5,0,1);
+    FracMap[sample] = new RooRealVar(Form("%s",name.Data()),Form("%s",name.Data()),NPredMap[sample]/NPredTotal,0,1);
   }
 }
 
@@ -222,13 +272,30 @@ void Fitter::DrawFit(RooRealVar *& var, const RDHMap & RooDHMap, RooAddPdf *& Mo
   std::cout << "Draw fits projected into 1D..." << std::endl;
 
   // Get Canvas
-  TCanvas * canv = new TCanvas();
+  auto canv = new TCanvas();
   canv->cd();
   canv->SetLogy();
 
+  // Blind the data!
+  const TString varname = var->GetName();
+  if      (varname.EqualTo("x",TString::kExact))
+  {
+    if (fXBlindedLow) RooDHMap.at(Data)->reduce(RooFit::Cut(Form("x>%f",fXLowCut)));
+    if (fXBlindedUp ) RooDHMap.at(Data)->reduce(RooFit::Cut(Form("x<%f",fXUpCut)));
+  }
+  else if (varname.EqualTo("y",TString::kExact))
+  {
+    if (fYBlindedLow) RooDHMap.at(Data)->reduce(RooFit::Cut(Form("y>%f",fYLowCut)));
+    if (fYBlindedUp ) RooDHMap.at(Data)->reduce(RooFit::Cut(Form("y<%f",fYUpCut)));
+  }
+  else
+  {
+    std::cerr << "How did this happen?? Variable name is not one that is predefined... exiting..." << std::endl;
+    exit(1);
+  }
+  
   // Draw 1D stuff
-  RooPlot * frame = var->frame();
-  //  RooDHMap.at(Data)->reduce(RooFit::Cut(Form("%s",var->GetName())));
+  auto frame = var->frame();
   RooDHMap.at(Data)->plotOn(frame);
   ModelPdf->plotOn(frame);
   frame->Draw();
@@ -249,12 +316,97 @@ void Fitter::ImportToWS(RooWorkspace *& Workspace, RooAddPdf *& ModelPdf, const 
   Workspace->import(*ModelPdf);
   Workspace->import(*RooDHMap.at(Data));
 
-  Workspace->writeToFile(fOutFileName.Data());
+  Workspace->writeToFile(Form("%s.root",fOutFileText.Data()));
 }
 
-void Fitter::InitConfig()
+void Fitter::MakeConfigPave()
 {
+  std::cout << "Dumping config to a pave..." << std::endl;
+
+  // create the pave
+  fConfigPave = new TPaveText();
+  fConfigPave->SetName("Config");
+  std::string str; // tmp string
+  
+  // fit config
+  fConfigPave->AddText("Fit Config");
+  std::ifstream cutfile(Form("%s",fFitConfig.Data()),std::ios::in);
+  while (std::getline(cutfile,str))
+  {
+    fConfigPave->AddText(str.c_str());
+  }
+
+  // save to output file
+  fOutFile->cd();
+  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+}
+
+
+void Fitter::SetupDefaultBools()
+{
+  fXBlindedLow = false;
+  fXBlindedUp  = false;
+  fYBlindedLow = false;
+  fYBlindedUp  = false;
+}
+
+void Fitter::SetupConfig()
+{
+  Config::SetupGroups();
   Config::SetupHistNames();
+}
+
+void Fitter::ReadInFitConfig()
+{
+  std::cout << "Reading fit config..." << std::endl;
+
+  std::ifstream infile(Form("%s",fFitConfig.Data()),std::ios::in);
+  std::string str;
+  while (std::getline(infile,str))
+  {
+    if (str == "") continue;
+    else if (str.find("CR_GJets_In=") != std::string::npos)
+    {
+      fGJetsFileBase = Config::RemoveDelim(str,"CR_GJets_In=");
+    }
+    else if (str.find("CR_QCD_In=") != std::string::npos)
+    {
+      fQCDFileBase = Config::RemoveDelim(str,"CR_QCD_In=");
+    }
+    else if (str.find("SR_In=") != std::string::npos)
+    {
+      fSRFileBase = Config::RemoveDelim(str,"SR_In=");
+    }
+    else if (str.find("Plot=") != std::string::npos)
+    {
+      fPlotName = Config::RemoveDelim(str,"Plot=");
+    }
+    else if (str.find("x_blindlow=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"x_blindlow=");
+      Config::SetupBlinding(str,fXLowCut,fXBlindedLow);
+    }
+    else if (str.find("x_blindup=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"x_blindup=");
+      Config::SetupBlinding(str,fXUpCut,fXBlindedUp);
+    }
+    else if (str.find("y_blindlow=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"y_blindlow=");
+      Config::SetupBlinding(str,fYLowCut,fYBlindedLow);
+    }
+    else if (str.find("y_blindup=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"y_blindup=");
+      Config::SetupBlinding(str,fYUpCut,fYBlindedUp);
+    }
+    else 
+    {
+      std::cerr << "Aye... your fit config is messed up, try again! Offending line: " << str.c_str() << std::endl;
+      exit(1);
+    }
+  }
 }
 
 template <typename T>

@@ -26,7 +26,7 @@
 class TreePlotter2D
 {
 public:
-  TreePlotter2D(const TString & cutconfig, const TString & plotconfig, const TString & pdname, const TString & outfilename);
+  TreePlotter2D(const TString & cutconfig, const TString & plotconfig, const TString & pdname, const TString & outfiletext);
   ~TreePlotter2D();
 
   // Initialize
@@ -53,7 +53,7 @@ private:
   const TString fCutConfig;
   const TString fPlotConfig;
   const TString fPDName;
-  const TString fOutFileName;
+  const TString fOutFileText;
 
   // plot vars
   TString fTitle;

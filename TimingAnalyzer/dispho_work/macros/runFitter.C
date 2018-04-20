@@ -2,8 +2,8 @@
 #include "common/Common.cpp+"
 #include "Fitter.cpp+"
 
-void runFitter(const TString & infilename, const TString & outfilename)
+void runFitter(const TString & fitconfig, const TString & outfiletext)
 {
-  Fitter fitter(infilename,outfilename);
+  Fitter fitter(fitconfig,outfiletext);
   fitter.MakeFits();
 }

@@ -1,7 +1,7 @@
 #include "TreePlotter2D.hh"
 
-TreePlotter2D::TreePlotter2D(const TString & cutconfig, const TString & plotconfig, const TString & pdname, const TString & outfilename) 
-  : fCutConfig(cutconfig), fPlotConfig(plotconfig), fPDName(pdname), fOutFileName(outfilename)
+TreePlotter2D::TreePlotter2D(const TString & cutconfig, const TString & plotconfig, const TString & pdname, const TString & outfiletext) 
+  : fCutConfig(cutconfig), fPlotConfig(plotconfig), fPDName(pdname), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -21,7 +21,7 @@ TreePlotter2D::TreePlotter2D(const TString & cutconfig, const TString & plotconf
   TreePlotter2D::SetupHists();
 
   // output root file
-  fOutFile = TFile::Open(Form("%s",fOutFileName.Data()),"UPDATE");
+  fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
 }
 
 TreePlotter2D::~TreePlotter2D()
@@ -200,6 +200,7 @@ void TreePlotter2D::SetupConfig()
 {
   Config::SetupPrimaryDataset(fPDName);
   Config::SetupSamples();
+  Config::SetupGroups();
   Config::SetupHistNames();
   Config::SetupCuts(fCutConfig);
 }

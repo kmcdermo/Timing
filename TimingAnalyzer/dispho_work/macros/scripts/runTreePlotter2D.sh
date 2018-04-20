@@ -3,18 +3,20 @@
 cutconfig=${1:-"cut_config/signal_blinded.txt"}
 plotconfig=${2:-"plot_config/met_vs_time.txt"}
 pdname=${3:-"SinglePhoton"}
-outfilename=${4:-"met_vs_time.root"}
+outfiletext=${4:-"met_vs_time.root"}
 dir=${5:-"plots2D"}
 
-root -l -b -q runTreePlotter2D.C\(\"${cutconfig}\",\"${plotconfig}\",\"${pdname}\",\"${outfilename}\"\)
+root -l -b -q runTreePlotter2D.C\(\"${cutconfig}\",\"${plotconfig}\",\"${pdname}\",\"${outfiletext}\"\)
 
-## copy out
-topdir=/afs/cern.ch/user/k/kmcdermo/www/dispho
-fulldir=${topdir}/${dir}
+## make out dirs
+topdir=/afs/cern.ch/user/k/kmcdermo/www
+fulldir=${topdir}/dispho/${dir}
 
+## make them readable
 mkdir -p ${fulldir}
 pushd ${topdir}
-./makereadable.sh ${dir}
+./makereadable.sh ${fulldir}
 popd
 
-cp ${outfilename} ${fulldir}
+## copy everything
+cp ${outfiletext}.root ${fulldir}

@@ -10,6 +10,7 @@
 #include "TH1F.h"
 #include "TString.h"
 #include "TCanvas.h"
+#include "TPaveText.h"
 
 // RooFit includes
 #include "RooFit.h"
@@ -34,6 +35,7 @@
 // Typedefs needed
 typedef std::map<SampleType,TH2F*>        TH2Map;
 typedef std::map<SampleType,TH1F*>        TH1Map;
+typedef std::map<SampleType,Float_t>      FltMap;
 
 typedef std::map<SampleType,RooDataHist*> RDHMap;
 typedef std::map<SampleType,RooHistPdf*>  RHPMap;
@@ -55,11 +57,13 @@ struct FitInfo
 class Fitter
 {
 public:
-  Fitter(const TString & infilename, const TString & outfilename);
+  Fitter(const TString & fitconfig, const TString & outfiletext);
   ~Fitter();
 
   // Initialize
-  void InitConfig();
+  void SetupDefaultBools();
+  void SetupConfig();
+  void ReadInFitConfig();
 
   // Deleting
   template <typename T>
@@ -76,8 +80,12 @@ public:
   void MakeFit(const T & HistMap, RDHMap & RooDHMap, RHPMap & RooHPdfMap, RRVMap & FracMap,
 	       RooAddPdf *& ModelPdf, RooWorkspace *& Workspace, const FitInfo & fitInfo);
 
+  // meta data
+  void MakeConfigPave();
+
   // Prep for fits
   void GetInputHists();
+  void GetConstants();
   void GetMinMax();
   void DeclareVars();
 
@@ -92,12 +100,30 @@ public:
 
 private:
   // settings
-  const TString fInFileName;
-  const TString fOutFileName;
+  const TString fFitConfig;
+  const TString fOutFileText;
 
-  // Input
-  TFile * fInFile;
-  TH2Map  HistMap2D;
+  // Input files
+  TFile * GJetsFile;
+  TFile * QCDFile;
+  TFile * SRFile;
+
+  // Input Hists
+  TH2Map HistMap2D;
+  TH2F * GJetsHistMC_CR;
+  TH2F * GJetsHistMC_SR;
+  TH2F * QCDHistMC_CR;
+  TH2F * QCDHistMC_SR;
+
+  // Input names
+  TString fPlotName;
+  TString fGJetsFileBase;
+  TString fQCDFileBase;
+  TString fSRFileBase;
+
+  // Counts 
+  FltMap NPredMap; 
+  Float_t NPredTotal;
 
   // Style
   TStyle * fTDRStyle;
@@ -107,6 +133,17 @@ private:
   Float_t fXmax;
   Float_t fYmin;
   Float_t fYmax;
+
+  // Blinding
+  Bool_t fXBlindedLow;
+  Float_t fXLowCut;
+  Bool_t fXBlindedUp;
+  Float_t fXUpCut;
+
+  Bool_t fYBlindedLow;
+  Float_t fYLowCut;
+  Bool_t fYBlindedUp;
+  Float_t fYUpCut;
 
   // Roo vars
   RooRealVar * fX;
@@ -137,6 +174,7 @@ private:
 
   // Output
   TFile        * fOutFile;
+  TPaveText    * fConfigPave;
 };
 
 #endif
