@@ -1,0 +1,10 @@
+CR_GJets_In=control_gjets_deg_DoubleEG
+CR_QCD_In=control_qcd_SinglePhoton
+SR_In=signal_idT_hlt_nJet3pt30_ht400jetpt30_sumEtjetpt30phopt0_hltreco_SinglePhoton
+
+Range=0.5
+
+Plot=met_vs_time
+
+bkgd_only=1
+gen_data=1
