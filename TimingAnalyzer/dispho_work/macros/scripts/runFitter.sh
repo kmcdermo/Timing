@@ -16,4 +16,7 @@ pushd ${topdir}
 ./makereadable.sh ${fulldir}
 popd
 
-cp xfit_2D.png yfit_2D.png fit_projX.png fit_projY.png ${outfiletext}.root ${fulldir}
+echo "Copying to ${fulldir}"
+cp xfit_2D_lin.png yfit_2D_lin.png fit_projX_lin.png fit_projY_lin.png ${outfiletext}.root ${fulldir}
+cp xfit_2D_log.png yfit_2D_log.png fit_projX_log.png fit_projY_log.png ${fulldir}
+cp ${outfiletext}.root ${fulldir}
