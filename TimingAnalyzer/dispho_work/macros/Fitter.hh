@@ -18,6 +18,7 @@
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
 #include "RooAddPdf.h"
+#include "RooExtendPdf.h"
 #include "RooWorkspace.h"
 
 // STL includes
@@ -32,26 +33,28 @@
 // Common include
 #include "common/Common.hh"
 
-// Typedefs needed
-typedef std::map<SampleType,TH2F*>        TH2Map;
-typedef std::map<SampleType,TH1F*>        TH1Map;
-typedef std::map<SampleType,Float_t>      FltMap;
-
-typedef std::map<SampleType,RooDataHist*> RDHMap;
-typedef std::map<SampleType,RooHistPdf*>  RHPMap;
-typedef std::map<SampleType,RooRealVar*>  RRVMap;
-
 // Special enum for type of fit
 enum FitType {TwoD, X, Y};
 
 // Special struct for each fit
 struct FitInfo
 {
-  FitInfo(const RooArgList & ArgList, const TString & Text, const FitType & Fit)
-    : ArgList_(ArgList), Text_(Text), Fit_(Fit) {}
-  const RooArgList ArgList_;
-  const TString Text_;
-  const FitType Fit_;
+  FitInfo(const RooArgList & arglist, const TString & text, const FitType & fit)
+    : ArgList(arglist), Text(text), Fit(fit) {}
+
+  // input params
+  const RooArgList ArgList;
+  const TString Text;
+  const FitType Fit;
+
+  // PDF inputs/outputs
+  std::map<SampleType,RooDataHist*> DataHistMap;
+  std::map<SampleType,RooHistPdf*>  HistPdfMap;
+  RooAddPdf    * BkgdPdf;
+  RooExtendPdf * EBkgdPdf;
+  RooExtendPdf * ESignPdf;
+  RooAddPdf    * ModelPdf;
+  RooWorkspace * Workspace;
 };
 
 class Fitter
@@ -61,23 +64,21 @@ public:
   ~Fitter();
 
   // Initialize
+  void SetupDefaultBools();
   void SetupConfig();
   void ReadInFitConfig();
 
   // Deleting
-  template <typename T>
-  void Delete(T & HistMap, RDHMap & RooDHMap, RHPMap & RooHPdfMap, RRVMap & FracMap,
-	      RooAddPdf *& ModelPdf, RooWorkspace *& Workspace);
+  void DeleteFitInfo(FitInfo & fitInfo);
   template <typename T>
   void DeleteMap(T & Map);
 
   // Main calls
   void MakeFits();
   void PrepareFits();
-  void Project2DHistTo1D();
   template <typename T>
-  void MakeFit(const T & HistMap, RDHMap & RooDHMap, RHPMap & RooHPdfMap, RRVMap & FracMap,
-	       RooAddPdf *& ModelPdf, RooWorkspace *& Workspace, const FitInfo & fitInfo);
+  void MakeFit(const T & HistMap, FitInfo & fitInfo);
+  void Project2DHistTo1D();
 
   // meta data
   void MakeConfigPave();
@@ -90,29 +91,22 @@ public:
 
   // Subroutine for fitting
   template <typename T>
-  void DeclareDatasets(const T & HistMap, RDHMap & RooDHMap, const FitInfo & fitInfo);
-  void MakeSamplePdfs(const RDHMap & RooDHMap, RHPMap & RooHPdfMap, const FitInfo & fitInfo);
-  void DeclareFractions(const RHPMap & RooHPdfMap, RRVMap & FracMap, const FitInfo & fitInfo);
-  void FitModel(RooAddPdf *& ModelPdf, const RHPMap & RooHPdfMap, const RRVMap & FracMap, const RDHMap & RooDHmap, const FitInfo & fitInfo);
-  void DrawFit(RooRealVar *& var, const RDHMap & RooDHMap, RooAddPdf *& ModelPdf, const TString & title, const FitInfo & fitInfo);
-  void ImportToWS(RooWorkspace *& Workspace, RooAddPdf *& ModelPdf, const RDHMap & RooDHMap, const FitInfo & fitInfo);
+  void DeclareDatasets(const T & HistMap, FitInfo & fitInfo);
+  void MakeSamplePdfs(FitInfo & fitInfo);
+  void BuildModel(FitInfo & fitInfo);
+  void GenerateData(FitInfo & fitInfo);
+  void FitModel(FitInfo & fitInfo);
+  void DrawFit(RooRealVar *& var, const TString & title, const FitInfo & fitInfo);
+  void ImportToWS(FitInfo & fitInfo);
 
 private:
   // settings
   const TString fFitConfig;
   const TString fOutFileText;
 
-  // Input files
-  TFile * GJetsFile;
-  TFile * QCDFile;
-  TFile * SRFile;
-
-  // Input Hists
-  TH2Map HistMap2D;
-  TH2F * GJetsHistMC_CR;
-  TH2F * GJetsHistMC_SR;
-  TH2F * QCDHistMC_CR;
-  TH2F * QCDHistMC_SR;
+  // Bools
+  Bool_t fBkgdOnly;
+  Bool_t fGenData;
 
   // Input names
   TString fPlotName;
@@ -120,9 +114,26 @@ private:
   TString fQCDFileBase;
   TString fSRFileBase;
 
+  // Input files
+  TFile * fGJetsFile;
+  TFile * fQCDFile;
+  TFile * fSRFile;
+
+  // Input Hists
+  TH2F * fGJetsHistMC_CR;
+  TH2F * fGJetsHistMC_SR;
+  TH2F * fQCDHistMC_CR;
+  TH2F * fQCDHistMC_SR;
+  std::map<SampleType,TH2F*> fHistMap2D;
+  std::map<SampleType,TH1F*> fHistMapX;
+  std::map<SampleType,TH1F*> fHistMapY;
+
   // Counts 
-  FltMap NPredMap; 
-  Float_t NPredTotal;
+  Float_t fNBkgdTotal;
+  Float_t fNSignTotal;
+  std::map<SampleType,RooRealVar*> fFracMap; 
+  RooRealVar * fNPredBkgd;
+  RooRealVar * fNPredSign;
 
   // Style
   TStyle * fTDRStyle;
@@ -141,28 +152,8 @@ private:
   RooRealVar * fX;
   RooRealVar * fY;
 
-  // 2D Fit
-  RDHMap         RooDHMap2D;
-  RHPMap         RooHPdfMap2D;
-  RRVMap         FracMap2D;
-  RooAddPdf    * ModelPdf2D;
-  RooWorkspace * Workspace2D;
-
-  // 1D Fit X
-  TH1Map         HistMapX;
-  RDHMap         RooDHMapX;
-  RHPMap         RooHPdfMapX;
-  RRVMap         FracMapX;
-  RooAddPdf    * ModelPdfX;
-  RooWorkspace * WorkspaceX;
-
-  // 1D Fit Y
-  TH1Map         HistMapY;
-  RDHMap         RooDHMapY;
-  RHPMap         RooHPdfMapY;
-  RRVMap         FracMapY;
-  RooAddPdf    * ModelPdfY;
-  RooWorkspace * WorkspaceY;
+  // Percent range of variables
+  Float_t fInitRange;
 
   // Output
   TFile        * fOutFile;

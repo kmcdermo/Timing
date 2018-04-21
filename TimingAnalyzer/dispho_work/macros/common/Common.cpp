@@ -241,6 +241,23 @@ namespace Config
       exit(1);
     }
   }
+  
+  void SetupBool(const std::string & str, Bool_t & setting)
+  {
+    if      (str.find("1") != std::string::npos)
+    {
+      setting = true;
+    }
+    else if (str.find("0") != std::string::npos)
+    {
+      setting = false;
+    }
+    else 
+    {
+      std::cerr << "Aye, bool must be either 1 or 0! Exiting..." << std::endl;
+      exit(1);
+    }
+  }
 
   void CheckValidFile(const TFile * file, const TString & fname)
   {

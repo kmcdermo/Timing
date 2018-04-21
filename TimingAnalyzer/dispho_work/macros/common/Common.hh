@@ -71,6 +71,7 @@ namespace Config
   void SetupBinLabels(std::string & str, std::vector<TString> & binlabels);
   void SetupBlinding(std::string & str, Float_t & cut, Bool_t & isblind);
   void SetupScale(const std::string & str, Bool_t & scale);
+  void SetupBool(const std::string & str, Bool_t & setting);
 
   // skim input
   constexpr UInt_t nEvCheck = 10000;

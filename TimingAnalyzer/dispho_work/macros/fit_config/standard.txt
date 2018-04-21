@@ -1,6 +1,6 @@
-CR_GJets_In=control_gjets_deg_DoubleEG
+BCR_GJets_In=control_gjets_deg_DoubleEG
 CR_QCD_In=control_qcd_SinglePhoton
-SR_In=signal_idT_hlt_nJet3pt30_ht400jetpt30_sumEtjetpt30phopt0_hltreco_SinglePhoton
+S1;95;0cR_In=signal_idT_hlt_nJet3pt30_ht400jetpt30_sumEtjetpt30phopt0_hltreco_SinglePhoton
 
 Plot=met_vs_time
 x_cut=(x<3)
