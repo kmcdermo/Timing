@@ -281,21 +281,17 @@ void Fitter::BuildModel(FitInfo & fitInfo)
   // Declare strings for naming pdfs
   const TString bkgdname  = Form("bkgdpdf_%s",fitInfo.Text.Data());
   const TString ebkgdname = Form("ebkgdpdf_%s",fitInfo.Text.Data());
-  const TString signname  = Form("signpdf_%s",fitInfo.Text.Data());
   const TString esignname = Form("esignpdf_%s",fitInfo.Text.Data());
   const TString modelname = Form("modelpdf_%s",fitInfo.Text.Data());
 
-  // get members of fitInfo
-  const auto & pdfmap = fitInfo.HistPdfMap;
-
   // Build Bkgd-Only Pdfs first
-  fitInfo.BkgdPdf = new RooAddPdf(Form("%s",bkgdname.Data()),Form("%s",bkgdname.Data()),RooArgList(*pdfmap.at(GJets),*pdfmap.at(QCD)),RooArgList(*fFracMap.at(GJets),*fFracMap.at(QCD)));
-  fitInfo.EBkgdPdf = new RooExtendPdf(Form("%s",bkgdname.Data()),Form("%s",bkgdname.Data()),*fitInfo.BkgdPdf,*fNPredBkgd);
+  fitInfo.BkgdPdf = new RooAddPdf(Form("%s",bkgdname.Data()),Form("%s",bkgdname.Data()),RooArgList(*fitInfo.HistPdfMap.at(GJets),*fitInfo.HistPdfMap.at(QCD)),RooArgList(*fFracMap.at(GJets),*fFracMap.at(QCD)));
+  fitInfo.EBkgdPdf = new RooExtendPdf(Form("%s",ebkgdname.Data()),Form("%s",ebkgdname.Data()),*fitInfo.BkgdPdf,*fNPredBkgd);
 
   // use signal?
   if (!fBkgdOnly)
   {
-    fitInfo.ESignPdf = new RooExtendPdf(Form("%s",signname.Data()),Form("%s",signname.Data()),*pdfmap.at(GMSB),*fNPredSign);
+    fitInfo.ESignPdf = new RooExtendPdf(Form("%s",esignname.Data()),Form("%s",esignname.Data()),*fitInfo.HistPdfMap.at(GMSB),*fNPredSign);
     fitInfo.ModelPdf = new RooAddPdf(Form("%s",modelname.Data()),Form("%s",modelname.Data()),RooArgList(*fitInfo.EBkgdPdf,*fitInfo.ESignPdf));
   }
   else
@@ -323,15 +319,14 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   // Get Canvas
   auto canv = new TCanvas();
   canv->cd();
-  canv->SetLogy();
   
   // Draw 1D frame
-  auto frame = var->frame();
+  auto plot = var->frame();
 
   // Blind the data!
   const TString varname = var->GetName();
-  if      (varname.EqualTo("x",TString::kExact)) fitInfo.DataHistMap.at(Data)->plotOn(frame,RooFit::Cut(Form("%s",fXCut.Data())));
-  else if (varname.EqualTo("y",TString::kExact)) fitInfo.DataHistMap.at(Data)->plotOn(frame,RooFit::Cut(Form("%s",fYCut.Data())));
+  if      (varname.EqualTo("x",TString::kExact)) fitInfo.DataHistMap.at(Data)->plotOn(plot,RooFit::Cut(Form("%s",fXCut.Data())));
+  else if (varname.EqualTo("y",TString::kExact)) fitInfo.DataHistMap.at(Data)->plotOn(plot,RooFit::Cut(Form("%s",fYCut.Data())));
   else 
   {
     std::cerr << "How did this happen?? Specified a variable that is not predefined... exiting.." << std::endl;
@@ -339,15 +334,29 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   }
 
   // Plot the fitted pdf
-  fitInfo.ModelPdf->plotOn(frame);
-  frame->Draw();
+  fitInfo.ModelPdf->plotOn(plot);
+  plot->Draw();
 
-  // make the canvas nice and save
+  // get min/max
+  const Float_t min = plot->GetMinimum();
+  const Float_t max = plot->GetMaximum();
+
+  // make the range nice and save (LIN)
+  plot->SetMinimum(min<0?0:min/1.05);
+  plot->SetMaximum(max*1.05);
+  canv->SetLogy(false);
   Config::CMSLumi(canv);
-  canv->SaveAs(Form("%s_%s.png",title.Data(),fitInfo.Text.Data()));
+  canv->SaveAs(Form("%s_%s_lin.png",title.Data(),fitInfo.Text.Data()));
+
+  // make the range nice and save (LOG)
+  plot->SetMinimum(min<=0?0.01:min/1.5);
+  plot->SetMaximum(max*1.5);
+  canv->SetLogy(true);
+  Config::CMSLumi(canv);
+  canv->SaveAs(Form("%s_%s_log.png",title.Data(),fitInfo.Text.Data()));
 
   // delete it
-  delete frame;
+  delete plot;
   delete canv;
 }
 
@@ -471,7 +480,7 @@ void Fitter::DeleteFitInfo(FitInfo & fitInfo)
 
   delete fitInfo.BkgdPdf;
   delete fitInfo.EBkgdPdf;
-  delete fitInfo.ESignPdf;
+  if (!fBkgdOnly) delete fitInfo.ESignPdf;
   delete fitInfo.ModelPdf;
   delete fitInfo.Workspace;
 }
