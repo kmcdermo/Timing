@@ -30,6 +30,9 @@ Fitter::Fitter(const TString & fitconfig, const TString & outfiletext)
   
   // output root file for quick inspection
   fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"RECREATE");
+
+  // setup outtree
+  if (fRunExp) Fitter::SetupOutTree();
 }
 
 Fitter::~Fitter()
@@ -56,6 +59,7 @@ Fitter::~Fitter()
   delete fQCDFile;
   delete fGJetsFile;
 
+  if (fRunExp) delete fOutTree;
   delete fOutFile;
   delete fTDRStyle;
 }
@@ -79,6 +83,13 @@ void Fitter::MakeFits()
   // Do the fit in 1D -- Y
   FitInfo FitInfoY(RooArgList(*fY),"projY",Y);
   Fitter::MakeFit(fHistMapY,FitInfoY);
+
+  // Save Output?
+  if (fRunExp) 
+  {
+    fOutFile->cd();
+    fOutTree->Write(fOutTree->GetName(),TObject::kWriteDelete);
+  }
 
   // Save MetaData
   Fitter::MakeConfigPave();
@@ -179,6 +190,9 @@ void Fitter::GetConstants()
   // Count signal
   fNSignTotal = (fBkgdOnly ? 0.f : fHistMap2D[GMSB]->Integral());
 
+  // Total input counts
+  fNInTotal = fNBkgdTotal+fNSignTotal;
+
   // make vars for varying extended PDFs
   fNPredBkgd = new RooRealVar("nbkgd","nbkgd",fFracLow*fNBkgdTotal,(fFracHigh)*fNBkgdTotal);
   fNPredSign = new RooRealVar("nsign","nsign",fFracLow*fNSignTotal,(fFracHigh)*fNSignTotal);
@@ -206,34 +220,52 @@ void Fitter::MakeFit(const T & HistMap, FitInfo & fitInfo)
   // Build Model
   Fitter::BuildModel(fitInfo);
 
-  // Construct asimov dataset from PDFS
-  if (fGenData) Fitter::GenerateData(fitInfo);
+  // run n experiments
+  const Int_t nfit = (fRunExp ? fNExperiments : 1);
+  for (auto ifit = 0; ifit < nfit; ifit++)
+  {
+    // Construct asimov dataset from PDFS
+    if (fGenData) Fitter::GenerateData(fitInfo);
+    
+    // Fit Model to Data
+    Fitter::FitModel(fitInfo);
 
-  // Fit Model to Data
-  Fitter::FitModel(fitInfo);
+    // save info
+    if (fRunExp) 
+    {
+      fFitID = fitInfo.Text.Data();
+      fNFitBkgd = fNPredBkgd->getVal();
+      fNFitSign = fNPredSign->getVal();
+      fNExpected = fitInfo.ModelPdf->expectedEvents(fitInfo.ArgList);
+      fOutTree->Fill();
+    }
+  }    
+  
+  if (!fRunExp) 
+  { 
+    // Draw fit(s) in 1D
+    if (fitInfo.Fit == TwoD)
+    {
+      Fitter::DrawFit(fX,"xfit",fitInfo);
+      Fitter::DrawFit(fY,"yfit",fitInfo);
+    }
+    else if (fitInfo.Fit == X)
+    {
+      Fitter::DrawFit(fX,"fit",fitInfo);
+    }
+    else if (fitInfo.Fit == Y)
+    {
+      Fitter::DrawFit(fY,"fit",fitInfo);
+    }
+    else
+    {
+      std::cerr << "Not sure how, but you provided an incorrect enum for FitType! Exiting..." << std::endl;
+      exit(1);
+    }
 
-  // Draw fit(s) in 1D
-  if (fitInfo.Fit == TwoD)
-  {
-    Fitter::DrawFit(fX,"xfit",fitInfo);
-    Fitter::DrawFit(fY,"yfit",fitInfo);
+    // Save in a workspace
+    Fitter::ImportToWS(fitInfo);
   }
-  else if (fitInfo.Fit == X)
-  {
-    Fitter::DrawFit(fX,"fit",fitInfo);
-  }
-  else if (fitInfo.Fit == Y)
-  {
-    Fitter::DrawFit(fY,"fit",fitInfo);
-  }
-  else
-  {
-    std::cerr << "Not sure how, but you provided an incorrect enum for FitType! Exiting..." << std::endl;
-    exit(1);
-  }
-
-  // Save in a workspace
-  Fitter::ImportToWS(fitInfo);
 }
 
 template <typename T>  
@@ -296,12 +328,15 @@ void Fitter::BuildModel(FitInfo & fitInfo)
 void Fitter::GenerateData(FitInfo & fitInfo)
 {
   std::cout << "Generating Asimov data for: " << fitInfo.Text.Data() << std::endl;
-  fitInfo.DataHistMap[Data] = fitInfo.ModelPdf->generateBinned(fitInfo.ArgList,fFracGen*(fNBkgdTotal+fNSignTotal),RooFit::Asimov());
+
+  fNGen = fFracGen*fNInTotal;
+  fitInfo.DataHistMap[Data] = fitInfo.ModelPdf->generateBinned(fitInfo.ArgList,fNGen,RooFit::Asimov());
 }
 
 void Fitter::FitModel(FitInfo & fitInfo)
 {
   std::cout << "Fit model for: " << fitInfo.Text.Data() << std::endl;
+
   fitInfo.ModelPdf->fitTo(*fitInfo.DataHistMap.at(Data),RooFit::SumW2Error(true));
 }
 
@@ -472,6 +507,7 @@ void Fitter::SetupDefaultBools()
 {
   fBkgdOnly = false;
   fGenData  = false;
+  fRunExp   = false;
 }
 
 void Fitter::SetupConfig()
@@ -538,6 +574,16 @@ void Fitter::ReadFitConfig()
       str = Config::RemoveDelim(str,"frac_gen=");
       fFracGen = std::atof(str.c_str());
     }
+    else if (str.find("run_exp=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"run_exp=");
+      Config::SetupBool(str,fRunExp);
+    }
+    else if (str.find("n_exp=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"n_exp=");
+      fNExperiments = std::atoi(str.c_str());
+    }
     else 
     {
       std::cerr << "Aye... your fit config is messed up, try again! Offending line: " << str.c_str() << std::endl;
@@ -587,6 +633,23 @@ void Fitter::ReadPlotConfig()
       exit(1);
     }
   }
+}
+
+void Fitter::SetupOutTree()
+{
+  fOutFile->cd();
+  fOutTree = new TTree("exptree","Experiment Tree");
+  
+  fOutTree->Branch("nExperiments",fNExperiments);
+  fOutTree->Branch("nInTotal",&fNInTotal);
+  fOutTree->Branch("nBkgdTotal",&fNBkgdTotal);
+  fOutTree->Branch("nSignTotal",&fNSignTotal);
+  fOutTree->Branch("fracGen",&fFracGen);
+  fOutTree->Branch("nGen",&fNGen);
+  fOutTree->Branch("nFitBkgd",&fNFitBkgd);
+  fOutTree->Branch("nFitSign",&fNFitSign);
+  fOutTree->Branch("nExpected",&fNExpected);
+  fOutTree->Branch("fitID",&fFitID);
 }
 
 void Fitter::ScaleUp(TH2F *& hist)
@@ -674,7 +737,7 @@ void Fitter::DeleteFitInfo(FitInfo & fitInfo)
   delete fitInfo.EBkgdPdf;
   if (!fBkgdOnly) delete fitInfo.ESignPdf;
   delete fitInfo.ModelPdf;
-  delete fitInfo.Workspace;
+  if (!fRunExp) delete fitInfo.Workspace;
 }
 
 template <typename T>

@@ -70,6 +70,7 @@ public:
   void SetupConfig();
   void ReadFitConfig();
   void ReadPlotConfig();
+  void SetupOutTree();
 
   // Deleting
   void DeleteFitInfo(FitInfo & fitInfo);
@@ -117,6 +118,7 @@ private:
   // Bools
   Bool_t fBkgdOnly;
   Bool_t fGenData;
+  Bool_t fRunExp;
 
   // Input names
   TString fGJetsFileName;
@@ -148,6 +150,7 @@ private:
   // Counts 
   Float_t fNBkgdTotal;
   Float_t fNSignTotal;
+  Float_t fNInTotal;
   std::map<SampleType,RooRealVar*> fFracMap; 
   RooRealVar * fNPredBkgd;
   RooRealVar * fNPredSign;
@@ -156,8 +159,9 @@ private:
   Float_t fFracLow;
   Float_t fFracHigh;
 
-  // fractional number of events to generate
+  // Number of events to generate
   Float_t fFracGen;
+  Float_t fNGen;
 
   // Blinding
   TString fXCut;
@@ -173,6 +177,16 @@ private:
   // Output
   TFile     * fOutFile;
   TPaveText * fConfigPave;
+
+  // Experiment input
+  Int_t fNExperiments;
+
+  // Experiment output
+  TTree * fOutTree;
+  Float_t fNFitBkgd;
+  Float_t fNFitSign;
+  Float_t fNExpected;
+  std::string fFitID;
 };
 
 #endif
