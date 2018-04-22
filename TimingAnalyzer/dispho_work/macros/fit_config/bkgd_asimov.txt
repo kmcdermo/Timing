@@ -1,10 +1,13 @@
-CR_GJets_In=control_gjets_deg_DoubleEG
-CR_QCD_In=control_qcd_SinglePhoton
-SR_In=signal_idT_hlt_nJet3pt30_ht400jetpt30_sumEtjetpt30phopt0_hltreco_SinglePhoton
+CR_GJets_in=met_vs_time_control_gjets_deg_DoubleEG.root
+CR_QCD_in=met_vs_time_control_qcd_SinglePhoton.root
+SR_in=met_vs_time_signal_idT_hlt_nJet3pt30_ht400jetpt30_sumEtjetpt30phopt0_hltreco_SinglePhoton.root
 
-Range=0.5
+plot_config=plot_config/met_vs_time.txt
 
-Plot=met_vs_time
+frac_low=0
+frac_high=10
 
 bkgd_only=1
 gen_data=1
+
+frac_gen=1

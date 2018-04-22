@@ -10,6 +10,7 @@
 #include "TH1F.h"
 #include "TString.h"
 #include "TCanvas.h"
+#include "TGraphAsymmErrors.h"
 #include "TPaveText.h"
 
 // RooFit includes
@@ -19,6 +20,7 @@
 #include "RooHistPdf.h"
 #include "RooAddPdf.h"
 #include "RooExtendPdf.h"
+#include "RooAbsPdf.h"
 #include "RooWorkspace.h"
 
 // STL includes
@@ -66,7 +68,8 @@ public:
   // Initialize
   void SetupDefaultBools();
   void SetupConfig();
-  void ReadInFitConfig();
+  void ReadFitConfig();
+  void ReadPlotConfig();
 
   // Deleting
   void DeleteFitInfo(FitInfo & fitInfo);
@@ -86,7 +89,6 @@ public:
   // Prep for fits
   void GetInputHists();
   void GetConstants();
-  void GetMinMax();
   void DeclareVars();
 
   // Subroutine for fitting
@@ -99,20 +101,27 @@ public:
   void DrawFit(RooRealVar *& var, const TString & title, const FitInfo & fitInfo);
   void ImportToWS(FitInfo & fitInfo);
 
+  // Helper Routines
+  void ScaleUp(TH2F *& hist);
+  void ScaleDown(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins);
+  void ScaleDown(TH1F *& hist);
+  Float_t GetMinimum(TGraphAsymmErrors *& graph, TH1F *& hist);
+  Float_t GetMaximum(TGraphAsymmErrors *& graph, TH1F *& hist);
+
 private:
   // settings
   const TString fFitConfig;
   const TString fOutFileText;
+  TString fPlotConfig;
 
   // Bools
   Bool_t fBkgdOnly;
   Bool_t fGenData;
 
   // Input names
-  TString fPlotName;
-  TString fGJetsFileBase;
-  TString fQCDFileBase;
-  TString fSRFileBase;
+  TString fGJetsFileName;
+  TString fQCDFileName;
+  TString fSRFileName;
 
   // Input files
   TFile * fGJetsFile;
@@ -128,6 +137,14 @@ private:
   std::map<SampleType,TH1F*> fHistMapX;
   std::map<SampleType,TH1F*> fHistMapY;
 
+  // Hist info
+  std::vector<Double_t> fXBins;
+  Bool_t fXVarBins;
+  TString fXTitle;
+  std::vector<Double_t> fYBins;
+  Bool_t fYVarBins;
+  TString fYTitle;
+
   // Counts 
   Float_t fNBkgdTotal;
   Float_t fNSignTotal;
@@ -135,14 +152,12 @@ private:
   RooRealVar * fNPredBkgd;
   RooRealVar * fNPredSign;
 
-  // Style
-  TStyle * fTDRStyle;
+  // fractional range of initial integral guess
+  Float_t fFracLow;
+  Float_t fFracHigh;
 
-  // Hist info
-  Float_t fXmin;
-  Float_t fXmax;
-  Float_t fYmin;
-  Float_t fYmax;
+  // fractional number of events to generate
+  Float_t fFracGen;
 
   // Blinding
   TString fXCut;
@@ -152,12 +167,12 @@ private:
   RooRealVar * fX;
   RooRealVar * fY;
 
-  // Percent range of variables
-  Float_t fInitRange;
+  // Style
+  TStyle * fTDRStyle;
 
   // Output
-  TFile        * fOutFile;
-  TPaveText    * fConfigPave;
+  TFile     * fOutFile;
+  TPaveText * fConfigPave;
 };
 
 #endif

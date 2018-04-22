@@ -24,7 +24,8 @@ Fitter::Fitter(const TString & fitconfig, const TString & outfiletext)
   // init configuration, set minimizer
   Fitter::SetupDefaultBools();
   Fitter::SetupConfig();
-  Fitter::ReadInFitConfig();
+  Fitter::ReadFitConfig();
+  Fitter::ReadPlotConfig();
   TVirtualFitter::SetDefaultFitter("Minuit2");
   
   // output root file for quick inspection
@@ -96,9 +97,6 @@ void Fitter::PrepareFits()
   // Get constants as needed
   Fitter::GetConstants();
 
-  // Get mins and maxes
-  Fitter::GetMinMax();
-
   // Declare variable of interest
   Fitter::DeclareVars();
 }
@@ -108,47 +106,52 @@ void Fitter::GetInputHists()
   std::cout << "Getting input histograms..." << std::endl;
 
   // GJets CR
-  const TString gjetsfilename = Form("%s_%s.root",fPlotName.Data(),fGJetsFileBase.Data());
-  fGJetsFile = TFile::Open(Form("%s",gjetsfilename.Data()));
-  Config::CheckValidFile(fGJetsFile,gjetsfilename);
+  fGJetsFile = TFile::Open(Form("%s",fGJetsFileName.Data()));
+  Config::CheckValidFile(fGJetsFile,fGJetsFileName);
 
   fHistMap2D[GJets] = (TH2F*)fGJetsFile->Get(Form("%s",Config::HistNameMap[Data].Data()));
   fGJetsHistMC_CR   = (TH2F*)fGJetsFile->Get(Form("%s",Config::HistNameMap[GJets].Data()));
-  Config::CheckValidTH2F(fHistMap2D[GJets],Config::HistNameMap[Data] ,gjetsfilename);
-  Config::CheckValidTH2F(fGJetsHistMC_CR  ,Config::HistNameMap[GJets],gjetsfilename);
+  Config::CheckValidTH2F(fHistMap2D[GJets],Config::HistNameMap[Data] ,fGJetsFileName);
+  Config::CheckValidTH2F(fGJetsHistMC_CR  ,Config::HistNameMap[GJets],fGJetsFileName);
+  Fitter::ScaleUp(fHistMap2D[GJets]);
+  Fitter::ScaleUp(fGJetsHistMC_CR);
 
   // QCD CR
-  const TString qcdfilename = Form("%s_%s.root",fPlotName.Data(),fQCDFileBase.Data());
-  fQCDFile = TFile::Open(Form("%s",qcdfilename.Data()));
-  Config::CheckValidFile(fQCDFile,qcdfilename);
+  fQCDFile = TFile::Open(Form("%s",fQCDFileName.Data()));
+  Config::CheckValidFile(fQCDFile,fQCDFileName);
 
   fHistMap2D[QCD] = (TH2F*)fQCDFile->Get(Form("%s",Config::HistNameMap[Data].Data()));
   fQCDHistMC_CR   = (TH2F*)fQCDFile->Get(Form("%s",Config::HistNameMap[QCD].Data()));
-  Config::CheckValidTH2F(fHistMap2D[QCD],Config::HistNameMap[Data],qcdfilename);
-  Config::CheckValidTH2F(fQCDHistMC_CR  ,Config::HistNameMap[QCD] ,qcdfilename);
+  Config::CheckValidTH2F(fHistMap2D[QCD],Config::HistNameMap[Data],fQCDFileName);
+  Config::CheckValidTH2F(fQCDHistMC_CR  ,Config::HistNameMap[QCD] ,fQCDFileName);
+  Fitter::ScaleUp(fHistMap2D[QCD]);
+  Fitter::ScaleUp(fQCDHistMC_CR);
 
   // SR
-  const TString srfilename = Form("%s_%s.root",fPlotName.Data(),fSRFileBase.Data()); 
-  fSRFile = TFile::Open(Form("%s",srfilename.Data()));
-  Config::CheckValidFile(fQCDFile,qcdfilename);
+  fSRFile = TFile::Open(Form("%s",fSRFileName.Data()));
+  Config::CheckValidFile(fSRFile,fSRFileName);
 
   fGJetsHistMC_SR = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[GJets].Data()));
   fQCDHistMC_SR   = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[QCD].Data()));
-  Config::CheckValidTH2F(fGJetsHistMC_SR,Config::HistNameMap[GJets],srfilename);
-  Config::CheckValidTH2F(fQCDHistMC_SR  ,Config::HistNameMap[QCD]  ,srfilename);
+  Config::CheckValidTH2F(fGJetsHistMC_SR,Config::HistNameMap[GJets],fSRFileName);
+  Config::CheckValidTH2F(fQCDHistMC_SR  ,Config::HistNameMap[QCD]  ,fSRFileName);
+  Fitter::ScaleUp(fGJetsHistMC_SR);
+  Fitter::ScaleUp(fQCDHistMC_SR);
 
   // use signal sample?
   if (!fBkgdOnly) 
   {
     fHistMap2D[GMSB] = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[GMSB].Data()));
-    Config::CheckValidTH2F(fHistMap2D[GMSB],Config::HistNameMap[GMSB],srfilename);
+    Config::CheckValidTH2F(fHistMap2D[GMSB],Config::HistNameMap[GMSB],fSRFileName);
+    Fitter::ScaleUp(fHistMap2D[GMSB]);
   }
 
   // use real data?
   if (!fGenData)
   {
     fHistMap2D[Data] = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[Data].Data()));
-    Config::CheckValidTH2F(fHistMap2D[Data],Config::HistNameMap[Data],srfilename);
+    Config::CheckValidTH2F(fHistMap2D[Data],Config::HistNameMap[Data],fSRFileName);
+    Fitter::ScaleUp(fHistMap2D[Data]);
   }
 }  
 
@@ -158,8 +161,8 @@ void Fitter::GetConstants()
 
   // Count up background first
   std::map<SampleType,Float_t> nBkgdMap;
-  nBkgdMap[GJets] = ((fHistMap2D[GJets]->Integral("widths"))*(fGJetsHistMC_SR->Integral("widths")))/(fGJetsHistMC_CR->Integral("widths"));
-  nBkgdMap[QCD]   = ((fHistMap2D[QCD]  ->Integral("widths"))*(fQCDHistMC_SR  ->Integral("widths")))/(fQCDHistMC_CR  ->Integral("widths"));
+  nBkgdMap[GJets] = ((fHistMap2D[GJets]->Integral())*(fGJetsHistMC_SR->Integral()))/(fGJetsHistMC_CR->Integral());
+  nBkgdMap[QCD]   = ((fHistMap2D[QCD]  ->Integral())*(fQCDHistMC_SR  ->Integral()))/(fQCDHistMC_CR  ->Integral());
  
   fNBkgdTotal = 0.f;
   for (const auto & nBkgdPair : nBkgdMap) fNBkgdTotal += nBkgdPair.second;
@@ -174,29 +177,19 @@ void Fitter::GetConstants()
   }
 
   // Count signal
-  fNSignTotal = (fBkgdOnly ? 0.f : fHistMap2D[GMSB]->Integral("widths"));
+  fNSignTotal = (fBkgdOnly ? 0.f : fHistMap2D[GMSB]->Integral());
 
   // make vars for varying extended PDFs
-  fNPredBkgd = new RooRealVar("nbkgd","nbkgd",fInitRange*fNBkgdTotal,(1+fInitRange)*fNBkgdTotal);
-  fNPredSign = new RooRealVar("nsign","nsign",fInitRange*fNSignTotal,(1+fInitRange)*fNSignTotal);
-}
-
-void Fitter::GetMinMax()
-{
-  std::cout << "Getting min and max of x,y range..." << std::endl;
-
-  fXmin = fHistMap2D[GJets]->GetXaxis()->GetBinLowEdge(1);
-  fXmax = fHistMap2D[GJets]->GetXaxis()->GetBinUpEdge(fHistMap2D[GJets]->GetXaxis()->GetNbins());
-  fYmin = fHistMap2D[GJets]->GetYaxis()->GetBinLowEdge(1);
-  fYmax = fHistMap2D[GJets]->GetYaxis()->GetBinUpEdge(fHistMap2D[GJets]->GetYaxis()->GetNbins());
+  fNPredBkgd = new RooRealVar("nbkgd","nbkgd",fFracLow*fNBkgdTotal,(fFracHigh)*fNBkgdTotal);
+  fNPredSign = new RooRealVar("nsign","nsign",fFracLow*fNSignTotal,(fFracHigh)*fNSignTotal);
 }
 
 void Fitter::DeclareVars()
 {
   std::cout << "Declaring RooFit variables..." << std::endl;
 
-  fX = new RooRealVar("x",fHistMap2D[GJets]->GetXaxis()->GetTitle(),fXmin,fXmax);
-  fY = new RooRealVar("y",fHistMap2D[GJets]->GetYaxis()->GetTitle(),fYmin,fYmax);
+  fX = new RooRealVar("x",Form("%s",fXTitle.Data()),fXBins.front(),fXBins.back());
+  fY = new RooRealVar("y",Form("%s",fYTitle.Data()),fYBins.front(),fYBins.back());
 }
 
 template <typename T>
@@ -303,61 +296,123 @@ void Fitter::BuildModel(FitInfo & fitInfo)
 void Fitter::GenerateData(FitInfo & fitInfo)
 {
   std::cout << "Generating Asimov data for: " << fitInfo.Text.Data() << std::endl;
-  fitInfo.DataHistMap[Data] = fitInfo.ModelPdf->generateBinned(fitInfo.ArgList,(fNBkgdTotal+fNSignTotal),RooFit::Asimov());
+  fitInfo.DataHistMap[Data] = fitInfo.ModelPdf->generateBinned(fitInfo.ArgList,fFracGen*(fNBkgdTotal+fNSignTotal),RooFit::Asimov());
 }
 
 void Fitter::FitModel(FitInfo & fitInfo)
 {
   std::cout << "Fit model for: " << fitInfo.Text.Data() << std::endl;
-  fitInfo.ModelPdf->fitTo(*fitInfo.DataHistMap.at(Data),RooFit::SumW2Error(true),RooFit::PrintLevel(2));
+  fitInfo.ModelPdf->fitTo(*fitInfo.DataHistMap.at(Data),RooFit::SumW2Error(true));
 }
 
 void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & fitInfo)
 {
   std::cout << "Draw fits projected into 1D for: " << fitInfo.Text.Data() << std::endl;
-
-  // Get Canvas
-  auto canv = new TCanvas();
-  canv->cd();
   
-  // Draw 1D frame
+  // which variable?
+  const TString varname = var->GetName();
+  const Bool_t isX = varname.EqualTo("x",TString::kExact);
+  const Bool_t isY = varname.EqualTo("y",TString::kExact);
+
+  // rescale as needed
+  const Bool_t rescale = (isX && fXVarBins) || (isY && fYVarBins);
+
+  // Draw 1D frame -- temporary
   auto plot = var->frame();
+  
+  // Data Hist Info
+  auto & datahist = fitInfo.DataHistMap.at(Data);
+  const TString tmpname = Form("%s_TmpPlot",datahist->GetName());
 
   // Blind the data!
-  const TString varname = var->GetName();
-  if      (varname.EqualTo("x",TString::kExact)) fitInfo.DataHistMap.at(Data)->plotOn(plot,RooFit::Cut(Form("%s",fXCut.Data())));
-  else if (varname.EqualTo("y",TString::kExact)) fitInfo.DataHistMap.at(Data)->plotOn(plot,RooFit::Cut(Form("%s",fYCut.Data())));
+  if      (isX) datahist->plotOn(plot,RooFit::Name(Form("%s",tmpname.Data())),RooFit::Cut(Form("%s",fXCut.Data())),RooFit::DrawOption("PZ"),RooFit::DataError(RooAbsData::SumW2));
+  else if (isY) datahist->plotOn(plot,RooFit::Name(Form("%s",tmpname.Data())),RooFit::Cut(Form("%s",fYCut.Data())),RooFit::DrawOption("PZ"),RooFit::DataError(RooAbsData::SumW2));
   else 
   {
     std::cerr << "How did this happen?? Specified a variable that is not predefined... exiting.." << std::endl;
     exit(1);
   }
 
-  // Plot the fitted pdf
-  fitInfo.ModelPdf->plotOn(plot);
-  plot->Draw();
+  // Get and Set TGraph of Data
+  auto tmpDataGraph = (TGraphAsymmErrors*)plot->findObject(Form("%s",tmpname.Data()));
+  auto dataGraph    = (TGraphAsymmErrors*)tmpDataGraph->Clone(Form("%s_Graph",datahist->GetName()));
+
+  if (rescale)
+  {
+    const auto & bins = (isX ? fXBins : fYBins);
+    Fitter::ScaleDown(dataGraph,bins);
+  }
+  
+  // delete plotOn --> will not use to draw, also deletes tmpDataGraph
+  delete plot;
+
+  // Setup PDF fit plot
+  TH1F * pdfHist;
+  const TString pdfname = Form("%s_Fit_Hist",fitInfo.ModelPdf->GetName());
+  if      ((fitInfo.Fit == X) || (fitInfo.Fit == Y))
+  {
+    pdfHist = (TH1F*)fitInfo.ModelPdf->createHistogram(Form("%s",pdfname.Data()),*var);
+  }
+  else if (fitInfo.Fit == TwoD)
+  {
+    // get other var
+    auto & projvar = (isX ? fY : fX);
+
+    // Project out in other variable, and make histogram!
+    RooAbsPdf * pdf1D = fitInfo.ModelPdf->createProjection(*projvar);
+    pdfHist = (TH1F*)pdf1D->createHistogram(Form("%s",pdfname.Data()),*var);
+
+    // Rescale as necessary
+    if (rescale)
+    {
+      Fitter::ScaleDown(pdfHist);
+    }
+
+    // Normalize
+    const auto nExpected = fitInfo.ModelPdf->expectedEvents(RooArgSet(*var,*projvar));
+    const auto nNorm = (rescale ? nExpected/pdfHist->Integral("widths") : nExpected);
+    pdfHist->Scale(nNorm);
+  }
+  else
+  {
+    std::cerr << "How did this happen?? Specified a fit that is not predefined... exiting.." << std::endl;
+    exit(1);
+  }
+
+  // decorate and draw PDF
+  pdfHist->SetLineColor(kBlue);
+  pdfHist->SetLineWidth(2);
+
+  // Get canvas and draw
+  auto canv = new TCanvas();
+  canv->cd();
+
+  // draw PDF first
+  pdfHist->Draw("hist");
+  dataGraph->Draw("PZ same");
 
   // get min/max
-  const Float_t min = plot->GetMinimum();
-  const Float_t max = plot->GetMaximum();
+  const auto min = Fitter::GetMinimum(dataGraph,pdfHist);
+  const auto max = Fitter::GetMaximum(dataGraph,pdfHist);
 
   // make the range nice and save (LIN)
-  plot->SetMinimum(min<0?0:min/1.05);
-  plot->SetMaximum(max*1.05);
+  pdfHist->SetMinimum(min/1.05);
+  pdfHist->SetMaximum(max*1.05);
   canv->SetLogy(false);
   Config::CMSLumi(canv);
   canv->SaveAs(Form("%s_%s_lin.png",title.Data(),fitInfo.Text.Data()));
 
   // make the range nice and save (LOG)
-  plot->SetMinimum(min<=0?0.01:min/1.5);
-  plot->SetMaximum(max*1.5);
+  pdfHist->SetMinimum(min/1.5);
+  pdfHist->SetMaximum(max*1.5);
   canv->SetLogy(true);
   Config::CMSLumi(canv);
   canv->SaveAs(Form("%s_%s_log.png",title.Data(),fitInfo.Text.Data()));
 
-  // delete it
-  delete plot;
+  // delete the rest
   delete canv;
+  delete pdfHist;
+  delete dataGraph;
 }
 
 void Fitter::ImportToWS(FitInfo & fitInfo)
@@ -392,10 +447,18 @@ void Fitter::MakeConfigPave()
   fConfigPave->SetName("Config");
   std::string str; // tmp string
   
-  // fit config
+  // plot config first
+  fConfigPave->AddText("Plot Config");
+  std::ifstream plotfile(Form("%s",fPlotConfig.Data()),std::ios::in);
+  while (std::getline(plotfile,str))
+  {
+    fConfigPave->AddText(str.c_str());
+  }
+
+  // fit config second
   fConfigPave->AddText("Fit Config");
-  std::ifstream cutfile(Form("%s",fFitConfig.Data()),std::ios::in);
-  while (std::getline(cutfile,str))
+  std::ifstream fitfile(Form("%s",fFitConfig.Data()),std::ios::in);
+  while (std::getline(fitfile,str))
   {
     fConfigPave->AddText(str.c_str());
   }
@@ -417,7 +480,7 @@ void Fitter::SetupConfig()
   Config::SetupHistNames();
 }
 
-void Fitter::ReadInFitConfig()
+void Fitter::ReadFitConfig()
 {
   std::cout << "Reading fit config..." << std::endl;
 
@@ -426,26 +489,31 @@ void Fitter::ReadInFitConfig()
   while (std::getline(infile,str))
   {
     if (str == "") continue;
-    else if (str.find("CR_GJets_In=") != std::string::npos)
+    else if (str.find("CR_GJets_in=") != std::string::npos)
     {
-      fGJetsFileBase = Config::RemoveDelim(str,"CR_GJets_In=");
+      fGJetsFileName = Config::RemoveDelim(str,"CR_GJets_in=");
     }
-    else if (str.find("CR_QCD_In=") != std::string::npos)
+    else if (str.find("CR_QCD_in=") != std::string::npos)
     {
-      fQCDFileBase = Config::RemoveDelim(str,"CR_QCD_In=");
+      fQCDFileName = Config::RemoveDelim(str,"CR_QCD_in=");
     }
-    else if (str.find("SR_In=") != std::string::npos)
+    else if (str.find("SR_in=") != std::string::npos)
     {
-      fSRFileBase = Config::RemoveDelim(str,"SR_In=");
+      fSRFileName = Config::RemoveDelim(str,"SR_in=");
     }
-    else if (str.find("Range=") != std::string::npos)
+    else if (str.find("plot_config=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"Range=");
-      fInitRange = std::atof(str.c_str());
+      fPlotConfig = Config::RemoveDelim(str,"plot_config=");
     }
-    else if (str.find("Plot=") != std::string::npos)
+    else if (str.find("frac_low=") != std::string::npos)
     {
-      fPlotName = Config::RemoveDelim(str,"Plot=");
+      str = Config::RemoveDelim(str,"frac_low=");
+      fFracLow = std::atof(str.c_str());
+    }
+    else if (str.find("frac_high=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"frac_high=");
+      fFracHigh = std::atof(str.c_str());
     }
     else if (str.find("x_cut=") != std::string::npos)
     {
@@ -465,12 +533,136 @@ void Fitter::ReadInFitConfig()
       str = Config::RemoveDelim(str,"gen_data=");
       Config::SetupBool(str,fGenData);
     }
+    else if (str.find("frac_gen=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"frac_gen=");
+      fFracGen = std::atof(str.c_str());
+    }
     else 
     {
       std::cerr << "Aye... your fit config is messed up, try again! Offending line: " << str.c_str() << std::endl;
       exit(1);
     }
   }
+}
+
+void Fitter::ReadPlotConfig()
+{
+  std::cout << "Reading plot config..." << std::endl;
+
+  std::ifstream infile(Form("%s",fPlotConfig.Data()),std::ios::in);
+  std::string str;
+  while (std::getline(infile,str))
+  {
+    if (str == "") continue;
+    else if (str.find("x_title=") != std::string::npos)
+    {
+      fXTitle = Config::RemoveDelim(str,"x_title=");
+    }
+    else if (str.find("x_bins=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"x_bins=");
+      Config::SetupBins(str,fXBins,fXVarBins);
+    }
+    else if (str.find("y_title=") != std::string::npos)
+    {
+      fYTitle = Config::RemoveDelim(str,"y_title=");
+    }
+    else if (str.find("y_bins=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"y_bins=");
+      Config::SetupBins(str,fYBins,fYVarBins);
+    }
+    else if ((str.find("plot_title=") != std::string::npos) ||
+	     (str.find("x_var=") != std::string::npos)      ||
+	     (str.find("x_labels=") != std::string::npos)   ||
+	     (str.find("y_var=") != std::string::npos)      ||
+	     (str.find("y_labels=") != std::string::npos))
+    {
+      continue;
+    }
+    else 
+    {
+      std::cerr << "Aye... your plot config is messed up, try again!" << std::endl;
+      exit(1);
+    }
+  }
+}
+
+void Fitter::ScaleUp(TH2F *& hist)
+{
+  for (auto ibinX = 1; ibinX <= hist->GetXaxis()->GetNbins(); ibinX++)
+  {
+    const auto binwidthX = hist->GetXaxis()->GetBinWidth(ibinX);
+    for (auto ibinY = 1; ibinY <= hist->GetYaxis()->GetNbins(); ibinY++)
+    {
+      const auto binwidthY = hist->GetYaxis()->GetBinWidth(ibinY);
+
+      auto multiplier = 1.f;      
+      if (fXVarBins) multiplier *= binwidthX;
+      if (fYVarBins) multiplier *= binwidthY;
+
+      hist->SetBinContent(ibinX,ibinY,(hist->GetBinContent(ibinX,ibinY))*multiplier);
+      hist->SetBinError  (ibinX,ibinY,(hist->GetBinError  (ibinX,ibinY))*multiplier);
+    }
+  }
+}
+
+void Fitter::ScaleDown(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins)
+{
+  for (UInt_t i = 0; i < bins.size()-1; i++)
+  {
+    const auto divisor = bins[i+1]-bins[i];
+    
+    Double_t xval,yval;
+    graph->GetPoint(i,xval,yval);
+    graph->SetPoint(i,xval,yval/divisor);
+    
+    auto yerrl = graph->GetErrorYlow (i);
+    auto yerrh = graph->GetErrorYhigh(i);
+    graph->SetPointEYlow (i,yerrl/divisor);
+    graph->SetPointEYhigh(i,yerrh/divisor);
+  }
+}
+
+void Fitter::ScaleDown(TH1F *& hist)
+{
+  for (auto ibinX = 1; ibinX <= hist->GetXaxis()->GetNbins(); ibinX++)
+  {
+    const auto divisor = hist->GetXaxis()->GetBinWidth(ibinX);
+    
+    hist->SetBinContent(ibinX,(hist->GetBinContent(ibinX))/divisor);
+    hist->SetBinError  (ibinX,(hist->GetBinError  (ibinX))/divisor);
+  }
+}
+
+Float_t Fitter::GetMinimum(TGraphAsymmErrors *& graph, TH1F *& hist)
+{
+  auto min = 1e9;
+
+  // need to loop through to check bin != 0
+  for (auto bin = 1; bin <= hist->GetNbinsX(); bin++)
+  {
+    const auto tmpmin = hist->GetBinContent(bin);
+    if ((tmpmin < min) && (tmpmin > 0)) min = tmpmin;
+  }
+
+  // need to loop through to check point yval != 0
+  for (auto point = 0; point <= graph->GetN(); point++)
+  {
+    Double_t xtmpmin,ytmpmin;
+    graph->GetPoint(point,xtmpmin,ytmpmin);
+    if ((ytmpmin < min) && (ytmpmin > 0)) min = ytmpmin;
+  }
+
+  return min;
+}
+
+Float_t Fitter::GetMaximum(TGraphAsymmErrors *& graph, TH1F *& hist)
+{
+  const auto histmax  = hist->GetBinContent(hist->GetMaximumBin());
+  const auto graphmax = graph->GetMaximum();
+  return (histmax > graphmax ? histmax : graphmax);
 }
 
 void Fitter::DeleteFitInfo(FitInfo & fitInfo)
