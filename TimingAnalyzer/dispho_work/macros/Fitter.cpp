@@ -42,7 +42,10 @@ Fitter::~Fitter()
   delete fConfigPave;
 
   delete fY;
+  delete fYRooBins;
+
   delete fX;
+  delete fXRooBins;
 
   delete fNPredSign;
   delete fNPredBkgd;
@@ -108,82 +111,20 @@ void Fitter::PrepareCommon()
   // Get the input 2D histograms
   Fitter::GetInputHists();
 
-  // Get constants/fractions as needed
-  Fitter::GetCoefficients();
+  // Scale data CR to SR via MC SFs
+  Fitter::ScaleCRtoSR();
 
-  // Make plots from input hists
-  Fitter::MakeInputPlots();
+  // Make plots from input hists and dump pre-fit integrals
+  Fitter::DumpInputInfo();
 
   // Project 2D histograms into 1D for later use
   Fitter::Project2DHistTo1D();
 
+  // Get constants/fractions as needed
+  Fitter::DeclareCoefficients();
+
   // Declare variables used in fitting
   Fitter::DeclareXYVars();
-}
-
-void Fitter::MakeInputPlots()
-{
-  std::cout << "Making quick dump of input histograms..." << std::endl;
-
-  // scale back down temporarily (since already scaled up
-  const Bool_t isUp = false;
-
-  // make tmp canvas
-  TCanvas * canv = new TCanvas();
-
-  // Combine Bkgd samples
-  TH2F * bkgdHist = (TH2F*)fHistMap2D[GJets]->Clone("BkgdHist");
-  bkgdHist->Scale(fFracMap[GJets]->getVal());
-  bkgdHist->Add(fHistMap2D[QCD],fFracMap[QCD]->getVal());
-  bkgdHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
-  Fitter::Scale(bkgdHist,isUp);
-
-  // draw bkgd
-  bkgdHist->Draw("colz");
-  Config::CMSLumi(canv);
-  canv->SaveAs("bkgdHist.png");
-  delete bkgdHist;
-  
-  // Clone Signal 
-  if (!fBkgdOnly)
-  {
-    TH2F * signHist = (TH2F*)fHistMap2D[GMSB]->Clone("SignHist");
-    signHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
-    Fitter::Scale(signHist,isUp);
-    
-    // draw signal
-    signHist->Draw("colz");
-    Config::CMSLumi(canv);
-    canv->SaveAs("signHist.png");
-    delete signHist;
-  }
-
-  // Data Histogram --> need to blind it if called for
-  if (!fGenData)
-  {
-    TH2F * dataHist = (TH2F*)fHistMap2D[Data]->Clone("DataHist");
-    dataHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
-
-    // blinding : FIXME
-    for (auto ibinX = 1; ibinX <= dataHist->GetXaxis()->GetNbins(); ibinX++)
-    {
-      const auto bincenterX = dataHist->GetXaxis()->GetBinCenter(ibinX);
-      for (auto ibinY = 1; ibinY <= dataHist->GetYaxis()->GetNbins(); ibinY++)
-      {
-	const auto bincenterY = dataHist->GetYaxis()->GetBinCenter(ibinY);
-	if ((bincenterX > 3) || (bincenterY > 200)) dataHist->SetBinContent(ibinX,ibinY,0);
-      }
-    }
-
-    // now scale it
-    Fitter::Scale(dataHist,isUp);
-
-    // draw hist
-    dataHist->Draw("colz");
-    Config::CMSLumi(canv);
-    canv->SaveAs("dataHist.png");
-    delete dataHist;
-  }
 }
 
 void Fitter::GetInputHists()
@@ -243,15 +184,128 @@ void Fitter::GetInputHists()
   }
 }  
 
-void Fitter::GetCoefficients()
+void Fitter::ScaleCRtoSR()
+{
+  std::cout << "Scaling data hists in CR to SR using MC scale factors..." << std::endl;
+
+  // Create MC SFs
+  std::map<SampleType,Float_t> mcSFMap;
+  mcSFMap[GJets] = (fGJetsHistMC_SR->Integral())/(fGJetsHistMC_CR->Integral());
+  mcSFMap[QCD]   = (fQCDHistMC_SR  ->Integral())/(fQCDHistMC_CR  ->Integral());
+  
+  // Scale Data CR by MC SFs --> yields SR prediction for each CR
+  for (const auto & mcSFPair : mcSFMap)
+  {
+    const auto & sample = mcSFPair.first;
+    const auto & mcsf   = mcSFPair.second;
+
+    fHistMap2D[sample]->Scale(mcsf);
+  }
+}
+
+void Fitter::DumpInputInfo()
+{
+  std::cout << "Making quick dump of input histograms..." << std::endl;
+
+  // scale back down temporarily (since already scaled up)
+  const Bool_t isUp = false;
+
+  // make tmp canvas
+  TCanvas * canv = new TCanvas();
+
+  // GJets integral
+  Double_t GJets_Err = 0.;
+  const Double_t GJets_Int = fHistMap2D[GJets]->IntegralAndError(1,fHistMap2D[GJets]->GetXaxis()->GetNbins(),1,fHistMap2D[GJets]->GetYaxis()->GetNbins(),GJets_Err);
+  std::cout << "GJets Integral: " << GJets_Int << " +/- " << GJets_Err << std::endl;
+
+  // QCD integral
+  Double_t QCD_Err = 0.;
+  const Double_t QCD_Int = fHistMap2D[QCD]->IntegralAndError(1,fHistMap2D[QCD]->GetXaxis()->GetNbins(),1,fHistMap2D[QCD]->GetYaxis()->GetNbins(),QCD_Err);
+  std::cout << "QCD Integral: " << QCD_Int << " +/- " << QCD_Err << std::endl;
+
+  // Combine Bkgd samples
+  TH2F * bkgdHist = (TH2F*)fHistMap2D[GJets]->Clone("BkgdHist");
+  bkgdHist->Add(fHistMap2D[QCD]);
+  Double_t Bkgd_Err = 0.;
+  const Double_t Bkgd_Int = bkgdHist->IntegralAndError(1,bkgdHist->GetXaxis()->GetNbins(),1,bkgdHist->GetYaxis()->GetNbins(),Bkgd_Err);
+  std::cout << "Bkgd Integral: " << Bkgd_Int << " +/- " << Bkgd_Err << std::endl;
+
+  // pretty up and draw bkgd
+  Fitter::Scale(bkgdHist,isUp);
+  bkgdHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
+  bkgdHist->Draw("colz");
+  Config::CMSLumi(canv);
+  canv->SaveAs("bkgdHist.png");
+  delete bkgdHist;
+  
+  // Clone Signal 
+  if (!fBkgdOnly)
+  {
+    TH2F * signHist = (TH2F*)fHistMap2D[GMSB]->Clone("SignHist");
+    Double_t Sign_Err = 0.;
+    const Double_t Sign_Int = signHist->IntegralAndError(1,signHist->GetXaxis()->GetNbins(),1,signHist->GetYaxis()->GetNbins(),Sign_Err);
+    std::cout << "Sign Integral: " << Sign_Int << " +/- " << Sign_Err << std::endl;
+    
+    // pretty up and draw signal
+    Fitter::Scale(signHist,isUp);
+    signHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
+    signHist->Draw("colz");
+    Config::CMSLumi(canv);
+    canv->SaveAs("signHist.png");
+    delete signHist;
+  }
+
+  // Data Histogram --> need to blind it if called for
+  if (!fGenData)
+  {
+    TH2F * dataHist = (TH2F*)fHistMap2D[Data]->Clone("DataHist");
+
+    // blinding : FIXME
+    for (auto ibinX = 1; ibinX <= dataHist->GetXaxis()->GetNbins(); ibinX++)
+    {
+      const auto bincenterX = dataHist->GetXaxis()->GetBinCenter(ibinX);
+      for (auto ibinY = 1; ibinY <= dataHist->GetYaxis()->GetNbins(); ibinY++)
+      {
+	const auto bincenterY = dataHist->GetYaxis()->GetBinCenter(ibinY);
+	if ((bincenterX > 3) || (bincenterY > 200)) dataHist->SetBinContent(ibinX,ibinY,0);
+      }
+    }
+
+    Double_t Data_Err = 0.;
+    const Double_t Data_Int = dataHist->IntegralAndError(1,dataHist->GetXaxis()->GetNbins(),1,dataHist->GetYaxis()->GetNbins(),Data_Err);
+    std::cout << "Data Integral: " << Data_Int << " +/- " << Data_Err << std::endl;
+
+    // draw and pretty up
+    Fitter::Scale(dataHist,isUp);
+    dataHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
+    dataHist->Draw("colz");
+    Config::CMSLumi(canv);
+    canv->SaveAs("dataHist.png");
+    delete dataHist;
+  }
+}
+
+void Fitter::Project2DHistTo1D()
+{
+  std::cout << "Projecting 2D histograms to 1D..." << std::endl;
+
+  for (auto & HistPair2D : fHistMap2D)
+  {
+    const auto & sample = HistPair2D.first;
+    fHistMapX[sample] = (TH1F*)HistPair2D.second->ProjectionX(Form("%s_projX",Config::HistNameMap[sample].Data()));
+    fHistMapY[sample] = (TH1F*)HistPair2D.second->ProjectionY(Form("%s_projY",Config::HistNameMap[sample].Data()));
+  }
+}
+
+void Fitter::DeclareCoefficients()
 {
   std::cout << "Getting integral counts and fractions..." << std::endl;
 
   // Count up background first
   std::map<SampleType,Float_t> nBkgdMap;
-  nBkgdMap[GJets] = ((fHistMap2D[GJets]->Integral())*(fGJetsHistMC_SR->Integral()))/(fGJetsHistMC_CR->Integral());
-  nBkgdMap[QCD]   = ((fHistMap2D[QCD]  ->Integral())*(fQCDHistMC_SR  ->Integral()))/(fQCDHistMC_CR  ->Integral());
- 
+  nBkgdMap[GJets] = fHistMap2D[GJets]->Integral();
+  nBkgdMap[QCD]   = fHistMap2D[QCD]  ->Integral();
+
   fNTotalBkgd = 0.f;
   for (const auto & nBkgdPair : nBkgdMap) fNTotalBkgd += nBkgdPair.second;
 
@@ -272,24 +326,25 @@ void Fitter::GetCoefficients()
   fNPredSign = new RooRealVar("nsign","nsign",fNTotalSign,(fFracLow*fNTotalSign),(fFracHigh*fNTotalSign));
 }
 
-void Fitter::Project2DHistTo1D()
-{
-  std::cout << "Projecting 2D histograms to 1D..." << std::endl;
-
-  for (auto & HistPair2D : fHistMap2D)
-  {
-    const auto & sample = HistPair2D.first;
-    fHistMapX[sample] = (TH1F*)HistPair2D.second->ProjectionX(Form("%s_projX",Config::HistNameMap[sample].Data()));
-    fHistMapY[sample] = (TH1F*)HistPair2D.second->ProjectionY(Form("%s_projY",Config::HistNameMap[sample].Data()));
-  }
-}
-
 void Fitter::DeclareXYVars()
 {
   std::cout << "Declaring RooFit variables..." << std::endl;
 
+  // Build bins for X
+  fXRooBins = new RooBinning(fXBins.front(),fXBins.back(),"X bins");
+  for (const auto boundary : fXBins) fXRooBins->addBoundary(boundary);
+
+  // Declare vars and set bins: X
   fX = new RooRealVar("x",Form("%s",fXTitle.Data()),fXBins.front(),fXBins.back());
+  fX->setBinning(*fXRooBins);
+  
+  // Build bins for Y
+  fYRooBins = new RooBinning(fYBins.front(),fYBins.back(),"Y bins");
+  for (const auto boundary : fYBins) fYRooBins->addBoundary(boundary);
+
+  // Declare vars and set bins: Y
   fY = new RooRealVar("y",Form("%s",fYTitle.Data()),fYBins.front(),fYBins.back());
+  fY->setBinning(*fYRooBins);
 }
 
 template <typename T>
@@ -301,7 +356,7 @@ void Fitter::PreparePdfs(const T & HistMap, FitInfo & fitInfo)
   Fitter::DeclareDatasets(HistMap,fitInfo);
 
   // Make pdfs from histograms
-  Fitter::MakeSamplePdfs(fitInfo);
+  Fitter::DeclareSamplePdfs(fitInfo);
 }
 
 template <typename T>
@@ -319,7 +374,7 @@ void Fitter::DeclareDatasets(const T & HistMap, FitInfo & fitInfo)
   }
 }
 
-void Fitter::MakeSamplePdfs(FitInfo & fitInfo)
+void Fitter::DeclareSamplePdfs(FitInfo & fitInfo)
 {
   std::cout << "Setting Sample Pdfs for: " << fitInfo.Text.Data() << std::endl;
 
@@ -852,7 +907,8 @@ void Fitter::ReadPlotConfig()
 	     (str.find("x_var=") != std::string::npos)      ||
 	     (str.find("x_labels=") != std::string::npos)   ||
 	     (str.find("y_var=") != std::string::npos)      ||
-	     (str.find("y_labels=") != std::string::npos))
+	     (str.find("y_labels=") != std::string::npos)   ||
+	     (str.find("z_title=") != std::string::npos))
     {
       continue;
     }

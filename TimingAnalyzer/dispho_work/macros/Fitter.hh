@@ -18,6 +18,7 @@
 // RooFit includes
 #include "RooFit.h"
 #include "RooRealVar.h"
+#include "RooBinning.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
 #include "RooAddPdf.h"
@@ -92,15 +93,16 @@ public:
   
   // Prep for common variables/datasets/etc
   void GetInputHists();
-  void GetCoefficients();
-  void MakeInputPlots();
+  void ScaleCRtoSR();
+  void DumpInputInfo();
   void Project2DHistTo1D();
+  void DeclareCoefficients();
   void DeclareXYVars();
 
   // Prep for pdfs
   template <typename T>
   void DeclareDatasets(const T & HistMap, FitInfo & fitInfo);
-  void MakeSamplePdfs(FitInfo & fitInfo);
+  void DeclareSamplePdfs(FitInfo & fitInfo);
 
   // Subroutine for fitting
   void MakeFit(FitInfo & fitInfo);
@@ -181,9 +183,12 @@ private:
   TString fXCut;
   TString fYCut;
 
-  // Roo vars
+  // Roo vars and bins
   RooRealVar * fX;
   RooRealVar * fY;
+  
+  RooBinning * fXRooBins;
+  RooBinning * fYRooBins;
 
   // Style
   TStyle * fTDRStyle;

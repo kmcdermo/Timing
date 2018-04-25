@@ -254,6 +254,10 @@ void TreePlotter2D::ReadPlotConfig()
       str = Config::RemoveDelim(str,"y_labels=");
       Config::SetupBinLabels(str,fYLabels);
     }
+    else if (str.find("z_title=") != std::string::npos)
+    {
+      fZTitle = Config::RemoveDelim(str,"z_title=");
+    }
     else 
     {
       std::cerr << "Aye... your plot config is messed up, try again!" << std::endl;
@@ -285,6 +289,7 @@ TH2F * TreePlotter2D::SetupHist(const TString & name)
   // set axis titles
   hist->GetXaxis()->SetTitle(fXTitle.Data());
   hist->GetYaxis()->SetTitle(fYTitle.Data());
+  hist->GetZaxis()->SetTitle(fZTitle.Data());
 
   // set x-axis labels only if read in
   if (fXLabels.size() > 0)

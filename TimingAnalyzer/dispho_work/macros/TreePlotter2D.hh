@@ -67,6 +67,7 @@ private:
   std::vector<Double_t> fYBins;
   Bool_t fYVarBins;
   std::vector<TString> fYLabels;
+  TString fZTitle;
 
   // Style
   TStyle * fTDRStyle;
