@@ -22,7 +22,7 @@ Fitter::Fitter(const TString & fitconfig, const TString & outfiletext)
   gROOT->ForceStyle();
 
   // init configuration, set minimizer
-  Fitter::SetupDefaultBools();
+  Fitter::SetupDefaultValues();
   Fitter::SetupConfig();
   Fitter::ReadFitConfig();
   Fitter::ReadPlotConfig();
@@ -193,8 +193,8 @@ void Fitter::GetCoefficients()
   nBkgdMap[GJets] = ((fHistMap2D[GJets]->Integral())*(fGJetsHistMC_SR->Integral()))/(fGJetsHistMC_CR->Integral());
   nBkgdMap[QCD]   = ((fHistMap2D[QCD]  ->Integral())*(fQCDHistMC_SR  ->Integral()))/(fQCDHistMC_CR  ->Integral());
  
-  fNBkgdTotal = 0.f;
-  for (const auto & nBkgdPair : nBkgdMap) fNBkgdTotal += nBkgdPair.second;
+  fNTotalBkgd = 0.f;
+  for (const auto & nBkgdPair : nBkgdMap) fNTotalBkgd += nBkgdPair.second;
 
   for (auto & nBkgdPair : nBkgdMap)
   {
@@ -202,15 +202,15 @@ void Fitter::GetCoefficients()
     const auto   nbkgd  = nBkgdPair.second;
 
     const TString name = Form("%s_frac",Config::HistNameMap[sample].Data());
-    fFracMap[sample] = new RooRealVar(Form("%s",name.Data()),Form("%s",name.Data()),nbkgd/fNBkgdTotal);
+    fFracMap[sample] = new RooRealVar(Form("%s",name.Data()),Form("%s",name.Data()),nbkgd/fNTotalBkgd);
   }
 
   // Count signal
-  fNSignTotal = (fBkgdOnly ? 0.f : fHistMap2D[GMSB]->Integral());
+  fNTotalSign = (fBkgdOnly ? 0.f : fHistMap2D[GMSB]->Integral());
 
   // make vars for varying extended PDFs
-  fNPredBkgd = new RooRealVar("nbkgd","nbkgd",fNBkgdTotal,(fFracLow*fNBkgdTotal),(fFracHigh*fNBkgdTotal));
-  fNPredSign = new RooRealVar("nsign","nsign",fNSignTotal,(fFracLow*fNSignTotal),(fFracHigh*fNSignTotal));
+  fNPredBkgd = new RooRealVar("nbkgd","nbkgd",fNTotalBkgd,(fFracLow*fNTotalBkgd),(fFracHigh*fNTotalBkgd));
+  fNPredSign = new RooRealVar("nsign","nsign",fNTotalSign,(fFracLow*fNTotalSign),(fFracHigh*fNTotalSign));
 }
 
 void Fitter::DeclareXYVars()
@@ -275,6 +275,8 @@ void Fitter::MakeFit(FitInfo & fitInfo)
   // run n fits
   for (auto ifit = 0; ifit < fNFits; ifit++)
   {
+    std::cout << "Working on ifit " << ifit << " of " << fNFits << " for: " << fitInfo.Text.Data() << std::endl;
+
     // Throw random numbers for new nEvents
     if (fGenData) Fitter::ThrowPoisson(fitInfo);
 
@@ -315,10 +317,10 @@ void Fitter::MakeFit(FitInfo & fitInfo)
     }
 
     // Final Bits for fOutTree
-    Fitter::FillOutTree();
+    Fitter::FillOutTree(fitInfo);
 
     // delete dataset and reset pdf
-    Fitter::DeleteModel(fitInfo); 
+    Fitter::DeleteModel(fitInfo,ifit); 
   }
 }
 
@@ -327,8 +329,8 @@ void Fitter::ThrowPoisson(const FitInfo & fitInfo)
   std::cout << "Throwing poisson for generating toy data for: " << fitInfo.Text.Data() << std::endl;
 
   // generate random poisson number from total
-  fNPredBkgd->setVal(gRandom->Poisson(fFracGen*fNBkgdTotal));
-  fNPredSign->setVal(gRandom->Poisson(fFracGen*fNSignTotal));
+  fNPredBkgd->setVal(gRandom->Poisson(fFracGen*fNTotalBkgd));
+  fNPredSign->setVal(gRandom->Poisson(fFracGen*fNTotalSign));
 
   // for fOutTree
   fNGenBkgd = fNPredBkgd->getVal();
@@ -350,7 +352,7 @@ void Fitter::BuildModel(FitInfo & fitInfo)
   // use signal?
   if (!fBkgdOnly)
   {
-    fitInfo.SignExPdf = new RooExtendPdf(Form("%s",esignname.Data()),Form("%s",esignname.Data()),*fitInfo.HistPdfMap.at(GMSB),*fNPredSign);
+    fitInfo.SignExtPdf = new RooExtendPdf(Form("%s",esignname.Data()),Form("%s",esignname.Data()),*fitInfo.HistPdfMap.at(GMSB),*fNPredSign);
     fitInfo.ModelPdf = new RooAddPdf(Form("%s",modelname.Data()),Form("%s",modelname.Data()),RooArgList(*fitInfo.BkgdExtPdf,*fitInfo.SignExtPdf));
   }
   else
@@ -361,7 +363,7 @@ void Fitter::BuildModel(FitInfo & fitInfo)
 
 void Fitter::GenerateData(FitInfo & fitInfo)
 {
-  std::cout << "Generating Asimov data for: " << fitInfo.Text.Data() << std::endl;
+  std::cout << "Generating toy data for: " << fitInfo.Text.Data() << std::endl;
 
   // generate the data and save to "Data" slot in RooDataHist Map
   fitInfo.DataHistMap[Data] = fitInfo.ModelPdf->generateBinned(fitInfo.ArgList,(fNGenBkgd+fNGenSign));
@@ -376,8 +378,8 @@ void Fitter::FitModel(FitInfo & fitInfo)
   std::cout << "Fit model for: " << fitInfo.Text.Data() << std::endl;
 
   // initialize norms before each fit, i.e. don't cheat!
-  fNPredBkgd->setVal(((fFracLow*fNBkgdTotal)+(fFracHigh*fNBkgdTotal))/2.f);
-  fNPredSign->setVal(((fFracLow*fNSignTotal)+(fFracHigh*fNSignTotal))/2.f);
+  fNPredBkgd->setVal(((fFracLow*fNTotalBkgd)+(fFracHigh*fNTotalBkgd))/2.f);
+  fNPredSign->setVal(((fFracLow*fNTotalSign)+(fFracHigh*fNTotalSign))/2.f);
 
   // perform the fit!
   fitInfo.ModelPdf->fitTo(*fitInfo.DataHistMap.at(Data),RooFit::SumW2Error(true));
@@ -447,14 +449,15 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   // Get the plots
   if      ((fitInfo.Fit == X) || (fitInfo.Fit == Y))
   {
-    // create histograms straight from pdfs
+    // create histograms straight from pdfs (norms already taken care of!)
     modelHist = (TH1F*)fitInfo.ModelPdf  ->createHistogram(Form("%s",modelname.Data()),*var);
     bkgdHist  = (TH1F*)fitInfo.BkgdExtPdf->createHistogram(Form("%s",bkgdname .Data()),*var);
     signHist  = (TH1F*)fitInfo.SignExtPdf->createHistogram(Form("%s",signname .Data()),*var);
 
-    // scale to actual value after the fit
-    bkgdHist->Scale(fNFitBkgd/bkgdHist->Integral("widths"));
-    signHist->Scale(fNFitSign/signHist->Integral("widths"));
+    std::cout << fitInfo.Text.Data() << " " << var->GetName() << std::endl;
+    std::cout << "bkgd: " << fNTotalBkgd << " " << fNGenBkgd << " " << fNFitBkgd << " " << bkgdHist->Integral("widths") << std::endl;
+    std::cout << "sign: " << fNTotalSign << " " << fNGenSign << " " << fNFitSign << " " << signHist->Integral("widths") << std::endl;
+    std::cout << std::endl;
   }
   else if (fitInfo.Fit == TwoD)
   {
@@ -462,9 +465,9 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
     auto & projvar = (isX ? fY : fX);
 
     // Project out in other variables first
-    RooAbsPdf * model1D = fitInfo.ModelPdf->createProjection(*projvar);
-    RooAbsPdf * bkgd1D  = fitInfo.BkgdEPdf->createProjection(*projvar);
-    RooAbsPdf * sign1D  = fitInfo.SignEPdf->createProjection(*projvar);
+    RooAbsPdf * model1D = fitInfo.ModelPdf  ->createProjection(*projvar);
+    RooAbsPdf * bkgd1D  = fitInfo.BkgdExtPdf->createProjection(*projvar);
+    RooAbsPdf * sign1D  = fitInfo.SignExtPdf->createProjection(*projvar);
 
     // Now make the histograms
     modelHist = (TH1F*)model1D->createHistogram(Form("%s",modelname.Data()),*var);
@@ -482,9 +485,9 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
     // Normalize
     const auto nFitTotal = fNFitBkgd + fNFitSign;
     modelHist->Scale(rescale ? nFitTotal/modelHist->Integral("widths") : nFitTotal);
-    bkgdHist ->Scale(rescale ? fNFitBkgd/modelHist->Integral("widths") : fNFitBkgd);
-    modelHist->Scale(rescale ? fNFitSign/modelHist->Integral("widths") : fNFitSign);
-
+    bkgdHist ->Scale(rescale ? fNFitBkgd/bkgdHist ->Integral("widths") : fNFitBkgd);
+    signHist ->Scale(rescale ? fNFitSign/signHist ->Integral("widths") : fNFitSign);
+     
     // delete projections
     delete sign1D;
     delete bkgd1D;
@@ -555,7 +558,7 @@ void Fitter::FillOutTree(const FitInfo & fitInfo)
   fOutTree->Fill();
 }
 
-void Fitter::DeleteModel(FitInfo & fitInfo)
+void Fitter::DeleteModel(FitInfo & fitInfo, const Int_t ifit)
 {
   std::cout << "Deleting model info for: " << fitInfo.Text.Data() << std::endl;      
 
@@ -563,7 +566,7 @@ void Fitter::DeleteModel(FitInfo & fitInfo)
   delete fitInfo.SignExtPdf;
   delete fitInfo.ModelPdf;
 
-  if (fGenData) delete fitInfo.DataHistMap[Data];
+  if (fGenData && (ifit != (fNFits - 1))) delete fitInfo.DataHistMap[Data];
 }
 
 void Fitter::ImportToWS(FitInfo & fitInfo)
@@ -579,18 +582,18 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
 
   // change names as needed
   fitInfo.BkgdPdf->SetName(Form("%s",bkgdname.Data()));
-  fitInfo.SignPdf->SetName(Form("%s",signname.Data()));
+  fitInfo.HistPdfMap[GMSB]->SetName(Form("%s",signname.Data()));
   fNPredBkgd->SetName(Form("%s_norm",bkgdname.Data()));
   fNPredSign->SetName(Form("%s_norm",signname.Data()));
 
   // Set values to generic expectationss
-  fNPredBkgd->setVal(fNBkgdTotal);
-  fNPredSign->setVal(fNSignTotal);
+  fNPredBkgd->setVal(fNTotalBkgd);
+  fNPredSign->setVal(fNTotalSign);
 
   // import into workspace
   workspace->import(*fitInfo.BkgdPdf);
   workspace->import(*fNPredBkgd);
-  workspace->import(*fitInfo.SignPdf);
+  workspace->import(*fitInfo.HistPdfMap[GMSB]);
   workspace->import(*fNPredSign);
   workspace->import(*fitInfo.DataHistMap.at(Data));
 
@@ -722,6 +725,11 @@ void Fitter::ReadFitConfig()
       str = Config::RemoveDelim(str,"frac_gen=");
       fFracGen = std::atof(str.c_str());
     }
+    else if (str.find("make_ws=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"make_ws=");
+      Config::SetupBool(str,fMakeWS);
+    }
     else if (str.find("do_fits=") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"do_fits=");
@@ -796,8 +804,8 @@ void Fitter::SetupOutTree()
   fOutTree = new TTree("exptree","Experiment Tree");
   
   fOutTree->Branch("nNFits",fNFits);
-  fOutTree->Branch("nBkgdTotal",&fNBkgdTotal);
-  fOutTree->Branch("nSignTotal",&fNSignTotal);
+  fOutTree->Branch("nTotalBkgd",&fNTotalBkgd);
+  fOutTree->Branch("nTotalSign",&fNTotalSign);
   fOutTree->Branch("fracGen",&fFracGen);
   fOutTree->Branch("nGenBkgd",&fNGenBkgd);
   fOutTree->Branch("nGenSign",&fNGenSign);
@@ -850,7 +858,7 @@ void Fitter::ScaleDown(TGraphAsymmErrors *& graph, const std::vector<Double_t> &
 
 void Fitter::ScaleDown(TH1F *& hist)
 {
-  std::cout << "Scaling down hist: " << graph->GetName() << std::endl;
+  std::cout << "Scaling down hist: " << hist->GetName() << std::endl;
 
   for (auto ibinX = 1; ibinX <= hist->GetXaxis()->GetNbins(); ibinX++)
   {
@@ -861,7 +869,7 @@ void Fitter::ScaleDown(TH1F *& hist)
   }
 }
 
-Float_t Fitter::GetMinimum(TGraphAsymmErrors *& graph, TH1F *& hist1, TH1F *& hist1)
+Float_t Fitter::GetMinimum(TGraphAsymmErrors *& graph, TH1F *& hist1, TH1F *& hist2)
 {
   std::cout << "Getting minimum for plot..." << std::endl;
 

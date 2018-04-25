@@ -110,7 +110,7 @@ public:
   void GetPredicted(FitInfo & fitInfo);
   void DrawFit(RooRealVar *& var, const TString & title, const FitInfo & fitInfo);
   void FillOutTree(const FitInfo & fitInfo);
-  void DeleteModel(FitInfo & fitInfo);
+  void DeleteModel(FitInfo & fitInfo, const Int_t ifit);
 
   // Helper Routines
   void ScaleUp(TH2F *& hist);
@@ -165,8 +165,8 @@ private:
   std::map<SampleType,TH1F*> fHistMapY;
 
   // Counts 
-  Float_t fNBkgdTotal;
-  Float_t fNSignTotal;
+  Float_t fNTotalBkgd;
+  Float_t fNTotalSign;
   std::map<SampleType,RooRealVar*> fFracMap; 
   RooRealVar * fNPredBkgd;
   RooRealVar * fNPredSign;
