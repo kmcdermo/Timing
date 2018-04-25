@@ -145,15 +145,18 @@ void Fitter::MakeInputPlots()
   delete bkgdHist;
   
   // Clone Signal 
-  TH2F * signHist = (TH2F*)fHistMap2D[GMSB]->Clone("SignHist");
-  signHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
-  Fitter::Scale(signHist,isUp);
-
-  // draw signal
-  signHist->Draw("colz");
-  Config::CMSLumi(canv);
-  canv->SaveAs("signHist.png");
-  delete signHist;
+  if (!fBkgdOnly)
+  {
+    TH2F * signHist = (TH2F*)fHistMap2D[GMSB]->Clone("SignHist");
+    signHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
+    Fitter::Scale(signHist,isUp);
+    
+    // draw signal
+    signHist->Draw("colz");
+    Config::CMSLumi(canv);
+    canv->SaveAs("signHist.png");
+    delete signHist;
+  }
 
   // Data Histogram --> need to blind it if called for
   if (!fGenData)
@@ -508,12 +511,12 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   // Setup PDF fit plot
   TH1F * modelHist;
   TH1F * bkgdHist;
-  TH1F * signHist;
+  TH1F * signHist = nullptr;
 
   // Set names of plots
   const TString modelname = Form("%s_Fit_Hist",fitInfo.ModelPdf  ->GetName());
   const TString bkgdname  = Form("%s_Fit_Hist",fitInfo.BkgdExtPdf->GetName());
-  const TString signname  = Form("%s_Fit_Hist",fitInfo.SignExtPdf->GetName());
+  const TString signname  = ((!fBkgdOnly) ? Form("%s_Fit_Hist",fitInfo.SignExtPdf->GetName()) : "");
 
   // Get the plots
   if      ((fitInfo.Fit == X) || (fitInfo.Fit == Y))
@@ -521,7 +524,7 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
     // create histograms straight from pdfs (norms already taken care of!)
     modelHist = (TH1F*)fitInfo.ModelPdf  ->createHistogram(Form("%s",modelname.Data()),*var);
     bkgdHist  = (TH1F*)fitInfo.BkgdExtPdf->createHistogram(Form("%s",bkgdname .Data()),*var);
-    signHist  = (TH1F*)fitInfo.SignExtPdf->createHistogram(Form("%s",signname .Data()),*var);
+    if (!fBkgdOnly) signHist = (TH1F*)fitInfo.SignExtPdf->createHistogram(Form("%s",signname.Data()),*var);
   }
   else if (fitInfo.Fit == TwoD)
   {
@@ -531,29 +534,30 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
     // Project out in other variables first
     RooAbsPdf * model1D = fitInfo.ModelPdf  ->createProjection(*projvar);
     RooAbsPdf * bkgd1D  = fitInfo.BkgdExtPdf->createProjection(*projvar);
-    RooAbsPdf * sign1D  = fitInfo.SignExtPdf->createProjection(*projvar);
+    RooAbsPdf * sign1D  = nullptr;
+    if (!fBkgdOnly) sign1D = fitInfo.SignExtPdf->createProjection(*projvar);
 
     // Now make the histograms
     modelHist = (TH1F*)model1D->createHistogram(Form("%s",modelname.Data()),*var);
     bkgdHist  = (TH1F*)bkgd1D ->createHistogram(Form("%s",bkgdname .Data()),*var);
-    signHist  = (TH1F*)sign1D ->createHistogram(Form("%s",signname .Data()),*var);
+    if (!fBkgdOnly) signHist = (TH1F*)sign1D->createHistogram(Form("%s",signname.Data()),*var);
 
     // Rescale (down) as necessary
     if (rescale)
     {
       Fitter::Scale(modelHist,isUp);
       Fitter::Scale(bkgdHist,isUp);
-      Fitter::Scale(signHist,isUp);
+      if (!fBkgdOnly) Fitter::Scale(signHist,isUp);
     }
 
     // Normalize
     const auto nFitTotal = fNFitBkgd + fNFitSign;
     modelHist->Scale(rescale ? nFitTotal/modelHist->Integral("widths") : nFitTotal);
     bkgdHist ->Scale(rescale ? fNFitBkgd/bkgdHist ->Integral("widths") : fNFitBkgd);
-    signHist ->Scale(rescale ? fNFitSign/signHist ->Integral("widths") : fNFitSign);
+    if (!fBkgdOnly) signHist->Scale(rescale ? fNFitSign/signHist->Integral("widths") : fNFitSign);
      
     // delete projections
-    delete sign1D;
+    if (!fBkgdOnly) delete sign1D;
     delete bkgd1D;
     delete model1D;
   }
@@ -566,7 +570,7 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   // decorate and draw PDFs
   modelHist->SetLineColor(kBlue);
   bkgdHist ->SetLineColor(kRed);
-  signHist ->SetLineColor(kGreen);
+  if (!fBkgdOnly) signHist->SetLineColor(kGreen);
   modelHist->SetLineWidth(2);
 
   // Get canvas and draw
@@ -576,7 +580,7 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   // draw PDF first
   modelHist->Draw("hist");
   bkgdHist ->Draw("hist same");
-  signHist ->Draw("hist same");
+  if (!fBkgdOnly) signHist->Draw("hist same");
   dataGraph->Draw("PZ same");
 
   // add legend
@@ -584,7 +588,7 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   leg->AddEntry(dataGraph,"Toy Data","epl");
   leg->AddEntry(modelHist,"Norm. Fit","l");
   leg->AddEntry(bkgdHist,"Norm. Bkgd","l");
-  leg->AddEntry(signHist,"Norm. Sign","l");
+  if (!fBkgdOnly) leg->AddEntry(signHist,"Norm. Sign","l");
   leg->Draw("same");
 
   // get min/max
@@ -608,7 +612,7 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   // delete the rest
   delete leg;
   delete canv;
-  delete signHist;
+  if (!fBkgdOnly) delete signHist;
   delete bkgdHist;
   delete modelHist;
   delete dataGraph;
@@ -627,7 +631,7 @@ void Fitter::DeleteModel(FitInfo & fitInfo, const Int_t ifit)
   std::cout << "Deleting model info for: " << fitInfo.Text.Data() << std::endl;      
 
   delete fitInfo.BkgdExtPdf;
-  delete fitInfo.SignExtPdf;
+  if (!fBkgdOnly) delete fitInfo.SignExtPdf;
   delete fitInfo.ModelPdf;
 
   if (fGenData && (ifit != (fNFits - 1))) delete fitInfo.DataHistMap[Data];
@@ -993,17 +997,23 @@ Float_t Fitter::GetMinimum(TGraphAsymmErrors *& graph, TH1F *& hist1, TH1F *& hi
   auto min = 1e9;
 
   // need to loop through to check bin != 0
-  for (auto bin = 1; bin <= hist1->GetNbinsX(); bin++)
+  if (hist1 != (TH1F*)NULL)
   {
-    const auto tmpmin = hist1->GetBinContent(bin);
-    if ((tmpmin < min) && (tmpmin > 0)) min = tmpmin;
+    for (auto bin = 1; bin <= hist1->GetNbinsX(); bin++)
+    {
+      const auto tmpmin = hist1->GetBinContent(bin);
+      if ((tmpmin < min) && (tmpmin > 0)) min = tmpmin;
+    }
   }
 
   // need to loop through to check bin != 0
-  for (auto bin = 1; bin <= hist2->GetNbinsX(); bin++)
+  if (hist2 != (TH1F*)NULL)
   {
-    const auto tmpmin = hist2->GetBinContent(bin);
-    if ((tmpmin < min) && (tmpmin > 0)) min = tmpmin;
+    for (auto bin = 1; bin <= hist2->GetNbinsX(); bin++)
+    {
+      const auto tmpmin = hist2->GetBinContent(bin);
+      if ((tmpmin < min) && (tmpmin > 0)) min = tmpmin;
+    }
   }
 
   // need to loop through to check point yval != 0
