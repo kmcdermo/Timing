@@ -9,7 +9,9 @@
 #include "TH2F.h"
 #include "TH1F.h"
 #include "TString.h"
+#include "TRandom.h"
 #include "TCanvas.h"
+#include "TLegend.h"
 #include "TGraphAsymmErrors.h"
 #include "TPaveText.h"
 
@@ -79,28 +81,32 @@ public:
 
   // Main calls
   void MakeFits();
-  void PrepareFits();
+  void PrepareCommon();
   template <typename T>
-  void MakeFit(const T & HistMap, FitInfo & fitInfo);
-  void Project2DHistTo1D();
+  void PreparePdfs(const T & HistMap, FitInfo & fitInfo);
+  void ImportToWS(FitInfo & fitInfo);
+  void RunExperiments(FitInfo & fitInfo);
 
   // meta data
   void MakeConfigPave();
 
-  // Prep for fits
+  // Prep for common variables
   void GetInputHists();
-  void GetConstants();
-  void DeclareVars();
+  void Project2DHistTo1D();
+  void GetCoefficients();
+  void DeclareXYVars();
+
+  // Prep for pdfs
+  void DeclareDatasets(const T & HistMap, FitInfo & fitInfo);
+  void MakeSamplePdfs(FitInfo & fitInfo);
+
 
   // Subroutine for fitting
   template <typename T>
-  void DeclareDatasets(const T & HistMap, FitInfo & fitInfo);
-  void MakeSamplePdfs(FitInfo & fitInfo);
   void BuildModel(FitInfo & fitInfo);
   void GenerateData(FitInfo & fitInfo);
   void FitModel(FitInfo & fitInfo);
   void DrawFit(RooRealVar *& var, const TString & title, const FitInfo & fitInfo);
-  void ImportToWS(FitInfo & fitInfo);
 
   // Helper Routines
   void ScaleUp(TH2F *& hist);
@@ -161,6 +167,8 @@ private:
 
   // Number of events to generate
   Float_t fFracGen;
+  Float_t fNGenBkgd;
+  Float_t fNGenSign;
   Float_t fNGen;
 
   // Blinding
@@ -183,8 +191,13 @@ private:
 
   // Experiment output
   TTree * fOutTree;
+  Float_t fNSumEntries;
+  Float_t fNPreFitBkgd;
+  Float_t fNPreFitSign;
   Float_t fNFitBkgd;
+  Float_t fNFitBkgdErr;
   Float_t fNFitSign;
+  Float_t fNFitSignErr;
   Float_t fNExpected;
   std::string fFitID;
 };

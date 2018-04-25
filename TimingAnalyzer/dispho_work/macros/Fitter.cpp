@@ -71,6 +71,15 @@ void Fitter::MakeFits()
   
   // Do the fit in 2D
   FitInfo FitInfo2D(RooArgList(*fX,*fY),"2D",TwoD);
+
+
+
+  // Declare datasets with input histograms (when using real data as input)
+  Fitter::DeclareDatasets(HistMap,fitInfo);
+
+  // Make pdfs from histograms
+  Fitter::MakeSamplePdfs(fitInfo);
+
   Fitter::MakeFit(fHistMap2D,FitInfo2D);
 
   // Project 2D Hist to 1D
@@ -166,7 +175,17 @@ void Fitter::GetInputHists()
   }
 }  
 
-void Fitter::GetConstants()
+void Fitter::Project2DHistTo1D()
+{
+  for (auto & HistPair2D : fHistMap2D)
+  {
+    const auto & sample = HistPair2D.first;
+    fHistMapX[sample] = (TH1F*)HistPair2D.second->ProjectionX(Form("%s_projX",Config::HistNameMap[sample].Data()));
+    fHistMapY[sample] = (TH1F*)HistPair2D.second->ProjectionY(Form("%s_projY",Config::HistNameMap[sample].Data()));
+  }
+}
+
+void Fitter::GetCoefficients()
 {
   std::cout << "Getting integral counts..." << std::endl;
 
@@ -194,11 +213,11 @@ void Fitter::GetConstants()
   fNInTotal = fNBkgdTotal+fNSignTotal;
 
   // make vars for varying extended PDFs
-  fNPredBkgd = new RooRealVar("nbkgd","nbkgd",fFracLow*fNBkgdTotal,(fFracHigh)*fNBkgdTotal);
-  fNPredSign = new RooRealVar("nsign","nsign",fFracLow*fNSignTotal,(fFracHigh)*fNSignTotal);
+  fNPredBkgd = new RooRealVar("nbkgd","nbkgd",fNBkgdTotal,fFracLow*fNBkgdTotal,(fFracHigh)*fNBkgdTotal);
+  fNPredSign = new RooRealVar("nsign","nsign",fNSignTotal,fFracLow*fNSignTotal,(fFracHigh)*fNSignTotal);
 }
 
-void Fitter::DeclareVars()
+void Fitter::DeclareXYVars()
 {
   std::cout << "Declaring RooFit variables..." << std::endl;
 
@@ -211,19 +230,13 @@ void Fitter::MakeFit(const T & HistMap, FitInfo & fitInfo)
 {
   std::cout << "Doing full chain of fit for: " << fitInfo.Text.Data() << std::endl;
 
-  // Declare datasets with input histograms (when using real data as input)
-  Fitter::DeclareDatasets(HistMap,fitInfo);
-
-  // Make pdfs from histograms
-  Fitter::MakeSamplePdfs(fitInfo);
-
-  // Build Model
-  Fitter::BuildModel(fitInfo);
-
   // run n experiments
   const Int_t nfit = (fRunExp ? fNExperiments : 1);
   for (auto ifit = 0; ifit < nfit; ifit++)
   {
+    // Build Model
+    Fitter::BuildModel(fitInfo);
+
     // Construct asimov dataset from PDFS
     if (fGenData) Fitter::GenerateData(fitInfo);
     
@@ -233,42 +246,54 @@ void Fitter::MakeFit(const T & HistMap, FitInfo & fitInfo)
     // save info
     if (fRunExp) 
     {
-      fFitID = fitInfo.Text.Data();
-      fNFitBkgd = fNPredBkgd->getVal();
-      fNFitSign = fNPredSign->getVal();
+      fFitID     = fitInfo.Text.Data();
+      fNFitBkgd  = fNPredBkgd->getVal();
+      fNFitBkgdErr = fNPredBkgd->getError();
+      fNFitSign  = fNPredSign->getVal();
+      fNFitSignErr  = fNPredSign->getError();
       fNExpected = fitInfo.ModelPdf->expectedEvents(fitInfo.ArgList);
       fOutTree->Fill();
-    }
-  }    
-  
-  if (!fRunExp) 
-  { 
-    // Draw fit(s) in 1D
-    if (fitInfo.Fit == TwoD)
+    }  
+
+    if (ifit % 100 == 0)
     {
-      Fitter::DrawFit(fX,"xfit",fitInfo);
-      Fitter::DrawFit(fY,"yfit",fitInfo);
+      // Draw fit(s) in 1D
+      if (fitInfo.Fit == TwoD)
+      {
+	Fitter::DrawFit(fX,Form("%i_xfit",ifit),fitInfo);
+	Fitter::DrawFit(fY,Form("%i_yfit",ifit),fitInfo);
+      }
+      else if (fitInfo.Fit == X)
+      {
+	Fitter::DrawFit(fX,Form("%i_fit",ifit),fitInfo);
+      }
+      else if (fitInfo.Fit == Y)
+      {
+	Fitter::DrawFit(fY,Form("%i_fit",ifit),fitInfo);
+      }
+      else
+      {
+	std::cerr << "Not sure how, but you provided an incorrect enum for FitType! Exiting..." << std::endl;
+	exit(1);
+      }
     }
-    else if (fitInfo.Fit == X)
-    {
-      Fitter::DrawFit(fX,"fit",fitInfo);
-    }
-    else if (fitInfo.Fit == Y)
-    {
-      Fitter::DrawFit(fY,"fit",fitInfo);
-    }
-    else
-    {
-      std::cerr << "Not sure how, but you provided an incorrect enum for FitType! Exiting..." << std::endl;
-      exit(1);
+
+    // delete dataset and reset pdf
+    if (ifit < nfit - 1)
+    { 
+      delete fitInfo.BkgdPdf;
+      delete fitInfo.EBkgdPdf;
+      delete fitInfo.ESignPdf;
+      delete fitInfo.ModelPdf;
+      delete fitInfo.DataHistMap[Data]; // ugh
     }
 
     // Save in a workspace
-    Fitter::ImportToWS(fitInfo);
+    if (!fRunExp) Fitter::ImportToWS(fitInfo);
   }
 }
 
-template <typename T>  
+template <typename T>
 void Fitter::DeclareDatasets(const T & HistMap, FitInfo & fitInfo)
 {
   std::cout << "Setting datasets for: " << fitInfo.Text.Data() << std::endl;
@@ -297,20 +322,29 @@ void Fitter::MakeSamplePdfs(FitInfo & fitInfo)
     const TString name = Form("%s_PDF_%s",Config::HistNameMap[sample].Data(),fitInfo.Text.Data());
     fitInfo.HistPdfMap[sample] = new RooHistPdf(Form("%s",name.Data()),Form("%s",name.Data()),fitInfo.ArgList,*datahist);
   }
+
+  // Build Bkgd-Only Pdfs
+  const TString bkgdname  = Form("bkgdpdf_%s",fitInfo.Text.Data());
+  fitInfo.BkgdPdf = new RooAddPdf(Form("%s",bkgdname.Data()),Form("%s",bkgdname.Data()),RooArgList(*fitInfo.HistPdfMap.at(GJets),*fitInfo.HistPdfMap.at(QCD)),RooArgList(*fFracMap.at(GJets),*fFracMap.at(QCD)));
 }
 
 void Fitter::BuildModel(FitInfo & fitInfo)
 {
   std::cout << "Build model for: " << fitInfo.Text.Data() << std::endl;
 
+  fNGenBkgd = gRandom->Poisson(fFracGen*fNBkgdTotal);
+  fNGenSign = gRandom->Poisson(fFracGen*fNSignTotal);
+  fNPredBkgd->setVal(fNGenBkgd);
+  fNPredSign->setVal(fNGenSign);
+
+  fNPreFitBkgd = fNPredBkgd->getVal();
+  fNPreFitSign = fNPredSign->getVal();
+
   // Declare strings for naming pdfs
-  const TString bkgdname  = Form("bkgdpdf_%s",fitInfo.Text.Data());
   const TString ebkgdname = Form("ebkgdpdf_%s",fitInfo.Text.Data());
   const TString esignname = Form("esignpdf_%s",fitInfo.Text.Data());
   const TString modelname = Form("modelpdf_%s",fitInfo.Text.Data());
 
-  // Build Bkgd-Only Pdfs first
-  fitInfo.BkgdPdf = new RooAddPdf(Form("%s",bkgdname.Data()),Form("%s",bkgdname.Data()),RooArgList(*fitInfo.HistPdfMap.at(GJets),*fitInfo.HistPdfMap.at(QCD)),RooArgList(*fFracMap.at(GJets),*fFracMap.at(QCD)));
   fitInfo.EBkgdPdf = new RooExtendPdf(Form("%s",ebkgdname.Data()),Form("%s",ebkgdname.Data()),*fitInfo.BkgdPdf,*fNPredBkgd);
 
   // use signal?
@@ -329,14 +363,24 @@ void Fitter::GenerateData(FitInfo & fitInfo)
 {
   std::cout << "Generating Asimov data for: " << fitInfo.Text.Data() << std::endl;
 
-  fNGen = fFracGen*fNInTotal;
-  fitInfo.DataHistMap[Data] = fitInfo.ModelPdf->generateBinned(fitInfo.ArgList,fNGen,RooFit::Asimov());
+  fNGen = fNGenBkgd+fNGenSign;
+  fitInfo.DataHistMap[Data] = fitInfo.ModelPdf->generateBinned(fitInfo.ArgList,fNGen);
+
+  const TString name = Form("%s_RooDataHist_%s",Config::HistNameMap[Data].Data(),fitInfo.Text.Data());
+  fitInfo.DataHistMap[Data]->SetName(Form("%s",name.Data()));
+
+  fNSumEntries = fitInfo.DataHistMap[Data]->sumEntries();
 }
 
 void Fitter::FitModel(FitInfo & fitInfo)
 {
   std::cout << "Fit model for: " << fitInfo.Text.Data() << std::endl;
 
+  // initialize norms before each fit
+  fNPredBkgd->setVal(((fFracLow*fNBkgdTotal)+(fFracHigh*fNBkgdTotal))/2.f);
+  fNPredSign->setVal(((fFracLow*fNSignTotal)+(fFracHigh*fNSignTotal))/2.f);
+
+  // perform the fit!
   fitInfo.ModelPdf->fitTo(*fitInfo.DataHistMap.at(Data),RooFit::SumW2Error(true));
 }
 
@@ -383,10 +427,19 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
 
   // Setup PDF fit plot
   TH1F * pdfHist;
+
+  TH1F * bkgdHist;
+  TH1F * signHist;
   const TString pdfname = Form("%s_Fit_Hist",fitInfo.ModelPdf->GetName());
   if      ((fitInfo.Fit == X) || (fitInfo.Fit == Y))
   {
     pdfHist = (TH1F*)fitInfo.ModelPdf->createHistogram(Form("%s",pdfname.Data()),*var);
+
+    bkgdHist = (TH1F*)fitInfo.EBkgdPdf->createHistogram("bkgd_PostFit",*var);
+    signHist = (TH1F*)fitInfo.ESignPdf->createHistogram("sign_PostFit",*var);
+
+    bkgdHist->Scale(fNPredBkgd->getVal()/bkgdHist->Integral("widths"));
+    signHist->Scale(fNPredSign->getVal()/signHist->Integral("widths"));
   }
   else if (fitInfo.Fit == TwoD)
   {
@@ -422,9 +475,28 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   auto canv = new TCanvas();
   canv->cd();
 
+  // legend
+  auto leg = new TLegend(0.682,0.7,0.825,0.92);
+
   // draw PDF first
   pdfHist->Draw("hist");
   dataGraph->Draw("PZ same");
+
+  leg->AddEntry(dataGraph,"Toy Data","epl");
+  leg->AddEntry(pdfHist  ,"Norm. Fit","l");
+
+  if ((fitInfo.Fit == X) || (fitInfo.Fit == Y))
+  {
+    bkgdHist->SetLineColor(kRed);
+    signHist->SetLineColor(kGreen);
+
+    bkgdHist->Draw("hist same");
+    signHist->Draw("hist same");
+
+    leg->AddEntry(bkgdHist,"Norm. Bkgd","l");
+    leg->AddEntry(signHist,"Norm. Sign","l");
+  }
+  leg->Draw("same");
 
   // get min/max
   const auto min = Fitter::GetMinimum(dataGraph,pdfHist);
@@ -438,14 +510,21 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   canv->SaveAs(Form("%s_%s_lin.png",title.Data(),fitInfo.Text.Data()));
 
   // make the range nice and save (LOG)
-  pdfHist->SetMinimum(min/1.5);
+  pdfHist->SetMinimum(min/3.5);
   pdfHist->SetMaximum(max*1.5);
   canv->SetLogy(true);
   Config::CMSLumi(canv);
   canv->SaveAs(Form("%s_%s_log.png",title.Data(),fitInfo.Text.Data()));
 
   // delete the rest
+  delete leg;
   delete canv;
+
+  if ((fitInfo.Fit == X) || (fitInfo.Fit == Y))
+  {
+    delete signHist;
+    delete bkgdHist;
+  }
   delete pdfHist;
   delete dataGraph;
 }
@@ -461,16 +540,6 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
 
   fOutFile->cd();
   fitInfo.Workspace->Write(fitInfo.Workspace->GetName(),TObject::kWriteDelete);
-}
-
-void Fitter::Project2DHistTo1D()
-{
-  for (auto & HistPair2D : fHistMap2D)
-  {
-    const auto & sample = HistPair2D.first;
-    fHistMapX[sample] = (TH1F*)HistPair2D.second->ProjectionX(Form("%s_projX",Config::HistNameMap[sample].Data()));
-    fHistMapY[sample] = (TH1F*)HistPair2D.second->ProjectionY(Form("%s_projY",Config::HistNameMap[sample].Data()));
-  }
 }
 
 void Fitter::MakeConfigPave()
@@ -645,9 +714,16 @@ void Fitter::SetupOutTree()
   fOutTree->Branch("nBkgdTotal",&fNBkgdTotal);
   fOutTree->Branch("nSignTotal",&fNSignTotal);
   fOutTree->Branch("fracGen",&fFracGen);
+  fOutTree->Branch("nGenBkgd",&fNGenBkgd);
+  fOutTree->Branch("nGenSign",&fNGenSign);
   fOutTree->Branch("nGen",&fNGen);
+  fOutTree->Branch("nSumEntries",&fNSumEntries);
+  fOutTree->Branch("nPreFitBkgd",&fNPreFitBkgd);
+  fOutTree->Branch("nPreFitSign",&fNPreFitSign);
   fOutTree->Branch("nFitBkgd",&fNFitBkgd);
+  fOutTree->Branch("nFitBkgdErr",&fNFitBkgdErr);
   fOutTree->Branch("nFitSign",&fNFitSign);
+  fOutTree->Branch("nFitSignErr",&fNFitSignErr);
   fOutTree->Branch("nExpected",&fNExpected);
   fOutTree->Branch("fitID",&fFitID);
 }

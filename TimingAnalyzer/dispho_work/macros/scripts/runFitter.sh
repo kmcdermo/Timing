@@ -17,6 +17,6 @@ pushd ${topdir}
 popd
 
 echo "Copying to ${fulldir}"
-cp xfit_2D_lin.png yfit_2D_lin.png fit_projX_lin.png fit_projY_lin.png ${outfiletext}.root ${fulldir}
-cp xfit_2D_log.png yfit_2D_log.png fit_projX_log.png fit_projY_log.png ${fulldir}
+cp *_xfit_2D_lin.png *_yfit_2D_lin.png *_fit_projX_lin.png *_fit_projY_lin.png ${fulldir}
+cp *_xfit_2D_log.png *_yfit_2D_log.png *_fit_projX_log.png *_fit_projY_log.png ${fulldir}
 cp ${outfiletext}.root ${fulldir}
