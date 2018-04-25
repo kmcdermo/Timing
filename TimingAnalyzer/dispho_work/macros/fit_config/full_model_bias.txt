@@ -8,7 +8,7 @@ frac_low=0
 frac_high=10
 
 do_fits=1
-n_fits=1000
+n_fits=10000
 n_draw=10
 
 gen_data=1
