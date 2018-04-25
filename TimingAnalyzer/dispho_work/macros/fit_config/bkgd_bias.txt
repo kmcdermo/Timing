@@ -7,8 +7,10 @@ plot_config=plot_config/met_vs_time.txt
 frac_low=0
 frac_high=10
 
+bkgd_only=1
+
 do_fits=1
-n_fits=1000
+n_fits=10000
 n_draw=10
 
 gen_data=1
