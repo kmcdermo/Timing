@@ -54,11 +54,12 @@ struct FitInfo
   // PDF inputs/outputs
   std::map<SampleType,RooDataHist*> DataHistMap;
   std::map<SampleType,RooHistPdf*>  HistPdfMap;
-  RooAddPdf    * BkgdPdf;
-  RooExtendPdf * EBkgdPdf;
-  RooExtendPdf * ESignPdf;
+  RooAddPdf * BkgdPdf;
+
+  // model for fit
+  RooExtendPdf * BkgdExtPdf;
+  RooExtendPdf * SignExtPdf;
   RooAddPdf    * ModelPdf;
-  RooWorkspace * Workspace;
 };
 
 class Fitter
@@ -68,7 +69,7 @@ public:
   ~Fitter();
 
   // Initialize
-  void SetupDefaultBools();
+  void SetupDefaultValues();
   void SetupConfig();
   void ReadFitConfig();
   void ReadPlotConfig();
@@ -80,39 +81,42 @@ public:
   void DeleteMap(T & Map);
 
   // Main calls
-  void MakeFits();
+  void DoMain();
   void PrepareCommon();
   template <typename T>
   void PreparePdfs(const T & HistMap, FitInfo & fitInfo);
-  void ImportToWS(FitInfo & fitInfo);
   void RunExperiments(FitInfo & fitInfo);
-
-  // meta data
+  void ImportToWS(FitInfo & fitInfo);
+  void SaveOutTree();
   void MakeConfigPave();
-
-  // Prep for common variables
+  
+  // Prep for common variables/datasets/etc
   void GetInputHists();
   void Project2DHistTo1D();
   void GetCoefficients();
   void DeclareXYVars();
 
   // Prep for pdfs
+  template <typename T>
   void DeclareDatasets(const T & HistMap, FitInfo & fitInfo);
   void MakeSamplePdfs(FitInfo & fitInfo);
 
-
   // Subroutine for fitting
-  template <typename T>
+  void MakeFit(FitInfo & fitInfo);
+  void ThrowPoisson(const FitInfo & fitInfo);
   void BuildModel(FitInfo & fitInfo);
   void GenerateData(FitInfo & fitInfo);
   void FitModel(FitInfo & fitInfo);
+  void GetPredicted(FitInfo & fitInfo);
   void DrawFit(RooRealVar *& var, const TString & title, const FitInfo & fitInfo);
+  void FillOutTree(const FitInfo & fitInfo);
+  void DeleteModel(FitInfo & fitInfo);
 
   // Helper Routines
   void ScaleUp(TH2F *& hist);
   void ScaleDown(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins);
   void ScaleDown(TH1F *& hist);
-  Float_t GetMinimum(TGraphAsymmErrors *& graph, TH1F *& hist);
+  Float_t GetMinimum(TGraphAsymmErrors *& graph, TH1F *& hist1, TH1F *& hist2);
   Float_t GetMaximum(TGraphAsymmErrors *& graph, TH1F *& hist);
 
 private:
@@ -121,10 +125,25 @@ private:
   const TString fOutFileText;
   TString fPlotConfig;
 
-  // Bools
+  // Bools+Values
   Bool_t fBkgdOnly;
   Bool_t fGenData;
-  Bool_t fRunExp;
+  Bool_t fDoFits;
+  Bool_t fMakeWS;
+  Int_t  fNFits;
+  Int_t  fNDraw;
+
+  // fractional range of initial integral guess
+  Float_t fFracLow;
+  Float_t fFracHigh;
+
+  // Hist info
+  std::vector<Double_t> fXBins;
+  Bool_t fXVarBins;
+  TString fXTitle;
+  std::vector<Double_t> fYBins;
+  Bool_t fYVarBins;
+  TString fYTitle;
 
   // Input names
   TString fGJetsFileName;
@@ -145,31 +164,17 @@ private:
   std::map<SampleType,TH1F*> fHistMapX;
   std::map<SampleType,TH1F*> fHistMapY;
 
-  // Hist info
-  std::vector<Double_t> fXBins;
-  Bool_t fXVarBins;
-  TString fXTitle;
-  std::vector<Double_t> fYBins;
-  Bool_t fYVarBins;
-  TString fYTitle;
-
   // Counts 
   Float_t fNBkgdTotal;
   Float_t fNSignTotal;
-  Float_t fNInTotal;
   std::map<SampleType,RooRealVar*> fFracMap; 
   RooRealVar * fNPredBkgd;
   RooRealVar * fNPredSign;
-
-  // fractional range of initial integral guess
-  Float_t fFracLow;
-  Float_t fFracHigh;
 
   // Number of events to generate
   Float_t fFracGen;
   Float_t fNGenBkgd;
   Float_t fNGenSign;
-  Float_t fNGen;
 
   // Blinding
   TString fXCut;
@@ -186,19 +191,12 @@ private:
   TFile     * fOutFile;
   TPaveText * fConfigPave;
 
-  // Experiment input
-  Int_t fNExperiments;
-
   // Experiment output
   TTree * fOutTree;
-  Float_t fNSumEntries;
-  Float_t fNPreFitBkgd;
-  Float_t fNPreFitSign;
   Float_t fNFitBkgd;
   Float_t fNFitBkgdErr;
   Float_t fNFitSign;
   Float_t fNFitSignErr;
-  Float_t fNExpected;
   std::string fFitID;
 };
 
