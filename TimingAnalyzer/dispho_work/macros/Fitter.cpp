@@ -108,19 +108,87 @@ void Fitter::PrepareCommon()
   // Get the input 2D histograms
   Fitter::GetInputHists();
 
-  // Project 2D histograms into 1D for later use
-  Fitter::Project2DHistTo1D();
-
   // Get constants/fractions as needed
   Fitter::GetCoefficients();
+
+  // Make plots from input hists
+  Fitter::MakeInputPlots();
+
+  // Project 2D histograms into 1D for later use
+  Fitter::Project2DHistTo1D();
 
   // Declare variables used in fitting
   Fitter::DeclareXYVars();
 }
 
+void Fitter::MakeInputPlots()
+{
+  std::cout << "Making quick dump of input histograms..." << std::endl;
+
+  // scale back down temporarily (since already scaled up
+  const Bool_t isUp = false;
+
+  // make tmp canvas
+  TCanvas * canv = new TCanvas();
+
+  // Combine Bkgd samples
+  TH2F * bkgdHist = (TH2F*)fHistMap2D[GJets]->Clone("BkgdHist");
+  bkgdHist->Scale(fFracMap[GJets]->getVal());
+  bkgdHist->Add(fHistMap2D[QCD],fFracMap[QCD]->getVal());
+  bkgdHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
+  Fitter::Scale(bkgdHist,isUp);
+
+  // draw bkgd
+  bkgdHist->Draw("colz");
+  Config::CMSLumi(canv);
+  canv->SaveAs("bkgdHist.png");
+  delete bkgdHist;
+  
+  // Clone Signal 
+  TH2F * signHist = (TH2F*)fHistMap2D[GMSB]->Clone("SignHist");
+  signHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
+  Fitter::Scale(signHist,isUp);
+
+  // draw signal
+  signHist->Draw("colz");
+  Config::CMSLumi(canv);
+  canv->SaveAs("signHist.png");
+  delete signHist;
+
+  // Data Histogram --> need to blind it if called for
+  if (!fGenData)
+  {
+    TH2F * dataHist = (TH2F*)fHistMap2D[Data]->Clone("DataHist");
+    dataHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
+
+    // blinding : FIXME
+    for (auto ibinX = 1; ibinX <= dataHist->GetXaxis()->GetNbins(); ibinX++)
+    {
+      const auto bincenterX = dataHist->GetXaxis()->GetBinCenter(ibinX);
+      for (auto ibinY = 1; ibinY <= dataHist->GetYaxis()->GetNbins(); ibinY++)
+      {
+	const auto bincenterY = dataHist->GetYaxis()->GetBinCenter(ibinY);
+	if ((bincenterX > 3) || (bincenterY > 200)) dataHist->SetBinContent(ibinX,ibinY,0);
+      }
+    }
+
+    // now scale it
+    Fitter::Scale(dataHist,isUp);
+
+    // draw hist
+    dataHist->Draw("colz");
+    Config::CMSLumi(canv);
+    canv->SaveAs("dataHist.png");
+    delete dataHist;
+  }
+}
+
 void Fitter::GetInputHists()
 {
   std::cout << "Getting input histograms..." << std::endl;
+
+  // scale up
+  const Bool_t isUp = true;
 
   // GJets CR
   fGJetsFile = TFile::Open(Form("%s",fGJetsFileName.Data()));
@@ -130,8 +198,8 @@ void Fitter::GetInputHists()
   fGJetsHistMC_CR   = (TH2F*)fGJetsFile->Get(Form("%s",Config::HistNameMap[GJets].Data()));
   Config::CheckValidTH2F(fHistMap2D[GJets],Config::HistNameMap[Data] ,fGJetsFileName);
   Config::CheckValidTH2F(fGJetsHistMC_CR  ,Config::HistNameMap[GJets],fGJetsFileName);
-  Fitter::ScaleUp(fHistMap2D[GJets]);
-  Fitter::ScaleUp(fGJetsHistMC_CR);
+  Fitter::Scale(fHistMap2D[GJets],isUp);
+  Fitter::Scale(fGJetsHistMC_CR,isUp);
 
   // QCD CR
   fQCDFile = TFile::Open(Form("%s",fQCDFileName.Data()));
@@ -141,8 +209,8 @@ void Fitter::GetInputHists()
   fQCDHistMC_CR   = (TH2F*)fQCDFile->Get(Form("%s",Config::HistNameMap[QCD].Data()));
   Config::CheckValidTH2F(fHistMap2D[QCD],Config::HistNameMap[Data],fQCDFileName);
   Config::CheckValidTH2F(fQCDHistMC_CR  ,Config::HistNameMap[QCD] ,fQCDFileName);
-  Fitter::ScaleUp(fHistMap2D[QCD]);
-  Fitter::ScaleUp(fQCDHistMC_CR);
+  Fitter::Scale(fHistMap2D[QCD],isUp);
+  Fitter::Scale(fQCDHistMC_CR,isUp);
 
   // SR
   fSRFile = TFile::Open(Form("%s",fSRFileName.Data()));
@@ -152,15 +220,15 @@ void Fitter::GetInputHists()
   fQCDHistMC_SR   = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[QCD].Data()));
   Config::CheckValidTH2F(fGJetsHistMC_SR,Config::HistNameMap[GJets],fSRFileName);
   Config::CheckValidTH2F(fQCDHistMC_SR  ,Config::HistNameMap[QCD]  ,fSRFileName);
-  Fitter::ScaleUp(fGJetsHistMC_SR);
-  Fitter::ScaleUp(fQCDHistMC_SR);
+  Fitter::Scale(fGJetsHistMC_SR,isUp);
+  Fitter::Scale(fQCDHistMC_SR,isUp);
 
   // use signal sample?
   if (!fBkgdOnly) 
   {
     fHistMap2D[GMSB] = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[GMSB].Data()));
     Config::CheckValidTH2F(fHistMap2D[GMSB],Config::HistNameMap[GMSB],fSRFileName);
-    Fitter::ScaleUp(fHistMap2D[GMSB]);
+    Fitter::Scale(fHistMap2D[GMSB],isUp);
   }
 
   // use real data?
@@ -168,21 +236,9 @@ void Fitter::GetInputHists()
   {
     fHistMap2D[Data] = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[Data].Data()));
     Config::CheckValidTH2F(fHistMap2D[Data],Config::HistNameMap[Data],fSRFileName);
-    Fitter::ScaleUp(fHistMap2D[Data]);
+    Fitter::Scale(fHistMap2D[Data],isUp);
   }
 }  
-
-void Fitter::Project2DHistTo1D()
-{
-  std::cout << "Projecting 2D histograms to 1D..." << std::endl;
-
-  for (auto & HistPair2D : fHistMap2D)
-  {
-    const auto & sample = HistPair2D.first;
-    fHistMapX[sample] = (TH1F*)HistPair2D.second->ProjectionX(Form("%s_projX",Config::HistNameMap[sample].Data()));
-    fHistMapY[sample] = (TH1F*)HistPair2D.second->ProjectionY(Form("%s_projY",Config::HistNameMap[sample].Data()));
-  }
-}
 
 void Fitter::GetCoefficients()
 {
@@ -211,6 +267,18 @@ void Fitter::GetCoefficients()
   // make vars for varying extended PDFs
   fNPredBkgd = new RooRealVar("nbkgd","nbkgd",fNTotalBkgd,(fFracLow*fNTotalBkgd),(fFracHigh*fNTotalBkgd));
   fNPredSign = new RooRealVar("nsign","nsign",fNTotalSign,(fFracLow*fNTotalSign),(fFracHigh*fNTotalSign));
+}
+
+void Fitter::Project2DHistTo1D()
+{
+  std::cout << "Projecting 2D histograms to 1D..." << std::endl;
+
+  for (auto & HistPair2D : fHistMap2D)
+  {
+    const auto & sample = HistPair2D.first;
+    fHistMapX[sample] = (TH1F*)HistPair2D.second->ProjectionX(Form("%s_projX",Config::HistNameMap[sample].Data()));
+    fHistMapY[sample] = (TH1F*)HistPair2D.second->ProjectionY(Form("%s_projY",Config::HistNameMap[sample].Data()));
+  }
 }
 
 void Fitter::DeclareXYVars()
@@ -406,6 +474,7 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
 
   // rescale as needed
   const Bool_t rescale = (isX && fXVarBins) || (isY && fYVarBins);
+  const Bool_t isUp    = false;
 
   // Draw 1D frame -- temporary
   auto plot = var->frame();
@@ -430,7 +499,7 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   if (rescale)
   {
     const auto & bins = (isX ? fXBins : fYBins);
-    Fitter::ScaleDown(dataGraph,bins);
+    Fitter::Scale(dataGraph,bins,isUp);
   }
   
   // delete plotOn --> will not use to draw, also deletes tmpDataGraph
@@ -453,11 +522,6 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
     modelHist = (TH1F*)fitInfo.ModelPdf  ->createHistogram(Form("%s",modelname.Data()),*var);
     bkgdHist  = (TH1F*)fitInfo.BkgdExtPdf->createHistogram(Form("%s",bkgdname .Data()),*var);
     signHist  = (TH1F*)fitInfo.SignExtPdf->createHistogram(Form("%s",signname .Data()),*var);
-
-    std::cout << fitInfo.Text.Data() << " " << var->GetName() << std::endl;
-    std::cout << "bkgd: " << fNTotalBkgd << " " << fNGenBkgd << " " << fNFitBkgd << " " << bkgdHist->Integral("widths") << std::endl;
-    std::cout << "sign: " << fNTotalSign << " " << fNGenSign << " " << fNFitSign << " " << signHist->Integral("widths") << std::endl;
-    std::cout << std::endl;
   }
   else if (fitInfo.Fit == TwoD)
   {
@@ -474,12 +538,12 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
     bkgdHist  = (TH1F*)bkgd1D ->createHistogram(Form("%s",bkgdname .Data()),*var);
     signHist  = (TH1F*)sign1D ->createHistogram(Form("%s",signname .Data()),*var);
 
-    // Rescale as necessary
+    // Rescale (down) as necessary
     if (rescale)
     {
-      Fitter::ScaleDown(modelHist);
-      Fitter::ScaleDown(bkgdHist);
-      Fitter::ScaleDown(signHist);
+      Fitter::Scale(modelHist,isUp);
+      Fitter::Scale(bkgdHist,isUp);
+      Fitter::Scale(signHist,isUp);
     }
 
     // Normalize
@@ -816,9 +880,9 @@ void Fitter::SetupOutTree()
   fOutTree->Branch("fitID",&fFitID);
 }
 
-void Fitter::ScaleUp(TH2F *& hist)
+void Fitter::Scale(TH2F *& hist, const Bool_t isUp)
 {
-  std::cout << "Scaling up hist: " << hist->GetName() << std::endl;
+  std::cout << "Scaling " << (isUp?"up":"down") << " hist: " << hist->GetName() << std::endl;
 
   for (auto ibinX = 1; ibinX <= hist->GetXaxis()->GetNbins(); ibinX++)
   {
@@ -827,45 +891,98 @@ void Fitter::ScaleUp(TH2F *& hist)
     {
       const auto binwidthY = hist->GetYaxis()->GetBinWidth(ibinY);
 
+      // get multiplier/divisor
       auto multiplier = 1.f;      
       if (fXVarBins) multiplier *= binwidthX;
       if (fYVarBins) multiplier *= binwidthY;
 
-      hist->SetBinContent(ibinX,ibinY,(hist->GetBinContent(ibinX,ibinY))*multiplier);
-      hist->SetBinError  (ibinX,ibinY,(hist->GetBinError  (ibinX,ibinY))*multiplier);
+      // get content/error
+      auto content = hist->GetBinContent(ibinX,ibinY);
+      auto error   = hist->GetBinError  (ibinX,ibinY);
+
+      // scale it
+      if (isUp)
+      {
+	content *= multiplier;
+	error   *= multiplier;
+      }
+      else
+      {
+	content /= multiplier;
+	error   /= multiplier;
+      }
+
+      // set new contents
+      hist->SetBinContent(ibinX,ibinY,content);
+      hist->SetBinError  (ibinX,ibinY,error);
     }
   }
 }
 
-void Fitter::ScaleDown(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins)
+void Fitter::Scale(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins, const Bool_t isUp)
 {
-  std::cout << "Scaling down graph: " << graph->GetName() << std::endl;
+  std::cout << "Scaling " << (isUp?"up":"down") << " graph: " << graph->GetName() << std::endl;
 
   for (UInt_t i = 0; i < bins.size()-1; i++)
   {
-    const auto divisor = bins[i+1]-bins[i];
+    // get width
+    const auto multiplier = bins[i+1]-bins[i];
     
+    // get contents + errors
     Double_t xval,yval;
     graph->GetPoint(i,xval,yval);
-    graph->SetPoint(i,xval,yval/divisor);
-    
     auto yerrl = graph->GetErrorYlow (i);
     auto yerrh = graph->GetErrorYhigh(i);
-    graph->SetPointEYlow (i,yerrl/divisor);
-    graph->SetPointEYhigh(i,yerrh/divisor);
+
+    // scale up or down
+    if (isUp)
+    {
+      yval  *= multiplier;
+      yerrl *= multiplier;
+      yerrh *= multiplier;
+    }
+    else
+    {
+      yval  /= multiplier;
+      yerrl /= multiplier;
+      yerrh /= multiplier;
+    }
+
+    // set point with new values
+    graph->SetPoint(i,xval,yval);
+    graph->SetPointEYlow (i,yerrl);
+    graph->SetPointEYhigh(i,yerrh);
   }
 }
 
-void Fitter::ScaleDown(TH1F *& hist)
+void Fitter::Scale(TH1F *& hist, const Bool_t isUp)
 {
-  std::cout << "Scaling down hist: " << hist->GetName() << std::endl;
+  std::cout << "Scaling " << (isUp?"up":"down") << " hist: " << hist->GetName() << std::endl;
 
   for (auto ibinX = 1; ibinX <= hist->GetXaxis()->GetNbins(); ibinX++)
   {
-    const auto divisor = hist->GetXaxis()->GetBinWidth(ibinX);
+    // get width
+    const auto multiplier = hist->GetXaxis()->GetBinWidth(ibinX);
     
-    hist->SetBinContent(ibinX,(hist->GetBinContent(ibinX))/divisor);
-    hist->SetBinError  (ibinX,(hist->GetBinError  (ibinX))/divisor);
+    // get content and errors
+    auto content = hist->GetBinContent(ibinX);
+    auto error   = hist->GetBinError  (ibinX);
+
+    // scale up or down
+    if (isUp)
+    {
+      content *= multiplier;
+      error   *= multiplier;
+    }
+    else
+    {
+      content /= multiplier;
+      error   /= multiplier;
+    }
+
+    // set values
+    hist->SetBinContent(ibinX,content);
+    hist->SetBinError  (ibinX,error);
   }
 }
 

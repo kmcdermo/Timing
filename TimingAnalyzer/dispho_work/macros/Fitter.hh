@@ -92,8 +92,9 @@ public:
   
   // Prep for common variables/datasets/etc
   void GetInputHists();
-  void Project2DHistTo1D();
   void GetCoefficients();
+  void MakeInputPlots();
+  void Project2DHistTo1D();
   void DeclareXYVars();
 
   // Prep for pdfs
@@ -113,9 +114,9 @@ public:
   void DeleteModel(FitInfo & fitInfo, const Int_t ifit);
 
   // Helper Routines
-  void ScaleUp(TH2F *& hist);
-  void ScaleDown(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins);
-  void ScaleDown(TH1F *& hist);
+  void Scale(TH2F *& hist,const Bool_t isUp);
+  void Scale(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins, const Bool_t isUp);
+  void Scale(TH1F *& hist, const Bool_t isUp);
   Float_t GetMinimum(TGraphAsymmErrors *& graph, TH1F *& hist1, TH1F *& hist2);
   Float_t GetMaximum(TGraphAsymmErrors *& graph, TH1F *& hist);
 
