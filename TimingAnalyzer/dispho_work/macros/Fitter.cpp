@@ -323,9 +323,13 @@ void Fitter::DeclareCoefficients()
   // Count signal
   fNTotalSign = (fBkgdOnly ? 0.f : fHistMap2D[GMSB]->Integral());
 
+  // Scale nBkgd and nSignal up or down 
+  fNTotalBkgd *= fScaleTotalBkgd;
+  fNTotalSign *= fScaleTotalSign;
+
   // make vars for varying extended PDFs
-  fNPredBkgd = new RooRealVar("nbkgd","nbkgd",fNTotalBkgd,(fFracLow*fNTotalBkgd),(fFracHigh*fNTotalBkgd));
-  fNPredSign = new RooRealVar("nsign","nsign",fNTotalSign,(fFracLow*fNTotalSign),(fFracHigh*fNTotalSign));
+  fNPredBkgd = new RooRealVar("nbkgd","nbkgd",fNTotalBkgd,(fScaleRangeLow*fNTotalBkgd),(fScaleRangeHigh*fNTotalBkgd));
+  fNPredSign = new RooRealVar("nsign","nsign",fNTotalSign,(fScaleRangeLow*fNTotalSign),(fScaleRangeHigh*fNTotalSign));
 }
 
 void Fitter::DeclareXYVars()
@@ -457,8 +461,8 @@ void Fitter::ThrowPoisson(const FitInfo & fitInfo)
   std::cout << "Throwing poisson for generating toy data for: " << fitInfo.Text.Data() << std::endl;
 
   // generate random poisson number from total
-  fNPredBkgd->setVal(gRandom->Poisson(fFracGenBkgd*fNTotalBkgd));
-  fNPredSign->setVal(gRandom->Poisson(fFracGenSign*fNTotalSign));
+  fNPredBkgd->setVal(gRandom->Poisson(fScaleGenBkgd*fNTotalBkgd));
+  fNPredSign->setVal(gRandom->Poisson(fScaleGenSign*fNTotalSign));
 
   // for fOutTree
   fNGenBkgd = fNPredBkgd->getVal();
@@ -506,8 +510,8 @@ void Fitter::FitModel(FitInfo & fitInfo)
   std::cout << "Fit model for: " << fitInfo.Text.Data() << std::endl;
 
   // initialize norms before each fit, i.e. don't cheat!
-  fNPredBkgd->setVal(((fFracLow*fNTotalBkgd)+(fFracHigh*fNTotalBkgd))/2.f);
-  fNPredSign->setVal(((fFracLow*fNTotalSign)+(fFracHigh*fNTotalSign))/2.f);
+  fNPredBkgd->setVal(((fScaleRangeLow*fNTotalBkgd)+(fScaleRangeHigh*fNTotalBkgd))/2.f);
+  fNPredSign->setVal(((fScaleRangeLow*fNTotalSign)+(fScaleRangeHigh*fNTotalSign))/2.f);
 
   // perform the fit!
   fitInfo.ModelPdf->fitTo(*fitInfo.DataHistMap.at(Data),RooFit::SumW2Error(true));
@@ -779,10 +783,12 @@ void Fitter::SetupDefaultValues()
 
   fNFits = 1;
   fNDraw = 100;
-  fFracGenBkgd = 1;
-  fFracGenSign = 1;
-  fFracLow = 0;
-  fFracHigh = 100;
+  fScaleTotalBkgd = 1;
+  fScaleTotalSign = 1;
+  fScaleRangeLow = 0;
+  fScaleRangeHigh = 100;
+  fScaleGenBkgd = 1;
+  fScaleGenSign = 1;
 }
 
 void Fitter::SetupConfig()
@@ -818,43 +824,45 @@ void Fitter::ReadFitConfig()
     {
       fPlotConfig = Config::RemoveDelim(str,"plot_config=");
     }
-    else if (str.find("frac_low=") != std::string::npos)
-    {
-      str = Config::RemoveDelim(str,"frac_low=");
-      fFracLow = std::atof(str.c_str());
-    }
-    else if (str.find("frac_high=") != std::string::npos)
-    {
-      str = Config::RemoveDelim(str,"frac_high=");
-      fFracHigh = std::atof(str.c_str());
-    }
-    else if (str.find("x_cut=") != std::string::npos)
-    {
-      fXCut = Config::RemoveDelim(str,"x_cut=");
-    }
-    else if (str.find("y_cut=") != std::string::npos)
-    {
-      fYCut = Config::RemoveDelim(str,"y_cut=");
-    }
     else if (str.find("bkgd_only=") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"bkgd_only=");
       Config::SetupBool(str,fBkgdOnly);
+    }
+    else if (str.find("scale_total_bkgd=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"scale_total_bkgd=");
+      fScaleTotalBkgd = std::atof(str.c_str());
+    }
+    else if (str.find("scale_total_sign=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"scale_total_sign=");
+      fScaleTotalSign = std::atof(str.c_str());
+    }
+    else if (str.find("scale_range_low=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"scale_range_low=");
+      fScaleRangeLow = std::atof(str.c_str());
+    }
+    else if (str.find("scale_range_high=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"scale_range_high=");
+      fScaleRangeHigh = std::atof(str.c_str());
     }
     else if (str.find("gen_data=") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"gen_data=");
       Config::SetupBool(str,fGenData);
     }
-    else if (str.find("frac_gen_bkgd=") != std::string::npos)
+    else if (str.find("scale_gen_bkgd=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"frac_gen_bkgd=");
-      fFracGenBkgd = std::atof(str.c_str());
+      str = Config::RemoveDelim(str,"scale_gen_bkgd=");
+      fScaleGenBkgd = std::atof(str.c_str());
     }
-    else if (str.find("frac_gen_sign=") != std::string::npos)
+    else if (str.find("scale_gen_sign=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"frac_gen_sign=");
-      fFracGenSign = std::atof(str.c_str());
+      str = Config::RemoveDelim(str,"scale_gen_sign=");
+      fScaleGenSign = std::atof(str.c_str());
     }
     else if (str.find("make_ws=") != std::string::npos)
     {
@@ -875,6 +883,14 @@ void Fitter::ReadFitConfig()
     {
       str = Config::RemoveDelim(str,"n_draw=");
       fNDraw = std::atoi(str.c_str());
+    }
+    else if (str.find("x_cut=") != std::string::npos)
+    {
+      fXCut = Config::RemoveDelim(str,"x_cut=");
+    }
+    else if (str.find("y_cut=") != std::string::npos)
+    {
+      fYCut = Config::RemoveDelim(str,"y_cut=");
     }
     else 
     {
@@ -936,12 +952,16 @@ void Fitter::SetupOutTree()
   fOutTree = new TTree("exptree","Experiment Tree");
   
   fOutTree->Branch("nNFits",fNFits);
+  fOutTree->Branch("scaleTotalBkgd",&fScaleTotalBkgd);
+  fOutTree->Branch("scaleTotalSign",&fScaleTotalSign);
   fOutTree->Branch("nTotalBkgd",&fNTotalBkgd);
   fOutTree->Branch("nTotalSign",&fNTotalSign);
-  fOutTree->Branch("fracGenBkgd",&fFracGenBkgd);
-  fOutTree->Branch("fracGenSign",&fFracGenSign);
+  fOutTree->Branch("scaleGenBkgd",&fScaleGenBkgd);
+  fOutTree->Branch("scaleGenSign",&fScaleGenSign);
   fOutTree->Branch("nGenBkgd",&fNGenBkgd);
   fOutTree->Branch("nGenSign",&fNGenSign);
+  fOutTree->Branch("scaleRangeLow",&fScaleRangeLow);
+  fOutTree->Branch("scaleRangeHigh",&fScaleRangeHigh);
   fOutTree->Branch("nFitBkgd",&fNFitBkgd);
   fOutTree->Branch("nFitBkgdErr",&fNFitBkgdErr);
   fOutTree->Branch("nFitSign",&fNFitSign);

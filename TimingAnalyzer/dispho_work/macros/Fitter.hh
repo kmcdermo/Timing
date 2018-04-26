@@ -136,9 +136,9 @@ private:
   Int_t  fNFits;
   Int_t  fNDraw;
 
-  // fractional range of initial integral guess
-  Float_t fFracLow;
-  Float_t fFracHigh;
+  // scale factors of initial guess for fit range * fNTotal{Bkgd/Sign}
+  Float_t fScaleRangeLow;
+  Float_t fScaleRangeHigh;
 
   // Hist info
   std::vector<Double_t> fXBins;
@@ -167,16 +167,20 @@ private:
   std::map<SampleType,TH1F*> fHistMapX;
   std::map<SampleType,TH1F*> fHistMapY;
 
-  // Counts 
+  // Counts + scaling norm from the start
+  Float_t fScaleTotalBkgd;
+  Float_t fScaleTotalSign;
   Float_t fNTotalBkgd;
   Float_t fNTotalSign;
+
+  // Constants used to build model + post-fit numbers
   std::map<SampleType,RooRealVar*> fFracMap; 
   RooRealVar * fNPredBkgd;
   RooRealVar * fNPredSign;
 
-  // Number of events to generate
-  Float_t fFracGenBkgd;
-  Float_t fFracGenSign;
+  // Number of events to generate, and scale norm up or down when throwing poisson for building generation template
+  Float_t fScaleGenBkgd;
+  Float_t fScaleGenSign;
   Float_t fNGenBkgd;
   Float_t fNGenSign;
 

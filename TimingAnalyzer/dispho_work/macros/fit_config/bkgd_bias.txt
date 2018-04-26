@@ -4,8 +4,8 @@ SR_in=input/met_vs_time_signal_idT_hlt_nJet3pt30_ht400jetpt30_sumEtjetpt30phopt0
 
 plot_config=plot_config/met_vs_time.txt
 
-frac_low=0
-frac_high=10
+scale_range_low=0
+scale_range_high=10
 
 bkgd_only=1
 
@@ -14,5 +14,5 @@ n_fits=10000
 n_draw=10
 
 gen_data=1
-frac_gen_bkgd=1
-frac_gen_sign=0
+scale_gen_bkgd=1
+scale_gen_sign=0
