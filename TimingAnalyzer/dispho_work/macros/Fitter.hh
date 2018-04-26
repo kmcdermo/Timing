@@ -175,7 +175,8 @@ private:
   RooRealVar * fNPredSign;
 
   // Number of events to generate
-  Float_t fFracGen;
+  Float_t fFracGenBkgd;
+  Float_t fFracGenSign;
   Float_t fNGenBkgd;
   Float_t fNGenSign;
 

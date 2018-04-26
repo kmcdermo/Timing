@@ -457,8 +457,8 @@ void Fitter::ThrowPoisson(const FitInfo & fitInfo)
   std::cout << "Throwing poisson for generating toy data for: " << fitInfo.Text.Data() << std::endl;
 
   // generate random poisson number from total
-  fNPredBkgd->setVal(gRandom->Poisson(fFracGen*fNTotalBkgd));
-  fNPredSign->setVal(gRandom->Poisson(fFracGen*fNTotalSign));
+  fNPredBkgd->setVal(gRandom->Poisson(fFracGenBkgd*fNTotalBkgd));
+  fNPredSign->setVal(gRandom->Poisson(fFracGenSign*fNTotalSign));
 
   // for fOutTree
   fNGenBkgd = fNPredBkgd->getVal();
@@ -732,7 +732,7 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
 
 void Fitter::SaveOutTree()
 {
-  std::cout << "Setting up config..." << std::endl;
+  std::cout << "Writing fOutTree..." << std::endl;
 
   fOutFile->cd();
   fOutTree->Write(fOutTree->GetName(),TObject::kWriteDelete);
@@ -779,7 +779,8 @@ void Fitter::SetupDefaultValues()
 
   fNFits = 1;
   fNDraw = 100;
-  fFracGen = 1;
+  fFracGenBkgd = 1;
+  fFracGenSign = 1;
   fFracLow = 0;
   fFracHigh = 100;
 }
@@ -845,10 +846,15 @@ void Fitter::ReadFitConfig()
       str = Config::RemoveDelim(str,"gen_data=");
       Config::SetupBool(str,fGenData);
     }
-    else if (str.find("frac_gen=") != std::string::npos)
+    else if (str.find("frac_gen_bkgd=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"frac_gen=");
-      fFracGen = std::atof(str.c_str());
+      str = Config::RemoveDelim(str,"frac_gen_bkgd=");
+      fFracGenBkgd = std::atof(str.c_str());
+    }
+    else if (str.find("frac_gen_sign=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"frac_gen_sign=");
+      fFracGenSign = std::atof(str.c_str());
     }
     else if (str.find("make_ws=") != std::string::npos)
     {
@@ -932,7 +938,8 @@ void Fitter::SetupOutTree()
   fOutTree->Branch("nNFits",fNFits);
   fOutTree->Branch("nTotalBkgd",&fNTotalBkgd);
   fOutTree->Branch("nTotalSign",&fNTotalSign);
-  fOutTree->Branch("fracGen",&fFracGen);
+  fOutTree->Branch("fracGenBkgd",&fFracGenBkgd);
+  fOutTree->Branch("fracGenSign",&fFracGenSign);
   fOutTree->Branch("nGenBkgd",&fNGenBkgd);
   fOutTree->Branch("nGenSign",&fNGenSign);
   fOutTree->Branch("nFitBkgd",&fNFitBkgd);
