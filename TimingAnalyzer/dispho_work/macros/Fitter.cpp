@@ -312,7 +312,8 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
     histY->Draw("hist");
     Config::CMSLumi(canv);
     canv->SaveAs(Form("%sHist_projY.png",text.Data()));
-    
+    delete histY;
+
     delete canv;
   }
 }
