@@ -476,6 +476,18 @@ void TreePlotter::DumpIntegrals()
   // make dumpfile object
   std::ofstream dumpfile(Form("%s_integrals.txt",fOutFileText.Data()),std::ios_base::out);
 
+  // Signal MC zeroth
+  for (const auto & HistPair : HistMap)
+  {
+    if (Config::GroupMap[HistPair.first] == isSignal)
+    {
+      Double_t sign_err = 0.;
+      const Double_t sign_int = HistPair.second->IntegralAndError(1,HistPair.second->GetXaxis()->GetNbins(),sign_err,(fXVarBins?"width":""));
+      dumpfile << HistPair.second->GetName() << " : " << sign_int << " +/- " << sign_err << std::endl;
+    }
+  }
+  dumpfile << "-------------------------------------" << std::endl;
+
   // Individual MC first
   for (const auto & HistPair : HistMap)
   {

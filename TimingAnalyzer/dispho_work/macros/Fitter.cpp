@@ -215,7 +215,7 @@ void Fitter::DumpInputInfo()
 
   // GJets integral
   Double_t GJets_Err = 0.;
-  const Double_t GJets_Int = fHistMap2D[GJets]->IntegralAndError(1,fHistMap2D[GJets]->GetXaxis()->GetNbins(),1,fHistMap2D[GJets]->GetYaxis()->GetNbins(),GJets_Err);
+  const auto GJets_Int = fHistMap2D[GJets]->IntegralAndError(1,fHistMap2D[GJets]->GetXaxis()->GetNbins(),1,fHistMap2D[GJets]->GetYaxis()->GetNbins(),GJets_Err);
   std::cout << "GJets Integral: " << GJets_Int << " +/- " << GJets_Err << std::endl;
 
   // QCD integral
@@ -224,10 +224,10 @@ void Fitter::DumpInputInfo()
   std::cout << "QCD Integral: " << QCD_Int << " +/- " << QCD_Err << std::endl;
 
   // Combine Bkgd samples
-  TH2F * bkgdHist = (TH2F*)fHistMap2D[GJets]->Clone("BkgdHist");
+  auto bkgdHist = (TH2F*)fHistMap2D[GJets]->Clone("BkgdHist");
   bkgdHist->Add(fHistMap2D[QCD]);
   Double_t Bkgd_Err = 0.;
-  const Double_t Bkgd_Int = bkgdHist->IntegralAndError(1,bkgdHist->GetXaxis()->GetNbins(),1,bkgdHist->GetYaxis()->GetNbins(),Bkgd_Err);
+  const auto Bkgd_Int = bkgdHist->IntegralAndError(1,bkgdHist->GetXaxis()->GetNbins(),1,bkgdHist->GetYaxis()->GetNbins(),Bkgd_Err);
   std::cout << "Bkgd Integral: " << Bkgd_Int << " +/- " << Bkgd_Err << std::endl;
 
   // pretty up and draw bkgd
@@ -241,9 +241,9 @@ void Fitter::DumpInputInfo()
   // Clone Signal 
   if (!fBkgdOnly)
   {
-    TH2F * signHist = (TH2F*)fHistMap2D[GMSB]->Clone("SignHist");
+    auto signHist = (TH2F*)fHistMap2D[GMSB]->Clone("SignHist");
     Double_t Sign_Err = 0.;
-    const Double_t Sign_Int = signHist->IntegralAndError(1,signHist->GetXaxis()->GetNbins(),1,signHist->GetYaxis()->GetNbins(),Sign_Err);
+    const auto Sign_Int = signHist->IntegralAndError(1,signHist->GetXaxis()->GetNbins(),1,signHist->GetYaxis()->GetNbins(),Sign_Err);
     std::cout << "Sign Integral: " << Sign_Int << " +/- " << Sign_Err << std::endl;
     
     // pretty up and draw signal
@@ -258,7 +258,7 @@ void Fitter::DumpInputInfo()
   // Data Histogram --> need to blind it if called for
   if (!fGenData)
   {
-    TH2F * dataHist = (TH2F*)fHistMap2D[Data]->Clone("DataHist");
+    auto dataHist = (TH2F*)fHistMap2D[Data]->Clone("DataHist");
 
     // blinding : FIXME
     for (auto ibinX = 1; ibinX <= dataHist->GetXaxis()->GetNbins(); ibinX++)
@@ -272,7 +272,7 @@ void Fitter::DumpInputInfo()
     }
 
     Double_t Data_Err = 0.;
-    const Double_t Data_Int = dataHist->IntegralAndError(1,dataHist->GetXaxis()->GetNbins(),1,dataHist->GetYaxis()->GetNbins(),Data_Err);
+    const auto Data_Int = dataHist->IntegralAndError(1,dataHist->GetXaxis()->GetNbins(),1,dataHist->GetYaxis()->GetNbins(),Data_Err);
     std::cout << "Data Integral: " << Data_Int << " +/- " << Data_Err << std::endl;
 
     // draw and pretty up
@@ -283,6 +283,8 @@ void Fitter::DumpInputInfo()
     canv->SaveAs("dataHist.png");
     delete dataHist;
   }
+
+  delete canv;
 }
 
 void Fitter::Project2DHistTo1D()
