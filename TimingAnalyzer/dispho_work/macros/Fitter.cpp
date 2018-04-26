@@ -207,84 +207,114 @@ void Fitter::DumpInputInfo()
 {
   std::cout << "Making quick dump of input histograms..." << std::endl;
 
-  // scale back down temporarily (since already scaled up)
-  const Bool_t isUp = false;
+  // GJets 
+  const TString gjetstext = "GJets";
+  auto gjetsHist = (TH2F*)fHistMap2D[GJets]->Clone(Form("%sHist",gjetstext.Data()));
+  Fitter::DumpIntegralsAndDraw(gjetsHist,gjetstext,false,false);
+  delete gjetsHist;
 
-  // make tmp canvas
-  TCanvas * canv = new TCanvas();
-
-  // GJets integral
-  Double_t GJets_Err = 0.;
-  const auto GJets_Int = fHistMap2D[GJets]->IntegralAndError(1,fHistMap2D[GJets]->GetXaxis()->GetNbins(),1,fHistMap2D[GJets]->GetYaxis()->GetNbins(),GJets_Err);
-  std::cout << "GJets Integral: " << GJets_Int << " +/- " << GJets_Err << std::endl;
-
-  // QCD integral
-  Double_t QCD_Err = 0.;
-  const Double_t QCD_Int = fHistMap2D[QCD]->IntegralAndError(1,fHistMap2D[QCD]->GetXaxis()->GetNbins(),1,fHistMap2D[QCD]->GetYaxis()->GetNbins(),QCD_Err);
-  std::cout << "QCD Integral: " << QCD_Int << " +/- " << QCD_Err << std::endl;
+  // QCD 
+  const TString qcdtext = "QCD";
+  auto qcdHist = (TH2F*)fHistMap2D[QCD]->Clone(Form("%sHist",qcdtext.Data()));
+  Fitter::DumpIntegralsAndDraw(qcdHist,qcdtext,false,false);
+  delete qcdHist;
 
   // Combine Bkgd samples
-  auto bkgdHist = (TH2F*)fHistMap2D[GJets]->Clone("BkgdHist");
+  const TString bkgdtext = "Bkgd";
+  auto bkgdHist = (TH2F*)fHistMap2D[GJets]->Clone(Form("%sHist",bkgdtext.Data()));
   bkgdHist->Add(fHistMap2D[QCD]);
-  Double_t Bkgd_Err = 0.;
-  const auto Bkgd_Int = bkgdHist->IntegralAndError(1,bkgdHist->GetXaxis()->GetNbins(),1,bkgdHist->GetYaxis()->GetNbins(),Bkgd_Err);
-  std::cout << "Bkgd Integral: " << Bkgd_Int << " +/- " << Bkgd_Err << std::endl;
-
-  // pretty up and draw bkgd
-  Fitter::Scale(bkgdHist,isUp);
-  bkgdHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
-  bkgdHist->Draw("colz");
-  Config::CMSLumi(canv);
-  canv->SaveAs("bkgdHist.png");
+  Fitter::DumpIntegralsAndDraw(bkgdHist,bkgdtext,false,true);
   delete bkgdHist;
-  
-  // Clone Signal 
+
+  // Signal 
   if (!fBkgdOnly)
   {
-    auto signHist = (TH2F*)fHistMap2D[GMSB]->Clone("SignHist");
-    Double_t Sign_Err = 0.;
-    const auto Sign_Int = signHist->IntegralAndError(1,signHist->GetXaxis()->GetNbins(),1,signHist->GetYaxis()->GetNbins(),Sign_Err);
-    std::cout << "Sign Integral: " << Sign_Int << " +/- " << Sign_Err << std::endl;
-    
-    // pretty up and draw signal
-    Fitter::Scale(signHist,isUp);
-    signHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
-    signHist->Draw("colz");
-    Config::CMSLumi(canv);
-    canv->SaveAs("signHist.png");
+    const TString signtext = "Sign";
+    auto signHist = (TH2F*)fHistMap2D[GMSB]->Clone(Form("%sHist",signtext.Data()));
+    Fitter::DumpIntegralsAndDraw(signHist,signtext,false,true);
     delete signHist;
   }
 
   // Data Histogram --> need to blind it if called for
   if (!fGenData)
   {
-    auto dataHist = (TH2F*)fHistMap2D[Data]->Clone("DataHist");
-
-    // blinding : FIXME
-    for (auto ibinX = 1; ibinX <= dataHist->GetXaxis()->GetNbins(); ibinX++)
-    {
-      const auto bincenterX = dataHist->GetXaxis()->GetBinCenter(ibinX);
-      for (auto ibinY = 1; ibinY <= dataHist->GetYaxis()->GetNbins(); ibinY++)
-      {
-	const auto bincenterY = dataHist->GetYaxis()->GetBinCenter(ibinY);
-	if ((bincenterX > 3) || (bincenterY > 200)) dataHist->SetBinContent(ibinX,ibinY,0);
-      }
-    }
-
-    Double_t Data_Err = 0.;
-    const auto Data_Int = dataHist->IntegralAndError(1,dataHist->GetXaxis()->GetNbins(),1,dataHist->GetYaxis()->GetNbins(),Data_Err);
-    std::cout << "Data Integral: " << Data_Int << " +/- " << Data_Err << std::endl;
-
-    // draw and pretty up
-    Fitter::Scale(dataHist,isUp);
-    dataHist->GetZaxis()->SetTitle("Events/ns/GeV/c");
-    dataHist->Draw("colz");
-    Config::CMSLumi(canv);
-    canv->SaveAs("dataHist.png");
+    const TString datatext = "Data";
+    auto dataHist = (TH2F*)fHistMap2D[Data]->Clone(Form("%sHist",datatext.Data()));
+    Fitter::DumpIntegralsAndDraw(dataHist,datatext,(fXBlindedLow||fXBlindedUp||fYBlindedLow||fYBlindedUp),true);
     delete dataHist;
   }
+}
 
-  delete canv;
+void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bool_t isBlind, const Bool_t isDraw)
+{
+  // get useful bin numbers
+  const auto firstBin = 1;
+  const auto lastBinX = hist2D->GetXaxis()->GetNbins();
+  const auto lastBinY = hist2D->GetYaxis()->GetNbins();
+
+  const auto binXLow = (fXBlindedLow ? std::max(hist2D->GetXaxis()->FindBin(fXLowCut),firstBin) : firstBin);
+  const auto binXUp  = (fXBlindedUp  ? std::min(hist2D->GetXaxis()->FindBin(fXUpCut) ,lastBinX) : lastBinX);
+  const auto binYLow = (fYBlindedLow ? std::max(hist2D->GetYaxis()->FindBin(fYLowCut),firstBin) : firstBin);
+  const auto binYUp  = (fYBlindedUp  ? std::min(hist2D->GetYaxis()->FindBin(fYUpCut) ,lastBinY) : lastBinY);
+
+  // blind if needed -- must be done first!
+  if (isBlind)
+  {
+    for (auto ibinX = binXLow; ibinX <= binXUp; ibinX++)
+    {
+      for (auto ibinY = binYLow; ibinY <= binYUp; ibinY++)
+      {
+	hist2D->SetBinContent(ibinX,ibinY,0);
+	hist2D->SetBinError  (ibinX,ibinY,0);
+      }
+    }
+  }
+
+  // reuse integrals
+  Double_t hist_int = 0;
+  Double_t hist_err = 0;
+
+  // get integral and error full region
+  hist_int = hist2D->IntegralAndError(firstBin,lastBinX,firstBin,lastBinY,hist_err);
+  std::cout << text.Data() << " Integral: " << hist_int << " +/- " << hist_err << std::endl;
+
+  // get integral and error over signal region
+  hist_int = hist2D->IntegralAndError(binXLow,binXUp,binYLow,binYUp,hist_err);
+  std::cout << text.Data() << " Integral (In Blinded Region): " << hist_int << " +/- " << hist_err << std::endl;
+
+  // save it to the outfile
+  fOutFile->cd();
+  hist2D->Write(hist2D->GetName(),TObject::kWriteDelete);
+  
+  if (isDraw)
+  {
+    // scale back down temporarily (since already scaled up)
+    const Bool_t isUp = false;
+    Fitter::Scale(hist2D,isUp);
+
+    // get new tmp canvas
+    TCanvas * canv = new TCanvas();
+
+    // draw TH2 on canv
+    hist2D->Draw("colz");
+    Config::CMSLumi(canv);
+    canv->SaveAs(Form("%sHist.png",text.Data()));
+
+    // project in X and draw
+    auto histX = hist2D->ProjectionX("tmp_projX",binYLow,binYUp);
+    histX->Draw("hist");
+    Config::CMSLumi(canv);
+    canv->SaveAs(Form("%sHist_projX.png",text.Data()));
+    delete histX;
+
+    // project in Y and draw
+    auto histY = hist2D->ProjectionY("tmp_projY",binXLow,binXUp);
+    histY->Draw("hist");
+    Config::CMSLumi(canv);
+    canv->SaveAs(Form("%sHist_projY.png",text.Data()));
+    
+    delete canv;
+  }
 }
 
 void Fitter::Project2DHistTo1D()
@@ -891,6 +921,26 @@ void Fitter::ReadFitConfig()
     else if (str.find("y_cut=") != std::string::npos)
     {
       fYCut = Config::RemoveDelim(str,"y_cut=");
+    }
+    else if (str.find("x_blindlow=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"x_blindlow=");
+      Config::SetupBlinding(str,fXLowCut,fXBlindedLow);
+    }
+    else if (str.find("x_blindup=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"x_blindup=");
+      Config::SetupBlinding(str,fXUpCut,fXBlindedUp);
+    }
+    else if (str.find("y_blindlow=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"y_blindlow=");
+      Config::SetupBlinding(str,fYLowCut,fYBlindedLow);
+    }
+    else if (str.find("y_blindup=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"y_blindup=");
+      Config::SetupBlinding(str,fYUpCut,fYBlindedUp);
     }
     else 
     {

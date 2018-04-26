@@ -13,3 +13,6 @@ scale_range_high=10
 do_fits=1
 n_fits=1
 n_draw=1
+
+x_blindup=3
+y_blindup=200

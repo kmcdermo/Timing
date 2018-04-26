@@ -95,6 +95,7 @@ public:
   void GetInputHists();
   void ScaleCRtoSR();
   void DumpInputInfo();
+  void DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bool_t isBlind, const Bool_t isDraw);
   void Project2DHistTo1D();
   void DeclareCoefficients();
   void DeclareXYVars();
@@ -184,9 +185,19 @@ private:
   Float_t fNGenBkgd;
   Float_t fNGenSign;
 
-  // Blinding
+  // Blinding (for RooPlots)
   TString fXCut;
   TString fYCut;
+  
+  // Blinding (for TH's)
+  Bool_t  fXBlindedLow;
+  Bool_t  fXBlindedUp;
+  Bool_t  fYBlindedLow;
+  Bool_t  fYBlindedUp;
+  Float_t fXLowCut;
+  Float_t fXUpCut;
+  Float_t fYLowCut;
+  Float_t fYUpCut;
 
   // Roo vars and bins
   RooRealVar * fX;

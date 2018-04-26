@@ -8,3 +8,6 @@ scale_range_low=0
 scale_range_high=10
 
 make_ws=1
+
+x_blindup=3
+y_blindup=200
