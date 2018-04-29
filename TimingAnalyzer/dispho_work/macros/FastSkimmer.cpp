@@ -63,8 +63,8 @@ void FastSkimmer::MakeListFromTrees()
     std::cout << "Computing list of entries..." << std::endl;
 
     // Get entry list
-    auto listname = Config::ReplaceSlashWithUnderscore(input);
-    auto & list = ListMap[listname];
+    const auto samplename = Config::ReplaceSlashWithUnderscore(input);
+    auto & list = ListMap[samplename];
     list->SetDirectory(file);
     
     // use ttree::draw() to generate entry list
@@ -72,6 +72,7 @@ void FastSkimmer::MakeListFromTrees()
 
     // Write out list
     fOutFile->cd();
+    list->SetDirectory(fOutFile);
     list->SetTitle("EntryList");
     list->Write(list->GetName(),TObject::kWriteDelete);
 
@@ -118,7 +119,7 @@ void FastSkimmer::MakeMergedSkims()
     for (auto & TreePair : TreeMap)
     {
       delete TreePair.second;
-    }
+    }    
   } // end loop over sample groups
 }
 
@@ -143,14 +144,19 @@ void FastSkimmer::MakeSkimsFromEntryLists(std::map<TString,TTree*> & TreeMap, TL
     Config::CheckValidTree(tree,Config::disphotreename,filename);
     
     // Set Entry List Needed
-    auto listname = Config::ReplaceSlashWithUnderscore(input);
-    tree->SetEntryList(ListMap[listname]);
-    
+    const auto samplename = Config::ReplaceSlashWithUnderscore(input);
+    const auto & list = ListMap[samplename];
+    const Bool_t isFilled = (list->GetN() != 0);
+    tree->SetEntryList(list);
+    tree->SetName(Form("%s_Tree",samplename.Data()));
+
     std::cout << "Skimming into a smaller tree..." << std::endl;
     
     // Fill from tree into smaller tree
     fOutFile->cd();
     TreeMap[input] = tree->CopyTree("");
+
+    std::cout << tree->GetEntries() << std::endl;
     
     // Add tree to list
     TreeList->Add(TreeMap[input]);
@@ -200,8 +206,8 @@ void FastSkimmer::SetupLists()
   // loop over all subsamples, create new list
   for (const auto & SamplePair : Config::SampleMap)
   {
-    const auto & input  = SamplePair.first;
-    auto listname = Config::ReplaceSlashWithUnderscore(input);
-    ListMap[listname] = new TEntryList(Form("%s_EntryList",listname.Data()),"EntryList");
+    const auto & input    = SamplePair.first;
+    const auto samplename = Config::ReplaceSlashWithUnderscore(input);
+    ListMap[samplename]   = new TEntryList(Form("%s_EntryList",samplename.Data()),"EntryList");
   }
 }

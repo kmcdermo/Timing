@@ -84,41 +84,31 @@ void TreePlotter::MakePlot()
 
 void TreePlotter::MakeHistFromTrees()
 {
-  for (const auto & SamplePair : Config::SampleMap)
+  for (const auto & TreeNamePair : Config::TreeNameMap)
   {
     // Init
-    const auto & input  = SamplePair.first;
-    const auto & sample = SamplePair.second;
-    std::cout << "Working on input: " << input.Data() << std::endl;
+    const auto & sample   = TreeNamePair.first;
+    const auto & treename = TreeNamePair.second;
+    std::cout << "Working on tree: " << treename.Data() << std::endl;
 
     // Get File
-    const TString filename = Form("%s/%s/%s/%s",Config::eosDir.Data(),Config::baseDir.Data(),input.Data(),Config::tupleFileName.Data());
-    TFile * file = TFile::Open(Form("%s",filename.Data()));
-    Config::CheckValidFile(file,filename);
+    auto file = TFile::Open(Form("%s",fInFileName.Data()));
+    Config::CheckValidFile(file,fInFileName);
     file->cd();
 	
     // Get TTree
-    TTree * tree = (TTree*)file->Get(Form("%s",Config::disphotreename.Data()));
-    Config::CheckValidTree(tree,Config::disphotreename,filename);
-
-    // Make temp hist
-    TString histname = Config::ReplaceSlashWithUnderscore(input);
-    TH1F * hist = TreePlotter::SetupHist(Form("%s_Hist",histname.Data()));
+    auto tree = (TTree*)file->Get(Form("%s",treename.Data()));
+    Config::CheckValidTree(tree,treename,filename);
 
     std::cout << "Filling hist from tree..." << std::endl;
     
     // Fill from tree
-    tree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(input,sample).Data()),"goff");
+    tree->Draw(Form("%s>>%s",fXVar.Data(),->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(input,sample).Data()),"goff");
     
     // Add to main hists
     HistMap[sample]->Add(hist);
 
-    // save to output file
-    fOutFile->cd();
-    hist->Write(hist->GetName(),TObject::kWriteDelete);
-
     // delete everything
-    delete hist;
     delete tree;
     delete file;
   }
@@ -129,10 +119,10 @@ void TreePlotter::MakeHistFromTrees()
     for (auto & HistPair : HistMap)
     {
       auto & hist = HistPair.second;
-      const UInt_t nbinsX = hist->GetXaxis()->GetNbins();
-      for (UInt_t ibinX = 1; ibinX <= nbinsX; ibinX++)
+      const auto nbinsX = hist->GetXaxis()->GetNbins();
+      for (auto ibinX = 1; ibinX <= nbinsX; ibinX++)
       {
-	const Float_t binwidthX = hist->GetXaxis()->GetBinWidth(ibinX);
+	const auto binwidthX = hist->GetXaxis()->GetBinWidth(ibinX);
 	hist->SetBinContent(ibinX,(hist->GetBinContent(ibinX)/binwidthX));
 	hist->SetBinError  (ibinX,(hist->GetBinError  (ibinX)/binwidthX));
       }
@@ -493,33 +483,33 @@ void TreePlotter::DumpIntegrals()
   {
     if (Config::GroupMap[HistPair.first] == isBkgd)
     {
-      Double_t bkgd_err = 0.;
-      const Double_t bkgd_int = HistPair.second->IntegralAndError(1,HistPair.second->GetXaxis()->GetNbins(),bkgd_err,(fXVarBins?"width":""));
+      auto bkgd_err = 0.0;
+      const auto bkgd_int = HistPair.second->IntegralAndError(1,HistPair.second->GetXaxis()->GetNbins(),bkgd_err,(fXVarBins?"width":""));
       dumpfile << HistPair.second->GetName() << " : " << bkgd_int << " +/- " << bkgd_err << std::endl;
     }
   }
   dumpfile << "-------------------------------------" << std::endl;
   
   // Sum MC second
-  Double_t mc_err = 0;
-  const Double_t mc_int = BkgdHist->IntegralAndError(1,BkgdHist->GetXaxis()->GetNbins(),mc_err,(fXVarBins?"width":""));
+  auto mc_err = 0.0;
+  const auto mc_int = BkgdHist->IntegralAndError(1,BkgdHist->GetXaxis()->GetNbins(),mc_err,(fXVarBins?"width":""));
   dumpfile << BkgdHist->GetName() << " : " << mc_int << " +/- " << mc_err << std::endl;
 
   // Data third
-  Double_t data_err = 0;
-  const Double_t data_int = DataHist->IntegralAndError(1,DataHist->GetXaxis()->GetNbins(),data_err,(fXVarBins?"width":""));
+  auto data_err = 0.0;
+  const auto data_int = DataHist->IntegralAndError(1,DataHist->GetXaxis()->GetNbins(),data_err,(fXVarBins?"width":""));
   dumpfile << DataHist->GetName() << " : " << data_int << " +/- " << data_err << std::endl;
   dumpfile << "-------------------------------------" << std::endl;
 
   // Make ratio
-  const Double_t ratio = data_int/mc_int;
-  const Double_t ratio_err = ratio*std::sqrt(std::pow(data_err/data_int,2)+std::pow(mc_err/mc_int,2));
+  const auto ratio = data_int/mc_int;
+  const auto ratio_err = ratio*std::sqrt(std::pow(data_err/data_int,2)+std::pow(mc_err/mc_int,2));
   dumpfile << "Data/MC : " << ratio << " +/- " << ratio_err << std::endl;
 }
 
 void TreePlotter::ScaleToArea()
 {
-  const Float_t area_sf = DataHist->Integral()/BkgdHist->Integral();
+  const auto area_sf = DataHist->Integral()/BkgdHist->Integral();
 
   // first scale each individual sample
   for (auto & HistPair : HistMap)
@@ -536,15 +526,15 @@ void TreePlotter::ScaleToArea()
 
 Float_t TreePlotter::GetHistMinimum()
 {
-  Float_t min = 1e9;
+  auto min = 1.0e9;
 
   // need to loop through to check bin != 0
   for (const auto & HistPair : HistMap)
   {
     const auto & hist = HistPair.second;
-    for (Int_t bin = 1; bin <= hist->GetNbinsX(); bin++)
+    for (auto bin = 1; bin <= hist->GetNbinsX(); bin++)
     {
-      const Float_t tmpmin = hist->GetBinContent(bin);
+      const auto tmpmin = hist->GetBinContent(bin);
       if ((tmpmin < min) && (tmpmin > 0)) min = tmpmin;
     }
   }
@@ -554,8 +544,8 @@ Float_t TreePlotter::GetHistMinimum()
 
 Float_t TreePlotter::GetHistMaximum()
 {
-  const Float_t datamax = DataHist->GetBinContent(DataHist->GetMaximumBin());
-  const Float_t bkgdmax = BkgdHist->GetBinContent(BkgdHist->GetMaximumBin());
+  const auto datamax = DataHist->GetBinContent(DataHist->GetMaximumBin());
+  const auto bkgdmax = BkgdHist->GetBinContent(BkgdHist->GetMaximumBin());
   return (datamax > bkgdmax ? datamax : bkgdmax);
 }
 
@@ -686,7 +676,7 @@ TH1F * TreePlotter::SetupHist(const TString & name)
   // set axis labels only if read in
   if (fXLabels.size() > 0)
   {
-    for (Int_t ibin = 1; ibin <= hist->GetXaxis()->GetNbins(); ibin++)
+    for (auto ibin = 1; ibin <= hist->GetXaxis()->GetNbins(); ibin++)
     {
       hist->GetXaxis()->SetBinLabel(ibin,fXLabels[ibin-1].Data());
     }
