@@ -1,7 +1,7 @@
 #include "TreePlotter.hh"
 
-TreePlotter::TreePlotter(const TString & cutconfig, const TString & plotconfig, const TString & pdname, const Bool_t scalearea, const TString & outfiletext) 
-  : fCutConfig(cutconfig), fPlotConfig(plotconfig), fPDName(pdname), fScaleArea(scalearea), fOutFileText(outfiletext)
+TreePlotter::TreePlotter(const TString & infilename, const TString & cutconfig, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext) 
+  : fInFileName(infilename), fCutConfig(cutconfig), fPlotConfig(plotconfig), fScaleArea(scalearea), fOutFileText(outfiletext)
 {
   std::cout << "Initializing TreePlotter..." << std::endl;
 
@@ -11,6 +11,10 @@ TreePlotter::TreePlotter(const TString & cutconfig, const TString & plotconfig, 
   //            //
   ////////////////
 
+  // Get input file
+  fInFile = TFile::Open(Form("%s",fInFileName.Data()));
+  Config::CheckValidFile(fInFile,fInFileName);
+ 
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
   Config::SetTDRStyle(fTDRStyle);
@@ -44,6 +48,7 @@ TreePlotter::~TreePlotter()
   delete fOutFile;
   for (auto & HistPair : HistMap) delete HistPair.second;
   delete fTDRStyle;
+  delete fInFile;
 }
 
 void TreePlotter::MakePlot()
@@ -84,11 +89,7 @@ void TreePlotter::MakePlot()
 
 void TreePlotter::MakeHistFromTrees()
 {
-  // all made from the same file
-  auto infile = TFile::Open(Form("%s",fInFileName.Data()));
-  Config::CheckValidFile(infile,fInFileName);
-  infile->cd();
-
+  // loop over sample groups for each tree
   for (const auto & TreeNamePair : Config::TreeNameMap)
   {
     // Init
@@ -97,18 +98,19 @@ void TreePlotter::MakeHistFromTrees()
     std::cout << "Working on tree: " << treename.Data() << std::endl;
 	
     // Get TTree
-    auto intree = (TTree*)infile->Get(Form("%s",treename.Data()));
-    const auto isNull = Config::IsNullTree(tree);
+    fInFile->cd();
+    auto intree = (TTree*)fInFile->Get(Form("%s",treename.Data()));
+    const auto isnull = Config::IsNullTree(intree);
 
-    if (!isNull)
+    if (!isnull)
     {
       std::cout << "Filling hist from tree..." << std::endl;
+
+      // get the hist we wish to write to
+      auto & hist = HistMap[sample];
       
       // Fill from tree
-      intree->Draw(Form("%s>>%s",fXVar.Data(),->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(input,sample).Data()),"goff");
-      
-      // Add to main hists
-      HistMap[sample]->Add(hist);
+      intree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(sample).Data()),"goff");
     }
     else
     {
@@ -118,9 +120,6 @@ void TreePlotter::MakeHistFromTrees()
     // delete tree;
     delete intree;
   }
-
-  // delete infile
-  delete infile;
 
   // rescale bins by widths if variable size
   if (fXVarBins)
@@ -437,10 +436,8 @@ void TreePlotter::MakeConfigPave()
   std::cout << "Dumping config to a pave..." << std::endl;
 
   // first get old pave to copy in...
-  auto infile = TFile::Open(Form("%s",fInFileName.Data()));
-  Config::CheckValidFile(infile,fInFileName);
-  infile->cd();
-  auto inPave = (TPaveText*)->Get(Form("%s",Config::pavename.Data()));
+  fInFile->cd();
+  auto inPave = (TPaveText*)fInFile->Get(Form("%s",Config::pavename.Data()));
 
   // create the pave, copying in old info
   fOutFile->cd();
@@ -448,8 +445,11 @@ void TreePlotter::MakeConfigPave()
   fConfigPave->SetName(Form("%s",Config::pavename.Data()));
   std::string str; // tmp string
 
+  // save name of infile, redundant
+  fConfigPave->AddText(Form("Infile name: %s",fInFileName.Data()));
+
   // dump plot cut config first
-  fConfigPave->AddText("TreePlotter Cut Config");
+  fConfigPave->AddText(Form("TreePlotter Cut Config: %s",fCutConfig.Data()));
   std::ifstream cutfile(Form("%s",fCutConfig.Data()),std::ios::in);
   while (std::getline(cutfile,str))
   {
@@ -457,15 +457,12 @@ void TreePlotter::MakeConfigPave()
   }
 
   // dump plot config second
-  fConfigPave->AddText("Plot Config");
+  fConfigPave->AddText(Form("Plot Config: %s",fPlotConfig.Data()));
   std::ifstream plotfile(Form("%s",fPlotConfig.Data()),std::ios::in);
   while (std::getline(plotfile,str))
   {
     fConfigPave->AddText(str.c_str());
   }
-
-  // dump with PD
-  fConfigPave->AddText(Form("Primary Dataset: %s",fPDName.Data()));
 
   // dump scaling choices
   fConfigPave->AddText(fScaleArea?"Scale MC to data area":"Scale MC to luminosity");
@@ -476,7 +473,6 @@ void TreePlotter::MakeConfigPave()
 
   // delete input
   delete inPave;
-  delete infile;
 }
 
 void TreePlotter::DumpIntegrals()
@@ -491,8 +487,8 @@ void TreePlotter::DumpIntegrals()
   {
     if (Config::GroupMap[HistPair.first] == isSignal)
     {
-      Double_t sign_err = 0.;
-      const Double_t sign_int = HistPair.second->IntegralAndError(1,HistPair.second->GetXaxis()->GetNbins(),sign_err,(fXVarBins?"width":""));
+      auto sign_err = 0.;
+      const auto sign_int = HistPair.second->IntegralAndError(1,HistPair.second->GetXaxis()->GetNbins(),sign_err,(fXVarBins?"width":""));
       dumpfile << HistPair.second->GetName() << " : " << sign_int << " +/- " << sign_err << std::endl;
     }
   }
@@ -580,7 +576,6 @@ void TreePlotter::SetupDefaultBools()
 
 void TreePlotter::SetupConfig()
 {
-  Config::SetupPrimaryDataset(fPDName);
   Config::SetupSamples();
   Config::SetupGroups();
   Config::SetupHistNames();

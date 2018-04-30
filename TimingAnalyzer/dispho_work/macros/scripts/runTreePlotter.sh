@@ -1,14 +1,14 @@
 #!/bin/bash
 
-cutconfig=${1:-"cut_config/signal_blinded_hlt.txt"}
-plotconfig=${2:-"plot_config/phopt_0.txt"}
-pdname=${3:-"SinglePhoton"}
+infilename=${1:-"test.root"}
+cutconfig=${2:-"cut_config/always_true.txt"}
+plotconfig=${3:-"plot_config/phopt_0.txt"}
 scalearea=${4:-0}
-outfiletext=${5:-"phopt_0"}
-dir=${6:-"plots"}
+outfiletext=${5:-"plots"}
+dir=${6:-"plots/test"}
 
 ## first make plot
-root -l -b -q runTreePlotter.C\(\"${cutconfig}\",\"${plotconfig}\",\"${pdname}\",${scalearea},\"${outfiletext}\"\)
+root -l -b -q runTreePlotter.C\(\"${infilename}\",\"${cutconfig}\",\"${plotconfig}\",${scalearea},\"${outfiletext}\"\)
 
 ## make out dirs
 topdir=/afs/cern.ch/user/k/kmcdermo/www

@@ -111,22 +111,10 @@ namespace Config
   TString ReplaceSlashWithUnderscore(TString tmp){return tmp.ReplaceAll("/","_");}
 
   // Weight for sample
-  TString WeightString(const TString & input, const SampleType sample)
+  TString WeightString(const SampleType sample)
   {
     // Get the appropriate weight 
-    TString weight = (Config::GroupMap[sample] != isData ? "evtwgt * puwgt" : "1.0");
-    if (sample == DYLL)
-    {
-      if      (input.Contains("base")) weight += " * 0.4982";
-      else if (input.Contains("ext"))  weight += " * 0.5018";
-      else    
-      {
-	std::cerr << "Somehow you specified a DYLL sample that does not exist: " << input.Data() << " ...exiting..." << std::endl;
-	exit(1);
-      }
-    }
-
-    return weight;
+    return (Config::GroupMap[sample] != isData ? "evtwgt * puwgt" : "1.0");
   }
 
   // Check inputs

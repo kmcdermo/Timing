@@ -185,16 +185,16 @@ void FastSkimmer::MakeConfigPave()
   fConfigPave->SetName("Config");
   std::string str; // tmp string
   
+  // dump with PD
+  fConfigPave->AddText(Form("Primary Dataset: %s",fPDName.Data()));
+
   // dump cut config
-  fConfigPave->AddText("FastSkimmer Cut Config");
+  fConfigPave->AddText(Form("FastSkimmer Cut Config: %s",fCutConfig.Data()));
   std::ifstream cutfile(Form("%s",fCutConfig.Data()),std::ios::in);
   while (std::getline(cutfile,str))
   {
     fConfigPave->AddText(str.c_str());
   }
-
-  // dump with PD
-  fConfigPave->AddText(Form("Primary Dataset: %s",fPDName.Data()));
 
   // save to output file
   fOutFile->cd();
