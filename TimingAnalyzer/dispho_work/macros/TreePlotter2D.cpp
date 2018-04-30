@@ -52,6 +52,14 @@ void TreePlotter2D::MakePlot()
 
 void TreePlotter2D::MakeHistFromTrees()
 {
+  // all made from the same file
+  auto infile = TFile::Open(Form("%s",fInFileName.Data()));
+  Config::CheckValidFile(infile,fInFileName);
+  infile->cd();
+
+
+
+
   for (const auto & SamplePair : Config::SampleMap)
   {
     // Init

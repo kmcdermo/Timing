@@ -186,7 +186,7 @@ void FastSkimmer::MakeConfigPave()
   std::string str; // tmp string
   
   // dump cut config
-  fConfigPave->AddText("Cut Config");
+  fConfigPave->AddText("FastSkimmer Cut Config");
   std::ifstream cutfile(Form("%s",fCutConfig.Data()),std::ios::in);
   while (std::getline(cutfile,str))
   {
