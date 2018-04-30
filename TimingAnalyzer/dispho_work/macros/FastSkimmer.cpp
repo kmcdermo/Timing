@@ -102,19 +102,24 @@ void FastSkimmer::MakeMergedSkims()
     // Make skims...
     FastSkimmer::MakeSkimsFromEntryLists(TreeMap,TreeList,sample);
 
-    std::cout << "Merging skimmed trees..." << std::endl;
-  
-    // Now want to merge the list!
-    fOutFile->cd();
-    auto OutTree = TTree::MergeTrees(TreeList);
-    OutTree->SetName(Form("%s",treename.Data()));
+    if (TreeList->GetEntries() != 0)
+    {
+      std::cout << "Merging skimmed trees..." << std::endl;
+      
+      // Now want to merge the list!
+      fOutFile->cd();
+      auto OutTree = TTree::MergeTrees(TreeList);
+      OutTree->SetName(Form("%s",treename.Data()));
+      
+      // write out merged tree
+      fOutFile->cd();
+      OutTree->Write(OutTree->GetName(),TObject::kWriteDelete);
 
-    // write out merged tree
-    fOutFile->cd();
-    OutTree->Write(OutTree->GetName(),TObject::kWriteDelete);
-    
-    // now start deleting stuff to reduce memory footprint
-    delete OutTree;
+      // delete to reduce memory footprint
+      delete OutTree;
+    }
+
+    // delete other stuff to reduce memory footprint
     delete TreeList;
     for (auto & TreePair : TreeMap)
     {
@@ -146,20 +151,24 @@ void FastSkimmer::MakeSkimsFromEntryLists(std::map<TString,TTree*> & TreeMap, TL
     // Set Entry List Needed
     const auto samplename = Config::ReplaceSlashWithUnderscore(input);
     const auto & list = ListMap[samplename];
-    const Bool_t isFilled = (list->GetN() != 0);
     tree->SetEntryList(list);
     tree->SetName(Form("%s_Tree",samplename.Data()));
 
-    std::cout << "Skimming into a smaller tree..." << std::endl;
+    if (list->GetN() != 0)
+    {
+      std::cout << "Skimming into a smaller tree..." << std::endl;
     
-    // Fill from tree into smaller tree
-    fOutFile->cd();
-    TreeMap[input] = tree->CopyTree("");
-
-    std::cout << tree->GetEntries() << std::endl;
-    
-    // Add tree to list
-    TreeList->Add(TreeMap[input]);
+      // Fill from tree into smaller tree
+      fOutFile->cd();
+      TreeMap[input] = tree->CopyTree("");
+      
+      // Add tree to list
+      TreeList->Add(TreeMap[input]);
+    }
+    else
+    {
+      std::cout << "Skipping as no entries in this tree..." << std::endl;
+    }
     
     // Delete everything you can
     delete tree;

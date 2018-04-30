@@ -134,6 +134,9 @@ namespace Config
   void CheckValidTH1F(const TH1F * plot, const TString & pname, const TString & fname);
   void CheckValidTH2F(const TH2F * plot, const TString & pname, const TString & fname);
 
+  // may actually want an invalid tree...
+  Bool_t IsNullTree(const TTree * tree);
+
   // ROOT Formatting
   void CMSLumi(TCanvas * canv, const Int_t iPosX = 10);
   void SetTDRStyle(TStyle * tdrStyle);

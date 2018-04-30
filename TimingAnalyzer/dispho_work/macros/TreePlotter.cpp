@@ -98,15 +98,22 @@ void TreePlotter::MakeHistFromTrees()
 	
     // Get TTree
     auto tree = (TTree*)file->Get(Form("%s",treename.Data()));
-    Config::CheckValidTree(tree,treename,filename);
+    const auto isNull = Config::IsNullTree(tree);
 
-    std::cout << "Filling hist from tree..." << std::endl;
-    
-    // Fill from tree
-    tree->Draw(Form("%s>>%s",fXVar.Data(),->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(input,sample).Data()),"goff");
-    
-    // Add to main hists
-    HistMap[sample]->Add(hist);
+    if (!isNull)
+    {
+      std::cout << "Filling hist from tree..." << std::endl;
+      
+      // Fill from tree
+      tree->Draw(Form("%s>>%s",fXVar.Data(),->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(input,sample).Data()),"goff");
+      
+      // Add to main hists
+      HistMap[sample]->Add(hist);
+    }
+    else
+    {
+      std::cout << "Skipping null tree..." << std::endl;
+    }
 
     // delete everything
     delete tree;

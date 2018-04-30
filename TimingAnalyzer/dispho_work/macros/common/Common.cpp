@@ -41,7 +41,7 @@ namespace Config
     
     // DYLL
     SampleMap["MC/DYJetsToLL/base"] = DYLL;
-    SampleMap["MC/DYJetsToLL/ext"]  = DYLL;
+    //    SampleMap["MC/DYJetsToLL/ext"]  = DYLL;
 
     // DiPhoBox
     SampleMap["MC/DiPhotonJetsBox/M40_80"]  = DiPho;
@@ -275,7 +275,7 @@ namespace Config
 
   void CheckValidTree(const TTree * tree, const TString & tname, const TString & fname)
   {
-    if (tree == (TTree*) NULL) // check if valid plot
+    if (tree == (TTree*) NULL) // check if valid tree
     {
       std::cerr << "Input TTree is bad pointer: " << tname.Data() << " in input file: " << fname.Data()
 		<< " ...exiting..." << std::endl;
@@ -307,6 +307,11 @@ namespace Config
     }
   }
 
+  Bool_t IsNullTree(const TTree * tree)
+  {
+    return (tree == (TTree*) NULL);
+  }
+  
   void CMSLumi(TCanvas * canv, const Int_t iPosX) 
   {
     const TString  cmsText     = "CMS";
