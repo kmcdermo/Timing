@@ -209,6 +209,7 @@ void TreePlotter2D::SetupConfig()
 {
   Config::SetupSamples();
   Config::SetupGroups();
+  Config::SetupTreeNames();
   Config::SetupHistNames();
   Config::SetupCuts(fCutConfig);
 }

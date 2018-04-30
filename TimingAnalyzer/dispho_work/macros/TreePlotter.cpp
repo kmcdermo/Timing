@@ -474,9 +474,6 @@ void TreePlotter::MakeConfigPave()
   // save to output file
   fOutFile->cd();
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
-
-  // delete input
-  delete inPave;
 }
 
 void TreePlotter::DumpIntegrals()
@@ -582,6 +579,7 @@ void TreePlotter::SetupConfig()
 {
   Config::SetupSamples();
   Config::SetupGroups();
+  Config::SetupTreeNames();
   Config::SetupHistNames();
   Config::SetupColors();
   Config::SetupLabels();

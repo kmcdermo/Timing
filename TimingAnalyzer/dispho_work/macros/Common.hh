@@ -129,7 +129,7 @@ namespace Config
   Bool_t IsNullTree(const TTree * tree);
 
   // saving old config info
-  void AddTextFromInputPave(TPaveText *& outpave, const TFile * infile);
+  void AddTextFromInputPave(TPaveText *& outpave, TFile *& infile);
 
   // ROOT Formatting
   void CMSLumi(TCanvas * canv, const Int_t iPosX = 10);

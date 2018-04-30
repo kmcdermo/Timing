@@ -312,10 +312,10 @@ namespace Config
     return (tree == (TTree*) NULL);
   }
   
-  void AddTextFromInputPave(TPaveText *& outpave, const TFile * infile)
+  void AddTextFromInputPave(TPaveText *& outpave, TFile *& infile)
   {
-    auto inpave = (TPaveText*)infile->Get(Form("%s",Config::pavename.Data()));
-    auto lines  = inpave->GetListOfLines();
+    const auto inpave = (TPaveText*)infile->Get(Form("%s",Config::pavename.Data()));
+    const auto lines  = inpave->GetListOfLines();
 
     TIter next(lines);
     while (auto text = (TText*)next())
