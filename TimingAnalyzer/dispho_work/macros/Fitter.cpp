@@ -296,7 +296,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
     Fitter::Scale(hist2D,isUp);
 
     // get new tmp canvas
-    TCanvas * canv = new TCanvas();
+    auto canv = new TCanvas();
 
     // draw TH2 on canv
     hist2D->Draw("colz");
