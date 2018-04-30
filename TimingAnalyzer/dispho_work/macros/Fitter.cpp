@@ -252,20 +252,23 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
   const auto lastBinX = hist2D->GetXaxis()->GetNbins();
   const auto lastBinY = hist2D->GetYaxis()->GetNbins();
 
-  const auto binXLow = (fXBlindedLow ? std::max(hist2D->GetXaxis()->FindBin(fXLowCut),firstBin) : firstBin);
-  const auto binXUp  = (fXBlindedUp  ? std::min(hist2D->GetXaxis()->FindBin(fXUpCut) ,lastBinX) : lastBinX);
-  const auto binYLow = (fYBlindedLow ? std::max(hist2D->GetYaxis()->FindBin(fYLowCut),firstBin) : firstBin);
-  const auto binYUp  = (fYBlindedUp  ? std::min(hist2D->GetYaxis()->FindBin(fYUpCut) ,lastBinY) : lastBinY);
+  const auto binXLow = (fXBlindedLow ? std::max(hist2D->GetXaxis()->FindBin(fXLowCut),firstBin) : firstBin-1);
+  const auto binXUp  = (fXBlindedUp  ? std::min(hist2D->GetXaxis()->FindBin(fXUpCut) ,lastBinX) : lastBinX+1);
+  const auto binYLow = (fYBlindedLow ? std::max(hist2D->GetYaxis()->FindBin(fYLowCut),firstBin) : firstBin-1);
+  const auto binYUp  = (fYBlindedUp  ? std::min(hist2D->GetYaxis()->FindBin(fYUpCut) ,lastBinY) : lastBinY+1);
 
   // blind if needed -- must be done first!
   if (isBlind)
   {
-    for (auto ibinX = binXLow; ibinX <= binXUp; ibinX++)
+    for (auto ibinX = firstBin; ibinX <= lastBinX; ibinX++)
     {
-      for (auto ibinY = binYLow; ibinY <= binYUp; ibinY++)
+      for (auto ibinY = firstBin; ibinY <= lastBinY; ibinY++)
       {
-	hist2D->SetBinContent(ibinX,ibinY,0);
-	hist2D->SetBinError  (ibinX,ibinY,0);
+	if ((ibinX <= binXLow) || (ibinX >= binXUp) || (ibinY <= binYLow) || (ibinY >= binYUp))
+	{
+	  hist2D->SetBinContent(ibinX,ibinY,0);
+	  hist2D->SetBinError  (ibinX,ibinY,0);
+	}
       }
     }
   }
@@ -279,7 +282,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
   std::cout << text.Data() << " Integral: " << hist_int << " +/- " << hist_err << std::endl;
 
   // get integral and error over signal region
-  hist_int = hist2D->IntegralAndError(binXLow,binXUp,binYLow,binYUp,hist_err);
+  hist_int = hist2D->IntegralAndError(binXUp,lastBinX,binYUp,lastBinY,hist_err);
   std::cout << text.Data() << " Integral (In Blinded Region): " << hist_int << " +/- " << hist_err << std::endl;
 
   // save it to the outfile
@@ -298,7 +301,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
     // draw TH2 on canv
     hist2D->Draw("colz");
     Config::CMSLumi(canv);
-    canv->SaveAs(Form("%sHist.png",text.Data()));
+    canv->SaveAs(Form("%sHist_2D.png",text.Data()));
 
     // project in X and draw
     auto histX = hist2D->ProjectionX("tmp_projX",binYLow,binYUp);
@@ -817,6 +820,11 @@ void Fitter::SetupDefaultValues()
   fGenData  = false;
   fDoFits   = false;
   fMakeWS   = false;
+
+  fXBlindedLow = false;
+  fXBlindedUp  = false;
+  fYBlindedLow = false;
+  fYBlindedUp  = false;
 
   fNFits = 1;
   fNDraw = 100;
