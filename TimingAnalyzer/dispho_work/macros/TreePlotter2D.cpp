@@ -1,7 +1,7 @@
 #include "TreePlotter2D.hh"
 
-TreePlotter2D::TreePlotter2D(const TString & cutconfig, const TString & plotconfig, const TString & pdname, const TString & outfiletext) 
-  : fCutConfig(cutconfig), fPlotConfig(plotconfig), fPDName(pdname), fOutFileText(outfiletext)
+TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & cutconfig, const TString & plotconfig, const TString & outfiletext) 
+  : fInFileName(filename), fCutConfig(cutconfig), fPlotConfig(plotconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -11,6 +11,10 @@ TreePlotter2D::TreePlotter2D(const TString & cutconfig, const TString & plotconf
   //            //
   ////////////////
 
+  // Get input file
+  fInFile = TFile::Open(Form("%s",fInFileName.Data()));
+  Config::CheckValidFile(fInFile,fInFileName);
+ 
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
   Config::SetTDRStyle(fTDRStyle);
@@ -33,6 +37,7 @@ TreePlotter2D::~TreePlotter2D()
   delete fOutFile;
   for (auto & HistPair : HistMap) delete HistPair.second;
   delete fTDRStyle;
+  delete fInFile;
 }
 
 void TreePlotter2D::MakePlot()
@@ -52,49 +57,38 @@ void TreePlotter2D::MakePlot()
 
 void TreePlotter2D::MakeHistFromTrees()
 {
-  // all made from the same file
-  auto infile = TFile::Open(Form("%s",fInFileName.Data()));
-  Config::CheckValidFile(infile,fInFileName);
-  infile->cd();
+  std::cout << "Making hists from input trees..." << std::endl;
 
-
-
-
-  for (const auto & SamplePair : Config::SampleMap)
+  // loop over sample groups for each tree
+  for (const auto & TreeNamePair : Config::TreeNameMap)
   {
     // Init
-    const auto & input  = SamplePair.first;
-    const auto & sample = SamplePair.second;
-    std::cout << "Working on input: " << input.Data() << std::endl;
-
-    // Get File
-    const TString filename = Form("%s/%s/%s/%s",Config::eosDir.Data(),Config::baseDir.Data(),input.Data(),Config::tupleFileName.Data());
-    TFile * file = TFile::Open(Form("%s",filename.Data()));
-    Config::CheckValidFile(file,filename);
-    file->cd();
+    const auto & sample   = TreeNamePair.first;
+    const auto & treename = TreeNamePair.second;
+    std::cout << "Working on tree: " << treename.Data() << std::endl;
 	
     // Get TTree
-    TTree * tree = (TTree*)file->Get(Form("%s",Config::disphotreename.Data()));
-    Config::CheckValidTree(tree,Config::disphotreename,filename);
+    fInFile->cd();
+    auto intree = (TTree*)fInFile->Get(Form("%s",treename.Data()));
+    const auto isnull = Config::IsNullTree(intree);
 
-    // Make temp hist
-    TString histname = Config::ReplaceSlashWithUnderscore(input);
-    TH2F * hist = TreePlotter2D::SetupHist(Form("%s_Hist",histname.Data()));
-    
-    // Fill from tree
-    tree->Draw(Form("%s:%s>>%s",fYVar.Data(),fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(input,sample).Data()),"goff");
-    
-    // Add to main hists
-    HistMap[sample]->Add(hist);
+    if (!isnull)
+    {
+      std::cout << "Filling hist from tree..." << std::endl;
 
-    // save to output file
-    fOutFile->cd();
-    hist->Write(hist->GetName(),TObject::kWriteDelete);
+      // get the hist we wish to write to
+      auto & hist = HistMap[sample];
+      
+      // Fill from tree
+      intree->Draw(Form("%s:%s>>%s",fYVar.Data(),fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(sample).Data()),"goff");
+    }
+    else
+    {
+      std::cout << "Skipping null tree..." << std::endl;
+    }
 
-    // delete everything
-    delete hist;
-    delete tree;
-    delete file;
+    // delete tree;
+    delete intree;
   }
 
   // rescale bins by widths if variable size
@@ -103,16 +97,16 @@ void TreePlotter2D::MakeHistFromTrees()
     for (auto & HistPair : HistMap)
     {
       auto & hist = HistPair.second;
-      const UInt_t nbinsX = hist->GetXaxis()->GetNbins();
-      const UInt_t nbinsY = hist->GetYaxis()->GetNbins();
-      for (UInt_t ibinX = 1; ibinX <= nbinsX; ibinX++)
+      const auto nbinsX = hist->GetXaxis()->GetNbins();
+      const auto nbinsY = hist->GetYaxis()->GetNbins();
+      for (auto ibinX = 1; ibinX <= nbinsX; ibinX++)
       {
-	const Float_t binwidthX = hist->GetXaxis()->GetBinWidth(ibinX);
-	for (UInt_t ibinY = 1; ibinY <= nbinsY; ibinY++)
+	const auto binwidthX = hist->GetXaxis()->GetBinWidth(ibinX);
+	for (auto ibinY = 1; ibinY <= nbinsY; ibinY++)
         {
-	  const Float_t binwidthY = hist->GetYaxis()->GetBinWidth(ibinY);
+	  const auto binwidthY = hist->GetYaxis()->GetBinWidth(ibinY);
 	  
-	  Float_t divisor = 1.f;
+	  auto divisor = 1.f;
 	  if (fXVarBins) divisor *= binwidthX;
 	  if (fYVarBins) divisor *= binwidthY;
 
@@ -175,13 +169,17 @@ void TreePlotter2D::MakeConfigPave()
 {
   std::cout << "Dumping config to a pave..." << std::endl;
 
-  // create the pave
+  // create the pave, copying in old info
+  fOutFile->cd();
   fConfigPave = new TPaveText();
-  fConfigPave->SetName("Config");
+  fConfigPave->SetName(Form("%s",Config::pavename.Data()));
   std::string str; // tmp string
-  
-  // dump cut config first
-  fConfigPave->AddText("Cut Config");
+
+  // give grand title
+  fConfigPave->AddText("***** TreePlotter2D Config *****");
+
+  // dump plot cut config first
+  fConfigPave->AddText(Form("TreePlotter2D Cut Config: %s",fCutConfig.Data()));
   std::ifstream cutfile(Form("%s",fCutConfig.Data()),std::ios::in);
   while (std::getline(cutfile,str))
   {
@@ -189,15 +187,18 @@ void TreePlotter2D::MakeConfigPave()
   }
 
   // dump plot config second
-  fConfigPave->AddText("Plot Config");
+  fConfigPave->AddText(Form("Plot Config: %s",fPlotConfig.Data()));
   std::ifstream plotfile(Form("%s",fPlotConfig.Data()),std::ios::in);
   while (std::getline(plotfile,str))
   {
     fConfigPave->AddText(str.c_str());
   }
 
-  // dump with PD
-  fConfigPave->AddText(Form("Primary Dataset: %s",fPDName.Data()));
+  // save name of infile, redundant
+  fConfigPave->AddText(Form("Infile name: %s",fInFileName.Data()));
+
+  // dump in old config
+  Config::AddTextFromInputPave(fConfigPave,fInFile);
 
   // save to output file
   fOutFile->cd();
@@ -206,7 +207,6 @@ void TreePlotter2D::MakeConfigPave()
 
 void TreePlotter2D::SetupConfig()
 {
-  Config::SetupPrimaryDataset(fPDName);
   Config::SetupSamples();
   Config::SetupGroups();
   Config::SetupHistNames();
@@ -288,11 +288,11 @@ void TreePlotter2D::SetupHists()
 TH2F * TreePlotter2D::SetupHist(const TString & name)
 {
   // get the bins in a struct for ROOT
-  const Double_t * xbins = &fXBins[0];
-  const Double_t * ybins = &fYBins[0];
+  const auto xbins = &fXBins[0];
+  const auto ybins = &fYBins[0];
 
   // initialize new histogram
-  TH2F * hist = new TH2F(name.Data(),fTitle.Data(),fXBins.size()-1,xbins,fYBins.size()-1,ybins);
+  auto hist = new TH2F(name.Data(),fTitle.Data(),fXBins.size()-1,xbins,fYBins.size()-1,ybins);
 
   // set axis titles
   hist->GetXaxis()->SetTitle(fXTitle.Data());
@@ -302,7 +302,7 @@ TH2F * TreePlotter2D::SetupHist(const TString & name)
   // set x-axis labels only if read in
   if (fXLabels.size() > 0)
   {
-    for (Int_t ibin = 1; ibin <= hist->GetXaxis()->GetNbins(); ibin++)
+    for (auto ibin = 1; ibin <= hist->GetXaxis()->GetNbins(); ibin++)
     {
       hist->GetXaxis()->SetBinLabel(ibin,fXLabels[ibin-1].Data());
     }
@@ -311,7 +311,7 @@ TH2F * TreePlotter2D::SetupHist(const TString & name)
   // set y-axis labels only if read in
   if (fYLabels.size() > 0)
   {
-    for (Int_t ibin = 1; ibin <= hist->GetYaxis()->GetNbins(); ibin++)
+    for (auto ibin = 1; ibin <= hist->GetYaxis()->GetNbins(); ibin++)
     {
       hist->GetYaxis()->SetBinLabel(ibin,fYLabels[ibin-1].Data());
     }

@@ -312,6 +312,20 @@ namespace Config
     return (tree == (TTree*) NULL);
   }
   
+  void AddTextFromInputPave(TPaveText *& outpave, const TFile * infile)
+  {
+    auto inpave = (TPaveText*)infile->Get(Form("%s",Config::pavename.Data()));
+    auto lines  = inpave->GetListOfLines();
+
+    TIter next(lines);
+    while (auto text = (TText*)next())
+    { 
+      outpave->AddText(text->GetTitle());
+    }
+    
+    delete inpave;
+  }
+
   void CMSLumi(TCanvas * canv, const Int_t iPosX) 
   {
     const TString  cmsText     = "CMS";

@@ -15,7 +15,7 @@
 #include <map>
 
 // Common include
-#include "common/Common.hh"
+#include "Common.hh"
 
 class FastSkimmer
 {

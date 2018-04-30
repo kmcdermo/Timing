@@ -1,5 +1,5 @@
 #include "TString.h"
-#include "common/Common.cpp+"
+#include "Common.cpp+"
 #include "TreePlotter.cpp+"
 
 void runTreePlotter(const TString & infilename, const TString & cutconfig, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext)

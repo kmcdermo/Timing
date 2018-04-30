@@ -27,7 +27,7 @@
 #include <algorithm>
 
 // Common include
-#include "common/Common.hh"
+#include "Common.hh"
 
 class TreePlotter
 {

@@ -36,7 +36,7 @@
 #include <algorithm>
 
 // Common include
-#include "common/Common.hh"
+#include "Common.hh"
 
 // Special enum for type of fit
 enum FitType {TwoD, X, Y};

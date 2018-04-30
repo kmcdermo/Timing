@@ -2,7 +2,7 @@
 #define _skimmer_ 
 
 #include "SkimmerTypes.hh"
-#include "common/Common.hh"
+#include "Common.hh"
 
 #include "TTree.h"
 #include "TFile.h"

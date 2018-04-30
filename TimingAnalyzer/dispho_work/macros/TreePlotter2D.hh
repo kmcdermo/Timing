@@ -21,12 +21,12 @@
 #include <algorithm>
 
 // Common include
-#include "common/Common.hh"
+#include "Common.hh"
 
 class TreePlotter2D
 {
 public:
-  TreePlotter2D(const TString & cutconfig, const TString & plotconfig, const TString & pdname, const TString & outfiletext);
+  TreePlotter2D(const TString & infilename, const TString & cutconfig, const TString & plotconfig, const TString & outfiletext);
   ~TreePlotter2D();
 
   // Initialize
@@ -50,10 +50,13 @@ public:
 
 private:
   // Settings
+  const TString fInFileName;
   const TString fCutConfig;
   const TString fPlotConfig;
-  const TString fPDName;
   const TString fOutFileText;
+
+  // input
+  TFile * fInFile;
 
   // plot vars
   TString fTitle;

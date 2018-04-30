@@ -9,6 +9,8 @@
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TString.h"
+#include "TPaveText.h"
+#include "TText.h"
 
 // STL includes
 #include <map>
@@ -125,6 +127,9 @@ namespace Config
 
   // may actually want an invalid tree...
   Bool_t IsNullTree(const TTree * tree);
+
+  // saving old config info
+  void AddTextFromInputPave(TPaveText *& outpave, const TFile * infile);
 
   // ROOT Formatting
   void CMSLumi(TCanvas * canv, const Int_t iPosX = 10);

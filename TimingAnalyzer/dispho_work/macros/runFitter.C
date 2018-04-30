@@ -1,5 +1,5 @@
 #include "TString.h"
-#include "common/Common.cpp+"
+#include "Common.cpp+"
 #include "Fitter.cpp+"
 
 void runFitter(const TString & fitconfig, const TString & outfiletext)

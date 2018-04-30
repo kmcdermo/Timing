@@ -777,26 +777,32 @@ void Fitter::MakeConfigPave()
 {
   std::cout << "Dumping config to a pave..." << std::endl;
 
-  // create the pave
+  // create the pave, copying in old info
+  fOutFile->cd();
   fConfigPave = new TPaveText();
-  fConfigPave->SetName("Config");
+  fConfigPave->SetName(Form("%s",Config::pavename.Data()));
   std::string str; // tmp string
-  
-  // plot config first
-  fConfigPave->AddText("Plot Config");
-  std::ifstream plotfile(Form("%s",fPlotConfig.Data()),std::ios::in);
-  while (std::getline(plotfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
 
-  // fit config second
+  // give grand title
+  fConfigPave->AddText("***** Fitter Config *****");
+
+  // fit config
   fConfigPave->AddText("Fit Config");
   std::ifstream fitfile(Form("%s",fFitConfig.Data()),std::ios::in);
   while (std::getline(fitfile,str))
   {
     fConfigPave->AddText(str.c_str());
   }
+
+  // dump in old config
+  fConfigPave->AddText("***** GJets CR Config *****");
+  Config::AddTextFromInputPave(fConfigPave,fGJetsFile);
+
+  fConfigPave->AddText("***** QCD CR Config *****");
+  Config::AddTextFromInputPave(fConfigPave,fQCDFile);
+
+  fConfigPave->AddText("***** SR Config *****");
+  Config::AddTextFromInputPave(fConfigPave,fSRFile);
 
   // save to output file
   fOutFile->cd();

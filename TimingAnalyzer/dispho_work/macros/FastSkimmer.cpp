@@ -182,11 +182,11 @@ void FastSkimmer::MakeConfigPave()
 
   // create the pave
   fConfigPave = new TPaveText();
-  fConfigPave->SetName("Config");
+  fConfigPave->SetName(Form("%s",Config::pavename.Data()));
   std::string str; // tmp string
   
-  // dump with PD
-  fConfigPave->AddText(Form("Primary Dataset: %s",fPDName.Data()));
+  // give grand title
+  fConfigPave->AddText("***** FastSkimmer Config *****");
 
   // dump cut config
   fConfigPave->AddText(Form("FastSkimmer Cut Config: %s",fCutConfig.Data()));
@@ -195,6 +195,9 @@ void FastSkimmer::MakeConfigPave()
   {
     fConfigPave->AddText(str.c_str());
   }
+
+  // dump with PD
+  fConfigPave->AddText(Form("Primary Dataset: %s",fPDName.Data()));
 
   // save to output file
   fOutFile->cd();

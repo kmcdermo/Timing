@@ -89,6 +89,8 @@ void TreePlotter::MakePlot()
 
 void TreePlotter::MakeHistFromTrees()
 {
+  std::cout << "Making hists from input trees..." << std::endl;
+
   // loop over sample groups for each tree
   for (const auto & TreeNamePair : Config::TreeNameMap)
   {
@@ -435,18 +437,14 @@ void TreePlotter::MakeConfigPave()
 {
   std::cout << "Dumping config to a pave..." << std::endl;
 
-  // first get old pave to copy in...
-  fInFile->cd();
-  auto inPave = (TPaveText*)fInFile->Get(Form("%s",Config::pavename.Data()));
-
   // create the pave, copying in old info
   fOutFile->cd();
-  fConfigPave = new TPaveText(*inPave);
+  fConfigPave = new TPaveText();
   fConfigPave->SetName(Form("%s",Config::pavename.Data()));
   std::string str; // tmp string
 
-  // save name of infile, redundant
-  fConfigPave->AddText(Form("Infile name: %s",fInFileName.Data()));
+  // give grand title
+  fConfigPave->AddText("***** TreePlotter Config *****");
 
   // dump plot cut config first
   fConfigPave->AddText(Form("TreePlotter Cut Config: %s",fCutConfig.Data()));
@@ -467,6 +465,12 @@ void TreePlotter::MakeConfigPave()
   // dump scaling choices
   fConfigPave->AddText(fScaleArea?"Scale MC to data area":"Scale MC to luminosity");
 
+  // save name of infile, redundant
+  fConfigPave->AddText(Form("Infile name: %s",fInFileName.Data()));
+
+  // dump in old config
+  Config::AddTextFromInputPave(fConfigPave,fInFile);
+  
   // save to output file
   fOutFile->cd();
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
@@ -679,7 +683,7 @@ void TreePlotter::SetupHists()
 TH1F * TreePlotter::SetupHist(const TString & name)
 {
   // get the bins in a struct for ROOT
-  const Double_t * xbins = &fXBins[0];
+  const auto xbins = &fXBins[0];
   
   // initialize new histogram
   auto hist = new TH1F(name.Data(),fTitle.Data(),fXBins.size()-1,xbins);
