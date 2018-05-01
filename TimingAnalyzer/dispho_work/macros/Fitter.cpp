@@ -740,14 +740,20 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
   auto workspace = new RooWorkspace(Form("workspace_%s",fitInfo.Text.Data()),Form("workspace_%s",fitInfo.Text.Data()));
 
   // give meaningful names first
-  const TString bkgdname = "BkgdPDF";
-  const TString signname = "SignPDF";
+  const TString bkgdname = Form("BkgdPDF_%s",fitInfo.Text.Data());
+  const TString signname = Form("SignPDF_%s",fitInfo.Text.Data());
 
   // change names as needed
   fitInfo.BkgdPdf->SetName(Form("%s",bkgdname.Data()));
   fitInfo.HistPdfMap[GMSB]->SetName(Form("%s",signname.Data()));
   fNPredBkgd->SetName(Form("%s_norm",bkgdname.Data()));
   fNPredSign->SetName(Form("%s_norm",signname.Data()));
+
+  // Change names of fractions
+  const TString gjetsfracname = fFracMap[GJets]->GetName();
+  const TString qcdfracname   = fFracMap[QCD]->GetName();
+  fFracMap[GJets]->SetName(Form("%s_%s",gjetsfracname.Data(),fitInfo.Text.Data()));
+  fFracMap[QCD]  ->SetName(Form("%s_%s",qcdfracname  .Data(),fitInfo.Text.Data()));
 
   // Set values to generic expectationss
   fNPredBkgd->setVal(fNTotalBkgd);
@@ -766,6 +772,10 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
 
   // now delete it!
   delete workspace;
+
+  // rename now that it is safe
+  fFracMap[GJets]->SetName(Form("%s",gjetsfracname.Data()));
+  fFracMap[QCD]  ->SetName(Form("%s",qcdfracname  .Data()));
 }
 
 void Fitter::SaveOutTree()
