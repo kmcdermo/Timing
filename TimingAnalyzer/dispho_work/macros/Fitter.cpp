@@ -84,14 +84,14 @@ void Fitter::DoMain()
   Fitter::DeleteFitInfo(FitInfo2D);
 
   // Do the fit in 1D -- X
-  FitInfo FitInfoX(RooArgList(*fX),"projX",X);
+  FitInfo FitInfoX(RooArgList(*fX),"1D_projX",X);
   Fitter::PreparePdfs(fHistMapX,FitInfoX);
   if (fDoFits) Fitter::MakeFit(FitInfoX);
   if (fMakeWS) Fitter::ImportToWS(FitInfoX);
   Fitter::DeleteFitInfo(FitInfoX);
 
   // Do the fit in 1D -- Y
-  FitInfo FitInfoY(RooArgList(*fY),"projY",Y);
+  FitInfo FitInfoY(RooArgList(*fY),"1D_projY",Y);
   Fitter::PreparePdfs(fHistMapY,FitInfoY);
   if (fDoFits) Fitter::MakeFit(FitInfoY);
   if (fMakeWS) Fitter::ImportToWS(FitInfoY);
@@ -142,8 +142,8 @@ void Fitter::GetInputHists()
   fGJetsHistMC_CR   = (TH2F*)fGJetsFile->Get(Form("%s",Config::HistNameMap[GJets].Data()));
   Config::CheckValidTH2F(fHistMap2D[GJets],Config::HistNameMap[Data] ,fGJetsFileName);
   Config::CheckValidTH2F(fGJetsHistMC_CR  ,Config::HistNameMap[GJets],fGJetsFileName);
-  Fitter::Scale(fHistMap2D[GJets],isUp);
-  Fitter::Scale(fGJetsHistMC_CR,isUp);
+  if (fXVarBins || fYVarBins) Fitter::Scale(fHistMap2D[GJets],isUp);
+  if (fXVarBins || fYVarBins) Fitter::Scale(fGJetsHistMC_CR,isUp);
 
   // QCD CR
   fQCDFile = TFile::Open(Form("%s",fQCDFileName.Data()));
@@ -153,8 +153,8 @@ void Fitter::GetInputHists()
   fQCDHistMC_CR   = (TH2F*)fQCDFile->Get(Form("%s",Config::HistNameMap[QCD].Data()));
   Config::CheckValidTH2F(fHistMap2D[QCD],Config::HistNameMap[Data],fQCDFileName);
   Config::CheckValidTH2F(fQCDHistMC_CR  ,Config::HistNameMap[QCD] ,fQCDFileName);
-  Fitter::Scale(fHistMap2D[QCD],isUp);
-  Fitter::Scale(fQCDHistMC_CR,isUp);
+  if (fXVarBins || fYVarBins) Fitter::Scale(fHistMap2D[QCD],isUp);
+  if (fXVarBins || fYVarBins) Fitter::Scale(fQCDHistMC_CR,isUp);
 
   // SR
   fSRFile = TFile::Open(Form("%s",fSRFileName.Data()));
@@ -164,15 +164,15 @@ void Fitter::GetInputHists()
   fQCDHistMC_SR   = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[QCD].Data()));
   Config::CheckValidTH2F(fGJetsHistMC_SR,Config::HistNameMap[GJets],fSRFileName);
   Config::CheckValidTH2F(fQCDHistMC_SR  ,Config::HistNameMap[QCD]  ,fSRFileName);
-  Fitter::Scale(fGJetsHistMC_SR,isUp);
-  Fitter::Scale(fQCDHistMC_SR,isUp);
+  if (fXVarBins || fYVarBins) Fitter::Scale(fGJetsHistMC_SR,isUp);
+  if (fXVarBins || fYVarBins) Fitter::Scale(fQCDHistMC_SR,isUp);
 
   // use signal sample?
   if (!fBkgdOnly) 
   {
     fHistMap2D[GMSB] = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[GMSB].Data()));
     Config::CheckValidTH2F(fHistMap2D[GMSB],Config::HistNameMap[GMSB],fSRFileName);
-    Fitter::Scale(fHistMap2D[GMSB],isUp);
+    if (fXVarBins || fYVarBins) Fitter::Scale(fHistMap2D[GMSB],isUp);
   }
 
   // use real data?
@@ -180,7 +180,7 @@ void Fitter::GetInputHists()
   {
     fHistMap2D[Data] = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[Data].Data()));
     Config::CheckValidTH2F(fHistMap2D[Data],Config::HistNameMap[Data],fSRFileName);
-    Fitter::Scale(fHistMap2D[Data],isUp);
+    if (fXVarBins || fYVarBins) Fitter::Scale(fHistMap2D[Data],isUp);
   }
 }  
 
@@ -293,7 +293,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
   {
     // scale back down temporarily (since already scaled up)
     const Bool_t isUp = false;
-    Fitter::Scale(hist2D,isUp);
+    if (fXVarBins || fYVarBins) Fitter::Scale(hist2D,isUp);
 
     // get new tmp canvas
     auto canv = new TCanvas();
@@ -759,6 +759,77 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
   fNPredBkgd->setVal(fNTotalBkgd);
   fNPredSign->setVal(fNTotalSign);
 
+  TCanvas * canv = new TCanvas();
+  RooPlot * frame = nullptr;
+  TH1F * hist = nullptr;
+  if (fitInfo.Fit == TwoD || fitInfo.Fit == X)
+  {
+    frame = fX->frame();
+    fitInfo.BkgdPdf->plotOn(frame);
+    frame->Draw();
+    canv->SaveAs(Form("preimport_x_plotOn_%s.png",fitInfo.Text.Data()));
+
+    hist = (TH1F*)fitInfo.BkgdPdf->createHistogram("bkgdhist_prex",*fX,RooFit::Binning(fX->getBinning()));
+    hist->Draw();
+    canv->SaveAs(Form("preimport_x_createHist_%s.png",fitInfo.Text.Data()));
+
+    delete hist;
+    delete frame;
+  }
+  
+  if (fitInfo.Fit == TwoD || fitInfo.Fit == Y)
+  {
+    frame = fY->frame();
+    fitInfo.BkgdPdf->plotOn(frame);
+    frame->Draw();
+    canv->SaveAs(Form("preimport_y_plotOn_%s.png",fitInfo.Text.Data()));
+
+    hist = (TH1F*)fitInfo.BkgdPdf->createHistogram("bkgdhist_prey",*fY,RooFit::Binning(fY->getBinning()));
+    hist->Draw();
+    canv->SaveAs(Form("preimport_y_createHist_%s.png",fitInfo.Text.Data()));
+
+    delete hist;
+    delete frame;
+  }
+  
+  if (fitInfo.Fit == TwoD)
+  {
+    auto xpdf = fitInfo.BkgdPdf->createProjection(*fY);
+
+    frame = fX->frame();
+    xpdf->plotOn(frame);
+    frame->Draw();
+    canv->SaveAs("preimport_x_plotOn_2D_projX.png");
+    delete frame;
+
+    auto xhist = (TH1F*)xpdf->createHistogram("xhist",*fX);                                                      
+    xhist->Draw();
+    canv->SaveAs("preimport_x_createHist_2D_projX.png");
+    delete xhist;
+
+    delete xpdf;
+    
+    auto ypdf = fitInfo.BkgdPdf->createProjection(*fX);
+
+    frame = fY->frame();
+    ypdf->plotOn(frame);
+    frame->Draw();
+    canv->SaveAs("preimport_y_plotOn_2D_projY.png");
+    delete frame;
+
+    auto yhist = (TH1F*)ypdf->createHistogram("yhist",*fY);                                                      
+    yhist->Draw();
+    canv->SaveAs("preimport_y_createHist_2D_projY.png");
+    delete yhist;
+
+    delete ypdf;
+
+    auto hist2d = (TH2F*)fitInfo.BkgdPdf->createHistogram("bkgdhist_pre2d",*fX,RooFit::Binning(fX->getBinning()),RooFit::YVar(*fY,RooFit::Binning(fY->getBinning())));
+    hist2d->Draw("colz");
+    canv->SaveAs(Form("preimport_xy_createHist_%s.png",fitInfo.Text.Data()));
+    delete hist2d;
+  }
+
   // import into workspace
   workspace->import(*fitInfo.BkgdPdf);
   workspace->import(*fNPredBkgd);
@@ -769,6 +840,77 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
   // write it out
   fOutFile->cd();
   workspace->Write(workspace->GetName(),TObject::kWriteDelete);
+
+  if (fitInfo.Fit == TwoD || fitInfo.Fit == X)
+  {
+    frame = workspace->var("x")->frame();
+    workspace->pdf(Form("BkgdPDF_%s",fitInfo.Text.Data()))->plotOn(frame);
+    frame->Draw();
+    canv->SaveAs(Form("postimport_x_plotOn_%s.png",fitInfo.Text.Data()));
+
+    hist = (TH1F*)workspace->pdf(Form("BkgdPDF_%s",fitInfo.Text.Data()))->createHistogram("bkgdhist_postx",*(workspace->var("x")),RooFit::Binning(workspace->var("x")->getBinning()));
+    hist->Draw();
+    canv->SaveAs(Form("postimport_x_createHist_%s.png",fitInfo.Text.Data()));
+
+    delete hist;
+    delete frame;
+  }
+
+  if (fitInfo.Fit == TwoD || fitInfo.Fit == Y)
+  {
+    frame = workspace->var("y")->frame();
+    workspace->pdf(Form("BkgdPDF_%s",fitInfo.Text.Data()))->plotOn(frame);
+    frame->Draw();
+    canv->SaveAs(Form("postimport_y_plotOn_%s.png",fitInfo.Text.Data()));
+
+    hist = (TH1F*)workspace->pdf(Form("BkgdPDF_%s",fitInfo.Text.Data()))->createHistogram("bkgdhist_posty",*(workspace->var("y")),RooFit::Binning(workspace->var("y")->getBinning()));
+    hist->Draw();
+    canv->SaveAs(Form("postimport_y_createHist_%s.png",fitInfo.Text.Data()));
+
+    delete hist;
+    delete frame;
+  }
+
+  if (fitInfo.Fit == TwoD)
+  {
+    auto xpdf = workspace->pdf(Form("BkgdPDF_%s",fitInfo.Text.Data()))->createProjection(*(workspace->var("y")));
+
+    frame = workspace->var("x")->frame();
+    xpdf->plotOn(frame);
+    frame->Draw();
+    canv->SaveAs("postimport_x_plotOn_2D_projX.png");
+    delete frame;
+
+    auto xhist = (TH1F*)xpdf->createHistogram("xhist",*(workspace->var("x")));
+    xhist->Draw();
+    canv->SaveAs("postimport_x_createHist_2D_projX.png");
+    delete xhist;
+
+    delete xpdf;
+
+    auto ypdf = workspace->pdf(Form("BkgdPDF_%s",fitInfo.Text.Data()))->createProjection(*(workspace->var("x")));
+
+    frame = workspace->var("y")->frame();
+    ypdf->plotOn(frame);
+    frame->Draw();
+    canv->SaveAs("postimport_y_plotOn_2D_projY.png");
+    delete frame;
+
+    auto yhist = (TH1F*)ypdf->createHistogram("yhist",*(workspace->var("y")));
+    yhist->Draw();
+    canv->SaveAs("postimport_y_createHist_2D_projY.png");
+    delete yhist;
+
+    delete ypdf;
+
+    auto hist2d = (TH2F*)workspace->pdf(Form("BkgdPDF_%s",fitInfo.Text.Data()))->createHistogram("bkgdhist_post2d",*(workspace->var("x")),RooFit::Binning(workspace->var("x")->getBinning()),RooFit::YVar(*(workspace->var("y")),RooFit::Binning(workspace->var("y")->getBinning())));
+    hist2d->Draw("colz");
+    canv->SaveAs(Form("postimport_xy_createHist_%s.png",fitInfo.Text.Data()));
+    delete hist2d;
+  }
+
+  // delete canv
+  delete canv;
 
   // now delete it!
   delete workspace;
