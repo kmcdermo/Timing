@@ -1,7 +1,7 @@
 #include "TreePlotter2D.hh"
 
 TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & cutconfig, const TString & plotconfig, const TString & outfiletext) 
-  : fInFileName(filename), fCutConfig(cutconfig), fPlotConfig(plotconfig), fOutFileText(outfiletext)
+  : fInFileName(infilename), fCutConfig(cutconfig), fPlotConfig(plotconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
