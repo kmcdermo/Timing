@@ -431,7 +431,7 @@ void Fitter::DeclareSamplePdfs(FitInfo & fitInfo)
 
   // Build Bkgd-Only Pdfs
   const TString bkgdname = Form("Bkgd_PDF_%s",fitInfo.Text.Data());
-  fitInfo.BkgdPdf = new RooAddPdf(Form("%s",bkgdname.Data()),Form("%s",bkgdname.Data()),RooArgList(*fitInfo.HistPdfMap.at(GJets),*fitInfo.HistPdfMap.at(QCD)),RooArgList(*fFracMap.at(GJets),*fFracMap.at(QCD)));
+  fitInfo.BkgdPdf = new RooAddPdf(Form("%s",bkgdname.Data()),Form("%s",bkgdname.Data()),RooArgList(*fitInfo.HistPdfMap.at(GJets),*fitInfo.HistPdfMap.at(QCD)),RooArgList(*fFracMap.at(GJets)));
 }
 
 void Fitter::MakeFit(FitInfo & fitInfo)
