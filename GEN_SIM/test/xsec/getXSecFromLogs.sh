@@ -1,9 +1,9 @@
 #!/bin/bash
 
 ## SETUP
-basename=GMSB_L250TeV_CTau0p1cm_step0
-path=/eos/cms/store/group/phys_egamma/soffi/displacedPhotons/GEN-SIM_2304218/${basename}/${basename}
-output=${basename}_xsecs.txt
+path=${1}
+totaloutput=${2}
+tmpoutput=xsecs.txt
 
 echo "Copying log tar files"
 
@@ -27,14 +27,14 @@ do
     echo "Grepping for xsec"
     xsec=$( grep "final cross section" cmsRun-stdout-${i}.log | cut -d " " -f 7 )
     exsec=$( grep "final cross section" cmsRun-stdout-${i}.log | cut -d " " -f 9 )
-    echo ${xsec} ${exsec} >> ${output}
+    echo ${xsec} ${exsec} >> ${tmpoutput}
 
     rm cmsRun-stdout-${i}.log
 done
 
 ## COMPUTE AVERAGE XSEC AND DUMP
 echo "Computing total xsec"
-root -l -b -q computeAverageXSec.C\(\"${output}\"\)
+root -l -b -q computeAverageXSec.C\(\"${tmpoutput}\",\"${totaloutput}\"\)
 
 ## CLEANUP
-rm ${output}
+rm ${tmpoutput}

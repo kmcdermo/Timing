@@ -3,10 +3,10 @@
 #include <fstream>
 #include <iostream>
 
-void computeAverageXSec(const TString & filename)
+void computeAverageXSec(const TString & infilename, const TString & outfilename)
 {
   // input stream
-  std::ifstream input(filename.Data(),std::ios::in); 
+  std::ifstream input(infilename.Data(),std::ios::in); 
   Float_t xsec;
   Float_t exsec;
 
@@ -28,5 +28,6 @@ void computeAverageXSec(const TString & filename)
   sum_exsec2  = std::sqrt(sum_exsec2)/n;
 
   // dump
-  std::cout << sum_xsec << " " << sum_exsec2 << std::endl;
+  std::ofstream output(outfilename.Data(),std::ios_base::trunc);
+  output << sum_xsec << " " << sum_exsec2 << std::endl;
 }
