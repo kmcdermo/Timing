@@ -1,8 +1,8 @@
 namespace Config
 {
-  static const Int_t   ipho = 1;
+  static const Int_t   ipho = 0;
   static const Int_t   npho = ipho+1;
-  static const Float_t ptcut = 70.f;
+  static const Float_t ptcut = 0.f;
   static const Float_t sol  = 2.99792458e10; // cm/s
   static const Float_t ns_per_s = 1e9; 
   static const Float_t cm_per_m = 1e2; 
@@ -81,7 +81,7 @@ void gencalc()
   Float_t genpheta    = 0; TBranch * b_genpheta    = 0; tree->SetBranchAddress(Form("genpheta_%i"   ,Config::ipho), &genpheta   , &b_genpheta);
 
   // Set hists
-  TH1F * ctau = new TH1F("ctau","ctau",100,0,4000);
+  TH1F * ctau = new TH1F("ctau","ctau",100,0,2);
   ctau->Sumw2();
   TH1F * time = new TH1F("arrival_time","arrival time [ns]",100,0,1000);
   time->Sumw2();
@@ -138,15 +138,16 @@ void gencalc()
     std::cout << labels[ibin-1].Data() << " " << det->GetBinContent(ibin) << std::endl;
   }
 
-
-//   TCanvas * canv = new TCanvas();
-//   canv->cd();
-//   canv->SetLogy();
-//   rad->Scale(1.f/rad->Integral());
-//   rad->Draw();
-
-//  det->Scale(1.f/det->Integral());
-//  det->GetYaxis()->SetRangeUser(0.01,1);
-
-//  det->Draw("text");
+  TFormula form("texp","[0]*exp(-x/[1])");
+  TF1 * fit = new TF1("texp_fit",form.GetName(),0.f,100.f);
+  fit->SetParName(0,"Norm"); fit->SetParameter(0,ctau->GetMaximum());
+  fit->SetParName(1,"d");    fit->SetParameter(1,ctau->GetMean());
+  ctau->Fit(fit->GetName());
+  
+  TCanvas * canv = new TCanvas();
+  canv->cd();
+  canv->SetLogy();
+  ctau->Draw();
+  fit->Draw("same");
+  canv->SaveAs("ctau.png");
 }
