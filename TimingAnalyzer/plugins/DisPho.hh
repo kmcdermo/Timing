@@ -250,6 +250,10 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // output histograms
   TH1F * h_cutflow;
   std::map<std::string,int> cutflowLabelMap;
+  TH1F * h_genpuobs;
+  TH1F * h_genpuobs_wgt;
+  TH1F * h_genputrue;
+  TH1F * h_genputrue_wgt;
 
   // output metadeta configs
   TTree * configtree;

@@ -255,11 +255,31 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     {
       DisPho::SetGenEvtBranches(genevtInfoH);
     }
+
+    /////////////////////
+    //                 //
+    // Gen pileup info //
+    //                 //
+    /////////////////////
+    DisPho::InitializeGenPUBranches();
+    if (pileupInfoH.isValid()) // standard check for pileup
+    {
+      DisPho::SetGenPUBranches(pileupInfoH);
+    } // end check over pileup
   }
   const Float_t evtwgt = (isMC ? genwgt : 1.f);
 
   // Fill total cutflow regardless of cuts
   h_cutflow->Fill(cutflowLabelMap["All"]*1.f,evtwgt);
+
+  // Fill PU hists regardless of cuts
+  if (isMC)
+  {
+    h_genpuobs->Fill(genpuobs);
+    h_genpuobs_wgt->Fill(genpuobs,evtwgt);
+    h_genputrue->Fill(genputrue);
+    h_genputrue_wgt->Fill(genputrue,evtwgt);
+  }
 
   //////////////
   //          //
@@ -391,17 +411,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       DisPho::SetGenT0Branches(gent0H);
     }
     
-    /////////////////////
-    //                 //
-    // Gen pileup info //
-    //                 //
-    /////////////////////
-    DisPho::InitializeGenPUBranches();
-    if (pileupInfoH.isValid()) // standard check for pileup
-    {
-      DisPho::SetGenPUBranches(pileupInfoH);
-    } // end check over pileup
-
     ///////////////////////
     //                   //
     // Gen particle info //
@@ -1254,6 +1263,10 @@ void DisPho::beginJob()
   
   // histograms needed
   h_cutflow = fs->make<TH1F>("h_cutflow", "Cut Flow", cutflowLabelMap.size(), 0, cutflowLabelMap.size());
+  h_genpuobs = fs->make<TH1F>("h_genpuobs", "Gen PU Observed", 150, 0, 150);
+  h_genputrue = fs->make<TH1F>("h_genputrue", "Gen PU True", 150, 0, 150);
+  h_genpuobs_wgt = fs->make<TH1F>("h_genpuobs_wgt", "Gen PU Observed (Weighted)", 150, 0, 150);
+  h_genputrue_wgt = fs->make<TH1F>("h_genputrue_wgt", "Gen PU True (Weighted)", 150, 0, 150);
   DisPho::MakeHists();
 
   // Config tree, filled once
@@ -1273,7 +1286,25 @@ void DisPho::MakeHists()
     h_cutflow->GetXaxis()->SetBinLabel(cutflowLabelPair.second+1,cutflowLabelPair.first.c_str()); // +1 to account for bins in ROOT from [1,nBins]
   }
   h_cutflow->GetYaxis()->SetTitle("nEvents with weights");
+
+  // PUObs
+  h_genpuobs->GetXaxis()->SetTitle("nPU observed");
+  h_genpuobs->GetYaxis()->SetTitle("nEvents");
+  h_genpuobs_wgt->GetXaxis()->SetTitle("nPU observed");
+  h_genpuobs_wgt->GetYaxis()->SetTitle("nEvents");
+
+  // PUTrue
+  h_genputrue->GetXaxis()->SetTitle("nPU True");
+  h_genputrue->GetYaxis()->SetTitle("nEvents");
+  h_genputrue_wgt->GetXaxis()->SetTitle("nPU True");
+  h_genputrue_wgt->GetYaxis()->SetTitle("nEvents");
+
+  // SumW2
   h_cutflow->Sumw2();
+  h_genpuobs->Sumw2();
+  h_genpuobs_wgt->Sumw2();
+  h_genputrue->Sumw2();
+  h_genputrue_wgt->Sumw2();
 }
 
 void DisPho::MakeAndFillConfigTree()
