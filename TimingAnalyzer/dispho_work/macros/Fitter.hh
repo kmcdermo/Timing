@@ -105,7 +105,7 @@ public:
   void DeclareDatasets(const T & HistMap, FitInfo & fitInfo);
   void DeclareSamplePdfs(FitInfo & fitInfo);
 
-  // Subroutine for fitting
+  // Subroutines for fitting
   void MakeFit(FitInfo & fitInfo);
   void ThrowPoisson(const FitInfo & fitInfo);
   void BuildModel(FitInfo & fitInfo);
@@ -115,6 +115,9 @@ public:
   void DrawFit(RooRealVar *& var, const TString & title, const FitInfo & fitInfo);
   void FillOutTree(const FitInfo & fitInfo);
   void DeleteModel(FitInfo & fitInfo, const Int_t ifit);
+
+  // Subroutines for dumping ws 
+  void DumpWS(const FitInfo & fitInfo, const TString & label);
 
   // Helper Routines
   void Scale(TH2F *& hist,const Bool_t isUp);
@@ -134,6 +137,7 @@ private:
   Bool_t fGenData;
   Bool_t fDoFits;
   Bool_t fMakeWS;
+  Bool_t fDumpWS;
   Int_t  fNFits;
   Int_t  fNDraw;
 
