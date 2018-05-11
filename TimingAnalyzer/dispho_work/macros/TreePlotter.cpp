@@ -113,14 +113,14 @@ void TreePlotter::MakeHistFromTrees()
       
       // Fill from tree
       intree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(sample).Data()),"goff");
+
+      // delete tree;
+      delete intree;
     }
     else
     {
       std::cout << "Skipping null tree..." << std::endl;
     }
-
-    // delete tree;
-    delete intree;
   }
 
   // rescale bins by widths if variable size

@@ -105,16 +105,16 @@ void Skimmer::EventLoop()
       // leading photon skim section
       fInEvent.b_nphotons->GetEntry(entry);
       if (fInEvent.nphotons <= 0) continue;
-
+      fOutCutFlow->Fill((cutLabels["nPhotons"]*1.f)-0.5f,evtwgt);
+      
       fInPhos[0].b_isEB->GetEntry(entry);
       if (!fInPhos[0].isEB) continue;
+      fOutCutFlow->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,evtwgt);
 
       fInPhos[0].b_pt->GetEntry(entry);
       if (fInPhos[0].pt < 70.f) continue;
-      
-      // fill cutflow
-      fOutCutFlow->Fill((cutLabels["skim"]*1.f)-0.5f,evtwgt);
-      
+      fOutCutFlow->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);      
+
       // filter on MET Flags
       fInEvent.b_metPV->GetEntry(entry);
       fInEvent.b_metBeamHalo->GetEntry(entry);
@@ -124,7 +124,7 @@ void Skimmer::EventLoop()
       fInEvent.b_metPFMuon->GetEntry(entry);
       fInEvent.b_metPFChgHad->GetEntry(entry);
       if (!fInEvent.metPV || !fInEvent.metBeamHalo || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || 
-	  !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad) continue;
+       	  !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad) continue;
 
       fInEvent.b_metECALCalib->GetEntry(entry);
       if (!fOutConfig.isGMSB && !fInEvent.metECALCalib) continue;
@@ -132,7 +132,7 @@ void Skimmer::EventLoop()
       fInEvent.b_metEESC->GetEntry(entry);
       if (!fIsMC && !fInEvent.metEESC) continue;
       
-      // fill cutflow
+      // fill cutflow for MET filters
       fOutCutFlow->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
       
       // cut on crappy pileup... eventually genputrue
@@ -1215,7 +1215,9 @@ void Skimmer::InitOutCutFlow()
     cutLabels[fInCutFlow->GetXaxis()->GetBinLabel(ibin)] = ibin;
   }
   Int_t inNbinsX_new = inNbinsX;
-  cutLabels["skim"] = ++inNbinsX_new;
+  cutLabels["nPhotons"] = ++inNbinsX_new;
+  cutLabels["ph0isEB"] = ++inNbinsX_new;
+  cutLabels["ph0pt70"] = ++inNbinsX_new;
   cutLabels["METFlag"] = ++inNbinsX_new;
   cutLabels["badPU"] = ++inNbinsX_new;
 
