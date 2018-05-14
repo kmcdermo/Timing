@@ -14,7 +14,10 @@ namespace Config
   std::map<SampleType,Color_t>     ColorMap;
   std::map<SampleType,TString>     LabelMap;
   std::map<SampleType,TString>     CutMap;
+
   std::map<TString,TString>        SignalSampleMap;
+  std::map<TString,std::vector<TString> > SignalGroupMap;
+  std::map<TString,Color_t>        SignalGroupColorMap;
   std::map<TString,TString>        SignalTreeNameMap;
   std::map<TString,TString>        SignalCutFlowHistNameMap;
   std::map<TString,TString>        SignalHistNameMap;
@@ -192,6 +195,29 @@ namespace Config
     SignalSampleMap["MC/GMSB/L300TeV_CTau0p1cm"] = "GMSB_L300_CTau0p1";
     SignalSampleMap["MC/GMSB/L350TeV_CTau0p1cm"] = "GMSB_L350_CTau0p1";
     SignalSampleMap["MC/GMSB/L400TeV_CTau0p1cm"] = "GMSB_L400_CTau0p1";
+  }
+
+  void SetupSignalGroups()
+  {
+    for (const auto & SignalSamplePair : SignalSampleMap)
+    {
+      const auto & signal = SignalSamplePair.second;
+
+      if (signal.Contains("GMSB",TString::kExact))
+      {
+	const TString s_ctau = "_CTau";
+	auto i_ctau = signal.Index(s_ctau);
+	auto l_ctau = s_ctau.Length();
+	
+	const TString ctau(signal(i_ctau+l_ctau,signal.Length()-i_ctau-l_ctau));
+	SignalGroupMap["GMSB_"+ctau+"cm"].emplace_back(signal);
+      }
+    }
+  }
+
+  void SetupSignalGroupColors()
+  {
+    SignalGroupColorMap["GMSB_0p1cm"] = kBlue;
   }
 
   void SetupSignalTreeNames()
