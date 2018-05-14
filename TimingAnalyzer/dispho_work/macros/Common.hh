@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <cstdlib>
+#include <utility>
 
 // Sample Enums
 enum SampleType  {Data, GMSB, HVDS, QCD, GJets, DYLL, DiPho, ToyMC};
@@ -56,8 +57,13 @@ namespace Config
   extern std::map<SampleType,TString>     TreeNameMap;
   extern std::map<SampleType,TString>     HistNameMap;
   extern std::map<SampleType,Color_t>     ColorMap;
-  extern std::map<SampleType,TString>     LabelMap;
+  extern std::map<SampleType,TString>     LabelMap; 
   extern std::map<SampleType,TString>     CutMap;
+  extern std::map<TString,TString>        SignalSampleMap;
+  extern std::map<TString,TString>        SignalTreeMap;
+  extern std::map<TString,TString>        SignalHistMap;
+  extern std::map<TString,Color_t>        SignalColorMap;
+  extern std::vector<std::pair<TString,TString> > SignalCutFlowPairVec;
 
   // Sample setup functions
   void SetupPrimaryDataset(const TString & pdname);
@@ -68,6 +74,14 @@ namespace Config
   void SetupColors();
   void SetupLabels();
   void SetupCuts(const TString & cutconfig);
+
+  // Signal setup functions
+  void SetupSignalSamples();
+  void SetupSignalTreeNames();
+  void SetupSignalHistNames();
+  void SetupSignalColors();
+  void SetupSignalLabels();
+  void SetupSignalCutFlow(const TString & cutflowconfig);
 
   // Setup hists
   void SetupBins(std::string & str, std::vector<Double_t> & bins, Bool_t & var_bins);
@@ -111,6 +125,7 @@ namespace Config
   std::string RemoveDelim(std::string tmp, const std::string & delim){return tmp.erase(tmp.find(delim),delim.length());}
   TString ReplaceDelimWithSpace(TString tmp, const TString & delim){return tmp.ReplaceAll(delim," ");}
   TString ReplaceSlashWithUnderscore(TString tmp){return tmp.ReplaceAll("/","_");}
+  TString ReplaceSpaceWithUnderscore(TString tmp){return tmp.ReplaceAll(" ","_");}
 
   // Weight for sample
   TString WeightString(const SampleType sample)

@@ -89,9 +89,12 @@ void FastSkimmer::MakeMergedSkims()
   // loop over all samples, merging subsamples and saving
   for (const auto & TreeNamePair : Config::TreeNameMap)
   {
-    // get main sample, 
+    // get main sample, skip signals
     const auto & sample   = TreeNamePair.first;
     const auto & treename = TreeNamePair.second;
+
+    // skip signals
+    if (Config::GroupMap[sample] == isSignal) continue;
 
     std::cout << "Working on sample group: " << treename.Data() << std::endl;
 

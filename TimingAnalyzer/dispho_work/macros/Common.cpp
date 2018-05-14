@@ -14,7 +14,12 @@ namespace Config
   std::map<SampleType,Color_t>     ColorMap;
   std::map<SampleType,TString>     LabelMap;
   std::map<SampleType,TString>     CutMap;
-  
+  std::map<TString,TString>        SignalSampleMap;
+  std::map<TString,TString>        SignalTreeMap;
+  std::map<TString,TString>        SignalHistMap;
+  std::map<TString,Color_t>        SignalColorMap;
+  std::vector<std::pair<TString,TString> > SignalCutFlowPairVec;
+
   void SetupPrimaryDataset(const TString & pdname)
   {
     PrimaryDataset = pdname;
@@ -46,9 +51,6 @@ namespace Config
     // DiPhoBox
     SampleMap["MC/DiPhotonJetsBox/M40_80"]  = DiPho;
     SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = DiPho;
-
-    // GMSB
-    SampleMap["MC/GMSB/L200TeV_CTau400cm"] = GMSB;
     
     // Data
     SampleMap[Form("Data/%s/B/v1",Config::PrimaryDataset.Data())] = Data;
@@ -64,8 +66,9 @@ namespace Config
     GroupMap[GJets] = isBkgd;
     GroupMap[DYLL]  = isBkgd;
     GroupMap[DiPho] = isBkgd;
-    GroupMap[GMSB]  = isSignal;
     GroupMap[Data]  = isData;
+    GroupMap[GMSB]  = isSignal;
+    GroupMap[HVDS]  = isSignal;
   }
 
   void SetupTreeNames()
@@ -74,7 +77,6 @@ namespace Config
     TreeNameMap[GJets] = "GJets_Tree";
     TreeNameMap[DYLL]  = "DYLL_Tree";
     TreeNameMap[DiPho] = "DiPho_Tree";
-    TreeNameMap[GMSB]  = "GMSB_Tree";
     TreeNameMap[Data]  = "Data_Tree";
   }
 
@@ -84,7 +86,6 @@ namespace Config
     HistNameMap[GJets] = "GJets_Hist";
     HistNameMap[DYLL]  = "DYLL_Hist";
     HistNameMap[DiPho] = "DiPho_Hist";
-    HistNameMap[GMSB]  = "GMSB_Hist";
     HistNameMap[Data]  = "Data_Hist";
   }
 
@@ -94,7 +95,6 @@ namespace Config
     ColorMap[GJets] = kRed;
     ColorMap[DYLL]  = kMagenta;
     ColorMap[DiPho] = kCyan;
-    ColorMap[GMSB]  = kBlue;
     ColorMap[Data]  = kBlack;
   }
 
@@ -104,7 +104,6 @@ namespace Config
     LabelMap[GJets] = "#gamma+Jets"; //"#gamma + Jets (H_{T} Binned)";
     LabelMap[DYLL]  = "DY#rightarrowLL+Jets";
     LabelMap[DiPho] = "2#gamma";
-    LabelMap[GMSB]  = "GMSB c#tau=4m"; //"GMSB c#tau = 4m, #Lambda = 200 TeV";
     LabelMap[Data]  = "Data";
   }
 
@@ -179,6 +178,84 @@ namespace Config
 	std::cerr << "Aye... your cut config is messed up, try again!" << std::endl;
 	exit(1);
       }
+    }
+  }
+
+  void SetupSignalSamples()
+  {
+    SignalSampleMap["MC/GMSB/L100TeV_CTau0p1cm"] = "GMSB_L100_CTau0p1";
+  }
+
+  void SetupSignalTreeNames()
+  {
+    for (const auto & SignalSamplePair : SignalSampleMap)
+    {
+      const auto & signal = SignalSamplePair.second;
+      SignalTreeNameMap[signal] = signal+"_Tree";
+    }
+  }
+
+  void SetupSignalCutFlowHistNames()
+  {
+    for (const auto & SignalSamplePair : SignalSampleMap)
+    {
+      const auto & signal = SignalSamplePair.second;
+      SignalCutFlowHistNameMap[signal] = signal+"_"+h_cutflowname;
+    }
+  }
+
+  void SetupSignalHistNames()
+  {
+    for (const auto & SignalSamplePair : SignalSampleMap)
+    {
+      const auto & signal = SignalSamplePair.second;
+      SignalHistNameMap[signal] = signal+"_Hist";
+    }
+  }
+
+  void SetupSignalColors()
+  {
+    Int_t counter = 0;
+    for (const auto & SignalSamplePair : SignalSampleMap)
+    {
+      SignalColorMap[SignalSamplePair.second] = kBlue+counter;
+    }
+  }
+
+  void SetupSignalLabels()
+  {
+    for (const auto & SignalSamplePair : SignalSampleMap)
+    {
+      const auto & signal = SignalSamplePair.second;
+
+      if (signal.Contains("GMSB",TString::kExact))
+      {
+	const TString s_lambda = "_L";
+	auto i_lambda = signal.Index(s_lambda);
+	auto l_lambda = s_lambda.Length();
+	
+	const TString s_ctau = "_CTau";
+	auto i_ctau = signal.Index(s_ctau);
+	auto l_ctau = s_ctau.Length();
+	
+	const TString lambda(signal(i_lambda+l_lambda,i_ctau-i_lambda-l_lambda));
+	TString ctau(signal(i_ctau+l_ctau,signal.Length()-i_ctau-l_ctau));
+	ctau.ReplaceAll("p",".");
+      
+	SignalLabelMap[signal] = "GMSB #Lambda:"+lamba+"TeV c#tau:"+ctau+"cm";
+      }
+    }
+  }
+
+  void SetupSignalCutFlow(const TString & cutflowconfig)
+  {
+    std::cout << "Reading signal cut flow config..." << std::endl;
+
+    std::ifstream infile(Form("%s",cutflowconfig.Data()),std::ios::in);
+    TString label,cut;
+    while (infile >> label >> cut)
+    {
+      SignalCutFlowPairVec.emplace_back(std::pair<TString,TString>{label,cut});
     }
   }
 
