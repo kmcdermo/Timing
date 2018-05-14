@@ -60,9 +60,11 @@ namespace Config
   extern std::map<SampleType,TString>     LabelMap; 
   extern std::map<SampleType,TString>     CutMap;
   extern std::map<TString,TString>        SignalSampleMap;
-  extern std::map<TString,TString>        SignalTreeMap;
-  extern std::map<TString,TString>        SignalHistMap;
+  extern std::map<TString,TString>        SignalTreeNameMap;
+  extern std::map<TString,TString>        SignalCutFlowHistNameMap;
+  extern std::map<TString,TString>        SignalHistNameMap;
   extern std::map<TString,Color_t>        SignalColorMap;
+  extern std::map<TString,TString>        SignalLabelMap;
   extern std::vector<std::pair<TString,TString> > SignalCutFlowPairVec;
 
   // Sample setup functions
@@ -78,6 +80,7 @@ namespace Config
   // Signal setup functions
   void SetupSignalSamples();
   void SetupSignalTreeNames();
+  void SetupSignalCutFlowHistNames();
   void SetupSignalHistNames();
   void SetupSignalColors();
   void SetupSignalLabels();

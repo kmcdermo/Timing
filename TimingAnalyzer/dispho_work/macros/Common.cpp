@@ -15,8 +15,10 @@ namespace Config
   std::map<SampleType,TString>     LabelMap;
   std::map<SampleType,TString>     CutMap;
   std::map<TString,TString>        SignalSampleMap;
-  std::map<TString,TString>        SignalTreeMap;
-  std::map<TString,TString>        SignalHistMap;
+  std::map<TString,TString>        SignalTreeNameMap;
+  std::map<TString,TString>        SignalCutFlowHistNameMap;
+  std::map<TString,TString>        SignalHistNameMap;
+  std::map<TString,TString>        SignalLabelMap;
   std::map<TString,Color_t>        SignalColorMap;
   std::vector<std::pair<TString,TString> > SignalCutFlowPairVec;
 
@@ -184,6 +186,12 @@ namespace Config
   void SetupSignalSamples()
   {
     SignalSampleMap["MC/GMSB/L100TeV_CTau0p1cm"] = "GMSB_L100_CTau0p1";
+    SignalSampleMap["MC/GMSB/L150TeV_CTau0p1cm"] = "GMSB_L150_CTau0p1";
+    SignalSampleMap["MC/GMSB/L200TeV_CTau0p1cm"] = "GMSB_L200_CTau0p1";
+    SignalSampleMap["MC/GMSB/L250TeV_CTau0p1cm"] = "GMSB_L250_CTau0p1";
+    SignalSampleMap["MC/GMSB/L300TeV_CTau0p1cm"] = "GMSB_L300_CTau0p1";
+    SignalSampleMap["MC/GMSB/L350TeV_CTau0p1cm"] = "GMSB_L350_CTau0p1";
+    SignalSampleMap["MC/GMSB/L400TeV_CTau0p1cm"] = "GMSB_L400_CTau0p1";
   }
 
   void SetupSignalTreeNames()
@@ -242,7 +250,7 @@ namespace Config
 	TString ctau(signal(i_ctau+l_ctau,signal.Length()-i_ctau-l_ctau));
 	ctau.ReplaceAll("p",".");
       
-	SignalLabelMap[signal] = "GMSB #Lambda:"+lamba+"TeV c#tau:"+ctau+"cm";
+	SignalLabelMap[signal] = "GMSB #Lambda:"+lambda+"TeV c#tau:"+ctau+"cm";
       }
     }
   }
