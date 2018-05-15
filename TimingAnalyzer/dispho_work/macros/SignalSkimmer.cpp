@@ -38,11 +38,11 @@ void SignalSkimmer::MakeSkimsFromTrees()
 {
   std::cout << "Skimming trees from cut flow vector..." << std::endl;
 
-  for (const auto & SignalSamplePair : Config::SignalSampleMap)
+  for (const auto & SamplePair : Config::SampleMap)
   {
     // Init
-    const auto & input  = SignalSamplePair.first;
-    const auto & signal = SignalSamplePair.second;
+    const auto & input  = SamplePair.first;
+    const auto & signal = SamplePair.second;
     std::cout << "Working on input: " << input.Data() << std::endl;
 
     // Get File
@@ -56,7 +56,7 @@ void SignalSkimmer::MakeSkimsFromTrees()
     Config::CheckValidTree(intree,Config::disphotreename,infilename);
 
     // Rename ttree for output
-    intree->SetName(Form("%s",Config::SignalTreeNameMap[signal].Data()));
+    intree->SetName(Form("%s",Config::TreeNameMap[signal].Data()));
 
     // Get Input Cut Flow Histogram 
     auto inhist = (TH1F*)infile->Get(Form("%s",Config::h_cutflowname.Data()));
@@ -150,7 +150,7 @@ void SignalSkimmer::MakeConfigPave()
 void SignalSkimmer::SetupConfig()
 {
   Config::SetupSignalSamples();
-  Config::SetupSignalTreeNames();
+  Config::SetupTreeNames();
   Config::SetupSignalCutFlowHistNames();
   Config::SetupSignalCutFlow(fCutFlowConfig);
 }

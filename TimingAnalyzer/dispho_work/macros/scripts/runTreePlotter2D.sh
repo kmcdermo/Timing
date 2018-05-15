@@ -1,12 +1,13 @@
 #!/bin/bash
 
 infilename=${1:-"test.root"}
-cutconfig=${2:-"cut_config/signal_blinded.txt"}
-plotconfig=${3:-"plot_config/met_vs_time.txt"}
-outfiletext=${4:-"met_vs_time.root"}
-dir=${5:-"plots2D"}
+insignalfilename=${2:-"signals.root"}
+cutconfig=${3:-"cut_config/signal_blinded.txt"}
+plotconfig=${4:-"plot_config/met_vs_time.txt"}
+outfiletext=${5:-"met_vs_time.root"}
+dir=${6:-"plots2D"}
 
-root -l -b -q runTreePlotter2D.C\(\"${infilename}\",\"${cutconfig}\",\"${plotconfig}\",\"${outfiletext}\"\)
+root -l -b -q runTreePlotter2D.C\(\"${infilename}\",\"${insignalfilename}\",\"${cutconfig}\",\"${plotconfig}\",\"${outfiletext}\"\)
 
 ## make out dirs
 topdir=/afs/cern.ch/user/k/kmcdermo/www

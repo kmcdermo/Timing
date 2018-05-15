@@ -6,6 +6,7 @@
 #include "TTree.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TGraphAsymmErrors.h"
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TString.h"
@@ -23,8 +24,21 @@
 #include <utility>
 
 // Sample Enums
-enum SampleType  {Data, GMSB, HVDS, QCD, GJets, DYLL, DiPho, ToyMC};
 enum SampleGroup {isData, isBkgd, isSignal, isToy};
+
+// Blind Struct
+struct BlindStruct
+{
+  BlindStruct(const Float_t xlow, const Float_t xup, 
+	      const Float_t ylow = std::numeric_limits<float>::lowest(), 
+	      const Float_t yup = std::numeric_limits<float>::max())
+    : xlow(xlow), xup(xup), ylow(ylow), yup(yup) {} 
+
+  Float_t xlow;
+  Float_t xup;
+  Float_t ylow;
+  Float_t yup;
+};
 
 // Configuration parameters
 namespace Config
@@ -51,53 +65,40 @@ namespace Config
   static const TString pavename       = "Config";
 
   // Sample Information
-  extern TString                          PrimaryDataset;
-  extern std::map<TString,SampleType>     SampleMap;
-  extern std::map<SampleType,SampleGroup> GroupMap;
-  extern std::map<SampleType,TString>     TreeNameMap;
-  extern std::map<SampleType,TString>     HistNameMap;
-  extern std::map<SampleType,Color_t>     ColorMap;
-  extern std::map<SampleType,TString>     LabelMap; 
-  extern std::map<SampleType,TString>     CutMap;
-
-  extern std::map<TString,TString>        SignalSampleMap;
-  extern std::map<TString,std::vector<TString> > SignalGroupMap;
-  extern std::map<TString,Color_t>        SignalGroupColorMap;
-  extern std::map<TString,TString>        SignalTreeNameMap;
-  extern std::map<TString,TString>        SignalCutFlowHistNameMap;
-  extern std::map<TString,TString>        SignalHistNameMap;
-  extern std::map<TString,Color_t>        SignalColorMap;
-  extern std::map<TString,TString>        SignalLabelMap;
+  extern TString PrimaryDataset;
+  extern std::map<TString,TString> SampleMap;
+  extern std::map<TString,SampleGroup> GroupMap;
+  extern std::map<TString,TString> SignalGroupMap;
+  extern std::map<TString,TString> TreeNameMap;
+  extern std::map<TString,TString> HistNameMap;
+  extern std::map<TString,TString> SignalCutFlowHistNameMap;
+  extern std::map<TString,Color_t> ColorMap;
+  extern std::map<TString,TString> LabelMap; 
+  extern std::map<TString,TString> CutMap;
   extern std::vector<std::pair<TString,TString> > SignalCutFlowPairVec;
 
   // Sample setup functions
   void SetupPrimaryDataset(const TString & pdname);
   void SetupSamples();
   void SetupGroups();
+  void SetupSignalSamples();
+  void SetupSignalGroups();
   void SetupTreeNames();
   void SetupHistNames();
+  void SetupSignalCutFlowHistNames();
   void SetupColors();
   void SetupLabels();
   void SetupCuts(const TString & cutconfig);
-
-  // Signal setup functions
-  void SetupSignalSamples();
-  void SetupSignalGroups();
-  void SetupSignalGroupColors();
-  void SetupSignalTreeNames();
-  void SetupSignalCutFlowHistNames();
-  void SetupSignalHistNames();
-  void SetupSignalColors();
-  void SetupSignalLabels();
   void SetupSignalCutFlow(const TString & cutflowconfig);
 
   // Setup hists
   void SetupBins(std::string & str, std::vector<Double_t> & bins, Bool_t & var_bins);
   void SetupBinLabels(std::string & str, std::vector<TString> & binlabels);
-  void SetupBlinding(std::string & str, Float_t & cut, Bool_t & isblind);
+  void SetupBlinding(const std::string & str, std::vector<BlindStruct> & blinding);
   void SetupScale(const std::string & str, Bool_t & scale);
   void SetupBool(const std::string & str, Bool_t & setting);
-
+  void SetupSignalsToPlot(const std::string & str, std::map<TString,Bool_t> & plotSignalMap);
+  
   // skim input
   constexpr UInt_t nEvCheck = 10000;
   constexpr Int_t nGMSBs = 2;
@@ -136,11 +137,16 @@ namespace Config
   TString ReplaceSpaceWithUnderscore(TString tmp){return tmp.ReplaceAll(" ","_");}
 
   // Weight for sample
-  TString WeightString(const SampleType sample)
+  TString WeightString(const TString & sample)
   {
     // Get the appropriate weight 
     return (Config::GroupMap[sample] != isData ? "evtwgt * puwgt" : "1.0");
   }
+  
+  // Scale hists/graphs up or down
+  void Scale(TH2F *& hist, const Bool_t isUp, const Bool_t varBinsX, const Bool_t varBinsY);
+  void Scale(TH1F *& hist, const Bool_t isUp);
+  void Scale(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins, const Bool_t isUp);
 
   // Check inputs
   void CheckValidFile(const TFile * file, const TString & fname);

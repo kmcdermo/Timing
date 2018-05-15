@@ -1,7 +1,9 @@
 #include "TreePlotter2D.hh"
 
-TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & cutconfig, const TString & plotconfig, const TString & outfiletext) 
-  : fInFileName(infilename), fCutConfig(cutconfig), fPlotConfig(plotconfig), fOutFileText(outfiletext)
+TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insignalfilename,
+			     const TString & cutconfig, const TString & plotconfig, const TString & outfiletext) 
+  : fInFileName(infilename), fInSignalFileName(insignalfilename),
+    fCutConfig(cutconfig), fPlotConfig(plotconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -11,9 +13,13 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & cutconf
   //            //
   ////////////////
 
-  // Get input file
+  // Get main input file
   fInFile = TFile::Open(Form("%s",fInFileName.Data()));
   Config::CheckValidFile(fInFile,fInFileName);
+
+  // Get signal input file
+  fInSignalFile = TFile::Open(Form("%s",fInSignalFileName.Data()));
+  Config::CheckValidFile(fInSignalFile,fInSignalFileName);
  
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
@@ -21,7 +27,9 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & cutconf
   gROOT->ForceStyle();
 
   // setup hists
+  TreePlotter2D::SetupDefaults();
   TreePlotter2D::SetupConfig();
+  TreePlotter2D::SetupPlotConfig();
   TreePlotter2D::SetupHists();
 
   // output root file
@@ -34,9 +42,12 @@ TreePlotter2D::~TreePlotter2D()
   delete RatioMCErrs;
   delete RatioHist;
   delete BkgdHist;
+  delete DataHist;
+
   delete fOutFile;
   for (auto & HistPair : HistMap) delete HistPair.second;
   delete fTDRStyle;
+  delete fInSignalFile;
   delete fInFile;
 }
 
@@ -67,9 +78,12 @@ void TreePlotter2D::MakeHistFromTrees()
     const auto & treename = TreeNamePair.second;
     std::cout << "Working on tree: " << treename.Data() << std::endl;
 	
+    // Get infile
+    auto & infile = ((Config::GroupMap[sample] != isSignal) ? fInFile : fInSignalFile);
+    infile->cd();
+
     // Get TTree
-    fInFile->cd();
-    auto intree = (TTree*)fInFile->Get(Form("%s",treename.Data()));
+    auto intree = (TTree*)infile->Get(Form("%s",treename.Data()));
     const auto isnull = Config::IsNullTree(intree);
 
     if (!isnull)
@@ -81,39 +95,24 @@ void TreePlotter2D::MakeHistFromTrees()
       
       // Fill from tree
       intree->Draw(Form("%s:%s>>%s",fYVar.Data(),fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(sample).Data()),"goff");
+
+      // delete tree;
+      delete intree;
     }
     else
     {
       std::cout << "Skipping null tree..." << std::endl;
     }
-
-    // delete tree;
-    delete intree;
   }
 
   // rescale bins by widths if variable size
   if (fXVarBins || fYVarBins)
   {
+    const Bool_t isUp = false;
     for (auto & HistPair : HistMap)
     {
       auto & hist = HistPair.second;
-      const auto nbinsX = hist->GetXaxis()->GetNbins();
-      const auto nbinsY = hist->GetYaxis()->GetNbins();
-      for (auto ibinX = 1; ibinX <= nbinsX; ibinX++)
-      {
-	const auto binwidthX = hist->GetXaxis()->GetBinWidth(ibinX);
-	for (auto ibinY = 1; ibinY <= nbinsY; ibinY++)
-        {
-	  const auto binwidthY = hist->GetYaxis()->GetBinWidth(ibinY);
-	  
-	  auto divisor = 1.f;
-	  if (fXVarBins) divisor *= binwidthX;
-	  if (fYVarBins) divisor *= binwidthY;
-
-	  hist->SetBinContent(ibinX,ibinY,(hist->GetBinContent(ibinX,ibinY)/divisor));
-	  hist->SetBinError  (ibinX,ibinY,(hist->GetBinError  (ibinX,ibinY)/divisor));
-	}
-      }
+      Config::Scale(hist,isUp,fXVarBins,fYVarBins);
     }
   }
 
@@ -124,6 +123,34 @@ void TreePlotter2D::MakeHistFromTrees()
     const auto & hist = HistPair.second;
     hist->Write(hist->GetName(),TObject::kWriteDelete);
   }
+}
+
+void TreePlotter2D::MakeDataOutput()
+{
+  std::cout << "Making Data Output..." << std::endl;
+
+  // Make new data hist in case we are blinded
+  DataHist = TreePlotter::SetupHist("Data_Hist_Plotted");
+  DataHist->Add(Hist_Map[Data]);
+
+  for (const auto & Blind : fBlinds)
+  {
+    const auto binXlow = DataHist->GetXaxis()->FindBin(Blind.xlow);
+    const auto binXup  = DataHist->GetXaxis()->FindBin(Blind.xup);
+    const auto binYlow = DataHist->GetYaxis()->FindBin(Blind.ylow);
+    const auto binYup  = DataHist->GetYaxis()->FindBin(Blind.yup);
+
+    for (auto ibinX = binXlow; ibinX <= binXup; ibinX++) 
+    {
+      for (auto ibinY = binYlow; ibinY <= binYup; ibinY++) 
+      {
+	DataHist->SetBinContent(ibinX,ibinY,0.f);
+	DataHist->SetBinError  (ibinX,ibinY,0.f);
+      }
+    }
+  }
+
+  DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
 }
 
 void TreePlotter2D::MakeBkgdOutput()
@@ -151,7 +178,7 @@ void TreePlotter2D::MakeRatioOutput()
 
   // ratio value plot
   RatioHist = TreePlotter2D::SetupHist("Ratio_Hist");
-  RatioHist->Add(HistMap[Data]);
+  RatioHist->Add(DataHist);
   RatioHist->Divide(BkgdHist);  
   
   // ratio MC error plot
@@ -200,21 +227,33 @@ void TreePlotter2D::MakeConfigPave()
   // dump in old config
   Config::AddTextFromInputPave(fConfigPave,fInFile);
 
+  // dump in old signal config
+  Config::AddTextFromInputPave(fConfigPave,fInSignalFile);
+
   // save to output file
   fOutFile->cd();
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
+void TreePlotter2D::SetupDefaults()
+{
+  fXVarBins = false;
+  fYVarBins = false;
+}
+
 void TreePlotter2D::SetupConfig()
 {
+  std::cout << "Setting up Config..." << std::endl;
+
   Config::SetupSamples();
+  Config::SetupSignalSamples();
   Config::SetupGroups();
   Config::SetupTreeNames();
   Config::SetupHistNames();
   Config::SetupCuts(fCutConfig);
 }
 
-void TreePlotter2D::ReadPlotConfig()
+void TreePlotter2D::SetupPlotConfig()
 {
   std::cout << "Reading plot config..." << std::endl;
 
@@ -267,6 +306,11 @@ void TreePlotter2D::ReadPlotConfig()
     {
       fZTitle = Config::RemoveDelim(str,"z_title=");
     }
+    else if (str.find("blinding=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"blinding=");
+      Config::SetupBlinding(str,fBlinds);
+    }
     else 
     {
       std::cerr << "Aye... your plot config is messed up, try again!" << std::endl;
@@ -277,12 +321,18 @@ void TreePlotter2D::ReadPlotConfig()
 
 void TreePlotter2D::SetupHists()
 {
-  TreePlotter2D::ReadPlotConfig();
+  std::cout << "Setting up output histograms..." << std::endl;
 
   // instantiate each histogram
   for (const auto & HistNamePair : Config::HistNameMap)
   {
-    HistMap[HistNamePair.first] = SetupHist(HistNamePair.second);
+    HistMap[HistNamePair.first] = TreePlotter2D::SetupHist(HistNamePair.second);
+  }
+  
+  // instantiate each signal histogram
+  for (const auto & SignalHistNamePair : Config::SignalHistNameMap)
+  {
+    SignalHistMap[SignalHistNamePair.first] = TreePlotter2D::SetupHist(SignalHistNamePair.second);
   }
 }
 

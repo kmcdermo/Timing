@@ -1,14 +1,15 @@
 #!/bin/bash
 
 infilename=${1:-"test.root"}
-cutconfig=${2:-"cut_config/always_true.txt"}
-plotconfig=${3:-"plot_config/phopt_0.txt"}
-scalearea=${4:-0}
-outfiletext=${5:-"plots"}
-dir=${6:-"plots/test"}
+insignalfilename=${2:-"signals.root"}
+cutconfig=${3:-"cut_config/always_true.txt"}
+plotconfig=${4:-"plot_config/phopt_0.txt"}
+scalearea=${5:-0}
+outfiletext=${6:-"plots"}
+dir=${7:-"plots/test"}
 
 ## first make plot
-root -l -b -q runTreePlotter.C\(\"${infilename}\",\"${cutconfig}\",\"${plotconfig}\",${scalearea},\"${outfiletext}\"\)
+root -l -b -q runTreePlotter.C\(\"${infilename}\",\"${insignalfilename}\",\"${cutconfig}\",\"${plotconfig}\",${scalearea},\"${outfiletext}\"\)
 
 ## make out dirs
 topdir=/afs/cern.ch/user/k/kmcdermo/www

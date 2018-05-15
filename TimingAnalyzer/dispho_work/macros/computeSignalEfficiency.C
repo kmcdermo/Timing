@@ -8,6 +8,31 @@
 #include "TLegend.h"
 #include "TString.h"
 
+  void SetupSignalGroupColors()
+  {
+    SignalGroupColorMap["GMSB_0p1cm"] = kBlue;
+  }
+  void SetupSignalGroups()
+  {
+    for (const auto & SignalSamplePair : SignalSampleMap)
+    {
+      const auto & signal = SignalSamplePair.second;
+
+      if (signal.Contains("GMSB",TString::kExact))
+      {
+	const TString s_ctau = "_CTau";
+	auto i_ctau = signal.Index(s_ctau);
+	auto l_ctau = s_ctau.Length();
+	
+	const TString ctau(signal(i_ctau+l_ctau,signal.Length()-i_ctau-l_ctau));
+	SignalGroupMap["GMSB_"+ctau+"cm"].emplace_back(signal);
+      }
+    }
+  }
+
+
+
+
 void computeSignalEfficiency(const TString & infilename, const TString & outtext)
 {
   // set style

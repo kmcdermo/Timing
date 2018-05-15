@@ -26,11 +26,14 @@
 class TreePlotter2D
 {
 public:
-  TreePlotter2D(const TString & infilename, const TString & cutconfig, const TString & plotconfig, const TString & outfiletext);
+  TreePlotter2D(const TString & infilename, const TString & insignalfilename, 
+		const TString & cutconfig, const TString & plotconfig, const TString & outfiletext);
   ~TreePlotter2D();
 
   // Initialize
+  void SetupDefaults();
   void SetupConfig();
+  void SetupPlotConfig();
   void SetupHists();
 
   // Main call
@@ -38,11 +41,11 @@ public:
 
   // Subroutines for plotting
   void MakeHistFromTrees();
+  void MakeHistFromSignalTrees();
   void MakeBkgdOutput();
   void MakeRatioOutput();
 
   // Helper functions
-  void ReadPlotConfig();
   TH2F * SetupHist(const TString & name);
 
   // Meta data
@@ -51,12 +54,14 @@ public:
 private:
   // Settings
   const TString fInFileName;
+  const TString fInSignalFileName;
   const TString fCutConfig;
   const TString fPlotConfig;
   const TString fOutFileText;
 
   // input
   TFile * fInFile;
+  TFile * fInSignalFile;
 
   // plot vars
   TString fTitle;
@@ -71,13 +76,15 @@ private:
   Bool_t fYVarBins;
   std::vector<TString> fYLabels;
   TString fZTitle;
+  std::vector<BlindStruct> fBlinds;
 
   // Style
   TStyle * fTDRStyle;
 
   // Output
   TFile * fOutFile;
-  std::map<SampleType,TH2F*> HistMap;
+  std::map<TString,TH2F*> HistMap;
+  TH2F * DataHist;
   TH2F * BkgdHist;
   TH2F * RatioHist;
   TH2F * RatioMCErrs;

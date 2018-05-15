@@ -33,7 +33,7 @@ public:
   // Subroutines for skimming
   void MakeListFromTrees();
   void MakeMergedSkims();
-  void MakeSkimsFromEntryLists(std::map<TString,TTree*> & TreeMap, TList *& TreeList, const SampleType & sample);
+  void MakeSkimsFromEntryLists(std::map<TString,TTree*> & TreeMap, TList *& TreeList, const TString & sample);
   
   // Meta data and extra info
   void MakeConfigPave();

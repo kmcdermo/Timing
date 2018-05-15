@@ -6,110 +6,205 @@
 
 namespace Config
 {
-  TString                          PrimaryDataset;
-  std::map<TString,SampleType>     SampleMap;
-  std::map<SampleType,SampleGroup> GroupMap;
-  std::map<SampleType,TString>     TreeNameMap;
-  std::map<SampleType,TString>     HistNameMap;
-  std::map<SampleType,Color_t>     ColorMap;
-  std::map<SampleType,TString>     LabelMap;
-  std::map<SampleType,TString>     CutMap;
-
-  std::map<TString,TString>        SignalSampleMap;
-  std::map<TString,std::vector<TString> > SignalGroupMap;
-  std::map<TString,Color_t>        SignalGroupColorMap;
-  std::map<TString,TString>        SignalTreeNameMap;
-  std::map<TString,TString>        SignalCutFlowHistNameMap;
-  std::map<TString,TString>        SignalHistNameMap;
-  std::map<TString,TString>        SignalLabelMap;
-  std::map<TString,Color_t>        SignalColorMap;
+  TString PrimaryDataset;
+  std::map<TString,TString> SampleMap;
+  std::map<TString,SampleGroup> GroupMap;
+  std::map<TString,TString> SignalGroupMap;
+  std::map<TString,TString> TreeNameMap;
+  std::map<TString,TString> HistNameMap;
+  std::map<TString,TString> SignalCutFlowHistNameMap;
+  std::map<TString,Color_t> ColorMap;
+  std::map<TString,TString> LabelMap;
+  std::map<TString,TString> CutMap;
   std::vector<std::pair<TString,TString> > SignalCutFlowPairVec;
 
   void SetupPrimaryDataset(const TString & pdname)
   {
-    PrimaryDataset = pdname;
+    Config::PrimaryDataset = pdname;
   }
 
   void SetupSamples()
   {
     // QCD HT binned
-    SampleMap["MC/QCD_HT/100to200"]   = QCD;
-    SampleMap["MC/QCD_HT/200to300"]   = QCD;
-    SampleMap["MC/QCD_HT/300to500"]   = QCD;
-    SampleMap["MC/QCD_HT/500to700"]   = QCD;
-    SampleMap["MC/QCD_HT/700to1000"]  = QCD;
-    SampleMap["MC/QCD_HT/1000to1500"] = QCD;
-    SampleMap["MC/QCD_HT/1500to2000"] = QCD;
-    SampleMap["MC/QCD_HT/2000toInf"]  = QCD;
+    Config::SampleMap["MC/QCD_HT/100to200"]   = "QCD";
+    Config::SampleMap["MC/QCD_HT/200to300"]   = "QCD";
+    Config::SampleMap["MC/QCD_HT/300to500"]   = "QCD";
+    Config::SampleMap["MC/QCD_HT/500to700"]   = "QCD";
+    Config::SampleMap["MC/QCD_HT/700to1000"]  = "QCD";
+    Config::SampleMap["MC/QCD_HT/1000to1500"] = "QCD";
+    Config::SampleMap["MC/QCD_HT/1500to2000"] = "QCD";
+    Config::SampleMap["MC/QCD_HT/2000toInf"]  = "QCD";
   
     // GJets HT binned
-    SampleMap["MC/GJets_HT/40To100"]  = GJets;
-    SampleMap["MC/GJets_HT/100To200"] = GJets;
-    SampleMap["MC/GJets_HT/200To400"] = GJets;
-    SampleMap["MC/GJets_HT/400To600"] = GJets;
-    SampleMap["MC/GJets_HT/600ToInf"] = GJets;
+    Config::SampleMap["MC/GJets_HT/40To100"]  = "GJets";
+    Config::SampleMap["MC/GJets_HT/100To200"] = "GJets";
+    Config::SampleMap["MC/GJets_HT/200To400"] = "GJets";
+    Config::SampleMap["MC/GJets_HT/400To600"] = "GJets";
+    Config::SampleMap["MC/GJets_HT/600ToInf"] = "GJets";
     
     // DYLL
-    SampleMap["MC/DYJetsToLL/base"] = DYLL;
-    //    SampleMap["MC/DYJetsToLL/ext"]  = DYLL;
+    Config::SampleMap["MC/DYJetsToLL/base"] = "DYLL";
+    //    Config::SampleMap["MC/DYJetsToLL/ext"]  = "DYLL";
 
     // DiPhoBox
-    SampleMap["MC/DiPhotonJetsBox/M40_80"]  = DiPho;
-    SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = DiPho;
+    Config::SampleMap["MC/DiPhotonJetsBox/M40_80"]  = "DiPho";
+    Config::SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = "DiPho";
     
     // Data
-    SampleMap[Form("Data/%s/B/v1",Config::PrimaryDataset.Data())] = Data;
-    SampleMap[Form("Data/%s/C/v1",Config::PrimaryDataset.Data())] = Data;
-    SampleMap[Form("Data/%s/D/v1",Config::PrimaryDataset.Data())] = Data;
-    SampleMap[Form("Data/%s/E/v1",Config::PrimaryDataset.Data())] = Data;
-    SampleMap[Form("Data/%s/F/v1",Config::PrimaryDataset.Data())] = Data;
+    Config::SampleMap[Form("Data/%s/B/v1",Config::PrimaryDataset.Data())] = "Data";
+    Config::SampleMap[Form("Data/%s/C/v1",Config::PrimaryDataset.Data())] = "Data";
+    Config::SampleMap[Form("Data/%s/D/v1",Config::PrimaryDataset.Data())] = "Data";
+    Config::SampleMap[Form("Data/%s/E/v1",Config::PrimaryDataset.Data())] = "Data";
+    Config::SampleMap[Form("Data/%s/F/v1",Config::PrimaryDataset.Data())] = "Data";
+  }
+
+  void SetupSignalSamples()
+  {
+    const std::vector<TString> lambdas = {"100","150","200","250","300","350","400"};
+    const std::vector<TString> ctaus   = {"0p1"};
+
+    // loop over all possible GMSBs...
+    for (const auto & lambda : lambdas)
+    {
+      for (const auto & ctau : ctaus)
+      {
+	Config::SampleMap["MC/GMSB/L"+lambda+"TeV_CTau"+ctau+"cm"] = "GMSB_L"+lambda+"_CTau"+ctau;
+      }
+    }
+
+    // eventually do HVDS...
   }
 
   void SetupGroups()
   {
-    GroupMap[QCD]   = isBkgd;
-    GroupMap[GJets] = isBkgd;
-    GroupMap[DYLL]  = isBkgd;
-    GroupMap[DiPho] = isBkgd;
-    GroupMap[Data]  = isData;
-    GroupMap[GMSB]  = isSignal;
-    GroupMap[HVDS]  = isSignal;
+    for (const auto & SamplePair : Config::SampleMap)
+    {
+      const auto & sample = SamplePair.second;
+      
+      if      (sample == "QCD")   Config::GroupMap[sample] = isBkgd;
+      else if (sample == "GJets") Config::GroupMap[sample] = isBkgd;
+      else if (sample == "DYLL")  Config::GroupMap[sample] = isBkgd;
+      else if (sample == "DiPho") Config::GroupMap[sample] = isBkgd;
+      else if (sample == "Data")  Config::GroupMap[sample] = isData;
+      else if (sample.Contains("GMSB")) Config::GroupMap[sample] = isSignal;
+      else if (sample.Contains("HVDS")) Config::GroupMap[sample] = isSignal;
+      else
+      {
+	std::cerr << "Aye... the Common groups are messed up!!! Fix it!!! Exiting..." << std::endl;
+	exit(1);
+      }
+    }
+  }
+
+  void SetupSignalGroups()
+  {
+    for (const auto & SamplePair : Config::SampleMap)
+    {
+      const auto & sample = SamplePair.second;
+
+      if      (sample.Contains("GMSB")) Config::SignalGroupMap[sample] = "GMSB";
+      else if (sample.Contains("HVDS")) Config::SignalGroupMap[sample] = "HVDS";
+    }
   }
 
   void SetupTreeNames()
   {
-    TreeNameMap[QCD]   = "QCD_Tree";
-    TreeNameMap[GJets] = "GJets_Tree";
-    TreeNameMap[DYLL]  = "DYLL_Tree";
-    TreeNameMap[DiPho] = "DiPho_Tree";
-    TreeNameMap[Data]  = "Data_Tree";
+    for (const auto & GroupPair : Config::GroupMap)
+    {
+      const auto & sample = GroupPair.first;
+      Config::TreeNameMap[sample] = sample+"_Tree";
+    }
   }
 
   void SetupHistNames()
   {
-    HistNameMap[QCD]   = "QCD_Hist";
-    HistNameMap[GJets] = "GJets_Hist";
-    HistNameMap[DYLL]  = "DYLL_Hist";
-    HistNameMap[DiPho] = "DiPho_Hist";
-    HistNameMap[Data]  = "Data_Hist";
+    for (const auto & GroupPair : Config::GroupMap)
+    {
+      const auto & sample = GroupPair.first;
+      Config::HistNameMap[sample] = sample+"_Hist";
+    }
+  }
+
+  void SetupSignalCutFlowHistNames()
+  {
+    for (const auto & GroupPair : Config::GroupMap)
+    {
+      const auto & sample = Config::GroupPair.first;
+      if (group != isSignal) continue;
+
+      Config::SignalCutFlowHistNameMap[sample] = sample+"_"+Config::h_cutflowname;
+    }
   }
 
   void SetupColors()
   {
-    ColorMap[QCD]   = kGreen;
-    ColorMap[GJets] = kRed;
-    ColorMap[DYLL]  = kMagenta;
-    ColorMap[DiPho] = kCyan;
-    ColorMap[Data]  = kBlack;
+    Config::ColorMap["QCD"]   = kGreen;
+    Config::ColorMap["GJets"] = kRed;
+    Config::ColorMap["DYLL"]  = kMagenta;
+    Config::ColorMap["DiPho"] = kCyan;
+    Config::ColorMap["Data"]  = kBlack;
+    
+    Int_t counter = 0; 
+    for (const auto & GroupPair : GroupMap)
+    {
+      const auto & sample = GroupPair.first;
+      const auto group    = GroupPair.second;
+      
+      if (group != isSignal) continue;
+      if (SignalGroupMap[sample] != "GMSB") continue;
+
+      Config::ColorMap[sample] = kBlue+counter;
+      counter++;
+    }
+
+    counter = 0; 
+    for (const auto & GroupPair : GroupMap)
+    {
+      const auto & sample = GroupPair.first;
+      const auto group    = GroupPair.second;
+      
+      if (group != isSignal) continue;
+      if (SignalGroupMap[sample] != "HVDS") continue;
+
+      Config::ColorMap[sample] = kOrange+counter;
+      counter++;
+    }
   }
 
   void SetupLabels()
   {
-    LabelMap[QCD]   = "QCD"; //"#QCD (H_{T} Binned)";
-    LabelMap[GJets] = "#gamma+Jets"; //"#gamma + Jets (H_{T} Binned)";
-    LabelMap[DYLL]  = "DY#rightarrowLL+Jets";
-    LabelMap[DiPho] = "2#gamma";
-    LabelMap[Data]  = "Data";
+    Config::LabelMap["QCD"]   = "QCD"; //"#QCD (H_{T} Binned)";
+    Config::LabelMap["GJets"] = "#gamma+Jets"; //"#gamma + Jets (H_{T} Binned)";
+    Config::LabelMap["DYLL"]  = "DY#rightarrowLL+Jets";
+    Config::LabelMap["DiPho"] = "2#gamma";
+    Config::LabelMap["Data"]  = "Data";
+
+    // GMSB Labels
+    for (const auto & GroupPair : GroupMap)
+    {
+      const auto & sample = GroupPair.first;
+      const auto group    = GroupPair.second;
+      
+      if (group != isSignal) continue;
+      if (SignalGroupMap[sample] == "GMSB")
+      {
+	const TString s_lambda = "_L";
+	auto i_lambda = signal.Index(s_lambda);
+	auto l_lambda = s_lambda.Length();
+	
+	const TString s_ctau = "_CTau";
+	auto i_ctau = signal.Index(s_ctau);
+	auto l_ctau = s_ctau.Length();
+	
+	const TString lambda(signal(i_lambda+l_lambda,i_ctau-i_lambda-l_lambda));
+	TString ctau(signal(i_ctau+l_ctau,signal.Length()-i_ctau-l_ctau));
+	ctau.ReplaceAll("p",".");
+      
+	Config::LabelMap[signal] = "GMSB #Lambda:"+lambda+"TeV c#tau:"+ctau+"cm";
+      }
+    }
+
+    // HVDS Labels when we get some samples...
   }
 
   void SetupCuts(const TString & cutconfig)
@@ -129,7 +224,7 @@ namespace Config
 	{
 	  for (const auto & GroupPair : GroupMap)
 	  {
-	    CutMap[GroupPair.first] += Form("%s",cut.Data());
+	    Config::CutMap[GroupPair.first] += Form("%s",cut.Data());
 	  }
 	}
       }
@@ -143,7 +238,7 @@ namespace Config
 	  {
 	    if (GroupPair.second == isBkgd)
 	    {
-	      CutMap[GroupPair.first] += Form("&&%s",cut.Data());
+	      Config::CutMap[GroupPair.first] += Form("&&%s",cut.Data());
 	    }
 	  }
 	}
@@ -158,7 +253,7 @@ namespace Config
 	  {
 	    if (GroupPair.second == isSignal)
 	    {
-	      CutMap[GroupPair.first] += Form("&&%s",cut.Data());
+	      Config::CutMap[GroupPair.first] += Form("&&%s",cut.Data());
 	    }
 	  }
 	}
@@ -173,7 +268,7 @@ namespace Config
 	  {
 	    if (GroupPair.second == isData)
 	    {
-	      CutMap[GroupPair.first] += Form("&&%s",cut.Data());
+	      Config::CutMap[GroupPair.first] += Form("&&%s",cut.Data());
 	    }
 	  }
 	}
@@ -186,101 +281,6 @@ namespace Config
     }
   }
 
-  void SetupSignalSamples()
-  {
-    SignalSampleMap["MC/GMSB/L100TeV_CTau0p1cm"] = "GMSB_L100_CTau0p1";
-    SignalSampleMap["MC/GMSB/L150TeV_CTau0p1cm"] = "GMSB_L150_CTau0p1";
-    SignalSampleMap["MC/GMSB/L200TeV_CTau0p1cm"] = "GMSB_L200_CTau0p1";
-    SignalSampleMap["MC/GMSB/L250TeV_CTau0p1cm"] = "GMSB_L250_CTau0p1";
-    SignalSampleMap["MC/GMSB/L300TeV_CTau0p1cm"] = "GMSB_L300_CTau0p1";
-    SignalSampleMap["MC/GMSB/L350TeV_CTau0p1cm"] = "GMSB_L350_CTau0p1";
-    SignalSampleMap["MC/GMSB/L400TeV_CTau0p1cm"] = "GMSB_L400_CTau0p1";
-  }
-
-  void SetupSignalGroups()
-  {
-    for (const auto & SignalSamplePair : SignalSampleMap)
-    {
-      const auto & signal = SignalSamplePair.second;
-
-      if (signal.Contains("GMSB",TString::kExact))
-      {
-	const TString s_ctau = "_CTau";
-	auto i_ctau = signal.Index(s_ctau);
-	auto l_ctau = s_ctau.Length();
-	
-	const TString ctau(signal(i_ctau+l_ctau,signal.Length()-i_ctau-l_ctau));
-	SignalGroupMap["GMSB_"+ctau+"cm"].emplace_back(signal);
-      }
-    }
-  }
-
-  void SetupSignalGroupColors()
-  {
-    SignalGroupColorMap["GMSB_0p1cm"] = kBlue;
-  }
-
-  void SetupSignalTreeNames()
-  {
-    for (const auto & SignalSamplePair : SignalSampleMap)
-    {
-      const auto & signal = SignalSamplePair.second;
-      SignalTreeNameMap[signal] = signal+"_Tree";
-    }
-  }
-
-  void SetupSignalCutFlowHistNames()
-  {
-    for (const auto & SignalSamplePair : SignalSampleMap)
-    {
-      const auto & signal = SignalSamplePair.second;
-      SignalCutFlowHistNameMap[signal] = signal+"_"+h_cutflowname;
-    }
-  }
-
-  void SetupSignalHistNames()
-  {
-    for (const auto & SignalSamplePair : SignalSampleMap)
-    {
-      const auto & signal = SignalSamplePair.second;
-      SignalHistNameMap[signal] = signal+"_Hist";
-    }
-  }
-
-  void SetupSignalColors()
-  {
-    Int_t counter = 0;
-    for (const auto & SignalSamplePair : SignalSampleMap)
-    {
-      SignalColorMap[SignalSamplePair.second] = kBlue+counter;
-    }
-  }
-
-  void SetupSignalLabels()
-  {
-    for (const auto & SignalSamplePair : SignalSampleMap)
-    {
-      const auto & signal = SignalSamplePair.second;
-
-      if (signal.Contains("GMSB",TString::kExact))
-      {
-	const TString s_lambda = "_L";
-	auto i_lambda = signal.Index(s_lambda);
-	auto l_lambda = s_lambda.Length();
-	
-	const TString s_ctau = "_CTau";
-	auto i_ctau = signal.Index(s_ctau);
-	auto l_ctau = s_ctau.Length();
-	
-	const TString lambda(signal(i_lambda+l_lambda,i_ctau-i_lambda-l_lambda));
-	TString ctau(signal(i_ctau+l_ctau,signal.Length()-i_ctau-l_ctau));
-	ctau.ReplaceAll("p",".");
-      
-	SignalLabelMap[signal] = "GMSB #Lambda:"+lambda+"TeV c#tau:"+ctau+"cm";
-      }
-    }
-  }
-
   void SetupSignalCutFlow(const TString & cutflowconfig)
   {
     std::cout << "Reading signal cut flow config..." << std::endl;
@@ -289,7 +289,7 @@ namespace Config
     TString label,cut;
     while (infile >> label >> cut)
     {
-      SignalCutFlowPairVec.emplace_back(std::pair<TString,TString>{label,cut});
+      Config::SignalCutFlowPairVec.emplace_back(std::pair<TString,TString>{label,cut});
     }
   }
 
@@ -330,10 +330,34 @@ namespace Config
     while (ss >> binlabel) binlabels.push_back(binlabel);
   }
 
-  void SetupBlinding(std::string & str, Float_t & cut, Bool_t & isblind)
+  void SetupBlinding(const std::string & str, std::vector<BlindStruct> & blinding)
   {
-    isblind = true;
-    cut = std::atof(str.c_str());
+    std::stringstream ss(str);
+    std::string cutblock;
+    while (ss >> cutblock)
+    {
+      cutblock = Config::RemoveDelim(cutblock,"(");
+      cutblock = Config::RemoveDelim(cutblock,")");
+
+      std::stringstream subss(cutblock);
+      std::string cutvalue;
+      std::vector<Float_t> tmpvec;
+      while (std::getline(subss,cutvalue,','))
+      {
+	if      (cutvalue.find("-Inf") != std::string::npos) tmpvec.push_back(std::numeric_limits<float>::lowest());
+	else if (cutvalue.find("+Inf") != std::string::npos) tmpvec.push_back(std::numeric_limits<float>::max());
+	else    tmpvec.push_back(std::atof(cutvalue.c_str()));
+      }
+
+      // emplace parameters back as xlow,xup,ylow,yup
+      if      (tmpvec.size() == 2) blinding.emplace_back(tmpvec[0],tmpvec[1]);
+      else if (tmpvec.size() == 4) blinding.emplace_back(tmpvec[0],tmpvec[1],tmpvec[2],tmpvec[3]);
+      else   
+      {
+	std::cerr << "Cutblock: " << cutblock.c_str() << " is formatted incorrectly! Exiting..." << std::endl;
+	exit(1);
+      }
+    }
   } 
 
   void SetupScale(const std::string & str, Bool_t & scale)
@@ -367,6 +391,16 @@ namespace Config
     {
       std::cerr << "Aye, bool must be either 1 or 0! Exiting..." << std::endl;
       exit(1);
+    }
+  }
+
+  void SetupSignalsToPlot(const std::string & str, std::map<TString,Bool_t> & plotSignalMap)
+  {
+    std::stringstream ss(str);
+    std::string signal;
+    while (ss >> signal)
+    {
+      plotSignalMap[signal] = true;
     }
   }
 
@@ -435,6 +469,112 @@ namespace Config
     }
     
     delete inpave;
+  }
+
+  void Scale(TH2F *& hist, const Bool_t isUp, const Bool_t varBinsX, const Bool_t varBinsY)
+  {
+    std::cout << "Scaling " << (isUp?"up":"down") << " hist: " << hist->GetName() << std::endl;
+
+    for (auto ibinX = 1; ibinX <= hist->GetXaxis()->GetNbins(); ibinX++)
+    {
+      const auto binwidthX = hist->GetXaxis()->GetBinWidth(ibinX);
+      for (auto ibinY = 1; ibinY <= hist->GetYaxis()->GetNbins(); ibinY++)
+      {
+	const auto binwidthY = hist->GetYaxis()->GetBinWidth(ibinY);
+	
+	// get multiplier/divisor
+	auto multiplier = 1.f;      
+	if (varBinsX) multiplier *= binwidthX;
+	if (varBinsY) multiplier *= binwidthY;
+	
+	// get content/error
+	auto content = hist->GetBinContent(ibinX,ibinY);
+	auto error   = hist->GetBinError  (ibinX,ibinY);
+	
+	// scale it
+	if (isUp)
+	{
+	  content *= multiplier;
+	  error   *= multiplier;
+	}
+	else
+        {
+	  content /= multiplier;
+	  error   /= multiplier;
+	}
+	
+	// set new contents
+	hist->SetBinContent(ibinX,ibinY,content);
+	hist->SetBinError  (ibinX,ibinY,error);
+      }
+    }
+  }
+
+  void Scale(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins, const Bool_t isUp)
+  {
+    std::cout << "Scaling " << (isUp?"up":"down") << " graph: " << graph->GetName() << std::endl;
+    
+    for (auto i = 0U; i < bins.size()-1; i++)
+    {
+      // get width
+      const auto multiplier = bins[i+1]-bins[i];
+      
+      // get contents + errors
+      Double_t xval,yval;
+      graph->GetPoint(i,xval,yval);
+      auto yerrl = graph->GetErrorYlow (i);
+      auto yerrh = graph->GetErrorYhigh(i);
+      
+      // scale up or down
+      if (isUp)
+      {
+	yval  *= multiplier;
+	yerrl *= multiplier;
+	yerrh *= multiplier;
+      }
+      else
+      {
+	yval  /= multiplier;
+	yerrl /= multiplier;
+	yerrh /= multiplier;
+      }
+      
+      // set point with new values
+      graph->SetPoint(i,xval,yval);
+      graph->SetPointEYlow (i,yerrl);
+      graph->SetPointEYhigh(i,yerrh);
+    }
+  }
+
+  void Scale(TH1F *& hist, const Bool_t isUp)
+  {
+    std::cout << "Scaling " << (isUp?"up":"down") << " hist: " << hist->GetName() << std::endl;
+    
+    for (auto ibinX = 1; ibinX <= hist->GetXaxis()->GetNbins(); ibinX++)
+    {
+      // get width
+      const auto multiplier = hist->GetXaxis()->GetBinWidth(ibinX);
+      
+      // get content and errors
+      auto content = hist->GetBinContent(ibinX);
+      auto error   = hist->GetBinError  (ibinX);
+      
+      // scale up or down
+      if (isUp)
+      {
+	content *= multiplier;
+	error   *= multiplier;
+      }
+      else
+      {
+	content /= multiplier;
+	error   /= multiplier;
+      }
+      
+      // set values
+      hist->SetBinContent(ibinX,content);
+      hist->SetBinError  (ibinX,error);
+    }
   }
 
   void CMSLumi(TCanvas * canv, const Int_t iPosX) 

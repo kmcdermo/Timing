@@ -32,12 +32,15 @@
 class TreePlotter
 {
 public:
-  TreePlotter(const TString & infilename, const TString & cutconfig, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext);
+  TreePlotter(const TString & infilename, const TString & insignalfilename, 
+	      const TString & cutconfig, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext);
   ~TreePlotter();
 
   // Initialize
-  void SetupDefaultBools();
+  void SetupDefaults();
   void SetupConfig();
+  void SetupPlotConfig();
+  void SetupSignalsToPlot();
   void SetupHists();
 
   // Main call
@@ -55,7 +58,6 @@ public:
   void SaveOutput();
 
   // Helper functions
-  void ReadPlotConfig();
   TH1F * SetupHist(const TString & name);
   void ScaleToArea();
   Float_t GetHistMinimum();
@@ -69,6 +71,7 @@ public:
 private:
   // Settings
   const TString fInFileName;
+  const TString fInSignalFileName;
   const TString fCutConfig;
   const TString fPlotConfig;
   const Bool_t  fScaleArea;
@@ -76,6 +79,7 @@ private:
 
   // input
   TFile * fInFile;
+  TFile * fInSignalFile;
 
   // plot vars
   TString fTitle;
@@ -84,20 +88,18 @@ private:
   TString fXVar;
   std::vector<Double_t> fXBins;
   Bool_t fXVarBins;
-  Bool_t fXBlindedLow;
-  Float_t fXLowCut;
-  Bool_t fXBlindedUp;
-  Float_t fXUpCut;
   std::vector<TString> fXLabels;
   TString fYTitle;
   Bool_t  fIsLogY;
+  std::vector<BlindStruct> fBlinds;
+  std::map<TString,Bool_t> fPlotSignalMap;
 
   // Style
   TStyle * fTDRStyle;
 
   // Output
   TFile * fOutFile;
-  std::map<SampleType,TH1F*> HistMap;
+  std::map<TString,TH1F*> HistMap;
   TH1F * DataHist;
   TH1F * BkgdHist;
   THStack * BkgdStack;

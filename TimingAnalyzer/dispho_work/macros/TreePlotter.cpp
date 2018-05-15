@@ -1,7 +1,9 @@
 #include "TreePlotter.hh"
 
-TreePlotter::TreePlotter(const TString & infilename, const TString & cutconfig, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext) 
-  : fInFileName(infilename), fCutConfig(cutconfig), fPlotConfig(plotconfig), fScaleArea(scalearea), fOutFileText(outfiletext)
+TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfilename, 
+			 const TString & cutconfig, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext) 
+  : fInFileName(infilename), fInSignalFileName(insignalfilename), 
+    fCutConfig(cutconfig), fPlotConfig(plotconfig), fScaleArea(scalearea), fOutFileText(outfiletext)
 {
   std::cout << "Initializing TreePlotter..." << std::endl;
 
@@ -15,14 +17,20 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & cutconfig, 
   fInFile = TFile::Open(Form("%s",fInFileName.Data()));
   Config::CheckValidFile(fInFile,fInFileName);
  
+  // Get signal input file
+  fInSignalFile = TFile::Open(Form("%s",fInSignalFileName.Data()));
+  Config::CheckValidFile(fInSignalFile,fInSignalFileName);
+
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
   Config::SetTDRStyle(fTDRStyle);
   gROOT->ForceStyle();
 
   // setup hists
-  TreePlotter::SetupDefaultBools();
+  TreePlotter::SetupDefaults();
   TreePlotter::SetupConfig();
+  TreePlotter::SetupPlotConfig();
+  TreePlotter::SetupSignalsToPlot();
   TreePlotter::SetupHists();
 
   // output root file for quick inspection
@@ -99,9 +107,12 @@ void TreePlotter::MakeHistFromTrees()
     const auto & treename = TreeNamePair.second;
     std::cout << "Working on tree: " << treename.Data() << std::endl;
 	
+    // Get infile
+    auto & infile = ((Config::GroupMap[sample] != isSignal) ? fInFile : fInSignalFile);
+    infile->cd();
+
     // Get TTree
-    fInFile->cd();
-    auto intree = (TTree*)fInFile->Get(Form("%s",treename.Data()));
+    auto intree = (TTree*)infile->Get(Form("%s",treename.Data()));
     const auto isnull = Config::IsNullTree(intree);
 
     if (!isnull)
@@ -126,16 +137,11 @@ void TreePlotter::MakeHistFromTrees()
   // rescale bins by widths if variable size
   if (fXVarBins)
   {
+    const Bool_t isUp = false;
     for (auto & HistPair : HistMap)
     {
       auto & hist = HistPair.second;
-      const auto nbinsX = hist->GetXaxis()->GetNbins();
-      for (auto ibinX = 1; ibinX <= nbinsX; ibinX++)
-      {
-	const auto binwidthX = hist->GetXaxis()->GetBinWidth(ibinX);
-	hist->SetBinContent(ibinX,(hist->GetBinContent(ibinX)/binwidthX));
-	hist->SetBinError  (ibinX,(hist->GetBinError  (ibinX)/binwidthX));
-      }
+      Config::Scale(hist,isUp);
     }
   }
 
@@ -154,20 +160,18 @@ void TreePlotter::MakeDataOutput()
 
   // Make new data hist in case we are blinded
   DataHist = TreePlotter::SetupHist("Data_Hist_Plotted");
+  DataHist->Add(Hist_Map[Data]);
 
-  for (auto ibin = 0; ibin <= DataHist->GetNbinsX()+1; ibin++) 
+  for (const auto & Blind : fBlinds)
   {
-    const auto lowEdge = DataHist->GetXaxis()->GetBinLowEdge(ibin);
-    const auto upEdge  = DataHist->GetXaxis()->GetBinUpEdge (ibin);
-    
-    if (fXBlindedLow && upEdge  <= fXLowCut) continue; 
-    if (fXBlindedUp  && lowEdge >= fXUpCut ) continue; 
-    
-    const auto content = HistMap[Data]->GetBinContent(ibin);
-    const auto error   = HistMap[Data]->GetBinError  (ibin);
-    
-    DataHist->SetBinContent(ibin,content);
-    DataHist->SetBinError  (ibin,error);
+    const auto binXlow = DataHist->GetXaxis()->FindBin(Blind.xlow);
+    const auto binXup  = DataHist->GetXaxis()->FindBin(Blind.xup);
+
+    for (auto ibinX = binXlow; ibinX <= binXup; ibinX++) 
+    {
+      DataHist->SetBinContent(ibinX,0.f);
+      DataHist->SetBinError  (ibinX,0.f);
+    }
   }
 
   DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
@@ -279,13 +283,22 @@ void TreePlotter::MakeLegend()
   // add all bkgd samples and data to legend
   for (const auto & HistPair : HistMap)
   {
+    // get sample
     const auto & sample = HistPair.first;
+    const auto & hist   = HistPair.second;
+
+    // if signal, check to see if this is a plotted one
+    if (Config::GroupMap[sample] == isSignal)
+    {
+      if (!fPlotSignalMap[sample]) continue;
+    }
+
     TString fillType;
     if      (Config::GroupMap[sample] == isData) fillType = "epl";
     else if (Config::GroupMap[sample] == isBkgd) fillType = "f";
     else                                         fillType = "l";
 
-    Legend->AddEntry(HistPair.second,Config::LabelMap[sample].Data(),fillType.Data());
+    Legend->AddEntry(hist,Config::LabelMap[sample].Data(),fillType.Data());
   }
 
   // add the mc unc. to legend
@@ -340,8 +353,15 @@ void TreePlotter::DrawUpperPad()
   BkgdStack->Draw("HIST SAME"); 
   UpperPad->RedrawAxis("SAME"); // stack kills axis
 
-  // Draw Signal
-  HistMap[GMSB]->Draw("HIST SAME");
+  // Draw Signal : loop over ones to plot
+  for (const auto & PlotSignalPair : fPlotSignalMap)
+  {
+    const auto & sample = PlotSignalPair.first;
+    const auto & isplot = PlotSignalPair.second;
+    if (!isplot) continue;
+    
+    Hist_Map[sample]->Draw("HIST SAME");
+  }
 
   // Draw MC sum total error as well on top of stack --> E2 makes error appear as rectangle
   BkgdHist->Draw("E2 SAME");
@@ -470,6 +490,9 @@ void TreePlotter::MakeConfigPave()
 
   // dump in old config
   Config::AddTextFromInputPave(fConfigPave,fInFile);
+
+  // dump in old signal config
+  Config::AddTextFromInputPave(fConfigPave,fInSignalFile);
   
   // save to output file
   fOutFile->cd();
@@ -548,7 +571,16 @@ Float_t TreePlotter::GetHistMinimum()
   // need to loop through to check bin != 0
   for (const auto & HistPair : HistMap)
   {
+    const auto & sample = HistPair.first;
     const auto & hist = HistPair.second;
+
+    // skip samples not plotted
+    if (Config::GroupMap[sample] == isSignal)
+    {
+      if (!fPlotSignalMap[sample]) continue;
+    }
+
+    // get tmp min
     for (auto bin = 1; bin <= hist->GetNbinsX(); bin++)
     {
       const auto tmpmin = hist->GetBinContent(bin);
@@ -566,18 +598,19 @@ Float_t TreePlotter::GetHistMaximum()
   return (datamax > bkgdmax ? datamax : bkgdmax);
 }
 
-void TreePlotter::SetupDefaultBools()
+void TreePlotter::SetupDefaults()
 {
   fIsLogX      = false;
   fXVarBins    = false;
-  fXBlindedLow = false;
-  fXBlindedUp  = false;
   fIsLogY      = false;
 }
 
 void TreePlotter::SetupConfig()
 {
+  std::cout << "Setting up Config..." << std::endl;
+
   Config::SetupSamples();
+  Config::SetupSignalSamples();
   Config::SetupGroups();
   Config::SetupTreeNames();
   Config::SetupHistNames();
@@ -586,7 +619,7 @@ void TreePlotter::SetupConfig()
   Config::SetupCuts(fCutConfig);
 }
 
-void TreePlotter::ReadPlotConfig()
+void TreePlotter::SetupPlotConfig()
 {
   std::cout << "Reading plot config..." << std::endl;
 
@@ -621,16 +654,6 @@ void TreePlotter::ReadPlotConfig()
       str = Config::RemoveDelim(str,"x_labels=");
       Config::SetupBinLabels(str,fXLabels);
     }
-    else if (str.find("x_blindlow=") != std::string::npos)
-    {
-      str = Config::RemoveDelim(str,"x_blindlow=");
-      Config::SetupBlinding(str,fXLowCut,fXBlindedLow);
-    }
-    else if (str.find("x_blindup=") != std::string::npos)
-    {
-      str = Config::RemoveDelim(str,"x_blindup=");
-      Config::SetupBlinding(str,fXUpCut,fXBlindedUp);
-    }
     else if (str.find("y_title=") != std::string::npos)
     {
       fYTitle = Config::RemoveDelim(str,"y_title=");
@@ -638,6 +661,16 @@ void TreePlotter::ReadPlotConfig()
     else if (str.find("y_scale=") != std::string::npos)
     {
       Config::SetupScale(str,fIsLogY);
+    }
+    else if (str.find("blinding=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"blinding=");
+      Config::SetupBlinding(str,fBlinds);
+    }
+    else if (str.find("signals_to_plot=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"signals_to_plot=");
+      Config::SetupSignalsToPlot(str,fPlotSignalMap);
     }
     else 
     {
@@ -647,15 +680,30 @@ void TreePlotter::ReadPlotConfig()
   }
 }
 
+void TreePlotter::SetupSignalsToPlot()
+{
+  // loop over signals
+  for (const auto & GroupPair : Config::GroupMap)
+  {
+    const auto & sample = GroupPair.first;
+    const auto & group  = GroupPair.second;
+
+    // skip non-signal samples
+    if (group != isSignal) continue;
+    
+    // only mark samples false for those that are not marked true
+    if (!fPlotSignalMap.count(sample)) fPlotSignalMap[sample] = false;
+  }
+}
+
 void TreePlotter::SetupHists()
 {
-  // read in configuration file
-  TreePlotter::ReadPlotConfig();
-  
+  std::cout << "Setting up output hists..." << std::endl;
+
   // instantiate each histogram
   for (const auto & HistNamePair : Config::HistNameMap)
   {
-    HistMap[HistNamePair.first] = SetupHist(HistNamePair.second);
+    HistMap[HistNamePair.first] = TreePlotter::SetupHist(HistNamePair.second);
   }
   
   // set colors for each histogram

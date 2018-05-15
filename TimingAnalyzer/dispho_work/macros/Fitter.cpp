@@ -142,8 +142,8 @@ void Fitter::GetInputHists()
   fGJetsHistMC_CR   = (TH2F*)fGJetsFile->Get(Form("%s",Config::HistNameMap[GJets].Data()));
   Config::CheckValidTH2F(fHistMap2D[GJets],Config::HistNameMap[Data] ,fGJetsFileName);
   Config::CheckValidTH2F(fGJetsHistMC_CR  ,Config::HistNameMap[GJets],fGJetsFileName);
-  if (fXVarBins || fYVarBins) Fitter::Scale(fHistMap2D[GJets],isUp);
-  if (fXVarBins || fYVarBins) Fitter::Scale(fGJetsHistMC_CR,isUp);
+  if (fXVarBins || fYVarBins) Config::Scale(fHistMap2D[GJets],isUp,fXVarBins,fYVarBins);
+  if (fXVarBins || fYVarBins) Config::Scale(fGJetsHistMC_CR,isUp,fXVarBins,fYVarBins);
 
   // QCD CR
   fQCDFile = TFile::Open(Form("%s",fQCDFileName.Data()));
@@ -153,8 +153,8 @@ void Fitter::GetInputHists()
   fQCDHistMC_CR   = (TH2F*)fQCDFile->Get(Form("%s",Config::HistNameMap[QCD].Data()));
   Config::CheckValidTH2F(fHistMap2D[QCD],Config::HistNameMap[Data],fQCDFileName);
   Config::CheckValidTH2F(fQCDHistMC_CR  ,Config::HistNameMap[QCD] ,fQCDFileName);
-  if (fXVarBins || fYVarBins) Fitter::Scale(fHistMap2D[QCD],isUp);
-  if (fXVarBins || fYVarBins) Fitter::Scale(fQCDHistMC_CR,isUp);
+  if (fXVarBins || fYVarBins) Config::Scale(fHistMap2D[QCD],isUp,fXVarBins,fYVarBins);
+  if (fXVarBins || fYVarBins) Config::Scale(fQCDHistMC_CR,isUp,fXVarBins,fYVarBins);
 
   // SR
   fSRFile = TFile::Open(Form("%s",fSRFileName.Data()));
@@ -164,15 +164,15 @@ void Fitter::GetInputHists()
   fQCDHistMC_SR   = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[QCD].Data()));
   Config::CheckValidTH2F(fGJetsHistMC_SR,Config::HistNameMap[GJets],fSRFileName);
   Config::CheckValidTH2F(fQCDHistMC_SR  ,Config::HistNameMap[QCD]  ,fSRFileName);
-  if (fXVarBins || fYVarBins) Fitter::Scale(fGJetsHistMC_SR,isUp);
-  if (fXVarBins || fYVarBins) Fitter::Scale(fQCDHistMC_SR,isUp);
+  if (fXVarBins || fYVarBins) Config::Scale(fGJetsHistMC_SR,isUp,fXVarBins,fYVarBins);
+  if (fXVarBins || fYVarBins) Config::Scale(fQCDHistMC_SR,isUp,fXVarBins,fYVarBins);
 
   // use signal sample?
   if (!fBkgdOnly) 
   {
     fHistMap2D[GMSB] = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[GMSB].Data()));
     Config::CheckValidTH2F(fHistMap2D[GMSB],Config::HistNameMap[GMSB],fSRFileName);
-    if (fXVarBins || fYVarBins) Fitter::Scale(fHistMap2D[GMSB],isUp);
+    if (fXVarBins || fYVarBins) Config::Scale(fHistMap2D[GMSB],isUp,fXVarBins,fYVarBins);
   }
 
   // use real data?
@@ -180,7 +180,7 @@ void Fitter::GetInputHists()
   {
     fHistMap2D[Data] = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[Data].Data()));
     Config::CheckValidTH2F(fHistMap2D[Data],Config::HistNameMap[Data],fSRFileName);
-    if (fXVarBins || fYVarBins) Fitter::Scale(fHistMap2D[Data],isUp);
+    if (fXVarBins || fYVarBins) Config::Scale(fHistMap2D[Data],isUp,fXVarBins,fYVarBins);
   }
 }  
 
@@ -264,7 +264,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
     {
       for (auto ibinY = firstBin; ibinY <= lastBinY; ibinY++)
       {
-	if ((ibinX <= binXLow) || (ibinX >= binXUp) || (ibinY <= binYLow) || (ibinY >= binYUp))
+	if ((ibinX <= binXLow && fXBlindedLow) || (ibinX >= binXUp && fXBlindedUp) || (ibinY <= binYLow && fYBlindedLow) || (ibinY >= binYUp && fYBlindedUp))
 	{
 	  hist2D->SetBinContent(ibinX,ibinY,0);
 	  hist2D->SetBinError  (ibinX,ibinY,0);
@@ -293,7 +293,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
   {
     // scale back down temporarily (since already scaled up)
     const Bool_t isUp = false;
-    if (fXVarBins || fYVarBins) Fitter::Scale(hist2D,isUp);
+    if (fXVarBins || fYVarBins) Config::Scale(hist2D,isUp,fXVarBins,fYVarBins);
 
     // get new tmp canvas
     auto canv = new TCanvas();
@@ -597,7 +597,7 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   if (rescale)
   {
     const auto & bins = (isX ? fXBins : fYBins);
-    Fitter::Scale(dataGraph,bins,isUp);
+    Config::Scale(dataGraph,bins,isUp);
   }
   
   // delete plotOn --> will not use to draw, also deletes tmpDataGraph
@@ -640,9 +640,9 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
     // Rescale (down) as necessary
     if (rescale)
     {
-      Fitter::Scale(modelHist,isUp);
-      Fitter::Scale(bkgdHist,isUp);
-      if (!fBkgdOnly) Fitter::Scale(signHist,isUp);
+      Config::Scale(modelHist,isUp);
+      Config::Scale(bkgdHist,isUp);
+      if (!fBkgdOnly) Config::Scale(signHist,isUp);
     }
 
     // Normalize
@@ -1131,112 +1131,6 @@ void Fitter::SetupOutTree()
   fOutTree->Branch("nFitSign",&fNFitSign);
   fOutTree->Branch("nFitSignErr",&fNFitSignErr);
   fOutTree->Branch("fitID",&fFitID);
-}
-
-void Fitter::Scale(TH2F *& hist, const Bool_t isUp)
-{
-  std::cout << "Scaling " << (isUp?"up":"down") << " hist: " << hist->GetName() << std::endl;
-
-  for (auto ibinX = 1; ibinX <= hist->GetXaxis()->GetNbins(); ibinX++)
-  {
-    const auto binwidthX = hist->GetXaxis()->GetBinWidth(ibinX);
-    for (auto ibinY = 1; ibinY <= hist->GetYaxis()->GetNbins(); ibinY++)
-    {
-      const auto binwidthY = hist->GetYaxis()->GetBinWidth(ibinY);
-
-      // get multiplier/divisor
-      auto multiplier = 1.f;      
-      if (fXVarBins) multiplier *= binwidthX;
-      if (fYVarBins) multiplier *= binwidthY;
-
-      // get content/error
-      auto content = hist->GetBinContent(ibinX,ibinY);
-      auto error   = hist->GetBinError  (ibinX,ibinY);
-
-      // scale it
-      if (isUp)
-      {
-	content *= multiplier;
-	error   *= multiplier;
-      }
-      else
-      {
-	content /= multiplier;
-	error   /= multiplier;
-      }
-
-      // set new contents
-      hist->SetBinContent(ibinX,ibinY,content);
-      hist->SetBinError  (ibinX,ibinY,error);
-    }
-  }
-}
-
-void Fitter::Scale(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins, const Bool_t isUp)
-{
-  std::cout << "Scaling " << (isUp?"up":"down") << " graph: " << graph->GetName() << std::endl;
-
-  for (UInt_t i = 0; i < bins.size()-1; i++)
-  {
-    // get width
-    const auto multiplier = bins[i+1]-bins[i];
-    
-    // get contents + errors
-    Double_t xval,yval;
-    graph->GetPoint(i,xval,yval);
-    auto yerrl = graph->GetErrorYlow (i);
-    auto yerrh = graph->GetErrorYhigh(i);
-
-    // scale up or down
-    if (isUp)
-    {
-      yval  *= multiplier;
-      yerrl *= multiplier;
-      yerrh *= multiplier;
-    }
-    else
-    {
-      yval  /= multiplier;
-      yerrl /= multiplier;
-      yerrh /= multiplier;
-    }
-
-    // set point with new values
-    graph->SetPoint(i,xval,yval);
-    graph->SetPointEYlow (i,yerrl);
-    graph->SetPointEYhigh(i,yerrh);
-  }
-}
-
-void Fitter::Scale(TH1F *& hist, const Bool_t isUp)
-{
-  std::cout << "Scaling " << (isUp?"up":"down") << " hist: " << hist->GetName() << std::endl;
-
-  for (auto ibinX = 1; ibinX <= hist->GetXaxis()->GetNbins(); ibinX++)
-  {
-    // get width
-    const auto multiplier = hist->GetXaxis()->GetBinWidth(ibinX);
-    
-    // get content and errors
-    auto content = hist->GetBinContent(ibinX);
-    auto error   = hist->GetBinError  (ibinX);
-
-    // scale up or down
-    if (isUp)
-    {
-      content *= multiplier;
-      error   *= multiplier;
-    }
-    else
-    {
-      content /= multiplier;
-      error   /= multiplier;
-    }
-
-    // set values
-    hist->SetBinContent(ibinX,content);
-    hist->SetBinError  (ibinX,error);
-  }
 }
 
 Float_t Fitter::GetMinimum(TGraphAsymmErrors *& graph, TH1F *& hist1, TH1F *& hist2)
