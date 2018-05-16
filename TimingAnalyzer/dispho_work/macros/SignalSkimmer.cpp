@@ -74,6 +74,9 @@ void SignalSkimmer::MakeSkimsFromTrees()
       const auto & label = SignalCutFlowPair.first;
       auto & list = listmap[label];
       list->SetDirectory(infile);
+
+      //////////////// **************** HACK FOR NOW!!!! **************** ////////////////
+      if (label.Contains("HLT",TString::kExact) && sample.EqualTo("GMSB_L200_CTau400")) continue;
     
       std::cout << "Computing entries for cut: " << label.Data() << std::endl;
 

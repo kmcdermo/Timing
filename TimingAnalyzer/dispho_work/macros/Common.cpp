@@ -149,26 +149,26 @@ namespace Config
     Config::ColorMap["Data"]  = kBlack;
     
     Int_t counter = 0; 
-    for (const auto & GroupPair : GroupMap)
+    for (const auto & GroupPair : Config::GroupMap)
     {
       const auto & sample = GroupPair.first;
       const auto group    = GroupPair.second;
       
       if (group != isSignal) continue;
-      if (SignalGroupMap[sample] != "GMSB") continue;
+      if (Config::SignalGroupMap[sample] != "GMSB") continue;
 
       Config::ColorMap[sample] = kBlue+counter;
       counter++;
     }
 
     counter = 0; 
-    for (const auto & GroupPair : GroupMap)
+    for (const auto & GroupPair : Config::GroupMap)
     {
       const auto & sample = GroupPair.first;
       const auto group    = GroupPair.second;
       
       if (group != isSignal) continue;
-      if (SignalGroupMap[sample] != "HVDS") continue;
+      if (Config::SignalGroupMap[sample] != "HVDS") continue;
 
       Config::ColorMap[sample] = kOrange+counter;
       counter++;
@@ -184,13 +184,13 @@ namespace Config
     Config::LabelMap["Data"]  = "Data";
 
     // GMSB Labels
-    for (const auto & GroupPair : GroupMap)
+    for (const auto & GroupPair : Config::GroupMap)
     {
       const auto & sample = GroupPair.first;
       const auto group    = GroupPair.second;
       
       if (group != isSignal) continue;
-      if (SignalGroupMap[sample] == "GMSB")
+      if (Config::SignalGroupMap[sample] == "GMSB")
       {
 	const TString s_lambda = "_L";
 	auto i_lambda = sample.Index(s_lambda);

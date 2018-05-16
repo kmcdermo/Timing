@@ -625,6 +625,7 @@ void TreePlotter::SetupConfig()
   Config::SetupSamples();
   Config::SetupSignalSamples();
   Config::SetupGroups();
+  Config::SetupSignalGroups();
   Config::SetupTreeNames();
   Config::SetupHistNames();
   Config::SetupColors();

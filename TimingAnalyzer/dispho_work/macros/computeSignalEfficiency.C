@@ -1,54 +1,17 @@
-#include "Common.cpp+"
-
-#include "TStyle.h"
-#include "TFile.h"
-#include "TH1F.h"
-#include "TEfficiency.h"
-#include "TCanvas.h"
-#include "TLegend.h"
-#include "TString.h"
-
-  void SetupSignalGroupColors()
-  {
-    SignalGroupColorMap["GMSB_0p1cm"] = kBlue;
-  }
-  void SetupSignalGroups()
-  {
-    for (const auto & SignalSamplePair : SignalSampleMap)
-    {
-      const auto & signal = SignalSamplePair.second;
-
-      if (signal.Contains("GMSB",TString::kExact))
-      {
-	const TString s_ctau = "_CTau";
-	auto i_ctau = signal.Index(s_ctau);
-	auto l_ctau = s_ctau.Length();
-	
-	const TString ctau(signal(i_ctau+l_ctau,signal.Length()-i_ctau-l_ctau));
-	SignalGroupMap["GMSB_"+ctau+"cm"].emplace_back(signal);
-      }
-    }
-  }
-
-
-
+#include "computeSignalEfficiency.hh"
 
 void computeSignalEfficiency(const TString & infilename, const TString & outtext)
 {
-  // set style
+  // set things up
+  std::map<TString,std::vector<TString> > SignalSubGroupMap;
+  std::map<TString,Color_t> SignalSubGroupColorMap;
   auto tdrStyle = new TStyle();
-  Config::SetTDRStyle(tdrStyle);
-
+  Setup(SignalSubGroupMap,SignalSubGroupColorMap,tdrStyle);
+  
   // get input
   auto infile = TFile::Open(Form("%s",infilename.Data()));
   Config::CheckValidFile(infile,infilename);
   infile->cd();
-
-  // setup input hist names
-  Config::SetupSignalSamples();
-  Config::SetupSignalGroups();
-  Config::SetupSignalGroupColors();
-  Config::SetupSignalCutFlowHistNames();
 
   // legends, canv and overall map
   auto canv = new TCanvas();
@@ -58,26 +21,26 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
 
   // loop over signal groups
   Int_t counter = 0;
-  for (const auto & SignalGroupPair : Config::SignalGroupMap)
+  for (const auto & SignalSubGroupPair : SignalSubGroupMap)
   {
-    const auto & groupname = SignalGroupPair.first;
-    const auto & signals   = SignalGroupPair.second;
+    const auto & groupname = SignalSubGroupPair.first;
+    const auto & samples   = SignalSubGroupPair.second;
 
     // make efficiency object
-    const auto nSignals = signals.size();
-    auto efficiency = new TEfficiency("signal_efficiency","Signal Sample Efficiency;#Lambda [TeV];#epsilon",nSignals,0,nSignals);
+    const auto nSamples = samples.size();
+    auto efficiency = new TEfficiency("signal_efficiency","Signal Sample Efficiency;#Lambda [TeV];#epsilon",nSamples,0,nSamples);
 
-    // loop over signals, get hists, and set the appropriate efficiency
-    for (auto isignal = 0; isignal < nSignals; isignal++)
+    // loop over samples, get hists, and set the appropriate efficiency
+    for (auto isample = 0; isample < nSamples; isample++)
     {
       // get input hist
-      const auto & histname = Config::SignalCutFlowHistNameMap[signals[isignal]];
+      const auto & histname = Config::SignalCutFlowHistNameMap[samples[isample]];
       auto hist = (TH1F*)infile->Get(Form("%s",histname.Data()));
       Config::CheckValidTH1F(hist,histname,infilename);
 
       // set efficiency by bins!
-      efficiency->SetTotalEvents(isignal+1,hist->GetBinContent(1));
-      efficiency->SetPassedEvents(isignal+1,hist->GetBinContent(hist->GetXaxis()->GetNbins()));
+      efficiency->SetTotalEvents(isample+1,hist->GetBinContent(1));
+      efficiency->SetPassedEvents(isample+1,hist->GetBinContent(hist->GetXaxis()->GetNbins()));
 
       delete hist;
     }
@@ -86,30 +49,31 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
     graphMap[groupname] = efficiency->CreateGraph();
     auto & graph = graphMap[groupname];
     graph->SetName(Form("%s_eff_graph",groupname.Data()));
-    graph->SetLineColor(Config::SignalGroupColorMap[groupname]);
-    graph->SetMarkerColor(Config::SignalGroupColorMap[groupname]);
+    graph->SetLineColor(SignalSubGroupColorMap[groupname]);
+    graph->SetMarkerColor(SignalSubGroupColorMap[groupname]);
 
     // set labels!
     if (counter == 0)
     {
       // absurdity from ROOT
-      graph->GetHistogram()->GetXaxis()->Set(nSignals,0,nSignals);
+      graph->GetHistogram()->GetXaxis()->Set(nSamples,0,nSamples);
+      graph->GetHistogram()->GetYaxis()->SetRangeUser(0.0,1.0);
       
-      // loop over signals, set Lambda for GMSB
-      for (auto isignal = 0; isignal < nSignals; isignal++)
+      // loop over samples, set Lambda for GMSB
+      for (auto isample = 0; isample < nSamples; isample++)
       {
-	auto signal = signals[isignal];
+	auto sample = samples[isample];
 	
 	const TString s_lambda = "_L";
-	auto i_lambda = signal.Index(s_lambda);
+	auto i_lambda = sample.Index(s_lambda);
 	auto l_lambda = s_lambda.Length();
 
 	const TString s_ctau = "_CTau";
-	auto i_ctau = signal.Index(s_ctau);
+	auto i_ctau = sample.Index(s_ctau);
 	
-	const TString lambda(signal(i_lambda+l_lambda,i_ctau-i_lambda-l_lambda));
+	const TString lambda(sample(i_lambda+l_lambda,i_ctau-i_lambda-l_lambda));
 
-	graph->GetHistogram()->GetXaxis()->SetBinLabel(isignal+1,Form("%s",lambda.Data()));
+	graph->GetHistogram()->GetXaxis()->SetBinLabel(isample+1,Form("%s",lambda.Data()));
       }
     }
 
@@ -141,4 +105,45 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
   delete canv;
   delete infile;
   delete tdrStyle;
+}
+
+void Setup(std::map<TString,vector<TString> > & SignalSubGroupMap, std::map<TString,Color_t> & SignalSubGroupColorMap, TStyle *& tdrStyle)
+{
+  Config::SetupSignalSamples();
+
+  //// ************** HACK FOR NOW ********************* //
+  Config::SampleMap.erase("MC/GMSB/L200TeV_CTau400cm");
+
+  Config::SetupGroups();
+  Config::SetupSignalGroups();
+  Config::SetupSignalCutFlowHistNames();
+
+  SetupSignalSubGroups(SignalSubGroupMap);
+  SetupSignalSubGroupColors(SignalSubGroupColorMap);
+
+  Config::SetTDRStyle(tdrStyle);
+}
+
+void SetupSignalSubGroups(std::map<TString,std::vector<TString> > & SignalSubGroupMap)
+{
+  for (const auto & SamplePair : Config::SampleMap)
+  {
+    const auto & sample = SamplePair.second;
+    
+    if (Config::SignalGroupMap[sample] == "GMSB")
+    {
+      const TString s_ctau = "_CTau";
+      auto i_ctau = sample.Index(s_ctau);
+      auto l_ctau = s_ctau.Length();
+      
+      const TString ctau(sample(i_ctau+l_ctau,sample.Length()-i_ctau-l_ctau));
+      SignalSubGroupMap["GMSB_"+ctau+"cm"].emplace_back(sample);
+    }
+  }
+}
+
+void SetupSignalSubGroupColors(std::map<TString,Color_t> & SignalSubGroupColorMap)
+{
+  SignalSubGroupColorMap["GMSB_0p1cm"] = kBlue;
+  SignalSubGroupColorMap["GMSB_400cm"] = kRed;
 }
