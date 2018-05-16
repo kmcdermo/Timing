@@ -1,0 +1,2 @@
+scale_mc_to_data_area=0
+blind_data=1

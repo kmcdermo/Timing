@@ -1,9 +1,9 @@
 #include "TreePlotter.hh"
 
 TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
-			 const TString & plotsignals, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext) 
+			 const TString & plotsignals, const TString & plotconfig, const TString & miscplotconfig, const TString & outfiletext) 
   : fInFileName(infilename), fInSignalFileName(insignalfilename), fCutConfig(cutconfig),
-    fPlotSignals(plotsignals), fPlotConfig(plotconfig), fScaleArea(scalearea), fOutFileText(outfiletext)
+    fPlotSignals(plotsignals), fPlotConfig(plotconfig), fMiscPlotConfig(miscplotconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing TreePlotter..." << std::endl;
 
@@ -31,6 +31,7 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
   TreePlotter::SetupConfig();
   TreePlotter::SetupSignalsToPlot();
   TreePlotter::SetupPlotConfig();
+  TreePlotter::SetupMiscPlotConfig();
   TreePlotter::SetupHists();
 
   // output root file for quick inspection
@@ -162,15 +163,18 @@ void TreePlotter::MakeDataOutput()
   DataHist = TreePlotter::SetupHist("Data_Hist_Plotted");
   DataHist->Add(Hist_Map[Data]);
 
-  for (const auto & Blind : fBlinds)
+  if (fBlindData)
   {
-    const auto binXlow = DataHist->GetXaxis()->FindBin(Blind.xlow);
-    const auto binXup  = DataHist->GetXaxis()->FindBin(Blind.xup);
-
-    for (auto ibinX = binXlow; ibinX <= binXup; ibinX++) 
+    for (const auto & Blind : fBlinds)
     {
-      DataHist->SetBinContent(ibinX,0.f);
-      DataHist->SetBinError  (ibinX,0.f);
+      const auto binXlow = DataHist->GetXaxis()->FindBin(Blind.xlow);
+      const auto binXup  = DataHist->GetXaxis()->FindBin(Blind.xup);
+      
+      for (auto ibinX = binXlow; ibinX <= binXup; ibinX++) 
+      {
+	DataHist->SetBinContent(ibinX,0.f);
+	DataHist->SetBinError  (ibinX,0.f);
+      }
     }
   }
 
@@ -201,7 +205,7 @@ void TreePlotter::MakeBkgdOutput()
   BkgdStack = new THStack("Bkgd_Stack","");
   
   // sort by smallest to biggest, then add
-  std::vector<SampleType> StackOrder;
+  std::vector<TString> StackOrder;
   for (const auto & GroupPair : Config::GroupMap)
   {
     if (GroupPair.second == isBkgd)
@@ -476,8 +480,8 @@ void TreePlotter::MakeConfigPave()
 
   // dump which signals were plotted
   fConfigPave->AddText(Form("Signals Plotted: %s",fPlotSignals.Data()));
-  std::ifstream plotfile(Form("%s",fPlotSignals.Data()),std::ios::in);
-  while (std::getline(plotfile,str))
+  std::ifstream signalplotfile(Form("%s",fPlotSignals.Data()),std::ios::in);
+  while (std::getline(signalplotfile,str))
   {
     fConfigPave->AddText(str.c_str());
   }
@@ -490,8 +494,13 @@ void TreePlotter::MakeConfigPave()
     fConfigPave->AddText(str.c_str());
   }
 
-  // dump scaling choices
-  fConfigPave->AddText(fScaleArea?"Scale MC to data area":"Scale MC to luminosity");
+  // store last bits of info
+  fConfigPave->AddText(Form("Miscellaneous Plot Config: %s",fMiscPlotConfig.Data()));
+  std::ifstream miscplotfile(Form("%s",fMiscPlotConfig.Data()),std::ios::in);
+  while (std::getline(miscplotfile,str))
+  {
+    fConfigPave->AddText(str.c_str());
+  }
 
   // save name of infile, redundant
   fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
@@ -613,9 +622,10 @@ Float_t TreePlotter::GetHistMaximum()
 
 void TreePlotter::SetupDefaults()
 {
-  fIsLogX   = false;
-  fXVarBins = false;
-  fIsLogY   = false;
+  fIsLogX    = false;
+  fXVarBins  = false;
+  fIsLogY    = false;
+  fScaleArea = false;
 }
 
 void TreePlotter::SetupConfig()
@@ -641,7 +651,9 @@ void TreePlotter::SetupSignalsToPlot()
   std::string str;
   while (infile >> str)
   {
-    fPlotSignalMap[signal] = true;
+    if (str == "") continue;
+    const TString sample(str);
+    fPlotSignalMap[sample] = true;
   }
 
   // loop over signals
@@ -709,6 +721,33 @@ void TreePlotter::SetupPlotConfig()
     else 
     {
       std::cerr << "Aye... your plot config is messed up, try again!" << std::endl;
+      exit(1);
+    }
+  }
+}
+
+void TreePlotter::SetupMiscPlotConfig()
+{
+  std::cout << "Reading miscellaneous plot config..." << std::endl;
+
+  std::ifstream infile(Form("%s",fMiscPlotConfig.Data()),std::ios::in);
+  std::string str;
+  while (std::getline(infile,str))
+  {
+    if (str == "") continue;
+    else if (str.find("scale_mc_to_data_area=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"scale_mc_to_data_area=");
+      Config::SetupBool(str,fScaleArea);
+    }
+    else if (str.find("blind_data=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"blind_data=");
+      Config::SetupBool(str,fBlindData);
+    }
+    else 
+    {
+      std::cerr << "Aye... your miscellaneous plot config is messed up, try again!" << std::endl;
       exit(1);
     }
   }

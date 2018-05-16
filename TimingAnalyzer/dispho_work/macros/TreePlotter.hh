@@ -33,7 +33,7 @@ class TreePlotter
 {
 public:
   TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
-	      const TString & plotsignals, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext);
+	      const TString & plotsignals, const TString & plotconfig, const TString & miscplotconfig, const TString & outfiletext);
   ~TreePlotter();
 
   // Initialize
@@ -41,6 +41,7 @@ public:
   void SetupConfig();
   void SetupSignalsToPlot();
   void SetupPlotConfig();
+  void SetupMiscPlotConfig();
   void SetupHists();
 
   // Main call
@@ -75,7 +76,7 @@ private:
   const TString fCutConfig;
   const TString fPlotSignals;
   const TString fPlotConfig;
-  const Bool_t  fScaleArea;
+  const TString fMiscPlotConfig;
   const TString fOutFileText;
 
   // input
@@ -93,7 +94,11 @@ private:
   TString fYTitle;
   Bool_t  fIsLogY;
   std::vector<BlindStruct> fBlinds;
+
+  // other plotting config
   std::map<TString,Bool_t> fPlotSignalMap;
+  Bool_t fScaleArea;
+  Bool_t fBlindData;
 
   // Style
   TStyle * fTDRStyle;
