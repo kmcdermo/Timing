@@ -222,10 +222,13 @@ void TreePlotter2D::MakeConfigPave()
   }
 
   // save name of infile, redundant
-  fConfigPave->AddText(Form("Infile name: %s",fInFileName.Data()));
+  fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
 
   // dump in old config
   Config::AddTextFromInputPave(fConfigPave,fInFile);
+
+  // save name of insignalfile, redundant
+  fConfigPave->AddText(Form("InSignalFile name: %s",fInSignalFileName.Data()));
 
   // dump in old signal config
   Config::AddTextFromInputPave(fConfigPave,fInSignalFile);

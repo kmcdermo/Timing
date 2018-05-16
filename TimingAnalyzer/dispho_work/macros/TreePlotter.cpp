@@ -1,9 +1,9 @@
 #include "TreePlotter.hh"
 
-TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfilename, 
-			 const TString & cutconfig, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext) 
-  : fInFileName(infilename), fInSignalFileName(insignalfilename), 
-    fCutConfig(cutconfig), fPlotConfig(plotconfig), fScaleArea(scalearea), fOutFileText(outfiletext)
+TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
+			 const TString & plotsignals, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext) 
+  : fInFileName(infilename), fInSignalFileName(insignalfilename), fCutConfig(cutconfig),
+    fPlotSignals(plotsignals), fPlotConfig(plotconfig), fScaleArea(scalearea), fOutFileText(outfiletext)
 {
   std::cout << "Initializing TreePlotter..." << std::endl;
 
@@ -29,8 +29,8 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
   // setup hists
   TreePlotter::SetupDefaults();
   TreePlotter::SetupConfig();
-  TreePlotter::SetupPlotConfig();
   TreePlotter::SetupSignalsToPlot();
+  TreePlotter::SetupPlotConfig();
   TreePlotter::SetupHists();
 
   // output root file for quick inspection
@@ -474,7 +474,15 @@ void TreePlotter::MakeConfigPave()
     fConfigPave->AddText(str.c_str());
   }
 
-  // dump plot config second
+  // dump which signals were plotted
+  fConfigPave->AddText(Form("Signals Plotted: %s",fPlotSignals.Data()));
+  std::ifstream plotfile(Form("%s",fPlotSignals.Data()),std::ios::in);
+  while (std::getline(plotfile,str))
+  {
+    fConfigPave->AddText(str.c_str());
+  }
+
+  // dump plot config
   fConfigPave->AddText(Form("Plot Config: %s",fPlotConfig.Data()));
   std::ifstream plotfile(Form("%s",fPlotConfig.Data()),std::ios::in);
   while (std::getline(plotfile,str))
@@ -486,10 +494,13 @@ void TreePlotter::MakeConfigPave()
   fConfigPave->AddText(fScaleArea?"Scale MC to data area":"Scale MC to luminosity");
 
   // save name of infile, redundant
-  fConfigPave->AddText(Form("Infile name: %s",fInFileName.Data()));
+  fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
 
   // dump in old config
   Config::AddTextFromInputPave(fConfigPave,fInFile);
+
+  // save name of insignalfile, redundant
+  fConfigPave->AddText(Form("InSignalFile name: %s",fInSignalFileName.Data()));
 
   // dump in old signal config
   Config::AddTextFromInputPave(fConfigPave,fInSignalFile);
@@ -549,6 +560,8 @@ void TreePlotter::DumpIntegrals()
 
 void TreePlotter::ScaleToArea()
 {
+  std::cout << "Scaling MC Bkgd to data..." << std::endl;
+
   const auto area_sf = DataHist->Integral()/BkgdHist->Integral();
 
   // first scale each individual sample
@@ -600,9 +613,9 @@ Float_t TreePlotter::GetHistMaximum()
 
 void TreePlotter::SetupDefaults()
 {
-  fIsLogX      = false;
-  fXVarBins    = false;
-  fIsLogY      = false;
+  fIsLogX   = false;
+  fXVarBins = false;
+  fIsLogY   = false;
 }
 
 void TreePlotter::SetupConfig()
@@ -617,6 +630,31 @@ void TreePlotter::SetupConfig()
   Config::SetupColors();
   Config::SetupLabels();
   Config::SetupCuts(fCutConfig);
+}
+
+void TreePlotter::SetupSignalsToPlot()
+{
+  std::cout << "Setting up which signals to plot..." << std::endl;
+
+  std::ifstream infile(Form("%s",fPlotSignals.Data()),std::ios::in);
+  std::string str;
+  while (infile >> str)
+  {
+    fPlotSignalMap[signal] = true;
+  }
+
+  // loop over signals
+  for (const auto & GroupPair : Config::GroupMap)
+  {
+    const auto & sample = GroupPair.first;
+    const auto & group  = GroupPair.second;
+
+    // skip non-signal samples
+    if (group != isSignal) continue;
+    
+    // only mark samples false for those that are not marked true
+    if (!fPlotSignalMap.count(sample)) fPlotSignalMap[sample] = false;
+  }
 }
 
 void TreePlotter::SetupPlotConfig()
@@ -667,32 +705,11 @@ void TreePlotter::SetupPlotConfig()
       str = Config::RemoveDelim(str,"blinding=");
       Config::SetupBlinding(str,fBlinds);
     }
-    else if (str.find("signals_to_plot=") != std::string::npos)
-    {
-      str = Config::RemoveDelim(str,"signals_to_plot=");
-      Config::SetupSignalsToPlot(str,fPlotSignalMap);
-    }
     else 
     {
       std::cerr << "Aye... your plot config is messed up, try again!" << std::endl;
       exit(1);
     }
-  }
-}
-
-void TreePlotter::SetupSignalsToPlot()
-{
-  // loop over signals
-  for (const auto & GroupPair : Config::GroupMap)
-  {
-    const auto & sample = GroupPair.first;
-    const auto & group  = GroupPair.second;
-
-    // skip non-signal samples
-    if (group != isSignal) continue;
-    
-    // only mark samples false for those that are not marked true
-    if (!fPlotSignalMap.count(sample)) fPlotSignalMap[sample] = false;
   }
 }
 

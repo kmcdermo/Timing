@@ -394,16 +394,6 @@ namespace Config
     }
   }
 
-  void SetupSignalsToPlot(const std::string & str, std::map<TString,Bool_t> & plotSignalMap)
-  {
-    std::stringstream ss(str);
-    std::string signal;
-    while (ss >> signal)
-    {
-      plotSignalMap[signal] = true;
-    }
-  }
-
   void CheckValidFile(const TFile * file, const TString & fname)
   {
     if (file == (TFile*) NULL) // check if valid file

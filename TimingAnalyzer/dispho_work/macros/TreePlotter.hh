@@ -32,15 +32,15 @@
 class TreePlotter
 {
 public:
-  TreePlotter(const TString & infilename, const TString & insignalfilename, 
-	      const TString & cutconfig, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext);
+  TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
+	      const TString & plotsignals, const TString & plotconfig, const Bool_t scalearea, const TString & outfiletext);
   ~TreePlotter();
 
   // Initialize
   void SetupDefaults();
   void SetupConfig();
-  void SetupPlotConfig();
   void SetupSignalsToPlot();
+  void SetupPlotConfig();
   void SetupHists();
 
   // Main call
@@ -73,6 +73,7 @@ private:
   const TString fInFileName;
   const TString fInSignalFileName;
   const TString fCutConfig;
+  const TString fPlotSignals;
   const TString fPlotConfig;
   const Bool_t  fScaleArea;
   const TString fOutFileText;
