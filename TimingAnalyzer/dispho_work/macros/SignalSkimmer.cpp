@@ -42,7 +42,7 @@ void SignalSkimmer::MakeSkimsFromTrees()
   {
     // Init
     const auto & input  = SamplePair.first;
-    const auto & signal = SamplePair.second;
+    const auto & sample = SamplePair.second;
     std::cout << "Working on input: " << input.Data() << std::endl;
 
     // Get File
@@ -55,20 +55,17 @@ void SignalSkimmer::MakeSkimsFromTrees()
     auto intree = (TTree*)infile->Get(Form("%s",Config::disphotreename.Data()));
     Config::CheckValidTree(intree,Config::disphotreename,infilename);
 
-    // Rename ttree for output
-    intree->SetName(Form("%s",Config::TreeNameMap[signal].Data()));
-
     // Get Input Cut Flow Histogram 
     auto inhist = (TH1F*)infile->Get(Form("%s",Config::h_cutflowname.Data()));
     Config::CheckValidTH1F(inhist,Config::h_cutflowname,infilename);
 
     // Init Output Cut Flow Histogram 
     std::map<TString,Int_t> binlabels;
-    auto outhist = SignalSkimmer::InitOutCutFlowHist(inhist,Config::SignalCutFlowHistNameMap[signal],binlabels);
+    auto outhist = SignalSkimmer::InitOutCutFlowHist(inhist,Config::SignalCutFlowHistNameMap[sample],binlabels);
 
     // Initialize map of lists
     std::map<TString,TEntryList*> listmap;
-    SignalSkimmer::InitListMap(listmap,signal);
+    SignalSkimmer::InitListMap(listmap,sample);
 
     // Loop over cuts, and make entry list for each cut, 
     for (const auto & SignalCutFlowPair : Config::SignalCutFlowPairVec)
@@ -96,6 +93,7 @@ void SignalSkimmer::MakeSkimsFromTrees()
     // Write out a copy of the last skim
     fOutFile->cd();
     auto outtree = intree->CopyTree("");
+    outtree->SetName(Form("%s",Config::TreeNameMap[sample].Data()));
     outtree->Write(outtree->GetName(),TObject::kWriteDelete);
 
     // Write out hist
@@ -150,6 +148,7 @@ void SignalSkimmer::MakeConfigPave()
 void SignalSkimmer::SetupConfig()
 {
   Config::SetupSignalSamples();
+  Config::SetupGroups();
   Config::SetupTreeNames();
   Config::SetupSignalCutFlowHistNames();
   Config::SetupSignalCutFlow(fCutFlowConfig);
