@@ -1,9 +1,9 @@
 #include "TreePlotter2D.hh"
 
 TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insignalfilename,
-			     const TString & cutconfig, const TString & plotconfig, const TString & outfiletext) 
+			     const TString & cutconfig, const TString & plotconfig, const TString & miscplotconfig, const TString & outfiletext) 
   : fInFileName(infilename), fInSignalFileName(insignalfilename),
-    fCutConfig(cutconfig), fPlotConfig(plotconfig), fOutFileText(outfiletext)
+    fCutConfig(cutconfig), fPlotConfig(plotconfig), fMiscPlotConfig(miscplotconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -30,6 +30,7 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insigna
   TreePlotter2D::SetupDefaults();
   TreePlotter2D::SetupConfig();
   TreePlotter2D::SetupPlotConfig();
+  TreePlotter2D::SetupMiscPlotConfig();
   TreePlotter2D::SetupHists();
 
   // output root file
@@ -90,8 +91,9 @@ void TreePlotter2D::MakeHistFromTrees()
     {
       std::cout << "Filling hist from tree..." << std::endl;
 
-      // get the hist we wish to write to
+      // get the hist we wish to write to --> ROOT and memory residency is satanic
       auto & hist = HistMap[sample];
+      hist->SetDirectory(infile);
       
       // Fill from tree
       intree->Draw(Form("%s:%s>>%s",fYVar.Data(),fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(sample).Data()),"goff");
@@ -133,19 +135,22 @@ void TreePlotter2D::MakeDataOutput()
   DataHist = TreePlotter::SetupHist("Data_Hist_Plotted");
   DataHist->Add(Hist_Map[Data]);
 
-  for (const auto & Blind : fBlinds)
+  if (fBlindData)
   {
-    const auto binXlow = DataHist->GetXaxis()->FindBin(Blind.xlow);
-    const auto binXup  = DataHist->GetXaxis()->FindBin(Blind.xup);
-    const auto binYlow = DataHist->GetYaxis()->FindBin(Blind.ylow);
-    const auto binYup  = DataHist->GetYaxis()->FindBin(Blind.yup);
-
-    for (auto ibinX = binXlow; ibinX <= binXup; ibinX++) 
+    for (const auto & Blind : fBlinds)
     {
-      for (auto ibinY = binYlow; ibinY <= binYup; ibinY++) 
+      const auto binXlow = DataHist->GetXaxis()->FindBin(Blind.xlow);
+      const auto binXup  = DataHist->GetXaxis()->FindBin(Blind.xup);
+      const auto binYlow = DataHist->GetYaxis()->FindBin(Blind.ylow);
+      const auto binYup  = DataHist->GetYaxis()->FindBin(Blind.yup);
+      
+      for (auto ibinX = binXlow; ibinX <= binXup; ibinX++) 
       {
-	DataHist->SetBinContent(ibinX,ibinY,0.f);
-	DataHist->SetBinError  (ibinX,ibinY,0.f);
+	for (auto ibinY = binYlow; ibinY <= binYup; ibinY++) 
+	{
+	    DataHist->SetBinContent(ibinX,ibinY,0.f);
+	    DataHist->SetBinError  (ibinX,ibinY,0.f);
+	}
       }
     }
   }
@@ -221,6 +226,14 @@ void TreePlotter2D::MakeConfigPave()
     fConfigPave->AddText(str.c_str());
   }
 
+  // store last bits of info
+  fConfigPave->AddText(Form("Miscellaneous Plot Config: %s",fMiscPlotConfig.Data()));
+  std::ifstream miscplotfile(Form("%s",fMiscPlotConfig.Data()),std::ios::in);
+  while (std::getline(miscplotfile,str))
+  {
+    fConfigPave->AddText(str.c_str());
+  }
+
   // save name of infile, redundant
   fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
 
@@ -242,6 +255,7 @@ void TreePlotter2D::SetupDefaults()
 {
   fXVarBins = false;
   fYVarBins = false;
+  fBlindData = false;
 }
 
 void TreePlotter2D::SetupConfig()
@@ -317,6 +331,32 @@ void TreePlotter2D::SetupPlotConfig()
     else 
     {
       std::cerr << "Aye... your plot config is messed up, try again!" << std::endl;
+      exit(1);
+    }
+  }
+}
+
+void TreePlotter2D::SetupMiscPlotConfig()
+{
+  std::cout << "Reading miscellaneous plot config..." << std::endl;
+
+  std::ifstream infile(Form("%s",fMiscPlotConfig.Data()),std::ios::in);
+  std::string str;
+  while (std::getline(infile,str))
+  {
+    if (str == "") continue;
+    else if (str.find("scale_mc_to_data_area=") != std::string::npos) 
+    {
+      std::cout << "scale_mc_to_data_area not currently implemented in 2D plotter, skipping..." << std::endl;
+    }
+    else if (str.find("blind_data=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"blind_data=");
+      Config::SetupBool(str,fBlindData);
+    }
+    else 
+    {
+      std::cerr << "Aye... your miscellaneous plot config is messed up, try again!" << std::endl;
       exit(1);
     }
   }

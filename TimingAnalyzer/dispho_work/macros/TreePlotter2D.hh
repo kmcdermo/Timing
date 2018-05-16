@@ -27,13 +27,14 @@ class TreePlotter2D
 {
 public:
   TreePlotter2D(const TString & infilename, const TString & insignalfilename, 
-		const TString & cutconfig, const TString & plotconfig, const TString & outfiletext);
+		const TString & cutconfig, const TString & plotconfig, const TString & miscplotconfig, const TString & outfiletext);
   ~TreePlotter2D();
 
   // Initialize
   void SetupDefaults();
   void SetupConfig();
   void SetupPlotConfig();
+  void SetupMiscPlotConfig();
   void SetupHists();
 
   // Main call
@@ -57,6 +58,7 @@ private:
   const TString fInSignalFileName;
   const TString fCutConfig;
   const TString fPlotConfig;
+  const TString fMiscPlotConfig;
   const TString fOutFileText;
 
   // input
@@ -77,6 +79,9 @@ private:
   std::vector<TString> fYLabels;
   TString fZTitle;
   std::vector<BlindStruct> fBlinds;
+
+  // other plotting config
+  Bool_t fBlindData;
 
   // Style
   TStyle * fTDRStyle;
