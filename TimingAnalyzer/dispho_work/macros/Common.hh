@@ -29,6 +29,7 @@ enum SampleGroup {isData, isBkgd, isSignal, isToy};
 // Blind Struct
 struct BlindStruct
 {
+  BlindStruct() {}
   BlindStruct(const Float_t xlow, const Float_t xup, 
 	      const Float_t ylow = std::numeric_limits<float>::lowest(), 
 	      const Float_t yup = std::numeric_limits<float>::max())

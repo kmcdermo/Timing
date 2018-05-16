@@ -120,9 +120,10 @@ void TreePlotter::MakeHistFromTrees()
     {
       std::cout << "Filling hist from tree..." << std::endl;
 
-      // get the hist we wish to write to
+      // get the hist we wish to write to (and holy crap, ROOT's internal memory residency is stupid)
       auto & hist = HistMap[sample];
-      
+      hist->SetDirectory(infile);
+     
       // Fill from tree
       intree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(sample).Data()),"goff");
 
@@ -161,7 +162,7 @@ void TreePlotter::MakeDataOutput()
 
   // Make new data hist in case we are blinded
   DataHist = TreePlotter::SetupHist("Data_Hist_Plotted");
-  DataHist->Add(Hist_Map[Data]);
+  DataHist->Add(HistMap["Data"]);
 
   if (fBlindData)
   {
@@ -278,35 +279,41 @@ void TreePlotter::MakeLegend()
   std::cout << "Creating Legend..." << std::endl;
 
   // instantiate the legend
-  Legend = new TLegend(0.682,0.7,0.825,0.92);
+  Legend = new TLegend(0.55,0.65,0.825,0.92);
   Legend->SetName("Legend");
   //  Legend->SetNColumns(2);
   Legend->SetBorderSize(1);
   Legend->SetLineColor(kBlack);
 
-  // add all bkgd samples and data to legend
+  // add data to legend
+  Legend->AddEntry(DataHist,Config::LabelMap["Data"].Data(),"epl");
+
+  // add bkgd to legend
   for (const auto & HistPair : HistMap)
   {
-    // get sample
     const auto & sample = HistPair.first;
     const auto & hist   = HistPair.second;
 
-    // if signal, check to see if this is a plotted one
-    if (Config::GroupMap[sample] == isSignal)
-    {
-      if (!fPlotSignalMap[sample]) continue;
-    }
+    // only do background
+    if (Config::GroupMap[sample] != isBkgd) continue;
 
-    TString fillType;
-    if      (Config::GroupMap[sample] == isData) fillType = "epl";
-    else if (Config::GroupMap[sample] == isBkgd) fillType = "f";
-    else                                         fillType = "l";
+    Legend->AddEntry(hist,Config::LabelMap[sample].Data(),"f");
+  }
 
-    Legend->AddEntry(hist,Config::LabelMap[sample].Data(),fillType.Data());
+  // add signal to legend
+  for (const auto & PlotSignalPair : fPlotSignalMap)
+  {
+    const auto & sample = PlotSignalPair.first;
+    const auto   isplot = PlotSignalPair.second;
+
+    // only do signals to be plotted
+    if (!isplot) continue;
+
+    Legend->AddEntry(HistMap[sample],Config::LabelMap[sample].Data(),"l");
   }
 
   // add the mc unc. to legend
-  Legend->AddEntry(BkgdHist,"MC Unc.","f");
+  // Legend->AddEntry(BkgdHist,"MC Unc.","f");
 
   // save to output file
   fOutFile->cd();
@@ -361,10 +368,12 @@ void TreePlotter::DrawUpperPad()
   for (const auto & PlotSignalPair : fPlotSignalMap)
   {
     const auto & sample = PlotSignalPair.first;
-    const auto & isplot = PlotSignalPair.second;
+    const auto   isplot = PlotSignalPair.second;
+
+    // only do signals to be plotted
     if (!isplot) continue;
     
-    Hist_Map[sample]->Draw("HIST SAME");
+    HistMap[sample]->Draw("HIST SAME");
   }
 
   // Draw MC sum total error as well on top of stack --> E2 makes error appear as rectangle
@@ -762,7 +771,7 @@ void TreePlotter::SetupHists()
   {
     HistMap[HistNamePair.first] = TreePlotter::SetupHist(HistNamePair.second);
   }
-  
+
   // set colors for each histogram
   for (auto & HistPair : HistMap)
   {
