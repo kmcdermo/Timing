@@ -1,0 +1,5 @@
+ph0std (phopt_0>70&&phoisEB_0)
+ph0IDTight ((phogedID_0==3&&phoisOOT_0==0&&!phohasPixSeed_0)||(phoootID_0==3&&phoisOOT_0==1&&!phoisTrk_0))
+nJetsLTE3 (Sum$(1*((jetpt>30)*(abs(jeteta)<3)))<=3)
+JetPh0DPhi2.1 (abs(TVector2::Phi_mpi_pi(jetphi[0]-phophi_0))>2.1)
+HLTdegbit (hltDiPho3022M90)
