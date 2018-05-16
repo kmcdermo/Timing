@@ -72,6 +72,9 @@ namespace Config
       }
     }
 
+    // temp...
+    Config::SampleMap["MC/GMSB/L200TeV_CTau400cm"] = "GMSB_L200_CTau400";
+
     // eventually do HVDS...
   }
 
@@ -129,7 +132,8 @@ namespace Config
   {
     for (const auto & GroupPair : Config::GroupMap)
     {
-      const auto & sample = Config::GroupPair.first;
+      const auto & sample = GroupPair.first;
+      const auto group    = GroupPair.second;
       if (group != isSignal) continue;
 
       Config::SignalCutFlowHistNameMap[sample] = sample+"_"+Config::h_cutflowname;
@@ -189,18 +193,18 @@ namespace Config
       if (SignalGroupMap[sample] == "GMSB")
       {
 	const TString s_lambda = "_L";
-	auto i_lambda = signal.Index(s_lambda);
+	auto i_lambda = sample.Index(s_lambda);
 	auto l_lambda = s_lambda.Length();
 	
 	const TString s_ctau = "_CTau";
-	auto i_ctau = signal.Index(s_ctau);
+	auto i_ctau = sample.Index(s_ctau);
 	auto l_ctau = s_ctau.Length();
 	
-	const TString lambda(signal(i_lambda+l_lambda,i_ctau-i_lambda-l_lambda));
-	TString ctau(signal(i_ctau+l_ctau,signal.Length()-i_ctau-l_ctau));
+	const TString lambda(sample(i_lambda+l_lambda,i_ctau-i_lambda-l_lambda));
+	TString ctau(sample(i_ctau+l_ctau,sample.Length()-i_ctau-l_ctau));
 	ctau.ReplaceAll("p",".");
       
-	Config::LabelMap[signal] = "GMSB #Lambda:"+lambda+"TeV c#tau:"+ctau+"cm";
+	Config::LabelMap[sample] = "GMSB #Lambda:"+lambda+"TeV c#tau:"+ctau+"cm";
       }
     }
 
