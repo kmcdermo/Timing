@@ -1,0 +1,2 @@
+signals_to_plot=GMSB_L200_CTau400
+blind_data=1

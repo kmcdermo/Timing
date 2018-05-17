@@ -1,10 +1,11 @@
 #!/bin/bash
 
 fitconfig=${1:-"fit_config/standard.txt"}
+miscconfig=${2:-"plot_config/misc_fit.txt"}
 outfiletext=${2:-"fitresults"}
 dir=${3:-"fits"}
 
-root -b -q -l runFitter.C\(\"${fitconfig}\",\"${outfiletext}\"\)
+root -b -q -l runFitter.C\(\"${fitconfig}\",\"${miscconfig}\",\"${outfiletext}\"\)
 
 ## make out dirs
 topdir=/afs/cern.ch/user/k/kmcdermo/www
