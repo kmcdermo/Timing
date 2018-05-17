@@ -54,9 +54,21 @@ namespace oot
     if (genparticlesH.isValid())
     {
       int nNeutoPhGr = 0;
+      int nNeus = 0;
+      std::cout << std::endl << "--------------" << std::endl;
+
       for (const auto & genparticle : *genparticlesH) // loop over gen particles
       {
-	if (nNeutoPhGr == 2) break;
+	//	if (nNeutoPhGr == 2) break;
+
+	if (genparticle.pdgId() == 1000022) 
+	{
+	  if (genparticle.numberOfDaughters() == 1)
+	  {
+	    if (genparticle.daughter(0)->pdgId() == 1000022) continue;
+	  }
+	  nNeus++;
+	}
 
 	if (genparticle.pdgId() == 1000022 && genparticle.numberOfDaughters() == 2)
 	{
@@ -65,9 +77,26 @@ namespace oot
 	  {
 	    nNeutoPhGr++;
 	    neutralinos.emplace_back(genparticle);
+
+	    std::cout << "Neutralino decayed normally" << std::endl;
 	  } // end conditional over matching daughter ids
+	  else
+	  {
+	    std::cout << "Neutralino had two daughters decay to something else: " << genparticle.daughter(0)->pdgId() << " " << genparticle.daughter(1)->pdgId() << std::endl;
+	  }
 	} // end conditional over neutralino id
+	else if (genparticle.pdgId() == 1000022 && genparticle.numberOfDaughters() != 2)
+	{
+	  std::cout << "Neutralino did NOT have two daughters, here's what it decayed to: ";
+	  for (auto i = 0U; i < genparticle.numberOfDaughters(); i++)
+	  {
+	    std::cout << genparticle.daughter(i)->pdgId() << " ";
+	  }
+	  std::cout << std::endl;
+	}
       } // end loop over gen particles
+
+      std::cout << "Total neutalinos: " << nNeus << " decayed correctly: " << nNeutoPhGr << std::endl;
 
       std::sort(neutralinos.begin(),neutralinos.end(),oot::sortByPt);
     } // end check over valid
