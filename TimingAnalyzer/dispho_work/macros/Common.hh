@@ -101,6 +101,7 @@ namespace Config
   // Misc setup
   void SetupBool(const std::string & str, Bool_t & setting);
   void SetupWhichSignals(const std::string & str, std::map<TString,Bool_t> & signalmap);
+  void SetupWhichNotSignals(std::map<TString,Bool_t> & signalmap);
   
   // skim input
   constexpr UInt_t nEvCheck = 10000;

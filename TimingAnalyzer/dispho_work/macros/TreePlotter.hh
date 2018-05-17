@@ -41,7 +41,6 @@ public:
   void SetupConfig();
   void SetupPlotConfig();
   void SetupMiscConfig();
-  void SetupSignalsToNotPlot();
   void SetupHists();
 
   // Main call

@@ -66,14 +66,15 @@ struct FitInfo
 class Fitter
 {
 public:
-  Fitter(const TString & fitconfig, const TString & outfiletext);
+  Fitter(const TString & fitconfig, const TString & miscconfig, const TString & outfiletext);
   ~Fitter();
 
   // Initialize
-  void SetupDefaultValues();
+  void SetupDefaults();
   void SetupConfig();
-  void ReadFitConfig();
-  void ReadPlotConfig();
+  void SetupFitConfig();
+  void SetupPlotConfig();
+  void SetupMiscConfig();
   void SetupOutTree();
 
   // Deleting
@@ -127,6 +128,7 @@ private:
   // settings
   const TString fFitConfig;
   const TString fOutFileText;
+  const TString fMiscConfig;
   TString fPlotConfig;
 
   // Bools+Values
@@ -171,16 +173,20 @@ private:
   std::map<TString,TH1F*> fHistMapX;
   std::map<TString,TH1F*> fHistMapY;
 
+  // misc plot info + model info
+  std::map<TString,Bool_t> fPlotSignalMap;
+  TString fSignalSample;
+
   // Counts + scaling norm from the start
   Float_t fScaleTotalBkgd;
   Float_t fScaleTotalSign;
   Float_t fNTotalBkgd;
-  Float_t fNTotalSign;
+  std::map<TString,Float_t> fNTotalSignMap;
 
   // Constants used to build model + post-fit numbers
   std::map<TString,RooRealVar*> fFracMap; 
   RooRealVar * fNPredBkgd;
-  RooRealVar * fNPredSign;
+  std::map<TString,RooRealVar*> fNPredSignMap;
 
   // Number of events to generate, and scale norm up or down when throwing poisson for building generation template
   Float_t fScaleGenBkgd;
@@ -193,14 +199,7 @@ private:
   TString fYCut;
   
   // Blinding (for TH's)
-  Bool_t  fXBlindedLow;
-  Bool_t  fXBlindedUp;
-  Bool_t  fYBlindedLow;
-  Bool_t  fYBlindedUp;
-  Float_t fXLowCut;
-  Float_t fXUpCut;
-  Float_t fYLowCut;
-  Float_t fYUpCut;
+  std::vector<BlindStruct> fBlinds;
 
   // Roo vars and bins
   RooRealVar * fX;

@@ -348,6 +348,10 @@ void TreePlotter2D::SetupMiscConfig()
   while (std::getline(infile,str))
   {
     if (str == "") continue;
+    else if (str.find("signal_to_model=") != std::string::npos) 
+    {
+      std::cout << "signal_to_model not implemented in 2D plotter, skipping..." << std::endl;
+    }
     else if (str.find("signals_to_plot=") != std::string::npos) 
     {
       std::cout << "signals_to_plot not currently implemented in 2D plotter, skipping..." << std::endl;

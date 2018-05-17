@@ -5,8 +5,8 @@
 #include "TVirtualFitter.h"
 #include "RooPlot.h"
 
-Fitter::Fitter(const TString & fitconfig, const TString & outfiletext)
-  : fFitConfig(fitconfig), fOutFileText(outfiletext)
+Fitter::Fitter(const TString & fitconfig, const TString & miscconfig, const TString & outfiletext)
+  : fFitConfig(fitconfig), fMiscConfig(miscconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -22,10 +22,12 @@ Fitter::Fitter(const TString & fitconfig, const TString & outfiletext)
   gROOT->ForceStyle();
 
   // init configuration, set minimizer
-  Fitter::SetupDefaultValues();
+  Fitter::SetupDefaults();
   Fitter::SetupConfig();
-  Fitter::ReadFitConfig();
-  Fitter::ReadPlotConfig();
+  Fitter::SetupFitConfig();
+  Fitter::SetupPlotConfig();
+  Fitter::SetupMiscConfig();
+  Config::SetupWhichNotSignals(fPlotSignalMap);
   TVirtualFitter::SetDefaultFitter("Minuit2");
   
   // output root file for quick inspection
@@ -47,7 +49,7 @@ Fitter::~Fitter()
   delete fX;
   delete fXRooBins;
 
-  delete fNPredSign;
+  Fitter::DeleteMap(fNPredSignMap);
   delete fNPredBkgd;
   Fitter::DeleteMap(fFracMap);
 
@@ -60,6 +62,7 @@ Fitter::~Fitter()
   delete fQCDHistMC_SR;
   delete fGJetsHistMC_SR;
   
+  if (!BkgdOnly) delete fSignalsFile;
   delete fSRFile;
   delete fQCDFile;
   delete fGJetsFile;
@@ -167,20 +170,34 @@ void Fitter::GetInputHists()
   if (fXVarBins || fYVarBins) Config::Scale(fGJetsHistMC_SR,isUp,fXVarBins,fYVarBins);
   if (fXVarBins || fYVarBins) Config::Scale(fQCDHistMC_SR,isUp,fXVarBins,fYVarBins);
 
-  // use signal sample?
-  if (!fBkgdOnly) 
-  {
-    fHistMap2D[GMSB] = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[GMSB].Data()));
-    Config::CheckValidTH2F(fHistMap2D[GMSB],Config::HistNameMap[GMSB],fSRFileName);
-    if (fXVarBins || fYVarBins) Config::Scale(fHistMap2D[GMSB],isUp,fXVarBins,fYVarBins);
-  }
-
   // use real data?
   if (!fGenData)
   {
     fHistMap2D["Data"] = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap["Data"].Data()));
     Config::CheckValidTH2F(fHistMap2D["Data"],Config::HistNameMap["Data"],fSRFileName);
     if (fXVarBins || fYVarBins) Config::Scale(fHistMap2D["Data"],isUp,fXVarBins,fYVarBins);
+  }
+
+  // use signal samples?
+  if (!fBkgdOnly) 
+  {
+    fSignalsFile = TFile::Open(Form("%s",fSignalsFileName.Data()));
+    Config::CheckValidFile(fSignalsFile,fSignalsFileName);
+    
+    // use ALL signal samples to start, only one for fitting... from config
+    for (const auto & GroupPair : Config::GroupMap)
+    {
+      const auto & sample = GroupPair.first;
+      const auto & group  = GroupPair.second;
+
+      // only load signals!
+      if (group != isSignal) continue;
+
+      // load signals
+      fHistMap2D[sample] = (TH2F*)fSignalsFile->Get(Form("%s",Config::HistNameMap[sample].Data()));
+      Config::CheckValidTH2F(fHistMap2D[sample],Config::HistNameMap[sample],fSignalsFileName);
+      if (fXVarBins || fYVarBins) Config::Scale(fHistMap2D[sample],isUp,fXVarBins,fYVarBins);
+    }
   }
 }  
 
@@ -227,12 +244,21 @@ void Fitter::DumpInputInfo()
   delete bkgdHist;
 
   // Signal 
-  if (!fBkgdOnly)
+  if (!fGenData)
   {
-    const TString signtext = "Sign";
-    auto signHist = (TH2F*)fHistMap2D[GMSB]->Clone(Form("%sHist",signtext.Data()));
-    Fitter::DumpIntegralsAndDraw(signHist,signtext,false,true);
-    delete signHist;
+    for (const auto & PlotSignalPair : fPlotSignalMap)
+    {
+      const auto & sample = PlotSignalPair.first;
+      const auto   isplot = PlotSignalPair.second;
+
+      // only plot ones specified -- no need for all!
+      if (!isplot) continue;
+
+      const TString signtext = "Sign";
+      auto signHist = (TH2F*)fHistMap2D[sample]->Clone(Form("Sign_%s_Hist",signtext.Data(),sample.Data()));
+      Fitter::DumpIntegralsAndDraw(signHist,signtext,false,true);
+      delete signHist;
+    }
   }
 
   // Data Histogram --> need to blind it if called for
@@ -240,7 +266,7 @@ void Fitter::DumpInputInfo()
   {
     const TString datatext = "Data";
     auto dataHist = (TH2F*)fHistMap2D["Data"]->Clone(Form("%sHist",datatext.Data()));
-    Fitter::DumpIntegralsAndDraw(dataHist,datatext,(fXBlindedLow||fXBlindedUp||fYBlindedLow||fYBlindedUp),true);
+    Fitter::DumpIntegralsAndDraw(dataHist,datatext,fBlindData,true);
     delete dataHist;
   }
 }
@@ -248,26 +274,21 @@ void Fitter::DumpInputInfo()
 void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bool_t isBlind, const Bool_t isDraw)
 {
   // get useful bin numbers
-  const auto firstBin = 1;
-  const auto lastBinX = hist2D->GetXaxis()->GetNbins();
-  const auto lastBinY = hist2D->GetYaxis()->GetNbins();
-
-  const auto binXLow = (fXBlindedLow ? std::max(hist2D->GetXaxis()->FindBin(fXLowCut),firstBin) : firstBin-1);
-  const auto binXUp  = (fXBlindedUp  ? std::min(hist2D->GetXaxis()->FindBin(fXUpCut) ,lastBinX) : lastBinX+1);
-  const auto binYLow = (fYBlindedLow ? std::max(hist2D->GetYaxis()->FindBin(fYLowCut),firstBin) : firstBin-1);
-  const auto binYUp  = (fYBlindedUp  ? std::min(hist2D->GetYaxis()->FindBin(fYUpCut) ,lastBinY) : lastBinY+1);
-
-  // blind if needed -- must be done first!
   if (isBlind)
   {
-    for (auto ibinX = firstBin; ibinX <= lastBinX; ibinX++)
+    for (const auto & Blind : fBlinds)
     {
-      for (auto ibinY = firstBin; ibinY <= lastBinY; ibinY++)
+      const auto binXlow = DataHist->GetXaxis()->FindBin(Blind.xlow);
+      const auto binXup  = DataHist->GetXaxis()->FindBin(Blind.xup);
+      const auto binYlow = DataHist->GetYaxis()->FindBin(Blind.ylow);
+      const auto binYup  = DataHist->GetYaxis()->FindBin(Blind.yup);
+      
+      for (auto ibinX = binXlow; ibinX <= binXup; ibinX++) 
       {
-	if ((ibinX <= binXLow && fXBlindedLow) || (ibinX >= binXUp && fXBlindedUp) || (ibinY <= binYLow && fYBlindedLow) || (ibinY >= binYUp && fYBlindedUp))
+	for (auto ibinY = binYlow; ibinY <= binYup; ibinY++) 
 	{
-	  hist2D->SetBinContent(ibinX,ibinY,0);
-	  hist2D->SetBinError  (ibinX,ibinY,0);
+	  DataHist->SetBinContent(ibinX,ibinY,0.f);
+	  DataHist->SetBinError  (ibinX,ibinY,0.f);
 	}
       }
     }
@@ -354,16 +375,30 @@ void Fitter::DeclareCoefficients()
     fFracMap[sample] = new RooRealVar(Form("%s",name.Data()),Form("%s",name.Data()),nbkgd/fNTotalBkgd);
   }
 
-  // Count signal
-  fNTotalSign = (fBkgdOnly ? 0.f : fHistMap2D[GMSB]->Integral());
-
-  // Scale nBkgd and nSignal up or down 
+  // Scale nBkgd up or down 
   fNTotalBkgd *= fScaleTotalBkgd;
-  fNTotalSign *= fScaleTotalSign;
 
   // make vars for varying extended PDFs
   fNPredBkgd = new RooRealVar("nbkgd","nbkgd",fNTotalBkgd,(fScaleRangeLow*fNTotalBkgd),(fScaleRangeHigh*fNTotalBkgd));
-  fNPredSign = new RooRealVar("nsign","nsign",fNTotalSign,(fScaleRangeLow*fNTotalSign),(fScaleRangeHigh*fNTotalSign));
+
+  // Count signal
+  for (const auto & GroupPair : Config::GroupMap)
+  {
+    const auto & sample = GroupPair.first;
+    const auto & group  = GroupPair.second;
+    
+    // only load signals!
+    if (group != isSignal) continue;
+
+    // total predicted for each signal (float)
+    fNTotalSignMap[sample] = fHistMap2D[sample]->Integral();
+
+    // scale up or down
+    fNTotalSignMap[sample] *= fScaleTotalSign;
+
+    // make vars for varying extended PDFs
+    fNPredSignMap[sample] = new RooRealVar(Form("nsign_%s",sample.Data()),Form("nsign_%s",sample.Data()),fNTotalSignMap[sample],(fScaleRangeLow*fNTotalSignMap[sample]),(fScaleRangeHigh*fNTotalSignMap[sample]));
+  }
 }
 
 void Fitter::DeclareXYVars()
@@ -496,11 +531,11 @@ void Fitter::ThrowPoisson(const FitInfo & fitInfo)
 
   // generate random poisson number from total
   fNPredBkgd->setVal(gRandom->Poisson(fScaleGenBkgd*fNTotalBkgd));
-  fNPredSign->setVal(gRandom->Poisson(fScaleGenSign*fNTotalSign));
+  fNPredSignMap[fSignalSample]->setVal(gRandom->Poisson(fScaleGenSign*fNTotalSignMap[fSignalSample]));
 
   // for fOutTree
   fNGenBkgd = fNPredBkgd->getVal();
-  fNGenSign = fNPredSign->getVal();
+  fNGenSign = fNPredSignMap[fSignalSample]->getVal();
 }
 
 void Fitter::BuildModel(FitInfo & fitInfo)
@@ -518,7 +553,7 @@ void Fitter::BuildModel(FitInfo & fitInfo)
   // use signal?
   if (!fBkgdOnly)
   {
-    fitInfo.SignExtPdf = new RooExtendPdf(Form("%s",esignname.Data()),Form("%s",esignname.Data()),*fitInfo.HistPdfMap.at(GMSB),*fNPredSign);
+    fitInfo.SignExtPdf = new RooExtendPdf(Form("%s",esignname.Data()),Form("%s",esignname.Data()),*fitInfo.HistPdfMap.at(fSignalSample),*fNPredSignMap.at(fSignalSample));
     fitInfo.ModelPdf = new RooAddPdf(Form("%s",modelname.Data()),Form("%s",modelname.Data()),RooArgList(*fitInfo.BkgdExtPdf,*fitInfo.SignExtPdf));
   }
   else
@@ -545,7 +580,7 @@ void Fitter::FitModel(FitInfo & fitInfo)
 
   // initialize norms before each fit, i.e. don't cheat!
   fNPredBkgd->setVal(((fScaleRangeLow*fNTotalBkgd)+(fScaleRangeHigh*fNTotalBkgd))/2.f);
-  fNPredSign->setVal(((fScaleRangeLow*fNTotalSign)+(fScaleRangeHigh*fNTotalSign))/2.f);
+  fNPredSignMap[fSignalSample]->setVal(((fScaleRangeLow*fNTotalSignMap[fSignalSample])+(fScaleRangeHigh*fNTotalSignMap[fSignalSample]))/2.f);
 
   // perform the fit!
   fitInfo.ModelPdf->fitTo(*fitInfo.DataHistMap.at("Data"),RooFit::SumW2Error(true));
@@ -557,8 +592,8 @@ void Fitter::GetPredicted(FitInfo & fitInfo)
 
   fNFitBkgd = fNPredBkgd->getVal();
   fNFitBkgdErr = fNPredBkgd->getError();
-  fNFitSign = fNPredSign->getVal();
-  fNFitSignErr = fNPredSign->getError();
+  fNFitSign = fNPredSignMap[fSignalSample]->getVal();
+  fNFitSignErr = fNPredSignMap[fSignalSample]->getError();
 }
 
 void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & fitInfo)
@@ -739,15 +774,10 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
   // make new workspace
   auto workspace = new RooWorkspace(Form("workspace_%s",fitInfo.Text.Data()),Form("workspace_%s",fitInfo.Text.Data()));
 
-  // give meaningful names first
-  const TString bkgdname = Form("BkgdPDF_%s",fitInfo.Text.Data());
-  const TString signname = Form("SignPDF_%s",fitInfo.Text.Data());
-
-  // change names as needed
+  // give meaningful names first, then change objects
+  const TString bkgdname = Form("Bkgd_PDF_%s",fitInfo.Text.Data());
   fitInfo.BkgdPdf->SetName(Form("%s",bkgdname.Data()));
-  fitInfo.HistPdfMap[GMSB]->SetName(Form("%s",signname.Data()));
   fNPredBkgd->SetName(Form("%s_norm",bkgdname.Data()));
-  fNPredSign->SetName(Form("%s_norm",signname.Data()));
 
   // Change names of fractions
   const TString gjetsfracname = fFracMap["GJets"]->GetName();
@@ -755,20 +785,45 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
   fFracMap["GJets"]->SetName(Form("%s_%s",gjetsfracname.Data(),fitInfo.Text.Data()));
   fFracMap["QCD"]  ->SetName(Form("%s_%s",qcdfracname  .Data(),fitInfo.Text.Data()));
 
-  // Set values to generic expectations and make signal constant
+  // Set bkgd to generic expectation
   fNPredBkgd->setVal(fNTotalBkgd);
-  fNPredSign->setVal(fNTotalSign);
-  fNPredSign->setConstant(true);
+
+  // Set up signals...
+  for (const auto & GroupPair : Config::GroupMap)
+  {
+    const auto & sample = GroupPair.first;
+    const auto & group  = GroupPair.second;
+    
+    // only load signals!
+    if (group != isSignal) continue;
+  
+    const TString signname = Form("%s_PDF_%s",sample.Data(),fitInfo.Text.Data());
+    fitInfo.HistPdfMap[sample]->SetName(Form("%s",signname.Data()));
+    
+    fNPredSignMap[sample]->setVal(fNTotalSignMap[sample]);
+    fNPredSignMap[sample]->setConstant(true);
+    fNPredSignMap[sample]->SetName(Form("%s_norm",signname.Data()));
+  }
 
   // make sanity plots
   if (fDumpWS) Fitter::DumpWS(fitInfo,"pre");
 
   // import into workspace
+  workspace->import(*fitInfo.DataHistMap.at("Data"));
   workspace->import(*fitInfo.BkgdPdf);
   workspace->import(*fNPredBkgd);
-  workspace->import(*fitInfo.HistPdfMap[GMSB]);
-  workspace->import(*fNPredSign);
-  workspace->import(*fitInfo.DataHistMap.at("Data"));
+
+  for (const auto & GroupPair : Config::GroupMap)
+  {
+    const auto & sample = GroupPair.first;
+    const auto & group  = GroupPair.second;
+    
+    // only load signals!
+    if (group != isSignal) continue;
+  
+    workspace->import(*fitInfo.HistPdfMap[sample]);
+    workspace->import(*fNPredSignMap[sample]);
+  }
 
   // make sanity plots
   if (fDumpWS) Fitter::DumpWS(fitInfo,"post");
@@ -890,6 +945,14 @@ void Fitter::MakeConfigPave()
     fConfigPave->AddText(str.c_str());
   }
 
+  // store last bits of info
+  fConfigPave->AddText(Form("Miscellaneous Config: %s",fMiscConfig.Data()));
+  std::ifstream miscfile(Form("%s",fMiscConfig.Data()),std::ios::in);
+  while (std::getline(miscfile,str))
+  {
+    fConfigPave->AddText(str.c_str());
+  }
+
   // dump in old config
   fConfigPave->AddText("***** GJets CR Config *****");
   Config::AddTextFromInputPave(fConfigPave,fGJetsFile);
@@ -908,7 +971,7 @@ void Fitter::MakeConfigPave()
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
-void Fitter::SetupDefaultValues()
+void Fitter::SetupDefaults()
 {
   std::cout << "Setting defaults..." << std::endl;
   
@@ -926,18 +989,21 @@ void Fitter::SetupDefaultValues()
   fScaleRangeHigh = 100;
   fScaleGenBkgd = 1;
   fScaleGenSign = 1;
+
+  fBlindData = false;
 }
 
 void Fitter::SetupConfig()
 {
   std::cout << "Setting up config..." << std::endl;
 
+  Config::SetupSamples();
   Config::SetupSignalSamples();
   Config::SetupGroups();
   Config::SetupHistNames();
 }
 
-void Fitter::ReadFitConfig()
+void Fitter::SetupFitConfig()
 {
   std::cout << "Reading fit config..." << std::endl;
 
@@ -965,6 +1031,10 @@ void Fitter::ReadFitConfig()
     else if (str.find("plot_config=") != std::string::npos)
     {
       fPlotConfig = Config::RemoveDelim(str,"plot_config=");
+    }
+    else if (str.find("misc_plot_config=") != std::string::npos)
+    {
+      fMiscPlotConfig = Config::RemoveDelim(str,"misc_plot_config=");
     }
     else if (str.find("bkgd_only=") != std::string::npos)
     {
@@ -1039,11 +1109,6 @@ void Fitter::ReadFitConfig()
     {
       fYCut = Config::RemoveDelim(str,"y_cut=");
     }
-    else if (str.find("blinding=") != std::string::npos)
-    {
-      str = Config::RemoveDelim(str,"blinding=");
-      Config::SetupBlinding(str,fBlinds);
-    }
     else 
     {
       std::cerr << "Aye... your fit config is messed up, try again! Offending line: " << str.c_str() << std::endl;
@@ -1052,7 +1117,7 @@ void Fitter::ReadFitConfig()
   }
 }
 
-void Fitter::ReadPlotConfig()
+void Fitter::SetupPlotConfig()
 {
   std::cout << "Reading plot config..." << std::endl;
 
@@ -1079,6 +1144,11 @@ void Fitter::ReadPlotConfig()
       str = Config::RemoveDelim(str,"y_bins=");
       Config::SetupBins(str,fYBins,fYVarBins);
     }
+    else if (str.find("blinding=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"blinding=");
+      Config::SetupBlinding(str,fBlinds);
+    }
     else if ((str.find("plot_title=") != std::string::npos) ||
 	     (str.find("x_var=") != std::string::npos)      ||
 	     (str.find("x_labels=") != std::string::npos)   ||
@@ -1096,6 +1166,46 @@ void Fitter::ReadPlotConfig()
   }
 }
 
+void Fitter::SetupMiscConfig()
+{
+  std::cout << "Reading miscellaneous plot config..." << std::endl;
+
+  std::ifstream infile(Form("%s",fMiscPlotConfig.Data()),std::ios::in);
+  std::string str;
+  while (std::getline(infile,str))
+  {
+    if (str == "") continue;
+    else if (str.find("signal_to_model=") != std::string::npos) 
+    {
+      str = Config::RemoveDelim(str,"signals_to_plot=");
+      std::map<TString,Bool_t> tempmap;
+      Config::SetupWhichSignals(str,tempmap);
+
+      // know that only one signal is specified for model building+fitting!
+      fSignalSample = tempmap.begin()->first;
+    }
+    else if (str.find("signals_to_plot=") != std::string::npos) 
+    {
+      str = Config::RemoveDelim(str,"signals_to_plot=");
+      Config::SetupWhichSignals(str,fPlotSignalMap);
+    }
+    else if (str.find("scale_mc_to_data_area=") != std::string::npos) 
+    {
+      std::cout << "scale_mc_to_data_area not currently implemented in Fitter, skipping..." << std::endl;
+    }
+    else if (str.find("blind_data=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"blind_data=");
+      Config::SetupBool(str,fBlindData);
+    }
+    else 
+    {
+      std::cerr << "Aye... your miscellaneous plot config is messed up, try again!" << std::endl;
+      exit(1);
+    }
+  }
+}
+
 void Fitter::SetupOutTree()
 {
   std::cout << "Setting up outtree..." << std::endl;
@@ -1107,7 +1217,7 @@ void Fitter::SetupOutTree()
   fOutTree->Branch("scaleTotalBkgd",&fScaleTotalBkgd);
   fOutTree->Branch("scaleTotalSign",&fScaleTotalSign);
   fOutTree->Branch("nTotalBkgd",&fNTotalBkgd);
-  fOutTree->Branch("nTotalSign",&fNTotalSign);
+  fOutTree->Branch("nTotalSign",&fNTotalSignMap[fSignalSample]);
   fOutTree->Branch("scaleGenBkgd",&fScaleGenBkgd);
   fOutTree->Branch("scaleGenSign",&fScaleGenSign);
   fOutTree->Branch("nGenBkgd",&fNGenBkgd);

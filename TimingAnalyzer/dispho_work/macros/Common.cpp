@@ -409,6 +409,22 @@ namespace Config
     }
   }
 
+  void SetupWhichNotSignals(std::map<TString,Bool_t> & signalmap)
+  {
+    // loop over signals
+    for (const auto & GroupPair : Config::GroupMap)
+    {
+      const auto & sample = GroupPair.first;
+      const auto & group  = GroupPair.second;
+      
+      // skip non-signal samples
+      if (group != isSignal) continue;
+    
+      // only mark samples false for those that are not marked true
+      if (!signalmap.count(sample)) signalmap[sample] = false;
+    }
+  }
+
   void CheckValidFile(const TFile * file, const TString & fname)
   {
     if (file == (TFile*) NULL) // check if valid file

@@ -31,7 +31,7 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
   TreePlotter::SetupConfig();
   TreePlotter::SetupPlotConfig();
   TreePlotter::SetupMiscConfig();
-  TreePlotter::SetupSignalsToNotPlot();
+  Config::SetupWhichNotSignals(fPlotSignalMap);
   TreePlotter::SetupHists();
 
   // output root file for quick inspection
@@ -709,6 +709,10 @@ void TreePlotter::SetupMiscConfig()
   while (std::getline(infile,str))
   {
     if (str == "") continue;
+    else if (str.find("signal_to_model=") != std::string::npos) 
+    {
+      std::cout << "signal_to_model not implemented in plotter, skipping..." << std::endl;
+    }
     else if (str.find("signals_to_plot=") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"signals_to_plot=");
@@ -729,24 +733,6 @@ void TreePlotter::SetupMiscConfig()
       std::cerr << "Aye... your miscellaneous plot config is messed up, try again!" << std::endl;
       exit(1);
     }
-  }
-}
-
-void TreePlotter::SetupSignalsToNotPlot()
-{
-  std::cout << "Setting up which signals to NOT plot..." << std::endl;
-
-  // loop over signals
-  for (const auto & GroupPair : Config::GroupMap)
-  {
-    const auto & sample = GroupPair.first;
-    const auto & group  = GroupPair.second;
-
-    // skip non-signal samples
-    if (group != isSignal) continue;
-    
-    // only mark samples false for those that are not marked true
-    if (!fPlotSignalMap.count(sample)) fPlotSignalMap[sample] = false;
   }
 }
 
