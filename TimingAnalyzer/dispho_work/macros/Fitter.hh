@@ -53,8 +53,8 @@ struct FitInfo
   const FitType Fit;
 
   // PDF inputs/outputs
-  std::map<SampleType,RooDataHist*> DataHistMap;
-  std::map<SampleType,RooHistPdf*>  HistPdfMap;
+  std::map<TString,RooDataHist*> DataHistMap;
+  std::map<TString,RooHistPdf*>  HistPdfMap;
   RooAddPdf * BkgdPdf;
 
   // model for fit
@@ -120,9 +120,6 @@ public:
   void DumpWS(const FitInfo & fitInfo, const TString & label);
 
   // Helper Routines
-  void Scale(TH2F *& hist,const Bool_t isUp);
-  void Scale(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins, const Bool_t isUp);
-  void Scale(TH1F *& hist, const Bool_t isUp);
   Float_t GetMinimum(TGraphAsymmErrors *& graph, TH1F *& hist1, TH1F *& hist2);
   Float_t GetMaximum(TGraphAsymmErrors *& graph, TH1F *& hist);
 
@@ -157,20 +154,22 @@ private:
   TString fGJetsFileName;
   TString fQCDFileName;
   TString fSRFileName;
+  TString fSignalsFileName;
 
   // Input files
   TFile * fGJetsFile;
   TFile * fQCDFile;
   TFile * fSRFile;
+  TFile * fSignalsFile;
 
   // Input Hists
   TH2F * fGJetsHistMC_CR;
   TH2F * fGJetsHistMC_SR;
   TH2F * fQCDHistMC_CR;
   TH2F * fQCDHistMC_SR;
-  std::map<SampleType,TH2F*> fHistMap2D;
-  std::map<SampleType,TH1F*> fHistMapX;
-  std::map<SampleType,TH1F*> fHistMapY;
+  std::map<TString,TH2F*> fHistMap2D;
+  std::map<TString,TH1F*> fHistMapX;
+  std::map<TString,TH1F*> fHistMapY;
 
   // Counts + scaling norm from the start
   Float_t fScaleTotalBkgd;
@@ -179,7 +178,7 @@ private:
   Float_t fNTotalSign;
 
   // Constants used to build model + post-fit numbers
-  std::map<SampleType,RooRealVar*> fFracMap; 
+  std::map<TString,RooRealVar*> fFracMap; 
   RooRealVar * fNPredBkgd;
   RooRealVar * fNPredSign;
 
