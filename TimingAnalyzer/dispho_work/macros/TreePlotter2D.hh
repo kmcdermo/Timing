@@ -27,14 +27,14 @@ class TreePlotter2D
 {
 public:
   TreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
-		const TString & plotconfig, const TString & miscplotconfig, const TString & outfiletext);
+		const TString & plotconfig, const TString & miscconfig, const TString & outfiletext);
   ~TreePlotter2D();
 
   // Initialize
   void SetupDefaults();
   void SetupConfig();
   void SetupPlotConfig();
-  void SetupMiscPlotConfig();
+  void SetupMiscConfig();
   void SetupHists();
 
   // Main call
@@ -59,7 +59,7 @@ private:
   const TString fInSignalFileName;
   const TString fCutConfig;
   const TString fPlotConfig;
-  const TString fMiscPlotConfig;
+  const TString fMiscConfig;
   const TString fOutFileText;
 
   // input

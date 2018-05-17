@@ -1,9 +1,9 @@
 #include "TreePlotter2D.hh"
 
 TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
-			     const TString & plotconfig, const TString & miscplotconfig, const TString & outfiletext) 
+			     const TString & plotconfig, const TString & miscconfig, const TString & outfiletext) 
   : fInFileName(infilename), fInSignalFileName(insignalfilename),
-    fCutConfig(cutconfig), fPlotConfig(plotconfig), fMiscPlotConfig(miscplotconfig), fOutFileText(outfiletext)
+    fCutConfig(cutconfig), fPlotConfig(plotconfig), fMiscConfig(miscconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -30,7 +30,7 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insigna
   TreePlotter2D::SetupDefaults();
   TreePlotter2D::SetupConfig();
   TreePlotter2D::SetupPlotConfig();
-  TreePlotter2D::SetupMiscPlotConfig();
+  TreePlotter2D::SetupMiscConfig();
   TreePlotter2D::SetupHists();
 
   // output root file
@@ -230,9 +230,9 @@ void TreePlotter2D::MakeConfigPave()
   }
 
   // store last bits of info
-  fConfigPave->AddText(Form("Miscellaneous Plot Config: %s",fMiscPlotConfig.Data()));
-  std::ifstream miscplotfile(Form("%s",fMiscPlotConfig.Data()),std::ios::in);
-  while (std::getline(miscplotfile,str))
+  fConfigPave->AddText(Form("Miscellaneous Plot Config: %s",fMiscConfig.Data()));
+  std::ifstream miscfile(Form("%s",fMiscConfig.Data()),std::ios::in);
+  while (std::getline(miscfile,str))
   {
     fConfigPave->AddText(str.c_str());
   }
@@ -339,15 +339,19 @@ void TreePlotter2D::SetupPlotConfig()
   }
 }
 
-void TreePlotter2D::SetupMiscPlotConfig()
+void TreePlotter2D::SetupMiscConfig()
 {
   std::cout << "Reading miscellaneous plot config..." << std::endl;
 
-  std::ifstream infile(Form("%s",fMiscPlotConfig.Data()),std::ios::in);
+  std::ifstream infile(Form("%s",fMiscConfig.Data()),std::ios::in);
   std::string str;
   while (std::getline(infile,str))
   {
     if (str == "") continue;
+    else if (str.find("signals_to_plot=") != std::string::npos) 
+    {
+      std::cout << "signals_to_plot not currently implemented in 2D plotter, skipping..." << std::endl;
+    }
     else if (str.find("scale_mc_to_data_area=") != std::string::npos) 
     {
       std::cout << "scale_mc_to_data_area not currently implemented in 2D plotter, skipping..." << std::endl;
