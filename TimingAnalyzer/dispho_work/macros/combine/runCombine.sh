@@ -1,10 +1,10 @@
 #!/bin/bash
 
-## generic
-source /afs/cern.ch/user/k/kmcdermo/.bash_profile
-
-## global vars and params
+## i/o params
 infile=${1:-"ws_final.root"}
+outdir=${2:-"output"}
+
+## other global vars
 combdir="/afs/cern.ch/work/k/kmcdermo/private/dispho/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit/working"
 datacard="datacard.txt"
 
@@ -63,7 +63,8 @@ eval `scram runtime -sh`
 ###########################################
 ## Ship things over to combine directory ##
 ###########################################
-cp ${combdir}/higgsCombine*.root .
+mkdir -p ${outdir}
+cp ${combdir}/higgsCombine*.root ${outdir}
 
 ##############
 ## clean-up ##
