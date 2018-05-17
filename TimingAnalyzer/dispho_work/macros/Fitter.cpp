@@ -250,8 +250,8 @@ void Fitter::DumpInputInfo()
       // only plot ones specified -- no need for all!
       if (!isplot) continue;
 
-      const TString signtext = "Sign";
-      auto signHist = (TH2F*)fHistMap2D[sample]->Clone(Form("%s_%s_Hist",signtext.Data(),sample.Data()));
+      const TString signtext = Form("%s_Sign",sample.Data());
+      auto signHist = (TH2F*)fHistMap2D[sample]->Clone(Form("%sHist",signtext.Data()));
       Fitter::DumpIntegralsAndDraw(signHist,signtext,false,true);
       delete signHist;
     }
