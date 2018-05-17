@@ -156,13 +156,11 @@ private:
   TString fGJetsFileName;
   TString fQCDFileName;
   TString fSRFileName;
-  TString fSignalsFileName;
 
   // Input files
   TFile * fGJetsFile;
   TFile * fQCDFile;
   TFile * fSRFile;
-  TFile * fSignalsFile;
 
   // Input Hists
   TH2F * fGJetsHistMC_CR;
@@ -199,6 +197,7 @@ private:
   TString fYCut;
   
   // Blinding (for TH's)
+  Bool_t fBlindData;
   std::vector<BlindStruct> fBlinds;
 
   // Roo vars and bins

@@ -404,8 +404,25 @@ namespace Config
     std::string signal;
     while (ss >> signal)
     {
-      const TString sample(signal);
-      signalmap[sample] = true;
+      if (signal == "*")
+      {
+	// loop over signals
+	for (const auto & GroupPair : Config::GroupMap)
+	{
+	  const auto & sample = GroupPair.first;
+	  const auto & group  = GroupPair.second;
+	  
+	  // skip non-signal samples
+	  if (group != isSignal) continue;
+
+	  signalmap[sample] = true;
+	}
+      }
+      else
+      {
+	const TString sample(signal);
+	signalmap[sample] = true;
+      }
     }
   }
 

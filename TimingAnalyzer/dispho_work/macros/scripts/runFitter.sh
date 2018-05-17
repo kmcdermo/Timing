@@ -2,8 +2,8 @@
 
 fitconfig=${1:-"fit_config/standard.txt"}
 miscconfig=${2:-"plot_config/misc_fit.txt"}
-outfiletext=${2:-"fitresults"}
-dir=${3:-"fits"}
+outfiletext=${3:-"fitresults"}
+dir=${4:-"fits"}
 
 root -b -q -l runFitter.C\(\"${fitconfig}\",\"${miscconfig}\",\"${outfiletext}\"\)
 

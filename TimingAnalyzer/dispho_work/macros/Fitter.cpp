@@ -62,7 +62,6 @@ Fitter::~Fitter()
   delete fQCDHistMC_SR;
   delete fGJetsHistMC_SR;
   
-  if (!BkgdOnly) delete fSignalsFile;
   delete fSRFile;
   delete fQCDFile;
   delete fGJetsFile;
@@ -181,9 +180,6 @@ void Fitter::GetInputHists()
   // use signal samples?
   if (!fBkgdOnly) 
   {
-    fSignalsFile = TFile::Open(Form("%s",fSignalsFileName.Data()));
-    Config::CheckValidFile(fSignalsFile,fSignalsFileName);
-    
     // use ALL signal samples to start, only one for fitting... from config
     for (const auto & GroupPair : Config::GroupMap)
     {
@@ -194,8 +190,8 @@ void Fitter::GetInputHists()
       if (group != isSignal) continue;
 
       // load signals
-      fHistMap2D[sample] = (TH2F*)fSignalsFile->Get(Form("%s",Config::HistNameMap[sample].Data()));
-      Config::CheckValidTH2F(fHistMap2D[sample],Config::HistNameMap[sample],fSignalsFileName);
+      fHistMap2D[sample] = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[sample].Data()));
+      Config::CheckValidTH2F(fHistMap2D[sample],Config::HistNameMap[sample],fSRFileName);
       if (fXVarBins || fYVarBins) Config::Scale(fHistMap2D[sample],isUp,fXVarBins,fYVarBins);
     }
   }
@@ -255,7 +251,7 @@ void Fitter::DumpInputInfo()
       if (!isplot) continue;
 
       const TString signtext = "Sign";
-      auto signHist = (TH2F*)fHistMap2D[sample]->Clone(Form("Sign_%s_Hist",signtext.Data(),sample.Data()));
+      auto signHist = (TH2F*)fHistMap2D[sample]->Clone(Form("%s_%s_Hist",signtext.Data(),sample.Data()));
       Fitter::DumpIntegralsAndDraw(signHist,signtext,false,true);
       delete signHist;
     }
@@ -278,32 +274,45 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
   {
     for (const auto & Blind : fBlinds)
     {
-      const auto binXlow = DataHist->GetXaxis()->FindBin(Blind.xlow);
-      const auto binXup  = DataHist->GetXaxis()->FindBin(Blind.xup);
-      const auto binYlow = DataHist->GetYaxis()->FindBin(Blind.ylow);
-      const auto binYup  = DataHist->GetYaxis()->FindBin(Blind.yup);
+      const auto binXlow = hist2D->GetXaxis()->FindBin(Blind.xlow);
+      const auto binXup  = hist2D->GetXaxis()->FindBin(Blind.xup);
+      const auto binYlow = hist2D->GetYaxis()->FindBin(Blind.ylow);
+      const auto binYup  = hist2D->GetYaxis()->FindBin(Blind.yup);
       
       for (auto ibinX = binXlow; ibinX <= binXup; ibinX++) 
       {
 	for (auto ibinY = binYlow; ibinY <= binYup; ibinY++) 
 	{
-	  DataHist->SetBinContent(ibinX,ibinY,0.f);
-	  DataHist->SetBinError  (ibinX,ibinY,0.f);
+	  hist2D->SetBinContent(ibinX,ibinY,0.f);
+	  hist2D->SetBinError  (ibinX,ibinY,0.f);
 	}
       }
     }
   }
 
   // reuse integrals
-  Double_t hist_int = 0;
-  Double_t hist_err = 0;
+  Double_t hist_int = 0.0;
+  Double_t hist_err = 0.0;
 
   // get integral and error full region
-  hist_int = hist2D->IntegralAndError(firstBin,lastBinX,firstBin,lastBinY,hist_err);
+  hist_int = hist2D->IntegralAndError(1,hist2D->GetXaxis()->GetNbins(),1,hist2D->GetYaxis()->GetNbins(),hist_err);
   std::cout << text.Data() << " Integral: " << hist_int << " +/- " << hist_err << std::endl;
 
-  // get integral and error over signal region
-  hist_int = hist2D->IntegralAndError(binXUp,lastBinX,binYUp,lastBinY,hist_err);
+  // get integral and error over signal region (by summing up over each cell in each blinded region)
+  Double_t sum_int  = 0.0;
+  Double_t sum_err2 = 0.0;
+  for (const auto & Blind : fBlinds)
+  {
+    const auto binXlow = hist2D->GetXaxis()->FindBin(Blind.xlow);
+    const auto binXup  = hist2D->GetXaxis()->FindBin(Blind.xup);
+    const auto binYlow = hist2D->GetYaxis()->FindBin(Blind.ylow);
+    const auto binYup  = hist2D->GetYaxis()->FindBin(Blind.yup);
+  
+    sum_int  += hist2D->IntegralAndError(binXlow,binXup,binYlow,binYup,hist_err);
+    sum_err2 += hist_err*hist_err;
+  }
+  hist_int = sum_int;
+  hist_err = std::sqrt(sum_err2);
   std::cout << text.Data() << " Integral (In Blinded Region): " << hist_int << " +/- " << hist_err << std::endl;
 
   // save it to the outfile
@@ -325,14 +334,42 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
     canv->SaveAs(Form("%sHist_2D.png",text.Data()));
 
     // project in X and draw
-    auto histX = hist2D->ProjectionX("tmp_projX",binYLow,binYUp);
+    auto histX = hist2D->ProjectionX("tmp_projX");
+    if (isBlind)
+    {
+      for (const auto & Blind : fBlinds)
+      {
+	const auto binXlow = hist2D->GetXaxis()->FindBin(Blind.xlow);
+	const auto binXup  = hist2D->GetXaxis()->FindBin(Blind.xup);
+      
+	for (auto ibinX = binXlow; ibinX <= binXup; ibinX++) 
+        {
+	  histX->SetBinContent(ibinX,0.f);
+	  histX->SetBinError  (ibinX,0.f);
+	}
+      }
+    }
     histX->Draw("hist");
     Config::CMSLumi(canv);
     canv->SaveAs(Form("%sHist_projX.png",text.Data()));
     delete histX;
 
     // project in Y and draw
-    auto histY = hist2D->ProjectionY("tmp_projY",binXLow,binXUp);
+    auto histY = hist2D->ProjectionY("tmp_projY");
+    if (isBlind)
+    {
+      for (const auto & Blind : fBlinds)
+      {
+	const auto binYlow = hist2D->GetYaxis()->FindBin(Blind.ylow);
+	const auto binYup  = hist2D->GetYaxis()->FindBin(Blind.yup);
+      
+	for (auto ibinY = binYlow; ibinY <= binYup; ibinY++) 
+        {
+	  histY->SetBinContent(ibinY,0.f);
+	  histY->SetBinError  (ibinY,0.f);
+	}
+      }
+    }
     histY->Draw("hist");
     Config::CMSLumi(canv);
     canv->SaveAs(Form("%sHist_projY.png",text.Data()));
@@ -359,7 +396,7 @@ void Fitter::DeclareCoefficients()
   std::cout << "Getting integral counts and fractions..." << std::endl;
 
   // Count up background first
-  std::map<SampleType,Float_t> nBkgdMap;
+  std::map<TString,Float_t> nBkgdMap;
   nBkgdMap["GJets"] = fHistMap2D["GJets"]->Integral();
   nBkgdMap["QCD"]   = fHistMap2D["QCD"]  ->Integral();
 
@@ -963,9 +1000,6 @@ void Fitter::MakeConfigPave()
   fConfigPave->AddText("***** SR Config *****");
   Config::AddTextFromInputPave(fConfigPave,fSRFile);
 
-  fConfigPave->AddText("***** Signals Config *****");
-  Config::AddTextFromInputPave(fConfigPave,fSignalsFile);
-
   // save to output file
   fOutFile->cd();
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
@@ -1024,17 +1058,9 @@ void Fitter::SetupFitConfig()
     {
       fSRFileName = Config::RemoveDelim(str,"SR_in=");
     }
-    else if (str.find("Signals_in=") != std::string::npos)
-    {
-      fSignalsFileName = Config::RemoveDelim(str,"Signals_in=");
-    }
     else if (str.find("plot_config=") != std::string::npos)
     {
       fPlotConfig = Config::RemoveDelim(str,"plot_config=");
-    }
-    else if (str.find("misc_plot_config=") != std::string::npos)
-    {
-      fMiscPlotConfig = Config::RemoveDelim(str,"misc_plot_config=");
     }
     else if (str.find("bkgd_only=") != std::string::npos)
     {
@@ -1170,7 +1196,7 @@ void Fitter::SetupMiscConfig()
 {
   std::cout << "Reading miscellaneous plot config..." << std::endl;
 
-  std::ifstream infile(Form("%s",fMiscPlotConfig.Data()),std::ios::in);
+  std::ifstream infile(Form("%s",fMiscConfig.Data()),std::ios::in);
   std::string str;
   while (std::getline(infile,str))
   {
