@@ -9,3 +9,5 @@ y_var=t1pfMETpt
 y_bins=VARIABLE 0 10 20 30 40 50 60 70 80 90 100 120 140 160 180 200 225 250 275 300 325 350 375 400 450 500 750 1000
 
 z_title=Events/ns/GeV/c
+
+blinding=(3,+Inf,200,+Inf)

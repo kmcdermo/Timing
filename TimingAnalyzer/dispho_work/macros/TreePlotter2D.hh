@@ -26,8 +26,8 @@
 class TreePlotter2D
 {
 public:
-  TreePlotter2D(const TString & infilename, const TString & insignalfilename, 
-		const TString & cutconfig, const TString & plotconfig, const TString & miscplotconfig, const TString & outfiletext);
+  TreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
+		const TString & plotconfig, const TString & miscplotconfig, const TString & outfiletext);
   ~TreePlotter2D();
 
   // Initialize
@@ -43,6 +43,7 @@ public:
   // Subroutines for plotting
   void MakeHistFromTrees();
   void MakeHistFromSignalTrees();
+  void MakeDataOutput();
   void MakeBkgdOutput();
   void MakeRatioOutput();
 

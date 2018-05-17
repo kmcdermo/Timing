@@ -1,7 +1,7 @@
 #include "TreePlotter2D.hh"
 
-TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insignalfilename,
-			     const TString & cutconfig, const TString & plotconfig, const TString & miscplotconfig, const TString & outfiletext) 
+TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
+			     const TString & plotconfig, const TString & miscplotconfig, const TString & outfiletext) 
   : fInFileName(infilename), fInSignalFileName(insignalfilename),
     fCutConfig(cutconfig), fPlotConfig(plotconfig), fMiscPlotConfig(miscplotconfig), fOutFileText(outfiletext)
 {
@@ -56,6 +56,9 @@ void TreePlotter2D::MakePlot()
 {
   // Fill Hists from TTrees
   TreePlotter2D::MakeHistFromTrees();
+
+  // Make Data Output
+  TreePlotter2D::MakeDataOutput();
 
   // Make Bkgd Output
   TreePlotter2D::MakeBkgdOutput();
@@ -132,8 +135,8 @@ void TreePlotter2D::MakeDataOutput()
   std::cout << "Making Data Output..." << std::endl;
 
   // Make new data hist in case we are blinded
-  DataHist = TreePlotter::SetupHist("Data_Hist_Plotted");
-  DataHist->Add(Hist_Map[Data]);
+  DataHist = TreePlotter2D::SetupHist("Data_Hist_Plotted");
+  DataHist->Add(HistMap["Data"]);
 
   if (fBlindData)
   {
@@ -370,12 +373,6 @@ void TreePlotter2D::SetupHists()
   for (const auto & HistNamePair : Config::HistNameMap)
   {
     HistMap[HistNamePair.first] = TreePlotter2D::SetupHist(HistNamePair.second);
-  }
-  
-  // instantiate each signal histogram
-  for (const auto & SignalHistNamePair : Config::SignalHistNameMap)
-  {
-    SignalHistMap[SignalHistNamePair.first] = TreePlotter2D::SetupHist(SignalHistNamePair.second);
   }
 }
 
