@@ -158,7 +158,8 @@ namespace Config
   void CheckValidTH1F(const TH1F * plot, const TString & pname, const TString & fname);
   void CheckValidTH2F(const TH2F * plot, const TString & pname, const TString & fname);
 
-  // may actually want an invalid tree...
+  // may actually want an invalid tree/file...
+  Bool_t IsNullFile(const TFile * file);
   Bool_t IsNullTree(const TTree * tree);
 
   // saving old config info

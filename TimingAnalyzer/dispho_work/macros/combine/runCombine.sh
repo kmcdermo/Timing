@@ -2,7 +2,8 @@
 
 ## i/o params
 infile=${1:-"ws_final.root"}
-outdir=${2:-"output"}
+outname=${2-"AsymLim"}
+outdir=${3:-"output"}
 
 ## other global vars
 combdir="/afs/cern.ch/work/k/kmcdermo/private/dispho/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit/working"
@@ -41,7 +42,7 @@ do
 	cp ${datacard} datacard_${name}.txt
 	sed -i "s/SIGNAL_PDF/GMSB_L${lambda}_CTau${ctau}_PDF/g" datacard_${name}.txt
 
-	combine -M AsymptoticLimits datacard_${name}.txt --run=expected --name asym_${name}
+	combine -M AsymptoticLimits datacard_${name}.txt --run=expected --name ${name}
     done
 done
 
@@ -52,7 +53,13 @@ name=GMSB_L200TeV_CTau400cm
 echo "Working on ${name}"
 cp ${datacard} datacard_${name}.txt
 sed -i "s/SIGNAL_PDF/GMSB_L200_CTau400_PDF/g" datacard_${name}.txt
-combine -M AsymptoticLimits datacard_${name}.txt --run=expected --name asym_${name} >& asym_${name}.txt
+combine -M AsymptoticLimits datacard_${name}.txt --run=expected --name ${name}
+
+############
+## rename ##
+############
+rename "higgsCombine" ${outname} *.root
+rename ".AsymptoticLimits.mH120" "" *.root
 
 ################
 ## Move back! ##
@@ -64,9 +71,10 @@ eval `scram runtime -sh`
 ## Ship things over to combine directory ##
 ###########################################
 mkdir -p ${outdir}
-cp ${combdir}/higgsCombine*.root ${outdir}
+cp ${combdir}/${outname}*.root ${outdir}
 
 ##############
 ## clean-up ##
 ##############
+rm ${combdir}/*.txt ${combdir}/*.root
 rm ${datacard}

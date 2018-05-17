@@ -490,6 +490,11 @@ namespace Config
     }
   }
 
+  Bool_t IsNullFile(const TFile * file)
+  {
+    return (file == (TFile*) NULL);
+  }
+
   Bool_t IsNullTree(const TTree * tree)
   {
     return (tree == (TTree*) NULL);
