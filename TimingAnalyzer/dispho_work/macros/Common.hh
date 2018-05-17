@@ -97,7 +97,10 @@ namespace Config
   void SetupBinLabels(std::string & str, std::vector<TString> & binlabels);
   void SetupBlinding(const std::string & str, std::vector<BlindStruct> & blinding);
   void SetupScale(const std::string & str, Bool_t & scale);
+
+  // Misc setup
   void SetupBool(const std::string & str, Bool_t & setting);
+  void SetupWhichSignals(const std::string & str, std::map<TString,Bool_t> & signalmap);
   
   // skim input
   constexpr UInt_t nEvCheck = 10000;

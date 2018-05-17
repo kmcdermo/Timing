@@ -1,9 +1,9 @@
 #include "TreePlotter.hh"
 
 TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
-			 const TString & plotsignals, const TString & plotconfig, const TString & miscplotconfig, const TString & outfiletext) 
+			 const TString & plotconfig, const TString & miscconfig, const TString & outfiletext) 
   : fInFileName(infilename), fInSignalFileName(insignalfilename), fCutConfig(cutconfig),
-    fPlotSignals(plotsignals), fPlotConfig(plotconfig), fMiscPlotConfig(miscplotconfig), fOutFileText(outfiletext)
+    fPlotConfig(plotconfig), fMiscConfig(miscconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing TreePlotter..." << std::endl;
 
@@ -29,9 +29,9 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
   // setup hists
   TreePlotter::SetupDefaults();
   TreePlotter::SetupConfig();
-  TreePlotter::SetupSignalsToPlot();
   TreePlotter::SetupPlotConfig();
-  TreePlotter::SetupMiscPlotConfig();
+  TreePlotter::SetupMiscConfig();
+  TreePlotter::SetupSignalsToNotPlot();
   TreePlotter::SetupHists();
 
   // output root file for quick inspection
@@ -487,14 +487,6 @@ void TreePlotter::MakeConfigPave()
     fConfigPave->AddText(str.c_str());
   }
 
-  // dump which signals were plotted
-  fConfigPave->AddText(Form("Signals Plotted: %s",fPlotSignals.Data()));
-  std::ifstream signalplotfile(Form("%s",fPlotSignals.Data()),std::ios::in);
-  while (std::getline(signalplotfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
-
   // dump plot config
   fConfigPave->AddText(Form("Plot Config: %s",fPlotConfig.Data()));
   std::ifstream plotfile(Form("%s",fPlotConfig.Data()),std::ios::in);
@@ -504,9 +496,9 @@ void TreePlotter::MakeConfigPave()
   }
 
   // store last bits of info
-  fConfigPave->AddText(Form("Miscellaneous Plot Config: %s",fMiscPlotConfig.Data()));
-  std::ifstream miscplotfile(Form("%s",fMiscPlotConfig.Data()),std::ios::in);
-  while (std::getline(miscplotfile,str))
+  fConfigPave->AddText(Form("Miscellaneous Config: %s",fMiscConfig.Data()));
+  std::ifstream miscplotfile(Form("%s",fMiscConfig.Data()),std::ios::in);
+  while (std::getline(miscfile,str))
   {
     fConfigPave->AddText(str.c_str());
   }
@@ -652,33 +644,6 @@ void TreePlotter::SetupConfig()
   Config::SetupCuts(fCutConfig);
 }
 
-void TreePlotter::SetupSignalsToPlot()
-{
-  std::cout << "Setting up which signals to plot..." << std::endl;
-
-  std::ifstream infile(Form("%s",fPlotSignals.Data()),std::ios::in);
-  std::string str;
-  while (infile >> str)
-  {
-    if (str == "") continue;
-    const TString sample(str);
-    fPlotSignalMap[sample] = true;
-  }
-
-  // loop over signals
-  for (const auto & GroupPair : Config::GroupMap)
-  {
-    const auto & sample = GroupPair.first;
-    const auto & group  = GroupPair.second;
-
-    // skip non-signal samples
-    if (group != isSignal) continue;
-    
-    // only mark samples false for those that are not marked true
-    if (!fPlotSignalMap.count(sample)) fPlotSignalMap[sample] = false;
-  }
-}
-
 void TreePlotter::SetupPlotConfig()
 {
   std::cout << "Reading plot config..." << std::endl;
@@ -735,15 +700,20 @@ void TreePlotter::SetupPlotConfig()
   }
 }
 
-void TreePlotter::SetupMiscPlotConfig()
+void TreePlotter::SetupMiscConfig()
 {
   std::cout << "Reading miscellaneous plot config..." << std::endl;
 
-  std::ifstream infile(Form("%s",fMiscPlotConfig.Data()),std::ios::in);
+  std::ifstream infile(Form("%s",fMiscConfig.Data()),std::ios::in);
   std::string str;
   while (std::getline(infile,str))
   {
     if (str == "") continue;
+    else if (str.find("signals_to_plot=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"signals_to_plot=");
+      Config::SetupWhichSignals(str,fPlotSignalMap);
+    }
     else if (str.find("scale_mc_to_data_area=") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"scale_mc_to_data_area=");
@@ -759,6 +729,24 @@ void TreePlotter::SetupMiscPlotConfig()
       std::cerr << "Aye... your miscellaneous plot config is messed up, try again!" << std::endl;
       exit(1);
     }
+  }
+}
+
+void TreePlotter::SetupSignalsToNotPlot()
+{
+  std::cout << "Setting up which signals to NOT plot..." << std::endl;
+
+  // loop over signals
+  for (const auto & GroupPair : Config::GroupMap)
+  {
+    const auto & sample = GroupPair.first;
+    const auto & group  = GroupPair.second;
+
+    // skip non-signal samples
+    if (group != isSignal) continue;
+    
+    // only mark samples false for those that are not marked true
+    if (!fPlotSignalMap.count(sample)) fPlotSignalMap[sample] = false;
   }
 }
 

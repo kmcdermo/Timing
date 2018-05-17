@@ -329,8 +329,8 @@ namespace Config
     
   void SetupBinLabels(std::string & str, std::vector<TString> & binlabels)
   {
-    std::string binlabel;
     std::stringstream ss(str);
+    std::string binlabel;
     while (ss >> binlabel) binlabels.push_back(binlabel);
   }
 
@@ -395,6 +395,17 @@ namespace Config
     {
       std::cerr << "Aye, bool must be either 1 or 0! Exiting..." << std::endl;
       exit(1);
+    }
+  }
+
+  void SetupWhichSignals(const std::string & str, std::map<TString,Bool_t> & signalmap)
+  {
+    std::stringstream ss(str);
+    std::string signal;
+    while (ss >> signal)
+    {
+      const TString sample(signal);
+      signalmap[sample] = true;
     }
   }
 

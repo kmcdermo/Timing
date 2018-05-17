@@ -3,8 +3,8 @@
 #include "TreePlotter.cpp+"
 
 void runTreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
-		    const TString & plotsignals, const TString & plotconfig, const TString & miscplotconfig, const TString & outfiletext)
+		    const TString & plotconfig, const TString & miscconfig, const TString & outfiletext)
 {
-  TreePlotter plotter(infilename,insignalfilename,cutconfig,plotsignals,plotconfig,miscplotconfig,outfiletext);
+  TreePlotter plotter(infilename,insignalfilename,cutconfig,plotconfig,miscconfig,outfiletext);
   plotter.MakePlot();
 }
