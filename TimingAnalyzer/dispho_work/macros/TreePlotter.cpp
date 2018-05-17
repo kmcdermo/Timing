@@ -497,7 +497,7 @@ void TreePlotter::MakeConfigPave()
 
   // store last bits of info
   fConfigPave->AddText(Form("Miscellaneous Config: %s",fMiscConfig.Data()));
-  std::ifstream miscplotfile(Form("%s",fMiscConfig.Data()),std::ios::in);
+  std::ifstream miscfile(Form("%s",fMiscConfig.Data()),std::ios::in);
   while (std::getline(miscfile,str))
   {
     fConfigPave->AddText(str.c_str());
