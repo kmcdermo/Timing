@@ -356,9 +356,13 @@ void TreePlotter2D::SetupMiscConfig()
     {
       std::cout << "signals_to_plot not currently implemented in 2D plotter, skipping..." << std::endl;
     }
-    else if (str.find("scale_mc_to_data_area=") != std::string::npos) 
+    else if (str.find("scale_mc_to_data=") != std::string::npos) 
     {
-      std::cout << "scale_mc_to_data_area not currently implemented in 2D plotter, skipping..." << std::endl;
+      std::cout << "scale_mc_to_data not currently implemented in 2D plotter, skipping..." << std::endl;
+    }
+    else if (str.find("scale_to_unity=") != std::string::npos)
+    {
+      std::cout << "scale_to_unity not currently implemented in 2D plotter, skipping..." << std::endl;
     }
     else if (str.find("blind_data=") != std::string::npos)
     {

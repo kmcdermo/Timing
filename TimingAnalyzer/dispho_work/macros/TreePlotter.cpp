@@ -71,6 +71,9 @@ void TreePlotter::MakePlot()
   // Make Bkgd Output
   TreePlotter::MakeBkgdOutput();
 
+  // Make Signal Output
+  TreePlotter::MakeSignalOutput();
+
   // Make Ratio Output
   TreePlotter::MakeRatioOutput();
 
@@ -179,6 +182,11 @@ void TreePlotter::MakeDataOutput()
     }
   }
 
+  // scale to unity 
+  if (fScaleToUnity) DataHist->Scale(1.f/DataHist->Integral(fXVarBins?"width":""));
+
+  // save to output file
+  fOutFile->cd();
   DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
 }
 
@@ -190,17 +198,23 @@ void TreePlotter::MakeBkgdOutput()
   BkgdHist = TreePlotter::SetupHist("Bkgd_Hist");
   for (const auto & HistPair : HistMap)
   {
-    if (Config::GroupMap[HistPair.first] == isBkgd)
+    const auto & sample = HistPair.first;
+    const auto & hist = HistPair.second;
+
+    if (Config::GroupMap[sample] == isBkgd)
     {
-      BkgdHist->Add(HistPair.second);
+      BkgdHist->Add(hist);
     }
   }
   BkgdHist->SetMarkerSize(0);
   BkgdHist->SetFillStyle(3254);
   BkgdHist->SetFillColor(kGray+3);
 
-  // ***** SCALE TO AREA OF DATA ***** //
-  if (fScaleArea) TreePlotter::ScaleToArea();
+  // scale to unity
+  if (fScaleToUnity) TreePlotter::ScaleMCToUnity();
+
+  // scale mc to data
+  if (fScaleMCToData) TreePlotter::ScaleMCToData();
 
   // Make Background Stack
   BkgdStack = new THStack("Bkgd_Stack","");
@@ -228,6 +242,27 @@ void TreePlotter::MakeBkgdOutput()
   fOutFile->cd();
   BkgdHist->Write(BkgdHist->GetName(),TObject::kWriteDelete);
   BkgdStack->Write(BkgdStack->GetName(),TObject::kWriteDelete);
+}
+
+void TreePlotter::MakeSignalOutput()
+{
+  std::cout << "Making Signal Output..." << std::endl;
+
+  // no need to make new hists, just rescale and save as "_Plotted"
+  for (const auto & HistPair : HistMap)
+  {
+    const auto & sample = HistPair.first;
+    auto & hist = HistPair.second;
+
+    if (Config::GroupMap[sample] == isSignal)
+    {
+      if (fScaleToUnity) hist->Scale(1.f/hist->Integral(fXVarBins?"width":""));
+
+      // save it regardless
+      fOutFile->cd();
+      hist->Write(Form("%s_Plotted",hist->GetName()),TObject::kWriteDelete);
+    }
+  }
 }
 
 void TreePlotter::MakeRatioOutput()
@@ -530,11 +565,14 @@ void TreePlotter::DumpIntegrals()
   // Signal MC zeroth
   for (const auto & HistPair : HistMap)
   {
-    if (Config::GroupMap[HistPair.first] == isSignal)
+    const auto & sample = HistPair.first;
+    const auto & hist = HistPair.second;
+
+    if (Config::GroupMap[sample] == isSignal)
     {
       auto sign_err = 0.;
-      const auto sign_int = HistPair.second->IntegralAndError(1,HistPair.second->GetXaxis()->GetNbins(),sign_err,(fXVarBins?"width":""));
-      dumpfile << HistPair.second->GetName() << " : " << sign_int << " +/- " << sign_err << std::endl;
+      const auto sign_int = hist->IntegralAndError(1,hist->GetXaxis()->GetNbins(),sign_err,(fXVarBins?"width":""));
+      dumpfile << hist->GetName() << " : " << sign_int << " +/- " << sign_err << std::endl;
     }
   }
   dumpfile << "-------------------------------------" << std::endl;
@@ -542,11 +580,14 @@ void TreePlotter::DumpIntegrals()
   // Individual MC first
   for (const auto & HistPair : HistMap)
   {
-    if (Config::GroupMap[HistPair.first] == isBkgd)
+    const auto & sample = HistPair.first;
+    const auto & hist = HistPair.second;
+
+    if (Config::GroupMap[sample] == isBkgd)
     {
       auto bkgd_err = 0.0;
-      const auto bkgd_int = HistPair.second->IntegralAndError(1,HistPair.second->GetXaxis()->GetNbins(),bkgd_err,(fXVarBins?"width":""));
-      dumpfile << HistPair.second->GetName() << " : " << bkgd_int << " +/- " << bkgd_err << std::endl;
+      const auto bkgd_int = hist->IntegralAndError(1,hist->GetXaxis()->GetNbins(),bkgd_err,(fXVarBins?"width":""));
+      dumpfile << hist->GetName() << " : " << bkgd_int << " +/- " << bkgd_err << std::endl;
     }
   }
   dumpfile << "-------------------------------------" << std::endl;
@@ -568,23 +609,48 @@ void TreePlotter::DumpIntegrals()
   dumpfile << "Data/MC : " << ratio << " +/- " << ratio_err << std::endl;
 }
 
-void TreePlotter::ScaleToArea()
+void TreePlotter::ScaleMCToUnity()
 {
-  std::cout << "Scaling MC Bkgd to data..." << std::endl;
-
-  const auto area_sf = DataHist->Integral()/BkgdHist->Integral();
+  std::cout << "Scaling MC Bkgd to unity..." << std::endl;
+  
+  const auto mctotal = BkgdHist->Integral(fXVarBins?"width":"");
 
   // first scale each individual sample
   for (auto & HistPair : HistMap)
   {
-    if (Config::GroupMap[HistPair.first] == isBkgd)
+    const auto & sample = HistPair.first;
+    auto & hist = HistPair.second;
+
+    if (Config::GroupMap[sample] == isBkgd)
     {
-      HistPair.second->Scale(area_sf);
+      hist->Scale(1.f/mctotal);
+    }
+  }
+
+  // scale total
+  BkgdHist->Scale(1.f/mctotal);
+}
+
+void TreePlotter::ScaleMCToData()
+{
+  std::cout << "Scaling MC Bkgd to data..." << std::endl;
+
+  const auto sf = DataHist->Integral(fXVarBins?"width":"")/BkgdHist->Integral(fXVarBins?"width":"");
+
+  // first scale each individual sample
+  for (auto & HistPair : HistMap)
+  {
+    const auto & sample = HistPair.first;
+    auto & hist = HistPair.second;
+
+    if (Config::GroupMap[sample] == isBkgd)
+    {
+      hist->Scale(sf);
     }
   }
 
   // lastly, scale combo bkgd hist
-  BkgdHist->Scale(area_sf);
+  BkgdHist->Scale(sf);
 }
 
 Float_t TreePlotter::GetHistMinimum()
@@ -623,10 +689,13 @@ Float_t TreePlotter::GetHistMaximum()
 
 void TreePlotter::SetupDefaults()
 {
-  fIsLogX    = false;
-  fXVarBins  = false;
-  fIsLogY    = false;
-  fScaleArea = false;
+  fIsLogX   = false;
+  fXVarBins = false;
+  fIsLogY   = false;
+
+  fScaleToUnity = false;
+  fScaleMCToData = false;
+  fBlindData = false;
 }
 
 void TreePlotter::SetupConfig()
@@ -718,10 +787,15 @@ void TreePlotter::SetupMiscConfig()
       str = Config::RemoveDelim(str,"signals_to_plot=");
       Config::SetupWhichSignals(str,fPlotSignalMap);
     }
-    else if (str.find("scale_mc_to_data_area=") != std::string::npos)
+    else if (str.find("scale_mc_to_data=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"scale_mc_to_data_area=");
-      Config::SetupBool(str,fScaleArea);
+      str = Config::RemoveDelim(str,"scale_mc_to_data=");
+      Config::SetupBool(str,fScaleMCToData);
+    }
+    else if (str.find("scale_to_unity=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"scale_to_unity=");
+      Config::SetupBool(str,fScaleToUnity);
     }
     else if (str.find("blind_data=") != std::string::npos)
     {

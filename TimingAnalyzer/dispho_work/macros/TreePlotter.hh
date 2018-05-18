@@ -50,6 +50,7 @@ public:
   void MakeHistFromTrees();
   void MakeDataOutput();
   void MakeBkgdOutput();
+  void MakeSignalOutput();
   void MakeRatioOutput();
   void MakeLegend();
   void InitOutputCanvPads();
@@ -59,7 +60,8 @@ public:
 
   // Helper functions
   TH1F * SetupHist(const TString & name);
-  void ScaleToArea();
+  void ScaleMCToUnity();
+  void ScaleMCToData();
   Float_t GetHistMinimum();
   Float_t GetHistMaximum();
   void PrintCanvas(const Bool_t isLogy);
@@ -95,7 +97,8 @@ private:
 
   // other plotting config
   std::map<TString,Bool_t> fPlotSignalMap;
-  Bool_t fScaleArea;
+  Bool_t fScaleToUnity;
+  Bool_t fScaleMCToData;
   Bool_t fBlindData;
 
   // Style
