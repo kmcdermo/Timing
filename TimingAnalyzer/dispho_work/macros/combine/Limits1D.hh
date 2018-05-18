@@ -1,12 +1,14 @@
 #include "../Common.hh"
 
+#include "TROOT.h"
+#include "TStyle.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TBranch.h"
 #include "TString.h"
-#include "TCanvas.h"
+#include "TGraph.h"
 #include "TLegend.h"
-#include "TStyle.h"
+#include "TCanvas.h"
 
 #include <iostream>
 #include <fstream>
@@ -16,11 +18,13 @@
 struct GMSBinfo
 {
   GMSBinfo() {}
-  GMSBinfo(const Int_t lambda, const Float_t ctau, const Float_t mass, const Float_t width, const Float_t br)
-    : lambda(lambda), ctau(ctau), mass(mass), width(width), br(br) {}
+  GMSBinfo(const TString & s_lambda, const Int_t lambda, const TString & s_ctau, const Float_t ctau, const Float_t mass, const Float_t width, const Float_t br)
+    : s_lambda(s_lambda), lambda(lambda), s_ctau(s_ctau), ctau(ctau), mass(mass), width(width), br(br) {}
 
   // model params
+  TString s_lambda;
   Int_t lambda; // TeV
+  TString s_ctau;
   Float_t ctau; // cm
   Float_t mass; // GeV/c^2
   Float_t width; // GeV
@@ -45,6 +49,8 @@ public:
   ~Limits1D();
 
   void SetupGMSB();
+  void RemoveGMSBSamples();
+  void SetupGMSBSubGroups();
   void MakeLimits1D();
 
 private:
@@ -52,6 +58,13 @@ private:
   const TString fInFileName;
   const TString fOutText;
 
+  // input maps
   std::map<TString,GMSBinfo> fGMSBMap;
+  std::map<TString,std::vector<TString> > fGMSBSubGroupMap;
 
+  // style
+  TStyle * fTDRStyle;
+
+  // output
+  TFile * fOutFile;
 };
