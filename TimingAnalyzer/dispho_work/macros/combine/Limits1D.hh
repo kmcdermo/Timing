@@ -35,30 +35,37 @@ struct GMSBinfo
   Float_t exsec;
 
   // r-values
+  Float_t robs;
+  Float_t r2sigdown;
+  Float_t r1sigdown;
   Float_t rexp;
   Float_t r1sigup;
-  Float_t r1sigdown;
   Float_t r2sigup;
-  Float_t r2sigdown;
 };
 
 class Limits1D
 {
 public:
-  Limits1D(const TString & indir, const TString & infilename, const TString & outtext);
+  Limits1D(const TString & indir, const TString & infilename, const Bool_t doobserved, const TString & outtext);
   ~Limits1D();
 
+  // setup functions
+  void SetupEntryMap();
   void SetupGMSB();
   void RemoveGMSBSamples();
   void SetupGMSBSubGroups();
+
+  // main plotting routine
   void MakeLimits1D();
 
 private:
   const TString fInDir;
   const TString fInFileName;
+  const Bool_t fDoObserved;
   const TString fOutText;
 
   // input maps
+  std::map<TString,Int_t> fEntryMap;
   std::map<TString,GMSBinfo> fGMSBMap;
   std::map<TString,std::vector<TString> > fGMSBSubGroupMap;
 

@@ -1,8 +1,10 @@
 #include "Limits1D.hh"
 
-Limits1D::Limits1D(const TString & indir, const TString & infilename, const TString & outtext)
-  : fInDir(indir), fInFileName(infilename), fOutText(outtext)
+Limits1D::Limits1D(const TString & indir, const TString & infilename, const Bool_t doobserved, const TString & outtext)
+  : fInDir(indir), fInFileName(infilename), fDoObserved(doobserved), fOutText(outtext)
 {  
+  // setup first
+  Limits1D::SetupEntryMap();
   Limits1D::SetupGMSB();
   Limits1D::RemoveGMSBSamples();
   Limits1D::SetupGMSBSubGroups();
@@ -39,6 +41,11 @@ void Limits1D::MakeLimits1D()
     theo_graph->SetLineWidth(2);
     theo_graph->SetLineColor(kBlue);
 
+    auto obs_graph = new TGraph(nSamples);
+    obs_graph->SetName(Form("%s_Observed_Graph",groupname.Data()));
+    obs_graph->SetLineWidth(2);
+    obs_graph->SetLineColor(kBlack);
+
     auto exp_graph = new TGraph(nSamples);
     exp_graph->SetName(Form("%s_Expected_Graph",groupname.Data()));
     exp_graph->SetLineStyle(7);
@@ -64,8 +71,9 @@ void Limits1D::MakeLimits1D()
       const auto & info = fGMSBMap[sample];
       const auto lambda = info.lambda;
       const auto xsec = info.xsec;
-      
+
       theo_graph->SetPoint(isample,lambda,xsec);
+      if (fDoObserved) obs_graph->SetPoint(isample,lambda,info.robs*xsec);
       exp_graph->SetPoint(isample,lambda,info.rexp*xsec);
 
       sig1_graph->SetPoint(isample,lambda,info.r1sigup*xsec);
@@ -79,6 +87,7 @@ void Limits1D::MakeLimits1D()
     auto leg = new TLegend(0.45,0.65,0.8,0.9);
     leg->SetName(Form("%s_Legend",groupname.Data()));
     leg->AddEntry(theo_graph,"Theory","l");
+    if (fDoObserved) leg->AddEntry(obs_graph,"Observed Limit","l");
     leg->AddEntry(exp_graph,"Expected Limit","l");
     leg->AddEntry(sig1_graph,"#pm 1 std. dev.","f");
     leg->AddEntry(sig2_graph,"#pm 2 std. dev.","f");
@@ -102,6 +111,7 @@ void Limits1D::MakeLimits1D()
     sig2_graph->Draw("AF");
     sig1_graph->Draw("F same");
     exp_graph->Draw("C same");
+    if (fDoObserved) obs_graph->Draw("C same");
     theo_graph->Draw("C same");
     leg->Draw("same");
 
@@ -115,6 +125,7 @@ void Limits1D::MakeLimits1D()
     // write it!
     fOutFile->cd();
     theo_graph->Write(theo_graph->GetName(),TObject::kWriteDelete);
+    if (fDoObserved) obs_graph->Write(obs_graph->GetName(),TObject::kWriteDelete);
     exp_graph->Write(exp_graph->GetName(),TObject::kWriteDelete);
     sig1_graph->Write(sig1_graph->GetName(),TObject::kWriteDelete);
     sig2_graph->Write(sig2_graph->GetName(),TObject::kWriteDelete);
@@ -127,7 +138,29 @@ void Limits1D::MakeLimits1D()
     delete sig2_graph;
     delete sig1_graph;
     delete exp_graph;
+    delete obs_graph;
     delete theo_graph;
+  }
+}
+
+void Limits1D::SetupEntryMap()
+{
+  // set up entries in tree, based on expectd, adjust accordingly
+  fEntryMap["r2sigdown"] = 0;
+  fEntryMap["r1sigdown"] = 1;
+  fEntryMap["rexp"]      = 2;
+  fEntryMap["r1sigup"]   = 3;
+  fEntryMap["r2sigup"]   = 4;
+
+  // adjust for observed limit
+  if (fDoObserved)
+  {
+    for (auto & EntryPair : fEntryMap)
+    {
+      auto & entry = EntryPair.second;
+      entry += 1;
+    }
+    fEntryMap["robs"] = 0;
   }
 }
 
@@ -184,26 +217,32 @@ void Limits1D::SetupGMSB()
       Double_t limit = 0; TBranch * b_limit = 0; TString s_limit = "limit";
       intree->SetBranchAddress(s_limit.Data(),&limit,&b_limit);
 
-      // 5 Entries in tree, one for each quantile 
-
+      // 5(6) Entries in tree, one for each quantile 
+      if (fDoObserved)
+      {
+	b_limit->GeEntry(fEntryMap["robs"]);
+	info.robs = limit;
+      }
+      else info.robs = -1;
+      
       // 2sigdown
-      b_limit->GetEntry(0);
+      b_limit->GetEntry(fEntryMap["r2sigdown"]);
       info.r2sigdown = limit;
-
+	
       // 1sigdown
-      b_limit->GetEntry(1);
+      b_limit->GetEntry(fEntryMap["r1sigdown"]);
       info.r1sigdown = limit;
      
       // expected
-      b_limit->GetEntry(2);
+      b_limit->GetEntry(fEntryMap["rexp"]);
       info.rexp = limit;
 
       // 1sigup
-      b_limit->GetEntry(3);
+      b_limit->GetEntry(fEntryMap["r1sigup"]);
       info.r1sigup = limit;
 
       // 2sigup
-      b_limit->GetEntry(4);
+      b_limit->GetEntry(fEntryMap["r2sigup"]);
       info.r2sigup = limit;
       
       // delete once done
@@ -212,11 +251,12 @@ void Limits1D::SetupGMSB()
     }
     else
     {
+      info.robs      = -1.f;
+      info.r2sigdown = -1.f;
+      info.r1sigdown = -1.f;
       info.rexp      = -1.f;
       info.r1sigup   = -1.f;
-      info.r1sigdown = -1.f;
       info.r2sigup   = -1.f;
-      info.r2sigdown = -1.f;
 
       std::cout << "skipping this file: " << filename.Data() << std::endl;
     }
