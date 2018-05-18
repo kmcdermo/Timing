@@ -34,25 +34,25 @@ void Limits1D::MakeLimits1D()
 
     // setup graphs
     auto theo_graph = new TGraph(nSamples);
-    theo_graph->SetName("Theo_Graph");
-    theo_graph->SetLineStyle(6);
+    theo_graph->SetName(Form("%s_Theo_Graph",groupname.Data()));
+    theo_graph->SetLineStyle(8);
     theo_graph->SetLineWidth(2);
     theo_graph->SetLineColor(kBlue);
 
     auto exp_graph = new TGraph(nSamples);
-    exp_graph->SetName("Expected_Graph");
-    exp_graph->SetLineStyle(9);
+    exp_graph->SetName(Form("%s_Expected_Graph",groupname.Data()));
+    exp_graph->SetLineStyle(7);
     exp_graph->SetLineWidth(2);
     exp_graph->SetLineColor(kBlack);
 
     auto sig1_graph = new TGraph(nSigPts);
-    sig1_graph->SetName("Sig1_Graph");
+    sig1_graph->SetName(Form("%s_Sig1_Graph",groupname.Data()));
     sig1_graph->SetFillStyle(1001);
     sig1_graph->SetFillColor(kGreen+1);
     sig1_graph->SetLineColor(kGreen+1);
 
     auto sig2_graph = new TGraph(nSigPts);
-    sig2_graph->SetName("Sig2_Graph");
+    sig2_graph->SetName(Form("%s_Sig2_Graph",groupname.Data()));
     sig2_graph->SetFillStyle(1001);
     sig2_graph->SetFillColor(kOrange);
     sig2_graph->SetLineColor(kOrange);
@@ -76,8 +76,8 @@ void Limits1D::MakeLimits1D()
     }
 
     // make legend
-    auto leg = new TLegend(0.5,0.65,0.85,0.9);
-    leg->SetName("Legend");
+    auto leg = new TLegend(0.45,0.65,0.8,0.9);
+    leg->SetName(Form("%s_Legend",groupname.Data()));
     leg->AddEntry(theo_graph,"Theory","l");
     leg->AddEntry(exp_graph,"Expected Limit","l");
     leg->AddEntry(sig1_graph,"#pm 1 std. dev.","f");
@@ -85,7 +85,7 @@ void Limits1D::MakeLimits1D()
 
     // make canvas
     auto canv = new TCanvas();
-    canv->SetName("Canvas");
+    canv->SetName(Form("%s_Canvas",groupname.Data()));
     canv->cd();
     canv->SetGridx(true);
     canv->SetGridy(true);
@@ -93,7 +93,10 @@ void Limits1D::MakeLimits1D()
 
     // label axes
     sig2_graph->GetXaxis()->SetTitle("#Lambda [GeV]");
-    sig2_graph->GetYaxis()->SetTitle("95% C.L. #sigma(#chi^{1}_{0} #rightarrow #tilde{G} #gamma) [pb]");
+    sig2_graph->GetYaxis()->SetTitle("95% C.L. #sigma(#tilde{#chi}^{1}_{0} #rightarrow #tilde{G} #gamma) [pb]");
+
+    // zoom out
+    sig2_graph->GetYaxis()->SetRangeUser(0.0001,10);
 
     // start drawing
     sig2_graph->Draw("AF");
@@ -107,6 +110,7 @@ void Limits1D::MakeLimits1D()
 
     // save it!
     canv->SaveAs(Form("%s_%s.png",fOutText.Data(),groupname.Data()));
+    canv->SaveAs(Form("%s_%s.pdf",fOutText.Data(),groupname.Data()));
 
     // write it!
     fOutFile->cd();
