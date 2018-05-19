@@ -15,22 +15,22 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
 
   // Get input file
   fInFile = TFile::Open(Form("%s",fInFileName.Data()));
-  Config::CheckValidFile(fInFile,fInFileName);
+  Common::CheckValidFile(fInFile,fInFileName);
  
   // Get signal input file
   fInSignalFile = TFile::Open(Form("%s",fInSignalFileName.Data()));
-  Config::CheckValidFile(fInSignalFile,fInSignalFileName);
+  Common::CheckValidFile(fInSignalFile,fInSignalFileName);
 
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
-  Config::SetTDRStyle(fTDRStyle);
+  Common::SetTDRStyle(fTDRStyle);
   gROOT->ForceStyle();
 
   // setup hists
   TreePlotter::SetupDefaults();
   TreePlotter::SetupConfig();
   TreePlotter::SetupMiscConfig();
-  if (fSignalsOnly) Config::KeepOnlySignals();
+  if (fSignalsOnly) Common::KeepOnlySignals();
   TreePlotter::SetupPlotConfig();
   TreePlotter::SetupHists();
 
@@ -104,7 +104,7 @@ void TreePlotter::MakeHistFromTrees()
   std::cout << "Making hists from input trees..." << std::endl;
 
   // loop over sample groups for each tree
-  for (const auto & TreeNamePair : Config::TreeNameMap)
+  for (const auto & TreeNamePair : Common::TreeNameMap)
   {
     // Init
     const auto & sample   = TreeNamePair.first;
@@ -112,12 +112,12 @@ void TreePlotter::MakeHistFromTrees()
     std::cout << "Working on tree: " << treename.Data() << std::endl;
 	
     // Get infile
-    auto & infile = ((Config::GroupMap[sample] != isSignal) ? fInFile : fInSignalFile);
+    auto & infile = ((Common::GroupMap[sample] != isSignal) ? fInFile : fInSignalFile);
     infile->cd();
 
     // Get TTree
     auto intree = (TTree*)infile->Get(Form("%s",treename.Data()));
-    const auto isnull = Config::IsNullTree(intree);
+    const auto isnull = Common::IsNullTree(intree);
 
     if (!isnull)
     {
@@ -128,7 +128,7 @@ void TreePlotter::MakeHistFromTrees()
       hist->SetDirectory(infile);
      
       // Fill from tree
-      intree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(sample).Data()),"goff");
+      intree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Common::CutMap[sample].Data(),Common::WeightString(sample).Data()),"goff");
 
       // delete tree;
       delete intree;
@@ -146,7 +146,7 @@ void TreePlotter::MakeHistFromTrees()
     for (auto & HistPair : HistMap)
     {
       auto & hist = HistPair.second;
-      Config::Scale(hist,isUp);
+      Common::Scale(hist,isUp);
     }
   }
 
@@ -204,7 +204,7 @@ void TreePlotter::MakeBkgdOutput()
     const auto & sample = HistPair.first;
     const auto & hist = HistPair.second;
 
-    if (Config::GroupMap[sample] == isBkgd)
+    if (Common::GroupMap[sample] == isBkgd)
     {
       BkgdHist->Add(hist);
     }
@@ -224,7 +224,7 @@ void TreePlotter::MakeBkgdOutput()
   
   // sort by smallest to biggest, then add
   std::vector<TString> StackOrder;
-  for (const auto & GroupPair : Config::GroupMap)
+  for (const auto & GroupPair : Common::GroupMap)
   {
     if (GroupPair.second == isBkgd)
     {
@@ -247,7 +247,7 @@ void TreePlotter::MakeBkgdOutput()
     const auto & sample = HistPair.first;
     auto & hist = HistPair.second;
 
-    if (Config::GroupMap[sample] == isBkgd)
+    if (Common::GroupMap[sample] == isBkgd)
     {
       fOutFile->cd();
       hist->Write(Form("%s_Plotted",hist->GetName()),TObject::kWriteDelete);
@@ -273,7 +273,7 @@ void TreePlotter::MakeSignalOutput()
     const auto & sample = HistPair.first;
     auto & hist = HistPair.second;
 
-    if (Config::GroupMap[sample] == isSignal)
+    if (Common::GroupMap[sample] == isSignal)
     {
       if (fScaleToUnity) hist->Scale(1.f/hist->Integral(fXVarBins?"width":""));
 
@@ -356,7 +356,7 @@ void TreePlotter::MakeLegend()
   Legend->SetLineColor(kBlack);
 
   // add data to legend
-  if (!fSignalsOnly) Legend->AddEntry(DataHist,Config::LabelMap["Data"].Data(),"epl");
+  if (!fSignalsOnly) Legend->AddEntry(DataHist,Common::LabelMap["Data"].Data(),"epl");
 
   // add bkgd to legend
   for (const auto & HistPair : HistMap)
@@ -365,15 +365,15 @@ void TreePlotter::MakeLegend()
     const auto & hist   = HistPair.second;
 
     // only do background
-    if (Config::GroupMap[sample] != isBkgd) continue;
+    if (Common::GroupMap[sample] != isBkgd) continue;
 
-    if (!fSignalsOnly) Legend->AddEntry(hist,Config::LabelMap[sample].Data(),"f");
+    if (!fSignalsOnly) Legend->AddEntry(hist,Common::LabelMap[sample].Data(),"f");
   }
 
   // add signals that we want to plot to the legend
   for (const auto & sample : fPlotSignalVec)
   {
-    Legend->AddEntry(HistMap[sample],Config::LabelMap[sample].Data(),"l");
+    Legend->AddEntry(HistMap[sample],Common::LabelMap[sample].Data(),"l");
   }
 
   // add the mc unc. to legend
@@ -391,10 +391,10 @@ void TreePlotter::InitOutputCanvPads()
   OutCanv = new TCanvas("OutCanv","");
   OutCanv->cd();
 
-  UpperPad = new TPad("UpperPad","", Config::left_up, Config::bottom_up, Config::right_up, Config::top_up);
+  UpperPad = new TPad("UpperPad","", Common::left_up, Common::bottom_up, Common::right_up, Common::top_up);
   UpperPad->SetBottomMargin(0); // Upper and lower plot are joined
 
-  LowerPad = new TPad("LowerPad", "", Config::left_lp, Config::bottom_lp, Config::right_lp, Config::top_lp);
+  LowerPad = new TPad("LowerPad", "", Common::left_lp, Common::bottom_lp, Common::right_lp, Common::top_lp);
   LowerPad->SetTopMargin(0);
   LowerPad->SetBottomMargin(0.35);
 }
@@ -420,9 +420,9 @@ void TreePlotter::DrawUpperPad()
   hist->SetMaximum(fMaxY);
   
   // Have to scale TDR style values by height of upper pad
-  hist->GetYaxis()->SetLabelSize  (Config::LabelSize / Config::height_up); 
-  hist->GetYaxis()->SetTitleSize  (Config::TitleSize / Config::height_up);
-  hist->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_up);
+  hist->GetYaxis()->SetLabelSize  (Common::LabelSize / Common::height_up); 
+  hist->GetYaxis()->SetTitleSize  (Common::TitleSize / Common::height_up);
+  hist->GetYaxis()->SetTitleOffset(Common::TitleFF * Common::TitleYOffset * Common::height_up);
   
   // full info
   if (!fSignalsOnly)
@@ -468,13 +468,13 @@ void TreePlotter::DrawLowerPad()
   RatioHist->GetYaxis()->SetNdivisions(505);
 
   // sizes of titles is percent of height of pad --> want a constant size 
-  RatioHist->GetXaxis()->SetLabelSize  (Config::LabelSize   / Config::height_lp); 
-  RatioHist->GetXaxis()->SetLabelOffset(Config::LabelOffset / Config::height_lp); 
-  RatioHist->GetXaxis()->SetTitleSize  (Config::TitleSize   / Config::height_lp);
-  RatioHist->GetXaxis()->SetTickLength (Config::TickLength  / Config::height_lp);
-  RatioHist->GetYaxis()->SetLabelSize  (Config::LabelSize   / Config::height_lp); 
-  RatioHist->GetYaxis()->SetTitleSize  (Config::TitleSize   / Config::height_lp);
-  RatioHist->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_lp);
+  RatioHist->GetXaxis()->SetLabelSize  (Common::LabelSize   / Common::height_lp); 
+  RatioHist->GetXaxis()->SetLabelOffset(Common::LabelOffset / Common::height_lp); 
+  RatioHist->GetXaxis()->SetTitleSize  (Common::TitleSize   / Common::height_lp);
+  RatioHist->GetXaxis()->SetTickLength (Common::TickLength  / Common::height_lp);
+  RatioHist->GetYaxis()->SetLabelSize  (Common::LabelSize   / Common::height_lp); 
+  RatioHist->GetYaxis()->SetTitleSize  (Common::TitleSize   / Common::height_lp);
+  RatioHist->GetYaxis()->SetTitleOffset(Common::TitleFF * Common::TitleYOffset * Common::height_lp);
 
   // draw th1 first so line can appear, then draw over it (and set Y axis divisions)
   RatioHist->Draw("EP"); 
@@ -502,7 +502,7 @@ void TreePlotter::SaveOutput()
 
   // Go back to the main canvas before saving and write out lumi info
   OutCanv->cd();
-  Config::CMSLumi(OutCanv,0);
+  Common::CMSLumi(OutCanv,0);
 
   // Save a log version first
   TreePlotter::PrintCanvas(true);
@@ -549,7 +549,7 @@ void TreePlotter::MakeConfigPave()
   // create the pave, copying in old info
   fOutFile->cd();
   fConfigPave = new TPaveText();
-  fConfigPave->SetName(Form("%s",Config::pavename.Data()));
+  fConfigPave->SetName(Form("%s",Common::pavename.Data()));
   std::string str; // tmp string
 
   // give grand title
@@ -583,13 +583,13 @@ void TreePlotter::MakeConfigPave()
   fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
 
   // dump in old config
-  Config::AddTextFromInputPave(fConfigPave,fInFile);
+  Common::AddTextFromInputPave(fConfigPave,fInFile);
 
   // save name of insignalfile, redundant
   fConfigPave->AddText(Form("InSignalFile name: %s",fInSignalFileName.Data()));
 
   // dump in old signal config
-  Config::AddTextFromInputPave(fConfigPave,fInSignalFile);
+  Common::AddTextFromInputPave(fConfigPave,fInSignalFile);
   
   // save to output file
   fOutFile->cd();
@@ -609,7 +609,7 @@ void TreePlotter::DumpIntegrals()
     const auto & sample = HistPair.first;
     const auto & hist = HistPair.second;
 
-    if (Config::GroupMap[sample] == isSignal)
+    if (Common::GroupMap[sample] == isSignal)
     {
       auto sign_err = 0.;
       const auto sign_int = hist->IntegralAndError(1,hist->GetXaxis()->GetNbins(),sign_err,(fXVarBins?"width":""));
@@ -624,7 +624,7 @@ void TreePlotter::DumpIntegrals()
     const auto & sample = HistPair.first;
     const auto & hist = HistPair.second;
 
-    if (Config::GroupMap[sample] == isBkgd)
+    if (Common::GroupMap[sample] == isBkgd)
     {
       auto bkgd_err = 0.0;
       const auto bkgd_int = hist->IntegralAndError(1,hist->GetXaxis()->GetNbins(),bkgd_err,(fXVarBins?"width":""));
@@ -662,7 +662,7 @@ void TreePlotter::ScaleMCToUnity()
     const auto & sample = HistPair.first;
     auto & hist = HistPair.second;
 
-    if (Config::GroupMap[sample] == isBkgd)
+    if (Common::GroupMap[sample] == isBkgd)
     {
       hist->Scale(1.f/mctotal);
     }
@@ -684,7 +684,7 @@ void TreePlotter::ScaleMCToData()
     const auto & sample = HistPair.first;
     auto & hist = HistPair.second;
 
-    if (Config::GroupMap[sample] == isBkgd)
+    if (Common::GroupMap[sample] == isBkgd)
     {
       hist->Scale(sf);
     }
@@ -706,10 +706,10 @@ void TreePlotter::GetHistMinimum()
     const auto & hist = HistPair.second;
 
     // skip data and check afterwards
-    if (Config::GroupMap[sample] == isData) continue;
+    if (Common::GroupMap[sample] == isData) continue;
 
     // skip samples not plotted
-    if (Config::GroupMap[sample] == isSignal)
+    if (Common::GroupMap[sample] == isSignal)
     {
       if (std::find(fPlotSignalVec.begin(),fPlotSignalVec.end(),sample) == fPlotSignalVec.end()) continue;
     }
@@ -778,17 +778,17 @@ void TreePlotter::SetupConfig()
 {
   std::cout << "Setting up Config..." << std::endl;
 
-  Config::SetupSamples();
-  Config::SetupSignalSamples();
-  Config::SetupGroups();
-  Config::SetupSignalGroups();
-  Config::SetupSignalSubGroups();
-  Config::SetupTreeNames();
-  Config::SetupHistNames();
-  Config::SetupSignalSubGroupColors();
-  Config::SetupColors();
-  Config::SetupLabels();
-  Config::SetupCuts(fCutConfig);
+  Common::SetupSamples();
+  Common::SetupSignalSamples();
+  Common::SetupGroups();
+  Common::SetupSignalGroups();
+  Common::SetupSignalSubGroups();
+  Common::SetupTreeNames();
+  Common::SetupHistNames();
+  Common::SetupSignalSubGroupColors();
+  Common::SetupColors();
+  Common::SetupLabels();
+  Common::SetupCuts(fCutConfig);
 }
 
 void TreePlotter::SetupPlotConfig()
@@ -802,42 +802,42 @@ void TreePlotter::SetupPlotConfig()
     if (str == "") continue;
     else if (str.find("plot_title=") != std::string::npos)
     {
-      fTitle = Config::RemoveDelim(str,"plot_title=");
+      fTitle = Common::RemoveDelim(str,"plot_title=");
     }
     else if (str.find("x_title=") != std::string::npos)
     {
-      fXTitle = Config::RemoveDelim(str,"x_title=");
+      fXTitle = Common::RemoveDelim(str,"x_title=");
     }
     else if (str.find("x_scale=") != std::string::npos)
     {
-      Config::SetupScale(str,fIsLogX);
+      Common::SetupScale(str,fIsLogX);
     }
     else if (str.find("x_var=") != std::string::npos)
     {
-      fXVar = Config::RemoveDelim(str,"x_var=");
+      fXVar = Common::RemoveDelim(str,"x_var=");
     }
     else if (str.find("x_bins=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"x_bins=");
-      Config::SetupBins(str,fXBins,fXVarBins);
+      str = Common::RemoveDelim(str,"x_bins=");
+      Common::SetupBins(str,fXBins,fXVarBins);
     }
     else if (str.find("x_labels=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"x_labels=");
-      Config::SetupBinLabels(str,fXLabels);
+      str = Common::RemoveDelim(str,"x_labels=");
+      Common::SetupBinLabels(str,fXLabels);
     }
     else if (str.find("y_title=") != std::string::npos)
     {
-      fYTitle = Config::RemoveDelim(str,"y_title=");
+      fYTitle = Common::RemoveDelim(str,"y_title=");
     }
     else if (str.find("y_scale=") != std::string::npos)
     {
-      Config::SetupScale(str,fIsLogY);
+      Common::SetupScale(str,fIsLogY);
     }
     else if (str.find("blinding=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"blinding=");
-      Config::SetupBlinding(str,fBlinds);
+      str = Common::RemoveDelim(str,"blinding=");
+      Common::SetupBlinding(str,fBlinds);
     }
     else 
     {
@@ -863,28 +863,28 @@ void TreePlotter::SetupMiscConfig()
     }
     else if (str.find("signals_to_plot=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"signals_to_plot=");
-      Config::SetupWhichSignals(str,fPlotSignalVec);
+      str = Common::RemoveDelim(str,"signals_to_plot=");
+      Common::SetupWhichSignals(str,fPlotSignalVec);
     }
     else if (str.find("scale_mc_to_data=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"scale_mc_to_data=");
-      Config::SetupBool(str,fScaleMCToData);
+      str = Common::RemoveDelim(str,"scale_mc_to_data=");
+      Common::SetupBool(str,fScaleMCToData);
     }
     else if (str.find("scale_to_unity=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"scale_to_unity=");
-      Config::SetupBool(str,fScaleToUnity);
+      str = Common::RemoveDelim(str,"scale_to_unity=");
+      Common::SetupBool(str,fScaleToUnity);
     }
     else if (str.find("blind_data=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"blind_data=");
-      Config::SetupBool(str,fBlindData);
+      str = Common::RemoveDelim(str,"blind_data=");
+      Common::SetupBool(str,fBlindData);
     }
     else if (str.find("signals_only=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"signals_only=");
-      Config::SetupBool(str,fSignalsOnly);
+      str = Common::RemoveDelim(str,"signals_only=");
+      Common::SetupBool(str,fSignalsOnly);
     }
     else 
     {
@@ -900,7 +900,7 @@ void TreePlotter::SetupHists()
   std::cout << "Setting up output hists..." << std::endl;
 
   // instantiate each histogram
-  for (const auto & HistNamePair : Config::HistNameMap)
+  for (const auto & HistNamePair : Common::HistNameMap)
   {
     HistMap[HistNamePair.first] = TreePlotter::SetupHist(HistNamePair.second);
   }
@@ -911,14 +911,14 @@ void TreePlotter::SetupHists()
     const auto & sample = HistPair.first;
     const auto & hist   = HistPair.second;
     
-    hist->SetLineColor(Config::ColorMap[sample]);
-    hist->SetMarkerColor(Config::ColorMap[sample]);
-    if (Config::GroupMap[sample] == isBkgd)
+    hist->SetLineColor(Common::ColorMap[sample]);
+    hist->SetMarkerColor(Common::ColorMap[sample]);
+    if (Common::GroupMap[sample] == isBkgd)
     {
-      hist->SetFillColor(Config::ColorMap[sample]);
+      hist->SetFillColor(Common::ColorMap[sample]);
       hist->SetFillStyle(1001);
     }
-    else if (Config::GroupMap[sample] == isSignal)
+    else if (Common::GroupMap[sample] == isSignal)
     {
       hist->SetLineWidth(2);
     }

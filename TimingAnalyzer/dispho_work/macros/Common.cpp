@@ -2,7 +2,7 @@
 #include "TLatex.h"
 #include "TColor.h"
 
-namespace Config
+namespace Common
 {
   TString PrimaryDataset;
   std::map<TString,TString> SampleMap;
@@ -20,42 +20,42 @@ namespace Config
 
   void SetupPrimaryDataset(const TString & pdname)
   {
-    Config::PrimaryDataset = pdname;
+    Common::PrimaryDataset = pdname;
   }
 
   void SetupSamples()
   {
     // QCD HT binned
-    Config::SampleMap["MC/QCD_HT/100to200"]   = "QCD";
-    Config::SampleMap["MC/QCD_HT/200to300"]   = "QCD";
-    Config::SampleMap["MC/QCD_HT/300to500"]   = "QCD";
-    Config::SampleMap["MC/QCD_HT/500to700"]   = "QCD";
-    Config::SampleMap["MC/QCD_HT/700to1000"]  = "QCD";
-    Config::SampleMap["MC/QCD_HT/1000to1500"] = "QCD";
-    Config::SampleMap["MC/QCD_HT/1500to2000"] = "QCD";
-    Config::SampleMap["MC/QCD_HT/2000toInf"]  = "QCD";
+    Common::SampleMap["MC/QCD_HT/100to200"]   = "QCD";
+    Common::SampleMap["MC/QCD_HT/200to300"]   = "QCD";
+    Common::SampleMap["MC/QCD_HT/300to500"]   = "QCD";
+    Common::SampleMap["MC/QCD_HT/500to700"]   = "QCD";
+    Common::SampleMap["MC/QCD_HT/700to1000"]  = "QCD";
+    Common::SampleMap["MC/QCD_HT/1000to1500"] = "QCD";
+    Common::SampleMap["MC/QCD_HT/1500to2000"] = "QCD";
+    Common::SampleMap["MC/QCD_HT/2000toInf"]  = "QCD";
   
     // GJets HT binned
-    Config::SampleMap["MC/GJets_HT/40To100"]  = "GJets";
-    Config::SampleMap["MC/GJets_HT/100To200"] = "GJets";
-    Config::SampleMap["MC/GJets_HT/200To400"] = "GJets";
-    Config::SampleMap["MC/GJets_HT/400To600"] = "GJets";
-    Config::SampleMap["MC/GJets_HT/600ToInf"] = "GJets";
+    Common::SampleMap["MC/GJets_HT/40To100"]  = "GJets";
+    Common::SampleMap["MC/GJets_HT/100To200"] = "GJets";
+    Common::SampleMap["MC/GJets_HT/200To400"] = "GJets";
+    Common::SampleMap["MC/GJets_HT/400To600"] = "GJets";
+    Common::SampleMap["MC/GJets_HT/600ToInf"] = "GJets";
     
     // DYLL
-    Config::SampleMap["MC/DYJetsToLL/base"] = "DYLL";
-    //    Config::SampleMap["MC/DYJetsToLL/ext"]  = "DYLL";
+    Common::SampleMap["MC/DYJetsToLL/base"] = "DYLL";
+    //    Common::SampleMap["MC/DYJetsToLL/ext"]  = "DYLL";
 
     // DiPhoBox
-    Config::SampleMap["MC/DiPhotonJetsBox/M40_80"]  = "DiPho";
-    Config::SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = "DiPho";
+    Common::SampleMap["MC/DiPhotonJetsBox/M40_80"]  = "DiPho";
+    Common::SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = "DiPho";
     
     // Data
-    Config::SampleMap[Form("Data/%s/B/v1",Config::PrimaryDataset.Data())] = "Data";
-    Config::SampleMap[Form("Data/%s/C/v1",Config::PrimaryDataset.Data())] = "Data";
-    Config::SampleMap[Form("Data/%s/D/v1",Config::PrimaryDataset.Data())] = "Data";
-    Config::SampleMap[Form("Data/%s/E/v1",Config::PrimaryDataset.Data())] = "Data";
-    Config::SampleMap[Form("Data/%s/F/v1",Config::PrimaryDataset.Data())] = "Data";
+    Common::SampleMap[Form("Data/%s/B/v1",Common::PrimaryDataset.Data())] = "Data";
+    Common::SampleMap[Form("Data/%s/C/v1",Common::PrimaryDataset.Data())] = "Data";
+    Common::SampleMap[Form("Data/%s/D/v1",Common::PrimaryDataset.Data())] = "Data";
+    Common::SampleMap[Form("Data/%s/E/v1",Common::PrimaryDataset.Data())] = "Data";
+    Common::SampleMap[Form("Data/%s/F/v1",Common::PrimaryDataset.Data())] = "Data";
   }
 
   void SetupSignalSamples()
@@ -68,29 +68,29 @@ namespace Config
     {
       for (const auto & ctau : ctaus)
       {
-	Config::SampleMap["MC/GMSB/L"+lambda+"TeV_CTau"+ctau+"cm"] = "GMSB_L"+lambda+"_CTau"+ctau;
+	Common::SampleMap["MC/GMSB/L"+lambda+"TeV_CTau"+ctau+"cm"] = "GMSB_L"+lambda+"_CTau"+ctau;
       }
     }
 
     // temp...
-    Config::SampleMap["MC/GMSB/L200TeV_CTau400cm"] = "GMSB_L200_CTau400";
+    Common::SampleMap["MC/GMSB/L200TeV_CTau400cm"] = "GMSB_L200_CTau400";
 
     // eventually do HVDS...
   }
 
   void SetupGroups()
   {
-    for (const auto & SamplePair : Config::SampleMap)
+    for (const auto & SamplePair : Common::SampleMap)
     {
       const auto & sample = SamplePair.second;
       
-      if      (sample == "QCD")   Config::GroupMap[sample] = isBkgd;
-      else if (sample == "GJets") Config::GroupMap[sample] = isBkgd;
-      else if (sample == "DYLL")  Config::GroupMap[sample] = isBkgd;
-      else if (sample == "DiPho") Config::GroupMap[sample] = isBkgd;
-      else if (sample == "Data")  Config::GroupMap[sample] = isData;
-      else if (sample.Contains("GMSB")) Config::GroupMap[sample] = isSignal;
-      else if (sample.Contains("HVDS")) Config::GroupMap[sample] = isSignal;
+      if      (sample == "QCD")   Common::GroupMap[sample] = isBkgd;
+      else if (sample == "GJets") Common::GroupMap[sample] = isBkgd;
+      else if (sample == "DYLL")  Common::GroupMap[sample] = isBkgd;
+      else if (sample == "DiPho") Common::GroupMap[sample] = isBkgd;
+      else if (sample == "Data")  Common::GroupMap[sample] = isData;
+      else if (sample.Contains("GMSB")) Common::GroupMap[sample] = isSignal;
+      else if (sample.Contains("HVDS")) Common::GroupMap[sample] = isSignal;
       else
       {
 	std::cerr << "Aye... the Common groups are messed up!!! Fix it!!! Exiting..." << std::endl;
@@ -101,18 +101,18 @@ namespace Config
 
   void SetupSignalGroups()
   {
-    for (const auto & SamplePair : Config::SampleMap)
+    for (const auto & SamplePair : Common::SampleMap)
     {
       const auto & sample = SamplePair.second;
 
-      if      (sample.Contains("GMSB")) Config::SignalGroupMap[sample] = "GMSB";
-      else if (sample.Contains("HVDS")) Config::SignalGroupMap[sample] = "HVDS";
+      if      (sample.Contains("GMSB")) Common::SignalGroupMap[sample] = "GMSB";
+      else if (sample.Contains("HVDS")) Common::SignalGroupMap[sample] = "HVDS";
     }
   }
 
   void SetupSignalSubGroups()
   {
-    for (const auto & SampleGroupPair : Config::SignalGroupMap)
+    for (const auto & SampleGroupPair : Common::SignalGroupMap)
     {
       const auto & sample = SampleGroupPair.first;
       const auto & group  = SampleGroupPair.second;
@@ -124,59 +124,59 @@ namespace Config
 	auto l_ctau = s_ctau.Length();
 	
 	const TString ctau(sample(i_ctau+l_ctau,sample.Length()-i_ctau-l_ctau));
-	Config::SignalSubGroupMap["GMSB_CTau"+ctau+"cm"].emplace_back(sample);
+	Common::SignalSubGroupMap["GMSB_CTau"+ctau+"cm"].emplace_back(sample);
       }
     }
   }
   
   void SetupTreeNames()
   {
-    for (const auto & GroupPair : Config::GroupMap)
+    for (const auto & GroupPair : Common::GroupMap)
     {
       const auto & sample = GroupPair.first;
-      Config::TreeNameMap[sample] = sample+"_Tree";
+      Common::TreeNameMap[sample] = sample+"_Tree";
     }
   }
 
   void SetupHistNames()
   {
-    for (const auto & GroupPair : Config::GroupMap)
+    for (const auto & GroupPair : Common::GroupMap)
     {
       const auto & sample = GroupPair.first;
-      Config::HistNameMap[sample] = sample+"_Hist";
+      Common::HistNameMap[sample] = sample+"_Hist";
     }
   }
 
   void SetupSignalCutFlowHistNames()
   {
-    for (const auto & GroupPair : Config::GroupMap)
+    for (const auto & GroupPair : Common::GroupMap)
     {
       const auto & sample = GroupPair.first;
       const auto group    = GroupPair.second;
       if (group != isSignal) continue;
 
-      Config::SignalCutFlowHistNameMap[sample] = sample+"_"+Config::h_cutflowname;
+      Common::SignalCutFlowHistNameMap[sample] = sample+"_"+Common::h_cutflowname;
     }
   }
 
   void SetupSignalSubGroupColors()
   {
     // GMSB: add more as we go
-    Config::SignalSubGroupColorMap["GMSB_CTau0p1cm"] = {kAzure,"Up"};
-    Config::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kAzure,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau0p1cm"] = {kAzure,"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kAzure,"Down"};
 
     // deal with HVDS later...
   }
 
   void SetupColors()
   {
-    Config::ColorMap["QCD"]   = kGreen;
-    Config::ColorMap["GJets"] = kRed;
-    Config::ColorMap["DYLL"]  = kMagenta;
-    Config::ColorMap["DiPho"] = kCyan;
-    Config::ColorMap["Data"]  = kBlack;
+    Common::ColorMap["QCD"]   = kGreen;
+    Common::ColorMap["GJets"] = kRed;
+    Common::ColorMap["DYLL"]  = kMagenta;
+    Common::ColorMap["DiPho"] = kCyan;
+    Common::ColorMap["Data"]  = kBlack;
     
-    for (const auto & SignalSubGroupPair : Config::SignalSubGroupMap)
+    for (const auto & SignalSubGroupPair : Common::SignalSubGroupMap)
     {
       const auto & group   = SignalSubGroupPair.first;
       const auto & samples = SignalSubGroupPair.second;
@@ -184,10 +184,10 @@ namespace Config
       Int_t counter = 0;
       for (const auto & sample : samples)
       {
-	Config::ColorMap[sample] = Config::SignalSubGroupColorMap[group].color+counter;
+	Common::ColorMap[sample] = Common::SignalSubGroupColorMap[group].color+counter;
 	
-	if      (Config::SignalSubGroupColorMap[group].increment == "Up"  ) counter++;
-	else if (Config::SignalSubGroupColorMap[group].increment == "Down") counter--;
+	if      (Common::SignalSubGroupColorMap[group].increment == "Up"  ) counter++;
+	else if (Common::SignalSubGroupColorMap[group].increment == "Down") counter--;
 	else    
 	{
 	  std::cerr << "Yikes, you messed up the signal sub group color config pretty bad, try again..." << std::endl;
@@ -199,20 +199,20 @@ namespace Config
 
   void SetupLabels()
   {
-    Config::LabelMap["QCD"]   = "QCD"; //"#QCD (H_{T} Binned)";
-    Config::LabelMap["GJets"] = "#gamma+Jets"; //"#gamma + Jets (H_{T} Binned)";
-    Config::LabelMap["DYLL"]  = "DY#rightarrowLL+Jets";
-    Config::LabelMap["DiPho"] = "2#gamma";
-    Config::LabelMap["Data"]  = "Data";
+    Common::LabelMap["QCD"]   = "QCD"; //"#QCD (H_{T} Binned)";
+    Common::LabelMap["GJets"] = "#gamma+Jets"; //"#gamma + Jets (H_{T} Binned)";
+    Common::LabelMap["DYLL"]  = "DY#rightarrowLL+Jets";
+    Common::LabelMap["DiPho"] = "2#gamma";
+    Common::LabelMap["Data"]  = "Data";
 
     // GMSB Labels
-    for (const auto & GroupPair : Config::GroupMap)
+    for (const auto & GroupPair : Common::GroupMap)
     {
       const auto & sample = GroupPair.first;
       const auto group    = GroupPair.second;
       
       if (group != isSignal) continue;
-      if (Config::SignalGroupMap[sample] == "GMSB")
+      if (Common::SignalGroupMap[sample] == "GMSB")
       {
 	const TString s_lambda = "_L";
 	auto i_lambda = sample.Index(s_lambda);
@@ -226,7 +226,7 @@ namespace Config
 	TString ctau(sample(i_ctau+l_ctau,sample.Length()-i_ctau-l_ctau));
 	ctau.ReplaceAll("p",".");
       
-	Config::LabelMap[sample] = "GMSB #Lambda:"+lambda+"TeV c#tau:"+ctau+"cm";
+	Common::LabelMap[sample] = "GMSB #Lambda:"+lambda+"TeV c#tau:"+ctau+"cm";
       }
     }
 
@@ -236,25 +236,25 @@ namespace Config
   void KeepOnlySignals()
   {
     // erase by key first
-    for (const auto & GroupPair : Config::GroupMap)
+    for (const auto & GroupPair : Common::GroupMap)
     {
       const auto & sample = GroupPair.first;
       const auto & group  = GroupPair.second;
 
       if (group == isSignal) continue;
 
-      Config::TreeNameMap.erase(sample);
-      Config::HistNameMap.erase(sample);
-      Config::ColorMap.erase(sample);
-      Config::LabelMap.erase(sample);
+      Common::TreeNameMap.erase(sample);
+      Common::HistNameMap.erase(sample);
+      Common::ColorMap.erase(sample);
+      Common::LabelMap.erase(sample);
     }
 
     // erase groups now
-    for (auto iter = Config::GroupMap.cbegin(); iter != Config::GroupMap.cend();)
+    for (auto iter = Common::GroupMap.cbegin(); iter != Common::GroupMap.cend();)
     {
       if (iter->second != isSignal) 
       {
-	Config::GroupMap.erase(iter++);
+	Common::GroupMap.erase(iter++);
       }
       else
       {
@@ -274,19 +274,19 @@ namespace Config
       if (str == "") continue;
       else if (str.find("common_cut=") != std::string::npos)
       {
-	const TString cut = Config::RemoveDelim(str,"common_cut=");
+	const TString cut = Common::RemoveDelim(str,"common_cut=");
 
 	if (cut != "")
 	{
 	  for (const auto & GroupPair : GroupMap)
 	  {
-	    Config::CutMap[GroupPair.first] += Form("%s",cut.Data());
+	    Common::CutMap[GroupPair.first] += Form("%s",cut.Data());
 	  }
 	}
       }
       else if (str.find("bkgd_cut=") != std::string::npos)
       {
-	const TString cut = Config::RemoveDelim(str,"bkgd_cut=");
+	const TString cut = Common::RemoveDelim(str,"bkgd_cut=");
 
 	if (cut != "")
 	{
@@ -294,14 +294,14 @@ namespace Config
 	  {
 	    if (GroupPair.second == isBkgd)
 	    {
-	      Config::CutMap[GroupPair.first] += Form("&&%s",cut.Data());
+	      Common::CutMap[GroupPair.first] += Form("&&%s",cut.Data());
 	    }
 	  }
 	}
       }
       else if (str.find("sign_cut=") != std::string::npos)
       {
-	const TString cut = Config::RemoveDelim(str,"sign_cut=");
+	const TString cut = Common::RemoveDelim(str,"sign_cut=");
 
 	if (cut != "")
 	{
@@ -309,14 +309,14 @@ namespace Config
 	  {
 	    if (GroupPair.second == isSignal)
 	    {
-	      Config::CutMap[GroupPair.first] += Form("&&%s",cut.Data());
+	      Common::CutMap[GroupPair.first] += Form("&&%s",cut.Data());
 	    }
 	  }
 	}
       }
       else if (str.find("data_cut=") != std::string::npos)
       {
-	const TString cut = Config::RemoveDelim(str,"data_cut=");
+	const TString cut = Common::RemoveDelim(str,"data_cut=");
 
 	if (cut != "")
 	{
@@ -324,7 +324,7 @@ namespace Config
 	  {
 	    if (GroupPair.second == isData)
 	    {
-	      Config::CutMap[GroupPair.first] += Form("&&%s",cut.Data());
+	      Common::CutMap[GroupPair.first] += Form("&&%s",cut.Data());
 	    }
 	  }
 	}
@@ -345,7 +345,7 @@ namespace Config
     TString label,cut;
     while (infile >> label >> cut)
     {
-      Config::SignalCutFlowPairVec.emplace_back(std::pair<TString,TString>{label,cut});
+      Common::SignalCutFlowPairVec.emplace_back(std::pair<TString,TString>{label,cut});
     }
   }
 
@@ -354,7 +354,7 @@ namespace Config
     if      (str.find("CONSTANT") != std::string::npos)
     {
       var_bins = false;
-      str = Config::RemoveDelim(str,"CONSTANT");
+      str = Common::RemoveDelim(str,"CONSTANT");
       Int_t nbins = 0; Double_t low = 0.f, high = 0.f;
       std::stringstream ss(str);
       ss >> nbins >> low >> high;
@@ -367,7 +367,7 @@ namespace Config
     else if (str.find("VARIABLE") != std::string::npos)
     {
       var_bins = true;
-      str = Config::RemoveDelim(str,"VARIABLE");
+      str = Common::RemoveDelim(str,"VARIABLE");
       Float_t bin_edge;
       std::stringstream ss(str);
       while (ss >> bin_edge) bins.push_back(bin_edge);
@@ -392,8 +392,8 @@ namespace Config
     std::string cutblock;
     while (ss >> cutblock)
     {
-      cutblock = Config::RemoveDelim(cutblock,"(");
-      cutblock = Config::RemoveDelim(cutblock,")");
+      cutblock = Common::RemoveDelim(cutblock,"(");
+      cutblock = Common::RemoveDelim(cutblock,")");
 
       std::stringstream subss(cutblock);
       std::string cutvalue;
@@ -459,7 +459,7 @@ namespace Config
       if (signal == "*")
       {
 	// loop over signals
-	for (const auto & GroupPair : Config::GroupMap)
+	for (const auto & GroupPair : Common::GroupMap)
 	{
 	  const auto & sample = GroupPair.first;
 	  const auto & group  = GroupPair.second;
@@ -474,7 +474,7 @@ namespace Config
       {
 	if (str.find("!") != std::string::npos)
 	{
-	  signal = Config::RemoveDelim(signal,"!");
+	  signal = Common::RemoveDelim(signal,"!");
 	  signalvec.erase(std::remove(signalvec.begin(), signalvec.end(), signal), signalvec.end()); 
 	}
 	else
@@ -545,7 +545,7 @@ namespace Config
   
   void AddTextFromInputPave(TPaveText *& outpave, TFile *& infile)
   {
-    const auto inpave = (TPaveText*)infile->Get(Form("%s",Config::pavename.Data()));
+    const auto inpave = (TPaveText*)infile->Get(Form("%s",Common::pavename.Data()));
     const auto lines  = inpave->GetListOfLines();
 
     TIter next(lines);
@@ -669,10 +669,10 @@ namespace Config
     const Double_t cmsTextFont = 61;  // default is helvetic-bold
     
     // extraText is either "Simulation" or "Preliminary"
-    const Bool_t   writeExtraText  = !(Config::extraText.EqualTo("",TString::kExact));
+    const Bool_t   writeExtraText  = !(Common::extraText.EqualTo("",TString::kExact));
     const Double_t extraTextFont   = 52;  // default is helvetica-italics
 
-    const TString lumiText = Form("%5.2f fb^{-1} (13 TeV)", Config::lumi); // must change this spec once we are in fb range!
+    const TString lumiText = Form("%5.2f fb^{-1} (13 TeV)", Common::lumi); // must change this spec once we are in fb range!
   
     // text sizes and text offsets with respect to the top frame
     // in unit of the top margin size
@@ -754,7 +754,7 @@ namespace Config
 	latex.SetTextFont(extraTextFont);
 	latex.SetTextAlign(align_);
 	latex.SetTextSize(extraTextSize*t);
-	latex.DrawLatex(posX_, posY_- relExtraDY*cmsTextSize*t, Config::extraText);
+	latex.DrawLatex(posX_, posY_- relExtraDY*cmsTextSize*t, Common::extraText);
       }
     }
   
@@ -768,7 +768,7 @@ namespace Config
       latex.SetTextFont(extraTextFont);
       latex.SetTextSize(extraTextSize*t);
       latex.SetTextAlign(align_);
-      latex.DrawLatex(posX_, posY_, Config::extraText);
+      latex.DrawLatex(posX_, posY_, Common::extraText);
     }
   }
 
@@ -858,23 +858,23 @@ namespace Config
     // For the axis titles:
     tdrStyle->SetTitleColor(1, "XYZ");
     tdrStyle->SetTitleFont(42, "XYZ");
-    tdrStyle->SetTitleSize(Config::TitleSize, "XYZ");
-    tdrStyle->SetTitleXOffset(Config::TitleXOffset);
-    tdrStyle->SetTitleYOffset(Config::TitleYOffset);
+    tdrStyle->SetTitleSize(Common::TitleSize, "XYZ");
+    tdrStyle->SetTitleXOffset(Common::TitleXOffset);
+    tdrStyle->SetTitleYOffset(Common::TitleYOffset);
 
     // For the axis labels:
 
     tdrStyle->SetLabelColor(1, "XYZ");
     tdrStyle->SetLabelFont(42, "XYZ");
-    tdrStyle->SetLabelOffset(Config::LabelOffset, "XYZ");
-    tdrStyle->SetLabelSize(Config::LabelSize, "XYZ");
+    tdrStyle->SetLabelOffset(Common::LabelOffset, "XYZ");
+    tdrStyle->SetLabelSize(Common::LabelSize, "XYZ");
 
     // For the axis:
 
     tdrStyle->SetAxisColor(1, "XYZ");
     tdrStyle->SetStripDecimals(kTRUE);
-    tdrStyle->SetTickLength(Config::TickLength, "XYZ");
-    tdrStyle->SetNdivisions(Config::Ndivisions, "X");
+    tdrStyle->SetTickLength(Common::TickLength, "XYZ");
+    tdrStyle->SetNdivisions(Common::Ndivisions, "X");
     tdrStyle->SetPadTickX(1);  // To get tick marks on the opposite side of the frame
     tdrStyle->SetPadTickY(1);
 

@@ -8,7 +8,7 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
   
   // get input
   auto infile = TFile::Open(Form("%s",infilename.Data()));
-  Config::CheckValidFile(infile,infilename);
+  Common::CheckValidFile(infile,infilename);
   infile->cd();
 
   // legends, canv and overall map
@@ -19,7 +19,7 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
 
   // loop over signal groups
   Int_t counter = 0;
-  for (const auto & SignalSubGroupPair : Config::SignalSubGroupMap)
+  for (const auto & SignalSubGroupPair : Common::SignalSubGroupMap)
   {
     const auto & groupname = SignalSubGroupPair.first;
     const auto & samples   = SignalSubGroupPair.second;
@@ -32,9 +32,9 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
     for (auto isample = 0; isample < nSamples; isample++)
     {
       // get input hist
-      const auto & histname = Config::SignalCutFlowHistNameMap[samples[isample]];
+      const auto & histname = Common::SignalCutFlowHistNameMap[samples[isample]];
       auto hist = (TH1F*)infile->Get(Form("%s",histname.Data()));
-      Config::CheckValidTH1F(hist,histname,infilename);
+      Common::CheckValidTH1F(hist,histname,infilename);
 
       // set efficiency by bins!
       efficiency->SetTotalEvents(isample+1,hist->GetBinContent(1));
@@ -47,8 +47,8 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
     graphMap[groupname] = efficiency->CreateGraph();
     auto & graph = graphMap[groupname];
     graph->SetName(Form("%s_eff_graph",groupname.Data()));
-    graph->SetLineColor(Config::SignalSubGroupColorMap[groupname].color);
-    graph->SetMarkerColor(Config::SignalSubGroupColorMap[groupname].color);
+    graph->SetLineColor(Common::SignalSubGroupColorMap[groupname].color);
+    graph->SetMarkerColor(Common::SignalSubGroupColorMap[groupname].color);
 
     // set labels!
     if (counter == 0)
@@ -94,7 +94,7 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
 
   // finish off the rest!
   leg->Draw("same");
-  Config::CMSLumi(canv);
+  Common::CMSLumi(canv);
   canv->SaveAs(Form("%s.png",outtext.Data()));
   
   // delete
@@ -107,17 +107,17 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
 
 void Setup(TStyle *& tdrStyle)
 {
-  Config::SetupSignalSamples();
+  Common::SetupSignalSamples();
 
   //// ************** HACK FOR NOW ********************* //
-  Config::SampleMap.erase("MC/GMSB/L200TeV_CTau400cm");
+  Common::SampleMap.erase("MC/GMSB/L200TeV_CTau400cm");
 
-  Config::SetupGroups();
-  Config::SetupSignalGroups();
-  Config::SetupSignalCutFlowHistNames();
+  Common::SetupGroups();
+  Common::SetupSignalGroups();
+  Common::SetupSignalCutFlowHistNames();
 
-  Config::SetupSignalSubGroups();
-  Config::SetupSignalSubGroupColors();
+  Common::SetupSignalSubGroups();
+  Common::SetupSignalSubGroupColors();
 
-  Config::SetTDRStyle(tdrStyle);
+  Common::SetTDRStyle(tdrStyle);
 }

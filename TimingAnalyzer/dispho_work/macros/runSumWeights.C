@@ -19,12 +19,12 @@ void runSumWeights(const TString & indir, const TString & files, const TString &
     // first get the file
     const TString infilename = Form("%s/%s",indir.Data(),infile.Data());
     TFile * file = TFile::Open(infilename.Data());
-    Config::CheckValidFile(file,infilename);
+    Common::CheckValidFile(file,infilename);
 
     // Get the cut histogram
-    const TString inh_cutflowname = Form("%s%s",Config::rootdir.Data(),Config::h_cutflowname.Data());
+    const TString inh_cutflowname = Form("%s%s",Common::rootdir.Data(),Common::h_cutflowname.Data());
     TH1F * cutflow = (TH1F*)file->Get(inh_cutflowname.Data());
-    Config::CheckValidTH1F(cutflow,inh_cutflowname,infilename);
+    Common::CheckValidTH1F(cutflow,inh_cutflowname,infilename);
 
     // now add to sum of weights
     sumwgts += cutflow->GetBinContent(1);

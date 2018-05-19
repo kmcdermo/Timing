@@ -55,7 +55,7 @@ struct ColorStruct
 };
 
 // Configuration parameters
-namespace Config
+namespace Common
 {
   // basics
   constexpr Float_t lumi = 41.37; // CMS lumi : golden for ReReco
@@ -161,7 +161,7 @@ namespace Config
   TString WeightString(const TString & sample)
   {
     // Get the appropriate weight 
-    return (Config::GroupMap[sample] != isData ? "evtwgt * puwgt" : "1.0");
+    return (Common::GroupMap[sample] != isData ? "evtwgt * puwgt" : "1.0");
   }
   
   // Scale hists/graphs up or down
