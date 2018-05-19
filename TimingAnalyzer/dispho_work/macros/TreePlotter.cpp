@@ -29,8 +29,9 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
   // setup hists
   TreePlotter::SetupDefaults();
   TreePlotter::SetupConfig();
-  TreePlotter::SetupPlotConfig();
   TreePlotter::SetupMiscConfig();
+  if (fSignalsOnly) Config::KeepOnlySignals();
+  TreePlotter::SetupPlotConfig();
   TreePlotter::SetupHists();
 
   // output root file for quick inspection
@@ -185,8 +186,11 @@ void TreePlotter::MakeDataOutput()
   if (fScaleToUnity) DataHist->Scale(1.f/DataHist->Integral(fXVarBins?"width":""));
 
   // save to output file
-  fOutFile->cd();
-  DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
+  if (!fSignalsOnly)
+  {
+    fOutFile->cd();
+    DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
+  }
 }
 
 void TreePlotter::MakeBkgdOutput()
@@ -251,9 +255,12 @@ void TreePlotter::MakeBkgdOutput()
   }
 
   // save to outfile
-  fOutFile->cd();
-  BkgdHist->Write(BkgdHist->GetName(),TObject::kWriteDelete);
-  BkgdStack->Write(BkgdStack->GetName(),TObject::kWriteDelete);
+  if (!fSignalsOnly)
+  {
+    fOutFile->cd();
+    BkgdHist->Write(BkgdHist->GetName(),TObject::kWriteDelete);
+    BkgdStack->Write(BkgdStack->GetName(),TObject::kWriteDelete);
+  }
 }
 
 void TreePlotter::MakeSignalOutput()
@@ -320,10 +327,13 @@ void TreePlotter::MakeRatioOutput()
   }
 
   // save to output file
-  fOutFile->cd();
-  RatioHist->Write(RatioHist->GetName(),TObject::kWriteDelete);
-  RatioMCErrs->Write(RatioMCErrs->GetName(),TObject::kWriteDelete);
-  
+  if (!fSignalsOnly)
+  {
+    fOutFile->cd();
+    RatioHist->Write(RatioHist->GetName(),TObject::kWriteDelete);
+    RatioMCErrs->Write(RatioMCErrs->GetName(),TObject::kWriteDelete);
+  }  
+
   // ratio line
   RatioLine = new TLine();
   RatioLine->SetLineColor(kRed);
@@ -399,23 +409,26 @@ void TreePlotter::DrawUpperPad()
   UpperPad->cd();
   UpperPad->SetLogx(fIsLogX);
 
+  // get relevant hist for setting options
+  auto & hist = (fSignalsOnly) ? HistMap[fPlotSignalVec[0]] : DataHist;
+  
   // Get and Set Global Minimum and Maximum
   TreePlotter::GetHistMinimum();
   TreePlotter::GetHistMaximum();
+
+  hist->SetMinimum(fMinY);
+  hist->SetMaximum(fMaxY);
+  
+  // Have to scale TDR style values by height of upper pad
+  hist->GetYaxis()->SetLabelSize  (Config::LabelSize / Config::height_up); 
+  hist->GetYaxis()->SetTitleSize  (Config::TitleSize / Config::height_up);
+  hist->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_up);
   
   // full info
   if (!fSignalsOnly)
   {
-    DataHist->SetMinimum(fMinY);
-    DataHist->SetMaximum(fMaxY);
-    
     // now draw the plots for upper pad in absurd order because ROOT is dumb
     DataHist->Draw("PE"); // draw first so labels appear
-    
-    // Have to scale TDR style values by height of upper pad
-    DataHist->GetYaxis()->SetLabelSize  (Config::LabelSize / Config::height_up); 
-    DataHist->GetYaxis()->SetTitleSize  (Config::TitleSize / Config::height_up);
-    DataHist->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_up);
     
     // Draw stack
     BkgdStack->Draw("HIST SAME"); 
@@ -434,20 +447,7 @@ void TreePlotter::DrawUpperPad()
     const auto & sample = fPlotSignalVec[isample];
     auto & hist = HistMap[sample];
 
-    if (fSignalsOnly && isample == 0)
-    {
-      hist->GetYaxis()->SetLabelSize  (Config::LabelSize / Config::height_up); 
-      hist->GetYaxis()->SetTitleSize  (Config::TitleSize / Config::height_up);
-      hist->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_up);
-
-      hist->SetMinimum(fMinY);
-      hist->SetMaximum(fMaxY);
-      hist->Draw("HIST");
-    }
-    else
-    { 
-      hist->Draw("HIST SAME");
-    }
+    hist->Draw(((isample==0 && fSignalsOnly)?"HIST":"HIST SAME"));
   }
 
   // And lastly draw the legend
@@ -464,14 +464,6 @@ void TreePlotter::DrawLowerPad()
   LowerPad->cd(); 
   LowerPad->SetLogx(fIsLogX);
 
-  // draw th1 first so line can appear, then draw over it (and set Y axis divisions)
-  RatioHist->Draw("EP"); 
-  RatioLine->SetX1(RatioHist->GetXaxis()->GetXmin());
-  RatioLine->SetX2(RatioHist->GetXaxis()->GetXmax());
-  RatioLine->SetY1(1.0);
-  RatioLine->SetY2(1.0);
-  RatioLine->Draw(fSignalsOnly?"":"SAME");
-
   // some style since apparently TDR Style is crapping out
   RatioHist->GetYaxis()->SetNdivisions(505);
 
@@ -483,6 +475,16 @@ void TreePlotter::DrawLowerPad()
   RatioHist->GetYaxis()->SetLabelSize  (Config::LabelSize   / Config::height_lp); 
   RatioHist->GetYaxis()->SetTitleSize  (Config::TitleSize   / Config::height_lp);
   RatioHist->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_lp);
+
+  // draw th1 first so line can appear, then draw over it (and set Y axis divisions)
+  RatioHist->Draw("EP"); 
+
+  // set params for line then draw
+  RatioLine->SetX1(RatioHist->GetXaxis()->GetXmin());
+  RatioLine->SetX2(RatioHist->GetXaxis()->GetXmax());
+  RatioLine->SetY1(1.0);
+  RatioLine->SetY2(1.0);
+  RatioLine->Draw(fSignalsOnly?"":"SAME");
 
   if (!fSignalsOnly)
   {
@@ -520,16 +522,19 @@ void TreePlotter::PrintCanvas(const Bool_t isLogy)
   UpperPad->cd();
   UpperPad->SetLogy(isLogy);
 
+  // get relevant hist
+  auto & hist = (fSignalsOnly) ? HistMap[fPlotSignalVec[0]] : DataHist;
+
   // set min and max
   if (isLogy)
   {
-    DataHist->SetMinimum(fMinY/1.5);
-    DataHist->SetMaximum(fMaxY*1.5);
+    hist->SetMinimum(fMinY/1.5);
+    hist->SetMaximum(fMaxY*1.5);
   }
   else 
   {
-    DataHist->SetMinimum( fMinY > 0 ? fMinY/1.05 : fMinY*1.05 );
-    DataHist->SetMaximum( fMaxY > 0 ? fMaxY*1.05 : fMaxY/1.05 );      
+    hist->SetMinimum( fMinY > 0 ? fMinY/1.05 : fMinY*1.05 );
+    hist->SetMaximum( fMaxY > 0 ? fMaxY*1.05 : fMaxY/1.05 );      
   }
 
   // save canvas as png
@@ -717,11 +722,14 @@ void TreePlotter::GetHistMinimum()
     }
   }
 
-  // now check data
-  for (auto bin = 1; bin <= DataHist->GetNbinsX(); bin++)
+  // now check data --> safely
+  if (!fSignalsOnly)
   {
-    const auto tmpmin = DataHist->GetBinContent(bin);
-    if ((tmpmin < fMinY) && (tmpmin > 0)) fMinY = tmpmin;
+    for (auto bin = 1; bin <= DataHist->GetNbinsX(); bin++)
+    {
+      const auto tmpmin = DataHist->GetBinContent(bin);
+      if ((tmpmin < fMinY) && (tmpmin > 0)) fMinY = tmpmin;
+    }
   }
 }
 
@@ -737,15 +745,21 @@ void TreePlotter::GetHistMaximum()
 
     // get tmp max
     const auto tmpmax = hist->GetBinContent(hist->GetMaximumBin());
+
+    if (tmpmax > fMaxY) fMaxY = tmpmax;
   }
 
-  // check combined background
-  const auto bkgdmax = BkgdHist->GetBinContent(BkgdHist->GetMaximumBin());
-  if (bkgdmax > fMaxY) fMaxY = bkgdmax;
-
-  // check final data (scaled and/or blinded)
-  const auto datamax = DataHist->GetBinContent(DataHist->GetMaximumBin());
-  if (datamax > fMaxY) fMaxY = datamax;
+  // for safety
+  if (!fSignalsOnly)
+  {
+    // check combined background
+    const auto bkgdmax = BkgdHist->GetBinContent(BkgdHist->GetMaximumBin());
+    if (bkgdmax > fMaxY) fMaxY = bkgdmax;
+    
+    // check final data (scaled and/or blinded)
+    const auto datamax = DataHist->GetBinContent(DataHist->GetMaximumBin());
+    if (datamax > fMaxY) fMaxY = datamax;
+  }
 }
 
 void TreePlotter::SetupDefaults()
@@ -764,7 +778,7 @@ void TreePlotter::SetupConfig()
 {
   std::cout << "Setting up Config..." << std::endl;
 
-  if (!fSignalsOnly) Config::SetupSamples();
+  Config::SetupSamples();
   Config::SetupSignalSamples();
   Config::SetupGroups();
   Config::SetupSignalGroups();

@@ -233,6 +233,36 @@ namespace Config
     // HVDS Labels when we get some samples...
   }
 
+  void KeepOnlySignals()
+  {
+    // erase by key first
+    for (const auto & GroupPair : Config::GroupMap)
+    {
+      const auto & sample = GroupPair.first;
+      const auto & group  = GroupPair.second;
+
+      if (group == isSignal) continue;
+
+      Config::TreeNameMap.erase(sample);
+      Config::HistNameMap.erase(sample);
+      Config::ColorMap.erase(sample);
+      Config::LabelMap.erase(sample);
+    }
+
+    // erase groups now
+    for (auto iter = Config::GroupMap.cbegin(); iter != Config::GroupMap.cend();)
+    {
+      if (iter->second != isSignal) 
+      {
+	Config::GroupMap.erase(iter++);
+      }
+      else
+      {
+	iter++;
+      }
+    }
+  }
+
   void SetupCuts(const TString & cutconfig)
   {
     std::cout << "Reading cut config..." << std::endl;

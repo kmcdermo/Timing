@@ -108,6 +108,7 @@ namespace Config
   void SetupLabels();
   void SetupCuts(const TString & cutconfig);
   void SetupSignalCutFlow(const TString & cutflowconfig);
+  void KeepOnlySignals();
 
   // Setup hists
   void SetupBins(std::string & str, std::vector<Double_t> & bins, Bool_t & var_bins);
