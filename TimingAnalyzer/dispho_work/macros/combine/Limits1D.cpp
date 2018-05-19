@@ -4,10 +4,7 @@ Limits1D::Limits1D(const TString & indir, const TString & infilename, const Bool
   : fInDir(indir), fInFileName(infilename), fDoObserved(doobserved), fOutText(outtext)
 {  
   // setup first
-  Limits1D::SetupEntryMap();
-  Limits1D::SetupGMSB();
-  Limits1D::RemoveGMSBSamples();
-  Limits1D::SetupGMSBSubGroups();
+  Limits1D::Setup();
 
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
@@ -27,7 +24,7 @@ Limits1D::~Limits1D()
 void Limits1D::MakeLimits1D()
 {
   // loop over GMSB subgroups
-  for (const auto & GMSBSubGroupPair : fGMSBSubGroupMap)
+  for (const auto & GMSBSubGroupPair : Common::GMSBSubGroupMap)
   {
     const auto & groupname = GMSBSubGroupPair.first;
     const auto & samples   = GMSBSubGroupPair.second;
@@ -145,155 +142,8 @@ void Limits1D::MakeLimits1D()
 
 void Limits1D::Setup()
 {
-  Common::
-
-
-}
-
-void Limits1D::SetupEntryMap()
-{
-  // set up entries in tree, based on expectd, adjust accordingly
-  fEntryMap["r2sigdown"] = 0;
-  fEntryMap["r1sigdown"] = 1;
-  fEntryMap["rexp"]      = 2;
-  fEntryMap["r1sigup"]   = 3;
-  fEntryMap["r2sigup"]   = 4;
-
-  // adjust for observed limit
-  if (fDoObserved)
-  {
-    for (auto & EntryPair : fEntryMap)
-    {
-      auto & entry = EntryPair.second;
-      entry += 1;
-    }
-    fEntryMap["robs"] = 0;
-  }
-}
-
-void Limits1D::SetupGMSB()
-{
-  // read in parameters... 
-  std::fstream inparams("signal_config/all_params.txt");
-  Float_t mass, width, br;
-  TString lambda, ctau;
-
-  while (inparams >> lambda >> ctau >> mass >> width >> br)
-  {
-    const TString s_ctau = (ctau.EqualTo("0.1") ? "0p1" : ctau);
-    const TString name = "GMSB_L"+lambda+"TeV_CTau"+s_ctau+"cm";
-
-    const Int_t i_lambda = lambda.Atoi();
-    const Float_t f_ctau = ctau.Atof();
-
-    fGMSBMap[name] = {lambda,i_lambda,s_ctau,f_ctau,mass,width,br};
-  }
-  
-  // read in xsecs...
-  std::fstream inxsecs("signal_config/all_xsecs.txt");
-  Float_t xsec, exsec;
-
-  while (inxsecs >> lambda >> ctau >> xsec >> exsec)
-  {
-    const TString s_ctau = (ctau.EqualTo("0.1") ? "0p1" : ctau);
-    const TString name = "GMSB_L"+lambda+"TeV_CTau"+s_ctau+"cm";
-
-    fGMSBMap[name].xsec  = xsec;
-    fGMSBMap[name].exsec = exsec;
-  }
-
-  // read in r-values...
-  for (auto & GMSBPair : fGMSBMap)
-  {
-    const auto & name = GMSBPair.first;
-    auto       & info = GMSBPair.second;
-    
-    // get file
-    const TString filename = Form("%s/%s%s.root",fInDir.Data(),fInFileName.Data(),name.Data());
-    auto infile = TFile::Open(Form("%s",filename.Data()));
-    auto isnull = Common::IsNullFile(infile);
-
-    if (!isnull)
-    {
-      // get tree
-      const TString treename = "limit";
-      auto intree = (TTree*)infile->Get(Form("%s",treename.Data()));
-      Common::CheckValidTree(intree,treename,filename);
-
-      // get limit branch
-      Double_t limit = 0; TBranch * b_limit = 0; TString s_limit = "limit";
-      intree->SetBranchAddress(s_limit.Data(),&limit,&b_limit);
-
-      // 5(6) Entries in tree, one for each quantile 
-      if (fDoObserved)
-      {
-	b_limit->GeEntry(fEntryMap["robs"]);
-	info.robs = limit;
-      }
-      else info.robs = -1;
-      
-      // 2sigdown
-      b_limit->GetEntry(fEntryMap["r2sigdown"]);
-      info.r2sigdown = limit;
-	
-      // 1sigdown
-      b_limit->GetEntry(fEntryMap["r1sigdown"]);
-      info.r1sigdown = limit;
-     
-      // expected
-      b_limit->GetEntry(fEntryMap["rexp"]);
-      info.rexp = limit;
-
-      // 1sigup
-      b_limit->GetEntry(fEntryMap["r1sigup"]);
-      info.r1sigup = limit;
-
-      // 2sigup
-      b_limit->GetEntry(fEntryMap["r2sigup"]);
-      info.r2sigup = limit;
-      
-      // delete once done
-      delete intree;
-      delete infile;
-    }
-    else
-    {
-      info.robs      = -1.f;
-      info.r2sigdown = -1.f;
-      info.r1sigdown = -1.f;
-      info.rexp      = -1.f;
-      info.r1sigup   = -1.f;
-      info.r2sigup   = -1.f;
-
-      std::cout << "skipping this file: " << filename.Data() << std::endl;
-    }
-  }
-}
-
-void Limits1D::RemoveGMSBSamples()
-{
-  std::vector<TString> keysToRemove;
-  for (const auto & GMSBPair : fGMSBMap)
-  {
-    const auto & name = GMSBPair.first;
-    const auto & info = GMSBPair.second;
-    
-    if (info.rexp < 0.f) keysToRemove.emplace_back(name);
-  }
-
-  for (const auto & keyToRemove : keysToRemove) fGMSBMap.erase(keyToRemove);
-
-  // ****************** HACK FOR NOW *************** //
-  fGMSBMap.erase("GMSB_L200TeV_CTau400cm");
-}
-
-void Limits1D::SetupGMSBSubGroups()
-{
-  for (const auto & GMSBPair : fGMSBMap)
-  {
-    const auto & name = GMSBPair.first;
-    const auto & info = GMSBPair.second;
-
-    fGMSBSubGroupMap["GMSB_CTau"+info.s_ctau+"cm"].emplace_back(name);
-  }
+  Combine::SetupEntryMap(fDoObserved);
+  Combine::SetupGMSB(Form("%s/%s%s.root",fInDir.Data(),fInFileName.Data(),name.Data()));
+  Combine::RemoveGMSBSamples();
+  Combine::SetupGMSBSubGroups();
 }
