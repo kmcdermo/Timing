@@ -1,0 +1,9 @@
+plot_title=#Sigma E_{T} [GeV/c]
+
+x_title=#Sigma E_{T} [GeV/c] (#Sigma p_{T}^{jet}+p_{T}^{#gamma_{0}}, p_{T}^{jet}>30, |#eta^{jet}|<3, #DeltaR(#gamma_{0},jet)>0.3, ID#geqTight)
+x_scale=LIN
+x_var=(Sum$(jetpt*((jetpt>30)&&(abs(jeteta)<3)))+phopt_0)
+x_bins=VARIABLE 0 25 50 75 100 150 200 250 300 350 400 500 600 700 800 1000 1500 2000 3000 5000
+
+y_title=Events/GeV/c
+y_scale=LOG
