@@ -62,8 +62,8 @@ public:
   TH1F * SetupHist(const TString & name);
   void ScaleMCToUnity();
   void ScaleMCToData();
-  Float_t GetHistMinimum();
-  Float_t GetHistMaximum();
+  void GetHistMinimum();
+  void GetHistMaximum();
   void PrintCanvas(const Bool_t isLogy);
   
   // Meta data and extra info
@@ -96,10 +96,11 @@ private:
   std::vector<BlindStruct> fBlinds;
 
   // other plotting config
-  std::map<TString,Bool_t> fPlotSignalMap;
+  std::vector<TString> fPlotSignalVec;
   Bool_t fScaleToUnity;
   Bool_t fScaleMCToData;
   Bool_t fBlindData;
+  Bool_t fSignalsOnly;
 
   // Style
   TStyle * fTDRStyle;

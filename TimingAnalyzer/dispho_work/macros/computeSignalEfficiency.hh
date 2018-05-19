@@ -15,10 +15,7 @@
 #include <map>
 #include <vector>
 
-void Setup(std::map<TString,vector<TString> > & SignalSubGroupMap, std::map<TString,Color_t> & SignalSubGroupColorMap, TStyle *& tdrStyle);
-void SetupSignalSubGroups(std::map<TString,vector<TString> > & SignalSubGroupMap);
-void SetupSignalSubGroupColors(std::map<TString,Color_t> & SignalSubGroupColorMap);
-
+void Setup(TStyle *& tdrStyle);
 void computeSignalEfficiency(const TString & infilename, const TString & outtext);
 
 #endif

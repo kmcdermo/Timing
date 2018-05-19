@@ -27,7 +27,6 @@ Fitter::Fitter(const TString & fitconfig, const TString & miscconfig, const TStr
   Fitter::SetupFitConfig();
   Fitter::SetupPlotConfig();
   Fitter::SetupMiscConfig();
-  Config::SetupWhichNotSignals(fPlotSignalMap);
   TVirtualFitter::SetDefaultFitter("Minuit2");
   
   // output root file for quick inspection
@@ -242,14 +241,8 @@ void Fitter::DumpInputInfo()
   // Signal 
   if (!fGenData)
   {
-    for (const auto & PlotSignalPair : fPlotSignalMap)
+    for (const auto & sample : fPlotSignalVec)
     {
-      const auto & sample = PlotSignalPair.first;
-      const auto   isplot = PlotSignalPair.second;
-
-      // only plot ones specified -- no need for all!
-      if (!isplot) continue;
-
       const TString signtext = Form("%s_Sign",sample.Data());
       auto signHist = (TH2F*)fHistMap2D[sample]->Clone(Form("%sHist",signtext.Data()));
       Fitter::DumpIntegralsAndDraw(signHist,signtext,false,true);
@@ -1138,6 +1131,7 @@ void Fitter::SetupFitConfig()
     else 
     {
       std::cerr << "Aye... your fit config is messed up, try again! Offending line: " << str.c_str() << std::endl;
+      std::cerr << "Offending line: " << str.c_str() << std::endl;
       exit(1);
     }
   }
@@ -1187,6 +1181,7 @@ void Fitter::SetupPlotConfig()
     else 
     {
       std::cerr << "Aye... your plot config is messed up, try again!" << std::endl;
+      std::cerr << "Offending line: " << str.c_str() << std::endl;
       exit(1);
     }
   }
@@ -1204,16 +1199,16 @@ void Fitter::SetupMiscConfig()
     else if (str.find("signal_to_model=") != std::string::npos) 
     {
       str = Config::RemoveDelim(str,"signals_to_plot=");
-      std::map<TString,Bool_t> tempmap;
-      Config::SetupWhichSignals(str,tempmap);
+      std::vector<TString> tempvec;
+      Config::SetupWhichSignals(str,tempvec);
 
       // know that only one signal is specified for model building+fitting!
-      fSignalSample = tempmap.begin()->first;
+      fSignalSample = tempvec[0];
     }
     else if (str.find("signals_to_plot=") != std::string::npos) 
     {
       str = Config::RemoveDelim(str,"signals_to_plot=");
-      Config::SetupWhichSignals(str,fPlotSignalMap);
+      Config::SetupWhichSignals(str,fPlotSignalVec);
     }
     else if (str.find("scale_mc_to_data=") != std::string::npos) 
     {
@@ -1228,9 +1223,14 @@ void Fitter::SetupMiscConfig()
       str = Config::RemoveDelim(str,"blind_data=");
       Config::SetupBool(str,fBlindData);
     }
+    else if (str.find("signals_only=") != std::string::npos)
+    {
+      std::cout << "signals_only not currently implemented in Fitter, skipping..." << std::endl;
+    }
     else 
     {
       std::cerr << "Aye... your miscellaneous plot config is messed up, try again!" << std::endl;
+      std::cerr << "Offending line: " << str.c_str() << std::endl;
       exit(1);
     }
   }

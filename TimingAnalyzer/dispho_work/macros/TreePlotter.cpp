@@ -31,7 +31,6 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
   TreePlotter::SetupConfig();
   TreePlotter::SetupPlotConfig();
   TreePlotter::SetupMiscConfig();
-  Config::SetupWhichNotSignals(fPlotSignalMap);
   TreePlotter::SetupHists();
 
   // output root file for quick inspection
@@ -165,7 +164,7 @@ void TreePlotter::MakeDataOutput()
 
   // Make new data hist in case we are blinded
   DataHist = TreePlotter::SetupHist("Data_Hist_Plotted");
-  DataHist->Add(HistMap["Data"]);
+  if (!fSignalsOnly) DataHist->Add(HistMap["Data"]);
 
   if (fBlindData)
   {
@@ -239,6 +238,19 @@ void TreePlotter::MakeBkgdOutput()
   }
 
   // save to output file
+  for (const auto & HistPair : HistMap)
+  {
+    const auto & sample = HistPair.first;
+    auto & hist = HistPair.second;
+
+    if (Config::GroupMap[sample] == isBkgd)
+    {
+      fOutFile->cd();
+      hist->Write(Form("%s_Plotted",hist->GetName()),TObject::kWriteDelete);
+    }
+  }
+
+  // save to outfile
   fOutFile->cd();
   BkgdHist->Write(BkgdHist->GetName(),TObject::kWriteDelete);
   BkgdStack->Write(BkgdStack->GetName(),TObject::kWriteDelete);
@@ -271,8 +283,18 @@ void TreePlotter::MakeRatioOutput()
 
   // ratio value plot
   RatioHist = TreePlotter::SetupHist("Ratio_Hist");
-  RatioHist->Add(DataHist);
-  RatioHist->Divide(BkgdHist);  
+  if (fSignalsOnly)
+  {
+    for (auto ibinX = 1; ibinX <= RatioHist->GetXaxis()->GetNbins(); ibinX++)
+    {
+      RatioHist->SetBinContent(ibinX,-1.f);
+    }
+  }
+  else
+  {
+    RatioHist->Add(DataHist);
+    RatioHist->Divide(BkgdHist);  
+  }
   RatioHist->GetYaxis()->SetTitle("Data/MC");
   RatioHist->SetMinimum(-0.1); // Define Y ..
   RatioHist->SetMaximum( 2.1); // .. range
@@ -282,14 +304,17 @@ void TreePlotter::MakeRatioOutput()
   
   // ratio MC error plot
   RatioMCErrs = TreePlotter::SetupHist("Ratio_MCErrs");
-  RatioMCErrs->Add(BkgdHist);
-  RatioMCErrs->Divide(BkgdHist);
+  if (!fSignalsOnly)
+  {
+    RatioMCErrs->Add(BkgdHist);
+    RatioMCErrs->Divide(BkgdHist);
+  }
   RatioMCErrs->SetMarkerSize(0);
   RatioMCErrs->SetFillStyle(3254);
   RatioMCErrs->SetFillColor(kGray+3);
 
   // don't display empty bins
-  for (Int_t ibin = 1; ibin <= RatioMCErrs->GetNbinsX(); ibin++) 
+  for (auto ibin = 1; ibin <= RatioMCErrs->GetNbinsX(); ibin++) 
   {
     if (RatioMCErrs->GetBinContent(ibin) == 0) {RatioMCErrs->SetBinContent(ibin,-2);} 
   }
@@ -321,7 +346,7 @@ void TreePlotter::MakeLegend()
   Legend->SetLineColor(kBlack);
 
   // add data to legend
-  Legend->AddEntry(DataHist,Config::LabelMap["Data"].Data(),"epl");
+  if (!fSignalsOnly) Legend->AddEntry(DataHist,Config::LabelMap["Data"].Data(),"epl");
 
   // add bkgd to legend
   for (const auto & HistPair : HistMap)
@@ -332,18 +357,12 @@ void TreePlotter::MakeLegend()
     // only do background
     if (Config::GroupMap[sample] != isBkgd) continue;
 
-    Legend->AddEntry(hist,Config::LabelMap[sample].Data(),"f");
+    if (!fSignalsOnly) Legend->AddEntry(hist,Config::LabelMap[sample].Data(),"f");
   }
 
-  // add signal to legend
-  for (const auto & PlotSignalPair : fPlotSignalMap)
+  // add signals that we want to plot to the legend
+  for (const auto & sample : fPlotSignalVec)
   {
-    const auto & sample = PlotSignalPair.first;
-    const auto   isplot = PlotSignalPair.second;
-
-    // only do signals to be plotted
-    if (!isplot) continue;
-
     Legend->AddEntry(HistMap[sample],Config::LabelMap[sample].Data(),"l");
   }
 
@@ -367,7 +386,7 @@ void TreePlotter::InitOutputCanvPads()
 
   LowerPad = new TPad("LowerPad", "", Config::left_lp, Config::bottom_lp, Config::right_lp, Config::top_lp);
   LowerPad->SetTopMargin(0);
-  LowerPad->SetBottomMargin(0.35); 
+  LowerPad->SetBottomMargin(0.35);
 }
 
 void TreePlotter::DrawUpperPad()
@@ -380,43 +399,57 @@ void TreePlotter::DrawUpperPad()
   UpperPad->cd();
   UpperPad->SetLogx(fIsLogX);
 
-  // Get and Set Global Maximum and Minimum
-  fMinY = TreePlotter::GetHistMinimum();
-  fMaxY = TreePlotter::GetHistMaximum();
-
-  DataHist->SetMinimum(fMinY);
-  DataHist->SetMaximum(fMaxY);
+  // Get and Set Global Minimum and Maximum
+  TreePlotter::GetHistMinimum();
+  TreePlotter::GetHistMaximum();
   
-  // now draw the plots for upper pad in absurd order because ROOT is dumb
-  DataHist->Draw("PE"); // draw first so labels appear
+  // full info
+  if (!fSignalsOnly)
+  {
+    DataHist->SetMinimum(fMinY);
+    DataHist->SetMaximum(fMaxY);
+    
+    // now draw the plots for upper pad in absurd order because ROOT is dumb
+    DataHist->Draw("PE"); // draw first so labels appear
+    
+    // Have to scale TDR style values by height of upper pad
+    DataHist->GetYaxis()->SetLabelSize  (Config::LabelSize / Config::height_up); 
+    DataHist->GetYaxis()->SetTitleSize  (Config::TitleSize / Config::height_up);
+    DataHist->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_up);
+    
+    // Draw stack
+    BkgdStack->Draw("HIST SAME"); 
+    UpperPad->RedrawAxis("SAME"); // stack kills axis
+    
+    // Draw MC sum total error as well on top of stack --> E2 makes error appear as rectangle
+    BkgdHist->Draw("E2 SAME");
 
-  // Have to scale TDR style values by height of upper pad
-  DataHist->GetYaxis()->SetLabelSize  (Config::LabelSize / Config::height_up); 
-  DataHist->GetYaxis()->SetTitleSize  (Config::TitleSize / Config::height_up);
-  DataHist->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_up);
-  
-  // Draw stack
-  BkgdStack->Draw("HIST SAME"); 
-  UpperPad->RedrawAxis("SAME"); // stack kills axis
+    // Redraw data to make it appear again!
+    DataHist->Draw("PE SAME"); 
+  } 
 
   // Draw Signal : loop over ones to plot
-  for (const auto & PlotSignalPair : fPlotSignalMap)
+  for (auto isample = 0U; isample < fPlotSignalVec.size(); isample++)
   {
-    const auto & sample = PlotSignalPair.first;
-    const auto   isplot = PlotSignalPair.second;
+    const auto & sample = fPlotSignalVec[isample];
+    auto & hist = HistMap[sample];
 
-    // only do signals to be plotted
-    if (!isplot) continue;
-    
-    HistMap[sample]->Draw("HIST SAME");
+    if (fSignalsOnly && isample == 0)
+    {
+      hist->GetYaxis()->SetLabelSize  (Config::LabelSize / Config::height_up); 
+      hist->GetYaxis()->SetTitleSize  (Config::TitleSize / Config::height_up);
+      hist->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_up);
+
+      hist->SetMinimum(fMinY);
+      hist->SetMaximum(fMaxY);
+      hist->Draw("HIST");
+    }
+    else
+    { 
+      hist->Draw("HIST SAME");
+    }
   }
 
-  // Draw MC sum total error as well on top of stack --> E2 makes error appear as rectangle
-  BkgdHist->Draw("E2 SAME");
-
-  // Redraw data to make it appear again!
-  DataHist->Draw("PE SAME"); 
- 
   // And lastly draw the legend
   Legend->Draw("SAME"); 
 }
@@ -437,7 +470,7 @@ void TreePlotter::DrawLowerPad()
   RatioLine->SetX2(RatioHist->GetXaxis()->GetXmax());
   RatioLine->SetY1(1.0);
   RatioLine->SetY2(1.0);
-  RatioLine->Draw("SAME");
+  RatioLine->Draw(fSignalsOnly?"":"SAME");
 
   // some style since apparently TDR Style is crapping out
   RatioHist->GetYaxis()->SetNdivisions(505);
@@ -451,11 +484,14 @@ void TreePlotter::DrawLowerPad()
   RatioHist->GetYaxis()->SetTitleSize  (Config::TitleSize   / Config::height_lp);
   RatioHist->GetYaxis()->SetTitleOffset(Config::TitleFF * Config::TitleYOffset * Config::height_lp);
 
-  // redraw to go over line
-  RatioHist->Draw("EP SAME"); 
-  
-  // plots MC error copy
-  RatioMCErrs->Draw("E2 SAME");
+  if (!fSignalsOnly)
+  {
+    // redraw to go over line
+    RatioHist->Draw("EP SAME");
+
+    // plots MC error copy
+    RatioMCErrs->Draw("E2 SAME");  
+  }
 }
 
 void TreePlotter::SaveOutput()
@@ -653,9 +689,10 @@ void TreePlotter::ScaleMCToData()
   BkgdHist->Scale(sf);
 }
 
-Float_t TreePlotter::GetHistMinimum()
+void TreePlotter::GetHistMinimum()
 {
-  auto min = 1.0e9;
+  // initialize to dummy value
+  fMinY = 1e9;
 
   // need to loop through to check bin != 0
   for (const auto & HistPair : HistMap)
@@ -663,28 +700,52 @@ Float_t TreePlotter::GetHistMinimum()
     const auto & sample = HistPair.first;
     const auto & hist = HistPair.second;
 
+    // skip data and check afterwards
+    if (Config::GroupMap[sample] == isData) continue;
+
     // skip samples not plotted
     if (Config::GroupMap[sample] == isSignal)
     {
-      if (!fPlotSignalMap[sample]) continue;
+      if (std::find(fPlotSignalVec.begin(),fPlotSignalVec.end(),sample) == fPlotSignalVec.end()) continue;
     }
 
-    // get tmp min
+    // get and set tmp min
     for (auto bin = 1; bin <= hist->GetNbinsX(); bin++)
     {
       const auto tmpmin = hist->GetBinContent(bin);
-      if ((tmpmin < min) && (tmpmin > 0)) min = tmpmin;
+      if ((tmpmin < fMinY) && (tmpmin > 0)) fMinY = tmpmin;
     }
   }
 
-  return min;
+  // now check data
+  for (auto bin = 1; bin <= DataHist->GetNbinsX(); bin++)
+  {
+    const auto tmpmin = DataHist->GetBinContent(bin);
+    if ((tmpmin < fMinY) && (tmpmin > 0)) fMinY = tmpmin;
+  }
 }
 
-Float_t TreePlotter::GetHistMaximum()
+void TreePlotter::GetHistMaximum()
 {
-  const auto datamax = DataHist->GetBinContent(DataHist->GetMaximumBin());
+  // initialize to dummy value
+  fMaxY = -1e9;
+
+  // check signals first
+  for (const auto & sample : fPlotSignalVec)
+  {
+    const auto & hist = HistMap[sample];
+
+    // get tmp max
+    const auto tmpmax = hist->GetBinContent(hist->GetMaximumBin());
+  }
+
+  // check combined background
   const auto bkgdmax = BkgdHist->GetBinContent(BkgdHist->GetMaximumBin());
-  return (datamax > bkgdmax ? datamax : bkgdmax);
+  if (bkgdmax > fMaxY) fMaxY = bkgdmax;
+
+  // check final data (scaled and/or blinded)
+  const auto datamax = DataHist->GetBinContent(DataHist->GetMaximumBin());
+  if (datamax > fMaxY) fMaxY = datamax;
 }
 
 void TreePlotter::SetupDefaults()
@@ -696,18 +757,21 @@ void TreePlotter::SetupDefaults()
   fScaleToUnity = false;
   fScaleMCToData = false;
   fBlindData = false;
+  fSignalsOnly = false;
 }
 
 void TreePlotter::SetupConfig()
 {
   std::cout << "Setting up Config..." << std::endl;
 
-  Config::SetupSamples();
+  if (!fSignalsOnly) Config::SetupSamples();
   Config::SetupSignalSamples();
   Config::SetupGroups();
   Config::SetupSignalGroups();
+  Config::SetupSignalSubGroups();
   Config::SetupTreeNames();
   Config::SetupHistNames();
+  Config::SetupSignalSubGroupColors();
   Config::SetupColors();
   Config::SetupLabels();
   Config::SetupCuts(fCutConfig);
@@ -764,6 +828,7 @@ void TreePlotter::SetupPlotConfig()
     else 
     {
       std::cerr << "Aye... your plot config is messed up, try again!" << std::endl;
+      std::cerr << "Offending line: " << str.c_str() << std::endl;
       exit(1);
     }
   }
@@ -785,7 +850,7 @@ void TreePlotter::SetupMiscConfig()
     else if (str.find("signals_to_plot=") != std::string::npos)
     {
       str = Config::RemoveDelim(str,"signals_to_plot=");
-      Config::SetupWhichSignals(str,fPlotSignalMap);
+      Config::SetupWhichSignals(str,fPlotSignalVec);
     }
     else if (str.find("scale_mc_to_data=") != std::string::npos)
     {
@@ -802,9 +867,15 @@ void TreePlotter::SetupMiscConfig()
       str = Config::RemoveDelim(str,"blind_data=");
       Config::SetupBool(str,fBlindData);
     }
+    else if (str.find("signals_only=") != std::string::npos)
+    {
+      str = Config::RemoveDelim(str,"signals_only=");
+      Config::SetupBool(str,fSignalsOnly);
+    }
     else 
     {
       std::cerr << "Aye... your miscellaneous plot config is messed up, try again!" << std::endl;
+      std::cerr << "Offending line: " << str.c_str() << std::endl;
       exit(1);
     }
   }

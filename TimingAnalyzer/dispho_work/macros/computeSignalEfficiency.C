@@ -3,10 +3,8 @@
 void computeSignalEfficiency(const TString & infilename, const TString & outtext)
 {
   // set things up
-  std::map<TString,std::vector<TString> > SignalSubGroupMap;
-  std::map<TString,Color_t> SignalSubGroupColorMap;
   auto tdrStyle = new TStyle();
-  Setup(SignalSubGroupMap,SignalSubGroupColorMap,tdrStyle);
+  Setup(tdrStyle);
   
   // get input
   auto infile = TFile::Open(Form("%s",infilename.Data()));
@@ -21,7 +19,7 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
 
   // loop over signal groups
   Int_t counter = 0;
-  for (const auto & SignalSubGroupPair : SignalSubGroupMap)
+  for (const auto & SignalSubGroupPair : Config::SignalSubGroupMap)
   {
     const auto & groupname = SignalSubGroupPair.first;
     const auto & samples   = SignalSubGroupPair.second;
@@ -49,8 +47,8 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
     graphMap[groupname] = efficiency->CreateGraph();
     auto & graph = graphMap[groupname];
     graph->SetName(Form("%s_eff_graph",groupname.Data()));
-    graph->SetLineColor(SignalSubGroupColorMap[groupname]);
-    graph->SetMarkerColor(SignalSubGroupColorMap[groupname]);
+    graph->SetLineColor(Config::SignalSubGroupColorMap[groupname].color);
+    graph->SetMarkerColor(Config::SignalSubGroupColorMap[groupname].color);
 
     // set labels!
     if (counter == 0)
@@ -83,7 +81,7 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
 
     // and add to legend!
     auto label = groupname;
-    label.ReplaceAll("GMSB_","c#tau: ");
+    label.ReplaceAll("GMSB_CTau","c#tau: ");
     label.ReplaceAll("p",".");
     leg->AddEntry(graph,Form("%s",label.Data()),"lp");
 
@@ -107,7 +105,7 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
   delete tdrStyle;
 }
 
-void Setup(std::map<TString,vector<TString> > & SignalSubGroupMap, std::map<TString,Color_t> & SignalSubGroupColorMap, TStyle *& tdrStyle)
+void Setup(TStyle *& tdrStyle)
 {
   Config::SetupSignalSamples();
 
@@ -118,32 +116,8 @@ void Setup(std::map<TString,vector<TString> > & SignalSubGroupMap, std::map<TStr
   Config::SetupSignalGroups();
   Config::SetupSignalCutFlowHistNames();
 
-  SetupSignalSubGroups(SignalSubGroupMap);
-  SetupSignalSubGroupColors(SignalSubGroupColorMap);
+  Config::SetupSignalSubGroups();
+  Config::SetupSignalSubGroupColors();
 
   Config::SetTDRStyle(tdrStyle);
-}
-
-void SetupSignalSubGroups(std::map<TString,std::vector<TString> > & SignalSubGroupMap)
-{
-  for (const auto & SamplePair : Config::SampleMap)
-  {
-    const auto & sample = SamplePair.second;
-    
-    if (Config::SignalGroupMap[sample] == "GMSB")
-    {
-      const TString s_ctau = "_CTau";
-      auto i_ctau = sample.Index(s_ctau);
-      auto l_ctau = s_ctau.Length();
-      
-      const TString ctau(sample(i_ctau+l_ctau,sample.Length()-i_ctau-l_ctau));
-      SignalSubGroupMap["GMSB_"+ctau+"cm"].emplace_back(sample);
-    }
-  }
-}
-
-void SetupSignalSubGroupColors(std::map<TString,Color_t> & SignalSubGroupColorMap)
-{
-  SignalSubGroupColorMap["GMSB_0p1cm"] = kBlue;
-  SignalSubGroupColorMap["GMSB_400cm"] = kRed;
 }

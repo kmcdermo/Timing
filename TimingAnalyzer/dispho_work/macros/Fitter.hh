@@ -172,7 +172,7 @@ private:
   std::map<TString,TH1F*> fHistMapY;
 
   // misc plot info + model info
-  std::map<TString,Bool_t> fPlotSignalMap;
+  std::vector<TString> fPlotSignalVec;
   TString fSignalSample;
 
   // Counts + scaling norm from the start

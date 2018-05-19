@@ -10,18 +10,20 @@
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TString.h"
+#include "TColor.h"
 #include "TPaveText.h"
 #include "TText.h"
 
 // STL includes
 #include <map>
+#include <vector>
+#include <string>
+#include <iostream>
 #include <fstream>
 #include <sstream>
-#include <iostream>
-#include <string>
-#include <vector>
 #include <cstdlib>
 #include <utility>
+#include <algorithm>
 
 // Sample Enums
 enum SampleGroup {isData, isBkgd, isSignal, isToy};
@@ -39,6 +41,17 @@ struct BlindStruct
   Float_t xup;
   Float_t ylow;
   Float_t yup;
+};
+
+// Color Struct
+struct ColorStruct
+{
+  ColorStruct() {}
+  ColorStruct(const Color_t & color, const TString & increment) 
+    : color(color), increment(increment) {}
+
+  Color_t color;
+  TString increment;
 };
 
 // Configuration parameters
@@ -70,9 +83,11 @@ namespace Config
   extern std::map<TString,TString> SampleMap;
   extern std::map<TString,SampleGroup> GroupMap;
   extern std::map<TString,TString> SignalGroupMap;
+  extern std::map<TString,vector<TString> > SignalSubGroupMap;
   extern std::map<TString,TString> TreeNameMap;
   extern std::map<TString,TString> HistNameMap;
   extern std::map<TString,TString> SignalCutFlowHistNameMap;
+  extern std::map<TString,ColorStruct> SignalSubGroupColorMap;
   extern std::map<TString,Color_t> ColorMap;
   extern std::map<TString,TString> LabelMap; 
   extern std::map<TString,TString> CutMap;
@@ -84,9 +99,11 @@ namespace Config
   void SetupGroups();
   void SetupSignalSamples();
   void SetupSignalGroups();
+  void SetupSignalSubGroups();
   void SetupTreeNames();
   void SetupHistNames();
   void SetupSignalCutFlowHistNames();
+  void SetupSignalSubGroupColors();
   void SetupColors();
   void SetupLabels();
   void SetupCuts(const TString & cutconfig);
@@ -100,8 +117,7 @@ namespace Config
 
   // Misc setup
   void SetupBool(const std::string & str, Bool_t & setting);
-  void SetupWhichSignals(const std::string & str, std::map<TString,Bool_t> & signalmap);
-  void SetupWhichNotSignals(std::map<TString,Bool_t> & signalmap);
+  void SetupWhichSignals(const std::string & str, std::vector<TString> & signalvec);
   
   // skim input
   constexpr UInt_t nEvCheck = 10000;

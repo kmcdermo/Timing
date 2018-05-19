@@ -334,6 +334,7 @@ void TreePlotter2D::SetupPlotConfig()
     else 
     {
       std::cerr << "Aye... your plot config is messed up, try again!" << std::endl;
+      std::cerr << "Offending line: " << str.c_str() << std::endl;
       exit(1);
     }
   }
@@ -369,9 +370,14 @@ void TreePlotter2D::SetupMiscConfig()
       str = Config::RemoveDelim(str,"blind_data=");
       Config::SetupBool(str,fBlindData);
     }
+    else if (str.find("signals_only=") != std::string::npos)
+    {
+      std::cout << "signals_only not currently implemented in 2D plotter, skipping..." << std::endl;
+    }
     else 
     {
       std::cerr << "Aye... your miscellaneous plot config is messed up, try again!" << std::endl;
+      std::cerr << "Offending line: " << str.c_str() << std::endl;
       exit(1);
     }
   }

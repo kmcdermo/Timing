@@ -2,17 +2,17 @@
 #include "TLatex.h"
 #include "TColor.h"
 
-#include <iostream>
-
 namespace Config
 {
   TString PrimaryDataset;
   std::map<TString,TString> SampleMap;
   std::map<TString,SampleGroup> GroupMap;
   std::map<TString,TString> SignalGroupMap;
+  std::map<TString,vector<TString> > SignalSubGroupMap;
   std::map<TString,TString> TreeNameMap;
   std::map<TString,TString> HistNameMap;
   std::map<TString,TString> SignalCutFlowHistNameMap;
+  std::map<TString,ColorStruct> SignalSubGroupColorMap;
   std::map<TString,Color_t> ColorMap;
   std::map<TString,TString> LabelMap;
   std::map<TString,TString> CutMap;
@@ -110,6 +110,25 @@ namespace Config
     }
   }
 
+  void SetupSignalSubGroups()
+  {
+    for (const auto & SampleGroupPair : Config::SignalGroupMap)
+    {
+      const auto & sample = SampleGroupPair.first;
+      const auto & group  = SampleGroupPair.second;
+    
+      if (group == "GMSB")
+      {
+	const TString s_ctau = "_CTau";
+	auto i_ctau = sample.Index(s_ctau);
+	auto l_ctau = s_ctau.Length();
+	
+	const TString ctau(sample(i_ctau+l_ctau,sample.Length()-i_ctau-l_ctau));
+	Config::SignalSubGroupMap["GMSB_CTau"+ctau+"cm"].emplace_back(sample);
+      }
+    }
+  }
+  
   void SetupTreeNames()
   {
     for (const auto & GroupPair : Config::GroupMap)
@@ -140,6 +159,15 @@ namespace Config
     }
   }
 
+  void SetupSignalSubGroupColors()
+  {
+    // GMSB: add more as we go
+    Config::SignalSubGroupColorMap["GMSB_CTau0p1cm"] = {kAzure,"Up"};
+    Config::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kAzure,"Down"};
+
+    // deal with HVDS later...
+  }
+
   void SetupColors()
   {
     Config::ColorMap["QCD"]   = kGreen;
@@ -148,30 +176,24 @@ namespace Config
     Config::ColorMap["DiPho"] = kCyan;
     Config::ColorMap["Data"]  = kBlack;
     
-    Int_t counter = 0; 
-    for (const auto & GroupPair : Config::GroupMap)
+    for (const auto & SignalSubGroupPair : Config::SignalSubGroupMap)
     {
-      const auto & sample = GroupPair.first;
-      const auto group    = GroupPair.second;
-      
-      if (group != isSignal) continue;
-      if (Config::SignalGroupMap[sample] != "GMSB") continue;
-
-      Config::ColorMap[sample] = kBlue+counter;
-      counter++;
-    }
-
-    counter = 0; 
-    for (const auto & GroupPair : Config::GroupMap)
-    {
-      const auto & sample = GroupPair.first;
-      const auto group    = GroupPair.second;
-      
-      if (group != isSignal) continue;
-      if (Config::SignalGroupMap[sample] != "HVDS") continue;
-
-      Config::ColorMap[sample] = kOrange+counter;
-      counter++;
+      const auto & group   = SignalSubGroupPair.first;
+      const auto & samples = SignalSubGroupPair.second;
+    
+      Int_t counter = 0;
+      for (const auto & sample : samples)
+      {
+	Config::ColorMap[sample] = Config::SignalSubGroupColorMap[group].color+counter;
+	
+	if      (Config::SignalSubGroupColorMap[group].increment == "Up"  ) counter++;
+	else if (Config::SignalSubGroupColorMap[group].increment == "Down") counter--;
+	else    
+	{
+	  std::cerr << "Yikes, you messed up the signal sub group color config pretty bad, try again..." << std::endl;
+	  exit(1);
+	}
+      }
     }
   }
 
@@ -398,7 +420,7 @@ namespace Config
     }
   }
 
-  void SetupWhichSignals(const std::string & str, std::map<TString,Bool_t> & signalmap)
+  void SetupWhichSignals(const std::string & str, std::vector<TString> & signalvec)
   {
     std::stringstream ss(str);
     std::string signal;
@@ -415,30 +437,21 @@ namespace Config
 	  // skip non-signal samples
 	  if (group != isSignal) continue;
 
-	  signalmap[sample] = true;
+	  signalvec.emplace_back(sample);
 	}
       }
       else
       {
-	const TString sample(signal);
-	signalmap[sample] = true;
+	if (str.find("!") != std::string::npos)
+	{
+	  signal = Config::RemoveDelim(signal,"!");
+	  signalvec.erase(std::remove(signalvec.begin(), signalvec.end(), signal), signalvec.end()); 
+	}
+	else
+	{
+	  signalvec.emplace_back(signal);
+	}
       }
-    }
-  }
-
-  void SetupWhichNotSignals(std::map<TString,Bool_t> & signalmap)
-  {
-    // loop over signals
-    for (const auto & GroupPair : Config::GroupMap)
-    {
-      const auto & sample = GroupPair.first;
-      const auto & group  = GroupPair.second;
-      
-      // skip non-signal samples
-      if (group != isSignal) continue;
-    
-      // only mark samples false for those that are not marked true
-      if (!signalmap.count(sample)) signalmap[sample] = false;
     }
   }
 
