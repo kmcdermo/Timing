@@ -66,7 +66,7 @@ options.register('filterEff',1.0,VarParsing.multiplicity.singleton,VarParsing.va
 options.register('BR',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'branching ratio of MC');
 
 ## GT to be used
-options.register('globalTag','94X_dataRun2_ReReco_EOY17_v2',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
+options.register('globalTag','94X_dataRun2_v6',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
 
 ## do a demo run over only 1k events
 options.register('demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to run over only 1k events');
@@ -166,10 +166,10 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+		# reminiaod data: 94X_dataRun2_v6
+		#'/store/data/Run2017E/SinglePhoton/MINIAOD/31Mar2018-v1/00000/52B0B611-FF37-E811-B31D-0242AC1C0500.root'
 		# test GJets, GT: 94X_mc2017_realistic_v10
 		#'/store/mc/RunIIFall17MiniAOD/GJets_HT-400To600_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/94X_mc2017_realistic_v10-v2/10000/2EB3F025-5DF8-E711-BCBE-90B11C27F610.root'
-		# EOY ReReco 2017D-v1; GT: 94X_dataRun2_ReReco_EOY17_v2
-		#'root://cms-xrd-global.cern.ch//store/data/Run2017D/SinglePhoton/MINIAOD/17Nov2017-v1/20000/029AE74D-B8D2-E711-9F13-0025905A6122.root'
 		###### Hacked 93X GMSB ctau = 4m sample, GT: 92X_upgrade2017_realistic_v10
 		#'/store/group/phys_exotica/displacedPhotons/GMSB_L200TeV_CTau400cm_930/GMSB_L200TeV_CTau400cm_930_step3/171024_213911/0000/step3_1.root',
 		#'file:/afs/cern.ch/work/k/kmcdermo/private/dispho/timegun/CMSSW_9_4_0/src/sample/step3.root'

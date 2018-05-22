@@ -163,70 +163,12 @@ namespace oot
   }
 
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
-		   const edm::Handle<edm::ValueMap<bool> > & photonLooseIdMapH, 
-		   const edm::Handle<edm::ValueMap<bool> > & photonMediumIdMapH, 
-		   const edm::Handle<edm::ValueMap<bool> > & photonTightIdMapH,
-		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
-		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonLooseIdMapH, 
-		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonMediumIdMapH, 
-		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonTightIdMapH,
-		   std::vector<oot::Photon> & photons, const float phpTmin, const std::string & phIDmin)
-  {
-    oot::PrepPhotons(photonsH,photonLooseIdMapH,photonMediumIdMapH,photonTightIdMapH,photons,false,phpTmin);
-    oot::PrepPhotons(ootPhotonsH,ootPhotonLooseIdMapH,ootPhotonMediumIdMapH,ootPhotonTightIdMapH,photons,true,phpTmin);
-
-    // final sorting
-    if (phIDmin != "none")
-    {
-      photons.erase(std::remove_if(photons.begin(),photons.end(),
-				   [&phIDmin](const auto & photon)
-				   {
-				     return !photon.photon().photonID(phIDmin);
-				   }),photons.end());
-    }
-    std::sort(photons.begin(),photons.end(),oot::sortByPt);
-  }  
-
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH,
-		   const edm::Handle<edm::ValueMap<bool> > & photonLooseIdMapH,
-		   const edm::Handle<edm::ValueMap<bool> > & photonMediumIdMapH,
-		   const edm::Handle<edm::ValueMap<bool> > & photonTightIdMapH,
-		   std::vector<oot::Photon> & photons, const bool isOOT, const float phpTmin)
-  {
-    if (photonsH.isValid()) // standard handle check
-    {
-      const edm::ValueMap<bool> photonLooseIdMap  = *photonLooseIdMapH;
-      const edm::ValueMap<bool> photonMediumIdMap = *photonMediumIdMapH;
-      const edm::ValueMap<bool> photonTightIdMap  = *photonTightIdMapH;
-
-      for (std::vector<pat::Photon>::const_iterator phiter = photonsH->begin(); phiter != photonsH->end(); ++phiter)
-      {
-	if (phiter->pt() < phpTmin) continue;
-
-	// Initialize Id Pair
-	idpVec idpairs = {{"loose",false}, {"medium",false}, {"tight",false}};
-	
-	// Get the VID of the photon
-	const edm::Ptr<pat::Photon> photonPtr(photonsH, phiter - photonsH->begin());
-	
-	// store VID in temp struct
-	// loose > medium > tight
-	if (photonLooseIdMap [photonPtr]) idpairs[0].second = true;
-	if (photonMediumIdMap[photonPtr]) idpairs[1].second = true;
-	if (photonTightIdMap [photonPtr]) idpairs[2].second = true;
-	
-	// set VID/isOOT of photon
-	photons.emplace_back(*phiter,isOOT);
-	photons.back().photon_nc().setPhotonIDs(idpairs);
-      } // end loop over photons
-    } // isValid
-  }
-
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
 		   std::vector<oot::Photon> & photons, const float rho,
 		   const float phpTmin, const std::string & phIDmin)
   {
+    // get VIDs of GED photons first (both GED ID and OOT ID), then OOT photons
+    // put both GED and OOT photons in a common container, sorting by pT at the end
     oot::PrepPhotons(photonsH,photons,false,rho,phpTmin,phIDmin);
     oot::PrepPhotons(ootPhotonsH,photons,true,rho,phpTmin,phIDmin);
 
@@ -245,8 +187,8 @@ namespace oot
 
 	idpVec idpairs;
 	idpairs = {{"loose-ged",false}, {"medium-ged",false}, {"tight-ged",false}, {"loose-oot",false}, {"tight-oot",false}};
-	oot::GetGEDPhoVID(photon,idpairs,rho);	  
-	oot::GetOOTPhoVID(photon,idpairs,rho);
+	oot::GetGEDPhoVID(photon,idpairs,rho,isOOT);
+	oot::GetOOTPhoVID(photon,idpairs,rho,isOOT);
 	
 	bool isGoodID = true;
 	if (phIDmin != "none")
@@ -392,12 +334,23 @@ namespace oot
   {
     if (photons.size() > 0)
     {
-      const auto & photon = photons[0]; // only clean out w.r.t. to leading photon... can do more later
-      jets.erase(std::remove_if(jets.begin(),jets.end(),
-				[dRmin,&photon](const auto & jet)
-				{
-				  return (Config::deltaR(jet.phi(),jet.eta(),photon.phi(),photon.eta()) < dRmin);
-				}),jets.end());
+      // only clean out w.r.t. to leading photon... can do more later
+      const auto & photon = photons[0].photon();
+
+      // apply loose selection on photon 
+      const float HoverE = photon.hadTowOverEm();
+      const float Sieie  = photon.full5x5_sigmaIetaIeta();
+      const float eta = std::abs(photon.superCluster()->eta());
+      
+      // cuts set to be looser than trigger values by .05 in H/E and 0.005 in Sieie
+      if ( ((eta < Config::etaEBcutoff) && (HoverE < 0.25) && (Sieie < 0.019)) || ((eta >= Config::etaEBcutoff && eta < Config::etaEEmax) && (HoverE < 0.2) && (Sieie < 0.04)) )
+      {
+     	jets.erase(std::remove_if(jets.begin(),jets.end(),
+				  [dRmin,&photon](const auto & jet)
+				  {
+				    return (Config::deltaR(jet.phi(),jet.eta(),photon.phi(),photon.eta()) < dRmin);
+				  }),jets.end());
+      }
     }
   }
 
@@ -505,64 +458,73 @@ namespace oot
   //                //
   ////////////////////
 
-  void GetGEDPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho)
+  void GetGEDPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho, const bool isOOT)
   {
-    // needed for cuts
-    const float eta = std::abs(photon.superCluster()->eta());
-    const float pt  = photon.pt();
-
-    // cut variables
-    const float HoverE = photon.hadTowOverEm();
-    const float Sieie  = photon.full5x5_sigmaIetaIeta();
-    // Isolations are currently wrong! need to recompute them apparently : 
-    // https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedPhotonIdentificationRun2#Selection_implementation_details
-    // https://twiki.cern.ch/twiki/bin/view/CMS/EgammaPFBasedIsolationRun2#Recipe_for_accessing_PF_isol_AN1
-    // https://github.com/cms-sw/cmssw/blob/master/RecoEgamma/PhotonIdentification/plugins/PhotonIDValueMapProducer.cc#L338-L395
-    const float ChgHadIso = std::max(photon.chargedHadronIso() - (rho * oot::GetChargedHadronEA(eta))                                         ,0.f);
-    const float NeuHadIso = std::max(photon.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(eta)) - (oot::GetNeutralHadronPtScale(eta,pt)),0.f);
-    const float PhoIso    = std::max(photon.photonIso()        - (rho * oot::GetGammaEA        (eta)) - (oot::GetGammaPtScale        (eta,pt)),0.f);
-
-    if (eta < Config::etaEBcutoff)
+    if (!isOOT && false) // hack for now --> will undo once we use MAD v2: can consider using VID for OOT photons then this section is trivial... bitmask from userInt == 127 == pass, also section below seems to work...
     {
-      if      ((HoverE < 0.020) && (Sieie < 0.0103) && (ChgHadIso < 1.158) && (NeuHadIso < 1.267) && (PhoIso < 2.065)) 
-      {
-	idpairs[2].second = true;
-	idpairs[1].second = true;
-	idpairs[0].second = true;
-      }
-      else if ((HoverE < 0.035) && (Sieie < 0.0103) && (ChgHadIso < 1.416) && (NeuHadIso < 2.491) && (PhoIso < 2.952)) 
-      {
-	idpairs[2].second = false;
-	idpairs[1].second = true;
-	idpairs[0].second = true;
-      }   
-      else if ((HoverE < 0.105) && (Sieie < 0.0103) && (ChgHadIso < 2.839) && (NeuHadIso < 9.188) && (PhoIso < 2.956)) 
-      {
-	idpairs[2].second = false;
-	idpairs[1].second = false;
-	idpairs[0].second = true;
-      }   
+      idpairs[2].second = photon.photonID("cutBasedPhotonID-Fall17-94X-V1-tight");
+      idpairs[1].second = photon.photonID("cutBasedPhotonID-Fall17-94X-V1-medium");
+      idpairs[0].second = photon.photonID("cutBasedPhotonID-Fall17-94X-V1-loose");
     }
-    else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax)
+    else 
     {
-      if      ((HoverE < 0.025) && (Sieie < 0.0271) && (ChgHadIso < 0.575) && (NeuHadIso < 8.916) && (PhoIso < 3.272)) 
+      // needed for cuts
+      const float eta = std::abs(photon.superCluster()->eta());
+      const float pt  = photon.pt();
+      
+      // cut variables
+      const float HoverE = photon.hadTowOverEm();
+      const float Sieie  = photon.full5x5_sigmaIetaIeta();
+      // Isolations are currently wrong! need to recompute them apparently : 
+      // https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedPhotonIdentificationRun2#Selection_implementation_details
+      // https://twiki.cern.ch/twiki/bin/view/CMS/EgammaPFBasedIsolationRun2#Recipe_for_accessing_PF_isol_AN1
+      // https://github.com/cms-sw/cmssw/blob/master/RecoEgamma/PhotonIdentification/plugins/PhotonIDValueMapProducer.cc#L338-L395
+      const float ChgHadIso = std::max(photon.chargedHadronIso() - (rho * oot::GetChargedHadronEA(eta))                                         ,0.f);
+      const float NeuHadIso = std::max(photon.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(eta)) - (oot::GetNeutralHadronPtScale(eta,pt)),0.f);
+      const float PhoIso    = std::max(photon.photonIso()        - (rho * oot::GetGammaEA        (eta)) - (oot::GetGammaPtScale        (eta,pt)),0.f);
+
+      if (eta < Config::etaEBcutoff)
       {
-	idpairs[2].second = true;
-	idpairs[1].second = true;
-	idpairs[0].second = true;
+	if      ((HoverE < 0.020) && (Sieie < 0.0103) && (ChgHadIso < 1.158) && (NeuHadIso < 1.267) && (PhoIso < 2.065)) 
+        {
+	  idpairs[2].second = true;
+	  idpairs[1].second = true;
+	  idpairs[0].second = true;
+	}
+	else if ((HoverE < 0.035) && (Sieie < 0.0103) && (ChgHadIso < 1.416) && (NeuHadIso < 2.491) && (PhoIso < 2.952)) 
+        {
+	  idpairs[2].second = false;
+	  idpairs[1].second = true;
+	  idpairs[0].second = true;
+	}  
+ 	else if ((HoverE < 0.105) && (Sieie < 0.0103) && (ChgHadIso < 2.839) && (NeuHadIso < 9.188) && (PhoIso < 2.956)) 
+        {
+	  idpairs[2].second = false;
+	  idpairs[1].second = false;
+	  idpairs[0].second = true;
+	}   
       }
-      else if ((HoverE < 0.027) && (Sieie < 0.0271) && (ChgHadIso < 1.012) && (NeuHadIso < 9.131) && (PhoIso < 4.095)) 
+      else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax)
       {
-	idpairs[2].second = false;
-	idpairs[1].second = true;
-	idpairs[0].second = true;
-      }   
-      else if ((HoverE < 0.029) && (Sieie < 0.0276) && (ChgHadIso < 2.150) && (NeuHadIso < 10.471) && (PhoIso < 4.895)) 
-      {
-	idpairs[2].second = false;
-	idpairs[1].second = false;
-	idpairs[0].second = true;
-      }   
+	if      ((HoverE < 0.025) && (Sieie < 0.0271) && (ChgHadIso < 0.575) && (NeuHadIso < 8.916) && (PhoIso < 3.272)) 
+        {
+	  idpairs[2].second = true;
+	  idpairs[1].second = true;
+	  idpairs[0].second = true;
+	}
+	else if ((HoverE < 0.027) && (Sieie < 0.0271) && (ChgHadIso < 1.012) && (NeuHadIso < 9.131) && (PhoIso < 4.095)) 
+        {
+	  idpairs[2].second = false;
+	  idpairs[1].second = true;
+	  idpairs[0].second = true;
+	}   
+	else if ((HoverE < 0.029) && (Sieie < 0.0276) && (ChgHadIso < 2.150) && (NeuHadIso < 10.471) && (PhoIso < 4.895)) 
+        {
+	  idpairs[2].second = false;
+	  idpairs[1].second = false;
+	  idpairs[0].second = true;
+	}   
+      }
     }
   }
 
@@ -572,7 +534,7 @@ namespace oot
   //               //
   ///////////////////
 
-  void GetOOTPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho)
+  void GetOOTPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho, const bool isOOT)
   {
     // needed for cuts
     const float eta = std::abs(photon.superCluster()->eta());
