@@ -11,7 +11,7 @@ Limits1D::Limits1D(const TString & indir, const TString & infilename, const Bool
 
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
-  Config::SetTDRStyle(fTDRStyle);
+  Common::SetTDRStyle(fTDRStyle);
   gROOT->ForceStyle();
 
   // make new output file
@@ -116,7 +116,7 @@ void Limits1D::MakeLimits1D()
     leg->Draw("same");
 
     // final touches
-    Config::CMSLumi(canv,0);
+    Common::CMSLumi(canv,0);
 
     // save it!
     canv->SaveAs(Form("%s_%s.png",fOutText.Data(),groupname.Data()));
@@ -141,6 +141,13 @@ void Limits1D::MakeLimits1D()
     delete obs_graph;
     delete theo_graph;
   }
+}
+
+void Limits1D::Setup()
+{
+  Common::
+
+
 }
 
 void Limits1D::SetupEntryMap()
@@ -204,14 +211,14 @@ void Limits1D::SetupGMSB()
     // get file
     const TString filename = Form("%s/%s%s.root",fInDir.Data(),fInFileName.Data(),name.Data());
     auto infile = TFile::Open(Form("%s",filename.Data()));
-    auto isnull = Config::IsNullFile(infile);
+    auto isnull = Common::IsNullFile(infile);
 
     if (!isnull)
     {
       // get tree
       const TString treename = "limit";
       auto intree = (TTree*)infile->Get(Form("%s",treename.Data()));
-      Config::CheckValidTree(intree,treename,filename);
+      Common::CheckValidTree(intree,treename,filename);
 
       // get limit branch
       Double_t limit = 0; TBranch * b_limit = 0; TString s_limit = "limit";

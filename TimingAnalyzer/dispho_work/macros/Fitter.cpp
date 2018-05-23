@@ -18,7 +18,7 @@ Fitter::Fitter(const TString & fitconfig, const TString & miscconfig, const TStr
 
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
-  Config::SetTDRStyle(fTDRStyle);
+  Common::SetTDRStyle(fTDRStyle);
   gROOT->ForceStyle();
 
   // init configuration, set minimizer
@@ -137,50 +137,50 @@ void Fitter::GetInputHists()
 
   // GJets CR
   fGJetsFile = TFile::Open(Form("%s",fGJetsFileName.Data()));
-  Config::CheckValidFile(fGJetsFile,fGJetsFileName);
+  Common::CheckValidFile(fGJetsFile,fGJetsFileName);
 
-  fHistMap2D["GJets"] = (TH2F*)fGJetsFile->Get(Form("%s",Config::HistNameMap["Data"].Data()));
-  fGJetsHistMC_CR     = (TH2F*)fGJetsFile->Get(Form("%s",Config::HistNameMap["GJets"].Data()));
-  Config::CheckValidTH2F(fHistMap2D["GJets"],Config::HistNameMap["Data"] ,fGJetsFileName);
-  Config::CheckValidTH2F(fGJetsHistMC_CR    ,Config::HistNameMap["GJets"],fGJetsFileName);
-  if (fXVarBins || fYVarBins) Config::Scale(fHistMap2D["GJets"],isUp,fXVarBins,fYVarBins);
-  if (fXVarBins || fYVarBins) Config::Scale(fGJetsHistMC_CR,isUp,fXVarBins,fYVarBins);
+  fHistMap2D["GJets"] = (TH2F*)fGJetsFile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
+  fGJetsHistMC_CR     = (TH2F*)fGJetsFile->Get(Form("%s",Common::HistNameMap["GJets"].Data()));
+  Common::CheckValidTH2F(fHistMap2D["GJets"],Common::HistNameMap["Data"] ,fGJetsFileName);
+  Common::CheckValidTH2F(fGJetsHistMC_CR    ,Common::HistNameMap["GJets"],fGJetsFileName);
+  if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D["GJets"],isUp,fXVarBins,fYVarBins);
+  if (fXVarBins || fYVarBins) Common::Scale(fGJetsHistMC_CR,isUp,fXVarBins,fYVarBins);
 
   // QCD CR
   fQCDFile = TFile::Open(Form("%s",fQCDFileName.Data()));
-  Config::CheckValidFile(fQCDFile,fQCDFileName);
+  Common::CheckValidFile(fQCDFile,fQCDFileName);
 
-  fHistMap2D["QCD"] = (TH2F*)fQCDFile->Get(Form("%s",Config::HistNameMap["Data"].Data()));
-  fQCDHistMC_CR     = (TH2F*)fQCDFile->Get(Form("%s",Config::HistNameMap["QCD"].Data()));
-  Config::CheckValidTH2F(fHistMap2D["QCD"],Config::HistNameMap["Data"],fQCDFileName);
-  Config::CheckValidTH2F(fQCDHistMC_CR    ,Config::HistNameMap["QCD"] ,fQCDFileName);
-  if (fXVarBins || fYVarBins) Config::Scale(fHistMap2D["QCD"],isUp,fXVarBins,fYVarBins);
-  if (fXVarBins || fYVarBins) Config::Scale(fQCDHistMC_CR,isUp,fXVarBins,fYVarBins);
+  fHistMap2D["QCD"] = (TH2F*)fQCDFile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
+  fQCDHistMC_CR     = (TH2F*)fQCDFile->Get(Form("%s",Common::HistNameMap["QCD"].Data()));
+  Common::CheckValidTH2F(fHistMap2D["QCD"],Common::HistNameMap["Data"],fQCDFileName);
+  Common::CheckValidTH2F(fQCDHistMC_CR    ,Common::HistNameMap["QCD"] ,fQCDFileName);
+  if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D["QCD"],isUp,fXVarBins,fYVarBins);
+  if (fXVarBins || fYVarBins) Common::Scale(fQCDHistMC_CR,isUp,fXVarBins,fYVarBins);
 
   // SR
   fSRFile = TFile::Open(Form("%s",fSRFileName.Data()));
-  Config::CheckValidFile(fSRFile,fSRFileName);
+  Common::CheckValidFile(fSRFile,fSRFileName);
 
-  fGJetsHistMC_SR = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap["GJets"].Data()));
-  fQCDHistMC_SR   = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap["QCD"].Data()));
-  Config::CheckValidTH2F(fGJetsHistMC_SR,Config::HistNameMap["GJets"],fSRFileName);
-  Config::CheckValidTH2F(fQCDHistMC_SR  ,Config::HistNameMap["QCD"]  ,fSRFileName);
-  if (fXVarBins || fYVarBins) Config::Scale(fGJetsHistMC_SR,isUp,fXVarBins,fYVarBins);
-  if (fXVarBins || fYVarBins) Config::Scale(fQCDHistMC_SR,isUp,fXVarBins,fYVarBins);
+  fGJetsHistMC_SR = (TH2F*)fSRFile->Get(Form("%s",Common::HistNameMap["GJets"].Data()));
+  fQCDHistMC_SR   = (TH2F*)fSRFile->Get(Form("%s",Common::HistNameMap["QCD"].Data()));
+  Common::CheckValidTH2F(fGJetsHistMC_SR,Common::HistNameMap["GJets"],fSRFileName);
+  Common::CheckValidTH2F(fQCDHistMC_SR  ,Common::HistNameMap["QCD"]  ,fSRFileName);
+  if (fXVarBins || fYVarBins) Common::Scale(fGJetsHistMC_SR,isUp,fXVarBins,fYVarBins);
+  if (fXVarBins || fYVarBins) Common::Scale(fQCDHistMC_SR,isUp,fXVarBins,fYVarBins);
 
   // use real data?
   if (!fGenData)
   {
-    fHistMap2D["Data"] = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap["Data"].Data()));
-    Config::CheckValidTH2F(fHistMap2D["Data"],Config::HistNameMap["Data"],fSRFileName);
-    if (fXVarBins || fYVarBins) Config::Scale(fHistMap2D["Data"],isUp,fXVarBins,fYVarBins);
+    fHistMap2D["Data"] = (TH2F*)fSRFile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
+    Common::CheckValidTH2F(fHistMap2D["Data"],Common::HistNameMap["Data"],fSRFileName);
+    if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D["Data"],isUp,fXVarBins,fYVarBins);
   }
 
   // use signal samples?
   if (!fBkgdOnly) 
   {
     // use ALL signal samples to start, only one for fitting... from config
-    for (const auto & GroupPair : Config::GroupMap)
+    for (const auto & GroupPair : Common::GroupMap)
     {
       const auto & sample = GroupPair.first;
       const auto & group  = GroupPair.second;
@@ -189,9 +189,9 @@ void Fitter::GetInputHists()
       if (group != isSignal) continue;
 
       // load signals
-      fHistMap2D[sample] = (TH2F*)fSRFile->Get(Form("%s",Config::HistNameMap[sample].Data()));
-      Config::CheckValidTH2F(fHistMap2D[sample],Config::HistNameMap[sample],fSRFileName);
-      if (fXVarBins || fYVarBins) Config::Scale(fHistMap2D[sample],isUp,fXVarBins,fYVarBins);
+      fHistMap2D[sample] = (TH2F*)fSRFile->Get(Form("%s",Common::HistNameMap[sample].Data()));
+      Common::CheckValidTH2F(fHistMap2D[sample],Common::HistNameMap[sample],fSRFileName);
+      if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D[sample],isUp,fXVarBins,fYVarBins);
     }
   }
 }  
@@ -316,14 +316,14 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
   {
     // scale back down temporarily (since already scaled up)
     const Bool_t isUp = false;
-    if (fXVarBins || fYVarBins) Config::Scale(hist2D,isUp,fXVarBins,fYVarBins);
+    if (fXVarBins || fYVarBins) Common::Scale(hist2D,isUp,fXVarBins,fYVarBins);
 
     // get new tmp canvas
     auto canv = new TCanvas();
 
     // draw TH2 on canv
     hist2D->Draw("colz");
-    Config::CMSLumi(canv);
+    Common::CMSLumi(canv);
     canv->SaveAs(Form("%sHist_2D.png",text.Data()));
 
     // project in X and draw
@@ -343,7 +343,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
       }
     }
     histX->Draw("hist");
-    Config::CMSLumi(canv);
+    Common::CMSLumi(canv);
     canv->SaveAs(Form("%sHist_projX.png",text.Data()));
     delete histX;
 
@@ -364,7 +364,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
       }
     }
     histY->Draw("hist");
-    Config::CMSLumi(canv);
+    Common::CMSLumi(canv);
     canv->SaveAs(Form("%sHist_projY.png",text.Data()));
     delete histY;
 
@@ -379,8 +379,8 @@ void Fitter::Project2DHistTo1D()
   for (auto & HistPair2D : fHistMap2D)
   {
     const auto & sample = HistPair2D.first;
-    fHistMapX[sample] = (TH1F*)HistPair2D.second->ProjectionX(Form("%s_projX",Config::HistNameMap[sample].Data()));
-    fHistMapY[sample] = (TH1F*)HistPair2D.second->ProjectionY(Form("%s_projY",Config::HistNameMap[sample].Data()));
+    fHistMapX[sample] = (TH1F*)HistPair2D.second->ProjectionX(Form("%s_projX",Common::HistNameMap[sample].Data()));
+    fHistMapY[sample] = (TH1F*)HistPair2D.second->ProjectionY(Form("%s_projY",Common::HistNameMap[sample].Data()));
   }
 }
 
@@ -401,7 +401,7 @@ void Fitter::DeclareCoefficients()
     const auto & sample = nBkgdPair.first;
     const auto   nbkgd  = nBkgdPair.second;
 
-    const TString name = Form("%s_frac",Config::HistNameMap[sample].Data());
+    const TString name = Form("%s_frac",Common::HistNameMap[sample].Data());
     fFracMap[sample] = new RooRealVar(Form("%s",name.Data()),Form("%s",name.Data()),nbkgd/fNTotalBkgd);
   }
 
@@ -412,7 +412,7 @@ void Fitter::DeclareCoefficients()
   fNPredBkgd = new RooRealVar("nbkgd","nbkgd",fNTotalBkgd,(fScaleRangeLow*fNTotalBkgd),(fScaleRangeHigh*fNTotalBkgd));
 
   // Count signal
-  for (const auto & GroupPair : Config::GroupMap)
+  for (const auto & GroupPair : Common::GroupMap)
   {
     const auto & sample = GroupPair.first;
     const auto & group  = GroupPair.second;
@@ -474,7 +474,7 @@ void Fitter::DeclareDatasets(const T & HistMap, FitInfo & fitInfo)
     const auto & sample = HistPair.first;
     const auto & hist   = HistPair.second;
 
-    const TString name = Form("%s_RooDataHist_%s",Config::HistNameMap[sample].Data(),fitInfo.Text.Data());
+    const TString name = Form("%s_RooDataHist_%s",Common::HistNameMap[sample].Data(),fitInfo.Text.Data());
     fitInfo.DataHistMap[sample] = new RooDataHist(Form("%s",name.Data()),Form("%s",name.Data()),fitInfo.ArgList,hist);
   }
 }
@@ -490,7 +490,7 @@ void Fitter::DeclareSamplePdfs(FitInfo & fitInfo)
     const auto & datahist = DataHistPair.second;
     if (sample == "Data") continue;
     
-    const TString name = Form("%s_PDF_%s",Config::HistNameMap[sample].Data(),fitInfo.Text.Data());
+    const TString name = Form("%s_PDF_%s",Common::HistNameMap[sample].Data(),fitInfo.Text.Data());
     fitInfo.HistPdfMap[sample] = new RooHistPdf(Form("%s",name.Data()),Form("%s",name.Data()),fitInfo.ArgList,*datahist);
   }
 
@@ -600,7 +600,7 @@ void Fitter::GenerateData(FitInfo & fitInfo)
   fitInfo.DataHistMap["Data"] = fitInfo.ModelPdf->generateBinned(fitInfo.ArgList,(fNGenBkgd+fNGenSign));
 
   // Rename to follow conventions so far
-  const TString name = Form("%s_RooDataHist_%s",Config::HistNameMap["Data"].Data(),fitInfo.Text.Data());
+  const TString name = Form("%s_RooDataHist_%s",Common::HistNameMap["Data"].Data(),fitInfo.Text.Data());
   fitInfo.DataHistMap["Data"]->SetName(Form("%s",name.Data()));
 }
 
@@ -662,7 +662,7 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   if (rescale)
   {
     const auto & bins = (isX ? fXBins : fYBins);
-    Config::Scale(dataGraph,bins,isUp);
+    Common::Scale(dataGraph,bins,isUp);
   }
   
   // delete plotOn --> will not use to draw, also deletes tmpDataGraph
@@ -705,9 +705,9 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
     // Rescale (down) as necessary
     if (rescale)
     {
-      Config::Scale(modelHist,isUp);
-      Config::Scale(bkgdHist,isUp);
-      if (!fBkgdOnly) Config::Scale(signHist,isUp);
+      Common::Scale(modelHist,isUp);
+      Common::Scale(bkgdHist,isUp);
+      if (!fBkgdOnly) Common::Scale(signHist,isUp);
     }
 
     // Normalize
@@ -759,14 +759,14 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   modelHist->SetMinimum(min/1.05);
   modelHist->SetMaximum(max*1.05);
   canv->SetLogy(false);
-  Config::CMSLumi(canv);
+  Common::CMSLumi(canv);
   canv->SaveAs(Form("%s_%s_lin.png",title.Data(),fitInfo.Text.Data()));
 
   // make the range nice and save (LOG)
   modelHist->SetMinimum(min/1.5);
   modelHist->SetMaximum(max*1.5);
   canv->SetLogy(true);
-  Config::CMSLumi(canv);
+  Common::CMSLumi(canv);
   canv->SaveAs(Form("%s_%s_log.png",title.Data(),fitInfo.Text.Data()));
 
   // delete the rest
@@ -819,7 +819,7 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
   fNPredBkgd->setVal(fNTotalBkgd);
 
   // Set up signals...
-  for (const auto & GroupPair : Config::GroupMap)
+  for (const auto & GroupPair : Common::GroupMap)
   {
     const auto & sample = GroupPair.first;
     const auto & group  = GroupPair.second;
@@ -843,7 +843,7 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
   workspace->import(*fitInfo.BkgdPdf);
   workspace->import(*fNPredBkgd);
 
-  for (const auto & GroupPair : Config::GroupMap)
+  for (const auto & GroupPair : Common::GroupMap)
   {
     const auto & sample = GroupPair.first;
     const auto & group  = GroupPair.second;
@@ -961,7 +961,7 @@ void Fitter::MakeConfigPave()
   // create the pave, copying in old info
   fOutFile->cd();
   fConfigPave = new TPaveText();
-  fConfigPave->SetName(Form("%s",Config::pavename.Data()));
+  fConfigPave->SetName(Form("%s",Common::pavename.Data()));
   std::string str; // tmp string
 
   // give grand title
@@ -985,13 +985,13 @@ void Fitter::MakeConfigPave()
 
   // dump in old config
   fConfigPave->AddText("***** GJets CR Config *****");
-  Config::AddTextFromInputPave(fConfigPave,fGJetsFile);
+  Common::AddTextFromInputPave(fConfigPave,fGJetsFile);
 
   fConfigPave->AddText("***** QCD CR Config *****");
-  Config::AddTextFromInputPave(fConfigPave,fQCDFile);
+  Common::AddTextFromInputPave(fConfigPave,fQCDFile);
 
   fConfigPave->AddText("***** SR Config *****");
-  Config::AddTextFromInputPave(fConfigPave,fSRFile);
+  Common::AddTextFromInputPave(fConfigPave,fSRFile);
 
   // save to output file
   fOutFile->cd();
@@ -1024,10 +1024,10 @@ void Fitter::SetupConfig()
 {
   std::cout << "Setting up config..." << std::endl;
 
-  Config::SetupSamples();
-  Config::SetupSignalSamples();
-  Config::SetupGroups();
-  Config::SetupHistNames();
+  Common::SetupSamples();
+  Common::SetupSignalSamples();
+  Common::SetupGroups();
+  Common::SetupHistNames();
 }
 
 void Fitter::SetupFitConfig()
@@ -1041,92 +1041,92 @@ void Fitter::SetupFitConfig()
     if (str == "") continue;
     else if (str.find("CR_GJets_in=") != std::string::npos)
     {
-      fGJetsFileName = Config::RemoveDelim(str,"CR_GJets_in=");
+      fGJetsFileName = Common::RemoveDelim(str,"CR_GJets_in=");
     }
     else if (str.find("CR_QCD_in=") != std::string::npos)
     {
-      fQCDFileName = Config::RemoveDelim(str,"CR_QCD_in=");
+      fQCDFileName = Common::RemoveDelim(str,"CR_QCD_in=");
     }
     else if (str.find("SR_in=") != std::string::npos)
     {
-      fSRFileName = Config::RemoveDelim(str,"SR_in=");
+      fSRFileName = Common::RemoveDelim(str,"SR_in=");
     }
     else if (str.find("plot_config=") != std::string::npos)
     {
-      fPlotConfig = Config::RemoveDelim(str,"plot_config=");
+      fPlotConfig = Common::RemoveDelim(str,"plot_config=");
     }
     else if (str.find("bkgd_only=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"bkgd_only=");
-      Config::SetupBool(str,fBkgdOnly);
+      str = Common::RemoveDelim(str,"bkgd_only=");
+      Common::SetupBool(str,fBkgdOnly);
     }
     else if (str.find("scale_total_bkgd=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"scale_total_bkgd=");
+      str = Common::RemoveDelim(str,"scale_total_bkgd=");
       fScaleTotalBkgd = std::atof(str.c_str());
     }
     else if (str.find("scale_total_sign=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"scale_total_sign=");
+      str = Common::RemoveDelim(str,"scale_total_sign=");
       fScaleTotalSign = std::atof(str.c_str());
     }
     else if (str.find("scale_range_low=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"scale_range_low=");
+      str = Common::RemoveDelim(str,"scale_range_low=");
       fScaleRangeLow = std::atof(str.c_str());
     }
     else if (str.find("scale_range_high=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"scale_range_high=");
+      str = Common::RemoveDelim(str,"scale_range_high=");
       fScaleRangeHigh = std::atof(str.c_str());
     }
     else if (str.find("gen_data=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"gen_data=");
-      Config::SetupBool(str,fGenData);
+      str = Common::RemoveDelim(str,"gen_data=");
+      Common::SetupBool(str,fGenData);
     }
     else if (str.find("scale_gen_bkgd=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"scale_gen_bkgd=");
+      str = Common::RemoveDelim(str,"scale_gen_bkgd=");
       fScaleGenBkgd = std::atof(str.c_str());
     }
     else if (str.find("scale_gen_sign=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"scale_gen_sign=");
+      str = Common::RemoveDelim(str,"scale_gen_sign=");
       fScaleGenSign = std::atof(str.c_str());
     }
     else if (str.find("make_ws=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"make_ws=");
-      Config::SetupBool(str,fMakeWS);
+      str = Common::RemoveDelim(str,"make_ws=");
+      Common::SetupBool(str,fMakeWS);
     }
     else if (str.find("dump_ws=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"dump_ws=");
-      Config::SetupBool(str,fDumpWS);
+      str = Common::RemoveDelim(str,"dump_ws=");
+      Common::SetupBool(str,fDumpWS);
     }
     else if (str.find("do_fits=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"do_fits=");
-      Config::SetupBool(str,fDoFits);
+      str = Common::RemoveDelim(str,"do_fits=");
+      Common::SetupBool(str,fDoFits);
     }
     else if (str.find("n_fits=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"n_fits=");
+      str = Common::RemoveDelim(str,"n_fits=");
       fNFits = std::atoi(str.c_str());
     }
     else if (str.find("n_draw=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"n_draw=");
+      str = Common::RemoveDelim(str,"n_draw=");
       fNDraw = std::atoi(str.c_str());
     }
     else if (str.find("x_cut=") != std::string::npos)
     {
-      fXCut = Config::RemoveDelim(str,"x_cut=");
+      fXCut = Common::RemoveDelim(str,"x_cut=");
     }
     else if (str.find("y_cut=") != std::string::npos)
     {
-      fYCut = Config::RemoveDelim(str,"y_cut=");
+      fYCut = Common::RemoveDelim(str,"y_cut=");
     }
     else 
     {
@@ -1148,26 +1148,26 @@ void Fitter::SetupPlotConfig()
     if (str == "") continue;
     else if (str.find("x_title=") != std::string::npos)
     {
-      fXTitle = Config::RemoveDelim(str,"x_title=");
+      fXTitle = Common::RemoveDelim(str,"x_title=");
     }
     else if (str.find("x_bins=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"x_bins=");
-      Config::SetupBins(str,fXBins,fXVarBins);
+      str = Common::RemoveDelim(str,"x_bins=");
+      Common::SetupBins(str,fXBins,fXVarBins);
     }
     else if (str.find("y_title=") != std::string::npos)
     {
-      fYTitle = Config::RemoveDelim(str,"y_title=");
+      fYTitle = Common::RemoveDelim(str,"y_title=");
     }
     else if (str.find("y_bins=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"y_bins=");
-      Config::SetupBins(str,fYBins,fYVarBins);
+      str = Common::RemoveDelim(str,"y_bins=");
+      Common::SetupBins(str,fYBins,fYVarBins);
     }
     else if (str.find("blinding=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"blinding=");
-      Config::SetupBlinding(str,fBlinds);
+      str = Common::RemoveDelim(str,"blinding=");
+      Common::SetupBlinding(str,fBlinds);
     }
     else if ((str.find("plot_title=") != std::string::npos) ||
 	     (str.find("x_var=") != std::string::npos)      ||
@@ -1198,17 +1198,17 @@ void Fitter::SetupMiscConfig()
     if (str == "") continue;
     else if (str.find("signal_to_model=") != std::string::npos) 
     {
-      str = Config::RemoveDelim(str,"signals_to_plot=");
+      str = Common::RemoveDelim(str,"signals_to_plot=");
       std::vector<TString> tempvec;
-      Config::SetupWhichSignals(str,tempvec);
+      Common::SetupWhichSignals(str,tempvec);
 
       // know that only one signal is specified for model building+fitting!
       fSignalSample = tempvec[0];
     }
     else if (str.find("signals_to_plot=") != std::string::npos) 
     {
-      str = Config::RemoveDelim(str,"signals_to_plot=");
-      Config::SetupWhichSignals(str,fPlotSignalVec);
+      str = Common::RemoveDelim(str,"signals_to_plot=");
+      Common::SetupWhichSignals(str,fPlotSignalVec);
     }
     else if (str.find("scale_mc_to_data=") != std::string::npos) 
     {
@@ -1220,8 +1220,8 @@ void Fitter::SetupMiscConfig()
     }
     else if (str.find("blind_data=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"blind_data=");
-      Config::SetupBool(str,fBlindData);
+      str = Common::RemoveDelim(str,"blind_data=");
+      Common::SetupBool(str,fBlindData);
     }
     else if (str.find("signals_only=") != std::string::npos)
     {

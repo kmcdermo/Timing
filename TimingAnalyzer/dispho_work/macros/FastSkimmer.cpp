@@ -43,7 +43,7 @@ void FastSkimmer::MakeListFromTrees()
 {
   std::cout << "Making TEntryLists from trees..." << std::endl;
 
-  for (const auto & SamplePair : Config::SampleMap)
+  for (const auto & SamplePair : Common::SampleMap)
   {
     // Init
     const auto & input  = SamplePair.first;
@@ -51,24 +51,24 @@ void FastSkimmer::MakeListFromTrees()
     std::cout << "Working on input: " << input.Data() << std::endl;
 
     // Get File
-    const TString filename = Form("%s/%s/%s/%s",Config::eosDir.Data(),Config::baseDir.Data(),input.Data(),Config::tupleFileName.Data());
+    const TString filename = Form("%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),input.Data(),Common::tupleFileName.Data());
     auto file = TFile::Open(Form("%s",filename.Data()));
-    Config::CheckValidFile(file,filename);
+    Common::CheckValidFile(file,filename);
     file->cd();
 	
     // Get TTree
-    auto tree = (TTree*)file->Get(Form("%s",Config::disphotreename.Data()));
-    Config::CheckValidTree(tree,Config::disphotreename,filename);
+    auto tree = (TTree*)file->Get(Form("%s",Common::disphotreename.Data()));
+    Common::CheckValidTree(tree,Common::disphotreename,filename);
 
     std::cout << "Computing list of entries..." << std::endl;
 
     // Get entry list
-    const auto samplename = Config::ReplaceSlashWithUnderscore(input);
+    const auto samplename = Common::ReplaceSlashWithUnderscore(input);
     auto & list = ListMap[samplename];
     list->SetDirectory(file);
     
     // use ttree::draw() to generate entry list
-    tree->Draw(Form(">>%s",list->GetName()),Form("%s",Config::CutMap[sample].Data()),"entrylist");
+    tree->Draw(Form(">>%s",list->GetName()),Form("%s",Common::CutMap[sample].Data()),"entrylist");
 
     // Write out list
     fOutFile->cd();
@@ -87,7 +87,7 @@ void FastSkimmer::MakeMergedSkims()
   std::cout << "Make skims and merge for each sample..." << std::endl;
 
   // loop over all samples, merging subsamples and saving
-  for (const auto & TreeNamePair : Config::TreeNameMap)
+  for (const auto & TreeNamePair : Common::TreeNameMap)
   {
     // get main sample
     const auto & sample   = TreeNamePair.first;
@@ -131,7 +131,7 @@ void FastSkimmer::MakeMergedSkims()
 void FastSkimmer::MakeSkimsFromEntryLists(std::map<TString,TTree*> & TreeMap, TList *& TreeList, const TString & sample)
 {
   // loop over all subsamples to avoid too many maps, simple control statement to control subsample grouping
-  for (const auto & SamplePair : Config::SampleMap)
+  for (const auto & SamplePair : Common::SampleMap)
   {
     const auto & input = SamplePair.first;
     if (sample != SamplePair.second) continue;
@@ -139,17 +139,17 @@ void FastSkimmer::MakeSkimsFromEntryLists(std::map<TString,TTree*> & TreeMap, TL
     std::cout << "Working on input: " << input.Data() << std::endl;
     
     // Get File
-    const TString filename = Form("%s/%s/%s/%s",Config::eosDir.Data(),Config::baseDir.Data(),input.Data(),Config::tupleFileName.Data());
+    const TString filename = Form("%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),input.Data(),Common::tupleFileName.Data());
     auto file = TFile::Open(Form("%s",filename.Data()));
-    Config::CheckValidFile(file,filename);
+    Common::CheckValidFile(file,filename);
     file->cd();
     
     // Get TTree
-    auto tree = (TTree*)file->Get(Form("%s",Config::disphotreename.Data()));
-    Config::CheckValidTree(tree,Config::disphotreename,filename);
+    auto tree = (TTree*)file->Get(Form("%s",Common::disphotreename.Data()));
+    Common::CheckValidTree(tree,Common::disphotreename,filename);
     
     // Set Entry List Needed
-    const auto samplename = Config::ReplaceSlashWithUnderscore(input);
+    const auto samplename = Common::ReplaceSlashWithUnderscore(input);
     const auto & list = ListMap[samplename];
     tree->SetEntryList(list);
     tree->SetName(Form("%s_Tree",samplename.Data()));
@@ -182,7 +182,7 @@ void FastSkimmer::MakeConfigPave()
 
   // create the pave
   fConfigPave = new TPaveText();
-  fConfigPave->SetName(Form("%s",Config::pavename.Data()));
+  fConfigPave->SetName(Form("%s",Common::pavename.Data()));
   std::string str; // tmp string
   
   // give grand title
@@ -206,20 +206,20 @@ void FastSkimmer::MakeConfigPave()
 
 void FastSkimmer::SetupConfig()
 {
-  Config::SetupPrimaryDataset(fPDName);
-  Config::SetupSamples();
-  Config::SetupGroups();
-  Config::SetupTreeNames();
-  Config::SetupCuts(fCutConfig);
+  Common::SetupPrimaryDataset(fPDName);
+  Common::SetupSamples();
+  Common::SetupGroups();
+  Common::SetupTreeNames();
+  Common::SetupCuts(fCutConfig);
 }
 
 void FastSkimmer::SetupLists()
 {
   // loop over all subsamples, create new list
-  for (const auto & SamplePair : Config::SampleMap)
+  for (const auto & SamplePair : Common::SampleMap)
   {
     const auto & input    = SamplePair.first;
-    const auto samplename = Config::ReplaceSlashWithUnderscore(input);
+    const auto samplename = Common::ReplaceSlashWithUnderscore(input);
     ListMap[samplename]   = new TEntryList(Form("%s_EntryList",samplename.Data()),"EntryList");
   }
 }

@@ -15,15 +15,15 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insigna
 
   // Get main input file
   fInFile = TFile::Open(Form("%s",fInFileName.Data()));
-  Config::CheckValidFile(fInFile,fInFileName);
+  Common::CheckValidFile(fInFile,fInFileName);
 
   // Get signal input file
   fInSignalFile = TFile::Open(Form("%s",fInSignalFileName.Data()));
-  Config::CheckValidFile(fInSignalFile,fInSignalFileName);
+  Common::CheckValidFile(fInSignalFile,fInSignalFileName);
  
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
-  Config::SetTDRStyle(fTDRStyle);
+  Common::SetTDRStyle(fTDRStyle);
   gROOT->ForceStyle();
 
   // setup hists
@@ -75,7 +75,7 @@ void TreePlotter2D::MakeHistFromTrees()
   std::cout << "Making hists from input trees..." << std::endl;
 
   // loop over sample groups for each tree
-  for (const auto & TreeNamePair : Config::TreeNameMap)
+  for (const auto & TreeNamePair : Common::TreeNameMap)
   {
     // Init
     const auto & sample   = TreeNamePair.first;
@@ -83,12 +83,12 @@ void TreePlotter2D::MakeHistFromTrees()
     std::cout << "Working on tree: " << treename.Data() << std::endl;
 	
     // Get infile
-    auto & infile = ((Config::GroupMap[sample] != isSignal) ? fInFile : fInSignalFile);
+    auto & infile = ((Common::GroupMap[sample] != isSignal) ? fInFile : fInSignalFile);
     infile->cd();
 
     // Get TTree
     auto intree = (TTree*)infile->Get(Form("%s",treename.Data()));
-    const auto isnull = Config::IsNullTree(intree);
+    const auto isnull = Common::IsNullTree(intree);
 
     if (!isnull)
     {
@@ -99,7 +99,7 @@ void TreePlotter2D::MakeHistFromTrees()
       hist->SetDirectory(infile);
       
       // Fill from tree
-      intree->Draw(Form("%s:%s>>%s",fYVar.Data(),fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Config::CutMap[sample].Data(),Config::WeightString(sample).Data()),"goff");
+      intree->Draw(Form("%s:%s>>%s",fYVar.Data(),fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Common::CutMap[sample].Data(),Common::WeightString(sample).Data()),"goff");
 
       // delete tree;
       delete intree;
@@ -117,7 +117,7 @@ void TreePlotter2D::MakeHistFromTrees()
     for (auto & HistPair : HistMap)
     {
       auto & hist = HistPair.second;
-      Config::Scale(hist,isUp,fXVarBins,fYVarBins);
+      Common::Scale(hist,isUp,fXVarBins,fYVarBins);
     }
   }
 
@@ -169,7 +169,7 @@ void TreePlotter2D::MakeBkgdOutput()
   BkgdHist = TreePlotter2D::SetupHist("Bkgd_Hist");
   for (const auto & HistPair : HistMap)
   {
-    if (Config::GroupMap[HistPair.first] == isBkgd)
+    if (Common::GroupMap[HistPair.first] == isBkgd)
     {
       BkgdHist->Add(HistPair.second);
     }
@@ -207,7 +207,7 @@ void TreePlotter2D::MakeConfigPave()
   // create the pave, copying in old info
   fOutFile->cd();
   fConfigPave = new TPaveText();
-  fConfigPave->SetName(Form("%s",Config::pavename.Data()));
+  fConfigPave->SetName(Form("%s",Common::pavename.Data()));
   std::string str; // tmp string
 
   // give grand title
@@ -241,13 +241,13 @@ void TreePlotter2D::MakeConfigPave()
   fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
 
   // dump in old config
-  Config::AddTextFromInputPave(fConfigPave,fInFile);
+  Common::AddTextFromInputPave(fConfigPave,fInFile);
 
   // save name of insignalfile, redundant
   fConfigPave->AddText(Form("InSignalFile name: %s",fInSignalFileName.Data()));
 
   // dump in old signal config
-  Config::AddTextFromInputPave(fConfigPave,fInSignalFile);
+  Common::AddTextFromInputPave(fConfigPave,fInSignalFile);
 
   // save to output file
   fOutFile->cd();
@@ -265,12 +265,12 @@ void TreePlotter2D::SetupConfig()
 {
   std::cout << "Setting up Config..." << std::endl;
 
-  Config::SetupSamples();
-  Config::SetupSignalSamples();
-  Config::SetupGroups();
-  Config::SetupTreeNames();
-  Config::SetupHistNames();
-  Config::SetupCuts(fCutConfig);
+  Common::SetupSamples();
+  Common::SetupSignalSamples();
+  Common::SetupGroups();
+  Common::SetupTreeNames();
+  Common::SetupHistNames();
+  Common::SetupCuts(fCutConfig);
 }
 
 void TreePlotter2D::SetupPlotConfig()
@@ -284,52 +284,52 @@ void TreePlotter2D::SetupPlotConfig()
     if (str == "") continue;
     else if (str.find("plot_title=") != std::string::npos)
     {
-      fTitle = Config::RemoveDelim(str,"plot_title=");
+      fTitle = Common::RemoveDelim(str,"plot_title=");
     }
     else if (str.find("x_title=") != std::string::npos)
     {
-      fXTitle = Config::RemoveDelim(str,"x_title=");
+      fXTitle = Common::RemoveDelim(str,"x_title=");
     }
     else if (str.find("x_var=") != std::string::npos)
     {
-      fXVar = Config::RemoveDelim(str,"x_var=");
+      fXVar = Common::RemoveDelim(str,"x_var=");
     }
     else if (str.find("x_bins=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"x_bins=");
-      Config::SetupBins(str,fXBins,fXVarBins);
+      str = Common::RemoveDelim(str,"x_bins=");
+      Common::SetupBins(str,fXBins,fXVarBins);
     }
     else if (str.find("x_labels=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"x_labels=");
-      Config::SetupBinLabels(str,fXLabels);
+      str = Common::RemoveDelim(str,"x_labels=");
+      Common::SetupBinLabels(str,fXLabels);
     }
     else if (str.find("y_title=") != std::string::npos)
     {
-      fYTitle = Config::RemoveDelim(str,"y_title=");
+      fYTitle = Common::RemoveDelim(str,"y_title=");
     }
     else if (str.find("y_var=") != std::string::npos)
     {
-      fYVar = Config::RemoveDelim(str,"y_var=");
+      fYVar = Common::RemoveDelim(str,"y_var=");
     }
     else if (str.find("y_bins=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"y_bins=");
-      Config::SetupBins(str,fYBins,fYVarBins);
+      str = Common::RemoveDelim(str,"y_bins=");
+      Common::SetupBins(str,fYBins,fYVarBins);
     }
     else if (str.find("y_labels=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"y_labels=");
-      Config::SetupBinLabels(str,fYLabels);
+      str = Common::RemoveDelim(str,"y_labels=");
+      Common::SetupBinLabels(str,fYLabels);
     }
     else if (str.find("z_title=") != std::string::npos)
     {
-      fZTitle = Config::RemoveDelim(str,"z_title=");
+      fZTitle = Common::RemoveDelim(str,"z_title=");
     }
     else if (str.find("blinding=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"blinding=");
-      Config::SetupBlinding(str,fBlinds);
+      str = Common::RemoveDelim(str,"blinding=");
+      Common::SetupBlinding(str,fBlinds);
     }
     else 
     {
@@ -367,8 +367,8 @@ void TreePlotter2D::SetupMiscConfig()
     }
     else if (str.find("blind_data=") != std::string::npos)
     {
-      str = Config::RemoveDelim(str,"blind_data=");
-      Config::SetupBool(str,fBlindData);
+      str = Common::RemoveDelim(str,"blind_data=");
+      Common::SetupBool(str,fBlindData);
     }
     else if (str.find("signals_only=") != std::string::npos)
     {
@@ -388,7 +388,7 @@ void TreePlotter2D::SetupHists()
   std::cout << "Setting up output histograms..." << std::endl;
 
   // instantiate each histogram
-  for (const auto & HistNamePair : Config::HistNameMap)
+  for (const auto & HistNamePair : Common::HistNameMap)
   {
     HistMap[HistNamePair.first] = TreePlotter2D::SetupHist(HistNamePair.second);
   }
