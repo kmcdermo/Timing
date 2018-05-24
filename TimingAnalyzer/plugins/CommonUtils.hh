@@ -196,20 +196,6 @@ namespace oot
 		   const EcalRecHitCollection * recHitsEE,
 		   uiiumap & recHitMap, const float rhEmin = 0.f);
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
-		   const edm::Handle<edm::ValueMap<bool> > & photonLooseIdMapH, 
-		   const edm::Handle<edm::ValueMap<bool> > & photonMediumIdMapH, 
-		   const edm::Handle<edm::ValueMap<bool> > & photonTightIdMapH,
-		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
-		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonLooseIdMapH, 
-		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonMediumIdMapH, 
-		   const edm::Handle<edm::ValueMap<bool> > & ootPhotonTightIdMapH,
-		   std::vector<oot::Photon> & photons, const float phpTmin = 0.f, const std::string & phIDmin = "none");
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
-		   const edm::Handle<edm::ValueMap<bool> > & photonLooseIdMapH, 
-		   const edm::Handle<edm::ValueMap<bool> > & photonMediumIdMapH, 
-		   const edm::Handle<edm::ValueMap<bool> > & photonTightIdMapH,
-		   std::vector<oot::Photon> & photons, const bool isOOT, const float phpTmin = 0.f);
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
 		   std::vector<oot::Photon> & photons, const float rho,
 		   const float phpTmin = 0.f, const std::string & phIDmin = "none");
@@ -239,8 +225,8 @@ namespace oot
   float GetEcalPFClPtScale(const float eta, const float pt);
   float GetHcalPFClPtScale(const float eta, const float pt);
   float GetTrackPtScale(const float eta, const float pt);
-  void GetGEDPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho);
-  void GetOOTPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho);
+  void GetGEDPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho, const bool isOOT);
+  void GetOOTPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho, const bool isOOT);
   int GetPFJetID(const pat::Jet & jet);
   void SplitPhotons(std::vector<oot::Photon>& photons, const int nmax);
   void StoreOnlyPho(std::vector<oot::Photon>& photons, const int nmax, const bool isOOT);

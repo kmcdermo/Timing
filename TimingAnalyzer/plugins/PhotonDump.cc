@@ -25,15 +25,9 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
 
   // photons + ids
   photonsTag          (iConfig.getParameter<edm::InputTag>("photons")),
-  photonLooseIdMapTag (iConfig.getParameter<edm::InputTag>("photonLooseID")),
-  photonMediumIdMapTag(iConfig.getParameter<edm::InputTag>("photonMediumID")),
-  photonTightIdMapTag (iConfig.getParameter<edm::InputTag>("photonTightID")),
 
   // ootPhotons + ids
   ootPhotonsTag          (iConfig.getParameter<edm::InputTag>("ootPhotons")),
-  ootPhotonLooseIdMapTag (iConfig.getParameter<edm::InputTag>("ootPhotonLooseID")),
-  ootPhotonMediumIdMapTag(iConfig.getParameter<edm::InputTag>("ootPhotonMediumID")),
-  ootPhotonTightIdMapTag (iConfig.getParameter<edm::InputTag>("ootPhotonTightID")),
   
   //recHits
   dumpRHs     (iConfig.existsAs<bool>("dumpRHs") ? iConfig.getParameter<bool>("dumpRHs") : false),
@@ -74,17 +68,11 @@ PhotonDump::PhotonDump(const edm::ParameterSet& iConfig):
 
   // photons + ids
   photonsToken           = consumes<std::vector<pat::Photon> > (photonsTag);
-  photonLooseIdMapToken  = consumes<edm::ValueMap<bool> > (photonLooseIdMapTag);
-  photonMediumIdMapToken = consumes<edm::ValueMap<bool> > (photonMediumIdMapTag);
-  photonTightIdMapToken  = consumes<edm::ValueMap<bool> > (photonTightIdMapTag);
 
   // ootPhotons + ids
   if (not ootPhotonsTag.label().empty())
   {
     ootPhotonsToken           = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
-    ootPhotonLooseIdMapToken  = consumes<edm::ValueMap<bool> > (ootPhotonLooseIdMapTag);
-    ootPhotonMediumIdMapToken = consumes<edm::ValueMap<bool> > (ootPhotonMediumIdMapTag);
-    ootPhotonTightIdMapToken  = consumes<edm::ValueMap<bool> > (ootPhotonTightIdMapTag);
   }
 
   // rechits
@@ -138,24 +126,12 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
   int phosize = photonsH->size();
-  edm::Handle<edm::ValueMap<bool> > photonLooseIdMapH;
-  iEvent.getByToken(photonLooseIdMapToken, photonLooseIdMapH);
-  edm::Handle<edm::ValueMap<bool> > photonMediumIdMapH;
-  iEvent.getByToken(photonMediumIdMapToken, photonMediumIdMapH);
-  edm::Handle<edm::ValueMap<bool> > photonTightIdMapH;
-  iEvent.getByToken(photonTightIdMapToken, photonTightIdMapH);
 
   edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
-  edm::Handle<edm::ValueMap<bool> > ootPhotonLooseIdMapH;
-  edm::Handle<edm::ValueMap<bool> > ootPhotonMediumIdMapH;
-  edm::Handle<edm::ValueMap<bool> > ootPhotonTightIdMapH;
   if (not ootPhotonsToken.isUninitialized())
   {
     iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
     phosize += ootPhotonsH->size();
-    iEvent.getByToken(ootPhotonLooseIdMapToken, ootPhotonLooseIdMapH);
-    iEvent.getByToken(ootPhotonMediumIdMapToken, ootPhotonMediumIdMapH);
-    iEvent.getByToken(ootPhotonTightIdMapToken, ootPhotonTightIdMapH);
   }
   std::vector<oot::Photon> photons; photons.reserve(phosize);
 
@@ -187,13 +163,19 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     iEvent.getByToken(genjetsToken,    genjetsH);
   }
 
+  ///////////////////
+  //               //
+  // FixedGrid Rho //
+  //               //
+  ///////////////////
+
+  const float rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
+
   // do some prepping of objects
   oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
   oot::PrepJets(jetsH,jets);
-  oot::PrepPhotons(photonsH,photonLooseIdMapH,photonMediumIdMapH,photonTightIdMapH,
-		   ootPhotonsH,ootPhotonLooseIdMapH,ootPhotonMediumIdMapH,ootPhotonTightIdMapH,
-		   photons);
+  oot::PrepPhotons(photonsH,ootPhotonsH,photons,rho);
   if (isGMSB) oot::PrepNeutralinos(genparticlesH,neutralinos);
   if (isHVDS) oot::PrepVPions(genparticlesH,vPions);
 	
@@ -534,14 +516,6 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     } // end check over isGMSB
   } // end block over isMC
 
-  ///////////////////
-  //               //
-  // FixedGrid Rho //
-  //               //
-  ///////////////////
-
-  const float rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
-
   //////////////////
   //              //
   // Type1 PF Met //
@@ -711,10 +685,10 @@ void PhotonDump::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       phsieip[iph] = phshape.sigmaIetaIphi;
 
       // 0 --> did not pass anything, 1 --> loose pass, 2 --> medium pass, 3 --> tight pass
-      if      (photon.photonID("tight"))  {phVID[iph] = 3;}
-      else if (photon.photonID("medium")) {phVID[iph] = 2;}
-      else if (photon.photonID("loose"))  {phVID[iph] = 1;}
-      else                                {phVID[iph] = 0;}
+      if      (photon.photonID("tight-ged"))  {phVID[iph] = 3;}
+      else if (photon.photonID("medium-ged")) {phVID[iph] = 2;}
+      else if (photon.photonID("loose-ged"))  {phVID[iph] = 1;}
+      else                                    {phVID[iph] = 0;}
 
       // use seed to get geometry and recHits
       const DetId seedDetId = phsc->seed()->seed(); //seed detid

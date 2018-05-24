@@ -156,22 +156,10 @@ class PhotonDump : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::on
   // photons + ids
   const edm::InputTag photonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > photonsToken;
-  const edm::InputTag photonLooseIdMapTag;
-  edm::EDGetTokenT<edm::ValueMap<bool> > photonLooseIdMapToken;
-  const edm::InputTag photonMediumIdMapTag;
-  edm::EDGetTokenT<edm::ValueMap<bool> > photonMediumIdMapToken;
-  const edm::InputTag photonTightIdMapTag;
-  edm::EDGetTokenT<edm::ValueMap<bool> > photonTightIdMapToken;
 
   // ootPhotons + ids
   const edm::InputTag ootPhotonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > ootPhotonsToken;
-  const edm::InputTag ootPhotonLooseIdMapTag;
-  edm::EDGetTokenT<edm::ValueMap<bool> > ootPhotonLooseIdMapToken;
-  const edm::InputTag ootPhotonMediumIdMapTag;
-  edm::EDGetTokenT<edm::ValueMap<bool> > ootPhotonMediumIdMapToken;
-  const edm::InputTag ootPhotonTightIdMapTag;
-  edm::EDGetTokenT<edm::ValueMap<bool> > ootPhotonTightIdMapToken;
 
   // ECAL RecHits
   const bool dumpRHs;
