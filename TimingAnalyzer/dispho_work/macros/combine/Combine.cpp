@@ -3,28 +3,19 @@
 namespace Combine
 {
   // input maps
-  std::map<TString,Int_t> EntryMap;
+  std::vector<TString> RValVec;
   std::map<TString,GMSBinfo> GMSBMap;
   std::map<TString,std::vector<TString> > GMSBSubGroupMap;
 
-  void SetupEntryMap(const Bool_t doObserved)
+  void SetupRValVec(const Bool_t doObserved)
   {
     // set up entries in tree, based on expectd, adjust accordingly
-    Combine::EntryMap["r2sigdown"] = 0;
-    Combine::EntryMap["r1sigdown"] = 1;
-    Combine::EntryMap["rexp"]      = 2;
-    Combine::EntryMap["r1sigup"]   = 3;
-    Combine::EntryMap["r2sigup"]   = 4;
-    
+    RValVec = {"r2sigdown","r1sigdown","rexp","r1sigup","r2sigup"};
+
     // adjust for observed limit
     if (doObserved)
     {
-      for (auto & EntryPair : Combine::EntryMap)
-      {
-	auto & entry = EntryPair.second;
-	entry += 1;
-      }
-      Combine::EntryMap["robs"] = 0;
+      RValVec.insert(RValVec.begin(),"robs");
     }
   }
   
@@ -81,32 +72,11 @@ namespace Combine
 	intree->SetBranchAddress(s_limit.Data(),&limit,&b_limit);
 
 	// 5(6) Entries in tree, one for each quantile 
-	if (fDoObserved)
-        {
-	  b_limit->GeEntry(Combine::EntryMap["robs"]);
-	  info.robs = limit;
+	for (const auto ientry = 0; ientry < intree->GetEntries(); ientry++)
+	{
+	  b_limit->GetEntry(ientry);
+	  info.rvalmap[Combine::RValVec[ientry]] = limit;
 	}
-	else info.robs = -1;
-	
-	// 2sigdown
-	b_limit->GetEntry(Combine::EntryMap["r2sigdown"]);
-	info.r2sigdown = limit;
-	
-	// 1sigdown
-	b_limit->GetEntry(Combine::EntryMap["r1sigdown"]);
-	info.r1sigdown = limit;
-	
-	// expected
-	b_limit->GetEntry(Combine::EntryMap["rexp"]);
-	info.rexp = limit;
-	
-	// 1sigup
-	b_limit->GetEntry(Combine::EntryMap["r1sigup"]);
-	info.r1sigup = limit;
-	
-	// 2sigup
-	b_limit->GetEntry(Combine::EntryMap["r2sigup"]);
-	info.r2sigup = limit;
 	
 	// delete once done
 	delete intree;
@@ -114,12 +84,10 @@ namespace Combine
       }
       else
       {
-	info.robs      = -1.f;
-	info.r2sigdown = -1.f;
-	info.r1sigdown = -1.f;
-	info.rexp      = -1.f;
-	info.r1sigup   = -1.f;
-	info.r2sigup   = -1.f;
+	for (const auto & RVal : RValVec)
+	{
+	  info.rvalmap[RVal] = -1.f;
+	}
 	
 	std::cout << "skipping this file: " << filename.Data() << std::endl;
       }
