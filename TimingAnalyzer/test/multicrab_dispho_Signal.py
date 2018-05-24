@@ -92,16 +92,22 @@ def main():
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
             ['/GMSB_L200TeV_CTau400cm_930/kmcdermo-GMSB_L200TeV_CTau400cm_930_step3-23134fac048c68b5122d77328802e60f/USER', '0.04', '1', '0.81418', 'isGMSB'],
+            
+            ['/GMSB_L100TeV_CTau0p1cm_step0/soffi-GMSB_L100TeV_CTau0p1cm_step3-401494f1e1638aa51280a90edc94ebc0/USER', '2.18318', '1', '0.9443385', 'isGMSB'],
+            ['/GMSB_L100TeV_CTau10cm_step0/soffi-GMSB_L100TeV_CTau10cm_step3-7b4951d75b0cdfce8b97c445b952682b/USER', '2.19101', '1', '0.9443385', 'isGMSB'],
+            ['/GMSB_L150TeV_CTau0p1cm_step0/soffi-GMSB_L150TeV_CTau0p1cm_step3-401494f1e1638aa51280a90edc94ebc0/USER', '0.217511', '1', '0.857347369', 'isGMSB'],
+            ['/GMSB_L150TeV_CTau10cm_step0/soffi-GMSB_L150TeV_CTau10cm_step3-5febe9b5e64145211cc865f9339571bf/USER', '0.21779', '1', '0.857347429', 'isGMSB'],
+            ['/GMSB_L200TeV_CTau0p1cm_step0/soffi-GMSB_L200TeV_CTau0p1cm_step3-401494f1e1638aa51280a90edc94ebc0/USER', '0.0401172', '1', '0.814181864', 'isGMSB'],
+            ['/GMSB_L200TeV_CTau10cm_step0/soffi-GMSB_L200TeV_CTau10cm_step3-401494f1e1638aa51280a90edc94ebc0/USER', '0.0400735', '1', '0.814181864', 'isGMSB'],
+            ['/GMSB_L250TeV_CTau0p1cm_step0/soffi-GMSB_L250TeV_CTau0p1cm_step3-7b4951d75b0cdfce8b97c445b952682b/USER', '0.0109216', '1', '0.792751014', 'isGMSB'],
+            ['/GMSB_L250TeV_CTau10cm_step0/soffi-GMSB_L250TeV_CTau10cm_step3-54655a0391212dbba2984afe28e21bc3/USER', '0.0109236', '1', '0.792751014', 'isGMSB'],
+            ['/GMSB_L300TeV_CTau0p1cm_step0/soffi-GMSB_L300TeV_CTau0p1cm_step3-401494f1e1638aa51280a90edc94ebc0/USER', '0.00387135', '1', '0.780865729', 'isGMSB'],
+            ['/GMSB_L300TeV_CTau10cm_step0/soffi-GMSB_L300TeV_CTau10cm_step3-e18eec80fff64b1d3595d955b2a6af85/USER', '0.0038706', '1', '0.780865788', 'isGMSB'],
+            ['/GMSB_L350TeV_CTau0p1cm_step0/soffi-GMSB_L350TeV_CTau0p1cm_step3-7b4951d75b0cdfce8b97c445b952682b/USER', '0.00161162', '1', '0.773663223', 'isGMSB'],
+            ['/GMSB_L350TeV_CTau10cm_step0/soffi-GMSB_L350TeV_CTau10cm_step3-7c673dc440a3408d9f3a1cc7f05303ae/USER', '0.00160427', '1', '0.773663163', 'isGMSB'],
+            ['/GMSB_L400TeV_CTau0p1cm_step0/soffi-GMSB_L400TeV_CTau0p1cm_step3-401494f1e1638aa51280a90edc94ebc0/USER', '0.00073187', '1', '0.768983364', 'isGMSB'],
+            ['/GMSB_L400TeV_CTau10cm_step0/soffi-GMSB_L400TeV_CTau10cm_step3-cea60c68d10a6972420825d5e6a4c6f4/USER', '0.000731975', '1', '0.768983364', 'isGMSB'],
 
-            ['/HVDS_MZP500_MDP20_Ctau100mm/kmcdermo-HVDS_MZP500_MDP20_Ctau100mm_step3-65c6b29ab922da94b788da955c09b417/USER', '0.0298386', '1', '1', 'isHVDS'],
-            ['/HVDS_MZP500_MDP20_Ctau5000mm/kmcdermo-HVDS_MZP500_MDP20_Ctau5000mm_step3-901620c07ae079e429c8dec5206b980f/USER', '0.0298836', '1', '1', 'isHVDS'],
-            ['/HVDS_MZP500_MDP60_Ctau100mm/kmcdermo-HVDS_MZP500_MDP60_Ctau100mm_step3-05194d539d32b57b7b59c72b87bd3ce4/USER', '0.0298075', '1', '1', 'isHVDS'],
-            ['/HVDS_MZP500_MDP60_Ctau5000mm/kmcdermo-HVDS_MZP500_MDP60_Ctau5000mm_step3-d231aac082cf30daa42f4c217757031e/USER', '0.0300165', '1', '1', 'isHVDS'],
-
-            ['/GMSB_L200TeV_CTau10cm/kmcdermo-GMSB_L200TeV_CTau10cm_step3_v2-65c6b29ab922da94b788da955c09b417/USER', '0.0402926', '1', '0.814181864', 'isGMSB'],
-            ['/GMSB_L200TeV_CTau400cm/kmcdermo-GMSB_L200TeV_CTau400cm_step3_v2-901620c07ae079e429c8dec5206b980f/USER', '0.0399241', '1', '0.814181805', 'isGMSB'],
-            ['/GMSB_L400TeV_CTau10cm/kmcdermo-GMSB_L400TeV_CTau10cm_step3_v2-05194d539d32b57b7b59c72b87bd3ce4/USER', '0.000731795', '1', '0.7768983364', 'isGMSB'],
-            ['/GMSB_L400TeV_CTau400cm/kmcdermo-GMSB_L400TeV_CTau400cm_step3_v2-d231aac082cf30daa42f4c217757031e/USER', '0.00113937', '1', '0.768983364', 'isGMSB'],
             ]
  
         for inDO in inputDataAndOpts:

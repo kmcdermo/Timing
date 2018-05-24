@@ -110,6 +110,10 @@ def main():
             
             ['/DiPhotonJetsBox_M40_80-Sherpa/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v3/MINIAODSIM', '308.3', '1', '1'],
             ['/DiPhotonJetsBox_MGG-80toInf_13TeV-Sherpa/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v3/MINIAODSIM', '87.54', '1', '1'],
+
+            ['/WGGJets_TuneCP5_13TeV_madgraphMLM_pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v11-v1/MINIAODSIM', '1.693', '1', '1'],
+            ['/ZGGJetsToLLGG_5f_LO_amcatnloMLM_pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v11-v1/MINIAODSIM', '0.6550', '1', '1'],
+            ['/ZGGJets_ZToHadOrNu_5f_LO_madgraph_pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v11-v1/MINIAODSIM', '0.3570', '1', '1'],
             ]
         
         for inDO in inputDataAndOpts:
