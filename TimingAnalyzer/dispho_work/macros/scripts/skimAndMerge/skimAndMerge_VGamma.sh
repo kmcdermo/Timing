@@ -10,10 +10,10 @@ sample=${3}
 ## global vars
 mcbase="VGamma"
 sample_label=${sample}
-if [[ "${samle}" = *"ToLLGG"* ]] ; then
+if [[ "${samle}" == *"ToLLGG"* ]] ; then
     sample_label="ZGGJets_ZToLL"
 fi
-text="${mcbase}_${label}"
+text="${mcbase}_${sample_label}"
 
 ## directories needed
 indir="${inbase}/analysis/${sample}_${tune}/${label}_${sample}_${tune}"
