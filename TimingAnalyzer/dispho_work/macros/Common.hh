@@ -8,6 +8,7 @@
 #include "TH2F.h"
 #include "TGraphAsymmErrors.h"
 #include "TCanvas.h"
+#include "TROOT.h"
 #include "TStyle.h"
 #include "TString.h"
 #include "TColor.h"

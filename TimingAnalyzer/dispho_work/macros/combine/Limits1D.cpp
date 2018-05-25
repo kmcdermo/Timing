@@ -4,7 +4,7 @@ Limits1D::Limits1D(const TString & indir, const TString & infilename, const Bool
   : fInDir(indir), fInFileName(infilename), fDoObserved(doobserved), fOutText(outtext)
 {  
   // setup first
-  Limits1D::Setup();
+  Limits1D::SetupCombine();
 
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
@@ -141,10 +141,10 @@ void Limits1D::MakeLimits1D()
   }
 }
 
-void Limits1D::Setup()
+void Limits1D::SetupCombine()
 {
   Combine::SetupRValVec(fDoObserved);
-  Combine::SetupGMSB(Form("%s/%s%s.root",fInDir.Data(),fInFileName.Data(),name.Data()));
+  Combine::SetupGMSB();
   Combine::RemoveGMSBSamples();
   Combine::SetupGMSBSubGroups();
 }

@@ -17,7 +17,7 @@ public:
   ~Limits1D();
 
   // setup functions
-  void Setup();
+  void SetupCombine();
 
   // main plotting routine
   void MakeLimits1D();

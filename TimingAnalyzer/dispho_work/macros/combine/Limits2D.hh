@@ -42,15 +42,18 @@ public:
   ~Limits2D();
 
   // setup functions
-  void Setup();
-
-  // Interpolation functions
-  Float_t ZValue(const Float_t x, const Float_t x1, const Float_t x2, 
-		 const Float_t y, const Float_t y1, const Float_t y2, 
-		 const Float_t fQ11, const Float_t fQ12, const Float_t fQ21, const Float_t fQ22);
+  void SetupCombine();
+  void SetupFilledBins();
+  void SetupAllBins();
 
   // main plotting routine
   void MakeLimits2D();
+
+  // Helper functions
+  void GetBinBoundaries(std::vector<Double_t> & xbins, std::vector<Double_t> & ybins);
+  Float_t ZValue(const Float_t x, const Float_t x1, const Float_t x2, 
+		 const Float_t y, const Float_t y1, const Float_t y2, 
+		 const Float_t fQ11, const Float_t fQ12, const Float_t fQ21, const Float_t fQ22);
 
 private:
   const TString fInDir;

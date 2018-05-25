@@ -9,7 +9,6 @@ Limits2D::Limits2D(const TString & indir, const TString & infilename, const Bool
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
   Common::SetTDRStyle(fTDRStyle);
-  gROOT->ForceStyle();
 
   // make new output file
   fOutFile = TFile::Open(Form("%s.root",fOutText.Data()),"UPDATE");
@@ -35,21 +34,79 @@ void Limits2D::MakeLimits2D()
   Limits2D::GetBinBoundaries(xbins,ybins);
 
   // start making histograms and filling them
-  std::map<TString,TH2F*> hists;
+  std::map<TString,TH2F*> HistMap;
   for (const auto & RVal : RValVec)
   {
-    hists[RVal] = new TH2F(Form("%s_hist",RVal.Data()),"",xbins.size()-1,&xbins[0],ybins.size()-1,&ybins[0]);
+    HistMap[RVal] = new TH2F(Form("%s_hist",RVal.Data()),"",xbins.size()-1,&xbins[0],ybins.size()-1,&ybins[0]);
     
-    auto & hist : hists[RVal];
+    auto & hist = HistMap[RVal];
     for (const auto & bin : fAllBins)
     {
       hist->Fill(bin.xcenter,bin.ycenter,bin.rvalmap[RVal]);
     }
+
+    // clone for contours
+    const TString cont_name = RVal+"_cont";
+    HistMap[cont_name] = (TH2F*)hist->Clone(cont_name.Data());
+    
+    // make contours
+    auto & cont_hist = HistMap[cont_name];
+    cont_hist->SetContour(1);
+    cont_hist->SetContourLevel(0,1.f);
+    cont_hist->SetLineColor(kBlack);
+    cont_hist->SetLineWidth(3);
   }
 
-  // make contours!
-  
+  // final style
+  if (fDoObserved) HistMap["robs_cont"]->SetLineColor(kRed);
+  HistMap["rexp_cont"]->SetLineStyle(7);
 
+  // make hist axes
+  auto & hist = (fDoObserved ? HistMap["robs"] : HistMap["rexp"]);
+  hist->GetXaxis()->SetTitle("#Lambda [GeV]");  
+  hist->GetYaxis()->SetTitle("c#tau [cm]");
+  hist->GetZaxis()->SetTitle("#sigma_{95% CL}/#sigma_{th}");
+
+  // legened
+  auto leg = new TLegend(0.7,0.7,0.85,0.85);
+  leg->SetName("Legend");
+  if (fDoObserved) leg->AddEntry(HistMap["robs_cont"],"Observed 95% CL","L");
+  leg->AddEntry(HistMap["rexp_cont"],"Expected 95% CL","L");
+  leg->AddEntry(HistMap["r1sigup_cont"],"#pm 1 s.d. (exp)","L");
+
+  // canvas
+  auto canv = new TCanvas();
+  canv->cd();
+  canv->SetName("Canvas");
+
+  // draw histogram + contours
+  hist->Draw("COLZ");
+  if (fDoObserved) HistMap["robs_cont"]->Draw("CONT3 same");
+  HistMap["rexp_cont"]->Draw("CONT3 same");
+  HistMap["rs1sigdown_cont"]->Draw("CONT3 same");
+  HistMap["rs1sigup_cont"]->Draw("CONT3 same");
+
+  // cms style
+  Common::CMSLumi(canv,0);
+  
+  // save it!
+  canv->SaveAs(Form("%s_%s.png",fOutText.Data(),groupname.Data()));
+  canv->SaveAs(Form("%s_%s.pdf",fOutText.Data(),groupname.Data()));
+  
+  // write it!
+  fOutFile->cd();
+  for (const auto & HistPair : HistMap)
+  {
+    const auto & hist = HistPair.second;
+    hist->Write(hist->GetName(),TObject::kWriteDelete);
+  }
+  leg->Write(leg->GetName(),TObject::kWriteDelete);
+  canv->Write(canv->GetName(),TObject::kWriteDelete);
+
+  // delete everything
+  delete canv;
+  delete leg;
+  for (auto & HistPair : HistMap) delete HistPair.second;
 }
 
 Float_t Limits2D::ZValue(const Float_t x, const Float_t x1, const Float_t x2, 
@@ -74,12 +131,12 @@ void Limits2D::GetBinBoundaries(std::vector<Double_t> & xbins, std::vector<Doubl
     const auto xlow = bin.xlow;
     const auto xup  = bin.xup;
     if (std::find(xbins.begin(),xbins.end(),xlow) == xbins.end()) xbins.emplace_back(xlow);
-    if (std::find(xbins.begin(),xbins.end(),xup) == xbins.end()) xbins.emplace_back(xup);
+    if (std::find(xbins.begin(),xbins.end(),xup)  == xbins.end()) xbins.emplace_back(xup);
 
     const auto ylow = bin.ylow;
     const auto yup  = bin.yup;
     if (std::find(ybins.begin(),ybins.end(),ylow) == ybins.end()) ybins.emplace_back(ylow);
-    if (std::find(ybins.begin(),ybins.end(),yup) == ybins.end()) ybins.emplace_back(yup);
+    if (std::find(ybins.begin(),ybins.end(),yup)  == ybins.end()) ybins.emplace_back(yup);
   }
   std::sort(xbins.begin(),xbins.end());
   std::sort(ybins.begin(),ybins.end());
@@ -88,7 +145,7 @@ void Limits2D::GetBinBoundaries(std::vector<Double_t> & xbins, std::vector<Doubl
 void Limits2D::SetupCombine()
 {
   Combine::SetupRValVec(fDoObserved);
-  Combine::SetupGMSB(Form("%s/%s%s.root",fInDir.Data(),fInFileName.Data(),name.Data()));
+  Combine::SetupGMSB();
   Combine::RemoveGMSBSamples();
   Combine::SetupGMSBSubGroups();
 }
@@ -144,7 +201,6 @@ void Limits2D::SetupFilledBins()
     }
   }
 }
-
 
 void Limits2D::SetupAllBins()
 {
@@ -297,4 +353,3 @@ void Limits2D::SetupAllBins()
     } // end loop over measured y vals
   } // end loop over measured x vals
 }
-

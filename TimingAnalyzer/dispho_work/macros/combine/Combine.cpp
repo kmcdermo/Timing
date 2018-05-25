@@ -19,7 +19,7 @@ namespace Combine
     }
   }
   
-  void SetupGMSB(const TString & filename)
+  void SetupGMSB()
   {
     // read in parameters... 
     std::fstream inparams("signal_config/all_params.txt");
@@ -57,6 +57,7 @@ namespace Combine
       auto       & info = GMSBPair.second;
       
       // get file
+      const TString filename = Form("%s/%s%s.root",fInDir.Data(),fInFileName.Data(),name.Data()));
       auto infile = TFile::Open(Form("%s",filename.Data()));
       auto isnull = Common::IsNullFile(infile);
 

@@ -19,7 +19,6 @@ Fitter::Fitter(const TString & fitconfig, const TString & miscconfig, const TStr
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
   Common::SetTDRStyle(fTDRStyle);
-  gROOT->ForceStyle();
 
   // init configuration, set minimizer
   Fitter::SetupDefaults();
