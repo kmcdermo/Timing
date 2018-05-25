@@ -101,7 +101,7 @@ void Skimmer::EventLoop()
   {
     // dump status check
     if (entry%Common::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
-    
+
     // get event weight: no scaling by BR, xsec, lumi, etc.
     if (fIsMC) fInEvent.b_genwgt->GetEntry(entry);
     const Float_t evtwgt = (fIsMC ? fInEvent.genwgt : 1.f);
@@ -143,8 +143,11 @@ void Skimmer::EventLoop()
       fOutCutFlow->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
       
       // cut on crappy pu
-      fInEvent.b_nvtx->GetEntry(entry);
-      if (fIsMC && ((fInEvent.genputrue < 0) || (UInt_t(fInEvent.genputrue) >= fPUWeights.size()))) continue;
+      if (fIsMC) 
+      {
+	fInEvent.b_genputrue->GetEntry(entry);
+	if ((fInEvent.genputrue < 0) || (UInt_t(fInEvent.genputrue) >= fPUWeights.size())) continue;
+      }
       
       // fill cutflow
       fOutCutFlow->Fill((cutLabels["badPU"]*1.f)-0.5f,evtwgt);
