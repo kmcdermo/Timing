@@ -44,11 +44,16 @@ namespace Common
     
     // DYLL
     Common::SampleMap["MC/DYJetsToLL/base"] = "DYLL";
-    //    Common::SampleMap["MC/DYJetsToLL/ext"]  = "DYLL";
+    Common::SampleMap["MC/DYJetsToLL/ext"]  = "DYLL";
 
     // DiPhoBox
     Common::SampleMap["MC/DiPhotonJetsBox/M40_80"]  = "DiPho";
     Common::SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = "DiPho";
+
+    // VGamma
+    Common::SampleMap["MC/VGamma/WGGJets"]            = "VG";
+    Common::SampleMap["MC/VGamma/ZGGJets_ZToLL"]      = "VG";
+    Common::SampleMap["MC/VGamma/ZGGJets_ZToHadOrNu"] = "VG";
     
     // Data
     Common::SampleMap[Form("Data/%s/B/v1",Common::PrimaryDataset.Data())] = "Data";
@@ -61,7 +66,7 @@ namespace Common
   void SetupSignalSamples()
   {
     const std::vector<TString> lambdas = {"100","150","200","250","300","350","400"};
-    const std::vector<TString> ctaus   = {"0p1"};
+    const std::vector<TString> ctaus   = {"0p1","10"};
 
     // loop over all possible GMSBs...
     for (const auto & lambda : lambdas)
@@ -88,6 +93,7 @@ namespace Common
       else if (sample == "GJets") Common::GroupMap[sample] = isBkgd;
       else if (sample == "DYLL")  Common::GroupMap[sample] = isBkgd;
       else if (sample == "DiPho") Common::GroupMap[sample] = isBkgd;
+      else if (sample == "VG")    Common::GroupMap[sample] = isBkgd;
       else if (sample == "Data")  Common::GroupMap[sample] = isData;
       else if (sample.Contains("GMSB")) Common::GroupMap[sample] = isSignal;
       else if (sample.Contains("HVDS")) Common::GroupMap[sample] = isSignal;
@@ -174,6 +180,7 @@ namespace Common
     Common::ColorMap["GJets"] = kRed;
     Common::ColorMap["DYLL"]  = kMagenta;
     Common::ColorMap["DiPho"] = kCyan;
+    Common::ColorMap["VG"]    = kOrange;
     Common::ColorMap["Data"]  = kBlack;
     
     for (const auto & SignalSubGroupPair : Common::SignalSubGroupMap)
@@ -203,6 +210,7 @@ namespace Common
     Common::LabelMap["GJets"] = "#gamma+Jets"; //"#gamma + Jets (H_{T} Binned)";
     Common::LabelMap["DYLL"]  = "DY#rightarrowLL+Jets";
     Common::LabelMap["DiPho"] = "2#gamma";
+    Common::LabelMap["VG"]    = "V#gamma";
     Common::LabelMap["Data"]  = "Data";
 
     // GMSB Labels

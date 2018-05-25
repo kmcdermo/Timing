@@ -17,4 +17,4 @@ indir="${inbase}/analysis/${mcbase}_${gridpoint}${extra}/${label}_${mcbase}_${gr
 tmpdir="${tmpbase}/${mcbase}/${gridpoint}"
 outdir="${outbase}/MC/${mcbase}/${gridpoint}"
 
-./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir}
+./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} 1

@@ -6,7 +6,7 @@
 
 #include <fstream>
 
-void runSumWeights(const TString & indir, const TString & files, const TString & wgtfile)
+void computeSumWeights(const TString & indir, const TString & files, const TString & wgtfile)
 {
   // get list of files
   std::ifstream infiles(files.Data(),std::ios::in);

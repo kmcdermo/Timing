@@ -9,11 +9,14 @@ indir=${2}
 tmpdir=${3}
 outdir=${4}
 
+usePUWeights=${5}
+
 redophoid=${redoPhotonID}
 
 ## global vars
 files="${text}_files.txt"
 wgtfile="${text}_wgt.txt"
+puwgtfile="${text}_puwgt.root"
 tmpfiles="tmp_${files}"
 timestamp=$(ls ${indir})
 eosdir="${indir}/${timestamp}/0000"
@@ -33,8 +36,14 @@ mkdir -p ${tmpdir}
 
 ## produce sum of weights
 echo "Getting sum of weights"
-./scripts/runSumWeights.sh ${eosdir} ${files} ${wgtfile}
+./scripts/computeSumWeights.sh ${eosdir} ${files} ${wgtfile}
 sumwgts=$(grep "Sum of weights: " ${wgtfile} | cut -d " " -f 4)
+
+## produce pu distribution
+if (( ${usePUWeights} == 1 )) ; then
+    echo "Computing PU Weights"
+    ./scripts/computePUWeights.sh ${eosdir} ${files} ${puwgtfile}
+fi
 
 ## read in each file and skim
 echo "Running skimming macro"
@@ -42,7 +51,7 @@ nfiles=$(wc -l ${files})
 counter="1"
 while IFS='' read -r line || [[ -n "${line}" ]]; do
     echo "Working on file" ${counter} "out of" ${nfiles} "[filename: ${line}]"
-    ./scripts/runSkimmer.sh ${eosdir} ${tmpdir} ${line} ${sumwgts} ${redophoid}
+    ./scripts/runSkimmer.sh ${eosdir} ${tmpdir} ${line} ${sumwgts} ${puwgtfile} ${redophoid}
     counter=$((${counter} + 1))
 done < "${files}"
 
@@ -56,8 +65,14 @@ echo "Hadding skims on tmp and then removing individual skim files"
 hadd -O -k ${tmpdir}/${outfile} ${tmpdir}/${infiles}
 rm -rf ${tmpdir}/${infiles}
 
-## Copy back to EOS
+## Copy to EOS
 echo "Copy hadded skim to EOS"
 mkdir -p ${outdir}
 mv ${tmpdir}/${outfile} ${outdir}
 rm -rf ${tmpdir}/${outfile}
+
+## Copy PU weights to EOS
+if (( ${usePUWeights} == 1)) ; then
+    echo "Copy puwgt file to EOS"
+    mv ${puwgtfile} ${outdir}/puweights.root
+fi

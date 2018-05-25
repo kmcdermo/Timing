@@ -1,4 +1,33 @@
-#include "computeSignalEfficiency.hh"
+#include "Common.cpp+"
+
+#include "TStyle.h"
+#include "TFile.h"
+#include "TH1F.h"
+#include "TEfficiency.h"
+#include "TCanvas.h"
+#include "TLegend.h"
+#include "TString.h"
+#include "TColor.h"
+
+#include <map>
+#include <vector>
+
+void Setup(TStyle *& tdrStyle)
+{
+  Common::SetupSignalSamples();
+
+  //// ************** HACK FOR NOW ********************* //
+  Common::SampleMap.erase("MC/GMSB/L200TeV_CTau400cm");
+
+  Common::SetupGroups();
+  Common::SetupSignalGroups();
+  Common::SetupSignalCutFlowHistNames();
+
+  Common::SetupSignalSubGroups();
+  Common::SetupSignalSubGroupColors();
+
+  Common::SetTDRStyle(tdrStyle);
+}
 
 void computeSignalEfficiency(const TString & infilename, const TString & outtext)
 {
@@ -103,21 +132,4 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
   delete canv;
   delete infile;
   delete tdrStyle;
-}
-
-void Setup(TStyle *& tdrStyle)
-{
-  Common::SetupSignalSamples();
-
-  //// ************** HACK FOR NOW ********************* //
-  Common::SampleMap.erase("MC/GMSB/L200TeV_CTau400cm");
-
-  Common::SetupGroups();
-  Common::SetupSignalGroups();
-  Common::SetupSignalCutFlowHistNames();
-
-  Common::SetupSignalSubGroups();
-  Common::SetupSignalSubGroupColors();
-
-  Common::SetTDRStyle(tdrStyle);
 }

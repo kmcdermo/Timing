@@ -4,7 +4,7 @@
 #include "TH1F.h"
 #include "TString.h"
 
-void computePUWeights(const TString & text)
+void computePUWeights(const TString & indir, const TString & files, const TString & puwgtfile)
 {
   // get input
   const TString filename = Form("%s.root",text.Data());

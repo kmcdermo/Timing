@@ -22,4 +22,4 @@ tmpdir="${tmpbase}/${mcbase}/${sample}"
 outdir="${outbase}/MC/${mcbase}/${sample}"
 
 ## process this bin
-./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir}
+./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} 1
