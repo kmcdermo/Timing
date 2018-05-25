@@ -58,7 +58,7 @@ struct ColorStruct
 namespace Common
 {
   // basics
-  constexpr Float_t lumi = 41.37; // CMS lumi : golden for ReReco
+  constexpr Float_t lumi = 41.53; // CMS lumi : https://hypernews.cern.ch/HyperNews/CMS/get/luminosity/761/1.html
   constexpr Float_t invfbToinvpb = 1000.f; // conversion for the world's dumbest unit
   static const TString extraText = "Preliminary";
 
