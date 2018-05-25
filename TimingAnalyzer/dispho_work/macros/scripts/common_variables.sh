@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ## dir bases
-export eosbase="/eos/cms/store/user/${USER}"
-export inbase="${eosbase}/nTuples/unskimmed"
+export eosbase="/eos/cms/store/user/${USER}/nTuples"
+export inbase="${eosbase}/unskimmed"
 export tmpbase="/tmp/${USER}"
-export outbase="${eosbase}/nTuples/skims/2017/rereco_v3"
+export outbase="${eosbase}/skims/2017/rereco_v4"
 
 ## filenames
 export infiles="dispho_*.root"

@@ -531,6 +531,16 @@ namespace Common
     }
   }
 
+  void CheckValidTH1D(const TH1D * plot, const TString & pname, const TString & fname)
+  {
+    if (plot == (TH1D*) NULL) // check if valid plot
+    {
+      std::cerr << "Input TH1F is bad pointer: " << pname.Data() << " in input file: " << fname.Data() 
+		<< " ...exiting..." << std::endl;
+      exit(1);
+    }
+  }
+
   void CheckValidTH2F(const TH2F * plot, const TString & pname, const TString & fname)
   {
     if (plot == (TH2F*) NULL) // check if valid plot

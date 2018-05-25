@@ -22,31 +22,36 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   Common::CheckValidFile(fInFile,infilename);
 
   // Get input config tree + sample weight
-  const TString inconfigtreename = Form("%s%s",Common::rootdir.Data(),Common::configtreename.Data());
+  const TString inconfigtreename = Form("%s/%s",Common::rootdir.Data(),Common::configtreename.Data());
   fInConfigTree = (TTree*)fInFile->Get(inconfigtreename.Data());
   Common::CheckValidTree(fInConfigTree,inconfigtreename,infilename);
   Skimmer::GetInConfig();
   if (fIsMC) Skimmer::GetSampleWeight();
 
   // Get main input tree and initialize it
-  const TString indisphotreename = Form("%s%s",Common::rootdir.Data(),Common::disphotreename.Data());
+  const TString indisphotreename = Form("%s/%s",Common::rootdir.Data(),Common::disphotreename.Data());
   fInTree = (TTree*)fInFile->Get(indisphotreename.Data());
   Common::CheckValidTree(fInTree,indisphotreename,infilename);
   Skimmer::InitInTree();
 
   // Get the cut flow + event weight histogram --> set the wgtsum
-  const TString inh_cutflowname = Form("%s%s",Common::rootdir.Data(),Common::h_cutflowname.Data());
+  const TString inh_cutflowname = Form("%s/%s",Common::rootdir.Data(),Common::h_cutflowname.Data());
   fInCutFlow = (TH1F*)fInFile->Get(inh_cutflowname.Data());
   Common::CheckValidTH1F(fInCutFlow,inh_cutflowname,infilename);
 
   // Get PU weights input
   if (fIsMC)
   {
-    const TString pufilename = Form("%s/%s/%s.root",Common::eosDir.Data(),Common::baseDir.Data(),Common::puwgtFileName.Data());
+    const Bool_t useOld = (fPUWgtName == "");
+
+    const TString pufilename = (useOld ? Form("%s/%s/%s.root",Common::eosDir.Data(),Common::baseDir.Data(),Common::puwgtFileName.Data()) : Form("%s",fPUWgtFileName.Data()));
     fInPUWgtFile = TFile::Open(pufilename.Data());
     Common::CheckValidFile(fInPUWgtFile,pufilename);
-    fInPUWgtHist = (TH1F*)fInPUWgtFile->Get(Common::puwgtHistName.Data());
-    Common::CheckValidTH1F(fInPUWgtHist,Common::puwgtHistName,pufilename);
+
+    const TString puhistname = (useOld ? Form("%s",Common::puwgHistName.Data()) : Form("%s_%s",Common::puTrueHistName.Data(),Common::puwgtHistName.Data()));
+    fInPUWgtHist = (TH1F*)fInPUWgtFile->Get(puhistname.Data());
+    Common::CheckValidTH1F(fInPUWgtHist,puhistname,pufilename);
+
     Skimmer::GetPUWeights();
   }
 
@@ -355,6 +360,8 @@ void Skimmer::FillOutEvent(const UInt_t entry)
     fInEvent.b_geny0->GetEntry(entry);
     fInEvent.b_genz0->GetEntry(entry);
     fInEvent.b_gent0->GetEntry(entry);
+    fInEvent.b_genputrue->GetEntry(entry);
+    fInEvent.b_genpuobs->GetEntry(entry);
 
     if (fInConfig.isGMSB)
     {
@@ -406,7 +413,9 @@ void Skimmer::FillOutEvent(const UInt_t entry)
     fOutEvent.geny0 = fInEvent.geny0;
     fOutEvent.genz0 = fInEvent.genz0;
     fOutEvent.gent0 = fInEvent.gent0;
-    fOutEvent.puwgt = fPUWeights[fInEvent.nvtx]; // == 0 for tmp skims --> genputrue eventually
+    fOutEvent.genputrue = fInEvent.genputrue;
+    fOutEvent.genpuobs = fInEvent.genpuobs;
+
     if (fOutConfig.isGMSB)
     {
       fOutEvent.nNeutoPhGr = fInEvent.nNeutoPhGr;
@@ -419,6 +428,9 @@ void Skimmer::FillOutEvent(const UInt_t entry)
     {
       fOutEvent.nToyPhs = fInEvent.nToyPhs;
     }
+
+    // pileup weight!!
+    fOutEvent.puwgt = fPUWeights[fInEvent.genputrue];
   }
 }
 
@@ -1038,7 +1050,9 @@ void Skimmer::InitOutBranches()
     fOutTree->Branch(fOutEvent.s_geny0.c_str(), &fOutEvent.geny0);
     fOutTree->Branch(fOutEvent.s_genz0.c_str(), &fOutEvent.genz0);
     fOutTree->Branch(fOutEvent.s_gent0.c_str(), &fOutEvent.gent0);
-    
+    fOutTree->Branch(fOutEvent.s_genpuobs.c_str(), &fOutEvent.genpuobs);
+    fOutTree->Branch(fOutEvent.s_genputrue.c_str(), &fOutEvent.genputrue);
+
     if (fOutConfig.isGMSB)
     {
       fOutTree->Branch(fOutEvent.s_nNeutoPhGr.c_str(), &fOutEvent.nNeutoPhGr);

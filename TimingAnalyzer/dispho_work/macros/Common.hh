@@ -5,6 +5,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1F.h"
+#include "TH1D.h"
 #include "TH2F.h"
 #include "TGraphAsymmErrors.h"
 #include "TCanvas.h"
@@ -68,16 +69,22 @@ namespace Common
   constexpr Float_t etaEEmax    = 2.5;
 
   // input
-  static const TString eosDir         = "/eos/cms/store/user/kmcdermo";
-  static const TString baseDir        = "nTuples/skims/2017/rereco_v3";
+  static const TString eosDir         = "/eos/cms/store/user/kmcdermo/nTuples";
+  static const TString baseDir        = "skims/2017/rereco_v4";
   static const TString tupleFileName  = "tree.root";
-  static const TString puwgtFileName  = "puweights";
-  static const TString puwgtHistName  = "PUWeightsHist";
-  static const TString rootdir        = "tree/";
+  static const TString rootdir        = "tree";
   static const TString configtreename = "configtree";
   static const TString disphotreename = "disphotree";
   static const TString h_cutflowname  = "h_cutflow";
   static const TString pavename       = "Config";
+
+  static const Int_t   nPUBins        = 150;
+  static const TString dataPUFileName = "datapu";
+  static const TString dataPUHistName = "pileup";
+  static const TString puObsHistName  = "h_genpuobs";
+  static const TString puTrueHistName = "h_genputrue";
+  static const TString puwgtFileName  = "puweights";
+  static const TString puwgtHistName  = "PUWeightsHist";
 
   // Sample Information
   extern TString PrimaryDataset;
@@ -174,6 +181,7 @@ namespace Common
   void CheckValidFile(const TFile * file, const TString & fname);
   void CheckValidTree(const TTree * tree, const TString & tname, const TString & fname);
   void CheckValidTH1F(const TH1F * plot, const TString & pname, const TString & fname);
+  void CheckValidTH1D(const TH1D * plot, const TString & pname, const TString & fname);
   void CheckValidTH2F(const TH2F * plot, const TString & pname, const TString & fname);
 
   // may actually want an invalid tree/file...
