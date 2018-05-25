@@ -48,7 +48,7 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
     }
 
     // delete file
-    delete infile;
+    delete file;
   }
 
   // save tmp output
@@ -60,7 +60,7 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
   }
 
   // input data file
-  const TString indatafilename = Form("%s/%s.root",indir.Data(),Common::dataPUFileName.Data());
+  const TString indatafilename = Form("%s/%s.root",Common::eosDir.Data(),Common::dataPUFileName.Data());
   auto indatafile = TFile::Open(indatafilename.Data());
   Common::CheckValidFile(indatafile,indatafilename);
   indatafile->cd();
@@ -68,7 +68,7 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
   // Get data hist
   const TString indatahistname = Form("%s",Common::dataPUHistName.Data());
   auto indatahist = (TH1D*)indatafile->Get(indatahistname.Data());
-  Common::CheckValidTH1F(indatahist,indatahistname,indatafilename);
+  Common::CheckValidTH1D(indatahist,indatahistname,indatafilename);
 
   // Make data hist resized
   auto datahist = new TH1F("h_pudata","h_pudata",Common::nPUBins,0,Common::nPUBins);
@@ -88,7 +88,7 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
   for (const auto & mchistpair : mchistmap)
   {
     const auto & name = mchistpair.first;
-    datahistmap[name] = (TH1F*)datahist->Clone(Form("%s_%s",name.Data(),Common::puWgtHistName.Data()))
+    datahistmap[name] = (TH1F*)datahist->Clone(Form("%s_%s",name.Data(),Common::puwgtHistName.Data()));
   }
 
   // normalize MC
@@ -104,23 +104,23 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
     auto & hist = datahistpair.second;
     hist->Scale(1.f/hist->Integral());
   }
-  
+
   // divide and stuff
   for (auto & datahistpair : datahistmap)
   {
     auto & name = datahistpair.first;
     auto & hist = datahistpair.second;
-    hist->Divide(mchistpair[name]);
+    hist->Divide(mchistmap[name]);
   }
 
   // save it
-  file->cd();
+  outfile->cd();
   for (const auto & datahistpair : datahistmap)
   {
     const auto & hist = datahistpair.second;
     hist->Write(hist->GetName(),TObject::kWriteDelete);
   }
-  
+
   // delete the rest
   for (auto & datahistpair : datahistmap) delete datahistpair.second;
   delete datahist;
@@ -129,3 +129,4 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
   for (auto & mchistpair : mchistmap) delete mchistpair.second;
   delete outfile;
 }
+
