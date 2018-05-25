@@ -15,7 +15,7 @@ class Skimmer
 public:
   // functions
   Skimmer(const TString & indir, const TString & outdir, const TString & filename, 
-	  const Float_t sumwgts, const TString & puwgtfile = "", const Bool_t redophoid = false);
+	  const Float_t sumwgts, const TString & puwgtfilename = "", const Bool_t redophoid = false);
   ~Skimmer();
 
   // setup config inputs
@@ -70,7 +70,7 @@ private:
   const TString fOutDir;
   const TString fFileName;
   const Float_t fSumWgts;
-  const TString fPUWgtFile;
+  const TString fPUWgtFileName;
   const Bool_t  fRedoPhoID;
   std::map<std::string,int> cutLabels;
   Bool_t fIsMC;

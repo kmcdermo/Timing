@@ -9,7 +9,7 @@ indir=${2}
 tmpdir=${3}
 outdir=${4}
 
-usePUWeights=${5}
+usePUWeights=${5:-0}
 
 redophoid=${redoPhotonID}
 

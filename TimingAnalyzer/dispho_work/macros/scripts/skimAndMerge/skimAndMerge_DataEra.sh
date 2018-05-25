@@ -18,4 +18,5 @@ tmpdir="${tmpbase}/${dataset}/${era}/${version}"
 outdir="${outbase}/Data/${dataset}/${era}/${version}"
 	
 ## process subera
-./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir}
+./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} 0
+

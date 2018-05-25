@@ -4,9 +4,9 @@
 #include <iostream>
 
 Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & filename, 
-		 const Float_t sumwgts, const TString & puwgtfile, const Bool_t redophoid) :
+		 const Float_t sumwgts, const TString & puwgtfilename, const Bool_t redophoid) :
   fInDir(indir), fOutDir(outdir), fFileName(filename), 
-  fSumWgts(sumwgts), fPUWgtFile(puwgtfile), fRedoPhoID(redophoid)
+  fSumWgts(sumwgts), fPUWgtFileName(puwgtfilename), fRedoPhoID(redophoid)
 {
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
@@ -42,13 +42,13 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   // Get PU weights input
   if (fIsMC)
   {
-    const Bool_t useOld = (fPUWgtName == "");
+    const Bool_t useOld = (fPUWgtFileName == "");
 
     const TString pufilename = (useOld ? Form("%s/%s/%s.root",Common::eosDir.Data(),Common::baseDir.Data(),Common::puwgtFileName.Data()) : Form("%s",fPUWgtFileName.Data()));
     fInPUWgtFile = TFile::Open(pufilename.Data());
     Common::CheckValidFile(fInPUWgtFile,pufilename);
 
-    const TString puhistname = (useOld ? Form("%s",Common::puwgHistName.Data()) : Form("%s_%s",Common::puTrueHistName.Data(),Common::puwgtHistName.Data()));
+    const TString puhistname = (useOld ? Form("%s",Common::puwgtHistName.Data()) : Form("%s_%s",Common::puTrueHistName.Data(),Common::puwgtHistName.Data()));
     fInPUWgtHist = (TH1F*)fInPUWgtFile->Get(puhistname.Data());
     Common::CheckValidTH1F(fInPUWgtHist,puhistname,pufilename);
 
