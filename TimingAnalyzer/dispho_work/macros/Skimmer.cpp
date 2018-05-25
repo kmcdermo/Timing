@@ -142,9 +142,9 @@ void Skimmer::EventLoop()
       // fill cutflow for MET filters
       fOutCutFlow->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
       
-      // cut on crappy pileup... eventually genputrue
+      // cut on crappy pu
       fInEvent.b_nvtx->GetEntry(entry);
-      if (fIsMC && ((fInEvent.nvtx < 0) || (UInt_t(fInEvent.nvtx) >= fPUWeights.size()))) continue;
+      if (fIsMC && ((fInEvent.genputrue < 0) || (UInt_t(fInEvent.genputrue) >= fPUWeights.size()))) continue;
       
       // fill cutflow
       fOutCutFlow->Fill((cutLabels["badPU"]*1.f)-0.5f,evtwgt);
@@ -360,8 +360,8 @@ void Skimmer::FillOutEvent(const UInt_t entry)
     fInEvent.b_geny0->GetEntry(entry);
     fInEvent.b_genz0->GetEntry(entry);
     fInEvent.b_gent0->GetEntry(entry);
-    fInEvent.b_genputrue->GetEntry(entry);
     fInEvent.b_genpuobs->GetEntry(entry);
+    fInEvent.b_genputrue->GetEntry(entry);
 
     if (fInConfig.isGMSB)
     {
@@ -413,8 +413,8 @@ void Skimmer::FillOutEvent(const UInt_t entry)
     fOutEvent.geny0 = fInEvent.geny0;
     fOutEvent.genz0 = fInEvent.genz0;
     fOutEvent.gent0 = fInEvent.gent0;
-    fOutEvent.genputrue = fInEvent.genputrue;
     fOutEvent.genpuobs = fInEvent.genpuobs;
+    fOutEvent.genputrue = fInEvent.genputrue;
 
     if (fOutConfig.isGMSB)
     {
