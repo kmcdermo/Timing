@@ -24,7 +24,6 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
   Common::SetTDRStyle(fTDRStyle);
-  gROOT->ForceStyle();
 
   // setup hists
   TreePlotter::SetupDefaults();

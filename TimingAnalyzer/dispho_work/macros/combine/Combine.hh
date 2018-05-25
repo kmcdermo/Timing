@@ -33,24 +33,19 @@ struct GMSBinfo
   Float_t exsec;
 
   // r-values
-  Float_t robs;
-  Float_t r2sigdown;
-  Float_t r1sigdown;
-  Float_t rexp;
-  Float_t r1sigup;
-  Float_t r2sigup;
+  std::map<TString,Float_t> rvalmap;
 };
 
 namespace Combine
 {
   // setup functions
-  void SetupEntryMap(const Bool_t doObserved);
+  void SetupEntryVec(const Bool_t doObserved);
   void SetupGMSB(const TString & filename);
   void RemoveGMSBSamples();
   void SetupGMSBSubGroups();
 
   // input maps
-  extern std::map<TString,Int_t> EntryMap;
+  extern std::vector<TString> EntryVec;
   extern std::map<TString,GMSBinfo> GMSBMap;
   extern std::map<TString,std::vector<TString> > GMSBSubGroupMap;
 };

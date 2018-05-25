@@ -909,5 +909,6 @@ namespace Common
     tdrStyle->SetNumberContours(NCont);
 
     tdrStyle->cd();
+    gROOT->ForceStyle();
   }
 };

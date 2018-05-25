@@ -24,7 +24,6 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insigna
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
   Common::SetTDRStyle(fTDRStyle);
-  gROOT->ForceStyle();
 
   // setup hists
   TreePlotter2D::SetupDefaults();
