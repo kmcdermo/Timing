@@ -2,7 +2,7 @@ plot_title=nJets30
 
 x_title=nJets (p_{T}^{jet}>30, |#eta^{jet}|<3, #DeltaR(#gamma_{0},jet)>0.3, ID#geqTight)
 x_scale=LIN
-x_var=Sum$(1*((jetpt>30)*(abs(jeteta)<3)))
+x_var=Sum$(1*(jetpt>30))
 x_bins=CONSTANT 15 0 15
 
 y_title=Events

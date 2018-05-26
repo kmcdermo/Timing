@@ -44,7 +44,7 @@ namespace Common
     
     // DYLL
     Common::SampleMap["MC/DYJetsToLL/base"] = "DYLL";
-    Common::SampleMap["MC/DYJetsToLL/ext"]  = "DYLL";
+    //    Common::SampleMap["MC/DYJetsToLL/ext"]  = "DYLL";
 
     // DiPhoBox
     Common::SampleMap["MC/DiPhotonJetsBox/M40_80"]  = "DiPho";
@@ -169,7 +169,8 @@ namespace Common
   {
     // GMSB: add more as we go
     Common::SignalSubGroupColorMap["GMSB_CTau0p1cm"] = {kAzure,"Up"};
-    Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kAzure,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau10cm"]  = {kGreen,"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kRed,"Down"};
 
     // deal with HVDS later...
   }
