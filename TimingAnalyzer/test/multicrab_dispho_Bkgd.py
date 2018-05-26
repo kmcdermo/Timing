@@ -122,7 +122,7 @@ def main():
             if "_ext" in inDO[0] : datasetName += "_ext"
 
             config.General.requestName   = datasetName
-            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v10','splitPho=False','nThreads='+str(config.JobType.numCores),
+            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v14','splitPho=False','nThreads='+str(config.JobType.numCores),
                                             'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],'isBkgd=True',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.inputDataset     = inDO[0]
