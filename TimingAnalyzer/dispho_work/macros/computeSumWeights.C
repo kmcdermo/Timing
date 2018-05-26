@@ -32,10 +32,8 @@ void computeSumWeights(const TString & indir, const TString & files, const TStri
     delete cutflow;
     delete file;
   }
-  infiles.close();
   
   // dump the sum of weights
   std::ofstream outfile(wgtfile.Data(),std::ios_base::trunc);
-  outfile << "Sum of weights: " << sumwgts << std::endl;
-  outfile.close();
+  outfile << "Sum_of_weights: " << sumwgts << std::endl;
 }

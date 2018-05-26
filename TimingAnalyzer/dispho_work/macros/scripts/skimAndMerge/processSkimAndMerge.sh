@@ -37,7 +37,7 @@ mkdir -p ${tmpdir}
 ## produce sum of weights
 echo "Getting sum of weights"
 ./scripts/computeSumWeights.sh ${eosdir} ${files} ${wgtfile}
-sumwgts=$(grep "Sum of weights: " ${wgtfile} | cut -d " " -f 4)
+sumwgts=$(grep "Sum_of_weights: " ${wgtfile} | cut -d " " -f 2)
 
 ## produce pu distribution
 if (( ${usePUWeights} == 1 )) ; then
