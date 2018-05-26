@@ -11,7 +11,23 @@ do echo ${inputgroup} | while read -r infile insignalfile sel pdname
 	    misc="misc"
 	    ./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}"
 	done
-	
+    done
+done
+
+for inputgroup in "qcd signals_qcd control_qcd SinglePhoton" "gjets signals_gjets control_gjets DoubleEG"
+do echo ${inputgroup} | while read -r infile insignalfile sel pdname
+    do
+	for plot in phoseedtime_0 met met_zoom
+	do
+	    misc="misc"
+	    ./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}"
+	done
+    done
+done
+
+for inputgroup in "sr signals_sr signal SinglePhoton"
+do echo ${inputgroup} | while read -r infile insignalfile sel pdname
+    do
 	for plot in phoseedtime_0 met met_zoom
 	do
 	    misc="misc_blind"
