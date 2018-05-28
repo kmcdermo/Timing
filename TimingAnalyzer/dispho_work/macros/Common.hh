@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <utility>
 #include <algorithm>
+#include <sys/stat.h>
 
 // Sample Enums
 enum SampleGroup {isData, isBkgd, isSignal, isToy};
@@ -185,7 +186,7 @@ namespace Common
   void CheckValidTH2F(const TH2F * plot, const TString & pname, const TString & fname);
 
   // may actually want an invalid tree/file...
-  Bool_t IsNullFile(const TFile * file);
+  Bool_t IsNullFile(const TString & filename);
   Bool_t IsNullTree(const TTree * tree);
 
   // saving old config info

@@ -552,9 +552,10 @@ namespace Common
     }
   }
 
-  Bool_t IsNullFile(const TFile * file)
+  Bool_t IsNullFile(const TString & filename)
   {
-    return (file == (TFile*) NULL);
+    struct stat buffer;
+    return (stat (filename.Data(), &buffer) != 0);
   }
 
   Bool_t IsNullTree(const TTree * tree)

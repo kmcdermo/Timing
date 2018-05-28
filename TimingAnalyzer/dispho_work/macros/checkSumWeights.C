@@ -10,13 +10,13 @@ void checkSumWeights(const TString & unskimmedwgtfile, const TString & skimdir)
 
   // get skimmed sum of weights
   const TString skimfilename = Form("%s/%s",skimdir.Data(),Common::tupleFileName.Data());
-  auto skimfile = TFile::Open(skimfilename.Data());
-  const Bool_t isnull = Common::IsNullFile(skimfile);
+  const Bool_t isnull = Common::IsNullFile(skimfilename);
   if (isnull) 
   {
-    std::cerr << "Bad skimmed file... exiting..." << std::endl;
+    std::cerr << "Bad skimmed file: " << skimfilename.Data() << "  ...Exiting..." << std::endl;
     exit(1);
   }
+  auto skimfile = TFile::Open(skimfilename.Data());
 
   // Get the cut histogram
   const TString skimhistname = Form("%s",Common::h_cutflowname.Data());

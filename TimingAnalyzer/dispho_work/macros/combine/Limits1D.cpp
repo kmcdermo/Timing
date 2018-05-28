@@ -65,20 +65,20 @@ void Limits1D::MakeLimits1D()
     for (auto isample = 0U; isample < nSamples; isample++)
     {
       const auto & sample = samples[isample];
-      const auto & info = fGMSBMap[sample];
+      const auto & info = Combine::GMSBMap[sample];
       const auto & vals = info.rvalmap;
       const auto lambda = info.lambda;
       const auto xsec = info.xsec;
 
       theo_graph->SetPoint(isample,lambda,xsec);
-      if (fDoObserved) obs_graph->SetPoint(isample,lambda,vals["robs"]*xsec);
-      exp_graph->SetPoint(isample,lambda,vals["rexp"]*xsec);
+      if (fDoObserved) obs_graph->SetPoint(isample,lambda,vals.at("robs")*xsec);
+      exp_graph->SetPoint(isample,lambda,vals.at("rexp")*xsec);
 
-      sig1_graph->SetPoint(isample,lambda,info.r1sigup*xsec);
-      sig1_graph->SetPoint(nSigPts-isample-1,lambda,vals["r1sigdown"]*xsec);
+      sig1_graph->SetPoint(isample,lambda,vals.at("r1sigup")*xsec);
+      sig1_graph->SetPoint(nSigPts-isample-1,lambda,vals.at("r1sigdown")*xsec);
 
-      sig2_graph->SetPoint(isample,lambda,info.r2sigup*xsec);
-      sig2_graph->SetPoint(nSigPts-isample-1,lambda,vals["r2sigdown"]*xsec);
+      sig2_graph->SetPoint(isample,lambda,vals.at("r2sigup")*xsec);
+      sig2_graph->SetPoint(nSigPts-isample-1,lambda,vals.at("r2sigdown")*xsec);
     }
 
     // make legend
@@ -144,7 +144,7 @@ void Limits1D::MakeLimits1D()
 void Limits1D::SetupCombine()
 {
   Combine::SetupRValVec(fDoObserved);
-  Combine::SetupGMSB();
+  Combine::SetupGMSB(fInDir,fInFileName);
   Combine::RemoveGMSBSamples();
   Combine::SetupGMSBSubGroups();
 }

@@ -39,13 +39,13 @@ struct GMSBinfo
 namespace Combine
 {
   // setup functions
-  void SetupEntryVec(const Bool_t doObserved);
-  void SetupGMSB(const TString & filename);
+  void SetupRValVec(const Bool_t doObserved);
+  void SetupGMSB(const TString & indir, const TString & infilename);
   void RemoveGMSBSamples();
   void SetupGMSBSubGroups();
 
   // input maps
-  extern std::vector<TString> EntryVec;
+  extern std::vector<TString> RValVec;
   extern std::map<TString,GMSBinfo> GMSBMap;
   extern std::map<TString,std::vector<TString> > GMSBSubGroupMap;
 };

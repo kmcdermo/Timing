@@ -1,15 +1,20 @@
 #!/bin/bash
 
-fitconfig=${1:-"fit_config/standard.txt"}
-miscconfig=${2:-"plot_config/misc_fit.txt"}
-outfiletext=${3:-"fitresults"}
-dir=${4:-"fits"}
+fitconfig=${1:-"fit_config/ws_final.txt"}
+miscconfig=${2:-"misc_config/misc_fit.txt"}
+outfiletext=${3:-"ws_final"}
+outdir=${4:-"plots/ntuples_v4/fits"}
 
 root -b -q -l runFitter.C\(\"${fitconfig}\",\"${miscconfig}\",\"${outfiletext}\"\)
 
+## copy to combine
+combinedir="combine/input"
+mkdir -p ${combinedir}
+cp ${outfiletext}.root ${combinedir} 
+
 ## make out dirs
 topdir=/afs/cern.ch/user/k/kmcdermo/www
-fulldir=${topdir}/dispho/${dir}
+fulldir=${topdir}/dispho/${outdir}
 
 ## make them readable
 mkdir -p ${fulldir}

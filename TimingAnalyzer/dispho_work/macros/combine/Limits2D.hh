@@ -3,7 +3,9 @@
 
 #include "TROOT.h"
 #include "TStyle.h"
-#include "TGraph.h"
+#include "TString.h"
+#include "TFile.h"
+#include "TH2F.h"
 #include "TLegend.h"
 #include "TCanvas.h"
 
@@ -11,6 +13,8 @@
 #include "Combine.hh"
 
 #include <vector>
+#include <map>
+#include <iostream>
 #include <algorithm>
 
 struct Bin2D
@@ -18,10 +22,10 @@ struct Bin2D
   Bin2D() {}
   Bin2D(const Float_t xlow, const Float_t xcenter, const Float_t xup, 
 	const Float_t ylow, const Float_t ycenter, const Float_t yup,
-	const std::map<TString,Float_t> && rvalmap)
+	const std::map<TString,Float_t> & rvalmap)
   : xlow(xlow), xcenter(xcenter), xup(xup), 
     ylow(ylow), ycenter(ycenter), yup(yup),
-    rvalmap(rvalmap) {}
+    rvalmap(std::move(rvalmap)) {}
 
   // bin info
   Float_t xlow;
@@ -60,6 +64,10 @@ private:
   const TString fInFileName;
   const Bool_t fDoObserved;
   const TString fOutText;
+
+  // stored info
+  std::vector<std::vector<Bin2D> > fFilledBins;
+  std::vector<Bin2D> fAllBins;
 
   // style
   TStyle * fTDRStyle;

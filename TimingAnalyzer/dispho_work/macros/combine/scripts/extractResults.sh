@@ -4,6 +4,7 @@
 infile=${1:-"ws_final.root"}
 outname=${2-"AsymLim"}
 outdir=${3:-"output"}
+indir="input"
 
 ## other global vars
 combdir="/afs/cern.ch/work/k/kmcdermo/private/dispho/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit/working"
@@ -12,13 +13,13 @@ datacard="datacard.txt"
 #############################
 ## replace input file name ##
 #############################
-cp datacard.tmpl ${datacard}
+cp ${indir}/datacard.tmpl ${datacard}
 sed -i "s/INPUT_FILE/${infile}/g" ${datacard}
 
 ###########################################
 ## Ship things over to combine directory ##
 ###########################################
-cp ${infile} ${combdir}
+cp ${indir}/${infile} ${combdir}
 cp ${datacard} ${combdir}
 
 #####################
@@ -32,7 +33,7 @@ eval `scram runtime -sh`
 #################################################
 for lambda in 100 150 200 250 300 350 400
 do
-    for ctau in 0p1
+    for ctau in 0p1 10
     do
 	name=GMSB_L${lambda}TeV_CTau${ctau}cm
 

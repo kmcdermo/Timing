@@ -19,7 +19,7 @@ namespace Combine
     }
   }
   
-  void SetupGMSB()
+  void SetupGMSB(const TString & indir, const TString & infilename)
   {
     // read in parameters... 
     std::fstream inparams("signal_config/all_params.txt");
@@ -33,7 +33,7 @@ namespace Combine
       
       const Int_t i_lambda = lambda.Atoi();
       const Float_t f_ctau = ctau.Atof();
-      
+     
       Combine::GMSBMap[name] = {lambda,i_lambda,s_ctau,f_ctau,mass,width,br};
     }
   
@@ -57,12 +57,14 @@ namespace Combine
       auto       & info = GMSBPair.second;
       
       // get file
-      const TString filename = Form("%s/%s%s.root",fInDir.Data(),fInFileName.Data(),name.Data()));
-      auto infile = TFile::Open(Form("%s",filename.Data()));
-      auto isnull = Common::IsNullFile(infile);
+      const TString filename = Form("%s/%s%s.root",indir.Data(),infilename.Data(),name.Data());
+      auto isnull = Common::IsNullFile(filename);
 
       if (!isnull)
       {
+	// open file
+	auto infile = TFile::Open(Form("%s",filename.Data()));
+
 	// get tree
 	const TString treename = "limit";
 	auto intree = (TTree*)infile->Get(Form("%s",treename.Data()));
@@ -73,7 +75,7 @@ namespace Combine
 	intree->SetBranchAddress(s_limit.Data(),&limit,&b_limit);
 
 	// 5(6) Entries in tree, one for each quantile 
-	for (const auto ientry = 0; ientry < intree->GetEntries(); ientry++)
+	for (auto ientry = 0U; ientry < intree->GetEntries(); ientry++)
 	{
 	  b_limit->GetEntry(ientry);
 	  info.rvalmap[Combine::RValVec[ientry]] = limit;
@@ -103,7 +105,7 @@ namespace Combine
       const auto & name = GMSBPair.first;
       const auto & info = GMSBPair.second;
       
-      if (info.rexp < 0.f) keysToRemove.emplace_back(name);
+      if (info.rvalmap.at("rexp") < 0.f) keysToRemove.emplace_back(name);
     }
     
     for (const auto & keyToRemove : keysToRemove) Combine::GMSBMap.erase(keyToRemove);
@@ -119,7 +121,7 @@ namespace Combine
       const auto & name = GMSBPair.first;
       const auto & info = GMSBPair.second;
       
-      Config::GMSBSubGroupMap["GMSB_CTau"+info.s_ctau+"cm"].emplace_back(name);
+      Combine::GMSBSubGroupMap["GMSB_CTau"+info.s_ctau+"cm"].emplace_back(name);
     }
   }
 };

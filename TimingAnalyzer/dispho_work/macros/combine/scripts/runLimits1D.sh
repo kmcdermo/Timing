@@ -3,10 +3,10 @@
 indir=${1:-"output"}
 infilename=${2:-"AsymLim"}
 doobserved=${3:-0}
-outtext=${4:-"limit2D"}
-dir=${5:-"plots/limits"}
+outtext=${4:-"limit1D"}
+dir=${5:-"plots/ntuples_v4/limits"}
 
-root -l -b -q runLimits2D.C\(\"${indir}\",\"${infilename}\",${doobserved},\"${outtext}\"\)
+root -l -b -q runLimits1D.C\(\"${indir}\",\"${infilename}\",${doobserved},\"${outtext}\"\)
 
 ## make out dirs
 topdir=/afs/cern.ch/user/k/kmcdermo/www
