@@ -1,5 +1,7 @@
 #include "Limits2D.hh"
 
+const auto sortPairs = [](const auto & obj1, const auto & obj2){return obj1.second < obj2.second;};
+
 Limits2D::Limits2D(const TString & indir, const TString & infilename, const Bool_t doobserved, const TString & outtext)
   : fInDir(indir), fInFileName(infilename), fDoObserved(doobserved), fOutText(outtext)
 {  
@@ -60,7 +62,6 @@ void Limits2D::MakeLimits2D()
     cont_hist->SetLineColor(kBlack);
     cont_hist->SetLineWidth(3);
   }
-  
   std::cout << "Draw and save..." << std::endl;
 
   // final style
@@ -89,8 +90,8 @@ void Limits2D::MakeLimits2D()
   hist->Draw("COLZ");
   if (fDoObserved) HistMap["robs_cont"]->Draw("CONT3 same");
   HistMap["rexp_cont"]->Draw("CONT3 same");
-  HistMap["rs1sigdown_cont"]->Draw("CONT3 same");
-  HistMap["rs1sigup_cont"]->Draw("CONT3 same");
+  HistMap["r1sigdown_cont"]->Draw("CONT3 same");
+  HistMap["r1sigup_cont"]->Draw("CONT3 same");
 
   // cms style
   Common::CMSLumi(canv,0);
@@ -98,7 +99,7 @@ void Limits2D::MakeLimits2D()
   // save it!
   canv->SaveAs(Form("%s_GMSB.png",fOutText.Data()));
   canv->SaveAs(Form("%s_GMSB.pdf",fOutText.Data()));
-  
+
   // write it!
   fOutFile->cd();
   for (const auto & HistPair : HistMap)
@@ -158,53 +159,57 @@ void Limits2D::SetupCombine()
 
 void Limits2D::SetupFilledBins()
 {
-  // get x-centers
-  std::vector<std::pair<Float_t,T> > xcenters;
+  // get x-centers (tmp map)
+  std::map<TString,Float_t> xcentersmap;
   for (const auto & GMSBPair : Combine::GMSBMap)
   {
-    const auto xcenter = GMSBPair.second.lambda;
-    if (std::find(xcenters.begin(),xcenters.end(),xcenter) == xcenters.end()) xcenters.emplace_back(xcenter);
+    const auto & s_lambda = GMSBPair.second.s_lambda;
+    const auto lambda     = GMSBPair.second.lambda;
+    xcentersmap[s_lambda] = lambda;
   }
-  std::sort(xcenters.begin(),xcenters.end());
+  // put into vector, sort, and use
+  std::vector<std::pair<TString,Float_t> > xcentersvec;
+  for (const auto & xcenterspair : xcentersmap) xcentersvec.emplace_back(xcenterspair.first,xcenterspair.second);
+  std::sort(xcentersvec.begin(),xcentersvec.end(),sortPairs);
 
-  // get y-centers
-  std::vector<Float_t> ycenters;
+  // get y-centers (tmp map)
+  std::map<TString,Float_t> ycentersmap;
   for (const auto & GMSBPair : Combine::GMSBMap)
   {
-    const auto ycenter = GMSBPair.second.ctau;
-    if (std::find(ycenters.begin(),ycenters.end(),ycenter) == ycenters.end()) ycenters.emplace_back(ycenter);
+    const auto & s_ctau = GMSBPair.second.s_ctau;
+    const auto ctau     = GMSBPair.second.ctau;
+    ycentersmap[s_ctau] = ctau;
   }
-  std::sort(ycenters.begin(),ycenters.end());
+  // put into vector, sort, and use
+  std::vector<std::pair<TString,Float_t> > ycentersvec;
+  for (const auto & ycenterspair : ycentersmap) ycentersvec.emplace_back(ycenterspair.first,ycenterspair.second);
+  std::sort(ycentersvec.begin(),ycentersvec.end(),sortPairs);
 
   // set width 
-  const auto xwidth = xcenters[0] / 10.f;
-  const auto ywidth = ycenters[0] / 10.f;
+  const auto xwidth = xcentersvec[0].second / 10.f;
+  const auto ywidth = ycentersvec[0].second / 10.f;
   
   // loop over centers and fill filledbins
-  fFilledBins.resize(xcenters.size());
-  for (auto i_fill = 0U; i_fill < xcenters.size(); i_fill++)
+  fFilledBins.resize(xcentersvec.size());
+  for (auto i_fill = 0U; i_fill < xcentersvec.size(); i_fill++)
   {
     // x bin info
-    const auto xcenter = xcenters[i_fill];
+    const auto & x_s   = xcentersvec[i_fill].first;
+    const auto xcenter = xcentersvec[i_fill].second;
     const auto xlow    = xcenter - (xwidth / 2.f);
     const auto xup     = xcenter + (xwidth / 2.f);
-    const TString x_s  = Form("%i",Int_t(xcenter));
 
-    fFilledBins[i_fill].resize(ycenters.size());
-    for (auto j_fill = 0U; j_fill < ycenters.size(); j_fill++)
+    fFilledBins[i_fill].resize(ycentersvec.size());
+    for (auto j_fill = 0U; j_fill < ycentersvec.size(); j_fill++)
     {
       // y bin info
-      const auto ycenter = ycenters[j_fill];
+      const auto & y_s   = ycentersvec[j_fill].first;
+      const auto ycenter = ycentersvec[j_fill].second;
       const auto ylow    = ycenter - ywidth;
       const auto yup     = ycenter + ywidth;
-      const TString y_s  = (ycenter == 0.1 ? "0p1" : Form("%i",Int_t(ycenter)));// FIX THIS!!!
       
       // get name of gmsb sample
       const TString name = "GMSB_L"+x_s+"TeV_CTau"+y_s+"cm";
-
-      std::cout << name.Data() << " " << i_fill << " " << j_fill << " " << xcenter << " " << ycenter;
-      for (const auto & GMSBPair :  Combine::GMSBMap[name].rvalmap) std::cout << " " << GMSBPair.first.Data() << " " << GMSBPair.second;  
-      std::cout << std::endl;
 
       // set basic info for bins
       fFilledBins[i_fill][j_fill] = {xlow,xcenter,xup,ylow,ycenter,yup,Combine::GMSBMap[name].rvalmap};
@@ -264,11 +269,8 @@ void Limits2D::SetupAllBins()
       // make stripes in x when center equals filled bin
       if (!isEdgeX)
       {
-	std::cout << "Making stripe in X ... i_fill: " << i_fill << " j_fill: " << j_fill << std::endl;
 	for (auto i_interp = 0; i_interp < nx_interp; i_interp++)
         {
-	  std::cout << "  i_interp: " << i_interp << std::endl;
-
 	  // bin boundaries
 	  const auto xbinlow    = xlow + xwidth*i_interp;
 	  const auto xbinup     = xlow + xwidth*(i_interp+1);
@@ -282,7 +284,6 @@ void Limits2D::SetupAllBins()
 	  std::map<TString,Float_t> tmpmap; // rval map for tmp zs
 	  for (const auto & RVal : Combine::RValVec)
 	  {
-	    std::cout << RVal.Data() << std::endl;
 	    // values
 	    const auto fQ11 = binlow.rvalmap.at(RVal);
 	    const auto fQ12 = fFilledBins[i_bin][j_bin+1].rvalmap.at(RVal);
@@ -300,11 +301,8 @@ void Limits2D::SetupAllBins()
       // make stripes in y when center equals filled bin
       if (!isEdgeY)
       {
-	std::cout << "Making stripe in Y ... i_fill: " << i_fill << " j_fill: " << j_fill << std::endl;
 	for (auto j_interp = 0; j_interp < ny_interp; j_interp++)
         {
-	  std::cout << "  j_interp: " << j_interp << std::endl;
-
 	  // bin boundaries
 	  const auto xbinlow    = (!isEdgeX ? binlow : binup).xlow;
 	  const auto xbinup     = (!isEdgeX ? binlow : binup).xup;
@@ -335,8 +333,6 @@ void Limits2D::SetupAllBins()
       // skip interpolation of inbetween boxes if either condition is met
       if (isEdgeX || isEdgeY) continue;
 
-      std::cout << "Making boxes in XY ... i_fill: " << i_fill << " j_fill: " << j_fill << std::endl;
-
       // interpolate inner boxes
       for (auto i_interp = 0; i_interp < nx_interp; i_interp++)
       {
@@ -347,8 +343,6 @@ void Limits2D::SetupAllBins()
 	
 	for (auto j_interp = 0; j_interp < ny_interp; j_interp++)
         {
-	  std::cout << "  i_interp: " << i_interp << " j_interp: " << j_interp << std::endl;
-
 	  // for this new bin
 	  const auto ybinlow    = ylow + ywidth*i_interp;
 	  const auto ybinup     = ylow + ywidth*(i_interp+1);
