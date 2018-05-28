@@ -1,0 +1,9 @@
+plot_title=PV X Position
+
+x_title=PV x-Position [cm]
+x_scale=LIN
+x_var=vtxX
+x_bins=CONSTANT 50 -0.1 0.1
+
+y_title=Events
+y_scale=LOG
