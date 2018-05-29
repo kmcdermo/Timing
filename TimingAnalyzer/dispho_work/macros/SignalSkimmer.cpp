@@ -68,7 +68,7 @@ void SignalSkimmer::MakeSkimsFromTrees()
     SignalSkimmer::InitListMap(listmap,sample);
 
     // Loop over cuts, and make entry list for each cut, 
-    for (const auto & SignalCutFlowPair : Common::SignalCutFlowPairVec)
+    for (const auto & SignalCutFlowPair : Common::CutFlowPairVec)
     {
       // Get entry list
       const auto & label = SignalCutFlowPair.first;
@@ -154,13 +154,13 @@ void SignalSkimmer::SetupConfig()
   Common::SetupGroups();
   Common::SetupTreeNames();
   Common::SetupSignalCutFlowHistNames();
-  Common::SetupSignalCutFlow(fCutFlowConfig);
+  Common::SetupCutFlow(fCutFlowConfig);
 }
 
 void SignalSkimmer::InitListMap(std::map<TString,TEntryList*> & listmap, const TString & signal)
 {
   // loop over vector of cuts, make new list for each
-  for (const auto & SignalCutFlowPair : Common::SignalCutFlowPairVec)
+  for (const auto & SignalCutFlowPair : Common::CutFlowPairVec)
   {
     const auto & label  = SignalCutFlowPair.first;
     listmap[label] = new TEntryList(Form("%s_%s_EntryList",signal.Data(),label.Data()),"EntryList");
@@ -174,7 +174,7 @@ TH1F * SignalSkimmer::InitOutCutFlowHist(const TH1F * inhist, const TString & ou
   for (auto ibin = 1; ibin <= inNbinsX; ibin++) binlabels[inhist->GetXaxis()->GetBinLabel(ibin)] = ibin;
 
   Int_t inNbinsX_new = inNbinsX;
-  for (const auto & SignalCutFlowPair : Common::SignalCutFlowPairVec) binlabels[SignalCutFlowPair.first] = ++inNbinsX_new;
+  for (const auto & SignalCutFlowPair : Common::CutFlowPairVec) binlabels[SignalCutFlowPair.first] = ++inNbinsX_new;
   
   // make new cut flow
   auto outhist = new TH1F(outname.Data(),inhist->GetTitle(),binlabels.size(),0,binlabels.size());

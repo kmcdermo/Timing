@@ -100,7 +100,7 @@ namespace Common
   extern std::map<TString,Color_t> ColorMap;
   extern std::map<TString,TString> LabelMap; 
   extern std::map<TString,TString> CutMap;
-  extern std::vector<std::pair<TString,TString> > SignalCutFlowPairVec;
+  extern std::vector<std::pair<TString,TString> > CutFlowPairVec;
 
   // Sample setup functions
   void SetupPrimaryDataset(const TString & pdname);
@@ -116,7 +116,7 @@ namespace Common
   void SetupColors();
   void SetupLabels();
   void SetupCuts(const TString & cutconfig);
-  void SetupSignalCutFlow(const TString & cutflowconfig);
+  void SetupCutFlow(const TString & cutflowconfig);
   void KeepOnlySignals();
 
   // Setup hists

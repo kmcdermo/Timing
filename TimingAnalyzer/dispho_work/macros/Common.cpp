@@ -16,7 +16,7 @@ namespace Common
   std::map<TString,Color_t> ColorMap;
   std::map<TString,TString> LabelMap;
   std::map<TString,TString> CutMap;
-  std::vector<std::pair<TString,TString> > SignalCutFlowPairVec;
+  std::vector<std::pair<TString,TString> > CutFlowPairVec;
 
   void SetupPrimaryDataset(const TString & pdname)
   {
@@ -346,15 +346,15 @@ namespace Common
     }
   }
 
-  void SetupSignalCutFlow(const TString & cutflowconfig)
+  void SetupCutFlow(const TString & cutflowconfig)
   {
-    std::cout << "Reading signal cut flow config..." << std::endl;
+    std::cout << "Reading cut flow config..." << std::endl;
 
     std::ifstream infile(Form("%s",cutflowconfig.Data()),std::ios::in);
     TString label,cut;
     while (infile >> label >> cut)
     {
-      Common::SignalCutFlowPairVec.emplace_back(std::pair<TString,TString>{label,cut});
+      Common::CutFlowPairVec.emplace_back(std::pair<TString,TString>{label,cut});
     }
   }
 
