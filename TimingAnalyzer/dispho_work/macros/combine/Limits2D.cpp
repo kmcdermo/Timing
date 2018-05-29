@@ -398,60 +398,6 @@ void Limits2D::DrawLimits()
   delete leg;
 }
 
-void TreePlotter::MakeConfigPave()
-{
-  std::cout << "Dumping config to a pave..." << std::endl;
-
-  // create the pave, copying in old info
-  fOutFile->cd();
-  fConfigPave = new TPaveText();
-  fConfigPave->SetName(Form("%s",Common::pavename.Data()));
-  std::string str; // tmp string
-
-  // give grand title
-  fConfigPave->AddText("***** TreePlotter Config *****");
-
-  // dump plot cut config first
-  fConfigPave->AddText(Form("TreePlotter Cut Config: %s",fCutConfig.Data()));
-  std::ifstream cutfile(Form("%s",fCutConfig.Data()),std::ios::in);
-  while (std::getline(cutfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
-
-  // dump plot config
-  fConfigPave->AddText(Form("Plot Config: %s",fPlotConfig.Data()));
-  std::ifstream plotfile(Form("%s",fPlotConfig.Data()),std::ios::in);
-  while (std::getline(plotfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
-
-  // store last bits of info
-  fConfigPave->AddText(Form("Miscellaneous Config: %s",fMiscConfig.Data()));
-  std::ifstream miscfile(Form("%s",fMiscConfig.Data()),std::ios::in);
-  while (std::getline(miscfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
-
-  // save name of infile, redundant
-  fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
-
-  // dump in old config
-  Common::AddTextFromInputPave(fConfigPave,fInFile);
-
-  // save name of insignalfile, redundant
-  fConfigPave->AddText(Form("InSignalFile name: %s",fInSignalFileName.Data()));
-
-  // dump in old signal config
-  Common::AddTextFromInputPave(fConfigPave,fInSignalFile);
-  
-  // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
-}
-
 void Limits2D::MakeConfigPave()
 {
   std::cout << "Dumping config to a pave..." << std::endl;
