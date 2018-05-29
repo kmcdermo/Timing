@@ -8,14 +8,19 @@
 #include "TH2F.h"
 #include "TLegend.h"
 #include "TCanvas.h"
+#include "TPaveText.h"
 
 #include "../Common.hh"
 #include "Combine.hh"
 
-#include <vector>
-#include <map>
 #include <iostream>
+#include <fstream>
+#include <cstdlib>
+#include <vector>
+#include <utility>
+#include <map>
 #include <algorithm>
+#include <string>
 
 struct Bin2D
 {
@@ -39,22 +44,32 @@ struct Bin2D
   std::map<TString,Float_t> rvalmap;
 };
 
+const auto sortPairs = [](const auto & obj1, const auto & obj2){return obj1.second < obj2.second;};
+
 class Limits2D
 {
 public:
-  Limits2D(const TString & indir, const TString & infilename, const Bool_t doobserved, const TString & outtext);
+  Limits2D(const TString & indir, const TString & infilename, const TString & limitconfig, const TString & outtext);
   ~Limits2D();
 
   // setup functions
+  void SetupDefaults();
+  void SetupLimitConfig();
   void SetupCombine();
-  void SetupFilledBins();
-  void SetupAllBins();
 
   // main plotting routine
   void MakeLimits2D();
 
+  // main subroutines
+  void FillKnownBins();
+  void InterpolateKnownBins();
+  void DumpAllBins();
+  void GetHistBinBoundaries();
+  void FillRValHists();
+  void DrawLimits();
+  void MakeConfigPave();
+
   // Helper functions
-  void GetBinBoundaries(std::vector<Double_t> & xbins, std::vector<Double_t> & ybins);
   Float_t ZValue(const Float_t x, const Float_t x1, const Float_t x2, 
 		 const Float_t y, const Float_t y1, const Float_t y2, 
 		 const Float_t fQ11, const Float_t fQ12, const Float_t fQ21, const Float_t fQ22);
@@ -62,18 +77,36 @@ public:
 private:
   const TString fInDir;
   const TString fInFileName;
-  const Bool_t fDoObserved;
+  const TString fLimitConfig;
   const TString fOutText;
+  
+  // config parameters
+  Bool_t fDoObserved;
+  Bool_t fDumpBins;
+  Float_t fXMinWidthDiv;
+  Float_t fYMinWidthDiv;
+  Int_t fNX_Interp;
+  Int_t fNY_Interp;
 
   // stored info
-  std::vector<std::vector<Bin2D> > fFilledBins;
+  std::vector<std::vector<Bin2D> > fKnownBins;
   std::vector<Bin2D> fAllBins;
+
+  // bin boundaries
+  std::vector<Double_t> fXBins;
+  std::vector<Double_t> fYBins;
+
+  // Histogram map
+  std::map<TString,TH2F*> fHistMap;
 
   // style
   TStyle * fTDRStyle;
 
   // output
   TFile * fOutFile;
+
+  // config pave
+  TPaveText * fConfigPave;
 };
 
 #endif
