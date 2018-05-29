@@ -32,6 +32,25 @@ void Limits2D::MakeLimits2D()
   std::cout << "Setup all bins via interpolation..." << std::endl;
   Limits2D::SetupAllBins();
 
+  if (false) {
+  std::sort(fAllBins.begin(),fAllBins.end(),
+	    [](const auto & bin1, const auto & bin2)
+	    {
+	      if (bin1.xcenter == bin2.xcenter) return bin1.ycenter < bin2.ycenter;
+	      return bin1.xcenter < bin2.xcenter;
+	    });
+
+  for (const auto & bin : fAllBins)
+  {
+    std::cout << bin.xlow << " " << bin.xcenter << " " << bin.xup << " " 
+  	      << bin.ylow << " " << bin.ycenter << " " << bin.yup << std::endl;
+    for (const auto & rvalpair : bin.rvalmap)
+    {
+      std::cout << "      " << rvalpair.first.Data() << ": " << rvalpair.second << std::endl;
+    }
+  }
+  }
+
   // get bin boundaries for histogram making...
   std::vector<Double_t> xbins;
   std::vector<Double_t> ybins;
@@ -74,16 +93,10 @@ void Limits2D::MakeLimits2D()
   hist->GetYaxis()->SetTitle("c#tau [cm]");
   hist->GetZaxis()->SetTitle("#sigma_{95% CL}/#sigma_{th}");
 
-  // legened
-  auto leg = new TLegend(0.7,0.7,0.85,0.85);
-  leg->SetName("Legend");
-  if (fDoObserved) leg->AddEntry(HistMap["robs_cont"],"Observed 95% CL","L");
-  leg->AddEntry(HistMap["rexp_cont"],"Expected 95% CL","L");
-  leg->AddEntry(HistMap["r1sigup_cont"],"#pm 1 s.d. (exp)","L");
-
   // canvas
   auto canv = new TCanvas();
   canv->cd();
+  canv->SetLogy(1);
   canv->SetName("Canvas");
 
   // draw histogram + contours
@@ -92,6 +105,14 @@ void Limits2D::MakeLimits2D()
   HistMap["rexp_cont"]->Draw("CONT3 same");
   HistMap["r1sigdown_cont"]->Draw("CONT3 same");
   HistMap["r1sigup_cont"]->Draw("CONT3 same");
+
+  // legend
+  auto leg = new TLegend(0.2,0.7,0.4,0.8);
+  leg->SetName("Legend");
+  if (fDoObserved) leg->AddEntry(HistMap["robs_cont"],"Observed 95% CL","L");
+  leg->AddEntry(HistMap["rexp_cont"],"Expected 95% CL","L");
+  leg->AddEntry(HistMap["r1sigup_cont"],"#pm 1 s.d. (exp)","L");
+  leg->Draw("same");
 
   // cms style
   Common::CMSLumi(canv,0);
@@ -229,8 +250,8 @@ void Limits2D::SetupAllBins()
   }
 
   // Set number of divisions in x and y between measured points for interpolation
-  const auto nx_interp = 10;
-  const auto ny_interp = 10;
+  const auto nx_interp = 2;
+  const auto ny_interp = 2;
 
   // loop over filled bins and interpolate: https://en.wikipedia.org/wiki/Bilinear_interpolation#Alternative_algorithm
   const auto nx_fill = fFilledBins.size();
@@ -244,11 +265,11 @@ void Limits2D::SetupAllBins()
       const Bool_t isEdgeY = (j_fill == (ny_fill-1));
 
       // bin numbers --> if at edges, do not overflow!
-      const auto i_bin = (isEdgeX ? i_fill - 1 : i_fill);
-      const auto j_bin = (isEdgeY ? j_fill - 1 : j_fill);
+      const auto i_bin = (!isEdgeX ? i_fill : i_fill-1);
+      const auto j_bin = (!isEdgeY ? j_fill : j_fill-1);
 
       // corner bins (11 and 22)
-      const auto & binlow = fFilledBins[i_bin][j_bin];
+      const auto & binlow = fFilledBins[i_bin  ][j_bin  ];
       const auto & binup  = fFilledBins[i_bin+1][j_bin+1];
 
       // bin boundaries
@@ -272,7 +293,7 @@ void Limits2D::SetupAllBins()
 	for (auto i_interp = 0; i_interp < nx_interp; i_interp++)
         {
 	  // bin boundaries
-	  const auto xbinlow    = xlow + xwidth*i_interp;
+	  const auto xbinlow    = xlow + xwidth*(i_interp);
 	  const auto xbinup     = xlow + xwidth*(i_interp+1);
 	  const auto xbincenter = (xbinlow+xbinup)/2.f;
 	  
@@ -286,11 +307,11 @@ void Limits2D::SetupAllBins()
 	  {
 	    // values
 	    const auto fQ11 = binlow.rvalmap.at(RVal);
-	    const auto fQ12 = fFilledBins[i_bin][j_bin+1].rvalmap.at(RVal);
-	    const auto fQ21 = fFilledBins[i_bin+1][j_bin].rvalmap.at(RVal);
+	    const auto fQ12 = fFilledBins[i_bin  ][j_bin+1].rvalmap.at(RVal);
+	    const auto fQ21 = fFilledBins[i_bin+1][j_bin  ].rvalmap.at(RVal);
 	    const auto fQ22 = binup.rvalmap.at(RVal);
 
-	    tmpmap[RVal] = Limits2D::ZValue(xbincenter,x1,x2,ybincenter,y1,y2,fQ11,fQ12,fQ21,fQ22);	    
+	    tmpmap[RVal] = Limits2D::ZValue(xbincenter,x1,x2,ybincenter,y1,y2,fQ11,fQ12,fQ21,fQ22);
 	  }
 	  
 	  // place bin into all bins
@@ -308,7 +329,7 @@ void Limits2D::SetupAllBins()
 	  const auto xbinup     = (!isEdgeX ? binlow : binup).xup;
 	  const auto xbincenter = (!isEdgeX ? binlow : binup).xcenter;
 
-	  const auto ybinlow    = ylow + ywidth*j_interp;
+	  const auto ybinlow    = ylow + ywidth*(j_interp);
 	  const auto ybinup     = ylow + ywidth*(j_interp+1);
 	  const auto ybincenter = (ybinlow+ybinup)/2.f;
 
@@ -318,8 +339,8 @@ void Limits2D::SetupAllBins()
 	  {
 	    // values
 	    const auto fQ11 = binlow.rvalmap.at(RVal);
-	    const auto fQ12 = fFilledBins[i_bin][j_bin+1].rvalmap.at(RVal);
-	    const auto fQ21 = fFilledBins[i_bin+1][j_bin].rvalmap.at(RVal);
+	    const auto fQ12 = fFilledBins[i_bin  ][j_bin+1].rvalmap.at(RVal);
+	    const auto fQ21 = fFilledBins[i_bin+1][j_bin  ].rvalmap.at(RVal);
 	    const auto fQ22 = binup.rvalmap.at(RVal);
 
 	    tmpmap[RVal] = Limits2D::ZValue(xbincenter,x1,x2,ybincenter,y1,y2,fQ11,fQ12,fQ21,fQ22);	    
@@ -337,15 +358,15 @@ void Limits2D::SetupAllBins()
       for (auto i_interp = 0; i_interp < nx_interp; i_interp++)
       {
 	// for this new bin
-	const auto xbinlow    = xlow + xwidth*i_interp;
+	const auto xbinlow    = xlow + xwidth*(i_interp);
 	const auto xbinup     = xlow + xwidth*(i_interp+1);
 	const auto xbincenter = (xbinlow+xbinup)/2.f;
 	
 	for (auto j_interp = 0; j_interp < ny_interp; j_interp++)
         {
 	  // for this new bin
-	  const auto ybinlow    = ylow + ywidth*i_interp;
-	  const auto ybinup     = ylow + ywidth*(i_interp+1);
+	  const auto ybinlow    = ylow + ywidth*(j_interp);
+	  const auto ybinup     = ylow + ywidth*(j_interp+1);
 	  const auto ybincenter = (ybinlow+ybinup)/2.f;
 
 	  // loop over values to interpolate!
@@ -354,8 +375,8 @@ void Limits2D::SetupAllBins()
 	  {
 	    // values
 	    const auto fQ11 = binlow.rvalmap.at(RVal);
-	    const auto fQ12 = fFilledBins[i_bin][j_bin+1].rvalmap.at(RVal);
-	    const auto fQ21 = fFilledBins[i_bin+1][j_bin].rvalmap.at(RVal);
+	    const auto fQ12 = fFilledBins[i_bin  ][j_bin+1].rvalmap.at(RVal);
+	    const auto fQ21 = fFilledBins[i_bin+1][j_bin  ].rvalmap.at(RVal);
 	    const auto fQ22 = binup.rvalmap.at(RVal);
 
 	    tmpmap[RVal] = Limits2D::ZValue(xbincenter,x1,x2,ybincenter,y1,y2,fQ11,fQ12,fQ21,fQ22);	    
