@@ -5,7 +5,7 @@ source scripts/common_variables.sh
 ## input
 label=${1}
 
-for ctau in 0p1 10
+for ctau in 0p1 10 600 1200
 do
     for lambda in 100 150 200 250 300 350 400
     do
@@ -14,4 +14,4 @@ do
     done
 done
 
-./scripts/skimAndMerge/skimAndMerge_SignalGridPoint.sh ${label} "GMSB" "L200TeV_CTau400cm" "_930"
+#./scripts/skimAndMerge/skimAndMerge_SignalGridPoint.sh ${label} "GMSB" "L200TeV_CTau400cm" "_930"

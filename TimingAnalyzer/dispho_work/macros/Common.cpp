@@ -66,7 +66,7 @@ namespace Common
   void SetupSignalSamples()
   {
     const std::vector<TString> lambdas = {"100","150","200","250","300","350","400"};
-    const std::vector<TString> ctaus   = {"0p1","10"};
+    const std::vector<TString> ctaus   = {"0p1","10","600","1200"};
 
     // loop over all possible GMSBs...
     for (const auto & lambda : lambdas)
@@ -169,8 +169,10 @@ namespace Common
   {
     // GMSB: add more as we go
     Common::SignalSubGroupColorMap["GMSB_CTau0p1cm"] = {kAzure,"Up"};
-    Common::SignalSubGroupColorMap["GMSB_CTau10cm"]  = {kGreen,"Up"};
-    Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kRed,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau10cm"]  = {kSpring,"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kPink,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau600cm"] = {kOrange,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau1200cm"] = {kViolet,"Down"};
 
     // deal with HVDS later...
   }

@@ -60,12 +60,12 @@ void SignalSkimmer::MakeSkimsFromTrees()
     Common::CheckValidTH1F(inhist,Common::h_cutflowname,infilename);
 
     // Init Output Cut Flow Histogram 
-    fOutFile->cd();
     std::map<TString,Int_t> binlabels;
     auto outhist = SignalSkimmer::InitOutCutFlowHist(inhist,Common::SignalCutFlowHistNameMap[sample],binlabels);
 
     // Initialize map of lists
     std::map<TString,TEntryList*> listmap;
+    fOutFile->cd();
     SignalSkimmer::InitListMap(listmap,sample);
 
     // Loop over cuts, and make entry list for each cut, 
@@ -75,6 +75,7 @@ void SignalSkimmer::MakeSkimsFromTrees()
       const auto & label = SignalCutFlowPair.first;
       auto & list = listmap[label];
       list->SetDirectory(infile);
+      infile->cd();
 
       //////////////// **************** HACK FOR NOW!!!! **************** ////////////////
       if (label.Contains("HLT",TString::kExact) && sample.EqualTo("GMSB_L200_CTau400")) continue;

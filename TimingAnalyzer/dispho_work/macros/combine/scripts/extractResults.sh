@@ -33,7 +33,7 @@ eval `scram runtime -sh`
 #################################################
 for lambda in 100 150 200 250 300 350 400
 do
-    for ctau in 0p1 10
+    for ctau in 0p1 10 600 1200
     do
 	name=GMSB_L${lambda}TeV_CTau${ctau}cm
 
