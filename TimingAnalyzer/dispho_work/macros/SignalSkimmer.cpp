@@ -49,17 +49,18 @@ void SignalSkimmer::MakeSkimsFromTrees()
     const TString infilename = Form("%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),input.Data(),Common::tupleFileName.Data());
     auto infile = TFile::Open(Form("%s",infilename.Data()));
     Common::CheckValidFile(infile,infilename);
-    infile->cd();
 	
     // Get TTree
     auto intree = (TTree*)infile->Get(Form("%s",Common::disphotreename.Data()));
     Common::CheckValidTree(intree,Common::disphotreename,infilename);
+    intree->SetName(Form("%s",Common::TreeNameMap[sample].Data()));
 
     // Get Input Cut Flow Histogram 
     auto inhist = (TH1F*)infile->Get(Form("%s",Common::h_cutflowname.Data()));
     Common::CheckValidTH1F(inhist,Common::h_cutflowname,infilename);
 
     // Init Output Cut Flow Histogram 
+    fOutFile->cd();
     std::map<TString,Int_t> binlabels;
     auto outhist = SignalSkimmer::InitOutCutFlowHist(inhist,Common::SignalCutFlowHistNameMap[sample],binlabels);
 
@@ -96,7 +97,6 @@ void SignalSkimmer::MakeSkimsFromTrees()
     // Write out a copy of the last skim
     fOutFile->cd();
     auto outtree = intree->CopyTree("");
-    outtree->SetName(Form("%s",Common::TreeNameMap[sample].Data()));
     outtree->Write(outtree->GetName(),TObject::kWriteDelete);
 
     // Write out hist

@@ -5,4 +5,4 @@ filename=${2:-"skims/std_qcd.root"}
 grouplabel=${3:-"QCD_Flow"}
 
 ## produce entrylists
-root -l -b -q runSignalSkimmer.C\(\"${cutflowconfig}\",\"${filename}\",\"${grouplabel}\"\)
+root -l -b -q runEntryListMaker.C\(\"${cutflowconfig}\",\"${filename}\",\"${grouplabel}\"\)

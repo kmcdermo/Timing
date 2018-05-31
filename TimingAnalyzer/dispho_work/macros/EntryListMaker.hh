@@ -8,6 +8,8 @@
 #include "TString.h"
 #include "TEntryList.h"
 #include "TPaveText.h"
+#include "TKey.h"
+#include "TCollection.h"
 
 // STL includes
 #include <iostream>

@@ -1,7 +1,7 @@
 #include "EntryListMaker.hh"
 
 EntryListMaker::EntryListMaker(const TString & cutflowconfig, const TString & filename, const TString & grouplabel)
-  : fCutFlowConfig(fCutFlowConfig), fFileName(filename), fGroupLabel(grouplabel)
+  : fCutFlowConfig(cutflowconfig), fFileName(filename), fGroupLabel(grouplabel)
 {
   std::cout << "Initializing EntryListMaker..." << std::endl;
 
@@ -12,7 +12,7 @@ EntryListMaker::EntryListMaker(const TString & cutflowconfig, const TString & fi
   ////////////////
 
   // setup config
-  Commong::SetupCutFlow(fCutFlowConfig);
+  Common::SetupCutFlow(fCutFlowConfig);
 
   // input/output root file containing every tree
   fFile = TFile::Open(Form("%s",fFileName.Data()),"UPDATE");
@@ -41,7 +41,7 @@ void EntryListMaker::MakeListsFromTrees()
   // loop over keys in file, only keeping trees
   TIter keyIter(fFile->GetListOfKeys());
   TKey * key = 0;
-  while (key = (TKey*)keyIter())
+  while ((key = (TKey*)keyIter()))
   {
     // get name
     const TString & name = key->GetName();
@@ -54,7 +54,7 @@ void EntryListMaker::MakeListsFromTrees()
 
     // Initialize map of lists
     std::map<TString,TEntryList*> listmap;
-    SignalSkimmer::InitListMap(listmap,name);
+    EntryListMaker::InitListMap(listmap,name);
 
     // loop over cut flow
     for (const auto & CutFlowPair : Common::CutFlowPairVec)
@@ -80,11 +80,11 @@ void EntryListMaker::MakeListsFromTrees()
     } // end loop over cuts
 
     // Write out lists
-    fOutFile->cd();
+    fFile->cd();
     for (auto & listpair : listmap)
     {
       auto & list = listpair.second;
-      list->SetDirectory(fOutFile);
+      list->SetDirectory(fFile);
       list->SetTitle(Form("%s_EntryList",fGroupLabel.Data()));
       list->Write(list->GetName(),TObject::kWriteDelete);
       delete list;
