@@ -101,7 +101,7 @@ void FastSkimmer::MakeMergedSkims()
 
     // make tmp file to keep trees from being memory resident and also not in the output file
     // https://root-forum.cern.ch/t/merging-trees-with-ttree-mergetrees/24301
-    const TString TreeFileName = "tmpfile.root";
+    const TString TreeFileName = Form("tmpfile_%s.root",fOutFileText.Data());
     auto TreeFile = TFile::Open(Form("%s",TreeFileName.Data()),"RECREATE");
 
     // Make skims...
