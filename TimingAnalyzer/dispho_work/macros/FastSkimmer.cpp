@@ -99,8 +99,13 @@ void FastSkimmer::MakeMergedSkims()
     auto TreeList = new TList();
     std::map<TString,TTree*> TreeMap;
 
+    // make tmp file to keep trees from being memory resident and also not in the output file
+    // https://root-forum.cern.ch/t/merging-trees-with-ttree-mergetrees/24301
+    const TString TreeFileName = "tmpfile.root";
+    auto TreeFile = TFile::Open(Form("%s",TreeFileName.Data()),"RECREATE");
+
     // Make skims...
-    FastSkimmer::MakeSkimsFromEntryLists(TreeMap,TreeList,sample);
+    FastSkimmer::MakeSkimsFromEntryLists(TreeFile,TreeMap,TreeList,sample,treename);
 
     if (TreeList->GetEntries() != 0)
     {
@@ -109,7 +114,6 @@ void FastSkimmer::MakeMergedSkims()
       // Now want to merge the list!
       fOutFile->cd();
       auto OutTree = TTree::MergeTrees(TreeList);
-      OutTree->SetName(Form("%s",treename.Data()));
       
       // write out merged tree
       fOutFile->cd();
@@ -124,11 +128,15 @@ void FastSkimmer::MakeMergedSkims()
     for (auto & TreePair : TreeMap)
     {
       delete TreePair.second;
-    }    
+    }
+
+    // delete tmp file and remove it locally, too!
+    delete TreeFile;
+    gSystem->Exec(Form("rm %s",TreeFileName.Data()));
   } // end loop over sample groups
 }
 
-void FastSkimmer::MakeSkimsFromEntryLists(std::map<TString,TTree*> & TreeMap, TList *& TreeList, const TString & sample)
+void FastSkimmer::MakeSkimsFromEntryLists(TFile *& TreeFile, std::map<TString,TTree*> & TreeMap, TList *& TreeList, const TString & sample, const TString & treename)
 {
   // loop over all subsamples to avoid too many maps, simple control statement to control subsample grouping
   for (const auto & SamplePair : Common::SampleMap)
@@ -139,28 +147,27 @@ void FastSkimmer::MakeSkimsFromEntryLists(std::map<TString,TTree*> & TreeMap, TL
     std::cout << "Working on input: " << input.Data() << std::endl;
     
     // Get File
-    const TString filename = Form("%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),input.Data(),Common::tupleFileName.Data());
-    auto file = TFile::Open(Form("%s",filename.Data()));
-    Common::CheckValidFile(file,filename);
-    file->cd();
+    const TString infilename = Form("%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),input.Data(),Common::tupleFileName.Data());
+    auto infile = TFile::Open(Form("%s",infilename.Data()));
+    Common::CheckValidFile(infile,infilename);
     
     // Get TTree
-    auto tree = (TTree*)file->Get(Form("%s",Common::disphotreename.Data()));
-    Common::CheckValidTree(tree,Common::disphotreename,filename);
+    auto intree = (TTree*)infile->Get(Form("%s",Common::disphotreename.Data()));
+    Common::CheckValidTree(intree,Common::disphotreename,infilename);
     
     // Set Entry List Needed
     const auto samplename = Common::ReplaceSlashWithUnderscore(input);
     const auto & list = ListMap[samplename];
-    tree->SetEntryList(list);
-    tree->SetName(Form("%s_Tree",samplename.Data()));
+    intree->SetEntryList(list);
+    intree->SetName(treename.Data());
 
     if (list->GetN() != 0)
     {
       std::cout << "Skimming into a smaller tree..." << std::endl;
     
       // Fill from tree into smaller tree
-      fOutFile->cd();
-      TreeMap[input] = tree->CopyTree("");
+      TreeFile->cd();
+      TreeMap[input] = intree->CopyTree("");
       
       // Add tree to list
       TreeList->Add(TreeMap[input]);
@@ -171,8 +178,8 @@ void FastSkimmer::MakeSkimsFromEntryLists(std::map<TString,TTree*> & TreeMap, TL
     }
     
     // Delete everything you can
-    delete tree;
-    delete file;
+    delete intree;
+    delete infile;
   }
 }
 

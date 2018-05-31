@@ -7,6 +7,7 @@
 #include "TString.h"
 #include "TEntryList.h"
 #include "TList.h"
+#include "TSystem.h"
 #include "TPaveText.h"
 
 // STL includes
@@ -33,7 +34,7 @@ public:
   // Subroutines for skimming
   void MakeListFromTrees();
   void MakeMergedSkims();
-  void MakeSkimsFromEntryLists(std::map<TString,TTree*> & TreeMap, TList *& TreeList, const TString & sample);
+  void MakeSkimsFromEntryLists(TFile *& TreeFile, std::map<TString,TTree*> & TreeMap, TList *& TreeList, const TString & sample, const TString & treename);
   
   // Meta data and extra info
   void MakeConfigPave();
