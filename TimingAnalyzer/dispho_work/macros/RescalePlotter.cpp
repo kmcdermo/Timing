@@ -22,6 +22,9 @@ RescalePlotter::RescalePlotter(const TString & infilename, const TString & resca
   TreePlotter::fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
   Common::SetTDRStyle(TreePlotter::fTDRStyle);
 
+  // output root file for quick inspection
+  TreePlotter::fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
+
   // setup hists
   RescalePlotter::SetupDefaults();
   RescalePlotter::SetupConfig();
@@ -29,9 +32,6 @@ RescalePlotter::RescalePlotter(const TString & infilename, const TString & resca
   if (TreePlotter::fSignalsOnly) Common::KeepOnlySignals();
   RescalePlotter::SetupRescaleConfig();
   RescalePlotter::SetupHists();
-
-  // output root file for quick inspection
-  TreePlotter::fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
 }
 
 RescalePlotter::~RescalePlotter()
@@ -109,6 +109,11 @@ void RescalePlotter::MakeConfigPave()
 void RescalePlotter::SetupDefaults()
 {
   std::cout << "Setting up defaults..." << std::endl;
+
+  TreePlotter::fScaleToUnity = false;
+  TreePlotter::fScaleMCToData = false;
+  TreePlotter::fBlindData = false;
+  TreePlotter::fSignalsOnly = false;
 }
 
 void RescalePlotter::SetupConfig()
@@ -134,26 +139,19 @@ void RescalePlotter::SetupHists()
 {
   std::cout << "Setting up input hists..." << std::endl;
   
+  // read in histograms
   for (const auto & HistNamePair : Common::HistNameMap)
   {
     const auto & sample   = HistNamePair.first;
     const auto & histname = HistNamePair.second;
-
-    std::cout << sample.Data() << " : " << histname.Data() << std::endl;
     TreePlotter::HistMap[sample] = (TH1F*)fInFile->Get(Form("%s",histname.Data()));
   }
-
-  std::cout << "asdfads" << std::endl;
 
   // save to output file
   TreePlotter::fOutFile->cd();
   for (const auto & HistPair : TreePlotter::HistMap)
   { 
     const auto & hist = HistPair.second;
-    
-    std::cout << hist->GetName() << std::endl;
-hist->Write(hist->GetName(),TObject::kWriteDelete);
+    hist->Write(hist->GetName(),TObject::kWriteDelete);
   }
-
-    std::cout << "asdfads" << std::endl;
 }
