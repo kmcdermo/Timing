@@ -961,26 +961,15 @@ void Fitter::MakeConfigPave()
   fOutFile->cd();
   fConfigPave = new TPaveText();
   fConfigPave->SetName(Form("%s",Common::pavename.Data()));
-  std::string str; // tmp string
 
   // give grand title
   fConfigPave->AddText("***** Fitter Config *****");
 
   // fit config
-  fConfigPave->AddText("Fit Config");
-  std::ifstream fitfile(Form("%s",fFitConfig.Data()),std::ios::in);
-  while (std::getline(fitfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
+  Common::AddTextFromInputConfig(fConfigPave,"Fit Config",fFitConfig);
 
-  // store last bits of info
-  fConfigPave->AddText(Form("Miscellaneous Config: %s",fMiscConfig.Data()));
-  std::ifstream miscfile(Form("%s",fMiscConfig.Data()),std::ios::in);
-  while (std::getline(miscfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
+  // store last bits of misc info
+  Common::AddTextFromInputConfig(fConfigPave,"Miscellaneous Config",fMiscConfig);
 
   // dump in old config
   fConfigPave->AddText("***** GJets CR Config *****");

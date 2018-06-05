@@ -4,7 +4,6 @@ RescalePlotter::RescalePlotter(const TString & infilename, const TString & resca
 			       const TString & miscconfig, const TString & outfiletext) 
   : fInFileName(infilename), fRescaleConfig(rescaleconfig),
     fMiscConfig(miscconfig), fOutFileText(outfiletext)
-
 {
   std::cout << "Initializing RescalePlotter..." << std::endl;
 
@@ -86,24 +85,50 @@ void RescalePlotter::MakeRescaledPlot()
   TreePlotter::DrawLowerPad();
 
   // Save Output
-  TreePlotter::SaveOutput();
+  TreePlotter::SaveOutput(fOutFileText);
 
   // Write Out Config
   RescalePlotter::MakeConfigPave();
 
   // Dump integrals into text file
-  TreePlotter::DumpIntegrals();
+  TreePlotter::DumpIntegrals(fOutFileText);
 }
 
 void RescalePlotter::RescaleHists()
 {
   std::cout << "Rescaling hists..." << std::endl;
+
+
+
 }
 
 void RescalePlotter::MakeConfigPave()
 {
-  std::cout << "Dumping config into pave..." << std::endl;
+  std::cout << "Dumping config to a pave..." << std::endl;
 
+  // create the pave, copying in old info
+  TreePlotter::fOutFile->cd();
+  TreePlotter::fConfigPave = new TPaveText();
+  TreePlotter::fConfigPave->SetName(Form("%s",Common::pavename.Data()));
+
+  // give grand title
+  TreePlotter::fConfigPave->AddText("***** RescalePlotter Config *****");
+
+  // dump plot cut config first
+  Common::AddTextFromInputConfig(fConfigPave,"Rescale Config",fRescaleConfig); 
+
+  // store misc config
+  Common::AddTextFromInputConfig(fConfigPave,"Miscellaneous Config",fMiscConfig); 
+
+  // save name of infile, redundant
+  TreePlotter::fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
+
+  // dump in old config
+  Common::AddTextFromInputPave(TreePlotter::fConfigPave,fInFile);
+  
+  // save to output file
+  TreePlotter::fOutFile->cd();
+  TreePlotter::fConfigPave->Write(TreePlotter::fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
 void RescalePlotter::SetupDefaults()
@@ -133,6 +158,28 @@ void RescalePlotter::SetupConfig()
 
 void RescalePlotter::SetupRescaleConfig()
 {
+  std::cout << "Reading rescale config..." << std::endl;
+
+  std::ifstream infile(Form("%s",fRescaleConfig.Data()),std::ios::in);
+  std::string str;
+  while (std::getline(infile,str))
+  {
+    if (str == "") continue;
+    else if (str.find("scale_hist=") != std::string::npos)
+    {
+      fScaleHist = Common::RemoveDelim(str,"scale_hist=");
+    }
+    else if (str.find("shape_hist=") != std::string::npos)
+    {
+      fShapeHist = Common::RemoveDelim(str,"shape_hist=");
+    }
+    else 
+    {
+      std::cerr << "Aye... your rescale config is messed up, try again!" << std::endl;
+      std::cerr << "Offending line: " << str.c_str() << std::endl;
+      exit(1);
+    }
+  }
 }
 
 void RescalePlotter::SetupHists()

@@ -565,6 +565,18 @@ namespace Common
     return (tree == (TTree*) NULL);
   }
   
+  void AddTexFromInputConfig(TPaveText *& outpave, const TString & label, const TString & configname)
+  {
+    outpave->AddText(Form("%s: %s",label.Data(),configname.Data()));
+
+    std::ifstream configfile(Form("%s",configname.Data()),std::ios::in);
+    std::string str; // tmp string
+    while (std::getline(configfile,str))
+    {
+      outpave->AddText(str.c_str());
+    }
+  }
+
   void AddTextFromInputPave(TPaveText *& outpave, TFile *& infile)
   {
     const auto inpave = (TPaveText*)infile->Get(Form("%s",Common::pavename.Data()));

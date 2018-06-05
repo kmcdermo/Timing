@@ -131,18 +131,12 @@ void SignalSkimmer::MakeConfigPave()
   // create the pave
   fConfigPave = new TPaveText();
   fConfigPave->SetName(Form("%s",Common::pavename.Data()));
-  std::string str; // tmp string
   
   // give grand title
   fConfigPave->AddText("***** SignalSkimmer Config *****");
 
   // dump cut config
-  fConfigPave->AddText(Form("SignalSkimmer Cut Config: %s",fCutFlowConfig.Data()));
-  std::ifstream cutfile(Form("%s",fCutFlowConfig.Data()),std::ios::in);
-  while (std::getline(cutfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
+  Common::AddTextFromInputConfig(fConfigPave,"SignalSkimmer Cut Config",fCutFlowConfig);
 
   // save to output file
   fOutFile->cd();

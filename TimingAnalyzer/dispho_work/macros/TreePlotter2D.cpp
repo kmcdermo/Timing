@@ -207,34 +207,18 @@ void TreePlotter2D::MakeConfigPave()
   fOutFile->cd();
   fConfigPave = new TPaveText();
   fConfigPave->SetName(Form("%s",Common::pavename.Data()));
-  std::string str; // tmp string
 
   // give grand title
   fConfigPave->AddText("***** TreePlotter2D Config *****");
 
   // dump plot cut config first
-  fConfigPave->AddText(Form("TreePlotter2D Cut Config: %s",fCutConfig.Data()));
-  std::ifstream cutfile(Form("%s",fCutConfig.Data()),std::ios::in);
-  while (std::getline(cutfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
+  Common::AddTextFromInputConfig(fConfigPave,"TreePlotter2D Cut Config",fCutConfig);
 
   // dump plot config second
-  fConfigPave->AddText(Form("Plot Config: %s",fPlotConfig.Data()));
-  std::ifstream plotfile(Form("%s",fPlotConfig.Data()),std::ios::in);
-  while (std::getline(plotfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
+  Common::AddTextFromInputConfig(fConfigPave,"Plot Config",fPlotConfig);
 
   // store last bits of info
-  fConfigPave->AddText(Form("Miscellaneous Plot Config: %s",fMiscConfig.Data()));
-  std::ifstream miscfile(Form("%s",fMiscConfig.Data()),std::ios::in);
-  while (std::getline(miscfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
+  Common::AddTextFromInputConfig(fConfigPave,"Miscellaneous Config",fMiscConfig);
 
   // save name of infile, redundant
   fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));

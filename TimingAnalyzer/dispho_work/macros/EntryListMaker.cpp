@@ -102,18 +102,12 @@ void EntryListMaker::MakeConfigPave()
   // create the pave
   fConfigPave = new TPaveText();
   fConfigPave->SetName(Form("%s_%s",fGroupLabel.Data(),Common::pavename.Data()));
-  std::string str; // tmp string
   
   // give grand title
   fConfigPave->AddText("***** EntryListMaker Config *****");
 
   // dump cut config
-  fConfigPave->AddText(Form("EntryListMaker Cut Config: %s",fCutFlowConfig.Data()));
-  std::ifstream cutfile(Form("%s",fCutFlowConfig.Data()),std::ios::in);
-  while (std::getline(cutfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
+  Common::AddTextFromInputConfig(fConfigPave,"EntryListMaker Cut Config",fCutFlowConfig);
 
   // save to output file
   fFile->cd();

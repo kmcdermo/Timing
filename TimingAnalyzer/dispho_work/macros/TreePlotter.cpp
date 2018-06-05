@@ -90,13 +90,13 @@ void TreePlotter::MakePlot()
   TreePlotter::DrawLowerPad();
 
   // Save Output
-  TreePlotter::SaveOutput();
+  TreePlotter::SaveOutput(fOutFileText);
 
   // Write Out Config
   TreePlotter::MakeConfigPave();
 
   // Dump integrals into text file
-  TreePlotter::DumpIntegrals();
+  TreePlotter::DumpIntegrals(fOutFileText);
 }
 
 void TreePlotter::MakeHistFromTrees()
@@ -496,7 +496,7 @@ void TreePlotter::DrawLowerPad()
   }
 }
 
-void TreePlotter::SaveOutput()
+void TreePlotter::SaveOutput(const TString & outfiletext)
 {
   std::cout << "Saving hist as png..." << std::endl;
 
@@ -505,17 +505,17 @@ void TreePlotter::SaveOutput()
   Common::CMSLumi(OutCanv,0);
 
   // Save a log version first
-  TreePlotter::PrintCanvas(true);
+  TreePlotter::PrintCanvas(outfiletext,true);
 
   // Save a linear version second
-  TreePlotter::PrintCanvas(false);
+  TreePlotter::PrintCanvas(outfiletext,false);
 
   // save to output file
   fOutFile->cd();
   OutCanv->Write(OutCanv->GetName(),TObject::kWriteDelete);
 }  
 
-void TreePlotter::PrintCanvas(const Bool_t isLogy)
+void TreePlotter::PrintCanvas(const TString & outfiletext, const Bool_t isLogy)
 {
   // pad gymnastics
   OutCanv->cd();
@@ -539,7 +539,7 @@ void TreePlotter::PrintCanvas(const Bool_t isLogy)
 
   // save canvas as png
   OutCanv->cd();
-  OutCanv->SaveAs(Form("%s_%s.png",fOutFileText.Data(),(isLogy?"log":"lin")));
+  OutCanv->SaveAs(Form("%s_%s.png",outfiletext.Data(),(isLogy?"log":"lin")));
 }
 
 void TreePlotter::MakeConfigPave()
@@ -550,34 +550,18 @@ void TreePlotter::MakeConfigPave()
   fOutFile->cd();
   fConfigPave = new TPaveText();
   fConfigPave->SetName(Form("%s",Common::pavename.Data()));
-  std::string str; // tmp string
 
   // give grand title
   fConfigPave->AddText("***** TreePlotter Config *****");
 
   // dump plot cut config first
-  fConfigPave->AddText(Form("TreePlotter Cut Config: %s",fCutConfig.Data()));
-  std::ifstream cutfile(Form("%s",fCutConfig.Data()),std::ios::in);
-  while (std::getline(cutfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
+  Common::AddTextFromInputConfig(fConfigPave,"TreePlotter Cut Config",fCutConfig);
 
   // dump plot config
-  fConfigPave->AddText(Form("Plot Config: %s",fPlotConfig.Data()));
-  std::ifstream plotfile(Form("%s",fPlotConfig.Data()),std::ios::in);
-  while (std::getline(plotfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
+  Common::AddTextFromInputConfig(fConfigPave,"Plot Config",fPlotConfig);
 
-  // store last bits of info
-  fConfigPave->AddText(Form("Miscellaneous Config: %s",fMiscConfig.Data()));
-  std::ifstream miscfile(Form("%s",fMiscConfig.Data()),std::ios::in);
-  while (std::getline(miscfile,str))
-  {
-    fConfigPave->AddText(str.c_str());
-  }
+  // store last bits of info from misc
+  Common::AddTextFromInputConfig(fConfigPave,"Miscellaneous Config",fMiscConfig); 
 
   // save name of infile, redundant
   fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
@@ -596,12 +580,12 @@ void TreePlotter::MakeConfigPave()
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
-void TreePlotter::DumpIntegrals()
+void TreePlotter::DumpIntegrals(const TString & outfiletext)
 {
   std::cout << "Dumping integrals into text file..." << std::endl;
 
   // make dumpfile object
-  std::ofstream dumpfile(Form("%s_integrals.txt",fOutFileText.Data()),std::ios_base::out);
+  std::ofstream dumpfile(Form("%s_integrals.txt",outfiletext.Data()),std::ios_base::out);
 
   // Signal MC zeroth
   for (const auto & HistPair : HistMap)

@@ -57,7 +57,7 @@ public:
   void InitOutputCanvPads();
   void DrawUpperPad();
   void DrawLowerPad();
-  void SaveOutput();
+  void SaveOutput(const TString & outfiletext);
 
   // Helper functions
   TH1F * SetupHist(const TString & name);
@@ -65,11 +65,11 @@ public:
   void ScaleMCToData();
   void GetHistMinimum();
   void GetHistMaximum();
-  void PrintCanvas(const Bool_t isLogy);
+  void PrintCanvas(const TString & outfiletext, const Bool_t isLogy);
   
   // Meta data and extra info
   void MakeConfigPave();
-  void DumpIntegrals();
+  void DumpIntegrals(const TString & outfiletext);
 
 private:
   // Settings
