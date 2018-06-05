@@ -1,0 +1,5 @@
+signals_to_plot=GMSB_L100_CTau0p1 GMSB_L200_CTau0p1 GMSB_L300_CTau0p1 GMSB_L400_CTau0p1 GMSB_L100_CTau600 GMSB_L200_CTau600 GMSB_L300_CTau600 GMSB_L400_CTau600
+scale_mc_to_data=0
+scale_to_unity=1
+blind_data=0
+signals_only=1

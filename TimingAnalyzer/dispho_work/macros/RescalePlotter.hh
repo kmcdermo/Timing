@@ -11,16 +11,17 @@ public:
 		 const TString & miscconfig, const TString & outfiletext);
   ~RescalePlotter();
 
+  // setup functions
+  void SetupDefaults();
+  void SetupConfig();
+  void SetupRescaleConfig();
+  void SetupHists();
+  
   // main calls!
   void MakeRescaledPlot();
   void RescaleHists();
   void MakeConfigPave();
 
-  // setup functions
-  void SetupDefaults();
-  void SetupConfig();
-  void SetupHists();
-  
 private:
   const TString fInFileName;
   const TString fRescaleConfig;

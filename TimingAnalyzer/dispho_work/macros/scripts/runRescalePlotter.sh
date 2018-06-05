@@ -2,7 +2,7 @@
 
 infilename=${1:-"jetphi_0_control_gjets_DoubleEG.root"}
 rescaleconfig=${2:-"rescale_config/qcdMC_to_gjetsMC.txt"}
-miscconfig=${3:-"plot_config/misc.txt"}
+miscconfig=${3:-"misc_config/misc.txt"}
 outfiletext=${4:-"rescaled"}
 dir=${5:-"plots/dispho/ntuples_v4"}
 

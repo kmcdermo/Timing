@@ -3,7 +3,7 @@ plot_title=Leading Photon Charged Hadron Isolation
 x_title=Leading Photon Charged Hadron Isolation
 x_scale=LIN
 x_var=(((phoisOOT_0==0)*phoChgHadIso_0)+((phoisOOT_0==1)*-9999))
-x_bins=CONSTANT 80 0 20
+x_bins=CONSTANT 100 0 2
 
 y_title=Events
 y_scale=LOG

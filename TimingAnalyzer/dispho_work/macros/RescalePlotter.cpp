@@ -27,6 +27,7 @@ RescalePlotter::RescalePlotter(const TString & infilename, const TString & resca
   RescalePlotter::SetupConfig();
   TreePlotter::SetupMiscConfig(fMiscConfig);
   if (TreePlotter::fSignalsOnly) Common::KeepOnlySignals();
+  RescalePlotter::SetupRescaleConfig();
   RescalePlotter::SetupHists();
 
   // output root file for quick inspection
@@ -125,8 +126,34 @@ void RescalePlotter::SetupConfig()
   Common::SetupLabels();
 }
 
+void RescalePlotter::SetupRescaleConfig()
+{
+}
+
 void RescalePlotter::SetupHists()
 {
   std::cout << "Setting up input hists..." << std::endl;
-}
+  
+  for (const auto & HistNamePair : Common::HistNameMap)
+  {
+    const auto & sample   = HistNamePair.first;
+    const auto & histname = HistNamePair.second;
 
+    std::cout << sample.Data() << " : " << histname.Data() << std::endl;
+    TreePlotter::HistMap[sample] = (TH1F*)fInFile->Get(Form("%s",histname.Data()));
+  }
+
+  std::cout << "asdfads" << std::endl;
+
+  // save to output file
+  TreePlotter::fOutFile->cd();
+  for (const auto & HistPair : TreePlotter::HistMap)
+  { 
+    const auto & hist = HistPair.second;
+    
+    std::cout << hist->GetName() << std::endl;
+hist->Write(hist->GetName(),TObject::kWriteDelete);
+  }
+
+    std::cout << "asdfads" << std::endl;
+}

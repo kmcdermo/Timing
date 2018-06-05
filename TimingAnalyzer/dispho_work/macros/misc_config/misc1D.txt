@@ -1,5 +1,0 @@
-signals_to_plot=* !GMSB_L200_CTau400
-scale_mc_to_data=0
-scale_to_unity=1
-blind_data=0
-signals_only=1
