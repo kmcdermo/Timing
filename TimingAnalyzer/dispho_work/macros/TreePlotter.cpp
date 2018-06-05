@@ -25,39 +25,19 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
   Common::SetTDRStyle(fTDRStyle);
 
-  // setup hists
+  // output root file for quick inspection
+  fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
+
+  // setup config
   TreePlotter::SetupDefaults();
   TreePlotter::SetupConfig();
   TreePlotter::SetupMiscConfig(fMiscConfig);
   if (fSignalsOnly) Common::KeepOnlySignals();
   TreePlotter::SetupPlotConfig(fPlotConfig);
+
+  // setup hists
   TreePlotter::SetupHists();
-
-  // output root file for quick inspection
-  fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
-}
-
-TreePlotter::~TreePlotter() 
-{
-  // delete everything
-  delete fConfigPave;
-
-  delete LowerPad;
-  delete UpperPad;
-  delete OutCanv;
-  delete Legend;
-  delete RatioLine;
-  delete RatioMCErrs;
-  delete RatioHist;
-  delete BkgdStack;
-  delete BkgdHist;
-  delete DataHist;
-
-  delete fOutFile;
-  for (auto & HistPair : HistMap) delete HistPair.second;
-  delete fTDRStyle;
-  delete fInSignalFile;
-  delete fInFile;
+  TreePlotter::SetupHistsStyle();
 }
 
 void TreePlotter::MakePlot()
@@ -97,6 +77,9 @@ void TreePlotter::MakePlot()
 
   // Dump integrals into text file
   TreePlotter::DumpIntegrals(fOutFileText);
+
+  // Delete allocated memory
+  TreePlotter::DeleteMemory(true);
 }
 
 void TreePlotter::MakeHistFromTrees()
@@ -634,6 +617,32 @@ void TreePlotter::DumpIntegrals(const TString & outfiletext)
   dumpfile << "Data/MC : " << ratio << " +/- " << ratio_err << std::endl;
 }
 
+void TreePlotter::DeleteMemory(const Bool_t deleteInternal)
+{
+  // delete everything
+  delete fConfigPave;
+
+  delete LowerPad;
+  delete UpperPad;
+  delete OutCanv;
+  delete Legend;
+  delete RatioLine;
+  delete RatioMCErrs;
+  delete RatioHist;
+  delete BkgdStack;
+  delete BkgdHist;
+  delete DataHist;
+
+  for (auto & HistPair : HistMap) delete HistPair.second;
+  delete fOutFile;
+  delete fTDRStyle;
+  if (deleteInternal) 
+  { 
+    delete fInSignalFile;
+    delete fInFile;
+  }
+}
+
 void TreePlotter::ScaleMCToUnity()
 {
   std::cout << "Scaling MC Bkgd to unity..." << std::endl;
@@ -888,8 +897,12 @@ void TreePlotter::SetupHists()
   {
     HistMap[HistNamePair.first] = TreePlotter::SetupHist(HistNamePair.second);
   }
+}
 
-  // set colors for each histogram
+void TreePlotter::SetupHistsStyle()
+{
+  std::cout << "Setting up output hists styles..." << std::endl;
+
   for (auto & HistPair : HistMap)
   {
     const auto & sample = HistPair.first;

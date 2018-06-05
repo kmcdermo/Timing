@@ -35,7 +35,7 @@ public:
   TreePlotter() {}
   TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
 	      const TString & plotconfig, const TString & miscconfig, const TString & outfiletext);
-  ~TreePlotter();
+  ~TreePlotter() {}
 
   // Initialize
   void SetupDefaults();
@@ -43,6 +43,7 @@ public:
   void SetupPlotConfig(const TString & plotconfig);
   void SetupMiscConfig(const TString & miscconfig);
   void SetupHists();
+  void SetupHistsStyle();
 
   // Main call
   void MakePlot();
@@ -70,6 +71,9 @@ public:
   // Meta data and extra info
   void MakeConfigPave();
   void DumpIntegrals(const TString & outfiletext);
+
+  // Delete Function
+  void DeleteMemory(const Bool_t deleteInternal);
 
 private:
   // Settings

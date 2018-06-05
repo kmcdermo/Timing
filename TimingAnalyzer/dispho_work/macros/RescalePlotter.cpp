@@ -24,42 +24,23 @@ RescalePlotter::RescalePlotter(const TString & infilename, const TString & resca
   // output root file for quick inspection
   TreePlotter::fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
 
-  // setup hists
+  // setup config
   TreePlotter::SetupDefaults();
   RescalePlotter::SetupConfig();
   TreePlotter::SetupMiscConfig(fMiscConfig);
   if (TreePlotter::fSignalsOnly) Common::KeepOnlySignals();
   RescalePlotter::SetupRescaleConfig();
   TreePlotter::SetupPlotConfig(fPlotConfig);
+
+  // setup hists
   RescalePlotter::SetupHists();
-}
-
-RescalePlotter::~RescalePlotter()
-{
-  // delete everything
-  delete TreePlotter::fConfigPave;
-
-  delete TreePlotter::LowerPad;
-  delete TreePlotter::UpperPad;
-  delete TreePlotter::OutCanv;
-  delete TreePlotter::Legend;
-  delete TreePlotter::RatioLine;
-  delete TreePlotter::RatioMCErrs;
-  delete TreePlotter::RatioHist;
-  delete TreePlotter::BkgdStack;
-  delete TreePlotter::BkgdHist;
-  delete TreePlotter::DataHist;
-
-  delete TreePlotter::fOutFile;
-  for (auto & HistPair : TreePlotter::HistMap) delete HistPair.second; // will delete RescaleHist as well
-  delete TreePlotter::fTDRStyle;
-  delete fInFile;
+  TreePlotter::SetupHistsStyle();
 }
 
 void RescalePlotter::MakeRescaledPlot()
 {
   // Scale hists
-  RescalePlotter::RescaleHists();
+  RescalePlotter::RescaleHist();
 
   // Make Data Output
   TreePlotter::MakeDataOutput();
@@ -93,34 +74,44 @@ void RescalePlotter::MakeRescaledPlot()
 
   // Dump integrals into text file
   TreePlotter::DumpIntegrals(fOutFileText);
+
+  // delete memory
+  RescalePlotter::DeleteMemory();
 }
 
-void RescalePlotter::RescaleHists()
+void RescalePlotter::RescaleHist()
 {
   std::cout << "Rescaling hists..." << std::endl;
 
   // get references for ease of use
-  const auto & InScaleHist = TreePlotter::HistMap[fScaleSample];
-  auto & InShapeHist = TreePlotter::HistMap[fShapeSample];
+  auto       & InScaleHist = TreePlotter::HistMap[fScaleSample];
+  const auto & InShapeHist = TreePlotter::HistMap[fShapeSample];
   const auto sf = InScaleHist->Integral(fXVarBins?"width":"")/InShapeHist->Integral(fXVarBins?"width":"");
 
   // first add the shape hist to output scale
-  RescaleHist = TreePlotter::SetupHist(Form("%s_Rescaled",Common::HistNameMap[fScaleSample]));
-  RescaleHist->Add(InShapeHist);
+  RescaledHist = TreePlotter::SetupHist(Form("%s_Rescaled",Common::HistNameMap[fScaleSample].Data()));
+  RescaledHist->Add(InShapeHist);
+
+  // set style for rescaled hist to match old scale histogram
+  RescaledHist->SetLineColor(InScaleHist->GetLineColor());
+  RescaledHist->SetMarkerColor(InScaleHist->GetMarkerColor());
+  RescaledHist->SetFillColor(InScaleHist->GetFillColor());
+  RescaledHist->SetFillStyle(InScaleHist->GetFillStyle());
+  RescaledHist->SetLineWidth(InScaleHist->GetLineWidth());
 
   // then scale it by the integral of scale hist
-  RescaleHist->Scale(sf);
+  RescaledHist->Scale(sf);
   
   // erase original unscaled hist in hist map
   delete InScaleHist;
-  Common::HistNameMap.erase(fScaleSample);
+  TreePlotter::HistMap.erase(fScaleSample);
 
   // set scaled hist to hist map
-  Common::HistNameMap[fScaleSample] = RescaleHist;
+  TreePlotter::HistMap[fScaleSample] = RescaledHist;
 
   // save a copy as _scaled
   fOutFile->cd();
-  RescaleHist->Write(RescaleHist->GetName(),TObject::kWriteDelete);
+  RescaledHist->Write(RescaledHist->GetName(),TObject::kWriteDelete);
 }
 
 void RescalePlotter::MakeConfigPave()
@@ -150,6 +141,12 @@ void RescalePlotter::MakeConfigPave()
   // save to output file
   TreePlotter::fOutFile->cd();
   TreePlotter::fConfigPave->Write(TreePlotter::fConfigPave->GetName(),TObject::kWriteDelete);
+}
+
+void RescalePlotter::DeleteMemory()
+{
+  TreePlotter::DeleteMemory(false);
+  delete fInFile;
 }
 
 void RescalePlotter::SetupConfig()

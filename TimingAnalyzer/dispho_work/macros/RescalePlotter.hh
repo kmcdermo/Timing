@@ -9,7 +9,7 @@ class RescalePlotter : TreePlotter
 public:
   RescalePlotter(const TString & infilename, const TString & rescaleconfig, const TString & plotconfig,
 		 const TString & miscconfig, const TString & outfiletext);
-  ~RescalePlotter();
+  ~RescalePlotter() {}
 
   // setup functions
   void SetupConfig();
@@ -18,8 +18,9 @@ public:
   
   // main calls!
   void MakeRescaledPlot();
-  void RescaleHists();
+  void RescaleHist();
   void MakeConfigPave();
+  void DeleteMemory();
 
 private:
   const TString fInFileName;
@@ -36,7 +37,7 @@ private:
   TString fShapeSample;
   
   // output hist
-  TH1F * RescaleHist;
+  TH1F * RescaledHist;
 };
 
 #endif

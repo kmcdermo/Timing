@@ -6,6 +6,6 @@
 void runRescalePlotter(const TString & infilename, const TString & rescaleconfig, const TString & plotconfig,
 		       const TString & miscconfig, const TString & outfiletext)
 {
-  RescalePlotter plotter(infilename,rescaleconfig,miscconfig,plotconfig,outfiletext);
+  RescalePlotter plotter(infilename,rescaleconfig,plotconfig,miscconfig,outfiletext);
   plotter.MakeRescaledPlot();
 }

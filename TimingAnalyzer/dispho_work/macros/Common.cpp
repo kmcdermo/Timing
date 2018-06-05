@@ -565,7 +565,7 @@ namespace Common
     return (tree == (TTree*) NULL);
   }
   
-  void AddTexFromInputConfig(TPaveText *& outpave, const TString & label, const TString & configname)
+  void AddTextFromInputConfig(TPaveText *& outpave, const TString & label, const TString & configname)
   {
     outpave->AddText(Form("%s: %s",label.Data(),configname.Data()));
 

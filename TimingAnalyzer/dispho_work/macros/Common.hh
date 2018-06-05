@@ -190,7 +190,7 @@ namespace Common
   Bool_t IsNullTree(const TTree * tree);
 
   // saving config info
-  void AddTexFromInputConfig(TPaveText *& outpave, const TString & label, const TString & configname);
+  void AddTextFromInputConfig(TPaveText *& outpave, const TString & label, const TString & configname);
   void AddTextFromInputPave(TPaveText *& outpave, TFile *& infile);
 
   // ROOT Formatting
