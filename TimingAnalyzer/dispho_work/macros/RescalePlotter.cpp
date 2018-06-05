@@ -1,8 +1,8 @@
 #include "RescalePlotter.hh"
 
-RescalePlotter::RescalePlotter(const TString & infilename, const TString & rescaleconfig,
+RescalePlotter::RescalePlotter(const TString & infilename, const TString & rescaleconfig, const TString & plotconfig,
 			       const TString & miscconfig, const TString & outfiletext) 
-  : fInFileName(infilename), fRescaleConfig(rescaleconfig),
+  : fInFileName(infilename), fRescaleConfig(rescaleconfig), fPlotConfig(plotconfig),
     fMiscConfig(miscconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing RescalePlotter..." << std::endl;
@@ -25,11 +25,12 @@ RescalePlotter::RescalePlotter(const TString & infilename, const TString & resca
   TreePlotter::fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
 
   // setup hists
-  RescalePlotter::SetupDefaults();
+  TreePlotter::SetupDefaults();
   RescalePlotter::SetupConfig();
   TreePlotter::SetupMiscConfig(fMiscConfig);
   if (TreePlotter::fSignalsOnly) Common::KeepOnlySignals();
   RescalePlotter::SetupRescaleConfig();
+  TreePlotter::SetupPlotConfig(fPlotConfig);
   RescalePlotter::SetupHists();
 }
 
@@ -50,7 +51,7 @@ RescalePlotter::~RescalePlotter()
   delete TreePlotter::DataHist;
 
   delete TreePlotter::fOutFile;
-  for (auto & HistPair : TreePlotter::HistMap) delete HistPair.second;
+  for (auto & HistPair : TreePlotter::HistMap) delete HistPair.second; // will delete RescaleHist as well
   delete TreePlotter::fTDRStyle;
   delete fInFile;
 }
@@ -98,8 +99,28 @@ void RescalePlotter::RescaleHists()
 {
   std::cout << "Rescaling hists..." << std::endl;
 
+  // get references for ease of use
+  const auto & InScaleHist = TreePlotter::HistMap[fScaleSample];
+  auto & InShapeHist = TreePlotter::HistMap[fShapeSample];
+  const auto sf = InScaleHist->Integral(fXVarBins?"width":"")/InShapeHist->Integral(fXVarBins?"width":"");
 
+  // first add the shape hist to output scale
+  RescaleHist = TreePlotter::SetupHist(Form("%s_Rescaled",Common::HistNameMap[fScaleSample]));
+  RescaleHist->Add(InShapeHist);
 
+  // then scale it by the integral of scale hist
+  RescaleHist->Scale(sf);
+  
+  // erase original unscaled hist in hist map
+  delete InScaleHist;
+  Common::HistNameMap.erase(fScaleSample);
+
+  // set scaled hist to hist map
+  Common::HistNameMap[fScaleSample] = RescaleHist;
+
+  // save a copy as _scaled
+  fOutFile->cd();
+  RescaleHist->Write(RescaleHist->GetName(),TObject::kWriteDelete);
 }
 
 void RescalePlotter::MakeConfigPave()
@@ -114,11 +135,11 @@ void RescalePlotter::MakeConfigPave()
   // give grand title
   TreePlotter::fConfigPave->AddText("***** RescalePlotter Config *****");
 
-  // dump plot cut config first
-  Common::AddTextFromInputConfig(fConfigPave,"Rescale Config",fRescaleConfig); 
+  // dump rescale config first
+  Common::AddTextFromInputConfig(TreePlotter::fConfigPave,"Rescale Config",fRescaleConfig); 
 
   // store misc config
-  Common::AddTextFromInputConfig(fConfigPave,"Miscellaneous Config",fMiscConfig); 
+  Common::AddTextFromInputConfig(TreePlotter::fConfigPave,"Miscellaneous Config",fMiscConfig); 
 
   // save name of infile, redundant
   TreePlotter::fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
@@ -129,16 +150,6 @@ void RescalePlotter::MakeConfigPave()
   // save to output file
   TreePlotter::fOutFile->cd();
   TreePlotter::fConfigPave->Write(TreePlotter::fConfigPave->GetName(),TObject::kWriteDelete);
-}
-
-void RescalePlotter::SetupDefaults()
-{
-  std::cout << "Setting up defaults..." << std::endl;
-
-  TreePlotter::fScaleToUnity = false;
-  TreePlotter::fScaleMCToData = false;
-  TreePlotter::fBlindData = false;
-  TreePlotter::fSignalsOnly = false;
 }
 
 void RescalePlotter::SetupConfig()
@@ -165,13 +176,13 @@ void RescalePlotter::SetupRescaleConfig()
   while (std::getline(infile,str))
   {
     if (str == "") continue;
-    else if (str.find("scale_hist=") != std::string::npos)
+    else if (str.find("scale_sample=") != std::string::npos)
     {
-      fScaleHist = Common::RemoveDelim(str,"scale_hist=");
+      fScaleSample = Common::RemoveDelim(str,"scale_sample=");
     }
-    else if (str.find("shape_hist=") != std::string::npos)
+    else if (str.find("shape_sample=") != std::string::npos)
     {
-      fShapeHist = Common::RemoveDelim(str,"shape_hist=");
+      fShapeSample = Common::RemoveDelim(str,"shape_sample=");
     }
     else 
     {

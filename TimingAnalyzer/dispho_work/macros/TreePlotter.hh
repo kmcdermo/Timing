@@ -40,7 +40,7 @@ public:
   // Initialize
   void SetupDefaults();
   void SetupConfig();
-  void SetupPlotConfig();
+  void SetupPlotConfig(const TString & plotconfig);
   void SetupMiscConfig(const TString & miscconfig);
   void SetupHists();
 
@@ -84,6 +84,7 @@ private:
   TFile * fInFile;
   TFile * fInSignalFile;
 
+protected:
   // plot vars
   TString fTitle;
   TString fXTitle;
@@ -96,7 +97,6 @@ private:
   Bool_t  fIsLogY;
   std::vector<BlindStruct> fBlinds;
 
-protected:
   // other plotting config
   std::vector<TString> fPlotSignalVec;
   Bool_t fScaleToUnity;

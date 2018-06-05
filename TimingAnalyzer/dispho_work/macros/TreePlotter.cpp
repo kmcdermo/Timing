@@ -30,7 +30,7 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
   TreePlotter::SetupConfig();
   TreePlotter::SetupMiscConfig(fMiscConfig);
   if (fSignalsOnly) Common::KeepOnlySignals();
-  TreePlotter::SetupPlotConfig();
+  TreePlotter::SetupPlotConfig(fPlotConfig);
   TreePlotter::SetupHists();
 
   // output root file for quick inspection
@@ -775,11 +775,11 @@ void TreePlotter::SetupConfig()
   Common::SetupCuts(fCutConfig);
 }
 
-void TreePlotter::SetupPlotConfig()
+void TreePlotter::SetupPlotConfig(const TString & plotconfig)
 {
   std::cout << "Reading plot config..." << std::endl;
 
-  std::ifstream infile(Form("%s",fPlotConfig.Data()),std::ios::in);
+  std::ifstream infile(Form("%s",plotconfig.Data()),std::ios::in);
   std::string str;
   while (std::getline(infile,str))
   {
