@@ -28,7 +28,7 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
   // setup hists
   TreePlotter::SetupDefaults();
   TreePlotter::SetupConfig();
-  TreePlotter::SetupMiscConfig();
+  TreePlotter::SetupMiscConfig(fMiscConfig);
   if (fSignalsOnly) Common::KeepOnlySignals();
   TreePlotter::SetupPlotConfig();
   TreePlotter::SetupHists();
@@ -56,6 +56,7 @@ TreePlotter::~TreePlotter()
   delete fOutFile;
   for (auto & HistPair : HistMap) delete HistPair.second;
   delete fTDRStyle;
+  delete fInSignalFile;
   delete fInFile;
 }
 
@@ -847,11 +848,11 @@ void TreePlotter::SetupPlotConfig()
   }
 }
 
-void TreePlotter::SetupMiscConfig()
+void TreePlotter::SetupMiscConfig(const TString & miscconfig)
 {
   std::cout << "Reading miscellaneous plot config..." << std::endl;
 
-  std::ifstream infile(Form("%s",fMiscConfig.Data()),std::ios::in);
+  std::ifstream infile(Form("%s",miscconfig.Data()),std::ios::in);
   std::string str;
   while (std::getline(infile,str))
   {

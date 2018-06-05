@@ -32,6 +32,7 @@
 class TreePlotter
 {
 public:
+  TreePlotter() {}
   TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
 	      const TString & plotconfig, const TString & miscconfig, const TString & outfiletext);
   ~TreePlotter();
@@ -40,7 +41,7 @@ public:
   void SetupDefaults();
   void SetupConfig();
   void SetupPlotConfig();
-  void SetupMiscConfig();
+  void SetupMiscConfig(const TString & miscconfig);
   void SetupHists();
 
   // Main call
@@ -69,7 +70,7 @@ public:
   // Meta data and extra info
   void MakeConfigPave();
   void DumpIntegrals();
-  
+
 private:
   // Settings
   const TString fInFileName;
@@ -95,6 +96,7 @@ private:
   Bool_t  fIsLogY;
   std::vector<BlindStruct> fBlinds;
 
+protected:
   // other plotting config
   std::vector<TString> fPlotSignalVec;
   Bool_t fScaleToUnity;
