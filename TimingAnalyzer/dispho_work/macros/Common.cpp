@@ -50,10 +50,30 @@ namespace Common
     Common::SampleMap["MC/DiPhotonJetsBox/M40_80"]  = "DiPho";
     Common::SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = "DiPho";
 
-    // VGamma
-    Common::SampleMap["MC/VGamma/WGGJets"]            = "VG";
-    Common::SampleMap["MC/VGamma/ZGGJets_ZToLL"]      = "VG";
-    Common::SampleMap["MC/VGamma/ZGGJets_ZToHadOrNu"] = "VG";
+    // T+X
+    Common::SampleMap["MC/TX/TGGJets"] = "TX";
+    Common::SampleMap["MC/TX/TTGJets"] = "TX";
+    Common::SampleMap["MC/TX/TTWJets"] = "TX";
+    Common::SampleMap["MC/TX/TTZJets"] = "TX";
+
+    // W+X
+    Common::SampleMap["MC/WX/WGGJets"]      = "WX";
+    Common::SampleMap["MC/WX/WToENu/M100"]  = "WX";
+    Common::SampleMap["MC/WX/WToENu/M200"]  = "WX";
+    Common::SampleMap["MC/WX/WToENu/M500"]  = "WX";
+    Common::SampleMap["MC/WX/WToENu/M1000"] = "WX";
+    Common::SampleMap["MC/WX/WWto2L2Nu"]    = "WX";
+    Common::SampleMap["MC/WX/WWtoLNu2Q"]    = "WX";
+    Common::SampleMap["MC/WX/WWtoLNu2Q"]    = "WX";
+    Common::SampleMap["MC/WX/WZ"]           = "WX";
+    Common::SampleMap["MC/WX/WZG"]          = "WX";
+
+    // Z+X
+    Common::SampleMap["MC/ZX/ZGGJets_ZToLL"]       = "ZX";
+    Common::SampleMap["MC/ZX/ZGGJets_ZToHadOrNu"]  = "ZX";
+    Common::SampleMap["MC/ZX/Z1Jets_ZpT/150to250"] = "ZX";
+    Common::SampleMap["MC/ZX/Z1Jets_ZpT/250to400"] = "ZX";
+    Common::SampleMap["MC/ZX/Z1Jets_ZpT/400toInf"] = "ZX";
     
     // Data
     Common::SampleMap[Form("Data/%s/B/v1",Common::PrimaryDataset.Data())] = "Data";
@@ -93,7 +113,9 @@ namespace Common
       else if (sample == "GJets") Common::GroupMap[sample] = isBkgd;
       else if (sample == "DYLL")  Common::GroupMap[sample] = isBkgd;
       else if (sample == "DiPho") Common::GroupMap[sample] = isBkgd;
-      else if (sample == "VG")    Common::GroupMap[sample] = isBkgd;
+      else if (sample == "TX")    Common::GroupMap[sample] = isBkgd;
+      else if (sample == "WX")    Common::GroupMap[sample] = isBkgd;
+      else if (sample == "ZX")    Common::GroupMap[sample] = isBkgd;
       else if (sample == "Data")  Common::GroupMap[sample] = isData;
       else if (sample.Contains("GMSB")) Common::GroupMap[sample] = isSignal;
       else if (sample.Contains("HVDS")) Common::GroupMap[sample] = isSignal;
@@ -171,8 +193,8 @@ namespace Common
     Common::SignalSubGroupColorMap["GMSB_CTau0p1cm"] = {kAzure,"Up"};
     Common::SignalSubGroupColorMap["GMSB_CTau10cm"]  = {kSpring,"Up"};
     Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kPink,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau600cm"] = {kOrange,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau1200cm"] = {kViolet,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau600cm"] = {kViolet,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau1200cm"] = {kOrange,"Down"};
 
     // deal with HVDS later...
   }
@@ -183,7 +205,9 @@ namespace Common
     Common::ColorMap["GJets"] = kRed;
     Common::ColorMap["DYLL"]  = kMagenta;
     Common::ColorMap["DiPho"] = kCyan;
-    Common::ColorMap["VG"]    = kOrange;
+    Common::ColorMap["TX"]    = kOrange;
+    Common::ColorMap["WX"]    = kOrange-6;
+    Common::ColorMap["ZX"]    = kOrange+2;
     Common::ColorMap["Data"]  = kBlack;
     
     for (const auto & SignalSubGroupPair : Common::SignalSubGroupMap)
@@ -213,7 +237,9 @@ namespace Common
     Common::LabelMap["GJets"] = "#gamma+Jets"; //"#gamma + Jets (H_{T} Binned)";
     Common::LabelMap["DYLL"]  = "DY#rightarrowLL+Jets";
     Common::LabelMap["DiPho"] = "2#gamma";
-    Common::LabelMap["VG"]    = "V#gamma";
+    Common::LabelMap["TX"]    = "T+X";
+    Common::LabelMap["WX"]    = "W+X";
+    Common::LabelMap["ZX"]    = "Z+X";
     Common::LabelMap["Data"]  = "Data";
 
     // GMSB Labels
