@@ -1,0 +1,9 @@
+plot_title=Min #Delta#phi(All Jets,MET)
+
+x_title=Min #Delta#phi(All Jets,MET)
+x_scale=LIN
+x_var=Min$(abs(TVector2::Phi_mpi_pi((t1pfMETphi-jetphi)*(jetpt>30)+((jetpt<30)*TMath::Pi()))))
+x_bins=CONSTANT 20 0 0.5
+
+y_title=Events
+y_scale=LIN

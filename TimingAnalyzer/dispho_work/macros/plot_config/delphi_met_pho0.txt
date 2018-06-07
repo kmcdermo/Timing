@@ -1,0 +1,9 @@
+plot_title=#Delta#phi(MET,#gamma_{0})
+
+x_title=#Delta#phi(MET,#gamma_{0})
+x_scale=LIN
+x_var=(abs(TVector2::Phi_mpi_pi(t1pfMETphi-phophi_0)))
+x_bins=CONSTANT 32 0 3.2
+
+y_title=Events
+y_scale=LIN
