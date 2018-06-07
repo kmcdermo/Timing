@@ -1,4 +1,4 @@
-njets30	
+njets30
 jetHT30
 jetHT30_zoom
 sumET
@@ -16,7 +16,7 @@ phoeta_0
 phosmaj_0
 phosmin_0
 phor9_0
-phoHoe_0
+phoHoE_0
 phosieie_0
 
 phopt_1
