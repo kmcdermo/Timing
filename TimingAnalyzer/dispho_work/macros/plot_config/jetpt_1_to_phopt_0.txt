@@ -1,9 +1,0 @@
-plot_title=Subleading Jet p_{T} to Leading Photon p_{T} Resolution
-
-x_title=(#frac{p_{T}^{Jet^{1}}}{p_{T}^{#gamma^{0}}}#leq1 ? 1-#frac{p_{T}^{Jet^{1}}}{p_{T}^{#gamma^{0}}} : #frac{p_{T}^{#gamma^{0}}}{p_{T}^{Jet^{1}}}-1
-x_scale=LIN
-x_var=((((jetpt[1]/phopt_0)<=1)*(1.0-(jetpt[1]/phopt_0)))+(((jetpt[1]/phopt_0)>1)*((phopt_0/jetpt[1])-1)))
-x_bins=CONSTANT 40 -1.0 1.0
-
-y_title=Events
-y_scale=LOG

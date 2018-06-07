@@ -3,7 +3,7 @@ plot_title=Leading Photon #phi
 x_title=Leading Photon #phi
 x_scale=LIN		
 x_var=phophi_0
-x_bins=CONSTANT 64 -3.2 3.2
+x_bins=CONSTANT 32 -3.2 3.2
 
 y_title=Events
 y_scale=LIN

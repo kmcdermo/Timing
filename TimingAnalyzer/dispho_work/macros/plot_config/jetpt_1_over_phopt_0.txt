@@ -2,7 +2,7 @@ plot_title=Subleading Jet p_{T} over Leading Photon p_{T}
 
 x_title=p_{T}^{Jet_{1}}/p_{T}^{#gamma_{0}}
 x_scale=LIN
-x_var=(jetpt[1]/phopt_0)
+x_var=((Sum$(1*(jetpt>30))>=2)*(jetpt[1]/phopt_0)+(Sum$(1*(jetpt>30))<2)*-9999)
 x_bins=CONSTANT 40 0 4.0
 
 y_title=Events

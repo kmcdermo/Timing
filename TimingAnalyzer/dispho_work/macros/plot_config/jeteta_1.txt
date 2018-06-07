@@ -1,0 +1,9 @@
+plot_title=Subleading Jet #eta
+
+x_title=Subleading Jet #eta
+x_scale=LIN
+x_var=((Sum$(1*(jetpt>30))>=2)*jeteta[1]+(Sum$(1*(jetpt>30))<2)*-9999)
+x_bins=CONSTANT 35 3.5 3.5
+
+y_title=Events
+y_scale=LIN
