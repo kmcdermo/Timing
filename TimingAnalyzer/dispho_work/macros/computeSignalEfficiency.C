@@ -40,18 +40,42 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
   Common::CheckValidFile(infile,infilename);
   infile->cd();
 
+  // use vector to put things in sorted order...
+  std::vector<TString> SignalSubGroupVec;
+  for (const auto & SignalSubGroupPair : Common::SignalSubGroupMap)
+  {
+    SignalSubGroupVec.emplace_back(SignalSubGroupPair.first);
+  }
+  std::sort(SignalSubGroupVec.begin(),SignalSubGroupVec.end(),
+	    [](const auto & group1, const auto & group2)
+	    {
+	      const TString s_ctau = "_CTau";
+	      auto i_ctau = group1.Index(s_ctau);
+	      auto l_ctau = s_ctau.Length();
+	      
+	      TString s_ctau1(group1(i_ctau+l_ctau,group1.Length()-i_ctau-l_ctau));
+	      TString s_ctau2(group2(i_ctau+l_ctau,group2.Length()-i_ctau-l_ctau));
+  
+	      s_ctau1.ReplaceAll("p",".");
+	      s_ctau2.ReplaceAll("p",".");
+
+	      const auto ctau1 = s_ctau1.Atof();
+	      const auto ctau2 = s_ctau2.Atof();
+	      
+	      return ctau1 < ctau2;
+	    });
+  
   // legends, canv and overall map
   auto canv = new TCanvas();
   canv->cd();
-  auto leg = new TLegend(0.2,0.75,0.4,0.85);
+  auto leg = new TLegend(0.2,0.7,0.5,0.9);
   std::map<TString,TGraphAsymmErrors*> graphMap;
 
   // loop over signal groups
-  Int_t counter = 0;
-  for (const auto & SignalSubGroupPair : Common::SignalSubGroupMap)
+  for (auto igroup = 0U; igroup < SignalSubGroupVec.size(); igroup++)
   {
-    const auto & groupname = SignalSubGroupPair.first;
-    const auto & samples   = SignalSubGroupPair.second;
+    const auto & groupname = SignalSubGroupVec[igroup];
+    const auto & samples   = Common::SignalSubGroupMap[groupname];
 
     // make efficiency object
     const auto nSamples = samples.size();
@@ -80,11 +104,11 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
     graph->SetMarkerColor(Common::SignalSubGroupColorMap[groupname].color);
 
     // set labels!
-    if (counter == 0)
+    if (igroup == 0)
     {
       // absurdity from ROOT
       graph->GetHistogram()->GetXaxis()->Set(nSamples,0,nSamples);
-      graph->GetHistogram()->GetYaxis()->SetRangeUser(0.0,1.0);
+      graph->GetHistogram()->GetYaxis()->SetRangeUser(0.0,0.5);
       
       // loop over samples, set Lambda for GMSB
       for (auto isample = 0; isample < nSamples; isample++)
@@ -106,7 +130,7 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
 
     // draw 
     canv->cd();
-    graph->Draw(counter>0?"P same":"AP");
+    graph->Draw(igroup>0?"P same":"AP");
 
     // and add to legend!
     auto label = groupname;
@@ -114,16 +138,13 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
     label.ReplaceAll("p",".");
     leg->AddEntry(graph,Form("%s",label.Data()),"lp");
 
-    // step counter up!
-    counter++;
-
     // delete 
     delete efficiency;
   }
 
   // finish off the rest!
   leg->Draw("same");
-  Common::CMSLumi(canv);
+  Common::CMSLumi(canv,0);
   canv->SaveAs(Form("%s.png",outtext.Data()));
   
   // delete

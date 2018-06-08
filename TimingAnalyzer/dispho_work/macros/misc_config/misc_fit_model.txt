@@ -1,3 +1,3 @@
-signal_to_model=GMSB_L200_CTau400
-signals_to_plot=GMSB_L200_CTau400
+signal_to_model=GMSB_L200_CTau600
+signals_to_plot=GMSB_L200_CTau600
 blind_data=1

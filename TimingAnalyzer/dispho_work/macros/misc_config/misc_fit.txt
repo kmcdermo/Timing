@@ -1,2 +1,2 @@
-signals_to_plot=GMSB_L200_CTau400
+signals_to_plot=GMSB_L200_CTau0p1 GMSB_L200_CTau10 GMSB_L200_CTau600 GMSB_L100_CTau0p1 GMSB_L400_CTau1200
 blind_data=1

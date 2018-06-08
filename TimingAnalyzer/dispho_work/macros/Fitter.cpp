@@ -1186,7 +1186,7 @@ void Fitter::SetupMiscConfig()
     if (str == "") continue;
     else if (str.find("signal_to_model=") != std::string::npos) 
     {
-      str = Common::RemoveDelim(str,"signals_to_plot=");
+      str = Common::RemoveDelim(str,"signal_to_model=");
       std::vector<TString> tempvec;
       Common::SetupWhichSignals(str,tempvec);
 
