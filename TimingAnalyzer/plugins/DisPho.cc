@@ -270,14 +270,15 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   const Float_t evtwgt = (isMC ? genwgt : 1.f);
 
   // Fill total cutflow regardless of cuts
-  h_cutflow->Fill(cutflowLabelMap["All"]*1.f,evtwgt);
+  h_cutflow    ->Fill(cutflowLabelMap["All"]*1.f,1.f);
+  h_cutflow_wgt->Fill(cutflowLabelMap["All"]*1.f,evtwgt);
 
   // Fill PU hists regardless of cuts
   if (isMC)
   {
-    h_genpuobs->Fill(genpuobs);
-    h_genpuobs_wgt->Fill(genpuobs,evtwgt);
-    h_genputrue->Fill(genputrue);
+    h_genpuobs     ->Fill(genpuobs);
+    h_genpuobs_wgt ->Fill(genpuobs,evtwgt);
+    h_genputrue    ->Fill(genputrue);
     h_genputrue_wgt->Fill(genputrue,evtwgt);
   }
 
@@ -287,13 +288,15 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //          //
   //////////////
   if (event%blindSF!=0 && applyBlindSF) return;
-  h_cutflow->Fill(cutflowLabelMap["nEvBlinding"]*1.f,evtwgt);
+  h_cutflow    ->Fill(cutflowLabelMap["nEvBlinding"]*1.f,1.f);
+  h_cutflow_wgt->Fill(cutflowLabelMap["nEvBlinding"]*1.f,evtwgt);
 
   if (metsH.isValid())
   {
     if ((*metsH)[0].pt() > blindMET && applyBlindMET) return;
   }  
-  h_cutflow->Fill(cutflowLabelMap["METBlinding"]*1.f,evtwgt);
+  h_cutflow    ->Fill(cutflowLabelMap["METBlinding"]*1.f,1.f);
+  h_cutflow_wgt->Fill(cutflowLabelMap["METBlinding"]*1.f,evtwgt);
 
   /////////
   //     //
@@ -343,7 +346,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Object Counts for Storing //
   //                           //
   ///////////////////////////////
-  const int nJets = std::min(int(jets.size()),Config::nJets);
+  const int nJets    = std::min(int(jets.size()),Config::nJets);
   const int nRecHits = recHitMap.size();
   const int nPhotons = std::min(int(photons.size()),Config::nPhotons);
 
@@ -359,13 +362,15 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (triggerBitPair.second) {triggered = true; break;}
   }
   if (!triggered && applyTrigger) return;
-  h_cutflow->Fill(cutflowLabelMap["Trigger"]*1.f,evtwgt);
+  h_cutflow    ->Fill(cutflowLabelMap["Trigger"]*1.f,1.f);
+  h_cutflow_wgt->Fill(cutflowLabelMap["Trigger"]*1.f,evtwgt);
 
   // HT pre-selection
   auto jetHT = 0.f;
   for (auto ijet = 0; ijet < nJets; ijet++) jetHT += jets[ijet].pt();
   if (jetHT < minHT && applyHT) return;
-  h_cutflow->Fill(cutflowLabelMap["H_{T}"]*1.f,evtwgt);
+  h_cutflow    ->Fill(cutflowLabelMap["H_{T}"]*1.f,1.f);
+  h_cutflow_wgt->Fill(cutflowLabelMap["H_{T}"]*1.f,evtwgt);
 
   // photon pre-selection: at least one good photon in event
   bool isphgood = false;
@@ -387,7 +392,8 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     } 
   } // end check
   if (!isphgood && applyPhGood) return;
-  h_cutflow->Fill(cutflowLabelMap["Good Photon"]*1.f,evtwgt);
+  h_cutflow    ->Fill(cutflowLabelMap["Good Photon"]*1.f,1.f);
+  h_cutflow_wgt->Fill(cutflowLabelMap["Good Photon"]*1.f,evtwgt);
 
   /////////////
   //         //
@@ -1269,11 +1275,16 @@ void DisPho::beginJob()
   edm::Service<TFileService> fs;
   
   // histograms needed
-  h_cutflow = fs->make<TH1F>("h_cutflow", "Cut Flow", cutflowLabelMap.size(), 0, cutflowLabelMap.size());
-  h_genpuobs = fs->make<TH1F>("h_genpuobs", "Gen PU Observed", 150, 0, 150);
-  h_genputrue = fs->make<TH1F>("h_genputrue", "Gen PU True", 150, 0, 150);
-  h_genpuobs_wgt = fs->make<TH1F>("h_genpuobs_wgt", "Gen PU Observed (Weighted)", 150, 0, 150);
-  h_genputrue_wgt = fs->make<TH1F>("h_genputrue_wgt", "Gen PU True (Weighted)", 150, 0, 150);
+  h_cutflow     = fs->make<TH1F>("h_cutflow"    , "Cut Flow"           , cutflowLabelMap.size(), 0, cutflowLabelMap.size());
+  h_cutflow_wgt = fs->make<TH1F>("h_cutflow_wgt", "Cut Flow (Weighted)", cutflowLabelMap.size(), 0, cutflowLabelMap.size());
+  
+  if (isMC)
+  {
+    h_genpuobs      = fs->make<TH1F>("h_genpuobs"     , "Gen PU Observed"           , 150, 0, 150);
+    h_genpuobs_wgt  = fs->make<TH1F>("h_genpuobs_wgt" , "Gen PU Observed (Weighted)", 150, 0, 150);
+    h_genputrue     = fs->make<TH1F>("h_genputrue"    , "Gen PU True"               , 150, 0, 150);
+    h_genputrue_wgt = fs->make<TH1F>("h_genputrue_wgt", "Gen PU True (Weighted)"    , 150, 0, 150);
+  }
   DisPho::MakeHists();
 
   // Config tree, filled once
@@ -1290,28 +1301,37 @@ void DisPho::MakeHists()
   // cut flow settings
   for (const auto & cutflowLabelPair : cutflowLabelMap)
   {
-    h_cutflow->GetXaxis()->SetBinLabel(cutflowLabelPair.second+1,cutflowLabelPair.first.c_str()); // +1 to account for bins in ROOT from [1,nBins]
+    h_cutflow    ->GetXaxis()->SetBinLabel(cutflowLabelPair.second+1,cutflowLabelPair.first.c_str()); // +1 to account for bins in ROOT from [1,nBins]
+    h_cutflow_wgt->GetXaxis()->SetBinLabel(cutflowLabelPair.second+1,cutflowLabelPair.first.c_str()); // +1 to account for bins in ROOT from [1,nBins]
   }
-  h_cutflow->GetYaxis()->SetTitle("nEvents with weights");
+  h_cutflow    ->GetYaxis()->SetTitle("nEntries");
+  h_cutflow_wgt->GetYaxis()->SetTitle("nEvents with weights");
 
-  // PUObs
-  h_genpuobs->GetXaxis()->SetTitle("nPU observed");
-  h_genpuobs->GetYaxis()->SetTitle("nEvents");
-  h_genpuobs_wgt->GetXaxis()->SetTitle("nPU observed");
-  h_genpuobs_wgt->GetYaxis()->SetTitle("nEvents");
-
-  // PUTrue
-  h_genputrue->GetXaxis()->SetTitle("nPU True");
-  h_genputrue->GetYaxis()->SetTitle("nEvents");
-  h_genputrue_wgt->GetXaxis()->SetTitle("nPU True");
-  h_genputrue_wgt->GetYaxis()->SetTitle("nEvents");
+  if (isMC)
+  {
+    // PUObs
+    h_genpuobs    ->GetXaxis()->SetTitle("nPU observed");
+    h_genpuobs    ->GetYaxis()->SetTitle("nEntries");
+    h_genpuobs_wgt->GetXaxis()->SetTitle("nPU observed");
+    h_genpuobs_wgt->GetYaxis()->SetTitle("nEvents with weights");
+    
+    // PUTrue
+    h_genputrue    ->GetXaxis()->SetTitle("nPU True");
+    h_genputrue    ->GetYaxis()->SetTitle("nEntries");
+    h_genputrue_wgt->GetXaxis()->SetTitle("nPU True");
+    h_genputrue_wgt->GetYaxis()->SetTitle("nEvents with weights");
+  }
 
   // SumW2
-  h_cutflow->Sumw2();
-  h_genpuobs->Sumw2();
-  h_genpuobs_wgt->Sumw2();
-  h_genputrue->Sumw2();
-  h_genputrue_wgt->Sumw2();
+  h_cutflow    ->Sumw2();
+  h_cutflow_wgt->Sumw2();
+  if (isMC)
+  {
+    h_genpuobs     ->Sumw2();
+    h_genpuobs_wgt ->Sumw2();
+    h_genputrue    ->Sumw2();
+    h_genputrue_wgt->Sumw2();
+  }
 }
 
 void DisPho::MakeAndFillConfigTree()

@@ -39,6 +39,10 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   fInCutFlow = (TH1F*)fInFile->Get(inh_cutflowname.Data());
   Common::CheckValidTH1F(fInCutFlow,inh_cutflowname,infilename);
 
+  const TString inh_cutflow_wgtname = Form("%s/%s_wgt",Common::rootdir.Data(),Common::h_cutflow_wgtname.Data());
+  fInCutFlowWgt = (TH1F*)fInFile->Get(inh_cutflow_wgtname.Data());
+  Common::CheckValidTH1F(fInCutFlowWgt,inh_cutflow_wgtname,infilename);
+
   // Get PU weights input
   if (fIsMC)
   {
@@ -70,7 +74,8 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   // Init output info
   Skimmer::InitAndSetOutConfig();
   Skimmer::InitOutTree();
-  Skimmer::InitOutCutFlow();
+  Skimmer::InitOutCutFlow(fInCutFlow,fOutCutFlow,"");
+  Skimmer::InitOutCutFlow(fInCutFlowWgt,fOutCutFlowWgt,"_wgt";)
 }
 
 Skimmer::~Skimmer()
@@ -82,11 +87,13 @@ Skimmer::~Skimmer()
     delete fInPUWgtFile;
   }
 
+  delete fInCutFlowWgt;
   delete fInCutFlow;
   delete fInTree;
   delete fInConfigTree;
   delete fInFile;
 
+  delete fOutCutFlowWgt;
   delete fOutCutFlow;
   delete fOutTree;
   delete fOutConfigTree;
@@ -96,15 +103,15 @@ Skimmer::~Skimmer()
 void Skimmer::EventLoop()
 {
   // do loop over events, reading in branches as needed, skimming, filling output trees and hists
-  const UInt_t nEntries = fInTree->GetEntries();
-  for (UInt_t entry = 0; entry < nEntries; entry++)
+  const auto nEntries = fInTree->GetEntries();
+  for (auto entry = 0U; entry < nEntries; entry++)
   {
     // dump status check
     if (entry%Common::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
 
     // get event weight: no scaling by BR, xsec, lumi, etc.
     if (fIsMC) fInEvent.b_genwgt->GetEntry(entry);
-    const Float_t evtwgt = (fIsMC ? fInEvent.genwgt : 1.f);
+    const auto evtwgt = (fIsMC ? fInEvent.genwgt : 1.f);
 
     // perform skim
     if (!fOutConfig.isToy) // do not apply skim selection on toy config
@@ -112,15 +119,18 @@ void Skimmer::EventLoop()
       // leading photon skim section
       fInEvent.b_nphotons->GetEntry(entry);
       if (fInEvent.nphotons <= 0) continue;
-      fOutCutFlow->Fill((cutLabels["nPhotons"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow   ->Fill((cutLabels["nPhotons"]*1.f)-0.5f,1.f);
+      fOutCutFlowWgt->Fill((cutLabels["nPhotons"]*1.f)-0.5f,evtwgt);
       
       fInPhos[0].b_isEB->GetEntry(entry);
       if (!fInPhos[0].isEB) continue;
-      fOutCutFlow->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow   ->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,1.f);
+      fOutCutFlowWgt->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,evtwgt);
 
       fInPhos[0].b_pt->GetEntry(entry);
       if (fInPhos[0].pt < 70.f) continue;
-      fOutCutFlow->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);      
+      fOutCutFlow   ->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,1.f);
+      fOutCutFlowWgt->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);
 
       // filter on MET Flags
       fInEvent.b_metPV->GetEntry(entry);
@@ -140,7 +150,8 @@ void Skimmer::EventLoop()
       if (!fIsMC && !fInEvent.metEESC) continue;
       
       // fill cutflow for MET filters
-      fOutCutFlow->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow   ->Fill((cutLabels["METFlag"]*1.f)-0.5f,1.f);
+      fOutCutFlowWgt->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
       
       // cut on crappy pu
       if (fIsMC) 
@@ -150,7 +161,8 @@ void Skimmer::EventLoop()
       }
       
       // fill cutflow
-      fOutCutFlow->Fill((cutLabels["badPU"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow   ->Fill((cutLabels["badPU"]*1.f)-0.5f,1.f);
+      fOutCutFlowWgt->Fill((cutLabels["badPU"]*1.f)-0.5f,evtwgt);
     }
 
     // end of skim, now copy... dropping rechits
@@ -175,7 +187,7 @@ void Skimmer::EventLoop()
 void Skimmer::FillOutGMSBs(const UInt_t entry)
 {
   // get input branches
-  for (Int_t igmsb = 0; igmsb < Common::nGMSBs; igmsb++)
+  for (auto igmsb = 0; igmsb < Common::nGMSBs; igmsb++)
   {
     auto & ingmsb = fInGMSBs[igmsb];
     ingmsb.b_genNmass->GetEntry(entry);
@@ -202,7 +214,7 @@ void Skimmer::FillOutGMSBs(const UInt_t entry)
   }
 
   // set output branches
-  for (Int_t igmsb = 0; igmsb < Common::nGMSBs; igmsb++)
+  for (auto igmsb = 0; igmsb < Common::nGMSBs; igmsb++)
   {
     const auto & ingmsb = fInGMSBs[igmsb];
     auto & outgmsb = fOutGMSBs[igmsb];
@@ -234,7 +246,7 @@ void Skimmer::FillOutGMSBs(const UInt_t entry)
 void Skimmer::FillOutHVDSs(const UInt_t entry)
 {
   // get input branches
-  for (Int_t ihvds = 0; ihvds < Common::nHVDSs; ihvds++)
+  for (auto ihvds = 0; ihvds < Common::nHVDSs; ihvds++)
   {
     auto & inhvds = fInHVDSs[ihvds];
 
@@ -262,7 +274,7 @@ void Skimmer::FillOutHVDSs(const UInt_t entry)
   }
 
   // set output branches
-  for (Int_t ihvds = 0; ihvds < Common::nHVDSs; ihvds++)
+  for (auto ihvds = 0; ihvds < Common::nHVDSs; ihvds++)
   {
     const auto & inhvds = fInHVDSs[ihvds];
     auto & outhvds = fOutHVDSs[ihvds];
@@ -294,7 +306,7 @@ void Skimmer::FillOutHVDSs(const UInt_t entry)
 void Skimmer::FillOutToys(const UInt_t entry)
 {
   // get input branches
-  for (Int_t itoy = 0; itoy < Common::nToys; itoy++)
+  for (auto itoy = 0; itoy < Common::nToys; itoy++)
   {
     auto & intoy = fInToys[itoy];
 
@@ -309,7 +321,7 @@ void Skimmer::FillOutToys(const UInt_t entry)
   }
 
   // set output branches
-  for (Int_t itoy = 0; itoy < Common::nToys; itoy++)
+  for (auto itoy = 0; itoy < Common::nToys; itoy++)
   {
     const auto & intoy = fInToys[itoy];
     auto & outtoy = fOutToys[itoy];
@@ -412,6 +424,7 @@ void Skimmer::FillOutEvent(const UInt_t entry)
   // isMC only branches
   if (fIsMC)
   {
+    fOutEvent.genwgt = fInEvent.genwgt;
     fOutEvent.genx0 = fInEvent.genx0;
     fOutEvent.geny0 = fInEvent.geny0;
     fOutEvent.genz0 = fInEvent.genz0;
@@ -455,7 +468,7 @@ void Skimmer::FillOutJets(const UInt_t entry)
 void Skimmer::FillOutPhos(const UInt_t entry)
 {  
   // get input photon branches
-  for (Int_t ipho = 0; ipho < Common::nPhotons; ipho++) 
+  for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
   {
     auto & inpho = fInPhos[ipho];
     
@@ -527,7 +540,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
   }
 
   // set output photon branches
-  for (Int_t ipho = 0; ipho < Common::nPhotons; ipho++) 
+  for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
   {
     const auto & inpho = fInPhos[ipho];
     auto & outpho = fOutPhos[ipho];
@@ -719,7 +732,7 @@ void Skimmer::InitInBranchVecs()
     fInRecHits.OOT = 0;
     fInRecHits.ID = 0;
 
-    for (Int_t ipho = 0; ipho < Common::nPhotons; ipho++) 
+    for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
     {
       fInPhos[ipho].recHits = 0;
     }  
@@ -741,7 +754,7 @@ void Skimmer::InitInBranches()
     if (fInConfig.isGMSB)
     {
       fInTree->SetBranchAddress(fInEvent.s_nNeutoPhGr.c_str(), &fInEvent.nNeutoPhGr, &fInEvent.b_nNeutoPhGr);
-      for (Int_t igmsb = 0; igmsb < Common::nGMSBs; igmsb++) 
+      for (auto igmsb = 0; igmsb < Common::nGMSBs; igmsb++) 
       {
 	auto & gmsb = fInGMSBs[igmsb];
 	fInTree->SetBranchAddress(Form("%s_%i",gmsb.s_genNmass.c_str(),igmsb), &gmsb.genNmass, &gmsb.b_genNmass);
@@ -771,7 +784,7 @@ void Skimmer::InitInBranches()
     if (fInConfig.isHVDS)
     {
       fInTree->SetBranchAddress(fInEvent.s_nvPions.c_str(), &fInEvent.nvPions, &fInEvent.b_nvPions);
-      for (Int_t ihvds = 0; ihvds < Common::nHVDSs; ihvds++) 
+      for (auto ihvds = 0; ihvds < Common::nHVDSs; ihvds++) 
       {
 	auto & hvds = fInHVDSs[ihvds]; 
 	fInTree->SetBranchAddress(Form("%s_%i",hvds.s_genvPionmass.c_str(),ihvds), &hvds.genvPionmass, &hvds.b_genvPionmass);
@@ -801,7 +814,7 @@ void Skimmer::InitInBranches()
     if (fInConfig.isToy)
     {
       fInTree->SetBranchAddress(fInEvent.s_nToyPhs.c_str(), &fInEvent.nToyPhs, &fInEvent.b_nToyPhs);
-      for (Int_t itoy = 0; itoy < Common::nToys; itoy++) 
+      for (auto itoy = 0; itoy < Common::nToys; itoy++) 
       {
 	auto & toy = fInToys[itoy]; 
 	fInTree->SetBranchAddress(Form("%s_%i",toy.s_genphE.c_str(),itoy), &toy.genphE, &toy.b_genphE);
@@ -872,7 +885,7 @@ void Skimmer::InitInBranches()
   }
 
   fInTree->SetBranchAddress(fInEvent.s_nphotons.c_str(), &fInEvent.nphotons, &fInEvent.b_nphotons);
-  for (Int_t ipho = 0; ipho < Common::nPhotons; ipho++) 
+  for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
   {
     auto & pho = fInPhos[ipho];
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_E.c_str(),ipho), &pho.E, &pho.b_E);
@@ -1048,6 +1061,7 @@ void Skimmer::InitOutBranches()
 {
   if (fIsMC)
   {
+    fOutTree->Branch(fOutEvent.s_genwgt.c_str(), &fOutEvent.genwgt);
     fOutTree->Branch(fOutEvent.s_puwgt.c_str(), &fOutEvent.puwgt);
     fOutTree->Branch(fOutEvent.s_genx0.c_str(), &fOutEvent.genx0);
     fOutTree->Branch(fOutEvent.s_geny0.c_str(), &fOutEvent.geny0);
@@ -1059,7 +1073,7 @@ void Skimmer::InitOutBranches()
     if (fOutConfig.isGMSB)
     {
       fOutTree->Branch(fOutEvent.s_nNeutoPhGr.c_str(), &fOutEvent.nNeutoPhGr);
-      for (Int_t igmsb = 0; igmsb < Common::nGMSBs; igmsb++) 
+      for (auto igmsb = 0; igmsb < Common::nGMSBs; igmsb++) 
       {
 	auto & gmsb = fOutGMSBs[igmsb];
 	fOutTree->Branch(Form("%s_%i",gmsb.s_genNmass.c_str(),igmsb), &gmsb.genNmass);
@@ -1089,7 +1103,7 @@ void Skimmer::InitOutBranches()
     if (fOutConfig.isHVDS)
     {
       fOutTree->Branch(fOutEvent.s_nvPions.c_str(), &fOutEvent.nvPions);
-      for (Int_t ihvds = 0; ihvds < Common::nHVDSs; ihvds++) 
+      for (auto ihvds = 0; ihvds < Common::nHVDSs; ihvds++) 
       {
 	auto & hvds = fOutHVDSs[ihvds]; 
 	fOutTree->Branch(Form("%s_%i",hvds.s_genvPionmass.c_str(),ihvds), &hvds.genvPionmass);
@@ -1171,7 +1185,7 @@ void Skimmer::InitOutBranches()
   fOutTree->Branch(fOutEvent.s_nrechits.c_str(), &fOutEvent.nrechits);
 
   fOutTree->Branch(fOutEvent.s_nphotons.c_str(), &fOutEvent.nphotons);
-  for (Int_t ipho = 0; ipho < Common::nPhotons; ipho++) 
+  for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
   {
     auto & pho = fOutPhos[ipho];
     fOutTree->Branch(Form("%s_%i",pho.s_E.c_str(),ipho), &pho.E);
@@ -1225,15 +1239,15 @@ void Skimmer::InitOutBranches()
   }
 } 
 
-void Skimmer::InitOutCutFlow()
+void Skimmer::InitOutCutFlow(const TH1F * inh_cutflow, TH1F *& outh_cutflow, const TString & label)
 {
   // get cut flow labels
-  const Int_t inNbinsX = fInCutFlow->GetNbinsX();
-  for (Int_t ibin = 1; ibin <= inNbinsX; ibin++)
+  const auto inNbinsX = inh_cutflow->GetNbinsX();
+  for (auto ibin = 1; ibin <= inNbinsX; ibin++)
   {
-    cutLabels[fInCutFlow->GetXaxis()->GetBinLabel(ibin)] = ibin;
+    cutLabels[inh_cutflow->GetXaxis()->GetBinLabel(ibin)] = ibin;
   }
-  Int_t inNbinsX_new = inNbinsX;
+  auto inNbinsX_new = inNbinsX;
   cutLabels["nPhotons"] = ++inNbinsX_new;
   cutLabels["ph0isEB"] = ++inNbinsX_new;
   cutLabels["ph0pt70"] = ++inNbinsX_new;
@@ -1241,21 +1255,21 @@ void Skimmer::InitOutCutFlow()
   cutLabels["badPU"] = ++inNbinsX_new;
 
   // make new cut flow
-  fOutCutFlow = new TH1F(Common::h_cutflowname.Data(),fInCutFlow->GetTitle(),cutLabels.size(),0,cutLabels.size());
-  fOutCutFlow->Sumw2();
+  outh_cutflow = new TH1F(Form("%s%s",Common::h_cutflowname.Data(),label.Data()),inh_cutflow->GetTitle(),cutLabels.size(),0,cutLabels.size());
+  outh_cutflow->Sumw2();
 
   for (const auto & cutlabel : cutLabels)
   {
-    const Int_t ibin = cutlabel.second;
+    const auto ibin = cutlabel.second;
 
-    fOutCutFlow->GetXaxis()->SetBinLabel(ibin,cutlabel.first.c_str());
+    outh_cutflow->GetXaxis()->SetBinLabel(ibin,cutlabel.first.c_str());
 
     if (ibin > inNbinsX) continue;
 
-    fOutCutFlow->SetBinContent(ibin,fInCutFlow->GetBinContent(ibin));
-    fOutCutFlow->SetBinError(ibin,fInCutFlow->GetBinError(ibin));
+    outh_cutflow->SetBinContent(ibin,inh_cutflow->GetBinContent(ibin));
+    outh_cutflow->SetBinError(ibin,inh_cutflow->GetBinError(ibin));
   }
-  fOutCutFlow->GetYaxis()->SetTitle(fInCutFlow->GetYaxis()->GetTitle());
+  outh_cutflow->GetYaxis()->SetTitle(inh_cutflow->GetYaxis()->GetTitle());
 }
 
 void Skimmer::GetSampleWeight()
@@ -1266,7 +1280,7 @@ void Skimmer::GetSampleWeight()
 void Skimmer::GetPUWeights()
 {
   fPUWeights.clear();
-  for (Int_t ibin = 1; ibin <= fInPUWgtHist->GetNbinsX(); ibin++)
+  for (auto ibin = 1; ibin <= fInPUWgtHist->GetNbinsX(); ibin++)
   {
     fPUWeights.emplace_back(fInPUWgtHist->GetBinContent(ibin));
   }
