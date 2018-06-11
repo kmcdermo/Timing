@@ -102,7 +102,14 @@ void FastSkimmer::MakeListFromTrees()
       // store result of number of entries into cutflow th1
       for (auto ientry = 0U; ientry < tree->GetEntries(); ientry++)
       {
-	b_evtwgt->GetEntry(ientry);
+	// from the wise words of philippe: https://root-forum.cern.ch/t/tentrylist-and-setentrylist-on-chain-not-registering/28286/6
+	// and also: https://root-forum.cern.ch/t/ttree-loadtree/14566/6
+	auto filteredEntry = tree->GetEntryNumber(ientry);
+	if (filteredEntry < 0) break;
+	auto localEntry = tree->LoadTree(filteredEntry);
+	if (localEntry < 0) break;
+
+	b_evtwgt->GetEntry(localEntry);
 	outhist->Fill((binlabels[label]*1.f)-0.5f,evtwgt);
       }
 
