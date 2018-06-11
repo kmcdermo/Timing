@@ -1,8 +1,8 @@
 #!/bin/bash
 
-cutconfig=${1:-"cut_config/signal_blinded_hlt.txt"}
+cutflowconfig=${1:-"cut_config/cuts_v2/one_at_a_time/control_qcd.txt"}
 pdname=${2:-"SinglePhoton"}
-outfiletext=${3:-"phopt_0"}
+outfiletext=${3:-"skim"}
 
 ## produce slimmed skim
-root -l -b -q runFastSkimmer.C\(\"${cutconfig}\",\"${pdname}\",\"${outfiletext}\"\)
+root -l -b -q runFastSkimmer.C\(\"${cutflowconfig}\",\"${pdname}\",\"${outfiletext}\"\)

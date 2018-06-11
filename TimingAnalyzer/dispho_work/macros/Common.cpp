@@ -76,7 +76,7 @@ namespace Common
     Common::SampleMap["MC/ZX/Z1Jets_ZpT/150to250"] = "ZX";
     Common::SampleMap["MC/ZX/Z1Jets_ZpT/250to400"] = "ZX";
     Common::SampleMap["MC/ZX/Z1Jets_ZpT/400toInf"] = "ZX";
-    //    Common::SampleMap["MC/ZX/ZZ"]                  = "ZX";
+    Common::SampleMap["MC/ZX/ZZ"]                  = "ZX";
     
     // Data
     Common::SampleMap[Form("Data/%s/B/v1",Common::PrimaryDataset.Data())] = "Data";

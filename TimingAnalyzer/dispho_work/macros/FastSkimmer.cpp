@@ -22,7 +22,13 @@ FastSkimmer::FastSkimmer(const TString & cutflowconfig, const TString & pdname, 
 FastSkimmer::~FastSkimmer()
 {
   // delete everything else already not deleted
-  for (const auto & ListPair : ListMap) delete ListPair.second;
+  for (const auto & ListMapPair : ListMapMap) 
+  {
+    for (const auto & ListPair : ListMapPair.second) 
+    {
+      delete ListPair.second;
+    }
+  }
   delete fConfigPave;
   delete fOutFile;
 }
@@ -63,29 +69,29 @@ void FastSkimmer::MakeListFromTrees()
 
     // Get Input Cut Flow Histogram 
     auto inhist = (TH1F*)file->Get(Form("%s",Common::h_cutflowname.Data()));
-    Common::CheckValidTH1F(inhist,Common::h_cutflowname,infilename);
+    Common::CheckValidTH1F(inhist,Common::h_cutflowname,filename);
 
     // Init Output Cut Flow Histogram 
     std::map<TString,Int_t> binlabels;
-    auto outhist = Common::SetupOutCutFlowHist(inhist,Common::SampleCutFlowHistNameMap[sample],binlabels);
+    auto outhist = Common::SetupOutCutFlowHist(inhist,Common::SampleCutFlowHistNameMap[input],binlabels);
 
     // Set tmp evtwgt variables for filling cutflow histogram ::::: HACK:::: EVENTUALLY USE BOTH WEIGHTED AND UNWEIGHTED HISTOGRAMS
     Float_t evtwgt = 0;
     TBranch * b_evtwgt = 0;
-    tree->SetBranchAddress("evtwgt",&evtwgt,b_evtwgt);
+    tree->SetBranchAddress("evtwgt",&evtwgt,&b_evtwgt);
 
     // Loop over cuts, and make entry list for each cut
     for (const auto & CutFlowPair : Common::CutFlowPairVec)
     {
-      // Get entry list	
       const auto & label = CutFlowPair.first;
-      auto & list = ListMapMap[samplename][label];
-      list->SetDirectory(file);
+      const auto & cutstring = CutFlowPair.second;
 
       std::cout << "Computing entries for cut: " << label.Data() << std::endl;
-
-      // get cut string
-      const auto & cutstring = CutFlowPair.second;
+      
+      // Get entry list	
+      file->cd();
+      auto & list = ListMapMap[samplename][label];
+      list->SetDirectory(file);
 
       // use ttree::draw() to generate entry list
       tree->Draw(Form(">>%s",list->GetName()),Form("%s",cutstring.Data()),"entrylist");
@@ -206,12 +212,23 @@ void FastSkimmer::MakeSkimsFromEntryLists(TFile *& TreeFile, std::map<TString,TT
     auto inhist = (TH1F*)fOutFile->Get(Form("%s",Common::SampleCutFlowHistNameMap[input].Data()));
     OutHist->Add(inhist);
 
-    // Set Entry List Needed : use last cut entry list!
-    const auto & list = ListMapMap[samplename][Common::CutFlowPairVec.back().first];
-    intree->SetEntryList(list);
+    // Loop over list and set as needed!
+    auto nentries = 0;
+    for (const auto & CutFlowPair : Common::CutFlowPairVec)
+    {
+      const auto & label = CutFlowPair.first;
+      const auto & list = ListMapMap[samplename][label];
+
+      nentries = list->GetN();
+      intree->SetEntryList(list);
+    }
+
+    // rename tree to output name to prevent double object
+    // https://root-forum.cern.ch/t/merging-trees-with-ttree-mergetrees/24301
     intree->SetName(treename.Data());
 
-    if (list->GetN() != 0)
+    // copy tree after final entry list set, only if it has more than 0 entries
+    if (nentries != 0)
     {
       std::cout << "Skimming into a smaller tree..." << std::endl;
     
@@ -246,7 +263,7 @@ void FastSkimmer::MakeConfigPave()
   fConfigPave->AddText("***** FastSkimmer Config *****");
 
   // dump cut config
-  Common::AddTextFromInputConfig(fConfigPave,"FastSkimmer Cut Config",fCutConfig);
+  Common::AddTextFromInputConfig(fConfigPave,"FastSkimmer CutFlow Config",fCutFlowConfig);
 
   // dump with PD
   fConfigPave->AddText(Form("Primary Dataset: %s",fPDName.Data()));
@@ -264,7 +281,7 @@ void FastSkimmer::SetupConfig()
   Common::SetupTreeNames();
   Common::SetupSampleCutFlowHistNames();
   Common::SetupGroupCutFlowHistNames();
-  Common::SetupCuts(fCutFlowConfig);
+  Common::SetupCutFlow(fCutFlowConfig);
 }
 
 void FastSkimmer::SetupLists()
@@ -279,7 +296,7 @@ void FastSkimmer::SetupLists()
     {
       const auto & label = CutFlowPair.first;
     
-      ListMapMap[samplename] = new TEntryList(Form("%s_%s_EntryList",samplename.Data(),label.Data()),"EntryList");
+      ListMapMap[samplename][label] = new TEntryList(Form("%s_%s_EntryList",samplename.Data(),label.Data()),"EntryList");
     }
   }
 }
@@ -289,7 +306,7 @@ TH1F * FastSkimmer::SetupTotalCutFlowHist(const TString & sample)
   // default constructor for output
   auto OutHist = new TH1F();
 
-  OutHist->SetName(Form("%s",Common::GroupCutFlowHistName[sample]));
+  OutHist->SetName(Form("%s",Common::GroupCutFlowHistNameMap[sample].Data()));
   OutHist->Sumw2();
   for (const auto & SamplePair : Common::SampleMap)
   {
@@ -307,7 +324,7 @@ TH1F * FastSkimmer::SetupTotalCutFlowHist(const TString & sample)
     OutHist->SetBins(nbinsX,0,nbinsX*1.f);
     
     // set bin labels
-    for (const auto ibinX = 1; ibinX <= nbinsX; ibinX++)
+    for (auto ibinX = 1; ibinX <= nbinsX; ibinX++)
     {
       OutHist->GetXaxis()->SetBinLabel(ibinX,tmphist->GetXaxis()->GetBinLabel(ibinX));
     }

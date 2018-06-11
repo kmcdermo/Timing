@@ -22,7 +22,7 @@
 class FastSkimmer
 {
 public:
-  FastSkimmer(const TString & cutconfig, const TString & pdname, const TString & outfiletext);
+  FastSkimmer(const TString & cutflowconfig, const TString & pdname, const TString & outfiletext);
   ~FastSkimmer();
 
   // Initialize
@@ -46,7 +46,7 @@ public:
   
 private:
   // Settings
-  const TString fCutConfig;
+  const TString fCutFlowConfig;
   const TString fPDName;
   const TString fOutFileText;
 
