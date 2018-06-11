@@ -61,7 +61,7 @@ void SignalSkimmer::MakeSkimsFromTrees()
 
     // Init Output Cut Flow Histogram 
     std::map<TString,Int_t> binlabels;
-    auto outhist = SignalSkimmer::InitOutCutFlowHist(inhist,Common::SignalCutFlowHistNameMap[sample],binlabels);
+    auto outhist = Common::SetupOutCutFlowHist(inhist,Common::SignalCutFlowHistNameMap[sample],binlabels);
 
     // Initialize map of lists
     std::map<TString,TEntryList*> listmap;
@@ -69,10 +69,10 @@ void SignalSkimmer::MakeSkimsFromTrees()
     SignalSkimmer::InitListMap(listmap,sample);
 
     // Loop over cuts, and make entry list for each cut, 
-    for (const auto & SignalCutFlowPair : Common::CutFlowPairVec)
+    for (const auto & CutFlowPair : Common::CutFlowPairVec)
     {
       // Get entry list
-      const auto & label = SignalCutFlowPair.first;
+      const auto & label = CutFlowPair.first;
       auto & list = listmap[label];
       list->SetDirectory(infile);
       infile->cd();
@@ -82,8 +82,11 @@ void SignalSkimmer::MakeSkimsFromTrees()
     
       std::cout << "Computing entries for cut: " << label.Data() << std::endl;
 
+      // get cut string
+      const auto & cutstring = CutFlowPair.second;
+
       // use ttree::draw() to generate entry list
-      intree->Draw(Form(">>%s",list->GetName()),Form("%s",SignalCutFlowPair.second.Data()),"entrylist");
+      intree->Draw(Form(">>%s",list->GetName()),Form("%s",cutsring.Data()),"entrylist");
 
       // store result of number of entries into cutflow th1
       outhist->SetBinContent(binlabels[label],list->GetN()*1.0);
@@ -155,40 +158,9 @@ void SignalSkimmer::SetupConfig()
 void SignalSkimmer::InitListMap(std::map<TString,TEntryList*> & listmap, const TString & signal)
 {
   // loop over vector of cuts, make new list for each
-  for (const auto & SignalCutFlowPair : Common::CutFlowPairVec)
+  for (const auto & CutFlowPair : Common::CutFlowPairVec)
   {
-    const auto & label  = SignalCutFlowPair.first;
+    const auto & label  = CutFlowPair.first;
     listmap[label] = new TEntryList(Form("%s_%s_EntryList",signal.Data(),label.Data()),"EntryList");
   }
-}
-
-TH1F * SignalSkimmer::InitOutCutFlowHist(const TH1F * inhist, const TString & outname, std::map<TString,Int_t> & binlabels)
-{
-  // get cut flow labels
-  const auto inNbinsX = inhist->GetNbinsX();
-  for (auto ibin = 1; ibin <= inNbinsX; ibin++) binlabels[inhist->GetXaxis()->GetBinLabel(ibin)] = ibin;
-
-  Int_t inNbinsX_new = inNbinsX;
-  for (const auto & SignalCutFlowPair : Common::CutFlowPairVec) binlabels[SignalCutFlowPair.first] = ++inNbinsX_new;
-  
-  // make new cut flow
-  auto outhist = new TH1F(outname.Data(),inhist->GetTitle(),binlabels.size(),0,binlabels.size());
-  outhist->Sumw2();
-
-  for (const auto & binlabel : binlabels)
-  {
-    const auto & cut = binlabel.first;
-    const auto ibin = binlabel.second;
-
-    outhist->GetXaxis()->SetBinLabel(ibin,cut.Data());
-
-    if (ibin > inNbinsX) continue;
-
-    outhist->SetBinContent(ibin,inhist->GetBinContent(ibin));
-    outhist->SetBinError(ibin,inhist->GetBinError(ibin));
-  }
-
-  outhist->GetYaxis()->SetTitle(inhist->GetYaxis()->GetTitle());
-
-  return outhist;
 }

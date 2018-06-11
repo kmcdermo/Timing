@@ -95,6 +95,8 @@ namespace Common
   extern std::map<TString,vector<TString> > SignalSubGroupMap;
   extern std::map<TString,TString> TreeNameMap;
   extern std::map<TString,TString> HistNameMap;
+  extern std::map<TString,TString> SampleCutFlowHistNameMap;
+  extern std::map<TString,TString> GroupCutFlowHistNameMap;
   extern std::map<TString,TString> SignalCutFlowHistNameMap;
   extern std::map<TString,ColorStruct> SignalSubGroupColorMap;
   extern std::map<TString,Color_t> ColorMap;
@@ -111,6 +113,8 @@ namespace Common
   void SetupSignalSubGroups();
   void SetupTreeNames();
   void SetupHistNames();
+  void SetupSampleCutFlowHistNames();
+  void SetupGroupCutFlowHistNames();
   void SetupSignalCutFlowHistNames();
   void SetupSignalSubGroupColors();
   void SetupColors();
@@ -128,6 +132,9 @@ namespace Common
   // Misc setup
   void SetupBool(const std::string & str, Bool_t & setting);
   void SetupWhichSignals(const std::string & str, std::vector<TString> & signalvec);
+
+  // cutflow histograms
+  TH1F * SetupOutCutFlowHist(const TH1F * inhist, const TString & outname, std::map<TString,Int_t> & binlabels);
   
   // skim input
   constexpr UInt_t nEvCheck = 10000;

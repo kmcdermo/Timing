@@ -38,7 +38,6 @@ public:
 
   // Helper Functions
   void InitListMap(std::map<TString,TEntryList*> & listmap, const TString & signal);
-  TH1F * InitOutCutFlowHist(const TH1F * inhist, const TString & outname, std::map<TString,Int_t> & cutlabels);
   
 private:
   // Settings

@@ -4,6 +4,7 @@
 // ROOT inludes
 #include "TFile.h"
 #include "TTree.h"
+#include "TBranch.h"
 #include "TString.h"
 #include "TEntryList.h"
 #include "TList.h"
@@ -34,8 +35,12 @@ public:
   // Subroutines for skimming
   void MakeListFromTrees();
   void MakeMergedSkims();
-  void MakeSkimsFromEntryLists(TFile *& TreeFile, std::map<TString,TTree*> & TreeMap, TList *& TreeList, const TString & sample, const TString & treename);
+  void MakeSkimsFromEntryLists(TFile *& TreeFile, std::map<TString,TTree*> & TreeMap, TList *& TreeList, 
+			       TH1F *& OutHist, const TString & sample, const TString & treename);
   
+  // Helper functions
+  TH1F * SetupTotalCutFlowHist(const TString & sample);
+
   // Meta data and extra info
   void MakeConfigPave();
   
@@ -47,7 +52,7 @@ private:
 
   // Output
   TFile * fOutFile;
-  std::map<TString,TEntryList*> ListMap;
+  std::map<TString,std::map<TString,TEntryList*> > ListMapMap;
   TPaveText * fConfigPave;
 };
 

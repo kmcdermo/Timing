@@ -1,7 +1,7 @@
 #include "FastSkimmer.hh"
 
-FastSkimmer::FastSkimmer(const TString & cutconfig, const TString & pdname, const TString & outtext)
-  : fCutConfig(cutconfig), fPDName(pdname), fOutFileText(outtext)
+FastSkimmer::FastSkimmer(const TString & cutflowconfig, const TString & pdname, const TString & outtext)
+  : fCutFlowConfig(cutflowconfig), fPDName(pdname), fOutFileText(outtext)
 {
   std::cout << "Initializing FastSkimmer..." << std::endl;
 
@@ -46,9 +46,10 @@ void FastSkimmer::MakeListFromTrees()
   for (const auto & SamplePair : Common::SampleMap)
   {
     // Init
-    const auto & input  = SamplePair.first;
-    const auto & sample = SamplePair.second;
-    std::cout << "Working on input: " << input.Data() << std::endl;
+    const auto & input    = SamplePair.first;
+    const auto samplename = Common::ReplaceSlashWithUnderscore(input);
+    
+    std::cout << "Working on sample name: " << samplename.Data() << std::endl;
 
     // Get File
     const TString filename = Form("%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),input.Data(),Common::tupleFileName.Data());
@@ -60,23 +61,59 @@ void FastSkimmer::MakeListFromTrees()
     auto tree = (TTree*)file->Get(Form("%s",Common::disphotreename.Data()));
     Common::CheckValidTree(tree,Common::disphotreename,filename);
 
-    std::cout << "Computing list of entries..." << std::endl;
+    // Get Input Cut Flow Histogram 
+    auto inhist = (TH1F*)file->Get(Form("%s",Common::h_cutflowname.Data()));
+    Common::CheckValidTH1F(inhist,Common::h_cutflowname,infilename);
 
-    // Get entry list
-    const auto samplename = Common::ReplaceSlashWithUnderscore(input);
-    auto & list = ListMap[samplename];
-    list->SetDirectory(file);
-    
-    // use ttree::draw() to generate entry list
-    tree->Draw(Form(">>%s",list->GetName()),Form("%s",Common::CutMap[sample].Data()),"entrylist");
+    // Init Output Cut Flow Histogram 
+    std::map<TString,Int_t> binlabels;
+    auto outhist = Common::SetupOutCutFlowHist(inhist,Common::SampleCutFlowHistNameMap[sample],binlabels);
 
-    // Write out list
+    // Set tmp evtwgt variables for filling cutflow histogram ::::: HACK:::: EVENTUALLY USE BOTH WEIGHTED AND UNWEIGHTED HISTOGRAMS
+    Float_t evtwgt = 0;
+    TBranch * b_evtwgt = 0;
+    tree->SetBranchAddress("evtwgt",&evtwgt,b_evtwgt);
+
+    // Loop over cuts, and make entry list for each cut
+    for (const auto & CutFlowPair : Common::CutFlowPairVec)
+    {
+      // Get entry list	
+      const auto & label = CutFlowPair.first;
+      auto & list = ListMapMap[samplename][label];
+      list->SetDirectory(file);
+
+      std::cout << "Computing entries for cut: " << label.Data() << std::endl;
+
+      // get cut string
+      const auto & cutstring = CutFlowPair.second;
+
+      // use ttree::draw() to generate entry list
+      tree->Draw(Form(">>%s",list->GetName()),Form("%s",cutstring.Data()),"entrylist");
+
+      // recursively set entry list for input tree
+      tree->SetEntryList(list);
+      
+      // store result of number of entries into cutflow th1
+      for (auto ientry = 0U; ientry < tree->GetEntries(); ientry++)
+      {
+	b_evtwgt->GetEntry(ientry);
+	outhist->Fill((binlabels[label]*1.f)-0.5f,evtwgt);
+      }
+
+      // Write out list
+      fOutFile->cd();
+      list->SetDirectory(fOutFile);
+      list->SetTitle("EntryList");
+      list->Write(list->GetName(),TObject::kWriteDelete);
+    }
+
+    // Write out hist
     fOutFile->cd();
-    list->SetDirectory(fOutFile);
-    list->SetTitle("EntryList");
-    list->Write(list->GetName(),TObject::kWriteDelete);
-
+    outhist->Write(outhist->GetName(),TObject::kWriteDelete);
+    
     // delete everything
+    delete outhist;
+    delete inhist;
     delete tree;
     delete file;
   }
@@ -104,8 +141,11 @@ void FastSkimmer::MakeMergedSkims()
     const TString TreeFileName = Form("tmpfile_%s.root",fOutFileText.Data());
     auto TreeFile = TFile::Open(Form("%s",TreeFileName.Data()),"RECREATE");
 
+    // output cutflow histogram
+    auto OutHist = FastSkimmer::SetupTotalCutFlowHist(sample);
+
     // Make skims...
-    FastSkimmer::MakeSkimsFromEntryLists(TreeFile,TreeMap,TreeList,sample,treename);
+    FastSkimmer::MakeSkimsFromEntryLists(TreeFile,TreeMap,TreeList,OutHist,sample,treename);
 
     if (TreeList->GetEntries() != 0)
     {
@@ -123,6 +163,11 @@ void FastSkimmer::MakeMergedSkims()
       delete OutTree;
     }
 
+    // write out cutflow histogram (then delete it)
+    fOutFile->cd();
+    OutHist->Write(OutHist->GetName(),TObject::kWriteDelete);
+    delete OutHist;
+
     // delete other stuff to reduce memory footprint
     delete TreeList;
     for (auto & TreePair : TreeMap)
@@ -136,15 +181,17 @@ void FastSkimmer::MakeMergedSkims()
   } // end loop over sample groups
 }
 
-void FastSkimmer::MakeSkimsFromEntryLists(TFile *& TreeFile, std::map<TString,TTree*> & TreeMap, TList *& TreeList, const TString & sample, const TString & treename)
+void FastSkimmer::MakeSkimsFromEntryLists(TFile *& TreeFile, std::map<TString,TTree*> & TreeMap, TList *& TreeList,
+					  TH1F *& OutHist, const TString & sample, const TString & treename)
 {
   // loop over all subsamples to avoid too many maps, simple control statement to control subsample grouping
   for (const auto & SamplePair : Common::SampleMap)
   {
     const auto & input = SamplePair.first;
     if (sample != SamplePair.second) continue;
-  
-    std::cout << "Working on input: " << input.Data() << std::endl;
+
+    const auto samplename = Common::ReplaceSlashWithUnderscore(input);
+    std::cout << "Working on sample name: " << samplename.Data() << std::endl;
     
     // Get File
     const TString infilename = Form("%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),input.Data(),Common::tupleFileName.Data());
@@ -155,9 +202,12 @@ void FastSkimmer::MakeSkimsFromEntryLists(TFile *& TreeFile, std::map<TString,TT
     auto intree = (TTree*)infile->Get(Form("%s",Common::disphotreename.Data()));
     Common::CheckValidTree(intree,Common::disphotreename,infilename);
     
-    // Set Entry List Needed
-    const auto samplename = Common::ReplaceSlashWithUnderscore(input);
-    const auto & list = ListMap[samplename];
+    // Get cutflow histogram and then add it up
+    auto inhist = (TH1F*)fOutFile->Get(Form("%s",Common::SampleCutFlowHistNameMap[input].Data()));
+    OutHist->Add(inhist);
+
+    // Set Entry List Needed : use last cut entry list!
+    const auto & list = ListMapMap[samplename][Common::CutFlowPairVec.back().first];
     intree->SetEntryList(list);
     intree->SetName(treename.Data());
 
@@ -178,6 +228,7 @@ void FastSkimmer::MakeSkimsFromEntryLists(TFile *& TreeFile, std::map<TString,TT
     }
     
     // Delete everything you can
+    delete inhist;
     delete intree;
     delete infile;
   }
@@ -211,7 +262,9 @@ void FastSkimmer::SetupConfig()
   Common::SetupSamples();
   Common::SetupGroups();
   Common::SetupTreeNames();
-  Common::SetupCuts(fCutConfig);
+  Common::SetupSampleCutFlowHistNames();
+  Common::SetupGroupCutFlowHistNames();
+  Common::SetupCuts(fCutFlowConfig);
 }
 
 void FastSkimmer::SetupLists()
@@ -221,6 +274,50 @@ void FastSkimmer::SetupLists()
   {
     const auto & input    = SamplePair.first;
     const auto samplename = Common::ReplaceSlashWithUnderscore(input);
-    ListMap[samplename]   = new TEntryList(Form("%s_EntryList",samplename.Data()),"EntryList");
+
+    for (const auto & CutFlowPair : Common::CutFlowPairVec)
+    {
+      const auto & label = CutFlowPair.first;
+    
+      ListMapMap[samplename] = new TEntryList(Form("%s_%s_EntryList",samplename.Data(),label.Data()),"EntryList");
+    }
   }
+}
+
+TH1F * FastSkimmer::SetupTotalCutFlowHist(const TString & sample)
+{    
+  // default constructor for output
+  auto OutHist = new TH1F();
+
+  OutHist->SetName(Form("%s",Common::GroupCutFlowHistName[sample]));
+  OutHist->Sumw2();
+  for (const auto & SamplePair : Common::SampleMap)
+  {
+    const auto & input = SamplePair.first;
+    if (sample != SamplePair.second) continue;
+    
+    // get tmp hist info
+    auto tmphist = (TH1F*)fOutFile->Get(Form("%s",Common::SampleCutFlowHistNameMap[input].Data()));
+    const auto nbinsX = tmphist->GetXaxis()->GetNbins();
+    
+    // set OutHist Info (bins+titles)
+    OutHist->SetTitle(tmphist->GetTitle());
+    OutHist->GetXaxis()->SetTitle(tmphist->GetXaxis()->GetTitle());
+    OutHist->GetYaxis()->SetTitle(tmphist->GetYaxis()->GetTitle());
+    OutHist->SetBins(nbinsX,0,nbinsX*1.f);
+    
+    // set bin labels
+    for (const auto ibinX = 1; ibinX <= nbinsX; ibinX++)
+    {
+      OutHist->GetXaxis()->SetBinLabel(ibinX,tmphist->GetXaxis()->GetBinLabel(ibinX));
+    }
+    
+    // delete temporary histogram
+    delete tmphist;
+    
+    // only need first example
+    break; 
+  }
+
+  return OutHist;
 }

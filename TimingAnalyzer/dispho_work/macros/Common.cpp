@@ -11,6 +11,8 @@ namespace Common
   std::map<TString,vector<TString> > SignalSubGroupMap;
   std::map<TString,TString> TreeNameMap;
   std::map<TString,TString> HistNameMap;
+  std::map<TString,TString> SampleCutFlowHistNameMap;
+  std::map<TString,TString> GroupCutFlowHistNameMap;
   std::map<TString,TString> SignalCutFlowHistNameMap;
   std::map<TString,ColorStruct> SignalSubGroupColorMap;
   std::map<TString,Color_t> ColorMap;
@@ -173,6 +175,29 @@ namespace Common
     {
       const auto & sample = GroupPair.first;
       Common::HistNameMap[sample] = sample+"_Hist";
+    }
+  }
+
+  void SetupSampleCutFlowHistNames()
+  {
+    for (const auto & SamplePair : Common::SampleMap)
+    {
+      const auto & input = SamplePair.first;
+      const auto samplename = Common::ReplaceSlashWithUnderscore(input);
+
+      Common::SampleCutFlowHistNameMap[input] = samplename+"_"+Common::h_cutflowname;
+    }
+  }
+
+  void SetupGroupCutFlowHistNames()
+  {
+    for (const auto & GroupPair : Common::GroupMap)
+    {
+      const auto & sample = GroupPair.first;
+      const auto group    = GroupPair.second;
+      if (group == isSignal) continue;
+
+      Common::GroupCutFlowHistNameMap[sample] = sample+"_"+Common::h_cutflowname;
     }
   }
 
@@ -521,6 +546,37 @@ namespace Common
 	}
       }
     }
+  }
+  
+  TH1F * SetupOutCutFlowHist(const TH1F * inhist, const TString & outname, std::map<TString,Int_t> & binlabels)
+  {
+    // get cut flow labels
+    const auto inNbinsX = inhist->GetNbinsX();
+    for (auto ibin = 1; ibin <= inNbinsX; ibin++) binlabels[inhist->GetXaxis()->GetBinLabel(ibin)] = ibin;
+    
+    Int_t inNbinsX_new = inNbinsX;
+    for (const auto & SignalCutFlowPair : Common::CutFlowPairVec) binlabels[SignalCutFlowPair.first] = ++inNbinsX_new;
+  
+    // make new cut flow
+    auto outhist = new TH1F(outname.Data(),inhist->GetTitle(),binlabels.size(),0,binlabels.size());
+    outhist->Sumw2();
+    
+    for (const auto & binlabel : binlabels)
+    {
+      const auto & cut = binlabel.first;
+      const auto ibin = binlabel.second;
+      
+      outhist->GetXaxis()->SetBinLabel(ibin,cut.Data());
+      
+      if (ibin > inNbinsX) continue;
+      
+      outhist->SetBinContent(ibin,inhist->GetBinContent(ibin));
+      outhist->SetBinError(ibin,inhist->GetBinError(ibin));
+    }
+    
+    outhist->GetYaxis()->SetTitle(inhist->GetYaxis()->GetTitle());
+    
+    return outhist;
   }
 
   void CheckValidFile(const TFile * file, const TString & fname)
