@@ -2,8 +2,8 @@
 #include "Common.cpp+"
 #include "FastSkimmer.cpp+"
 
-void runFastSkimmer(const TString & cutflowconfig, const TString & pdname, const TString outfiletext)
+void runFastSkimmer(const TString & cutflowconfig, const TString & pdname, const TString outfiletext, const Bool_t doskim = true)
 {
-  FastSkimmer skimmer(cutflowconfig,pdname,outfiletext);
+  FastSkimmer skimmer(cutflowconfig,pdname,outfiletext,doskim);
   skimmer.MakeSkim();
 }

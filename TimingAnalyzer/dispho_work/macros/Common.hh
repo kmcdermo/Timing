@@ -172,6 +172,7 @@ namespace Common
   TString ReplaceDelimWithSpace(TString tmp, const TString & delim){return tmp.ReplaceAll(delim," ");}
   TString ReplaceSlashWithUnderscore(TString tmp){return tmp.ReplaceAll("/","_");}
   TString ReplaceSpaceWithUnderscore(TString tmp){return tmp.ReplaceAll(" ","_");}
+  TString PrintBool(const Bool_t b){return (b ? "true" : "false");}
 
   // Weight for sample
   TString WeightString(const TString & sample)

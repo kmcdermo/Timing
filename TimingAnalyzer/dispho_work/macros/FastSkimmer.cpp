@@ -1,7 +1,7 @@
 #include "FastSkimmer.hh"
 
-FastSkimmer::FastSkimmer(const TString & cutflowconfig, const TString & pdname, const TString & outtext)
-  : fCutFlowConfig(cutflowconfig), fPDName(pdname), fOutFileText(outtext)
+FastSkimmer::FastSkimmer(const TString & cutflowconfig, const TString & pdname, const TString & outtext, const Bool_t doskim)
+  : fCutFlowConfig(cutflowconfig), fPDName(pdname), fOutFileText(outtext), fDoSkim(doskim)
 {
   std::cout << "Initializing FastSkimmer..." << std::endl;
 
@@ -160,7 +160,8 @@ void FastSkimmer::MakeMergedSkims()
     // Make skims...
     FastSkimmer::MakeSkimsFromEntryLists(TreeFile,TreeMap,TreeList,OutHist,sample,treename);
 
-    if (TreeList->GetEntries() != 0)
+    // Now merge all the eligible skims
+    if (fDoSkim && TreeList->GetEntries() != 0)
     {
       std::cout << "Merging skimmed trees..." << std::endl;
       
@@ -215,42 +216,46 @@ void FastSkimmer::MakeSkimsFromEntryLists(TFile *& TreeFile, std::map<TString,TT
     auto intree = (TTree*)infile->Get(Form("%s",Common::disphotreename.Data()));
     Common::CheckValidTree(intree,Common::disphotreename,infilename);
     
-    // Get cutflow histogram and then add it up
+    // Get cutflow histogram and then add it up to total
     auto inhist = (TH1F*)fOutFile->Get(Form("%s",Common::SampleCutFlowHistNameMap[input].Data()));
     OutHist->Add(inhist);
 
-    // Loop over list and set as needed!
-    auto nentries = 0;
-    for (const auto & CutFlowPair : Common::CutFlowPairVec)
+    // do the skimming: otherwise skip this as we only care about adding histograms
+    if (fDoSkim)
     {
-      const auto & label = CutFlowPair.first;
-      const auto & list = ListMapMap[samplename][label];
+      // Loop over lists of cuts, setting entrylist recursively in the same order cuts were originally computed!
+      auto nentries = 0;
+      for (const auto & CutFlowPair : Common::CutFlowPairVec)
+      {
+	const auto & label = CutFlowPair.first;
+	const auto & list = ListMapMap[samplename][label];
 
-      nentries = list->GetN();
-      intree->SetEntryList(list);
+	nentries = list->GetN();
+	intree->SetEntryList(list);
+      }
+
+      // copy tree after final entry list set, only if it has more than 0 entries
+      if (nentries != 0)
+      {
+	std::cout << "Skimming into a smaller tree..." << std::endl;
+
+	// rename tree to output name to prevent double object
+	// https://root-forum.cern.ch/t/merging-trees-with-ttree-mergetrees/24301
+	intree->SetName(treename.Data());
+	
+	// Fill from tree into smaller tree
+	TreeFile->cd();
+	TreeMap[input] = intree->CopyTree("");
+	
+	// Add tree to list
+	TreeList->Add(TreeMap[input]);
+      }
+      else
+      {
+	std::cout << "Skipping as no entries in this tree..." << std::endl;
+      }
     }
-
-    // rename tree to output name to prevent double object
-    // https://root-forum.cern.ch/t/merging-trees-with-ttree-mergetrees/24301
-    intree->SetName(treename.Data());
-
-    // copy tree after final entry list set, only if it has more than 0 entries
-    if (nentries != 0)
-    {
-      std::cout << "Skimming into a smaller tree..." << std::endl;
-    
-      // Fill from tree into smaller tree
-      TreeFile->cd();
-      TreeMap[input] = intree->CopyTree("");
       
-      // Add tree to list
-      TreeList->Add(TreeMap[input]);
-    }
-    else
-    {
-      std::cout << "Skipping as no entries in this tree..." << std::endl;
-    }
-    
     // Delete everything you can
     delete inhist;
     delete intree;
@@ -274,6 +279,9 @@ void FastSkimmer::MakeConfigPave()
 
   // dump with PD
   fConfigPave->AddText(Form("Primary Dataset: %s",fPDName.Data()));
+
+  // dump with option to save skim (a bit redundant as it will be obvious with .ls once the file is attached
+  fConfigPave->AddText(Form("Do skim bool: %s",Common::PrintBool(fDoSkim).Data()));
 
   // save to output file
   fOutFile->cd();
