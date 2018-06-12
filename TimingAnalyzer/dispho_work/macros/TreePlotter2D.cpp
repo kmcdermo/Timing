@@ -2,8 +2,8 @@
 
 TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
 			     const TString & plotconfig, const TString & miscconfig, const TString & outfiletext) 
-  : fInFileName(infilename), fInSignalFileName(insignalfilename),
-    fCutConfig(cutconfig), fPlotConfig(plotconfig), fMiscConfig(miscconfig), fOutFileText(outfiletext)
+  : fInFileName(infilename), fInSignalFileName(insignalfilename), fCutConfig(cutconfig), 
+    fPlotConfig(plotconfig), fMiscConfig(miscconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
