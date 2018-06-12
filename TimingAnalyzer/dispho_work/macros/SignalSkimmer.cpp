@@ -86,7 +86,7 @@ void SignalSkimmer::MakeSkimsFromTrees()
       const auto & cutstring = CutFlowPair.second;
 
       // use ttree::draw() to generate entry list
-      intree->Draw(Form(">>%s",list->GetName()),Form("%s",cutsring.Data()),"entrylist");
+      intree->Draw(Form(">>%s",list->GetName()),Form("%s",cutstring.Data()),"entrylist");
 
       // store result of number of entries into cutflow th1
       outhist->SetBinContent(binlabels[label],list->GetN()*1.0);
