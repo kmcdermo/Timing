@@ -816,7 +816,7 @@ void DisPho::SetToyBranches(const std::vector<reco::GenParticle> & toys, const s
     toyBranch.genpheta_ = toy.eta();
     
     auto mindR = dRmin, mindR_ptres = dRmin, mindR_status = dRmin;
-    for (int iphoton = 0; iphoton < nPhotons; iphoton++)
+    for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
     {
       const auto & photon = photons[iphoton];
 
@@ -1029,6 +1029,14 @@ void DisPho::InitializePhoBranches()
     phoBranch.HcalPFClIso_ = -9999.f;
     phoBranch.TrkIso_ = -9999.f;
 
+    phoBranch.ChgHadIsoC_ = -9999.f;
+    phoBranch.NeuHadIsoC_ = -9999.f;
+    phoBranch.PhoIsoC_ = -9999.f;
+
+    phoBranch.EcalPFClIsoC_ = -9999.f;
+    phoBranch.HcalPFClIsoC_ = -9999.f;
+    phoBranch.TrkIsoC_ = -9999.f;
+
     phoBranch.Sieie_ = -9999.f;
     phoBranch.Sipip_ = -9999.f;
     phoBranch.Sieip_ = -9999.f;
@@ -1076,13 +1084,16 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
 {
   nphotons = photons.size();
   
-  for (int iphoton = 0; iphoton < nPhotons; iphoton++)
+  for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
   {
+    // get objects
     const auto & photon = photons[iphoton];
     auto & phoBranch = phoBranches[iphoton];
+    const auto & pho = photon.photon();
     
     // basic kinematics
-    const auto & pho = photon.photon(); 
+    const auto phopt = pho.pt();
+
     phoBranch.E_   = pho.energy();
     phoBranch.Pt_  = pho.pt();
     phoBranch.Phi_ = pho.phi();
@@ -1095,8 +1106,10 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     // phoBranch.Phi_ = phop4.phi();
     // phoBranch.Eta_ = phop4.eta();
 
-    // super cluster from photon
+    // super cluster info from photon
     const auto & phosc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
+    const auto scEta = phosc->eta();
+
     phoBranch.scE_   = phosc->energy();
     phoBranch.scPhi_ = phosc->phi();
     phoBranch.scEta_ = phosc->eta();
@@ -1105,14 +1118,24 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     phoBranch.HoE_ = pho.hadTowOverEm(); // used in ID + trigger (single tower HoverE)
     phoBranch.r9_  = pho.r9(); // used in slimming in PAT + trigger
 
+    // PF Isolations : GED ID
     phoBranch.ChgHadIso_ = pho.chargedHadronIso();
     phoBranch.NeuHadIso_ = pho.neutralHadronIso();
     phoBranch.PhoIso_    = pho.photonIso();
 
-    // More ID variables
+    // PF Cluster Isos : OOT ID
     phoBranch.EcalPFClIso_ = pho.ecalPFClusterIso();
     phoBranch.HcalPFClIso_ = pho.hcalPFClusterIso();
     phoBranch.TrkIso_      = pho.trkSumPtHollowConeDR03();
+
+    // corrected values for isolations
+    phoBranch.ChgHadIsoC_ = std::max(phoBranch.ChgHadIso_ - (rho * oot::GetChargedHadronEA(scEta))                                              ,0.f);
+    phoBranch.NeuHadIsoC_ = std::max(phoBranch.NeuHadIso_ - (rho * oot::GetNeutralHadronEA(scEta)) - (oot::GetNeutralHadronPtScale(scEta,phopt)),0.f);
+    phoBranch.PhoIsoC_    = std::max(phoBranch.PhoIso_    - (rho * oot::GetGammaEA        (scEta)) - (oot::GetGammaPtScale        (scEta,phopt)),0.f);
+
+    phoBranch.EcalPFClIsoC_ = std::max(phoBranch.EcalPFClIso_ - (rho * oot::GetEcalPFClEA(scEta)) - (oot::GetEcalPFClPtScale(scEta,phopt)),0.f);
+    phoBranch.HcalPFClIsoC_ = std::max(phoBranch.HcalPFClIso_ - (rho * oot::GetHcalPFClEA(scEta)) - (oot::GetHcalPFClPtScale(scEta,phopt)),0.f);
+    phoBranch.TrkIsoC_      = std::max(phoBranch.TrkIso_      - (rho * oot::GetTrackEA   (scEta)) - (oot::GetTrackPtScale   (scEta,phopt)),0.f);
 
     // Shower Shape Objects
     const auto & phoshape = pho.full5x5_showerShapeVariables(); 
@@ -1637,6 +1660,14 @@ void DisPho::MakeEventTree()
     disphotree->Branch(Form("phoEcalPFClIso_%i",iphoton), &phoBranch.EcalPFClIso_, Form("phoEcalPFClIso_%i/F",iphoton));
     disphotree->Branch(Form("phoHcalPFClIso_%i",iphoton), &phoBranch.HcalPFClIso_, Form("phoHcalPFClIso_%i/F",iphoton));
     disphotree->Branch(Form("phoTrkIso_%i",iphoton), &phoBranch.TrkIso_, Form("phoTrkIso_%i/F",iphoton));
+
+    disphotree->Branch(Form("phoChgHadIsoC_%i",iphoton), &phoBranch.ChgHadIsoC_, Form("phoChgHadIsoC_%i/F",iphoton));
+    disphotree->Branch(Form("phoNeuHadIsoC_%i",iphoton), &phoBranch.NeuHadIsoC_, Form("phoNeuHadIsoC_%i/F",iphoton));
+    disphotree->Branch(Form("phoPhoIsoC_%i",iphoton), &phoBranch.PhoIsoC_, Form("phoPhoIsoC_%i/F",iphoton));
+
+    disphotree->Branch(Form("phoEcalPFClIsoC_%i",iphoton), &phoBranch.EcalPFClIsoC_, Form("phoEcalPFClIsoC_%i/F",iphoton));
+    disphotree->Branch(Form("phoHcalPFClIsoC_%i",iphoton), &phoBranch.HcalPFClIsoC_, Form("phoHcalPFClIsoC_%i/F",iphoton));
+    disphotree->Branch(Form("phoTrkIsoC_%i",iphoton), &phoBranch.TrkIsoC_, Form("phoTrkIsoC_%i/F",iphoton));
 
     disphotree->Branch(Form("phosieie_%i",iphoton), &phoBranch.Sieie_, Form("phosieie_%i/F",iphoton));
     disphotree->Branch(Form("phosipip_%i",iphoton), &phoBranch.Sipip_, Form("phosipip_%i/F",iphoton));

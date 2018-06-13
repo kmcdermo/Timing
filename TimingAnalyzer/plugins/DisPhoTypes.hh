@@ -104,6 +104,14 @@ struct phoStruct
   float HcalPFClIso_;
   float TrkIso_;
 
+  float ChgHadIsoC_;
+  float NeuHadIsoC_;
+  float PhoIsoC_;
+
+  float EcalPFClIsoC_;
+  float HcalPFClIsoC_;
+  float TrkIsoC_;
+
   float Sieie_; 
   float Sipip_;
   float Sieip_;

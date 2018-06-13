@@ -26,7 +26,7 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   fInConfigTree = (TTree*)fInFile->Get(inconfigtreename.Data());
   Common::CheckValidTree(fInConfigTree,inconfigtreename,infilename);
   Skimmer::GetInConfig();
-  if (fIsMC) Skimmer::GetSampleWeight();
+  Skimmer::GetSampleWeight();
 
   // Get main input tree and initialize it
   const TString indisphotreename = Form("%s/%s",Common::rootdir.Data(),Common::disphotreename.Data());
@@ -44,6 +44,7 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   Common::CheckValidTH1F(fInCutFlowWgt,inh_cutflow_wgtname,infilename);
 
   // Get PU weights input
+  fPUWeights.clear();
   if (fIsMC)
   {
     const Bool_t useOld = (fPUWgtFileName == "");
@@ -80,9 +81,9 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
 
 Skimmer::~Skimmer()
 {
+  fPUWeights.clear();
   if (fIsMC)
   {
-    fPUWeights.clear();
     delete fInPUWgtHist;
     delete fInPUWgtFile;
   }
@@ -487,6 +488,12 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     inpho.b_EcalPFClIso->GetEntry(entry);
     inpho.b_HcalPFClIso->GetEntry(entry);
     inpho.b_TrkIso->GetEntry(entry);
+    inpho.b_ChgHadIsoC->GetEntry(entry);
+    inpho.b_NeuHadIsoC->GetEntry(entry);
+    inpho.b_PhoIsoC->GetEntry(entry);
+    inpho.b_EcalPFClIsoC->GetEntry(entry);
+    inpho.b_HcalPFClIsoC->GetEntry(entry);
+    inpho.b_TrkIsoC->GetEntry(entry);
     inpho.b_sieie->GetEntry(entry);
     inpho.b_sipip->GetEntry(entry);
     inpho.b_sieip->GetEntry(entry);
@@ -560,6 +567,12 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     outpho.EcalPFClIso = inpho.EcalPFClIso;
     outpho.HcalPFClIso = inpho.HcalPFClIso;
     outpho.TrkIso = inpho.TrkIso;
+    outpho.ChgHadIsoC = inpho.ChgHadIsoC;
+    outpho.NeuHadIsoC = inpho.NeuHadIsoC;
+    outpho.PhoIsoC = inpho.PhoIsoC;
+    outpho.EcalPFClIsoC = inpho.EcalPFClIsoC;
+    outpho.HcalPFClIsoC = inpho.HcalPFClIsoC;
+    outpho.TrkIsoC = inpho.TrkIsoC;
     outpho.sieie = inpho.sieie;
     outpho.sipip = inpho.sipip;
     outpho.sieip = inpho.sieip;
@@ -903,6 +916,12 @@ void Skimmer::InitInBranches()
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_EcalPFClIso.c_str(),ipho), &pho.EcalPFClIso, &pho.b_EcalPFClIso);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_HcalPFClIso.c_str(),ipho), &pho.HcalPFClIso, &pho.b_HcalPFClIso);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_TrkIso.c_str(),ipho), &pho.TrkIso, &pho.b_TrkIso);
+    fInTree->SetBranchAddress(Form("%s_%i",pho.s_ChgHadIsoC.c_str(),ipho), &pho.ChgHadIsoC, &pho.b_ChgHadIsoC);
+    fInTree->SetBranchAddress(Form("%s_%i",pho.s_NeuHadIsoC.c_str(),ipho), &pho.NeuHadIsoC, &pho.b_NeuHadIsoC);
+    fInTree->SetBranchAddress(Form("%s_%i",pho.s_PhoIsoC.c_str(),ipho), &pho.PhoIsoC, &pho.b_PhoIsoC);
+    fInTree->SetBranchAddress(Form("%s_%i",pho.s_EcalPFClIsoC.c_str(),ipho), &pho.EcalPFClIsoC, &pho.b_EcalPFClIsoC);
+    fInTree->SetBranchAddress(Form("%s_%i",pho.s_HcalPFClIsoC.c_str(),ipho), &pho.HcalPFClIsoC, &pho.b_HcalPFClIsoC);
+    fInTree->SetBranchAddress(Form("%s_%i",pho.s_TrkIsoC.c_str(),ipho), &pho.TrkIsoC, &pho.b_TrkIsoC);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_sieie.c_str(),ipho), &pho.sieie, &pho.b_sieie);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_sipip.c_str(),ipho), &pho.sipip, &pho.b_sipip);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_sieip.c_str(),ipho), &pho.sieip, &pho.b_sieip);
@@ -984,6 +1003,11 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfigTree->Branch(fOutConfig.s_filterEff.c_str(), &fOutConfig.filterEff);
   fOutConfigTree->Branch(fOutConfig.s_BR.c_str(), &fOutConfig.BR);
 
+  // extra branches
+  fOutConfigTree->Branch(fOutConfig.s_sumWgts.c_str(), &fOutConfig.sumWgts);
+  fOutConfigTree->Branch(fOutConfig.s_sampleWeight.c_str(), &fOutConfig.sampleWeight);
+  fOutConfigTree->Branch(fOutConfig.s_puWeights.c_str(), &fOutConfig.puWeights);
+
   // Now set the values of the branches
   fOutConfig.blindSF = fInConfig.blindSF;
   fOutConfig.applyBlindSF = fInConfig.applyBlindSF;
@@ -1021,6 +1045,11 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfig.xsec = fInConfig.xsec;
   fOutConfig.filterEff = fInConfig.filterEff;
   fOutConfig.BR = fInConfig.BR;
+
+  // include computed variables for ease of use
+  fOutConfig.sumWgts = fSumWgts;
+  fOutConfig.sampleWeight = fSampleWeight;
+  fOutConfig.puWeights = fPUWeights;
 
   // and fill it once
   fOutConfigTree->Fill();
@@ -1203,6 +1232,12 @@ void Skimmer::InitOutBranches()
     fOutTree->Branch(Form("%s_%i",pho.s_EcalPFClIso.c_str(),ipho), &pho.EcalPFClIso);
     fOutTree->Branch(Form("%s_%i",pho.s_HcalPFClIso.c_str(),ipho), &pho.HcalPFClIso);
     fOutTree->Branch(Form("%s_%i",pho.s_TrkIso.c_str(),ipho), &pho.TrkIso);
+    fOutTree->Branch(Form("%s_%i",pho.s_ChgHadIsoC.c_str(),ipho), &pho.ChgHadIsoC);
+    fOutTree->Branch(Form("%s_%i",pho.s_NeuHadIsoC.c_str(),ipho), &pho.NeuHadIsoC);
+    fOutTree->Branch(Form("%s_%i",pho.s_PhoIsoC.c_str(),ipho), &pho.PhoIsoC);
+    fOutTree->Branch(Form("%s_%i",pho.s_EcalPFClIsoC.c_str(),ipho), &pho.EcalPFClIsoC);
+    fOutTree->Branch(Form("%s_%i",pho.s_HcalPFClIsoC.c_str(),ipho), &pho.HcalPFClIsoC);
+    fOutTree->Branch(Form("%s_%i",pho.s_TrkIsoC.c_str(),ipho), &pho.TrkIsoC);
     fOutTree->Branch(Form("%s_%i",pho.s_sieie.c_str(),ipho), &pho.sieie);
     fOutTree->Branch(Form("%s_%i",pho.s_sipip.c_str(),ipho), &pho.sipip);
     fOutTree->Branch(Form("%s_%i",pho.s_sieip.c_str(),ipho), &pho.sieip);
@@ -1274,12 +1309,12 @@ void Skimmer::InitOutCutFlow(const TH1F * inh_cutflow, TH1F *& outh_cutflow, con
 
 void Skimmer::GetSampleWeight()
 {
-  fSampleWeight = fInConfig.xsec * fInConfig.filterEff * Common::lumi * Common::invfbToinvpb / fSumWgts; // include normalization to lumi!!! ( do we need to multiply by * fInConfig.BR)
+  // include normalization to lumi!!! ( do we need to multiply by * fInConfig.BR)
+  fSampleWeight = (fIsMC ? fInConfig.xsec * fInConfig.filterEff * Common::lumi * Common::invfbToinvpb / fSumWgts : 1.f); 
 }
 
 void Skimmer::GetPUWeights()
 {
-  fPUWeights.clear();
   for (auto ibin = 1; ibin <= fInPUWgtHist->GetNbinsX(); ibin++)
   {
     fPUWeights.emplace_back(fInPUWgtHist->GetBinContent(ibin));

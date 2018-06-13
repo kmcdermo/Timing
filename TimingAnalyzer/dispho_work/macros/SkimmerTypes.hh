@@ -50,6 +50,9 @@ struct Configuration
   Float_t xsec;
   Float_t filterEff;
   Float_t BR;
+  Float_t sumWgts;
+  Float_t sampleWeight;
+  std::vector<Float_t> puWeights;
 
   // branch names
   std::string s_blindSF = "blindSF";
@@ -88,6 +91,9 @@ struct Configuration
   std::string s_xsec = "xsec";
   std::string s_filterEff = "filterEff";
   std::string s_BR = "BR";
+  std::string s_sumWgts = "sumWgts"; 
+  std::string s_sampleWeight = "sampleWeight";
+  std::string s_puWeights = "puWeights";
 };
 
 struct Event
@@ -315,6 +321,12 @@ struct Pho
   Float_t EcalPFClIso;
   Float_t HcalPFClIso;
   Float_t TrkIso;
+  Float_t ChgHadIsoC;
+  Float_t NeuHadIsoC;
+  Float_t PhoIsoC;
+  Float_t EcalPFClIsoC;
+  Float_t HcalPFClIsoC;
+  Float_t TrkIsoC;
   Float_t sieie;
   Float_t sipip;
   Float_t sieip;
@@ -359,6 +371,12 @@ struct Pho
   std::string s_EcalPFClIso = "phoEcalPFClIso";
   std::string s_HcalPFClIso = "phoHcalPFClIso";
   std::string s_TrkIso = "phoTrkIso";
+  std::string s_ChgHadIsoC = "phoChgHadIsoC";
+  std::string s_NeuHadIsoC = "phoNeuHadIsoC";
+  std::string s_PhoIsoC = "phoPhoIsoC";
+  std::string s_EcalPFClIsoC = "phoEcalPFClIsoC";
+  std::string s_HcalPFClIsoC = "phoHcalPFClIsoC";
+  std::string s_TrkIsoC = "phoTrkIsoC";
   std::string s_sieie = "phosieie";
   std::string s_sipip = "phosipip";
   std::string s_sieip = "phosieip";
@@ -401,6 +419,12 @@ struct Pho
   TBranch * b_EcalPFClIso;
   TBranch * b_HcalPFClIso;
   TBranch * b_TrkIso;
+  TBranch * b_ChgHadIsoC;
+  TBranch * b_NeuHadIsoC;
+  TBranch * b_PhoIsoC;
+  TBranch * b_EcalPFClIsoC;
+  TBranch * b_HcalPFClIsoC;
+  TBranch * b_TrkIsoC;
   TBranch * b_sieie;
   TBranch * b_sipip;
   TBranch * b_sieip;
