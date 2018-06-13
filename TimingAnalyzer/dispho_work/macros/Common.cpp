@@ -54,6 +54,7 @@ namespace Common
 
     // T+X
     Common::SampleMap["MC/TX/TGGJets"] = "TX";
+    Common::SampleMap["MC/TX/TTJets"]  = "TX";
     Common::SampleMap["MC/TX/TTGJets"] = "TX";
     Common::SampleMap["MC/TX/TTWJets"] = "TX";
     Common::SampleMap["MC/TX/TTZJets"] = "TX";
