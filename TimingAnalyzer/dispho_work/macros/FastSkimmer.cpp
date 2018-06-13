@@ -68,6 +68,7 @@ void FastSkimmer::MakeListFromTrees()
     Common::CheckValidTree(tree,Common::disphotreename,filename);
 
     // Get Input Cut Flow Histogram 
+    //    auto inhist = (TH1F*)file->Get(Form("%s_scaled",Common::h_cutflowname.Data()));
     auto inhist = (TH1F*)file->Get(Form("%s",Common::h_cutflowname.Data()));
     Common::CheckValidTH1F(inhist,Common::h_cutflowname,filename);
 
@@ -75,7 +76,7 @@ void FastSkimmer::MakeListFromTrees()
     std::map<TString,Int_t> binlabels;
     auto outhist = Common::SetupOutCutFlowHist(inhist,Common::SampleCutFlowHistNameMap[input],binlabels);
 
-    // Set tmp evtwgt variables for filling cutflow histogram ::::: HACK:::: EVENTUALLY USE BOTH WEIGHTED AND UNWEIGHTED HISTOGRAMS
+    // Set tmp evtwgt variables for filling cutflow histogram
     Float_t evtwgt = 0;
     TBranch * b_evtwgt = 0;
     tree->SetBranchAddress("evtwgt",&evtwgt,&b_evtwgt);

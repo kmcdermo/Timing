@@ -249,7 +249,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // output histograms
   TH1F * h_cutflow;
-  TH1F * h_cutflow_wgt;
+  //  TH1F * h_cutflow_wgt;
   std::map<std::string,int> cutflowLabelMap;
   TH1F * h_genpuobs;
   TH1F * h_genpuobs_wgt;

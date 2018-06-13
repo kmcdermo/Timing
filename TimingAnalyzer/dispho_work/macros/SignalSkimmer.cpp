@@ -57,6 +57,7 @@ void SignalSkimmer::MakeSkimsFromTrees()
 
     // Get Input Cut Flow Histogram 
     auto inhist = (TH1F*)infile->Get(Form("%s",Common::h_cutflowname.Data()));
+    // auto inhist = (TH1F*)infile->Get(Form("%s_scaled",Common::h_cutflowname.Data()));
     Common::CheckValidTH1F(inhist,Common::h_cutflowname,infilename);
 
     // Init Output Cut Flow Histogram 
@@ -67,6 +68,11 @@ void SignalSkimmer::MakeSkimsFromTrees()
     std::map<TString,TEntryList*> listmap;
     fOutFile->cd();
     SignalSkimmer::InitListMap(listmap,sample);
+
+    // FIXME WHEN USING REAL WEIGHTS
+    //    Float_t evtwgt = 0;
+    //    TBranch * b_evtwgt = 0;
+    //    intree->SetBranchAddress("evtwgt",&evtwgt,&b_evtwgt);
 
     // Loop over cuts, and make entry list for each cut, 
     for (const auto & CutFlowPair : Common::CutFlowPairVec)
@@ -91,6 +97,21 @@ void SignalSkimmer::MakeSkimsFromTrees()
       // store result of number of entries into cutflow th1
       outhist->SetBinContent(binlabels[label],list->GetN()*1.0);
       outhist->SetBinError  (binlabels[label],std::sqrt(list->GetN()*1.0));
+
+      // eventually, need to use evt_wgt
+      // store result of number of entries into cutflow th1
+      // for (auto ientry = 0U; ientry < intree->GetEntries(); ientry++)
+      // {
+      // 	// from the wise words of philippe: https://root-forum.cern.ch/t/tentrylist-and-setentrylist-on-chain-not-registering/28286/6
+      // 	// and also: https://root-forum.cern.ch/t/ttree-loadtree/14566/6
+      // 	auto filteredEntry = intree->GetEntryNumber(ientry);
+      // 	if (filteredEntry < 0) break;
+      // 	auto localEntry = intree->LoadTree(filteredEntry);
+      // 	if (localEntry < 0) break;
+      //
+      // 	b_evtwgt->GetEntry(localEntry);
+      // 	outhist->Fill((binlabels[label]*1.f)-0.5f,evtwgt);
+      // }
 
       // recursively set entry list for input tree
       intree->SetEntryList(list);

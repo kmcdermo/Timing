@@ -21,11 +21,13 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   fInFile = TFile::Open(infilename.Data());
   Common::CheckValidFile(fInFile,infilename);
 
-  // Get input config tree + sample weight
+  // Get input config tree
   const TString inconfigtreename = Form("%s/%s",Common::rootdir.Data(),Common::configtreename.Data());
   fInConfigTree = (TTree*)fInFile->Get(inconfigtreename.Data());
   Common::CheckValidTree(fInConfigTree,inconfigtreename,infilename);
   Skimmer::GetInConfig();
+
+  // get sample weight from in config
   Skimmer::GetSampleWeight();
 
   // Get main input tree and initialize it
@@ -39,9 +41,9 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   fInCutFlow = (TH1F*)fInFile->Get(inh_cutflowname.Data());
   Common::CheckValidTH1F(fInCutFlow,inh_cutflowname,infilename);
 
-  const TString inh_cutflow_wgtname = Form("%s/%s_wgt",Common::rootdir.Data(),Common::h_cutflow_wgtname.Data());
-  fInCutFlowWgt = (TH1F*)fInFile->Get(inh_cutflow_wgtname.Data());
-  Common::CheckValidTH1F(fInCutFlowWgt,inh_cutflow_wgtname,infilename);
+  // const TString inh_cutflow_wgtname = Form("%s/%s_wgt",Common::rootdir.Data(),Common::h_cutflow_wgtname.Data());
+  // fInCutFlowWgt = (TH1F*)fInFile->Get(inh_cutflow_wgtname.Data());
+  // Common::CheckValidTH1F(fInCutFlowWgt,inh_cutflow_wgtname,infilename);
 
   // Get PU weights input
   fPUWeights.clear();
@@ -75,8 +77,7 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   // Init output info
   Skimmer::InitAndSetOutConfig();
   Skimmer::InitOutTree();
-  Skimmer::InitOutCutFlow(fInCutFlow,fOutCutFlow,"");
-  Skimmer::InitOutCutFlow(fInCutFlowWgt,fOutCutFlowWgt,"_wgt";)
+  Skimmer::InitOutCutFlowHists();
 }
 
 Skimmer::~Skimmer()
@@ -88,13 +89,14 @@ Skimmer::~Skimmer()
     delete fInPUWgtFile;
   }
 
-  delete fInCutFlowWgt;
+  //  delete fInCutFlowWgt;
   delete fInCutFlow;
   delete fInTree;
   delete fInConfigTree;
   delete fInFile;
 
-  delete fOutCutFlowWgt;
+  //  delete fOutCutFlowScl;
+  //  delete fOutCutFlowWgt;
   delete fOutCutFlow;
   delete fOutTree;
   delete fOutConfigTree;
@@ -112,7 +114,8 @@ void Skimmer::EventLoop()
 
     // get event weight: no scaling by BR, xsec, lumi, etc.
     if (fIsMC) fInEvent.b_genwgt->GetEntry(entry);
-    const auto evtwgt = (fIsMC ? fInEvent.genwgt : 1.f);
+    const auto wgt    = (fIsMC ? fInEvent.genwgt : 1.f);
+    const auto evtwgt = fSampleWeight * wgt; // sample weight for data == 1
 
     // perform skim
     if (!fOutConfig.isToy) // do not apply skim selection on toy config
@@ -120,18 +123,24 @@ void Skimmer::EventLoop()
       // leading photon skim section
       fInEvent.b_nphotons->GetEntry(entry);
       if (fInEvent.nphotons <= 0) continue;
-      fOutCutFlow   ->Fill((cutLabels["nPhotons"]*1.f)-0.5f,1.f);
-      fOutCutFlowWgt->Fill((cutLabels["nPhotons"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow->Fill((cutLabels["nPhotons"]*1.f)-0.5f,wgt);
+      //      fOutCutFlow   ->Fill((cutLabels["nPhotons"]*1.f)-0.5f);
+      //      fOutCutFlowWgt->Fill((cutLabels["nPhotons"]*1.f)-0.5f,wgt);
+      //      fOutCutFlowScl->Fill((cutLabels["nPhotons"]*1.f)-0.5f,evtwgt);
       
       fInPhos[0].b_isEB->GetEntry(entry);
       if (!fInPhos[0].isEB) continue;
-      fOutCutFlow   ->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,1.f);
-      fOutCutFlowWgt->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,wgt);
+      //      fOutCutFlow   ->Fill((cutLabels["ph0isEB"]*1.f)-0.5f);
+      //      fOutCutFlowWgt->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,wgt);
+      //      fOutCutFlowScl->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,evtwgt);
 
       fInPhos[0].b_pt->GetEntry(entry);
       if (fInPhos[0].pt < 70.f) continue;
-      fOutCutFlow   ->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,1.f);
-      fOutCutFlowWgt->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
+      //      fOutCutFlow   ->Fill((cutLabels["ph0pt70"]*1.f)-0.5f);
+      //      fOutCutFlowWgt->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
+      //      fOutCutFlowScl->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);
 
       // filter on MET Flags
       fInEvent.b_metPV->GetEntry(entry);
@@ -151,8 +160,10 @@ void Skimmer::EventLoop()
       if (!fIsMC && !fInEvent.metEESC) continue;
       
       // fill cutflow for MET filters
-      fOutCutFlow   ->Fill((cutLabels["METFlag"]*1.f)-0.5f,1.f);
-      fOutCutFlowWgt->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow->Fill((cutLabels["METFlag"]*1.f)-0.5f,wgt);
+      //      fOutCutFlow   ->Fill((cutLabels["METFlag"]*1.f)-0.5f);
+      //      fOutCutFlowWgt->Fill((cutLabels["METFlag"]*1.f)-0.5f,wgt);
+      //      fOutCutFlowScl->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
       
       // cut on crappy pu
       if (fIsMC) 
@@ -162,15 +173,17 @@ void Skimmer::EventLoop()
       }
       
       // fill cutflow
-      fOutCutFlow   ->Fill((cutLabels["badPU"]*1.f)-0.5f,1.f);
-      fOutCutFlowWgt->Fill((cutLabels["badPU"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow->Fill((cutLabels["badPU"]*1.f)-0.5f,wgt);
+      //      fOutCutFlow   ->Fill((cutLabels["badPU"]*1.f)-0.5f);
+      //      fOutCutFlowWgt->Fill((cutLabels["badPU"]*1.f)-0.5f,wgt);
+      //      fOutCutFlowScl->Fill((cutLabels["badPU"]*1.f)-0.5f,evtwgt);
     }
 
     // end of skim, now copy... dropping rechits
     if (fOutConfig.isGMSB) Skimmer::FillOutGMSBs(entry);
     if (fOutConfig.isHVDS) Skimmer::FillOutHVDSs(entry);
     if (fOutConfig.isToy)  Skimmer::FillOutToys(entry);
-    Skimmer::FillOutEvent(entry);
+    Skimmer::FillOutEvent(entry,evtwgt);
     Skimmer::FillOutJets(entry);
     Skimmer::FillOutPhos(entry);
 
@@ -181,6 +194,8 @@ void Skimmer::EventLoop()
   // write out the output!
   fOutFile->cd();
   fOutCutFlow->Write();
+  //  fOutCutFlowWgt->Write();
+  //  fOutCutFlowScl->Write();
   fOutConfigTree->Write();
   fOutTree->Write();
 }
@@ -338,7 +353,7 @@ void Skimmer::FillOutToys(const UInt_t entry)
   }
 }
 
-void Skimmer::FillOutEvent(const UInt_t entry)
+void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt)
 {
   // get input branches
   fInEvent.b_run->GetEntry(entry);
@@ -420,7 +435,7 @@ void Skimmer::FillOutEvent(const UInt_t entry)
   fOutEvent.njets = fInEvent.njets;
   fOutEvent.nrechits = fInEvent.nrechits;
   fOutEvent.nphotons = fInEvent.nphotons;
-  fOutEvent.evtwgt   = (fIsMC ? fSampleWeight * fInEvent.genwgt : 1.f);
+  fOutEvent.evtwgt   = evtwgt;
 
   // isMC only branches
   if (fIsMC)
@@ -1274,7 +1289,17 @@ void Skimmer::InitOutBranches()
   }
 } 
 
-void Skimmer::InitOutCutFlow(const TH1F * inh_cutflow, TH1F *& outh_cutflow, const TString & label)
+void Skimmer::InitOutCutFlowHists()
+{
+  Skimmer::InitOutCutFlowHist(fInCutFlow,fOutCutFlow,"");
+  //  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowWgt,"_wgt");
+  //  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowScl,"_scaled");
+  //  fOutCutFlowScl->Scale(fSampleWeight);
+  //  fOutCutFlowScl->SetTitle("Scaled");
+  //  fOutCutFlowScl->GetYaxis()->SetTitle("nEvents");
+}
+
+void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow, const TString & label)
 {
   // get cut flow labels
   const auto inNbinsX = inh_cutflow->GetNbinsX();

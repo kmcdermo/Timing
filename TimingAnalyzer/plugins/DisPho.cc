@@ -267,19 +267,20 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       DisPho::SetGenPUBranches(pileupInfoH);
     } // end check over pileup
   }
-  const Float_t evtwgt = (isMC ? genwgt : 1.f);
+  const Float_t wgt = (isMC ? genwgt : 1.f);
 
   // Fill total cutflow regardless of cuts
-  h_cutflow    ->Fill(cutflowLabelMap["All"]*1.f,1.f);
-  h_cutflow_wgt->Fill(cutflowLabelMap["All"]*1.f,evtwgt);
+  h_cutflow->Fill((cutflowLabelMap["All"]*1.f)-0.5f,wgt);
+  //  h_cutflow    ->Fill((cutflowLabelMap["All"]*1.f)-0.5f);
+  //  h_cutflow_wgt->Fill((cutflowLabelMap["All"]*1.f)-0.5f,wgt);
 
   // Fill PU hists regardless of cuts
   if (isMC)
   {
     h_genpuobs     ->Fill(genpuobs);
-    h_genpuobs_wgt ->Fill(genpuobs,evtwgt);
+    h_genpuobs_wgt ->Fill(genpuobs,wgt);
     h_genputrue    ->Fill(genputrue);
-    h_genputrue_wgt->Fill(genputrue,evtwgt);
+    h_genputrue_wgt->Fill(genputrue,wgt);
   }
 
   //////////////
@@ -288,15 +289,17 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //          //
   //////////////
   if (event%blindSF!=0 && applyBlindSF) return;
-  h_cutflow    ->Fill(cutflowLabelMap["nEvBlinding"]*1.f,1.f);
-  h_cutflow_wgt->Fill(cutflowLabelMap["nEvBlinding"]*1.f,evtwgt);
+  h_cutflow->Fill((cutflowLabelMap["nEvBlinding"]*1.f)-0.5f,wgt);
+  //  h_cutflow    ->Fill((cutflowLabelMap["nEvBlinding"]*1.f)-0.5f);
+  //  h_cutflow_wgt->Fill((cutflowLabelMap["nEvBlinding"]*1.f)-0.5f,wgt);
 
   if (metsH.isValid())
   {
     if ((*metsH)[0].pt() > blindMET && applyBlindMET) return;
   }  
-  h_cutflow    ->Fill(cutflowLabelMap["METBlinding"]*1.f,1.f);
-  h_cutflow_wgt->Fill(cutflowLabelMap["METBlinding"]*1.f,evtwgt);
+  h_cutflow->Fill((cutflowLabelMap["METBlinding"]*1.f)-0.5f,wgt);
+  //  h_cutflow    ->Fill((cutflowLabelMap["METBlinding"]*1.f)-0.5f);
+  //  h_cutflow_wgt->Fill((cutflowLabelMap["METBlinding"]*1.f)-0.5f,wgt);
 
   /////////
   //     //
@@ -362,15 +365,17 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (triggerBitPair.second) {triggered = true; break;}
   }
   if (!triggered && applyTrigger) return;
-  h_cutflow    ->Fill(cutflowLabelMap["Trigger"]*1.f,1.f);
-  h_cutflow_wgt->Fill(cutflowLabelMap["Trigger"]*1.f,evtwgt);
+  h_cutflow->Fill((cutflowLabelMap["Trigger"]*1.f)-0.5f,wgt);
+  //  h_cutflow    ->Fill((cutflowLabelMap["Trigger"]*1.f)-0.5f);
+  //  h_cutflow_wgt->Fill((cutflowLabelMap["Trigger"]*1.f)-0.5f,wgt);
 
   // HT pre-selection
   auto jetHT = 0.f;
   for (auto ijet = 0; ijet < nJets; ijet++) jetHT += jets[ijet].pt();
   if (jetHT < minHT && applyHT) return;
-  h_cutflow    ->Fill(cutflowLabelMap["H_{T}"]*1.f,1.f);
-  h_cutflow_wgt->Fill(cutflowLabelMap["H_{T}"]*1.f,evtwgt);
+  h_cutflow->Fill((cutflowLabelMap["H_{T}"]*1.f)-0.5f,wgt);
+  //  h_cutflow    ->Fill((cutflowLabelMap["H_{T}"]*1.f)-0.5f);
+  //  h_cutflow_wgt->Fill((cutflowLabelMap["H_{T}"]*1.f)-0.5f,wgt);
 
   // photon pre-selection: at least one good photon in event
   bool isphgood = false;
@@ -392,8 +397,9 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     } 
   } // end check
   if (!isphgood && applyPhGood) return;
-  h_cutflow    ->Fill(cutflowLabelMap["Good Photon"]*1.f,1.f);
-  h_cutflow_wgt->Fill(cutflowLabelMap["Good Photon"]*1.f,evtwgt);
+  h_cutflow->Fill((cutflowLabelMap["Good Photon"]*1.f)-0.5f,wgt);
+  //  h_cutflow    ->Fill((cutflowLabelMap["Good Photon"]*1.f)-0.5f);
+  //  h_cutflow_wgt->Fill((cutflowLabelMap["Good Photon"]*1.f)-0.5f,wgt);
 
   /////////////
   //         //
@@ -1299,7 +1305,7 @@ void DisPho::beginJob()
   
   // histograms needed
   h_cutflow     = fs->make<TH1F>("h_cutflow"    , "Cut Flow"           , cutflowLabelMap.size(), 0, cutflowLabelMap.size());
-  h_cutflow_wgt = fs->make<TH1F>("h_cutflow_wgt", "Cut Flow (Weighted)", cutflowLabelMap.size(), 0, cutflowLabelMap.size());
+  //  h_cutflow_wgt = fs->make<TH1F>("h_cutflow_wgt", "Cut Flow (Weighted)", cutflowLabelMap.size(), 0, cutflowLabelMap.size());
   
   if (isMC)
   {
@@ -1325,10 +1331,10 @@ void DisPho::MakeHists()
   for (const auto & cutflowLabelPair : cutflowLabelMap)
   {
     h_cutflow    ->GetXaxis()->SetBinLabel(cutflowLabelPair.second+1,cutflowLabelPair.first.c_str()); // +1 to account for bins in ROOT from [1,nBins]
-    h_cutflow_wgt->GetXaxis()->SetBinLabel(cutflowLabelPair.second+1,cutflowLabelPair.first.c_str()); // +1 to account for bins in ROOT from [1,nBins]
+    //    h_cutflow_wgt->GetXaxis()->SetBinLabel(cutflowLabelPair.second+1,cutflowLabelPair.first.c_str()); // +1 to account for bins in ROOT from [1,nBins]
   }
   h_cutflow    ->GetYaxis()->SetTitle("nEntries");
-  h_cutflow_wgt->GetYaxis()->SetTitle("nEvents with weights");
+  //  h_cutflow_wgt->GetYaxis()->SetTitle("nEntries with gen weights");
 
   if (isMC)
   {
@@ -1347,7 +1353,7 @@ void DisPho::MakeHists()
 
   // SumW2
   h_cutflow    ->Sumw2();
-  h_cutflow_wgt->Sumw2();
+  //  h_cutflow_wgt->Sumw2();
   if (isMC)
   {
     h_genpuobs     ->Sumw2();
