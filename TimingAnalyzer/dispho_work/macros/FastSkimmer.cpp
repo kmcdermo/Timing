@@ -1,7 +1,9 @@
 #include "FastSkimmer.hh"
 
-FastSkimmer::FastSkimmer(const TString & cutflowconfig, const TString & pdname, const TString & outtext, const Bool_t doskim)
-  : fCutFlowConfig(cutflowconfig), fPDName(pdname), fOutFileText(outtext), fDoSkim(doskim)
+FastSkimmer::FastSkimmer(const TString & cutflowconfig, const TString & pdname, const TString & outtext,  
+			 const TString & sampleconfig, const Bool_t doskim)
+  : fCutFlowConfig(cutflowconfig), fPDName(pdname), fOutFileText(outtext), 
+    fSampleConfig(sampleconfig), fDoSkim(doskim)
 {
   std::cout << "Initializing FastSkimmer..." << std::endl;
 
@@ -281,6 +283,9 @@ void FastSkimmer::MakeConfigPave()
   // dump with PD
   fConfigPave->AddText(Form("Primary Dataset: %s",fPDName.Data()));
 
+  // dump with optional select only certain samples
+  fConfigPave->AddText(Form("Which samples to keep: %s",fSampleConfig.Data()));
+
   // dump with option to save skim (a bit redundant as it will be obvious with .ls once the file is attached
   fConfigPave->AddText(Form("Do skim bool: %s",Common::PrintBool(fDoSkim).Data()));
 
@@ -293,6 +298,11 @@ void FastSkimmer::SetupConfig()
 {
   Common::SetupPrimaryDataset(fPDName);
   Common::SetupSamples();
+  if (fSampleConfig != "")
+  {
+    Common::SetupWhichSamples(fSampleConfig,fSampleVec);
+    Common::KeepOnlySamples(fSampleVec);
+  }
   Common::SetupGroups();
   Common::SetupTreeNames();
   Common::SetupSampleCutFlowHistNames();
