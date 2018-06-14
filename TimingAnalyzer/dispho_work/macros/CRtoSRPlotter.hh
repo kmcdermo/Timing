@@ -28,10 +28,11 @@
 class CRtoSRPlotter
 {
 public:
-  CRtoSRPlotter(const TString & crtosrconfig, const TString & plotconfig, const TString & outfiletext);
-  ~CRtoSRPlotter() {}
+  CRtoSRPlotter(const TString & crtosrconfig, const TString & outfiletext);
+  ~CRtoSRPlotter();
 
   // Initialize
+  void SetupConfig();
   void SetupCRtoSRConfig();
   void SetupPlotConfig();
 
@@ -40,12 +41,15 @@ public:
 
   // Subroutines for plotting
   void GetInputHists();
-  void SetHistsStlye();
+  void SetupHistsStlye();
+  void MakeMCErrs();
   void MakeLegend();
+  void MakeOutCanv();
   void DrawOutCanv(const Bool_t isScaled);
   void SaveOutput(const Bool_t isScaled);
 
   // Helper functions
+  void MakeMCErr(const TString & key);
   void ScaleToUnity();
   void GetHistMinimum();
   void GetHistMaximum();
@@ -57,12 +61,18 @@ public:
 private:
   // Settings
   const TString fCRtoSRConfig;
-  const TString fPlotConfig;
   const TString fOutFileText;
+
+  // CRtoSR info
+  TString fSample;
+  TString fCRFileName;
+  TString fSRFileName;
+  TString fPlotConfig;
 
   // input
   TFile * fCRFile;
   TFile * fSRFile;
+  std::map<TString,TH1F*> HistMap;
 
   // plot info
   std::vector<Double_t> fXBins;
@@ -73,7 +83,6 @@ private:
 
   // Output
   TFile * fOutFile;
-  std::map<TString,TH1F*> HistMap;
   TLegend * Legend;
   TCanvas * OutCanv;
   TPaveText * fConfigPave;

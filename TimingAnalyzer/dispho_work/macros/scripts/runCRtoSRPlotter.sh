@@ -1,12 +1,11 @@
 #!/bin/bash
 
-crtosrconfig=${1}
-plotconfig=${2:-"plot_config/met_zoom.txt"}
-outfiletext=${3:-"crtosr"}
-dir=${4:-"plots/test"}
+crtosrconfig=${1:-"crtosr_config/qcd_phoseedtime_0.txt"}
+outfiletext=${2:-"qcd_phoseedtime_0"}
+dir=${3:-"plots/ntuples_v4/checks_v3/CRtoSR"}
 
 ## first make plot
-root -l -b -q runCRtoSRPlotter.C\(\"${crtosrconfig}\",\"${plotconfig}\",\"${outfiletext}\"\)
+root -l -b -q runCRtoSRPlotter.C\(\"${crtosrconfig}\",\"${outfiletext}\"\)
 
 ## make out dirs
 topdir=/afs/cern.ch/user/k/kmcdermo/www
@@ -20,10 +19,10 @@ popd
 
 ## copy everything
 cp ${outfiletext}.root ${fulldir}
-for i in norm scaled
+for plotscale in norm scaled
 do
-    for j in log lin
+    for canvscale in log lin
     do
-	cp ${outfiletext}_${i}_${j}.png ${fulldir}
+	cp ${outfiletext}_${plotscale}_${canvscale}.png ${fulldir}
     done
 done

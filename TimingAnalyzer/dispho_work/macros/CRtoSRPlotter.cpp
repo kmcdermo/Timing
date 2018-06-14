@@ -1,8 +1,8 @@
 // Class include
 #include "CRtoSRPlotter.hh"
 
-CRtoSRPlotter::CRtoSRPlotter(const TString & crtosrconfig, const TString & plotconfig, const TString & outfiletext)
-  : fCRtoSRConfig(crtosrconfig), fPlotConfig(plotconfig), fOutFileText(outfiletext)
+CRtoSRPlotter::CRtoSRPlotter(const TString & crtosrconfig, const TString & outfiletext)
+  : fCRtoSRConfig(crtosrconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -16,7 +16,8 @@ CRtoSRPlotter::CRtoSRPlotter(const TString & crtosrconfig, const TString & plotc
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
   Common::SetTDRStyle(fTDRStyle);
 
-  // init configuration, set minimizer
+  // init configuration
+  CRtoSRPlotter::SetupConfig();
   CRtoSRPlotter::SetupCRtoSRConfig();
   CRtoSRPlotter::SetupPlotConfig();
   
@@ -45,8 +46,10 @@ CRtoSRPlotter::~CRtoSRPlotter()
 void CRtoSRPlotter::MakeCRtoSRPlot()
 {
   CRtoSRPlotter::GetInputHists();
-  CRtoSRPlotter::SetHistsStlye();
+  CRtoSRPlotter::SetupHistsStlye();
+  CRtoSRPlotter::MakeMCErrs();
   CRtoSRPlotter::MakeLegend();
+  CRtoSRPlotter::MakeOutCanv();
 
   CRtoSRPlotter::DrawOutCanv(false);
   CRtoSRPlotter::SaveOutput(false);
@@ -80,24 +83,62 @@ void CRtoSRPlotter::GetInputHists()
 
   // save to outfile
   fOutFile->cd();
-  HistMap["CR_Data"]->Write(HistMap["CR_Data"]->GetName(),TObject::kWriteDelete);
-  HistMap["CR_MC"]->Write(HistMap["CR_MC"]->GetName(),TObject::kWriteDelete);
-  HistMap["SR_MC"]->Write(HistMap["SR_MC"]->GetName(),TObject::kWriteDelete);
+  for (auto & HistPair : HistMap)
+  {
+    const auto & key  = HistPair.first;
+    auto & hist = HistPair.second;
+    hist->SetName(Form("%s",key.Data()));
+    hist->Write(hist->GetName(),TObject::kWriteDelete);
+  }
 }  
 
-void CRtoSRPlotter::SetHistsStlye()
+void CRtoSRPlotter::SetupHistsStlye()
 {
-  HistMap["CR_MC"]->SetLineColor(kRed);
-  HistMap["CR_MC"]->SetFillColorAlpha(kRed,0.5);
-  HistMap["CR_MC"]->SetMarkerColor(kRed);
-  HistMap["CR_MC"]->SetFillStyle(1001);
-
-  HistMap["SR_MC"]->SetLineColor(kBlue);
-  HistMap["SR_MC"]->SetFillColorAlpha(kBlue,0.5);
-  HistMap["SR_MC"]->SetMarkerColor(kBlue);
-  HistMap["SR_MC"]->SetFillStyle(1001);
+  std::cout << "Setting up hists style..." << std::endl;
 
   HistMap["CR_Data"]->SetLineColor(kBlack);
+
+  for (auto & HistPair : HistMap)
+  {
+    const auto & key = HistPair.first;
+    auto & hist = HistPair.second;
+
+    if (key.Contains("Data",TString::kExact)) continue;
+
+    const auto color = (key.Contains("CR",TString::kExact) ? kOrange+10 : kAzure);
+
+    hist->SetLineColorAlpha(color,0.5);
+    hist->SetFillColorAlpha(color,0.5);
+    hist->SetMarkerColorAlpha(color,0.5);
+    hist->SetFillStyle(1001);
+  }
+}
+
+void CRtoSRPlotter::MakeMCErrs()
+{
+  std::cout << "Making MC Errs..." << std::endl;
+
+  CRtoSRPlotter::MakeMCErr("CR_MC");
+  CRtoSRPlotter::MakeMCErr("SR_MC");
+}
+
+void CRtoSRPlotter::MakeMCErr(const TString & key)
+{
+  std::cout << "Making MC Err for: " << key.Data() << "..." << std::endl;
+
+  const auto & hist    = HistMap[key];
+  const auto & key_err = key+"_Err";
+    
+  HistMap[key_err] = (TH1F*)hist->Clone(Form("%s_Err",hist->GetName()));
+  auto & hist_err  = HistMap[key_err];
+
+  hist_err->SetLineColorAlpha(0,1);
+  hist_err->SetMarkerSize(0);
+  hist_err->SetFillStyle(key.Contains("CR",TString::kExact) ? 3254 : 3245);
+  hist_err->SetFillColor(hist->GetFillColor());
+  
+  fOutFile->cd();
+  hist_err->Write(hist_err->GetName(),TObject::kWriteDelete);
 }
 
 void CRtoSRPlotter::MakeLegend()
@@ -105,7 +146,7 @@ void CRtoSRPlotter::MakeLegend()
   std::cout << "Creating Legend..." << std::endl;
 
   // instantiate the legend
-  Legend = new TLegend(0.55,0.65,0.825,0.92);
+  Legend = new TLegend(0.62,0.75,0.825,0.92);
   Legend->SetName("Legend");
   Legend->SetBorderSize(1);
   Legend->SetLineColor(kBlack);
@@ -122,40 +163,60 @@ void CRtoSRPlotter::MakeLegend()
   Legend->Write(Legend->GetName(),TObject::kWriteDelete);
 }
 
+void CRtoSRPlotter::MakeOutCanv()
+{
+  OutCanv = new TCanvas("OutCanv","");
+  OutCanv->cd();
+}
+
 void CRtoSRPlotter::ScaleToUnity()
 {
-  HistMap["CR_Data"]->Scale(1.f/HistMap["CR_Data"]->Integral(fXVarBins?"width":""));
-  HistMap["CR_MC"]->Scale(1.f/HistMap["CR_MC"]->Integral(fXVarBins?"width":""));
-  HistMap["SR_MC"]->Scale(1.f/HistMap["SR_MC"]->Integral(fXVarBins?"width":""));
+  std::cout << "Scaling to unity..." << std::endl;
+
+  for (auto & HistPair : HistMap)
+  {
+    auto & hist = HistPair.second;
+    hist->Scale(1.f/hist->Integral(fXVarBins?"width":""));
+  }
 }
 
 void CRtoSRPlotter::DrawOutCanv(const Bool_t isScaled)
 {
-  std::cout << "Drawing ..." << std::endl;
+  std::cout << "Drawing isScaled: " << Common::PrintBool(isScaled) << " ..." << std::endl;
 
-  OutCanv->cd();
-  
-  // Get and Set Global Minimum and Maximum
+   // Get and Set Global Minimum and Maximum
   CRtoSRPlotter::GetHistMinimum();
   CRtoSRPlotter::GetHistMaximum();
+
+  OutCanv->cd();
 
   HistMap["CR_Data"]->SetMinimum(fMinY);
   HistMap["CR_Data"]->SetMaximum(fMaxY);
   HistMap["CR_Data"]->Draw("PE");
 
-  HistMap["CR_MC"]->Draw("HIST SAME");
-  HistMap["CR_MC"]->SetLineColorAlpha(0,1);
-  HistMap["CR_MC"]->SetMarkerSize(0);
-  HistMap["CR_MC"]->SetFillStyle(3254);
-  HistMap["CR_MC"]->SetFillColor(kGray+3);
-  HistMap["CR_MC"]->Draw("E2 SAME");
+  // first MC, then errs
+  for (const auto & HistPair : HistMap)
+  {
+    const auto & key  = HistPair.first;
+    const auto & hist = HistPair.second;
 
-  HistMap["SR_MC"]->Draw("HIST SAME");
-  HistMap["SR_MC"]->SetLineColorAlpha(0,1);
-  HistMap["SR_MC"]->SetMarkerSize(0);
-  HistMap["SR_MC"]->SetFillStyle(3254);
-  HistMap["SR_MC"]->SetFillColor(kGray+3);
-  HistMap["SR_MC"]->Draw("E2 SAME");
+    if (key.Contains("Data",TString::kExact)) continue;
+    if (key.Contains("Err" ,TString::kExact)) continue;
+    
+    hist->Draw("HIST SAME");
+  }
+
+  // draw errs
+  for (const auto & HistPair : HistMap)
+  {
+    const auto & key  = HistPair.first;
+    const auto & hist = HistPair.second;
+
+    if ( key.Contains("Data",TString::kExact)) continue;
+    if (!key.Contains("Err" ,TString::kExact)) continue;
+    
+    hist->Draw("E2 SAME");
+  }
 
   // And lastly draw the legend
   Legend->Draw("SAME");
@@ -170,36 +231,39 @@ void CRtoSRPlotter::SaveOutput(const Bool_t isScaled)
   Common::CMSLumi(OutCanv,0);
 
   // Save a log version first
-  CRtoSRPlotter::PrintCanvas(fOutFileText,isScaled,true);
+  CRtoSRPlotter::PrintCanvas(isScaled,true);
 
   // Save a linear version second
-  CRtoSRPlotter::PrintCanvas(fOutFileText,isScaled,false);
+  CRtoSRPlotter::PrintCanvas(isScaled,false);
 
   // save to output file
   fOutFile->cd();
-  OutCanv->Write(Form("%s_%s",OutCanv->GetName(),(isScaled?"norm":"scaled")),TObject::kWriteDelete);
+  OutCanv->Write(Form("%s_%s",OutCanv->GetName(),(isScaled?"scaled":"norm")),TObject::kWriteDelete);
 }  
 
 void CRtoSRPlotter::PrintCanvas(const Bool_t isScaled, const Bool_t isLogy)
 {
+  // set logy
   OutCanv->cd();
   OutCanv->SetLogy(isLogy);
+
+  auto & hist = HistMap["CR_Data"];
   
   // set min and max
   if (isLogy)
   {
-    HistMap["CR_Data"]->SetMinimum(fMinY/1.5);
-    HistMap["CR_Data"]->SetMaximum(fMaxY*1.5);
+    hist->SetMinimum(fMinY/1.5);
+    hist->SetMaximum(fMaxY*1.5);
   }
   else 
   {
-    HistMap["CR_Data"]->SetMinimum( fMinY > 0 ? fMinY/1.05 : fMinY*1.05 );
-    HistMap["CR_Data"]->SetMaximum( fMaxY > 0 ? fMaxY*1.05 : fMaxY/1.05 );      
+    hist->SetMinimum( fMinY > 0 ? fMinY/1.05 : fMinY*1.05 );
+    hist->SetMaximum( fMaxY > 0 ? fMaxY*1.05 : fMaxY/1.05 );      
   }
 
   // save canvas as png
   OutCanv->cd();
-  OutCanv->SaveAs(Form("%s_%s_%s.png",fOutFileText.Data(),(isScaled?"norm":"scaled"),(isLogy?"log":"lin")));
+  OutCanv->SaveAs(Form("%s_%s_%s.png",fOutFileText.Data(),(isScaled?"scaled":"norm"),(isLogy?"log":"lin")));
 }
 
 void CRtoSRPlotter::MakeConfigPave()
@@ -232,6 +296,15 @@ void CRtoSRPlotter::MakeConfigPave()
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
+void CRtoSRPlotter::SetupConfig()
+{
+  std::cout << "Setting up config..." << std::endl;
+
+  Common::SetupSamples();
+  Common::SetupGroups();
+  Common::SetupHistNames();
+}
+
 void CRtoSRPlotter::SetupCRtoSRConfig()
 {
   std::cout << "Reading CRtoSR config..." << std::endl;
@@ -252,6 +325,10 @@ void CRtoSRPlotter::SetupCRtoSRConfig()
     else if (str.find("sr_file=") != std::string::npos)
     {
       fSRFileName = Common::RemoveDelim(str,"sr_file=");
+    }
+    else if (str.find("plot_config") != std::string::npos)
+    {
+      fPlotConfig = Common::RemoveDelim(str,"plot_config=");
     }
     else 
     {
@@ -302,6 +379,6 @@ void CRtoSRPlotter::GetHistMaximum()
   {
     const auto & hist = HistPair.second;
     const auto tmpmax = hist->GetBinContent(hist->GetMaximumBin());
-    if ((tmpmax > fMaxY) tmpmax = fMaxY;
+    if (tmpmax > fMaxY) fMaxY = tmpmax;
   }
 }
