@@ -1,0 +1,5 @@
+CR_GJets_in=met_zoom_control_gjets_DoubleEG.root
+CR_QCD_in=met_zoom_control_qcd_DoubleEG.root
+SR_in=met_zoom_signal_SinglePhoton.root
+
+plot_config=plot_config/met_zoom.txt
