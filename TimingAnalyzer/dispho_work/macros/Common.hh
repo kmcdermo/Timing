@@ -121,6 +121,7 @@ namespace Common
   void SetupLabels();
   void SetupCuts(const TString & cutconfig);
   void SetupCutFlow(const TString & cutflowconfig);
+  void KeepOnlySamples(const std::vector<TString> & samplevec);
   void KeepOnlySignals();
 
   // Setup hists
@@ -131,6 +132,7 @@ namespace Common
 
   // Misc setup
   void SetupBool(const std::string & str, Bool_t & setting);
+  void SetupWhichSamples(const TString & sampleconfig, std::vector<TString> & samplevec);
   void SetupWhichSignals(const std::string & str, std::vector<TString> & signalvec);
 
   // cutflow histograms

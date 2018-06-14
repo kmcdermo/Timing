@@ -46,7 +46,6 @@ namespace Common
     
     // DYLL
     Common::SampleMap["MC/DYJetsToLL/base"] = "DYLL";
-    //    Common::SampleMap["MC/DYJetsToLL/ext"]  = "DYLL";
 
     // DiPhoBox
     Common::SampleMap["MC/DiPhotonJetsBox/M40_80"]  = "DiPho";
@@ -299,6 +298,23 @@ namespace Common
     // HVDS Labels when we get some samples...
   }
 
+  void KeepOnlySamples(const std::vector<TString> & samplevec)
+  {
+    // erase by find
+    for (auto iter = Common::SampleMap.cbegin(); iter != Common::SampleMap.cend();)
+    {
+      const auto & sample = iter->first;
+      if (std::find(samplevec.begin(),samplevec.end(),sample) == samplevec.end())
+      {
+	Common::SampleMap.erase(iter++);
+      }
+      else
+      {
+	iter++;
+      }
+    }
+  }
+
   void KeepOnlySignals()
   {
     // erase by key first
@@ -516,6 +532,18 @@ namespace Common
     }
   }
 
+  void SetupWhichSamples(const TString & sampleconfig, std::vector<TString> & samplevec)
+  {
+    std::cout << "Reading sample config..." << std::endl;
+
+    std::ifstream infile(Form("%s",sampleconfig.Data()),std::ios::in);
+    std::string sample;
+    while (infile >> sample)
+    {
+      samplevec.emplace_back(sample);
+    }
+  }
+  
   void SetupWhichSignals(const std::string & str, std::vector<TString> & signalvec)
   {
     std::stringstream ss(str);
