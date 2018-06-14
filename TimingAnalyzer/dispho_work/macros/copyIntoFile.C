@@ -30,10 +30,13 @@ void copyIntoFile(const TString & sampleconfig, const TString & cutflowconfig, c
   auto outfile = TFile::Open(Form("%s",outfilename.Data()),"UPDATE");
 
   // samples
+  std::cout << "Copying sample lists and hists first..." << std::endl; 
   for (const auto & SamplePair : Common::SampleMap)
   {
     const auto & input = SamplePair.first;
     const auto & samplename = Common::ReplaceSlashWithUnderscore(input);
+
+    std::cout << "Working on input: " << input.Data() << std::endl;
 
     const auto & hist = (TH1F*)infile->Get(Common::SampleCutFlowHistNameMap[input].Data());
     outfile->cd();
@@ -44,6 +47,8 @@ void copyIntoFile(const TString & sampleconfig, const TString & cutflowconfig, c
     {
       const auto & label = CutFlowPair.first;
 
+      std::cout << "Copying list for cut: " << label.Data() << std::endl;
+
       const auto & list = (TEntryList*)infile->Get(Form("%s_%s_EntryList",samplename.Data(),label.Data()));
       outfile->cd();
       list->Write(list->GetName(),TObject::kWriteDelete);
@@ -52,10 +57,12 @@ void copyIntoFile(const TString & sampleconfig, const TString & cutflowconfig, c
   }
 
   // groups
+  std::cout << "Copying group hists and trees second..." << std::endl; 
   for (const auto & GroupPair : Common::GroupMap)
   {
     const auto & sample = GroupPair.first;
-    const auto & samplename = Common::ReplaceSlashWithUnderscore(sample);
+
+    std::cout << "Working on group: " << sample.Data() << std::endl;
 
     const auto & hist = (TH1F*)infile->Get(Common::GroupCutFlowHistNameMap[sample].Data());
     outfile->cd();
