@@ -249,7 +249,7 @@ void SRPlotter::SetupHists()
     const auto & sample   = HistNamePair.first;
     const auto & histname = HistNamePair.second;
 
-    if (sample.Contains("GJets",TString::kExact) || sample.Contains("QCD",TString::kExact)) continue;
+    if (Common::IsCRMC(sample)) continue;
 
     TreePlotter::HistMap[sample] = (TH1F*)fSRFile->Get(Form("%s",histname.Data()));
   }

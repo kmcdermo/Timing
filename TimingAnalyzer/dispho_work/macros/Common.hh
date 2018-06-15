@@ -104,6 +104,10 @@ namespace Common
   extern std::map<TString,TString> CutMap;
   extern std::vector<std::pair<TString,TString> > CutFlowPairVec;
 
+  // special name for EWK histogram
+  static const TString EWKSampleName = "EWK";
+  static const TString EWKHistName   = Common::EWKSampleName+"_Hist";
+
   // Sample setup functions
   void SetupPrimaryDataset(const TString & pdname);
   void SetupSamples();
@@ -194,6 +198,17 @@ namespace Common
   void CheckValidTH1F(const TH1F * plot, const TString & pname, const TString & fname);
   void CheckValidTH1D(const TH1D * plot, const TString & pname, const TString & fname);
   void CheckValidTH2F(const TH2F * plot, const TString & pname, const TString & fname);
+
+  // Check samples
+  Bool_t IsCRMC(const TString & sample)
+  {
+    return (sample.Contains("GJets",TString::kExact) || sample.Contains("QCD",TString::kExact));
+  }
+
+  Bool_t IsEWK(const SampleGroup & group, const TString & sample)
+  {
+    return (group == isBkgd && !Common::IsCRMC(sample));
+  }
 
   // may actually want an invalid tree/file...
   Bool_t IsNullFile(const TString & filename);

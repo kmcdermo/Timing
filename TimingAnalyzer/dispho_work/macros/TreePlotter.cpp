@@ -182,7 +182,7 @@ void TreePlotter::MakeBkgdOutput()
 
   // Extra Hists
   BkgdHist = TreePlotter::SetupHist("Bkgd_Hist"); // Make Total Bkgd Hist: for ratio and error plotting
-  EWKHist = TreePlotter::SetupHist("EWK_Hist"); // Make EWK Histogram for posterity : do not plot it though
+  EWKHist  = TreePlotter::SetupHist(Form("%s",Common::EWKHistName.Data())); // Make EWK Histogram for posterity : do not plot it though
 
   // Loop over histograms, adding up bkgd as needed
   for (const auto & HistPair : HistMap)
@@ -196,8 +196,10 @@ void TreePlotter::MakeBkgdOutput()
       BkgdHist->Add(hist);
       
       // ewk hist excludes GJets and QCD MC
-      if (sample.Contains("GJets",TString::kExact) || sample.Contains("QCD",TString::kExact)) continue;
-      EWKHist->Add(hist);
+      if (!Common::IsCRMC(sample))
+      {
+	EWKHist->Add(hist);
+      }
     }
   }
 
