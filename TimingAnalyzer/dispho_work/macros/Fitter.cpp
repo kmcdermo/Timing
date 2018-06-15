@@ -221,8 +221,8 @@ void Fitter::DumpInputInfo()
   std::cout << "Making quick dump of input histograms..." << std::endl;
 
   // EWK
-  const TString qcdtext = "EWK";
-  auto ewkHist = (TH2F*)fHistMap2D["EWK"]->Clone(Form("%sHist",qcdtext.Data()));
+  const TString ewktext = "EWK";
+  auto ewkHist = (TH2F*)fHistMap2D["EWK"]->Clone(Form("%sHist",ewktext.Data()));
   Fitter::DumpIntegralsAndDraw(ewkHist,ewktext,false,false);
   delete ewkHist;
 
