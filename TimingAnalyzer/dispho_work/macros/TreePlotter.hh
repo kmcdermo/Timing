@@ -116,6 +116,7 @@ protected:
   std::map<TString,TH1F*> HistMap;
   TH1F * DataHist;
   TH1F * BkgdHist;
+  TH1F * EWKHist;
   THStack * BkgdStack;
   TH1F * RatioHist;
   TH1F * RatioMCErrs;

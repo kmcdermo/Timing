@@ -41,8 +41,9 @@ TreePlotter2D::~TreePlotter2D()
   delete fConfigPave;
   delete RatioMCErrs;
   delete RatioHist;
+  delete EWKHist;
   delete BkgdHist;
-  delete DataHist;
+  delete DataHist; 
 
   delete fOutFile;
   for (auto & HistPair : HistMap) delete HistPair.second;
@@ -134,7 +135,7 @@ void TreePlotter2D::MakeDataOutput()
   std::cout << "Making Data Output..." << std::endl;
 
   // Make new data hist in case we are blinded
-  DataHist = TreePlotter2D::SetupHist("Data_Hist_Plotted");
+  DataHist = TreePlotter2D::SetupHist(Form("%s_Plotted",Common::HistNameMap["Data"].Data()));
   DataHist->Add(HistMap["Data"]);
 
   if (fBlindData)
@@ -164,19 +165,31 @@ void TreePlotter2D::MakeBkgdOutput()
 {
   std::cout << "Making Bkgd Output..." << std::endl;
 
-  // Make Total Bkgd Hist: for ratio and error plotting
-  BkgdHist = TreePlotter2D::SetupHist("Bkgd_Hist");
+  // Extra Hists
+  BkgdHist = TreePlotter2D::SetupHist("Bkgd_Hist"); // Make Total Bkgd Hist: for ratio and error plotting
+  EWKHist = TreePlotter2D::SetupHist("EWK_Hist"); // Make EWK Histogram for posterity : do not plot it though
+
+  // Loop over histograms, adding up bkgd as needed
   for (const auto & HistPair : HistMap)
   {
-    if (Common::GroupMap[HistPair.first] == isBkgd)
+    const auto & sample = HistPair.first;
+    const auto & hist = HistPair.second;
+
+    if (Common::GroupMap[sample] == isBkgd)
     {
-      BkgdHist->Add(HistPair.second);
+      // add all MC bkgds for bkgd hist 
+      BkgdHist->Add(hist);
+      
+      // ewk hist excludes GJets and QCD MC
+      if (sample.Contains("GJets",TString::kExact) || sample.Contains("QCD",TString::kExact)) continue;
+      EWKHist->Add(hist);
     }
   }
 
   // save to output file
   fOutFile->cd();
   BkgdHist->Write(BkgdHist->GetName(),TObject::kWriteDelete);
+  EWKHist->Write(EWKHist->GetName(),TObject::kWriteDelete);
 }
 
 void TreePlotter2D::MakeRatioOutput()

@@ -92,6 +92,7 @@ private:
   std::map<TString,TH2F*> HistMap;
   TH2F * DataHist;
   TH2F * BkgdHist;
+  TH2F * EWKHist;
   TH2F * RatioHist;
   TH2F * RatioMCErrs;
   TPaveText * fConfigPave;
