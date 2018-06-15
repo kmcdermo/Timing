@@ -1,0 +1,4 @@
+sample=QCD
+cr_file=met_zoom_control_qcd_DoubleEG.root
+sr_file=met_zoom_signal_SinglePhoton.root
+plot_config=plot_config/met_zoom.txt
