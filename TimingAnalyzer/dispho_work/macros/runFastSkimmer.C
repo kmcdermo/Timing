@@ -3,8 +3,8 @@
 #include "FastSkimmer.cpp+"
 
 void runFastSkimmer(const TString & cutflowconfig, const TString & pdname, const TString outfiletext, 
-		    const TString & sampleconfig = "", const Bool_t doskim = true)
+		    const Bool_t doskim = true, const TString & sampleconfig = "")
 {
-  FastSkimmer skimmer(cutflowconfig,pdname,outfiletext,sampleconfig,doskim);
+  FastSkimmer skimmer(cutflowconfig,pdname,outfiletext,doskim,sampleconfig);
   skimmer.MakeSkim();
 }

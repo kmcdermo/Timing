@@ -1,9 +1,9 @@
 #include "FastSkimmer.hh"
 
 FastSkimmer::FastSkimmer(const TString & cutflowconfig, const TString & pdname, const TString & outtext,  
-			 const TString & sampleconfig, const Bool_t doskim)
+			 const Bool_t doskim, const TString & sampleconfig)
   : fCutFlowConfig(cutflowconfig), fPDName(pdname), fOutFileText(outtext), 
-    fSampleConfig(sampleconfig), fDoSkim(doskim)
+    fDoSkim(doskim), fSampleConfig(sampleconfig)
 {
   std::cout << "Initializing FastSkimmer..." << std::endl;
 

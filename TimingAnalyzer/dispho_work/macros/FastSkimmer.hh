@@ -23,7 +23,7 @@ class FastSkimmer
 {
 public:
   FastSkimmer(const TString & cutflowconfig, const TString & pdname, const TString & outfiletext, 
-	      const TString & sampleconfig = "", const Bool_t doskim = true);
+	      const Bool_t doskim = true, const TString & sampleconfig = "");
   ~FastSkimmer();
 
   // Initialize
@@ -50,8 +50,8 @@ private:
   const TString fCutFlowConfig;
   const TString fPDName;
   const TString fOutFileText;
-  const TString fSampleConfig;
   const Bool_t  fDoSkim;
+  const TString fSampleConfig;
 
   // tmp variables
   std::vector<TString> fSampleVec;
