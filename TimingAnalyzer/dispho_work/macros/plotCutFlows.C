@@ -118,9 +118,10 @@ void plotCutFlows(const TString & infilename, const TString & cutflowconfig, con
   auto Canv = new TCanvas();
   Canv->cd();
   Canv->SetLogy();
+  Canv->SetTicky();
 
   // make legend
-  auto Leg = new TLegend(0.65,0.65,0.85,0.85);
+  auto Leg = new TLegend(0.77,0.65,0.87,0.88);
   
   // do plotting
   auto plot_counter = 0U;
