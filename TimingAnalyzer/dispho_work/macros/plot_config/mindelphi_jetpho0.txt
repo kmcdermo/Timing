@@ -1,0 +1,9 @@
+plot_title=Min #Delta#phi(All Jets,Leading Photon)
+
+x_title=Min #Delta#phi(All Jets,Leading Photon)
+x_scale=LIN
+x_var=Min$(abs(TVector2::Phi_mpi_pi((phophi_0-jetphi)*(jetpt>30)+((jetpt<30)*TMath::Pi()))))
+x_bins=CONSTANT 32 0 3.2
+
+y_title=Events
+y_scale=LIN

@@ -1,13 +1,9 @@
-njets30
-jetHT30
-jetHT30_zoom
-sumET
-sumET_zoom
-
 nvtx
 vtxX
 vtxY
 vtxZ
+
+nphotons
 
 phopt_0
 phopt_0_zoom
@@ -24,6 +20,12 @@ phopt_1_zoom
 phophi_1
 phoeta_1
 
+njets30
+jetHT30
+jetHT30_zoom
+sumET
+sumET_zoom
+
 jetpt_0
 jetpt_0_zoom
 jetphi_0
@@ -35,6 +37,12 @@ jetphi_1
 jeteta_1
 jetpt_1_over_phopt_0
 
+jetpt_2
+jetpt_2_zoom
+jetphi_2
+jeteta_2
+
 mindelphi_jetmet
+mindelphi_jetpho0
 delphi_met_pho0
 delphi_jet0_pho0
