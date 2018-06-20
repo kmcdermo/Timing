@@ -1,0 +1,9 @@
+plot_title=nPhotons
+
+x_title=nPhotons
+x_scale=LIN
+x_var=nphotons
+x_bins=CONSTANT 10 0 10
+
+y_title=Events
+y_scale=LOG

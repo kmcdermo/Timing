@@ -2,7 +2,7 @@ plot_title=Subleading Jet #phi
 
 x_title=Subleading Jet #phi
 x_scale=LIN
-x_var=((Sum$(1*(jetpt>30))>=2)*jetphi[1]+(Sum$(1*(jetpt>30))<2)*-9999)
+x_var=((Sum$(1*(jetpt>30))>1)*jetphi[1]+(Sum$(1*(jetpt>30))<=1)*-9999)
 x_bins=CONSTANT 32 -3.2 3.2
 
 y_title=Events

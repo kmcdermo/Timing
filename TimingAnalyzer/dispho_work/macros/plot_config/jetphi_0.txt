@@ -2,7 +2,7 @@ plot_title=Leading Jet #phi
 
 x_title=Leading Jet #phi
 x_scale=LIN		
-x_var=jetphi[0]
+x_var=((Sum$(1*(jetpt>30))>0)*jetphi[0]+(Sum$(1*(jetpt>30))<=0)*-9999)
 x_bins=CONSTANT 32 -3.2 3.2
 
 y_title=Events

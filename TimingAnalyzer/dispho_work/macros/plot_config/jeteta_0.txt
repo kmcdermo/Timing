@@ -2,7 +2,7 @@ plot_title=Leading Jet #eta
 
 x_title=Leading Jet #eta
 x_scale=LIN
-x_var=jeteta[0]
+x_var=((Sum$(1*(jetpt>30))>0)*jeteta[0]+(Sum$(1*(jetpt>30))<=0)*-9999)
 x_bins=CONSTANT 35 -3.5 3.5
 
 y_title=Events
