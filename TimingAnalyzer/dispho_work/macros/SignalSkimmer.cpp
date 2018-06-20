@@ -70,9 +70,9 @@ void SignalSkimmer::MakeSkimsFromTrees()
     SignalSkimmer::InitListMap(listmap,sample);
 
     // FIXME WHEN USING REAL WEIGHTS
-    //    Float_t evtwgt = 0;
-    //    TBranch * b_evtwgt = 0;
-    //    intree->SetBranchAddress("evtwgt",&evtwgt,&b_evtwgt);
+    Float_t evtwgt = 0;
+    TBranch * b_evtwgt = 0;
+    intree->SetBranchAddress("evtwgt",&evtwgt,&b_evtwgt);
 
     // Loop over cuts, and make entry list for each cut, 
     for (const auto & CutFlowPair : Common::CutFlowPairVec)
@@ -94,24 +94,20 @@ void SignalSkimmer::MakeSkimsFromTrees()
       // use ttree::draw() to generate entry list
       intree->Draw(Form(">>%s",list->GetName()),Form("%s",cutstring.Data()),"entrylist");
 
+      // FIXME!!! Eventually, need to use evt_wgt
       // store result of number of entries into cutflow th1
-      outhist->SetBinContent(binlabels[label],list->GetN()*1.0);
-      outhist->SetBinError  (binlabels[label],std::sqrt(list->GetN()*1.0));
-
-      // eventually, need to use evt_wgt
-      // store result of number of entries into cutflow th1
-      // for (auto ientry = 0U; ientry < intree->GetEntries(); ientry++)
-      // {
-      // 	// from the wise words of philippe: https://root-forum.cern.ch/t/tentrylist-and-setentrylist-on-chain-not-registering/28286/6
-      // 	// and also: https://root-forum.cern.ch/t/ttree-loadtree/14566/6
-      // 	auto filteredEntry = intree->GetEntryNumber(ientry);
-      // 	if (filteredEntry < 0) break;
-      // 	auto localEntry = intree->LoadTree(filteredEntry);
-      // 	if (localEntry < 0) break;
-      //
-      // 	b_evtwgt->GetEntry(localEntry);
-      // 	outhist->Fill((binlabels[label]*1.f)-0.5f,evtwgt);
-      // }
+      for (auto ientry = 0U; ientry < intree->GetEntries(); ientry++)
+      {
+      	// from the wise words of philippe: https://root-forum.cern.ch/t/tentrylist-and-setentrylist-on-chain-not-registering/28286/6
+      	// and also: https://root-forum.cern.ch/t/ttree-loadtree/14566/6
+      	auto filteredEntry = intree->GetEntryNumber(ientry);
+      	if (filteredEntry < 0) break;
+      	auto localEntry = intree->LoadTree(filteredEntry);
+      	if (localEntry < 0) break;
+      
+      	b_evtwgt->GetEntry(localEntry);
+      	outhist->Fill((binlabels[label]*1.f)-0.5f,1.f);
+      }
 
       // recursively set entry list for input tree
       intree->SetEntryList(list);
