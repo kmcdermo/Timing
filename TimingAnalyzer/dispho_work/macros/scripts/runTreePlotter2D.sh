@@ -22,3 +22,6 @@ popd
 
 ## copy everything
 cp ${outfiletext}.root ${fulldir}
+
+## Final message
+echo "Finished TreePlotting2D for plot: " ${plotconfig}

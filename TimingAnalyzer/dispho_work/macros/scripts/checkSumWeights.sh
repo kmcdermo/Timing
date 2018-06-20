@@ -37,3 +37,6 @@ root -b -q -l checkSumWeights.C\(\"${wgtfile}\",\"${outeosdir}\"\)
 rm ${tmpfiles}
 rm ${files}
 rm ${wgtfile}
+
+## Final message
+echo "Finished CheckingSumWeights"

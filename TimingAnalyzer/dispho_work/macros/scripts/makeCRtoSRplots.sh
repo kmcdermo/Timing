@@ -9,3 +9,6 @@ do
 	./scripts/runCRtoSRPlotter.sh "crtosr_config/${cr}_${plot}.txt" "${cr}_${plot}" ${outdir}
     done
 done
+
+## Final message
+echo "Finished MakingCRtoSRPlots"

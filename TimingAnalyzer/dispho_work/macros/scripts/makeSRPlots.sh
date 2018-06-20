@@ -7,3 +7,6 @@ for plot in phoseedtime_0 met met_zoom
 do
     ./scripts/runSRPlotter.sh "srplot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_srplot"
 done
+
+## Final message
+echo "Finished MakingSRPlots"

@@ -8,3 +8,6 @@ sampleconfig=${5:-""}
 
 ## produce slimmed skim
 root -l -b -q runFastSkimmer.C\(\"${cutflowconfig}\",\"${pdname}\",\"${outfiletext}\",${doskim},\"${sampleconfig}\"\)
+
+## Final message
+echo "Finished FastSkimming"

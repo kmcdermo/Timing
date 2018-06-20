@@ -18,3 +18,6 @@ popd
 
 ## copy everything
 cp ${outtext}.png ${fulldir}
+
+## Final message
+echo "Finished ComputingSignalEfficiency"

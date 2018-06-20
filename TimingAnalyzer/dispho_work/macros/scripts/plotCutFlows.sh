@@ -20,3 +20,6 @@ popd
 
 ## copy everything
 cp ${outfiletext}.png ${fulldir}
+
+## Final message
+echo "Finished PlottingCutFlows for:" ${infilename}

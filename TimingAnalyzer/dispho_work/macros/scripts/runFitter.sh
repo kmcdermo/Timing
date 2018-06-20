@@ -32,3 +32,6 @@ cp *_xfit_2D_lin.png *_yfit_2D_lin.png *_fit_projX_lin.png *_fit_projY_lin.png $
 cp *_xfit_2D_log.png *_yfit_2D_log.png *_fit_projX_log.png *_fit_projY_log.png ${fulldir}
 
 cp ${outfiletext}.root ${fulldir}
+
+## Final message
+echo "Finished Fitting for fit: " ${fitconfig}

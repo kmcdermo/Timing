@@ -76,3 +76,6 @@ if (( ${usePUWeights} == 1)) ; then
     echo "Copy puwgt file to EOS"
     mv ${puwgtfile} ${outdir}/puweights.root
 fi
+
+## Final message
+echo "Finished process skim and merge for:" ${text}

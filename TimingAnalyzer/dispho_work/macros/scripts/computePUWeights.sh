@@ -5,3 +5,6 @@ files=${2}
 puwgtfile=${3}
 
 root -l -b -q computePUWeights.C\(\"${indir}\",\"${files}\",\"${puwgtfile}\"\)
+
+## Final message
+echo "Finished ComputingPUWeights for: " ${files}

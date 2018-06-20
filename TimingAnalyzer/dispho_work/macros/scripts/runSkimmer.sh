@@ -8,3 +8,6 @@ puwgtfilename=${5:-""}
 redophoid=${6:-0}
 
 root -b -q -l runSkimmer.C\(\"${indir}\",\"${outdir}\",\"${filename}\",${sumwgts},\"${puwgtfilename}\",${redophoid}\)
+
+## Final message
+echo "Finished Skimming for file:" ${filename}

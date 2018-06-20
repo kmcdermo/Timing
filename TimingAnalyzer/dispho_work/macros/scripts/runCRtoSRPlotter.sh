@@ -26,3 +26,6 @@ do
 	cp ${outfiletext}_${plotscale}_${canvscale}.png ${fulldir}
     done
 done
+
+## Final message
+echo "Finished CRtoSRPlotting"

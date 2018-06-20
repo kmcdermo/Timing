@@ -11,3 +11,6 @@ do echo ${group} | while read -r infile insignalfile sel pdname
 	./scripts/runTreePlotter2D.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}"
     done
 done
+
+## Final message
+echo "Finished Making2DPlots"

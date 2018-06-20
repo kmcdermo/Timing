@@ -23,3 +23,6 @@ popd
 
 ## copy everything
 cp ${outfiletext}_log.png ${outfiletext}_lin.png ${outfiletext}.root ${outfiletext}_integrals.txt ${fulldir}
+
+## Final message
+echo "Finished TreePlotting for plot: " ${plotconfig}

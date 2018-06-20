@@ -5,3 +5,6 @@ outfiletext=${2:-"signal_skims"}
 
 ## produce slimmed skims
 root -l -b -q runSignalSkimmer.C\(\"${cutflowconfig}\",\"${outfiletext}\"\)
+
+## Final message
+echo "Finished SignalSkimming"

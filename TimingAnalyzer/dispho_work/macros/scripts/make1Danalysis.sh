@@ -47,3 +47,6 @@ do echo ${inputgroup} | while read -r infile insignalfile sel pdname
 	done
     done
 done
+
+## Final message
+echo "Finished Making1DAnalysis"

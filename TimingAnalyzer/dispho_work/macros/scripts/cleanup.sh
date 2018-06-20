@@ -19,3 +19,6 @@ rm *.pdf
 rm */*.png
 rm */*.pdf
 rm *.txt
+
+## Final message
+echo "Finished cleaning up"
