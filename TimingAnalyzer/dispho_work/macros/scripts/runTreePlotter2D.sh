@@ -24,4 +24,4 @@ popd
 cp ${outfiletext}.root ${fulldir}
 
 ## Final message
-echo "Finished TreePlotting2D for plot: " ${plotconfig}
+echo "Finished TreePlotting2D for plot:" ${plotconfig}
