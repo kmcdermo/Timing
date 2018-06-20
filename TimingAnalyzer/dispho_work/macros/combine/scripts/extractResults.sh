@@ -79,3 +79,8 @@ cp ${combdir}/${outname}*.root ${outdir}
 ##############
 rm ${combdir}/*.txt ${combdir}/*.root
 rm ${datacard}
+
+###################
+## Final message ##
+###################
+echo "Finished ExtractingResults"

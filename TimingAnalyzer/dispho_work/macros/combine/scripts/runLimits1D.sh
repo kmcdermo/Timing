@@ -20,3 +20,6 @@ popd
 
 ## copy everything
 cp ${outtext}*.png ${outtext}*.pdf ${outtext}.root ${fulldir}
+
+## Final message
+echo "Finished RunningLimits1D"
