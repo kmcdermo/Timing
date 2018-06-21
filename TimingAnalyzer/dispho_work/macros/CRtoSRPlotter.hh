@@ -32,6 +32,7 @@ public:
   ~CRtoSRPlotter();
 
   // Initialize
+  void SetupDefaults();
   void SetupConfig();
   void SetupCRtoSRConfig();
   void SetupPlotConfig();
@@ -42,6 +43,7 @@ public:
   // Subroutines for plotting
   void GetInputHists();
   void SetupHistsStlye();
+  void SaveOutHists();
   void MakeMCErrs();
   void MakeLegend();
   void MakeOutCanv();
@@ -68,6 +70,8 @@ private:
   TString fCRFileName;
   TString fSRFileName;
   TString fPlotConfig;
+  Bool_t  fDrawNorm;
+  Bool_t  fDrawScaled;
 
   // input
   TFile * fCRFile;

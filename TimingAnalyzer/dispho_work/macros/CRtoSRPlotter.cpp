@@ -17,6 +17,7 @@ CRtoSRPlotter::CRtoSRPlotter(const TString & crtosrconfig, const TString & outfi
   Common::SetTDRStyle(fTDRStyle);
 
   // init configuration
+  CRtoSRPlotter::SetupDefaults();
   CRtoSRPlotter::SetupConfig();
   CRtoSRPlotter::SetupCRtoSRConfig();
   CRtoSRPlotter::SetupPlotConfig();
@@ -45,19 +46,30 @@ CRtoSRPlotter::~CRtoSRPlotter()
 
 void CRtoSRPlotter::MakeCRtoSRPlot()
 {
+  // setup hists/canv/legend for plotting
   CRtoSRPlotter::GetInputHists();
   CRtoSRPlotter::SetupHistsStlye();
+  CRtoSRPlotter::SaveOutHists();
   CRtoSRPlotter::MakeMCErrs();
   CRtoSRPlotter::MakeLegend();
   CRtoSRPlotter::MakeOutCanv();
 
-  CRtoSRPlotter::DrawOutCanv(false);
-  CRtoSRPlotter::SaveOutput(false);
+  // draw canvas normalized
+  if (fDrawNorm)
+  {
+    CRtoSRPlotter::DrawOutCanv(false);
+    CRtoSRPlotter::SaveOutput(false);
+  }
 
-  CRtoSRPlotter::ScaleToUnity();
-  CRtoSRPlotter::DrawOutCanv(true);
-  CRtoSRPlotter::SaveOutput(true);
+  // draw canvas normalized to 1.0
+  if (fDrawScaled)
+  {
+    CRtoSRPlotter::ScaleToUnity();
+    CRtoSRPlotter::DrawOutCanv(true);
+    CRtoSRPlotter::SaveOutput(true);
+  }
 
+  // dump meta info
   CRtoSRPlotter::MakeConfigPave();
 }
 
@@ -65,22 +77,56 @@ void CRtoSRPlotter::GetInputHists()
 {
   std::cout << "Getting input histograms..." << std::endl;
 
+  const TString dataname = Common::HistNameMap["Data"] +"_Plotted";
+  const TString mcname   = Common::HistNameMap[fSample]+"_Plotted";
+
   // CR File
   fCRFile = TFile::Open(Form("%s",fCRFileName.Data()));
   Common::CheckValidFile(fCRFile,fCRFileName);
 
-  HistMap["CR_Data"] = (TH1F*)fCRFile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
-  HistMap["CR_MC"]   = (TH1F*)fCRFile->Get(Form("%s",Common::HistNameMap[Form("%s",fSample.Data())].Data()));
-  Common::CheckValidTH1F(HistMap["CR_Data"],Common::HistNameMap["Data"],fCRFileName);
-  Common::CheckValidTH1F(HistMap["CR_MC"]  ,Common::HistNameMap[Form("%s",fSample.Data())],fCRFileName);
+  HistMap["CR_Data"] = (TH1F*)fCRFile->Get(dataname.Data());
+  HistMap["CR_MC"]   = (TH1F*)fCRFile->Get(mcname  .Data());
+  Common::CheckValidTH1F(HistMap["CR_Data"],dataname,fCRFileName);
+  Common::CheckValidTH1F(HistMap["CR_MC"]  ,mcname  ,fCRFileName);
 
   // SR
   fSRFile = TFile::Open(Form("%s",fSRFileName.Data()));
   Common::CheckValidFile(fSRFile,fSRFileName);
 
-  HistMap["SR_MC"] = (TH1F*)fSRFile->Get(Form("%s",Common::HistNameMap[Form("%s",fSample.Data())].Data()));
-  Common::CheckValidTH1F(HistMap["SR_MC"],Common::HistNameMap[Form("%s",fSample.Data())],fSRFileName);
+  HistMap["SR_Data"] = (TH1F*)fSRFile->Get(dataname.Data());
+  HistMap["SR_MC"]   = (TH1F*)fSRFile->Get(mcname  .Data());
+  Common::CheckValidTH1F(HistMap["SR_Data"],dataname,fSRFileName);
+  Common::CheckValidTH1F(HistMap["SR_MC"]  ,mcname  ,fSRFileName);
+}  
 
+void CRtoSRPlotter::SetupHistsStlye()
+{
+  std::cout << "Setting up hists style..." << std::endl;
+
+  for (auto & HistPair : HistMap)
+  {
+    const auto & key = HistPair.first;
+    auto & hist = HistPair.second;
+
+    const auto color = (key.Contains("CR",TString::kExact) ? kOrange+10 : kAzure);
+
+    if (key.Contains("Data",TString::kExact))
+    {
+      hist->SetLineColor(color);
+      hist->SetMarkerColor(color);
+    }
+    else
+    {
+      hist->SetLineColorAlpha(color,0.5);
+      hist->SetFillColorAlpha(color,0.5);
+      hist->SetMarkerColorAlpha(color,0.5);
+      hist->SetFillStyle(1001);
+    }
+  }
+}
+
+void CRtoSRPlotter::SaveOutHists()
+{
   // save to outfile
   fOutFile->cd();
   for (auto & HistPair : HistMap)
@@ -89,28 +135,6 @@ void CRtoSRPlotter::GetInputHists()
     auto & hist = HistPair.second;
     hist->SetName(Form("%s",key.Data()));
     hist->Write(hist->GetName(),TObject::kWriteDelete);
-  }
-}  
-
-void CRtoSRPlotter::SetupHistsStlye()
-{
-  std::cout << "Setting up hists style..." << std::endl;
-
-  HistMap["CR_Data"]->SetLineColor(kBlack);
-
-  for (auto & HistPair : HistMap)
-  {
-    const auto & key = HistPair.first;
-    auto & hist = HistPair.second;
-
-    if (key.Contains("Data",TString::kExact)) continue;
-
-    const auto color = (key.Contains("CR",TString::kExact) ? kOrange+10 : kAzure);
-
-    hist->SetLineColorAlpha(color,0.5);
-    hist->SetFillColorAlpha(color,0.5);
-    hist->SetMarkerColorAlpha(color,0.5);
-    hist->SetFillStyle(1001);
   }
 }
 
@@ -153,6 +177,7 @@ void CRtoSRPlotter::MakeLegend()
   
   // add Data
   Legend->AddEntry(HistMap["CR_Data"],Form("%s [CR Data]",fSample.Data()),"epl");
+  Legend->AddEntry(HistMap["SR_Data"],Form("%s [SR Data]",fSample.Data()),"epl");
 
   // add MC
   Legend->AddEntry(HistMap["CR_MC"],Form("%s [CR MC]",fSample.Data()),"f");
@@ -192,7 +217,10 @@ void CRtoSRPlotter::DrawOutCanv(const Bool_t isScaled)
 
   HistMap["CR_Data"]->SetMinimum(fMinY);
   HistMap["CR_Data"]->SetMaximum(fMaxY);
+
+  // zeroth, draw data
   HistMap["CR_Data"]->Draw("PE");
+  HistMap["SR_Data"]->Draw("PE SAME");
 
   // first MC, then errs
   for (const auto & HistPair : HistMap)
@@ -200,13 +228,14 @@ void CRtoSRPlotter::DrawOutCanv(const Bool_t isScaled)
     const auto & key  = HistPair.first;
     const auto & hist = HistPair.second;
 
+    
     if (key.Contains("Data",TString::kExact)) continue;
     if (key.Contains("Err" ,TString::kExact)) continue;
     
     hist->Draw("HIST SAME");
   }
 
-  // draw errs
+  // draw errs on top
   for (const auto & HistPair : HistMap)
   {
     const auto & key  = HistPair.first;
@@ -247,6 +276,7 @@ void CRtoSRPlotter::PrintCanvas(const Bool_t isScaled, const Bool_t isLogy)
   OutCanv->cd();
   OutCanv->SetLogy(isLogy);
 
+ // set min/max to this hist as it is the first to be drawn
   auto & hist = HistMap["CR_Data"];
   
   // set min and max
@@ -296,6 +326,12 @@ void CRtoSRPlotter::MakeConfigPave()
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
+void CRtoSRPlotter::SetupDefaults()
+{
+  fDrawNorm = false;
+  fDrawScaled = false;
+}
+
 void CRtoSRPlotter::SetupConfig()
 {
   std::cout << "Setting up config..." << std::endl;
@@ -329,6 +365,16 @@ void CRtoSRPlotter::SetupCRtoSRConfig()
     else if (str.find("plot_config") != std::string::npos)
     {
       fPlotConfig = Common::RemoveDelim(str,"plot_config=");
+    }
+    else if (str.find("draw_norm=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"draw_norm=");
+      Common::SetupBool(str,fDrawNorm);
+    }
+    else if (str.find("draw_scaled=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"draw_scaled=");
+      Common::SetupBool(str,fDrawScaled);
     }
     else 
     {
