@@ -96,13 +96,24 @@ def main():
             ['/SinglePhoton/Run2017C-17Nov2017-v1/MINIAOD'],
             ['/SinglePhoton/Run2017D-17Nov2017-v1/MINIAOD'],
             ['/SinglePhoton/Run2017E-17Nov2017-v1/MINIAOD'],
-            ['/SinglePhoton/Run2017F-17Nov2017-v1/MINIAOD']
+            ['/SinglePhoton/Run2017F-17Nov2017-v1/MINIAOD'],
+
+            ['/DoubleEG/Run2017B-17Nov2017-v1/MINIAOD'],
+            ['/DoubleEG/Run2017C-17Nov2017-v1/MINIAOD'],
+            ['/DoubleEG/Run2017D-17Nov2017-v1/MINIAOD'],
+            ['/DoubleEG/Run2017E-17Nov2017-v1/MINIAOD'],
+            ['/DoubleEG/Run2017F-17Nov2017-v1/MINIAOD'],
             ]
  
         for inDO in inputDataAndOpts:
-            # inDO[0] is of the form /A/B/C. Since B is unique for each inDS, use this in the CRAB request name.
-            config.General.requestName   = inDO[0].split('/')[2]
-            config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_v6','splitPho=False','nThreads='+str(config.JobType.numCores),
+            # inDO[0] is of the form /A/B/C. Since A+B is unique for each inDS, use this in the CRAB request name.
+            primaryDataset = inDO[0].split('/')[1]
+            runEra         = inDO[0].split('/')[2]
+
+            config.General.requestName   = primaryDataset+"_"+runEra
+
+            # FIXME: 94X_dataRun2_ReReco_EOY17_v2 --> 94X_dataRun2_v6 when using ReMiniAOD
+            config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_ReReco_EOY17_v2','splitPho=False','nThreads='+str(config.JobType.numCores),
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
