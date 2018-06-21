@@ -1,4 +1,0 @@
-sample=GJets
-cr_file=phoseedtime_0_control_gjets_DoubleEG.root
-sr_file=phoseedtime_0_signal_SinglePhoton.root
-plot_config=plot_config/phoseedtime_0.txt

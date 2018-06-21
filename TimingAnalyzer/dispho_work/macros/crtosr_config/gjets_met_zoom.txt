@@ -1,4 +1,0 @@
-sample=GJets
-cr_file=met_zoom_control_gjets_DoubleEG.root
-sr_file=met_zoom_signal_SinglePhoton.root
-plot_config=plot_config/met.txt
