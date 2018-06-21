@@ -66,14 +66,14 @@ hadd -O -k ${tmpdir}/${outfile} ${tmpdir}/${infiles}
 rm -rf ${tmpdir}/${infiles}
 
 ## Copy to EOS
-echo "Copy hadded skim to EOS"
+echo "Copying hadded skim to EOS"
 mkdir -p ${outdir}
 mv ${tmpdir}/${outfile} ${outdir}
 rm -rf ${tmpdir}/${outfile}
 
 ## Copy PU weights to EOS
 if (( ${usePUWeights} == 1)) ; then
-    echo "Copy puwgt file to EOS"
+    echo "Copying puwgt file to EOS"
     mv ${puwgtfile} ${outdir}/puweights.root
 fi
 
