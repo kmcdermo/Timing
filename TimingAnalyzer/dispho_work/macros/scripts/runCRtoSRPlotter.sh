@@ -28,4 +28,4 @@ do
 done
 
 ## Final message
-echo "Finished CRtoSRPlotting"
+echo "Finished CRtoSRPlotting for:" ${crtosrconfig}

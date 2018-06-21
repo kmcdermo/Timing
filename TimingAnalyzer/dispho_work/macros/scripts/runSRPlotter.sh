@@ -22,4 +22,4 @@ popd
 cp ${outfiletext}_log.png ${outfiletext}_lin.png ${outfiletext}.root ${outfiletext}_integrals.txt ${fulldir}
 
 ## Final message
-echo "Finished SRPlotting"
+echo "Finished SRPlotting for:" ${srplotconfig}

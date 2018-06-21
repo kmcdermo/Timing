@@ -6,7 +6,7 @@ for cr in qcd gjets
 do
     for plot in phoseedtime_0 met met_zoom
     do
-	./scripts/runCRtoSRPlotter.sh "crtosr_config/${cr}_${plot}.txt" "${cr}_${plot}" ${outdir}
+	./scripts/runCRtoSRPlotter.sh "crtosr_config/${cr}_${plot}.txt" "${plot}" "${outdir}/${cr}"
     done
 done
 

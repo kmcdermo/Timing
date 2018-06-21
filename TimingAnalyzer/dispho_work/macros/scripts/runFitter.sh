@@ -34,4 +34,4 @@ cp *_xfit_2D_log.png *_yfit_2D_log.png *_fit_projX_log.png *_fit_projY_log.png $
 cp ${outfiletext}.root ${fulldir}
 
 ## Final message
-echo "Finished Fitting for fit: " ${fitconfig}
+echo "Finished Fitting for fit:" ${fitconfig}
