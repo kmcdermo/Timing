@@ -15,7 +15,7 @@ do echo ${inputgroup} | while read -r infile insignalfile sel pdname
 		misc="misc"
 		./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel_dir}${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}_${insel}"
 	    fi
-	done < scripts/standard_plots.txt
+	done < plot_config/standard_plots.txt
     done
 done
 
