@@ -170,18 +170,18 @@ void CRtoSRPlotter::MakeLegend()
   std::cout << "Creating Legend..." << std::endl;
 
   // instantiate the legend
-  Legend = new TLegend(0.62,0.75,0.825,0.92);
+  Legend = new TLegend(0.57,0.75,0.825,0.92);
   Legend->SetName("Legend");
   Legend->SetBorderSize(1);
   Legend->SetLineColor(kBlack);
   
   // add Data
-  Legend->AddEntry(HistMap["CR_Data"],Form("%s [CR Data]",fSample.Data()),"epl");
-  Legend->AddEntry(HistMap["SR_Data"],Form("%s [SR Data]",fSample.Data()),"epl");
+  Legend->AddEntry(HistMap["SR_Data"],Form("Data [SR]"),"epl");
+  Legend->AddEntry(HistMap["CR_Data"],Form("Data [%s CR]",fSample.Data()),"epl");
 
   // add MC
-  Legend->AddEntry(HistMap["CR_MC"],Form("%s [CR MC]",fSample.Data()),"f");
-  Legend->AddEntry(HistMap["SR_MC"],Form("%s [SR MC]",fSample.Data()),"f");
+  Legend->AddEntry(HistMap["SR_MC"],Form("%s MC [SR]",fSample.Data()),"f");
+  Legend->AddEntry(HistMap["CR_MC"],Form("%s MC [%s CR]",fSample.Data(),f),"f");
 
   // save to output file
   fOutFile->cd();
