@@ -136,6 +136,9 @@ struct Event
   Int_t     njets;
   Int_t     nrechits;
   Int_t     nphotons;
+  
+  Float_t   mgg;
+
   Float_t   evtwgt;
 
   // MC Types
@@ -190,6 +193,7 @@ struct Event
   std::string s_njets = "njets";
   std::string s_nrechits = "nrechits";
   std::string s_nphotons = "nphotons";
+  std::string s_mgg = "mgg";
   std::string s_evtwgt = "evtwgt";
   std::string s_genwgt = "genwgt";  
   std::string s_genx0 = "genx0";
@@ -239,6 +243,7 @@ struct Event
   TBranch * b_njets;
   TBranch * b_nrechits;
   TBranch * b_nphotons;
+  TBranch * b_mgg;
   TBranch * b_evtwgt;
   TBranch * b_genwgt;  
   TBranch * b_genx0;

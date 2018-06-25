@@ -46,7 +46,7 @@ public:
   void FillOutGMSBs(const UInt_t entry);
   void FillOutHVDSs(const UInt_t entry);
   void FillOutToys(const UInt_t entry);
-  void FillOutEvent(const UInt_t entry, const Float_t evtwgt);
+  void FillOutEvent(const UInt_t entry, const Float_t evtwgt, const Float_t mgg);
   void FillOutJets(const UInt_t entry);
   void FillOutPhos(const UInt_t entry);
 
@@ -102,8 +102,6 @@ private:
   TTree * fOutTree; 
   TTree * fOutConfigTree;
   TH1F  * fOutCutFlow;
-  // TH1F  * fOutCutFlowWgt;
-  // TH1F  * fOutCutFlowScl;
 
   GmsbVec fOutGMSBs;
   HvdsVec fOutHVDSs;

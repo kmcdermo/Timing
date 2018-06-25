@@ -95,8 +95,6 @@ Skimmer::~Skimmer()
   delete fInConfigTree;
   delete fInFile;
 
-  //  delete fOutCutFlowScl;
-  //  delete fOutCutFlowWgt;
   delete fOutCutFlow;
   delete fOutTree;
   delete fOutConfigTree;
@@ -117,53 +115,69 @@ void Skimmer::EventLoop()
     const auto wgt    = (fIsMC ? fInEvent.genwgt : 1.f);
     const auto evtwgt = fSampleWeight * wgt; // sample weight for data == 1
 
+    Float_t mgg = -1.f;
+
     // perform skim
     if (!fOutConfig.isToy) // do not apply skim selection on toy config
     {
-      // leading photon skim section
+      // trigger
+      fInEvent.b_hltDiPho3022M90->GetEntry(entry);
+      if (!fInEvent.hltDiPho3022M90) continue;
+      fOutCutFlow->Fill((cutLabels["hltDiPho"]*1.f)-0.5f,wgt);
+
+      // have two photons
       fInEvent.b_nphotons->GetEntry(entry);
-      if (fInEvent.nphotons <= 0) continue;
-      fOutCutFlow->Fill((cutLabels["nPhotons"]*1.f)-0.5f,wgt);
-      //      fOutCutFlow   ->Fill((cutLabels["nPhotons"]*1.f)-0.5f);
-      //      fOutCutFlowWgt->Fill((cutLabels["nPhotons"]*1.f)-0.5f,wgt);
-      //      fOutCutFlowScl->Fill((cutLabels["nPhotons"]*1.f)-0.5f,evtwgt);
-      
+      if (fInEvent.nphotons < 2) continue;
+      fOutCutFlow->Fill((cutLabels["nPhotonsGTE2"]*1.f)-0.5f,wgt);
+
+      // leading photon skim section      
       fInPhos[0].b_isEB->GetEntry(entry);
       if (!fInPhos[0].isEB) continue;
       fOutCutFlow->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,wgt);
-      //      fOutCutFlow   ->Fill((cutLabels["ph0isEB"]*1.f)-0.5f);
-      //      fOutCutFlowWgt->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,wgt);
-      //      fOutCutFlowScl->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,evtwgt);
+
+      fInPhos[0].b_gedID->GetEntry(entry);
+      if (fInPhos[0].gedID < 3) continue;
+      fOutCutFlow->Fill((cutLabels["ph0tightID"]*1.f)-0.5f,wgt);
 
       fInPhos[0].b_pt->GetEntry(entry);
-      if (fInPhos[0].pt < 70.f) continue;
-      fOutCutFlow->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
-      //      fOutCutFlow   ->Fill((cutLabels["ph0pt70"]*1.f)-0.5f);
-      //      fOutCutFlowWgt->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
-      //      fOutCutFlowScl->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);
+      const auto phopt_0 = fInPhos[0].pt;
+      if (phopt_0 < 40.f) continue;
+      fOutCutFlow->Fill((cutLabels["ph0ptGT40"]*1.f)-0.5f,wgt);
 
-      // filter on MET Flags
-      fInEvent.b_metPV->GetEntry(entry);
-      fInEvent.b_metBeamHalo->GetEntry(entry);
-      fInEvent.b_metHBHENoise->GetEntry(entry);
-      fInEvent.b_metHBHEisoNoise->GetEntry(entry);
-      fInEvent.b_metECALTP->GetEntry(entry);
-      fInEvent.b_metPFMuon->GetEntry(entry);
-      fInEvent.b_metPFChgHad->GetEntry(entry);
-      if (!fInEvent.metPV || !fInEvent.metBeamHalo || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || 
-       	  !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad) continue;
+      fInPhos[0].b_r9->GetEntry(entry);
+      if (fInPhos[0].r9 < 0.9) continue;
+      fOutCutFlow->Fill((cutLabels["ph0r9GT0.9"]*1.f)-0.5f,wgt);
 
-      fInEvent.b_metECALCalib->GetEntry(entry);
-      if (!fOutConfig.isGMSB && !fInEvent.metECALCalib) continue;
+      // subleading photon skim section      
+      fInPhos[1].b_isEB->GetEntry(entry);
+      if (!fInPhos[1].isEB) continue;
+      fOutCutFlow->Fill((cutLabels["ph1isEB"]*1.f)-0.5f,wgt);
 
-      fInEvent.b_metEESC->GetEntry(entry);
-      if (!fIsMC && !fInEvent.metEESC) continue;
-      
-      // fill cutflow for MET filters
-      fOutCutFlow->Fill((cutLabels["METFlag"]*1.f)-0.5f,wgt);
-      //      fOutCutFlow   ->Fill((cutLabels["METFlag"]*1.f)-0.5f);
-      //      fOutCutFlowWgt->Fill((cutLabels["METFlag"]*1.f)-0.5f,wgt);
-      //      fOutCutFlowScl->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
+      fInPhos[1].b_gedID->GetEntry(entry);
+      if (fInPhos[1].gedID < 3) continue;
+      fOutCutFlow->Fill((cutLabels["ph1tightID"]*1.f)-0.5f,wgt);
+
+      fInPhos[1].b_pt->GetEntry(entry);
+      const auto phopt_1 = fInPhos[1].pt;
+      if (phopt_1 < 40.f) continue;
+      fOutCutFlow->Fill((cutLabels["ph1ptGT40"]*1.f)-0.5f,wgt);
+
+      fInPhos[1].b_r9->GetEntry(entry);
+      if (fInPhos[1].r9 < 0.9) continue;
+      fOutCutFlow->Fill((cutLabels["ph1r9GT0.9"]*1.f)-0.5f,wgt);
+
+      // BLIND AWAY FROM THE CURSED HIGGS
+      fInPhos[0].b_E->GetEntry(entry);
+      fInPhos[0].b_eta->GetEntry(entry);
+      fInPhos[0].b_phi->GetEntry(entry);
+      fInPhos[1].b_E->GetEntry(entry);
+      fInPhos[1].b_eta->GetEntry(entry);
+      fInPhos[1].b_phi->GetEntry(entry);
+
+      mgg = std::sqrt(std::pow(fInPhos[0].E+fInPhos[1].E,2)-std::pow(phopt_0*std::cos(fInPhos[0].phi)+phopt_1*std::cos(fInPhos[1].phi),2)-std::pow(phopt_0*std::sin(fInPhos[0].phi)+phopt_1*std::sin(fInPhos[1].phi),2)-std::pow(phopt_0*std::sinh(fInPhos[0].eta)+phopt_1*std::sinh(fInPhos[1].eta),2));
+
+      if (mgg > 120.f) continue;
+      fOutCutFlow->Fill((cutLabels["mggLT120"]*1.f)-0.5f,wgt);
       
       // cut on crappy pu
       if (fIsMC) 
@@ -174,16 +188,13 @@ void Skimmer::EventLoop()
       
       // fill cutflow
       fOutCutFlow->Fill((cutLabels["badPU"]*1.f)-0.5f,wgt);
-      //      fOutCutFlow   ->Fill((cutLabels["badPU"]*1.f)-0.5f);
-      //      fOutCutFlowWgt->Fill((cutLabels["badPU"]*1.f)-0.5f,wgt);
-      //      fOutCutFlowScl->Fill((cutLabels["badPU"]*1.f)-0.5f,evtwgt);
     }
 
     // end of skim, now copy... dropping rechits
     if (fOutConfig.isGMSB) Skimmer::FillOutGMSBs(entry);
     if (fOutConfig.isHVDS) Skimmer::FillOutHVDSs(entry);
     if (fOutConfig.isToy)  Skimmer::FillOutToys(entry);
-    Skimmer::FillOutEvent(entry,evtwgt);
+    Skimmer::FillOutEvent(entry,evtwgt,mgg);
     Skimmer::FillOutJets(entry);
     Skimmer::FillOutPhos(entry);
 
@@ -194,8 +205,6 @@ void Skimmer::EventLoop()
   // write out the output!
   fOutFile->cd();
   fOutCutFlow->Write();
-  //  fOutCutFlowWgt->Write();
-  //  fOutCutFlowScl->Write();
   fOutConfigTree->Write();
   fOutTree->Write();
 }
@@ -353,7 +362,7 @@ void Skimmer::FillOutToys(const UInt_t entry)
   }
 }
 
-void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt)
+void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt, const Float_t mgg)
 {
   // get input branches
   fInEvent.b_run->GetEntry(entry);
@@ -435,7 +444,8 @@ void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt)
   fOutEvent.njets = fInEvent.njets;
   fOutEvent.nrechits = fInEvent.nrechits;
   fOutEvent.nphotons = fInEvent.nphotons;
-  fOutEvent.evtwgt   = evtwgt;
+  fOutEvent.mgg = mgg;
+  fOutEvent.evtwgt = evtwgt;
 
   // isMC only branches
   if (fIsMC)
@@ -1286,17 +1296,15 @@ void Skimmer::InitOutBranches()
 
     // add event weight
     fOutTree->Branch(fOutEvent.s_evtwgt.c_str(), &fOutEvent.evtwgt);
+
+    // add mgg
+    fOutTree->Branch(fOutEvent.s_mgg.c_str(), &fOutEvent.mgg);
   }
 } 
 
 void Skimmer::InitOutCutFlowHists()
 {
   Skimmer::InitOutCutFlowHist(fInCutFlow,fOutCutFlow,"");
-  //  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowWgt,"_wgt");
-  //  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowScl,"_scaled");
-  //  fOutCutFlowScl->Scale(fSampleWeight);
-  //  fOutCutFlowScl->SetTitle("Scaled");
-  //  fOutCutFlowScl->GetYaxis()->SetTitle("nEvents");
 }
 
 void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow, const TString & label)
@@ -1308,10 +1316,17 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
     cutLabels[inh_cutflow->GetXaxis()->GetBinLabel(ibin)] = ibin;
   }
   auto inNbinsX_new = inNbinsX;
-  cutLabels["nPhotons"] = ++inNbinsX_new;
+  cutLabels["hltDiPho"] = ++inNbinsX_new;
+  cutLabels["nPhotonsGTE2"] = ++inNbinsX_new;
   cutLabels["ph0isEB"] = ++inNbinsX_new;
-  cutLabels["ph0pt70"] = ++inNbinsX_new;
-  cutLabels["METFlag"] = ++inNbinsX_new;
+  cutLabels["ph0tightID"] = ++inNbinsX_new;
+  cutLabels["ph0ptGT40"] = ++inNbinsX_new;
+  cutLabels["ph0r9GT0.9"] = ++inNbinsX_new;
+  cutLabels["ph1isEB"] = ++inNbinsX_new;
+  cutLabels["ph1tightID"] = ++inNbinsX_new;
+  cutLabels["ph1ptGT40"] = ++inNbinsX_new;
+  cutLabels["ph1r9GT0.9"] = ++inNbinsX_new;
+  cutLabels["mggLT120"] = ++inNbinsX_new;
   cutLabels["badPU"] = ++inNbinsX_new;
 
   // make new cut flow
@@ -1335,7 +1350,21 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
 void Skimmer::GetSampleWeight()
 {
   // include normalization to lumi!!! ( do we need to multiply by * fInConfig.BR)
-  fSampleWeight = (fIsMC ? fInConfig.xsec * fInConfig.filterEff * Common::lumi * Common::invfbToinvpb / fSumWgts : 1.f); 
+
+  float denom = 0.f;
+  if (fIsMC)
+  {
+    if (fInDir.Contains("DYJetsToLL"))
+    {
+      denom = 96844300;
+    }
+    else
+    {
+      denom = fSumWgts;
+    }
+  }
+
+  fSampleWeight = (fIsMC ? fInConfig.xsec * fInConfig.filterEff * Common::lumi * Common::invfbToinvpb / denom : 1.f); 
 }
 
 void Skimmer::GetPUWeights()
