@@ -326,6 +326,14 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   std::vector<float> jeteta;
   std::vector<int>   jetID;
 
+  std::vector<float> jetNHF;
+  std::vector<float> jetNEMF;
+  std::vector<float> jetCHF;
+  std::vector<float> jetCEMF;
+  std::vector<float> jetMUF;
+  std::vector<float> jetNHM;
+  std::vector<float> jetCHM;
+
   // RecHits
   int nrechits;
   std::vector<float> rheta, rhphi, rhE, rhtime;

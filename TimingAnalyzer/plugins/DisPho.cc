@@ -386,7 +386,13 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       const auto & photon = photons[iphoton];
       const auto & pho = photon.photon();
 
+      //      if (iphoton > 0) break; // only consider first photon
+
       if (pho.pt() < phgoodpTmin) continue;
+
+      // const float sceta = std::abs(pho.superCluster()->eta());
+      // if (sceta > Config::etaEBcutoff) continue;
+
       if (phgoodIDmin != "none")
       {
 	if (!photon.isOOT() && !pho.photonID(phgoodIDmin+"-ged")) continue;
@@ -935,11 +941,27 @@ void DisPho::InitializeJetBranches(const int nJets)
   jeteta.clear();
   jetID.clear();
 
+  jetNHF.clear();
+  jetNEMF.clear();
+  jetCHF.clear();
+  jetCEMF.clear();
+  jetMUF.clear();
+  jetNHM.clear();
+  jetCHM.clear();
+ 
   jetE.resize(nJets);
   jetpt.resize(nJets);
   jetphi.resize(nJets);
   jeteta.resize(nJets);
   jetID.resize(nJets);
+
+  jetNHF.resize(nJets);
+  jetNEMF.resize(nJets);
+  jetCHF.resize(nJets);
+  jetCEMF.resize(nJets);
+  jetMUF.resize(nJets);
+  jetNHM.resize(nJets);
+  jetCHM.resize(nJets);
 }
 
 void DisPho::SetJetBranches(const std::vector<pat::Jet> & jets, const int nJets)
@@ -955,6 +977,14 @@ void DisPho::SetJetBranches(const std::vector<pat::Jet> & jets, const int nJets)
     jetphi[ijet] = jet.phi();
     jeteta[ijet] = jet.eta();
     jetID [ijet] = oot::GetPFJetID(jet);
+
+    jetNHF [ijet] = jet.neutralHadronEnergyFraction();
+    jetNEMF[ijet] = jet.neutralEmEnergyFraction();
+    jetCHF [ijet] = jet.chargedHadronEnergyFraction();
+    jetCEMF[ijet] = jet.chargedEmEnergyFraction();
+    jetMUF [ijet] = jet.muonEnergyFraction();
+    jetNHM [ijet] = jet.neutralMultiplicity();
+    jetCHM [ijet] = jet.chargedMultiplicity();
   }
 }
 
@@ -1626,6 +1656,14 @@ void DisPho::MakeEventTree()
   disphotree->Branch("jeteta", &jeteta);
   disphotree->Branch("jetphi", &jetphi);
   disphotree->Branch("jetID", &jetID);
+
+  disphotree->Branch("jetNHF", &jetNHF);
+  disphotree->Branch("jetNEMF", &jetNEMF);  
+  disphotree->Branch("jetCHF", &jetCHF);
+  disphotree->Branch("jetCEMF", &jetCEMF);
+  disphotree->Branch("jetMUF", &jetMUF);
+  disphotree->Branch("jetNHM", &jetNHM);
+  disphotree->Branch("jetCHM", &jetCHM);
 
   // RecHit Info
   disphotree->Branch("nrechits", &nrechits, "nrechits/I");

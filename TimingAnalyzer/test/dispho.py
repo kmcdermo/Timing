@@ -166,6 +166,9 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+		# rereo data: 94X_dataRun2_ReReco_EOY17_v2
+		#'/store/data/Run2017F/DoubleEG/MINIAOD/17Nov2017-v1/60000/9E7A56A7-FCDF-E711-86E3-7845C4FC3A91.root'
+		#'/store/data/Run2017F/SinglePhoton/MINIAOD/17Nov2017-v1/70000/FE5F0903-F2E1-E711-8D0F-009C02AAB4C0.root'
 		# reminiaod data: 94X_dataRun2_v6
 		#'/store/data/Run2017E/SinglePhoton/MINIAOD/31Mar2018-v1/00000/52B0B611-FF37-E811-B31D-0242AC1C0500.root'
 		# test GJets, GT: 94X_mc2017_realistic_v10
