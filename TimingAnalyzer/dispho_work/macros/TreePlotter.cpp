@@ -296,7 +296,7 @@ void TreePlotter::MakeLegend()
   std::cout << "Creating Legend..." << std::endl;
 
   // instantiate the legend
-  Legend = new TLegend(0.55,0.65,0.825,0.92);
+  Legend = new TLegend(0.73,0.78,0.825,0.92);
   Legend->SetName("Legend");
   //  Legend->SetNColumns(2);
   Legend->SetBorderSize(1);

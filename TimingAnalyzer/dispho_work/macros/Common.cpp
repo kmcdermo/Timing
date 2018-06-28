@@ -218,7 +218,7 @@ namespace Common
   {
     Common::LabelMap["QCD"]   = "QCD"; //"#QCD (H_{T} Binned)";
     Common::LabelMap["GJets"] = "#gamma+Jets"; //"#gamma + Jets (H_{T} Binned)";
-    Common::LabelMap["DYLL"]  = "DY#rightarrowLL+Jets";
+    Common::LabelMap["DYLL"]  = "DY#rightarrowLL";
     Common::LabelMap["DiPho"] = "2#gamma";
     Common::LabelMap["TX"]    = "T+X";
     Common::LabelMap["WX"]    = "W+X";
