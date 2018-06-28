@@ -45,8 +45,8 @@ namespace Common
 
   void SetupSignalSamples()
   {
-    const std::vector<TString> lambdas = {"100","150","200","250","300","350","400"};
-    const std::vector<TString> ctaus   = {"0p1","10","600","1200"};
+    const std::vector<TString> lambdas;
+    const std::vector<TString> ctaus;
 
     // loop over all possible GMSBs...
     for (const auto & lambda : lambdas)
@@ -58,7 +58,7 @@ namespace Common
     }
 
     // temp...
-    Common::SampleMap["MC/GMSB/L200TeV_CTau400cm"] = "GMSB_L200_CTau400";
+    //    Common::SampleMap["MC/GMSB/L200TeV_CTau400cm"] = "GMSB_L200_CTau400";
 
     // eventually do HVDS...
   }

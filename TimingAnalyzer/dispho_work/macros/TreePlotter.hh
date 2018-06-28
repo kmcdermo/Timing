@@ -33,7 +33,7 @@ class TreePlotter
 {
 public:
   TreePlotter() {}
-  TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
+  TreePlotter(const TString & infilename, const TString & cutconfig,
 	      const TString & plotconfig, const TString & miscconfig, const TString & outfiletext);
   ~TreePlotter() {}
 
@@ -52,7 +52,6 @@ public:
   void MakeHistFromTrees();
   void MakeDataOutput();
   void MakeBkgdOutput();
-  void MakeSignalOutput();
   void MakeRatioOutput();
   void MakeLegend();
   void InitOutputCanvPads();
@@ -78,7 +77,6 @@ public:
 private:
   // Settings
   const TString fInFileName;
-  const TString fInSignalFileName;
   const TString fCutConfig;
   const TString fPlotConfig;
   const TString fMiscConfig;
@@ -86,7 +84,6 @@ private:
 
   // input
   TFile * fInFile;
-  TFile * fInSignalFile;
 
 protected:
   // plot vars
@@ -102,11 +99,9 @@ protected:
   std::vector<BlindStruct> fBlinds;
 
   // other plotting config
-  std::vector<TString> fPlotSignalVec;
   Bool_t fScaleToUnity;
   Bool_t fScaleMCToData;
   Bool_t fBlindData;
-  Bool_t fSignalsOnly;
 
   // Style
   TStyle * fTDRStyle;

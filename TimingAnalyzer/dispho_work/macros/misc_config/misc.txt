@@ -1,3 +1,2 @@
-signals_to_plot=GMSB_L200_CTau0p1 GMSB_L200_CTau10 GMSB_L200_CTau600
 scale_mc_to_data=0
 blind_data=0

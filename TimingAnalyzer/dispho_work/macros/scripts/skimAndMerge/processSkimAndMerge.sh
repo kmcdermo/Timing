@@ -45,37 +45,37 @@ if (( ${usePUWeights} == 1 )) ; then
     ./scripts/computePUWeights.sh ${eosdir} ${files} ${puwgtfile}
 fi
 
-# ## read in each file and skim
-# echo "Running skimming macro"
-# nfiles=$(wc -l ${files})
-# counter="1"
-# while IFS='' read -r line || [[ -n "${line}" ]]; do
-#     echo "Working on file" ${counter} "out of" ${nfiles} "[filename: ${line}]"
-#     ./scripts/runSkimmer.sh ${eosdir} ${tmpdir} ${line} ${sumwgts} ${puwgtfile} ${redophoid}
-#     counter=$((${counter} + 1))
-# done < "${files}"
+## read in each file and skim
+echo "Running skimming macro"
+nfiles=$(wc -l ${files})
+counter="1"
+while IFS='' read -r line || [[ -n "${line}" ]]; do
+    echo "Working on file" ${counter} "out of" ${nfiles} "[filename: ${line}]"
+    ./scripts/runSkimmer.sh ${eosdir} ${tmpdir} ${line} ${sumwgts} ${puwgtfile} ${redophoid}
+    counter=$((${counter} + 1))
+done < "${files}"
 
-# ## remove txt files
-# echo "Removing txt files"
-# rm ${wgtfile}
-# rm ${files}
+## remove txt files
+echo "Removing txt files"
+rm ${wgtfile}
+rm ${files}
 
-# ## Hadd on tmp 
-# echo "Hadding skims on tmp and then removing individual skim files"
-# hadd -O -k ${tmpdir}/${outfile} ${tmpdir}/${infiles}
-# rm -rf ${tmpdir}/${infiles}
+## Hadd on tmp 
+echo "Hadding skims on tmp and then removing individual skim files"
+hadd -O -k ${tmpdir}/${outfile} ${tmpdir}/${infiles}
+rm -rf ${tmpdir}/${infiles}
 
-# ## Copy to EOS
-# echo "Copying hadded skim to EOS"
-# mkdir -p ${outdir}
-# mv ${tmpdir}/${outfile} ${outdir}
-# rm -rf ${tmpdir}/${outfile}
+## Copy to EOS
+echo "Copying hadded skim to EOS"
+mkdir -p ${outdir}
+mv ${tmpdir}/${outfile} ${outdir}
+rm -rf ${tmpdir}/${outfile}
 
-# ## Copy PU weights to EOS
-# if (( ${usePUWeights} == 1)) ; then
-#     echo "Copying puwgt file to EOS"
-#     mv ${puwgtfile} ${outdir}/puweights.root
-# fi
+## Copy PU weights to EOS
+if (( ${usePUWeights} == 1)) ; then
+    echo "Copying puwgt file to EOS"
+    mv ${puwgtfile} ${outdir}/puweights.root
+fi
 
-# ## Final message
-# echo "Finished process skim and merge for:" ${text}
+## Final message
+echo "Finished process skim and merge for:" ${text}
