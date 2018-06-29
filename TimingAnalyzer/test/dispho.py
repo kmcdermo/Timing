@@ -41,6 +41,7 @@ options.register('applyPhGood',False,VarParsing.multiplicity.singleton,VarParsin
 ## matching cuts
 options.register('dRmin',0.3,VarParsing.multiplicity.singleton,VarParsing.varType.float,'dR minimum cut');
 options.register('pTres',100.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'pT resolution cut');
+options.register('gendRmin',0.1,VarParsing.multiplicity.singleton,VarParsing.varType.float,'gen dR minimum cut');
 options.register('genpTres',0.5,VarParsing.multiplicity.singleton,VarParsing.varType.float,'gen pT resolution cut');
 options.register('trackdRmin',0.2,VarParsing.multiplicity.singleton,VarParsing.varType.float,'track dR minimum cut');
 options.register('trackpTmin',5.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'track pT minimum cut');
@@ -118,6 +119,7 @@ print "applyPhGood    : ",options.applyPhGood
 print "        -- Matching --"
 print "dRmin          : ",options.dRmin
 print "pTres          : ",options.pTres
+print "gendRmin       : ",options.gendRmin
 print "genpTres       : ",options.genpTres
 print "trackdRmin     : ",options.trackdRmin
 print "trackpTmin     : ",options.trackpTmin
@@ -235,6 +237,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    ## matched criteria
    dRmin = cms.double(options.dRmin),
    pTres = cms.double(options.pTres),
+   gendRmin = cms.double(options.gendRmin),
    genpTres = cms.double(options.genpTres),
    trackdRmin = cms.double(options.trackdRmin),
    trackpTmin = cms.double(options.trackpTmin),

@@ -174,6 +174,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // dR matching criteria
   const float dRmin;
   const float pTres;
+  const float gendRmin;
   const float genpTres;
   const float trackdRmin;
   const float trackpTmin;
