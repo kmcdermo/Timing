@@ -479,6 +479,22 @@ void Skimmer::FillOutJets(const UInt_t entry)
   fOutJets.phi_f.swap( (*fInJets.phi) );
   fOutJets.eta_f.swap( (*fInJets.eta) );
   fOutJets.ID_i.swap( (*fInJets.ID) );
+
+  // fInJets.b_NHF->GetEntry(entry);
+  // fInJets.b_NEMF->GetEntry(entry);
+  // fInJets.b_CHF->GetEntry(entry);
+  // fInJets.b_CEMF->GetEntry(entry);
+  // fInJets.b_MUF->GetEntry(entry);
+  // fInJets.b_NHM->GetEntry(entry);
+  // fInJets.b_CHM->GetEntry(entry);
+
+  // fOutJets.NHF_f.swap( (*fInJets.NHF) );
+  // fOutJets.NEMF_f.swap( (*fInJets.NEMF) );
+  // fOutJets.CHF_f.swap( (*fInJets.CHF) );
+  // fOutJets.CEMF_f.swap( (*fInJets.CEMF) );
+  // fOutJets.MUF_f.swap( (*fInJets.MUF) );
+  // fOutJets.NHM_f.swap( (*fInJets.NHM) );
+  // fOutJets.CHM_f.swap( (*fInJets.CHM) );
 }
 
 void Skimmer::FillOutPhos(const UInt_t entry)
@@ -659,7 +675,7 @@ void Skimmer::GetInConfig()
   fInConfigTree->GetEntry(0);
 
   // set isMC
-  fIsMC = (fInConfig.isGMSB || fInConfig.isHVDS || fInConfig.isBkgd || fInConfig.isToy);
+  fIsMC = (fInConfig.isGMSB || fInConfig.isHVDS || fInConfig.isBkgd || fInConfig.isToy || fInConfig.isADD);
 }
 
 void Skimmer::InitInConfigStrings()
@@ -706,6 +722,7 @@ void Skimmer::InitInConfigBranches()
   fInConfigTree->SetBranchAddress(fInConfig.s_isHVDS.c_str(), &fInConfig.isHVDS);
   fInConfigTree->SetBranchAddress(fInConfig.s_isBkgd.c_str(), &fInConfig.isBkgd);
   fInConfigTree->SetBranchAddress(fInConfig.s_isToy.c_str(), &fInConfig.isToy);
+  fInConfigTree->SetBranchAddress(fInConfig.s_isADD.c_str(), &fInConfig.isADD);
   fInConfigTree->SetBranchAddress(fInConfig.s_xsec.c_str(), &fInConfig.xsec);
   fInConfigTree->SetBranchAddress(fInConfig.s_filterEff.c_str(), &fInConfig.filterEff);
   fInConfigTree->SetBranchAddress(fInConfig.s_BR.c_str(), &fInConfig.BR);
@@ -750,6 +767,14 @@ void Skimmer::InitInBranchVecs()
   fInJets.phi = 0;
   fInJets.eta = 0;
   fInJets.ID = 0;
+
+  // fInJets.NHF = 0;
+  // fInJets.NEMF = 0;
+  // fInJets.CHF = 0;
+  // fInJets.CEMF = 0;
+  // fInJets.MUF = 0;
+  // fInJets.NHM = 0;
+  // fInJets.CHM = 0;
 
   if (fInConfig.storeRecHits) 
   {
@@ -901,6 +926,14 @@ void Skimmer::InitInBranches()
   fInTree->SetBranchAddress(fInJets.s_eta.c_str(), &fInJets.eta, &fInJets.b_eta);
   fInTree->SetBranchAddress(fInJets.s_ID.c_str(), &fInJets.ID, &fInJets.b_ID);
 
+  // fInTree->SetBranchAddress(fInJets.s_NHF.c_str(), &fInJets.NHF, &fInJets.b_NHF);
+  // fInTree->SetBranchAddress(fInJets.s_NEMF.c_str(), &fInJets.NEMF, &fInJets.b_NEMF);
+  // fInTree->SetBranchAddress(fInJets.s_CHF.c_str(), &fInJets.CHF, &fInJets.b_CHF);
+  // fInTree->SetBranchAddress(fInJets.s_CEMF.c_str(), &fInJets.CEMF, &fInJets.b_CEMF);
+  // fInTree->SetBranchAddress(fInJets.s_MUF.c_str(), &fInJets.MUF, &fInJets.b_MUF);
+  // fInTree->SetBranchAddress(fInJets.s_NHM.c_str(), &fInJets.NHM, &fInJets.b_NHM);
+  // fInTree->SetBranchAddress(fInJets.s_CHM.c_str(), &fInJets.CHM, &fInJets.b_CHM);
+
   fInTree->SetBranchAddress(fInEvent.s_nrechits.c_str(), &fInEvent.nrechits, &fInEvent.b_nrechits);
   if (fInConfig.storeRecHits)
   {
@@ -1014,6 +1047,7 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfigTree->Branch(fOutConfig.s_isHVDS.c_str(), &fOutConfig.isHVDS);
   fOutConfigTree->Branch(fOutConfig.s_isBkgd.c_str(), &fOutConfig.isBkgd);
   fOutConfigTree->Branch(fOutConfig.s_isToy.c_str(), &fOutConfig.isToy);
+  fOutConfigTree->Branch(fOutConfig.s_isADD.c_str(), &fOutConfig.isADD);
   fOutConfigTree->Branch(fOutConfig.s_xsec.c_str(), &fOutConfig.xsec);
   fOutConfigTree->Branch(fOutConfig.s_filterEff.c_str(), &fOutConfig.filterEff);
   fOutConfigTree->Branch(fOutConfig.s_BR.c_str(), &fOutConfig.BR);
@@ -1057,6 +1091,7 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfig.isHVDS = fInConfig.isHVDS;
   fOutConfig.isBkgd = fInConfig.isBkgd;
   fOutConfig.isToy = fInConfig.isToy;
+  fOutConfig.isADD = fInConfig.isADD;
   fOutConfig.xsec = fInConfig.xsec;
   fOutConfig.filterEff = fInConfig.filterEff;
   fOutConfig.BR = fInConfig.BR;
@@ -1225,6 +1260,13 @@ void Skimmer::InitOutBranches()
   fOutTree->Branch(fOutJets.s_phi.c_str(), &fOutJets.phi_f);
   fOutTree->Branch(fOutJets.s_eta.c_str(), &fOutJets.eta_f);
   fOutTree->Branch(fOutJets.s_ID.c_str(), &fOutJets.ID_i);
+  // fOutTree->Branch(fOutJets.s_NHF.c_str(), &fOutJets.NHF_f);
+  // fOutTree->Branch(fOutJets.s_NEMF.c_str(), &fOutJets.NEMF_f);
+  // fOutTree->Branch(fOutJets.s_CHF.c_str(), &fOutJets.CHF_f);
+  // fOutTree->Branch(fOutJets.s_CEMF.c_str(), &fOutJets.CEMF_f);
+  // fOutTree->Branch(fOutJets.s_MUF.c_str(), &fOutJets.MUF_f);
+  // fOutTree->Branch(fOutJets.s_NHM.c_str(), &fOutJets.NHM_f);
+  // fOutTree->Branch(fOutJets.s_CHM.c_str(), &fOutJets.CHM_f);
 
   fOutTree->Branch(fOutEvent.s_nrechits.c_str(), &fOutEvent.nrechits);
 

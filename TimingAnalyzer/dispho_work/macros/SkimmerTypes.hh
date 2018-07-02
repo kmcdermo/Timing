@@ -47,6 +47,7 @@ struct Configuration
   Bool_t  isHVDS;
   Bool_t  isBkgd;
   Bool_t  isToy;
+  Bool_t  isADD;
   Float_t xsec;
   Float_t filterEff;
   Float_t BR;
@@ -88,6 +89,7 @@ struct Configuration
   std::string s_isHVDS = "isHVDS";
   std::string s_isBkgd = "isBkgd";
   std::string s_isToy  = "isToy";
+  std::string s_isADD  = "isADD";
   std::string s_xsec = "xsec";
   std::string s_filterEff = "filterEff";
   std::string s_BR = "BR";
@@ -261,23 +263,55 @@ struct Jet
   std::vector<Float_t> * eta;
   std::vector<Int_t>   * ID;
 
+  std::vector<Float_t> * NHF;
+  std::vector<Float_t> * NEMF;
+  std::vector<Float_t> * CHF;
+  std::vector<Float_t> * CEMF;
+  std::vector<Float_t> * MUF;
+  std::vector<Float_t> * NHM;
+  std::vector<Float_t> * CHM;
+
   std::vector<Float_t> E_f;
   std::vector<Float_t> pt_f;
   std::vector<Float_t> phi_f;
   std::vector<Float_t> eta_f;
   std::vector<Int_t>   ID_i;
   
+  std::vector<Float_t> NHF_f;
+  std::vector<Float_t> NEMF_f;
+  std::vector<Float_t> CHF_f;
+  std::vector<Float_t> CEMF_f;
+  std::vector<Float_t> MUF_f;
+  std::vector<Float_t> NHM_f;
+  std::vector<Float_t> CHM_f;
+
   std::string s_E = "jetE";
   std::string s_pt = "jetpt";
   std::string s_phi = "jetphi";
   std::string s_eta = "jeteta";
   std::string s_ID = "jetID";
 
+  std::string s_NHF = "jetNHF";
+  std::string s_NEMF = "jetNEMF";
+  std::string s_CHF = "jetCHF";
+  std::string s_CEMF = "jetCEMF";
+  std::string s_MUF = "jetMUF";
+  std::string s_NHM = "jetNHM";
+  std::string s_CHM = "jetCHM";
+
   TBranch * b_E;
   TBranch * b_pt;
   TBranch * b_phi;
   TBranch * b_eta;
   TBranch * b_ID;
+
+  TBranch * b_NHF;
+  TBranch * b_NEMF;
+  TBranch * b_CHF;
+  TBranch * b_CEMF;
+  TBranch * b_MUF;
+  TBranch * b_NHM;
+  TBranch * b_CHM;
 };
 
 struct RecHits
