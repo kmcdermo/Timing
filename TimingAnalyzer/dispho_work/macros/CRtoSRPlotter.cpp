@@ -38,7 +38,7 @@ CRtoSRPlotter::~CRtoSRPlotter()
   for (auto & HistPair : HistMap) delete HistPair.second;
 
   delete fSRFile;
-  delete fCRFile;;
+  delete fCRFile;
 
   delete fOutFile;
   delete fTDRStyle;
@@ -308,10 +308,10 @@ void CRtoSRPlotter::MakeConfigPave()
   // give grand title
   fConfigPave->AddText("***** CRtoSRPlotter Config *****");
 
-  // fit config
+  // CR to SR plot config
   Common::AddTextFromInputConfig(fConfigPave,"CRtoSR Config",fCRtoSRConfig);
 
-  // store last bits of misc info
+  // a bit redundant as this is in CR and SR config, but store plot config anyway
   Common::AddTextFromInputConfig(fConfigPave,"Plot Config",fPlotConfig);
 
   // dump in old config
