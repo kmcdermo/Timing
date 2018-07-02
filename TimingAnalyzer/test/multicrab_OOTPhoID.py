@@ -92,7 +92,11 @@ def main():
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
             ['/GMSB_L200TeV_CTau400cm_930/kmcdermo-GMSB_L200TeV_CTau400cm_930_step3-23134fac048c68b5122d77328802e60f/USER', '0.04'  , '1', '0.81418', 'isGMSB', 10000 , 'phys03'],
-            ['/GJet_Pt-15To6000_TuneCP5-Flat_13TeV_pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'     , '283200', '1', '1'      , 'isBkgd', 500000, 'global']
+            ['/GJet_Pt-15To6000_TuneCP5-Flat_13TeV_pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'     , '283200', '1', '1'      , 'isBkgd', 500000, 'global'],
+
+            ['/ADDmonoPhoton_MD-1_d-5_TuneCUETP8M1_13TeV-pythia8/RunIISummer17MiniAOD-NZSFlatPU28to62_92X_upgrade2017_realistic_v10-v1/MINIAODSIM', '0.9701', '1', '1', 'isADD', 10000, 'global'],
+            ['/ADDmonoPhoton_MD-1_d-3_TuneCUETP8M1_13TeV-pythia8/RunIISummer17MiniAOD-NZSFlatPU28to62_92X_upgrade2017_realistic_v10-v1/MINIAODSIM', '0.4108', '1', '1', 'isADD', 10000, 'global'],
+            
             ]
  
         for inDO in inputDataAndOpts:

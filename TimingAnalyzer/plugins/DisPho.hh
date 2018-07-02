@@ -237,6 +237,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const bool isHVDS;
   const bool isBkgd;
   const bool isToy;
+  const bool isADD;
   const float xsec;
   const float filterEff;
   const float BR;

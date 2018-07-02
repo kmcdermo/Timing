@@ -62,6 +62,7 @@ options.register('isGMSB',False,VarParsing.multiplicity.singleton,VarParsing.var
 options.register('isHVDS',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate HVDS');
 options.register('isBkgd',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate Background MC');
 options.register('isToy',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate Toy MC');
+options.register('isADD',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate ADD Monophoton');
 options.register('xsec',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'cross section in pb');
 options.register('filterEff',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'filter efficiency of MC');
 options.register('BR',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'branching ratio of MC');
@@ -86,7 +87,7 @@ options.register('runUnscheduled',False,VarParsing.multiplicity.singleton,VarPar
 ## parsing command line arguments
 options.parseArguments()
 
-if options.isGMSB or options.isHVDS or options.isBkgd or options.isToy: options.isMC = True
+if options.isGMSB or options.isHVDS or options.isBkgd or options.isToy or options.isADD: options.isMC = True
 
 print "     ##### Settings ######"
 print "       -- Blinding --"
@@ -137,6 +138,7 @@ if options.isMC:
 	print "isHVDS         : ",options.isHVDS
 	print "isBkgd         : ",options.isBkgd
 	print "isToy          : ",options.isToy
+	print "isADD          : ",options.isADD
 	print "xsec           : ",options.xsec
 	print "filterEff      : ",options.filterEff
 	print "BR             : ",options.BR
@@ -270,6 +272,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    isHVDS   = cms.bool(options.isHVDS),
    isBkgd   = cms.bool(options.isBkgd),
    isToy    = cms.bool(options.isToy),
+   isADD    = cms.bool(options.isADD),
    xsec     = cms.double(options.xsec),
    filterEff= cms.double(options.filterEff),
    BR       = cms.double(options.BR),

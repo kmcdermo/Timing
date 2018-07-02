@@ -83,6 +83,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   isHVDS(iConfig.existsAs<bool>("isHVDS") ? iConfig.getParameter<bool>("isHVDS") : false),
   isBkgd(iConfig.existsAs<bool>("isBkgd") ? iConfig.getParameter<bool>("isBkgd") : false),
   isToy (iConfig.existsAs<bool>("isToy")  ? iConfig.getParameter<bool>("isToy")  : false),
+  isADD (iConfig.existsAs<bool>("isADD")  ? iConfig.getParameter<bool>("isADD")  : false),
   
   xsec(iConfig.existsAs<double>("xsec") ? iConfig.getParameter<double>("xsec") : 1.0),
   filterEff(iConfig.existsAs<double>("filterEff") ? iConfig.getParameter<double>("filterEff") : 1.0),
@@ -142,7 +143,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   }
 
   // only for simulated samples
-  if (isGMSB || isHVDS || isBkgd || isToy)
+  if (isGMSB || isHVDS || isBkgd || isToy || isADD)
   {
     isMC = true;
     genevtInfoToken = consumes<GenEventInfoProduct>             (iConfig.getParameter<edm::InputTag>("genevt"));
@@ -1482,6 +1483,7 @@ void DisPho::MakeAndFillConfigTree()
   bool isHVDS_tmp = isHVDS;
   bool isBkgd_tmp = isBkgd;
   bool isToy_tmp  = isToy;
+  bool isADD_tmp  = isADD;
   float xsec_tmp = xsec;
   float filterEff_tmp = filterEff;
   float BR_tmp = BR;
@@ -1489,6 +1491,7 @@ void DisPho::MakeAndFillConfigTree()
   configtree->Branch("isHVDS", &isHVDS_tmp, "isHVDS/O");
   configtree->Branch("isBkgd", &isBkgd_tmp, "isBkgd/O");
   configtree->Branch("isToy" , &isToy_tmp , "isToy/O");
+  configtree->Branch("isADD" , &isADD_tmp , "isADD/O");
   configtree->Branch("xsec", &xsec_tmp, "xsec/F");
   configtree->Branch("filterEff", &filterEff_tmp, "filterEff/F");
   configtree->Branch("BR", &BR_tmp, "BR/F");
