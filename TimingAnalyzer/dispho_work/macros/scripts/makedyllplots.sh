@@ -1,7 +1,7 @@
 #!/bin/bash
 
-outdir=${1:-"plots/ntuples_v4/dyll_skim"}
-infile="dyll_skim"
+outdir=${1:-"plots/ntuples_v4/dyll_skim_diel33"}
+infile="dyll_skim_diel33"
 sel="always_true"
 misc="misc"
 

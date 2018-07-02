@@ -1,0 +1,9 @@
+plot_title=Diphoton Invariant Mass [GeV/c^{2}]
+
+x_title=m_{#gamma#gamma} [GeV/c^{2}]
+x_scale=LIN
+x_var=mgg
+x_bins=CONSTANT 26 0 130
+
+y_title=Events
+y_scale=LOG

@@ -4,7 +4,7 @@
 export eosbase="/eos/cms/store/user/${USER}/nTuples"
 export inbase="${eosbase}/unskimmed"
 export tmpbase="/tmp/${USER}"
-export outbase="${eosbase}/skims/2017/rereco_v4_DYLL"
+export outbase="${eosbase}/skims/2017/rereco_v4_DYLL_NoHLT"
 
 ## filenames
 export infiles="dispho_*.root"

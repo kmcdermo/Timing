@@ -1,0 +1,9 @@
+plot_title=Subleading Photon isEB
+
+x_title=Subleading Photon isEB
+x_scale=LIN
+x_var=phoisEB_1
+x_bins=CONSTANT 2 0 2
+
+y_title=Events
+y_scale=LOG

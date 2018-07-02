@@ -1,0 +1,9 @@
+plot_title=Subleading Photon r_{9}
+
+x_title=Subleading Photon r_{9}
+x_scale=LIN
+x_var=phor9_1
+x_bins=CONSTANT 20 0.8 1.2
+
+y_title=Events
+y_scale=LOG

@@ -121,9 +121,9 @@ void Skimmer::EventLoop()
     if (!fOutConfig.isToy) // do not apply skim selection on toy config
     {
       // trigger
-      fInEvent.b_hltDiPho3022M90->GetEntry(entry);
-      if (!fInEvent.hltDiPho3022M90) continue;
-      fOutCutFlow->Fill((cutLabels["hltDiPho"]*1.f)-0.5f,wgt);
+      // fInEvent.b_hltDiPho3022M90->GetEntry(entry);
+      // if (!fInEvent.hltDiPho3022M90) continue;
+      // fOutCutFlow->Fill((cutLabels["hltDiPho"]*1.f)-0.5f,wgt);
 
       // have two photons
       fInEvent.b_nphotons->GetEntry(entry);
@@ -1316,7 +1316,7 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
     cutLabels[inh_cutflow->GetXaxis()->GetBinLabel(ibin)] = ibin;
   }
   auto inNbinsX_new = inNbinsX;
-  cutLabels["hltDiPho"] = ++inNbinsX_new;
+  //  cutLabels["hltDiPho"] = ++inNbinsX_new;
   cutLabels["nPhotonsGTE2"] = ++inNbinsX_new;
   cutLabels["ph0isEB"] = ++inNbinsX_new;
   cutLabels["ph0tightID"] = ++inNbinsX_new;

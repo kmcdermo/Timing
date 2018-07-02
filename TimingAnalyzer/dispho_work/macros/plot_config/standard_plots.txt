@@ -1,6 +1,6 @@
 nphotons
 mgg
-hltDiPho3022M90
+hltDiEle33MW
 
 phopt_0
 phopt_0_zoom
