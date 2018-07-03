@@ -436,7 +436,7 @@ namespace Common
   {
     std::cout << "Reading varwgtmap config..." << std::endl;
     
-    std::ifstream infile(Form("%s",varwgtconfig.Data()),std::ios::in);
+    std::ifstream infile(Form("%s",varwgtmapconfig.Data()),std::ios::in);
     TString sample, varwgt;
     while (infile >> sample >> varwgt)
     {
@@ -448,7 +448,7 @@ namespace Common
     // first encapsulate cut string
     for (auto & CutWgtPair : Common::CutWgtMap)
     {
-      auto & cutwgt = CutPair.second;
+      auto & cutwgt = CutWgtPair.second;
       cutwgt.Prepend("(");
       cutwgt.Append (")");
     }
@@ -456,8 +456,8 @@ namespace Common
     // second, multiply MC by evt weights
     for (auto & CutWgtPair : Common::CutWgtMap)
     {
-      const auto & sample = CutPair.first;
-      auto & cutwgt = CutPair.second;
+      const auto & sample = CutWgtPair.first;
+      auto & cutwgt = CutWgtPair.second;
     
       if (Common::GroupMap[sample] != isData)
       {

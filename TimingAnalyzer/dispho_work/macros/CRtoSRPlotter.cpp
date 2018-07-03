@@ -180,7 +180,7 @@ void CRtoSRPlotter::MakeLegend()
 
   // add MC
   Legend->AddEntry(HistMap["SR_MC"],Form("%s MC [SR]",fSample.Data()),"f");
-  Legend->AddEntry(HistMap["CR_MC"],Form("%s MC [%s CR]",fSample.Data(),f),"f");
+  Legend->AddEntry(HistMap["CR_MC"],Form("%s MC [%s CR]",fSample.Data(),fSample.Data()),"f");
 
   // save to output file
   fOutFile->cd();
