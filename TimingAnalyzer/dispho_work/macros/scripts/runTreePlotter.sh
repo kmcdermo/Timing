@@ -3,13 +3,14 @@
 infilename=${1:-"test.root"}
 insignalfilename=${2:-"signals.root"}
 cutconfig=${3:-"cut_config/always_true.txt"}
-plotconfig=${4:-"plot_config/phopt_0.txt"}
-miscconfig=${5:-"plot_config/misc_blind.txt"}
-outfiletext=${6:-"plots"}
-dir=${7:-"plots/test"}
+varwgtmapconfig=${4:-"varwgt_config/empty.txt"}
+plotconfig=${5:-"plot_config/phopt_0.txt"}
+miscconfig=${6:-"misc_config/misc_blind.txt"}
+outfiletext=${7:-"plots"}
+dir=${8:-"plots/test"}
 
 ## first make plot
-root -l -b -q runTreePlotter.C\(\"${infilename}\",\"${insignalfilename}\",\"${cutconfig}\",\"${plotconfig}\",\"${miscconfig}\",\"${outfiletext}\"\)
+root -l -b -q runTreePlotter.C\(\"${infilename}\",\"${insignalfilename}\",\"${cutconfig}\",\"${varwgtmapconfig}\",\"${plotconfig}\",\"${miscconfig}\",\"${outfiletext}\"\)
 
 ## make out dirs
 topdir=/afs/cern.ch/user/k/kmcdermo/www

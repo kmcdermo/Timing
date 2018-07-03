@@ -1,9 +1,11 @@
 #include "TreePlotter2D.hh"
 
 TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
-			     const TString & plotconfig, const TString & miscconfig, const TString & outfiletext) 
-  : fInFileName(infilename), fInSignalFileName(insignalfilename), fCutConfig(cutconfig), 
-    fPlotConfig(plotconfig), fMiscConfig(miscconfig), fOutFileText(outfiletext)
+			     const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
+			     const TString & outfiletext) 
+  : fInFileName(infilename), fInSignalFileName(insignalfilename), fCutConfig(cutconfig),
+    fVarWgtMapConfig(varwgtmapconfig), fPlotConfig(plotconfig), fMiscConfig(miscconfig), 
+    fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -99,7 +101,7 @@ void TreePlotter2D::MakeHistFromTrees()
       hist->SetDirectory(infile);
       
       // Fill from tree
-      intree->Draw(Form("%s:%s>>%s",fYVar.Data(),fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Common::CutMap[sample].Data(),Common::WeightString(sample).Data()),"goff");
+      intree->Draw(Form("%s:%s>>%s",fYVar.Data(),fXVar.Data(),hist->GetName()),Form("%s",Common::CutWgtMap[sample].Data()),"goff");
 
       // delete tree;
       delete intree;
@@ -229,7 +231,10 @@ void TreePlotter2D::MakeConfigPave()
   // dump plot cut config first
   Common::AddTextFromInputConfig(fConfigPave,"TreePlotter2D Cut Config",fCutConfig);
 
-  // dump plot config second
+  // dump extra weights 
+  Common::AddTextFromInputConfig(fConfigPave,"VarWgtMap Config",fVarWgtMapConfig);
+
+  // dump plot config
   Common::AddTextFromInputConfig(fConfigPave,"Plot Config",fPlotConfig);
 
   // store last bits of info
@@ -272,6 +277,8 @@ void TreePlotter2D::SetupConfig()
   Common::SetupTreeNames();
   Common::SetupHistNames();
   Common::SetupCuts(fCutConfig);
+  Common::SetupVarWgts(fVarWgtMapConfig);
+  Common::SetupWeights();
 }
 
 void TreePlotter2D::SetupPlotConfig()

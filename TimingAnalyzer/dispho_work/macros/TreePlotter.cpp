@@ -1,9 +1,11 @@
 #include "TreePlotter.hh"
 
 TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
-			 const TString & plotconfig, const TString & miscconfig, const TString & outfiletext) 
+			 const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
+			 const TString & outfiletext) 
   : fInFileName(infilename), fInSignalFileName(insignalfilename), fCutConfig(cutconfig),
-    fPlotConfig(plotconfig), fMiscConfig(miscconfig), fOutFileText(outfiletext)
+    fVarWgtMapConfig(varwgtmapconfig), fPlotConfig(plotconfig), fMiscConfig(miscconfig),
+    fOutFileText(outfiletext)
 {
   std::cout << "Initializing TreePlotter..." << std::endl;
 
@@ -109,8 +111,8 @@ void TreePlotter::MakeHistFromTrees()
       // get the hist we wish to write to (and holy crap, ROOT's internal memory residency is stupid)
       auto & hist = HistMap[sample];
       hist->SetDirectory(infile);
-     
-      intree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Common::CutMap[sample].Data(),Common::WeightString(sample).Data()),"goff");
+
+      intree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("%s",Common::CutWgtMap[sample].Data()),"goff");
 
       // delete tree;
       delete intree;
@@ -552,6 +554,9 @@ void TreePlotter::MakeConfigPave()
   // dump plot cut config first
   Common::AddTextFromInputConfig(fConfigPave,"TreePlotter Cut Config",fCutConfig);
 
+  // dump extra weights 
+  Common::AddTextFromInputConfig(fConfigPave,"VarWgtMap Config",fVarWgtMapConfig);
+
   // dump plot config
   Common::AddTextFromInputConfig(fConfigPave,"Plot Config",fPlotConfig);
 
@@ -798,6 +803,8 @@ void TreePlotter::SetupConfig()
   Common::SetupColors();
   Common::SetupLabels();
   Common::SetupCuts(fCutConfig);
+  Common::SetupVarWgts(fVarWgtMapConfig);
+  Common::SetupWeights();
 }
 
 void TreePlotter::SetupPlotConfig(const TString & plotconfig)

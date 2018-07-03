@@ -101,7 +101,8 @@ namespace Common
   extern std::map<TString,ColorStruct> SignalSubGroupColorMap;
   extern std::map<TString,Color_t> ColorMap;
   extern std::map<TString,TString> LabelMap; 
-  extern std::map<TString,TString> CutMap;
+  extern std::map<TString,TString> CutWgtMap;
+  extern std::map<TString,TString> VarWgtMap;
   extern std::vector<std::pair<TString,TString> > CutFlowPairVec;
 
   // special name for EWK histogram
@@ -125,6 +126,8 @@ namespace Common
   void SetupLabels();
   void SetupCuts(const TString & cutconfig);
   void SetupCutFlow(const TString & cutflowconfig);
+  void SetupVarWgts(const TString & varwgtconfig);
+  void SetupWeights();
   void KeepOnlySamples(const std::vector<TString> & samplevec);
   void KeepOnlySignals();
 
@@ -181,13 +184,6 @@ namespace Common
   TString ReplaceSpaceWithUnderscore(TString tmp){return tmp.ReplaceAll(" ","_");}
   TString PrintBool(const Bool_t b){return (b ? "true" : "false");}
 
-  // Weight for sample
-  TString WeightString(const TString & sample)
-  {
-    // Get the appropriate weight 
-    return (Common::GroupMap[sample] != isData ? "evtwgt * puwgt" : "1.0");
-  }
-  
   // Scale hists/graphs up or down
   void Scale(TH2F *& hist, const Bool_t isUp, const Bool_t varBinsX, const Bool_t varBinsY);
   void Scale(TH1F *& hist, const Bool_t isUp);

@@ -34,7 +34,8 @@ class TreePlotter
 public:
   TreePlotter() {}
   TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
-	      const TString & plotconfig, const TString & miscconfig, const TString & outfiletext);
+	      const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
+	      const TString & outfiletext);
   ~TreePlotter() {}
 
   // Initialize
@@ -80,6 +81,7 @@ private:
   const TString fInFileName;
   const TString fInSignalFileName;
   const TString fCutConfig;
+  const TString fVarWgtMapConfig;
   const TString fPlotConfig;
   const TString fMiscConfig;
   const TString fOutFileText;

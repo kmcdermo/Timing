@@ -17,7 +17,8 @@ namespace Common
   std::map<TString,ColorStruct> SignalSubGroupColorMap;
   std::map<TString,Color_t> ColorMap;
   std::map<TString,TString> LabelMap;
-  std::map<TString,TString> CutMap;
+  std::map<TString,TString> CutWgtMap;
+  std::map<TString,TString> VarWgtMap;
   std::vector<std::pair<TString,TString> > CutFlowPairVec;
 
   void SetupPrimaryDataset(const TString & pdname)
@@ -362,7 +363,7 @@ namespace Common
 	{
 	  for (const auto & GroupPair : GroupMap)
 	  {
-	    Common::CutMap[GroupPair.first] += Form("%s",cut.Data());
+	    Common::CutWgtMap[GroupPair.first] += Form("%s",cut.Data());
 	  }
 	}
       }
@@ -376,7 +377,7 @@ namespace Common
 	  {
 	    if (GroupPair.second == isBkgd)
 	    {
-	      Common::CutMap[GroupPair.first] += Form("&&%s",cut.Data());
+	      Common::CutWgtMap[GroupPair.first] += Form("&&%s",cut.Data());
 	    }
 	  }
 	}
@@ -391,7 +392,7 @@ namespace Common
 	  {
 	    if (GroupPair.second == isSignal)
 	    {
-	      Common::CutMap[GroupPair.first] += Form("&&%s",cut.Data());
+	      Common::CutWgtMap[GroupPair.first] += Form("&&%s",cut.Data());
 	    }
 	  }
 	}
@@ -406,7 +407,7 @@ namespace Common
 	  {
 	    if (GroupPair.second == isData)
 	    {
-	      Common::CutMap[GroupPair.first] += Form("&&%s",cut.Data());
+	      Common::CutWgtMap[GroupPair.first] += Form("&&%s",cut.Data());
 	    }
 	  }
 	}
@@ -428,6 +429,49 @@ namespace Common
     while (infile >> label >> cut)
     {
       Common::CutFlowPairVec.emplace_back(std::pair<TString,TString>{label,cut});
+    }
+  }
+
+  void SetupVarWgts(const TString & varwgtmapconfig)
+  {
+    std::cout << "Reading varwgtmap config..." << std::endl;
+    
+    std::ifstream infile(Form("%s",varwgtconfig.Data()),std::ios::in);
+    TString sample, varwgt;
+    while (infile >> sample >> varwgt)
+    {
+      Common::VarWgtMap[sample] += Form(" * (%s)",varwgt.Data());
+    }
+  }
+  void SetupWeights()
+  {
+    // first encapsulate cut string
+    for (auto & CutWgtPair : Common::CutWgtMap)
+    {
+      auto & cutwgt = CutPair.second;
+      cutwgt.Prepend("(");
+      cutwgt.Append (")");
+    }
+
+    // second, multiply MC by evt weights
+    for (auto & CutWgtPair : Common::CutWgtMap)
+    {
+      const auto & sample = CutPair.first;
+      auto & cutwgt = CutPair.second;
+    
+      if (Common::GroupMap[sample] != isData)
+      {
+	cutwgt += " * (evtwgt * puwgt)";
+      }
+    }  
+
+    // lastly, multiply any other weights from varwgt calculations
+    for (const auto & VarWgtPair : Common::VarWgtMap)
+    {
+      const auto & sample = VarWgtPair.first;
+      const auto & varwgt = VarWgtPair.second;
+      
+      Common::CutWgtMap[sample] += Form("%s",varwgt.Data());
     }
   }
 
