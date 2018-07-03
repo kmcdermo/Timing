@@ -235,6 +235,9 @@ void TreePlotter2D::MakeConfigPave()
   // store last bits of info
   Common::AddTextFromInputConfig(fConfigPave,"Miscellaneous Config",fMiscConfig);
 
+  // padding
+  Common::AddPaddingToPave(fConfigPave,3);
+
   // save name of infile, redundant
   fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
 

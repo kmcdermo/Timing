@@ -2,7 +2,7 @@
 #include "VarWeighter.hh"
 
 VarWeighter::VarWeighter(const TString & varwgtconfig)
-  : fVarConfig(varwgtconfig)
+  : fVarWgtConfig(varwgtconfig)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -13,8 +13,8 @@ VarWeighter::VarWeighter(const TString & varwgtconfig)
   ////////////////
 
   // init configuration
-  VarWeighter::SetupConfig();
   VarWeighter::SetupVarWgtConfig();
+  VarWeighter::SetupConfig();
 }
 
 VarWeighter::~VarWeighter()
@@ -34,6 +34,9 @@ void VarWeighter::MakeVarWeights()
 {
   // setup hists for making ratio
   VarWeighter::GetInputHists();
+
+  // scale input hists to unity 
+  VarWeighter::ScaleInputToUnity();
 
   // make the MC SR/CR hist
   VarWeighter::MakeRatioHist();
@@ -66,12 +69,23 @@ void VarWeighter::GetInputHists()
   Common::CheckValidTH1F(HistMap["SR_MC"],mcname,fSRFileName);
 }  
 
+void VarWeighter::ScaleInputToUnity()
+{
+  std::cout << "Scaling input hists to unity..." << std::endl;
+
+  for (auto & HistPair : HistMap)
+  {
+    auto & hist = HistPair.second;
+    hist->Scale(1.f/hist->Integral(fXVarBins?"width":""));
+  }
+}
+
 void VarWeighter::MakeRatioHist()
 {
   std::cout << "Computing SR/CR histogram..." << std::endl;
 
   // Open the skim file as we want to save the hist there
-  fSkimFile = TFile::Open(Form("%s",fSkimFileName.Data()));
+  fSkimFile = TFile::Open(Form("%s",fSkimFileName.Data()),"UPDATE");
   Common::CheckValidFile(fSkimFile,fSkimFileName);
   fSkimFile->cd();
   
@@ -107,7 +121,6 @@ void VarWeighter::MakeWeightBranch(const TString & treename)
   // get tree
   fSkimFile->cd();
   auto tree = (TTree*)fSkimFile->Get(Form("%s",treename.Data()));
-  tree->cd();
   
   // get input branch and var: assumes float!!!!!
   Float_t var = 0.f;
@@ -145,9 +158,11 @@ void VarWeighter::MakeConfigPave()
   std::cout << "Dumping config to a pave..." << std::endl;
 
   // create the pave, copying in old info
-  fOutFile->cd();
-  fConfigPave = new TPaveText();
-  fConfigPave->SetName(Form("%s",Common::pavename.Data()));
+  fSkimFile->cd();
+  fConfigPave = (TPaveText*)fSkimFile->Get(Form("%s",Common::pavename.Data()));
+
+  // add some padding to new stuff
+  Common::AddPaddingToPave(fConfigPave,3);
 
   // give grand title
   fConfigPave->AddText("***** VarWeighter Config *****");
@@ -161,18 +176,8 @@ void VarWeighter::MakeConfigPave()
   Common::AddTextFromInputPave(fConfigPave,fSRFile);
 
   // save to output file
-  fOutFile->cd();
+  fSkimFile->cd();
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
-}
-
-void VarWeighter::SetupConfig()
-{
-  std::cout << "Setting up config..." << std::endl;
-
-  Common::SetupSamples();
-  Common::SetupGroups();
-  Common::SetupTreeNames();
-  Common::SetupHistNames();
 }
 
 void VarWeighter::SetupVarWgtConfig()
@@ -187,6 +192,14 @@ void VarWeighter::SetupVarWgtConfig()
     else if (str.find("sample=") != std::string::npos)
     {
       fSample = Common::RemoveDelim(str,"sample=");
+    }
+    else if (str.find("var=") != std::string::npos)
+    {
+      fVar = Common::RemoveDelim(str,"var=");
+    }
+    else if (str.find("plot_config=") != std::string::npos)
+    {
+      fPlotConfig = Common::RemoveDelim(str,"plot_config=");
     }
     else if (str.find("cr_file=") != std::string::npos)
     {
@@ -207,4 +220,15 @@ void VarWeighter::SetupVarWgtConfig()
       exit(1);
     }
   }
+}
+
+void VarWeighter::SetupConfig()
+{
+  std::cout << "Setting up config..." << std::endl;
+
+  Common::SetupSamples();
+  Common::SetupGroups();
+  Common::SetupTreeNames();
+  Common::SetupHistNames();
+  Common::SetupVarBinsBool("x_bins=",fPlotConfig,fXVarBins);
 }

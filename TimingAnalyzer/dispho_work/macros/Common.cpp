@@ -515,6 +515,35 @@ namespace Common
     }
   }
   
+  void SetupVarBinsBool(const TString & label, const TString & plotconfig, Bool_t & var_bins)
+  {
+    std::cout << "Reading plot config for var_bins bool..." << std::endl;
+
+    // Bool used to see if we actually ever found the label!
+    Bool_t islabel = false;
+    
+    std::vector<Double_t> tmp_bins; // tmp unused variable
+    std::ifstream infile(Form("%s",plotconfig.Data()),std::ios::in);
+    std::string str;
+    while (std::getline(infile,str))
+    {
+      if (str.find(Form("%s",label.Data())) != std::string::npos)
+      {
+	str = Common::RemoveDelim(str,Form("%s",label.Data()));
+	Common::SetupBins(str,tmp_bins,var_bins);
+	islabel = true;
+      }
+    }
+
+    // exit if we screwed up the plot config!
+    if (!islabel)
+    {
+      std::cerr << "Aye... your messed up reading the plot config! Exiting..." << std::endl;
+      std::cerr << "Config file: " << plotconfig.Data() << " label: " << label.Data() << std::endl;
+      exit(1);
+    }
+  }
+
   void SetupBool(const std::string & str, Bool_t & setting)
   {
     if      (str.find("1") != std::string::npos)
@@ -703,6 +732,14 @@ namespace Common
     }
     
     delete inpave;
+  }
+
+  void AddPaddingToPave(TPaveText *& outpave, const Int_t lines)
+  {
+    for (auto iline = 0; iline < lines; iline++)
+    {
+      outpave->AddText("----- ================== -----");
+    }
   }
 
   void Scale(TH2F *& hist, const Bool_t isUp, const Bool_t varBinsX, const Bool_t varBinsY)

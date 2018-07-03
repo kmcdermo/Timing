@@ -129,8 +129,14 @@ void RescalePlotter::MakeConfigPave()
   // dump rescale config first
   Common::AddTextFromInputConfig(TreePlotter::fConfigPave,"Rescale Config",fRescaleConfig); 
 
+  // dump plot config
+  Common::AddTextFromInputConfig(TreePlotter::fConfigPave,"Plot Config",fPlotConfig); 
+
   // store misc config
   Common::AddTextFromInputConfig(TreePlotter::fConfigPave,"Miscellaneous Config",fMiscConfig); 
+
+  // padding
+  Common::AddPaddingToPave(Plotter::fConfigPave,3);
 
   // save name of infile, redundant
   TreePlotter::fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));

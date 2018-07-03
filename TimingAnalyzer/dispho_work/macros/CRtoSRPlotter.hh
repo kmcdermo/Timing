@@ -33,9 +33,8 @@ public:
 
   // Initialize
   void SetupDefaults();
-  void SetupConfig();
   void SetupCRtoSRConfig();
-  void SetupPlotConfig();
+  void SetupConfig();
 
   // Main call
   void MakeCRtoSRPlot();
@@ -79,7 +78,6 @@ private:
   std::map<TString,TH1F*> HistMap;
 
   // plot info
-  std::vector<Double_t> fXBins;
   Bool_t fXVarBins;
 
   // Style

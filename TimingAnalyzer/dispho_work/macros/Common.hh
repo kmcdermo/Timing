@@ -135,6 +135,7 @@ namespace Common
   void SetupScale(const std::string & str, Bool_t & scale);
 
   // Misc setup
+  void SetupVarBinsBool(const TString & label, const TString & plotconfig, Bool_t & var_bins);
   void SetupBool(const std::string & str, Bool_t & setting);
   void SetupWhichSamples(const TString & sampleconfig, std::vector<TString> & samplevec);
   void SetupWhichSignals(const std::string & str, std::vector<TString> & signalvec);
@@ -217,6 +218,7 @@ namespace Common
   // saving config info
   void AddTextFromInputConfig(TPaveText *& outpave, const TString & label, const TString & configname);
   void AddTextFromInputPave(TPaveText *& outpave, TFile *& infile);
+  void AddPaddingToPave(TPaveText *& outpave, const Int_t lines);
 
   // ROOT Formatting
   void CMSLumi(TCanvas * canv, const Int_t iPosX = 10);

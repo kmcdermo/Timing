@@ -28,14 +28,15 @@ public:
   ~VarWeighter();
 
   // Initialize
-  void SetupConfig();
   void SetupVarWgtConfig();
+  void SetupConfig();
 
   // Main call
   void MakeVarWeights();
 
   // Subroutines for making weight branches
   void GetInputHists();
+  void ScaleInputToUnity();
   void MakeRatioHist();
   void MakeWeightBranches();
 
@@ -51,6 +52,8 @@ private:
 
   // VarWgt info
   TString fSample;
+  TString fVar;
+  TString fPlotConfig;
   TString fCRFileName;
   TString fSRFileName;
   TString fSkimFileName;
@@ -60,8 +63,12 @@ private:
   TFile * fSRFile;
   std::map<TString,TH1F*> HistMap;
 
+  // plot info
+  Bool_t fXVarBins;
+
   // I/O
   TFile * fSkimFile;
+  TPaveText * fConfigPave;
 };
 
 #endif

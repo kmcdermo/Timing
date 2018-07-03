@@ -1,31 +1,30 @@
 #!/bin/bash
 
-outdir=${1:-"plots/ntuples_v4/checks_v3/jetclean_checks"}
-insel_dir="cuts_v3/"
-insel="hltSignal"
+outdir=${1:-"plots/ntuples_v4/checks_v3"}
+insel_dir=""
+insel="always_true"
 
-for inputgroup in "jetclean/sr_nohlt signals_sr signal_nohlt SinglePhoton"
-do echo ${inputgroup} | while read -r infile insignalfile sel pdname
+extra="_noqcdwgt1000"
+
+for inputgroup in "sr signals_sr signal SinglePhoton misc"
+do echo ${inputgroup} | while read -r infile insignalfile sel pdname misc
     do
-	while IFS='' read -r line || [[ -n "${line}" ]]; 
+	while IFS='' read -r plot || [[ -n "${plot}" ]]; 
 	do
-	    if [[ ${line} != "" ]];
+	    if [[ ${plot} != "" ]];
 	    then
-		plot=${line}
-		misc="misc"
-		./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel_dir}${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}_${insel}"
+		./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel_dir}${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}_${insel}${extra}"
 	    fi
 	done < plot_config/standard_plots.txt
     done
 done
 
-for inputgroup in "jetclean/sr_nohlt signals_sr signal_nohlt SinglePhoton"
-do echo ${inputgroup} | while read -r infile insignalfile sel pdname
+for inputgroup in "sr signals_sr signal SinglePhoton misc_blind"
+do echo ${inputgroup} | while read -r infile insignalfile sel pdname misc
     do
 	for plot in phoseedtime_0 met met_zoom
 	do
-	    misc="misc_blind"
-	    ./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel_dir}${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}_${insel}"
+	    ./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel_dir}${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}_${insel}${extra}"
 	done
     done
 done

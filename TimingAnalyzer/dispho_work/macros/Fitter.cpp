@@ -984,8 +984,14 @@ void Fitter::MakeConfigPave()
   // fit config
   Common::AddTextFromInputConfig(fConfigPave,"Fit Config",fFitConfig);
 
+  // plot config
+  Common::AddTextFromInputConfig(fConfigPave,"Plot Config",fPlotConfig);
+
   // store last bits of misc info
   Common::AddTextFromInputConfig(fConfigPave,"Miscellaneous Config",fMiscConfig);
+
+  // padding
+  Common::AddPaddingToPave(fConfigPave,3);
 
   // dump in old config
   fConfigPave->AddText("***** GJets CR Config *****");

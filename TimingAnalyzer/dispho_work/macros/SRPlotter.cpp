@@ -106,8 +106,14 @@ void SRPlotter::MakeConfigPave()
   // dump rescale config first
   Common::AddTextFromInputConfig(TreePlotter::fConfigPave,"SRPlot Config",fSRPlotConfig); 
 
+  // dump plot config: a bit redundant
+  Common::AddTextFromInputConfig(TreePlotter::fConfigPave,"Plot Config",fPlotConfig); 
+
   // store misc config
   Common::AddTextFromInputConfig(TreePlotter::fConfigPave,"Miscellaneous Config",fMiscConfig); 
+
+  // padding
+  Common::AddPaddingToPave(TreePlotter::fConfigPave,3);
 
   // dump in old config
   fConfigPave->AddText("***** GJets CR Config *****");

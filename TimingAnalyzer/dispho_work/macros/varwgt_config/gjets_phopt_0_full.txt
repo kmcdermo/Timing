@@ -1,0 +1,7 @@
+sample=GJets
+var=phopt_0
+plot_config=plot_config/phopt_0_full.txt
+
+cr_file=phopt_0_full_gjets_cr.root
+sr_file=phopt_0_full_sr.root
+skim_file=skims/gjets.root

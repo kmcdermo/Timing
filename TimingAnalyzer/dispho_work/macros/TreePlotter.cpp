@@ -110,7 +110,6 @@ void TreePlotter::MakeHistFromTrees()
       auto & hist = HistMap[sample];
       hist->SetDirectory(infile);
      
-      // Fill from tree
       intree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("(%s) * (%s)",Common::CutMap[sample].Data(),Common::WeightString(sample).Data()),"goff");
 
       // delete tree;
@@ -558,6 +557,9 @@ void TreePlotter::MakeConfigPave()
 
   // store last bits of info from misc
   Common::AddTextFromInputConfig(fConfigPave,"Miscellaneous Config",fMiscConfig); 
+
+  // padding
+  Common::AddPaddingToPave(fConfigPave,3);
 
   // save name of infile, redundant
   fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));

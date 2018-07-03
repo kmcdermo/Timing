@@ -18,10 +18,9 @@ CRtoSRPlotter::CRtoSRPlotter(const TString & crtosrconfig, const TString & outfi
 
   // init configuration
   CRtoSRPlotter::SetupDefaults();
-  CRtoSRPlotter::SetupConfig();
   CRtoSRPlotter::SetupCRtoSRConfig();
-  CRtoSRPlotter::SetupPlotConfig();
-  
+  CRtoSRPlotter::SetupConfig();
+
   // output root file for quick inspection
   fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"RECREATE");
 }
@@ -314,6 +313,9 @@ void CRtoSRPlotter::MakeConfigPave()
   // a bit redundant as this is in CR and SR config, but store plot config anyway
   Common::AddTextFromInputConfig(fConfigPave,"Plot Config",fPlotConfig);
 
+  // padding
+  Common::AddPaddingToPave(fConfigPave,3);
+  
   // dump in old config
   fConfigPave->AddText("***** CR Config *****");
   Common::AddTextFromInputPave(fConfigPave,fCRFile);
@@ -330,15 +332,6 @@ void CRtoSRPlotter::SetupDefaults()
 {
   fDrawNorm = false;
   fDrawScaled = false;
-}
-
-void CRtoSRPlotter::SetupConfig()
-{
-  std::cout << "Setting up config..." << std::endl;
-
-  Common::SetupSamples();
-  Common::SetupGroups();
-  Common::SetupHistNames();
 }
 
 void CRtoSRPlotter::SetupCRtoSRConfig()
@@ -362,7 +355,7 @@ void CRtoSRPlotter::SetupCRtoSRConfig()
     {
       fSRFileName = Common::RemoveDelim(str,"sr_file=");
     }
-    else if (str.find("plot_config") != std::string::npos)
+    else if (str.find("plot_config=") != std::string::npos)
     {
       fPlotConfig = Common::RemoveDelim(str,"plot_config=");
     }
@@ -385,20 +378,14 @@ void CRtoSRPlotter::SetupCRtoSRConfig()
   }
 }
 
-void CRtoSRPlotter::SetupPlotConfig()
+void CRtoSRPlotter::SetupConfig()
 {
-  std::cout << "Reading plot config..." << std::endl;
+  std::cout << "Setting up config..." << std::endl;
 
-  std::ifstream infile(Form("%s",fPlotConfig.Data()),std::ios::in);
-  std::string str;
-  while (std::getline(infile,str))
-  {
-    if (str.find("x_bins=") != std::string::npos)
-    {
-      str = Common::RemoveDelim(str,"x_bins=");
-      Common::SetupBins(str,fXBins,fXVarBins);
-    }
-  }
+  Common::SetupSamples();
+  Common::SetupGroups();
+  Common::SetupHistNames();
+  Common::SetupVarBinsBool("x_bins=",fPlotConfig,fXVarBins);
 }
 
 void CRtoSRPlotter::GetHistMinimum()
