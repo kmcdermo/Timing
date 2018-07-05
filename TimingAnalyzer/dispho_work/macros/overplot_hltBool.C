@@ -57,6 +57,7 @@ void draw(std::vector<TH1F*> & hists, TLegend *& leg, const TString & label, con
   // make canvas
   auto canv = new TCanvas();
   canv->cd();
+  canv->SetTicky();
   canv->SetLogy(isLogy);
 
   for (auto i = 0U; i < hists.size(); i++)
@@ -76,6 +77,8 @@ void draw(std::vector<TH1F*> & hists, TLegend *& leg, const TString & label, con
 
 void overplot_hltBool()
 {
+  gStyle->SetOptStat(0);
+  
   auto file = TFile::Open("skims/sr_noht_nohlt.root");
   auto tree = (TTree*)file->Get("Data_Tree");
 
@@ -92,7 +95,7 @@ void overplot_hltBool()
   const TString xtitle = "hltSignal";
   const TString ytitle = "Events";
 
-  auto leg = new TLegend(0.3,0.7,0.5,0.9);
+  auto leg = new TLegend(0.15,0.65,0.45,0.95);
   leg->SetNColumns(2);
 
   std::vector<TH1F*> hists(infos.size());
@@ -114,6 +117,8 @@ void overplot_hltBool()
     tree->Draw(Form("hltSignal>>%s",hist->GetName()),info.cut.Data(),"goff");
 
     leg->AddEntry(hist,info.label.Data(),"epl");
+
+    std::cout << hist->GetName() << ": " << hist->GetBinContent(2) << std::endl;
   }
 
   // unscaled
@@ -124,6 +129,8 @@ void overplot_hltBool()
   for (auto & hist : hists)
   {
     hist->Scale(1.f/hist->Integral());
+
+    std::cout << hist->GetName() << ": " << hist->GetBinContent(2) << std::endl;
   }
 
   draw(hists,leg,"scaled",true);
