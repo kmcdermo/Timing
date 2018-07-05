@@ -48,6 +48,10 @@ private:
 
   // input extra hists
   std::map<TString,TH1F*> HistMap;
+
+  // factor maps
+  std::map<TString,Float_t> fCRKFMap;
+  std::map<TString,Float_t> fCRSFMap;
 };
 
 #endif

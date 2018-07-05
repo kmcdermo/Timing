@@ -80,25 +80,23 @@ void SRPlotter::ScaleCRtoSR()
   std::cout << "Scaling data hists in CR to SR using MC scale factors..." << std::endl;
 
   // Create k-factors
-  std::map<TString,Float_t> crKFMap;
-  crKFMap["GJets"] = SRPlotter::GetKFactor("GJets");
-  crKFMap["QCD"]   = SRPlotter::GetKFactor("QCD");
+  fCRKFMap["GJets"] = SRPlotter::GetKFactor("GJets");
+  fCRKFMap["QCD"]   = SRPlotter::GetKFactor("QCD");
 
   // Create CRtoSR scale factors : a bit redundant with K-Factors for now
-  std::map<TString,Float_t> crSFMap;
-  for (const auto & crKFPair : crKFMap)
+  for (const auto & CRKFPair : fCRKFMap)
   {
-    const auto & CR    = crKFPair.first;
-    const auto kFactor = crKFPair.second;
+    const auto & CR    = CRKFPair.first;
+    const auto kFactor = CRKFPair.second;
 
-    crSFMap[CR] = SRPlotter::GetScaleFactor(CR,kFactor);
+    fCRSFMap[CR] = SRPlotter::GetScaleFactor(CR,kFactor);
   }
 
   // Scale Data CR by MC SFs --> yields SR prediction for each CR
-  for (const auto & crSFPair : crSFMap)
+  for (const auto & CRSFPair : fCRSFMap)
   {
-    const auto & sample = crSFPair.first;
-    const auto & crsf   = crSFPair.second;
+    const auto & sample = CRSFPair.first;
+    const auto & crsf   = CRSFPair.second;
 
     TreePlotter::HistMap[sample]->Scale(crsf);
   }
@@ -122,13 +120,17 @@ Float_t SRPlotter::GetKFactor(const TString & CR)
     // subtract everything in MC that is NOT CR MC
     numer -= hist->Integral(fXVarBins?"width":"");
   }
+  const Float_t cr_int = SRPlotter::HistMap[Form("%s_CR_%s",CR.Data(),CR.Data())]->Integral(fXVarBins?"width":"");
 
-  return (numer / SRPlotter::HistMap[Form("%s_CR_%s",CR.Data(),CR.Data())]->Integral(fXVarBins?"width":""));
+  return (numer / cr_int);
 }
 
 Float_t SRPlotter::GetScaleFactor(const TString & CR, const Float_t kFactor)
 {
-  return (kFactor * SRPlotter::HistMap[Form("%s_CR_%s",CR.Data(),CR.Data())]->Integral(fXVarBins?"width":""));
+  const Float_t cr_int = SRPlotter::HistMap[Form("%s_CR_%s",CR.Data(),CR.Data())]->Integral(fXVarBins?"width":"");
+  const Float_t sr_int = SRPlotter::HistMap[Form("SR_%s",CR.Data())]             ->Integral(fXVarBins?"width":"");
+
+  return (sr_int / (kFactor * cr_int));
 }
 
 void SRPlotter::MakeConfigPave()
@@ -186,24 +188,26 @@ void SRPlotter::DumpFactors(const TString & filename)
   // Dump GJets info first
   SRPlotter::DumpIntegrals("GJets",fGJetsFile,dumpfile);
 
-  // get factors
-  const auto gjets_kf = SRPlotter::GetKFactor("GJets");
-  const auto gjets_sf = SRPlotter::GetScaleFactor("GJets",gjets_kf);
+  // padding
+  dumpfile << "-------------------------------------" << std::endl;
 
   // dump factors
-  std::cout << "GJets K-Factor    : " << gjets_kf << std::endl;
-  std::cout << "GJets Scale-Factor: " << gjets_sf << std::endl;
+  dumpfile << "GJets K-Factor    : " << fCRKFMap["GJets"] << std::endl;
+  dumpfile << "GJets Scale-Factor: " << fCRSFMap["GJets"] << std::endl;
+
+  // padding
+  dumpfile << "-------------------------------------" << std::endl;
+  dumpfile << "-------------------------------------" << std::endl;
 
   // Dump QCD info second
   SRPlotter::DumpIntegrals("QCD",fQCDFile,dumpfile);
 
-  // get factors
-  const auto qcd_kf = SRPlotter::GetKFactor("QCD");
-  const auto qcd_sf = SRPlotter::GetScaleFactor("QCD",qcd_kf);
+  // padding
+  dumpfile << "-------------------------------------" << std::endl;
 
   // dump factors
-  std::cout << "QCD K-Factor      : " << qcd_kf << std::endl;
-  std::cout << "QCD Scale-Factor  : " << qcd_sf << std::endl;
+  dumpfile << "QCD K-Factor      : " << fCRKFMap["QCD"] << std::endl;
+  dumpfile << "QCD Scale-Factor  : " << fCRSFMap["QCD"] << std::endl;
 }
 
 void SRPlotter::DumpIntegrals(const TString & CR, TFile *& file, std::ofstream & dumpfile)
@@ -213,7 +217,7 @@ void SRPlotter::DumpIntegrals(const TString & CR, TFile *& file, std::ofstream &
   auto data_hist = (TH1F*)file->Get(Form("%s",Common::HistNameMap["Data"].Data()));
   auto data_error = 0.;
   const auto data_integral = data_hist->IntegralAndError(1,data_hist->GetXaxis()->GetNbins(),data_error,(fXVarBins?"width":""));
-  dumpfile << data_hist->GetName() << " : " << data_integral << " +/- " << data_error << std::endl;
+  dumpfile << CR.Data() << "_CR_" << data_hist->GetName() << " : " << data_integral << " +/- " << data_error << std::endl;
   delete data_hist;
 
   // Dump CR plots second
