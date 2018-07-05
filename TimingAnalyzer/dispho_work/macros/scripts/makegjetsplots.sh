@@ -3,17 +3,17 @@
 outdir=${1:-"plots/ntuples_v4/checks_v3/jetclean_checks"}
 insel_dir=""
 insel="always_true"
+misc="misc"
+varwgtmap="empty"
 
 for inputgroup in "gjets signals_gjets control_gjets DoubleEG"
 do echo ${inputgroup} | while read -r infile insignalfile sel pdname
     do
-	while IFS='' read -r line || [[ -n "${line}" ]]; 
+	while IFS='' read -r plot || [[ -n "${plot}" ]]; 
 	do
-	    if [[ ${line} != "" ]];
+	    if [[ ${plot} != "" ]];
 	    then
-		plot=${line}
-		misc="misc"
-		./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel_dir}${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}_${insel}"
+		./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel_dir}${insel}.txt" "varwgt_config/${varwgtmap}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}_${insel}"
 	    fi
 	done < plot_config/standard_plots.txt
     done
@@ -24,8 +24,7 @@ do echo ${inputgroup} | while read -r infile insignalfile sel pdname
     do
 	for plot in phoseedtime_0 met met_zoom
 	do
-	    misc="misc"
-	    ./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel_dir}${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}_${insel}"
+	    ./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel_dir}${insel}.txt" "varwgt_config/${varwgtmap}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}_${insel}"
 	done
     done
 done
