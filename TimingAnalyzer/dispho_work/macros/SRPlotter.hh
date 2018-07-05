@@ -13,23 +13,35 @@ public:
   // setup functions
   void SetupConfig();
   void SetupSRPlotConfig();
-  void SetupHists();
-  void SetupCRHists(TFile *& file, const TString & CR);
 
   // main calls!
+  void MakePlots();
   void MakeSRPlot();
-  void ScaleCRtoSR();
-  void MakeConfigPave();
-  void DeleteMemory();
+  void MakeScaledCRPlot(const TString & CR, TFile *& infile);
+  void DeleteInputFiles();
 
-  // helper functions
+  // SR-plot main functions
+  void SetupSRHists();
+  void SetupCRHists(const TString & CR, TFile *& infile);
+  void ScaleCRtoSR();
+
+  // SR-plot helper functions
   Float_t GetKFactor(const TString & CR);
   void ShapeCRHist(const TString & CR);
   Float_t GetTransferFactor(const TString & CR, const Float_t kFactor);
 
+  // CR-only functions
+  void SetupCROnlyHists(const TString & CR, TFile *& infile);
+  void ScaleCRByKFOnly(const TString & CR);
+  
+  // Shared main calls
+  void CommonPlotter(const TString & outfiletext);
+  void MakeConfigPave();
+  void DeleteMemory(const Bool_t deleteSRHists);
+
   // Meta data and extra info
-  void DumpFactors(const TString & filename);
-  void DumpIntegrals(const TString & CR, TFile *& file, std::ofstream & dumpfile);
+  void DumpFactors(const TString & outfilename);
+  void DumpIntegrals(const TString & CR, TFile *& infile, std::ofstream & dumpfile);
 
 private:
   const TString fSRPlotConfig;

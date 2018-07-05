@@ -11,29 +11,90 @@ SRPlotter::SRPlotter(const TString & srplotconfig, const TString & miscconfig, c
   //            //
   ////////////////
 
-  // set style
-  TreePlotter::fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
-  Common::SetTDRStyle(TreePlotter::fTDRStyle);
-
   // setup config
   TreePlotter::SetupDefaults();
   SRPlotter::SetupConfig();
   TreePlotter::SetupMiscConfig(fMiscConfig);
   SRPlotter::SetupSRPlotConfig();
   TreePlotter::SetupPlotConfig(fPlotConfig);
+}
+
+void SRPlotter::MakePlots()
+{
+  std::cout << "Making all plots..." << std::endl;
+
+  SRPlotter::MakeSRPlot();
+  SRPlotter::MakeScaledCRPlot("GJets",fGJetsFile);
+  SRPlotter::MakeScaledCRPlot("QCD"  ,fQCDFile);
+
+  SRPlotter::DeleteInputFiles();
+}
+
+void SRPlotter::MakeSRPlot()
+{
+  std::cout << "Making SR plot..." << std::endl;
+
+  // set style
+  TreePlotter::fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
+  Common::SetTDRStyle(TreePlotter::fTDRStyle);
 
   // output root file for quick inspection
   TreePlotter::fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
 
   // setup hists
-  SRPlotter::SetupHists();
+  SRPlotter::SetupSRHists();
   TreePlotter::SetupHistsStyle();
-}
 
-void SRPlotter::MakeSRPlot()
-{
   // Scale data CR hists via MC predictions
   SRPlotter::ScaleCRtoSR();
+
+  // Bulk hist plotter
+  SRPlotter::CommonPlotter(fOutFileText);
+
+  // Dump integrals into text file
+  const auto & outfilename = TreePlotter::DumpIntegrals(fOutFileText);
+
+  // Dump constants
+  SRPlotter::DumpFactors(outfilename);
+
+  // delete memory
+  SRPlotter::DeleteMemory(true);
+}
+
+void SRPlotter::MakeScaledCRPlot(const TString & CR, TFile *& infile)
+{
+  std::cout << "Making CR-only plot for: " << CR.Data() << std::endl;
+
+  // outtext
+  const TString outfiletext = fOutFileText+"_Scaled_"+CR;
+
+  // set style
+  TreePlotter::fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
+  Common::SetTDRStyle(TreePlotter::fTDRStyle);
+
+  // output root file for quick inspection
+  TreePlotter::fOutFile = TFile::Open(Form("%s.root",outfiletext.Data()),"UPDATE");
+
+  // setup hists
+  SRPlotter::SetupCROnlyHists(CR, infile);
+  TreePlotter::SetupHistsStyle();
+
+  // Scale data CR hists via MC predictions
+  SRPlotter::ScaleCRByKFOnly(CR);
+
+  // Bulk hist plotter
+  SRPlotter::CommonPlotter(outfiletext);
+
+  // Dump integrals into text file
+  TreePlotter::DumpIntegrals(outfiletext);
+
+  // delete memory
+  SRPlotter::DeleteMemory(false);
+}
+
+void SRPlotter::CommonPlotter(const TString & outfiletext)
+{
+  std::cout << "Building plot by using commong TreePlotter functions..." << std::endl;
 
   // Make Data Output
   TreePlotter::MakeDataOutput();
@@ -60,19 +121,10 @@ void SRPlotter::MakeSRPlot()
   TreePlotter::DrawLowerPad();
 
   // Save Output
-  TreePlotter::SaveOutput(fOutFileText);
+  TreePlotter::SaveOutput(outfiletext);
 
   // Write Out Config
   SRPlotter::MakeConfigPave();
-
-  // Dump integrals into text file
-  const auto & filename = TreePlotter::DumpIntegrals(fOutFileText);
-
-  // Dump constants
-  SRPlotter::DumpFactors(filename);
-
-  // delete memory
-  SRPlotter::DeleteMemory();
 }
 
 void SRPlotter::ScaleCRtoSR()
@@ -130,6 +182,8 @@ Float_t SRPlotter::GetKFactor(const TString & CR)
 
 void SRPlotter::ShapeCRHist(const TString & CR)
 {
+  std::cout << "Reshaping CR by subtracting non CR MC for: " << CR.Data() << std::endl;
+
   for (const auto & HistPair : SRPlotter::HistMap)
   {
     const auto & key  = HistPair.first;
@@ -152,6 +206,22 @@ Float_t SRPlotter::GetTransferFactor(const TString & CR, const Float_t kFactor)
   const Float_t sr_int = SRPlotter::HistMap[Form("SR_%s",CR.Data())]             ->Integral(fXVarBins?"width":"");
 
   return (sr_int / (kFactor * cr_int));
+}
+
+void SRPlotter::ScaleCRByKFOnly(const TString & CR)
+{
+  std::cout << "Scaling MC hists in CR-only plots by k-factor for: " << CR.Data()  << std::endl;
+
+  for (auto & HistPair : TreePlotter::HistMap)
+  {
+    const auto & sample = HistPair.first;
+    auto & hist = HistPair.second;
+
+    // skip data and data, only want to scale bkgd MC!
+    if (Common::GroupMap[sample] != isBkgd) continue;
+
+    hist->Scale(fCRKFMap[CR]); // already stored, but can recalculate Data/MC with loop over HistMap
+  }
 }
 
 void SRPlotter::MakeConfigPave()
@@ -193,12 +263,12 @@ void SRPlotter::MakeConfigPave()
   TreePlotter::fConfigPave->Write(TreePlotter::fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
-void SRPlotter::DumpFactors(const TString & filename)
+void SRPlotter::DumpFactors(const TString & outfilename)
 {
   std::cout << "Dumping kFactors and scaleFactors into text file..." << std::endl;
 
   // reopen dumpfile object
-  std::ofstream dumpfile(Form("%s",filename.Data()),std::ios_base::app);
+  std::ofstream dumpfile(Form("%s",outfilename.Data()),std::ios_base::app);
 
   dumpfile << std::endl;
   dumpfile << "-------------------------------------" << std::endl;
@@ -231,11 +301,13 @@ void SRPlotter::DumpFactors(const TString & filename)
   dumpfile << "QCD x-Factor: " << fCRXFMap["QCD"] << std::endl;
 }
 
-void SRPlotter::DumpIntegrals(const TString & CR, TFile *& file, std::ofstream & dumpfile)
+void SRPlotter::DumpIntegrals(const TString & CR, TFile *& infile, std::ofstream & dumpfile)
 {
+  std::cout << "Dumping integrals for: " << CR.Data() << std::endl;
+
   // Dump Data in CR first
-  file->cd();
-  auto data_hist = (TH1F*)file->Get(Form("%s",Common::HistNameMap["Data"].Data()));
+  infile->cd();
+  auto data_hist = (TH1F*)infile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
   auto data_error = 0.;
   const auto data_integral = data_hist->IntegralAndError(1,data_hist->GetXaxis()->GetNbins(),data_error,(fXVarBins?"width":""));
   dumpfile << CR.Data() << "_CR_" << data_hist->GetName() << " : " << data_integral << " +/- " << data_error << std::endl;
@@ -262,11 +334,22 @@ void SRPlotter::DumpIntegrals(const TString & CR, TFile *& file, std::ofstream &
   dumpfile << sr_hist->GetName() << " : " << sr_integral << " +/- " << sr_error << std::endl;
 }
 
-void SRPlotter::DeleteMemory()
+void SRPlotter::DeleteMemory(const Bool_t deleteSRHists)
 {
+  std::cout << "Deleting memory in SRPlotter... deleting SR plot inputs: " << Common::PrintBool(deleteSRHists).Data() << std::endl; 
+
   TreePlotter::DeleteMemory(false);
   
-  for (auto & HistPair : SRPlotter::HistMap) delete HistPair.second;
+  if (deleteSRHists)
+  {
+    for (auto & HistPair : SRPlotter::HistMap) delete HistPair.second;
+    SRPlotter::HistMap.clear();
+  }
+}
+
+void SRPlotter::DeleteInputFiles()
+{
+  std::cout << "Final delete of input files..." << std::endl;
 
   delete fSRFile;
   delete fQCDFile;
@@ -322,7 +405,7 @@ void SRPlotter::SetupSRPlotConfig()
   }
 }
 
-void SRPlotter::SetupHists()
+void SRPlotter::SetupSRHists()
 {
   std::cout << "Setting up input hists..." << std::endl;
   
@@ -334,7 +417,7 @@ void SRPlotter::SetupHists()
   Common::CheckValidFile(fGJetsFile,fGJetsFileName);
   fGJetsFile->cd();
 
-  SRPlotter::SetupCRHists(fGJetsFile,"GJets");
+  SRPlotter::SetupCRHists("GJets",fGJetsFile);
 
   ////////////
   // QCD CR //
@@ -344,7 +427,7 @@ void SRPlotter::SetupHists()
   Common::CheckValidFile(fQCDFile,fQCDFileName);
   fQCDFile->cd();
 
-  SRPlotter::SetupCRHists(fQCDFile,"QCD");
+  SRPlotter::SetupCRHists("QCD",fQCDFile);
 
   //////////////
   // SR Hists //
@@ -374,6 +457,7 @@ void SRPlotter::SetupHists()
     if (Common::IsCRMC(sample)) continue;
 
     TreePlotter::HistMap[sample] = (TH1F*)fSRFile->Get(Form("%s",histname.Data()));
+    Common::CheckValidTH1F(TreePlotter::HistMap[sample],histname,fSRFileName);
   }
 
   /////////////////////////
@@ -397,24 +481,24 @@ void SRPlotter::SetupHists()
   }
 }
 
-void SRPlotter::SetupCRHists(TFile *& file, const TString & CR)
+void SRPlotter::SetupCRHists(const TString & CR, TFile *& infile)
 {
   std::cout << "Setting up CR hists for: " << CR.Data() << std::endl;
 
   // Get Histograms
-  TreePlotter::HistMap[CR] = (TH1F*)file->Get(Form("%s",Common::HistNameMap["Data"].Data()));
+  TreePlotter::HistMap[CR] = (TH1F*)infile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
 
-  SRPlotter::HistMap[Form("%s_CR_GJets",CR.Data())] = (TH1F*)file->Get(Form("%s",Common::HistNameMap["GJets"].Data()));
-  SRPlotter::HistMap[Form("%s_CR_QCD"  ,CR.Data())] = (TH1F*)file->Get(Form("%s",Common::HistNameMap["QCD"]  .Data()));
-  SRPlotter::HistMap[Form("%s_CR_EWK"  ,CR.Data())] = (TH1F*)file->Get(Form("%s",Common::EWKHistName         .Data()));
+  SRPlotter::HistMap[Form("%s_CR_GJets",CR.Data())] = (TH1F*)infile->Get(Form("%s",Common::HistNameMap["GJets"].Data()));
+  SRPlotter::HistMap[Form("%s_CR_QCD"  ,CR.Data())] = (TH1F*)infile->Get(Form("%s",Common::HistNameMap["QCD"]  .Data()));
+  SRPlotter::HistMap[Form("%s_CR_EWK"  ,CR.Data())] = (TH1F*)infile->Get(Form("%s",Common::EWKHistName         .Data()));
 
   // Check hists are okay
-  const TString filename = file->GetName();
-  Common::CheckValidTH1F(TreePlotter::HistMap[CR],Common::HistNameMap["Data"],filename);
+  const TString infilename = infile->GetName();
+  Common::CheckValidTH1F(TreePlotter::HistMap[CR],Common::HistNameMap["Data"],infilename);
 
-  Common::CheckValidTH1F(SRPlotter::HistMap[Form("%s_CR_GJets",CR.Data())],Common::HistNameMap["GJets"],filename);
-  Common::CheckValidTH1F(SRPlotter::HistMap[Form("%s_CR_QCD"  ,CR.Data())],Common::HistNameMap["QCD"]  ,filename);
-  Common::CheckValidTH1F(SRPlotter::HistMap[Form("%s_CR_EWK"  ,CR.Data())],Common::EWKHistName         ,filename);
+  Common::CheckValidTH1F(SRPlotter::HistMap[Form("%s_CR_GJets",CR.Data())],Common::HistNameMap["GJets"],infilename);
+  Common::CheckValidTH1F(SRPlotter::HistMap[Form("%s_CR_QCD"  ,CR.Data())],Common::HistNameMap["QCD"]  ,infilename);
+  Common::CheckValidTH1F(SRPlotter::HistMap[Form("%s_CR_EWK"  ,CR.Data())],Common::EWKHistName         ,infilename);
   
   // Rename hists
   TreePlotter::HistMap[CR]->SetName(Form("%s_CR_%s",CR.Data(),TreePlotter::HistMap[CR]->GetName()));
@@ -422,4 +506,35 @@ void SRPlotter::SetupCRHists(TFile *& file, const TString & CR)
   SRPlotter::HistMap[Form("%s_CR_GJets",CR.Data())]->SetName(Form("%s_CR_%s",CR.Data(),SRPlotter::HistMap[Form("%s_CR_GJets",CR.Data())]->GetName()));
   SRPlotter::HistMap[Form("%s_CR_QCD"  ,CR.Data())]->SetName(Form("%s_CR_%s",CR.Data(),SRPlotter::HistMap[Form("%s_CR_QCD"  ,CR.Data())]->GetName()));
   SRPlotter::HistMap[Form("%s_CR_EWK"  ,CR.Data())]->SetName(Form("%s_CR_%s",CR.Data(),SRPlotter::HistMap[Form("%s_CR_EWK"  ,CR.Data())]->GetName()));
+}
+
+void SRPlotter::SetupCROnlyHists(const TString & CR, TFile *& infile)
+{
+  std::cout << "Getting hists from CR-only file: " << CR.Data() << std::endl;
+
+  /////////////////////////
+  // Emplace input hists //
+  /////////////////////////
+  
+  // get hists
+  for (const auto & HistNamePair : Common::HistNameMap)
+  {
+    const auto & sample   = HistNamePair.first;
+    const auto & histname = HistNamePair.second;
+
+    TreePlotter::HistMap[sample] = (TH1F*)infile->Get(Form("%s",histname.Data()));
+    Common::CheckValidTH1F(TreePlotter::HistMap[sample],histname,infile->GetName());
+  }
+
+  /////////////////////////
+  // Save to output file //
+  /////////////////////////
+
+  TreePlotter::fOutFile->cd();
+
+  for (const auto & HistPair : TreePlotter::HistMap)
+  { 
+    const auto & hist = HistPair.second;
+    hist->Write(hist->GetName(),TObject::kWriteDelete);
+  }
 }

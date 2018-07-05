@@ -2,8 +2,8 @@
 
 srplotconfig=${1:-"srplot_config/phoseedtime_0.txt"}
 miscconfig=${2:-"misc_config/misc_blind.txt"}
-outfiletext=${3:-"phoseedtime_0_srplot"}
-dir=${4:-"plots/ntuples_v4/checks_v3/SRPlot"}
+outfiletext=${3:-"phoseedtime_0_SRPlot"}
+dir=${4:-"plots/ntuples_v4/checks_v3/kF_v2"}
 
 ## first make plot
 root -l -b -q runSRPlotter.C\(\"${srplotconfig}\",\"${miscconfig}\",\"${outfiletext}\"\)
@@ -19,7 +19,10 @@ pushd ${topdir}
 popd
 
 ## copy everything
-cp ${outfiletext}_log.png ${outfiletext}_lin.png ${outfiletext}.root ${outfiletext}_integrals.txt ${fulldir}
+for label in "" "_Scaled_GJets" "_Scaled_QCD"
+do
+    cp ${outfiletext}${label}_log.png ${outfiletext}${label}_lin.png ${outfiletext}${label}.root ${outfiletext}${label}_integrals.txt ${fulldir}
+done
 
 ## Final message
 echo "Finished SRPlotting for:" ${srplotconfig}

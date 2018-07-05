@@ -642,6 +642,8 @@ TString TreePlotter::DumpIntegrals(const TString & outfiletext)
 
 void TreePlotter::DeleteMemory(const Bool_t deleteInternal)
 {
+  std::cout << "Deleting memory in TreePlotter... deleting internal: " << Common::PrintBool(deleteInternal).Data() << std::endl;
+
   // delete everything
   delete fConfigPave;
 
@@ -658,8 +660,11 @@ void TreePlotter::DeleteMemory(const Bool_t deleteInternal)
   delete DataHist;
 
   for (auto & HistPair : HistMap) delete HistPair.second;
+  HistMap.clear();
+
   delete fOutFile;
   delete fTDRStyle;
+
   if (deleteInternal) 
   { 
     delete fInSignalFile;

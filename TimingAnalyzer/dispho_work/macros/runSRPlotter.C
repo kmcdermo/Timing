@@ -6,5 +6,5 @@
 void runSRPlotter(const TString & srplotconfig, const TString & miscconfig, const TString & outfiletext)
 {
   SRPlotter plotter(srplotconfig,miscconfig,outfiletext);
-  plotter.MakeSRPlot();
+  plotter.MakePlots();
 }
