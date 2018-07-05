@@ -79,26 +79,30 @@ void SRPlotter::ScaleCRtoSR()
 {
   std::cout << "Scaling data hists in CR to SR using MC scale factors..." << std::endl;
 
-  // Create k-factors
+  // Create CR Data/MC k-factors
   fCRKFMap["GJets"] = SRPlotter::GetKFactor("GJets");
   fCRKFMap["QCD"]   = SRPlotter::GetKFactor("QCD");
 
-  // Create CRtoSR scale factors : a bit redundant with K-Factors for now
+  // Fix CR Data shapes by subtracting away non CR MC
+  SRPlotter::ShapeCRHist("GJets");
+  SRPlotter::ShapeCRHist("QCD");
+
+  // Create CRtoSR MC x-factors
   for (const auto & CRKFPair : fCRKFMap)
   {
     const auto & CR    = CRKFPair.first;
     const auto kFactor = CRKFPair.second;
 
-    fCRSFMap[CR] = SRPlotter::GetScaleFactor(CR,kFactor);
+    fCRXFMap[CR] = SRPlotter::GetTransferFactor(CR,kFactor);
   }
 
-  // Scale Data CR by MC SFs --> yields SR prediction for each CR
-  for (const auto & CRSFPair : fCRSFMap)
+  // Scale Data CR by MC XFs --> yields SR prediction for each CR
+  for (const auto & CRXFPair : fCRXFMap)
   {
-    const auto & sample = CRSFPair.first;
-    const auto & crsf   = CRSFPair.second;
+    const auto & sample = CRXFPair.first;
+    const auto & crxf   = CRXFPair.second;
 
-    TreePlotter::HistMap[sample]->Scale(crsf);
+    TreePlotter::HistMap[sample]->Scale(crxf);
   }
 }
 
@@ -106,8 +110,26 @@ Float_t SRPlotter::GetKFactor(const TString & CR)
 {
   std::cout << "Computing k-factor for: " << CR.Data() << std::endl;
 
-  // numer = Data - !CR_MC
-  Float_t numer = TreePlotter::HistMap[CR]->Integral(fXVarBins?"width":"");
+  const Float_t numer = TreePlotter::HistMap[CR]->Integral(fXVarBins?"width":"");
+
+  Float_t denom = 0.f;
+  for (const auto & HistPair : SRPlotter::HistMap)
+  {
+    const auto & key  = HistPair.first;
+    const auto & hist = HistPair.second;
+
+    if (key.Contains("SR",TString::kExact)) continue; // skip SR plots
+    if (!key.Contains(Form("%s_CR",CR.Data()),TString::kExact)) continue; // skip other CR
+    
+    // subtract everything in MC that is NOT CR MC
+    denom += hist->Integral(fXVarBins?"width":"");
+  }
+
+  return (numer / denom);
+}
+
+void SRPlotter::ShapeCRHist(const TString & CR)
+{
   for (const auto & HistPair : SRPlotter::HistMap)
   {
     const auto & key  = HistPair.first;
@@ -117,16 +139,15 @@ Float_t SRPlotter::GetKFactor(const TString & CR)
     if (!key.Contains(Form("%s_CR",CR.Data()),TString::kExact)) continue; // skip other CR
     if (key.Contains(Form("%s_CR_%s",CR.Data(),CR.Data()),TString::kExact)) continue; // skip MC Hist in CR
     
-    // subtract everything in MC that is NOT CR MC
-    numer -= hist->Integral(fXVarBins?"width":"");
+    // subtract from data every MC that is NOT CR MC
+    TreePlotter::HistMap[CR]->Add(hist,-1.f);
   }
-  const Float_t cr_int = SRPlotter::HistMap[Form("%s_CR_%s",CR.Data(),CR.Data())]->Integral(fXVarBins?"width":"");
-
-  return (numer / cr_int);
 }
 
-Float_t SRPlotter::GetScaleFactor(const TString & CR, const Float_t kFactor)
+Float_t SRPlotter::GetTransferFactor(const TString & CR, const Float_t kFactor)
 {
+  std::cout << "Computing x-factor for: " << CR.Data() << std::endl;
+
   const Float_t cr_int = SRPlotter::HistMap[Form("%s_CR_%s",CR.Data(),CR.Data())]->Integral(fXVarBins?"width":"");
   const Float_t sr_int = SRPlotter::HistMap[Form("SR_%s",CR.Data())]             ->Integral(fXVarBins?"width":"");
 
@@ -192,8 +213,8 @@ void SRPlotter::DumpFactors(const TString & filename)
   dumpfile << "-------------------------------------" << std::endl;
 
   // dump factors
-  dumpfile << "GJets K-Factor    : " << fCRKFMap["GJets"] << std::endl;
-  dumpfile << "GJets Scale-Factor: " << fCRSFMap["GJets"] << std::endl;
+  dumpfile << "GJets k-Factor: " << fCRKFMap["GJets"] << std::endl;
+  dumpfile << "GJets x-Factor: " << fCRXFMap["GJets"] << std::endl;
 
   // padding
   dumpfile << "-------------------------------------" << std::endl;
@@ -206,8 +227,8 @@ void SRPlotter::DumpFactors(const TString & filename)
   dumpfile << "-------------------------------------" << std::endl;
 
   // dump factors
-  dumpfile << "QCD K-Factor      : " << fCRKFMap["QCD"] << std::endl;
-  dumpfile << "QCD Scale-Factor  : " << fCRSFMap["QCD"] << std::endl;
+  dumpfile << "QCD k-Factor: " << fCRKFMap["QCD"] << std::endl;
+  dumpfile << "QCD x-Factor: " << fCRXFMap["QCD"] << std::endl;
 }
 
 void SRPlotter::DumpIntegrals(const TString & CR, TFile *& file, std::ofstream & dumpfile)

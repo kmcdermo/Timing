@@ -24,7 +24,8 @@ public:
 
   // helper functions
   Float_t GetKFactor(const TString & CR);
-  Float_t GetScaleFactor(const TString & CR, const Float_t kFactor);
+  void ShapeCRHist(const TString & CR);
+  Float_t GetTransferFactor(const TString & CR, const Float_t kFactor);
 
   // Meta data and extra info
   void DumpFactors(const TString & filename);
@@ -51,7 +52,7 @@ private:
 
   // factor maps
   std::map<TString,Float_t> fCRKFMap;
-  std::map<TString,Float_t> fCRSFMap;
+  std::map<TString,Float_t> fCRXFMap;
 };
 
 #endif

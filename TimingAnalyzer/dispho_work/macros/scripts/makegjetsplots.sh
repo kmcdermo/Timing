@@ -1,6 +1,6 @@
 #!/bin/bash
 
-outdir=${1:-"plots/ntuples_v4/checks_v3/jetclean_checks"}
+outdir=${1:-"plots/ntuples_v4/checks_v3"}
 insel_dir=""
 insel="always_true"
 misc="misc"
