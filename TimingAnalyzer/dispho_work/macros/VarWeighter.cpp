@@ -4,7 +4,7 @@
 VarWeighter::VarWeighter(const TString & varwgtconfig)
   : fVarWgtConfig(varwgtconfig)
 {
-  std::cout << "Initializing..." << std::endl;
+  std::cout << "Initializing VarWeighter..." << std::endl;
 
   ////////////////
   //            //

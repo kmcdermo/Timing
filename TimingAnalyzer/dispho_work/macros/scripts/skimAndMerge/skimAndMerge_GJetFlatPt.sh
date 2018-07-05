@@ -7,7 +7,7 @@ label=${1}
 
 ## global vars
 mcbase="GJet"
-bin="Pt-15to6000"
+bin="Pt-15To6000"
 flattune="TuneCP5-Flat_13TeV_pythia8"
 text="${mcbase}_${bin}"
 

@@ -14,12 +14,21 @@ public:
   void SetupConfig();
   void SetupSRPlotConfig();
   void SetupHists();
-  
+  void SetupCRHists(TFile *& file, const TString & CR);
+
   // main calls!
   void MakeSRPlot();
   void ScaleCRtoSR();
   void MakeConfigPave();
   void DeleteMemory();
+
+  // helper functions
+  Float_t GetKFactor(const TString & CR);
+  Float_t GetScaleFactor(const TString & CR, const Float_t kFactor);
+
+  // Meta data and extra info
+  void DumpFactors(const TString & filename);
+  void DumpIntegrals(const TString & CR, TFile *& file, std::ofstream & dumpfile);
 
 private:
   const TString fSRPlotConfig;
@@ -38,10 +47,7 @@ private:
   TFile * fSRFile;
 
   // input extra hists
-  TH1F * GJetsHistMC_CR;
-  TH1F * QCDHistMC_CR;
-  TH1F * GJetsHistMC_SR;
-  TH1F * QCDHistMC_SR;
+  std::map<TString,TH1F*> HistMap;
 };
 
 #endif

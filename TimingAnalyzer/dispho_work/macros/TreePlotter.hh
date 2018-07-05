@@ -71,7 +71,7 @@ public:
   
   // Meta data and extra info
   void MakeConfigPave();
-  void DumpIntegrals(const TString & outfiletext);
+  TString DumpIntegrals(const TString & outfiletext);
 
   // Delete Function
   void DeleteMemory(const Bool_t deleteInternal);

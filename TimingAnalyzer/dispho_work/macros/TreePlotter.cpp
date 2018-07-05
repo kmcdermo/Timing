@@ -583,12 +583,13 @@ void TreePlotter::MakeConfigPave()
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
-void TreePlotter::DumpIntegrals(const TString & outfiletext)
+TString TreePlotter::DumpIntegrals(const TString & outfiletext)
 {
   std::cout << "Dumping integrals into text file..." << std::endl;
 
   // make dumpfile object
-  std::ofstream dumpfile(Form("%s_integrals.txt",outfiletext.Data()),std::ios_base::out);
+  const TString filename = outfiletext+"_integrals.txt"; 
+  std::ofstream dumpfile(Form("%s",filename.Data()),std::ios_base::out);
 
   // Signal MC zeroth
   for (const auto & HistPair : HistMap)
@@ -635,6 +636,8 @@ void TreePlotter::DumpIntegrals(const TString & outfiletext)
   const auto ratio = data_int/mc_int;
   const auto ratio_err = ratio*std::sqrt(std::pow(data_err/data_int,2)+std::pow(mc_err/mc_int,2));
   dumpfile << "Data/MC : " << ratio << " +/- " << ratio_err << std::endl;
+
+  return filename;
 }
 
 void TreePlotter::DeleteMemory(const Bool_t deleteInternal)
