@@ -66,7 +66,7 @@ void SRPlotter::MakeScaledCRPlot(const TString & CR, TFile *& infile)
   std::cout << "Making CR-only plot for: " << CR.Data() << std::endl;
 
   // outtext
-  const TString outfiletext = fOutFileText+"_Scaled_"+CR;
+  const TString outfiletext = fOutFileText+"_CR_"+CR+"_kFScaled";
 
   // set style
   TreePlotter::fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
@@ -74,6 +74,9 @@ void SRPlotter::MakeScaledCRPlot(const TString & CR, TFile *& infile)
 
   // output root file for quick inspection
   TreePlotter::fOutFile = TFile::Open(Form("%s.root",outfiletext.Data()),"UPDATE");
+
+  // Quick hack for unblinding CRs
+  TreePlotter::fBlindData = false;
 
   // setup hists
   SRPlotter::SetupCROnlyHists(CR, infile);

@@ -19,7 +19,7 @@ pushd ${topdir}
 popd
 
 ## copy everything
-for label in "" "_Scaled_GJets" "_Scaled_QCD"
+for label in "" "_CR_GJets_kFScaled" "_CR_QCD_kFScaled"
 do
     cp ${outfiletext}${label}_log.png ${outfiletext}${label}_lin.png ${outfiletext}${label}.root ${outfiletext}${label}_integrals.txt ${fulldir}
 done

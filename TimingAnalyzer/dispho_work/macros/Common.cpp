@@ -443,6 +443,7 @@ namespace Common
       Common::VarWgtMap[sample] += Form(" * (%s)",varwgt.Data());
     }
   }
+
   void SetupWeights()
   {
     // first encapsulate cut string
