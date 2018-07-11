@@ -1,4 +1,4 @@
-sample=GJets
+sample=QCD
 var=phopt_0
 plot_config=plot_config/phopt_0_full.txt
 

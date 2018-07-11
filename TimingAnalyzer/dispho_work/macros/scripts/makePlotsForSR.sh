@@ -1,13 +1,13 @@
 #!/bin/bash
 
 ## command line options
-outdir=${1:-"plots/ntuples_v4/checks_v3"}
+outdir=${1:-"plots/ntuples_v4/checks_v3/srplots"}
 
 ## input configs
-GJets="gjets signals_gjets always_true gjets_phopt_0_full cr_gjets_DEG"
-QCD="qcd signals_qcd cuts_v3/invertiso0_v0 qcd_phopt_0_full cr_qcd_DEG"
+CR_GJets="gjets signals_gjets always_true gjets_phopt_0_map cr_gjets_DEG"
+CR_QCD="qcd signals_qcd cuts_v3/invertiso0_v0 qcd_phopt_0_map cr_qcd_DEG"
 SR="sr signals_sr always_true empty sr_SPH"
-declare -a inputs=(GJets QCD SR)
+declare -a inputs=(CR_GJets CR_QCD SR)
 
 ## make tmp director for configs
 tmpdir="srplot_config/tmp"
@@ -48,7 +48,7 @@ do
 		./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insigfile}.root" "cut_config/${sel}.txt" "varwgt_config/${varwgtmap}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${outfile}" "${outdir}/${plot}"
 
 		## use output to make config files for next step
-		echo "CR_${input}_in=${outfile}.root" >> "${tmpconfig}"
+		echo "${input}_in=${outfile}.root" >> "${tmpconfig}"
 
 	    done ## end loop over reading of input
 	done ## end loop over inputs array
@@ -67,7 +67,8 @@ do
 done < srplot_config/standard_plots.txt ## end loop over plots
 
 ## delete tmpdir
+echo "Removing tmp dir: ${tmpdir}"
 rm -r ${tmpdir}
 
 ## Final message
-echo "Finished MakingSignalPlots"
+echo "Finished MakingPlotsForSR"

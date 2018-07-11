@@ -154,6 +154,8 @@ done < varwgt_config/plot_info.txt ## end loop over input plot configs
 
 ## clear up tmpdirs
 echo "Removing tmp dirs: ${crtosrtmpdir}, ${varwgttmpdir}"
-
 rm -r "${crtosrtmpdir}"
 rm -r "${varwgttmpdir}"
+
+## Final message
+echo "Finishing MakingWgtsAndPlots"
