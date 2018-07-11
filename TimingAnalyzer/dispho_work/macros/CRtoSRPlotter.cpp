@@ -92,9 +92,7 @@ void CRtoSRPlotter::GetInputHists()
   fSRFile = TFile::Open(Form("%s",fSRFileName.Data()));
   Common::CheckValidFile(fSRFile,fSRFileName);
 
-  HistMap["SR_Data"] = (TH1F*)fSRFile->Get(dataname.Data());
   HistMap["SR_MC"]   = (TH1F*)fSRFile->Get(mcname  .Data());
-  Common::CheckValidTH1F(HistMap["SR_Data"],dataname,fSRFileName);
   Common::CheckValidTH1F(HistMap["SR_MC"]  ,mcname  ,fSRFileName);
 }  
 
@@ -107,15 +105,15 @@ void CRtoSRPlotter::SetupHistsStlye()
     const auto & key = HistPair.first;
     auto & hist = HistPair.second;
 
-    const auto color = (key.Contains("CR",TString::kExact) ? kOrange+10 : kAzure);
-
     if (key.Contains("Data",TString::kExact))
     {
-      hist->SetLineColor(color);
-      hist->SetMarkerColor(color);
+      hist->SetLineColor(kBlack);
+      hist->SetMarkerColor(kBlack);
     }
     else
     {
+      const auto color = (key.Contains("CR",TString::kExact) ? kOrange+10 : kAzure);
+
       hist->SetLineColorAlpha(color,0.5);
       hist->SetFillColorAlpha(color,0.5);
       hist->SetMarkerColorAlpha(color,0.5);
@@ -175,7 +173,6 @@ void CRtoSRPlotter::MakeLegend()
   Legend->SetLineColor(kBlack);
   
   // add Data
-  Legend->AddEntry(HistMap["SR_Data"],Form("Data [SR]"),"epl");
   Legend->AddEntry(HistMap["CR_Data"],Form("Data [%s CR]",fSample.Data()),"epl");
 
   // add MC
@@ -219,7 +216,6 @@ void CRtoSRPlotter::DrawOutCanv(const Bool_t isScaled)
 
   // zeroth, draw data
   HistMap["CR_Data"]->Draw("PE");
-  HistMap["SR_Data"]->Draw("PE SAME");
 
   // first MC, then errs
   for (const auto & HistPair : HistMap)
@@ -245,6 +241,9 @@ void CRtoSRPlotter::DrawOutCanv(const Bool_t isScaled)
     
     hist->Draw("E2 SAME");
   }
+
+  // then, redraw data to appear on top
+  HistMap["CR_Data"]->Draw("PE SAME");
 
   // And lastly draw the legend
   Legend->Draw("SAME");
