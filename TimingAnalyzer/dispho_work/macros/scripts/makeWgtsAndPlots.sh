@@ -128,27 +128,27 @@ do
 
 	echo "Working on plot: ${plot}"
 
-        ## make input plots
-	makeTreePlot "${plot}" "GJets" "${varwgtdir}/${empty}" "${orig}"
-	makeTreePlot "${plot}" "QCD" "${varwgtdir}/${empty}" "${orig}"
+	## make input SR plot first (unchanged by weights)
 	makeTreePlot "${plot}" "SR" "${varwgtdir}/${empty}" ""
+
+	for CR in GJets QCD
+	do
+	    ## make input plots
+	    makeTreePlot "${plot}" "${sample}" "${varwgtdir}/${empty}" "${orig}"
+	    
+	    ## make CRtoSR plots
+	    makeCRtoSRPlot "${plot}" "${sample}" "SR" "${orig}"
 	
-	## make CRtoSR plots
-	makeCRtoSRPlot "${plot}" "GJets" "SR" "${orig}"
-	makeCRtoSRPlot "${plot}" "QCD" "SR" "${orig}"
+	    ## make var weights
+	    makeVarWeights "${plot}" "${var}" "${sample}" "SR" "${orig}"
 	
-	## make var weights
-	makeVarWeights "${plot}" "${var}" "GJets" "SR" "${orig}"
-	makeVarWeights "${plot}" "${var}" "QCD" "SR" "${orig}"
+            ## make input plots (with weights applied)
+	    makeTreePlot "${plot}" "${sample}" "${varwgttmpdir}/${sample}_${var}${map}" "${wgt}"
 	
-        ## make input plots
-	makeTreePlot "${plot}" "GJets" "${varwgttmpdir}/GJets_${var}${map}" "${wgt}"
-	makeTreePlot "${plot}" "QCD" "${varwgttmpdir}/QCD_${var}${map}" "${wgt}"
-	
-	## make CRtoSR plots
-	makeCRtoSRPlot "${plot}" "GJets" "SR" "${wgt}"
-	makeCRtoSRPlot "${plot}" "QCD" "SR" "${wgt}"
-	
+ 	    ## make CRtoSR plots (final comparison)
+	    makeCRtoSRPlot "${plot}" "${sample}" "SR" "${wgt}"
+	done ## end loop over control regions
+
     fi ## end check over empty plot
 done < varwgt_config/plot_info.txt ## end loop over input plot configs
 

@@ -176,7 +176,7 @@ Float_t SRPlotter::GetKFactor(const TString & CR)
     if (key.Contains("SR",TString::kExact)) continue; // skip SR plots
     if (!key.Contains(Form("%s_CR",CR.Data()),TString::kExact)) continue; // skip other CR
     
-    // subtract everything in MC that is NOT CR MC
+    // add up all bkgd MC in CR
     denom += hist->Integral(fXVarBins?"width":"");
   }
 
