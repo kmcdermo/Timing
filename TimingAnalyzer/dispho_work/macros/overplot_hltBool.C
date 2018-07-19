@@ -72,7 +72,11 @@ void draw(std::vector<TH1F*> & hists, TLegend *& leg, const TString & label, con
   
   leg->Draw("same");
 
-  canv->SaveAs(Form("hltSignal_SR_Data_%s_%s.png",label.Data(),(isLogy?"log":"lin")));
+  const std::vector<TString> extensions = {"png","pdf","eps"};
+  for (const auto & extension : extensions)
+  {
+    canv->SaveAs(Form("hltSignal_SR_Data_%s_%s.%s",label.Data(),(isLogy?"log":"lin"),extension.Data()));
+  }
 }
 
 void overplot_hltBool()

@@ -332,7 +332,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
     // draw TH2 on canv
     hist2D->Draw("colz");
     Common::CMSLumi(canv);
-    canv->SaveAs(Form("%sHist_2D.png",text.Data()));
+    Common::SaveAs(canv,Form("%sHist_2D",text.Data()));
 
     // project in X and draw
     auto histX = hist2D->ProjectionX("tmp_projX");
@@ -352,7 +352,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
     }
     histX->Draw("hist");
     Common::CMSLumi(canv);
-    canv->SaveAs(Form("%sHist_projX.png",text.Data()));
+    Common::SaveAs(canv,Form("%sHist_projX",text.Data()));
     delete histX;
 
     // project in Y and draw
@@ -373,7 +373,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
     }
     histY->Draw("hist");
     Common::CMSLumi(canv);
-    canv->SaveAs(Form("%sHist_projY.png",text.Data()));
+    Common::SaveAs(canv,Form("%sHist_projY",text.Data()));
     delete histY;
 
     delete canv;
@@ -772,14 +772,14 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   modelHist->SetMaximum(max*1.05);
   canv->SetLogy(false);
   Common::CMSLumi(canv);
-  canv->SaveAs(Form("%s_%s_lin.png",title.Data(),fitInfo.Text.Data()));
+  Common::SaveAs(canv,Form("%s_%s_lin",title.Data(),fitInfo.Text.Data()));
 
   // make the range nice and save (LOG)
   modelHist->SetMinimum(min/1.5);
   modelHist->SetMaximum(max*1.5);
   canv->SetLogy(true);
   Common::CMSLumi(canv);
-  canv->SaveAs(Form("%s_%s_log.png",title.Data(),fitInfo.Text.Data()));
+  Common::SaveAs(canv,Form("%s_%s_log",title.Data(),fitInfo.Text.Data()));
 
   // delete the rest
   delete leg;
@@ -895,11 +895,11 @@ void Fitter::DumpWS(const FitInfo & fitInfo, const TString & label)
     frame = fX->frame();
     fitInfo.BkgdPdf->plotOn(frame);
     frame->Draw();
-    canv->SaveAs(Form("%simport_x_plotOn_%s.png",label.Data(),fitInfo.Text.Data()));
+    Common::SaveAs(canv,Form("%simport_x_plotOn_%s",label.Data(),fitInfo.Text.Data()));
 
     hist = (TH1F*)fitInfo.BkgdPdf->createHistogram(Form("bkgdhist_%sx",label.Data()),*fX,RooFit::Binning(fX->getBinning()));
     hist->Draw();
-    canv->SaveAs(Form("%simport_x_createHist_%s.png",label.Data(),fitInfo.Text.Data()));
+    Common::SaveAs(canv,Form("%simport_x_createHist_%s",label.Data(),fitInfo.Text.Data()));
 
     delete hist;
     delete frame;
@@ -910,11 +910,11 @@ void Fitter::DumpWS(const FitInfo & fitInfo, const TString & label)
     frame = fY->frame();
     fitInfo.BkgdPdf->plotOn(frame);
     frame->Draw();
-    canv->SaveAs(Form("%simport_y_plotOn_%s.png",label.Data(),fitInfo.Text.Data()));
+    Common::SaveAs(canv,Form("%simport_y_plotOn_%s",label.Data(),fitInfo.Text.Data()));
 
     hist = (TH1F*)fitInfo.BkgdPdf->createHistogram(Form("bkgdhist_%sy",label.Data()),*fY,RooFit::Binning(fY->getBinning()));
     hist->Draw();
-    canv->SaveAs(Form("%simport_y_createHist_%s.png",label.Data(),fitInfo.Text.Data()));
+    Common::SaveAs(canv,Form("%simport_y_createHist_%s",label.Data(),fitInfo.Text.Data()));
 
     delete hist;
     delete frame;
@@ -927,12 +927,12 @@ void Fitter::DumpWS(const FitInfo & fitInfo, const TString & label)
     frame = fX->frame();
     xpdf->plotOn(frame);
     frame->Draw();
-    canv->SaveAs(Form("%simport_x_plotOn_2D_projX.png",label.Data()));
+    Common::SaveAs(canv,Form("%simport_x_plotOn_2D_projX",label.Data()));
     delete frame;
 
     auto xhist = (TH1F*)xpdf->createHistogram("xhist",*fX);                                                      
     xhist->Draw();
-    canv->SaveAs(Form("%simport_x_createHist_2D_projX.png",label.Data()));
+    Common::SaveAs(canv,Form("%simport_x_createHist_2D_projX",label.Data()));
     delete xhist;
 
     delete xpdf;
@@ -942,19 +942,19 @@ void Fitter::DumpWS(const FitInfo & fitInfo, const TString & label)
     frame = fY->frame();
     ypdf->plotOn(frame);
     frame->Draw();
-    canv->SaveAs(Form("%simport_y_plotOn_2D_projY.png",label.Data()));
+    Common::SaveAs(canv,Form("%simport_y_plotOn_2D_projY",label.Data()));
     delete frame;
 
     auto yhist = (TH1F*)ypdf->createHistogram("yhist",*fY);                                                      
     yhist->Draw();
-    canv->SaveAs(Form("%simport_y_createHist_2D_projY.png",label.Data()));
+    Common::SaveAs(canv,Form("%simport_y_createHist_2D_projY",label.Data()));
     delete yhist;
 
     delete ypdf;
 
     auto hist2d = (TH2F*)fitInfo.BkgdPdf->createHistogram(Form("bkgdhist_%s2d",label.Data()),*fX,RooFit::Binning(fX->getBinning()),RooFit::YVar(*fY,RooFit::Binning(fY->getBinning())));
     hist2d->Draw("colz");
-    canv->SaveAs(Form("%simport_xy_createHist_%s.png",label.Data(),fitInfo.Text.Data()));
+    Common::SaveAs(canv,Form("%simport_xy_createHist_%s",label.Data(),fitInfo.Text.Data()));
     delete hist2d;
   }
 

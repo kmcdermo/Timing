@@ -146,7 +146,7 @@ void plotCutFlows(const TString & infilename, const TString & cutflowconfig, con
   Leg->Draw("same");
 
   // save output
-  Canv->SaveAs(Form("%s.png",outfiletext.Data()));
+  Common::SaveAs(Canv,outfiletext);
 
   // delete
   delete Leg;

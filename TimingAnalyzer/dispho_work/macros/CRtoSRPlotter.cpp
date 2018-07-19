@@ -251,7 +251,7 @@ void CRtoSRPlotter::DrawOutCanv(const Bool_t isScaled)
 
 void CRtoSRPlotter::SaveOutput(const Bool_t isScaled)
 {
-  std::cout << "Saving hist as png..." << std::endl;
+  std::cout << "Saving hist as images..." << std::endl;
 
   // Go back to the main canvas before saving and write out lumi info
   OutCanv->cd();
@@ -289,9 +289,8 @@ void CRtoSRPlotter::PrintCanvas(const Bool_t isScaled, const Bool_t isLogy)
     hist->SetMaximum( fMaxY > 0 ? fMaxY*1.05 : fMaxY/1.05 );      
   }
 
-  // save canvas as png
-  OutCanv->cd();
-  OutCanv->SaveAs(Form("%s_%s_%s.png",fOutFileText.Data(),(isScaled?"scaled":"norm"),(isLogy?"log":"lin")));
+  // save canvas as images
+  Common::SaveAs(OutCanv,Form("%s_%s_%s",fOutFileText.Data(),(isScaled?"scaled":"norm"),(isLogy?"log":"lin")));
 }
 
 void CRtoSRPlotter::MakeConfigPave()

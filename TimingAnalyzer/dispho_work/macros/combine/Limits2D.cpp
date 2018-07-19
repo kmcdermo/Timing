@@ -380,8 +380,7 @@ void Limits2D::DrawLimits()
   Common::CMSLumi(canv,0);
   
   // save it!
-  canv->SaveAs(Form("%s_GMSB.png",fOutText.Data()));
-  canv->SaveAs(Form("%s_GMSB.pdf",fOutText.Data()));
+  Common::SaveAs(canv,Form("%s_GMSB",fOutText.Data()));
 
   // write it all out!
   fOutFile->cd();

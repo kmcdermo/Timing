@@ -154,6 +154,9 @@ namespace Common
   constexpr Int_t nJets = 4;
   constexpr Int_t nPhotons = 4;
 
+  // output info
+  static const std::vector<TString> extensions = {"png","pdf","eps"};
+
   // plotting style
   constexpr Float_t TitleSize    = 0.035;
   constexpr Float_t TitleXOffset = 1.1;
@@ -215,6 +218,9 @@ namespace Common
   void AddTextFromInputConfig(TPaveText *& outpave, const TString & label, const TString & configname);
   void AddTextFromInputPave(TPaveText *& outpave, TFile *& infile);
   void AddPaddingToPave(TPaveText *& outpave, const Int_t lines);
+
+  // function to save multiple canvas inmages
+  void SaveAs(TCanvas *& canv, const TString & label);
 
   // ROOT Formatting
   void CMSLumi(TCanvas * canv, const Int_t iPosX = 10);

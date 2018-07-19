@@ -145,7 +145,7 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
   // finish off the rest!
   leg->Draw("same");
   Common::CMSLumi(canv,0);
-  canv->SaveAs(Form("%s.png",outtext.Data()));
+  Common::SaveAs(canv,outtext);
   
   // delete
   for (auto & graph : graphMap) delete graph.second;

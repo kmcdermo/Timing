@@ -495,7 +495,7 @@ void TreePlotter::DrawLowerPad()
 
 void TreePlotter::SaveOutput(const TString & outfiletext)
 {
-  std::cout << "Saving hist as png..." << std::endl;
+  std::cout << "Saving hist as images..." << std::endl;
 
   // Go back to the main canvas before saving and write out lumi info
   OutCanv->cd();
@@ -534,9 +534,8 @@ void TreePlotter::PrintCanvas(const TString & outfiletext, const Bool_t isLogy)
     hist->SetMaximum( fMaxY > 0 ? fMaxY*1.05 : fMaxY/1.05 );      
   }
 
-  // save canvas as png
-  OutCanv->cd();
-  OutCanv->SaveAs(Form("%s_%s.png",outfiletext.Data(),(isLogy?"log":"lin")));
+  // save canvas as images
+  Common::SaveAs(OutCanv,Form("%s_%s",outfiltext.Data(),(isLogy?"log":"lin")));
 }
 
 void TreePlotter::MakeConfigPave()

@@ -893,6 +893,15 @@ namespace Common
     }
   }
 
+  void SaveAs(TCanvas *& canv, const TString & label)
+  {
+    canv->cd();
+    for (const auto & extension : Common::extensions)
+    {
+      canv->SaveAs(Form("%s.%s",label.Data(),extension.Data()));
+    }
+  }
+
   void CMSLumi(TCanvas * canv, const Int_t iPosX) 
   {
     const TString  cmsText     = "CMS";

@@ -67,7 +67,11 @@ void overplot_cuts()
 
   leg->Draw("same");
   leg->Write("Legend");
-
-  canv->SaveAs("qcd_std_to_r9.png");
   canv->Write("canv");
+  
+  const std::vector<TString> extensions = {"png","pdf","eps"};
+  for (const auto & extension : extensions)
+  {
+    canv->SaveAs(Form("qcd_std_to_r9.%s",extension.Data()));
+  }
 }

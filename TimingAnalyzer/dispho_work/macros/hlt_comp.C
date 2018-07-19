@@ -61,7 +61,11 @@ void doPlot(TTree *& tree, const TString & sample, const Bool_t isHT)
   h_hltPho200->Draw("ep same");
   leg->Draw("same");
 
-  canv->SaveAs(Form("%s_%s_SR_trigger_comp.png",label.Data(),sample.Data()));
+  const std::vector<TString> extensions = {"png","pdf","eps"};
+  for (const auto & extension : extensions)
+  {
+    canv->SaveAs(Form("%s_%s_SR_trigger_comp.%s",label.Data(),sample.Data(),extension.Data()));
+  }
 
   delete canv;
   delete leg;

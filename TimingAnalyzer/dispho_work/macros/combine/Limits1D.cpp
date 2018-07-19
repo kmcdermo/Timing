@@ -117,9 +117,8 @@ void Limits1D::MakeLimits1D()
     Common::CMSLumi(canv,0);
 
     // save it!
-    canv->SaveAs(Form("%s_%s.png",fOutText.Data(),groupname.Data()));
-    canv->SaveAs(Form("%s_%s.pdf",fOutText.Data(),groupname.Data()));
-
+    Common::SaveAs(canv,Form("%s_%s",fOutText.Data(),groupname.Data()));
+      
     // write it!
     fOutFile->cd();
     theo_graph->Write(theo_graph->GetName(),TObject::kWriteDelete);
