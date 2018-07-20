@@ -19,7 +19,12 @@ pushd ${topdir}
 popd
 
 ## copy everything
-cp ${outtext}*.png ${outtext}*.pdf ${outtext}.root ${fulldir}
+for ext in png pdf eps
+do
+    cp ${outtext}*.${ext} ${fulldir}
+done
+cp ${outtext}.root ${fulldir}
+
 
 ## Final message
 echo "Finished RunningLimits2D"

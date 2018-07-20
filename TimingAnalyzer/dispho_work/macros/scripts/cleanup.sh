@@ -16,8 +16,10 @@ rm */*.d
 rm */*.pcm
 rm *.png
 rm *.pdf
+rm *.eps
 rm */*.png
 rm */*.pdf
+rm */*.eps
 rm *.txt
 
 ## Final message

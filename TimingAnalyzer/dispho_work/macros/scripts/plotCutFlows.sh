@@ -19,7 +19,10 @@ pushd ${topdir}
 popd
 
 ## copy everything
-cp ${outfiletext}.png ${fulldir}
+for ext in png pdf eps
+do
+    cp ${outfiletext}.${ext} ${fulldir}
+done
 
 ## Final message
 echo "Finished PlottingCutFlows for:" ${infilename}

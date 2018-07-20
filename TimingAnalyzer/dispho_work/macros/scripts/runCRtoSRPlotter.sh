@@ -23,7 +23,10 @@ for plotscale in norm scaled
 do
     for canvscale in log lin
     do
-	cp ${outfiletext}_${plotscale}_${canvscale}.png ${fulldir}
+	for ext in png pdf eps
+	do
+	    cp ${outfiletext}_${plotscale}_${canvscale}.${ext} ${fulldir}
+	done
     done
 done
 

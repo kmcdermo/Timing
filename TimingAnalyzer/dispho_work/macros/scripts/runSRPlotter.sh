@@ -21,7 +21,15 @@ popd
 ## copy everything
 for label in "" "_CR_GJets_kFScaled" "_CR_QCD_kFScaled"
 do
-    cp ${outfiletext}${label}_log.png ${outfiletext}${label}_lin.png ${outfiletext}${label}.root ${outfiletext}${label}_integrals.txt ${fulldir}
+    for canvscale in log lin
+    do
+	for ext in png pdf eps
+	do
+	    cp ${outfiletext}${label}_${canvscale}.${ext} ${fulldir}
+	done
+    done
+    
+    cp ${outfiletext}${label}.root ${outfiletext}${label}_integrals.txt ${fulldir}
 done
 
 ## Final message

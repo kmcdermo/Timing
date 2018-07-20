@@ -17,7 +17,10 @@ pushd ${topdir}
 popd
 
 ## copy everything
-cp ${outtext}.png ${fulldir}
+for ext in png pdf eps
+do
+    cp ${outtext}.${ext} ${fulldir}
+done
 
 ## Final message
 echo "Finished ComputingSignalEfficiency"

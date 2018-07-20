@@ -24,13 +24,27 @@ pushd ${topdir}
 popd
 
 echo "Copying to ${fulldir}"
-cp BkgdHist_2D.png BkgdHist_projX.png BkgdHist_projY.png ${fulldir}
-cp SignHist_2D.png SignHist_projX.png SignHist_projY.png ${fulldir}
-cp DataHist_2D.png DataHist_projX.png DataHist_projY.png ${fulldir}
+for sample in Bkgd Sign Data
+do
+    for dim in 2D projX projY
+    do
+	for ext in png pdf eps
+	do
+	    cp ${sample}Hist_${dim}.${ext} ${fulldir}
+	done
+    done
+done
 
-cp *_xfit_2D_lin.png *_yfit_2D_lin.png *_fit_projX_lin.png *_fit_projY_lin.png ${fulldir}
-cp *_xfit_2D_log.png *_yfit_2D_log.png *_fit_projX_log.png *_fit_projY_log.png ${fulldir}
-
+for fit in xfit_2D yfit_2D fit_projX fit_projY
+do 
+    for canvscale in log lin
+    do
+	for ext in png pdf eps
+	do
+	    cp *_${fit}_${canvscale}.${ext}
+	done
+    done
+done
 cp ${outfiletext}.root ${fulldir}
 
 ## Final message

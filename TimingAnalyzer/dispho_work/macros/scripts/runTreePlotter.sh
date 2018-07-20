@@ -23,7 +23,14 @@ pushd ${topdir}
 popd
 
 ## copy everything
-cp ${outfiletext}_log.png ${outfiletext}_lin.png ${outfiletext}.root ${outfiletext}_integrals.txt ${fulldir}
+for canvscale in log lin
+do
+    for ext in png pdf eps
+    do
+	cp ${outfiletext}_${canvscale}.${ext} ${fulldir}
+    done
+done
+cp ${outfiletext}.root ${outfiletext}_integrals.txt ${fulldir}
 
 ## Final message
 echo "Finished TreePlotting for plot:" ${plotconfig}
