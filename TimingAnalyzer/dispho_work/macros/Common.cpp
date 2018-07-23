@@ -7,10 +7,12 @@ namespace Common
   TString PrimaryDataset;
   std::map<TString,TString> SampleMap;
   std::map<TString,SampleGroup> GroupMap;
+  std::map<TString,SampleGroup> BkgdGroupMap;
   std::map<TString,TString> SignalGroupMap;
   std::map<TString,vector<TString> > SignalSubGroupMap;
   std::map<TString,TString> TreeNameMap;
   std::map<TString,TString> HistNameMap;
+  std::map<TString,TString> BkgdHistNameMap;
   std::map<TString,TString> SampleCutFlowHistNameMap;
   std::map<TString,TString> GroupCutFlowHistNameMap;
   std::map<TString,TString> SignalCutFlowHistNameMap;
@@ -133,6 +135,21 @@ namespace Common
     }
   }
 
+  void SetupBkgdGroups()
+  {
+    for (const auto & GroupPair : Common::GroupMap)
+    {
+      const auto & sample = GroupPair.first;
+
+      if (Common::IsCR(sample))
+      {
+	Common::BkgdGroupMap[sample] = isBkgd;
+      }
+    }
+
+    Common::BkgdGroupMap["EWK"] = isBkgd;
+  }
+
   void SetupSignalGroups()
   {
     for (const auto & SamplePair : Common::SampleMap)
@@ -178,6 +195,29 @@ namespace Common
     {
       const auto & sample = GroupPair.first;
       Common::HistNameMap[sample] = sample+"_Hist";
+    }
+  }
+
+  void SetupBkgdHistNames()
+  {
+    for (const auto & BkgdGroupPair : Common::BkgdGroupMap)
+    {
+      const auto & sample = BkgdGroupPair.first;
+
+      if (Common::IsCR(sample))
+      {
+	const auto & histname = Common::HistNameMap[sample];
+	Common::BkgdHistNameMap[sample] = histname;
+      }
+      else if (Common::IsEWK(sample))
+      {
+	Common::BkgdHistNameMap[sample] = Common::EWKHistName;
+      }
+      else
+      {
+	std::cerr << "Somehow, you messed up the BkgdHistMap setup with sample: " << sample.Data() << " ...exiting..." << std::endl;
+	exit(1);
+      }
     }
   }
 
@@ -754,6 +794,14 @@ namespace Common
     for (auto iline = 0; iline < lines; iline++)
     {
       outpave->AddText("----- ================== -----");
+    }
+  }
+
+  void AddPaddingToFile(std::ofstream *& file, const Int_t lines)
+  {
+    for (auto iline = 0; iline < lines; iline++)
+    {
+      file << "-------------------------------------" << std::endl;
     }
   }
 

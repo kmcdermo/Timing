@@ -21,14 +21,7 @@ public:
   void DeleteInputFiles();
 
   // SR-plot main functions
-  void SetupSRHists();
-  void SetupCRHists(const TString & CR, TFile *& infile);
-  void ScaleCRtoSR();
-
-  // SR-plot helper functions
-  Float_t GetKFactor(const TString & CR);
-  void ShapeCRHist(const TString & CR);
-  Float_t GetTransferFactor(const TString & CR, const Float_t kFactor);
+  void SetupHists();
 
   // CR-only functions
   void SetupCROnlyHists(const TString & CR, TFile *& infile);

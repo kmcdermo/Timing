@@ -49,7 +49,7 @@ void GetHists(TFile *& file, std::map<TString,TH1F*> & HistMap)
       else             	       HistMap["Bkgd"]->Add(HistMap[sample]);
       bkgd_counter++;
 
-      if (!Common::IsCRMC(sample)) 
+      if (!Common::IsCR(sample)) 
       {
 	if   (ewk_counter == 0) HistMap["EWK"] = (TH1F*)HistMap[sample]->Clone(Form("EWK_%s",Common::h_cutflowname.Data()));
 	else                    HistMap["EWK"]->Add(HistMap[sample]);

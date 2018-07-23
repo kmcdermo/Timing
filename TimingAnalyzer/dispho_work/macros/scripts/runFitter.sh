@@ -4,14 +4,9 @@
 fitconfig=${1:-"fit_config/ws_final.txt"} # full_model_bias.txt : for bias study with sig + bkg (toy data)
 miscconfig=${2:-"misc_config/misc_fit.txt"} # misc_fit_model.txt : for bias study with sig + bkg (toy data)
 outfiletext=${3:-"ws_final"}
-outdir=${4:-"plots/ntuples_v4/checks_v2/fits"}
+outdir=${4:-"plots/ntuples_v4/checks_v3/fits"}
 
 root -b -q -l runFitter.C\(\"${fitconfig}\",\"${miscconfig}\",\"${outfiletext}\"\)
-
-## copy to combine --> comment out for bias study
-combinedir="combine/input"
-mkdir -p ${combinedir}
-cp ${outfiletext}.root ${combinedir} 
 
 ## make out dirs
 topdir=/afs/cern.ch/user/k/kmcdermo/www

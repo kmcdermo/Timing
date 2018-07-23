@@ -183,7 +183,7 @@ void TreePlotter2D::MakeBkgdOutput()
       BkgdHist->Add(hist);
       
       // ewk hist excludes GJets and QCD MC
-      if (!Common::IsCRMC(sample))
+      if (!Common::IsCR(sample))
       {
 	EWKHist->Add(hist);
       }

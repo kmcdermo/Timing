@@ -95,7 +95,6 @@ public:
   
   // Prep for common variables/datasets/etc
   void GetInputHists();
-  void ScaleCRtoSR();
   void DumpInputInfo();
   void DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bool_t isBlind, const Bool_t isDraw);
   void Project2DHistTo1D();
@@ -164,17 +163,18 @@ private:
   TFile * fSRFile;
 
   // Input Hists
-  TH2F * fGJetsHistMC_CR;
-  TH2F * fGJetsHistMC_SR;
-  TH2F * fQCDHistMC_CR;
-  TH2F * fQCDHistMC_SR;
   std::map<TString,TH2F*> fHistMap2D;
+  std::map<TString,TH2F*> fHistMap2DTmp;
   std::map<TString,TH1F*> fHistMapX;
   std::map<TString,TH1F*> fHistMapY;
 
   // misc plot info + model info
   std::vector<TString> fPlotSignalVec;
   TString fSignalSample;
+
+  // scale factors
+  std::map<TString,Float_t> fCRKFMap;
+  std::map<TString,Float_t> fCRXFMap;
 
   // Counts + scaling norm from the start
   Float_t fScaleTotalBkgd;

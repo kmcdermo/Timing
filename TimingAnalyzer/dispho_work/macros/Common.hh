@@ -91,10 +91,12 @@ namespace Common
   extern TString PrimaryDataset;
   extern std::map<TString,TString> SampleMap;
   extern std::map<TString,SampleGroup> GroupMap;
+  extern std::map<TString,SampleGroup> BkgdGroupMap;
   extern std::map<TString,TString> SignalGroupMap;
   extern std::map<TString,vector<TString> > SignalSubGroupMap;
   extern std::map<TString,TString> TreeNameMap;
   extern std::map<TString,TString> HistNameMap;
+  extern std::map<TString,TString> BkgdHistNameMap;
   extern std::map<TString,TString> SampleCutFlowHistNameMap;
   extern std::map<TString,TString> GroupCutFlowHistNameMap;
   extern std::map<TString,TString> SignalCutFlowHistNameMap;
@@ -112,12 +114,14 @@ namespace Common
   // Sample setup functions
   void SetupPrimaryDataset(const TString & pdname);
   void SetupSamples();
-  void SetupGroups();
   void SetupSignalSamples();
+  void SetupGroups();
+  void SetupBkgdGroups();
   void SetupSignalGroups();
   void SetupSignalSubGroups();
   void SetupTreeNames();
   void SetupHistNames();
+  void SetupBkgdHistNames();
   void SetupSampleCutFlowHistNames();
   void SetupGroupCutFlowHistNames();
   void SetupSignalCutFlowHistNames();
@@ -207,14 +211,14 @@ namespace Common
   }
 
   // Check samples
-  Bool_t IsCRMC(const TString & sample)
+  Bool_t IsCR(const TString & sample)
   {
     return (sample.Contains("GJets",TString::kExact) || sample.Contains("QCD",TString::kExact));
   }
 
-  Bool_t IsEWK(const SampleGroup & group, const TString & sample)
+  Bool_t IsEWK(const TString & sample)
   {
-    return (group == isBkgd && !Common::IsCRMC(sample));
+    return (sample.Contains("EWK",TString::kExact));
   }
 
   // may actually want an invalid tree/file...
@@ -226,12 +230,154 @@ namespace Common
   void AddTextFromInputPave(TPaveText *& outpave, TFile *& infile);
   void AddPaddingToPave(TPaveText *& outpave, const Int_t lines);
 
+  // extra textfile config info
+  void AddPaddingToFile(std::ofstream *& file, const Int_t lines);
+
   // function to save multiple canvas inmages
   void SaveAs(TCanvas *& canv, const TString & label);
 
   // ROOT Formatting
   void CMSLumi(TCanvas * canv, const Int_t iPosX = 10);
   void SetTDRStyle(TStyle * tdrStyle);
+  
+  ///////////////////////////////////////////////////////////
+  // Template functions for setting up signal region stuff //
+  ///////////////////////////////////////////////////////////
+
+  template <typename T>
+  void SetupCRHists(const TString & CR, TFile *& infile, std::map<TString,T*> & HistMap, std::map<TString,T*> & HistMapTmp)
+  {
+    std::cout << "Setting up CR hists for: " << CR.Data() << std::endl;
+    
+    // tmp variable
+    const TString infilename = infile->GetName();
+    
+    // Get Data
+    HistMap[CR] = (T*)infile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
+    Common::CheckValidHist(HistMap[CR],Common::HistNameMap["Data"],infilename);
+    HistMap[CR]->SetName(Form("%s_CR_%s",CR.Data(),HistMap[CR]->GetName()));
+    
+    // Get Bkgd MC Histograms
+    for (const auto & BkgdHistNamePair : Common::BkgdHistNameMap)
+    {
+      const auto & sample   = BkgdHistNamePair.first;
+      const auto & histname = BkgdHistNamePair.second;
+      
+      auto & hist = HistMapTmp[Form("%s_CR_%s",CR.Data(),sample.Data())];
+      
+      hist = (TH1F*)infile->Get(Form("%s",histname.Data()));
+      Common::CheckValidHist(hist,histname,infilename);
+      hist->SetName(Form("%s_CR_%s",CR.Data(),hist->GetName()));
+    }
+  }
+
+  template <typename T>
+  void SetupSRMCHists(TFile *& infile, std::map<TString,T*> & HistMapTmp)
+  {
+    // Get Bkgd MC Histograms
+    for (const auto & BkgdHistNamePair : Common::BkgdHistNameMap)
+    {
+      const auto & sample   = BkgdHistNamePair.first;
+      const auto & histname = BkgdHistNamePair.second;
+      
+      if (!Common::IsCR(sample)) continue;
+      
+      auto & hist = HistMapTmp[Form("SR_%s",sample.Data())];
+      
+      hist = (T*)infile->Get(Form("%s",histname.Data()));
+      Common::CheckValidHist(hist,histname,fSRFileName);
+      hist->SetName(Form("SR_%s",hist->GetName()));
+    }
+  }
+
+  template <typename T>
+  void GetSRPredFromCRs(T & HistMap, const T & HistMapTmp, const Bool_t VarBins,
+			std::map<TString,Float_t> & KFMap, std::map<TString,Float_t> & XFMap)
+  {
+    std::cout << "Constructing SR prediction from data in each CR..." << std::endl;
+
+    for (const auto & BkgdGroupPair : Common::BkgdGroupMap)
+    {
+      const auto & sample = BkgdGroupPair.first;
+
+      if (!Common::IsCR(sample)) continue;
+
+      const auto & CR = sample;
+      GetSRPredFromCR(CR,HistMap,HistMapTmp,VarBins,KFMap[CR],XFMap[CR]);
+    }
+  }
+
+  template <typename T>
+  void GetSRPredFromCR(const TString & CR, T & HistMap, const T & HistMapTmp, const Bool_t VarBins,
+		       Float_t & kFactor, Float_t & xFactor)
+  {  
+    std::cout << "Constructing SR prediction from data for: " << CR.Data() << std::endl;
+    
+    // Create CR Data/MC k-factors
+    kFactor = Common::GetKFactor(CR,HistMap,HistMapTmp,VarBins);
+    
+    // Fix CR Data shapes by subtracting away non CR MC
+    SRPlotter::ShapeCRHist(CR,HistMap,HistMapTmp);
+    
+    // Create CRtoSR MC x-factors    
+    xFactor = Common::GetTransferFactor(CR,HistMapTmp,VarBins,kFactor);
+    
+    // Scale Data CR by MC XFs --> yields SR prediction for each CR
+    HistMap[sample]->Scale(xFactor);
+  }
+
+  template <typename T>
+  Float_t GetKFactor(const TString & CR, const T & HistMap, const T & HistMapTmp, const Bool_t VarBins)
+  {
+    std::cout << "Computing k-factor for: " << CR.Data() << std::endl;
+    
+    const Float_t numer = HistMap[CR]->Integral(VarBins?"width":"");
+    
+    Float_t denom = 0.f;
+    for (const auto & HistPair : HistMapTmp)
+    {
+      const auto & key  = HistPair.first;
+      const auto & hist = HistPair.second;
+      
+      if (key.Contains("SR",TString::kExact)) continue; // skip SR plots
+      if (!key.Contains(Form("%s_CR",CR.Data()),TString::kExact)) continue; // skip other CR
+      
+      // add up all bkgd MC in CR
+      denom += hist->Integral(VarBins?"width":"");
+    }
+    
+    return (numer / denom);
+  }
+
+  template <typename T>
+  void ShapeCRHist(const TString & CR, T & HistMap, const T & HistMapTmp)
+  {
+    std::cout << Form("Reshaping %s data hist by subtracting MC in SR (excluding %s MC)...",CR.Data(),CR.Data()) << std::endl;
+
+    for (const auto & HistPair : HistMapTmp)
+    {
+      const auto & key  = HistPair.first;
+      const auto & hist = HistPair.second;
+      
+      if (key.Contains("SR",TString::kExact)) continue; // skip SR plots
+      if (!key.Contains(Form("%s_CR",CR.Data()),TString::kExact)) continue; // skip other CR
+      if (key.Contains(Form("%s_CR_%s",CR.Data(),CR.Data()),TString::kExact)) continue; // skip MC Hist in CR
+      
+      // subtract from data every MC that is NOT CR MC
+      HistMap[CR]->Add(hist,-1.f);
+    }
+  }
+  
+  template <typename T>
+  Float_t GetTransferFactor(const TString & CR, const T & HistMapTmp, const Bool_t VarBins, const Float_t kFactor)
+  {
+    std::cout << "Computing x-factor for: " << CR.Data() << std::endl;
+
+    const Float_t cr_int = HistMapTmp[Form("%s_CR_%s",CR.Data(),CR.Data())]->Integral(VarBins?"width":"");
+    const Float_t sr_int = HistMapTmp[Form("SR_%s",CR.Data())]             ->Integral(VarBins?"width":"");
+    
+    return (sr_int / (kFactor * cr_int));
+  }
 };
 
 #endif

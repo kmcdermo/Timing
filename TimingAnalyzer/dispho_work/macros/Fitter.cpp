@@ -55,10 +55,7 @@ Fitter::~Fitter()
   Fitter::DeleteMap(fHistMapX);
   Fitter::DeleteMap(fHistMap2D);
 
-  delete fQCDHistMC_CR;
-  delete fGJetsHistMC_CR;
-  delete fQCDHistMC_SR;
-  delete fGJetsHistMC_SR;
+  Fitter::DeleteMap(fHistMap2DTmp);
   
   delete fSRFile;
   delete fQCDFile;
@@ -112,7 +109,7 @@ void Fitter::PrepareCommon()
   Fitter::GetInputHists();
 
   // Scale data CR to SR via MC SFs
-  Fitter::ScaleCRtoSR();
+  Common::GetSRPredFromCRs(fHistMap2D,fHistMap2DTmp,(fXVarBins||fYVarBins),fCRKFMap,fCRXFMap);
 
   // Make plots from input hists and dump pre-fit integrals
   Fitter::DumpInputInfo();
@@ -127,6 +124,33 @@ void Fitter::PrepareCommon()
   Fitter::DeclareXYVars();
 }
 
+template <typename T>
+void SetupCRHists(const TString & CR, TFile *& infile)
+{
+  std::cout << "Setting up CR hists for: " << CR.Data() << std::endl;
+
+  // tmp variable
+  const TString infilename = infile->GetName();
+  
+  // Get Data
+  fHistMap2D[CR] = (TH1F*)infile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
+  Common::CheckValidTH1F(fHistMap2D[CR],Common::HistNameMap["Data"],infilename);
+  fHistMap2D[CR]->SetName(Form("%s_CR_%s",CR.Data(),fHistMap2D[CR]->GetName()));
+
+  // Get Bkgd MC Histograms
+  for (const auto & BkgdHistNamePair : Common::BkgdHistNameMap)
+  {
+    const auto & sample   = BkgdHistNamePair.first;
+    const auto & histname = BkgdHistNamePair.second;
+
+    auto & hist = fHistMap2DTmp[Form("%s_CR_%s",CR.Data(),sample.Data())];
+
+    hist = (TH1F*)infile->Get(Form("%s",histname.Data()));
+    Common::CheckValidTH1F(hist,histname,infilename);
+    hist->SetName(Form("%s_CR_%s",CR.Data(),hist->GetName()));
+  }
+}
+
 void Fitter::GetInputHists()
 {
   std::cout << "Getting input histograms..." << std::endl;
@@ -134,50 +158,48 @@ void Fitter::GetInputHists()
   // scale up
   const Bool_t isUp = true;
 
-  // GJets CR
+  //////////////
+  // GJets CR //
+  //////////////
+
   fGJetsFile = TFile::Open(Form("%s",fGJetsFileName.Data()));
   Common::CheckValidFile(fGJetsFile,fGJetsFileName);
+  fGJetsFile->cd();
 
-  fHistMap2D["GJets"] = (TH2F*)fGJetsFile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
-  fGJetsHistMC_CR     = (TH2F*)fGJetsFile->Get(Form("%s",Common::HistNameMap["GJets"].Data()));
-  Common::CheckValidHist(fHistMap2D["GJets"],Common::HistNameMap["Data"] ,fGJetsFileName);
-  Common::CheckValidHist(fGJetsHistMC_CR    ,Common::HistNameMap["GJets"],fGJetsFileName);
-  if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D["GJets"],isUp,fXVarBins,fYVarBins);
-  if (fXVarBins || fYVarBins) Common::Scale(fGJetsHistMC_CR    ,isUp,fXVarBins,fYVarBins);
+  Common::SetupCRHists("GJets",fGJetsFile,fHistMap2D,fHistMap2DTmp);
 
-  // QCD CR
+  ////////////
+  // QCD CR //
+  ////////////
+
   fQCDFile = TFile::Open(Form("%s",fQCDFileName.Data()));
   Common::CheckValidFile(fQCDFile,fQCDFileName);
+  fQCDFile->cd();
 
-  fHistMap2D["QCD"] = (TH2F*)fQCDFile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
-  fQCDHistMC_CR     = (TH2F*)fQCDFile->Get(Form("%s",Common::HistNameMap["QCD"].Data()));
-  Common::CheckValidHist(fHistMap2D["QCD"],Common::HistNameMap["Data"],fQCDFileName);
-  Common::CheckValidHist(fQCDHistMC_CR    ,Common::HistNameMap["QCD"] ,fQCDFileName);
-  if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D["QCD"],isUp,fXVarBins,fYVarBins);
-  if (fXVarBins || fYVarBins) Common::Scale(fQCDHistMC_CR    ,isUp,fXVarBins,fYVarBins);
+  Common::SetupCRHists("QCD",fQCDFile,fHistMap2D,fHistMap2DTmp);
 
-  // SR
+  //////////////
+  // SR Hists //
+  //////////////
+  
   fSRFile = TFile::Open(Form("%s",fSRFileName.Data()));
   Common::CheckValidFile(fSRFile,fSRFileName);
+  fSRFile->cd();
 
+  // MC bkgds excluding EWK
+  Common::SetupSRMCHists(fSRFile,fHistMap2DTmp);
+
+  // EWK MC
   fHistMap2D["EWK"] = (TH2F*)fSRFile->Get(Form("%s",Common::EWKHistName.Data())); // MC prediction of all other MC backgrounds aside from GJets and QCD
-  fGJetsHistMC_SR   = (TH2F*)fSRFile->Get(Form("%s",Common::HistNameMap["GJets"].Data()));
-  fQCDHistMC_SR     = (TH2F*)fSRFile->Get(Form("%s",Common::HistNameMap["QCD"].Data()));
-  Common::CheckValidHist(fGJetsHistMC_SR,Common::HistNameMap["GJets"],fSRFileName);
-  Common::CheckValidHist(fQCDHistMC_SR  ,Common::HistNameMap["QCD"]  ,fSRFileName);
-  if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D["EWK"],isUp,fXVarBins,fYVarBins);
-  if (fXVarBins || fYVarBins) Common::Scale(fGJetsHistMC_SR  ,isUp,fXVarBins,fYVarBins);
-  if (fXVarBins || fYVarBins) Common::Scale(fQCDHistMC_SR    ,isUp,fXVarBins,fYVarBins);
 
-  // use real data?
+  // Real Data
   if (!fGenData)
   {
     fHistMap2D["Data"] = (TH2F*)fSRFile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
     Common::CheckValidHist(fHistMap2D["Data"],Common::HistNameMap["Data"],fSRFileName);
-    if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D["Data"],isUp,fXVarBins,fYVarBins);
   }
 
-  // use signal samples?
+  // Signal MC
   if (!fBkgdOnly) 
   {
     // use ALL signal samples to start, only one for fitting... from config
@@ -192,57 +214,52 @@ void Fitter::GetInputHists()
       // load signals
       fHistMap2D[sample] = (TH2F*)fSRFile->Get(Form("%s",Common::HistNameMap[sample].Data()));
       Common::CheckValidHist(fHistMap2D[sample],Common::HistNameMap[sample],fSRFileName);
-      if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D[sample],isUp,fXVarBins,fYVarBins);
+    }
+  }
+
+  /////////////////
+  // Scale Hists //
+  /////////////////
+
+  if (fXVarBins || fYVarBins)
+  {
+    // for real hists
+    for (auto & HistPair : fHistMap2D)
+    {
+      auto & hist = HistPair.second;
+      Common::Scale(hist,isUp,fXVarBins,fYVarBins);
+    }
+
+    // for temp hists
+    for (auto & HistPair : fHistMap2DTmp)
+    {
+      auto & hist = HistPair.second;
+      Common::Scale(hist,isUp,fXVarBins,fYVarBins);
     }
   }
 }  
 
-void Fitter::ScaleCRtoSR()
-{
-  std::cout << "Scaling data hists in CR to SR using MC scale factors..." << std::endl;
-
-  // Create MC SFs
-  std::map<TString,Float_t> mcSFMap;
-  mcSFMap["GJets"] = (fGJetsHistMC_SR->Integral())/(fGJetsHistMC_CR->Integral());
-  mcSFMap["QCD"]   = (fQCDHistMC_SR  ->Integral())/(fQCDHistMC_CR  ->Integral());
-  
-  // Scale Data CR by MC SFs --> yields SR prediction for each CR
-  for (const auto & mcSFPair : mcSFMap)
-  {
-    const auto & sample = mcSFPair.first;
-    const auto & mcsf   = mcSFPair.second;
-
-    fHistMap2D[sample]->Scale(mcsf);
-  }
-}
-
 void Fitter::DumpInputInfo()
 {
   std::cout << "Making quick dump of input histograms..." << std::endl;
-
-  // EWK
-  const TString ewktext = "EWK";
-  auto ewkHist = (TH2F*)fHistMap2D["EWK"]->Clone(Form("%sHist",ewktext.Data()));
-  Fitter::DumpIntegralsAndDraw(ewkHist,ewktext,false,false);
-  delete ewkHist;
-
-  // GJets 
-  const TString gjetstext = "GJets";
-  auto gjetsHist = (TH2F*)fHistMap2D["GJets"]->Clone(Form("%sHist",gjetstext.Data()));
-  Fitter::DumpIntegralsAndDraw(gjetsHist,gjetstext,false,false);
-  delete gjetsHist;
-
-  // QCD 
-  const TString qcdtext = "QCD";
-  auto qcdHist = (TH2F*)fHistMap2D["QCD"]->Clone(Form("%sHist",qcdtext.Data()));
-  Fitter::DumpIntegralsAndDraw(qcdHist,qcdtext,false,false);
-  delete qcdHist;
+  
+  for (const auto & BkgdGroupPair : Common::BkgdGroupMap)
+  {
+    const auto & sample = BkgdGroupPair.first;
+    auto hist = (TH2F*)fHistMap2D[sample]->Clone(Form("%sHist",sample.Data()));
+    Fitter::DumpIntegralsAndDraw(hist,sample,false,false);
+    delete hist;
+  }
   
   // Combine Bkgd samples
   const TString bkgdtext = "Bkgd";
   auto bkgdHist = (TH2F*)fHistMap2D["EWK"]->Clone(Form("%sHist",bkgdtext.Data()));
-  bkgdHist->Add(fHistMap2D["GJets"]);
-  bkgdHist->Add(fHistMap2D["QCD"]);
+  for (const auto & BkgdGroupPair : Common::BkgdGroupMap)
+  {
+    const auto & sample = BkgdGroupPair.first;
+    if (!Common::IsCR(sample)) continue;
+    bkgdHist->Add(fHistMap2D[sample]);
+  }
   Fitter::DumpIntegralsAndDraw(bkgdHist,bkgdtext,false,true);
   delete bkgdHist;
 
@@ -398,12 +415,15 @@ void Fitter::DeclareCoefficients()
 
   // Count up background first
   std::map<TString,Float_t> nBkgdMap;
-  nBkgdMap["EWK"]   = fHistMap2D["EWK"]  ->Integral();
-  nBkgdMap["GJets"] = fHistMap2D["GJets"]->Integral();
-  nBkgdMap["QCD"]   = fHistMap2D["QCD"]  ->Integral();
-
   fNTotalBkgd = 0.f;
-  for (const auto & nBkgdPair : nBkgdMap) fNTotalBkgd += nBkgdPair.second;
+  for (const auto & BkgdGroupPair : Common::BkgdGroupMap)
+  {
+    const auto & sample = BkgdGroupPair.first;
+    auto & nBkgd = nBkgdMap[sample];
+
+    nBkgd = fHistMap2D[sample]->Integral();
+    fNTotalBkgd += nBkgd;
+  }
 
   for (auto & nBkgdPair : nBkgdMap)
   {
@@ -493,6 +513,7 @@ void Fitter::DeclareSamplePdfs(FitInfo & fitInfo)
 {
   std::cout << "Setting Sample Pdfs for: " << fitInfo.Text.Data() << std::endl;
 
+  // Data only Pdf
   for (const auto & DataHistPair : fitInfo.DataHistMap)
   {
     // build background and signal pdfs
@@ -505,10 +526,18 @@ void Fitter::DeclareSamplePdfs(FitInfo & fitInfo)
   }
 
   // Build Bkgd-Only Pdfs
+  RooArgList BkgdPdfList;
+  RooArgList BkgdFracList;
+  for (const auto & BkgdGroupPair : Common::BkgdGroupMap)
+  {
+    const auto & sample = BkgdGroupPair.first;
+
+    BkgdPdfList.add(*fitInfo.HistPdfMap.at(sample));
+    BkgdFracList.add(*fFracMap.at(sample));
+  }
+
   const TString bkgdname = Form("Bkgd_PDF_%s",fitInfo.Text.Data());
-  fitInfo.BkgdPdf = new RooAddPdf(Form("%s",bkgdname.Data()),Form("%s",bkgdname.Data()),
-				  RooArgList(*fitInfo.HistPdfMap.at("EWK"),*fitInfo.HistPdfMap.at("GJets"),*fitInfo.HistPdfMap.at("QCD")),
-				  RooArgList(*fFracMap.at("EWK"),*fFracMap.at("GJets"),*fFracMap.at("QCD")));
+  fitInfo.BkgdPdf = new RooAddPdf(Form("%s",bkgdname.Data()),Form("%s",bkgdname.Data()),BkgdPdfList,BkgdFracList);
 }
 
 void Fitter::MakeFit(FitInfo & fitInfo)
@@ -821,13 +850,18 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
   fitInfo.BkgdPdf->SetName(Form("%s",bkgdname.Data()));
   fNPredBkgd->SetName(Form("%s_norm",bkgdname.Data()));
 
-  // Change names of fractions
-  const TString ewkfracname   = fFracMap["EWK"]  ->GetName();
-  const TString gjetsfracname = fFracMap["GJets"]->GetName();
-  const TString qcdfracname   = fFracMap["QCD"]  ->GetName();
-  fFracMap["EWK"]  ->SetName(Form("%s_%s",ewkfracname  .Data(),fitInfo.Text.Data()));
-  fFracMap["GJets"]->SetName(Form("%s_%s",gjetsfracname.Data(),fitInfo.Text.Data()));
-  fFracMap["QCD"]  ->SetName(Form("%s_%s",qcdfracname  .Data(),fitInfo.Text.Data()));
+  // Change names of relative fractions of PDFs
+  std::map<TString,TString> fracNameMap;
+  for (auto & FracPair : fFracMap)
+  {
+    const auto & sample = FracPair.first;
+    auto       & frac   = FracPair.second;
+ 
+    auto & fracName = fracNameMap[sample];
+    fracName = frac->GetName();
+
+    frac->SetName(Form("%s_%s",fracName.Data(),fitInfo.Text.Data()));
+  }
 
   // Set bkgd to generic expectation
   fNPredBkgd->setVal(fNTotalBkgd);
@@ -880,9 +914,13 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
   delete workspace;
 
   // rename now that it is safe
-  fFracMap["EWK"]  ->SetName(Form("%s",ewkfracname  .Data()));
-  fFracMap["GJets"]->SetName(Form("%s",gjetsfracname.Data()));
-  fFracMap["QCD"]  ->SetName(Form("%s",qcdfracname  .Data()));
+  for (auto & FracPair : fFracMap)
+  {
+    const auto & sample = FracPair.first;
+    auto       & frac   = FracPair.second;
+
+    frac->SetName(fracNameMap[sample].Data());
+  }
 }
 
 void Fitter::DumpWS(const FitInfo & fitInfo, const TString & label)
