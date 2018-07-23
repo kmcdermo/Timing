@@ -32,7 +32,7 @@ void GetHists(TFile *& file, std::map<TString,TH1F*> & HistMap)
     const auto histname = Common::GroupCutFlowHistNameMap[sample];
 
     HistMap[sample] = (TH1F*)file->Get(Form("%s",histname.Data()));
-    Common::CheckValidTH1F(HistMap[sample],histname,file->GetName());
+    Common::CheckValidHist(HistMap[sample],histname,file->GetName());
   }  
 
   // Make a sum MC bkgd hist and EWK sum hist

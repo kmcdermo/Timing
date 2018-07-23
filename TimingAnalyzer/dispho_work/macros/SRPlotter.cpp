@@ -442,8 +442,8 @@ void SRPlotter::SetupSRHists()
 
   SRPlotter::HistMap["SR_GJets"] = (TH1F*)fSRFile->Get(Form("%s",Common::HistNameMap["GJets"].Data()));
   SRPlotter::HistMap["SR_QCD"]   = (TH1F*)fSRFile->Get(Form("%s",Common::HistNameMap["QCD"]  .Data()));
-  Common::CheckValidTH1F(SRPlotter::HistMap["SR_GJets"],Common::HistNameMap["GJets"],fSRFileName);
-  Common::CheckValidTH1F(SRPlotter::HistMap["SR_QCD"]  ,Common::HistNameMap["QCD"]  ,fSRFileName);
+  Common::CheckValidHist(SRPlotter::HistMap["SR_GJets"],Common::HistNameMap["GJets"],fSRFileName);
+  Common::CheckValidHist(SRPlotter::HistMap["SR_QCD"]  ,Common::HistNameMap["QCD"]  ,fSRFileName);
 
   SRPlotter::HistMap["SR_GJets"]->SetName(Form("SR_%s",Common::HistNameMap["GJets"].Data()));
   SRPlotter::HistMap["SR_QCD"]  ->SetName(Form("SR_%s",Common::HistNameMap["QCD"  ].Data()));
@@ -460,7 +460,7 @@ void SRPlotter::SetupSRHists()
     if (Common::IsCRMC(sample)) continue;
 
     TreePlotter::HistMap[sample] = (TH1F*)fSRFile->Get(Form("%s",histname.Data()));
-    Common::CheckValidTH1F(TreePlotter::HistMap[sample],histname,fSRFileName);
+    Common::CheckValidHist(TreePlotter::HistMap[sample],histname,fSRFileName);
   }
 
   /////////////////////////
@@ -497,11 +497,11 @@ void SRPlotter::SetupCRHists(const TString & CR, TFile *& infile)
 
   // Check hists are okay
   const TString infilename = infile->GetName();
-  Common::CheckValidTH1F(TreePlotter::HistMap[CR],Common::HistNameMap["Data"],infilename);
+  Common::CheckValidHist(TreePlotter::HistMap[CR],Common::HistNameMap["Data"],infilename);
 
-  Common::CheckValidTH1F(SRPlotter::HistMap[Form("%s_CR_GJets",CR.Data())],Common::HistNameMap["GJets"],infilename);
-  Common::CheckValidTH1F(SRPlotter::HistMap[Form("%s_CR_QCD"  ,CR.Data())],Common::HistNameMap["QCD"]  ,infilename);
-  Common::CheckValidTH1F(SRPlotter::HistMap[Form("%s_CR_EWK"  ,CR.Data())],Common::EWKHistName         ,infilename);
+  Common::CheckValidHist(SRPlotter::HistMap[Form("%s_CR_GJets",CR.Data())],Common::HistNameMap["GJets"],infilename);
+  Common::CheckValidHist(SRPlotter::HistMap[Form("%s_CR_QCD"  ,CR.Data())],Common::HistNameMap["QCD"]  ,infilename);
+  Common::CheckValidHist(SRPlotter::HistMap[Form("%s_CR_EWK"  ,CR.Data())],Common::EWKHistName         ,infilename);
   
   // Rename hists
   TreePlotter::HistMap[CR]->SetName(Form("%s_CR_%s",CR.Data(),TreePlotter::HistMap[CR]->GetName()));
@@ -526,7 +526,7 @@ void SRPlotter::SetupCROnlyHists(const TString & CR, TFile *& infile)
     const auto & histname = HistNamePair.second;
 
     TreePlotter::HistMap[sample] = (TH1F*)infile->Get(Form("%s",histname.Data()));
-    Common::CheckValidTH1F(TreePlotter::HistMap[sample],histname,infile->GetName());
+    Common::CheckValidHist(TreePlotter::HistMap[sample],histname,infile->GetName());
   }
 
   /////////////////////////

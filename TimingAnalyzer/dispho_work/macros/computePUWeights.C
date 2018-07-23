@@ -38,7 +38,7 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
 
       const TString inhistname = Form("%s/%s",Common::rootdir.Data(),histname.Data());
       auto inhist = (TH1F*)file->Get(Form("%s",inhistname.Data()));
-      Common::CheckValidTH1F(inhist,inhistname,infilename);
+      Common::CheckValidHist(inhist,inhistname,infilename);
       
       // add hists
       hist->Add(inhist);
@@ -68,7 +68,7 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
   // Get data hist
   const TString indatahistname = Form("%s",Common::dataPUHistName.Data());
   auto indatahist = (TH1D*)indatafile->Get(indatahistname.Data());
-  Common::CheckValidTH1D(indatahist,indatahistname,indatafilename);
+  Common::CheckValidHist(indatahist,indatahistname,indatafilename);
 
   // Make data hist resized
   auto datahist = new TH1F("h_pudata","h_pudata",Common::nPUBins,0,Common::nPUBins);

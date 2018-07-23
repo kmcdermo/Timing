@@ -140,8 +140,8 @@ void Fitter::GetInputHists()
 
   fHistMap2D["GJets"] = (TH2F*)fGJetsFile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
   fGJetsHistMC_CR     = (TH2F*)fGJetsFile->Get(Form("%s",Common::HistNameMap["GJets"].Data()));
-  Common::CheckValidTH2F(fHistMap2D["GJets"],Common::HistNameMap["Data"] ,fGJetsFileName);
-  Common::CheckValidTH2F(fGJetsHistMC_CR    ,Common::HistNameMap["GJets"],fGJetsFileName);
+  Common::CheckValidHist(fHistMap2D["GJets"],Common::HistNameMap["Data"] ,fGJetsFileName);
+  Common::CheckValidHist(fGJetsHistMC_CR    ,Common::HistNameMap["GJets"],fGJetsFileName);
   if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D["GJets"],isUp,fXVarBins,fYVarBins);
   if (fXVarBins || fYVarBins) Common::Scale(fGJetsHistMC_CR    ,isUp,fXVarBins,fYVarBins);
 
@@ -151,8 +151,8 @@ void Fitter::GetInputHists()
 
   fHistMap2D["QCD"] = (TH2F*)fQCDFile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
   fQCDHistMC_CR     = (TH2F*)fQCDFile->Get(Form("%s",Common::HistNameMap["QCD"].Data()));
-  Common::CheckValidTH2F(fHistMap2D["QCD"],Common::HistNameMap["Data"],fQCDFileName);
-  Common::CheckValidTH2F(fQCDHistMC_CR    ,Common::HistNameMap["QCD"] ,fQCDFileName);
+  Common::CheckValidHist(fHistMap2D["QCD"],Common::HistNameMap["Data"],fQCDFileName);
+  Common::CheckValidHist(fQCDHistMC_CR    ,Common::HistNameMap["QCD"] ,fQCDFileName);
   if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D["QCD"],isUp,fXVarBins,fYVarBins);
   if (fXVarBins || fYVarBins) Common::Scale(fQCDHistMC_CR    ,isUp,fXVarBins,fYVarBins);
 
@@ -163,8 +163,8 @@ void Fitter::GetInputHists()
   fHistMap2D["EWK"] = (TH2F*)fSRFile->Get(Form("%s",Common::EWKHistName.Data())); // MC prediction of all other MC backgrounds aside from GJets and QCD
   fGJetsHistMC_SR   = (TH2F*)fSRFile->Get(Form("%s",Common::HistNameMap["GJets"].Data()));
   fQCDHistMC_SR     = (TH2F*)fSRFile->Get(Form("%s",Common::HistNameMap["QCD"].Data()));
-  Common::CheckValidTH2F(fGJetsHistMC_SR,Common::HistNameMap["GJets"],fSRFileName);
-  Common::CheckValidTH2F(fQCDHistMC_SR  ,Common::HistNameMap["QCD"]  ,fSRFileName);
+  Common::CheckValidHist(fGJetsHistMC_SR,Common::HistNameMap["GJets"],fSRFileName);
+  Common::CheckValidHist(fQCDHistMC_SR  ,Common::HistNameMap["QCD"]  ,fSRFileName);
   if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D["EWK"],isUp,fXVarBins,fYVarBins);
   if (fXVarBins || fYVarBins) Common::Scale(fGJetsHistMC_SR  ,isUp,fXVarBins,fYVarBins);
   if (fXVarBins || fYVarBins) Common::Scale(fQCDHistMC_SR    ,isUp,fXVarBins,fYVarBins);
@@ -173,7 +173,7 @@ void Fitter::GetInputHists()
   if (!fGenData)
   {
     fHistMap2D["Data"] = (TH2F*)fSRFile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
-    Common::CheckValidTH2F(fHistMap2D["Data"],Common::HistNameMap["Data"],fSRFileName);
+    Common::CheckValidHist(fHistMap2D["Data"],Common::HistNameMap["Data"],fSRFileName);
     if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D["Data"],isUp,fXVarBins,fYVarBins);
   }
 
@@ -191,7 +191,7 @@ void Fitter::GetInputHists()
 
       // load signals
       fHistMap2D[sample] = (TH2F*)fSRFile->Get(Form("%s",Common::HistNameMap[sample].Data()));
-      Common::CheckValidTH2F(fHistMap2D[sample],Common::HistNameMap[sample],fSRFileName);
+      Common::CheckValidHist(fHistMap2D[sample],Common::HistNameMap[sample],fSRFileName);
       if (fXVarBins || fYVarBins) Common::Scale(fHistMap2D[sample],isUp,fXVarBins,fYVarBins);
     }
   }

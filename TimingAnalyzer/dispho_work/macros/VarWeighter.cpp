@@ -59,14 +59,14 @@ void VarWeighter::GetInputHists()
   Common::CheckValidFile(fCRFile,fCRFileName);
 
   HistMap["CR_MC"] = (TH1F*)fCRFile->Get(mcname.Data());
-  Common::CheckValidTH1F(HistMap["CR_MC"],mcname,fCRFileName);
+  Common::CheckValidHist(HistMap["CR_MC"],mcname,fCRFileName);
 
   // SR
   fSRFile = TFile::Open(Form("%s",fSRFileName.Data()));
   Common::CheckValidFile(fSRFile,fSRFileName);
 
   HistMap["SR_MC"] = (TH1F*)fSRFile->Get(mcname.Data());
-  Common::CheckValidTH1F(HistMap["SR_MC"],mcname,fSRFileName);
+  Common::CheckValidHist(HistMap["SR_MC"],mcname,fSRFileName);
 }  
 
 void VarWeighter::ScaleInputToUnity()

@@ -72,7 +72,7 @@ void FastSkimmer::MakeListFromTrees()
     // Get Input Cut Flow Histogram 
     //    auto inhist = (TH1F*)file->Get(Form("%s_scaled",Common::h_cutflowname.Data()));
     auto inhist = (TH1F*)file->Get(Form("%s",Common::h_cutflowname.Data()));
-    Common::CheckValidTH1F(inhist,Common::h_cutflowname,filename);
+    Common::CheckValidHist(inhist,Common::h_cutflowname,filename);
 
     // Init Output Cut Flow Histogram 
     std::map<TString,Int_t> binlabels;

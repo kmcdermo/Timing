@@ -195,9 +195,16 @@ namespace Common
   // Check inputs
   void CheckValidFile(const TFile * file, const TString & fname);
   void CheckValidTree(const TTree * tree, const TString & tname, const TString & fname);
-  void CheckValidTH1F(const TH1F * plot, const TString & pname, const TString & fname);
-  void CheckValidTH1D(const TH1D * plot, const TString & pname, const TString & fname);
-  void CheckValidTH2F(const TH2F * plot, const TString & pname, const TString & fname);
+  template <typename T>
+  void CheckValidHist(const T * plot, const TString & pname, const TString & fname)
+  {
+    if (plot == (T*) NULL) // check if valid plot
+    {
+      std::cerr << "Input Hist is bad pointer: " << pname.Data() << " in input file: " << fname.Data() 
+		<< " ...exiting..." << std::endl;
+      exit(1);
+    }
+  }
 
   // Check samples
   Bool_t IsCRMC(const TString & sample)

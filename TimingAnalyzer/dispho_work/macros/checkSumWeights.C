@@ -21,7 +21,7 @@ void checkSumWeights(const TString & unskimmedwgtfile, const TString & skimdir)
   // Get the cut histogram
   const TString skimhistname = Form("%s",Common::h_cutflowname.Data());
   auto skimhist = (TH1F*)skimfile->Get(skimhistname.Data());
-  Common::CheckValidTH1F(skimhist,skimhistname,skimfilename);
+  Common::CheckValidHist(skimhist,skimhistname,skimfilename);
 
   // get sum
   const Float_t skimmedsum = skimhist->GetBinContent(1);

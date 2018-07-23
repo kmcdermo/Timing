@@ -85,15 +85,15 @@ void CRtoSRPlotter::GetInputHists()
 
   HistMap["CR_Data"] = (TH1F*)fCRFile->Get(dataname.Data());
   HistMap["CR_MC"]   = (TH1F*)fCRFile->Get(mcname  .Data());
-  Common::CheckValidTH1F(HistMap["CR_Data"],dataname,fCRFileName);
-  Common::CheckValidTH1F(HistMap["CR_MC"]  ,mcname  ,fCRFileName);
+  Common::CheckValidHist(HistMap["CR_Data"],dataname,fCRFileName);
+  Common::CheckValidHist(HistMap["CR_MC"]  ,mcname  ,fCRFileName);
 
   // SR
   fSRFile = TFile::Open(Form("%s",fSRFileName.Data()));
   Common::CheckValidFile(fSRFile,fSRFileName);
 
   HistMap["SR_MC"]   = (TH1F*)fSRFile->Get(mcname  .Data());
-  Common::CheckValidTH1F(HistMap["SR_MC"]  ,mcname  ,fSRFileName);
+  Common::CheckValidHist(HistMap["SR_MC"]  ,mcname  ,fSRFileName);
 }  
 
 void CRtoSRPlotter::SetupHistsStlye()

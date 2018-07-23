@@ -87,7 +87,7 @@ void computeSignalEfficiency(const TString & infilename, const TString & outtext
       // get input hist
       const auto & histname = Common::SignalCutFlowHistNameMap[samples[isample]];
       auto hist = (TH1F*)infile->Get(Form("%s",histname.Data()));
-      Common::CheckValidTH1F(hist,histname,infilename);
+      Common::CheckValidHist(hist,histname,infilename);
 
       // set efficiency by bins!
       efficiency->SetTotalEvents(isample+1,hist->GetBinContent(1));

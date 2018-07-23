@@ -39,11 +39,11 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   // Get the cut flow + event weight histogram --> set the wgtsum
   const TString inh_cutflowname = Form("%s/%s",Common::rootdir.Data(),Common::h_cutflowname.Data());
   fInCutFlow = (TH1F*)fInFile->Get(inh_cutflowname.Data());
-  Common::CheckValidTH1F(fInCutFlow,inh_cutflowname,infilename);
+  Common::CheckValidHist(fInCutFlow,inh_cutflowname,infilename);
 
   // const TString inh_cutflow_wgtname = Form("%s/%s_wgt",Common::rootdir.Data(),Common::h_cutflow_wgtname.Data());
   // fInCutFlowWgt = (TH1F*)fInFile->Get(inh_cutflow_wgtname.Data());
-  // Common::CheckValidTH1F(fInCutFlowWgt,inh_cutflow_wgtname,infilename);
+  // Common::CheckValidHist(fInCutFlowWgt,inh_cutflow_wgtname,infilename);
 
   // Get PU weights input
   fPUWeights.clear();
@@ -57,7 +57,7 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
 
     const TString puhistname = (useOld ? Form("%s",Common::puwgtHistName.Data()) : Form("%s_%s",Common::puTrueHistName.Data(),Common::puwgtHistName.Data()));
     fInPUWgtHist = (TH1F*)fInPUWgtFile->Get(puhistname.Data());
-    Common::CheckValidTH1F(fInPUWgtHist,puhistname,pufilename);
+    Common::CheckValidHist(fInPUWgtHist,puhistname,pufilename);
 
     Skimmer::GetPUWeights();
   }
