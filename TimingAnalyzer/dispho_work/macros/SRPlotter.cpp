@@ -369,6 +369,7 @@ void SRPlotter::SetupConfig()
   Common::SetupSignalGroups();
   Common::SetupSignalSubGroups();
   Common::SetupHistNames();
+  Common::SetupBkgdHistNames();
   Common::SetupSignalSubGroupColors();
   Common::SetupColors();
   Common::SetupLabels();
@@ -488,27 +489,26 @@ void SRPlotter::SetupCRHists(const TString & CR, TFile *& infile)
 {
   std::cout << "Setting up CR hists for: " << CR.Data() << std::endl;
 
-  // Get Histograms
-  TreePlotter::HistMap[CR] = (TH1F*)infile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
-
-  SRPlotter::HistMap[Form("%s_CR_GJets",CR.Data())] = (TH1F*)infile->Get(Form("%s",Common::HistNameMap["GJets"].Data()));
-  SRPlotter::HistMap[Form("%s_CR_QCD"  ,CR.Data())] = (TH1F*)infile->Get(Form("%s",Common::HistNameMap["QCD"]  .Data()));
-  SRPlotter::HistMap[Form("%s_CR_EWK"  ,CR.Data())] = (TH1F*)infile->Get(Form("%s",Common::EWKHistName         .Data()));
-
-  // Check hists are okay
+  // tmp variable
   const TString infilename = infile->GetName();
-  Common::CheckValidTH1F(TreePlotter::HistMap[CR],Common::HistNameMap["Data"],infilename);
-
-  Common::CheckValidTH1F(SRPlotter::HistMap[Form("%s_CR_GJets",CR.Data())],Common::HistNameMap["GJets"],infilename);
-  Common::CheckValidTH1F(SRPlotter::HistMap[Form("%s_CR_QCD"  ,CR.Data())],Common::HistNameMap["QCD"]  ,infilename);
-  Common::CheckValidTH1F(SRPlotter::HistMap[Form("%s_CR_EWK"  ,CR.Data())],Common::EWKHistName         ,infilename);
   
-  // Rename hists
+  // Get Data
+  TreePlotter::HistMap[CR] = (TH1F*)infile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
+  Common::CheckValidTH1F(TreePlotter::HistMap[CR],Common::HistNameMap["Data"],infilename);
   TreePlotter::HistMap[CR]->SetName(Form("%s_CR_%s",CR.Data(),TreePlotter::HistMap[CR]->GetName()));
 
-  SRPlotter::HistMap[Form("%s_CR_GJets",CR.Data())]->SetName(Form("%s_CR_%s",CR.Data(),SRPlotter::HistMap[Form("%s_CR_GJets",CR.Data())]->GetName()));
-  SRPlotter::HistMap[Form("%s_CR_QCD"  ,CR.Data())]->SetName(Form("%s_CR_%s",CR.Data(),SRPlotter::HistMap[Form("%s_CR_QCD"  ,CR.Data())]->GetName()));
-  SRPlotter::HistMap[Form("%s_CR_EWK"  ,CR.Data())]->SetName(Form("%s_CR_%s",CR.Data(),SRPlotter::HistMap[Form("%s_CR_EWK"  ,CR.Data())]->GetName()));
+  // Get Bkgd MC Histograms
+  for (const auto & BkgdHistNamePair : Common::BkgdHistNameMap)
+  {
+    const auto & sample   = BkgdHistNamePair.first;
+    const auto & histname = BkgdHistNamePair.second;
+
+    auto & hist = SRPlotter::HistMap[Form("%s_CR_%s",CR.Data(),sample.Data())];
+
+    hist = (TH1F*)infile->Get(Form("%s",histname.Data()));
+    Common::CheckValidTH1F(hist,histname,infilename);
+    hist->SetName(Form("%s_CR_%s",CR.Data(),hist->GetName()));
+  }
 }
 
 void SRPlotter::SetupCROnlyHists(const TString & CR, TFile *& infile)

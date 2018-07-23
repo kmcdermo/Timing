@@ -95,6 +95,7 @@ namespace Common
   extern std::map<TString,vector<TString> > SignalSubGroupMap;
   extern std::map<TString,TString> TreeNameMap;
   extern std::map<TString,TString> HistNameMap;
+  extern std::map<TString,TString> BkgdHistNameMap;
   extern std::map<TString,TString> SampleCutFlowHistNameMap;
   extern std::map<TString,TString> GroupCutFlowHistNameMap;
   extern std::map<TString,TString> SignalCutFlowHistNameMap;
@@ -118,6 +119,7 @@ namespace Common
   void SetupSignalSubGroups();
   void SetupTreeNames();
   void SetupHistNames();
+  void SetupBkgdHistNames();
   void SetupSampleCutFlowHistNames();
   void SetupGroupCutFlowHistNames();
   void SetupSignalCutFlowHistNames();

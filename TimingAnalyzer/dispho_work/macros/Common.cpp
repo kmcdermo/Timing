@@ -11,6 +11,7 @@ namespace Common
   std::map<TString,vector<TString> > SignalSubGroupMap;
   std::map<TString,TString> TreeNameMap;
   std::map<TString,TString> HistNameMap;
+  std::map<TString,TString> BkgdHistNameMap;
   std::map<TString,TString> SampleCutFlowHistNameMap;
   std::map<TString,TString> GroupCutFlowHistNameMap;
   std::map<TString,TString> SignalCutFlowHistNameMap;
@@ -179,6 +180,22 @@ namespace Common
       const auto & sample = GroupPair.first;
       Common::HistNameMap[sample] = sample+"_Hist";
     }
+  }
+
+  void SetupBkgdHistNames()
+  {
+    for (const auto & HistNamePair : Common::HistNameMap)
+    {
+      const auto & sample   = HistNamePair.first;
+      const auto & histname = HistNamePair.second;
+
+      if (Common::IsCRMC(sample))
+      {
+	Common::BkgdHistNameMap[sample] = histname;
+      }
+    }
+
+    Common::BkgdHistNameMap["EWK"] = Common::EWKHistName;
   }
 
   void SetupSampleCutFlowHistNames()
