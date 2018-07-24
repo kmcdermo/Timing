@@ -265,7 +265,7 @@ namespace Common
       
       auto & hist = HistMapTmp[Form("%s_CR_%s",CR.Data(),sample.Data())];
       
-      hist = (TH1F*)infile->Get(Form("%s",histname.Data()));
+      hist = (T*)infile->Get(Form("%s",histname.Data()));
       Common::CheckValidHist(hist,histname,infilename);
       hist->SetName(Form("%s_CR_%s",CR.Data(),hist->GetName()));
     }

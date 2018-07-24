@@ -124,33 +124,6 @@ void Fitter::PrepareCommon()
   Fitter::DeclareXYVars();
 }
 
-template <typename T>
-void SetupCRHists(const TString & CR, TFile *& infile)
-{
-  std::cout << "Setting up CR hists for: " << CR.Data() << std::endl;
-
-  // tmp variable
-  const TString infilename = infile->GetName();
-  
-  // Get Data
-  fHistMap2D[CR] = (TH1F*)infile->Get(Form("%s",Common::HistNameMap["Data"].Data()));
-  Common::CheckValidTH1F(fHistMap2D[CR],Common::HistNameMap["Data"],infilename);
-  fHistMap2D[CR]->SetName(Form("%s_CR_%s",CR.Data(),fHistMap2D[CR]->GetName()));
-
-  // Get Bkgd MC Histograms
-  for (const auto & BkgdHistNamePair : Common::BkgdHistNameMap)
-  {
-    const auto & sample   = BkgdHistNamePair.first;
-    const auto & histname = BkgdHistNamePair.second;
-
-    auto & hist = fHistMap2DTmp[Form("%s_CR_%s",CR.Data(),sample.Data())];
-
-    hist = (TH1F*)infile->Get(Form("%s",histname.Data()));
-    Common::CheckValidTH1F(hist,histname,infilename);
-    hist->SetName(Form("%s_CR_%s",CR.Data(),hist->GetName()));
-  }
-}
-
 void Fitter::GetInputHists()
 {
   std::cout << "Getting input histograms..." << std::endl;
@@ -404,8 +377,8 @@ void Fitter::Project2DHistTo1D()
   for (auto & HistPair2D : fHistMap2D)
   {
     const auto & sample = HistPair2D.first;
-    fHistMapX[sample] = (TH1F*)HistPair2D.second->ProjectionX(Form("%s_projX",Common::HistNameMap[sample].Data()));
-    fHistMapY[sample] = (TH1F*)HistPair2D.second->ProjectionY(Form("%s_projY",Common::HistNameMap[sample].Data()));
+    fHistMapX[sample] = (TH1F*)HistPair2D.second->ProjectionX(Form("%s_projX",Fitter::GetHistName(sample).Data()));
+    fHistMapY[sample] = (TH1F*)HistPair2D.second->ProjectionY(Form("%s_projY",Fitter::GetHistName(sample).Data()));
   }
 }
 
@@ -425,12 +398,12 @@ void Fitter::DeclareCoefficients()
     fNTotalBkgd += nBkgd;
   }
 
-  for (auto & nBkgdPair : nBkgdMap)
+  for (const auto & nBkgdPair : nBkgdMap)
   {
     const auto & sample = nBkgdPair.first;
     const auto   nbkgd  = nBkgdPair.second;
 
-    const TString name = Form("%s_frac",Common::HistNameMap[sample].Data());
+    const TString name = Fitter::GetHistName(sample)+"_frac";
     fFracMap[sample] = new RooRealVar(Form("%s",name.Data()),Form("%s",name.Data()),nbkgd/fNTotalBkgd);
   }
 
@@ -504,7 +477,7 @@ void Fitter::DeclareDatasets(const T & HistMap, FitInfo & fitInfo)
     const auto & sample = HistPair.first;
     const auto & hist   = HistPair.second;
 
-    const TString name = Form("%s_RooDataHist_%s",Common::HistNameMap[sample].Data(),fitInfo.Text.Data());
+    const TString name = Form("%s_RooDataHist_%s",Fitter::GetHistName(sample).Data(),fitInfo.Text.Data());
     fitInfo.DataHistMap[sample] = new RooDataHist(Form("%s",name.Data()),Form("%s",name.Data()),fitInfo.ArgList,hist);
   }
 }
@@ -513,19 +486,20 @@ void Fitter::DeclareSamplePdfs(FitInfo & fitInfo)
 {
   std::cout << "Setting Sample Pdfs for: " << fitInfo.Text.Data() << std::endl;
 
-  // Data only Pdf
+  // Make a Pdf for each signal and background
   for (const auto & DataHistPair : fitInfo.DataHistMap)
   {
     // build background and signal pdfs
     const auto & sample   = DataHistPair.first;
     const auto & datahist = DataHistPair.second;
-    if (sample == "Data") continue;
+
+    if (Fitter::IsData(sample)) continue;
     
-    const TString name = Form("%s_PDF_%s",Common::HistNameMap[sample].Data(),fitInfo.Text.Data());
+    const TString name = Form("%s_PDF_%s",Fitter::GetHistName(sample).Data(),fitInfo.Text.Data());
     fitInfo.HistPdfMap[sample] = new RooHistPdf(Form("%s",name.Data()),Form("%s",name.Data()),fitInfo.ArgList,*datahist);
   }
 
-  // Build Bkgd-Only Pdfs
+  // Build Sum of Bkgd-Only Pdf
   RooArgList BkgdPdfList;
   RooArgList BkgdFracList;
   for (const auto & BkgdGroupPair : Common::BkgdGroupMap)
@@ -1309,6 +1283,22 @@ void Fitter::SetupOutTree()
   fOutTree->Branch("nFitSign",&fNFitSign);
   fOutTree->Branch("nFitSignErr",&fNFitSignErr);
   fOutTree->Branch("fitID",&fFitID);
+}
+
+Bool_t Fitter::IsData(const TString & sample)
+{
+  if   (Common::IsEWK(sample)) return false;
+  else                         return (Common::GroupMap[sample] == isData);
+}
+
+TString Fitter::GetHistName(const TString & sample)
+{
+  TString name;
+  
+  if   (!Common::IsEWK(sample)) name = Common::HistNameMap[sample];
+  else                          name = Common::EWKHistName;
+  
+  return name;
 }
 
 Float_t Fitter::GetMinimum(TGraphAsymmErrors *& graph, TH1F *& hist1, TH1F *& hist2)

@@ -47,7 +47,7 @@ outlimitplotdir="limits"
 
 mkdir -p "${tmpdir}"
 mkdir -p "${infitdir}"
-mkdir -p "${limitdir}/{inlimitdir}"
+mkdir -p "${limitdir}/${inlimitdir}"
 
 #########################
 ## Make 2D Input Plots ##
@@ -61,7 +61,7 @@ do
 	outtext="${plot}_${label}"
 
 	## make plot
-	./scripts/runTreePlotter2D.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${sel}.txt" "plot_config/${plot}.txt" "misc_config/${misc2D}.txt" "${outtext}" "${outdir}/${outplot2Ddir}"
+	./scripts/runTreePlotter2D.sh "skims/${infile}.root" "skims/${insigfile}.root" "cut_config/${sel}.txt" "vargwgt_config/${varwgmap}.txt" "plot_config/${plot}.txt" "misc_config/${misc2D}.txt" "${outtext}" "${outdir}/${outplot2Ddir}"
 
 	## cp root file to local directory
 	cp "${outtext}.root" "${infitdir}"
@@ -75,7 +75,7 @@ done
 ## Finish details on fit config ##
 ##################################
 
-echo "plot_config=plot_config/${plot}" >> "${fitconfig}"
+echo "plot_config=plot_config/${plot}.txt" >> "${fitconfig}"
 echo "scale_range_low=-10" >> "${fitconfig}"
 echo "scale_range_high=10" >> "${fitconfig}"
 echo "make_ws=1" >> "${fitconfig}"
@@ -84,7 +84,13 @@ echo "make_ws=1" >> "${fitconfig}"
 ## Run Fitter Over Input Plots ##
 #################################
 
-./scripts/runFitter.sh "${tmpdir}/${fitconfig}" "misc_config/${misc_fit}.txt" "${fit}" "${outdir}/${outfitdir}"
+./scripts/runFitter.sh "${fitconfig}" "misc_config/${misc_fit}.txt" "${fit}" "${outdir}/${outfitdir}"
+
+###################
+## Remove tmpdir ##
+###################
+
+rm -r "${tmpdir}"
 
 #####################################
 ## Copy To Local Combine Directory ##
@@ -108,7 +114,7 @@ pushd "${limitdir}"
 ## Make 1D Limit Plots ##
 #########################
 
-./scriplts/runLimits1D.sh "${outlimitdir}" "${outcombname}" "${doobs}" "${outlimit1D}" "${outdir}/${outlimitplotdir}"
+./scriplts/runLimits1D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${outlimit1D}" "${outdir}/${outlimitplotdir}"
 
 #########################
 ## Make 2D Limit Plots ##

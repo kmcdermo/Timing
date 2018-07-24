@@ -121,6 +121,8 @@ public:
   void DumpWS(const FitInfo & fitInfo, const TString & label);
 
   // Helper Routines
+  Bool_t  IsData(const TString & sample);
+  TString GetHistName(const TString & sample);
   Float_t GetMinimum(TGraphAsymmErrors *& graph, TH1F *& hist1, TH1F *& hist2);
   Float_t GetMaximum(TGraphAsymmErrors *& graph, TH1F *& hist);
 
