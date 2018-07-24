@@ -797,7 +797,7 @@ namespace Common
     }
   }
 
-  void AddPaddingToFile(std::ofstream *& file, const Int_t lines)
+  void AddPaddingToFile(std::ofstream & file, const Int_t lines)
   {
     for (auto iline = 0; iline < lines; iline++)
     {

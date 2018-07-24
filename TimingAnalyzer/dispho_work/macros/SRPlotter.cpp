@@ -275,8 +275,8 @@ void SRPlotter::SetupConfig()
 
   Common::SetupSamples();
   Common::SetupSignalSamples();
-  Common::SetupBkgdGroups();
   Common::SetupGroups();
+  Common::SetupBkgdGroups();
   Common::SetupSignalGroups();
   Common::SetupSignalSubGroups();
   Common::SetupHistNames();

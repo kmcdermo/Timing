@@ -231,7 +231,7 @@ namespace Common
   void AddPaddingToPave(TPaveText *& outpave, const Int_t lines);
 
   // extra textfile config info
-  void AddPaddingToFile(std::ofstream *& file, const Int_t lines);
+  void AddPaddingToFile(std::ofstream & file, const Int_t lines);
 
   // function to save multiple canvas inmages
   void SaveAs(TCanvas *& canv, const TString & label);
@@ -274,6 +274,11 @@ namespace Common
   template <typename T>
   void SetupSRMCHists(TFile *& infile, std::map<TString,T*> & HistMapTmp)
   {
+    std::cout << "Setting up SR MC Hists..." << std::endl;
+    
+    // tmp variable
+    const TString & infilename = infile->GetName();
+
     // Get Bkgd MC Histograms
     for (const auto & BkgdHistNamePair : Common::BkgdHistNameMap)
     {
@@ -285,45 +290,9 @@ namespace Common
       auto & hist = HistMapTmp[Form("SR_%s",sample.Data())];
       
       hist = (T*)infile->Get(Form("%s",histname.Data()));
-      Common::CheckValidHist(hist,histname,fSRFileName);
+      Common::CheckValidHist(hist,histname,infilename);
       hist->SetName(Form("SR_%s",hist->GetName()));
     }
-  }
-
-  template <typename T>
-  void GetSRPredFromCRs(T & HistMap, const T & HistMapTmp, const Bool_t VarBins,
-			std::map<TString,Float_t> & KFMap, std::map<TString,Float_t> & XFMap)
-  {
-    std::cout << "Constructing SR prediction from data in each CR..." << std::endl;
-
-    for (const auto & BkgdGroupPair : Common::BkgdGroupMap)
-    {
-      const auto & sample = BkgdGroupPair.first;
-
-      if (!Common::IsCR(sample)) continue;
-
-      const auto & CR = sample;
-      GetSRPredFromCR(CR,HistMap,HistMapTmp,VarBins,KFMap[CR],XFMap[CR]);
-    }
-  }
-
-  template <typename T>
-  void GetSRPredFromCR(const TString & CR, T & HistMap, const T & HistMapTmp, const Bool_t VarBins,
-		       Float_t & kFactor, Float_t & xFactor)
-  {  
-    std::cout << "Constructing SR prediction from data for: " << CR.Data() << std::endl;
-    
-    // Create CR Data/MC k-factors
-    kFactor = Common::GetKFactor(CR,HistMap,HistMapTmp,VarBins);
-    
-    // Fix CR Data shapes by subtracting away non CR MC
-    SRPlotter::ShapeCRHist(CR,HistMap,HistMapTmp);
-    
-    // Create CRtoSR MC x-factors    
-    xFactor = Common::GetTransferFactor(CR,HistMapTmp,VarBins,kFactor);
-    
-    // Scale Data CR by MC XFs --> yields SR prediction for each CR
-    HistMap[sample]->Scale(xFactor);
   }
 
   template <typename T>
@@ -331,7 +300,7 @@ namespace Common
   {
     std::cout << "Computing k-factor for: " << CR.Data() << std::endl;
     
-    const Float_t numer = HistMap[CR]->Integral(VarBins?"width":"");
+    const Float_t numer = HistMap.at(CR)->Integral(VarBins?"width":"");
     
     Float_t denom = 0.f;
     for (const auto & HistPair : HistMapTmp)
@@ -373,10 +342,46 @@ namespace Common
   {
     std::cout << "Computing x-factor for: " << CR.Data() << std::endl;
 
-    const Float_t cr_int = HistMapTmp[Form("%s_CR_%s",CR.Data(),CR.Data())]->Integral(VarBins?"width":"");
-    const Float_t sr_int = HistMapTmp[Form("SR_%s",CR.Data())]             ->Integral(VarBins?"width":"");
+    const Float_t cr_int = HistMapTmp.at(Form("%s_CR_%s",CR.Data(),CR.Data()))->Integral(VarBins?"width":"");
+    const Float_t sr_int = HistMapTmp.at(Form("SR_%s",CR.Data()))             ->Integral(VarBins?"width":"");
     
     return (sr_int / (kFactor * cr_int));
+  }
+
+  template <typename T>
+  void GetSRPredFromCR(const TString & CR, T & HistMap, const T & HistMapTmp, const Bool_t VarBins,
+		       Float_t & kFactor, Float_t & xFactor)
+  {  
+    std::cout << "Constructing SR prediction from data for: " << CR.Data() << std::endl;
+    
+    // Create CR Data/MC k-factors
+    kFactor = Common::GetKFactor(CR,HistMap,HistMapTmp,VarBins);
+    
+    // Fix CR Data shapes by subtracting away non CR MC
+    Common::ShapeCRHist(CR,HistMap,HistMapTmp);
+    
+    // Create CRtoSR MC x-factors    
+    xFactor = Common::GetTransferFactor(CR,HistMapTmp,VarBins,kFactor);
+    
+    // Scale Data CR by MC XFs --> yields SR prediction for each CR
+    HistMap[CR]->Scale(xFactor);
+  }
+
+  template <typename T>
+  void GetSRPredFromCRs(T & HistMap, const T & HistMapTmp, const Bool_t VarBins,
+			std::map<TString,Float_t> & KFMap, std::map<TString,Float_t> & XFMap)
+  {
+    std::cout << "Constructing SR prediction from data in each CR..." << std::endl;
+
+    for (const auto & BkgdGroupPair : Common::BkgdGroupMap)
+    {
+      const auto & sample = BkgdGroupPair.first;
+
+      if (!Common::IsCR(sample)) continue;
+
+      const auto & CR = sample;
+      GetSRPredFromCR(CR,HistMap,HistMapTmp,VarBins,KFMap[CR],XFMap[CR]);
+    }
   }
 };
 

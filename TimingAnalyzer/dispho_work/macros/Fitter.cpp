@@ -1075,7 +1075,9 @@ void Fitter::SetupConfig()
   Common::SetupSamples();
   Common::SetupSignalSamples();
   Common::SetupGroups();
+  Common::SetupBkgdGroups();
   Common::SetupHistNames();
+  Common::SetupBkgdHistNames();
 }
 
 void Fitter::SetupFitConfig()

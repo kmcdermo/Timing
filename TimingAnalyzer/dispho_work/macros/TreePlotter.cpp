@@ -535,7 +535,7 @@ void TreePlotter::PrintCanvas(const TString & outfiletext, const Bool_t isLogy)
   }
 
   // save canvas as images
-  Common::SaveAs(OutCanv,Form("%s_%s",outfiltext.Data(),(isLogy?"log":"lin")));
+  Common::SaveAs(OutCanv,Form("%s_%s",outfiletext.Data(),(isLogy?"log":"lin")));
 }
 
 void TreePlotter::MakeConfigPave()

@@ -7,6 +7,7 @@ LSFJOB
 *.bak
 *.pdf
 *.png
+*.eps
 *.log
 *.root
 crab*/
