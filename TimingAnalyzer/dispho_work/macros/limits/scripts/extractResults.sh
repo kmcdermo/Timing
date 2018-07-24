@@ -1,19 +1,21 @@
 #!/bin/bash
 
 ## i/o params
-infile=${1:-"ws_final.root"}
-outname=${2-"AsymLim"}
-outdir=${3:-"output"}
-indir="input"
+indir=${1:-"input"}
+infile=${2:-"ws_final.root"}
+outname=${3-"AsymLim"}
+outdir=${4:-"output"}
 
 ## other global vars
+carddir="cards"
+cardtmpl="datacard.tmpl"
 combdir="/afs/cern.ch/work/k/kmcdermo/private/dispho/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit/working"
 datacard="datacard.txt"
 
 #############################
 ## replace input file name ##
 #############################
-cp ${indir}/datacard.tmpl ${datacard}
+cp ${carddir}/${cardtmpl} ${datacard}
 sed -i "s/INPUT_FILE/${infile}/g" ${datacard}
 
 ###########################################
