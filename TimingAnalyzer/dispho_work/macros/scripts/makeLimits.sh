@@ -114,13 +114,13 @@ pushd "${limitdir}"
 ## Make 1D Limit Plots ##
 #########################
 
-./scriplts/runLimits1D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${outlimit1D}" "${outdir}/${outlimitplotdir}"
+./scripts/runLimits1D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${outlimit1D}" "${outdir}/${outlimitplotdir}"
 
 #########################
 ## Make 2D Limit Plots ##
 #########################
 
-./scriplts/runLimits1D.sh "${outlimitdir}" "${outcombname}" "limit_config/${limit}.txt" "${outlimit2D}" "${outdir}/${outlimitplotdir}"
+./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" "limit_config/${limit}.txt" "${outlimit2D}" "${outdir}/${outlimitplotdir}"
 
 #########################
 ## Snap Back When Done ##
