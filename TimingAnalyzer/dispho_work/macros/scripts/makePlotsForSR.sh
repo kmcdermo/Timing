@@ -38,13 +38,13 @@ do
 		misc="misc"
 		if [[ ${input} == "SR" ]] 
 		then
-		    if [[ ${plot} == *"met"* ]] || [[ ${plot} == "phoseedtime_0" ]] 
+		    if [[ ${plot} == *"met"* ]] || [[ ${plot} == *"phoseedtime_0"* ]] 
 		    then
 			misc="misc_blind"
 		    fi
 		fi
 
-		## make the plot
+		## make the plot (with variable weights applied as needed)
 		./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insigfile}.root" "cut_config/${sel}.txt" "varwgt_config/${varwgtmap}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${outfile}" "${outdir}/${plot}"
 
 		## use output to make config files for next step
@@ -55,7 +55,7 @@ do
 
         ## determine which 
 	misc="misc"
-	if [[ ${plot} == *"met"* ]] || [[ ${plot} == "phoseedtime_0" ]]
+	if [[ ${plot} == *"met"* ]] || [[ ${plot} == *"phoseedtime_0"* ]]
 	then
 	    misc="misc_blind"
 	fi

@@ -1,5 +1,5 @@
 ## command line options
-outdir=${1:-"plots/ntuples_v4/checks_v3/varwgts"}
+outdir=${1:-"plots/ntuples_v4/checks_v3/DEG_test/varwgts"}
 
 ## input configs
 GJets="gjets signals_gjets always_true cr_gjets_DEG"
@@ -44,7 +44,7 @@ function makeTreePlot()
 	misc="misc"
 	if [[ ${input} == "SR" ]] 
 	then
-	    if [[ ${plot} == *"met"* ]] || [[ ${plot} == "phoseedtime_0" ]] 
+	    if [[ ${plot} == *"met"* ]] || [[ ${plot} == *"phoseedtime_0"* ]] 
 	    then
 		misc="misc_blind"
 	    fi
@@ -134,19 +134,19 @@ do
 	for CR in GJets QCD
 	do
 	    ## make input plots
-	    makeTreePlot "${plot}" "${sample}" "${varwgtdir}/${empty}" "${orig}"
+	    makeTreePlot "${plot}" "${CR}" "${varwgtdir}/${empty}" "${orig}"
 	    
 	    ## make CRtoSR plots
-	    makeCRtoSRPlot "${plot}" "${sample}" "SR" "${orig}"
+	    makeCRtoSRPlot "${plot}" "${CR}" "SR" "${orig}"
 	
 	    ## make var weights
-	    makeVarWeights "${plot}" "${var}" "${sample}" "SR" "${orig}"
+	    makeVarWeights "${plot}" "${var}" "${CR}" "SR" "${orig}"
 	
             ## make input plots (with weights applied)
-	    makeTreePlot "${plot}" "${sample}" "${varwgttmpdir}/${sample}_${var}${map}" "${wgt}"
+	    makeTreePlot "${plot}" "${CR}" "${varwgttmpdir}/${CR}_${var}${map}" "${wgt}"
 	
  	    ## make CRtoSR plots (final comparison)
-	    makeCRtoSRPlot "${plot}" "${sample}" "SR" "${wgt}"
+	    makeCRtoSRPlot "${plot}" "${CR}" "SR" "${wgt}"
 	done ## end loop over control regions
 
     fi ## end check over empty plot
