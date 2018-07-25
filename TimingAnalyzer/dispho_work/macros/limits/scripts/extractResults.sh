@@ -1,5 +1,13 @@
 #!/bin/bash
 
+#######################
+## Source This First ##
+#######################
+source scripts/common_variables.sh
+
+###################
+## Configuration ##
+###################
 ## i/o params
 indir=${1:-"input"}
 infile=${2:-"ws_final.root"}
@@ -9,8 +17,6 @@ outdir=${4:-"output"}
 ## other global vars
 carddir="cards"
 cardtmpl="datacard.tmpl"
-combdir="/afs/cern.ch/work/k/kmcdermo/private/dispho/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit/working"
-datacard="datacard.txt"
 
 #############################
 ## replace input file name ##
@@ -75,12 +81,6 @@ eval `scram runtime -sh`
 ###########################################
 mkdir -p ${outdir}
 cp ${combdir}/${outname}*.root ${outdir}
-
-##############
-## clean-up ##
-##############
-rm ${combdir}/*.txt ${combdir}/*.root
-rm ${datacard}
 
 ###################
 ## Final message ##

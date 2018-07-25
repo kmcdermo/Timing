@@ -1,16 +1,14 @@
 #!/bin/bash
 
-## command line options
-outdir=${1:-"plots/ntuples_v4/checks_v3/srplots"}
+## source first
+source scripts/common_variables.sh
 
-## input configs
-CR_GJets="gjets signals_gjets always_true gjets_phopt_0_map cr_gjets_DEG"
-CR_QCD="qcd signals_qcd cuts_v3/invertiso0_v0 qcd_phopt_0_map cr_qcd_DEG"
-SR="sr signals_sr always_true empty sr_SPH"
-declare -a inputs=(CR_GJets CR_QCD SR)
+## command line options
+outdir=${1:-"plots/ntuples_v4/checks_v3/DEG_test/srplots_wgt"}
+docleanup=${2:-"true"}
 
 ## make tmp director for configs
-tmpdir="srplot_config/tmp"
+tmpdir="${srplotconfigdir}/tmp"
 mkdir -p "${tmpdir}"
 
 ## loop over plots to make input plots for SRPlotter, then make SRPlot
@@ -21,13 +19,16 @@ do
 	echo "Working on plot: ${plot}"
 	
         ## make tmp config file for srplotter
-	tmpconfig="${tmpdir}/${plot}.txt"
-	echo "plot_config=plot_config/${plot}.txt" >> "${tmpconfig}"
+	tmpconfig="${tmpdir}/${plot}.${inTextExt}"
+	> "${tmpconfig}"
+
+	## fill plot to use
+	echo "${plotconfigdir}=${plotconfigdir}/${plot}.${inTextExt}" >> "${tmpconfig}"
     
         ## loop over regions to make input plots
 	for input in "${inputs[@]}"
 	do 
-	    echo ${!input} | while read -r infile insigfile sel varwgtmap label
+	    echo ${!input} | while read -r label infile insigfile sel varwgtmap
 	    do
 		echo "Creating input plot for: ${input}"
 
@@ -35,17 +36,10 @@ do
 		outfile="${plot}_${label}"
 		
 		## determine which misc file to use
-		misc="misc"
-		if [[ ${input} == "SR" ]] 
-		then
-		    if [[ ${plot} == *"met"* ]] || [[ ${plot} == *"phoseedtime_0"* ]] 
-		    then
-			misc="misc_blind"
-		    fi
-		fi
-
+		misc=$(GetMisc ${input} ${plot})
+	
 		## make the plot (with variable weights applied as needed)
-		./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insigfile}.root" "cut_config/${sel}.txt" "varwgt_config/${varwgtmap}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${outfile}" "${outdir}/${plot}"
+		./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${outdir}/${plot}"
 
 		## use output to make config files for next step
 		echo "${input}_in=${outfile}.root" >> "${tmpconfig}"
@@ -53,22 +47,20 @@ do
 	    done ## end loop over reading of input
 	done ## end loop over inputs array
 
-        ## determine which 
-	misc="misc"
-	if [[ ${plot} == *"met"* ]] || [[ ${plot} == *"phoseedtime_0"* ]]
-	then
-	    misc="misc_blind"
-	fi
-	
+        ## determine which misc
+	misc=$(GetMisc ${input} ${plot})
+
         ## Now run SRPlotter over input files
-	./scripts/runSRPlotter.sh "${tmpconfig}" "misc_config/${misc}.txt" "${plot}_SRPlot" "${outdir}/${plot}"
+	./scripts/runSRPlotter.sh "${tmpconfig}" "${miscconfigdir}/${misc}.${inTextExt}" "${plot}_SRPlot" "${outdir}/${plot}"
 	
     fi ## end check on plot is valid
-done < srplot_config/standard_plots.txt ## end loop over plots
+done < "${srplotconfigdir}/${standardplotlist}.${inTextExt}" ## end loop over plots
 
 ## delete tmpdir
-echo "Removing tmp dir: ${tmpdir}"
-rm -r ${tmpdir}
+if [[ "${docleanup}" == "true" ]]; then
+    echo "Removing tmp dir: ${tmpdir}"
+    rm -r "${tmpdir}"
+fi
 
 ## Final message
 echo "Finished MakingPlotsForSR"

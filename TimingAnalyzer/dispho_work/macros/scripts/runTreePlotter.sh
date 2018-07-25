@@ -1,11 +1,15 @@
 #!/bin/bash
 
-infilename=${1:-"test.root"}
-insignalfilename=${2:-"signals.root"}
-cutconfig=${3:-"cut_config/always_true.txt"}
-varwgtmapconfig=${4:-"varwgt_config/empty.txt"}
-plotconfig=${5:-"plot_config/phopt_0.txt"}
-miscconfig=${6:-"misc_config/misc_blind.txt"}
+## source first
+source scripts/common_variables.sh
+
+## config
+infilename=${1:-"${skimdir}/sr.root"}
+insignalfilename=${2:-"${skimdir}signals_sr.root"}
+cutconfig=${3:-"${cutconfigdir}/always_true.${inTextExt}"}
+varwgtmapconfig=${4:-"${varwgtconfigdir}/empty.${inTextExt}"}
+plotconfig=${5:-"${plotconfigdir}/phopt_0.${inTextExt}"}
+miscconfig=${6:-"${miscconfigdir}/misc_blind.${inTextExt}"}
 outfiletext=${7:-"plots"}
 dir=${8:-"plots/test"}
 
@@ -13,24 +17,18 @@ dir=${8:-"plots/test"}
 root -l -b -q runTreePlotter.C\(\"${infilename}\",\"${insignalfilename}\",\"${cutconfig}\",\"${varwgtmapconfig}\",\"${plotconfig}\",\"${miscconfig}\",\"${outfiletext}\"\)
 
 ## make out dirs
-topdir=/afs/cern.ch/user/k/kmcdermo/www
-fulldir=${topdir}/dispho/${dir}
-
-## make them readable
-mkdir -p ${fulldir}
-pushd ${topdir}
-./makereadable.sh ${fulldir}
-popd
+fulldir=${topdir}/${disphodir}/${dir}
+PrepOutDir ${fulldir}
 
 ## copy everything
-for canvscale in log lin
+for canvscale in "${canvscales[@]"
 do
-    for ext in png pdf eps
+    for ext in "${exts[@]}"
     do
 	cp ${outfiletext}_${canvscale}.${ext} ${fulldir}
     done
 done
-cp ${outfiletext}.root ${outfiletext}_integrals.txt ${fulldir}
+cp ${outfiletext}.root ${outfiletext}_integrals.${outTextExt} ${fulldir}
 
 ## Final message
 echo "Finished TreePlotting for plot:" ${plotconfig}

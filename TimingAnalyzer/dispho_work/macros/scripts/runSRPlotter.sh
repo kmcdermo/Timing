@@ -1,7 +1,11 @@
 #!/bin/bash
 
-srplotconfig=${1:-"srplot_config/phoseedtime_0.txt"}
-miscconfig=${2:-"misc_config/misc_blind.txt"}
+## source first
+source scripts/common_variables.sh
+
+## config
+srplotconfig=${1:-"${srplotconfigdir}/phoseedtime_0.${inTextExt}"}
+miscconfig=${2:-"${miscconfigdir}/misc_blind.${inTextExt}"}
 outfiletext=${3:-"phoseedtime_0_SRPlot"}
 dir=${4:-"plots/ntuples_v4/checks_v3/kF_v2"}
 
@@ -9,27 +13,21 @@ dir=${4:-"plots/ntuples_v4/checks_v3/kF_v2"}
 root -l -b -q runSRPlotter.C\(\"${srplotconfig}\",\"${miscconfig}\",\"${outfiletext}\"\)
 
 ## make out dirs
-topdir=/afs/cern.ch/user/k/kmcdermo/www
-fulldir=${topdir}/dispho/${dir}
-
-## make them readable
-mkdir -p ${fulldir}
-pushd ${topdir}
-./makereadable.sh ${fulldir}
-popd
+fulldir=${topdir}/${disphodir}/${dir}
+PrepOutDir ${fulldir}
 
 ## copy everything
 for label in "" "_CR_GJets_kFScaled" "_CR_QCD_kFScaled"
 do
-    for canvscale in log lin
+    for canvscale in "${canvscales[@]}"
     do
-	for ext in png pdf eps
+	for ext in "${exts[@]}"
 	do
 	    cp ${outfiletext}${label}_${canvscale}.${ext} ${fulldir}
 	done
     done
     
-    cp ${outfiletext}${label}.root ${outfiletext}${label}_integrals.txt ${fulldir}
+    cp ${outfiletext}${label}.root ${outfiletext}${label}_integrals.${outTextExt} ${fulldir}
 done
 
 ## Final message

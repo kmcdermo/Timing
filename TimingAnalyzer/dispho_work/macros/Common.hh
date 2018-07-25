@@ -160,6 +160,7 @@ namespace Common
 
   // output info
   static const std::vector<TString> extensions = {"png","pdf","eps"};
+  static const TString textExt = "log";
 
   // plotting style
   constexpr Float_t TitleSize    = 0.035;

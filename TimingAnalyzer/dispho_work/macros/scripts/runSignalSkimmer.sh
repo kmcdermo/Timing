@@ -1,6 +1,10 @@
 #!/bin/bash
 
-cutflowconfig=${1:-"cut_config/one_at_a_time/signal_idT_hlt_nJet3pt30_ht400jetpt30_sumEtjetpt30phopt0_hltreco.txt"}
+## source first
+source scripts/common_variables.sh
+
+## config
+cutflowconfig=${1:-"${cutconfigdir}/one_at_a_time/signal.${inTextExt}"}
 outfiletext=${2:-"signal_skims"}
 
 ## produce slimmed skims

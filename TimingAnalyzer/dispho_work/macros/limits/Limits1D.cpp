@@ -17,12 +17,16 @@ Limits1D::Limits1D(const TString & indir, const TString & infilename, const Bool
 
 Limits1D::~Limits1D() 
 {
+  std::cout << "Tidying up in the destructor..." << std::endl;
+
   delete fOutFile;
   delete fTDRStyle;
 }
 
 void Limits1D::MakeLimits1D()
 {
+  std::cout << "Making limit plots in 1D..." << std::endl;
+
   // loop over GMSB subgroups
   for (const auto & GMSBSubGroupPair : Combine::GMSBSubGroupMap)
   {
@@ -142,6 +146,8 @@ void Limits1D::MakeLimits1D()
 
 void Limits1D::SetupCombine()
 {
+  std::cout << "Setting up Limits1D..." << std::endl;
+
   Combine::SetupRValVec(fDoObserved);
   Combine::SetupGMSB(fInDir,fInFileName);
   Combine::RemoveGMSBSamples();

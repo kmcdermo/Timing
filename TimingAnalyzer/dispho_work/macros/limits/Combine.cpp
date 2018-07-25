@@ -9,6 +9,8 @@ namespace Combine
 
   void SetupRValVec(const Bool_t doObserved)
   {
+    std::cout << "Setting up RValVec..." << std::endl;
+
     // set up entries in tree, based on expectd, adjust accordingly
     RValVec = {"r2sigdown","r1sigdown","rexp","r1sigup","r2sigup"};
 
@@ -21,6 +23,8 @@ namespace Combine
   
   void SetupGMSB(const TString & indir, const TString & infilename)
   {
+    std::cout << "Setting up GMSB..." << std::endl;
+
     // read in parameters... 
     std::fstream inparams("signal_config/all_params.txt");
     Float_t mass, width, br;
@@ -99,23 +103,27 @@ namespace Combine
   
   void RemoveGMSBSamples()
   {
+    std::cout << "Removing GMSB Samples from GMSBMap..." << std::endl;
+
+    // ****************** HACK FOR NOW *************** //
+    Combine::GMSBMap.erase("GMSB_L200TeV_CTau400cm");
+
     std::vector<TString> keysToRemove;
     for (const auto & GMSBPair : Combine::GMSBMap)
     {
       const auto & name = GMSBPair.first;
       const auto & info = GMSBPair.second;
-      
+
       if (info.rvalmap.at("rexp") < 0.f) keysToRemove.emplace_back(name);
     }
     
     for (const auto & keyToRemove : keysToRemove) Combine::GMSBMap.erase(keyToRemove);
-
-    // ****************** HACK FOR NOW *************** //
-    Combine::GMSBMap.erase("GMSB_L200TeV_CTau400cm");
   }
   
   void SetupGMSBSubGroups()
   {
+    std::cout << "Setting up GMSB SubGroups..." << std::endl;
+
     for (const auto & GMSBPair : Combine::GMSBMap)
     {
       const auto & name = GMSBPair.first;

@@ -1,43 +1,30 @@
 #!/bin/bash
 
+## source first
+source scripts/common_variables.sh
+
+## config
 outdir=${1:-"plots/ntuples_v4/checks_v2"}
-insel_dir=""
-insel="always_true"
 
-for inputgroup in "qcd signals_qcd control_qcd SinglePhoton" "gjets signals_gjets control_gjets DoubleEG" "sr signals_sr signal SinglePhoton"
-do echo ${inputgroup} | while read -r infile insignalfile sel pdname
+## main loops
+for input in "${inputs[@]}"
+do 
+    echo ${!input} | while read -r label infile insigfile sel varwgtmap
     do
-	while IFS='' read -r line || [[ -n "${line}" ]]; 
+	while IFS='' read -r plot || [[ -n "${plot}" ]];
 	do
-	    if [[ ${line} != "" ]];
+	    if [[ ${plot} != "" ]];
 	    then
-		plot=${line}
-		misc="misc"
-		./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel_dir}${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}_${insel}"
+		## output filename
+		outfile="${plot}_${label}"
+
+		## determine which misc file to use
+		misc=$(GetMisc ${input} ${plot})
+
+		## run script
+		./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${outdir}/${label}"
 	    fi
-	done < plot_config/standard_plots.txt
-    done
-done
-
-for inputgroup in "qcd signals_qcd control_qcd SinglePhoton" "gjets signals_gjets control_gjets DoubleEG"
-do echo ${inputgroup} | while read -r infile insignalfile sel pdname
-    do
-	for plot in phoseedtime_0 met met_zoom
-	do
-	    misc="misc"
-	    ./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel_dir}${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}_${insel}"
-	done
-    done
-done
-
-for inputgroup in "sr signals_sr signal SinglePhoton"
-do echo ${inputgroup} | while read -r infile insignalfile sel pdname
-    do
-	for plot in phoseedtime_0 met met_zoom
-	do
-	    misc="misc_blind"
-	    ./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel_dir}${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}_${insel}"
-	done
+	done < "${plotconfigdir}/${standardplotlist}.${inTextExt}"
     done
 done
 

@@ -1,10 +1,11 @@
+#!/bin/bash
+
+## source first
+source scripts/common_variables.sh
+
 ## command line options
 outdir=${1:-"plots/ntuples_v4/checks_v3/DEG_test/varwgts"}
-
-## input configs
-GJets="gjets signals_gjets always_true cr_gjets_DEG"
-QCD="qcd signals_qcd cuts_v3/invertiso0_v0 cr_qcd_DEG"
-SR="sr signals_sr always_true sr_SPH"
+docleanup=${2:-"true"}
 
 ## text
 orig="_orig"
@@ -14,14 +15,10 @@ wgt="_wgt"
 empty=""
 map="_map"
 
-## input dirs
-crtosrdir="crtosr_config"
-varwgtdir="varwgt_config"
-
 ## make tmp directory for configs
 tmpdir="tmp"
-crtosrtmpdir="${crtosrdir}/${tmpdir}"
-varwgttmpdir="${varwgtdir}/${tmpdir}"
+crtosrtmpdir="${crtosrconfigdir}/${tmpdir}"
+varwgttmpdir="${varwgtconfigdir}/${tmpdir}"
 mkdir -p "${crtosrtmpdir}"
 mkdir -p "${varwgttmpdir}"
 
@@ -33,7 +30,7 @@ function makeTreePlot()
     varwgtmap=${3}
     text=${4}
 
-    echo ${!input} | while read -r infile insigfile sel label
+    echo ${!input} | while read -r label infile insigfile sel
     do
 	## output filename
 	outfile="${plot}_${label}${text}"
@@ -41,17 +38,10 @@ function makeTreePlot()
 	echo "Creating input plot for: ${outfile}"
 	
 	## determine which misc file to use
-	misc="misc"
-	if [[ ${input} == "SR" ]] 
-	then
-	    if [[ ${plot} == *"met"* ]] || [[ ${plot} == *"phoseedtime_0"* ]] 
-	    then
-		misc="misc_blind"
-	    fi
-	fi
+	misc=$(GetMisc ${input} ${plot})
 	
-	 ## make the plot
-	./scripts/runTreePlotter.sh "skims/${infile}.root" "skims/${insigfile}.root" "cut_config/${sel}.txt" "${varwgtmap}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${outfile}" "${outdir}/${plot}"
+	## make the plot
+	./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${outdir}/${plot}"
     done
 }
 
@@ -64,15 +54,18 @@ function makeCRtoSRPlot()
     text=${4}
     
     ## derived parameters
-    crlabel=$( echo ${!crinput} | cut -d " " -f 4 )
-    srlabel=$( echo ${!srinput} | cut -d " " -f 4 )
+    crlabel=$( echo ${!crinput} | cut -d " " -f 1 )
+    srlabel=$( echo ${!srinput} | cut -d " " -f 1 )
 
     ## make config
-    crtosrconfig="${crtosrtmpdir}/${crinput}_${plot}${text}.txt"
+    crtosrconfig="${crtosrtmpdir}/${crinput}_${plot}${text}.${inTextExt}"
+    > "${crtosrconfig}"
+     
+    ## fill config
     echo "sample=${crinput}" >> "${crtosrconfig}"
     echo "cr_file=${plot}_${crlabel}${text}.root" >> "${crtosrconfig}"
     echo "sr_file=${plot}_${srlabel}.root" >> "${crtosrconfig}"
-    echo "plot_config=plot_config/${plot}.txt" >> "${crtosrconfig}"
+    echo "${plotconfigdir}=${plotconfigdir}/${plot}.${inTextExt}" >> "${crtosrconfig}"
     echo "draw_scaled=1" >> "${crtosrconfig}"
     
     ## output filename
@@ -94,15 +87,18 @@ function makeVarWeights()
     text=${5}
 
     ## derived parameters
-    crlabel=$( echo ${!crinput} | cut -d " " -f 4 )
-    srlabel=$( echo ${!srinput} | cut -d " " -f 4 )
-    skim=$( echo ${!crinput} | cut -d " " -f 1 )
+    crlabel=$( echo ${!crinput} | cut -d " " -f 1 )
+    srlabel=$( echo ${!srinput} | cut -d " " -f 1 )
+    skim=$( echo ${!crinput} | cut -d " " -f 2 )
 
     ## make tmp config
-    varwgtconfig="${varwgttmpdir}/${crinput}_${plot}.txt"
+    varwgtconfig="${varwgttmpdir}/${crinput}_${plot}.${inTextExt}"
+    > "${varwgtconfig}"
+
+    ## fill config
     echo "sample=${crinput}" >> "${varwgtconfig}"
     echo "var=${var}" >> "${varwgtconfig}"
-    echo "plot_config=plot_config/${plot}.txt" >> "${varwgtconfig}"
+    echo "${plotconfigdir}=${plotconfigdir}/${plot}.${inTextExt}" >> "${varwgtconfig}"
     echo "cr_file=${plot}_${crlabel}${text}.root" >> "${varwgtconfig}"
     echo "sr_file=${plot}_${srlabel}.root" >> "${varwgtconfig}"
     echo "skim_file=skims/${skim}.root" >> "${varwgtconfig}"
@@ -113,7 +109,7 @@ function makeVarWeights()
     ./scripts/runVarWeighter.sh "${varwgtconfig}"
 
     ## make map needed for next plotter
-    varwgtmap="${varwgttmpdir}/${crinput}_${var}${map}.txt"
+    varwgtmap="${varwgttmpdir}/${crinput}_${var}${map}.${inTextExt}"
     echo "Data ${var}_wgt" >> "${varwgtmap}"
     echo "${crinput} ${var}_wgt" >> "${varwgtmap}"
 }
@@ -129,7 +125,7 @@ do
 	echo "Working on plot: ${plot}"
 
 	## make input SR plot first (unchanged by weights)
-	makeTreePlot "${plot}" "SR" "${varwgtdir}/${empty}" ""
+	makeTreePlot "${plot}" "Signal" "${varwgtdir}/${empty}" ""
 
 	for CR in GJets QCD
 	do
@@ -137,25 +133,27 @@ do
 	    makeTreePlot "${plot}" "${CR}" "${varwgtdir}/${empty}" "${orig}"
 	    
 	    ## make CRtoSR plots
-	    makeCRtoSRPlot "${plot}" "${CR}" "SR" "${orig}"
+	    makeCRtoSRPlot "${plot}" "${CR}" "Signal" "${orig}"
 	
 	    ## make var weights
-	    makeVarWeights "${plot}" "${var}" "${CR}" "SR" "${orig}"
+	    makeVarWeights "${plot}" "${var}" "${CR}" "Signal" "${orig}"
 	
             ## make input plots (with weights applied)
 	    makeTreePlot "${plot}" "${CR}" "${varwgttmpdir}/${CR}_${var}${map}" "${wgt}"
 	
  	    ## make CRtoSR plots (final comparison)
-	    makeCRtoSRPlot "${plot}" "${CR}" "SR" "${wgt}"
+	    makeCRtoSRPlot "${plot}" "${CR}" "Signal" "${wgt}"
 	done ## end loop over control regions
 
     fi ## end check over empty plot
-done < varwgt_config/plot_info.txt ## end loop over input plot configs
+done < "${varwgtconfigdir}/plot_info.${inTextExt}" ## end loop over input plot configs
 
 ## clear up tmpdirs
-echo "Removing tmp dirs: ${crtosrtmpdir}, ${varwgttmpdir}"
-rm -r "${crtosrtmpdir}"
-rm -r "${varwgttmpdir}"
+if [[ "${docleanup}" == "true" ]]; then
+    echo "Removing tmp dirs: ${crtosrtmpdir}, ${varwgttmpdir}"
+    rm -r "${crtosrtmpdir}"
+    rm -r "${varwgttmpdir}"
+fi
 
 ## Final message
 echo "Finishing MakingWgtsAndPlots"

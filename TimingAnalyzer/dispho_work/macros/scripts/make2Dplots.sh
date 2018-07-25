@@ -1,14 +1,23 @@
 #!/bin/bash
 
+## source first
+source scripts/common_variables.sh
+
+## config
 outdir=${1:-"plots"}
 plot="met_vs_time"
-insel="always_true"
-misc="empty.txt"
+misc="empty"
 
-for group in "qcd signals_qcd control_qcd SinglePhoton" "gjets signals_gjets control_gjets DoubleEG" "sr signals_sr signal SinglePhoton"
-do echo ${group} | while read -r infile insignalfile sel pdname
+## main loop
+for input in "${inputs[@]}"
+do 
+    echo ${!input} | while read -r label infile insigfile sel varwgtmap
     do
-	./scripts/runTreePlotter2D.sh "skims/${infile}.root" "skims/${insignalfile}.root" "cut_config/${insel}.txt" "plot_config/${plot}.txt" "misc_config/${misc}.txt" "${plot}_${sel}_${pdname}" "${outdir}/${sel}"
+	## make outfile text
+	outfile="${plot}_${label}"
+
+	## run script
+	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${outdir}/${label}"
     done
 done
 

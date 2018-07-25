@@ -587,7 +587,7 @@ TString TreePlotter::DumpIntegrals(const TString & outfiletext)
   std::cout << "Dumping integrals into text file..." << std::endl;
 
   // make dumpfile object
-  const TString filename = outfiletext+"_integrals.txt"; 
+  const TString filename = outfiletext+"_integrals."+Common::textExt; 
   std::ofstream dumpfile(Form("%s",filename.Data()),std::ios_base::out);
 
   // Signal MC zeroth

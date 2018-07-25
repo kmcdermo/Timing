@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source scripts/common_variables.sh
+source scripts/skimAndMerge/common_variables.sh
 
 ## input
 label=${1}

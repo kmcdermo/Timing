@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source scripts/common_variables.sh
+source scripts/skimAndMerge/common_variables.sh
 
 ## input
 text=${1}
@@ -14,8 +14,8 @@ usePUWeights=${5:-0}
 redophoid=${redoPhotonID}
 
 ## global vars
-files="${text}_files.txt"
-wgtfile="${text}_wgt.txt"
+files="${text}_files.log"
+wgtfile="${text}_wgt.log"
 puwgtfile="${text}_puwgt.root"
 tmpfiles="tmp_${files}"
 timestamp=$(ls ${indir})
@@ -55,8 +55,8 @@ while IFS='' read -r line || [[ -n "${line}" ]]; do
     counter=$((${counter} + 1))
 done < "${files}"
 
-## remove txt files
-echo "Removing txt files"
+## remove log files
+echo "Removing log files"
 rm ${wgtfile}
 rm ${files}
 

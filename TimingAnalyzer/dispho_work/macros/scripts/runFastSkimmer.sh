@@ -1,6 +1,10 @@
 #!/bin/bash
 
-cutflowconfig=${1:-"cut_config/cuts_v2/one_at_a_time/control_qcd.txt"}
+## source first 
+source scripts/common_variables.sh
+
+## config
+cutflowconfig=${1:-"${cutconfigdir}/cuts_v2/one_at_a_time/control_qcd.${inTextExt}"}
 pdname=${2:-"SinglePhoton"}
 outfiletext=${3:-"skim"}
 doskim=${4:-1}

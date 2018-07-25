@@ -1,6 +1,10 @@
 #!/bin/bash
 
-varwgtconfig=${1:-"varwgt_config/qcd_met.txt"}
+## source first
+source scripts/common_variables.sh
+
+## config
+varwgtconfig=${1:-"${varwgtconfigdir}/qcd_met.${inTextExt}"}
 
 ## first make plot
 root -l -b -q runVarWeighter.C\(\"${varwgtconfig}\"\)
