@@ -12,15 +12,13 @@ orig="_orig"
 wgt="_wgt"
 
 ## varmaps
-empty=""
+empty="empty"
 map="_map"
 
 ## make tmp directory for configs
 tmpdir="tmp"
 crtosrtmpdir="${crtosrconfigdir}/${tmpdir}"
 varwgttmpdir="${varwgtconfigdir}/${tmpdir}"
-mkdir -p "${crtosrtmpdir}"
-mkdir -p "${varwgttmpdir}"
 
 function makeTreePlot() 
 {
@@ -110,9 +108,16 @@ function makeVarWeights()
 
     ## make map needed for next plotter
     varwgtmap="${varwgttmpdir}/${crinput}_${var}${map}.${inTextExt}"
+    > "${varwgtmap}"
+
+    ## fill config
     echo "Data ${var}_wgt" >> "${varwgtmap}"
     echo "${crinput} ${var}_wgt" >> "${varwgtmap}"
 }
+
+## make tmp dirs
+mkdir -p "${crtosrtmpdir}"
+mkdir -p "${varwgttmpdir}"
 
 ## main call: loop over plots
 while IFS='' read -r plot_info || [[ -n "${plot_info}" ]]
@@ -125,12 +130,12 @@ do
 	echo "Working on plot: ${plot}"
 
 	## make input SR plot first (unchanged by weights)
-	makeTreePlot "${plot}" "Signal" "${varwgtdir}/${empty}" ""
+	makeTreePlot "${plot}" "Signal" "${varwgtconfigdir}/${empty}" ""
 
 	for CR in GJets QCD
 	do
 	    ## make input plots
-	    makeTreePlot "${plot}" "${CR}" "${varwgtdir}/${empty}" "${orig}"
+	    makeTreePlot "${plot}" "${CR}" "${varwgtconfigdir}/${empty}" "${orig}"
 	    
 	    ## make CRtoSR plots
 	    makeCRtoSRPlot "${plot}" "${CR}" "Signal" "${orig}"

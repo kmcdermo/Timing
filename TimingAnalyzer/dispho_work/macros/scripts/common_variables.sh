@@ -10,7 +10,7 @@ export standardplotlist="standard_plots"
 
 ## config dir info
 export crtosrconfigdir="crtosr_config"
-export cutconfigdir="cut_config/cuts_v3"
+export cutconfigdir="cut_config"
 export fitconfigdir="fit_config"
 export miscconfigdir="misc_config"
 export plotconfigdir="plot_config"

@@ -21,7 +21,7 @@ fulldir=${topdir}/${disphodir}/${dir}
 PrepOutDir ${fulldir}
 
 ## copy everything
-for canvscale in "${canvscales[@]"
+for canvscale in "${canvscales[@]}"
 do
     for ext in "${exts[@]}"
     do
