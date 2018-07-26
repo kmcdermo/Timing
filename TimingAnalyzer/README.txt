@@ -27,3 +27,11 @@ Make sure to do both for GJets CR, QCD CR, and SR selection
 Then run the scripts for making the variable weight trees in CR to SR: scripts/makeWgtsAndPlots.sh
 Then check 1D final plots: scripts/makePlotsForSR.sh
 Finally, run 2D plots for fis: scripts/makeLimits.sh
+
+--------------------------------
+to do:
+
+--> switch ctau to tau [ns]
+--> make sure to use REAL ctau in limit plots... update scripts to read in this value
+--> make exclusion in 2D vs neutralino mass
+--> make exclusion in 1D vs REAL ctau (slices of neutralino mass)
