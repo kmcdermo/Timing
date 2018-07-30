@@ -12,8 +12,10 @@
 
 Float_t GetMin(const std::vector<TH1F*> & hists);
 Float_t GetMax(const std::vector<TH1F*> & hists);
-void overlay(std::vector<TH1F*> & hists, const UInt_t N, const std::vector<Color_t> & colors,
+void Overlay(std::vector<TH1F*> & hists, const UInt_t N, const std::vector<Color_t> & colors,
 	     const std::vector<TString> & labels, const TString & outtext, TFile *& outfile);
+void DrawOutput(std::vector<TH1F*> & hists, const UInt_t N, const std::vector<TString> & labels,
+		const TString & outtext, const Bool_t isLogY);
 
 void overplot_prediction()
 {
@@ -29,15 +31,16 @@ void overplot_prediction()
   std::vector<Color_t> colors = {kBlack,kRed+1,kBlue,kGreen};
 
   // vector of file names
-  std::vector<TString> filenames = {""};
+  const TString indir = "test_macros/files";
+  std::vector<TString> filenames = {"orig_met","deg_met","sph200_met"};
   const auto N = filenames.size();
 
   // signal hist name
   const TString signalname = "GMSB_L200_CTau600";
   
   // outtext + labels
-  const TString outtext = "";
-  const TString labels = {"Orig","DEG","SPH200"};
+  const TString outtext = "met_zoom";
+  const std::vector<TString> labels = {"Orig","DEG","SPH200"};
 
   // outfile
   auto outfile = TFile::Open(Form("%s.root",outtext.Data()),"RECREATE");
@@ -46,10 +49,11 @@ void overplot_prediction()
   std::vector<TFile*> infiles(N);
   for (auto i = 0U; i < N; i++)
   {
-    const auto & filename = filenames[i];
+    const auto & filename = indir+"/"+filenames[i]+".root";
     auto & infile = infiles[i];
 
     infile = TFile::Open(filename.Data());
+    Common::CheckValidFile(infile,filename);
   }
 
   // vector of Bkgd Prediction hists
@@ -64,6 +68,8 @@ void overplot_prediction()
     auto & bkgdhist = bkgdhists[i];
     
     bkgdhist = (TH1F*)infile->Get(Common::BkgdHistName.Data());
+    Common::CheckValidHist(bkgdhist,Common::BkgdHistName,infile->GetName());
+
     bkgdhist->SetName(Form("%s_%s",Common::BkgdHistName.Data(),label.Data()));
   }
   
@@ -78,8 +84,11 @@ void overplot_prediction()
 
     auto & signalhist = signalhists[i];
 
-    signalhist = (TH1F*)infile->Get(Form("%s_Hist_Plotted",signalname.Data()));
-    signalhist->SetName(Form("%s_%s",signalhist->GetName(),label.Data()));
+    const TString histname = signalname+"_Hist_Plotted";
+    signalhist = (TH1F*)infile->Get(histname.Data());
+    Common::CheckValidHist(signalhist,histname,infile->GetName());
+
+    signalhist->SetName(Form("%s_%s",histname.Data(),label.Data()));
   }
 
   //////////////////
@@ -122,17 +131,17 @@ void overplot_prediction()
   // OVERLAY //
   /////////////
 
-  Overlay(bkgdhists,N,colors,labels,outfile);
-  Overlay(signalhists,N,colors,labels,outfile);
-  Overlay(sbhists,N,colors,labels,outfile);
+  Overlay(bkgdhists,N,colors,labels,outtext+"_bkgd",outfile);
+  Overlay(signalhists,N,colors,labels,outtext+"_"+signalname,outfile);
+  Overlay(sbhists,N,colors,labels,outtext+"_sb",outfile);
 
   ////////////
   // DELETE //
   ////////////
 
-  for (auto & sbhist : sbhists) delete sbhists;
-  for (auto & signalhist : signalhists) delete signalhists;
-  for (auto & bkgdhist : bkgdhists) delete bkgdhists;
+  for (auto & sbhist : sbhists) delete sbhist;
+  for (auto & signalhist : signalhists) delete signalhist;
+  for (auto & bkgdhist : bkgdhists) delete bkgdhist;
   
   delete outfile;
   for (auto & infile : infiles) delete infile;
@@ -168,35 +177,54 @@ Float_t GetMax(const std::vector<TH1F*> & hists)
 void Overlay(std::vector<TH1F*> & hists, const UInt_t N, const std::vector<Color_t> & colors, 
 	     const std::vector<TString> & labels, const TString & outtext, TFile *& outfile)
 {
-  const Float_t min = GetMin(hists);
-  const Float_t max = GetMax(hists);
-
-  auto canv = new TCanvas();
-  auto leg = new TLegend(0.55,0.65,0.825,0.92);
-  
   for (auto i = 0U; i < N; i++)
   {
     const auto & color = colors[i];
-    const auto & label = labels[i];
     auto & hist = hists[i];
 
     hist->SetLineColor(color);
     hist->SetMarkerColor(color);
 
-    hist->SetMinimum(min/1.05f);
-    hist->SetMaximum(max*1.05f);
-
     outfile->cd();
     hist->Write(hist->GetName(),TObject::kWriteDelete);
+  }
 
+  // do a drawing for lin then log
+  DrawOutput(hists,N,labels,outtext,false);
+  DrawOutput(hists,N,labels,outtext,true);
+}
+
+void DrawOutput(std::vector<TH1F*> & hists, const UInt_t N, const std::vector<TString> & labels,
+		const TString & outtext, const Bool_t isLogY)
+{
+  const Float_t min = GetMin(hists);
+  const Float_t max = GetMax(hists);
+
+  auto canv = new TCanvas();
+  canv->cd();
+  canv->SetLogy(isLogY);
+
+  auto leg = new TLegend(0.725,0.82,0.825,0.92);
+  leg->SetBorderSize(1);
+  leg->SetLineColor(kBlack);
+
+  for (auto i = 0U; i < N; i++)
+  {
+    const auto & label = labels[i];
+    auto & hist = hists[i];
+
+    hist->SetMinimum(isLogY?min/1.5f:min/1.05f);
+    hist->SetMaximum(isLogY?max*1.5f:max*1.05f);
+  
     canv->cd();
     hist->Draw(i>0?"same ep":"ep");
     leg->AddEntry(hist,label.Data(),"epl");
   }
 
   // final touches and save image
+  leg->Draw("same");
   Common::CMSLumi(canv,0);
-  Common::SaveAs(canv,outtext);
+  Common::SaveAs(canv,outtext+"_"+(isLogY?"log":"lin"));
   
   delete leg;
   delete canv;
