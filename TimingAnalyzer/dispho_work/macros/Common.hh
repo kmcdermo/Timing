@@ -229,6 +229,10 @@ namespace Common
   Bool_t IsNullFile(const TString & filename);
   Bool_t IsNullTree(const TTree * tree);
 
+  // check for negative bins and set to zero if so
+  void CheckNegativeBins(std::map<TString,TH1F*> & HistMap);
+  void CheckNegativeBins(std::map<TString,TH2F*> & HistMap);
+
   // saving config info
   void AddTextFromInputConfig(TPaveText *& outpave, const TString & label, const TString & configname);
   void AddTextFromInputPave(TPaveText *& outpave, TFile *& infile);

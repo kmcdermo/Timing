@@ -763,6 +763,49 @@ namespace Common
     return (tree == (TTree*) NULL);
   }
   
+  void CheckNegativeBins(std::map<TString,TH1F*> & HistMap)
+  {
+    std::cout << "Checking for negative bins..." << std::endl;
+
+    for (auto & HistPair : HistMap)
+    {
+      auto & hist = HistPair.second;
+      
+      for (auto xbin = 1; xbin <= hist->GetXaxis()->GetNbins(); xbin++)
+      {
+	const Float_t content = hist->GetBinContent(xbin);
+	if (content < 0.f) 
+	{
+	  hist->SetBinContent(xbin,0.f);
+	  hist->SetBinError  (xbin,0.f);
+	}
+      }
+    }
+  }
+
+  void CheckNegativeBins(std::map<TString,TH2F*> & HistMap)
+  {
+    std::cout << "Checking for negative bins..." << std::endl;
+
+    for (auto & HistPair : HistMap)
+    {
+      auto & hist = HistPair.second;
+      
+      for (auto xbin = 1; xbin <= hist->GetXaxis()->GetNbins(); xbin++)
+      {
+	for (auto ybin = 1; ybin <= hist->GetYaxis()->GetNbins(); ybin++)
+        {
+	  const Float_t content = hist->GetBinContent(xbin,ybin);
+	  if (content < 0.f) 
+	  {
+	    hist->SetBinContent(xbin,ybin,0.f);
+	    hist->SetBinError  (xbin,ybin,0.f);
+	  }
+	}
+      }
+    }
+  }
+
   void AddTextFromInputConfig(TPaveText *& outpave, const TString & label, const TString & configname)
   {
     outpave->AddText(Form("%s: %s",label.Data(),configname.Data()));

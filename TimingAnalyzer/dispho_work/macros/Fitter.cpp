@@ -111,6 +111,9 @@ void Fitter::PrepareCommon()
   // Scale data CR to SR via MC SFs
   Common::GetSRPredFromCRs(fHistMap2D,fHistMap2DTmp,(fXVarBins||fYVarBins),fCRKFMap,fCRXFMap);
 
+  // Check for any negative bins and set them to zero!
+  Common::CheckNegativeBins(fHistMap2D);
+
   // Make plots from input hists and dump pre-fit integrals
   Fitter::DumpInputInfo();
 
