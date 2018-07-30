@@ -107,6 +107,9 @@ namespace Common
   extern std::map<TString,TString> VarWgtMap;
   extern std::vector<std::pair<TString,TString> > CutFlowPairVec;
 
+  // special name for Bkgd Hist
+  static const TString BkgdHistName = "Bkgd_Hist";
+  
   // special name for EWK histogram
   static const TString EWKSampleName = "EWK";
   static const TString EWKHistName   = Common::EWKSampleName+"_Hist";

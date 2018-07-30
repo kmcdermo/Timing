@@ -168,7 +168,7 @@ void TreePlotter2D::MakeBkgdOutput()
   std::cout << "Making Bkgd Output..." << std::endl;
 
   // Extra Hists
-  BkgdHist = TreePlotter2D::SetupHist("Bkgd_Hist"); // Make Total Bkgd Hist: for ratio and error plotting
+  BkgdHist = TreePlotter2D::SetupHist(Form("%s",Common::BkgdHistName.Data())); // Make Total Bkgd Hist: for ratio and error plotting
   EWKHist  = TreePlotter2D::SetupHist(Form("%s",Common::EWKHistName.Data())); // Make EWK Histogram for posterity : do not plot it though
 
   // Loop over histograms, adding up bkgd as needed
