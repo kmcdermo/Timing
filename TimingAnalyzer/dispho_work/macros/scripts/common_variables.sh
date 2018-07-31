@@ -30,9 +30,9 @@ declare -a canvscales=("lin" "log")
 export canvscales
 
 ## CR + SR info: label skim signal_skim additional_cuts (var wgt map)
-export GJets="cr_gjets_DEG gjets signals_gjets always_true"
-export QCD="cr_qcd_DEG qcd signals_qcd cuts_v3/invertiso0_v0"
-export Signal="sr_SPH sr signals_sr always_true"
+export GJets="cr_gjets_DEG orig/gjets orig/signals_gjets always_true"
+export QCD="cr_qcd_DEG orig/qcd orig/signals_qcd cuts_v3/invertiso0_v0"
+export Signal="sr_SPH orig/sr orig/signals_sr always_true"
 
 export CR_GJets="${GJets} gjets_phopt_0_map"
 export CR_QCD="${QCD} qcd_phopt_0_map"
