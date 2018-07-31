@@ -139,7 +139,7 @@ void SRPlotter::ScaleCRByKFOnly(const TString & CR)
     const auto & sample = HistPair.first;
     auto & hist = HistPair.second;
     
-    // skip data and data, only want to scale bkgd MC!
+    // skip data and signal, only want to scale bkgd MC!
     if (Common::GroupMap[sample] != isBkgd) continue;
     
     hist->Scale(fCRKFMap[CR]); // already stored, but can recalculate Data/MC with loop over HistMap

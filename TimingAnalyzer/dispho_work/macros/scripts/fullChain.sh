@@ -11,16 +11,13 @@ docleanup=${2:-"true"}
 ./scripts/makeSignalEffs.sh "${outdir}/sig_effs"
 
 ## make Data/MC plots (no weights yet)
-./scripts/make1Dplots.sh "${outdir}/data_over_mc/no_wgts" "${reducedplotlist}" "false"
+./scripts/make1Dplots.sh "${outdir}/data_over_mc" "${reducedplotlist}" "false"
 
 ## make weights and related plots
 ./scripts/makeWgtsAndPlots.sh "${outdir}/varwgts" "${docleanup}"
 
 ## make SR plots
 ./scripts/makePlotsForSR.sh "${outdir}/srplots" "${reducedplotlist}" "${docleanup}"
-
-## make Data/MC plots (with weights)
-./scripts/make1Dplots.sh "${outdir}/data_over_mc/with_wgts" "${reducedplotlist}" "true"
 
 ## make limit plots
 ./scripts/makeAnalysis.sh "${outdir}/results" "${docleanup}"

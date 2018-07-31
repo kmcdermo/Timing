@@ -59,7 +59,7 @@ do
 	outtext="${plot}_${label}"
 
 	## make plot
-	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "vargwgt_config/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc2D}.${inTextExt}" "${outtext}" "${outdir}/${outplot2Ddir}"
+	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${vargwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc2D}.${inTextExt}" "${outtext}" "${outdir}/${outplot2Ddir}"
 
 	## cp root file to local directory
 	cp "${outtext}.root" "${infitdir}"

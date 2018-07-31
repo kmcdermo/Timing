@@ -15,7 +15,7 @@ do
     do
 	
 	## check for no weights
-	if [[ "${usewgts}" != "true" ]]; then
+	if [[ "${usewgts}" == "false" ]]; then
 	    varwgtmap="empty"
 	fi
 	
