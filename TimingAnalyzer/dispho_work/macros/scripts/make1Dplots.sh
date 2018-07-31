@@ -21,6 +21,9 @@ do
 		## determine which misc file to use
 		misc=$(GetMisc ${input} ${plot})
 
+		## vargtmap == empty for data_mc
+		varwgtmap="empty"
+
 		## run script
 		./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${outdir}/${label}"
 	    fi
