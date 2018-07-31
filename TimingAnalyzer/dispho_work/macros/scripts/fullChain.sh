@@ -9,7 +9,7 @@ docleanup=${2:-"true"}
 
 ## make signal efficiency
 signal_skim=$( echo ${Signal} | cut -d " " -f 3 ) 
-./scripts/computeSignalEfficiency.sh "${signal_skim}" "signal_efficiency" "${outdir}"
+./scripts/computeSignalEfficiency.sh "${skimdir}/${signal_skim}.root" "signal_efficiency" "${outdir}"
 
 ## make Data/MC plots (no weights yet)
 ./scripts/make1Dplots.sh "${outdir}/data_over_mc"
