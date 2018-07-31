@@ -6,12 +6,20 @@ source scripts/common_variables.sh
 ## config
 outdir=${1:-"plots/ntuples_v4/checks_v2"}
 plotlist=${2:-"standard"}
+usewgts=${3:-"true"}
 
 ## main loops
 for input in "${inputs[@]}"
 do 
     echo ${!input} | while read -r label infile insigfile sel varwgtmap
     do
+	
+	## check for no weights
+	if [[ "${usewgts}" != "true" ]]; then
+	    varwgtmap="empty"
+	fi
+	
+	## loop over plots
 	while IFS='' read -r plot || [[ -n "${plot}" ]];
 	do
 	    if [[ ${plot} != "" ]];
@@ -21,9 +29,6 @@ do
 
 		## determine which misc file to use
 		misc=$(GetMisc ${input} ${plot})
-
-		## vargtmap == empty for data_mc
-		varwgtmap="empty"
 
 		## run script
 		./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${outdir}/${label}"
