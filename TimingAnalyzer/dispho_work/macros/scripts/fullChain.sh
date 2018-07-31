@@ -24,4 +24,4 @@ signal_skim=$( echo ${Signal} | cut -d " " -f 3 )
 ./scripts/makeAnalysis.sh "${outdir}/results" ${docleanup}
 
 ## final make readable
-PrepOutDir "${outdir}"
+PrepOutDir "${topdir}/${disphodir}/${outdir}"
