@@ -7,6 +7,10 @@ source scripts/common_variables.sh
 outdir=${1:-"plots/ntuples_v4/checks_v3/full_chain"}
 docleanup=${2:-"true"}
 
+## make signal efficiency
+signal_skim=$( echo ${Signal} | cut -d " " -f 3 ) 
+./scripts/computeSignalEfficiency.sh "${signal_skim}" "signal_efficiency" "${outdir}"
+
 ## make Data/MC plots (no weights yet)
 ./scripts/make1Dplots.sh "${outdir}/data_over_mc"
 
