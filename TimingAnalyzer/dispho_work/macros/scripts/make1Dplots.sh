@@ -5,6 +5,7 @@ source scripts/common_variables.sh
 
 ## config
 outdir=${1:-"plots/ntuples_v4/checks_v2"}
+plotlist=${2:-"standard"}
 
 ## main loops
 for input in "${inputs[@]}"
@@ -27,7 +28,7 @@ do
 		## run script
 		./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${outdir}/${label}"
 	    fi
-	done < "${plotconfigdir}/${standardplotlist}.${inTextExt}"
+	done < "${plotconfigdir}/${plotlist}.${inTextExt}"
     done
 done
 

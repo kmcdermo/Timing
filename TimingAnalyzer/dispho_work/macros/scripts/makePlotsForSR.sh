@@ -5,7 +5,8 @@ source scripts/common_variables.sh
 
 ## command line options
 outdir=${1:-"plots/ntuples_v4/checks_v3/DEG_test/srplots_wgt"}
-docleanup=${2:-"true"}
+plotlist=${2:-"standard"}
+docleanup=${3:-"true"}
 
 ## make tmp director for configs
 tmpdir="${srplotconfigdir}/tmp"
@@ -54,7 +55,7 @@ do
 	./scripts/runSRPlotter.sh "${tmpconfig}" "${miscconfigdir}/${misc}.${inTextExt}" "${plot}_SRPlot" "${outdir}/${plot}"
 	
     fi ## end check on plot is valid
-done < "${srplotconfigdir}/${standardplotlist}.${inTextExt}" ## end loop over plots
+done < "${srplotconfigdir}/${plotlist}.${inTextExt}" ## end loop over plots
 
 ## delete tmpdir
 if [[ "${docleanup}" == "true" ]]; then

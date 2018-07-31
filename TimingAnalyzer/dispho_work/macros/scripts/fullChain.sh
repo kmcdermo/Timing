@@ -7,18 +7,17 @@ source scripts/common_variables.sh
 outdir=${1:-"plots/ntuples_v4/checks_v3/full_chain"}
 docleanup=${2:-"true"}
 
-## make signal efficiency
-signal_skim=$( echo ${Signal} | cut -d " " -f 3 ) 
-./scripts/computeSignalEfficiency.sh "${skimdir}/${signal_skim}.root" "signal_efficiency" "${outdir}"
+## make signal efficiencies
+./scripts/makeSigEffs.sh "${outdir}/sig_effs"
 
 ## make Data/MC plots (no weights yet)
-./scripts/make1Dplots.sh "${outdir}/data_over_mc"
+./scripts/make1Dplots.sh "${outdir}/data_over_mc" "${reducedplotlist}"
 
 ## make weights and related plots
 ./scripts/makeWgtsAndPlots.sh "${outdir}/varwgts" ${docleanup}
 
 ## make SR plots
-./scripts/makePlotsForSR.sh "${outdir}/srplots" ${docleanup}
+./scripts/makePlotsForSR.sh "${outdir}/srplots" "${reducedplotlist}" ${docleanup}
 
 ## make limit plots
 ./scripts/makeAnalysis.sh "${outdir}/results" ${docleanup}

@@ -9,17 +9,21 @@ outtext=${2:-"signal_efficiency"}
 dir=${3:-"plots"}
 
 ## run macro
-root -l -b -q computeSignalEfficiency.C\(\"${infilename}\",\"${outtext}\"\)
+root -l -b -q runSigEffPlotter.C\(\"${infilename}\",\"${outtext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}
 PrepOutDir "${fulldir}"
 
 ## copy everything
-for ext in "${exts[@]}"
+for canvscale in "${canvscales[@]}"
 do
-    cp ${outtext}.${ext} ${fulldir}
+    for ext in "${exts[@]}"
+    do
+	cp ${outtext}_${canvscale}.${ext} ${fulldir}
+    done
 done
+cp ${outtext}.root ${fulldir}
 
 ## Final message
 echo "Finished ComputingSignalEfficiency"

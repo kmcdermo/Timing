@@ -7,6 +7,7 @@ export skimdir="skims"
 export inTextExt="txt"
 export tmplExt="tmpl"
 export standardplotlist="standard_plots"
+export reducedplotlist="reduced_analysis_plots"
 
 ## config dir info
 export crtosrconfigdir="crtosr_config"
