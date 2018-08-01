@@ -237,10 +237,11 @@ void Fitter::DumpInputInfo()
     bkgdHist->Add(fHistMap2D[sample]);
   }
   Fitter::DumpIntegralsAndDraw(bkgdHist,bkgdtext,false,true);
+  if (!fBkgdOnly) Fitter::DumpSignificance(bkgdHist);
   delete bkgdHist;
 
   // Signal 
-  if (!fGenData)
+  if (!fBkgdOnly)
   {
     for (const auto & sample : fPlotSignalVec)
     {
@@ -263,6 +264,8 @@ void Fitter::DumpInputInfo()
 
 void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bool_t isBlind, const Bool_t isDraw)
 {
+  std::cout << "Dumping intregral and drawing for: " << hist2D->GetName() << std::endl;
+  
   // get useful bin numbers
   if (isBlind)
   {
@@ -321,56 +324,272 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
 
     // get new tmp canvas
     auto canv = new TCanvas();
-
+    canv->cd();
+    
     // draw TH2 on canv
     hist2D->Draw("colz");
     Common::CMSLumi(canv);
     Common::SaveAs(canv,Form("%sHist_2D",text.Data()));
+    delete canv;
 
-    // project in X and draw
-    auto histX = hist2D->ProjectionX("tmp_projX");
-    if (isBlind)
+    // project in X,Y and draw
+    Fitter::DrawProjection(hist2D,text,isBlind,"X");
+    Fitter::DrawProjection(hist2D,text,isBlind,"Y");
+  }
+}
+
+void Fitter::DrawProjection(TH2F *& hist2D, const TString & text, const Bool_t isBlind, const TString & proj)
+{
+  std::cout << "Drawing " << proj.Data() << "-projection for: " << hist2D->GetName() << std::endl;
+
+  // tmp strings
+  const TString histname = "tmp_proj"+proj;
+  const TString outname  = text+"Hist_proj"+proj;
+
+  // determine which projection
+  const Bool_t isX = proj.Contains("X",TString::kExact);
+  
+  // get hist
+  auto hist1D = ( isX ? hist2D->ProjectionX(histname.Data()) : hist2D->ProjectionY(histname.Data()) );
+
+  // blind
+  if (isBlind)
+  {
+    for (const auto & Blind : fBlinds)
     {
-      for (const auto & Blind : fBlinds)
-      {
-	const auto binXlow = hist2D->GetXaxis()->FindBin(Blind.xlow);
-	const auto binXup  = hist2D->GetXaxis()->FindBin(Blind.xup);
+      const auto binlow = hist->GetXaxis()->FindBin( isX ? Blind.xlow : Blind.ylow );
+      const auto binup  = hist->GetXaxis()->FindBin( isX ? Blind.xup  : Blind.yup  );
       
-	for (auto ibinX = binXlow; ibinX <= binXup; ibinX++) 
-        {
-	  histX->SetBinContent(ibinX,0.f);
-	  histX->SetBinError  (ibinX,0.f);
-	}
+      for (auto ibin = binlow; ibin <= binup; ibin++) 
+      {
+	hist1D->SetBinContent(ibin,0.f);
+	hist1D->SetBinError  (ibin,0.f);
       }
     }
-    histX->Draw("hist");
-    Common::CMSLumi(canv);
-    Common::SaveAs(canv,Form("%sHist_projX",text.Data()));
-    delete histX;
+  }
+  
+  // save as both lin and log
+  Fitter::SaveHist(hist1D,outname);
+  delete hist1D;
+}
 
-    // project in Y and draw
-    auto histY = hist2D->ProjectionY("tmp_projY");
-    if (isBlind)
+void Fitter::SaveHist(TH1F *& hist, const TString & text)
+{
+  // lin first
+  Fitter::SaveHist(hist,text,false);
+  
+  // log second
+  Fitter::SaveHist(hist,text,true);
+}
+
+void Fitter::SaveHist(TH1F *& hist, const TString & text, const Bool_t isLogY)
+{
+  // make canvas
+  auto canv = new TCanvas();
+  canv->cd();
+  canv->SetLogy(isLogy);
+
+  // draw hist
+  hist->Draw("ep");
+  
+  // save it
+  Common::CMSLumi(canv);
+  Common::SaveAs(canv,text+"_"+(isLogY?"log":"lin"));
+
+  delete canv;
+}
+
+void Fitter::DumpSignificance(TH2F *& bkgdHist2D)
+{
+  std::cout << "Dumping significance in 2D..." << std::endl;
+
+  // first, get the signal histograms into the numerator and denom
+  std::vector<TH2F*> significanceVec2D;
+  std::vector<TH2F*> splusbDenomVec2D;
+  Fitter::ReadInSignalHists(significanceVec2D,"Significance");
+  Fitter::ReadInSignalHists(splusbDenomVec2D ,"SPlusB_Denom");
+  const auto nSignals = fPlotSignalVec.size();
+  
+  // compute sqrt(s+b) : add bkgdHist to each signal for denom, compute sqrt of content and errors
+  for (auto & hist2D : splusbDenomVec2D)
+  {
+    hist2D->Add(bkgdHist2D);
+
+    for (auto ibinX = 1; ibinX <= hist2D->GetXaxis()->GetNbins(); ibinX++) 
     {
-      for (const auto & Blind : fBlinds)
+      for (auto ibinY = 1; ibinY <= hist2D->GetYaxis()->GetNbins(); ibinY++) 
       {
-	const auto binYlow = hist2D->GetYaxis()->FindBin(Blind.ylow);
-	const auto binYup  = hist2D->GetYaxis()->FindBin(Blind.yup);
-      
-	for (auto ibinY = binYlow; ibinY <= binYup; ibinY++) 
-        {
-	  histY->SetBinContent(ibinY,0.f);
-	  histY->SetBinError  (ibinY,0.f);
-	}
+	const auto orig_content = hist2D->GetBinContent(ibinX,ibinY);
+	const auto orig_error   = hist2D->GetBinError  (ibinX,ibinY);
+
+	hist2D->SetBinContent(ibinX,ibinY,std::sqrt(orig_content));
+	hist2D->SetBinError  (ibinX,ibinY,(orig_error/(2.f*std::sqrt(orig_content)))); // https://en.wikipedia.org/wiki/Propagation_of_uncertainty#Example_formulas
       }
     }
-    histY->Draw("hist");
-    Common::CMSLumi(canv);
-    Common::SaveAs(canv,Form("%sHist_projY",text.Data()));
-    delete histY;
+  }
+  
+  // compute s/sqrt(s+b), knowing that lengths of vectors are the same
+  for (auto isignal = 0U; isignal < nSignals; isignal++)
+  {
+    const auto & denom2D = splusbDenomVec2D [isignal];
+    auto       & numer2D = significanceVec2D[isignal];
 
+    numer2D->Divide(denom2D);
+  }
+
+  // save and draw 2D, write to file
+  for (auto & hist2D : significanceVec2D)
+  {
+    // save it to the outfile
+    fOutFile->cd();
+    hist2D->Write(hist2D->GetName(),TObject::kWriteDelete);
+
+    // make canvas
+    auto canv = new TCanvas();
+  
+    // draw TH2 on canv
+    hist2D->Draw("colz");
+    Common::CMSLumi(canv);
+    Common::SaveAs(canv,Form("%s_2D",hist2D->GetName()));
+
+    // delete it
     delete canv;
   }
+  
+  // project in X,Y and make canvas
+  Fitter::DumpSignificance1D(significanceVec2D,"X");
+  Fitter::DumpSignificance1D(significanceVec2D,"Y");
+
+  // delete it all!
+  for (auto & hist2D : significanceVec2D) delete hist2D;
+  for (auto & hist2D : denomSPlusBVec2D)  delete hist2D;
+}
+
+void Fitter::ReadInSignalHists(std::vector<TH2F*> & hists2D, const TString & text)
+{
+  // scale the signal, as it turns out the bkgd hist is already scaled up [and NOT blinded] from DumpIntegralAndDraw() 
+  const Bool_t isUp = false;
+
+  // loop over signals to plot, clone, and then scale up
+  for (const auto & signalname : fPlotSignalVec)
+  {
+    hists2D.emplace_back((TH2F*)fHistMap2D[signalname]->Clone(Form("%s_%s",signalname.Data(),text.Data())));
+   
+    auto & hist2D = hists2D.back();
+    if (fXVarBins || fYVarBins) Common::Scale(hist2D,isUp,fXVarBins,fYVarBins);
+  }
+}
+
+void Fitter::DumpSignificance1D(std::vector<TH2F*> hists2D, const TString & proj)
+{
+  std::cout << "Dumping significance in 1D for: " << proj.Data() << std::endl;
+  
+  // determine which projection to use
+  const Bool_t isX = proj.Contains("X",TString::kExact);
+  
+  // get hists, set colors
+  std::vector<TH1F*> hists1D;
+  for (auto ihist = 0U; ihist < hists2D.size(); ihist++)
+  {
+    auto & hist2D = hists2D[ihist];
+    const TString histname = Form("%s_proj%s",hist2D->GetName(),proj.Data());
+
+    hists1D.emplace_back( isX ? hist2D->ProjectionX(histname.Data()) : hist2D->ProjectionY(histname.Data()) );
+    auto & hist1D = hists1D.back();
+
+    hist1D->SetLineColor  (Common::ColorVec[ihist]);
+    hist1D->SetMarkerColor(Common::ColorVec[ihist]);
+  }
+  
+  // Draw in log, lin
+  Fitter::DrawSignificance1D(hists1D,proj);
+
+  // delete tmp hists
+  for (auto & hist1D : hists1D) delete hist1D;
+}
+
+void Fitter::DrawSignificance1D(std::vector<TH1F*> & hists1D, const TString & proj)
+{
+  std::cout << "Drawing significance in 1D for: " << proj.Data() << std::endl;
+
+  // get min, max
+  const auto min = Fitter::GetMinimum(hists1D);
+  const auto max = Fitter::GetMaximum(hists1D);
+
+  // Draw lin, then log
+  Fitter::DrawSignificance1D(hists1D,proj,min,max,false);
+  Fitter::DrawSignificance1D(hists1D,proj,min,max,true);
+}
+
+Float_t Fitter::GetMinimum(const std::vector<TH1F*> & hists1D)
+{
+  Float_t min = 1e9;
+  for (const auto & hist1D : hists1D)
+  {
+    for (auto ibin = 1; ibin <= hist1D->GetXaxis()->GetNbins(); ibin++)
+    {
+      const Float_t tmpmin = hist1D->GetBinContent(ibin);
+      if (tmpmin > 0.f && tmpmin < min) min = tmpmin;
+    }
+  }
+  return min;
+}
+
+Float_t Fitter::GetMaximum(const std::vector<TH1F*> & hists1D)
+{
+  Float_t max = -1e9;
+  for (const auto & hist1D : hists1D)
+  {
+    const Float_t tmpmax = hist1D->GetBinContent(hist1D->GetMaximumBin());
+    if (tmpmax > max) max = tmpmax;
+  }
+  return max;
+}
+
+void Fitter::DrawSignificance1D(std::vector<TH1F*> & hists1D, const TString & proj,
+				const Float_t min, const Float_t max, const Bool_t isLogY)
+{
+  // make canvas
+  auto canv = new TCanvas();
+  canv->cd();
+  canv->SetLogy(isLogY);
+
+  // make legend
+  auto leg = new TLegend(0.725,0.82,0.825,0.92);
+  leg->SetNColumns(2);
+  leg->SetBorderSize(1);
+  leg->SetLineColor(kBlack);
+
+  // set min, max, and then draw (add to leg)
+  for (auto ihist = 0U; ihist < hists1D.size(); ihist++)
+  {
+    auto & hist1D = hists1D[ihist];
+    
+    hist1D->SetMinimum( isLogY ? min/1.5f : min/1.05f );
+    hist1D->SetMaximum( isLogY ? max*1.5f : max*1.05f );
+
+    // draw
+    canv->cd();
+    hist1D->Draw(ihist>0?"ep same":"ep");
+
+    // Get label
+    auto label = fSignalPlotVec[ihist]; // these are aligned, so we pick out the labels this way
+    label.ReplaceAll("GMSB_","");
+    label.ReplaceAll("_",",");
+    label.ReplaceAll("L","#Lambda:");
+    label.ReplaceAll("CTau","c#tau:");
+
+    // add leg
+    leg->AddEntry(hist1D,label.Data(),"lep");
+  }
+
+  // draw it all
+  leg->Draw("same");
+  Common::CMSLumi(canv);
+  Common::SaveAs(canv,"Significance_proj"+proj+"_"+(isLogY?"log":"lin"));
+  
+  delete leg;
+  delete canv;
 }
 
 void Fitter::Project2DHistTo1D()

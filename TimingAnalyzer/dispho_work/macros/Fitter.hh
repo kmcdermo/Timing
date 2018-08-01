@@ -95,11 +95,25 @@ public:
   
   // Prep for common variables/datasets/etc
   void GetInputHists();
-  void DumpInputInfo();
-  void DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bool_t isBlind, const Bool_t isDraw);
   void Project2DHistTo1D();
   void DeclareCoefficients();
   void DeclareXYVars();
+
+  // Subroutines for dumping input info
+  void DumpInputInfo();
+  void DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bool_t isBlind, const Bool_t isDraw);
+  void DrawProjection(TH2F *& hist2D, const TString & text, const Bool_t isBlind, const TString & proj);
+  void SaveHist(TH1F *& hist, const TString & text);
+  void SaveHist(TH1F *& hist, const TString & text, const Bool_t isLogY);
+
+  // Subroutines for dumping input significance
+  void DumpSignificance(TH2F *& bkgdHist2D);
+  void DumpSignificance1D(std::vector<TH2F*> hists2D, const TString & proj);
+  void DrawSignificance1D(std::vector<TH1F*> & hists1D, const TString & proj);
+  void DrawSignificance1D(std::vector<TH1F*> & hists1D, const TString & proj, const Float_t min, const Float_t max, const Bool_t isLogY);
+  void ReadInSignalHists(std::vector<TH2F*> & hists2D, const TString & text);
+  Float_t GetMinimum(const std::vector<TH1F*> & hists1D);
+  Float_t GetMaximum(const std::vector<TH1F*> & hists1D);
 
   // Prep for pdfs
   template <typename T>

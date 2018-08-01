@@ -9,6 +9,9 @@ miscconfig=${2:-"${miscconfigdir}/misc_fit.${inTextExt}"} # misc_fit_model.${inT
 outfiletext=${3:-"ws_final"}
 outdir=${4:-"plots/ntuples_v4/checks_v3/fits"}
 
+## make array of dimensions
+declare -a dims=("2D" "projX" "projY")
+
 ## run macro
 root -b -q -l runFitter.C\(\"${fitconfig}\",\"${miscconfig}\",\"${outfiletext}\"\)
 
@@ -16,14 +19,26 @@ root -b -q -l runFitter.C\(\"${fitconfig}\",\"${miscconfig}\",\"${outfiletext}\"
 fulldir=${topdir}/${disphodir}/${outdir}
 PrepOutDir ${fulldir}
 
-echo "Copying to ${fulldir}"
-for sample in Bkgd *Sign Data
+for dim in "${dims[@]}"
 do
-    for dim in 2D projX projY
+    PrepOutDir ${fulldir}/${dim}
+done
+
+echo "Copying to ${fulldir}"
+for sample in BkgdHist *SignHist DataHist *Significance
+do
+    for dim in "${dims[@]}"
     do
 	for ext in "${exts[@]}"
 	do
-	    cp ${sample}Hist_${dim}.${ext} ${fulldir}
+	    if [[ "${dim}" == "2D" ]]; then
+		cp ${sample}_${dim}.${ext} ${fulldir}/${dim}
+	    else
+		for canvscale in "${canvscales[@]}"
+		do
+		    cp ${sample}_${dim}_${canvscale}.${ext} ${fulldir}/${dim}
+		done
+	    fi
 	done
     done
 done

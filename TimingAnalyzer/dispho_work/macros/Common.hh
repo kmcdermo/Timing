@@ -188,6 +188,9 @@ namespace Common
   constexpr Float_t top_lp    = bottom_up;
   constexpr Float_t height_lp = top_lp - bottom_lp;
 
+  // color vector for special overplotting
+  static const std::vector<Color_t> ColorVec = {kBlack,kBlue,kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3,kPink-9}; 
+
   // String formatting
   std::string RemoveDelim(std::string tmp, const std::string & delim){return tmp.erase(tmp.find(delim),delim.length());}
   TString ReplaceDelimWithSpace(TString tmp, const TString & delim){return tmp.ReplaceAll(delim," ");}

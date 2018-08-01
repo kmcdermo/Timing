@@ -12,8 +12,8 @@
 
 Float_t GetMin(const std::vector<TH1F*> & hists);
 Float_t GetMax(const std::vector<TH1F*> & hists);
-void Overlay(std::vector<TH1F*> & hists, const UInt_t N, const std::vector<Color_t> & colors,
-	     const std::vector<TString> & labels, const TString & outtext, TFile *& outfile);
+void Overlay(std::vector<TH1F*> & hists, const UInt_t N, const std::vector<TString> & labels,
+	     const TString & outtext, TFile *& outfile);
 void DrawOutput(std::vector<TH1F*> & hists, const UInt_t N, const std::vector<TString> & labels,
 		const TString & outtext, const Bool_t isLogY);
 
@@ -26,9 +26,6 @@ void overplot_prediction()
   /////////////////
   // PREP INPUTS //
   /////////////////
-
-  // colors
-  std::vector<Color_t> colors = {kBlack,kRed+1,kBlue,kGreen};
 
   // vector of file names
   const TString indir = "test_macros/files";
@@ -131,9 +128,9 @@ void overplot_prediction()
   // OVERLAY //
   /////////////
 
-  Overlay(bkgdhists,N,colors,labels,outtext+"_bkgd",outfile);
-  Overlay(signalhists,N,colors,labels,outtext+"_"+signalname,outfile);
-  Overlay(sbhists,N,colors,labels,outtext+"_sb",outfile);
+  Overlay(bkgdhists,N,labels,outtext+"_bkgd",outfile);
+  Overlay(signalhists,N,labels,outtext+"_"+signalname,outfile);
+  Overlay(sbhists,N,labels,outtext+"_sb",outfile);
 
   ////////////
   // DELETE //
@@ -174,12 +171,12 @@ Float_t GetMax(const std::vector<TH1F*> & hists)
   return max;
 }
 
-void Overlay(std::vector<TH1F*> & hists, const UInt_t N, const std::vector<Color_t> & colors, 
-	     const std::vector<TString> & labels, const TString & outtext, TFile *& outfile)
+void Overlay(std::vector<TH1F*> & hists, const UInt_t N, const std::vector<TString> & labels, 
+	     const TString & outtext, TFile *& outfile)
 {
   for (auto i = 0U; i < N; i++)
   {
-    const auto & color = colors[i];
+    const auto & color = Common::ColorVec[i];
     auto & hist = hists[i];
 
     hist->SetLineColor(color);
