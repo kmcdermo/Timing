@@ -34,9 +34,9 @@ export canvscales
 export wgtvar="phopt_0"
 
 ## CR + SR info: label skim signal_skim additional_cuts (var wgt map)
-export GJets="cr_gjets_DEG orig/gjets orig/signals_gjets always_true"
-export QCD="cr_qcd_DEG orig/qcd orig/signals_qcd cuts_v3/invertiso0_v0"
-export Signal="sr_SPH orig/sr orig/signals_sr always_true"
+export GJets="cr_gjets_DEG v4/orig/gjets v4/orig/signals_gjets always_true"
+export QCD="cr_qcd_DEG v4/orig/qcd v4/orig/signals_qcd always_true"
+export Signal="sr_SPH v4/orig/sr v4/orig/signals_sr always_true"
 
 export CR_GJets="${GJets} gjets_${wgtvar}_map"
 export CR_QCD="${QCD} qcd_${wgtvar}_map"

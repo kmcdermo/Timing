@@ -23,20 +23,20 @@ varwgttmpdir="${varwgtconfigdir}/${tmpdir}"
 function makeTreePlot() 
 {
     ## passed parameters
-    plot=${1}
-    input=${2}
-    varwgtmap=${3}
-    text=${4}
+    local plot=${1}
+    local input=${2}
+    local varwgtmap=${3}
+    local text=${4}
 
     echo ${!input} | while read -r label infile insigfile sel
     do
 	## output filename
-	outfile="${plot}_${label}${text}"
+	local outfile="${plot}_${label}${text}"
 
 	echo "Creating input plot for: ${outfile}"
 	
 	## determine which misc file to use
-	misc=$(GetMisc ${input} ${plot})
+	local misc=$(GetMisc ${input} ${plot})
 	
 	## make the plot
 	./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${outdir}/${plot}"
@@ -46,17 +46,17 @@ function makeTreePlot()
 function makeCRtoSRPlot()
 {
     ## passed parameters
-    plot=${1}
-    crinput=${2}
-    srinput=${3}
-    text=${4}
+    local plot=${1}
+    local crinput=${2}
+    local srinput=${3}
+    local text=${4}
     
     ## derived parameters
-    crlabel=$( echo ${!crinput} | cut -d " " -f 1 )
-    srlabel=$( echo ${!srinput} | cut -d " " -f 1 )
+    local crlabel=$( echo ${!crinput} | cut -d " " -f 1 )
+    local srlabel=$( echo ${!srinput} | cut -d " " -f 1 )
 
     ## make config
-    crtosrconfig="${crtosrtmpdir}/${crinput}_${plot}${text}.${inTextExt}"
+    local crtosrconfig="${crtosrtmpdir}/${crinput}_${plot}${text}.${inTextExt}"
     > "${crtosrconfig}"
      
     ## fill config
@@ -67,7 +67,7 @@ function makeCRtoSRPlot()
     echo "draw_scaled=1" >> "${crtosrconfig}"
     
     ## output filename
-    outfile="${plot}_${crinput}${text}_CRtoSR"
+    local outfile="${plot}_${crinput}${text}_CRtoSR"
     
     echo "Creating CRtoSR plot for: ${outfile}"
 
@@ -78,19 +78,19 @@ function makeCRtoSRPlot()
 function makeVarWeights()
 {
     ## passed parameters
-    plot=${1}
-    var=${2}
-    crinput=${3}
-    srinput=${4}
-    text=${5}
+    local plot=${1}
+    local var=${2}
+    local crinput=${3}
+    local srinput=${4}
+    local text=${5}
 
     ## derived parameters
-    crlabel=$( echo ${!crinput} | cut -d " " -f 1 )
-    srlabel=$( echo ${!srinput} | cut -d " " -f 1 )
-    skim=$( echo ${!crinput} | cut -d " " -f 2 )
+    local crlabel=$( echo ${!crinput} | cut -d " " -f 1 )
+    local srlabel=$( echo ${!srinput} | cut -d " " -f 1 )
+    local skim=$( echo ${!crinput} | cut -d " " -f 2 )
 
     ## make tmp config
-    varwgtconfig="${varwgttmpdir}/${crinput}_${plot}.${inTextExt}"
+    local varwgtconfig="${varwgttmpdir}/${crinput}_${plot}.${inTextExt}"
     > "${varwgtconfig}"
 
     ## fill config
@@ -107,7 +107,7 @@ function makeVarWeights()
     ./scripts/runVarWeighter.sh "${varwgtconfig}"
 
     ## make map needed for next plotter
-    varwgtmap="${varwgttmpdir}/${crinput}_${var}${map}.${inTextExt}"
+    local varwgtmap="${varwgttmpdir}/${crinput}_${var}${map}.${inTextExt}"
     > "${varwgtmap}"
 
     ## fill config
