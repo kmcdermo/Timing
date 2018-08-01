@@ -3,14 +3,14 @@
 ## source first
 source scripts/common_variables.sh
 
-dir=$(pwd)
-
-echo "Clean up in ${dir}"
+## clean main working space
+echo "Cleaning main working space"
 ./scripts/cleanup.sh
 
-pushd limits
-dir=$(pwd)
-
-echo "Clean up in ${dir}"
+## clean limits dir
+pushd "${limitdir}"
+echo "Cleaning ${limitdir} dir"
 ./scripts/cleanup.sh
 popd 
+
+echo "Finished total cleanup"

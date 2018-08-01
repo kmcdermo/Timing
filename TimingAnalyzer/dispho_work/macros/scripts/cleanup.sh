@@ -19,5 +19,6 @@ rm *.png
 rm *.pdf
 rm *.eps
 
-## Final message
-echo "Finished cleaning up"
+## print out message
+this_dir=$( pwd )
+echo "Finished cleaning up ${this_dir}"

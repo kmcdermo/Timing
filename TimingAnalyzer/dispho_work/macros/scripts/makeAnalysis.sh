@@ -29,7 +29,6 @@ misc_fit="misc_fit"
 outfitdir="fits"
 
 ## Limit config
-limitdir="limits"
 inlimitdir="input"
 doobs=0
 

@@ -24,6 +24,9 @@ export outTextExt="log"
 export topdir="/afs/cern.ch/user/k/kmcdermo/www"
 export disphodir="dispho"
 
+## common derived output info
+export limitdir="limits"
+
 declare -a exts=("eps" "png" "pdf")
 export exts
 

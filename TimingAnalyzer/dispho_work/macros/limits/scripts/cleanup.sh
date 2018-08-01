@@ -17,3 +17,7 @@ rm *.eps
 ## clean-up combine info
 rm ${combdir}/*.txt ${combdir}/*.root
 rm ${datacard}
+
+## print out message
+this_dir=$( pwd )
+echo "Finished cleaning up ${this_dir}"
