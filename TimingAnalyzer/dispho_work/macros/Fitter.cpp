@@ -350,15 +350,15 @@ void Fitter::DrawProjection(TH2F *& hist2D, const TString & text, const Bool_t i
   const Bool_t isX = proj.Contains("X",TString::kExact);
   
   // get hist
-  auto hist1D = ( isX ? hist2D->ProjectionX(histname.Data()) : hist2D->ProjectionY(histname.Data()) );
+  auto hist1D = (TH1F*)( isX ? hist2D->ProjectionX(histname.Data()) : hist2D->ProjectionY(histname.Data()) );
 
   // blind
   if (isBlind)
   {
     for (const auto & Blind : fBlinds)
     {
-      const auto binlow = hist->GetXaxis()->FindBin( isX ? Blind.xlow : Blind.ylow );
-      const auto binup  = hist->GetXaxis()->FindBin( isX ? Blind.xup  : Blind.yup  );
+      const auto binlow = hist1D->GetXaxis()->FindBin( isX ? Blind.xlow : Blind.ylow );
+      const auto binup  = hist1D->GetXaxis()->FindBin( isX ? Blind.xup  : Blind.yup  );
       
       for (auto ibin = binlow; ibin <= binup; ibin++) 
       {
@@ -387,7 +387,7 @@ void Fitter::SaveHist(TH1F *& hist, const TString & text, const Bool_t isLogY)
   // make canvas
   auto canv = new TCanvas();
   canv->cd();
-  canv->SetLogy(isLogy);
+  canv->SetLogy(isLogY);
 
   // draw hist
   hist->Draw("ep");
@@ -462,7 +462,7 @@ void Fitter::DumpSignificance(TH2F *& bkgdHist2D)
 
   // delete it all!
   for (auto & hist2D : significanceVec2D) delete hist2D;
-  for (auto & hist2D : denomSPlusBVec2D)  delete hist2D;
+  for (auto & hist2D : splusbDenomVec2D)  delete hist2D;
 }
 
 void Fitter::ReadInSignalHists(std::vector<TH2F*> & hists2D, const TString & text)
@@ -494,7 +494,7 @@ void Fitter::DumpSignificance1D(std::vector<TH2F*> hists2D, const TString & proj
     auto & hist2D = hists2D[ihist];
     const TString histname = Form("%s_proj%s",hist2D->GetName(),proj.Data());
 
-    hists1D.emplace_back( isX ? hist2D->ProjectionX(histname.Data()) : hist2D->ProjectionY(histname.Data()) );
+    hists1D.emplace_back( (TH1F*)(isX ? hist2D->ProjectionX(histname.Data()) : hist2D->ProjectionY(histname.Data())) );
     auto & hist1D = hists1D.back();
 
     hist1D->SetLineColor  (Common::ColorVec[ihist]);
@@ -555,7 +555,7 @@ void Fitter::DrawSignificance1D(std::vector<TH1F*> & hists1D, const TString & pr
   canv->SetLogy(isLogY);
 
   // make legend
-  auto leg = new TLegend(0.725,0.82,0.825,0.92);
+  auto leg = new TLegend(0.55,0.82,0.825,0.92);
   leg->SetNColumns(2);
   leg->SetBorderSize(1);
   leg->SetLineColor(kBlack);
@@ -573,7 +573,7 @@ void Fitter::DrawSignificance1D(std::vector<TH1F*> & hists1D, const TString & pr
     hist1D->Draw(ihist>0?"ep same":"ep");
 
     // Get label
-    auto label = fSignalPlotVec[ihist]; // these are aligned, so we pick out the labels this way
+    auto label = fPlotSignalVec[ihist]; // these are aligned, so we pick out the labels this way
     label.ReplaceAll("GMSB_","");
     label.ReplaceAll("_",",");
     label.ReplaceAll("L","#Lambda:");

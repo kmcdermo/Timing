@@ -44,10 +44,23 @@ export SR="${Signal} empty"
 declare -a inputs=(CR_GJets CR_QCD SR)
 export inputs
 
+## suppress pushd, popd output
+function pushd () 
+{
+    command pushd "$@" > /dev/null
+}
+export -f pushd
+
+function popd () 
+{
+    command popd "$@" > /dev/null
+}
+export -f popd
+
 ## function to make directory readable
 function PrepOutDir ()
 {
-    fulldir=${1:-"${topdir}/${disphodir}/plots"}
+    local fulldir=${1:-"${topdir}/${disphodir}/plots"}
     mkdir -p ${fulldir}
 
     pushd ${topdir}
@@ -59,8 +72,8 @@ export -f PrepOutDir
 ## function to decide which misc to use
 function GetMisc ()
 {
-    input=${1}
-    plot=${2}
+    local input=${1}
+    local plot=${2}
 
     local misc="misc"
 

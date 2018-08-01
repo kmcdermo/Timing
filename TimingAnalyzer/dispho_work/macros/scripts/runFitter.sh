@@ -27,9 +27,9 @@ done
 echo "Copying to ${fulldir}"
 for sample in BkgdHist *SignHist DataHist *Significance
 do
-    for dim in "${dims[@]}"
+    for ext in "${exts[@]}"
     do
-	for ext in "${exts[@]}"
+	for dim in "${dims[@]}"
 	do
 	    if [[ "${dim}" == "2D" ]]; then
 		cp ${sample}_${dim}.${ext} ${fulldir}/${dim}
