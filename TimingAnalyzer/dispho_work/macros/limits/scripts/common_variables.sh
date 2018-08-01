@@ -20,7 +20,7 @@ export exts
 ## function to make directory readable
 function PrepOutDir ()
 {
-    fulldir=${1:-"${topdir}/${disphodir}/plots"}
+    local fulldir=${1:-"${topdir}/${disphodir}/plots"}
     mkdir -p ${fulldir}
 
     pushd ${topdir}
