@@ -359,7 +359,11 @@ void Limits2D::DrawLimits()
   auto canv = new TCanvas();
   canv->cd();
   canv->SetLogy(1);
+  canv->SetLogz(1);
   canv->SetName("Canvas");
+
+  // Set range user for limits in z!
+  hist->GetZaxis()->SetRangeUser(1e-3,1e2);
 
   // draw histogram + contours
   hist->Draw("COLZ");

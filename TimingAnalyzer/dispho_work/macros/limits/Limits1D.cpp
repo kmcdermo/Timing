@@ -9,7 +9,6 @@ Limits1D::Limits1D(const TString & indir, const TString & infilename, const Bool
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
   Common::SetTDRStyle(fTDRStyle);
-  gROOT->ForceStyle();
 
   // make new output file
   fOutFile = TFile::Open(Form("%s.root",fOutText.Data()),"UPDATE");
