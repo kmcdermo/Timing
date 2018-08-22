@@ -31,6 +31,18 @@
 // Sample Enums
 enum SampleGroup {isData, isBkgd, isSignal, isToy};
 
+// Era Struct
+struct EraStruct
+{
+  EraStruct() {}
+  EraStruct(const UInt_t startRun, const UInt_t endRun, const Float_t lumi)
+    : startRun(startRun), endRun(endRun), lumi(lumi) {}
+  
+  UInt_t  startRun;
+  UInt_t  endRun;
+  Float_t lumi;
+};
+
 // Blind Struct
 struct BlindStruct
 {
@@ -89,6 +101,7 @@ namespace Common
 
   // Sample Information
   extern TString PrimaryDataset;
+  extern std::map<TString,EraStruct> EraMap;
   extern std::map<TString,TString> SampleMap;
   extern std::map<TString,SampleGroup> GroupMap;
   extern std::map<TString,SampleGroup> BkgdGroupMap;
@@ -116,6 +129,7 @@ namespace Common
 
   // Sample setup functions
   void SetupPrimaryDataset(const TString & pdname);
+  void SetupEras();
   void SetupSamples();
   void SetupSignalSamples();
   void SetupGroups();
@@ -133,8 +147,10 @@ namespace Common
   void SetupLabels();
   void SetupCuts(const TString & cutconfig);
   void SetupCutFlow(const TString & cutflowconfig);
+  void SetupEraCuts(const TString & era);
   void SetupVarWgts(const TString & varwgtconfig);
   void SetupWeights();
+  void SetupEraWeights(const TString & era);
   void KeepOnlySamples(const std::vector<TString> & samplevec);
   void KeepOnlySignals();
 
@@ -189,7 +205,7 @@ namespace Common
   constexpr Float_t height_lp = top_lp - bottom_lp;
 
   // color vector for special overplotting
-  static const std::vector<Color_t> ColorVec = {kBlack,kBlue,kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3,kPink-9}; 
+  static const std::vector<Color_t> ColorVec = {kBlue,kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3,kPink-9}; 
 
   // String formatting
   std::string RemoveDelim(std::string tmp, const std::string & delim){return tmp.erase(tmp.find(delim),delim.length());}
@@ -248,7 +264,7 @@ namespace Common
   void SaveAs(TCanvas *& canv, const TString & label);
 
   // ROOT Formatting
-  void CMSLumi(TCanvas * canv, const Int_t iPosX = 10);
+  void CMSLumi(TCanvas * canv, const Int_t iPosX = 10, const Float_t lumi = Common::lumi);
   void SetTDRStyle(TStyle * tdrStyle);
   
   ///////////////////////////////////////////////////////////

@@ -39,7 +39,7 @@ public:
   void SetupHists();
 
   // Main call
-  void MakePlot();
+  void MakeTreePlot2D();
 
   // Subroutines for plotting
   void MakeHistFromTrees();

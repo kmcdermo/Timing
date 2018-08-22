@@ -5,6 +5,7 @@
 namespace Common
 {
   TString PrimaryDataset;
+  std::map<TString,EraStruct> EraMap;
   std::map<TString,TString> SampleMap;
   std::map<TString,SampleGroup> GroupMap;
   std::map<TString,SampleGroup> BkgdGroupMap;
@@ -26,6 +27,16 @@ namespace Common
   void SetupPrimaryDataset(const TString & pdname)
   {
     Common::PrimaryDataset = pdname;
+  }
+
+  void SetupEras()
+  {
+    // https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmV2017Analysis
+    Common::EraMap["2017B"] = {297020,299329,4.79f};
+    Common::EraMap["2017C"] = {299337,302029,9.63f};
+    Common::EraMap["2017D"] = {302030,303434,4.23f};
+    Common::EraMap["2017E"] = {303435,304826,9.32f};
+    Common::EraMap["2017F"] = {304911,306462,13.54f};
   }
 
   void SetupSamples()
@@ -472,6 +483,24 @@ namespace Common
     }
   }
 
+  void SetupEraCuts(const TString & era)
+  {
+    // get era info
+    const auto & erainfo = Common::EraMap[era];
+
+    // set run range for data
+    for (auto & CutWgtPair : Common::CutWgtMap)
+    {
+      const auto & sample = CutWgtPair.first;
+      auto & cutwgt = CutWgtPair.second;
+    
+      if (Common::GroupMap[sample] != isData) continue;
+
+      // add era cut for data
+      cutwgt += Form("&&(run>=%i&&run<=%i)",erainfo.startRun,erainfo.endRun);
+    }  
+  }
+
   void SetupVarWgts(const TString & varwgtmapconfig)
   {
     std::cout << "Reading varwgtmap config..." << std::endl;
@@ -514,6 +543,25 @@ namespace Common
       
       Common::CutWgtMap[sample] += Form("%s",varwgt.Data());
     }
+  }
+
+  void SetupEraWeights(const TString & era)
+  {
+    // get era info
+    const auto & erainfo = Common::EraMap[era];
+    const auto frac = erainfo.lumi / Common::lumi;
+
+    // multiply cut string by fractional lumi
+    for (auto & CutWgtPair : Common::CutWgtMap)
+    {
+      const auto & sample = CutWgtPair.first;
+      auto & cutwgt = CutWgtPair.second;
+    
+      if (Common::GroupMap[sample] != isData)
+      {
+	cutwgt += Form(" * %6.3f",frac);
+      }
+    } 
   }
 
   void SetupBins(std::string & str, std::vector<Double_t> & bins, Bool_t & var_bins)
@@ -963,7 +1011,7 @@ namespace Common
     }
   }
 
-  void CMSLumi(TCanvas * canv, const Int_t iPosX) 
+  void CMSLumi(TCanvas * canv, const Int_t iPosX, const Float_t lumi)
   {
     const TString  cmsText     = "CMS";
     const Double_t cmsTextFont = 61;  // default is helvetic-bold
@@ -972,7 +1020,7 @@ namespace Common
     const Bool_t   writeExtraText  = !(Common::extraText.EqualTo("",TString::kExact));
     const Double_t extraTextFont   = 52;  // default is helvetica-italics
 
-    const TString lumiText = Form("%5.2f fb^{-1} (13 TeV)", Common::lumi); // must change this spec once we are in fb range!
+    const TString lumiText = Form("%5.2f fb^{-1} (13 TeV)",lumi);
   
     // text sizes and text offsets with respect to the top frame
     // in unit of the top margin size

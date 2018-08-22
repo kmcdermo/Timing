@@ -47,10 +47,10 @@ public:
   void SetupHistsStyle();
 
   // Main call
-  void MakePlot();
+  void MakeTreePlot();
 
   // Subroutines for plotting
-  void MakeHistFromTrees();
+  void MakeHistFromTrees(TFile *& inFile, TFile *& inSignalFile);
   void MakeDataOutput();
   void MakeBkgdOutput();
   void MakeSignalOutput();
@@ -59,7 +59,7 @@ public:
   void InitOutputCanvPads();
   void DrawUpperPad();
   void DrawLowerPad();
-  void SaveOutput(const TString & outfiletext);
+  void SaveOutput(const TString & outfiletext, const Float_t lumi = Common::lumi);
 
   // Helper functions
   TH1F * SetupHist(const TString & name);

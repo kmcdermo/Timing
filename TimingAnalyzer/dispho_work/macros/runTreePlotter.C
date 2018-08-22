@@ -7,5 +7,5 @@ void runTreePlotter(const TString & infilename, const TString & insignalfilename
 		    const TString & outfiletext)
 {
   TreePlotter plotter(infilename,insignalfilename,cutconfig,varwgtmapconfig,plotconfig,miscconfig,outfiletext);
-  plotter.MakePlot();
+  plotter.MakeTreePlot();
 }

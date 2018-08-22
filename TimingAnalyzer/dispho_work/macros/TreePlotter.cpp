@@ -42,10 +42,10 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
   TreePlotter::SetupHistsStyle();
 }
 
-void TreePlotter::MakePlot()
+void TreePlotter::MakeTreePlot()
 {
   // Fill Hists from TTrees
-  TreePlotter::MakeHistFromTrees();
+  TreePlotter::MakeHistFromTrees(fInFile,fInSignalFile);
 
   // Make Data Output
   TreePlotter::MakeDataOutput();
@@ -84,7 +84,7 @@ void TreePlotter::MakePlot()
   TreePlotter::DeleteMemory(true);
 }
 
-void TreePlotter::MakeHistFromTrees()
+void TreePlotter::MakeHistFromTrees(TFile *& inFile, TFile *& inSignalFile)
 {
   std::cout << "Making hists from input trees..." << std::endl;
 
@@ -97,7 +97,7 @@ void TreePlotter::MakeHistFromTrees()
     std::cout << "Working on tree: " << treename.Data() << std::endl;
 	
     // Get infile
-    auto & infile = ((Common::GroupMap[sample] != isSignal) ? fInFile : fInSignalFile);
+    auto & infile = ((Common::GroupMap[sample] != isSignal) ? inFile : inSignalFile);
     infile->cd();
 
     // Get TTree
@@ -493,13 +493,13 @@ void TreePlotter::DrawLowerPad()
   }
 }
 
-void TreePlotter::SaveOutput(const TString & outfiletext)
+void TreePlotter::SaveOutput(const TString & outfiletext, const Float_t lumi)
 {
   std::cout << "Saving hist as images..." << std::endl;
 
   // Go back to the main canvas before saving and write out lumi info
   OutCanv->cd();
-  Common::CMSLumi(OutCanv,0);
+  Common::CMSLumi(OutCanv,0,lumi);
 
   // Save a log version first
   TreePlotter::PrintCanvas(outfiletext,true);

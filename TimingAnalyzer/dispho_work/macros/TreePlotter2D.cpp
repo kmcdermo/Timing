@@ -54,7 +54,7 @@ TreePlotter2D::~TreePlotter2D()
   delete fInFile;
 }
 
-void TreePlotter2D::MakePlot()
+void TreePlotter2D::MakeTreePlot2D()
 {
   // Fill Hists from TTrees
   TreePlotter2D::MakeHistFromTrees();

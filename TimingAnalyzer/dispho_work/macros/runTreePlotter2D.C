@@ -7,5 +7,5 @@ void runTreePlotter2D(const TString & infilename, const TString & insignalfilena
 		      const TString & outfilename)
 {
   TreePlotter2D plotter(infilename,insignalfilename,cutconfig,varwgtmapconfig,plotconfig,miscconfig,outfilename);
-  plotter.MakePlot();
+  plotter.MakeTreePlot2D();
 }
