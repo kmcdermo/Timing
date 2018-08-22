@@ -252,17 +252,26 @@ void EraPlotter::DrawLowerPad()
   LowerPad->Draw();
   LowerPad->cd(); 
 
+  // get first hist to be drawn
+  auto & hist = BkgdHistErrRatio;
+
+  // set title and range
+  hist->GetYaxis()->SetTitle("Data/MC");
+  hist->SetMinimum(-0.1); // Define Y ..
+  hist->SetMaximum( 2.1); // .. range
+  hist->SetStats(0);      // No statistics on lower plot
+
   // some style since apparently TDR Style is crapping out
-  BkgdHistErrRatio->GetYaxis()->SetNdivisions(505);
+  hist->GetYaxis()->SetNdivisions(505);
 
   // sizes of titles is percent of height of pad --> want a constant size 
-  BkgdHistErrRatio->GetXaxis()->SetLabelSize  (Common::LabelSize   / Common::height_lp); 
-  BkgdHistErrRatio->GetXaxis()->SetLabelOffset(Common::LabelOffset / Common::height_lp); 
-  BkgdHistErrRatio->GetXaxis()->SetTitleSize  (Common::TitleSize   / Common::height_lp);
-  BkgdHistErrRatio->GetXaxis()->SetTickLength (Common::TickLength  / Common::height_lp);
-  BkgdHistErrRatio->GetYaxis()->SetLabelSize  (Common::LabelSize   / Common::height_lp); 
-  BkgdHistErrRatio->GetYaxis()->SetTitleSize  (Common::TitleSize   / Common::height_lp);
-  BkgdHistErrRatio->GetYaxis()->SetTitleOffset(Common::TitleFF * Common::TitleYOffset * Common::height_lp);
+  hist->GetXaxis()->SetLabelSize  (Common::LabelSize   / Common::height_lp); 
+  hist->GetXaxis()->SetLabelOffset(Common::LabelOffset / Common::height_lp); 
+  hist->GetXaxis()->SetTitleSize  (Common::TitleSize   / Common::height_lp);
+  hist->GetXaxis()->SetTickLength (Common::TickLength  / Common::height_lp);
+  hist->GetYaxis()->SetLabelSize  (Common::LabelSize   / Common::height_lp); 
+  hist->GetYaxis()->SetTitleSize  (Common::TitleSize   / Common::height_lp);
+  hist->GetYaxis()->SetTitleOffset(Common::TitleFF * Common::TitleYOffset * Common::height_lp);
 
   // draw th1 first so line can appear, then draw over it (and set Y axis divisions)
   BkgdHistErrRatio->Draw("E2"); 
@@ -277,7 +286,7 @@ void EraPlotter::DrawLowerPad()
   // draw again
   BkgdHistErrRatio->Draw("E2 SAME");
 
-  // draw other ratios
+  // draw data ratios
   for (auto & ratiohist : RatioHistVec)
   {
     ratiohist->Draw("EP SAME");
