@@ -9,7 +9,7 @@ era=${3}
 version=${4}
 
 ## global vars
-database="Run2017${era}-17Nov2017-${version}"
+database="${dataset}_Run2017${era}-17Nov2017-${version}"
 text="${dataset}_2017${era}_${version}"
 
 ## directories needed
