@@ -68,7 +68,7 @@ options.register('filterEff',1.0,VarParsing.multiplicity.singleton,VarParsing.va
 options.register('BR',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'branching ratio of MC');
 
 ## GT to be used
-options.register('globalTag','94X_dataRun2_v6',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
+options.register('globalTag','94X_dataRun2_ReReco_EOY17_v6',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
 
 ## do a demo run over only 1k events
 options.register('demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to run over only 1k events');
@@ -172,11 +172,11 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 		# rereo data: 94X_dataRun2_ReReco_EOY17_v2
 		#'/store/data/Run2017F/DoubleEG/MINIAOD/17Nov2017-v1/60000/9E7A56A7-FCDF-E711-86E3-7845C4FC3A91.root'
-		#'/store/data/Run2017F/SinglePhoton/MINIAOD/17Nov2017-v1/70000/FE5F0903-F2E1-E711-8D0F-009C02AAB4C0.root'
+#		'/store/data/Run2017F/SinglePhoton/MINIAOD/17Nov2017-v1/70000/FE5F0903-F2E1-E711-8D0F-009C02AAB4C0.root'
 		# reminiaod data: 94X_dataRun2_v6
 		#'/store/data/Run2017E/SinglePhoton/MINIAOD/31Mar2018-v1/00000/52B0B611-FF37-E811-B31D-0242AC1C0500.root'
 		# test GJets, GT: 94X_mc2017_realistic_v10
-		#'/store/mc/RunIIFall17MiniAOD/GJets_HT-400To600_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/94X_mc2017_realistic_v10-v2/10000/2EB3F025-5DF8-E711-BCBE-90B11C27F610.root'
+		'/store/mc/RunIIFall17MiniAOD/GJets_HT-400To600_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/94X_mc2017_realistic_v10-v2/10000/2EB3F025-5DF8-E711-BCBE-90B11C27F610.root'
 		###### Hacked 93X GMSB ctau = 4m sample, GT: 92X_upgrade2017_realistic_v10
 		#'/store/group/phys_exotica/displacedPhotons/GMSB_L200TeV_CTau400cm_930/GMSB_L200TeV_CTau400cm_930_step3/171024_213911/0000/step3_1.root',
 		#'file:/afs/cern.ch/work/k/kmcdermo/private/dispho/timegun/CMSSW_9_4_0/src/sample/step3.root'
@@ -206,6 +206,15 @@ else                       : ootPhotonsTag = cms.InputTag("")
 ## generate track collection at miniAOD
 from PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi import unpackedTracksAndVertices
 process.unpackedTracksAndVertices = unpackedTracksAndVertices.clone()
+
+## MET corrections for 2017 data
+from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
+runMetCorAndUncFromMiniAOD (
+        process,
+        isData = not options.isMC,
+        fixEE2017 = True,
+        postfix = "ModifiedMET"
+)
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("DisPho",
@@ -258,7 +267,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    ## rho
    rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## MET
-   mets = cms.InputTag("slimmedMETs"),
+   mets = cms.InputTag("slimmedMETsModifiedMET"),
    ## jets			    	
    jets = cms.InputTag("slimmedJets"),
    ## photons		
@@ -284,7 +293,7 @@ process.tree = cms.EDAnalyzer("DisPho",
 )
 
 # Set up the path
-process.treePath = cms.Path(process.unpackedTracksAndVertices + process.tree)
+process.treePath = cms.Path(process.unpackedTracksAndVertices + process.fullPatMetSequenceModifiedMET + process.tree)
 
 ### Extra bits from other configs
 process.options = cms.untracked.PSet(
