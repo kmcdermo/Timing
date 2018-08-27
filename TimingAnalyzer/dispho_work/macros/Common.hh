@@ -195,7 +195,7 @@ namespace Common
   constexpr Float_t left_up   = 0.0;
   constexpr Float_t bottom_up = 0.3;
   constexpr Float_t right_up  = 1.0;
-  constexpr Float_t top_up    = 0.99;
+  constexpr Float_t top_up    = 0.99; // 1.0
   constexpr Float_t height_up = top_up - bottom_up;
 
   constexpr Float_t left_lp   = left_up;
@@ -213,6 +213,7 @@ namespace Common
   TString ReplaceSlashWithUnderscore(TString tmp){return tmp.ReplaceAll("/","_");}
   TString ReplaceSpaceWithUnderscore(TString tmp){return tmp.ReplaceAll(" ","_");}
   TString PrintBool(const Bool_t b){return (b ? "true" : "false");}
+  Float_t Atof(const std::string & str){return std::atof(str.c_str());}
 
   // Scale hists/graphs up or down
   void Scale(TH2F *& hist, const Bool_t isUp, const Bool_t varBinsX, const Bool_t varBinsY);
