@@ -799,7 +799,16 @@ namespace Common
       std::cout << "Successfully opened tree: " << tname.Data() << " in input file: " << fname.Data() << std::endl;
     }
   }
-  
+
+  void CheckIfEmptyConfig(const TString & param, const TString & label)
+  {
+    if (param.EqualTo(""))
+    {
+      std::cerr << "Input param: " << label.Data() << " was left empty! Exiting..." << std::endl;
+      exit(1);
+    }
+  }
+
   Bool_t IsNullFile(const TString & filename)
   {
     struct stat buffer;

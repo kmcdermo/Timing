@@ -233,6 +233,7 @@ namespace Common
       exit(1);
     }
   }
+  void CheckIfConfigEmpty(const TString & param, const TString & label);
 
   // Check samples
   Bool_t IsCR(const TString & sample)

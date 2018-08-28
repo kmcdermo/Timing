@@ -366,6 +366,22 @@ void PlotComparator::SetupCompareConfig()
     {
       fRatioMaxY = Common::Atof(str);
     }
+    else if (str.find("file_name_1=") != std::string::npos)
+    {
+      fFileName1 = Common::RemoveDelim(str,"file_name_1=");
+    }
+    else if (str.find("hist_name_1=") != std::string::npos)
+    {
+      fHistName1 = Common::RemoveDelim(str,"hist_name_1=");
+    }
+    else if (str.find("file_name_2=") != std::string::npos)
+    {
+      fFileName2 = Common::RemoveDelim(str,"file_name_2=");
+    }
+    else if (str.find("hist_name_2=") != std::string::npos)
+    {
+      fHistName2 = Common::RemoveDelim(str,"hist_name_2=");
+    }
     else 
     {
       std::cerr << "Aye... your compare config is messed up, try again!" << std::endl;
@@ -373,6 +389,12 @@ void PlotComparator::SetupCompareConfig()
       exit(1);
     }
   }
+  
+  // do some checking
+  Common::CheckIfConfigEmpty(fFileName1,"file_name_1");
+  Common::CheckIfConfigEmpty(fHistName1,"hist_name_1");
+  Common::CheckIfConfigEmpty(fFileName2,"file_name_2");
+  Common::CheckIfConfigEmpty(fHistName2,"hist_name_2");
 }
 
 Float_t PlotComparator::GetHistMinY(const TH1F * hist)
