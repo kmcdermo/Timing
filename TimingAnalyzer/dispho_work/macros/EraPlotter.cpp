@@ -199,11 +199,11 @@ void EraPlotter::InitOutputCanvPads()
   OutCanv->cd();
 
   UpperPad = new TPad("UpperPad","", Common::left_up, Common::bottom_up, Common::right_up, Common::top_up);
-  UpperPad->SetBottomMargin(0); // Upper and lower plot are joined
+  UpperPad->SetBottomMargin(Common::merged_margin);
 
   LowerPad = new TPad("LowerPad", "", Common::left_lp, Common::bottom_lp, Common::right_lp, Common::top_lp);
-  LowerPad->SetTopMargin(0);
-  LowerPad->SetBottomMargin(0.35);
+  LowerPad->SetTopMargin(Common::merged_margin);
+  LowerPad->SetBottomMargin(Common::bottom_margin);
 }
 
 void EraPlotter::DrawUpperPad()

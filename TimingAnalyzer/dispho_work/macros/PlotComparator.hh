@@ -47,7 +47,9 @@ public:
 
   // Helper Functions
   void PrintCanvas(const Bool_t isLogy);
-  
+  Float_t GetHistMinY(const TH1F * hist);
+  Float_t GetHistMaxY(const TH1F * hist);
+
   // Meta data and extra info
   void MakeConfigPave();
 
@@ -87,6 +89,13 @@ private:
   TString fRatioYTitle;  
   Float_t fRatioMinY;
   Float_t fRatioMaxY;
+
+  TString fFileName1;
+  TString fFileName2;
+  TString fHistName1;
+  TString fHistName2;
+  TString fLabel1;
+  TString fLabel2;
 };
 
 #endif

@@ -195,7 +195,7 @@ namespace Common
   constexpr Float_t left_up   = 0.0;
   constexpr Float_t bottom_up = 0.3;
   constexpr Float_t right_up  = 1.0;
-  constexpr Float_t top_up    = 0.99; // 1.0
+  constexpr Float_t top_up    = 0.99;
   constexpr Float_t height_up = top_up - bottom_up;
 
   constexpr Float_t left_lp   = left_up;
@@ -203,6 +203,10 @@ namespace Common
   constexpr Float_t right_lp  = right_up;
   constexpr Float_t top_lp    = bottom_up;
   constexpr Float_t height_lp = top_lp - bottom_lp;
+
+  // extra pad info
+  constexpr Float_t merged_margin = 0.04;
+  constexpr Float_t bottom_margin = 0.35;
 
   // color vector for special overplotting
   static const std::vector<Color_t> ColorVec = {kBlue,kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3,kPink-9}; 

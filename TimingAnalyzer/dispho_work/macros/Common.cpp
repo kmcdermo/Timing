@@ -800,7 +800,7 @@ namespace Common
     }
   }
 
-  void CheckIfEmptyConfig(const TString & param, const TString & label)
+  void CheckIfConfigEmpty(const TString & param, const TString & label)
   {
     if (param.EqualTo(""))
     {

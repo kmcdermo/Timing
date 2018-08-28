@@ -9,7 +9,7 @@ outfiletext=${2:-"plots"}
 dir=${3:-"plots/test"}
 
 ## first make plot
-root -l -b -q runTreePlotter.C\(\"${compareconfig}\",\"${outfiletext}\"\)
+root -l -b -q runPlotComparator.C\(\"${compareconfig}\",\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}

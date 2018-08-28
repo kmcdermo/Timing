@@ -89,7 +89,7 @@ void PlotComparator::SetupInputs()
   fFile2 = TFile::Open(Form("%s",fFileName2.Data()));
   fFile2->cd();
 
-  fHist2 = (TH2F*)fFile2->Get(Form("%s",fHistName2.Data()));
+  fHist2 = (TH1F*)fFile2->Get(Form("%s",fHistName2.Data()));
   fHist2->SetName("Hist2");
   fHist2->SetLineColor(fColor2);
   fHist2->SetMarkerColor(fColor2);
@@ -172,7 +172,7 @@ void PlotComparator::MakeLegend()
   std::cout << "Creating Legend..." << std::endl;
 
   // instantiate the legend
-  fLegend = new TLegend(0.55,0.65,0.825,0.92);
+  fLegend = new TLegend(0.70,0.78,0.825,0.92);
   fLegend->SetName("Legend");
   fLegend->SetBorderSize(1);
   fLegend->SetLineColor(kBlack);
@@ -183,7 +183,7 @@ void PlotComparator::MakeLegend()
 
   // save to output file
   fOutFile->cd();
-  fLegend->Write(Legend->GetName(),TObject::kWriteDelete);
+  fLegend->Write(fLegend->GetName(),TObject::kWriteDelete);
 }
 
 void PlotComparator::SetupCanvasAndPads()
@@ -194,11 +194,11 @@ void PlotComparator::SetupCanvasAndPads()
   fOutCanv->cd();
 
   fUpperPad = new TPad("UpperPad","", Common::left_up, Common::bottom_up, Common::right_up, Common::top_up);
-  fUpperPad->SetBottomMargin(0); // 0.04
+  fUpperPad->SetBottomMargin(Common::merged_margin);
 
   fLowerPad = new TPad("LowerPad", "", Common::left_lp, Common::bottom_lp, Common::right_lp, Common::top_lp);
-  fLowerPad->SetTopMargin(0);  // 0.04
-  fLowerPad->SetBottomMargin(0.35);
+  fLowerPad->SetTopMargin(Common::merged_margin);
+  fLowerPad->SetBottomMargin(Common::bottom_margin);
 }
 
 void PlotComparator::DrawUpperPad()
@@ -360,11 +360,11 @@ void PlotComparator::SetupCompareConfig()
     }
     else if (str.find("ratio_min_y=") != std::string::npos)
     {
-      fRatioMinY = Common::Atof(str);
+      fRatioMinY = Common::Atof(Common::RemoveDelim(str,"ratio_min_y="));
     }
     else if (str.find("ratio_max_y=") != std::string::npos)
     {
-      fRatioMaxY = Common::Atof(str);
+      fRatioMaxY = Common::Atof(Common::RemoveDelim(str,"ratio_max_y="));
     }
     else if (str.find("file_name_1=") != std::string::npos)
     {
@@ -374,6 +374,10 @@ void PlotComparator::SetupCompareConfig()
     {
       fHistName1 = Common::RemoveDelim(str,"hist_name_1=");
     }
+    else if (str.find("label_1=") != std::string::npos)
+    {
+      fLabel1 = Common::RemoveDelim(str,"label_1=");
+    }
     else if (str.find("file_name_2=") != std::string::npos)
     {
       fFileName2 = Common::RemoveDelim(str,"file_name_2=");
@@ -382,7 +386,11 @@ void PlotComparator::SetupCompareConfig()
     {
       fHistName2 = Common::RemoveDelim(str,"hist_name_2=");
     }
-    else 
+    else if (str.find("label_2=") != std::string::npos)
+    {
+      fLabel2 = Common::RemoveDelim(str,"label_2=");
+    }
+    else
     {
       std::cerr << "Aye... your compare config is messed up, try again!" << std::endl;
       std::cerr << "Offending line: " << str.c_str() << std::endl;
@@ -393,8 +401,10 @@ void PlotComparator::SetupCompareConfig()
   // do some checking
   Common::CheckIfConfigEmpty(fFileName1,"file_name_1");
   Common::CheckIfConfigEmpty(fHistName1,"hist_name_1");
+  Common::CheckIfConfigEmpty(fLabel1,"label_1");
   Common::CheckIfConfigEmpty(fFileName2,"file_name_2");
   Common::CheckIfConfigEmpty(fHistName2,"hist_name_2");
+  Common::CheckIfConfigEmpty(fLabel2,"label_2");
 }
 
 Float_t PlotComparator::GetHistMinY(const TH1F * hist)

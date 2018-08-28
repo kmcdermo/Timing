@@ -25,6 +25,9 @@ do
     echo "hist_name_1=${era}_Hist" >> "${tmp_config}"
     echo "hist_name_2=${era}_Hist" >> "${tmp_config}"
 
+    echo "label_1=After" >> "${tmp_config}"
+    echo "label_2=Before" >> "${tmp_config}"
+
     # run macro
     ./scripts/runPlotComparator.sh "${tmp_config}" "${era}_${plot}" "${outdir}"
 
