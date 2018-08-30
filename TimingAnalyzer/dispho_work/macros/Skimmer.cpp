@@ -117,8 +117,8 @@ void Skimmer::EventLoop()
     const auto wgt    = (fIsMC ? fInEvent.genwgt : 1.f);
     const auto evtwgt = fSampleWeight * wgt; // sample weight for data == 1
 
-    // perform skim
-    if (!fOutConfig.isToy) // do not apply skim selection on toy config
+    // perform skim: standard
+    if (!fOutConfig.isToy && (fSkim == Standard)) // do not apply skim selection on toy config
     {
       // leading photon skim section
       fInEvent.b_nphotons->GetEntry(entry);
@@ -141,7 +141,52 @@ void Skimmer::EventLoop()
       //      fOutCutFlow   ->Fill((cutLabels["ph0pt70"]*1.f)-0.5f);
       //      fOutCutFlowWgt->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
       //      fOutCutFlowScl->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);
+    }
+    else if (!fOutConfig.isToy && (fSkim == Zee))
+    {
+      // cut on HLT right away
+      fInEvent.b_hltDiEle33MW->GetEntry(entry);
+      fInEvent.b_hltDiEle27WPT->GetEntry(entry);
+      
+      if (!fInEvent.hltDiEle33MW && !fInEvent.hltDiEle27WPT) continue;
+      fOutCutFlow->Fill((cutLabels["diEleHLT"]*1.f)-0.5f,wgt);
 
+      // build list of "good electrons"
+      for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
+      {
+	auto & inpho = fInPhos[ipho];
+	
+	inpho.b_pt->GetEntry(entry);
+	inpho.b_isOOT->GetEntry(entry);
+	inpho.b_gedID->GetEntry(entry);
+	inpho.b_ootID->GetEntry(entry);
+
+	if (inpho.pt < 40.f) continue;
+	if      (!inpho.isOOT && inpho.getID < 3) continue;
+	else if ( inpho.isOOT && inpho.ootID < 3) continue;
+
+	good_phos.emplace_back(ipho);
+      }
+      
+      // make sure have at least 2 good photons
+      if (good_phos.size() < 2) continue;
+      fOutCutFlow->Fill((cutLabels["goodPho2"]*1.f)-0.5f,wgt);
+      
+      // double loop over photons, make masses
+      for (auto i = 0U; i < good_phos.size(); i++)
+      {
+	const auto ipho = good_phos[i];
+	for (auto j = i+1; j < good_phos.size(); j++)
+	{
+	  
+	}
+      }
+
+    }
+
+    // common skim params
+    if (!fOutConfig.isToy)
+    {
       // filter on MET Flags
       fInEvent.b_metPV->GetEntry(entry);
       fInEvent.b_metBeamHalo->GetEntry(entry);
@@ -150,11 +195,9 @@ void Skimmer::EventLoop()
       fInEvent.b_metECALTP->GetEntry(entry);
       fInEvent.b_metPFMuon->GetEntry(entry);
       fInEvent.b_metPFChgHad->GetEntry(entry);
-      if (!fInEvent.metPV || !fInEvent.metBeamHalo || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || 
-       	  !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad) continue;
-
       fInEvent.b_metECALCalib->GetEntry(entry);
-      if (!fOutConfig.isGMSB && !fInEvent.metECALCalib) continue;
+      if (!fInEvent.metPV || !fInEvent.metBeamHalo || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || 
+       	  !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad || !fInEvent.metECALCalib) continue;
 
       fInEvent.b_metEESC->GetEntry(entry);
       if (!fIsMC && !fInEvent.metEESC) continue;
@@ -369,8 +412,8 @@ void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt)
   fInEvent.b_hltDiPho3022M90->GetEntry(entry);
   fInEvent.b_hltDiPho30PV18PV->GetEntry(entry);
   fInEvent.b_hltDiEle33MW->GetEntry(entry);
-  fInEvent.b_hltDiEle27WPT->GetEntry(entry);
   fInEvent.b_hltJet500->GetEntry(entry);
+  fInEvent.b_hltDiEle27WPT->GetEntry(entry);
   fInEvent.b_nvtx->GetEntry(entry);
   fInEvent.b_vtxX->GetEntry(entry);
   fInEvent.b_vtxY->GetEntry(entry);

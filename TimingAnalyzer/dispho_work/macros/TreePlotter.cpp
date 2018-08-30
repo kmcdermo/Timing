@@ -299,12 +299,24 @@ void TreePlotter::MakeRatioOutput()
     RatioHist->Add(DataHist);
     RatioHist->Divide(BkgdHist);  
   }
+
+  // set style for ratio plot
   RatioHist->GetYaxis()->SetTitle("Data/MC");
   RatioHist->SetMinimum(-0.1); // Define Y ..
   RatioHist->SetMaximum( 2.1); // .. range
   RatioHist->SetLineColor(kBlack);
   RatioHist->SetMarkerColor(kBlack);
   RatioHist->SetStats(0);      // No statistics on lower plot
+
+  // rescale titles and labels
+  RatioHist->GetYaxis()->SetNdivisions(505);
+  RatioHist->GetXaxis()->SetLabelSize  (Common::LabelSize   / Common::height_lp); 
+  RatioHist->GetXaxis()->SetLabelOffset(Common::LabelOffset / Common::height_lp); 
+  RatioHist->GetXaxis()->SetTitleSize  (Common::TitleSize   / Common::height_lp);
+  RatioHist->GetXaxis()->SetTickLength (Common::TickLength  / Common::height_lp);
+  RatioHist->GetYaxis()->SetLabelSize  (Common::LabelSize   / Common::height_lp); 
+  RatioHist->GetYaxis()->SetTitleSize  (Common::TitleSize   / Common::height_lp);
+  RatioHist->GetYaxis()->SetTitleOffset(Common::TitleFF * Common::TitleYOffset * Common::height_lp);
   
   // ratio MC error plot
   RatioMCErrs = TreePlotter::SetupHist("Ratio_MCErrs");
@@ -335,6 +347,12 @@ void TreePlotter::MakeRatioOutput()
   RatioLine = new TLine();
   RatioLine->SetLineColor(kRed);
   RatioLine->SetLineWidth(2);
+
+  // set line params
+  RatioLine->SetX1(RatioHist->GetXaxis()->GetXmin());
+  RatioLine->SetX2(RatioHist->GetXaxis()->GetXmax());
+  RatioLine->SetY1(1.0);
+  RatioLine->SetY2(1.0);
 
   // save to output file
   fOutFile->cd();
@@ -413,10 +431,10 @@ void TreePlotter::DrawUpperPad()
   TreePlotter::GetHistMinimum();
   TreePlotter::GetHistMaximum();
 
-  hist->SetMinimum(fMinY);
-  hist->SetMaximum(fMaxY);
-  
   // Have to scale TDR style values by height of upper pad
+  hist->GetXaxis()->SetLabelSize(0);
+  hist->GetXaxis()->SetTitleSize(0);
+
   hist->GetYaxis()->SetLabelSize  (Common::LabelSize / Common::height_up); 
   hist->GetYaxis()->SetTitleSize  (Common::TitleSize / Common::height_up);
   hist->GetYaxis()->SetTitleOffset(Common::TitleFF * Common::TitleYOffset * Common::height_up);
@@ -462,25 +480,11 @@ void TreePlotter::DrawLowerPad()
   LowerPad->SetLogx(fIsLogX);
 
   // some style since apparently TDR Style is crapping out
-  RatioHist->GetYaxis()->SetNdivisions(505);
-
-  // sizes of titles is percent of height of pad --> want a constant size 
-  RatioHist->GetXaxis()->SetLabelSize  (Common::LabelSize   / Common::height_lp); 
-  RatioHist->GetXaxis()->SetLabelOffset(Common::LabelOffset / Common::height_lp); 
-  RatioHist->GetXaxis()->SetTitleSize  (Common::TitleSize   / Common::height_lp);
-  RatioHist->GetXaxis()->SetTickLength (Common::TickLength  / Common::height_lp);
-  RatioHist->GetYaxis()->SetLabelSize  (Common::LabelSize   / Common::height_lp); 
-  RatioHist->GetYaxis()->SetTitleSize  (Common::TitleSize   / Common::height_lp);
-  RatioHist->GetYaxis()->SetTitleOffset(Common::TitleFF * Common::TitleYOffset * Common::height_lp);
 
   // draw th1 first so line can appear, then draw over it (and set Y axis divisions)
   RatioHist->Draw("EP"); 
 
   // set params for line then draw
-  RatioLine->SetX1(RatioHist->GetXaxis()->GetXmin());
-  RatioLine->SetX2(RatioHist->GetXaxis()->GetXmax());
-  RatioLine->SetY1(1.0);
-  RatioLine->SetY2(1.0);
   RatioLine->Draw(fSignalsOnly?"":"SAME");
 
   if (!fSignalsOnly)
