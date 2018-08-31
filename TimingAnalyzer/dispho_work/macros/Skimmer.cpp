@@ -4,9 +4,11 @@
 #include <iostream>
 
 Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & filename, 
-		 const Float_t sumwgts, const TString & puwgtfilename, const Bool_t redophoid) :
+		 const Float_t sumwgts, const TString & puwgtfilename, 
+		 const TString & skimtype, const Bool_t redophoid) :
   fInDir(indir), fOutDir(outdir), fFileName(filename), 
-  fSumWgts(sumwgts), fPUWgtFileName(puwgtfilename), fRedoPhoID(redophoid)
+  fSumWgts(sumwgts), fPUWgtFileName(puwgtfilename), 
+  fSkimType(skimtype), fRedoPhoID(redophoid)
 {
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
@@ -15,6 +17,9 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   // Get all the inputs //
   ////////////////////////
   std::cout << "Setting up inputs for skim" << std::endl;
+
+  // Set skim type first
+  Skimmer::SetSkim();
 
   // Get input file
   const TString infilename = Form("%s/%s", fInDir.Data(), fFileName.Data());
@@ -141,6 +146,12 @@ void Skimmer::EventLoop()
       //      fOutCutFlow   ->Fill((cutLabels["ph0pt70"]*1.f)-0.5f);
       //      fOutCutFlowWgt->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
       //      fOutCutFlowScl->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);
+
+      fPhoList.clear();
+      for (auto i = 0; i < Common::nPhotons; ipho++)
+      {
+	fPhoList.emplace_back(ipho);
+      }
     }
     else if (!fOutConfig.isToy && (fSkim == Zee))
     {
@@ -168,20 +179,78 @@ void Skimmer::EventLoop()
 	good_phos.emplace_back(ipho);
       }
       
+      // make sure have at least 1 good photon
+      if (good_phos.size() < 1) continue;
+      fOutCutFlow->Fill((cutLabels["goodPho1"]*1.f)-0.5f,wgt);
+
       // make sure have at least 2 good photons
       if (good_phos.size() < 2) continue;
       fOutCutFlow->Fill((cutLabels["goodPho2"]*1.f)-0.5f,wgt);
       
+      // object for containing mass pairs
+      std::vector<MassStruct> phopairs;
+
       // double loop over photons, make masses
       for (auto i = 0U; i < good_phos.size(); i++)
       {
-	const auto ipho = good_phos[i];
+	auto & pho1 = fInPhos[good_phos[i]];
+	pho1.b_pt ->GetEntry(entry);
+	pho1.b_eta->GetEntry(entry);
+	pho1.b_phi->GetEntry(entry);
+	pho1.b_E  ->GetEntry(entry);
+	TLorentzVector pho1vec; pho1vec.SetPtEtaPhiE(pho1.pt, pho1.eta, pho1.phi, phi1.E);
+
 	for (auto j = i+1; j < good_phos.size(); j++)
 	{
-	  
+	  auto & pho2 = fInPhos[good_phos[j]];
+	  pho2.b_pt ->GetEntry(entry);
+	  pho2.b_eta->GetEntry(entry);
+	  pho2.b_phi->GetEntry(entry);
+	  pho2.b_E  ->GetEntry(entry);
+	  TLorentzVector pho2vec; pho2vec.SetPtEtaPhiE(pho2.pt, pho2.eta, pho2.phi, phi2.E);
+
+	  // get invariant mass
+	  pho1vec += pho2vec;
+	  phopairs.emplace_back(good_phos[i],good_phos[j],std::abs(el1vec.M()-91.1876));
 	}
       }
 
+      // sort the mass structs
+      std::sort(phopairs.begin(),phopairs.end(),[](const auto & phopair1, const auto & phopair2){return phopair1.mass < phopair2.mass;});
+      
+      // get best pair
+      const auto & phopair = phopairs[0];      
+      
+      // make sure within 30 GeV
+      if (phopair.mass > 30) continue;
+      fOutCutFlow->Fill((cutLabels["diPhoMZ30"]*1.f)-0.5f,wgt);
+
+      // re-order photons based on pairs
+      auto & pho1 = fInPhos[phopair.ipho1];
+      auto & pho2 = fInPhos[phopair.ipho2];
+      
+      pho1.b_pt->GetEntry(entry);
+      pho2.b_pt->GetEntry(entry);
+
+      fPhoList.emplace_back((pho1.pt > pho2.pt) ? phopair.ipho1 : phopair.ipho2);
+      fPhoList.emplace_back((pho1.pt > pho2.pt) ? phopair.ipho2 : phopair.ipho1);
+      
+      fPhoList.clear();
+      for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
+      {
+	if      (phopair.ipho1 == ipho) continue;
+	else if (phopair.ipho2 == ipho) continue;
+	
+	fPhoList.emplace_back(ipho);
+      }
+    } // end of ZeeSkim
+    else
+    {
+      fPhoList.clear();
+      for (auto i = 0; i < Common::nPhotons; ipho++)
+      {
+	fPhoList.emplace_back(ipho);
+      }
     }
 
     // common skim params
@@ -543,7 +612,7 @@ void Skimmer::FillOutJets(const UInt_t entry)
 void Skimmer::FillOutPhos(const UInt_t entry)
 {  
   // get input photon branches
-  for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
+  for (auto ipho : fPhoList)
   {
     auto & inpho = fInPhos[ipho];
     
@@ -623,7 +692,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
   // set output photon branches
   for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
   {
-    const auto & inpho = fInPhos[ipho];
+    const auto & inpho = fInPhos[fPhoList[ipho]];
     auto & outpho = fOutPhos[ipho];
     
     outpho.E = inpho.E;
@@ -1393,11 +1462,27 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
     cutLabels[inh_cutflow->GetXaxis()->GetBinLabel(ibin)] = ibin;
   }
   auto inNbinsX_new = inNbinsX;
-  cutLabels["nPhotons"] = ++inNbinsX_new;
-  cutLabels["ph0isEB"] = ++inNbinsX_new;
-  cutLabels["ph0pt70"] = ++inNbinsX_new;
-  cutLabels["METFlag"] = ++inNbinsX_new;
-  cutLabels["badPU"] = ++inNbinsX_new;
+
+  if (fSkim == Standard)
+  {
+    cutLabels["nPhotons"] = ++inNbinsX_new;
+    cutLabels["ph0isEB"] = ++inNbinsX_new;
+    cutLabels["ph0pt70"] = ++inNbinsX_new;
+    cutLabels["METFlag"] = ++inNbinsX_new;
+    cutLabels["badPU"] = ++inNbinsX_new;
+  }
+  else if (fSkim == Zee)
+  {
+    fOutCutFlow->Fill((cutLabels["diEleHLT"]*1.f)-0.5f,wgt);
+    fOutCutFlow->Fill((cutLabels["goodPho1"]*1.f)-0.5f,wgt);
+    fOutCutFlow->Fill((cutLabels["goodPho2"]*1.f)-0.5f,wgt);
+    fOutCutFlow->Fill((cutLabels["diPhoMZ30"]*1.f)-0.5f,wgt);
+  }
+  else
+  {
+    std::cerr << "How did this happen?? Somehow, fSkim was not setup! Exiting..." << std::endl;
+    exit(1);
+  }
 
   // make new cut flow
   outh_cutflow = new TH1F(Form("%s%s",Common::h_cutflowname.Data(),label.Data()),inh_cutflow->GetTitle(),cutLabels.size(),0,cutLabels.size());
@@ -1428,6 +1513,22 @@ void Skimmer::GetPUWeights()
   for (auto ibin = 1; ibin <= fInPUWgtHist->GetNbinsX(); ibin++)
   {
     fPUWeights.emplace_back(fInPUWgtHist->GetBinContent(ibin));
+  }
+}
+
+///////////////////////
+//                   //
+// Read in skim type //
+//                   //
+///////////////////////
+void Skimmer::SetSkim()
+{
+  if      (fSkimType.EqualTo("Standard",TString::kExact)) fSkim = Standard;
+  else if (fSkimType.EqualTo("Zee"     ,TString::kExact)) fSkim = Zee;
+  else
+  {
+    std::cerr << fSkimType.Data() << " is not a valid skim selection! Exiting..." << std::endl;
+    exit(1);
   }
 }
 

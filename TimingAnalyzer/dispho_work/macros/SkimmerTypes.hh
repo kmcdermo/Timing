@@ -6,6 +6,19 @@
 
 #include "TBranch.h"
 
+enum SkimEnum {Standard, Zee};
+
+struct MassStruct
+{
+  MassStruct() {}
+  MassStruct(const Int_t ipho1, const Int_t ipho2, const Float_t mass)
+    : ipho1(ipho1), ipho2(ipho2), mass(mass) {}
+
+  Int_t ipho1;
+  Int_t ipho2;
+  Float_t mass;
+};
+
 struct Configuration
 {
   // branches

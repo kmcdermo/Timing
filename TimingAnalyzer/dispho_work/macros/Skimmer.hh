@@ -6,6 +6,7 @@
 
 #include "TTree.h"
 #include "TFile.h"
+#include "TLorentzVector.h"
 
 #include <vector>
 #include <map>
@@ -15,8 +16,12 @@ class Skimmer
 public:
   // functions
   Skimmer(const TString & indir, const TString & outdir, const TString & filename, 
-	  const Float_t sumwgts, const TString & puwgtfilename = "", const Bool_t redophoid = false);
+	  const Float_t sumwgts, const TString & puwgtfilename = "", 
+	  const TString & skimtype = "Standard", const Bool_t redophoid = false);
   ~Skimmer();
+
+  // setup skim type
+  void SetSkim();
 
   // setup config inputs
   void GetInConfig();
@@ -72,11 +77,13 @@ private:
   const TString fFileName;
   const Float_t fSumWgts;
   const TString fPUWgtFileName;
+  const TString fSkimType;
   const Bool_t  fRedoPhoID;
   std::map<std::string,int> cutLabels;
   Bool_t fIsMC;
-  
+
   // Input
+  SkimEnum fSkim;
   TFile * fInFile;
   TTree * fInTree; 
   TTree * fInConfigTree;
@@ -96,6 +103,9 @@ private:
   PhoVec  fInPhos;
 
   Configuration fInConfig;
+
+  // list of photon indices
+  std::vector<Int_t> fPhoList;
   
   // Output
   TFile * fOutFile;
