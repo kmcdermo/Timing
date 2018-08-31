@@ -7,6 +7,10 @@ label=${1}
 dataset=${2}
 era=${3}
 version=${4}
+skimtype=${5:-"Standard"}
+
+## other input vars
+usePUWeights=0
 
 ## global vars
 database="${dataset}_Run2017${era}-17Nov2017-${version}"
@@ -18,5 +22,4 @@ tmpdir="${tmpbase}/${dataset}/${era}/${version}"
 outdir="${outbase}/Data/${dataset}/${era}/${version}"
 	
 ## process subera
-./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} 0
-
+./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} ${usePUWeights} ${skimtype}

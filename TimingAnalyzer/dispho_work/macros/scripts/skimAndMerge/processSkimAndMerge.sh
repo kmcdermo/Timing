@@ -10,7 +10,7 @@ tmpdir=${3}
 outdir=${4}
 
 usePUWeights=${5:-0}
-
+skimtype=${6:-"Standard"}
 redophoid=${redoPhotonID}
 
 ## global vars
@@ -51,7 +51,7 @@ nfiles=$(wc -l ${files})
 counter="1"
 while IFS='' read -r line || [[ -n "${line}" ]]; do
     echo "Working on file" ${counter} "out of" ${nfiles} "[filename: ${line}]"
-    ./scripts/runSkimmer.sh ${eosdir} ${tmpdir} ${line} ${sumwgts} ${puwgtfile} ${redophoid}
+    ./scripts/runSkimmer.sh ${eosdir} ${tmpdir} ${line} ${sumwgts} ${puwgtfile} ${skimtype} ${redophoid}
     counter=$((${counter} + 1))
 done < "${files}"
 

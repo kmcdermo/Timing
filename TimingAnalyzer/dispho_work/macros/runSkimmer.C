@@ -2,9 +2,10 @@
 #include "Common.cpp+"
 #include "Skimmer.cpp+"
 
-void runSkimmer(const TString & indir, const TString & outdir, const TString & filename, 
-		const Float_t sumwgts, const TString & puwgtfilename = "", const Bool_t redophoid = false)
+void runSkimmer(const TString & indir, const TString & outdir, const TString & filename,
+		const Float_t sumwgts, const TString & puwgtfilename = "",
+		const TString & skimtype = "Standard", const Bool_t redophoid = false)
 {
-  Skimmer skimmer(indir, outdir, filename, sumwgts, puwgtfilename, redophoid);
+  Skimmer skimmer(indir, outdir, filename, sumwgts, puwgtfilename, skimtype, redophoid);
   skimmer.EventLoop();
 }
