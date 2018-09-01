@@ -148,7 +148,7 @@ void Skimmer::EventLoop()
       //      fOutCutFlowScl->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);
 
       fPhoList.clear();
-      for (auto i = 0; i < Common::nPhotons; ipho++)
+      for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
       {
 	fPhoList.emplace_back(ipho);
       }
@@ -163,6 +163,7 @@ void Skimmer::EventLoop()
       fOutCutFlow->Fill((cutLabels["diEleHLT"]*1.f)-0.5f,wgt);
 
       // build list of "good electrons"
+      std::vector<Int_t> good_phos;
       for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
       {
 	auto & inpho = fInPhos[ipho];
@@ -173,7 +174,7 @@ void Skimmer::EventLoop()
 	inpho.b_ootID->GetEntry(entry);
 
 	if (inpho.pt < 40.f) continue;
-	if      (!inpho.isOOT && inpho.getID < 3) continue;
+	if      (!inpho.isOOT && inpho.gedID < 3) continue;
 	else if ( inpho.isOOT && inpho.ootID < 3) continue;
 
 	good_phos.emplace_back(ipho);
@@ -186,7 +187,7 @@ void Skimmer::EventLoop()
       // make sure have at least 2 good photons
       if (good_phos.size() < 2) continue;
       fOutCutFlow->Fill((cutLabels["goodPho2"]*1.f)-0.5f,wgt);
-      
+
       // object for containing mass pairs
       std::vector<MassStruct> phopairs;
 
@@ -198,7 +199,7 @@ void Skimmer::EventLoop()
 	pho1.b_eta->GetEntry(entry);
 	pho1.b_phi->GetEntry(entry);
 	pho1.b_E  ->GetEntry(entry);
-	TLorentzVector pho1vec; pho1vec.SetPtEtaPhiE(pho1.pt, pho1.eta, pho1.phi, phi1.E);
+	TLorentzVector pho1vec; pho1vec.SetPtEtaPhiE(pho1.pt, pho1.eta, pho1.phi, pho1.E);
 
 	for (auto j = i+1; j < good_phos.size(); j++)
 	{
@@ -207,11 +208,11 @@ void Skimmer::EventLoop()
 	  pho2.b_eta->GetEntry(entry);
 	  pho2.b_phi->GetEntry(entry);
 	  pho2.b_E  ->GetEntry(entry);
-	  TLorentzVector pho2vec; pho2vec.SetPtEtaPhiE(pho2.pt, pho2.eta, pho2.phi, phi2.E);
+	  TLorentzVector pho2vec; pho2vec.SetPtEtaPhiE(pho2.pt, pho2.eta, pho2.phi, pho2.E);
 
 	  // get invariant mass
 	  pho1vec += pho2vec;
-	  phopairs.emplace_back(good_phos[i],good_phos[j],std::abs(el1vec.M()-91.1876));
+	  phopairs.emplace_back(good_phos[i],good_phos[j],std::abs(pho1vec.M()-ECAL::Zmass));
 	}
       }
 
@@ -219,7 +220,7 @@ void Skimmer::EventLoop()
       std::sort(phopairs.begin(),phopairs.end(),[](const auto & phopair1, const auto & phopair2){return phopair1.mass < phopair2.mass;});
           
       // get best pair
-      const auto & phopair = phopairs[0];      
+      const auto & phopair = phopairs[0];
       
       // make sure within 30 GeV
       if (phopair.mass > 30) continue;
@@ -232,10 +233,10 @@ void Skimmer::EventLoop()
       pho1.b_pt->GetEntry(entry);
       pho2.b_pt->GetEntry(entry);
 
+      // now start to save them
+      fPhoList.clear();
       fPhoList.emplace_back((pho1.pt > pho2.pt) ? phopair.ipho1 : phopair.ipho2);
       fPhoList.emplace_back((pho1.pt > pho2.pt) ? phopair.ipho2 : phopair.ipho1);
-      
-      fPhoList.clear();
       for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
       {
 	if      (phopair.ipho1 == ipho) continue;
@@ -247,7 +248,7 @@ void Skimmer::EventLoop()
     else
     {
       fPhoList.clear();
-      for (auto i = 0; i < Common::nPhotons; ipho++)
+      for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
       {
 	fPhoList.emplace_back(ipho);
       }
@@ -694,7 +695,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
   {
     const auto & inpho = fInPhos[fPhoList[ipho]];
     auto & outpho = fOutPhos[ipho];
-    
+
     outpho.E = inpho.E;
     outpho.pt = inpho.pt;
     outpho.eta = inpho.eta;
@@ -757,7 +758,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	{
 	  outpho.seedX = ECAL::radEB * std::cos((*fInRecHits.phi)[inpho.seed]);
 	  outpho.seedY = ECAL::radEB * std::sin((*fInRecHits.phi)[inpho.seed]);
-	  outpho.seedZ = ECAL::radEB / ECAL::uneta((*fInRecHits.eta)[ipho.seed]);
+	  outpho.seedZ = ECAL::radEB / ECAL::uneta((*fInRecHits.eta)[inpho.seed]);
 	}
 	else
 	{
@@ -770,10 +771,10 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 
 	// TOF correction, HACK: FIXME!!!
 	const auto r_curv = outpho.pt / (ECAL::helix);
-	const auto d_pvT  = std::hypot(fOutEvent.vtxX-outpho.seedX,fOutEvent.vtxY-outpho.seedY);
-	const auto arc_leng = r_curv * std::acos(1.f-(std::pow(d_pvT,2.f)/(2.f*std::pow(r_curv))));
-	const auto d_pv   = std::hypot(arc_leng,fOutEvent.vtxZ-outpho.seedZ);
-	const auto d_orig = std::hypot(outpho.seedX,outpho.seedY,outpho.seedZ);
+	const auto d_pvT  = ECAL::hypot(fOutEvent.vtxX-outpho.seedX,fOutEvent.vtxY-outpho.seedY);
+	const auto arc_leng = r_curv * std::acos(1.f-(std::pow(d_pvT,2.f)/(2.f*std::pow(r_curv,2.f))));
+	const auto d_pv   = ECAL::hypot(arc_leng,fOutEvent.vtxZ-outpho.seedZ);
+	const auto d_orig = ECAL::hypot(outpho.seedX,outpho.seedY,outpho.seedZ);
 	
 	outpho.seedTOF = (d_orig-d_pv) / ECAL::sol;
       }
@@ -1504,21 +1505,23 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
     cutLabels["nPhotons"] = ++inNbinsX_new;
     cutLabels["ph0isEB"] = ++inNbinsX_new;
     cutLabels["ph0pt70"] = ++inNbinsX_new;
-    cutLabels["METFlag"] = ++inNbinsX_new;
-    cutLabels["badPU"] = ++inNbinsX_new;
   }
   else if (fSkim == Zee)
   {
-    fOutCutFlow->Fill((cutLabels["diEleHLT"]*1.f)-0.5f,wgt);
-    fOutCutFlow->Fill((cutLabels["goodPho1"]*1.f)-0.5f,wgt);
-    fOutCutFlow->Fill((cutLabels["goodPho2"]*1.f)-0.5f,wgt);
-    fOutCutFlow->Fill((cutLabels["diPhoMZ30"]*1.f)-0.5f,wgt);
+    cutLabels["diEleHLT"] = ++inNbinsX_new;
+    cutLabels["goodPho1"] = ++inNbinsX_new;
+    cutLabels["goodPho2"] = ++inNbinsX_new;
+    cutLabels["diPhoMZ30"] = ++inNbinsX_new;
   }
   else
   {
     std::cerr << "How did this happen?? Somehow, fSkim was not setup! Exiting..." << std::endl;
     exit(1);
   }
+
+  // common skim
+  cutLabels["METFlag"] = ++inNbinsX_new;
+  cutLabels["badPU"] = ++inNbinsX_new;
 
   // make new cut flow
   outh_cutflow = new TH1F(Form("%s%s",Common::h_cutflowname.Data(),label.Data()),inh_cutflow->GetTitle(),cutLabels.size(),0,cutLabels.size());
