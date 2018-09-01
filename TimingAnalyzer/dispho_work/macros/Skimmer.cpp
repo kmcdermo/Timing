@@ -217,7 +217,7 @@ void Skimmer::EventLoop()
 
       // sort the mass structs
       std::sort(phopairs.begin(),phopairs.end(),[](const auto & phopair1, const auto & phopair2){return phopair1.mass < phopair2.mass;});
-      
+          
       // get best pair
       const auto & phopair = phopairs[0];      
       
@@ -751,12 +751,42 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.seedtime = (*fInRecHits.time)[inpho.seed];
 	outpho.seedE    = (*fInRecHits.E)   [inpho.seed];
 	outpho.seedID   = (*fInRecHits.ID)  [inpho.seed];
+
+	// HACK: FIXME!!!
+	if (outpho.isEB)
+	{
+	  outpho.seedX = ECAL::radEB * std::cos((*fInRecHits.phi)[inpho.seed]);
+	  outpho.seedY = ECAL::radEB * std::sin((*fInRecHits.phi)[inpho.seed]);
+	  outpho.seedZ = ECAL::radEB / ECAL::uneta((*fInRecHits.eta)[ipho.seed]);
+	}
+	else
+	{
+	  const auto rad = ECAL::zEE * ECAL::uneta((*fInRecHits.eta)[inpho.seed]);
+	  
+	  outpho.seedX = rad * std::cos((*fInRecHits.phi)[inpho.seed]);
+	  outpho.seedY = rad * std::sin((*fInRecHits.phi)[inpho.seed]);
+	  outpho.seedZ = ECAL::zEE;
+	}
+
+	// TOF correction, HACK: FIXME!!!
+	const auto r_curv = outpho.pt / (ECAL::helix);
+	const auto d_pvT  = std::hypot(fOutEvent.vtxX-outpho.seedX,fOutEvent.vtxY-outpho.seedY);
+	const auto arc_leng = r_curv * std::acos(1.f-(std::pow(d_pvT,2.f)/(2.f*std::pow(r_curv))));
+	const auto d_pv   = std::hypot(arc_leng,fOutEvent.vtxZ-outpho.seedZ);
+	const auto d_orig = std::hypot(outpho.seedX,outpho.seedY,outpho.seedZ);
+	
+	outpho.seedTOF = (d_orig-d_pv) / ECAL::sol;
       }
       else
       {
 	outpho.seedtime = -9999.f;
 	outpho.seedE    = -9999.f;
 	outpho.seedID   = 0;
+	
+	outpho.seedX    = -9999.f;
+	outpho.seedY    = -9999.f;
+	outpho.seedZ    = -9999.f;
+	outpho.seedTOF  = -9999.f;
       }
     }
     else
@@ -1438,9 +1468,15 @@ void Skimmer::InitOutBranches()
       }
     }
 
-    // add event weight
-    fOutTree->Branch(fOutEvent.s_evtwgt.c_str(), &fOutEvent.evtwgt);
-  }
+    // HACK: FIXME!!!
+    fOutTree->Branch(Form("%s_%i",pho.s_seedX.c_str(),ipho), &pho.seedX);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedY.c_str(),ipho), &pho.seedY);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedZ.c_str(),ipho), &pho.seedZ);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF);
+  } // end loop over nPhotons
+
+  // add event weight
+  fOutTree->Branch(fOutEvent.s_evtwgt.c_str(), &fOutEvent.evtwgt);
 } 
 
 void Skimmer::InitOutCutFlowHists()

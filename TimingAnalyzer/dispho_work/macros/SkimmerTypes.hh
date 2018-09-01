@@ -401,6 +401,11 @@ struct Pho
   // MC types
   Bool_t  isGen;
   Int_t   isSignal;
+  // HACK: FIXME!!! Will redo once from ntuples level
+  Float_t seedX;
+  Float_t seedY;
+  Float_t seedZ;
+  Float_t seedTOF;
 
   // branch names
   std::string s_E = "phoE";
@@ -449,6 +454,10 @@ struct Pho
   std::string s_seedID = "phoseedID";
   std::string s_isGen = "phoisGen";
   std::string s_isSignal = "phoisSignal";
+  std::string s_seedX = "seedX";
+  std::string s_seedY = "seedY";
+  std::string s_seedZ = "seedZ";
+  std::string s_seedTOF = "seedTOF";
 
   // tbranches
   TBranch * b_E;
