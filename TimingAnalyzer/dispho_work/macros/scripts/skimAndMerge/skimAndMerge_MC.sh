@@ -10,7 +10,7 @@ dir=${4}
 skimtype=${5:-"Standard"}
 
 ## other input vars
-usePUWeights=0
+usePUWeights=1
 
 ## global vars
 text="${mcbase}_${sample}"
