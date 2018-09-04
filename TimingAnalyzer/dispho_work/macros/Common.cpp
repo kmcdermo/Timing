@@ -128,16 +128,16 @@ namespace Common
     {
       const auto & sample = SamplePair.second;
       
-      if      (sample == "QCD")   Common::GroupMap[sample] = isBkgd;
-      else if (sample == "GJets") Common::GroupMap[sample] = isBkgd;
-      else if (sample == "DYLL")  Common::GroupMap[sample] = isBkgd;
-      else if (sample == "DiPho") Common::GroupMap[sample] = isBkgd;
-      else if (sample == "TX")    Common::GroupMap[sample] = isBkgd;
-      else if (sample == "WX")    Common::GroupMap[sample] = isBkgd;
-      else if (sample == "ZX")    Common::GroupMap[sample] = isBkgd;
-      else if (sample == "Data")  Common::GroupMap[sample] = isData;
-      else if (sample.Contains("GMSB")) Common::GroupMap[sample] = isSignal;
-      else if (sample.Contains("HVDS")) Common::GroupMap[sample] = isSignal;
+      if      (sample == "QCD")   Common::GroupMap[sample] = SampleGroup::isBkgd;
+      else if (sample == "GJets") Common::GroupMap[sample] = SampleGroup::isBkgd;
+      else if (sample == "DYLL")  Common::GroupMap[sample] = SampleGroup::isBkgd;
+      else if (sample == "DiPho") Common::GroupMap[sample] = SampleGroup::isBkgd;
+      else if (sample == "TX")    Common::GroupMap[sample] = SampleGroup::isBkgd;
+      else if (sample == "WX")    Common::GroupMap[sample] = SampleGroup::isBkgd;
+      else if (sample == "ZX")    Common::GroupMap[sample] = SampleGroup::isBkgd;
+      else if (sample == "Data")  Common::GroupMap[sample] = SampleGroup::isData;
+      else if (sample.Contains("GMSB")) Common::GroupMap[sample] = SampleGroup::isSignal;
+      else if (sample.Contains("HVDS")) Common::GroupMap[sample] = SampleGroup::isSignal;
       else
       {
 	std::cerr << "Aye... the Common groups are messed up!!! Fix it!!! Exiting..." << std::endl;
@@ -154,11 +154,11 @@ namespace Common
 
       if (Common::IsCR(sample))
       {
-	Common::BkgdGroupMap[sample] = isBkgd;
+	Common::BkgdGroupMap[sample] = SampleGroup::isBkgd;
       }
     }
 
-    Common::BkgdGroupMap["EWK"] = isBkgd;
+    Common::BkgdGroupMap["EWK"] = SampleGroup::isBkgd;
   }
 
   void SetupSignalGroups()
@@ -249,7 +249,7 @@ namespace Common
     {
       const auto & sample = GroupPair.first;
       const auto group    = GroupPair.second;
-      if (group == isSignal) continue;
+      if (group == SampleGroup::isSignal) continue;
 
       Common::GroupCutFlowHistNameMap[sample] = sample+"_"+Common::h_cutflowname;
     }
@@ -261,7 +261,7 @@ namespace Common
     {
       const auto & sample = GroupPair.first;
       const auto group    = GroupPair.second;
-      if (group != isSignal) continue;
+      if (group != SampleGroup::isSignal) continue;
 
       Common::SignalCutFlowHistNameMap[sample] = sample+"_"+Common::h_cutflowname;
     }
@@ -328,7 +328,7 @@ namespace Common
       const auto & sample = GroupPair.first;
       const auto group    = GroupPair.second;
       
-      if (group != isSignal) continue;
+      if (group != SampleGroup::isSignal) continue;
       if (Common::SignalGroupMap[sample] == "GMSB")
       {
 	const TString s_lambda = "_L";
@@ -375,7 +375,7 @@ namespace Common
       const auto & sample = GroupPair.first;
       const auto & group  = GroupPair.second;
 
-      if (group == isSignal) continue;
+      if (group == SampleGroup::isSignal) continue;
 
       Common::TreeNameMap.erase(sample);
       Common::HistNameMap.erase(sample);
@@ -386,13 +386,55 @@ namespace Common
     // erase groups now
     for (auto iter = Common::GroupMap.cbegin(); iter != Common::GroupMap.cend();)
     {
-      if (iter->second != isSignal) 
+      if (iter->second != SampleGroup::isSignal) 
       {
 	Common::GroupMap.erase(iter++);
       }
       else
       {
 	iter++;
+      }
+    }
+  }
+  
+  void SetVar(const TString & str, const Variable var)
+  {
+    for (const auto & GroupPair : Common::GroupMap)
+    {
+      if      (var == Variable::X)
+      {
+	Common::XVarMap[GroupPair.first] = str;
+      }
+      else if (var == Variable::Y)
+      {
+	Common::YVarMap[GroupPair.first] = str;
+      }
+      else
+      {
+	std::cerr << "How did this happen?? You passed a Variable that doesn't exist! Exiting..." << std::endl;
+	exit(1);
+      }
+    }
+  }
+
+  void SetVarMod(const TString & str, const Variable var, const SampleGroup sample)
+  {
+    for (const auto & GroupPair : Common::GroupMap)
+    {
+      if (sample != GroupPair.second) continue;
+
+      if      (var == Variable::X)
+      {
+	Common::XVarMap[GroupPair.first] += str;
+      }
+      else if (var == Variable::Y)
+      {
+	Common::YVarMap[GroupPair.first] += str;
+      }
+      else
+      {
+	std::cerr << "How did this happen?? You passed a Variable that doesn't exist! Exiting..." << std::endl;
+	exit(1);
       }
     }
   }
@@ -412,7 +454,7 @@ namespace Common
 
 	if (cut != "")
 	{
-	  for (const auto & GroupPair : GroupMap)
+	  for (const auto & GroupPair : Common::GroupMap)
 	  {
 	    Common::CutWgtMap[GroupPair.first] += Form("%s",cut.Data());
 	  }
@@ -424,9 +466,9 @@ namespace Common
 
 	if (cut != "")
 	{
-	  for (const auto & GroupPair : GroupMap)
+	  for (const auto & GroupPair : Common::GroupMap)
 	  {
-	    if (GroupPair.second == isBkgd)
+	    if (GroupPair.second == SampleGroup::isBkgd)
 	    {
 	      Common::CutWgtMap[GroupPair.first] += Form("&&%s",cut.Data());
 	    }
@@ -439,9 +481,9 @@ namespace Common
 
 	if (cut != "")
 	{
-	  for (const auto & GroupPair : GroupMap)
+	  for (const auto & GroupPair : Common::GroupMap)
 	  {
-	    if (GroupPair.second == isSignal)
+	    if (GroupPair.second == SampleGroup::isSignal)
 	    {
 	      Common::CutWgtMap[GroupPair.first] += Form("&&%s",cut.Data());
 	    }
@@ -454,9 +496,9 @@ namespace Common
 
 	if (cut != "")
 	{
-	  for (const auto & GroupPair : GroupMap)
+	  for (const auto & GroupPair : Common::GroupMap)
 	  {
-	    if (GroupPair.second == isData)
+	    if (GroupPair.second == SampleGroup::isData)
 	    {
 	      Common::CutWgtMap[GroupPair.first] += Form("&&%s",cut.Data());
 	    }
@@ -494,7 +536,7 @@ namespace Common
       const auto & sample = CutWgtPair.first;
       auto & cutwgt = CutWgtPair.second;
     
-      if (Common::GroupMap[sample] != isData) continue;
+      if (Common::GroupMap[sample] != SampleGroup::isData) continue;
 
       // add era cut for data
       cutwgt += Form("&&(run>=%i&&run<=%i)",erainfo.startRun,erainfo.endRun);
@@ -529,7 +571,7 @@ namespace Common
       const auto & sample = CutWgtPair.first;
       auto & cutwgt = CutWgtPair.second;
     
-      if (Common::GroupMap[sample] != isData)
+      if (Common::GroupMap[sample] != SampleGroup::isData)
       {
 	cutwgt += " * (evtwgt * puwgt)";
       }
@@ -557,7 +599,7 @@ namespace Common
       const auto & sample = CutWgtPair.first;
       auto & cutwgt = CutWgtPair.second;
     
-      if (Common::GroupMap[sample] != isData)
+      if (Common::GroupMap[sample] != SampleGroup::isData)
       {
 	cutwgt += Form(" * %6.3f",frac);
       }
@@ -721,7 +763,7 @@ namespace Common
 	  const auto & group  = GroupPair.second;
 	  
 	  // skip non-signal samples
-	  if (group != isSignal) continue;
+	  if (group != SampleGroup::isSignal) continue;
 
 	  signalvec.emplace_back(sample);
 	}

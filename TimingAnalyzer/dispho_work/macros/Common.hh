@@ -31,6 +31,9 @@
 // Sample Enums
 enum SampleGroup {isData, isBkgd, isSignal, isToy};
 
+// Variable Enums
+enum Variable {X, Y};
+
 // Era Struct
 struct EraStruct
 {
@@ -116,6 +119,8 @@ namespace Common
   extern std::map<TString,ColorStruct> SignalSubGroupColorMap;
   extern std::map<TString,Color_t> ColorMap;
   extern std::map<TString,TString> LabelMap; 
+  extern std::map<TString,TString> XVarMap;
+  extern std::map<TString,TString> YVarMap;
   extern std::map<TString,TString> CutWgtMap;
   extern std::map<TString,TString> VarWgtMap;
   extern std::vector<std::pair<TString,TString> > CutFlowPairVec;
@@ -145,6 +150,8 @@ namespace Common
   void SetupSignalSubGroupColors();
   void SetupColors();
   void SetupLabels();
+  void SetVar(const TString & str, const Variable var);
+  void SetVarMod(const TString & str, const Variable var, const SampleGroup sample);
   void SetupCuts(const TString & cutconfig);
   void SetupCutFlow(const TString & cutflowconfig);
   void SetupEraCuts(const TString & era);

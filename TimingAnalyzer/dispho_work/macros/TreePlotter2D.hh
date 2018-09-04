@@ -26,27 +26,28 @@
 class TreePlotter2D
 {
 public:
+  TreePlotter2D() {}
   TreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
 		const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
 		const TString & outfiletext);
-  ~TreePlotter2D();
+  ~TreePlotter2D() {}  
 
   // Initialize
   void SetupDefaults();
   void SetupConfig();
-  void SetupPlotConfig();
-  void SetupMiscConfig();
+  void SetupPlotConfig(const TString & plotconfig);
+  void SetupMiscConfig(const TString & miscconfig);
   void SetupHists();
 
   // Main call
   void MakeTreePlot2D();
 
   // Subroutines for plotting
-  void MakeHistFromTrees();
-  void MakeHistFromSignalTrees();
+  void MakeHistFromTrees(TFile *& inFile, TFile *& inSignalFile);
   void MakeDataOutput();
   void MakeBkgdOutput();
   void MakeRatioOutput();
+  void DeleteMemory(const Bool_t deleteMemory);
 
   // Helper functions
   TH2F * SetupHist(const TString & name);
@@ -68,15 +69,14 @@ private:
   TFile * fInFile;
   TFile * fInSignalFile;
 
+protected:
   // plot vars
   TString fTitle;
   TString fXTitle;
-  TString fXVar;
   std::vector<Double_t> fXBins;
   Bool_t fXVarBins;
   std::vector<TString> fXLabels;
   TString fYTitle;
-  TString fYVar;
   std::vector<Double_t> fYBins;
   Bool_t fYVarBins;
   std::vector<TString> fYLabels;

@@ -30,34 +30,18 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insigna
   // setup hists
   TreePlotter2D::SetupDefaults();
   TreePlotter2D::SetupConfig();
-  TreePlotter2D::SetupPlotConfig();
-  TreePlotter2D::SetupMiscConfig();
+  TreePlotter2D::SetupPlotConfig(fPlotConfig);
+  TreePlotter2D::SetupMiscConfig(fMiscConfig);
   TreePlotter2D::SetupHists();
 
   // output root file
   fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
 }
 
-TreePlotter2D::~TreePlotter2D()
-{
-  delete fConfigPave;
-  delete RatioMCErrs;
-  delete RatioHist;
-  delete EWKHist;
-  delete BkgdHist;
-  delete DataHist; 
-
-  delete fOutFile;
-  for (auto & HistPair : HistMap) delete HistPair.second;
-  delete fTDRStyle;
-  delete fInSignalFile;
-  delete fInFile;
-}
-
 void TreePlotter2D::MakeTreePlot2D()
 {
   // Fill Hists from TTrees
-  TreePlotter2D::MakeHistFromTrees();
+  TreePlotter2D::MakeHistFromTrees(fInFile,fInSignalFile);
 
   // Make Data Output
   TreePlotter2D::MakeDataOutput();
@@ -70,9 +54,12 @@ void TreePlotter2D::MakeTreePlot2D()
 
   // Write Out Config
   TreePlotter2D::MakeConfigPave();
+
+  // Delete Memory
+  TreePlotter2D::DeleteMemory(true);
 }
 
-void TreePlotter2D::MakeHistFromTrees()
+void TreePlotter2D::MakeHistFromTrees(TFile *& inFile, TFile *& inSignalFile)
 {
   std::cout << "Making hists from input trees..." << std::endl;
 
@@ -85,7 +72,7 @@ void TreePlotter2D::MakeHistFromTrees()
     std::cout << "Working on tree: " << treename.Data() << std::endl;
 	
     // Get infile
-    auto & infile = ((Common::GroupMap[sample] != isSignal) ? fInFile : fInSignalFile);
+    auto & infile = ((Common::GroupMap[sample] != SampleGroup::isSignal) ? inFile : inSignalFile);
     infile->cd();
 
     // Get TTree
@@ -101,7 +88,7 @@ void TreePlotter2D::MakeHistFromTrees()
       hist->SetDirectory(infile);
       
       // Fill from tree
-      intree->Draw(Form("%s:%s>>%s",fYVar.Data(),fXVar.Data(),hist->GetName()),Form("%s",Common::CutWgtMap[sample].Data()),"goff");
+      intree->Draw(Form("%s:%s>>%s",Common::YVarMap[sample].Data(),Common::XVarMap[sample].Data(),hist->GetName()),Form("%s",Common::CutWgtMap[sample].Data()),"goff");
 
       // delete tree;
       delete intree;
@@ -177,7 +164,7 @@ void TreePlotter2D::MakeBkgdOutput()
     const auto & sample = HistPair.first;
     const auto & hist = HistPair.second;
 
-    if (Common::GroupMap[sample] == isBkgd)
+    if (Common::GroupMap[sample] == SampleGroup::isBkgd)
     {
       // add all MC bkgds for bkgd hist 
       BkgdHist->Add(hist);
@@ -260,6 +247,28 @@ void TreePlotter2D::MakeConfigPave()
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
+void TreePlotter2D::DeleteMemory(const Bool_t deleteInternal)
+{
+  delete fConfigPave;
+  delete RatioMCErrs;
+  delete RatioHist;
+  delete EWKHist;
+  delete BkgdHist;
+  delete DataHist; 
+
+  for (auto & HistPair : HistMap) delete HistPair.second;
+  HistMap.clear();
+
+  delete fOutFile;
+  delete fTDRStyle;
+
+  if (deleteInternal)
+  {
+    delete fInSignalFile;
+    delete fInFile;
+  }
+}
+
 void TreePlotter2D::SetupDefaults()
 {
   fXVarBins = false;
@@ -281,11 +290,11 @@ void TreePlotter2D::SetupConfig()
   Common::SetupWeights();
 }
 
-void TreePlotter2D::SetupPlotConfig()
+void TreePlotter2D::SetupPlotConfig(const TString & plotconfig)
 {
   std::cout << "Reading plot config..." << std::endl;
 
-  std::ifstream infile(Form("%s",fPlotConfig.Data()),std::ios::in);
+  std::ifstream infile(Form("%s",plotconfig.Data()),std::ios::in);
   std::string str;
   while (std::getline(infile,str))
   {
@@ -300,7 +309,23 @@ void TreePlotter2D::SetupPlotConfig()
     }
     else if (str.find("x_var=") != std::string::npos)
     {
-      fXVar = Common::RemoveDelim(str,"x_var=");
+      str = Common::RemoveDelim(str,"x_var=");
+      Common::SetVar(str,Variable::X);
+    }    
+    else if (str.find("x_var_data=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"x_var_data=");
+      Common::SetVarMod(str,Variable::X,SampleGroup::isData);
+    }
+    else if (str.find("x_var_bkgd=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"x_var_bkgd=");
+      Common::SetVarMod(str,Variable::X,SampleGroup::isBkgd);
+    }
+    else if (str.find("x_var_sign=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"x_var_sign=");
+      Common::SetVarMod(str,Variable::X,SampleGroup::isSignal);
     }
     else if (str.find("x_bins=") != std::string::npos)
     {
@@ -318,7 +343,23 @@ void TreePlotter2D::SetupPlotConfig()
     }
     else if (str.find("y_var=") != std::string::npos)
     {
-      fYVar = Common::RemoveDelim(str,"y_var=");
+      str = Common::RemoveDelim(str,"y_var=");
+      Common::SetVar(str,Variable::Y);
+    }    
+    else if (str.find("y_var_data=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"y_var_data=");
+      Common::SetVarMod(str,Variable::Y,SampleGroup::isData);
+    }
+    else if (str.find("y_var_bkgd=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"y_var_bkgd=");
+      Common::SetVarMod(str,Variable::Y,SampleGroup::isBkgd);
+    }
+    else if (str.find("y_var_sign=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"y_var_sign=");
+      Common::SetVarMod(str,Variable::Y,SampleGroup::isSignal);
     }
     else if (str.find("y_bins=") != std::string::npos)
     {
@@ -348,11 +389,11 @@ void TreePlotter2D::SetupPlotConfig()
   }
 }
 
-void TreePlotter2D::SetupMiscConfig()
+void TreePlotter2D::SetupMiscConfig(const TString & miscconfig)
 {
   std::cout << "Reading miscellaneous plot config..." << std::endl;
 
-  std::ifstream infile(Form("%s",fMiscConfig.Data()),std::ios::in);
+  std::ifstream infile(Form("%s",miscconfig.Data()),std::ios::in);
   std::string str;
   while (std::getline(infile,str))
   {

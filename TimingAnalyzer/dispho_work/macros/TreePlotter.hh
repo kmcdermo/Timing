@@ -95,7 +95,6 @@ protected:
   TString fTitle;
   TString fXTitle;
   Bool_t  fIsLogX;
-  TString fXVar;
   std::vector<Double_t> fXBins;
   Bool_t fXVarBins;
   std::vector<TString> fXLabels;

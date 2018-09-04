@@ -185,7 +185,7 @@ void Fitter::GetInputHists()
       const auto & group  = GroupPair.second;
 
       // only load signals!
-      if (group != isSignal) continue;
+      if (group != SampleGroup::isSignal) continue;
 
       // load signals
       fHistMap2D[sample] = (TH2F*)fSRFile->Get(Form("%s",Common::HistNameMap[sample].Data()));
@@ -642,7 +642,7 @@ void Fitter::DeclareCoefficients()
     const auto & group  = GroupPair.second;
     
     // only load signals!
-    if (group != isSignal) continue;
+    if (group != SampleGroup::isSignal) continue;
 
     // total predicted for each signal (float)
     fNTotalSignMap[sample] = fHistMap2D[sample]->Integral();
@@ -1069,7 +1069,7 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
     const auto & group  = GroupPair.second;
     
     // only load signals!
-    if (group != isSignal) continue;
+    if (group != SampleGroup::isSignal) continue;
   
     const TString signname = Form("%s_PDF_%s",sample.Data(),fitInfo.Text.Data());
     fitInfo.HistPdfMap[sample]->SetName(Form("%s",signname.Data()));
@@ -1093,7 +1093,7 @@ void Fitter::ImportToWS(FitInfo & fitInfo)
     const auto & group  = GroupPair.second;
     
     // only load signals!
-    if (group != isSignal) continue;
+    if (group != SampleGroup::isSignal) continue;
   
     workspace->import(*fitInfo.HistPdfMap[sample]);
     workspace->import(*fNPredSignMap[sample]);
@@ -1510,7 +1510,7 @@ void Fitter::SetupOutTree()
 Bool_t Fitter::IsData(const TString & sample)
 {
   if   (Common::IsEWK(sample)) return false;
-  else                         return (Common::GroupMap[sample] == isData);
+  else                         return (Common::GroupMap[sample] == SampleGroup::isData);
 }
 
 TString Fitter::GetHistName(const TString & sample)

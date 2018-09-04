@@ -97,7 +97,7 @@ void TreePlotter::MakeHistFromTrees(TFile *& inFile, TFile *& inSignalFile)
     std::cout << "Working on tree: " << treename.Data() << std::endl;
 	
     // Get infile
-    auto & infile = ((Common::GroupMap[sample] != isSignal) ? inFile : inSignalFile);
+    auto & infile = ((Common::GroupMap[sample] != SampleGroup::isSignal) ? inFile : inSignalFile);
     infile->cd();
 
     // Get TTree
@@ -112,7 +112,7 @@ void TreePlotter::MakeHistFromTrees(TFile *& inFile, TFile *& inSignalFile)
       auto & hist = HistMap[sample];
       hist->SetDirectory(infile);
 
-      intree->Draw(Form("%s>>%s",fXVar.Data(),hist->GetName()),Form("%s",Common::CutWgtMap[sample].Data()),"goff");
+      intree->Draw(Form("%s>>%s",Common::XVarMap[sample].Data(),hist->GetName()),Form("%s",Common::CutWgtMap[sample].Data()),"goff");
 
       // delete tree;
       delete intree;
@@ -191,7 +191,7 @@ void TreePlotter::MakeBkgdOutput()
     const auto & sample = HistPair.first;
     const auto & hist = HistPair.second;
 
-    if (Common::GroupMap[sample] == isBkgd)
+    if (Common::GroupMap[sample] == SampleGroup::isBkgd)
     {
       // add all MC bkgds for bkgd hist 
       BkgdHist->Add(hist);
@@ -222,7 +222,7 @@ void TreePlotter::MakeBkgdOutput()
   std::vector<TString> StackOrder;
   for (const auto & GroupPair : Common::GroupMap)
   {
-    if (GroupPair.second == isBkgd)
+    if (GroupPair.second == SampleGroup::isBkgd)
     {
       StackOrder.push_back(GroupPair.first);
     }
@@ -243,7 +243,7 @@ void TreePlotter::MakeBkgdOutput()
     const auto & sample = HistPair.first;
     auto & hist = HistPair.second;
 
-    if (Common::GroupMap[sample] == isBkgd)
+    if (Common::GroupMap[sample] == SampleGroup::isBkgd)
     {
       fOutFile->cd();
       hist->Write(Form("%s_Plotted",hist->GetName()),TObject::kWriteDelete);
@@ -270,7 +270,7 @@ void TreePlotter::MakeSignalOutput()
     const auto & sample = HistPair.first;
     auto & hist = HistPair.second;
 
-    if (Common::GroupMap[sample] == isSignal)
+    if (Common::GroupMap[sample] == SampleGroup::isSignal)
     {
       if (fScaleToUnity) hist->Scale(1.f/hist->Integral(fXVarBins?"width":""));
 
@@ -380,7 +380,7 @@ void TreePlotter::MakeLegend()
     const auto & hist   = HistPair.second;
 
     // only do background
-    if (Common::GroupMap[sample] != isBkgd) continue;
+    if (Common::GroupMap[sample] != SampleGroup::isBkgd) continue;
 
     if (!fSignalsOnly) Legend->AddEntry(hist,Common::LabelMap[sample].Data(),"f");
   }
@@ -600,7 +600,7 @@ TString TreePlotter::DumpIntegrals(const TString & outfiletext)
     const auto & sample = HistPair.first;
     const auto & hist = HistPair.second;
 
-    if (Common::GroupMap[sample] == isSignal)
+    if (Common::GroupMap[sample] == SampleGroup::isSignal)
     {
       auto sign_err = 0.;
       const auto sign_int = hist->IntegralAndError(1,hist->GetXaxis()->GetNbins(),sign_err,(fXVarBins?"width":""));
@@ -615,7 +615,7 @@ TString TreePlotter::DumpIntegrals(const TString & outfiletext)
     const auto & sample = HistPair.first;
     const auto & hist = HistPair.second;
 
-    if (Common::GroupMap[sample] == isBkgd)
+    if (Common::GroupMap[sample] == SampleGroup::isBkgd)
     {
       auto bkgd_err = 0.0;
       const auto bkgd_int = hist->IntegralAndError(1,hist->GetXaxis()->GetNbins(),bkgd_err,(fXVarBins?"width":""));
@@ -687,7 +687,7 @@ void TreePlotter::ScaleMCToUnity()
     const auto & sample = HistPair.first;
     auto & hist = HistPair.second;
 
-    if (Common::GroupMap[sample] == isBkgd)
+    if (Common::GroupMap[sample] == SampleGroup::isBkgd)
     {
       hist->Scale(1.f/mctotal);
     }
@@ -709,7 +709,7 @@ void TreePlotter::ScaleMCToData()
     const auto & sample = HistPair.first;
     auto & hist = HistPair.second;
 
-    if (Common::GroupMap[sample] == isBkgd)
+    if (Common::GroupMap[sample] == SampleGroup::isBkgd)
     {
       hist->Scale(sf);
     }
@@ -731,10 +731,10 @@ void TreePlotter::GetHistMinimum()
     const auto & hist = HistPair.second;
 
     // skip data and check afterwards
-    if (Common::GroupMap[sample] == isData) continue;
+    if (Common::GroupMap[sample] == SampleGroup::isData) continue;
 
     // skip samples not plotted
-    if (Common::GroupMap[sample] == isSignal)
+    if (Common::GroupMap[sample] == SampleGroup::isSignal)
     {
       if (std::find(fPlotSignalVec.begin(),fPlotSignalVec.end(),sample) == fPlotSignalVec.end()) continue;
     }
@@ -841,7 +841,23 @@ void TreePlotter::SetupPlotConfig(const TString & plotconfig)
     }
     else if (str.find("x_var=") != std::string::npos)
     {
-      fXVar = Common::RemoveDelim(str,"x_var=");
+      str = Common::RemoveDelim(str,"x_var=");
+      Common::SetVar(str,Variable::X);
+    }
+    else if (str.find("x_var_data=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"x_var_data=");
+      Common::SetVarMod(str,Variable::X,SampleGroup::isData);
+    }
+    else if (str.find("x_var_bkgd=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"x_var_bkgd=");
+      Common::SetVarMod(str,Variable::X,SampleGroup::isBkgd);
+    }
+    else if (str.find("x_var_sign=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"x_var_sign=");
+      Common::SetVarMod(str,Variable::X,SampleGroup::isSignal);
     }
     else if (str.find("x_bins=") != std::string::npos)
     {
@@ -944,12 +960,12 @@ void TreePlotter::SetupHistsStyle()
     
     hist->SetLineColor(Common::ColorMap[sample]);
     hist->SetMarkerColor(Common::ColorMap[sample]);
-    if (Common::GroupMap[sample] == isBkgd)
+    if (Common::GroupMap[sample] == SampleGroup::isBkgd)
     {
       hist->SetFillColor(Common::ColorMap[sample]);
       hist->SetFillStyle(1001);
     }
-    else if (Common::GroupMap[sample] == isSignal)
+    else if (Common::GroupMap[sample] == SampleGroup::isSignal)
     {
       hist->SetLineWidth(2);
     }
