@@ -27,7 +27,10 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
     // first get the file
     const TString infilename = Form("%s/%s",indir.Data(),infile.Data());
     auto file = TFile::Open(infilename.Data());
-    Common::CheckValidFile(file,infilename);
+    const Bool_t isFile = Common::CheckValidFile(file,infilename);
+    
+    if (!isFile) continue;
+    
     file->cd();
     
     // get input hists + add it up

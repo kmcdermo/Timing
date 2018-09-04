@@ -232,7 +232,7 @@ namespace Common
   void Scale(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins, const Bool_t isUp);
 
   // Check inputs
-  void CheckValidFile(const TFile * file, const TString & fname);
+  Bool_t CheckValidFile(const TFile * file, const TString & fname);
   void CheckValidTree(const TTree * tree, const TString & tname, const TString & fname);
   template <typename T>
   void CheckValidHist(const T * plot, const TString & pname, const TString & fname)
