@@ -20,6 +20,8 @@ namespace Common
   std::map<TString,ColorStruct> SignalSubGroupColorMap;
   std::map<TString,Color_t> ColorMap;
   std::map<TString,TString> LabelMap;
+  std::map<TString,TString> XVarMap;
+  std::map<TString,TString> YVarMap;
   std::map<TString,TString> CutWgtMap;
   std::map<TString,TString> VarWgtMap;
   std::vector<std::pair<TString,TString> > CutFlowPairVec;
