@@ -34,11 +34,13 @@ namespace Common
   void SetupEras()
   {
     // https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmV2017Analysis
-    Common::EraMap["2017B"] = {297020,299329,4.79f};
-    Common::EraMap["2017C"] = {299337,302029,9.63f};
-    Common::EraMap["2017D"] = {302030,303434,4.23f};
-    Common::EraMap["2017E"] = {303435,304826,9.32f};
-    Common::EraMap["2017F"] = {304911,306462,13.54f};
+    Common::EraMap["2017B"] = {297020,299329,4.794f}; // 4.794
+    Common::EraMap["2017C"] = {299337,302029,9.633f}; // 9.633
+    Common::EraMap["2017D"] = {302030,303434,4.228f}; // 4.228
+    Common::EraMap["2017E"] = {303435,304826,9.315f}; // 9.315
+    Common::EraMap["2017F"] = {304911,306462,13.54f}; // 13.540
+
+    Common::EraMap["Full"] = {Common::EraMap["2017B"].startRun,Common::EraMap["2017F"].endRun,41.53f}; // for some idiotic reason, sum of above is 41.51
   }
 
   void SetupSamples()
@@ -593,7 +595,7 @@ namespace Common
   {
     // get era info
     const auto & erainfo = Common::EraMap[era];
-    const auto frac = erainfo.lumi / Common::lumi;
+    const auto frac = erainfo.lumi / Common::EraMap["Full"];
 
     // multiply cut string by fractional lumi
     for (auto & CutWgtPair : Common::CutWgtMap)
@@ -907,6 +909,12 @@ namespace Common
     }
   }
 
+  void AddEraInfoToPave(TPaveText *& outpave,const TString & era)
+  {
+    const auto & erainfo = Common::EraMap[era];
+    outpave->AddText(Form("Era: %s, Runs: %i-%i, Lumi: %5.2f /fb",fEra.Data(),erainfo.startRun,erainfo.endRun,erainfo.lumi));
+  }
+
   void AddTextFromInputConfig(TPaveText *& outpave, const TString & label, const TString & configname)
   {
     outpave->AddText(Form("%s: %s",label.Data(),configname.Data()));
@@ -1064,7 +1072,7 @@ namespace Common
     }
   }
 
-  void CMSLumi(TCanvas * canv, const Int_t iPosX, const Float_t lumi)
+  void CMSLumi(TCanvas * canv, const Int_t iPosX, const TString & era)
   {
     const TString  cmsText     = "CMS";
     const Double_t cmsTextFont = 61;  // default is helvetic-bold
@@ -1073,7 +1081,9 @@ namespace Common
     const Bool_t   writeExtraText  = !(Common::extraText.EqualTo("",TString::kExact));
     const Double_t extraTextFont   = 52;  // default is helvetica-italics
 
-    const TString lumiText = Form("%5.2f fb^{-1} (13 TeV)",lumi);
+    const TString writeLumiText = !(Common::extraText.EqualTo("Simulation",TString::kExact));
+    TString lumiText = "(13 TeV)";
+    if (writeLumiText) lumiText.Prepend(Form("%5.2f fb^{-1} ",Common::EraMap[era].lumi));
   
     // text sizes and text offsets with respect to the top frame
     // in unit of the top margin size

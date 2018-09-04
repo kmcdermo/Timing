@@ -64,10 +64,9 @@ public:
   ~TimeFitter();
 
   // config
-  void SetupConfig();
+  void SetupCommon();
   void SetupPlotConfig();
   void SetupTimeFitConfig();
-  void SetupLumi();
 
   // main calls
   void MakeTimeFits();
@@ -116,7 +115,6 @@ private:
   // output
   TFile * fOutFile;
   TPaveText * fConfigPave;
-  Float_t fLumi;
 };
 
 #endif

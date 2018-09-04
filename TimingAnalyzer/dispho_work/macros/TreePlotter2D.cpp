@@ -2,10 +2,10 @@
 
 TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
 			     const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
-			     const TString & outfiletext) 
+			     const TString & era, const TString & outfiletext) 
   : fInFileName(infilename), fInSignalFileName(insignalfilename), fCutConfig(cutconfig),
     fVarWgtMapConfig(varwgtmapconfig), fPlotConfig(plotconfig), fMiscConfig(miscconfig), 
-    fOutFileText(outfiletext)
+    fEra(era), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -29,7 +29,7 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insigna
 
   // setup hists
   TreePlotter2D::SetupDefaults();
-  TreePlotter2D::SetupConfig();
+  TreePlotter2D::SetupCommon();
   TreePlotter2D::SetupPlotConfig(fPlotConfig);
   TreePlotter2D::SetupMiscConfig(fMiscConfig);
   TreePlotter2D::SetupHists();
@@ -276,18 +276,21 @@ void TreePlotter2D::SetupDefaults()
   fBlindData = false;
 }
 
-void TreePlotter2D::SetupConfig()
+void TreePlotter2D::SetupCommon()
 {
-  std::cout << "Setting up Config..." << std::endl;
+  std::cout << "Setting up Common..." << std::endl;
 
+  Common::SetupEras();
   Common::SetupSamples();
   Common::SetupSignalSamples();
   Common::SetupGroups();
   Common::SetupTreeNames();
   Common::SetupHistNames();
   Common::SetupCuts(fCutConfig);
+  Common::SetupEraCuts(fEra);
   Common::SetupVarWgts(fVarWgtMapConfig);
   Common::SetupWeights();
+  Common::SetupEraWeights(fEra);
 }
 
 void TreePlotter2D::SetupPlotConfig(const TString & plotconfig)

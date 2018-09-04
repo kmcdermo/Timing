@@ -22,7 +22,7 @@ Fitter::Fitter(const TString & fitconfig, const TString & miscconfig, const TStr
 
   // init configuration, set minimizer
   Fitter::SetupDefaults();
-  Fitter::SetupConfig();
+  Fitter::SetupCommon();
   Fitter::SetupFitConfig();
   Fitter::SetupPlotConfig();
   Fitter::SetupMiscConfig();
@@ -328,7 +328,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
     
     // draw TH2 on canv
     hist2D->Draw("colz");
-    Common::CMSLumi(canv);
+    Common::CMSLumi(canv,10,fEra);
     Common::SaveAs(canv,Form("%sHist_2D",text.Data()));
     delete canv;
 
@@ -393,7 +393,7 @@ void Fitter::SaveHist(TH1F *& hist, const TString & text, const Bool_t isLogY)
   hist->Draw("ep");
   
   // save it
-  Common::CMSLumi(canv);
+  Common::CMSLumi(canv,10,fEra);
   Common::SaveAs(canv,text+"_"+(isLogY?"log":"lin"));
 
   delete canv;
@@ -449,7 +449,7 @@ void Fitter::DumpSignificance(TH2F *& bkgdHist2D)
   
     // draw TH2 on canv
     hist2D->Draw("colz");
-    Common::CMSLumi(canv);
+    Common::CMSLumi(canv,10,fEra);
     Common::SaveAs(canv,Form("%s_2D",hist2D->GetName()));
 
     // delete it
@@ -585,7 +585,7 @@ void Fitter::DrawSignificance1D(std::vector<TH1F*> & hists1D, const TString & pr
 
   // draw it all
   leg->Draw("same");
-  Common::CMSLumi(canv);
+  Common::CMSLumi(canv,10,fEra);
   Common::SaveAs(canv,"Significance_proj"+proj+"_"+(isLogY?"log":"lin"));
   
   delete leg;
@@ -996,14 +996,14 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   modelHist->SetMinimum(min/1.05);
   modelHist->SetMaximum(max*1.05);
   canv->SetLogy(false);
-  Common::CMSLumi(canv);
+  Common::CMSLumi(canv,10,fEra);
   Common::SaveAs(canv,Form("%s_%s_lin",title.Data(),fitInfo.Text.Data()));
 
   // make the range nice and save (LOG)
   modelHist->SetMinimum(min/1.5);
   modelHist->SetMaximum(max*1.5);
   canv->SetLogy(true);
-  Common::CMSLumi(canv);
+  Common::CMSLumi(canv,10,fEra);
   Common::SaveAs(canv,Form("%s_%s_log",title.Data(),fitInfo.Text.Data()));
 
   // delete the rest
@@ -1215,6 +1215,9 @@ void Fitter::MakeConfigPave()
   // give grand title
   fConfigPave->AddText("***** Fitter Config *****");
 
+    // Add era info
+  Common::AddEraInfoToPave(fConfigPave,fEra);
+
   // fit config
   Common::AddTextFromInputConfig(fConfigPave,"Fit Config",fFitConfig);
 
@@ -1264,10 +1267,11 @@ void Fitter::SetupDefaults()
   fBlindData = false;
 }
 
-void Fitter::SetupConfig()
+void Fitter::SetupCommon()
 {
-  std::cout << "Setting up config..." << std::endl;
+  std::cout << "Setting up Common..." << std::endl;
 
+  Common::SetupEras();
   Common::SetupSamples();
   Common::SetupSignalSamples();
   Common::SetupGroups();
@@ -1300,6 +1304,10 @@ void Fitter::SetupFitConfig()
     else if (str.find("plot_config=") != std::string::npos)
     {
       fPlotConfig = Common::RemoveDelim(str,"plot_config=");
+    }
+    else if (str.find("era=") != std::string::npos)
+    {
+      fEra = Common::RemoveDelim(str,"era=");
     }
     else if (str.find("bkgd_only=") != std::string::npos)
     {

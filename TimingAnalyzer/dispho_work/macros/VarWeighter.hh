@@ -29,7 +29,7 @@ public:
 
   // Initialize
   void SetupVarWgtConfig();
-  void SetupConfig();
+  void SetupCommon();
 
   // Main call
   void MakeVarWeights();

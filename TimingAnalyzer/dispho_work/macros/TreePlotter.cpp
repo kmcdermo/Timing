@@ -2,10 +2,10 @@
 
 TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
 			 const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
-			 const TString & outfiletext) 
+			 const TString & era, const TString & outfiletext) 
   : fInFileName(infilename), fInSignalFileName(insignalfilename), fCutConfig(cutconfig),
     fVarWgtMapConfig(varwgtmapconfig), fPlotConfig(plotconfig), fMiscConfig(miscconfig),
-    fOutFileText(outfiletext)
+    fEra(era), fOutFileText(outfiletext)
 {
   std::cout << "Initializing TreePlotter..." << std::endl;
 
@@ -32,7 +32,7 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
 
   // setup config
   TreePlotter::SetupDefaults();
-  TreePlotter::SetupConfig();
+  TreePlotter::SetupCommon();
   TreePlotter::SetupMiscConfig(fMiscConfig);
   if (fSignalsOnly) Common::KeepOnlySignals();
   TreePlotter::SetupPlotConfig(fPlotConfig);
@@ -72,7 +72,7 @@ void TreePlotter::MakeTreePlot()
   TreePlotter::DrawLowerPad();
 
   // Save Output
-  TreePlotter::SaveOutput(fOutFileText);
+  TreePlotter::SaveOutput(fOutFileText,fEra);
 
   // Write Out Config
   TreePlotter::MakeConfigPave();
@@ -497,13 +497,13 @@ void TreePlotter::DrawLowerPad()
   }
 }
 
-void TreePlotter::SaveOutput(const TString & outfiletext, const Float_t lumi)
+void TreePlotter::SaveOutput(const TString & outfiletext, const TString & era)
 {
   std::cout << "Saving hist as images..." << std::endl;
 
   // Go back to the main canvas before saving and write out lumi info
   OutCanv->cd();
-  Common::CMSLumi(OutCanv,0,lumi);
+  Common::CMSLumi(OutCanv,0,era);
 
   // Save a log version first
   TreePlotter::PrintCanvas(outfiletext,true);
@@ -553,6 +553,9 @@ void TreePlotter::MakeConfigPave()
 
   // give grand title
   fConfigPave->AddText("***** TreePlotter Config *****");
+
+  // Add era info
+  Common::AddEraInfoToPave(fConfigPave,fEra);
 
   // dump plot cut config first
   Common::AddTextFromInputConfig(fConfigPave,"TreePlotter Cut Config",fCutConfig);
@@ -799,10 +802,11 @@ void TreePlotter::SetupDefaults()
   fSignalsOnly = false;
 }
 
-void TreePlotter::SetupConfig()
+void TreePlotter::SetupCommon()
 {
-  std::cout << "Setting up Config..." << std::endl;
+  std::cout << "Setting up Common..." << std::endl;
 
+  Common::SetEras();
   Common::SetupSamples();
   Common::SetupSignalSamples();
   Common::SetupGroups();
@@ -814,8 +818,10 @@ void TreePlotter::SetupConfig()
   Common::SetupColors();
   Common::SetupLabels();
   Common::SetupCuts(fCutConfig);
+  Common::SetupEraCuts(fEra);
   Common::SetupVarWgts(fVarWgtMapConfig);
   Common::SetupWeights();
+  Common::SetupEraWeights(fEra);
 }
 
 void TreePlotter::SetupPlotConfig(const TString & plotconfig)

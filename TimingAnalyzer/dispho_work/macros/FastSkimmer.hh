@@ -27,7 +27,7 @@ public:
   ~FastSkimmer();
 
   // Initialize
-  void SetupConfig();
+  void SetupCommon();
   void SetupLists();
 
   // Main call

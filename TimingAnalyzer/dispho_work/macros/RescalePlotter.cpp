@@ -1,9 +1,9 @@
 #include "RescalePlotter.hh"
 
 RescalePlotter::RescalePlotter(const TString & infilename, const TString & rescaleconfig, const TString & plotconfig,
-			       const TString & miscconfig, const TString & outfiletext) 
+			       const TString & miscconfig, const TString & era, const TString & outfiletext) 
   : fInFileName(infilename), fRescaleConfig(rescaleconfig), fPlotConfig(plotconfig),
-    fMiscConfig(miscconfig), fOutFileText(outfiletext)
+    fMiscConfig(miscconfig), fEra(era), fOutFileText(outfiletext)
 {
   std::cout << "Initializing RescalePlotter..." << std::endl;
 
@@ -26,7 +26,7 @@ RescalePlotter::RescalePlotter(const TString & infilename, const TString & resca
 
   // setup config
   TreePlotter::SetupDefaults();
-  RescalePlotter::SetupConfig();
+  RescalePlotter::SetupCommon();
   TreePlotter::SetupMiscConfig(fMiscConfig);
   if (TreePlotter::fSignalsOnly) Common::KeepOnlySignals();
   RescalePlotter::SetupRescaleConfig();
@@ -67,7 +67,7 @@ void RescalePlotter::MakeRescaledPlot()
   TreePlotter::DrawLowerPad();
 
   // Save Output
-  TreePlotter::SaveOutput(fOutFileText);
+  TreePlotter::SaveOutput(fOutFileText,fEra);
 
   // Write Out Config
   RescalePlotter::MakeConfigPave();
@@ -126,6 +126,9 @@ void RescalePlotter::MakeConfigPave()
   // give grand title
   TreePlotter::fConfigPave->AddText("***** RescalePlotter Config *****");
 
+  // add era info
+  Common::AddEraInfoToPave(TreePlotter::fConfigPave,fEra);
+
   // dump rescale config first
   Common::AddTextFromInputConfig(TreePlotter::fConfigPave,"Rescale Config",fRescaleConfig); 
 
@@ -155,10 +158,11 @@ void RescalePlotter::DeleteMemory()
   delete fInFile;
 }
 
-void RescalePlotter::SetupConfig()
+void RescalePlotter::SetupCommon()
 {
-  std::cout << "Setting up Config..." << std::endl;
+  std::cout << "Setting up Common..." << std::endl;
 
+  Common::SetupEras();
   Common::SetupSamples();
   Common::SetupSignalSamples();
   Common::SetupGroups();

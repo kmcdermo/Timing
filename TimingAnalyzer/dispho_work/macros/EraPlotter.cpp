@@ -13,7 +13,7 @@ EraPlotter::EraPlotter(const TString & eraplotconfig, const TString & plotconfig
 
   // setup config
   EraPlotter::SetupDefaults();
-  EraPlotter::SetupConfig();
+  EraPlotter::SetupCommon();
   EraPlotter::SetupEraPlotConfig();
   EraPlotter::SetupPlotConfig();
 
@@ -413,10 +413,11 @@ void EraPlotter::GetHistMaximum()
   if (bkgdmax > fMaxY) fMaxY = bkgdmax;
 }
 
-void EraPlotter::SetupConfig()
+void EraPlotter::SetupCommon()
 {
-  std::cout << "Setting up Config..." << std::endl;
+  std::cout << "Setting up Common..." << std::endl;
 
+  Common::SetupEras();
   Common::SetupSamples();
   Common::SetupGroups();
   Common::SetupHistNames();

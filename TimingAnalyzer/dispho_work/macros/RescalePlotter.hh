@@ -8,11 +8,11 @@ class RescalePlotter : TreePlotter
 {
 public:
   RescalePlotter(const TString & infilename, const TString & rescaleconfig, const TString & plotconfig,
-		 const TString & miscconfig, const TString & outfiletext);
+		 const TString & miscconfig, const TString & era, const TString & outfiletext);
   ~RescalePlotter() {}
 
   // setup functions
-  void SetupConfig();
+  void SetupCommon();
   void SetupRescaleConfig();
   void SetupHists();
   
@@ -27,6 +27,7 @@ private:
   const TString fRescaleConfig;
   const TString fPlotConfig;
   const TString fMiscConfig;
+  const TString fEra;
   const TString fOutFileText;
 
   // input hist file

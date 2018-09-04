@@ -25,7 +25,7 @@ public:
   ~SignalSkimmer();
 
   // Initialize
-  void SetupConfig();
+  void SetupCommon();
 
   // Main call
   void MakeSkims();

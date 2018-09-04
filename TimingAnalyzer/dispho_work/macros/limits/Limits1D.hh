@@ -13,10 +13,11 @@
 class Limits1D
 {
 public:
-  Limits1D(const TString & indir, const TString & infilename, const Bool_t doobserved, const TString & outtext);
+  Limits1D(const TString & indir, const TString & infilename, const Bool_t doobserved, const TString & era, const TString & outtext);
   ~Limits1D();
 
   // setup functions
+  void SetupCommon();
   void SetupCombine();
 
   // main plotting routine
@@ -26,6 +27,7 @@ private:
   const TString fInDir;
   const TString fInFileName;
   const Bool_t fDoObserved;
+  const TString fEra;
   const TString fOutText;
 
   // style

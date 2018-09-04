@@ -72,7 +72,7 @@ public:
 
   // Initialize
   void SetupDefaults();
-  void SetupConfig();
+  void SetupCommon();
   void SetupFitConfig();
   void SetupPlotConfig();
   void SetupMiscConfig();
@@ -146,6 +146,7 @@ private:
   const TString fOutFileText;
   const TString fMiscConfig;
   TString fPlotConfig;
+  TString fEra;
 
   // Bools+Values
   Bool_t fBkgdOnly;

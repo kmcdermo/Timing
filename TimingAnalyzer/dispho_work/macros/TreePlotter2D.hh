@@ -29,12 +29,12 @@ public:
   TreePlotter2D() {}
   TreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
 		const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
-		const TString & outfiletext);
+		const TString & era, const TString & outfiletext);
   ~TreePlotter2D() {}  
 
   // Initialize
   void SetupDefaults();
-  void SetupConfig();
+  void SetupCommon();
   void SetupPlotConfig(const TString & plotconfig);
   void SetupMiscConfig(const TString & miscconfig);
   void SetupHists();
@@ -63,6 +63,7 @@ private:
   const TString fVarWgtMapConfig;
   const TString fPlotConfig;
   const TString fMiscConfig;
+  const TString fEra;
   const TString fOutFileText;
 
   // input

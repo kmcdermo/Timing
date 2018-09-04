@@ -26,10 +26,9 @@ TimeFitter::TimeFitter(const TString & infilename, const TString & plotconfig, c
   fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
 
   // setup config
-  TimeFitter::SetupConfig();
+  TimeFitter::SetupCommon();
   TimeFitter::SetupPlotConfig();
   TimeFitter::SetupTimeFitConfig();
-  TimeFitter::SetupLumi();
 
   // set fitter
   TVirtualFitter::SetDefaultFitter("Minuit2");
@@ -259,7 +258,7 @@ void TimeFitter::PrintCanvas(TH1F *& DataHist, TH1F *& BkgdHist, Float_t min, Fl
   leg->Draw("same");
   
   // pretty up
-  Common::CMSLumi(canv,0,fLumi);
+  Common::CMSLumi(canv,0,fEra);
 
   // save output if lin
   if (!isLogy)
@@ -395,6 +394,9 @@ void TimeFitter::MakeConfigPave()
   // give grand title
   fConfigPave->AddText("***** TimeFitter Config *****");
 
+  // add era info
+  Common::AddEraInfoToPave(fConfigPave,fEra);
+
   // dump time fit config
   Common::AddTextFromInputConfig(fConfigPave,"TimeFit Config",fTimeFitConfig);
 
@@ -415,9 +417,9 @@ void TimeFitter::MakeConfigPave()
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
-void TimeFitter::SetupConfig() 
+void TimeFitter::SetupCommon() 
 {
-  std::cout << "Setting config..." << std::endl;
+  std::cout << "Setting up Common..." << std::endl;
 
   Common::SetupEras();
   Common::SetupSamples();
@@ -492,20 +494,6 @@ void TimeFitter::SetupTimeFitConfig()
       std::cerr << "Offending line: " << str.c_str() << std::endl;
       exit(1);
     }
-  }
-}
-
-void TimeFitter::SetupLumi()
-{
-  std::cout << "Setting up lumi..." << std::endl;
-  
-  if (fEra.Contains("2017",TString::kExact))
-  {
-    fLumi = Common::EraMap[fEra].lumi;
-  }
-  else
-  {
-    fLumi = Common::lumi;
   }
 }
 

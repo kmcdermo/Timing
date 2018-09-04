@@ -35,12 +35,12 @@ public:
   TreePlotter() {}
   TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
 	      const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
-	      const TString & outfiletext);
+	      const TString & era, const TString & outfiletext);
   ~TreePlotter() {}
 
   // Initialize
   void SetupDefaults();
-  void SetupConfig();
+  void SetupCommon();
   void SetupPlotConfig(const TString & plotconfig);
   void SetupMiscConfig(const TString & miscconfig);
   void SetupHists();
@@ -59,7 +59,7 @@ public:
   void InitOutputCanvPads();
   void DrawUpperPad();
   void DrawLowerPad();
-  void SaveOutput(const TString & outfiletext, const Float_t lumi = Common::lumi);
+  void SaveOutput(const TString & outfiletext, const TString & era);
 
   // Helper functions
   TH1F * SetupHist(const TString & name);
@@ -84,6 +84,7 @@ private:
   const TString fVarWgtMapConfig;
   const TString fPlotConfig;
   const TString fMiscConfig;
+  const TString fEra;
   const TString fOutFileText;
 
   // input

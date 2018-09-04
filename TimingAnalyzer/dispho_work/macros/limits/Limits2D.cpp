@@ -1,11 +1,12 @@
 #include "Limits2D.hh"
 
-Limits2D::Limits2D(const TString & indir, const TString & infilename, const TString & limitconfig, const TString & outtext)
-  : fInDir(indir), fInFileName(infilename), fLimitConfig(limitconfig), fOutText(outtext)
+Limits2D::Limits2D(const TString & indir, const TString & infilename, const TString & limitconfig, const TString & era, const TString & outtext)
+  : fInDir(indir), fInFileName(infilename), fLimitConfig(limitconfig), fEra(era), fOutText(outtext)
 {  
   // setup common first
   Limits2D::SetupDefaults();
   Limits2D::SetupLimitConfig();
+  Limits2D::SetupCommon();
   Limits2D::SetupCombine();
 
   // set style
@@ -381,7 +382,7 @@ void Limits2D::DrawLimits()
   leg->Draw("same");
 
   // cms style
-  Common::CMSLumi(canv,0);
+  Common::CMSLumi(canv,0,fEra);
   
   // save it!
   Common::SaveAs(canv,Form("%s_GMSB",fOutText.Data()));
@@ -503,6 +504,13 @@ void Limits2D::SetupLimitConfig()
       exit(1);
     }
   }
+}
+
+void Limits2D::SetupCombine()
+{
+  std::cout << "Setup Common Config..." << std::endl;
+
+  Common::SetupEras();
 }
 
 void Limits2D::SetupCombine()

@@ -14,7 +14,7 @@ FastSkimmer::FastSkimmer(const TString & cutflowconfig, const TString & pdname, 
   ////////////////
 
   // setup samples and such
-  FastSkimmer::SetupConfig();
+  FastSkimmer::SetupCommon();
   FastSkimmer::SetupLists();
 
   // output root file containing every tree
@@ -294,8 +294,10 @@ void FastSkimmer::MakeConfigPave()
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
-void FastSkimmer::SetupConfig()
+void FastSkimmer::SetupCommon()
 {
+  std::cout << "Setting up Common..." << std::endl;
+
   Common::SetupPrimaryDataset(fPDName);
   Common::SetupSamples();
   if (fSampleConfig != "")
@@ -312,6 +314,8 @@ void FastSkimmer::SetupConfig()
 
 void FastSkimmer::SetupLists()
 {
+  std::cout << "Setting up lists..." << std::endl;
+
   // loop over all subsamples, create new list
   for (const auto & SamplePair : Common::SampleMap)
   {

@@ -4,8 +4,8 @@
 
 void runTreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
 		      const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
-		      const TString & outfilename)
+		      const TString & era, const TString & outfilename)
 {
-  TreePlotter2D plotter(infilename,insignalfilename,cutconfig,varwgtmapconfig,plotconfig,miscconfig,outfilename);
+  TreePlotter2D plotter(infilename,insignalfilename,cutconfig,varwgtmapconfig,plotconfig,miscconfig,era,outfilename);
   plotter.MakeTreePlot2D();
 }

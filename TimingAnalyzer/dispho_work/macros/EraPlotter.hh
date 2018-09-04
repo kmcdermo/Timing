@@ -35,7 +35,7 @@ public:
 
   // Initialize
   void SetupDefaults();
-  void SetupConfig();
+  void SetupCommon();
   void SetupEraPlotConfig();
   void SetupPlotConfig();
   void SetupInFiles();

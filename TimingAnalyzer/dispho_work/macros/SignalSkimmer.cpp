@@ -12,7 +12,7 @@ SignalSkimmer::SignalSkimmer(const TString & cutflowconfig, const TString & outt
   ////////////////
 
   // setup samples and such
-  SignalSkimmer::SetupConfig();
+  SignalSkimmer::SetupCommon();
 
   // output root file containing every tree
   fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
@@ -163,8 +163,10 @@ void SignalSkimmer::MakeConfigPave()
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
-void SignalSkimmer::SetupConfig()
+void SignalSkimmer::SetupCommon()
 {
+  std::cout << "Setting up Common..." << std::endl;
+
   Common::SetupSignalSamples();
   Common::SetupGroups();
   Common::SetupTreeNames();

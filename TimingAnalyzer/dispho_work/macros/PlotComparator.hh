@@ -26,7 +26,7 @@ enum RatioEnum {DIVONLY,RES};
 class PlotComparator
 {
 public:
-  PlotComparator(const TString & compareconfig, const TString & outfiletext);
+  PlotComparator(const TString & compareconfig, const TString & era, const TString & outfiletext);
   ~PlotComparator();
 
   // Initialize
@@ -43,7 +43,7 @@ public:
   void SetupCanvasAndPads();
   void DrawUpperPad();
   void DrawLowerPad();
-  void SaveOutput(const Float_t lumi = Common::lumi);
+  void SaveOutput();
 
   // Helper Functions
   void PrintCanvas(const Bool_t isLogy);
@@ -56,6 +56,7 @@ public:
 private:
   // Settings
   const TString fCompareConfig;
+  const TString fEra;
   const TString fOutFileText;
 
   // Inputs

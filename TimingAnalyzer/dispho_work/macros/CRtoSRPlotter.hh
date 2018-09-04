@@ -28,13 +28,13 @@
 class CRtoSRPlotter
 {
 public:
-  CRtoSRPlotter(const TString & crtosrconfig, const TString & outfiletext);
+  CRtoSRPlotter(const TString & crtosrconfig, const TString & era, const TString & outfiletext);
   ~CRtoSRPlotter();
 
   // Initialize
   void SetupDefaults();
   void SetupCRtoSRConfig();
-  void SetupConfig();
+  void SetupCommon();
 
   // Main call
   void MakeCRtoSRPlot();
@@ -62,6 +62,7 @@ public:
 private:
   // Settings
   const TString fCRtoSRConfig;
+  const TString fEra;
   const TString fOutFileText;
 
   // CRtoSR info

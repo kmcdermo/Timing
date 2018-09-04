@@ -76,7 +76,6 @@ struct ColorStruct
 namespace Common
 {
   // basics
-  constexpr Float_t lumi = 41.53; // CMS lumi : https://hypernews.cern.ch/HyperNews/CMS/get/luminosity/761/1.html
   constexpr Float_t invfbToinvpb = 1000.f; // conversion for the world's dumbest unit
   static const TString extraText = "Preliminary";
 
@@ -266,6 +265,7 @@ namespace Common
   void CheckNegativeBins(std::map<TString,TH2F*> & HistMap);
 
   // saving config info
+  void AddEraInfoToPave(TPaveText *& outpave,const TString & era);
   void AddTextFromInputConfig(TPaveText *& outpave, const TString & label, const TString & configname);
   void AddTextFromInputPave(TPaveText *& outpave, TFile *& infile);
   void AddPaddingToPave(TPaveText *& outpave, const Int_t lines);
@@ -277,7 +277,7 @@ namespace Common
   void SaveAs(TCanvas *& canv, const TString & label);
 
   // ROOT Formatting
-  void CMSLumi(TCanvas * canv, const Int_t iPosX = 10, const Float_t lumi = Common::lumi);
+  void CMSLumi(TCanvas * canv, const Int_t iPosX = 10, const TString & era = "Full");
   void SetTDRStyle(TStyle * tdrStyle);
   
   ///////////////////////////////////////////////////////////

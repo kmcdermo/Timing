@@ -24,7 +24,7 @@ public:
   ~SigEffPlotter();
 
   // Setup
-  void SetupConfig();
+  void SetupCommon();
   void SetupSignalSubGroups();
 
   // Main routines

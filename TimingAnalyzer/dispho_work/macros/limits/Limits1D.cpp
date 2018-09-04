@@ -1,9 +1,10 @@
 #include "Limits1D.hh"
 
 Limits1D::Limits1D(const TString & indir, const TString & infilename, const Bool_t doobserved, const TString & outtext)
-  : fInDir(indir), fInFileName(infilename), fDoObserved(doobserved), fOutText(outtext)
+  : fInDir(indir), fInFileName(infilename), fDoObserved(doobserved), fEra(era), fOutText(outtext)
 {  
   // setup first
+  Limits1D::SetupCommon();
   Limits1D::SetupCombine();
 
   // set style
@@ -117,7 +118,7 @@ void Limits1D::MakeLimits1D()
     leg->Draw("same");
 
     // final touches
-    Common::CMSLumi(canv,0);
+    Common::CMSLumi(canv,0,fEra);
 
     // save it!
     Common::SaveAs(canv,Form("%s_%s",fOutText.Data(),groupname.Data()));
@@ -141,6 +142,13 @@ void Limits1D::MakeLimits1D()
     delete obs_graph;
     delete theo_graph;
   }
+}
+
+void Limits1D::SetupCommon()
+{
+  std::cout << "Setting up Common..." << std::endl;
+
+  Common::SetupEras();
 }
 
 void Limits1D::SetupCombine()

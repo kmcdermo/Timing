@@ -14,7 +14,7 @@ VarWeighter::VarWeighter(const TString & varwgtconfig)
 
   // init configuration
   VarWeighter::SetupVarWgtConfig();
-  VarWeighter::SetupConfig();
+  VarWeighter::SetupCommon();
 }
 
 VarWeighter::~VarWeighter()
@@ -222,9 +222,9 @@ void VarWeighter::SetupVarWgtConfig()
   }
 }
 
-void VarWeighter::SetupConfig()
+void VarWeighter::SetupCommon()
 {
-  std::cout << "Setting up config..." << std::endl;
+  std::cout << "Setting up Common..." << std::endl;
 
   Common::SetupSamples();
   Common::SetupGroups();

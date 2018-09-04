@@ -1,7 +1,7 @@
 #include "SRPlotter.hh"
 
-SRPlotter::SRPlotter(const TString & srplotconfig, const TString & miscconfig, const TString & outfiletext) 
-  : fSRPlotConfig(srplotconfig), fMiscConfig(miscconfig), fOutFileText(outfiletext)
+SRPlotter::SRPlotter(const TString & srplotconfig, const TString & miscconfig, const TString & era, const TString & outfiletext) 
+  : fSRPlotConfig(srplotconfig), fMiscConfig(miscconfig), fEra(era), fOutFileText(outfiletext)
 {
   std::cout << "Initializing SRPlotter..." << std::endl;
 
@@ -13,7 +13,7 @@ SRPlotter::SRPlotter(const TString & srplotconfig, const TString & miscconfig, c
 
   // setup config
   TreePlotter::SetupDefaults();
-  SRPlotter::SetupConfig();
+  SRPlotter::SetupCommon();
   TreePlotter::SetupMiscConfig(fMiscConfig);
   SRPlotter::SetupSRPlotConfig();
   TreePlotter::SetupPlotConfig(fPlotConfig);
@@ -124,7 +124,7 @@ void SRPlotter::CommonPlotter(const TString & outfiletext)
   TreePlotter::DrawLowerPad();
 
   // Save Output
-  TreePlotter::SaveOutput(outfiletext);
+  TreePlotter::SaveOutput(outfiletext,fEra);
 
   // Write Out Config
   SRPlotter::MakeConfigPave();
@@ -157,6 +157,9 @@ void SRPlotter::MakeConfigPave()
 
   // give grand title
   TreePlotter::fConfigPave->AddText("***** SRPlotter Config *****");
+
+  // add era info
+  Common::AddEraInfoToPave(TreePlotter::fConfigPave,fEra);
 
   // dump rescale config first
   Common::AddTextFromInputConfig(TreePlotter::fConfigPave,"SRPlot Config",fSRPlotConfig); 
@@ -269,10 +272,11 @@ void SRPlotter::DeleteInputFiles()
   delete fGJetsFile;
 }
 
-void SRPlotter::SetupConfig()
+void SRPlotter::SetupCommon()
 {
-  std::cout << "Setting up Config..." << std::endl;
+  std::cout << "Setting up Common..." << std::endl;
 
+  Common::SetupEras();
   Common::SetupSamples();
   Common::SetupSignalSamples();
   Common::SetupGroups();

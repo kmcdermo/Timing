@@ -1,7 +1,7 @@
 #include "PlotComparator.hh"
 
-PlotComparator::PlotComparator(const TString & compareconfig, const TString & outfiletext)
-  : fCompareConfig(compareconfig), fOutFileText(outfiletext)
+PlotComparator::PlotComparator(const TString & compareconfig, const TString & era, const TString & outfiletext)
+  : fCompareConfig(compareconfig), fEra(era), fOutFileText(outfiletext)
 {
   std::cout << "Initializing PlotComparator..." << std::endl;
 
@@ -246,13 +246,13 @@ void PlotComparator::DrawLowerPad()
   fRatioHist->Draw("EP SAME");
 }
 
-void PlotComparator::SaveOutput(const Float_t lumi)
+void PlotComparator::SaveOutput()
 {
   std::cout << "Saving hist as images..." << std::endl;
 
   // Go back to the main canvas before saving and write out lumi info
   fOutCanv->cd();
-  Common::CMSLumi(fOutCanv,0,lumi);
+  Common::CMSLumi(fOutCanv,0,fEra);
 
   // Save a log version first
   PlotComparator::PrintCanvas(true);
@@ -299,6 +299,9 @@ void PlotComparator::MakeConfigPave()
 
   // give grand title
   fConfigPave->AddText("***** PlotComparator Config *****");
+
+  // add era info
+  Common::AddEraInfoToPave(fConfigPave,fEra);
 
   // dump compare config first
   Common::AddTextFromInputConfig(fConfigPave,"PlotComparator Config",fCompareConfig);

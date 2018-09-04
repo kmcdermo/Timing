@@ -21,6 +21,9 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   // Set skim type first
   Skimmer::SetSkim();
 
+  // Get era info
+  Common::SetupEras();
+
   // Get input file
   const TString infilename = Form("%s/%s", fInDir.Data(), fFileName.Data());
   fInFile = TFile::Open(infilename.Data());
@@ -1546,7 +1549,7 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
 void Skimmer::GetSampleWeight()
 {
   // include normalization to lumi!!! ( do we need to multiply by * fInConfig.BR)
-  fSampleWeight = (fIsMC ? fInConfig.xsec * fInConfig.filterEff * Common::lumi * Common::invfbToinvpb / fSumWgts : 1.f); 
+  fSampleWeight = (fIsMC ? fInConfig.xsec * fInConfig.filterEff * Common::EraMap["Full"].lumi * Common::invfbToinvpb / fSumWgts : 1.f); 
 }
 
 void Skimmer::GetPUWeights()

@@ -17,7 +17,7 @@ SigEffPlotter::SigEffPlotter(const TString & infilename, const TString & outtext
   fOutFile = TFile::Open(Form("%s.root",fOutText.Data()),"UPDATE");
 
   // setup config
-  SigEffPlotter::SetupConfig();
+  SigEffPlotter::SetupCommon();
   SigEffPlotter::SetupSignalSubGroups();
 }
 
@@ -285,9 +285,9 @@ void SigEffPlotter::GetMinYMaxY()
   }
 }
 
-void SigEffPlotter::SetupConfig()
+void SigEffPlotter::SetupCommon()
 {
-  std::cout << "Setting up Config..." << std::endl;
+  std::cout << "Setting up Common..." << std::endl;
 
   Common::SetupSignalSamples();
 

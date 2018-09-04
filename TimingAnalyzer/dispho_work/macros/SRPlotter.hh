@@ -7,11 +7,11 @@
 class SRPlotter : TreePlotter 
 {
 public:
-  SRPlotter(const TString & srplotconfig, const TString & miscconfig, const TString & outfiletext);
+  SRPlotter(const TString & srplotconfig, const TString & miscconfig, const TString & era, const TString & outfiletext);
   ~SRPlotter() {}
 
   // setup functions
-  void SetupConfig();
+  void SetupCommon();
   void SetupSRPlotConfig();
 
   // main calls!
@@ -39,6 +39,7 @@ public:
 private:
   const TString fSRPlotConfig;
   const TString fMiscConfig;
+  const TString fEra;
   const TString fOutFileText;
 
   // input sr plot config

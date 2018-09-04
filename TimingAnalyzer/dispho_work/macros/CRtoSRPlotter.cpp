@@ -1,8 +1,8 @@
 // Class include
 #include "CRtoSRPlotter.hh"
 
-CRtoSRPlotter::CRtoSRPlotter(const TString & crtosrconfig, const TString & outfiletext)
-  : fCRtoSRConfig(crtosrconfig), fOutFileText(outfiletext)
+CRtoSRPlotter::CRtoSRPlotter(const TString & crtosrconfig, const TString & era, const TString & outfiletext)
+  : fCRtoSRConfig(crtosrconfig), fEra(era), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -19,7 +19,7 @@ CRtoSRPlotter::CRtoSRPlotter(const TString & crtosrconfig, const TString & outfi
   // init configuration
   CRtoSRPlotter::SetupDefaults();
   CRtoSRPlotter::SetupCRtoSRConfig();
-  CRtoSRPlotter::SetupConfig();
+  CRtoSRPlotter::SetupCommon();
 
   // output root file for quick inspection
   fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"RECREATE");
@@ -255,7 +255,7 @@ void CRtoSRPlotter::SaveOutput(const Bool_t isScaled)
 
   // Go back to the main canvas before saving and write out lumi info
   OutCanv->cd();
-  Common::CMSLumi(OutCanv,0);
+  Common::CMSLumi(OutCanv,0,fEra);
 
   // Save a log version first
   CRtoSRPlotter::PrintCanvas(isScaled,true);
@@ -304,6 +304,9 @@ void CRtoSRPlotter::MakeConfigPave()
 
   // give grand title
   fConfigPave->AddText("***** CRtoSRPlotter Config *****");
+
+  // Add era info
+  Common::AddEraInfoToPave(fConfigPave,fEra);
 
   // CR to SR plot config
   Common::AddTextFromInputConfig(fConfigPave,"CRtoSR Config",fCRtoSRConfig);
@@ -376,10 +379,11 @@ void CRtoSRPlotter::SetupCRtoSRConfig()
   }
 }
 
-void CRtoSRPlotter::SetupConfig()
+void CRtoSRPlotter::SetupCommon()
 {
-  std::cout << "Setting up config..." << std::endl;
+  std::cout << "Setting up Common..." << std::endl;
 
+  Common::SetupEras();
   Common::SetupSamples();
   Common::SetupGroups();
   Common::SetupHistNames();

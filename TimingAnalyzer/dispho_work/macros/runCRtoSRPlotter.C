@@ -2,8 +2,8 @@
 #include "Common.cpp+"
 #include "CRtoSRPlotter.cpp+"
 
-void runCRtoSRPlotter(const TString & crtosrconfig, const TString & outfiletext)
+void runCRtoSRPlotter(const TString & crtosrconfig, const TString & era, const TString & outfiletext)
 {
-  CRtoSRPlotter plotter(crtosrconfig,outfiletext);
+  CRtoSRPlotter plotter(crtosrconfig,era,outfiletext);
   plotter.MakeCRtoSRPlot();
 }

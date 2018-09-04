@@ -49,12 +49,13 @@ const auto sortPairs = [](const auto & obj1, const auto & obj2){return obj1.seco
 class Limits2D
 {
 public:
-  Limits2D(const TString & indir, const TString & infilename, const TString & limitconfig, const TString & outtext);
+  Limits2D(const TString & indir, const TString & infilename, const TString & limitconfig, const TString & era, const TString & outtext);
   ~Limits2D();
 
   // setup functions
   void SetupDefaults();
   void SetupLimitConfig();
+  void SetupCommon();
   void SetupCombine();
 
   // main plotting routine
@@ -78,6 +79,7 @@ private:
   const TString fInDir;
   const TString fInFileName;
   const TString fLimitConfig;
+  const TString fEra;
   const TString fOutText;
   
   // config parameters
