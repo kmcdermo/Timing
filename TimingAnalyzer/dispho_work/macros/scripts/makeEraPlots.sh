@@ -14,9 +14,6 @@ outdir=${1:-"plots/ntuples_v4/checks_v4/era_plots"}
 plot=${2:-"met_zoom"}
 usewgts=${3:-"true"}
 
-## eras
-declare -a eras=(2017B 2017C 2017D 2017E 2017F)
-
 ################
 ## Run Script ##
 ################
@@ -58,24 +55,11 @@ do
 	    misc=$(GetMisc ${input} ${plot})
 
 	    ## make plot for each era
-	    ./scripts/runEraTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${era}" "${outdir}/${label}"
+	    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${era}" "${outdir}/${label}"
 
 	    ## record the era in config
 	    echo -n " ${era}" >> "${eraplotconfig}"
 	done
-
-	########################################
-	## Make Full Lumi Plot For Comparison ##
-	########################################
-	
-        ## output filename
-	outfile="${baseoutfile}"
-
-	## determine which misc file to use
-	misc=$(GetMisc ${input} ${plot})
-
-        ## run standard tree plotting script
-	./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}_full_lumi" "${outdir}/${label}"
 
 	##################
 	## Compare Eras ##

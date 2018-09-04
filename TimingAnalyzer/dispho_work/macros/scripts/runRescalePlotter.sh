@@ -8,11 +8,12 @@ infilename=${1:-"${skimdir}/jetphi_0_control_gjets_DoubleEG.root"}
 rescaleconfig=${2:-"${rescaleconfigdir}/qcdMC_to_gjetsMC.${inTextExt}"}
 plotconfig=${3:-"${plotconfigdir}/jetphi_0.${inTextExt}"}
 miscconfig=${4:-"${miscconfigdir}/misc.${inTextExt}"}
-outfiletext=${5:-"rescaled_jetphi_0"}
-dir=${6:-"plots/ntuples_v4/test"}
+era=${5:-"Full"}
+outfiletext=${6:-"rescaled_jetphi_0"}
+dir=${7:-"plots/ntuples_v4/test"}
 
 ## first make plot
-root -l -b -q runRescalePlotter.C\(\"${infilename}\",\"${rescaleconfig}\",\"${plotconfig}\",\"${miscconfig}\",\"${outfiletext}\"\)
+root -l -b -q runRescalePlotter.C\(\"${infilename}\",\"${rescaleconfig}\",\"${plotconfig}\",\"${miscconfig}\",\"${era}\",\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}

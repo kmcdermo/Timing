@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# input
+## source first
+source ./scripts/common_variables.sh
+
+## command line input
 indir=${1:-"compare_input"}
 plot=${2:-"met_zoom"}
 outdir=${3:-"plots/ntuples_v5/checks_v4/era_comp"}
-
-declare -a eras=(2017B 2017C 2017D 2017E 2017F)
 
 for era in "${eras[@]}"
 do
@@ -29,7 +30,7 @@ do
     echo "label_2=Before" >> "${tmp_config}"
 
     # run macro
-    ./scripts/runPlotComparator.sh "${tmp_config}" "${era}_${plot}" "${outdir}"
+    ./scripts/runPlotComparator.sh "${tmp_config}" "${era}" "${era}_${plot}" "${outdir}"
 
     # tidy up
     rm -rf "${tmp_config}"

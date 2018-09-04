@@ -5,11 +5,12 @@ source scripts/common_variables.sh
 
 ## config
 compareconfig=${1:-"plot_compare.${inTextExt}"}
-outfiletext=${2:-"plots"}
-dir=${3:-"plots/test"}
+era=${2:-"Full"}
+outfiletext=${3:-"plots"}
+dir=${4:-"plots/test"}
 
 ## first make plot
-root -l -b -q runPlotComparator.C\(\"${compareconfig}\",\"${outfiletext}\"\)
+root -l -b -q runPlotComparator.C\(\"${compareconfig}\",\"${era}\",\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}

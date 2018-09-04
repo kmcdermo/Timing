@@ -33,6 +33,10 @@ export exts
 declare -a canvscales=("lin" "log")
 export canvscales
 
+## eras
+declare -a eras=("2017B" "2017C" "2017D" "2017E" "2017F" "Full")
+export MainEra="Full"
+
 ## weight info
 export wgtvar="phopt_0"
 

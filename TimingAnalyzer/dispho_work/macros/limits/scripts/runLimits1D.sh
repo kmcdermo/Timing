@@ -7,11 +7,12 @@ source scripts/common_variables.sh
 indir=${1:-"output"}
 infilename=${2:-"AsymLim"}
 doobserved=${3:-0}
-outtext=${4:-"limit1D"}
-dir=${5:-"plots/ntuples_v4/limits"}
+era=${4:-"Full"}
+outtext=${5:-"limit1D"}
+dir=${6:-"plots/ntuples_v4/limits"}
 
 ## run macro
-root -l -b -q runLimits1D.C\(\"${indir}\",\"${infilename}\",${doobserved},\"${outtext}\"\)
+root -l -b -q runLimits1D.C\(\"${indir}\",\"${infilename}\",${doobserved},\"${era}\",\"${outtext}\"\)
 
 ## make outdirs readable
 fulldir=${topdir}/${disphodir}/${dir}

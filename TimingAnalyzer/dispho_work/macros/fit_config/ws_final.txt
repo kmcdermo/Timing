@@ -3,6 +3,7 @@ CR_QCD_in=input/met_vs_time_control_qcd_SinglePhoton.root
 SR_in=input/met_vs_time_signal_SinglePhoton.root
 
 plot_config=plot_config/met_vs_time.txt
+era=Full
 
 scale_range_low=-10
 scale_range_high=10

@@ -21,22 +21,16 @@ infile="zee_signals"
 varwgtmap="empty"
 misc="misc"
 
-## eras
-declare -a eras=(2017B 2017C 2017D 2017E 2017F)
-
 ## etas
-EB="0 1.4442"
-EE="1.566 2.5"
-Full="0 2.5"
-declare -a etas=(EB EE Full)
+declare -a etas=("EB" "EE" "Full")
 
 ## vars
-declare -a vars=(E pt eta time nvtx)
+declare -a vars=("E" "pt" "eta" "time" "nvtx")
 
 ## phos
 pho0="0 Leading"
 pho1="1 Subleading"
-declare -a phos=(pho0 pho1)
+declare -a phos=("pho0" "pho1")
 
 ## function
 function ReadConfig ()
@@ -108,13 +102,25 @@ do echo ${!pho} | while read -r index pho_label
 		cut="tmp_cut_config.txt"
 		> "${cut}"
 
-		echo ${!eta} | while read -r eta_low eta_high
-		do
-		    echo "common_cut=(abs(phoeta_${index})>=${eta_low}&&abs(phoeta_${index})<=${eta_high})" >> "${cut}"
-		    echo "data_cut=" >> "${cut}"
-		    echo "bkgd_cut=" >> "${cut}"
-		    echo "sign_cut=" >> "${cut}"
-		done ## read eta
+		## write common cut
+		eta_cut="phoisEB_${index}"
+		if [[ "${eta}" == "EB" ]]
+		then
+		    echo "common_cut=(${eta_cut})" >> "${cut}"
+		elif [[ "${eta}" == "EE" ]]
+		then
+		    echo "common_cut=(!${eta_cut})" >> "${cut}"
+		elif [[ "${eta}" == "Full" ]]
+		then
+		    echo "common_cut=(1)" >> "${cut}"
+		else
+		    echo "How did this happen?? Did not choose a correct option for eta: ${eta} ... Exiting..."
+		    exit
+		fi
+		## write the remainder of cuts
+		echo "data_cut=" >> "${cut}"
+		echo "bkgd_cut=" >> "${cut}"
+		echo "sign_cut=" >> "${cut}"
 
 		###########################
          	## make plot config (1D) ##
@@ -173,17 +179,10 @@ do echo ${!pho} | while read -r index pho_label
 		####################
 		for era in "${eras[@]}"
 		do
-		    ./scripts/runEraTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}_${era}" "${era}" "${outdir}"
-		    
-		    ./scripts/runEraTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile2D}_${era}" "${era}" "${outdir}"
-
+		    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile}_${era}" "${outdir}"
+		    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile2D}_${era}" "${outdir}"
 		    ./scripts/runTimeFitter.sh "${outfile2D}_${era}.root" "${plot2D}" "${timefitdir}/${timefitconfig}.${inTextExt}" "${era}" "${outfile}_${era}_${time}" "${outdir}"
 		done ## end loop over eras
-
-		## make full lumi plots
-		./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}_${extra}" "${outdir}"
-		./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile2D}_${extra}" "${outdir}"
-		./scripts/runTimeFitter.sh "${outfile2D}.root" "${plot2D}" "${timefitdir}/${timefitconfig}.${inTextExt}" "full" "${outfile}_${extra}_${time}" "${outdir}"
 
 		## remove tmp files
 		rm "${plot}" "${plot2D}"

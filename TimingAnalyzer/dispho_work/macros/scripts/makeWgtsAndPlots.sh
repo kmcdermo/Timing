@@ -39,7 +39,7 @@ function makeTreePlot()
 	local misc=$(GetMisc ${input} ${plot})
 	
 	## make the plot
-	./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${outdir}/${plot}"
+	./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" "${outfile}" "${outdir}/${plot}"
     done
 }
 
@@ -72,7 +72,7 @@ function makeCRtoSRPlot()
     echo "Creating CRtoSR plot for: ${outfile}"
 
      ## make the plots
-    ./scripts/runCRtoSRPlotter.sh "${crtosrconfig}" "${outfile}" "${outdir}/${plot}"
+    ./scripts/runCRtoSRPlotter.sh "${crtosrconfig}" "${MainEra}" "${outfile}" "${outdir}/${plot}"
 }
 
 function makeVarWeights()

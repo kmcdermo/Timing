@@ -58,7 +58,7 @@ do
 	outtext="${plot}_${label}"
 
 	## make plot
-	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc2D}.${inTextExt}" "${outtext}" "${outdir}/${outplot2Ddir}"
+	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc2D}.${inTextExt}" "${MainEra}" "${outtext}" "${outdir}/${outplot2Ddir}"
 
 	## cp root file to local directory
 	cp "${outtext}.root" "${infitdir}"
@@ -76,6 +76,7 @@ echo "${plotconfigdir}=${plotconfigdir}/${plot}.${inTextExt}" >> "${fitconfig}"
 echo "scale_range_low=-10" >> "${fitconfig}"
 echo "scale_range_high=10" >> "${fitconfig}"
 echo "make_ws=1" >> "${fitconfig}"
+echo "era=${MainEra}" >> "${fitconfig}"
 
 #################################
 ## Run Fitter Over Input Plots ##

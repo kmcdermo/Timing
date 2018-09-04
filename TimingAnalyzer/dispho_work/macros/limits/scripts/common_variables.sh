@@ -17,6 +17,9 @@ export disphodir="dispho"
 declare -a exts=("eps" "png" "pdf")
 export exts
 
+## era
+export MainEra="Full"
+
 ## function to make directory readable
 function PrepOutDir ()
 {

@@ -36,13 +36,13 @@ outlimitplotdir="limits"
 ## Make 1D Limit Plots ##
 #########################
 
-./scripts/runLimits1D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${outlimit1D}" "${outdir}/${outlimitplotdir}"
+./scripts/runLimits1D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${MainEra}" "${outlimit1D}" "${outdir}/${outlimitplotdir}"
 
 #########################
 ## Make 2D Limit Plots ##
 #########################
 
-./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" "${limitconfigdir}/${limit}.${inTextExt}" "${outlimit2D}" "${outdir}/${outlimitplotdir}"
+./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" "${outlimit2D}" "${outdir}/${outlimitplotdir}"
 
 ###########################
 ## Clean Up If Requested ##

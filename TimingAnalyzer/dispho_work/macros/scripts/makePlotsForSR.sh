@@ -40,7 +40,7 @@ do
 		misc=$(GetMisc ${input} ${plot})
 	
 		## make the plot (with variable weights applied as needed)
-		./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${outdir}/${plot}"
+		./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" "${outfile}" "${outdir}/${plot}"
 
 		## use output to make config files for next step
 		echo "${input}_in=${outfile}.root" >> "${tmpconfig}"
@@ -52,7 +52,7 @@ do
 	misc=$(GetMisc ${input} ${plot})
 
         ## Now run SRPlotter over input files
-	./scripts/runSRPlotter.sh "${tmpconfig}" "${miscconfigdir}/${misc}.${inTextExt}" "${plot}_SRPlot" "${outdir}/${plot}"
+	./scripts/runSRPlotter.sh "${tmpconfig}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" "${plot}_SRPlot" "${outdir}/${plot}"
 	
     fi ## end check on plot is valid
 done < "${srplotconfigdir}/${plotlist}.${inTextExt}" ## end loop over plots
