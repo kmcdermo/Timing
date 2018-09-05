@@ -85,7 +85,7 @@ namespace Common
 
   // input
   static const TString eosDir         = "/eos/cms/store/user/kmcdermo/nTuples";
-  static const TString baseDir        = "skims/2017/rereco_v4";
+  static const TString baseDir        = "skims/2017/rereco_v4_metcorr_Zee";
   static const TString tupleFileName  = "tree.root";
   static const TString rootdir        = "tree";
   static const TString configtreename = "configtree";

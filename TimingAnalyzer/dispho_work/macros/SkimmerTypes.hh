@@ -454,10 +454,10 @@ struct Pho
   std::string s_seedID = "phoseedID";
   std::string s_isGen = "phoisGen";
   std::string s_isSignal = "phoisSignal";
-  std::string s_seedX = "seedX";
-  std::string s_seedY = "seedY";
-  std::string s_seedZ = "seedZ";
-  std::string s_seedTOF = "seedTOF";
+  std::string s_seedX = "phoseedX";
+  std::string s_seedY = "phoseedY";
+  std::string s_seedZ = "phoseedZ";
+  std::string s_seedTOF = "phoseedTOF";
 
   // tbranches
   TBranch * b_E;
