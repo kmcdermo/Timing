@@ -6,13 +6,14 @@ source scripts/common_variables.sh
 ## config
 infilename=${1:-"${skimdir}/sr.root"}
 plotconfig=${2:-"${plotconfigdir}/phopt_0.${inTextExt}"}
-timefitconfig=${3:-"${miscconfigdir}/misc_blind.${inTextExt}"}
-era={$4:-"full"}
-outfiletext=${5:-"plots"}
-dir=${6:-"plots/test"}
+miscconfig=${3:-"${miscconfigdir}/misc_blind.${inTextExt}"}
+timefitconfig=${4:-"time.${inTextExt}"}
+era={$5:-"full"}
+outfiletext=${6:-"plots"}
+dir=${7:-"plots/test"}
 
 ## first make plot
-root -l -b -q runTimeFitter.C\(\"${infilename}\",\"${plotconfig}\",\"${timefitconfig}\",\"${era}\",\"${outfiletext}\"\)
+root -l -b -q runTimeFitter.C\(\"${infilename}\",\"${plotconfig}\",\"${miscconfig}\",\"${timefitconfig}\",\"${era}\",\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}

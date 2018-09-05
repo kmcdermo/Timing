@@ -1,8 +1,10 @@
 // Class include
 #include "TimeAdjuster.hh"
 
-TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & infilesconfig, const TString & outfiletext)
-  : fSkimFileName(skimfilename), fInFilesConfig(infilesconfig), fOutFileText(outfiletext)
+TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signalskimfile, 
+			   const TString & infilesconfig, const TString & outfiletext)
+  : fSkimFileName(skimfilename), fSignalSkimFile(signalskimfile),
+    fInFilesConfig(infilesconfig), fOutFileText(outfiletext)
 {
   std::cout << "Initializing TimeAdjuster..." << std::endl;
 
@@ -14,20 +16,24 @@ TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & infiles
 
   // init configuration
   TimeAdjuster::SetupCommon();
-  TimeAdjuster::SetupInFiles();
+  TimeAdjuster::SetupInFilesConfig();
 
   // open skim file
   fSkimFile = TFile::Open(Form("%s",fSkimFileName.Data()),"UPDATE");
   Common::CheckValidFile(fSkimFile,fSkimFileName);
-  fSkimFile->cd();
+
+  // open signal skim file
+  fSignalSkimFile = TFile::Open(Form("%s",fSignalSkimFileName.Data()),"UPDATE");
+  Common::CheckValidFile(fSignalSkimFile,fSignalSkimFileName);
 }
 
 TimeAdjuster::~TimeAdjuster()
 {
   std::cout << "Tidying up in the destructor..." << std::endl;
 
-  delete fConfigPave;
   TimeAdjuster::DeleteMap(fInFileMap);
+
+  delete fSignalSkimFile;
   delete fSkimFile;
 }
 
@@ -49,25 +55,13 @@ void TimeAdjuster::AdjustTime();
   // Correct MC
   TimeAdjuster::CorrectMC(DataInfo,MCInfo);
 
-  // Save fits in proper input files
-  TimeAdjuster::SaveSigmaFits(DataInfo,MCInfo);
-  
   // dump meta info
-  TimeAdjuster::MakeConfigPave();
+  TimeAdjuster::MakeConfigPave(fSkimFile);
+  TimeAdjuster::MakeConfigPave(fSignalSkimFile);
 
   // delete info
   TimeAdjuster::DeleteInfo(DataInfo);
   TimeAdjuster::DeleteInfo(MCInfo);
-}
-
-void TimeAdjuster::DeleteInfo(FitStruct & FitInfo)
-{
-  const auto & label = FitInfo.label;
-  std::cout << "Deleting info for: " << label.Data() << std::endl;
-
-  TimeAdjuster::DeleteMap(FitInfo.MuHistMap);
-  TimeAdjuster::DeleteMap(FitInfo.SigmaHistMap);
-  TimeAdjuster::DeleteMap(FitInfo.SigmaFitMap);
 }
 
 void TimeAdjuster::PrepAdjustments(FitStruct & FitInfo)
@@ -75,19 +69,20 @@ void TimeAdjuster::PrepAdjustments(FitStruct & FitInfo)
   const auto & label = FitInfo.label;
   std::cout << "Preparing time adjustments for: " << label.Data() << std::endl;
 
-  // Get the input hits first
-  TimeAdjuster::GetInputHists(FitInfo);
+  // Get the input mu hists
+  TimeAdjuster::GetInputMuHists(FitInfo);
 
-  // Prep fits for sigma
-  TimeAdjuster::PrepSigmaFits(FitInfo);
-  
-  // Fit sigma hists
-  TimeAdjuster::FitSigmaHists(FitInfo);
+  // Get input resolution fits
+  TimeAdjuster::GetInputSigmaFits(FitInfo);
 }
 
 void TimeAdjuster::CorrectData(FitStruct & DataInfo)
 {
   std::cout << "Correcting data!" << std::endl;
+
+  ////////////////////////////
+  // Initialize corrections //
+  ////////////////////////////
 
   // variables for looping
   Event ev;
@@ -98,8 +93,8 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
   auto tree = (TTree*)fSkimFile->Get(Form("%s",Common::TreeNameMap["Data"].Data()));
   
   // set input branches
-  tree->SetBranchAddress(Form("%s",ev.s_run.Data(),&ev.run,&ev.b_run);
-  tree->SetBranchAddress(Form("%s",ev.s_nphotons.Data(),&ev.nphotons,&ev.b_nphotons);
+  tree->SetBranchAddress(Form("%s",ev.s_run.Data()),&ev.run,&ev.b_run);
+  tree->SetBranchAddress(Form("%s",ev.s_nphotons.Data()),&ev.nphotons,&ev.b_nphotons);
   for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
   {
     // get pho
@@ -110,23 +105,30 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
     tree->SetBranchAddress(Form("%s_%i",pho.s_isEB.Data(),ipho),&pho.isEB,&pho.b_isEB);
 
     // make new
-    pho.b_seedtimeSHIFT = tree->SetBranchAddress(Form("%s_%i",pho.s_seedtimeSHIFT.Data(),ipho),&pho.seedtimeSHIFT,Form("%s/F",s_seedtimeSHIFT.Data()));
+    pho.b_seedtimeSHIFT = tree->Branch(Form("%s_%i",pho.s_seedtimeSHIFT.Data(),ipho),&pho.seedtimeSHIFT,Form("%s/F",s_seedtimeSHIFT.Data()));
   }
+
+  /////////////////////////////
+  // Get and set corrections //
+  /////////////////////////////
 
   // loop over entries in tree
   const auto nEntries = tree->GetEntries();
   for (auto entry = 0U; entry < nEntries; entry++)
   {
+    // dump status check
+    if (entry%Common::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
+
     // only need the entry for the single branches
     ev.b_run->GetEntry(entry);
     ev.b_nphotons->GetEntry(entry);
 
     // get era
-    const auto era = std::find_if(Common::EraMap.begin(),Common::EraMap.end(),
-				  [=](const std::pair<TString,EraStruct> & EraPair)
-				  {
-				    return ( (EraPair.first != "Full") && ((run >= EraPair.second.startRun) && (run <= EraPair.second.endRun)) );
-				  });
+    const auto & era = std::find_if(Common::EraMap.begin(),Common::EraMap.end(),
+				    [=](const std::pair<TString,EraStruct> & EraPair)
+				    {
+				      return ( (EraPair.first != "Full") && ((ev.run >= EraPair.second.startRun) && (ev.run <= EraPair.second.endRun)) );
+				    })->first;
     
     // loop over nphotons
     const auto nphos = std::min(nphotons,Common::nPhotons);
@@ -137,201 +139,268 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
       // get branch
       pho.b_pt->GetEntry(entry);
       pho.b_isEB->GetEntry(entry);
-
+      
       // get the correction
-      DataInfo.
-    }
+      const TString key = (pho.isEB ? "EB" : "EE")+"_"+era;
+      const auto & hist = DataInfo.MuHistMap[key];
+      
+      // set correction branch
+      const auto shift = hist->GetBinContent(hist->FindBin(pho.pt));
+      pho.seedtimeSHIFT = ((shift > 0.f) ? -shift : shift);
 
-    // store blank info
+      // fill branch
+      pho.b_seedtimeSHIFT->Fill();
+    } // end loop over nphotons on file
+
+    // store remainder photons
     for (auto ipho = nphos; ipho < Common::nPhotons)
-
-    // get weight from ratio hist
-    varwgt = hist->GetBinContent(hist->FindBin(var));
+    {
+      // set remainder
+      pho.seedtimeSHIFT = -9999.f;
+      
+      // fill branch
+      pho.b_seedtimeSHIFT->Fill();
+    } // end loop over remainder photons
+    
+  } // end loop over entries
   
-    // fill single branch with weight
-    b_varwgt->Fill();
-  }
+  //////////////
+  // Clean up //
+  //////////////
 
   // overwrite tree
   tree->Write(tree->GetName(),TObject::kWriteDelete);
-
+  
   // delete it all
   delete tree;
-}
 }
 
 void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitInfo & MCInfo)
 {
   std::cout << "Correcting MC!" << std::endl;
+
+  //////////////////////////
+  // Get random generator //
+  //////////////////////////
+
+  auto rand = new TRandomMixMax();
+
+  ////////////////////////
+  // Loop over MC trees //
+  ////////////////////////
+
+  for (const auto & TreeNamePair : Common::TreeNameMap)
+  {
+    // Init
+    const auto & sample   = TreeNamePair.first;
+    const auto & treename = TreeNamePair.second;
+    
+    // Skip data
+    if (Common::GroupMap[sample] == SampleGroup::isData) continue;
+    
+    std::cout << "Working on tree: " << treename.Data() << std::endl;
+	
+    // Get infile
+    auto & SkimFile = ((Common::GroupMap[sample] != SampleGroup::isSignal) ? fSkimFile : fInSignalFile);
+    SkimFile->cd();
+
+    // Get tree
+    auto tree = (TTree*)infile->Get(Form("%s",treename.Data()));
+    const auto isnull = Common::IsNullTree(tree);
+
+    if (!isnull)
+    {
+      ////////////////////////////
+      // Initialize corrections //
+      ////////////////////////////
+
+      // variables for looping
+      Event ev;
+      std::vector<Photon> phos(Common::nPhotons);
+  
+      // set input branches
+      tree->SetBranchAddress(Form("%s",ev.s_nphotons.Data()),&ev.nphotons,&ev.b_nphotons);
+      for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
+      {
+	// get pho
+	auto & pho = phos[ipho];
+	
+	// set old
+	tree->SetBranchAddress(Form("%s_%i",pho.s_pt.Data(),ipho),&pho.pt,&pho.b_pt);
+	tree->SetBranchAddress(Form("%s_%i",pho.s_isEB.Data(),ipho),&pho.isEB,&pho.b_isEB);
+
+	// make new
+	pho.b_seedtimeSHIFT = tree->Branch(Form("%s_%i",pho.s_seedtimeSHIFT.Data(),ipho),&pho.seedtimeSHIFT,Form("%s/F",s_seedtimeSHIFT.Data()));
+	pho.b_seedtimeSMEAR = tree->Branch(Form("%s_%i",pho.s_seedtimeSMEAR.Data(),ipho),&pho.seedtimeSMEAR,Form("%s/F",s_seedtimeSMEAR.Data()));
+      }
+
+      /////////////////////////////
+      // Get and set corrections //
+      /////////////////////////////
+
+      // loop over entries in tree
+      const auto nEntries = tree->GetEntries();
+      for (auto entry = 0U; entry < nEntries; entry++)
+      {
+	// dump status check
+	if (entry%Common::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
+	
+	// only need the entry for the single branches
+	ev.b_nphotons->GetEntry(entry);
+    
+	// loop over nphotons
+	const auto nphos = std::min(nphotons,Common::nPhotons);
+	for (auto ipho = 0; ipho < nphos; ipho++)
+        {
+	  auto & pho = phos[ipho];
+	  
+	  // get branch
+	  pho.b_pt->GetEntry(entry);
+	  pho.b_isEB->GetEntry(entry);
+      
+	  // get the corrections
+	  const TString key    = (pho.isEB ? "EB" : "EE")+"_Full";
+	  const auto & hist    = MCInfo  .MuHistMap  [key];
+	  const auto & datafit = DataInfo.SigmaFitMap[key];
+	  const auto & mcfit   = MCInfo  .SigmaFitMap[key];
+
+	  // set shift correction branch
+	  const auto shift = hist->GetBinContent(hist->FindBin(pho.pt));
+	  pho.seedtimeSHIFT = ((shift > 0.f) ? -shift : shift);
+
+	  // set smear correction branch
+	  const auto sigma = std::sqrt(std::pow(datafit->Eval(pho.pt),2.f)-std::pow(mcfit->Eval(pho.pt),2.f));
+	  pho.seedtimeSMEAR = rand->Gaus(0.f,sigma);
+
+	  // fill branch
+	  pho.b_seedtimeSHIFT->Fill();
+	  pho.b_seedtimeSMEAR->Fill();
+	} // end loop over nphotons on file
+
+	// store remainder photons
+	for (auto ipho = nphos; ipho < Common::nPhotons)
+	{
+	  // set remainders
+	  pho.seedtimeSHIFT = -9999.f;
+	  pho.seedtimeSMEAR = -9999.f;
+      
+	  // fill branch
+	  pho.b_seedtimeSHIFT->Fill();
+	} // end loop over remainder photons
+    
+      } // end loop over entries
+  
+      //////////////
+      // Clean up //
+      //////////////
+      
+      // overwrite tree
+      tree->Write(tree->GetName(),TObject::kWriteDelete);
+  
+      // delete it all
+      delete tree;
+
+    } // tree is valid
+    else
+    {
+      std::cout << "Skipping null tree..." << std::endl;
+    } // isnull tree
+
+  } // end loop over tree names
 }
 
-void TimeAdjuster::SaveSigmaFits(FitStruct & DataInfo, FitStruct & MCInfo)
-{
-  std::cout << "Saving fits back into original files..." << std::endl;
-}
-
-void TimeAdjuster::GetInputHists(FitStruct & FitInfo)
+void TimeAdjuster::GetInputMuHists(FitStruct & FitInfo)
 {
   const auto & label = FitInfo.label;
-  std::cout << "Getting input histograms for: " << label.Data() << std::endl;
+  std::cout << "Getting input mu histograms for: " << label.Data() << std::endl;
 
-  // get inputs to be set
-  auto & MuHistMap    = FitInfo.MuHistMap;
-  auto & SigmaHistMap = FitInfo.SigmaHistMap;
-
-  // tmp names for getting hists
-  const TString muname    = label+"_mu";
-  const TString sigmaname = label+"_sigma";
+  // get inputs
+  const TString muhistname = label+"_mu";
+  auto & MuHistMap = FitInfo.MuHistMap;
 
   // loop over files, read in hists, then rename
   for (auto & InFilePair : fInFileMap)
   {
     const auto & key = InFilePair.first;
-    auto & file = InFilePair.second;
+    auto & InFile = InFilePair.second;
+    auto & MuHist = MuHistMap[key];
 
-    auto & MuHist    = MuHistMap   [key];
-    auto & SigmaHist = SigmaHistMap[key];
-
-    // grab hists
-    MuHist    = (TH1F*)file->Get(muname.Data());
-    SigmaHist = (TH1F*)file->Get(sigmaname.Data());
+    // grab hist
+    MuHist = (TH1F*)InFile->Get(muhistname.Data());
 
     // check to make sure ok
-    Common::CheckValidHist(MuHist   ,muname   ,file->GetName());
-    Common::CheckValidHist(SigmaHist,sigmaname,file->GetName());
+    Common::CheckValidHist(MuHist,muhistname,InFile->GetName());
 
     // rename
-    MuHist   ->SetName(Form("%s_%s_Hist",muname   ,key.Data()));
-    SigmaHist->SetName(Form("%s_%s_Hist",sigmaname,key.Data()));
+    MuHist->SetName(Form("%s_%s_Hist",muhistname,key.Data()));
   }
 }
 
-void TimeAdjuster::PrepSigmaFits(FitStruct & FitInfo)
+void TimeAdjuster::GetSigmaFits(FitStruct & FitInfo)
 {
   const auto & label = FitInfo.label;
-  std::cout << "Prepping fits for: " << label.Data() << std::endl;
+  std::cout << "Getting sigma fits for: " << label.Data() << std::endl;
   
   // get inputs/outputs
-  const auto & SigmaHistMap = FitInfo.SigmaHistMap;
-  const auto & SigmaFitMap  = FitInfo.SigmaFitMap;
-
-  // loop over sigma hists
-  for (const auto & SigmaHistPair : SigmaHistMap)
-  {
-    const auto & key  = SigmaHistPair.first;
-    const auto & hist = SigmaHistPair.second;
-
-    // get range
-    const auto x_low = hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetFirst());
-    const auto x_up  = hist->GetXaxis()->GetBinUpEdge (hist->GetXaxis()->GetLast());
-
-    // set names
-    const TString formname = label+"_"+key+"_form";
-    const TString fitname  = label+"_"+key+"_fit";
-
-    // set formula
-    TFormula form(formname.Data(),Form("sqrt((([0]*[0])/(x*x))+(2*[1]*[1]))"));
-    
-    // get and set fit
-    auto & fit = SigmaFitMap[key];
-    fit = new TF1(fitname.Data(),formname.Data(),x_low,x_up);
-
-    // init params
-    fit->SetParameter(0,5000.f);
-    fit->SetParLimits(0,0.f,20000.f);
-    fit->SetParameter(1,150.f);
-    fit->SetParLimits(1,0.f,500.f);
-  }
-}
-
-void TimeAdjuster::FitSigmaHists(FitStruct & FitInfo)
-{
-  const auto & label = FitInfo.label;
-  std::cout << "Fitting sigma hists for: " << label.Data() << std::endl;
-  
-  // get inputs/outputs
-  const auto & SigmaHistMap = FitInfo.SigmaHistMap;
-  const auto & SigmaFitMap  = FitInfo.SigmaFitMap;
+  const TString sigamfitname = label+"_sigma_fit";
+  auto & SigmaFitMap = FitInfo.SigmaFitMap;
 
   // loop over sigma hists and fit!
-  for (const auto & SigmaHistPair : SigmaHistMap)
+  for (auto & InFilePair : fInFileMap)
   {
     const auto & key = SigmaHistPair.first;
-    auto & hist = SigmaHistPair.second;
-    auto & fit  = SigmaFitMap[key];
+    auto & InFile = InFilePair.second;
+    auto & SigmaFit = SigmaFitMap[key];
 
-    hist->Fit(fit->GetName(),"RBQ0");
+    // grab fit
+    SigmaFit = (TF1*)InFile->Get(sigmafitname.Data());
+
+    // check to make sure ok
+    Common::CheckValidFit(SigmaFit,sigmafitname,InFile->GetName());
+
+    // rename
+    SigmaFit->SetName(Form("%s_%s_Fit",sigmafitname.Data(),key.Data()));
   }
 }
 
-
-void TimeAdjuster::MakeConfigPave()
+void TimeAdjuster::MakeConfigPave(TFile *& SkimFile)
 {
-  std::cout << "Dumping config to a pave..." << std::endl;
+  std::cout << "Dumping config to a pave for: " << SkimFile->GetName() << std::endl;
 
   // create the pave, copying in old info
-  fSkimFile->cd();
-  fConfigPave = (TPaveText*)fSkimFile->Get(Form("%s",Common::pavename.Data()));
+  SkimFile->cd();
+  auto ConfigPave = (TPaveText*)SkimFile->Get(Form("%s",Common::pavename.Data()));
 
   // add some padding to new stuff
-  Common::AddPaddingToPave(fConfigPave,3);
+  Common::AddPaddingToPave(ConfigPave,3);
 
   // give grand title
   fConfigPave->AddText("***** TimeAdjuster Config *****");
-  Common::AddTextFromInputConfig(fConfigPave,"VarWgt Config",fVarWgtConfig);
+  Common::AddTextFromInputConfig(ConfigPave,"InFiles Config",fInFilesConfig);
 
-  // dump in old config
-  fConfigPave->AddText("***** CR Config *****");
-  Common::AddTextFromInputPave(fConfigPave,fCRFile);
+  // padding
+  Common::AddPaddingToPave(ConfigPave,3);
 
-  fConfigPave->AddText("***** SR Config *****");
-  Common::AddTextFromInputPave(fConfigPave,fSRFile);
+  // dump in old configs... will be a lot
+  for (auto & InFilePair : fInFileMap)
+  {
+    const auto & key = InFilePair.first;
+    auto & file = InFilePair.second;
+
+    // save input file name
+    ConfigPave->AddText(Form("InFile, key: %s, name: %s",key.Data(),file->GetName())); 
+    Common::AddTextFromInputPave(ConfigPave,file);
+
+    // padding
+    Common::AddPaddingToPave(ConfigPave,3);
+  }
 
   // save to output file
-  fSkimFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
-}
+  SkimFile->cd();
+  ConfigPave->Write(ConfigPave->GetName(),TObject::kWriteDelete);
 
-void TimeAdjuster::SetupVarWgtConfig()
-{
-  std::cout << "Reading VarWgt config..." << std::endl;
-
-  std::ifstream infile(Form("%s",fVarWgtConfig.Data()),std::ios::in);
-  std::string str;
-  while (std::getline(infile,str))
-  {
-    if (str == "") continue;
-    else if (str.find("sample=") != std::string::npos)
-    {
-      fSample = Common::RemoveDelim(str,"sample=");
-    }
-    else if (str.find("var=") != std::string::npos)
-    {
-      fVar = Common::RemoveDelim(str,"var=");
-    }
-    else if (str.find("plot_config=") != std::string::npos)
-    {
-      fPlotConfig = Common::RemoveDelim(str,"plot_config=");
-    }
-    else if (str.find("cr_file=") != std::string::npos)
-    {
-      fCRFileName = Common::RemoveDelim(str,"cr_file=");
-    }
-    else if (str.find("sr_file=") != std::string::npos)
-    {
-      fSRFileName = Common::RemoveDelim(str,"sr_file=");
-    }
-    else if (str.find("skim_file=") != std::string::npos)
-    {
-      fSkimFileName = Common::RemoveDelim(str,"skim_file=");
-    }
-    else 
-    {
-      std::cerr << "Aye... your varwgt config is messed up, try again!" << std::endl;
-      std::cerr << "Offending line: " << str.c_str() << std::endl;
-      exit(1);
-    }
-  }
+  // delete pave
+  delete ConfigPave;
 }
 
 void TimeAdjuster::SetupCommon()
@@ -340,11 +409,12 @@ void TimeAdjuster::SetupCommon()
 
   Common::SetupEras();
   Common::SetupSamples();
+  Common::SetupSignalSamples();
   Common::SetupGroups();
   Common::SetupTreeNames();
 }
 
-void TimeAdjuster::SetupInFiles()
+void TimeAdjuster::SetupInFilesConfig()
 {
   std::cout << "Setting up in files..." << std::endl;
 
@@ -374,6 +444,15 @@ void TimeAdjuster::SetupInFiles()
     fInFileMap[key] = TFile::Open(filename.Data());
     Common::CheckValidFile(fInFileMap[key],filename);
   }
+}
+
+void TimeAdjuster::DeleteInfo(FitStruct & FitInfo)
+{
+  const auto & label = FitInfo.label;
+  std::cout << "Deleting info for: " << label.Data() << std::endl;
+
+  TimeAdjuster::DeleteMap(FitInfo.MuHistMap);
+  TimeAdjuster::DeleteMap(FitInfo.SigmaFitMap);
 }
 
 template <typename T>

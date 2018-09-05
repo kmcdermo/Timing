@@ -1,10 +1,10 @@
 #include "TimeFitter.hh"
 #include "TVirtualFitter.h"
 
-TimeFitter::TimeFitter(const TString & infilename, const TString & plotconfig, const TString & timefitconfig, 
-		       const TString & era, const TString & outfiletext) :
-  fInFileName(infilename), fPlotConfig(plotconfig), fTimeFitConfig(timefitconfig), 
-  fEra(era), fOutFileText(outfiletext)
+TimeFitter::TimeFitter(const TString & infilename, const TString & plotconfig, const TString & miscconfig,
+		       const TString & timefitconfig, const TString & era, const TString & outfiletext) :
+  fInFileName(infilename), fPlotConfig(plotconfig), fMiscConfig(miscconfig),
+  fTimeFitConfig(timefitconfig), fEra(era), fOutFileText(outfiletext)
 {
   std::cout << "Initializing TimeFitter..." << std::endl;
 
@@ -26,8 +26,10 @@ TimeFitter::TimeFitter(const TString & infilename, const TString & plotconfig, c
   fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
 
   // setup config
+  TimeFitter::SetupDefaults();
   TimeFitter::SetupCommon();
   TimeFitter::SetupPlotConfig();
+  TimeFitter::SetupMiscConfig();
   TimeFitter::SetupTimeFitConfig();
 
   // set fitter
@@ -57,6 +59,13 @@ void TimeFitter::MakeTimeFits()
   FitStruct MCInfo("MC",Common::BkgdHistName.Data());
   TimeFitter::MakeTimeFit(MCInfo);
 
+  // Fit sigma plot if asked
+  if (fDoSigmaFit)
+  {
+    TimeFitter::MakeSigmaFit(DataInfo);
+    TimeFitter::MakeSigmaFit(MCInfo);
+  }
+
   // Make Plots
   TimeFitter::MakePlots(DataInfo,MCInfo);
 
@@ -84,6 +93,46 @@ void TimeFitter::MakeTimeFit(FitStruct & FitInfo)
 
   // Extract mu and sigma into maps
   TimeFitter::ExtractFitResults(FitInfo);
+}
+
+void TimeFitter::MakeSigmaFit(FitStruct & FitInfo)
+{
+  const auto & label = FitInfo.label;
+  std::cout << "Making sigma fit for: " << label.Data() << std::endl;
+  
+  // Prep sigma fit
+  TimeFitter::PrepSigmaFit(FitInfo);
+
+  // Fit sigma hist
+  TimeFitter::FitSigmaHist(FitInfo);
+}
+
+void TimeFitter::MakePlots(FitStruct & DataInfo, FitStruct & MCInfo)
+{
+  std::cout << "Make overlay plots..." << std::endl;
+
+  // make temp vector of hist key names
+  std::vector<TString> keys;
+  for (const auto & ResultsPair : DataInfo.ResultsMap) keys.emplace_back(ResultsPair.first);
+
+  // loop over keys
+  for (const auto & key : keys)
+  {
+    // get hists
+    const auto & DataHist = DataInfo.ResultsMap[key];
+    const auto & MCHist   = MCInfo  .ResultsMap[key];
+
+    // tmp max, min
+    const Float_t min =  1e9;
+    const Float_t max = -1e9;
+    
+    TimeFitter::GetMinMax(DataHist,min,max,key);
+    TimeFitter::GetMinMax(MCHist  ,min,max,key);
+
+    // lin first, then log
+    TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,false);
+    TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,true);
+  }
 }
 
 void TimeFitter::GetInputHist(FitStruct & FitInfo)
@@ -162,8 +211,8 @@ void TimeFitter::ExtractFitResults(FitStruct & FitInfo)
   // setup hists
   ResultsMap["chi2ndf"]  = TimeFitter::SetupHist("#chi^{2}/NDF","chi2ndf",label);
   ResultsMap["chi2prob"] = TimeFitter::SetupHist("#chi^{2} Prob.","chi2prob",label);
-  ResultsMap["mu"]       = TimeFitter::SetupHist("#mu","mu",label);
-  ResultsMap["sigma"]    = TimeFitter::SetupHist("#sigma","sigma",label);
+  ResultsMap["mu"]       = TimeFitter::SetupHist("#mu_{T} [ns]","mu",label);
+  ResultsMap["sigma"]    = TimeFitter::SetupHist("#sigma_{T} [ns]","sigma",label);
 
   // set bin content!
   for (auto ibinX = 1U; ibinX <= fXBins.size(); ibinX++)
@@ -192,32 +241,55 @@ void TimeFitter::ExtractFitResults(FitStruct & FitInfo)
   for (const auto & ResultsPair : ResultsMap) ResultsPair.second->Write(ResultsPair.second->GetName(),TObject::kWriteDelete);
 }
 
-void TimeFitter::MakePlots(FitStruct & DataInfo, FitStruct & MCInfo)
+void TimeFitter::PrepSigmaFit(FitStruct & FitInfo)
 {
-  std::cout << "Make overlay plots..." << std::endl;
+  const auto & label = FitInfo.label;
+  std::cout << "Prepping sigma fit for: " << label.Data() << std::endl;
 
-  // make temp vector of hist key names
-  std::vector<TString> keys;
-  for (const auto & ResultsPair : DataInfo.ResultsMap) keys.emplace_back(ResultsPair.first);
+  // get input hist
+  const auto & hist = FitInfo.ResultsMap["sigma"];
 
-  // loop over keys
-  for (const auto & key : keys)
-  {
-    // get hists
-    const auto & DataHist = DataInfo.ResultsMap[key];
-    const auto & MCHist   = MCInfo  .ResultsMap[key];
+  // get range
+  const auto x_low = hist->GetXaxis()->GetBinLowEdge(hist->GetXaxis()->GetFirst());
+  const auto x_up  = hist->GetXaxis()->GetBinUpEdge (hist->GetXaxis()->GetLast());
 
-    // tmp max, min
-    const Float_t min =  1e9;
-    const Float_t max = -1e9;
+  // set names
+  const TString histname = hist->GetName();
+  const TString formname = histname+"_form";
+  const TString fitname  = histname+"_fit";
+
+  // set formula
+  TFormula form(formname.Data(),Form("sqrt((([0]*[0])/(x*x))+(2*[1]*[1]))"));
     
-    TimeFitter::GetMinMax(DataHist,min,max,key);
-    TimeFitter::GetMinMax(MCHist  ,min,max,key);
+  // get and set fit
+  auto & fit = FitInfo.SigmaFit;
+  fit = new TF1(fitname.Data(),formname.Data(),x_low,x_up);
 
-    // lin first, then log
-    TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,false);
-    TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,true);
-  }
+  // init params
+  fit->SetParameter(0,5000.f);
+  fit->SetParLimits(0,0.f,20000.f);
+  fit->SetParameter(1,150.f);
+  fit->SetParLimits(1,0.f,500.f);
+
+  // set line color
+  fit->SetLineColor(hist->GetLineColor());
+}
+
+void TimeAdjuster::FitSigmaHists(FitStruct & FitInfo)
+{
+  const auto & label = FitInfo.label;
+  std::cout << "Fitting sigma hist for: " << label.Data() << std::endl;
+  
+  // get inputs/outputs
+  auto & hist = FitInfo.ResultsMap["sigma"];
+  auto & fit  = FitInfo.SigmaFit;
+  
+  // and fit it
+  hist->Fit(fit->GetName(),"RBQ0");
+
+  // save to output
+  fOutFile->cd();
+  fit->Write(fit->GetName(),TObject::kWriteDelete);
 }
 
 void TimeFitter::PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, Float_t max, 
@@ -229,13 +301,17 @@ void TimeFitter::PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, 
   auto & DataHist = DataInfo.ResultsMap[key];
   auto & MCHist   = MCInfo  .ResultsMap[key];
 
+  // get labels
+  const auto & DataLabel = DataInfo.label;
+  const auto & MCLabel   = MCInfo  .label;
+
   // bool to allow negative values
   const Bool_t canBeNeg = (key.Contains("mu",TString::kExact));
   
   // make canvas first
-  auto TCanvas = new TCanvas("Canvas_"+key,"");
-  canv->cd();
-  canv->SetLogy(isLogy);
+  auto Canvas = new TCanvas("Canvas_"+key,"");
+  Canvas->cd();
+  Canvas->SetLogy(isLogy);
 
   const Float_t factor = (isLogy ? 1.5f : 1.05f);
   min = (min > 0.f ? (min / factor) : (min * factor));
@@ -249,33 +325,85 @@ void TimeFitter::PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, 
   DataHist->Draw("ep");
   MCHist  ->Draw("ep same");
 
+  // draw sigma fit
+  TF1 * DataFit = 0;
+  TF1 * MCFit   = 0;
+  TPaveText * FitText = 0;
+  if (fDoSigmaFit)
+  {
+    DataFit = DataInfo.SigmaFit;
+    MCFit   = MCInfo  .SigmaFit;
+
+    // draw fits
+    DataFit->Draw("same");
+    MCFit  ->Draw("same");
+
+    // setup output text
+    FitText = new TPaveText(0.5,0.6,0.825,0.0.73,"NDC");
+    FitText-SetName("SigmaFitText");
+    
+    FitText->AddText(Form("#sigma(t)=#frac{N}{%s}} #oplus #sqrt{2}C",fSigmaText.Data()));
+    FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f",DataLabel.Data(),DataFit->GetParameter(0),DataFit->GetParError(0)));
+    FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f",DataLabel.Data(),DataFit->GetParameter(1),DataFit->GetParError(1)));
+    FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f",MCLabel  .Data(),MCFit  ->GetParameter(0),MCFit  ->GetParError(0)));
+    FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f",MCLabel  .Data(),MCFit  ->GetParameter(1),MCFit  ->GetParError(1)));
+    FitText->SetTextAlign(11);
+    FitText->SetFillColorAlpha(FitText->GetFillColor(),0);
+
+    // draw text!
+    FitText->Draw("same");
+  }
+
   // make legend
-  auto leg = new TLegend(0.75,0.75,0.825,0.92);
-  leg->SetName("Legend_"+key);
-  leg->SetBorderSize(1);
-  leg->SetLineColor(kBlack);
+  auto Legend = new TLegend(0.75,0.75,0.825,0.92);
+  Legend->SetName("Legend_"+key);
+  Legend->SetBorderSize(1);
+  Legend->SetLineColor(kBlack);
   
   // add to legend
-  leg->AddEntry(DataHist,DataInfo.label.Data(),"epl");
-  leg->AddEntry(MCHist  ,MCInfo  .label.Data(),"epl");
+  Legend->AddEntry(DataHist,DataInfo.label.Data(),"epl");
+  Legend->AddEntry(MCHist  ,MCInfo  .label.Data(),"epl");
 
   // draw legend
-  leg->Draw("same");
+  Legend->Draw("same");
   
   // pretty up
-  Common::CMSLumi(canv,0,fEra);
+  Common::CMSLumi(Canvas,0,fEra);
+
+  // make images
+  Common::SaveAs(Canvas,Form("%s_%s",outfiletext.Data(),(isLogy?"log":"lin")));
+
+  // do log-x?
+  if (fDoLogX)
+  {
+    Canvas->cd();
+    Canvas->SetLogx();
+
+    // make images
+    Common::SaveAs(Canvas,Form("%s_%s_logx",outfiletext.Data(),(isLogy?"log":"lin")));
+  }
 
   // save output if lin
   if (!isLogy)
   {
     fOutFile->cd();
-    leg->Write(leg->GetName(),TObject::kWriteDelete);
-    canv->Write(canv->GetName(),TObject::kWriteDelete);
+    Legend->Write(Legend->GetName(),TObject::kWriteDelete);
+    Canvas->Write(Canvas->GetName(),TObject::kWriteDelete);
+    if (fDoSigmaFit)
+    {
+      FitText->Write(fittext->GetName(),TObject::kWriteDelete);
+    }
   }
 
   // delete all
-  delete leg;
-  delete canv;
+  if (fDoSigmaFit)
+  {
+    delete FitText;
+    delete MCFit;
+    delete DataFit;
+  }
+  delete Legend;
+  delete Canvas;
 }
 
 void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
@@ -283,7 +411,7 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
   // make tmp fit first
   auto tempfit = new TF1("temp","gaus(0)",fRangeLow,fRangeUp);
   tempfit->SetParLimits(2,0,10);
-  hist1D->Fit("temp","RQ0B");
+  hist1D->Fit("temp","RBQ0");
   const Float_t norm  = tempfit->GetParameter(0); // constant
   const Float_t mu    = tempfit->GetParameter(1); // mu
   const Float_t sigma = tempfit->GetParameter(2); // sigma
@@ -423,6 +551,9 @@ void TimeFitter::MakeConfigPave()
   // dump plot config
   Common::AddTextFromInputConfig(fConfigPave,"Plot Config",fPlotConfig);
 
+  // dump misc config
+  Common::AddTextFromInputConfig(fConfigPave,"Misc Config",fMiscConfig);
+
   // padding
   Common::AddPaddingToPave(fConfigPave,3);
 
@@ -437,6 +568,14 @@ void TimeFitter::MakeConfigPave()
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
+void TimeFitter::SetupDefaults()
+{
+  std::cout << "Setting up defaults for some params..." << std::endl;
+
+  fDoLogX = false;
+  fDoSigmaFit = false;
+}
+
 void TimeFitter::SetupCommon() 
 {
   std::cout << "Setting up Common..." << std::endl;
@@ -446,7 +585,7 @@ void TimeFitter::SetupCommon()
   Common::SetupGroups();
   Common::SetupHistNames();
 }
- 
+
 void TimeFitter::SetupPlotConfig()
 {
   std::cout << "Reading plot config..." << std::endl;
@@ -472,6 +611,29 @@ void TimeFitter::SetupPlotConfig()
     else if (str.find("y_title=") != std::string::npos)
     {
       fYTitle = Common::RemoveDelim(str,"y_title=");
+    }
+  }
+}
+
+void TimeFitter::SetupMiscConfig()
+{
+  std::cout << "Reading misc config..." << std::endl;
+
+  std::ifstream infile(Form("%s",fMiscConfig.Data()),std::ios::in);
+  std::string str;
+  while (std::getline(infile,str))
+  {
+    if (str == "") continue;
+    else if (str.find("do_logx=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"do_logx=");
+      Common::SetupBool(str,fDoLogX);
+    }
+    else
+    {
+      std::cerr << "Aye... your fit config is messed up, try again! Offending line: " << str.c_str() << std::endl;
+      std::cerr << "Offending line: " << str.c_str() << std::endl;
+      exit(1);
     }
   }
 }
@@ -508,7 +670,16 @@ void TimeFitter::SetupTimeFitConfig()
       str = Common::RemoveDelim(str,"range_up=");
       fRangeUp = std::atof(str.c_str());
     }
-    else 
+    else if (str.find("do_sigma_fit=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"do_sigma_fit=");
+      Common::SetupBool(str,fDoSigmaFit);
+    }
+    else if (str.find("sigma_text=") != std::string::npos)
+    {
+      fSigmaText = Common::RemoveDelim(str,"sigma_text=");
+    }
+    else
     {
       std::cerr << "Aye... your fit config is messed up, try again! Offending line: " << str.c_str() << std::endl;
       std::cerr << "Offending line: " << str.c_str() << std::endl;
@@ -553,6 +724,8 @@ void TimeFitter::DeleteInfo(FitStruct & FitInfo)
   std::cout << "Deleting info for: " << label.Data() << std::endl;
 
   delete FitInfo.Hist2D;
+
+  if (fDoSigmaFit) delete FitInfo.SigmaFit;
 
   TimeFitter::DeleteMap(FitInfo.Hist1DMap);
   TimeFitter::DeleteMap(FitInfo.FitMap);

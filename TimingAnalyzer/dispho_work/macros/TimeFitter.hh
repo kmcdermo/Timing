@@ -39,6 +39,7 @@ struct FitStruct
   std::vector<Int_t,TH1F*>   Hist1DMap;
   std::vector<Int_t,TF1*>    FitMap;
   std::vector<TString,TH1F*> ResultsMap;
+  TF1 * SigmaFit;
 };
 
 // fit result struct
@@ -59,13 +60,15 @@ enum FitEnum {Gaus1, Gaus1core, Gaus2fm, Gaus3fm};
 class TimeFitter
 {
 public:
-  TimeFitter(const TString & infilename, const TString & plotconfig, const TString & timefitconfig, 
-	     const TString & era, const TString & outfiletext);
+  TimeFitter(const TString & infilename, const TString & plotconfig, const TString & miscconfig,
+	     const TString & timefitconfig, const TString & era, const TString & outfiletext);
   ~TimeFitter();
 
   // config
+  void SetupDefaults();
   void SetupCommon();
   void SetupPlotConfig();
+  void SetupMiscConfig();
   void SetupTimeFitConfig();
 
   // main calls
@@ -73,12 +76,21 @@ public:
   void MakePlots(FitStruct & DataInfo, FitStruct & BkgdInfo);
   void DeleteInfo(FitStruct & FitInfo);
 
-  // subroutines for making fit
+  // subroutines for making fits to variables
   void MakeTimeFit(FitStruct & FitInfo);
   void GetInputHist(FitStruct & FitInfo);
   void Project2Dto1DHists(FitStruct & FitInfo);
   void Fit1DHists(FitStruct & FitInfo);
   void ExtractFitResults(FitStruct & FitInfo);
+
+  // helper functions for making fits to variables
+  void PrepFit(TH1F *& hist1D, TF1 *& fit);
+  void GetFitResult(const TF1 * fit, FitResult & result);
+
+  // subroutines for making fits to sigma
+  void MakeSigmaFit(FitStruct & FitInfo);
+  void PrepSigmaFit(FitStruct & FitInfo);
+  void FitSigmaHist(FitStruct & FitInfo);
 
   // subroutines for plotting
   void PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, Float_t max, 
@@ -87,17 +99,16 @@ public:
   // save meta data
   void MakeConfigPave();
 
-  // helper functions
+  // additional helper functions
   template <typename T>
   void DeleteMap(T & Map);
-  void PrepFit(TH1F *& hist1D, TF1 *& fit);
-  void GetFitResult(const TF1 * fit, FitResult & result);
   void GetMinMax(const TH1F * hist, Float_t & min, Float_t & max, const TString & key);
 
 private:
   // settings
   const TString fInFileName;
   const TString fPlotConfig;
+  const TString fMiscConfig;
   const TString fTimeFitConfig;
   const TString fEra;
   const TString fOutFileText;
@@ -108,11 +119,16 @@ private:
   TString fXTitle;
   std::vector<Double_t> fXBins;
   TString fYTitle;
+  Bool_t fDoLogX; // technically, read in from miscconfig
 
-  // fit config
+  // var fit config
   FitEnum fFit;
   Float_t fRangeLow;
   Float_t fRangeUp;
+
+  // sigma fit config
+  Bool_t fDoSigmaFit;
+  TString fSigmaText;
 
   // input
   TFile * fInFile;

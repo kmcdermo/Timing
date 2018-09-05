@@ -15,7 +15,6 @@ usecorr=${2:-"false"}
 
 ## other info
 fragdir="plot_config/fragments"}
-timefitdir="timefit_config"}
 
 ## etas
 declare -a etas=("EB" "EE" "Full")
@@ -23,16 +22,37 @@ declare -a etas=("EB" "EE" "Full")
 ## vars
 declare -a vars=("E" "pt" "eta" "time" "nvtx")
 
+## logx vars
+declare -a logx_vars=("E" "pt")
+
 ## phos
 pho0="0 Leading"
 pho1="1 Subleading"
 declare -a phos=("pho0" "pho1")
 
-## function
+## function to read config
 function ReadConfig ()
 {
     local line=${1}
     echo "${line}" | cut -d "=" -f 2
+}
+
+## function to say if logx
+function CheckLogX ()
+{
+    local var=${1}
+    local result="false"
+
+    for logx_var in "${logx_vars[@]}"
+    do
+	if [[ "${var}" == "${logx_var}" ]]
+	then
+	    result="true"
+	    break
+	fi
+    done
+    
+    echo "${result}"
 }
 
 ## make 1D and 2D plots
@@ -122,7 +142,7 @@ do echo ${!pho} | while read -r index pho_label
          	## make plot config (1D) ##
 		###########################
 
-		plot="tmp_plot_config.txt"
+		plot="tmp_plot_config.${inTextExt}"
 		> "${plot}"
 	    
 		echo "plot_title=${title} (${eta})" >> "${plot}"
@@ -134,7 +154,7 @@ do echo ${!pho} | while read -r index pho_label
          	## make plot config (2D) ##
 		###########################
 
-		plot2D="tmp_plot_config_2D.txt"
+		plot2D="tmp_plot_config_2D.${inTextExt}"
 		> "${plot2D}"
 	    
 		echo "plot_title=${time_title} vs. ${title} (${eta})" >> "${plot2D}"
@@ -160,7 +180,27 @@ do echo ${!pho} | while read -r index pho_label
 		    echo "x_var_bkgd=${mc_corr}" >> "${plot2D}"
 		    echo "x_var_sign=${mc_corr}" >> "${plot2D}"
 		fi
+
+		#########################
+		## make timefit config ##
+		#########################
+
+
+		##############################
+		## make misc timefit config ##
+		##############################
 		
+		misc_fit="tmp_misc_fit.${inTextExt}"
+		> "${misc_fit}"
+
+		check_logx=$( CheckLogX ${var} )
+		if [[ "${check_logx}" == "true" ]]
+		then
+		    echo "do_logx=1" >> "${misc_fit}"
+		else
+		    echo "do_logx=0" >> "${misc_fit}"
+		fi
+
 		####################
 		## loop over eras ##
 		####################
@@ -182,13 +222,13 @@ do echo ${!pho} | while read -r index pho_label
 		
 			    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile}" "${outdir}"
 			    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile2D}" "${outdir}"
-			    ./scripts/runTimeFitter.sh "${outfile2D}_${era}.root" "${plot2D}" "${timefitdir}/${timefitconfig}.${inTextExt}" "${era}" "${outfile}_${time}" "${outdir}"
+			    ./scripts/runTimeFitter.sh "${outfile2D}_${era}.root" "${plot2D}" "${fit_misc}" "${timefitconfig}" "${era}" "${outfile}_${time}" "${outdir}"
 			done ## read input
 		    done ## loop over inputs
 		done ## loop over eras
 
 		## remove tmp files
-		rm "${plot}" "${plot2D}"
+		rm "${plot}" "${plot2D}" "${misc_fit}"
 
 	    done ## loop over etas
 	done ## loop over vars

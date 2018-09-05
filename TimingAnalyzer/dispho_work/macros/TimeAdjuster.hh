@@ -49,8 +49,8 @@ struct Photon
   // strings
   std::string s_pt = "phopt";
   std::string s_isEB = "phoisEB";
-  std::string s_seedtimeSHIFT = "seedtimeSHIFT";
-  std::string s_seedtimeSMEAR = "seedtimeSMEAR";
+  std::string s_seedtimeSHIFT = "phoseedtimeSHIFT";
+  std::string s_seedtimeSMEAR = "phoseedtimeSMEAR";
 
   // branches
   TBranch * b_pt;
@@ -66,34 +66,33 @@ struct FitStruct
 
   const TString label;
   std::vector<TString,TH1F*> MuHistMap;
-  std::vector<TString,TH1F*> SigmaHistMap;
   std::vector<TString,TF1*>  SigmaFitMap;
 };
 
 class TimeAdjuster
 {
 public:
-  TimeAdjuster(const TString & skimfilename, const TString & infilesconfig, const TString & outfiletext);
+  TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename,
+	       const TString & infilesconfig, const TString & outfiletext);
   ~TimeAdjuster();
 
   // Config
   void SetupCommon();
-  void SetupInFiles();
+  void SetupInFilesConfig();
 
   // Main calls
   void AdjustTime();
   void PrepAdjustments(FitStruct & FitInfo);
   void CorrectData(FitStruct & DataInfo);
   void CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo);
-  void SaveSigmaFits(FitStruct & DataInfo, FitStruct & MCInfo);
+  void DeleteInfo(FitStruct & FitInfo);
   
   // Getting adjustments ready
-  void GetInputHists(FitStruct & FitInfo);
-  void PrepSigmaFits(FitStruct & FitInfo);
-  void FitSigmaHists(FitStruct & FitInfo);
+  void GetInputMuHists(FitStruct & FitInfo);
+  void GetInputSigmaFits(FitStruct & FitInfo);
 
   // Meta data
-  void MakeCongigPave();
+  void MakeCongigPave(TFile *& SkimFile);
 
   // Helper functions
   template <typename T>
@@ -102,11 +101,9 @@ public:
 private:
   // settings
   const TString fSkimFileName;
+  const TString fSignalSkimFileName;
   const TString fInFilesConfig;
   const TString fOutFileText;
-
-  // adjust config
-  TString fHistName;
 
   // inputs
   std::map<TString,TString> fInFileNameMap;
@@ -114,7 +111,7 @@ private:
 
   // I/O
   TFile * fSkimFile;
-  TPaveText * fPaveText;
+  TFile * fSignalSkimFile;
 };
 
 #endif
