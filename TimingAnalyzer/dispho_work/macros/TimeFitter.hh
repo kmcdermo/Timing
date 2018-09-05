@@ -80,6 +80,10 @@ public:
   void Fit1DHists(FitStruct & FitInfo);
   void ExtractFitResults(FitStruct & FitInfo);
 
+  // subroutines for plotting
+  void PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, Float_t max, 
+		   const TString & key, const Bool_t isLogy);
+
   // save meta data
   void MakeConfigPave();
 
@@ -88,6 +92,7 @@ public:
   void DeleteMap(T & Map);
   void PrepFit(TH1F *& hist1D, TF1 *& fit);
   void GetFitResult(const TF1 * fit, FitResult & result);
+  void GetMinMax(const TH1F * hist, Float_t & min, Float_t & max, const TString & key);
 
 private:
   // settings

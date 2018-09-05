@@ -54,18 +54,18 @@ void TimeFitter::MakeTimeFits()
   TimeFitter::MakeTimeFit(DataInfo);
 
   // Do MC bkgd first
-  FitStruct BkgdInfo("Bkgd",Common::BkgdHistName.Data());
-  TimeFitter::MakeTimeFit(BkgdInfo);
+  FitStruct MCInfo("MC",Common::BkgdHistName.Data());
+  TimeFitter::MakeTimeFit(MCInfo);
 
   // Make Plots
-  TimeFitter::MakePlots(DataInfo,BkgdInfo);
+  TimeFitter::MakePlots(DataInfo,MCInfo);
 
   // MakeConfigPave
   TimeFitter::MakeConfigPave();
 
   // Delete infos
   TimeFitter::DeleteFitInfo(DataInfo);
-  TimeFitter::DeleteFitInfo(BkgdInfo);
+  TimeFitter::DeleteFitInfo(MCInfo);
 }
 
 void TimeFitter::MakeTimeFit(FitStruct & FitInfo)
@@ -113,7 +113,7 @@ void TimeFitter::Project2Dto1DHists(FitStruct & FitInfo);
   auto & Hist1DMap = FitInfo.Hist1DMap;
   const TString histname = Hist2D->GetName();
 
-  for (auto ibinX = 1; ibinX <= fXBins.size(); ibinX++)
+  for (auto ibinX = 1U; ibinX <= fXBins.size(); ibinX++)
   {
     auto & hist1D = Hist1DMap[ibinX];
     hist1D = (TH1F*)Hist2D->ProjectionY(Form("%s_ibin%i",histname.Data(),ibinX),ibinX,ibinX);
@@ -130,7 +130,7 @@ void TimeFitter::Fit1DHists(FitStruct & FitInfo)
   auto & Hist1DMap = FitInfo.Hist1DMap;
   auto & FitMap    = FitInfo.FitMap;
 
-  for (auto ibinX = 1; ibinX <= fXBins.size(); ibinX++)
+  for (auto ibinX = 1U; ibinX <= fXBins.size(); ibinX++)
   {
     // get hist, and skip if no entries
     auto & hist1D = Hist1DMap[ibinX];
@@ -166,7 +166,7 @@ void TimeFitter::ExtractFitResults(FitStruct & FitInfo)
   ResultsMap["sigma"]    = TimeFitter::SetupHist("#sigma","sigma",label);
 
   // set bin content!
-  for (auto ibinX = 1; ibinX <= fXBins.size(); ibinX++)
+  for (auto ibinX = 1U; ibinX <= fXBins.size(); ibinX++)
   {
     // skip if fit not present
     if (!FitMap.count(ibinX)) continue;
@@ -192,7 +192,7 @@ void TimeFitter::ExtractFitResults(FitStruct & FitInfo)
   for (const auto & ResultsPair : ResultsMap) ResultsPair.second->Write(ResultsPair.second->GetName(),TObject::kWriteDelete);
 }
 
-void TimeFitter::MakePlots(FitStruct & DataInfo, FitStruct & BkgdInfo)
+void TimeFitter::MakePlots(FitStruct & DataInfo, FitStruct & MCInfo)
 {
   std::cout << "Make overlay plots..." << std::endl;
 
@@ -203,26 +203,31 @@ void TimeFitter::MakePlots(FitStruct & DataInfo, FitStruct & BkgdInfo)
   // loop over keys
   for (const auto & key : keys)
   {
-    const auto & DataHist = DataInfo[key];
-    const auto & BkgdHist = BkgdInfo[key];
+    // get hists
+    const auto & DataHist = DataInfo.ResultsMap[key];
+    const auto & MCHist   = MCInfo  .ResultsMap[key];
 
     // tmp max, min
     const Float_t min =  1e9;
     const Float_t max = -1e9;
     
-    TimeFitter::GetMinMax(DataHist,min,max);
-    TimeFitter::GetMinMax(BkgdHist,min,max);
+    TimeFitter::GetMinMax(DataHist,min,max,key);
+    TimeFitter::GetMinMax(MCHist  ,min,max,key);
 
     // lin first, then log
-    TimeFitter::PrintCanvas(DataHist,BkgdHist,min,max,key,false);
-    TimeFitter::PrintCanvas(DataHist,BkgdHist,min,max,key,true);
+    TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,false);
+    TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,true);
   }
 }
 
-void TimeFitter::PrintCanvas(TH1F *& DataHist, TH1F *& BkgdHist, Float_t min, Float_t max, 
+void TimeFitter::PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, Float_t max, 
 			     const TString & key, const Bool_t isLogy)
 {
   std::cout << "Printing canvas for: " << key.Data() << " isLogy: " << Common::PrintBool(isLogy).Data() << std::endl;
+
+  // get hists
+  auto & DataHist = DataInfo.ResultsMap[key];
+  auto & MCHist   = MCInfo  .ResultsMap[key];
 
   // bool to allow negative values
   const Bool_t canBeNeg = (key.Contains("mu",TString::kExact));
@@ -242,7 +247,7 @@ void TimeFitter::PrintCanvas(TH1F *& DataHist, TH1F *& BkgdHist, Float_t min, Fl
 
   // draw!
   DataHist->Draw("ep");
-  BkgdHist->Draw("ep same");
+  MCHist  ->Draw("ep same");
 
   // make legend
   auto leg = new TLegend(0.75,0.75,0.825,0.92);
@@ -251,8 +256,8 @@ void TimeFitter::PrintCanvas(TH1F *& DataHist, TH1F *& BkgdHist, Float_t min, Fl
   leg->SetLineColor(kBlack);
   
   // add to legend
-  leg->AddEntry(DataHist,"Data","epl");
-  leg->AddEntry(BkgdHist,"MC","epl");
+  leg->AddEntry(DataHist,DataInfo.label.Data(),"epl");
+  leg->AddEntry(MCHist  ,MCInfo  .label.Data(),"epl");
 
   // draw legend
   leg->Draw("same");
@@ -285,8 +290,9 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
   delete tempfit;
   
   // names for fits and formulas
-  const TString formname = Form("%s_form");
-  const TString fitname  = Form("%s_fit");
+  const TString histname = hist1D->GetName();
+  const TString formname = histname+"_form";
+  const TString fitname  = histname+"_fit";
 
   if (fFit == Gaus1)
   {
@@ -379,6 +385,20 @@ void TimeFitter::GetFitResult(const TF1 * fit, FitResult & result)
   {
     std::cerr << "How did this happen?? Fit was not set for getting results! Exiting..." << std::endl;
     exit(1);
+  }
+}
+
+void TimeFitter::GetMinMax(const TH1F * hist, Float_t & min, Float_t & max, const TString & key)
+{
+  for (auto ibinX = 1U; ibinX < fXBins.size(); ibinX++)
+  {
+    const auto content = hist->GetBinConent(ibinX);
+    
+    // bool to allow negative values
+    const Bool_t canBeNeg = (key.Contains("mu",TString::kExact));
+    
+    if ( ((!canBeNeg && min > 0.f) || (canBeNeg)) && content < min) min = content;
+    if ( ((!canBeNeg && max > 0.f) || (canBeNeg)) && content > max) max = content;
   }
 }
 
@@ -511,13 +531,13 @@ TH1F * TimeFitter::SetupHist(const TString & ytitle, const TString & yextra, con
   {
     color = kRed;
   }
-  else if (label.Contains("Bkgd",TString::kExact))
+  else if (label.Contains("MC",TString::kExact))
   {
     color = kBlue;
   }
   else
   {
-    std::cerr << "How did this happen?? Specified neither Data nor Bkgd for hist! Exiting..." << std::endl;
+    std::cerr << "How did this happen?? Specified neither Data nor MC for hist! Exiting..." << std::endl;
     exit(1);
   }
 
