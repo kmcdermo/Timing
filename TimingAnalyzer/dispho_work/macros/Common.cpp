@@ -818,17 +818,17 @@ namespace Common
     return outhist;
   }
 
-  Bool_t CheckValidFile(const TFile * file, const TString & fname)
+  void CheckValidFile(const TFile * file, const TString & fname)
   {
     if (file == (TFile*) NULL) // check if valid file
     {
-      std::cerr << "Input file is bad pointer: " << fname.Data() << std::endl;
-      return false;
+      std::cerr << "Input file is bad pointer: " << fname.Data()
+		<< " ...exiting..." << std::endl;
+      exit(1);
     }
     else 
     {
       std::cout << "Successfully opened file: " << fname.Data() << std::endl;
-      return true;
     }
   }
 

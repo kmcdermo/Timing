@@ -27,9 +27,7 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   // Get input file
   const TString infilename = Form("%s/%s", fInDir.Data(), fFileName.Data());
   fInFile = TFile::Open(infilename.Data());
-  const Bool_t isFile = Common::CheckValidFile(fInFile,infilename);
-
-  if (!isFile) exit(1);
+  Common::CheckValidFile(fInFile,infilename);
 
   // Get input config tree
   const TString inconfigtreename = Form("%s/%s",Common::rootdir.Data(),Common::configtreename.Data());

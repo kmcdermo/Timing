@@ -19,9 +19,7 @@ void computeSumWeights(const TString & indir, const TString & files, const TStri
     // first get the file
     const TString infilename = Form("%s/%s",indir.Data(),infile.Data());
     auto file = TFile::Open(infilename.Data());
-    const Bool_t isFile = Common::CheckValidFile(file,infilename);
-    
-    if (!isFile) continue;
+    Common::CheckValidFile(file,infilename);
 
     // Get the cut histogram
     const TString inh_cutflowname = Form("%s/%s",Common::rootdir.Data(),Common::h_cutflowname.Data());
