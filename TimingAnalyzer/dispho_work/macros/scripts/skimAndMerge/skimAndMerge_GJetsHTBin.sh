@@ -6,6 +6,10 @@ source scripts/skimAndMerge/common_variables.sh
 label=${1}
 tune=${2}
 bin=${3}
+skimtype=${4:-"Standard"}
+
+## other input vars
+usePUWeights=1
 
 ## global vars
 mcbase="GJets_HT"
@@ -17,4 +21,4 @@ tmpdir="${tmpbase}/${mcbase}/${bin}"
 outdir="${outbase}/MC/${mcbase}/${bin}"
 
 ## process this bin
-./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} 1
+./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} ${usePUWeights} ${skimtype}

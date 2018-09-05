@@ -6,6 +6,10 @@ source scripts/skimAndMerge/common_variables.sh
 label=${1}
 tune=${2}
 sample=${3}
+skimtype=${4:-"Standard"}
+
+## other input vars
+usePUWeights=1
 
 ## global vars
 mcbase="DYJetsToLL"
@@ -22,4 +26,4 @@ tmpdir="${tmpbase}/${mcbase}/${sample}"
 outdir="${outbase}/MC/${mcbase}/${sample}"
 
 ## process this bin
-./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} 1
+./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} ${usePUWeights} ${skimtype}
