@@ -595,7 +595,7 @@ namespace Common
   {
     // get era info
     const auto & erainfo = Common::EraMap[era];
-    const auto frac = erainfo.lumi / Common::EraMap["Full"];
+    const auto frac = erainfo.lumi / Common::EraMap["Full"].lumi;
 
     // multiply cut string by fractional lumi
     for (auto & CutWgtPair : Common::CutWgtMap)
@@ -912,7 +912,7 @@ namespace Common
   void AddEraInfoToPave(TPaveText *& outpave,const TString & era)
   {
     const auto & erainfo = Common::EraMap[era];
-    outpave->AddText(Form("Era: %s, Runs: %i-%i, Lumi: %5.2f /fb",fEra.Data(),erainfo.startRun,erainfo.endRun,erainfo.lumi));
+    outpave->AddText(Form("Era: %s, Runs: %i-%i, Lumi: %5.2f /fb",era.Data(),erainfo.startRun,erainfo.endRun,erainfo.lumi));
   }
 
   void AddTextFromInputConfig(TPaveText *& outpave, const TString & label, const TString & configname)

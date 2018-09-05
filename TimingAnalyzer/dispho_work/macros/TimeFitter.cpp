@@ -64,8 +64,8 @@ void TimeFitter::MakeTimeFits()
   TimeFitter::MakeConfigPave();
 
   // Delete infos
-  TimeFitter::DeleteFitInfo(DataInfo);
-  TimeFitter::DeleteFitInfo(MCInfo);
+  TimeFitter::DeleteInfo(DataInfo);
+  TimeFitter::DeleteInfo(MCInfo);
 }
 
 void TimeFitter::MakeTimeFit(FitStruct & FitInfo)
@@ -549,6 +549,9 @@ TH1F * TimeFitter::SetupHist(const TString & ytitle, const TString & yextra, con
 
 void TimeFitter::DeleteInfo(FitStruct & FitInfo)
 {
+  const auto & label = FitInfo.label;
+  std::cout << "Deleting info for: " << label.Data() << std::endl;
+
   delete FitInfo.Hist2D;
 
   TimeFitter::DeleteMap(FitInfo.Hist1DMap);
