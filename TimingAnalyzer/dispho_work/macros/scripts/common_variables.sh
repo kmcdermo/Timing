@@ -53,7 +53,7 @@ export SR="${Signal} empty"
 ## Zee 
 export Zee="Zee_DEG v4/zee/zee v4/zee/zee_signal always_true"
 export ZEE="${Zee} empty"
-declare -a inputs(ZEE)
+declare -a inputs=(ZEE)
 export inputs
 
 ## suppress pushd, popd output

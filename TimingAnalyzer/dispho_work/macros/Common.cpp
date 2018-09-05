@@ -66,37 +66,37 @@ namespace Common
     Common::SampleMap["MC/DYJetsToLL/base"] = "DYLL";
 
     // DiPhoBox
-    Common::SampleMap["MC/DiPhotonJetsBox/M40_80"]  = "DiPho";
-    Common::SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = "DiPho";
+    // Common::SampleMap["MC/DiPhotonJetsBox/M40_80"]  = "DiPho";
+    // Common::SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = "DiPho";
 
-    // T+X
-    Common::SampleMap["MC/TX/TGGJets"] = "TX";
-    Common::SampleMap["MC/TX/TTJets"]  = "TX";
-    Common::SampleMap["MC/TX/TTGJets"] = "TX";
-    Common::SampleMap["MC/TX/TTWJets"] = "TX";
-    Common::SampleMap["MC/TX/TTZJets"] = "TX";
+    // // T+X
+    // Common::SampleMap["MC/TX/TGGJets"] = "TX";
+    // Common::SampleMap["MC/TX/TTJets"]  = "TX";
+    // Common::SampleMap["MC/TX/TTGJets"] = "TX";
+    // Common::SampleMap["MC/TX/TTWJets"] = "TX";
+    // Common::SampleMap["MC/TX/TTZJets"] = "TX";
 
-    // W+X
-    Common::SampleMap["MC/WX/WGGJets"]      = "WX";
-    Common::SampleMap["MC/WX/WToENu/M100"]  = "WX";
-    Common::SampleMap["MC/WX/WToENu/M200"]  = "WX";
-    Common::SampleMap["MC/WX/WToENu/M500"]  = "WX";
-    Common::SampleMap["MC/WX/WToENu/M1000"] = "WX";
-    Common::SampleMap["MC/WX/WWto2L2Nu"]    = "WX";
-    Common::SampleMap["MC/WX/WWtoLNu2Q"]    = "WX";
-    Common::SampleMap["MC/WX/WWtoLNu2Q"]    = "WX";
-    Common::SampleMap["MC/WX/WZ"]           = "WX";
-    Common::SampleMap["MC/WX/WZG"]          = "WX";
+    // // W+X
+    // Common::SampleMap["MC/WX/WGGJets"]      = "WX";
+    // Common::SampleMap["MC/WX/WToENu/M100"]  = "WX";
+    // Common::SampleMap["MC/WX/WToENu/M200"]  = "WX";
+    // Common::SampleMap["MC/WX/WToENu/M500"]  = "WX";
+    // Common::SampleMap["MC/WX/WToENu/M1000"] = "WX";
+    // Common::SampleMap["MC/WX/WWto2L2Nu"]    = "WX";
+    // Common::SampleMap["MC/WX/WWtoLNu2Q"]    = "WX";
+    // Common::SampleMap["MC/WX/WWtoLNu2Q"]    = "WX";
+    // Common::SampleMap["MC/WX/WZ"]           = "WX";
+    // Common::SampleMap["MC/WX/WZG"]          = "WX";
 
-    // Z+X
-    Common::SampleMap["MC/ZX/ZGGJets_ZToLL"]       = "ZX";
-    Common::SampleMap["MC/ZX/ZGGJets_ZToHadOrNu"]  = "ZX";
-    Common::SampleMap["MC/ZX/Z1Jets_ZpT/150to250"] = "ZX";
-    Common::SampleMap["MC/ZX/Z1Jets_ZpT/250to400"] = "ZX";
-    Common::SampleMap["MC/ZX/Z1Jets_ZpT/400toInf"] = "ZX";
-    Common::SampleMap["MC/ZX/Z2Jets_ZpT/150to250"] = "ZX";
-    Common::SampleMap["MC/ZX/Z2Jets_ZpT/400toInf"] = "ZX";
-    Common::SampleMap["MC/ZX/ZZ"]                  = "ZX";
+    // // Z+X
+    // Common::SampleMap["MC/ZX/ZGGJets_ZToLL"]       = "ZX";
+    // Common::SampleMap["MC/ZX/ZGGJets_ZToHadOrNu"]  = "ZX";
+    // Common::SampleMap["MC/ZX/Z1Jets_ZpT/150to250"] = "ZX";
+    // Common::SampleMap["MC/ZX/Z1Jets_ZpT/250to400"] = "ZX";
+    // Common::SampleMap["MC/ZX/Z1Jets_ZpT/400toInf"] = "ZX";
+    // Common::SampleMap["MC/ZX/Z2Jets_ZpT/150to250"] = "ZX";
+    // Common::SampleMap["MC/ZX/Z2Jets_ZpT/400toInf"] = "ZX";
+    // Common::SampleMap["MC/ZX/ZZ"]                  = "ZX";
     
     // Data
     Common::SampleMap[Form("Data/%s/B/v1",Common::PrimaryDataset.Data())] = "Data";
