@@ -48,7 +48,12 @@ export Signal="sr_SPH v4/orig/sr v4/orig/signals_sr always_true"
 export CR_GJets="${GJets} gjets_${wgtvar}_map"
 export CR_QCD="${QCD} qcd_${wgtvar}_map"
 export SR="${Signal} empty"
-declare -a inputs=(CR_GJets CR_QCD SR)
+#declare -a inputs=(CR_GJets CR_QCD SR)
+
+## Zee 
+export Zee="Zee_DEG v4/zee/zee v4/zee/zee_signal always_true"
+export ZEE="${Zee} empty"
+declare -a inputs(ZEE)
 export inputs
 
 ## suppress pushd, popd output

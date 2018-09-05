@@ -11,15 +11,11 @@ source scripts/common_variables.sh
 
 ## command line inputs
 outdirbase=${1:-"plots/ntuples_v4/checks_v4/era_plots"}
-usecorr=${4:-"false"}
+usecorr=${2:-"false"}
 
 ## other info
 fragdir="plot_config/fragments"}
 timefitdir="timefit_config"}
-infile="zee"
-infile="zee_signals"
-varwgtmap="empty"
-misc="misc"
 
 ## etas
 declare -a etas=("EB" "EE" "Full")
@@ -51,9 +47,9 @@ do echo ${!pho} | while read -r index pho_label
 		if   [[ "${line}" == "var="* ]]
 		then
 		    x_var=$( ReadConfig "${line}" )
-		elif [[ "${line}" == "label="* ]]
+		elif [[ "${line}" == "title="* ]]
 		then
-		    label=$( ReadConfig "${line}" )
+		    title=$( ReadConfig "${line}" )
 		elif [[ "${line}" == "bins="* ]]
 		then
 		    x_bins=$( ReadConfig "${line}" )
@@ -63,7 +59,7 @@ do echo ${!pho} | while read -r index pho_label
 	    ## add in photon index
 	    if [[ "${var}" != "nvtx" ]] 
 	    then
-		label="${pho_label} ${label}"
+		title="${pho_label} ${title}"
 		x_var="${x_var}_${index}"
 	    fi
 
@@ -74,10 +70,10 @@ do echo ${!pho} | while read -r index pho_label
 		then
 		    time_var=$( ReadConfig "${line}" )
 		    time_var="${time_var}_${index}"
-		elif [[ "${line}" == "label="* ]]
+		elif [[ "${line}" == "title="* ]]
 		then
-		    time_label=$( ReadConfig "${line}" )
-		    time_label="${pho_label} ${time_label}"
+		    time_title=$( ReadConfig "${line}" )
+		    time_title="${pho_label} ${time_title}"
 		elif [[ "${line}" == "bins="* ]]
 		then
 		    time_bins=$( ReadConfig "${line}" )
@@ -85,14 +81,14 @@ do echo ${!pho} | while read -r index pho_label
 	    done < "${fragdir}/time.${inTextExt}"
 	    
 	    ## set corrections
-	    std_corr="+phoseedTOF_${pho_label}"
+	    std_corr="+phoseedTOF_${index}"
 	    data_corr="${std_corr}"
 	    mc_corr="${std_corr}"
 
 	    if [[ "${usecorr}" == "true" ]]
 	    then
-		data_corr="+phoseedtimeSHIFT_${pho_label}" 
-		mc_corr="+phoseedtimeSHIFT_${pho_label}+phoseedtimeSMEAR_${pho_label}"
+		data_corr="+phoseedtimeSHIFT_${index}" 
+		mc_corr="+phoseedtimeSHIFT_${index}+phoseedtimeSMEAR_${index}"
 	    fi
 
 	    ## loop over eta regions
@@ -129,8 +125,8 @@ do echo ${!pho} | while read -r index pho_label
 		plot="tmp_plot_config.txt"
 		> "${plot}"
 	    
-		echo "plot_title=${label} (${eta})" >> "${plot}"
-		echo "x_title=${label} (${eta})" >> "${plot}"
+		echo "plot_title=${title} (${eta})" >> "${plot}"
+		echo "x_title=${title} (${eta})" >> "${plot}"
 		echo "x_var=${x_var}" >> "${plot}"
 		echo "x_bins=${x_bins}" >> "${plot}"
 
@@ -141,11 +137,11 @@ do echo ${!pho} | while read -r index pho_label
 		plot2D="tmp_plot_config_2D.txt"
 		> "${plot2D}"
 	    
-		echo "plot_title=${time_label} vs. ${label} (${eta})" >> "${plot2D}"
-		echo "x_title=${label} (${eta})" >> "${plot2D}"
+		echo "plot_title=${time_title} vs. ${title} (${eta})" >> "${plot2D}"
+		echo "x_title=${title} (${eta})" >> "${plot2D}"
 		echo "x_var=${x_var}" >> "${plot2D}"
 		echo "x_bins=${x_bins}" >> "${plot2D}"
-		echo "y_title=${time_label} (${eta})" >> "${plot2D}"
+		echo "y_title=${time_title} (${eta})" >> "${plot2D}"
 		echo "y_var=${time_var}" >> "${plot2D}"
 		echo "y_bins=${time_bins}" >> "${plot2D}"       
 
@@ -165,27 +161,35 @@ do echo ${!pho} | while read -r index pho_label
 		    echo "x_var_sign=${mc_corr}" >> "${plot2D}"
 		fi
 		
-		##################
-		## outfile name ##
-		##################
-		outdir="${outdirbase}/${eta}/${var}"
-		outfile="${x_var}_${eta}"
-		outfile2D="${time_var}_vs_${outfile}"
-		extra="full_lumi"
-		time="timefit"
-
 		####################
 		## loop over eras ##
 		####################
 		for era in "${eras[@]}"
 		do
-		    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile}_${era}" "${outdir}"
-		    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile2D}_${era}" "${outdir}"
-		    ./scripts/runTimeFitter.sh "${outfile2D}_${era}.root" "${plot2D}" "${timefitdir}/${timefitconfig}.${inTextExt}" "${era}" "${outfile}_${era}_${time}" "${outdir}"
-		done ## end loop over eras
+		    ################################
+		    ## loop over inputs: Zee only ##
+		    ################################
+		    for input in "${inputs[@]}"
+		    do echo ${!input} | while read -r label infile insigfile sel varwgtmap
+			do
+			    ##################
+                 	    ## outfile name ##
+                	    ##################
+			    time="timefit"
+			    outdir="${outdirbase}/${label}/${eta}/${var}"
+			    outfile="${x_var}_${label}_${eta}_${era}"
+			    outfile2D="${time_var}_vs_${outfile}"
+		
+			    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile}" "${outdir}"
+			    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile2D}" "${outdir}"
+			    ./scripts/runTimeFitter.sh "${outfile2D}_${era}.root" "${plot2D}" "${timefitdir}/${timefitconfig}.${inTextExt}" "${era}" "${outfile}_${time}" "${outdir}"
+			done ## read input
+		    done ## loop over inputs
+		done ## loop over eras
 
 		## remove tmp files
 		rm "${plot}" "${plot2D}"
+
 	    done ## loop over etas
 	done ## loop over vars
     done ## read pho
