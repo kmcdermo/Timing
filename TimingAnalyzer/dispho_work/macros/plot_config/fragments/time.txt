@@ -1,0 +1,3 @@
+var=phoseedtime
+label=Seed Time [ns]
+bins=CONSTANT 240 -3 3
