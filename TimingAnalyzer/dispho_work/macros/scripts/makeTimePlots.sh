@@ -25,7 +25,7 @@ then
 fi
 
 ## other info
-fragdir="plot_config/fragments"}
+fragdir="plot_config/fragments"
 
 ## etas
 declare -a etas=("EB" "EE" "Full")
@@ -236,7 +236,7 @@ do echo ${!pho} | while read -r index pho_label
 		echo "range_low=${rangelow}" >> "${timefit_config}"
 		echo "range_up=${rangeup}" >> "${timefit_config}"
 
-		check_sigmafit=$( CheckSimgaFitVar ${var} )
+		check_sigmafit=$( CheckSigmaFitVar ${var} )
 		if [[ "${check_sigmafit}" == "true" ]]
 		then
 		    echo "do_sigma_fit=1" >> "${timefit_config}"

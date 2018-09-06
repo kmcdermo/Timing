@@ -123,8 +123,8 @@ void TimeFitter::MakePlots(FitStruct & DataInfo, FitStruct & MCInfo)
     const auto & MCHist   = MCInfo  .ResultsMap[key];
 
     // tmp max, min
-    const Float_t min =  1e9;
-    const Float_t max = -1e9;
+    Float_t min =  1e9;
+    Float_t max = -1e9;
     
     TimeFitter::GetMinMax(DataHist,min,max,key);
     TimeFitter::GetMinMax(MCHist  ,min,max,key);
@@ -152,7 +152,7 @@ void TimeFitter::GetInputHist(FitStruct & FitInfo)
   Hist2D->Write(Hist2D->GetName(),TObject::kWriteDelete);
 }
 
-void TimeFitter::Project2Dto1DHists(FitStruct & FitInfo); 
+void TimeFitter::Project2Dto1DHists(FitStruct & FitInfo)
 {
   const auto & label = FitInfo.label;
   std::cout << "Projecting to 1D from 2D plot: " << label.Data() << std::endl;
@@ -166,7 +166,6 @@ void TimeFitter::Project2Dto1DHists(FitStruct & FitInfo);
   {
     auto & hist1D = Hist1DMap[ibinX];
     hist1D = (TH1F*)Hist2D->ProjectionY(Form("%s_ibin%i",histname.Data(),ibinX),ibinX,ibinX);
-    hist1D->Sumw2();
   }
 }
 
@@ -275,7 +274,7 @@ void TimeFitter::PrepSigmaFit(FitStruct & FitInfo)
   fit->SetLineColor(hist->GetLineColor());
 }
 
-void TimeAdjuster::FitSigmaHists(FitStruct & FitInfo)
+void TimeFitter::FitSigmaHist(FitStruct & FitInfo)
 {
   const auto & label = FitInfo.label;
   std::cout << "Fitting sigma hist for: " << label.Data() << std::endl;
@@ -292,7 +291,7 @@ void TimeAdjuster::FitSigmaHists(FitStruct & FitInfo)
   fit->Write(fit->GetName(),TObject::kWriteDelete);
 }
 
-void TimeFitter::PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, Float_t max, 
+void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t min, Float_t max, 
 			     const TString & key, const Bool_t isLogy)
 {
   std::cout << "Printing canvas for: " << key.Data() << " isLogy: " << Common::PrintBool(isLogy).Data() << std::endl;
@@ -339,8 +338,8 @@ void TimeFitter::PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, 
     MCFit  ->Draw("same");
 
     // setup output text
-    FitText = new TPaveText(0.5,0.6,0.825,0.0.73,"NDC");
-    FitText-SetName("SigmaFitText");
+    FitText = new TPaveText(0.5,0.6,0.825,0.73,"NDC");
+    FitText->SetName("SigmaFitText");
     
     FitText->AddText(Form("#sigma(t)=#frac{N}{%s}} #oplus #sqrt{2}C",fSigmaText.Data()));
     FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f",DataLabel.Data(),DataFit->GetParameter(0),DataFit->GetParError(0)));
@@ -371,7 +370,7 @@ void TimeFitter::PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, 
   Common::CMSLumi(Canvas,0,fEra);
 
   // make images
-  Common::SaveAs(Canvas,Form("%s_%s_%s",key.Data(),outfiletext.Data(),(isLogy?"log":"lin")));
+  Common::SaveAs(Canvas,Form("%s_%s_%s",key.Data(),fOutFileText.Data(),(isLogy?"log":"lin")));
 
   // do log-x?
   if (fDoLogX)
@@ -380,7 +379,7 @@ void TimeFitter::PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, 
     Canvas->SetLogx();
 
     // make images
-    Common::SaveAs(Canvas,Form("%s_%s_%s_logx",key.Data(),outfiletext.Data(),(isLogy?"log":"lin")));
+    Common::SaveAs(Canvas,Form("%s_%s_%s_logx",key.Data(),fOutFileText.Data(),(isLogy?"log":"lin")));
   }
 
   // save output if lin
@@ -391,7 +390,7 @@ void TimeFitter::PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, 
     Canvas->Write(Canvas->GetName(),TObject::kWriteDelete);
     if (fDoSigmaFit)
     {
-      FitText->Write(fittext->GetName(),TObject::kWriteDelete);
+      FitText->Write(FitText->GetName(),TObject::kWriteDelete);
     }
   }
 
@@ -520,7 +519,7 @@ void TimeFitter::GetMinMax(const TH1F * hist, Float_t & min, Float_t & max, cons
 {
   for (auto ibinX = 1U; ibinX < fXBins.size(); ibinX++)
   {
-    const auto content = hist->GetBinConent(ibinX);
+    const auto content = hist->GetBinContent(ibinX);
     
     // bool to allow negative values
     const Bool_t canBeNeg = (key.Contains("mu",TString::kExact));
@@ -694,7 +693,7 @@ TH1F * TimeFitter::SetupHist(const TString & ytitle, const TString & yextra, con
   const auto xbins = &fXBins[0];
 
   // make new hist
-  auto hist = new TH1F(label+"_"+yextra,fTitle+" "+ytitle+";"+fXTitle+";"+fTitle+" "+ytitle,fXbins.size()-1,xbins);
+  auto hist = new TH1F(label+"_"+yextra,fTitle+" "+ytitle+";"+fXTitle+";"+fTitle+" "+ytitle,fXBins.size()-1,xbins);
   hist->Sumw2();
 
   Color_t color = kBlack;
@@ -713,7 +712,7 @@ TH1F * TimeFitter::SetupHist(const TString & ytitle, const TString & yextra, con
   }
 
   hist->SetLineColor(color);
-  hist->SetaMarkerColor(color);
+  hist->SetMarkerColor(color);
 
   return hist;
 }

@@ -65,8 +65,8 @@ struct FitStruct
   FitStruct(const TString & label) : label(label) {}
 
   const TString label;
-  std::vector<TString,TH1F*> MuHistMap;
-  std::vector<TString,TF1*>  SigmaFitMap;
+  std::map<TString,TH1F*> MuHistMap;
+  std::map<TString,TF1*>  SigmaFitMap;
 };
 
 class TimeAdjuster

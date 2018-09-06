@@ -36,9 +36,9 @@ struct FitStruct
   const TString inHistName;
 
   TH2F * Hist2D;
-  std::vector<Int_t,TH1F*>   Hist1DMap;
-  std::vector<Int_t,TF1*>    FitMap;
-  std::vector<TString,TH1F*> ResultsMap;
+  std::map<Int_t,TH1F*>   Hist1DMap;
+  std::map<Int_t,TF1*>    FitMap;
+  std::map<TString,TH1F*> ResultsMap;
   TF1 * SigmaFit;
 };
 
@@ -93,7 +93,7 @@ public:
   void FitSigmaHist(FitStruct & FitInfo);
 
   // subroutines for plotting
-  void PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, Float_t max, 
+  void PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t min, Float_t max, 
 		   const TString & key, const Bool_t isLogy);
 
   // save meta data
@@ -103,6 +103,7 @@ public:
   template <typename T>
   void DeleteMap(T & Map);
   void GetMinMax(const TH1F * hist, Float_t & min, Float_t & max, const TString & key);
+  TH1F * SetupHist(const TString & ytitle, const TString & yextra, const TString & label);
 
 private:
   // settings

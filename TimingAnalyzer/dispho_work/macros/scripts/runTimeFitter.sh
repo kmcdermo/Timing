@@ -8,11 +8,11 @@ infilename=${1:-"${skimdir}/sr.root"}
 plotconfig=${2:-"${plotconfigdir}/phopt_0.${inTextExt}"}
 miscconfig=${3:-"${miscconfigdir}/misc_blind.${inTextExt}"}
 timefitconfig=${4:-"time.${inTextExt}"}
-era={$5:-"full"}
+era=${5:-"full"}
 outfiletext=${6:-"plots"}
 dir=${7:-"plots/test"}
 
-declare -a outputs=("chi2ndf" "chi2prrob" "mu" "sigma")
+declare -a outputs=("chi2ndf" "chi2prob" "mu" "sigma")
 
 ## first make plot
 root -l -b -q runTimeFitter.C\(\"${infilename}\",\"${plotconfig}\",\"${miscconfig}\",\"${timefitconfig}\",\"${era}\",\"${outfiletext}\"\)
