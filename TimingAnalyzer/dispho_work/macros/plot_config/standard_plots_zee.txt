@@ -5,6 +5,7 @@ phoeta_0
 
 phoseedtime_0
 phoseedtime_0_const_zoom
+phoseedTOF_0
 
 phoE_1
 phopt_1_zoom
@@ -13,6 +14,7 @@ phoeta_1
 
 phoseedtime_1
 phoseedtime_1_const_zoom
+phoseedTOF_1
 
 zeemass
 diphoseedtime_const_zoom
