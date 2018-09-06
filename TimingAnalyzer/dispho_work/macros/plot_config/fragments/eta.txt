@@ -1,3 +1,4 @@
 var=phoeta
 title=Photon #eta
-bins=CONSTANT 50 -2.5 2.5
+bins=CONSTANT 25 -2.5 2.5
+ytitle=Events

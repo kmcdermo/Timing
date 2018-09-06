@@ -1,0 +1,4 @@
+common_cut=(hltDiEle27WPT&&!phoisOOT_0&&!phoisOOT_1&&phohasPixSeed_0&&phohasPixSeed_1)
+data_cut=
+bkgd_cut=
+sign_cut=

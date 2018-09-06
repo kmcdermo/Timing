@@ -55,6 +55,16 @@ struct FitResult
   Float_t esigma;
 };
 
+// sigma fit params
+struct SigmaFitParams
+{
+  SigmaFitParams() {}
+  
+  Float_t low;
+  Float_t val;
+  Float_t up;
+};
+
 enum FitEnum {Gaus1, Gaus1core, Gaus2fm, Gaus3fm};
 
 class TimeFitter
@@ -70,6 +80,7 @@ public:
   void SetupPlotConfig();
   void SetupMiscConfig();
   void SetupTimeFitConfig();
+  void ReadInitParams(const std::string & str, SigmaFitParams & params);
 
   // main calls
   void MakeTimeFits();
@@ -127,10 +138,14 @@ private:
   FitEnum fFit;
   Float_t fRangeLow;
   Float_t fRangeUp;
+  TString fTimeText;
 
   // sigma fit config
   Bool_t fDoSigmaFit;
-  TString fSigmaText;
+  TString fSigmaVarText;
+  TString fSigmaVarUnit;
+  SigmaFitParams fSigmaInitN;
+  SigmaFitParams fSigmaInitC;
 
   // input
   TFile * fInFile;

@@ -209,8 +209,8 @@ void TimeFitter::ExtractFitResults(FitStruct & FitInfo)
   // setup hists
   ResultsMap["chi2ndf"]  = TimeFitter::SetupHist("#chi^{2}/NDF","chi2ndf",label);
   ResultsMap["chi2prob"] = TimeFitter::SetupHist("#chi^{2} Prob.","chi2prob",label);
-  ResultsMap["mu"]       = TimeFitter::SetupHist("#mu_{T} [ns]","mu",label);
-  ResultsMap["sigma"]    = TimeFitter::SetupHist("#sigma_{T} [ns]","sigma",label);
+  ResultsMap["mu"]       = TimeFitter::SetupHist(Form("#mu_{%s} [ns]",fTimeText.Data()),"mu",label);
+  ResultsMap["sigma"]    = TimeFitter::SetupHist(Form("#sigma_{%s} [ns]",fTimeText.Data()),"sigma",label);
 
   // set bin content!
   for (auto ibinX = 1U; ibinX <= fXBins.size(); ibinX++)
@@ -264,10 +264,10 @@ void TimeFitter::PrepSigmaFit(FitStruct & FitInfo)
   fit = new TF1(fitname.Data(),formname.Data(),x_low,x_up);
 
   // init params
-  fit->SetParameter(0,5000.f);
-  fit->SetParLimits(0,0.f,20000.f);
-  fit->SetParameter(1,150.f);
-  fit->SetParLimits(1,0.f,500.f);
+  fit->SetParameter(0,fSigmaInitN.val);
+  fit->SetParLimits(0,fSigmaInitN.low,fSigmaInitN.up);
+  fit->SetParameter(1,fSigmaInitC.val);
+  fit->SetParLimits(1,fSigmaInitC.low,fSigmaInitC.up);
 
   // set line color
   fit->SetLineColor(hist->GetLineColor());
@@ -341,14 +341,14 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
     MCFit  ->Draw("same");
 
     // setup output text
-    FitText = new TPaveText(0.5,0.6,0.825,0.73,"NDC");
+    FitText = new TPaveText(0.5,0.55,0.825,0.73);
     FitText->SetName("SigmaFitText");
     
-    FitText->AddText(Form("#sigma(t)=#frac{N}{%s}} #oplus #sqrt{2}C",fSigmaText.Data()));
-    FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f",DataLabel.Data(),DataFit->GetParameter(0),DataFit->GetParError(0)));
-    FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f",DataLabel.Data(),DataFit->GetParameter(1),DataFit->GetParError(1)));
-    FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f",MCLabel  .Data(),MCFit  ->GetParameter(0),MCFit  ->GetParError(0)));
-    FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f",MCLabel  .Data(),MCFit  ->GetParameter(1),MCFit  ->GetParError(1)));
+    FitText->AddText(Form("#sigma(t)=#frac{N}{%s} #oplus #sqrt{2}C",fSigmaVarText.Data()));
+    FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f [%s ns]",DataLabel.Data(),DataFit->GetParameter(0),DataFit->GetParError(0),fSigmaVarUnit.Data()));
+    FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f [ns]"   ,DataLabel.Data(),DataFit->GetParameter(1),DataFit->GetParError(1)));
+    FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f [%s ns]",MCLabel  .Data(),MCFit  ->GetParameter(0),MCFit  ->GetParError(0),fSigmaVarUnit.Data()));
+    FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f [ns]"   ,MCLabel  .Data(),MCFit  ->GetParameter(1),MCFit  ->GetParError(1)));
     FitText->SetTextAlign(11);
     FitText->SetFillColorAlpha(FitText->GetFillColor(),0);
 
@@ -672,14 +672,32 @@ void TimeFitter::SetupTimeFitConfig()
       str = Common::RemoveDelim(str,"range_up=");
       fRangeUp = std::atof(str.c_str());
     }
+    else if (str.find("time_text=") != std::string::npos)
+    {
+      fTimeText = Common::RemoveDelim(str,"time_text=");
+    }
     else if (str.find("do_sigma_fit=") != std::string::npos)
     {
       str = Common::RemoveDelim(str,"do_sigma_fit=");
       Common::SetupBool(str,fDoSigmaFit);
     }
-    else if (str.find("sigma_text=") != std::string::npos)
+    else if (str.find("sigma_var_text=") != std::string::npos)
     {
-      fSigmaText = Common::RemoveDelim(str,"sigma_text=");
+      fSigmaVarText = Common::RemoveDelim(str,"sigma_var_text=");
+    }
+    else if (str.find("sigma_var_unit=") != std::string::npos)
+    {
+      fSigmaVarUnit = Common::RemoveDelim(str,"sigma_var_unit=");
+    }
+    else if (str.find("sigma_init_N_params=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"sigma_init_N_params=");
+      TimeFitter::ReadInitParams(str,fSigmaInitN);
+    }
+    else if (str.find("sigma_init_C_params=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"sigma_init_c_params=");
+      TimeFitter::ReadInitParams(str,fSigmaInitC);
     }
     else
     {
@@ -688,6 +706,12 @@ void TimeFitter::SetupTimeFitConfig()
       exit(1);
     }
   }
+}
+
+void TimeFitter::ReadInitParams(const std::string & str, SigmaFitParams & params)
+{
+  std::stringstream ss(str);
+  ss >> params.low >> params.val >> params.up;
 }
 
 TH1F * TimeFitter::SetupHist(const TString & ytitle, const TString & yextra, const TString & label)

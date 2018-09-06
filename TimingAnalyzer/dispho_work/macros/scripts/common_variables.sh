@@ -34,7 +34,10 @@ declare -a canvscales=("lin" "log")
 export canvscales
 
 ## eras
-declare -a eras=("2017B" "2017C" "2017D" "2017E" "2017F" "Full")
+#declare -a eras=("2017B" "2017C" "2017D" "2017E" "2017F" "Full")
+declare -a eras=("Full")
+export eras
+
 export MainEra="Full"
 
 ## weight info
@@ -54,7 +57,7 @@ export SR="${Signal} empty"
 #declare -a inputs=(CR_GJets CR_QCD SR)
 
 ## Zee 
-export Zee="Zee_DEG v4_metcorr_Zee/zee v4_metcorr_Zee/signals_zee always_true"
+export Zee="Zee_DEG v4_metcorr_Zee/zee v4_metcorr_Zee/signals_zee cuts_v4/zee"
 export ZEE="${Zee} empty"
 declare -a inputs=(ZEE)
 export inputs
@@ -94,12 +97,17 @@ function GetMisc ()
 
     if [[ ${input} == "SR" ]] 
     then
-	if [[ ${plot} == *"met"* ]] || [[ ${plot} == *"phoseedtime_0"* ]] 
+	if [[ ${plot} == *"met"* ]] || [[ ${plot} == *"time"* ]] 
 	then
 	    misc="misc_blind"
 	fi
     fi
-    
+
+    if [[ ${input} == "ZEE" ]] 
+    then
+	misc="misc_zee"
+    fi
+
     echo "${misc}"
 }
 export -f GetMisc

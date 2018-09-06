@@ -11,12 +11,13 @@ source scripts/common_variables.sh
 
 ## command line inputs
 outdirbase=${1:-"plots/ntuples_v4/checks_v4/era_plots"}
-usecorr=${2:-"false"}
-fittype=${3:-"Gaus1core"}
-rangelow=${4:-"3"}
-rangeup=${5:-"3"}
-writefiles=${6:-"false"}
-filedump=${7:-"${timeadjvar}_infiles.${inTextExt}"}
+useshift=${2:-"false"}
+usesmear=${3:-"false"}
+fittype=${4:-"Gaus1core"}
+rangelow=${5:-"3"}
+rangeup=${6:-"3"}
+writefiles=${7:-"false"}
+filedump=${8:-"${timeadjvar}_infiles.${inTextExt}"}
 
 ## create filedump
 if [[ "${writefiles}" == "true" ]]
@@ -28,22 +29,22 @@ fi
 fragdir="plot_config/fragments"
 
 ## etas
-declare -a etas=("EB" "EE" "Full")
+declare -a etas=("EB" "EE") # "Full"
 
 ## vars
-declare -a vars=("E" "pt" "eta" "time" "nvtx")
+declare -a vars=("pt" "eta" "nvtx") # "time" "E"
 
 ## logx vars
-declare -a logx_vars=("E" "pt")
+declare -a logx_vars=("pt") # "E"
 
 ## sigma fit vars
-pt="p_{T}"
+pt="p_{T} GeV/c 0 5 100 0 0.5 10"
 declare -a sigmafit_vars=(pt)
 
 ## phos
 pho0="0 Leading"
 pho1="1 Subleading"
-declare -a phos=("pho0" "pho1")
+declare -a phos=("pho0") # "pho1"
 
 ###############
 ## Functions ##
@@ -105,7 +106,10 @@ do echo ${!pho} | while read -r index pho_label
     do
 	for var in "${vars[@]}"
 	do 
-	    ## read in plot info (1D)
+	    ##########################
+	    ## Set plot config (1D) ##
+	    ##########################
+
 	    while IFS='' read -r line || [[ -n "${line}" ]]
 	    do
 		if   [[ "${line}" == "var="* ]]
@@ -117,6 +121,9 @@ do echo ${!pho} | while read -r index pho_label
 		elif [[ "${line}" == "bins="* ]]
 		then
 		    x_bins=$( ReadConfig "${line}" )
+		elif [[ "${line}" == "ytitle="* ]]
+		then
+		    ytitle=$( ReadConfig "${line}" )
 		fi
 	    done < "${fragdir}/${var}.${inTextExt}"
 
@@ -127,7 +134,10 @@ do echo ${!pho} | while read -r index pho_label
 		x_var="${x_var}_${index}"
 	    fi
 
-	    ## read in time plot info (2D)
+	    ##########################
+	    ## Set plot config (2D) ##
+	    ##########################
+
 	    while IFS='' read -r line || [[ -n "${line}" ]]
 	    do
 		if   [[ "${line}" == "var="* ]]
@@ -144,35 +154,51 @@ do echo ${!pho} | while read -r index pho_label
 		fi
 	    done < "${fragdir}/time.${inTextExt}"
 	    
-	    ## set corrections
-	    std_corr="+phoseedTOF_${index}"
-	    data_corr="${std_corr}"
-	    mc_corr="${std_corr}"
+	    #####################
+	    ## set corrections ##
+	    #####################
 
-	    if [[ "${usecorr}" == "true" ]]
+	    tof_corr="+phoseedTOF_${index}"
+	    shift_corr="+phoseedtimeSHIFT_${index}"
+	    smear_corr="+phoseedtimeSMEAR_${index}"
+
+	    data_corr="${tof_corr}"
+	    mc_corr="${tof_corr}"
+
+	    if [[ "${useshift}" == "true" ]]
 	    then
-		data_corr="+phoseedtimeSHIFT_${index}" 
-		mc_corr="+phoseedtimeSHIFT_${index}+phoseedtimeSMEAR_${index}"
+		data_corr+="${shift_corr}"
+		mc_corr+="${shift_corr}"
+	    fi
+
+	    if [[ "${usesmear}" == "true" ]]
+	    then
+		data_corr+="${smear_corr}"
+		mc_corr+="${smear_corr}"
 	    fi
 
 	    ## loop over eta regions
 	    for eta in "${etas[@]}"
 	    do
-		## make eta cut config
+		#########################
+		## make eta cut config ##
+		#########################
+
 		cut="tmp_cut_config.txt"
 		> "${cut}"
 
 		## write common cut
+		common_cut="hltDiEle27WPT&&!phoisOOT_0&&!phoisOOT_1&&phohasPixSeed_0&&phohasPixSeed_1"
 		eta_cut="phoisEB_${index}"
 		if [[ "${eta}" == "EB" ]]
 		then
-		    echo "common_cut=(${eta_cut})" >> "${cut}"
+		    echo "common_cut=((${eta_cut})&&(${common_cut}))" >> "${cut}"
 		elif [[ "${eta}" == "EE" ]]
 		then
-		    echo "common_cut=(!${eta_cut})" >> "${cut}"
+		    echo "common_cut=(!(${eta_cut})&&(${common_cut}))" >> "${cut}"
 		elif [[ "${eta}" == "Full" ]]
 		then
-		    echo "common_cut=(1)" >> "${cut}"
+		    echo "common_cut=(${common_cut})" >> "${cut}"
 		else
 		    echo "How did this happen?? Did not choose a correct option for eta: ${eta} ... Exiting..."
 		    exit
@@ -193,6 +219,7 @@ do echo ${!pho} | while read -r index pho_label
 		echo "x_title=${title} (${eta})" >> "${plot}"
 		echo "x_var=${x_var}" >> "${plot}"
 		echo "x_bins=${x_bins}" >> "${plot}"
+		echo "y_title=${ytitle}" >> "${plot}"
 
 		###########################
          	## make plot config (2D) ##
@@ -225,6 +252,12 @@ do echo ${!pho} | while read -r index pho_label
 		    echo "x_var_sign=${mc_corr}" >> "${plot2D}"
 		fi
 
+		######################################
+		## determine which misc file to use ##
+		######################################
+
+		misc=$(GetMisc ${input} ${plot})
+
 		#########################
 		## make timefit config ##
 		#########################
@@ -235,12 +268,19 @@ do echo ${!pho} | while read -r index pho_label
 		echo "fit_type=${fittype}" >> "${timefit_config}"
 		echo "range_low=${rangelow}" >> "${timefit_config}"
 		echo "range_up=${rangeup}" >> "${timefit_config}"
+		echo "time_text=t" >> "${timefit_config}"
 
 		check_sigmafit=$( CheckSigmaFitVar ${var} )
 		if [[ "${check_sigmafit}" == "true" ]]
 		then
 		    echo "do_sigma_fit=1" >> "${timefit_config}"
-		    echo "sigma_text=${!var}" >> "${timefit_config}"
+		    echo ${!var} | while read -r var_text var_unit N_low N_val N_up C_low C_val C_up
+		    do
+			echo "sigma_var_text=${var_text}" >> "${timefit_config}"
+			echo "sigma_var_unit=${var_unit}" >> "${timefit_config}"
+			echo "sigma_init_N_params=${N_low} ${N_val} ${N_up}" >> "${timefit_config}"
+			echo "sigma_init_C_params=${C_low} ${C_val} ${C_up}" >> "${timefit_config}"
+		    done
 		else
 		    echo "do_sigma_fit=0" >> "${timefit_config}"
 		fi
@@ -295,7 +335,7 @@ do echo ${!pho} | while read -r index pho_label
 		done ## loop over eras
 
 		## remove tmp files
-		rm "${plot}" "${plot2D}" "${misc_fit}" "${timefit_config}"
+		rm "${cut}" "${plot}" "${plot2D}" "${timefit_config}" "${misc_fit}"
 
 	    done ## loop over etas
 	done ## loop over vars
