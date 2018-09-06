@@ -371,7 +371,7 @@ void TimeFitter::PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, 
   Common::CMSLumi(Canvas,0,fEra);
 
   // make images
-  Common::SaveAs(Canvas,Form("%s_%s",outfiletext.Data(),(isLogy?"log":"lin")));
+  Common::SaveAs(Canvas,Form("%s_%s_%s",key.Data(),outfiletext.Data(),(isLogy?"log":"lin")));
 
   // do log-x?
   if (fDoLogX)
@@ -380,7 +380,7 @@ void TimeFitter::PrintCanvas(FitInfo & DataInfo, FitInfo & MCInfo, Float_t min, 
     Canvas->SetLogx();
 
     // make images
-    Common::SaveAs(Canvas,Form("%s_%s_logx",outfiletext.Data(),(isLogy?"log":"lin")));
+    Common::SaveAs(Canvas,Form("%s_%s_%s_logx",key.Data(),outfiletext.Data(),(isLogy?"log":"lin")));
   }
 
   // save output if lin

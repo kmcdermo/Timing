@@ -72,8 +72,7 @@ struct FitStruct
 class TimeAdjuster
 {
 public:
-  TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename,
-	       const TString & infilesconfig, const TString & outfiletext);
+  TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig);
   ~TimeAdjuster();
 
   // Config
@@ -103,7 +102,6 @@ private:
   const TString fSkimFileName;
   const TString fSignalSkimFileName;
   const TString fInFilesConfig;
-  const TString fOutFileText;
 
   // inputs
   std::map<TString,TString> fInFileNameMap;

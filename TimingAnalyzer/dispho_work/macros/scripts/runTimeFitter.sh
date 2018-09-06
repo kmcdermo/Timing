@@ -12,6 +12,8 @@ era={$5:-"full"}
 outfiletext=${6:-"plots"}
 dir=${7:-"plots/test"}
 
+declare -a outputs=("chi2ndf" "chi2prrob" "mu" "sigma")
+
 ## first make plot
 root -l -b -q runTimeFitter.C\(\"${infilename}\",\"${plotconfig}\",\"${miscconfig}\",\"${timefitconfig}\",\"${era}\",\"${outfiletext}\"\)
 
@@ -24,7 +26,11 @@ for canvscale in "${canvscales[@]}"
 do
     for ext in "${exts[@]}"
     do
-	cp ${outfiletext}_${canvscale}.${ext} ${fulldir}
+	for output in "${outputs[@]}"
+	do
+	    cp ${output}_${outfiletext}_${canvscale}.${ext} ${fulldir}
+	    cp ${output}_${outfiletext}_${canvscale}_logx.${ext} ${fulldir}
+	done
     done
 done
 cp ${outfiletext}.root ${fulldir}

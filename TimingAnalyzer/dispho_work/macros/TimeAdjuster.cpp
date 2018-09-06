@@ -1,10 +1,8 @@
 // Class include
 #include "TimeAdjuster.hh"
 
-TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signalskimfile, 
-			   const TString & infilesconfig, const TString & outfiletext)
-  : fSkimFileName(skimfilename), fSignalSkimFile(signalskimfile),
-    fInFilesConfig(infilesconfig), fOutFileText(outfiletext)
+TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig)
+  : fSkimFileName(skimfilename), fSignalSkimFileName(signalskimfilename), fInFilesConfig(infilesconfig)
 {
   std::cout << "Initializing TimeAdjuster..." << std::endl;
 
