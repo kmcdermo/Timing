@@ -419,11 +419,11 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
     TFormula tmp_formula("tmp_formula","[0]*exp(-0.5*((x-[1])/[2])**2)");
     auto tmp_fit = new TF1("tmp_fit",tmp_formula.GetName(),fRangeLow,fRangeUp);
 
-    tmp_fit->SetParameter(0,hist_norm);
-    tmp_fit->SetParameter(1,hist_mu);
-    tmp_fit->SetParameter(2,hist_sigma);
-    tmp_fit->SetParLimits(2,0,10);
+    tmp_fit->SetParameter(0,norm);
+    tmp_fit->SetParameter(1,mu);
+    tmp_fit->SetParameter(2,sigma); tmp_fit->SetParLimits(2,0,10);
 
+    // fit hist with tmp tf1
     hist1D->Fit(tmp_fit->GetName(),"RBQ0");
 
     norm  = tmp_fit->GetParameter(0); // constant

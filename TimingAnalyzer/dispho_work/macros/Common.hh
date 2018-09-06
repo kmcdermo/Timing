@@ -79,15 +79,15 @@ namespace Common
   constexpr float    PI    = 3.14159265358979323846f;
   constexpr float TwoPI    = 6.28318530717958647692f;
   constexpr float SqrtPI   = 1.77245385090551602729f;
-  constexpr float PIOver2  = Config::PI / 2.0f;
-  constexpr float PIOver4  = Config::PI / 4.0f;
-  constexpr float PI3Over4 = 3.0f * Config::PI / 4.0f;
-  constexpr float InvPI    = 1.0f / Config::PI;
-  constexpr float RadToDeg = 180.0f / Config::PI;
-  constexpr float DegToRad = Config::PI / 180.0f;
+  constexpr float PIOver2  = Common::PI / 2.0f;
+  constexpr float PIOver4  = Common::PI / 4.0f;
+  constexpr float PI3Over4 = 3.0f * Common::PI / 4.0f;
+  constexpr float InvPI    = 1.0f / Common::PI;
+  constexpr float RadToDeg = 180.0f / Common::PI;
+  constexpr float DegToRad = Common::PI / 180.0f;
   constexpr float sol      = 29.9792458; // speed of light in cm/ns
   constexpr float Sqrt2    = 1.414213562373095048807;
-  constexpr float InvSqrt2 = 1.f / Config::Sqrt2;
+  constexpr float InvSqrt2 = 1.f / Common::Sqrt2;
 
   // ECAL info
   constexpr Float_t etaEBcutoff = 1.479;

@@ -12,18 +12,6 @@
 #include <map>
 #include <cmath>
 
-namespace ECAL
-{
-  constexpr Float_t radEB = 129.f;
-  constexpr Float_t zEE   = 314.f;
-  constexpr Float_t helix = 0.0114; // 0.3 * 3.8 T / (100 cm / m), 0.3 = sol m/ns
-  constexpr Float_t sol   = 29.979; // speed of light in cm / ns
-  constexpr Float_t Zmass = 91.1876;
-
-  inline Float_t uneta(const Float_t eta){return std::tan(2.f*std::atan(std::exp(-1.f*eta)));}
-  inline Float_t hypot(const Float_t x, const Float_t y, const Float_t z = 0.f){return std::sqrt(std::pow(x,2.f)+std::pow(y,2.f)+std::pow(z,2.f));}
-};
-
 class Skimmer 
 {
 public:
