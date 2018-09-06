@@ -21,7 +21,7 @@ export varwgtconfigdir="varwgt_config"
 
 ## common output info
 export outTextExt="log"
-export topdir="/afs/cern.ch/user/k/kmcdermo/www"
+export topdir="/eos/user/k/kmcdermo/www"
 export disphodir="dispho"
 
 ## common derived output info
@@ -54,7 +54,7 @@ export SR="${Signal} empty"
 #declare -a inputs=(CR_GJets CR_QCD SR)
 
 ## Zee 
-export Zee="Zee_DEG v4/zee/zee v4/zee/zee_signal always_true"
+export Zee="Zee_DEG v4_metcorr_Zee/zee v4_metcorr_Zee/signals_zee always_true"
 export ZEE="${Zee} empty"
 declare -a inputs=(ZEE)
 export inputs
@@ -79,7 +79,7 @@ function PrepOutDir ()
     mkdir -p ${fulldir}
 
     pushd ${topdir}
-    ./makereadable.sh ${fulldir}
+    ./copyphp.sh ${fulldir}
     popd
 }
 export -f PrepOutDir

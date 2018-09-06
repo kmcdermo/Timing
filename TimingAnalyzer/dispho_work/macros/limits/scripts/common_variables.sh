@@ -11,7 +11,7 @@ export inTextExt="txt"
 export limitconfigdir="limit_config"
 
 ## common output info
-export topdir="/afs/cern.ch/user/k/kmcdermo/www"
+export topdir="/eos/user/k/kmcdermo/www"
 export disphodir="dispho"
 
 declare -a exts=("eps" "png" "pdf")
@@ -27,7 +27,7 @@ function PrepOutDir ()
     mkdir -p ${fulldir}
 
     pushd ${topdir}
-    ./makereadable.sh ${fulldir}
+    ./copyphp.sh ${fulldir}
     popd
 }
 export -f PrepOutDir

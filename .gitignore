@@ -20,8 +20,7 @@ multicrab*/
 *.txt
 *.pyc
 .*.swp
-.#*
-#*#
+*#*
 *.pcm
 *.php
 .DS_STORE

@@ -806,7 +806,7 @@ void TreePlotter::SetupCommon()
 {
   std::cout << "Setting up Common..." << std::endl;
 
-  Common::SetEras();
+  Common::SetupEras();
   Common::SetupSamples();
   Common::SetupSignalSamples();
   Common::SetupGroups();
