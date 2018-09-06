@@ -215,7 +215,7 @@ void Skimmer::EventLoop()
 
 	  // get invariant mass
 	  pho1vec += pho2vec;
-	  phopairs.emplace_back(good_phos[i],good_phos[j],std::abs(pho1vec.M()-ECAL::Zmass));
+	  phopairs.emplace_back(good_phos[i],good_phos[j],std::abs(pho1vec.M()-Common::Zmass));
 	}
       }
 
@@ -759,27 +759,27 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	// HACK: FIXME!!!
 	if (outpho.isEB)
 	{
-	  outpho.seedX = ECAL::radEB * std::cos((*fInRecHits.phi)[inpho.seed]);
-	  outpho.seedY = ECAL::radEB * std::sin((*fInRecHits.phi)[inpho.seed]);
-	  outpho.seedZ = ECAL::radEB / ECAL::uneta((*fInRecHits.eta)[inpho.seed]);
+	  outpho.seedX = Common::radEB * std::cos((*fInRecHits.phi)[inpho.seed]);
+	  outpho.seedY = Common::radEB * std::sin((*fInRecHits.phi)[inpho.seed]);
+	  outpho.seedZ = Common::radEB / Common::uneta((*fInRecHits.eta)[inpho.seed]);
 	}
 	else
 	{
-	  const auto rad = ECAL::zEE * ECAL::uneta((*fInRecHits.eta)[inpho.seed]);
+	  const auto rad = Common::zEE * Common::uneta((*fInRecHits.eta)[inpho.seed]);
 	  
 	  outpho.seedX = rad * std::cos((*fInRecHits.phi)[inpho.seed]);
 	  outpho.seedY = rad * std::sin((*fInRecHits.phi)[inpho.seed]);
-	  outpho.seedZ = ECAL::zEE;
+	  outpho.seedZ = Common::zEE;
 	}
 
 	// TOF correction, HACK: FIXME!!!
-	const auto r_curv = outpho.pt / (ECAL::helix);
-	const auto d_pvT  = ECAL::hypot(fOutEvent.vtxX-outpho.seedX,fOutEvent.vtxY-outpho.seedY);
+	const auto r_curv = outpho.pt / (Common::helix);
+	const auto d_pvT  = Common::hypot(fOutEvent.vtxX-outpho.seedX,fOutEvent.vtxY-outpho.seedY);
 	const auto arc_leng = r_curv * std::acos(1.f-(std::pow(d_pvT,2.f)/(2.f*std::pow(r_curv,2.f))));
-	const auto d_pv   = ECAL::hypot(arc_leng,fOutEvent.vtxZ-outpho.seedZ);
-	const auto d_orig = ECAL::hypot(outpho.seedX,outpho.seedY,outpho.seedZ);
+	const auto d_pv   = Common::hypot(arc_leng,fOutEvent.vtxZ-outpho.seedZ);
+	const auto d_orig = Common::hypot(outpho.seedX,outpho.seedY,outpho.seedZ);
 	
-	outpho.seedTOF = (d_orig-d_pv) / ECAL::sol;
+	outpho.seedTOF = (d_orig-d_pv) / Common::sol;
       }
       else
       {

@@ -119,6 +119,7 @@ private:
   TString fTitle;
   TString fXTitle;
   std::vector<Double_t> fXBins;
+  Bool_t fXVarBins;
   TString fYTitle;
   Bool_t fDoLogX; // technically, read in from miscconfig
 

@@ -75,15 +75,37 @@ struct ColorStruct
 // Configuration parameters
 namespace Common
 {
-  // basics
-  constexpr Float_t invfbToinvpb = 1000.f; // conversion for the world's dumbest unit
-  static const TString extraText = "Preliminary";
+  // numerical constants
+  constexpr float    PI    = 3.14159265358979323846f;
+  constexpr float TwoPI    = 6.28318530717958647692f;
+  constexpr float SqrtPI   = 1.77245385090551602729f;
+  constexpr float PIOver2  = Config::PI / 2.0f;
+  constexpr float PIOver4  = Config::PI / 4.0f;
+  constexpr float PI3Over4 = 3.0f * Config::PI / 4.0f;
+  constexpr float InvPI    = 1.0f / Config::PI;
+  constexpr float RadToDeg = 180.0f / Config::PI;
+  constexpr float DegToRad = Config::PI / 180.0f;
+  constexpr float sol      = 29.9792458; // speed of light in cm/ns
+  constexpr float Sqrt2    = 1.414213562373095048807;
+  constexpr float InvSqrt2 = 1.f / Config::Sqrt2;
 
   // ECAL info
   constexpr Float_t etaEBcutoff = 1.479;
   constexpr Float_t etaEEmax    = 2.5;
+  constexpr Float_t radEB       = 129.f;
+  constexpr Float_t zEE         = 314.f;
+
+  // Physics info
+  constexpr Float_t helix = 0.0114; // 0.3 * 3.8 T / (100 cm / m), 0.3 = sol m/ns --> constant in radius of curv.
+  constexpr Float_t Zmass = 91.1876;
+
+  // generic computation functions
+  inline Float_t uneta(const Float_t eta){return std::tan(2.f*std::atan(std::exp(-1.f*eta)));}
+  inline Float_t hypot(const Float_t x, const Float_t y, const Float_t z = 0.f){return std::sqrt(std::pow(x,2.f)+std::pow(y,2.f)+std::pow(z,2.f));}
 
   // input
+  constexpr    Float_t invfbToinvpb   = 1000.f; // conversion for the world's dumbest unit
+  static const TString extraText      = "Preliminary";
   static const TString eosDir         = "/eos/cms/store/user/kmcdermo/nTuples";
   static const TString baseDir        = "skims/2017/rereco_v4_metcorr_Zee";
   static const TString tupleFileName  = "tree.root";
@@ -185,7 +207,7 @@ namespace Common
 
   // output info
   static const std::vector<TString> extensions = {"png","pdf","eps"};
-  static const TString textExt = "log";
+  static const TString outTextExt = "log";
 
   // plotting style
   constexpr Float_t TitleSize    = 0.035;

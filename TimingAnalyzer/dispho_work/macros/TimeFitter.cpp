@@ -112,8 +112,7 @@ void TimeFitter::MakePlots(FitStruct & DataInfo, FitStruct & MCInfo)
   std::cout << "Make overlay plots..." << std::endl;
 
   // make temp vector of hist key names
-  std::vector<TString> keys;
-  for (const auto & ResultsPair : DataInfo.ResultsMap) keys.emplace_back(ResultsPair.first);
+  std::vector<TString> keys = {"mu","sigma"}; // can add chi2prob and chi2ndf
 
   // loop over keys
   for (const auto & key : keys)
@@ -129,9 +128,9 @@ void TimeFitter::MakePlots(FitStruct & DataInfo, FitStruct & MCInfo)
     TimeFitter::GetMinMax(DataHist,min,max,key);
     TimeFitter::GetMinMax(MCHist  ,min,max,key);
 
-    // lin first, then log
+    // lin first, then log --> log disabled for now
     TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,false);
-    TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,true);
+    //    TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,true);
   }
 }
 
@@ -296,6 +295,9 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
 {
   std::cout << "Printing canvas for: " << key.Data() << " isLogy: " << Common::PrintBool(isLogy).Data() << std::endl;
 
+  // do sigma fit?
+  const Bool_t doSigmaFit = (fDoSigmaFit && (key.EqualTo("sigma",TString::kExact)));
+  
   // get hists
   auto & DataHist = DataInfo.ResultsMap[key];
   auto & MCHist   = MCInfo  .ResultsMap[key];
@@ -312,7 +314,7 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
   Canvas->cd();
   Canvas->SetLogy(isLogy);
 
-  const Float_t factor = (isLogy ? 1.5f : 1.05f);
+  const Float_t factor = (isLogy ? 3.f : 1.5f);
   min = (min > 0.f ? (min / factor) : (min * factor));
   max = (max > 0.f ? (max * factor) : (max / factor));
 
@@ -325,10 +327,11 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
   MCHist  ->Draw("ep same");
 
   // draw sigma fit
-  TF1 * DataFit = 0;
-  TF1 * MCFit   = 0;
+  TF1 * DataFit;
+  TF1 * MCFit;
   TPaveText * FitText = 0;
-  if (fDoSigmaFit)
+  
+  if (doSigmaFit)
   {
     DataFit = DataInfo.SigmaFit;
     MCFit   = MCInfo  .SigmaFit;
@@ -354,7 +357,7 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
   }
 
   // make legend
-  auto Legend = new TLegend(0.75,0.75,0.825,0.92);
+  auto Legend = new TLegend(0.72,0.85,0.82,0.92);
   Legend->SetName("Legend_"+key);
   Legend->SetBorderSize(1);
   Legend->SetLineColor(kBlack);
@@ -388,18 +391,16 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
     fOutFile->cd();
     Legend->Write(Legend->GetName(),TObject::kWriteDelete);
     Canvas->Write(Canvas->GetName(),TObject::kWriteDelete);
-    if (fDoSigmaFit)
+    if (doSigmaFit)
     {
       FitText->Write(FitText->GetName(),TObject::kWriteDelete);
     }
   }
 
   // delete all
-  if (fDoSigmaFit)
+  if (doSigmaFit)
   {
     delete FitText;
-    delete MCFit;
-    delete DataFit;
   }
   delete Legend;
   delete Canvas;
@@ -407,67 +408,70 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
 
 void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
 {
-  // make tmp fit first
-  auto tempfit = new TF1("temp","gaus(0)",fRangeLow,fRangeUp);
-  tempfit->SetParLimits(2,0,10);
-  hist1D->Fit("temp","RBQ0");
-  const Float_t norm  = tempfit->GetParameter(0); // constant
-  const Float_t mu    = tempfit->GetParameter(1); // mu
-  const Float_t sigma = tempfit->GetParameter(2); // sigma
-  delete tempfit;
+  // set tmp init vals
+  Float_t norm  = hist1D->Integral(fXVarBins?"width":"") / Common::SqrtPI;
+  Float_t mu    = hist1D->GetMean();
+  Float_t sigma = hist1D->GetStdDev(); 
+
+  // make tmp fit first if not gaus core
+  if (fFit != Gaus1core)
+  {
+    TFormula tmp_formula("tmp_formula","[0]*exp(-0.5*((x-[1])/[2])**2)");
+    auto tmp_fit = new TF1("tmp_fit",tmp_formula.GetName(),fRangeLow,fRangeUp);
+
+    tmp_fit->SetParameter(0,hist_norm);
+    tmp_fit->SetParameter(1,hist_mu);
+    tmp_fit->SetParameter(2,hist_sigma);
+    tmp_fit->SetParLimits(2,0,10);
+
+    hist1D->Fit(tmp_fit->GetName(),"RBQ0");
+
+    norm  = tmp_fit->GetParameter(0); // constant
+    mu    = tmp_fit->GetParameter(1); // mu
+    sigma = tmp_fit->GetParameter(2); // sigma
+
+    delete tmp_fit;
+  }
   
   // names for fits and formulas
   const TString histname = hist1D->GetName();
-  const TString formname = histname+"_form";
+  const TString formname = histname+"_formula";
   const TString fitname  = histname+"_fit";
 
-  if (fFit == Gaus1)
+  if (fFit == Gaus1 || fFit == Gaus1core)
   {
-    TFormula form(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
-    fit  = new TF1(fitname.Data(),formname.Data(),fRangeLow,fRangeUp);
-    fit->SetParameters(norm,mu,sigma);
-    fit->SetParName(0,"norm");
-    fit->SetParName(1,"mu");
-    fit->SetParName(2,"sigma");
-    fit->SetParLimits(2,0,10);
-  }
-  else if (fFit == Gaus1core)
-  {
-    TFormula form(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
-    const Float_t hmu    = hist1D->GetMean();
-    const Float_t hsigma = hist1D->GetStdDev(); 
-    
-    fit  = new TF1(fitname.Data(),formname.Data(),hmu-fRangeLow*hsigma,hmu+fRangeUp*hsigma);
-    fit->SetParameters(norm,mu,sigma);
-    fit->SetParName(0,"norm");
-    fit->SetParName(1,"mu");
-    fit->SetParName(2,"sigma");
-    fit->SetParLimits(2,0,10);
+    TFormula formula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
+    const Float_t rangelow = ((fFit == Gaus1) ? (fRangeLow) : (mu-(fRangeLow*sigma)));
+    const Float_t rangeup  = ((fFit == Gaus1) ? (fRangeUp)  : (mu+(fRangeUp *sigma)));
+    fit = new TF1(fitname.Data(),formname.Data(),rangelow,rangeup);
+
+    fit->SetParName(0,"N");      fit->SetParameter(0,norm);
+    fit->SetParName(1,"#mu");    fit->SetParameter(1,mu);
+    fit->SetParName(2,"#sigma"); fit->SetParameter(2,sigma); fit->SetParLimits(2,0,10);
   }
   else if (fFit == Gaus2fm)
   {
-    TFormula form(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)");
+    TFormula formula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)");
     fit  = new TF1(fitname.Data(),formname.Data(),fRangeLow,fRangeUp);
-    fit->SetParameters(norm,mu,sigma,norm/10,sigma*4);
-    fit->SetParName(0,"norm1");
-    fit->SetParName(1,"mu");
-    fit->SetParName(2,"sigma1");
-    fit->SetParName(3,"norm2");
-    fit->SetParName(4,"sigma2");
-    fit->SetParLimits(2,0,10);
-    fit->SetParLimits(4,0,10);
+
+    fit->SetParName(0,"N_{1}");      fit->SetParameter(0,norm);
+    fit->SetParName(1,"#mu");        fit->SetParameter(1,mu);
+    fit->SetParName(2,"#sigma_{1}"); fit->SetParameter(2,sigma);   fit->SetParLimits(2,0,10);
+    fit->SetParName(3,"N_{2}");      fit->SetParameter(3,norm/10);
+    fit->SetParName(4,"#sigma_{2}"); fit->SetParameter(4,sigma*4); fit->SetParLimits(4,0,10);
   }
   else if (fFit == Gaus3fm)
   {
-    TFormula form(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)+[5]*exp(-0.5*((x-[1])/[6])**2)");
+    TFormula formula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)+[5]*exp(-0.5*((x-[1])/[6])**2)");
     fit  = new TF1(fitname.Data(),formname.Data(),fRangeLow,fRangeUp);
-    fit->SetParName(0,"norm1");  fit->SetParameter(0,norm*0.8);  fit->SetParLimits(0,norm*0.5,norm);
-    fit->SetParName(1,"mu");     fit->SetParameter(1,mu);
-    fit->SetParName(2,"sigma1"); fit->SetParameter(2,sigma*0.7); fit->SetParLimits(2,sigma*0.5,sigma);
-    fit->SetParName(3,"norm2");  fit->SetParameter(3,norm*0.3);  fit->SetParLimits(3,norm*0.1,norm*0.5);
-    fit->SetParName(4,"sigma2"); fit->SetParameter(4,sigma*1.4); fit->SetParLimits(4,sigma,sigma*1.5);
-    fit->SetParName(5,"norm3");  fit->SetParameter(5,norm*0.01); fit->SetParLimits(5,norm*0.005,norm*0.1);
-    fit->SetParName(6,"sigma3"); fit->SetParameter(6,sigma*2.5); fit->SetParLimits(6,sigma*1.5,sigma*5.0);
+
+    fit->SetParName(0,"N_{1}");      fit->SetParameter(0,norm*0.8);  fit->SetParLimits(0,norm*0.5,norm);
+    fit->SetParName(1,"#mu");        fit->SetParameter(1,mu);
+    fit->SetParName(2,"#sigma_{1}"); fit->SetParameter(2,sigma*0.7); fit->SetParLimits(2,sigma*0.5,sigma);
+    fit->SetParName(3,"N_{2}");      fit->SetParameter(3,norm*0.3);  fit->SetParLimits(3,norm*0.1,norm*0.5);
+    fit->SetParName(4,"#sigma_{2}"); fit->SetParameter(4,sigma*1.4); fit->SetParLimits(4,sigma,sigma*1.5);
+    fit->SetParName(5,"N_{3}");      fit->SetParameter(5,norm*0.01); fit->SetParLimits(5,norm*0.005,norm*0.1);
+    fit->SetParName(6,"#sigma_{3}"); fit->SetParameter(6,sigma*2.5); fit->SetParLimits(6,sigma*1.5,sigma*5.0);
   }
   else
   {
@@ -603,9 +607,8 @@ void TimeFitter::SetupPlotConfig()
     }
     else if (str.find("x_bins=") != std::string::npos)
     {
-      Bool_t tmp_bool = false;
       str = Common::RemoveDelim(str,"x_bins=");
-      Common::SetupBins(str,fXBins,tmp_bool);
+      Common::SetupBins(str,fXBins,fXVarBins);
     }
     else if (str.find("y_title=") != std::string::npos)
     {
@@ -693,7 +696,7 @@ TH1F * TimeFitter::SetupHist(const TString & ytitle, const TString & yextra, con
   const auto xbins = &fXBins[0];
 
   // make new hist
-  auto hist = new TH1F(label+"_"+yextra,fTitle+" "+ytitle+";"+fXTitle+";"+fTitle+" "+ytitle,fXBins.size()-1,xbins);
+  auto hist = new TH1F(label+"_"+yextra,fTitle+" "+ytitle+";"+fXTitle+";"+ytitle,fXBins.size()-1,xbins);
   hist->Sumw2();
 
   Color_t color = kBlack;

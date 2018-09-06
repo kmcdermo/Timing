@@ -12,7 +12,7 @@ era=${5:-"full"}
 outfiletext=${6:-"plots"}
 dir=${7:-"plots/test"}
 
-declare -a outputs=("chi2ndf" "chi2prob" "mu" "sigma")
+declare -a outputs=("mu" "sigma") ## can add back chi2prob, chi2ndf
 
 ## first make plot
 root -l -b -q runTimeFitter.C\(\"${infilename}\",\"${plotconfig}\",\"${miscconfig}\",\"${timefitconfig}\",\"${era}\",\"${outfiletext}\"\)
@@ -24,6 +24,11 @@ PrepOutDir ${fulldir}
 ## copy everything
 for canvscale in "${canvscales[@]}"
 do
+    if [[ "${canvscale}" == "log" ]]
+    then
+	continue ## skip making logy plots for now
+    fi
+
     for ext in "${exts[@]}"
     do
 	for output in "${outputs[@]}"

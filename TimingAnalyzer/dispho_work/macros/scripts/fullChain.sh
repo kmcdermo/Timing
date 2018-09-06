@@ -27,7 +27,7 @@ echo "Making signal region plots"
 echo "Making limit plots"
 ./scripts/makeAnalysis.sh "${outdir}/results" "${docleanup}"
 
-## final make readable
+## final prep dir
 echo "Final prep outdir"
 PrepOutDir "${topdir}/${disphodir}/${outdir}"
 
