@@ -438,7 +438,7 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
     const Float_t hmu    = hist1D->GetMean();
     const Float_t hsigma = hist1D->GetStdDev(); 
     
-    fit  = new TF1(fitname.Data(),formname.Data(),hmu-2.f*hsigma,hmu+2.f*hsigma);
+    fit  = new TF1(fitname.Data(),formname.Data(),hmu-fRangeLow*hsigma,hmu+fRangeUp*hsigma);
     fit->SetParameters(norm,mu,sigma);
     fit->SetParName(0,"norm");
     fit->SetParName(1,"mu");
@@ -660,12 +660,12 @@ void TimeFitter::SetupTimeFitConfig()
 	exit(1);
       }
     }
-    else if (str.find("range_low=") != std::string::npos)
+    else if (str.find("range_low=") != std::string::npos) // if gaus1core = how many sigma from mean down, else absolute low edge of fit
     {
       str = Common::RemoveDelim(str,"range_low=");
       fRangeLow = std::atof(str.c_str());
     }
-    else if (str.find("range_up=") != std::string::npos)
+    else if (str.find("range_up=") != std::string::npos) // if gaus1core = how many sigma from mean up, else absolute up edge of fit
     {
       str = Common::RemoveDelim(str,"range_up=");
       fRangeUp = std::atof(str.c_str());

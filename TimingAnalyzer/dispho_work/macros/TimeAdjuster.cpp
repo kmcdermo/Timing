@@ -427,7 +427,7 @@ void TimeAdjuster::SetupInFilesConfig()
     const TString match = "=";
     auto middle = line.Index(match);
     
-    const TString key(line(0,middle));
+    const TString key(line(0,middle)); // [EB/EE]_[2017B-F/Full] --> eta_era
     const TString infilename(line(middle+1,line.Length()-middle-1));
 
     fInFileNameMap[key] = infilename;

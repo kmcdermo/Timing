@@ -40,6 +40,9 @@ export MainEra="Full"
 ## weight info
 export wgtvar="phopt_0"
 
+## time adjust var
+export timeadjvar="phopt_0"
+
 ## CR + SR info: label skim signal_skim additional_cuts (var wgt map)
 export GJets="cr_gjets_DEG v4/orig/gjets v4/orig/signals_gjets always_true"
 export QCD="cr_qcd_DEG v4/orig/qcd v4/orig/signals_qcd always_true"
