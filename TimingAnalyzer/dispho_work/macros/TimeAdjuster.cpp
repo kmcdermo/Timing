@@ -93,7 +93,7 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
   auto tree = (TTree*)fSkimFile->Get(Form("%s",Common::TreeNameMap["Data"].Data()));
   
   // set input branches
-  tree->SetBranchAddress(Form("%s",ev.s_run.c_str()),&ev.run,&ev.b_run);
+  //  tree->SetBranchAddress(Form("%s",ev.s_run.c_str()),&ev.run,&ev.b_run);
   tree->SetBranchAddress(Form("%s",ev.s_nphotons.c_str()),&ev.nphotons,&ev.b_nphotons);
   for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
   {
@@ -120,16 +120,17 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
     if (entry%Common::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
 
     // only need the entry for the single branches
-    ev.b_run->GetEntry(entry);
+    //    ev.b_run->GetEntry(entry);
     ev.b_nphotons->GetEntry(entry);
 
     // get era
-    const auto & era = std::find_if(Common::EraMap.begin(),Common::EraMap.end(),
-				    [=](const std::pair<TString,EraStruct> & EraPair)
-				    {
-				      return ( (EraPair.first != "Full") && ((ev.run >= EraPair.second.startRun) && (ev.run <= EraPair.second.endRun)) );
-				    })->first;
-    
+    // const auto & era = std::find_if(Common::EraMap.begin(),Common::EraMap.end(),
+    // 				    [=](const std::pair<TString,EraStruct> & EraPair)
+    // 				    {
+    // 				      return ( (EraPair.first != "Full") && ((ev.run >= EraPair.second.startRun) && (ev.run <= EraPair.second.endRun)) );
+    // 				    })->first;
+    const TString era = "Full";
+
     // loop over nphotons
     const auto nphos = std::min(ev.nphotons,Common::nPhotons);
     for (auto ipho = 0; ipho < nphos; ipho++)
