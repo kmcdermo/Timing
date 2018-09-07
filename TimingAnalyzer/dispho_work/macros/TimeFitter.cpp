@@ -408,16 +408,29 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
 
 void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
 {
+  // Word on fit notation
+  // "GausN" == N Gaussians fit
+  // "fm" == "fixed mean", i.e. for N Gaussian fit, all Gaussians share the same mu
+  // "core" == mid point of range of fit is mean of the histogram, range is n times the std. dev of hist
+
   // set tmp init vals
   Float_t norm  = hist1D->Integral(fXVarBins?"width":"") / Common::SqrtPI;
   Float_t mu    = hist1D->GetMean();
   Float_t sigma = hist1D->GetStdDev(); 
 
-  // make tmp fit first if not gaus core
-  if (fFit != Gaus1core)
+  // range vars
+  auto rangelow = 0.f;
+  auto rangeup  = 0.f;
+
+  // make tmp fit first if not gausNcore, set range
+  if (fFit == Gaus1 || fFit == Gaus2fm || fFit == Gaus3fm)
   {
+    // set range for tmp and main fit
+    rangelow = fRangeLow;
+    rangeup  = fRangeUp;
+
     TFormula tmp_formula("tmp_formula","[0]*exp(-0.5*((x-[1])/[2])**2)");
-    auto tmp_fit = new TF1("tmp_fit",tmp_formula.GetName(),fRangeLow,fRangeUp);
+    auto tmp_fit = new TF1("tmp_fit",tmp_formula.GetName(),rangelow,rangeup);
 
     tmp_fit->SetParameter(0,norm);
     tmp_fit->SetParameter(1,mu);
@@ -432,6 +445,12 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
 
     delete tmp_fit;
   }
+  else // "core" fits
+  {
+    // set range for main fit
+    rangelow = (mu-(fRangeLow*sigma));
+    rangeup  = (mu+(fRangeUp *sigma));
+  }
   
   // names for fits and formulas
   const TString histname = hist1D->GetName();
@@ -441,18 +460,16 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
   if (fFit == Gaus1 || fFit == Gaus1core)
   {
     TFormula formula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
-    const Float_t rangelow = ((fFit == Gaus1) ? (fRangeLow) : (mu-(fRangeLow*sigma)));
-    const Float_t rangeup  = ((fFit == Gaus1) ? (fRangeUp)  : (mu+(fRangeUp *sigma)));
     fit = new TF1(fitname.Data(),formname.Data(),rangelow,rangeup);
 
     fit->SetParName(0,"N");      fit->SetParameter(0,norm);
     fit->SetParName(1,"#mu");    fit->SetParameter(1,mu);
     fit->SetParName(2,"#sigma"); fit->SetParameter(2,sigma); fit->SetParLimits(2,0,10);
   }
-  else if (fFit == Gaus2fm)
+  else if (fFit == Gaus2fm || fFit == Gaus2fmcore)
   {
     TFormula formula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)");
-    fit  = new TF1(fitname.Data(),formname.Data(),fRangeLow,fRangeUp);
+    fit  = new TF1(fitname.Data(),formname.Data(),rangelow,rangeup);
 
     fit->SetParName(0,"N_{1}");      fit->SetParameter(0,norm);
     fit->SetParName(1,"#mu");        fit->SetParameter(1,mu);
@@ -460,10 +477,10 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
     fit->SetParName(3,"N_{2}");      fit->SetParameter(3,norm/10);
     fit->SetParName(4,"#sigma_{2}"); fit->SetParameter(4,sigma*4); fit->SetParLimits(4,0,10);
   }
-  else if (fFit == Gaus3fm)
+  else if (fFit == Gaus3fm || fFit == Gaus3fmcore)
   {
     TFormula formula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)+[5]*exp(-0.5*((x-[1])/[6])**2)");
-    fit  = new TF1(fitname.Data(),formname.Data(),fRangeLow,fRangeUp);
+    fit  = new TF1(fitname.Data(),formname.Data(),rangelow,rangeup);
 
     fit->SetParName(0,"N_{1}");      fit->SetParameter(0,norm*0.8);  fit->SetParLimits(0,norm*0.5,norm);
     fit->SetParName(1,"#mu");        fit->SetParameter(1,mu);
@@ -493,7 +510,7 @@ void TimeFitter::GetFitResult(const TF1 * fit, FitResult & result)
     result.sigma  = fit->GetParameter(2);
     result.esigma = fit->GetParError (2);
   }
-  else if (fFit == Gaus2fm)
+  else if (fFit == Gaus2fm || fFit == Gaus2fmcore)
   {
     const Float_t const1 = fit->GetParameter(0); 
     const Float_t const2 = fit->GetParameter(3);
@@ -502,7 +519,7 @@ void TimeFitter::GetFitResult(const TF1 * fit, FitResult & result)
     result.sigma  = (const1*fit->GetParameter(2)+const2*fit->GetParameter(4))/denom;
     result.esigma = std::hypot(const1*fit->GetParError(2),const2*fit->GetParError(4))/denom;
   }
-  else if (fFit == Gaus3fm)
+  else if (fFit == Gaus3fm || fFit == Gaus3fmcore)
   {
     const Double_t const1 = fit->GetParameter(0); 
     const Double_t const2 = fit->GetParameter(3);
@@ -652,22 +669,24 @@ void TimeFitter::SetupTimeFitConfig()
     else if (str.find("fit_type=") != std::string::npos)
     {
       str = Common::RemoveDelim(str,"fit_type=");
-      if      (str.find("Gaus1")     != std::string::npos) fFit = Gaus1;
-      if      (str.find("Gaus1core") != std::string::npos) fFit = Gaus1core;
-      else if (str.find("Gaus2fm")   != std::string::npos) fFit = Gaus2fm;
-      else if (str.find("Gaus3fm")   != std::string::npos) fFit = Gaus3fm;
+      if      (str.find("Gaus1")       != std::string::npos) fFit = Gaus1;
+      if      (str.find("Gaus1core")   != std::string::npos) fFit = Gaus1core;
+      else if (str.find("Gaus2fm")     != std::string::npos) fFit = Gaus2fm;
+      else if (str.find("Gaus2fmcore") != std::string::npos) fFit = Gaus2fmcore;
+      else if (str.find("Gaus3fm")     != std::string::npos) fFit = Gaus3fm;
+      else if (str.find("Gaus3fmcore") != std::string::npos) fFit = Gaus3fmcore;
       else
       {
 	std::cerr << "Specified a non-supported fit type: " << str.c_str() << " ... Exiting..." << std::endl;
 	exit(1);
       }
     }
-    else if (str.find("range_low=") != std::string::npos) // if gaus1core = how many sigma from mean down, else absolute low edge of fit
+    else if (str.find("range_low=") != std::string::npos) // if "core" = how many sigma from mean down, else absolute low edge of fit
     {
       str = Common::RemoveDelim(str,"range_low=");
       fRangeLow = std::atof(str.c_str());
     }
-    else if (str.find("range_up=") != std::string::npos) // if gaus1core = how many sigma from mean up, else absolute up edge of fit
+    else if (str.find("range_up=") != std::string::npos) // if "core" = how many sigma from mean up, else absolute up edge of fit
     {
       str = Common::RemoveDelim(str,"range_up=");
       fRangeUp = std::atof(str.c_str());

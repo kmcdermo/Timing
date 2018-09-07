@@ -56,7 +56,7 @@ done
 rm "${filedump}"
 
 ## lauch plots with shift corrections
-echo "Making time related plots with corrections"
+echo "Making time related plots with shift and scale corrections"
 ./scripts/makeTimePlots.sh "${outdirbase}/shift_smear_corrs" "true" "true" "false"
 
 ## final prep dir

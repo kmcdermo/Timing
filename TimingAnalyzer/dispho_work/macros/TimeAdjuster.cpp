@@ -105,7 +105,7 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
     tree->SetBranchAddress(Form("%s_%i",pho.s_isEB.c_str(),ipho),&pho.isEB,&pho.b_isEB);
 
     // make new
-    pho.b_seedtimeSHIFT = tree->Branch(Form("%s_%i",pho.s_seedtimeSHIFT.c_str(),ipho),&pho.seedtimeSHIFT,Form("%s/F",pho.s_seedtimeSHIFT.c_str()));
+    pho.b_seedtimeSHIFT = tree->Branch(Form("%s_%i",pho.s_seedtimeSHIFT.c_str(),ipho),&pho.seedtimeSHIFT,Form("%s_%i/F",pho.s_seedtimeSHIFT.c_str(),ipho));
   }
 
   /////////////////////////////
@@ -232,8 +232,8 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	tree->SetBranchAddress(Form("%s_%i",pho.s_isEB.c_str(),ipho),&pho.isEB,&pho.b_isEB);
 
 	// make new
-	if (fDoShift) pho.b_seedtimeSHIFT = tree->Branch(Form("%s_%i",pho.s_seedtimeSHIFT.c_str(),ipho),&pho.seedtimeSHIFT,Form("%s/F",pho.s_seedtimeSHIFT.c_str()));
-	if (fDoSmear) pho.b_seedtimeSMEAR = tree->Branch(Form("%s_%i",pho.s_seedtimeSMEAR.c_str(),ipho),&pho.seedtimeSMEAR,Form("%s/F",pho.s_seedtimeSMEAR.c_str()));
+	if (fDoShift) pho.b_seedtimeSHIFT = tree->Branch(Form("%s_%i",pho.s_seedtimeSHIFT.c_str(),ipho),&pho.seedtimeSHIFT,Form("%s_%i/F",pho.s_seedtimeSHIFT.c_str(),ipho));
+	if (fDoSmear) pho.b_seedtimeSMEAR = tree->Branch(Form("%s_%i",pho.s_seedtimeSMEAR.c_str(),ipho),&pho.seedtimeSMEAR,Form("%s_%i/F",pho.s_seedtimeSMEAR.c_str(),ipho));
       }
 
       /////////////////////////////

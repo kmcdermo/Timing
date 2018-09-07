@@ -191,7 +191,6 @@ do echo ${!pho} | while read -r index pho_label
 
 	    if [[ "${usesmear}" == "true" ]]
 	    then
-		data_corr+="${smear_corr}"
 		mc_corr+="${smear_corr}"
 	    fi
 

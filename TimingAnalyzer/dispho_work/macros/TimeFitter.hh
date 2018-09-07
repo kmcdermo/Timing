@@ -65,7 +65,7 @@ struct SigmaFitParams
   Float_t up;
 };
 
-enum FitEnum {Gaus1, Gaus1core, Gaus2fm, Gaus3fm};
+enum FitEnum {Gaus1, Gaus1core, Gaus2fm, Gaus2fmcore, Gaus3fm, Gaus3fmcore};
 
 class TimeFitter
 {
