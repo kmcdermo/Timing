@@ -1,8 +1,10 @@
 // Class include
 #include "TimeAdjuster.hh"
 
-TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig)
-  : fSkimFileName(skimfilename), fSignalSkimFileName(signalskimfilename), fInFilesConfig(infilesconfig)
+TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig,
+			   const Bool_t doshift, const Bool_t dosmear)
+  : fSkimFileName(skimfilename), fSignalSkimFileName(signalskimfilename), fInFilesConfig(infilesconfig),
+    fDoShift(doshift), fDoSmear(dosmear)
 {
   std::cout << "Initializing TimeAdjuster..." << std::endl;
 
@@ -35,7 +37,7 @@ TimeAdjuster::~TimeAdjuster()
   delete fSkimFile;
 }
 
-void TimeAdjuster::AdjustTime();
+void TimeAdjuster::AdjustTime()
 {
   std::cout << "Adjusting time..." << std::endl;
 
@@ -48,10 +50,10 @@ void TimeAdjuster::AdjustTime();
   TimeAdjuster::PrepAdjustments(MCInfo);
 
   // Correct data
-  TimeAdjuster::CorrectData(DataInfo);
+  if (fDoShift) TimeAdjuster::CorrectData(DataInfo);
 
   // Correct MC
-  TimeAdjuster::CorrectMC(DataInfo,MCInfo);
+  if (fDoShift || fDoSmear) TimeAdjuster::CorrectMC(DataInfo,MCInfo);
 
   // dump meta info
   TimeAdjuster::MakeConfigPave(fSkimFile);
@@ -68,10 +70,10 @@ void TimeAdjuster::PrepAdjustments(FitStruct & FitInfo)
   std::cout << "Preparing time adjustments for: " << label.Data() << std::endl;
 
   // Get the input mu hists
-  TimeAdjuster::GetInputMuHists(FitInfo);
+  if (fDoShift) TimeAdjuster::GetInputMuHists(FitInfo);
 
   // Get input resolution fits
-  TimeAdjuster::GetInputSigmaFits(FitInfo);
+  if (fDoSmear) TimeAdjuster::GetInputSigmaFits(FitInfo);
 }
 
 void TimeAdjuster::CorrectData(FitStruct & DataInfo)
@@ -91,19 +93,19 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
   auto tree = (TTree*)fSkimFile->Get(Form("%s",Common::TreeNameMap["Data"].Data()));
   
   // set input branches
-  tree->SetBranchAddress(Form("%s",ev.s_run.Data()),&ev.run,&ev.b_run);
-  tree->SetBranchAddress(Form("%s",ev.s_nphotons.Data()),&ev.nphotons,&ev.b_nphotons);
+  tree->SetBranchAddress(Form("%s",ev.s_run.c_str()),&ev.run,&ev.b_run);
+  tree->SetBranchAddress(Form("%s",ev.s_nphotons.c_str()),&ev.nphotons,&ev.b_nphotons);
   for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
   {
     // get pho
     auto & pho = phos[ipho];
 
     // set old
-    tree->SetBranchAddress(Form("%s_%i",pho.s_pt.Data(),ipho),&pho.pt,&pho.b_pt);
-    tree->SetBranchAddress(Form("%s_%i",pho.s_isEB.Data(),ipho),&pho.isEB,&pho.b_isEB);
+    tree->SetBranchAddress(Form("%s_%i",pho.s_pt.c_str(),ipho),&pho.pt,&pho.b_pt);
+    tree->SetBranchAddress(Form("%s_%i",pho.s_isEB.c_str(),ipho),&pho.isEB,&pho.b_isEB);
 
     // make new
-    pho.b_seedtimeSHIFT = tree->Branch(Form("%s_%i",pho.s_seedtimeSHIFT.Data(),ipho),&pho.seedtimeSHIFT,Form("%s/F",s_seedtimeSHIFT.Data()));
+    pho.b_seedtimeSHIFT = tree->Branch(Form("%s_%i",pho.s_seedtimeSHIFT.c_str(),ipho),&pho.seedtimeSHIFT,Form("%s/F",pho.s_seedtimeSHIFT.c_str()));
   }
 
   /////////////////////////////
@@ -129,7 +131,7 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
 				    })->first;
     
     // loop over nphotons
-    const auto nphos = std::min(nphotons,Common::nPhotons);
+    const auto nphos = std::min(ev.nphotons,Common::nPhotons);
     for (auto ipho = 0; ipho < nphos; ipho++)
     {
       auto & pho = phos[ipho];
@@ -139,7 +141,7 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
       pho.b_isEB->GetEntry(entry);
       
       // get the correction
-      const TString key = (pho.isEB ? "EB" : "EE")+"_"+era;
+      const TString key = Form("%s_%s",(pho.isEB?"EB":"EE"),era.Data());
       const auto & hist = DataInfo.MuHistMap[key];
       
       // set correction branch
@@ -151,8 +153,10 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
     } // end loop over nphotons on file
 
     // store remainder photons
-    for (auto ipho = nphos; ipho < Common::nPhotons)
+    for (auto ipho = nphos; ipho < Common::nPhotons; ipho++)
     {
+      auto & pho = phos[ipho];
+
       // set remainder
       pho.seedtimeSHIFT = -9999.f;
       
@@ -173,7 +177,7 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
   delete tree;
 }
 
-void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitInfo & MCInfo)
+void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 {
   std::cout << "Correcting MC!" << std::endl;
 
@@ -199,11 +203,11 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitInfo & MCInfo)
     std::cout << "Working on tree: " << treename.Data() << std::endl;
 	
     // Get infile
-    auto & SkimFile = ((Common::GroupMap[sample] != SampleGroup::isSignal) ? fSkimFile : fInSignalFile);
+    auto & SkimFile = ((Common::GroupMap[sample] != SampleGroup::isSignal) ? fSkimFile : fSignalSkimFile);
     SkimFile->cd();
 
     // Get tree
-    auto tree = (TTree*)infile->Get(Form("%s",treename.Data()));
+    auto tree = (TTree*)SkimFile->Get(Form("%s",treename.Data()));
     const auto isnull = Common::IsNullTree(tree);
 
     if (!isnull)
@@ -217,19 +221,19 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitInfo & MCInfo)
       std::vector<Photon> phos(Common::nPhotons);
   
       // set input branches
-      tree->SetBranchAddress(Form("%s",ev.s_nphotons.Data()),&ev.nphotons,&ev.b_nphotons);
+      tree->SetBranchAddress(Form("%s",ev.s_nphotons.c_str()),&ev.nphotons,&ev.b_nphotons);
       for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
       {
 	// get pho
 	auto & pho = phos[ipho];
 	
 	// set old
-	tree->SetBranchAddress(Form("%s_%i",pho.s_pt.Data(),ipho),&pho.pt,&pho.b_pt);
-	tree->SetBranchAddress(Form("%s_%i",pho.s_isEB.Data(),ipho),&pho.isEB,&pho.b_isEB);
+	tree->SetBranchAddress(Form("%s_%i",pho.s_pt.c_str(),ipho),&pho.pt,&pho.b_pt);
+	tree->SetBranchAddress(Form("%s_%i",pho.s_isEB.c_str(),ipho),&pho.isEB,&pho.b_isEB);
 
 	// make new
-	pho.b_seedtimeSHIFT = tree->Branch(Form("%s_%i",pho.s_seedtimeSHIFT.Data(),ipho),&pho.seedtimeSHIFT,Form("%s/F",s_seedtimeSHIFT.Data()));
-	pho.b_seedtimeSMEAR = tree->Branch(Form("%s_%i",pho.s_seedtimeSMEAR.Data(),ipho),&pho.seedtimeSMEAR,Form("%s/F",s_seedtimeSMEAR.Data()));
+	if (fDoShift) pho.b_seedtimeSHIFT = tree->Branch(Form("%s_%i",pho.s_seedtimeSHIFT.c_str(),ipho),&pho.seedtimeSHIFT,Form("%s/F",pho.s_seedtimeSHIFT.c_str()));
+	if (fDoSmear) pho.b_seedtimeSMEAR = tree->Branch(Form("%s_%i",pho.s_seedtimeSMEAR.c_str(),ipho),&pho.seedtimeSMEAR,Form("%s/F",pho.s_seedtimeSMEAR.c_str()));
       }
 
       /////////////////////////////
@@ -247,7 +251,7 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitInfo & MCInfo)
 	ev.b_nphotons->GetEntry(entry);
     
 	// loop over nphotons
-	const auto nphos = std::min(nphotons,Common::nPhotons);
+	const auto nphos = std::min(ev.nphotons,Common::nPhotons);
 	for (auto ipho = 0; ipho < nphos; ipho++)
         {
 	  auto & pho = phos[ipho];
@@ -256,34 +260,43 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitInfo & MCInfo)
 	  pho.b_pt->GetEntry(entry);
 	  pho.b_isEB->GetEntry(entry);
       
-	  // get the corrections
-	  const TString key    = (pho.isEB ? "EB" : "EE")+"_Full";
-	  const auto & hist    = MCInfo  .MuHistMap  [key];
-	  const auto & datafit = DataInfo.SigmaFitMap[key];
-	  const auto & mcfit   = MCInfo  .SigmaFitMap[key];
+	  // get the key
+	  const TString key = Form("%s_Full",(pho.isEB?"EB":"EE"));
 
 	  // set shift correction branch
-	  const auto shift = hist->GetBinContent(hist->FindBin(pho.pt));
-	  pho.seedtimeSHIFT = ((shift > 0.f) ? -shift : shift);
+	  if (fDoShift)
+	  {
+	    const auto & hist = MCInfo  .MuHistMap  [key];
+	    const auto shift  = hist->GetBinContent(hist->FindBin(pho.pt));
+	    pho.seedtimeSHIFT = ((shift > 0.f) ? -shift : shift);
+	  }
 
 	  // set smear correction branch
-	  const auto sigma = std::sqrt(std::pow(datafit->Eval(pho.pt),2.f)-std::pow(mcfit->Eval(pho.pt),2.f));
-	  pho.seedtimeSMEAR = rand->Gaus(0.f,sigma);
+	  if (fDoSmear)
+	  {
+	    const auto & datafit = DataInfo.SigmaFitMap[key];
+	    const auto & mcfit   = MCInfo  .SigmaFitMap[key];
+	    const auto sigma     = std::sqrt(std::pow(datafit->Eval(pho.pt),2.f)-std::pow(mcfit->Eval(pho.pt),2.f));
+	    pho.seedtimeSMEAR    = rand->Gaus(0.f,sigma);
+	  }
 
-	  // fill branch
-	  pho.b_seedtimeSHIFT->Fill();
-	  pho.b_seedtimeSMEAR->Fill();
+	  // fill branches
+	  if (fDoShift) pho.b_seedtimeSHIFT->Fill();
+	  if (fDoSmear) pho.b_seedtimeSMEAR->Fill();
 	} // end loop over nphotons on file
 
 	// store remainder photons
-	for (auto ipho = nphos; ipho < Common::nPhotons)
+	for (auto ipho = nphos; ipho < Common::nPhotons; ipho++)
 	{
+	  auto & pho = phos[ipho];
+
 	  // set remainders
-	  pho.seedtimeSHIFT = -9999.f;
-	  pho.seedtimeSMEAR = -9999.f;
+	  if (fDoShift) pho.seedtimeSHIFT = -9999.f;
+	  if (fDoSmear) pho.seedtimeSMEAR = -9999.f;
       
-	  // fill branch
-	  pho.b_seedtimeSHIFT->Fill();
+	  // fill branches
+	  if (fDoShift) pho.b_seedtimeSHIFT->Fill();
+	  if (fDoSmear) pho.b_seedtimeSMEAR->Fill();
 	} // end loop over remainder photons
     
       } // end loop over entries
@@ -330,23 +343,23 @@ void TimeAdjuster::GetInputMuHists(FitStruct & FitInfo)
     Common::CheckValidHist(MuHist,muhistname,InFile->GetName());
 
     // rename
-    MuHist->SetName(Form("%s_%s_Hist",muhistname,key.Data()));
+    MuHist->SetName(Form("%s_%s_Hist",muhistname.Data(),key.Data()));
   }
 }
 
-void TimeAdjuster::GetSigmaFits(FitStruct & FitInfo)
+void TimeAdjuster::GetInputSigmaFits(FitStruct & FitInfo)
 {
   const auto & label = FitInfo.label;
   std::cout << "Getting sigma fits for: " << label.Data() << std::endl;
   
   // get inputs/outputs
-  const TString sigamfitname = label+"_sigma_fit";
+  const TString sigmafitname = label+"_sigma_fit";
   auto & SigmaFitMap = FitInfo.SigmaFitMap;
 
   // loop over sigma hists and fit!
   for (auto & InFilePair : fInFileMap)
   {
-    const auto & key = SigmaHistPair.first;
+    const auto & key = InFilePair.first;
     auto & InFile = InFilePair.second;
     auto & SigmaFit = SigmaFitMap[key];
 
@@ -354,7 +367,7 @@ void TimeAdjuster::GetSigmaFits(FitStruct & FitInfo)
     SigmaFit = (TF1*)InFile->Get(sigmafitname.Data());
 
     // check to make sure ok
-    Common::CheckValidFit(SigmaFit,sigmafitname,InFile->GetName());
+    Common::CheckValidF1(SigmaFit,sigmafitname,InFile->GetName());
 
     // rename
     SigmaFit->SetName(Form("%s_%s_Fit",sigmafitname.Data(),key.Data()));
@@ -373,7 +386,13 @@ void TimeAdjuster::MakeConfigPave(TFile *& SkimFile)
   Common::AddPaddingToPave(ConfigPave,3);
 
   // give grand title
-  fConfigPave->AddText("***** TimeAdjuster Config *****");
+  ConfigPave->AddText("***** TimeAdjuster Config *****");
+  
+  // store which correction performed
+  ConfigPave->AddText(Form("DoShift: %s",Common::PrintBool(fDoShift).Data()));
+  ConfigPave->AddText(Form("DoSmear: %s",Common::PrintBool(fDoSmear).Data()));
+
+  // list of inputs
   Common::AddTextFromInputConfig(ConfigPave,"InFiles Config",fInFilesConfig);
 
   // padding

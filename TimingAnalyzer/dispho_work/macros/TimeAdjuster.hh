@@ -1,11 +1,11 @@
-#idndef __TimeAdjuster__
+#ifndef __TimeAdjuster__
 #define __TimeAdjuster__
 
 // ROOT inludes
 #include "TFile.h"
 #include "TH1F.h"
 #include "TF1.h"
-#include "TRandom.h"
+#include "TRandomGen.h"
 #include "TString.h"
 #include "TPaveText.h"
 
@@ -30,11 +30,11 @@ struct Event
 
   // strings
   std::string s_run = "run";
-  std::string s_photons = "nphotons";
+  std::string s_nphotons = "nphotons";
 
   // branches
   TBranch * b_run;
-  TBranch * b_photons;
+  TBranch * b_nphotons;
 };
 
 struct Photon
@@ -72,7 +72,8 @@ struct FitStruct
 class TimeAdjuster
 {
 public:
-  TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig);
+  TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig,
+	       const Bool_t doshift, const Bool_t dosmear);
   ~TimeAdjuster();
 
   // Config
@@ -91,7 +92,7 @@ public:
   void GetInputSigmaFits(FitStruct & FitInfo);
 
   // Meta data
-  void MakeCongigPave(TFile *& SkimFile);
+  void MakeConfigPave(TFile *& SkimFile);
 
   // Helper functions
   template <typename T>
@@ -102,6 +103,8 @@ private:
   const TString fSkimFileName;
   const TString fSignalSkimFileName;
   const TString fInFilesConfig;
+  const Bool_t  fDoShift;
+  const Bool_t  fDoSmear;
 
   // inputs
   std::map<TString,TString> fInFileNameMap;

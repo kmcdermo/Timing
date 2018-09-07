@@ -8,6 +8,7 @@
 #include "TH1D.h"
 #include "TH2F.h"
 #include "TGraphAsymmErrors.h"
+#include "TF1.h"
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TStyle.h"
@@ -253,18 +254,18 @@ namespace Common
   void Scale(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins, const Bool_t isUp);
 
   // Check inputs
-  void CheckValidFile(const TFile * file, const TString & fname);
-  void CheckValidTree(const TTree * tree, const TString & tname, const TString & fname);
+  void CheckValidFile(const TFile * file, const TString & filename);
+  void CheckValidTree(const TTree * tree, const TString & treename, const TString & filename);
   template <typename T>
-  void CheckValidHist(const T * plot, const TString & pname, const TString & fname)
+  void CheckValidHist(const T * hist, const TString & histname, const TString & filename)
   {
-    if (plot == (T*) NULL) // check if valid plot
+    if (hist == (T*) NULL) // check if valid hist
     {
-      std::cerr << "Input Hist is bad pointer: " << pname.Data() << " in input file: " << fname.Data() 
-		<< " ...exiting..." << std::endl;
+      std::cerr << "Input Hist is bad pointer: " << histname.Data() << " in input file: " << filename.Data() << " ...exiting..." << std::endl;
       exit(1);
     }
   }
+  void CheckValidF1(const TF1 * f1, const TString & f1name, const TString & filename);
   void CheckIfConfigEmpty(const TString & param, const TString & label);
 
   // Check samples

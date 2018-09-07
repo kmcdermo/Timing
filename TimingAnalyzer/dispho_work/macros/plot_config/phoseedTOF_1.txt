@@ -3,7 +3,7 @@ plot_title=Subleading Photon Seed TOF [ns]
 x_title=Subleading Photon Seed TOF [ns]
 x_scale=LIN
 x_var=phoseedTOF_1
-x_bins=100 -1 1
+x_bins=CONSTANT 100 -1 1
 
 y_title=Events
 y_scale=LOG

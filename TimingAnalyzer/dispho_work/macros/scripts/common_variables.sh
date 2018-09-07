@@ -34,14 +34,15 @@ declare -a canvscales=("lin" "log")
 export canvscales
 
 ## eras
-#declare -a eras=("2017B" "2017C" "2017D" "2017E" "2017F" "Full")
-declare -a eras=("Full")
+declare -a eras=("2017B" "2017C" "2017D" "2017E" "2017F" "Full")
 export eras
-
 export MainEra="Full"
 
 ## weight info
 export wgtvar="phopt_0"
+
+## fit info
+export fitinfo="Gaus1core 2 2"
 
 ## time adjust var
 export timeadjvar="phopt_0"

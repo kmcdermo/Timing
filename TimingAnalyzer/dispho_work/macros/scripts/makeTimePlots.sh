@@ -13,11 +13,8 @@ source scripts/common_variables.sh
 outdirbase=${1:-"plots/ntuples_v4/checks_v4/era_plots"}
 useshift=${2:-"false"}
 usesmear=${3:-"false"}
-fittype=${4:-"Gaus1core"}
-rangelow=${5:-"3"}
-rangeup=${6:-"3"}
-writefiles=${7:-"false"}
-filedump=${8:-"${timeadjvar}_infiles.${inTextExt}"}
+writefiles=${4:-"false"}
+filedump=${5:-"${timeadjvar}_infiles.${inTextExt}"}
 
 ## create filedump
 if [[ "${writefiles}" == "true" ]]
@@ -32,13 +29,16 @@ fragdir="plot_config/fragments"
 declare -a etas=("EB" "EE") # "Full"
 
 ## vars
-declare -a vars=("pt" "eta" "nvtx") # "time" "E"
+declare -a vars=("pt" "eta" "time" "nvtx") # "time" "E"
 
 ## logx vars
 declare -a logx_vars=("pt") # "E"
 
+## do full era vars for mu hists
+declare -a mualleras_vars=("pt")
+
 ## sigma fit vars
-pt="p_{T} GeV/c 0 5 100 0 0.5 10"
+pt="p_{T} GeV/c 0 10 100 0 1 10"
 declare -a sigmafit_vars=(pt)
 
 ## phos
@@ -58,7 +58,7 @@ function ReadConfig ()
 }
 
 ## function to say if logx
-function CheckLogX ()
+function CheckLogXVar ()
 {
     local var=${1}
     local result="false"
@@ -66,6 +66,24 @@ function CheckLogX ()
     for logx_var in "${logx_vars[@]}"
     do
 	if [[ "${var}" == "${logx_var}" ]]
+	then
+	    result="true"
+	    break
+	fi
+    done
+    
+    echo "${result}"
+}
+
+## function to check if run over all eras for mu hists
+function CheckMuAllErasVar ()
+{
+    local var=${1}
+    local result="false"
+
+    for mualleras_var in "${mualleras_vars[@]}"
+    do
+	if [[ "${var}" == "${mualleras_var}" ]]
 	then
 	    result="true"
 	    break
@@ -188,7 +206,7 @@ do echo ${!pho} | while read -r index pho_label
 		> "${cut}"
 
 		## write common cut
-		common_cut="hltDiEle27WPT&&!phoisOOT_0&&!phoisOOT_1&&phohasPixSeed_0&&phohasPixSeed_1"
+		common_cut="hltDiEle33MW&&!phoisOOT_0&&!phoisOOT_1&&phohasPixSeed_0&&phohasPixSeed_1"
 		eta_cut="phoisEB_${index}"
 		if [[ "${eta}" == "EB" ]]
 		then
@@ -212,7 +230,7 @@ do echo ${!pho} | while read -r index pho_label
          	## make plot config (1D) ##
 		###########################
 
-		plot="tmp_plot_config.${inTextExt}"
+		plot="tmp_pho_${index}_${var}_${eta}.${inTextExt}"
 		> "${plot}"
 	    
 		echo "plot_title=${title} (${eta})" >> "${plot}"
@@ -225,9 +243,9 @@ do echo ${!pho} | while read -r index pho_label
          	## make plot config (2D) ##
 		###########################
 
-		plot2D="tmp_plot_config_2D.${inTextExt}"
+		plot2D="tmp_pho_${index}_time_vs_${var}_${eta}.${inTextExt}"
 		> "${plot2D}"
-	    
+
 		echo "plot_title=${time_title} vs. ${title} (${eta})" >> "${plot2D}"
 		echo "x_title=${title} (${eta})" >> "${plot2D}"
 		echo "x_var=${x_var}" >> "${plot2D}"
@@ -240,7 +258,7 @@ do echo ${!pho} | while read -r index pho_label
 		echo "y_var_bkgd=${mc_corr}" >> "${plot2D}"
 		echo "y_var_sign=${mc_corr}" >> "${plot2D}"
 
-		## add corrections if plotting time
+		## add corrections if plotting time --> currently disabled time vs time plot
 		if [[ "${var}" == "time" ]]
 		then
 		    echo "x_var_data=${data_corr}" >> "${plot}"
@@ -265,10 +283,13 @@ do echo ${!pho} | while read -r index pho_label
 		timefit_config="tmp_timefit_config.${inTextExt}"
 		> "${timefit_config}"
 
-		echo "fit_type=${fittype}" >> "${timefit_config}"
-		echo "range_low=${rangelow}" >> "${timefit_config}"
-		echo "range_up=${rangeup}" >> "${timefit_config}"
 		echo "time_text=t" >> "${timefit_config}"
+		echo ${fitinfo} | while read -r fittype rangelow rangeup
+		do
+		    echo "fit_type=${fittype}" >> "${timefit_config}"
+		    echo "range_low=${rangelow}" >> "${timefit_config}"
+		    echo "range_up=${rangeup}" >> "${timefit_config}"
+		done
 
 		check_sigmafit=$( CheckSigmaFitVar ${var} )
 		if [[ "${check_sigmafit}" == "true" ]]
@@ -292,7 +313,7 @@ do echo ${!pho} | while read -r index pho_label
 		misc_fit="tmp_misc_fit.${inTextExt}"
 		> "${misc_fit}"
 
-		check_logx=$( CheckLogX ${var} )
+		check_logx=$( CheckLogXVar ${var} )
 		if [[ "${check_logx}" == "true" ]]
 		then
 		    echo "do_logx=1" >> "${misc_fit}"
@@ -305,31 +326,45 @@ do echo ${!pho} | while read -r index pho_label
 		####################
 		for era in "${eras[@]}"
 		do
+		    ## skip if not needed to do all eras
+		    check_mualleras=$( CheckMuAllErasVar ${var} )
+		    if [[ "${check_mualleras}" != "true" ]] && [[ "${era}" != "Full" ]]
+		    then
+			continue
+		    fi
+
 		    ################################
 		    ## loop over inputs: Zee only ##
 		    ################################
 		    for input in "${inputs[@]}"
 		    do echo ${!input} | while read -r label infile insigfile sel varwgtmap
 			do
-			    ##################
-                 	    ## outfile name ##
-                	    ##################
-			    timefile="timefit"
+                 	    ## outfile names
 			    outdir="${outdirbase}/${label}/${eta}/${var}"
 			    outfile="${x_var}_${label}_${eta}_${era}"
-			    outfile2D="${time_var}_vs_${outfile}"
 			    
-			    ## run 1D, 2D, and time plots
+			    ## run 1D plotter
 			    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile}" "${outdir}"
-			    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile2D}" "${outdir}"
-			    ./scripts/runTimeFitter.sh "${outfile2D}.root" "${plot2D}" "${misc_fit}" "${timefit_config}" "${era}" "${outfile}_${timefile}" "${outdir}"
 
-			    ## write out time files
-			    if [[ "${writefiles}" == "true" ]] && [[ "${x_var}" == "${timeadjvar}" ]] && [[ "${eta}" != "Full" ]]
+			    ## run 2D plotter, passing 2D plots to make fits for all vars except vs time
+			    if [[ "${var}" != "time" ]]
 			    then
-				echo "${eta}_${era}=${outfile}_${timefile}.root" >> "${filedump}"
-			    fi
-			    
+                 	        ## extra outfile names
+				outfile2D="${time_var}_vs_${outfile}"
+				timefile="timefit"			    
+
+				## run 2D plotter
+				./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile2D}" "${outdir}"
+
+				## run fitter, getting 2D plots from before
+				./scripts/runTimeFitter.sh "${outfile2D}.root" "${plot2D}" "${misc_fit}" "${timefit_config}" "${era}" "${outfile}_${timefile}" "${outdir}"
+				
+			        ## write out time files for correction computations
+				if [[ "${writefiles}" == "true" ]] && [[ "${x_var}" == "${timeadjvar}" ]] && [[ "${eta}" != "Full" ]]
+				then
+				    echo "${eta}_${era}=${outfile}_${timefile}.root" >> "${filedump}"
+				fi
+			    fi ## end check over vars to fit
 			done ## read input
 		    done ## loop over inputs
 		done ## loop over eras

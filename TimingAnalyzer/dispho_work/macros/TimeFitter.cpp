@@ -341,7 +341,7 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
     MCFit  ->Draw("same");
 
     // setup output text
-    FitText = new TPaveText(0.5,0.55,0.825,0.73);
+    FitText = new TPaveText(0.22,0.6,0.52,0.92,"NDC");
     FitText->SetName("SigmaFitText");
     
     FitText->AddText(Form("#sigma(t)=#frac{N}{%s} #oplus #sqrt{2}C",fSigmaVarText.Data()));
@@ -696,7 +696,7 @@ void TimeFitter::SetupTimeFitConfig()
     }
     else if (str.find("sigma_init_C_params=") != std::string::npos)
     {
-      str = Common::RemoveDelim(str,"sigma_init_c_params=");
+      str = Common::RemoveDelim(str,"sigma_init_C_params=");
       TimeFitter::ReadInitParams(str,fSigmaInitC);
     }
     else

@@ -818,31 +818,39 @@ namespace Common
     return outhist;
   }
 
-  void CheckValidFile(const TFile * file, const TString & fname)
+  void CheckValidFile(const TFile * file, const TString & filename)
   {
     if (file == (TFile*) NULL) // check if valid file
     {
-      std::cerr << "Input file is bad pointer: " << fname.Data()
-		<< " ...exiting..." << std::endl;
+      std::cerr << "Input file is bad pointer: " << filename.Data() << " ...exiting..." << std::endl;
       exit(1);
     }
     else 
     {
-      std::cout << "Successfully opened file: " << fname.Data() << std::endl;
+      std::cout << "Successfully opened file: " << filename.Data() << std::endl;
     }
   }
 
-  void CheckValidTree(const TTree * tree, const TString & tname, const TString & fname)
+  void CheckValidTree(const TTree * tree, const TString & treename, const TString & filename)
   {
     if (tree == (TTree*) NULL) // check if valid tree
     {
-      std::cerr << "Input TTree is bad pointer: " << tname.Data() << " in input file: " << fname.Data()
+      std::cerr << "Input TTree is bad pointer: " << treename.Data() << " in input file: " << filename.Data()
 		<< " ...exiting..." << std::endl;
       exit(1);
     }
     else 
     {
-      std::cout << "Successfully opened tree: " << tname.Data() << " in input file: " << fname.Data() << std::endl;
+      std::cout << "Successfully grabbed tree: " << treename.Data() << " in input file: " << filename.Data() << std::endl;
+    }
+  }
+
+  void CheckValidF1(const TF1 * f1, const TString & f1name, const TString & filename)
+  {
+    if (f1 == (TF1*) NULL) // check if valid tf1
+    {
+      std::cerr << "Input TF1 is bad pointer: " << f1name.Data() << " in input file: " << filename.Data() << " ...exiting..." << std::endl;
+      exit(1);
     }
   }
 
