@@ -38,6 +38,16 @@ declare -a eras=("2017B" "2017C" "2017D" "2017E" "2017F" "Full")
 export eras
 export MainEra="Full"
 
+## etas
+declare -a etas=("EB" "EE" "Full")
+export etas
+
+## phos
+export pho0="0 Leading"
+export pho1="1 Subleading"
+declare -a phos=("pho0" "pho1")
+export phos
+
 ## weight info
 export wgtvar="phopt_0"
 
@@ -75,6 +85,14 @@ function popd ()
     command popd "$@" > /dev/null
 }
 export -f popd
+
+## function to read config
+function ReadConfig ()
+{
+    local line=${1}
+    echo "${line}" | cut -d "=" -f 2
+}
+export -f ReadConfig
 
 ## function to make directory readable
 function PrepOutDir ()

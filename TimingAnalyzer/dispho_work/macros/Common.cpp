@@ -401,17 +401,23 @@ namespace Common
     }
   }
   
-  void SetVar(const TString & str, const Variable var)
+  void SetVar(const TString & var, const Variable Var)
   {
     for (const auto & GroupPair : Common::GroupMap)
     {
-      if      (var == Variable::X)
+      if (var == "")
       {
-	Common::XVarMap[GroupPair.first] = str;
+	std::cerr << "How did this happen?? You did not specify a variable to draw! Exiting..." << std::endl;
+	exit(1);
       }
-      else if (var == Variable::Y)
+
+      if      (Var == Variable::X)
       {
-	Common::YVarMap[GroupPair.first] = str;
+	Common::XVarMap[GroupPair.first] = var;
+      }
+      else if (Var == Variable::Y)
+      {
+	Common::YVarMap[GroupPair.first] = var;
       }
       else
       {
@@ -421,19 +427,20 @@ namespace Common
     }
   }
 
-  void SetVarMod(const TString & str, const Variable var, const SampleGroup sample)
+  void SetVarMod(const TString & varmod, const Variable Var, const SampleGroup sample)
   {
     for (const auto & GroupPair : Common::GroupMap)
     {
       if (sample != GroupPair.second) continue;
+      if (varmod == "") continue;
 
-      if      (var == Variable::X)
+      if      (Var == Variable::X)
       {
-	Common::XVarMap[GroupPair.first] += str;
+	Common::XVarMap[GroupPair.first] += varmod;
       }
-      else if (var == Variable::Y)
+      else if (Var == Variable::Y)
       {
-	Common::YVarMap[GroupPair.first] += str;
+	Common::YVarMap[GroupPair.first] += varmod;
       }
       else
       {

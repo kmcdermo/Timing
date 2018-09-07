@@ -1,22 +1,17 @@
 phoE_0
+phoE_0_zoomer
 phopt_0_zoom
+phopt_0_zoomer
 phophi_0
 phoeta_0
 
-phoseedtime_0
-phoseedtime_0_const_zoom
-phoseedTOF_0
-
 phoE_1
+phoE_1_zoomer
 phopt_1_zoom
+phopt_1_zoomer
 phophi_1
 phoeta_1
 
-phoseedtime_1
-phoseedtime_1_const_zoom
-phoseedTOF_1
-
 zeemass
-diphoseedtime_const_zoom
 
 nvtx

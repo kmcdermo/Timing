@@ -172,8 +172,8 @@ namespace Common
   void SetupSignalSubGroupColors();
   void SetupColors();
   void SetupLabels();
-  void SetVar(const TString & str, const Variable var);
-  void SetVarMod(const TString & str, const Variable var, const SampleGroup sample);
+  void SetVar(const TString & var, const Variable Var);
+  void SetVarMod(const TString & varmod, const Variable Var, const SampleGroup sample);
   void SetupCuts(const TString & cutconfig);
   void SetupCutFlow(const TString & cutflowconfig);
   void SetupEraCuts(const TString & era);

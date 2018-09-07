@@ -8,6 +8,7 @@ nphotons
 phopt_0
 phopt_0_full
 phopt_0_zoom
+phopt_0_zoomer
 phophi_0
 phoeta_0
 phosmaj_0
@@ -18,6 +19,7 @@ phosieie_0
 
 phopt_1
 phopt_1_zoom
+phopt_1_zoomer
 phophi_1
 phoeta_1
 

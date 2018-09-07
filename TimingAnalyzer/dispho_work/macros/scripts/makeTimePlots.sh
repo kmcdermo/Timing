@@ -11,10 +11,11 @@ source scripts/common_variables.sh
 
 ## command line inputs
 outdirbase=${1:-"plots/ntuples_v4/checks_v4/era_plots"}
-useshift=${2:-"false"}
-usesmear=${3:-"false"}
-writefiles=${4:-"false"}
-filedump=${5:-"${timeadjvar}_infiles.${inTextExt}"}
+usetof=${2:-"false"}
+useshift=${3:-"false"}
+usesmear=${4:-"false"}
+writefiles=${5:-"false"}
+filedump=${6:-"${timeadjvar}_infiles.${inTextExt}"}
 
 ## create filedump
 if [[ "${writefiles}" == "true" ]]
@@ -24,9 +25,6 @@ fi
 
 ## other info
 fragdir="plot_config/fragments"
-
-## etas
-declare -a etas=("EB" "EE" "Full")
 
 ## vars
 declare -a vars=("pt" "eta" "time" "nvtx") # "E"
@@ -41,21 +39,9 @@ declare -a mualleras_vars=("pt")
 pt="p_{T} GeV/c 0 10 100 0 1 10"
 declare -a sigmafit_vars=(pt)
 
-## phos
-pho0="0 Leading"
-pho1="1 Subleading"
-declare -a phos=("pho0") # "pho1"
-
 ###############
 ## Functions ##
 ###############
-
-## function to read config
-function ReadConfig ()
-{
-    local line=${1}
-    echo "${line}" | cut -d "=" -f 2
-}
 
 ## function to say if logx
 function CheckLogXVar ()
@@ -124,6 +110,12 @@ do echo ${!pho} | while read -r index pho_label
     do
 	for var in "${vars[@]}"
 	do 
+	    ## only plot time vars for pho1
+	    if [[ "${pho}" == "pho1" ]] && [[ "${var}" != "time" ]]
+	    then
+		continue
+	    fi
+
 	    ##########################
 	    ## Set plot config (1D) ##
 	    ##########################
@@ -180,8 +172,14 @@ do echo ${!pho} | while read -r index pho_label
 	    shift_corr="+phoseedtimeSHIFT_${index}"
 	    smear_corr="+phoseedtimeSMEAR_${index}"
 
-	    data_corr="${tof_corr}"
-	    mc_corr="${tof_corr}"
+	    data_corr=""
+	    mc_corr=""
+
+	    if [[ "${usetof}" == "true" ]]
+	    then
+		data_corr+="${tof_corr}"
+		mc_corr+="${tof_corr}"
+	    fi
 
 	    if [[ "${useshift}" == "true" ]]
 	    then
@@ -226,6 +224,7 @@ do echo ${!pho} | while read -r index pho_label
 		    echo "How did this happen?? Did not choose a correct option for eta: ${eta} ... Exiting..."
 		    exit
 		fi
+
 		## write the remainder of cuts
 		echo "data_cut=" >> "${cut}"
 		echo "bkgd_cut=" >> "${cut}"
@@ -345,7 +344,7 @@ do echo ${!pho} | while read -r index pho_label
 		    do echo ${!input} | while read -r label infile insigfile sel varwgtmap
 			do
                  	    ## outfile names
-			    outdir="${outdirbase}/${label}/${eta}/${var}"
+			    outdir="${outdirbase}/${label}/${pho}/${eta}/${var}"
 			    outfile="${x_var}_${label}_${eta}_${era}"
 			    
 			    ## run 1D plotter
