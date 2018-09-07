@@ -66,6 +66,7 @@ struct FitStruct
 
   const TString label;
   std::map<TString,TH1F*> MuHistMap;
+  std::map<TString,TH1F*> SigmaHistMap;
   std::map<TString,TF1*>  SigmaFitMap;
 };
 
@@ -89,6 +90,7 @@ public:
   
   // Getting adjustments ready
   void GetInputMuHists(FitStruct & FitInfo);
+  void GetInputSigmaHists(FitStruct & FitInfo);
   void GetInputSigmaFits(FitStruct & FitInfo);
 
   // Meta data

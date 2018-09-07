@@ -73,7 +73,8 @@ void TimeAdjuster::PrepAdjustments(FitStruct & FitInfo)
   if (fDoShift) TimeAdjuster::GetInputMuHists(FitInfo);
 
   // Get input resolution fits
-  if (fDoSmear) TimeAdjuster::GetInputSigmaFits(FitInfo);
+  //  if (fDoSmear) TimeAdjuster::GetInputSigmaFits(FitInfo);
+  if (fDoSmear) TimeAdjuster::GetInputSigmaHists(FitInfo);
 }
 
 void TimeAdjuster::CorrectData(FitStruct & DataInfo)
@@ -261,8 +262,11 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	  pho.b_pt->GetEntry(entry);
 	  pho.b_isEB->GetEntry(entry);
       
+	  // era to use
+	  const TString era = "Full";
+
 	  // get the key
-	  const TString key = Form("%s_Full",(pho.isEB?"EB":"EE"));
+	  const TString key = Form("%s_%s",(pho.isEB?"EB":"EE"),era.Data());
 
 	  // set shift correction branch
 	  if (fDoShift)
@@ -275,9 +279,13 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	  // set smear correction branch
 	  if (fDoSmear)
 	  {
-	    const auto & datafit = DataInfo.SigmaFitMap[key];
-	    const auto & mcfit   = MCInfo  .SigmaFitMap[key];
-	    const auto sigma     = std::sqrt(std::pow(datafit->Eval(pho.pt),2.f)-std::pow(mcfit->Eval(pho.pt),2.f));
+	    // const auto & datafit = DataInfo.SigmaFitMap[key];
+	    // const auto & mcfit   = MCInfo  .SigmaFitMap[key];
+	    // const auto sigma     = std::sqrt(std::pow(datafit->Eval(pho.pt),2.f)-std::pow(mcfit->Eval(pho.pt),2.f));
+
+	    const auto & datahist = DataInfo.SigmaHistMap[key];
+	    const auto & mchist   = MCInfo  .SigmaHistMap[key];
+	    const auto sigma     = std::sqrt(std::pow(datahist->FindBin(pho.pt),2.f)-std::pow(mchist->FindBin(pho.pt),2.f));
 	    pho.seedtimeSMEAR    = rand->Gaus(0.f,sigma);
 	  }
 
@@ -345,6 +353,33 @@ void TimeAdjuster::GetInputMuHists(FitStruct & FitInfo)
 
     // rename
     MuHist->SetName(Form("%s_%s_Hist",muhistname.Data(),key.Data()));
+  }
+}
+
+void TimeAdjuster::GetInputSigmaHists(FitStruct & FitInfo)
+{
+  const auto & label = FitInfo.label;
+  std::cout << "Getting input sigma histograms for: " << label.Data() << std::endl;
+
+  // get inputs
+  const TString sigmahistname = label+"_sigma";
+  auto & SigmaHistMap = FitInfo.SigmaHistMap;
+
+  // loop over files, read in hists, then rename
+  for (auto & InFilePair : fInFileMap)
+  {
+    const auto & key = InFilePair.first;
+    auto & InFile = InFilePair.second;
+    auto & SigmaHist = SigmaHistMap[key];
+
+    // grab hist
+    SigmaHist = (TH1F*)InFile->Get(sigmahistname.Data());
+
+    // check to make sure ok
+    Common::CheckValidHist(SigmaHist,sigmahistname,InFile->GetName());
+
+    // rename
+    SigmaHist->SetName(Form("%s_%s_Hist",sigmahistname.Data(),key.Data()));
   }
 }
 
@@ -470,7 +505,8 @@ void TimeAdjuster::DeleteInfo(FitStruct & FitInfo)
   std::cout << "Deleting info for: " << label.Data() << std::endl;
 
   TimeAdjuster::DeleteMap(FitInfo.MuHistMap);
-  TimeAdjuster::DeleteMap(FitInfo.SigmaFitMap);
+  TimeAdjuster::DeleteMap(FitInfo.SigmaHistMap);
+  //  TimeAdjuster::DeleteMap(FitInfo.SigmaFitMap);
 }
 
 template <typename T>
