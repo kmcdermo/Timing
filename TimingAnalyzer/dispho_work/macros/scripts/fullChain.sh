@@ -4,7 +4,7 @@
 source scripts/common_variables.sh
 
 ## config
-outdir=${1:-"plots/ntuples_v4/checks_v3/full_chain"}
+outdir=${1:-"ntuples_v4/checks_v3/full_chain"}
 docleanup=${2:-"true"}
 
 ## make signal efficiencies

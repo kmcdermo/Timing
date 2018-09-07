@@ -7,7 +7,7 @@ source scripts/common_variables.sh
 compareconfig=${1:-"plot_compare.${inTextExt}"}
 era=${2:-"Full"}
 outfiletext=${3:-"plots"}
-dir=${4:-"plots/test"}
+dir=${4:-"test"}
 
 ## first make plot
 root -l -b -q runPlotComparator.C\(\"${compareconfig}\",\"${era}\",\"${outfiletext}\"\)

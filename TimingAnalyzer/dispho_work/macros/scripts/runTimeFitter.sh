@@ -10,7 +10,7 @@ miscconfig=${3:-"${miscconfigdir}/misc_blind.${inTextExt}"}
 timefitconfig=${4:-"time.${inTextExt}"}
 era=${5:-"full"}
 outfiletext=${6:-"plots"}
-dir=${7:-"plots/test"}
+dir=${7:-"test"}
 
 declare -a outputs=("mu" "sigma") ## can add back chi2prob, chi2ndf
 

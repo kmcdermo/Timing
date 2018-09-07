@@ -4,7 +4,7 @@
 source scripts/common_variables.sh
 
 ## config
-outdir=${1:-"plots"}
+outdir=${1:-"plots2D"}
 plot="met_vs_time"
 misc="empty"
 

@@ -4,7 +4,7 @@
 source scripts/common_variables.sh
 
 ## command line options
-outdir=${1:-"plots/ntuples_v4/checks_v3/DEG_test/srplots_wgt"}
+outdir=${1:-"ntuples_v4/checks_v3/DEG_test/srplots_wgt"}
 plotlist=${2:-"standard"}
 docleanup=${3:-"true"}
 

@@ -6,7 +6,7 @@ source ./scripts/common_variables.sh
 ## command line input
 indir=${1:-"compare_input"}
 plot=${2:-"met_zoom"}
-outdir=${3:-"plots/ntuples_v5/checks_v4/era_comp"}
+outdir=${3:-"ntuples_v5/checks_v4/era_comp"}
 
 for era in "${eras[@]}"
 do

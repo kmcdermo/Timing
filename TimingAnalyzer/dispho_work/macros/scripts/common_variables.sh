@@ -22,7 +22,7 @@ export varwgtconfigdir="varwgt_config"
 ## common output info
 export outTextExt="log"
 export topdir="/eos/user/k/kmcdermo/www"
-export disphodir="dispho"
+export disphodir="dispho/plots"
 
 ## common derived output info
 export limitdir="limits"
@@ -102,7 +102,7 @@ export -f popd
 ## function to make directory readable
 function PrepOutDir ()
 {
-    local fulldir=${1:-"${topdir}/${disphodir}/plots"}
+    local fulldir=${1:-"${topdir}/${disphodir}"}
     mkdir -p ${fulldir}
 
     pushd ${topdir}

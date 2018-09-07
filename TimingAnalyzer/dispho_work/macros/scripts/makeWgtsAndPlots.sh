@@ -4,7 +4,7 @@
 source scripts/common_variables.sh
 
 ## command line options
-outdir=${1:-"plots/ntuples_v4/checks_v3/DEG_test/varwgts"}
+outdir=${1:-"ntuples_v4/checks_v3/DEG_test/varwgts"}
 docleanup=${2:-"true"}
 
 ## text

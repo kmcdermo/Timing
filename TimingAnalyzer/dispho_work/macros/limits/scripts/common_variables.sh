@@ -12,7 +12,7 @@ export limitconfigdir="limit_config"
 
 ## common output info
 export topdir="/eos/user/k/kmcdermo/www"
-export disphodir="dispho"
+export disphodir="dispho/plots"
 
 declare -a exts=("eps" "png" "pdf")
 export exts
@@ -23,7 +23,7 @@ export MainEra="Full"
 ## function to make directory readable
 function PrepOutDir ()
 {
-    local fulldir=${1:-"${topdir}/${disphodir}/plots"}
+    local fulldir=${1:-"${topdir}/${disphodir}"}
     mkdir -p ${fulldir}
 
     pushd ${topdir}

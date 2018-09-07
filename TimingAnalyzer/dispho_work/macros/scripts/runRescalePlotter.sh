@@ -10,7 +10,7 @@ plotconfig=${3:-"${plotconfigdir}/jetphi_0.${inTextExt}"}
 miscconfig=${4:-"${miscconfigdir}/misc.${inTextExt}"}
 era=${5:-"Full"}
 outfiletext=${6:-"rescaled_jetphi_0"}
-dir=${7:-"plots/ntuples_v4/test"}
+dir=${7:-"ntuples_v4/test"}
 
 ## first make plot
 root -l -b -q runRescalePlotter.C\(\"${infilename}\",\"${rescaleconfig}\",\"${plotconfig}\",\"${miscconfig}\",\"${era}\",\"${outfiletext}\"\)

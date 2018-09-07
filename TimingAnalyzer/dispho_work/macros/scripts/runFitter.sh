@@ -7,7 +7,7 @@ source scripts/common_variables.sh
 fitconfig=${1:-"${fitconfigdir}/ws_final.${inTextExt}"} # full_model_bias.${inTextExt} : for bias study with sig + bkg (toy data)
 miscconfig=${2:-"${miscconfigdir}/misc_fit.${inTextExt}"} # misc_fit_model.${inTextExt} : for bias study with sig + bkg (toy data)
 outfiletext=${3:-"ws_final"}
-outdir=${4:-"plots/ntuples_v4/checks_v3/fits"}
+outdir=${4:-"ntuples_v4/checks_v3/fits"}
 
 ## make array of dimensions
 declare -a dims=("2D" "projX" "projY")

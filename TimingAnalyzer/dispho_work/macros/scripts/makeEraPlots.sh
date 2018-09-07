@@ -10,7 +10,7 @@ source scripts/common_variables.sh
 ############
 
 ## command line inputs
-outdir=${1:-"plots/ntuples_v4/checks_v4/era_plots"}
+outdir=${1:-"ntuples_v4/checks_v4/era_plots"}
 plot=${2:-"met_zoom"}
 usewgts=${3:-"true"}
 

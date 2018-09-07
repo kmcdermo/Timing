@@ -6,7 +6,7 @@ source scripts/common_variables.sh
 ## config
 infilename=${1:-"signal_skims.root"}
 outtext=${2:-"signal_efficiency"}
-dir=${3:-"plots"}
+dir=${3:-"sigeffplots"}
 
 ## run macro
 root -l -b -q runSigEffPlotter.C\(\"${infilename}\",\"${outtext}\"\)

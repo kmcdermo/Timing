@@ -8,7 +8,7 @@ srplotconfig=${1:-"${srplotconfigdir}/phoseedtime_0.${inTextExt}"}
 miscconfig=${2:-"${miscconfigdir}/misc_blind.${inTextExt}"}
 era=${3:-"Full"}
 outfiletext=${4:-"phoseedtime_0_SRPlot"}
-dir=${5:-"plots/ntuples_v4/checks_v3/kF_v2"}
+dir=${5:-"ntuples_v4/checks_v3/kF_v2"}
 
 ## first make plot
 root -l -b -q runSRPlotter.C\(\"${srplotconfig}\",\"${miscconfig}\",\"${era}\",\"${outfiletext}\"\)

@@ -12,7 +12,7 @@ plotconfig=${5:-"${plotconfigdir}/phopt_0.${inTextExt}"}
 miscconfig=${6:-"${miscconfigdir}/misc_blind.${inTextExt}"}
 era=${7:-"Full"}
 outfiletext=${8:-"plots"}
-dir=${9:-"plots/test"}
+dir=${9:-"test"}
 
 ## first make plot
 root -l -b -q runTreePlotter.C\(\"${infilename}\",\"${insignalfilename}\",\"${cutconfig}\",\"${varwgtmapconfig}\",\"${plotconfig}\",\"${miscconfig}\",\"${era}\",\"${outfiletext}\"\)

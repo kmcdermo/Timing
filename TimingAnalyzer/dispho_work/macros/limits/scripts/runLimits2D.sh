@@ -9,7 +9,7 @@ infilename=${2:-"AsymLim"}
 limitconfig=${3:-"${limitconfigdir}/limits2D.${inTextExt}"}
 era=${4:-"Full"}
 outtext=${5:-"limit2D"}
-dir=${6:-"plots/ntuples_v4/limits"}
+dir=${6:-"ntuples_v4/limits"}
 
 ## run macro
 root -l -b -q runLimits2D.C\(\"${indir}\",\"${infilename}\",\"${limitconfig}\",\"${era}\",\"${outtext}\"\)

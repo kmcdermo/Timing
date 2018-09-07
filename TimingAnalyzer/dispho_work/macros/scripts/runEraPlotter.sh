@@ -7,7 +7,7 @@ source scripts/common_variables.sh
 eraplotconfig=${1:-"etaplotconfig.${inTextExt}"}
 plotconfig=${2:-"${plotconfigdir}/met_zoom.${inTextExt}"}
 outfiletext=${3:-"plot_era"}
-dir=${4:-"plots/test"}
+dir=${4:-"test"}
 
 ## first make plot
 root -l -b -q runEraPlotter.C\(\"${eraplotconfig}\",\"${plotconfig}\",\"${outfiletext}\"\)

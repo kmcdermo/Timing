@@ -13,7 +13,7 @@ source scripts/common_variables.sh
 inlimitdir=${1:-"input"}
 inwsfile=${2:-"ws_final.root"}
 doobs=${3:-0}
-outdir=${4:-"plots/ntuples_v4/full_chain"}
+outdir=${4:-"ntuples_v4/full_chain"}
 docleanup=${5:-"true"}
 
 ## Combine config

@@ -10,7 +10,7 @@ source scripts/common_variables.sh
 ###################
 
 ## Command Line Input
-outdir=${1:-"plots/ntuples_v4/full_chain"}
+outdir=${1:-"ntuples_v4/full_chain"}
 docleanup=${2:-"true"}
 
 ## Tmp Info

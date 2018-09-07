@@ -9,7 +9,7 @@ infilename=${2:-"AsymLim"}
 doobserved=${3:-0}
 era=${4:-"Full"}
 outtext=${5:-"limit1D"}
-dir=${6:-"plots/ntuples_v4/limits"}
+dir=${6:-"ntuples_v4/limits"}
 
 ## run macro
 root -l -b -q runLimits1D.C\(\"${indir}\",\"${infilename}\",${doobserved},\"${era}\",\"${outtext}\"\)

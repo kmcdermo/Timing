@@ -10,7 +10,7 @@ source scripts/common_variables.sh
 ############
 
 ## command line inputs
-outdirbase=${1:-"plots/ntuples_v4/checks_v4/era_plots"}
+outdirbase=${1:-"ntuples_v4/checks_v4/era_plots"}
 usetof=${2:-"false"}
 useshift=${3:-"false"}
 usesmear=${4:-"false"}

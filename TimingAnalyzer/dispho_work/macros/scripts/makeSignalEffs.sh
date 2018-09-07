@@ -4,7 +4,7 @@
 source scripts/common_variables.sh
 
 ## config
-outdir=${1:-"plots/ntuples_v4/checks_v3/sig_effs"}
+outdir=${1:-"ntuples_v4/checks_v3/sig_effs"}
 
 ## make signal efficiency
 for input in "${inputs[@]}"

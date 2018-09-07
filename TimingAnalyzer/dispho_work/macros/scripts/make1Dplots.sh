@@ -4,7 +4,7 @@
 source scripts/common_variables.sh
 
 ## config
-outdir=${1:-"plots/ntuples_v4/checks_v2"}
+outdir=${1:-"ntuples_v4/checks_v2"}
 plotlist=${2:-"standard"}
 usewgts=${3:-"true"}
 

@@ -10,7 +10,7 @@ source scripts/common_variables.sh
 ############
 
 ## command line inputs
-outdirbase=${1:-"plots/ntuples_v5/time_study"}
+outdirbase=${1:-"ntuples_v5/time_study"}
 
 ## other config
 nodir="no_corrs"
@@ -41,9 +41,9 @@ echo "Making 1D generic plots"
 echo "Making time related plots without TOF, SHIFT, SMEAR corrections"
 ./scripts/makeTimePlots.sh "${outdirbase}/${nodir}" "false" "false" "false" "true" "${filedump}"
 
-## launch delta time plots with TOF+SHIFT+SMEAR corrections
-echo "Making deltaT related plots with TOF, SHIFT, SMEAR corrections"
-./scripts/makeDeltaTimePlots.sh "${outdirbase}/${smeardir}" "true" "true" "true"
+## launch delta time plots with NO TOF+SHIFT+SMEAR corrections
+echo "Making deltaT related plots with NO TOF, SHIFT, SMEAR corrections"
+./scripts/makeDeltaTimePlots.sh "${outdirbase}/${smeardir}" "false" "false" "false"
 
 ## plot raw TOF
 echo "Making raw TOF plots"
