@@ -30,6 +30,9 @@ do echo ${!pho} | while read -r index pho_label
 	    then
 		title=$( ReadConfig "${line}" )
 		title="${pho_label} ${title}"
+	    elif [[ "${line}" == "unit="* ]]
+	    then
+		unit=$( ReadConfig "${line}" )
 	    elif [[ "${line}" == "bins="* ]]
 	    then
 		x_bins=$( ReadConfig "${line}" )
@@ -38,6 +41,12 @@ do echo ${!pho} | while read -r index pho_label
 		ytitle=$( ReadConfig "${line}" )
 	    fi
 	done < "${fragdir}/${var}.${inTextExt}"
+	
+	## add units to title
+	if [[ "${unit}" != "" ]]
+	then
+	    title+=" ${unit}"
+	fi
 	
         ## loop over eta regions
 	for eta in "${etas[@]}"

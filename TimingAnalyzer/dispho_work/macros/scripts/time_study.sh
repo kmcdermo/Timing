@@ -42,8 +42,8 @@ echo "Making time related plots without TOF, SHIFT, SMEAR corrections"
 ./scripts/makeTimePlots.sh "${outdirbase}/${nodir}" "false" "false" "false" "true" "${filedump}"
 
 ## launch delta time plots with TOF+SHIFT+SMEAR corrections
-#echo "Making deltaT related plots with TOF, SHIFT, SMEAR corrections"
-#./scripts/makeDeltaTimePlots.sh "${outdirbase}/${smeardir}" "true" "true" "true"
+echo "Making deltaT related plots with TOF, SHIFT, SMEAR corrections"
+./scripts/makeDeltaTimePlots.sh "${outdirbase}/${smeardir}" "true" "true" "true"
 
 ## plot raw TOF
 echo "Making raw TOF plots"
@@ -106,8 +106,8 @@ echo "Making time related plots with TOF, SHIFT, SMEAR corrections"
 ./scripts/makeTimePlots.sh "${outdirbase}/${smeardir}" "true" "true" "true" "false"
 
 ## launch delta time plots with TOF+SHIFT+SMEAR corrections
-#echo "Making deltaT related plots with TOF, SHIFT, SMEAR corrections"
-#./scripts/makeDeltaTimePlots.sh "${outdirbase}/${smeardir}" "true" "true" "true"
+echo "Making deltaT related plots with TOF, SHIFT, SMEAR corrections"
+./scripts/makeDeltaTimePlots.sh "${outdirbase}/${smeardir}" "true" "true" "true"
 
 ## final prep dir
 echo "Final prep outdir"

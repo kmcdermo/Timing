@@ -27,75 +27,18 @@ fi
 fragdir="plot_config/fragments"
 
 ## vars
-declare -a vars=("pt" "eta" "time" "nvtx") # "E"
+declare -a vars=("pt" "E" "eta" "time" "nvtx")
 
 ## logx vars
-declare -a logx_vars=("pt") # "E"
+declare -a logx_vars=("pt" "E")
 
 ## do full era vars for mu hists
 declare -a mualleras_vars=("pt")
 
 ## sigma fit vars
 pt="p_{T} GeV/c 0 10 100 0 1 10"
-declare -a sigmafit_vars=(pt)
-
-###############
-## Functions ##
-###############
-
-## function to say if logx
-function CheckLogXVar ()
-{
-    local var=${1}
-    local result="false"
-
-    for logx_var in "${logx_vars[@]}"
-    do
-	if [[ "${var}" == "${logx_var}" ]]
-	then
-	    result="true"
-	    break
-	fi
-    done
-    
-    echo "${result}"
-}
-
-## function to check if run over all eras for mu hists
-function CheckMuAllErasVar ()
-{
-    local var=${1}
-    local result="false"
-
-    for mualleras_var in "${mualleras_vars[@]}"
-    do
-	if [[ "${var}" == "${mualleras_var}" ]]
-	then
-	    result="true"
-	    break
-	fi
-    done
-    
-    echo "${result}"
-}
-
-## function to check if sigma fit
-function CheckSigmaFitVar ()
-{
-    local var=${1}
-    local result="false"
-
-    for sigmafit_var in "${sigmafit_vars[@]}"
-    do
-	if [[ "${var}" == "${sigmafit_var}" ]]
-	then
-	    result="true"
-	    break
-	fi
-    done
-    
-    echo "${result}"
-}
+E="E GeV 0 10 100 0 1 10"
+declare -a sigmafit_vars=(pt E)
 
 ###############
 ## Run code! ##
@@ -128,6 +71,9 @@ do echo ${!pho} | while read -r index pho_label
 		elif [[ "${line}" == "title="* ]]
 		then
 		    title=$( ReadConfig "${line}" )
+		elif [[ "${line}" == "unit="* ]]
+		then
+		    unit=$( ReadConfig "${line}" )
 		elif [[ "${line}" == "bins="* ]]
 		then
 		    x_bins=$( ReadConfig "${line}" )
@@ -144,6 +90,12 @@ do echo ${!pho} | while read -r index pho_label
 		x_var="${x_var}_${index}"
 	    fi
 
+	    ## add units to title
+	    if [[ "${unit}" != "" ]]
+	    then
+		title+=" ${unit}"
+	    fi
+
 	    ##########################
 	    ## Set plot config (2D) ##
 	    ##########################
@@ -158,38 +110,46 @@ do echo ${!pho} | while read -r index pho_label
 		then
 		    time_title=$( ReadConfig "${line}" )
 		    time_title="${pho_label} ${time_title}"
+		elif [[ "${line}" == "unit="* ]]
+		then
+		    time_unit=$( ReadConfig "${line}" )
 		elif [[ "${line}" == "bins="* ]]
 		then
 		    time_bins=$( ReadConfig "${line}" )
 		fi
 	    done < "${fragdir}/time.${inTextExt}"
+
+	    ## add units to title
+	    time_title+=" ${time_unit}"
 	    
 	    #####################
 	    ## set corrections ##
 	    #####################
-
-	    tof_corr="+phoseedTOF_${index}"
-	    shift_corr="+phoseedtimeSHIFT_${index}"
-	    smear_corr="+phoseedtimeSMEAR_${index}"
 
 	    data_corr=""
 	    mc_corr=""
 
 	    if [[ "${usetof}" == "true" ]]
 	    then
-		data_corr+="${tof_corr}"
-		mc_corr+="${tof_corr}"
+		tof_corr_index="+${tof_corr}_${index}"
+
+		data_corr+="${tof_corr_index}"
+		mc_corr+="${tof_corr_index}"
 	    fi
 
 	    if [[ "${useshift}" == "true" ]]
 	    then
-		data_corr+="${shift_corr}"
-		mc_corr+="${shift_corr}"
+		shift_corr_index="+${shift_corr}_${index}"
+		
+		data_corr+="${shift_corr_index}"
+		mc_corr+="${shift_corr_index}"
 	    fi
 
 	    if [[ "${usesmear}" == "true" ]]
 	    then
-		mc_corr+="${smear_corr}"
+		smear_corr_index="+${smear_corr}_${index}"
+
+		mc_corr+="${smear_corr_index}"
 	    fi
 
 	    ## loop over eta regions
@@ -198,7 +158,7 @@ do echo ${!pho} | while read -r index pho_label
 		## only do Full detector for time plot only
 		if [[ "${eta}" == "Full" ]] && [[ "${var}" != "time" ]]
 		then
-		    continue;
+		    continue
 		fi
 
 		#########################
@@ -295,7 +255,7 @@ do echo ${!pho} | while read -r index pho_label
 		    echo "range_up=${rangeup}" >> "${timefit_config}"
 		done
 
-		check_sigmafit=$( CheckSigmaFitVar ${var} )
+		check_sigmafit=$( CheckVar ${var} "${sigmafit_vars[@]}" )
 		if [[ "${check_sigmafit}" == "true" ]]
 		then
 		    echo "do_sigma_fit=1" >> "${timefit_config}"
@@ -317,7 +277,7 @@ do echo ${!pho} | while read -r index pho_label
 		misc_fit="tmp_misc_fit.${inTextExt}"
 		> "${misc_fit}"
 
-		check_logx=$( CheckLogXVar ${var} )
+		check_logx=$( CheckVar ${var} "${logx_vars[@]}" )
 		if [[ "${check_logx}" == "true" ]]
 		then
 		    echo "do_logx=1" >> "${misc_fit}"
@@ -331,7 +291,7 @@ do echo ${!pho} | while read -r index pho_label
 		for era in "${eras[@]}"
 		do
 		    ## skip if not needed to do all eras
-		    check_mualleras=$( CheckMuAllErasVar ${var} )
+		    check_mualleras=$( CheckVar ${var} "${mualleras_vars[@]}" )
 		    if [[ "${check_mualleras}" != "true" ]] && [[ "${era}" != "Full" ]]
 		    then
 			continue

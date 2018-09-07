@@ -48,6 +48,11 @@ export pho1="1 Subleading"
 declare -a phos=("pho0" "pho1")
 export phos
 
+## time corrections
+export tof_corr="phoseedTOF"
+export shift_corr="phoseedtimeSHIFT"
+export smear_corr="phoseedtimeSMEAR"
+
 ## weight info
 export wgtvar="phopt_0"
 
@@ -73,6 +78,10 @@ export ZEE="${Zee} empty"
 declare -a inputs=(ZEE)
 export inputs
 
+################################
+## Generic function overrides ##
+################################
+
 ## suppress pushd, popd output
 function pushd () 
 {
@@ -86,13 +95,9 @@ function popd ()
 }
 export -f popd
 
-## function to read config
-function ReadConfig ()
-{
-    local line=${1}
-    echo "${line}" | cut -d "=" -f 2
-}
-export -f ReadConfig
+####################
+## Plot functions ##
+####################
 
 ## function to make directory readable
 function PrepOutDir ()
@@ -130,3 +135,36 @@ function GetMisc ()
     echo "${misc}"
 }
 export -f GetMisc
+
+########################
+## Time Fit Functions ##
+########################
+
+## function to read config
+function ReadConfig ()
+{
+    local line=${1}
+    echo "${line}" | cut -d "=" -f 2
+}
+export -f ReadConfig
+
+## function to say if logx
+function CheckVar ()
+{
+    local var=${1}
+    shift
+    local arr_vars=("$@")
+    local result="false"
+
+    for arr_var in "${arr_vars[@]}"
+    do
+	if [[ "${var}" == "${arr_var}" ]]
+	then
+	    result="true"
+	    break
+	fi
+    done
+    
+    echo "${result}"
+}
+export -f CheckVar

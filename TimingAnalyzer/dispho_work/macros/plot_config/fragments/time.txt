@@ -1,4 +1,5 @@
 var=phoseedtime
-title=Seed Time [ns]
+title=Photon Seed Time
+unit=[ns]
 bins=CONSTANT 30 -3 3
 ytitle=Events
