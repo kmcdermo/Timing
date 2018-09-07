@@ -26,10 +26,10 @@ fi
 fragdir="plot_config/fragments"
 
 ## etas
-declare -a etas=("EB" "EE") # "Full"
+declare -a etas=("EB" "EE" "Full")
 
 ## vars
-declare -a vars=("pt" "eta" "time" "nvtx") # "time" "E"
+declare -a vars=("pt" "eta" "time" "nvtx") # "E"
 
 ## logx vars
 declare -a logx_vars=("pt") # "E"
@@ -198,6 +198,12 @@ do echo ${!pho} | while read -r index pho_label
 	    ## loop over eta regions
 	    for eta in "${etas[@]}"
 	    do
+		## only do Full detector for time plot only
+		if [[ "${eta}" == "Full" ]] && [[ "${var}" != "time" ]]
+		then
+		    continue;
+		fi
+
 		#########################
 		## make eta cut config ##
 		#########################
@@ -351,7 +357,7 @@ do echo ${!pho} | while read -r index pho_label
 			    then
                  	        ## extra outfile names
 				outfile2D="${time_var}_vs_${outfile}"
-				timefile="timefit"			    
+				timefile="timefit"
 
 				## run 2D plotter
 				./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile2D}" "${outdir}"
