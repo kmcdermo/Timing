@@ -35,27 +35,19 @@ filedump="tmp_infiles.${inTextExt}"
 
 ## make generic plots
 echo "Making 1D generic plots"
-./scripts/make1Dplots.sh "${outdirbase}/basic_plots" "standard_plots_zee" "false"
-
-## lauch plots with no corrections
-echo "Making time related plots without TOF, SHIFT, SMEAR corrections"
-./scripts/makeTimePlots.sh "${outdirbase}/${nodir}" "false" "false" "false" "true" "${filedump}"
+#./scripts/make1Dplots.sh "${outdirbase}/basic_plots" "standard_plots_zee" "false"
 
 ## launch delta time plots with NO TOF+SHIFT+SMEAR corrections
 echo "Making deltaT related plots with NO TOF, SHIFT, SMEAR corrections"
-./scripts/makeDeltaTimePlots.sh "${outdirbase}/${smeardir}" "false" "false" "false"
-
-## plot raw TOF
-echo "Making raw TOF plots"
-./scripts/makeCorrPlots.sh "${outdirbase}/${tofdir}" "TOF"
+./scripts/makeDeltaTimePlots.sh "${outdirbase}/${nodir}" "false" "false" "false"
 
 ############################
 ## Make shift corrections ##
 ############################
 
-## lauch plots with TOF corrections
-echo "Making time related plots without SHIFT, SMEAR corrections; with TOF corrections"
-./scripts/makeTimePlots.sh "${outdirbase}/${tofdir}" "true" "false" "false" "true" "${filedump}"
+## lauch plots with no corrections
+echo "Making time related plots without TOF, SHIFT, SMEAR corrections"
+./scripts/makeTimePlots.sh "${outdirbase}/${nodir}" "false" "false" "false" "true" "${filedump}"
 
 ## launch time adjuster, over each input selection
 for input in "${inputs[@]}"
@@ -71,15 +63,15 @@ rm "${filedump}"
 
 ## plot raw shift
 echo "Making raw shift plots"
-./scripts/makeCorrPlots.sh "${outdirbase}/${tofdir}" "SHIFT"
+./scripts/makeCorrPlots.sh "${outdirbase}/${shiftdir}" "SHIFT"
 
 ############################
 ## Make smear corrections ##
 ############################
 
-## lauch plots with TOF+SHIFT corrections
-echo "Making time related plots without SMEAR corrections; with TOF, SHIFT corrections"
-./scripts/makeTimePlots.sh "${outdirbase}/${shiftdir}" "true" "true" "false" "true" "${filedump}"
+## lauch plots with SHIFT corrections
+echo "Making time related plots without SMEAR corrections; with SHIFT corrections"
+./scripts/makeTimePlots.sh "${outdirbase}/${shiftdir}" "false" "true" "false" "true" "${filedump}"
 
 ## launch time adjuster, over each input selection
 for input in "${inputs[@]}"
@@ -95,19 +87,19 @@ rm "${filedump}"
 
 ## plot raw smear
 echo "Making raw smear plots"
-./scripts/makeCorrPlots.sh "${outdirbase}/${tofdir}" "SMEAR"
+./scripts/makeCorrPlots.sh "${outdirbase}/${smeardir}" "SMEAR"
 
 ##########################
 ## Final plots and such ##
 ##########################
 
-## lauch plots with TOF+SHIFT+SMEAR corrections
-echo "Making time related plots with TOF, SHIFT, SMEAR corrections"
-./scripts/makeTimePlots.sh "${outdirbase}/${smeardir}" "true" "true" "true" "false"
+## lauch plots with SHIFT+SMEAR corrections
+echo "Making time related plots with SHIFT and SMEAR corrections"
+./scripts/makeTimePlots.sh "${outdirbase}/${smeardir}" "false" "true" "true" "false"
 
-## launch delta time plots with TOF+SHIFT+SMEAR corrections
-echo "Making deltaT related plots with TOF, SHIFT, SMEAR corrections"
-./scripts/makeDeltaTimePlots.sh "${outdirbase}/${smeardir}" "true" "true" "true"
+## launch delta time plots with SHIFT+SMEAR corrections
+echo "Making deltaT related plots with SHIFT and SMEAR corrections"
+./scripts/makeDeltaTimePlots.sh "${outdirbase}/${smeardir}" "false" "true" "true"
 
 ## final prep dir
 echo "Final prep outdir"

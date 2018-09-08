@@ -86,11 +86,13 @@ do
 	    title="Subleading ${title}"
 	    x_var="${x_var}_1"
 	elif [[ "${var}" == *"_eff" ]]
+	then
 	    title="Effective ${title}"
 	    x_var="sqrt(${x_var}_0*${x_var}_1)"
 	elif [[ "${var}" == *"_delta" ]]
+	then
 	    title="#Delta(${title})"
-	    x_var="sqrt(${x_var}_0*${x_var}_1)"
+	    x_var="${x_var}_0-${x_var}_1"
 	fi
 
         ## add units to title
@@ -120,6 +122,9 @@ do
 	    fi
 	done < "${fragdir}/time.${inTextExt}"
 	
+        ## add in photon indices
+	time_var="${time_var}_0-${time_var}_1"
+
         ## add delta and units to title
 	time_title="#Delta(${time_title}) ${time_unit}"
     
@@ -268,7 +273,7 @@ do
             ## make plot config (2D) ##
 	    ###########################
 
-	    plot2D="tmp_deltatime_vs_${var}_${eta}.${inTextExt}"
+	    plot2D="tmp_deltaT_vs_${var}_${eta}.${inTextExt}"
 	    > "${plot2D}"
 
 	    echo "plot_title=${time_title} vs. ${title} (${eta})" >> "${plot2D}"
@@ -366,7 +371,7 @@ do
 		    do
                  	## outfile names
 			outdir="${outdirbase}/${label}/${diphodir}/${eta}/${var}"
-			outfile="${x_var}_${label}_${eta}_${era}"
+			outfile="${var}_${label}_${eta}_${era}"
 			
 			## run 1D plotter
 			./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile}" "${outdir}"
@@ -375,7 +380,7 @@ do
 			if [[ "${var}" != "time_delta" ]]
 			then
                  	    ## extra outfile names
-			    outfile2D="${time_var}_vs_${outfile}"
+			    outfile2D="deltaT_vs_${outfile}"
 			    timefile="timefit"
 
 			    ## run 2D plotter
@@ -384,11 +389,6 @@ do
 			    ## run fitter, getting 2D plots from before
 			    ./scripts/runTimeFitter.sh "${outfile2D}.root" "${plot2D}" "${misc_fit}" "${timefit_config}" "${era}" "${outfile}_${timefile}" "${outdir}"
 				
-			    ## write out time files for correction computations
-			    if [[ "${writefiles}" == "true" ]] && [[ "${x_var}" == "${timeadjvar}" ]] && [[ "${eta}" != "Full" ]]
-			    then
-				echo "${eta}_${era}=${outfile}_${timefile}.root" >> "${filedump}"
-			    fi
 			fi ## end check over vars to fit
 		    done ## read input
 		done ## loop over inputs

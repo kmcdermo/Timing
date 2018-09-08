@@ -314,7 +314,7 @@ do echo ${!pho} | while read -r index pho_label
 			    if [[ "${var}" != "time" ]]
 			    then
                  	        ## extra outfile names
-				outfile2D="${time_var}_vs_${outfile}"
+				outfile2D="time_${index}_vs_${outfile}"
 				timefile="timefit"
 
 				## run 2D plotter
