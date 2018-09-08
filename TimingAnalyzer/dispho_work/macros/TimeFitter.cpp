@@ -72,6 +72,9 @@ void TimeFitter::MakeTimeFits()
   // MakeConfigPave
   TimeFitter::MakeConfigPave();
 
+  // Dump mu's and sigma's into text file
+  TimeFitter::DumpFitInfo(DataInfo,MCInfo);
+
   // Delete infos
   TimeFitter::DeleteInfo(DataInfo);
   TimeFitter::DeleteInfo(MCInfo);
@@ -586,6 +589,66 @@ void TimeFitter::MakeConfigPave()
   // save to output file
   fOutFile->cd();
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+}
+
+void TimeFitter::DumpFitInfo(FitStruct & DataInfo, FitStruct & MCInfo)
+{
+  std::cout << "Dumping fit info into text file..." << std::endl;
+
+  // get histograms!
+  const auto & data_mu_hist = DataInfo.ResultsMap["mu"];
+  const auto & mc_mu_hist   = MCInfo  .ResultsMap["mu"];
+
+  const auto & data_sigma_hist = DataInfo.ResultsMap["sigma"];
+  const auto & mc_sigma_hist   = MCInfo  .ResultsMap["sigma"];
+
+  // make dumpfile object
+  const TString filename = outfiletext+Common::outFitText+"."+Common::outTextExt; 
+  std::ofstream dumpfile(Form("%s",filename.Data()),std::ios_base::out);
+
+  dumpfile << std::setw(5)  << "Bin |"
+	   << std::setw(18) << "     pT range    |"
+	   << std::setw(19) << "      Data mu     |"
+	   << std::setw(19) << "       MC mu      |"
+	   << std::setw(19) << "    Data sigma    |"
+	   << std::setw(19) << "     MC sigma     |"
+  	   << std::setw(17) << "    Diff sigma   "
+	   << std::endl;
+  
+  std::string space = "";
+  const auto nw = 5+18+19+19+19+19+17;
+  for (auto i = 0; i < nw; i++) space += "-";
+
+  dumpfile << space.c_str() << std::endl;
+
+  for (auto ibinX = 1; ibinX <= fXBins.size()-1; i++)
+  {
+    const auto pt_low = fXBins[i-1];
+    const auto pt_up  = fXBins[i];
+
+    const auto data_mu   = data_mu_hist->GetBinContent(i);
+    const auto data_mu_e = data_mu_hist->GetBinError  (i);
+    const auto mc_mu     = mc_mu_hist  ->GetBinContent(i);
+    const auto mc_mu_e   = mc_mu_hist  ->GetBinError  (i);
+
+    const auto data_sigma   = data_sigma_hist->GetBinContent(i);
+    const auto data_sigma_e = data_sigma_hist->GetBinError  (i);
+    const auto mc_sigma     = mc_sigma_hist  ->GetBinContent(i);
+    const auto mc_sigma_e   = mc_sigma_hist  ->GetBinError  (i);
+    const auto diff_sigma   = std::sqrt(std::pow(data_sigma,2.f)-std::pow(mc_sigma,2.f));
+    const auto diff_sigma_e = std::sqrt(std::pow(data_sigma*data_sigma_e/diff_sigma,2.f)+std::pow(mc_sigma*mc_sigma_e/diff_sigma,2.f));
+
+    dumpfile << std::setw(5)  << Form("%i |",ibinX) 
+	     << std::setw(17) << Form(" %6.1f - %6.1f |",pt_low,pt_up)
+	     << std::setw(19) << Form(" %6.3f +/- %5.3f |",data_mu,data_mu_e)
+	     << std::setw(19) << Form(" %6.3f +/- %5.3f |",mc_mu  ,mc_mu_e)
+	     << std::setw(19) << Form(" %6.3f +/- %5.3f |",data_sigma,data_sigma_e)
+	     << std::setw(19) << Form(" %6.3f +/- %5.3f |",mc_sigma  ,mc_sigma_e)
+	     << std::setw(17) << Form(" %6.3f +/- %5.3f"  ,diff_sigma,diff_sigma_e)
+	     << std::endl;
+
+    if (ibinX % 20 == 0) dumpfile << space.c_str() << std::endl;
+  }
 }
 
 void TimeFitter::SetupDefaults()

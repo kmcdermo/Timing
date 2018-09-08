@@ -208,6 +208,8 @@ namespace Common
   constexpr Int_t nPhotons = 4;
 
   // output info
+  static const TString outIntText = "_integrals";
+  static const TString outFitText = "_fitinfo";
   static const std::vector<TString> extensions = {"png","pdf","eps"};
   static const TString outTextExt = "log";
 

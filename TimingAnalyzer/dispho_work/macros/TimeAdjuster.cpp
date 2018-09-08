@@ -153,7 +153,7 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
       if (bin != 0 && bin != hist->GetXaxis()->GetNbins()+1)
       {
 	const auto shift = hist->GetBinContent(bin);
-	pho.seedtimeSHIFT = ((shift > 0.f) ? (-shift) : (shift));
+	pho.seedtimeSHIFT = -shift;
       }
       else
       {
@@ -291,7 +291,7 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	    if (bin != 0 && bin != hist->GetXaxis()->GetNbins()+1)
 	    {
 	      const auto shift = hist->GetBinContent(bin);
-	      pho.seedtimeSHIFT = ((shift > 0.f) ? (-shift) : (shift));
+	      pho.seedtimeSHIFT = -shift;
 	    }
 	    else
 	    {

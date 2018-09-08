@@ -29,7 +29,7 @@ do
 	cp ${outfiletext}_${canvscale}.${ext} ${fulldir}
     done
 done
-cp ${outfiletext}.root ${outfiletext}_integrals.${outTextExt} ${fulldir}
+cp ${outfiletext}.root ${outfiletext}"_integrals".${outTextExt} ${fulldir}
 
 ## Final message
 echo "Finished TreePlotting for plot:" ${plotconfig}

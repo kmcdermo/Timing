@@ -107,8 +107,9 @@ public:
   void PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t min, Float_t max, 
 		   const TString & key, const Bool_t isLogy);
 
-  // save meta data
+  // save meta data and extra info
   void MakeConfigPave();
+  void DumpFitInfo(FitStruct & DataInfo, FitStruct & MCInfo);
 
   // additional helper functions
   template <typename T>

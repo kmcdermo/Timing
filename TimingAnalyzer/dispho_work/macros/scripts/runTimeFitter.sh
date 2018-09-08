@@ -38,7 +38,7 @@ do
 	done
     done
 done
-cp ${outfiletext}.root ${fulldir}
+cp ${outfiletext}.root ${outfiletext}"_fitinfo".${outTextExt} ${fulldir}
 
 ## Final message
 echo "Finished TimeFitting for plot:" ${plotconfig}
