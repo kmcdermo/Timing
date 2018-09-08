@@ -130,7 +130,7 @@ function GetMisc ()
 
     if [[ "${input}" == "ZEE" ]] 
     then
-	if [[ "${plot}" != "SMEAR" ]]
+	if [[ "${plot}" != *"SMEAR"* ]]
 	then
 	    misc="misc_zee"
 	else

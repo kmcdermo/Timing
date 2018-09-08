@@ -304,7 +304,7 @@ do
 	    ## determine which misc file to use ##
 	    ######################################
 
-	    misc=$(GetMisc ${input} ${plot})
+	    misc=$( GetMisc ${input} ${plot} )
 	    
 	    #########################
 	    ## make timefit config ##

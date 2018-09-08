@@ -97,7 +97,7 @@ do echo ${!pho} | while read -r index pho_label
 	    ## determine which misc file to use ##
 	    ######################################
 
-	    misc=$(GetMisc ${input} ${var}) ## a break with tradition --> otherwise would need to save tmp names in common
+	    misc=$( GetMisc ${input} ${plot} )
 
 	    ####################
 	    ## loop over eras ##

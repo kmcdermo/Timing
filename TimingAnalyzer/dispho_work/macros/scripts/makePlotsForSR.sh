@@ -37,7 +37,7 @@ do
 		outfile="${plot}_${label}"
 		
 		## determine which misc file to use
-		misc=$(GetMisc ${input} ${plot})
+		misc=$( GetMisc ${input} ${plot} )
 	
 		## make the plot (with variable weights applied as needed)
 		./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" "${outfile}" "${outdir}/${plot}"
@@ -49,7 +49,7 @@ do
 	done ## end loop over inputs array
 
         ## determine which misc
-	misc=$(GetMisc ${input} ${plot})
+	misc=$( GetMisc ${input} ${plot} )
 
         ## Now run SRPlotter over input files
 	./scripts/runSRPlotter.sh "${tmpconfig}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" "${plot}_SRPlot" "${outdir}/${plot}"

@@ -36,7 +36,7 @@ function makeTreePlot()
 	echo "Creating input plot for: ${outfile}"
 	
 	## determine which misc file to use
-	local misc=$(GetMisc ${input} ${plot})
+	local misc=$( GetMisc ${input} ${plot} )
 	
 	## make the plot
 	./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" "${outfile}" "${outdir}/${plot}"

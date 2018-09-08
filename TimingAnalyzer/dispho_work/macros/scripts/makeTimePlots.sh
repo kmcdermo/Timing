@@ -235,7 +235,7 @@ do echo ${!pho} | while read -r index pho_label
 		## determine which misc file to use ##
 		######################################
 
-		misc=$(GetMisc ${input} ${plot})
+		misc=$( GetMisc ${input} ${plot} )
 
 		#########################
 		## make timefit config ##
