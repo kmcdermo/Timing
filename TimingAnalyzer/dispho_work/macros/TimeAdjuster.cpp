@@ -146,10 +146,20 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
       const TString key = Form("%s_%s",(pho.isEB?"EB":"EE"),era.Data());
       const auto & hist = DataInfo.MuHistMap[key];
       
-      // set correction branch
-      const auto shift = hist->GetBinContent(hist->FindBin(pho.pt));
-      pho.seedtimeSHIFT = ((shift > 0.f) ? -shift : shift);
+      // get bin which corresponds to the pt of the object
+      const auto bin = hist->FindBin(pho.pt);
 
+      // set correction branch if bin is found, else no correction
+      if (bin != 0 && bin != hist->GetXaxis()->GetNbins()+1)
+      {
+	const auto shift = hist->GetBinContent(bin);
+	pho.seedtimeSHIFT = ((shift > 0.f) ? (-shift) : (shift));
+      }
+      else
+      {
+	pho.seedtimeSHIFT = 0.f;
+      }
+      
       // fill branch
       pho.b_seedtimeSHIFT->Fill();
     } // end loop over nphotons on file
@@ -271,9 +281,22 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	  // set shift correction branch
 	  if (fDoShift)
 	  {
-	    const auto & hist = MCInfo  .MuHistMap  [key];
-	    const auto shift  = hist->GetBinContent(hist->FindBin(pho.pt));
-	    pho.seedtimeSHIFT = ((shift > 0.f) ? -shift : shift);
+	    // get the right hist
+	    const auto & hist = MCInfo.MuHistMap[key];
+
+	    // get the bin for the pt of the object
+	    const auto bin = hist->FindBin(pho.pt);
+	    
+	    // set correction branch if bin is found, else no correction
+	    if (bin != 0 && bin != hist->GetXaxis()->GetNbins()+1)
+	    {
+	      const auto shift = hist->GetBinContent(bin);
+	      pho.seedtimeSHIFT = ((shift > 0.f) ? (-shift) : (shift));
+	    }
+	    else
+	    {
+	      pho.seedtimeSHIFT = 0.f;
+	    }
 	  }
 
 	  // set smear correction branch
@@ -283,10 +306,24 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	    // const auto & mcfit   = MCInfo  .SigmaFitMap[key];
 	    // const auto sigma     = std::sqrt(std::pow(datafit->Eval(pho.pt),2.f)-std::pow(mcfit->Eval(pho.pt),2.f));
 
+	    // get the right hists
 	    const auto & datahist = DataInfo.SigmaHistMap[key];
 	    const auto & mchist   = MCInfo  .SigmaHistMap[key];
-	    const auto sigma     = std::sqrt(std::pow(datahist->FindBin(pho.pt),2.f)-std::pow(mchist->FindBin(pho.pt),2.f));
-	    pho.seedtimeSMEAR    = rand->Gaus(0.f,sigma);
+
+	    // get the right bins based on pt
+	    const auto & databin = datahist->FindBin(pho.pt);
+	    const auto & mcbin   = mchist  ->FindBin(pho.pt);
+	    
+	    // make smear if bins within range
+	    if ( (databin != 0 && databin != datahist->GetXaxis()->GetNbins()+1) && (mcbin != 0 && mcbin != mchist->GetXaxis()->GetNbins()+1) )
+	    {
+	      const auto sigma  = std::sqrt(std::pow(datahist->GetBinContent(databin),2.f)-std::pow(mchist->GetBinContent(mcbin),2.f));
+	      pho.seedtimeSMEAR = rand->Gaus(0.f,sigma);
+	    }
+	    else
+	    {
+	      pho.seedtimeSMEAR = 0.f;
+	    }
 	  }
 
 	  // fill branches

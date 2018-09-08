@@ -1,0 +1,5 @@
+var=phoseedtimeSHIFT
+title=Photon Seed Time SHIFT Correction
+unit=[ns]
+bins=CONSTANT 30 -3 3
+ytitle=Events

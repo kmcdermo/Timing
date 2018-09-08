@@ -23,9 +23,6 @@ then
     > "${filedump}"
 fi
 
-## other info
-fragdir="plot_config/fragments"
-
 ## vars
 declare -a vars=("pt" "E" "eta" "time" "nvtx")
 

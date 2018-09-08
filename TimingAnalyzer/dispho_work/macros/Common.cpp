@@ -354,6 +354,36 @@ namespace Common
     // HVDS Labels when we get some samples...
   }
 
+  void RemoveData()
+  {
+    // erase by key first
+    for (const auto & GroupPair : Common::GroupMap)
+    {
+      const auto & sample = GroupPair.first;
+      const auto & group  = GroupPair.second;
+
+      if (group != SampleGroup::isData) continue;
+
+      Common::TreeNameMap.erase(sample);
+      Common::HistNameMap.erase(sample);
+      Common::ColorMap.erase(sample);
+      Common::LabelMap.erase(sample);
+    }
+
+    // erase groups now
+    for (auto iter = Common::GroupMap.cbegin(); iter != Common::GroupMap.cend();)
+    {
+      if (iter->second == SampleGroup::isData) 
+      {
+	Common::GroupMap.erase(iter++);
+      }
+      else
+      {
+	iter++;
+      }
+    }
+  }
+
   void KeepOnlySamples(const std::vector<TString> & samplevec)
   {
     // erase by find

@@ -1,0 +1,2 @@
+signals_to_plot=GMSB_L250_CTau0p1 GMSB_L250_CTau10 GMSB_L250_CTau600
+skip_data=1

@@ -35,7 +35,7 @@ filedump="tmp_infiles.${inTextExt}"
 
 ## make generic plots
 echo "Making 1D generic plots"
-#./scripts/make1Dplots.sh "${outdirbase}/basic_plots" "standard_plots_zee" "false"
+./scripts/make1Dplots.sh "${outdirbase}/basic_plots" "standard_plots_zee" "false"
 
 ## launch delta time plots with NO TOF+SHIFT+SMEAR corrections
 echo "Making deltaT related plots with NO TOF, SHIFT, SMEAR corrections"

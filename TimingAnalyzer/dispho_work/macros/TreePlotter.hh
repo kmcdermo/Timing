@@ -108,6 +108,7 @@ protected:
   Bool_t fScaleToUnity;
   Bool_t fScaleMCToData;
   Bool_t fBlindData;
+  Bool_t fSkipData;
   Bool_t fSignalsOnly;
 
   // Style

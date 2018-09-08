@@ -18,6 +18,7 @@ export plotconfigdir="plot_config"
 export rescaleconfigdir="rescale_config"
 export srplotconfigdir="srplot_config"
 export varwgtconfigdir="varwgt_config"
+export fragdir="plot_config/fragments"
 
 ## common output info
 export outTextExt="log"
@@ -119,17 +120,22 @@ function GetMisc ()
 
     local misc="misc"
 
-    if [[ ${input} == "SR" ]] 
+    if [[ "${input}" == "SR" ]] 
     then
-	if [[ ${plot} == *"met"* ]] || [[ ${plot} == *"time"* ]] 
+	if [[ "${plot}" == *"met"* ]] || [[ "${plot}" == *"time"* ]] 
 	then
 	    misc="misc_blind"
 	fi
     fi
 
-    if [[ ${input} == "ZEE" ]] 
+    if [[ "${input}" == "ZEE" ]] 
     then
-	misc="misc_zee"
+	if [[ "${plot}" != "SMEAR" ]]
+	then
+	    misc="misc_zee"
+	else
+	    misc="misc_zee_smear"
+	fi
     fi
 
     echo "${misc}"
