@@ -15,6 +15,7 @@
 
 // STL includes
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <cmath>
@@ -131,6 +132,7 @@ private:
   TString fTitle;
   TString fXTitle;
   std::vector<Double_t> fXBins;
+  Int_t fNBinsX;
   Bool_t fXVarBins;
   TString fYTitle;
   Bool_t fDoLogX; // technically, read in from miscconfig

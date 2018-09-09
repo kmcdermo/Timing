@@ -164,7 +164,7 @@ void TimeFitter::Project2Dto1DHists(FitStruct & FitInfo)
   auto & Hist1DMap = FitInfo.Hist1DMap;
   const TString histname = Hist2D->GetName();
 
-  for (auto ibinX = 1U; ibinX <= fXBins.size(); ibinX++)
+  for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
   {
     auto & hist1D = Hist1DMap[ibinX];
     hist1D = (TH1F*)Hist2D->ProjectionY(Form("%s_ibin%i",histname.Data(),ibinX),ibinX,ibinX);
@@ -180,7 +180,7 @@ void TimeFitter::Fit1DHists(FitStruct & FitInfo)
   auto & Hist1DMap = FitInfo.Hist1DMap;
   auto & FitMap    = FitInfo.FitMap;
 
-  for (auto ibinX = 1U; ibinX <= fXBins.size(); ibinX++)
+  for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
   {
     // get hist, and skip if no entries
     auto & hist1D = Hist1DMap[ibinX];
@@ -216,7 +216,7 @@ void TimeFitter::ExtractFitResults(FitStruct & FitInfo)
   ResultsMap["sigma"]    = TimeFitter::SetupHist(Form("#sigma_{%s} [ns]",fTimeText.Data()),"sigma",label);
 
   // set bin content!
-  for (auto ibinX = 1U; ibinX <= fXBins.size(); ibinX++)
+  for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
   {
     // skip if fit not present
     if (!FitMap.count(ibinX)) continue;
@@ -541,7 +541,7 @@ void TimeFitter::GetFitResult(const TF1 * fit, FitResult & result)
 
 void TimeFitter::GetMinMax(const TH1F * hist, Float_t & min, Float_t & max, const TString & key)
 {
-  for (auto ibinX = 1U; ibinX < fXBins.size(); ibinX++)
+  for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
   {
     const auto content = hist->GetBinContent(ibinX);
     
@@ -603,7 +603,7 @@ void TimeFitter::DumpFitInfo(FitStruct & DataInfo, FitStruct & MCInfo)
   const auto & mc_sigma_hist   = MCInfo  .ResultsMap["sigma"];
 
   // make dumpfile object
-  const TString filename = outfiletext+Common::outFitText+"."+Common::outTextExt; 
+  const TString filename = fOutFileText+Common::outFitText+"."+Common::outTextExt; 
   std::ofstream dumpfile(Form("%s",filename.Data()),std::ios_base::out);
 
   dumpfile << std::setw(5)  << "Bin |"
@@ -621,20 +621,20 @@ void TimeFitter::DumpFitInfo(FitStruct & DataInfo, FitStruct & MCInfo)
 
   dumpfile << space.c_str() << std::endl;
 
-  for (auto ibinX = 1; ibinX <= fXBins.size()-1; i++)
+  for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
   {
-    const auto pt_low = fXBins[i-1];
-    const auto pt_up  = fXBins[i];
+    const auto pt_low = fXBins[ibinX-1];
+    const auto pt_up  = fXBins[ibinX];
 
-    const auto data_mu   = data_mu_hist->GetBinContent(i);
-    const auto data_mu_e = data_mu_hist->GetBinError  (i);
-    const auto mc_mu     = mc_mu_hist  ->GetBinContent(i);
-    const auto mc_mu_e   = mc_mu_hist  ->GetBinError  (i);
+    const auto data_mu   = data_mu_hist->GetBinContent(ibinX);
+    const auto data_mu_e = data_mu_hist->GetBinError  (ibinX);
+    const auto mc_mu     = mc_mu_hist  ->GetBinContent(ibinX);
+    const auto mc_mu_e   = mc_mu_hist  ->GetBinError  (ibinX);
 
-    const auto data_sigma   = data_sigma_hist->GetBinContent(i);
-    const auto data_sigma_e = data_sigma_hist->GetBinError  (i);
-    const auto mc_sigma     = mc_sigma_hist  ->GetBinContent(i);
-    const auto mc_sigma_e   = mc_sigma_hist  ->GetBinError  (i);
+    const auto data_sigma   = data_sigma_hist->GetBinContent(ibinX);
+    const auto data_sigma_e = data_sigma_hist->GetBinError  (ibinX);
+    const auto mc_sigma     = mc_sigma_hist  ->GetBinContent(ibinX);
+    const auto mc_sigma_e   = mc_sigma_hist  ->GetBinError  (ibinX);
     const auto diff_sigma   = std::sqrt(std::pow(data_sigma,2.f)-std::pow(mc_sigma,2.f));
     const auto diff_sigma_e = std::sqrt(std::pow(data_sigma*data_sigma_e/diff_sigma,2.f)+std::pow(mc_sigma*mc_sigma_e/diff_sigma,2.f));
 
@@ -689,6 +689,7 @@ void TimeFitter::SetupPlotConfig()
     {
       str = Common::RemoveDelim(str,"x_bins=");
       Common::SetupBins(str,fXBins,fXVarBins);
+      fNBinsX = fXBins.size()-1;
     }
     else if (str.find("y_title=") != std::string::npos)
     {
@@ -802,7 +803,7 @@ TH1F * TimeFitter::SetupHist(const TString & ytitle, const TString & yextra, con
   const auto xbins = &fXBins[0];
 
   // make new hist
-  auto hist = new TH1F(label+"_"+yextra,fTitle+" "+ytitle+";"+fXTitle+";"+ytitle,fXBins.size()-1,xbins);
+  auto hist = new TH1F(label+"_"+yextra,fTitle+" "+ytitle+";"+fXTitle+";"+ytitle,fNBinsX,xbins);
   hist->Sumw2();
 
   Color_t color = kBlack;
