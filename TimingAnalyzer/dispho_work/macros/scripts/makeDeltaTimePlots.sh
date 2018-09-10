@@ -325,6 +325,8 @@ do
 	    if [[ "${check_sigmafit}" == "true" ]]
 	    then
 		echo "do_sigma_fit=1" >> "${timefit_config}"
+		echo "use_sqrt2=1" >> "${timefit_config}"
+		    
 		echo ${!var} | while read -r var_text var_unit N_low N_val N_up C_low C_val C_up
 		do
 		    echo "sigma_var_text=${var_text}" >> "${timefit_config}"

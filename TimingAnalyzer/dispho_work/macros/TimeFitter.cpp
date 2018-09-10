@@ -260,7 +260,7 @@ void TimeFitter::PrepSigmaFit(FitStruct & FitInfo)
   const TString fitname  = histname+"_fit";
 
   // set formula
-  TFormula form(formname.Data(),Form("sqrt((([0]*[0])/(x*x))+(2*[1]*[1]))"));
+  TFormula form(formname.Data(),Form("sqrt((([0]*[0])/(x*x))+(%s[1]*[1]))",fUseSqrt2?"2*":""));
     
   // get and set fit
   auto & fit = FitInfo.SigmaFit;
@@ -347,8 +347,8 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
     FitText = new TPaveText(0.22,0.6,0.52,0.92,"NDC");
     FitText->SetName("SigmaFitText");
     
-    FitText->AddText(Form("#sigma(t)=#frac{N}{%s} #oplus #sqrt{2}C",fSigmaVarText.Data()));
-    FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f [%s ns]",DataLabel.Data(),DataFit->GetParameter(0),DataFit->GetParError(0),fSigmaVarUnit.Data()));
+    FitText->AddText(Form("#sigma(t)=#frac{N}{%s} #oplus %sC",fSigmaVarText.Data(),fUseSqrt2?"#sqrt{2}":""));
+    Fittext->AddText(Form("N^{%s} = %4.1f #pm %3.1f [%s ns]",DataLabel.Data(),DataFit->GetParameter(0),DataFit->GetParError(0),fSigmaVarUnit.Data()));
     FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f [ns]"   ,DataLabel.Data(),DataFit->GetParameter(1),DataFit->GetParError(1)));
     FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f [%s ns]",MCLabel  .Data(),MCFit  ->GetParameter(0),MCFit  ->GetParError(0),fSigmaVarUnit.Data()));
     FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f [ns]"   ,MCLabel  .Data(),MCFit  ->GetParameter(1),MCFit  ->GetParError(1)));
@@ -657,6 +657,7 @@ void TimeFitter::SetupDefaults()
 
   fDoLogX = false;
   fDoSigmaFit = false;
+  fUseSqrt2 = false;
 }
 
 void TimeFitter::SetupCommon() 
@@ -764,6 +765,11 @@ void TimeFitter::SetupTimeFitConfig()
       str = Common::RemoveDelim(str,"do_sigma_fit=");
       Common::SetupBool(str,fDoSigmaFit);
     }
+    else if (str.find("use_sqrt2=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"use_sqrt2=");
+      Common::SetupBool(str,fUseSqrt2);
+    }
     else if (str.find("sigma_var_text=") != std::string::npos)
     {
       fSigmaVarText = Common::RemoveDelim(str,"sigma_var_text=");
@@ -834,7 +840,11 @@ void TimeFitter::DeleteInfo(FitStruct & FitInfo)
 
   delete FitInfo.Hist2D;
 
-  if (fDoSigmaFit) delete FitInfo.SigmaFit;
+  if (fDoSigmaFit) 
+  {
+    delete FitInfo.SigmaForm;
+    delete FitInfo.SigmaFit;
+  }
 
   TimeFitter::DeleteMap(FitInfo.Hist1DMap);
   TimeFitter::DeleteMap(FitInfo.FitMap);

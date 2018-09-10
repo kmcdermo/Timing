@@ -145,6 +145,7 @@ private:
 
   // sigma fit config
   Bool_t fDoSigmaFit;
+  Bool_t fUseSqrt2;
   TString fSigmaVarText;
   TString fSigmaVarUnit;
   SigmaFitParams fSigmaInitN;
