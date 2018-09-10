@@ -160,9 +160,8 @@ void Skimmer::EventLoop()
     {
       // cut on HLT right away
       fInEvent.b_hltDiEle33MW->GetEntry(entry);
-      fInEvent.b_hltDiEle27WPT->GetEntry(entry);
       
-      if (!fInEvent.hltDiEle33MW && !fInEvent.hltDiEle27WPT) continue;
+      if (!fInEvent.hltDiEle33MW) continue;
       fOutCutFlow->Fill((cutLabels["diEleHLT"]*1.f)-0.5f,wgt);
 
       // build list of "good electrons"
@@ -172,13 +171,16 @@ void Skimmer::EventLoop()
 	auto & inpho = fInPhos[ipho];
 	
 	inpho.b_pt->GetEntry(entry);
-	inpho.b_isOOT->GetEntry(entry);
-	inpho.b_gedID->GetEntry(entry);
-	inpho.b_ootID->GetEntry(entry);
-
 	if (inpho.pt < 40.f) continue;
-	if      (!inpho.isOOT && inpho.gedID < 3) continue;
-	else if ( inpho.isOOT && inpho.ootID < 3) continue;
+
+	inpho.b_hasPixSeed->GetEntry(entry);
+	if (!inpho.hasPixSeed) continue;
+
+	inpho.b_gedID->GetEntry(entry);
+	if (inpho.gedID < 3) continue;
+
+	inpho.b_isOOT->GetEntry(entry);
+	if (inpho.isOOT) continue;
 
 	good_phos.emplace_back(ipho);
       }
@@ -780,6 +782,19 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	const auto d_orig = Common::hypot(outpho.seedX,outpho.seedY,outpho.seedZ);
 	
 	outpho.seedTOF = (d_orig-d_pv) / Common::sol;
+
+	// compute mean time
+	outpho.meantime = 0.f;
+	auto rhcounter = 0;
+	for (auto irh = 0; irh < fInEvent.nrechits; irh++)
+	{
+	  if ((*fInRecHits.E)[irh] > 120.f) continue;
+	  rhcounter++;
+	  outpho.meantime += (*fInRecHits.time)[irh];
+	}
+
+	if (rhcounter > 0) outpho.meantime /= rhcounter;
+	else outpho.meantime = -9999.f;
       }
       else
       {
@@ -791,6 +806,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.seedY    = -9999.f;
 	outpho.seedZ    = -9999.f;
 	outpho.seedTOF  = -9999.f;
+
+	outpho.meantime = -9999.f;
       }
     }
     else
@@ -1477,6 +1494,9 @@ void Skimmer::InitOutBranches()
     fOutTree->Branch(Form("%s_%i",pho.s_seedY.c_str(),ipho), &pho.seedY);
     fOutTree->Branch(Form("%s_%i",pho.s_seedZ.c_str(),ipho), &pho.seedZ);
     fOutTree->Branch(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF);
+
+    // HACK!
+    fOutTree->Branch(Form("%s_%i",pho.s_meantime.c_str(),ipho), &pho.meantime);
   } // end loop over nPhotons
 
   // add event weight

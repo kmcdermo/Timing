@@ -406,7 +406,9 @@ struct Pho
   Float_t seedY;
   Float_t seedZ;
   Float_t seedTOF;
-
+  // HACK: FIXME
+  Float_t meantime;
+  
   // branch names
   std::string s_E = "phoE";
   std::string s_pt = "phopt";
@@ -458,6 +460,7 @@ struct Pho
   std::string s_seedY = "phoseedY";
   std::string s_seedZ = "phoseedZ";
   std::string s_seedTOF = "phoseedTOF";
+  std::string s_meantime = "phomeantime";
 
   // tbranches
   TBranch * b_E;
@@ -506,6 +509,11 @@ struct Pho
   TBranch * b_seedID;
   TBranch * b_isGen;
   TBranch * b_isSignal;
+  TBranch * b_phoseedX;
+  TBranch * b_phoseedY;
+  TBranch * b_phoseedZ;
+  TBranch * b_phoseedTOF;
+  TBranch * b_phomeantime;
 };
 typedef std::vector<Pho> PhoVec;
 
