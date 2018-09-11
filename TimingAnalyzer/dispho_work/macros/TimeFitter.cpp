@@ -178,6 +178,7 @@ void TimeFitter::Fit1DHists(FitStruct & FitInfo)
   
   // get inputs/outputs
   auto & Hist1DMap = FitInfo.Hist1DMap;
+  auto & FormMap   = FitInfo.FormMap;
   auto & FitMap    = FitInfo.FitMap;
 
   for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
@@ -352,7 +353,7 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
     FitText->SetName("SigmaFitText");
     
     FitText->AddText(Form("#sigma(t)=#frac{N}{%s} #oplus %sC",fSigmaVarText.Data(),fUseSqrt2?"#sqrt{2}":""));
-    Fittext->AddText(Form("N^{%s} = %4.1f #pm %3.1f [%s ns]",DataLabel.Data(),DataFit->GetParameter(0),DataFit->GetParError(0),fSigmaVarUnit.Data()));
+    FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f [%s ns]",DataLabel.Data(),DataFit->GetParameter(0),DataFit->GetParError(0),fSigmaVarUnit.Data()));
     FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f [ns]"   ,DataLabel.Data(),DataFit->GetParameter(1),DataFit->GetParError(1)));
     FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f [%s ns]",MCLabel  .Data(),MCFit  ->GetParameter(0),MCFit  ->GetParError(0),fSigmaVarUnit.Data()));
     FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f [ns]"   ,MCLabel  .Data(),MCFit  ->GetParameter(1),MCFit  ->GetParError(1)));
@@ -506,7 +507,7 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TFormula *& form, TF1 *& fit)
   
   // save formula
   fOutFile->cd();
-  form->Write(form->GetName(),TObject::kWriteDelete());
+  form->Write(form->GetName(),TObject::kWriteDelete);
 }
 
 void TimeFitter::GetFitResult(const TF1 * fit, FitResult & result)
@@ -681,7 +682,7 @@ void TimeFitter::DumpFitInfo(FitStruct & DataInfo, FitStruct & MCInfo)
       const auto mc_sigma_fit_par     = mc_sigma_fit  ->GetParameter(ipar);
       const auto mc_sigma_fit_par_e   = mc_sigma_fit  ->GetParError (ipar);
       
-      dumpfile << std::setw(5)  << Form("%s |",data_sigma_fit_par->GetParName(ipar)) 
+      dumpfile << std::setw(5)  << Form("%s |",data_sigma_fit->GetParName(ipar)) 
 	       << std::setw(23) << Form(" %8.3f +/- %7.3f |",data_sigma_fit_par,data_sigma_fit_par_e)
 	       << std::setw(23) << Form(" %8.3f +/- %7.3f |",mc_sigma_fit_par  ,mc_sigma_fit_par_e)
 	       << std::endl;
