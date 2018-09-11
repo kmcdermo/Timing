@@ -186,9 +186,10 @@ void TimeFitter::Fit1DHists(FitStruct & FitInfo)
     auto & hist1D = Hist1DMap[ibinX];
     if (hist1D->GetEntries() == 0) continue;
 
-    // get fit, and prep it
-    auto & fit = FitMap[ibinX];
-    TimeFitter::PrepFit(hist1D,fit);
+    // get form+fit, and prep them
+    auto & form = FormMap[ibinX];
+    auto & fit  = FitMap [ibinX];
+    TimeFitter::PrepFit(hist1D,form,fit);
     
     // do the fit!
     hist1D->Fit(fit->GetName(),"RBQ0");
@@ -259,21 +260,24 @@ void TimeFitter::PrepSigmaFit(FitStruct & FitInfo)
   const TString formname = histname+"_form";
   const TString fitname  = histname+"_fit";
 
-  // set formula
-  TFormula form(formname.Data(),Form("sqrt((([0]*[0])/(x*x))+(%s[1]*[1]))",fUseSqrt2?"2*":""));
+  // get and set formula
+  auto & form = FitInfo.SigmaForm;
+  form = new TFormula(formname.Data(),Form("sqrt((([0]*[0])/(x*x))+(%s[1]*[1]))",fUseSqrt2?"2*":""));
     
   // get and set fit
   auto & fit = FitInfo.SigmaFit;
-  fit = new TF1(fitname.Data(),formname.Data(),x_low,x_up);
+  fit = new TF1(fitname.Data(),form->GetName(),x_low,x_up);
 
   // init params
-  fit->SetParameter(0,fSigmaInitN.val);
-  fit->SetParLimits(0,fSigmaInitN.low,fSigmaInitN.up);
-  fit->SetParameter(1,fSigmaInitC.val);
-  fit->SetParLimits(1,fSigmaInitC.low,fSigmaInitC.up);
+  fit->SetParName(0,"N"); fit->SetParameter(0,fSigmaInitN.val); fit->SetParLimits(0,fSigmaInitN.low,fSigmaInitN.up);
+  fit->SetParName(1,"C"); fit->SetParameter(1,fSigmaInitC.val); fit->SetParLimits(1,fSigmaInitC.low,fSigmaInitC.up);
 
   // set line color
   fit->SetLineColor(hist->GetLineColor());
+
+  // save form
+  fOutFile->cd();
+  form->Write(form->GetName(),TObject::kWriteDelete);
 }
 
 void TimeFitter::FitSigmaHist(FitStruct & FitInfo)
@@ -409,7 +413,7 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
   delete Canvas;
 }
 
-void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
+void TimeFitter::PrepFit(TH1F *& hist1D, TFormula *& form, TF1 *& fit)
 {
   // Word on fit notation
   // "GausN" == N Gaussians fit
@@ -432,8 +436,8 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
     rangelow = fRangeLow;
     rangeup  = fRangeUp;
 
-    TFormula tmp_formula("tmp_formula","[0]*exp(-0.5*((x-[1])/[2])**2)");
-    auto tmp_fit = new TF1("tmp_fit",tmp_formula.GetName(),rangelow,rangeup);
+    auto tmp_form = new TFormula("tmp_formula","[0]*exp(-0.5*((x-[1])/[2])**2)");
+    auto tmp_fit  = new TF1("tmp_fit",tmp_form->GetName(),rangelow,rangeup);
 
     tmp_fit->SetParameter(0,norm);
     tmp_fit->SetParameter(1,mu);
@@ -446,6 +450,7 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
     mu    = tmp_fit->GetParameter(1); // mu
     sigma = tmp_fit->GetParameter(2); // sigma
 
+    delete tmp_form;
     delete tmp_fit;
   }
   else // "core" fits
@@ -462,8 +467,8 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
 
   if (fFit == Gaus1 || fFit == Gaus1core)
   {
-    TFormula formula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
-    fit = new TF1(fitname.Data(),formname.Data(),rangelow,rangeup);
+    form = new TFormula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
+    fit  = new TF1(fitname.Data(),form->GetName(),rangelow,rangeup);
 
     fit->SetParName(0,"N");      fit->SetParameter(0,norm);
     fit->SetParName(1,"#mu");    fit->SetParameter(1,mu);
@@ -471,8 +476,8 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
   }
   else if (fFit == Gaus2fm || fFit == Gaus2fmcore)
   {
-    TFormula formula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)");
-    fit  = new TF1(fitname.Data(),formname.Data(),rangelow,rangeup);
+    form = new TFormula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)");
+    fit  = new TF1(fitname.Data(),form->GetName(),rangelow,rangeup);
 
     fit->SetParName(0,"N_{1}");      fit->SetParameter(0,norm);
     fit->SetParName(1,"#mu");        fit->SetParameter(1,mu);
@@ -482,8 +487,8 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
   }
   else if (fFit == Gaus3fm || fFit == Gaus3fmcore)
   {
-    TFormula formula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)+[5]*exp(-0.5*((x-[1])/[6])**2)");
-    fit  = new TF1(fitname.Data(),formname.Data(),rangelow,rangeup);
+    form = new TFormula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)+[5]*exp(-0.5*((x-[1])/[6])**2)");
+    fit  = new TF1(fitname.Data(),form->GetName(),rangelow,rangeup);
 
     fit->SetParName(0,"N_{1}");      fit->SetParameter(0,norm*0.8);  fit->SetParLimits(0,norm*0.5,norm);
     fit->SetParName(1,"#mu");        fit->SetParameter(1,mu);
@@ -498,6 +503,10 @@ void TimeFitter::PrepFit(TH1F *& hist1D, TF1 *& fit)
     std::cerr << "How did this happen?? Fit was not set for prepping fits! Exiting..." << std::endl;
     exit(1);
   }
+  
+  // save formula
+  fOutFile->cd();
+  form->Write(form->GetName(),TObject::kWriteDelete());
 }
 
 void TimeFitter::GetFitResult(const TF1 * fit, FitResult & result)
@@ -648,6 +657,35 @@ void TimeFitter::DumpFitInfo(FitStruct & DataInfo, FitStruct & MCInfo)
 	     << std::endl;
 
     if (ibinX % 20 == 0) dumpfile << space.c_str() << std::endl;
+  }
+
+  if (fDoSigmaFit)
+  {
+    // get fits!
+    const auto & data_sigma_fit = DataInfo.SigmaFit;
+    const auto & mc_sigma_fit   = MCInfo  .SigmaFit;
+
+    dumpfile << space.c_str() << std::endl << std::endl;
+    dumpfile << "Sigma Fit Results" << std::endl;
+    dumpfile << std::setw(5)  << "Par |"
+	     << std::setw(23) << "         Data         |"
+	     << std::setw(23) << "          MC          |"
+	     << std::endl;
+
+    // loop over params and dump
+    for (auto ipar = 0; ipar < data_sigma_fit->GetNpar(); ipar++)
+    {
+      // get constants
+      const auto data_sigma_fit_par   = data_sigma_fit->GetParameter(ipar);
+      const auto data_sigma_fit_par_e = data_sigma_fit->GetParError (ipar);
+      const auto mc_sigma_fit_par     = mc_sigma_fit  ->GetParameter(ipar);
+      const auto mc_sigma_fit_par_e   = mc_sigma_fit  ->GetParError (ipar);
+      
+      dumpfile << std::setw(5)  << Form("%s |",data_sigma_fit_par->GetParName(ipar)) 
+	       << std::setw(23) << Form(" %8.3f +/- %7.3f |",data_sigma_fit_par,data_sigma_fit_par_e)
+	       << std::setw(23) << Form(" %8.3f +/- %7.3f |",mc_sigma_fit_par  ,mc_sigma_fit_par_e)
+	       << std::endl;
+    }
   }
 }
 
@@ -838,17 +876,18 @@ void TimeFitter::DeleteInfo(FitStruct & FitInfo)
   const auto & label = FitInfo.label;
   std::cout << "Deleting info for: " << label.Data() << std::endl;
 
-  delete FitInfo.Hist2D;
-
   if (fDoSigmaFit) 
   {
-    delete FitInfo.SigmaForm;
     delete FitInfo.SigmaFit;
+    delete FitInfo.SigmaForm;
   }
 
-  TimeFitter::DeleteMap(FitInfo.Hist1DMap);
-  TimeFitter::DeleteMap(FitInfo.FitMap);
   TimeFitter::DeleteMap(FitInfo.ResultsMap);
+  TimeFitter::DeleteMap(FitInfo.FitMap);
+  TimeFitter::DeleteMap(FitInfo.FormMap);
+  TimeFitter::DeleteMap(FitInfo.Hist1DMap);
+
+  delete FitInfo.Hist2D;
 }
 
 template <typename T>

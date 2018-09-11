@@ -6,6 +6,7 @@
 #include "TFile.h"
 #include "TH2F.h"
 #include "TH1F.h"
+#include "TFormula.h"
 #include "TF1.h"
 #include "TString.h"
 #include "TColor.h"
@@ -37,9 +38,12 @@ struct FitStruct
   const TString inHistName;
 
   TH2F * Hist2D;
-  std::map<Int_t,TH1F*>   Hist1DMap;
-  std::map<Int_t,TF1*>    FitMap;
-  std::map<TString,TH1F*> ResultsMap;
+  std::map<Int_t,TH1F*>     Hist1DMap;
+  std::map<Int_t,TFormula*> FormMap;
+  std::map<Int_t,TF1*>      FitMap;
+  std::map<TString,TH1F*>   ResultsMap;
+
+  TFormula * SigmaForm;
   TF1 * SigmaFit;
 };
 
@@ -96,7 +100,7 @@ public:
   void ExtractFitResults(FitStruct & FitInfo);
 
   // helper functions for making fits to variables
-  void PrepFit(TH1F *& hist1D, TF1 *& fit);
+  void PrepFit(TH1F *& hist1D, TFormula *& form, TF1 *& fit);
   void GetFitResult(const TF1 * fit, FitResult & result);
 
   // subroutines for making fits to sigma
