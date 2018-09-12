@@ -398,20 +398,23 @@ namespace oot
 
   float GetEcalPFClEA(const float eta)
   {
-    if   (eta < Config::etaEBcutoff) return 0.167;
-    else                             return 0.f;
+    if      (eta < 0.8 ) return 0.19;
+    else if (eta < 1.44) return 0.14;
+    else                 return 0.f;
   }
 
   float GetHcalPFClEA(const float eta)
   {
-    if   (eta < Config::etaEBcutoff) return 0.108;
-    else                             return 0.f;
+    if      (eta < 0.8 ) return 0.089;
+    else if (eta < 1.44) return 0.15;
+    else                 return 0.f;
   }
 
   float GetTrackEA(const float eta)
   {
-    if   (eta < Config::etaEBcutoff) return 0.113;
-    else                             return 0.f;
+    if      (eta < 0.8 ) return 0.037;
+    else if (eta < 1.44) return 0.031;
+    else                 return 0.f;
   }
 
   ////////////////
@@ -436,20 +439,20 @@ namespace oot
 
   float GetEcalPFClPtScale(const float eta, const float pt)
   {
-    if   (eta <  Config::etaEBcutoff) return 0.0028*pt;
-    else                              return 0.f;
+    if   (eta < 1.44) return 0.00092*pt;
+    else              return 0.f;
   }
 
   float GetHcalPFClPtScale(const float eta, const float pt)
   {
-    if   (eta <  Config::etaEBcutoff) return 0.0087*pt;
-    else                              return 0.f;
+    if   (eta < 1.44) return 0.0052*pt;
+    else              return 0.f;
   }
 
   float GetTrackPtScale(const float eta, const float pt)
   {
-    if   (eta <  Config::etaEBcutoff) return 0.0056*pt;
-    else                              return 0.f;
+    if   (eta < 1.44) return 0.00091*pt;
+    else              return 0.f;
   }
 
   ////////////////////
@@ -460,7 +463,7 @@ namespace oot
 
   void GetGEDPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho, const bool isOOT)
   {
-    if (!isOOT && false) // hack for now --> will undo once we use MAD v2: can consider using VID for OOT photons then this section is trivial... bitmask from userInt == 127 == pass, also section below seems to work...
+    if (!isOOT) // get info straight from madv2
     {
       idpairs[2].second = photon.photonID("cutBasedPhotonID-Fall17-94X-V1-tight");
       idpairs[1].second = photon.photonID("cutBasedPhotonID-Fall17-94X-V1-medium");
@@ -547,32 +550,16 @@ namespace oot
     const float HcalPFClIso = std::max(photon.hcalPFClusterIso() - (rho * oot::GetHcalPFClEA(eta)) - (oot::GetHcalPFClPtScale(eta,pt)),0.f);
     const float TrkIso      = std::max(photon.trackIso()         - (rho * oot::GetTrackEA   (eta)) - (oot::GetTrackPtScale   (eta,pt)),0.f);
 
-    if (eta < Config::etaEBcutoff)
+    if      ((HoverE < 0.0165) && (Sieie < 0.011) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 5.5f))
     {
-      if      ((HoverE < 0.020) && (Sieie < 0.0103) && (EcalPFClIso < 2.f) && (HcalPFClIso < 5.f) && (TrkIso < 3.f)) 
-      {
-	idpairs[4].second = true;
-	idpairs[3].second = true;
-      }   
-      else if ((HoverE < 0.105) && (Sieie < 0.0103) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 6.f)) 
-      {
-	idpairs[4].second = false;
-	idpairs[3].second = true;
-      }   
-    }
-    else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax)
+      idpairs[4].second = true;
+      idpairs[3].second = true;
+    }   
+    else if ((HoverE < 0.185) && (Sieie < 0.0125) && (EcalPFClIso < 8.f) && (HcalPFClIso < 12.f) && (TrkIso < 8.5f)) 
     {
-      if      ((HoverE < 0.025) && (Sieie < 0.0271) && (EcalPFClIso < 2.f) && (HcalPFClIso < 5.f) && (TrkIso < 3.f)) 
-      {
-	idpairs[4].second = true;
-	idpairs[3].second = true;
-      }   
-      else if ((HoverE < 0.029) && (Sieie < 0.0271) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 6.f)) 
-      {
-	idpairs[4].second = false;
-	idpairs[3].second = true;
-      }   
-    }
+      idpairs[4].second = false;
+      idpairs[3].second = true;
+    }   
   }
 
   //////////////

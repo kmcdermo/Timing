@@ -229,6 +229,14 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   const CaloSubdetectorGeometry * barrelGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
   const CaloSubdetectorGeometry * endcapGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
+  // ECAL Records from https://github.com/ferriff/usercode/blob/master/DBDump/plugins/DBDump.cc
+  // ADCToGeV
+  edm::ESHandle<EcalADCToGeVConstant> adcToGeVH;
+  iSetup.get<EcalADCToGeVConstantRcd>().get(adcToGeVH);
+  // Pedestals
+  edm::ESHandle<EcalPedestals> pedestalsH;
+  iSetup.get<EcalPedestalsRcd>().get(pedestalsH);
+
   // GEN INFO
   edm::Handle<GenEventInfoProduct> genevtInfoH;
   edm::Handle<float>   gent0H;
@@ -272,9 +280,8 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   const Float_t wgt = (isMC ? genwgt : 1.f);
 
   // Fill total cutflow regardless of cuts
-  h_cutflow->Fill((cutflowLabelMap["All"]*1.f),wgt);
-  //  h_cutflow    ->Fill((cutflowLabelMap["All"]*1.f));
-  //  h_cutflow_wgt->Fill((cutflowLabelMap["All"]*1.f),wgt);
+  h_cutflow    ->Fill((cutflowLabelMap["All"]*1.f));
+  h_cutflow_wgt->Fill((cutflowLabelMap["All"]*1.f),wgt);
 
   // Fill PU hists regardless of cuts
   if (isMC)
@@ -291,17 +298,15 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //          //
   //////////////
   if (event%blindSF!=0 && applyBlindSF) return;
-  h_cutflow->Fill((cutflowLabelMap["nEvBlinding"]*1.f),wgt);
-  //  h_cutflow    ->Fill((cutflowLabelMap["nEvBlinding"]*1.f));
-  //  h_cutflow_wgt->Fill((cutflowLabelMap["nEvBlinding"]*1.f),wgt);
+  h_cutflow    ->Fill((cutflowLabelMap["nEvBlinding"]*1.f));
+  h_cutflow_wgt->Fill((cutflowLabelMap["nEvBlinding"]*1.f),wgt);
 
   if (metsH.isValid())
   {
     if ((*metsH)[0].pt() > blindMET && applyBlindMET) return;
   }  
-  h_cutflow->Fill((cutflowLabelMap["METBlinding"]*1.f),wgt);
-  //  h_cutflow    ->Fill((cutflowLabelMap["METBlinding"]*1.f));
-  //  h_cutflow_wgt->Fill((cutflowLabelMap["METBlinding"]*1.f),wgt);
+  h_cutflow    ->Fill((cutflowLabelMap["METBlinding"]*1.f));
+  h_cutflow_wgt->Fill((cutflowLabelMap["METBlinding"]*1.f),wgt);
 
   /////////
   //     //
@@ -367,17 +372,15 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (triggerBitPair.second) {triggered = true; break;}
   }
   if (!triggered && applyTrigger) return;
-  h_cutflow->Fill((cutflowLabelMap["Trigger"]*1.f),wgt);
-  //  h_cutflow    ->Fill((cutflowLabelMap["Trigger"]*1.f));
-  //  h_cutflow_wgt->Fill((cutflowLabelMap["Trigger"]*1.f),wgt);
+  h_cutflow    ->Fill((cutflowLabelMap["Trigger"]*1.f));
+  h_cutflow_wgt->Fill((cutflowLabelMap["Trigger"]*1.f),wgt);
 
   // HT pre-selection
   auto jetHT = 0.f;
   for (auto ijet = 0; ijet < nJets; ijet++) jetHT += jets[ijet].pt();
   if (jetHT < minHT && applyHT) return;
-  h_cutflow->Fill((cutflowLabelMap["H_{T}"]*1.f),wgt);
-  //  h_cutflow    ->Fill((cutflowLabelMap["H_{T}"]*1.f));
-  //  h_cutflow_wgt->Fill((cutflowLabelMap["H_{T}"]*1.f),wgt);
+  h_cutflow    ->Fill((cutflowLabelMap["H_{T}"]*1.f));
+  h_cutflow_wgt->Fill((cutflowLabelMap["H_{T}"]*1.f),wgt);
 
   // photon pre-selection: at least one good photon in event
   bool isphgood = false;
@@ -405,9 +408,8 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     } 
   } // end check
   if (!isphgood && applyPhGood) return;
-  h_cutflow->Fill((cutflowLabelMap["Good Photon"]*1.f),wgt);
-  //  h_cutflow    ->Fill((cutflowLabelMap["Good Photon"]*1.f));
-  //  h_cutflow_wgt->Fill((cutflowLabelMap["Good Photon"]*1.f),wgt);
+  h_cutflow    ->Fill((cutflowLabelMap["Good Photon"]*1.f));
+  h_cutflow_wgt->Fill((cutflowLabelMap["Good Photon"]*1.f),wgt);
 
   /////////////
   //         //
@@ -430,7 +432,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     {
       DisPho::SetGenT0Branches(gent0H);
     }
-    
+      
     ///////////////////////
     //                   //
     // Gen particle info //
@@ -499,6 +501,17 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     DisPho::SetPVBranches(verticesH);
   }
 
+  /////////////////////
+  //                 //
+  // ADCToGeV (ECAL) //
+  //                 //
+  /////////////////////
+  DisPho::InitializeADCToGeVBranches();
+  if (adcToGeVH.isValid())
+  {
+    DisPho::SetADCToGeVBranchs(adcToGeVH);
+  }
+    
   //////////////////
   //              //
   // Type1 PF Met //
@@ -531,7 +544,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     DisPho::InitializeRecHitBranches(nRecHits);
     if (recHitsEBH.isValid() && recHitsEEH.isValid())
     {
-      DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,recHitsEE,endcapGeometry,recHitMap);
+      DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,recHitsEE,endcapGeometry,pedestalsH,recHitMap);
     }
   }
 
@@ -919,6 +932,18 @@ void DisPho::SetPVBranches(const edm::Handle<std::vector<reco::Vertex> > & verti
   vtxZ = primevtx.position().z();
 }
 
+void DisPho::InitializeADCToGeVBranches()
+{
+  adcToGeVEB = -9999.f;
+  adcToGeVEE = -9999.f;
+}
+
+void DisPho::SetADCToGeVBranches(const edm::ESHandle<EcalADCToGeVConstant> & adcToGeVH)
+{
+  adcToGeVEB = adcToGeVH->getEBValue();
+  adcToGeVEE = adcToGeVH->getEEValue();
+}
+
 void DisPho::InitializeMETBranches()
 {
   t1pfMETpt    = -9999.f;
@@ -964,6 +989,23 @@ void DisPho::InitializeJetBranches(const int nJets)
   jetMUF.resize(nJets);
   jetNHM.resize(nJets);
   jetCHM.resize(nJets);
+
+  for (auto i = 0; i < nJets; i++)
+  {
+    jetE  [i] = -9999.f;
+    jetpt [i] = -9999.f;
+    jetphi[i] = -9999.f;
+    jeteta[i] = -9999.f;
+    jetID [i] = -9999;
+
+    jetNHF [i] = -9999.f;
+    jetNEMF[i] = -9999.f;
+    jetCHF [i] = -9999.f;
+    jetCEMF[i] = -9999.f;
+    jetMUF [i] = -9999.f;
+    jetNHM [i] = -9999.f;
+    jetCHM [i] = -9999.f;
+  }
 }
 
 void DisPho::SetJetBranches(const std::vector<pat::Jet> & jets, const int nJets)
@@ -992,33 +1034,72 @@ void DisPho::SetJetBranches(const std::vector<pat::Jet> & jets, const int nJets)
 
 void DisPho::InitializeRecHitBranches(const int nRecHits)
 {
-  rheta.clear();
-  rhphi.clear();
+  rhX.clear();
+  rhY.clear();
+  rhZ.clear();
   rhE.clear();
   rhtime.clear();
-  rhOOT.clear();
   rhID.clear();
+  rhisOOT.clear();
+  rhisGS6.clear();
+  rhisGS1.clear();
+  rhped12.clear();
+  rhped6.clear();
+  rhped1.clear();
+  rhpedrms12.clear();
+  rhpedrms6.clear();
+  rhpedrms1.clear();
 
-  rheta.resize(nRecHits);
-  rhphi.resize(nRecHits);
+  rhX.resize(nRecHits);
+  rhY.resize(nRecHits);
+  rhZ.resize(nRecHits);
   rhE.resize(nRecHits);
   rhtime.resize(nRecHits);
-  rhOOT.resize(nRecHits);
   rhID.resize(nRecHits);
+  rhisOOT.resize(nRecHits);
+  rhisGS6.resize(nRecHits);
+  rhisGS1.resize(nRecHits);
+  rhped12.resize(nRecHits);
+  rhped6.resize(nRecHits);
+  rhped1.resize(nRecHits);
+  rhpedrms12.resize(nRecHits);
+  rhpedrms6.resize(nRecHits);
+  rhpedrms1.resize(nRecHits);
+
+  for (auto i = 0; i < nRecHits; i++)
+  {
+    rhX   [i] = -9999.f;
+    rhY   [i] = -9999.f;
+    rhZ   [i] = -9999.f;
+    rhE   [i] = -9999.f;
+    rhtime[i] = -9999.f;
+
+    rhisOOT[i] = false;
+    rhisGS6[i] = false;
+    rhisGS1[i] = false;
+
+    rhped12[i] = -9999.f;
+    rhped6 [i] = -9999.f;
+    rhped1 [i] = -9999.f;
+
+    rhpedrms12[i] = -9999.f;
+    rhpedrms6 [i] = -9999.f;
+    rhpedrms1 [i] = -9999.f;
+  }
 }
 
 void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHitsEB, const CaloSubdetectorGeometry * barrelGeometry,
 			       const EcalRecHitCollection * recHitsEE, const CaloSubdetectorGeometry * endcapGeometry,
-			       const uiiumap & recHitMap)
+			       const edm::ESHandle<EcalPedestals> & pedestalsH, const uiiumap & recHitMap)
 {
   nrechits = recHitMap.size();
   
-  DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,recHitMap);
-  DisPho::SetRecHitBranches(recHitsEE,endcapGeometry,recHitMap);
+  DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,pedestalsH,recHitMap);
+  DisPho::SetRecHitBranches(recHitsEE,endcapGeometry,pedestalsH,recHitMap);
 }
 
 void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloSubdetectorGeometry * geometry, 
-			       const uiiumap & recHitMap)
+			       const edm::ESHandle<EcalPedestals> & pedestalsH, const uiiumap & recHitMap)
 {
   for (const auto recHit : *recHits)
   {
@@ -1027,16 +1108,35 @@ void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloS
     if (recHitMap.count(rawId))
     {
       const auto pos = recHitMap.at(rawId);
-      
       const auto recHitPos = geometry->getGeometry(recHitId)->getPosition();
       
       // save position, energy, and time of each rechit to a vector
-      rheta [pos] = recHitPos.eta();
-      rhphi [pos] = recHitPos.phi();
+      rhX   [pos] = recHitPos.x();
+      rhY   [pos] = recHitPos.y();
+      rhZ   [pos] = recHitPos.z();
       rhE   [pos] = recHit.energy();
       rhtime[pos] = recHit.time();
-      rhOOT [pos] = int(recHit.checkFlag(EcalRecHit::kOutOfTime));   
       rhID  [pos] = rawId;
+
+      // flags: isOOT, isGainSwitch6/1
+      rhisOOT[pos] = recHit.checkFlag(EcalRecHit::kOutOfTime);
+      rhisGS6[pos] = recHit.checkFlag(EcalRecHit::kHasSwitchToGain6);
+      rhisGS1[pos] = recHit.checkFlag(EcalRecHit::kHasSwitchToGain1);
+
+      // record info
+      const auto & pediter = pedestalsH->find(recHitId);
+      if (pediter != pedestalsH->end())
+      {
+	const auto & ped = (*pediter);
+
+	rhped12[pos] = ped.mean(1);
+	rhped6 [pos] = ped.mean(2);
+	rhped1 [pos] = ped.mean(3);
+
+	rhpedrms12[pos] = ped.rms(1);
+	rhpedrms6 [pos] = ped.rms(2);
+	rhpedrms1 [pos] = ped.rms(3);
+      }
     }
   }
 }
@@ -1129,20 +1229,18 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     auto & phoBranch = phoBranches[iphoton];
     const auto & pho = photon.photon();
     
-    // basic kinematics
-    const auto phopt = pho.pt();
+    // basic kinematic with v2: https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaMiniAODV2#Applying_the_Energy_Scale_and_sm
+    const auto & phop4 = pho.p4() * (pho.pat::Photon::userFloat("ecalEnergyPostCorr") / pho.pat::Photon::energy());
+    phoBranch.E_   = phop4.energy();
+    phoBranch.Pt_  = phop4.pt();
+    phoBranch.Phi_ = phop4.phi();
+    phoBranch.Eta_ = phop4.eta();
 
-    phoBranch.E_   = pho.energy();
-    phoBranch.Pt_  = pho.pt();
-    phoBranch.Phi_ = pho.phi();
-    phoBranch.Eta_ = pho.eta();
+    const auto phopt = phoBranch.Pt_;
 
-    // for scale and smearing later with v2
-    // const auto & phop4 = pho.p4() * pho.pat::Photon::userFloat("ecalEnergyPostCorr") / pho.pat::Photon::userFloat("ecalEnergyPreCorr");
-    // phoBranch.E_   = phop4.energy();
-    // phoBranch.Pt_  = phop4.pt();
-    // phoBranch.Phi_ = phop4.phi();
-    // phoBranch.Eta_ = phop4.eta();
+    // scale and smearing
+    phoBranch.Scale_ = pho.pat::Photon::userFloat("energyScaleValue");
+    phoBranch.Smear_ = pho.pat::Photon::userFloat("energySigmaValue");
 
     // super cluster info from photon
     const auto & phosc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
@@ -1337,7 +1435,7 @@ void DisPho::beginJob()
   
   // histograms needed
   h_cutflow     = fs->make<TH1F>("h_cutflow"    , "Cut Flow"           , cutflowLabelMap.size(), 0, cutflowLabelMap.size());
-  //  h_cutflow_wgt = fs->make<TH1F>("h_cutflow_wgt", "Cut Flow (Weighted)", cutflowLabelMap.size(), 0, cutflowLabelMap.size());
+  h_cutflow_wgt = fs->make<TH1F>("h_cutflow_wgt", "Cut Flow (Weighted)", cutflowLabelMap.size(), 0, cutflowLabelMap.size());
   
   if (isMC)
   {
@@ -1363,10 +1461,10 @@ void DisPho::MakeHists()
   for (const auto & cutflowLabelPair : cutflowLabelMap)
   {
     h_cutflow    ->GetXaxis()->SetBinLabel(cutflowLabelPair.second+1,cutflowLabelPair.first.c_str()); // +1 to account for bins in ROOT from [1,nBins]
-    //    h_cutflow_wgt->GetXaxis()->SetBinLabel(cutflowLabelPair.second+1,cutflowLabelPair.first.c_str()); // +1 to account for bins in ROOT from [1,nBins]
+    h_cutflow_wgt->GetXaxis()->SetBinLabel(cutflowLabelPair.second+1,cutflowLabelPair.first.c_str()); // +1 to account for bins in ROOT from [1,nBins]
   }
   h_cutflow    ->GetYaxis()->SetTitle("nEntries");
-  //  h_cutflow_wgt->GetYaxis()->SetTitle("nEntries with gen weights");
+  h_cutflow_wgt->GetYaxis()->SetTitle("nEntries with gen weights");
 
   if (isMC)
   {
@@ -1385,7 +1483,7 @@ void DisPho::MakeHists()
 
   // SumW2
   h_cutflow    ->Sumw2();
-  //  h_cutflow_wgt->Sumw2();
+  h_cutflow_wgt->Sumw2();
   if (isMC)
   {
     h_genpuobs     ->Sumw2();
@@ -1650,6 +1748,10 @@ void DisPho::MakeEventTree()
   disphotree->Branch("vtxY", &vtxY, "vtxY/F");
   disphotree->Branch("vtxZ", &vtxZ, "vtxZ/F");
 
+  // ADCtoGeV info
+  disphotree->Branch("adcToGeVEB", &adcToGeVEB, "adcToGeVEB/F");
+  disphotree->Branch("adcToGeVEE", &adcToGeVEE, "adcToGeVEE/F");
+  
   // MET info
   disphotree->Branch("t1pfMETpt", &t1pfMETpt, "t1pfMETpt/F");
   disphotree->Branch("t1pfMETphi", &t1pfMETphi, "t1pfMETphi/F");
@@ -1675,12 +1777,21 @@ void DisPho::MakeEventTree()
   disphotree->Branch("nrechits", &nrechits, "nrechits/I");
   if (storeRecHits)
   {
-    disphotree->Branch("rheta", &rheta);
-    disphotree->Branch("rhphi", &rhphi);
+    disphotree->Branch("rhX", &rhX);
+    disphotree->Branch("rhY", &rhY);
+    disphotree->Branch("rhZ", &rhZ);
     disphotree->Branch("rhE", &rhE);
     disphotree->Branch("rhtime", &rhtime);
-    disphotree->Branch("rhOOT", &rhOOT);
     disphotree->Branch("rhID", &rhID);
+    disphotree->Branch("rhisOOT", &rhisOOT);
+    disphotree->Branch("rhisGS6", &rhisGS6);
+    disphotree->Branch("rhisGS1", &rhisGS1);
+    disphotree->Branch("rhped12", &rhped12);
+    disphotree->Branch("rhped6", &rhped6);
+    disphotree->Branch("rhped1", &rhped1);
+    disphotree->Branch("rhpedrms12", &rhpedrms12);
+    disphotree->Branch("rhpedrms6", &rhpedrms6);
+    disphotree->Branch("rhpedrms1", &rhpedrms1);
   }
 
   // Photon Info
@@ -1695,6 +1806,9 @@ void DisPho::MakeEventTree()
     disphotree->Branch(Form("phopt_%i",iphoton), &phoBranch.Pt_, Form("phopt_%i/F",iphoton));
     disphotree->Branch(Form("phoeta_%i",iphoton), &phoBranch.Eta_, Form("phoeta_%i/F",iphoton));
     disphotree->Branch(Form("phophi_%i",iphoton), &phoBranch.Phi_, Form("phophi_%i/F",iphoton));
+
+    disphotree->Branch(Form("phoscale_%i",iphoton), &phoBranch.Scale_, Form("phoscale_%i/F",iphoton));
+    disphotree->Branch(Form("phosmear_%i",iphoton), &phoBranch.Smear_, Form("phosmear_%i/F",iphoton));
 
     disphotree->Branch(Form("phoscE_%i",iphoton), &phoBranch.scE_, Form("phoscE_%i/F",iphoton));
     disphotree->Branch(Form("phosceta_%i",iphoton), &phoBranch.scEta_, Form("phosceta_%i/F",iphoton));

@@ -55,6 +55,14 @@
 #include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 
+// ECAL Record info (ADCToGeV)
+#include "CondFormats/EcalObjects/interface/EcalADCToGeVConstant.h"
+#include "CondFormats/DataRecord/interface/EcalADCToGeVConstantRcd.h"
+
+// ECAL Record info (Pedestals)
+#include "CondFormats/EcalObjects/interface/EcalPedestals.h"
+#include "CondFormats/DataRecord/interface/EcalPedestalsRcd.h"
+
 // ROOT
 #include "TH1F.h"
 #include "TTree.h"
@@ -108,6 +116,9 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void InitializePVBranches();
   void SetPVBranches(const edm::Handle<std::vector<reco::Vertex> > & verticesH);
 
+  void InitializeADCToGeVBranches();
+  void SetADCToGeVBranches(const edm::ESHandle<EcalADCToGeVConstant> & adcToGeVH);
+
   void InitializeMETBranches();
   void SetMETBranches(const edm::Handle<std::vector<pat::MET> > & metsH);
 
@@ -117,9 +128,9 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void InitializeRecHitBranches(const int nRecHits);
   void SetRecHitBranches(const EcalRecHitCollection * recHitsEB, const CaloSubdetectorGeometry * barrelGeometry,
 			 const EcalRecHitCollection * recHitsEE, const CaloSubdetectorGeometry * endcapGeometry,
-			 const uiiumap & recHitMap);
+			 const edm::ESHandle<EcalPedestals> & pedestalsH, const uiiumap & recHitMap);
   void SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloSubdetectorGeometry * geometry,
-			 const uiiumap& recHitMap);
+			 const edm::ESHandle<EcalPedestals> & pedestalsH, const uiiumap& recHitMap);
 
   void InitializePhoBranches();
   void SetPhoBranches(const std::vector<oot::Photon> photons, const int nPhotons, const uiiumap & recHitMap,
@@ -317,6 +328,9 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // rho
   float rho;
 
+  // ecal info
+  float adcToGeVEB, adcToGeVEE;
+
   // MET
   float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
 
@@ -338,9 +352,11 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // RecHits
   int nrechits;
-  std::vector<float> rheta, rhphi, rhE, rhtime;
-  std::vector<int> rhOOT;
+  std::vector<float> rhX, rhY, rhZ, rhE, rhtime;
   std::vector<unsigned int> rhID;
+  std::vector<bool> rhisOOT, rhisGS6, rhisG1;
+  std::vector<float> rhped12, rhped6, rhped1;
+  std::vector<float> rhpedrms12, rhpedrms6, rhpedrms1;
 
   // photon info
   int nphotons;
