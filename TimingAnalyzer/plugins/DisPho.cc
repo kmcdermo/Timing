@@ -509,7 +509,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   DisPho::InitializeADCToGeVBranches();
   if (adcToGeVH.isValid())
   {
-    DisPho::SetADCToGeVBranchs(adcToGeVH);
+    DisPho::SetADCToGeVBranches(adcToGeVH);
   }
     
   //////////////////

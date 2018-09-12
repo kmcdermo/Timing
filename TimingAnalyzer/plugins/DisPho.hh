@@ -262,7 +262,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // output histograms
   TH1F * h_cutflow;
-  //  TH1F * h_cutflow_wgt;
+  TH1F * h_cutflow_wgt;
   std::map<std::string,int> cutflowLabelMap;
   TH1F * h_genpuobs;
   TH1F * h_genpuobs_wgt;
@@ -354,7 +354,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   int nrechits;
   std::vector<float> rhX, rhY, rhZ, rhE, rhtime;
   std::vector<unsigned int> rhID;
-  std::vector<bool> rhisOOT, rhisGS6, rhisG1;
+  std::vector<bool> rhisOOT, rhisGS6, rhisGS1;
   std::vector<float> rhped12, rhped6, rhped1;
   std::vector<float> rhpedrms12, rhpedrms6, rhpedrms1;
 
