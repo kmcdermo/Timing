@@ -89,6 +89,9 @@ struct phoStruct
   float Phi_;
   float Eta_;
 
+  float Scale;
+  float Sigma;
+
   float scE_;
   float scPhi_;
   float scEta_;
