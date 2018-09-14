@@ -89,9 +89,6 @@ struct phoStruct
   float Phi_;
   float Eta_;
 
-  float Scale_;
-  float Smear_;
-
   float scE_;
   float scPhi_;
   float scEta_;
@@ -146,8 +143,12 @@ struct phoStruct
   int  gedID_;
   int  ootID_;
 
+  // MC only
   int  isSignal_;
   bool isGen_;
+
+  float Scale_;
+  float Smear_;
 };
 
 #endif

@@ -41,6 +41,11 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   genpTres(iConfig.existsAs<double>("genpTres") ? iConfig.getParameter<double>("genpTres") : 0.5),
   trackdRmin(iConfig.existsAs<double>("trackdRmin") ? iConfig.getParameter<double>("trackdRmin") : 0.2),
   trackpTmin(iConfig.existsAs<double>("trackpTmin") ? iConfig.getParameter<double>("trackpTmin") : 5.f),
+  genjetdRmin(iConfig.existsAs<double>("genjetdRmin") ? iConfig.getParameter<double>("genjetdRmin") : 0.2), // 0.4 from AK4PF / 2
+  genjetpTfactor(iConfig.existsAs<double>("genjetpTfactor") ? iConfig.getParameter<double>("genjetpTfactor") : 3.f),
+
+  // JER extra info
+  smearjetEmin(iConfig.existsAs<double>("smearjetEmin") ? iConfig.getParameter<double>("smearjetEmin") : 0.01),
 
   // triggers
   inputPaths       (iConfig.existsAs<std::string>("inputPaths")   ? iConfig.getParameter<std::string>("inputPaths") : ""),
@@ -150,7 +155,8 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
     gent0Token      = consumes<float>                           (iConfig.getParameter<edm::InputTag>("gent0"));
     genxyz0Token    = consumes<Point3D>                         (iConfig.getParameter<edm::InputTag>("genxyz0"));
     pileupInfoToken = consumes<std::vector<PileupSummaryInfo> > (iConfig.getParameter<edm::InputTag>("pileup"));
-    genpartsToken   = consumes<std::vector<reco::GenParticle> > (iConfig.getParameter<edm::InputTag>("genparts"));   
+    genpartsToken   = consumes<std::vector<reco::GenParticle> > (iConfig.getParameter<edm::InputTag>("genparts"));
+    genjetsToken    = consumes<std::vector<reco::GenJet> >      (iConfig.getParameter<edm::InputTag>("genjets"));
   }
   else 
   {
@@ -224,10 +230,10 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   std::vector<oot::Photon> photons; photons.reserve(phosize);
 
   // geometry (from ECAL ELF)
-  edm::ESHandle<CaloGeometry> calogeoH;
-  iSetup.get<CaloGeometryRecord>().get(calogeoH);
-  const CaloSubdetectorGeometry * barrelGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
-  const CaloSubdetectorGeometry * endcapGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
+  edm::ESHandle<CaloGeometry> caloGeoH;
+  iSetup.get<CaloGeometryRecord>().get(caloGeoH);
+  const CaloSubdetectorGeometry * barrelGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
+  const CaloSubdetectorGeometry * endcapGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
   // ECAL Records from https://github.com/ferriff/usercode/blob/master/DBDump/plugins/DBDump.cc
   // ADCToGeV
@@ -237,12 +243,22 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::ESHandle<EcalPedestals> pedestalsH;
   iSetup.get<EcalPedestalsRcd>().get(pedestalsH);
 
+  // JECs : https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#CorrPatJets  
+  edm::ESHandle<JetCorrectorParametersCollection> jetCorrH;
+  iSetup.get<JetCorrectionsRecord>().get("AK4PFchs",jetCorrH); 
+  JetCorrectionUncertainty jetCorrUnc((*jetCorrH)["Uncertainty"]);
+
+  // JERs : https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyResolution#Accessing_factors_from_Global_Ta
+  JME::JetResolution jetRes = JME::JetResolution::get(iSetup, "AK4PFchs_pt");
+  JME::JetResolutionScaleFactor jetRes_sf = JME::JetResolutionScaleFactor::get(iSetup, "AK4PFchs");
+
   // GEN INFO
   edm::Handle<GenEventInfoProduct> genevtInfoH;
   edm::Handle<float>   gent0H;
   edm::Handle<Point3D> genxyz0H;
   edm::Handle<std::vector<PileupSummaryInfo> > pileupInfoH;
   edm::Handle<std::vector<reco::GenParticle> > genparticlesH;
+  edm::Handle<std::vector<reco::GenJet> > genjetsH;
   genPartVec neutralinos;
   genPartVec vPions;
   genPartVec toys;
@@ -254,6 +270,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     iEvent.getByToken(gent0Token     , gent0H);
     iEvent.getByToken(pileupInfoToken, pileupInfoH);
     iEvent.getByToken(genpartsToken  , genparticlesH);
+    iEvent.getByToken(genjetsToken   , genjetsH);
 
     ///////////////////////
     //                   //
@@ -496,7 +513,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //                     //
   /////////////////////////
   DisPho::InitializePVBranches();
-  if (verticesH.isValid()) 
+  if (verticesH.isValid())
   {
     DisPho::SetPVBranches(verticesH);
   }
@@ -529,9 +546,11 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //                     //
   /////////////////////////
   DisPho::InitializeJetBranches(nJets);
+  if (isMC) DisPho::InitializeJetBranchesMC(nJets);
   if (jetsH.isValid()) // check to make sure reco jets exist
   {
     DisPho::SetJetBranches(jets,nJets);
+    if (isMC && jetCorrH.isValid() && genjetsH.isValid()) DisPho::SetJetBranchesMC(jets,nJets,genjetsH,jetCorrUnc,jetRes,JetRes_sf);
   }
 
   //////////////
@@ -554,9 +573,11 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //              //
   //////////////////
   DisPho::InitializePhoBranches();
+  if (isMC) DisPho::InitializePhoBranchesMC();
   if (photonsH.isValid() || ootPhotonsH.isValid()) // standard handle check
   {
     DisPho::SetPhoBranches(photons,nPhotons,recHitMap,recHitsEB,recHitsEE,tracksH,genparticlesH);
+    if (isMC) DisPho::SetPhoBranchesMC(photons,nPhotons,genparticlesH);
   }
 
   ///////////////
@@ -667,19 +688,20 @@ void DisPho::SetGMSBBranches(const std::vector<reco::GenParticle> & neutralinos,
     gmsbBranch.genNprodvx_ = neutralino.vx();
     gmsbBranch.genNprodvy_ = neutralino.vy();
     gmsbBranch.genNprodvz_ = neutralino.vz();
-  
-    // neutralino decay vertex (same for both daughters unless really screwed up)
-    gmsbBranch.genNdecayvx_ = neutralino.daughter(0)->vx();
-    gmsbBranch.genNdecayvy_ = neutralino.daughter(0)->vy();
-    gmsbBranch.genNdecayvz_ = neutralino.daughter(0)->vz();
-    
+
     // set photon daughter stuff
-    const auto phdaughter = (neutralino.daughter(0)->pdgId() == 22)?0:1;
-    
-    gmsbBranch.genphE_   = neutralino.daughter(phdaughter)->energy();
-    gmsbBranch.genphpt_  = neutralino.daughter(phdaughter)->pt();
-    gmsbBranch.genphphi_ = neutralino.daughter(phdaughter)->phi();
-    gmsbBranch.genpheta_ = neutralino.daughter(phdaughter)->eta();
+    const auto phdaughter  =  (neutralino.daughter(0)->pdgId() == 22)?0:1;
+    const auto & genphoton = *(neutralino.daughter(phdaughter));
+
+    // neutralino decay vertex (same for both daughters unless really screwed up)
+    gmsbBranch.genNdecayvx_ = genphoton.vx();
+    gmsbBranch.genNdecayvy_ = genphoton.vy();
+    gmsbBranch.genNdecayvz_ = genphoton.vz();
+        
+    gmsbBranch.genphE_   = genphoton.energy();
+    gmsbBranch.genphpt_  = genphoton.pt();
+    gmsbBranch.genphphi_ = genphoton.phi();
+    gmsbBranch.genpheta_ = genphoton.eta();
     
     // check for a reco match!
     auto mindR = gendRmin;
@@ -691,7 +713,7 @@ void DisPho::SetGMSBBranches(const std::vector<reco::GenParticle> & neutralinos,
       if (photon.pt() < ((1.f-genpTres) * gmsbBranch.genphpt_)) continue;
       if (photon.pt() > ((1.f+genpTres) * gmsbBranch.genphpt_)) continue;
       
-      const auto delR = Config::deltaR(gmsbBranch.genphphi_,gmsbBranch.genpheta_,photon.phi(),photon.eta());
+      const auto delR = reco::deltaR(genphoton,photon);
       if (delR < mindR) 
       {
 	mindR = delR;
@@ -700,13 +722,14 @@ void DisPho::SetGMSBBranches(const std::vector<reco::GenParticle> & neutralinos,
     } // end loop over reco photons
   
     // set gravitino daughter stuff
-    const auto grdaughter = (neutralino.daughter(0)->pdgId() == 1000039)?0:1;
+    const auto grdaughter     =  (neutralino.daughter(0)->pdgId() == 1000039)?0:1;
+    const auto & gengravitino = *(neutralino.daughter(grdaughter))l
     
-    gmsbBranch.gengrmass_ = neutralino.daughter(grdaughter)->mass();
-    gmsbBranch.gengrE_    = neutralino.daughter(grdaughter)->energy();
-    gmsbBranch.gengrpt_   = neutralino.daughter(grdaughter)->pt();
-    gmsbBranch.gengrphi_  = neutralino.daughter(grdaughter)->phi();
-    gmsbBranch.gengreta_  = neutralino.daughter(grdaughter)->eta();
+    gmsbBranch.gengrmass_ = gengravitino.mass();
+    gmsbBranch.gengrE_    = gengravitino.energy();
+    gmsbBranch.gengrpt_   = gengravitino.pt();
+    gmsbBranch.gengrphi_  = gengravitino.phi();
+    gmsbBranch.gengreta_  = gengravitino.eta();
   } // end loop over GMSBs 
 }
 
@@ -749,23 +772,27 @@ void DisPho::SetHVDSBranches(const std::vector<reco::GenParticle> & vPions, cons
     hvdsBranch.genvPionprodvy_ = vPion.vy();
     hvdsBranch.genvPionprodvz_ = vPion.vz();
     
+    // get daughters
+    const auto leading      = (vPion.daughter(0)->pt()>vPion.daughter(1)->pt())?0:1;
+    const auto subleading   = (vPion.daughter(0)->pt()>vPion.daughter(1)->pt())?1:0;
+    const auto & genphoton0 = *(vPion.daughter(leading));
+    const auto & genphoton1 = *(vPion.daughter(subleading));
+
     // vPion decay vertex (same for both daughters unless really screwed up)
-    hvdsBranch.genvPiondecayvx_ = vPion.daughter(0)->vx();
-    hvdsBranch.genvPiondecayvy_ = vPion.daughter(0)->vy();
-    hvdsBranch.genvPiondecayvz_ = vPion.daughter(0)->vz();
+    hvdsBranch.genvPiondecayvx_ = genphoton0.vx();
+    hvdsBranch.genvPiondecayvy_ = genphoton0.vy();
+    hvdsBranch.genvPiondecayvz_ = genphoton0.vz();
+
+    // save daughter info
+    hvdsBranch.genHVph0E_   = genphoton0.energy();
+    hvdsBranch.genHVph0pt_  = genphoton0.pt();
+    hvdsBranch.genHVph0phi_ = genphoton0.phi();
+    hvdsBranch.genHVph0eta_ = genphoton0.eta();
     
-    const auto leading    = (vPion.daughter(0)->pt()>vPion.daughter(1)->pt())?0:1;
-    const auto subleading = (vPion.daughter(0)->pt()>vPion.daughter(1)->pt())?1:0;
-    
-    hvdsBranch.genHVph0E_   = vPion.daughter(leading)->energy();
-    hvdsBranch.genHVph0pt_  = vPion.daughter(leading)->pt();
-    hvdsBranch.genHVph0phi_ = vPion.daughter(leading)->phi();
-    hvdsBranch.genHVph0eta_ = vPion.daughter(leading)->eta();
-    
-    hvdsBranch.genHVph1E_   = vPion.daughter(subleading)->energy();
-    hvdsBranch.genHVph1pt_  = vPion.daughter(subleading)->pt();
-    hvdsBranch.genHVph1phi_ = vPion.daughter(subleading)->phi();
-    hvdsBranch.genHVph1eta_ = vPion.daughter(subleading)->eta();
+    hvdsBranch.genHVph1E_   = genphoton1.energy();
+    hvdsBranch.genHVph1pt_  = genphoton1.pt();
+    hvdsBranch.genHVph1phi_ = genphoton1.phi();
+    hvdsBranch.genHVph1eta_ = genphoton1.eta();
   
     // check for a reco match!
     auto tmpph0 = -9999, tmpph1 = -9999;
@@ -774,27 +801,24 @@ void DisPho::SetHVDSBranches(const std::vector<reco::GenParticle> & vPions, cons
     for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
     {
       const auto & photon = photons[iphoton];
-      
-      const auto tmppt  = photon.pt();
-      const auto tmpphi = photon.phi();
-      const auto tmpeta = photon.eta();
-      
-      // check photon 1
+      const auto tmppt = photon.pt();
+
+      // check gen photon 0
       if (tmppt < ((1.f-genpTres) * hvdsBranch.genHVph0pt_)) continue;
       if (tmppt > ((1.f+genpTres) * hvdsBranch.genHVph0pt_)) continue;
 
-      const auto delR0 = Config::deltaR(hvdsBranch.genHVph0phi_,hvdsBranch.genHVph0eta_,tmpphi,tmpeta);
+      const auto delR0 = reco::deltaR(genphoton0,photon);
       if (delR0 < mindR0) 
       {
 	mindR0 = delR0;
 	tmpph0 = iphoton;
       } // end check over deltaR
       
-      // check photon 2
+      // check gen photon 1
       if (tmppt < ((1.f-genpTres) * hvdsBranch.genHVph1pt_)) continue;
       if (tmppt > ((1.f+genpTres) * hvdsBranch.genHVph1pt_)) continue;
       
-      const auto delR1 = Config::deltaR(hvdsBranch.genHVph1phi_,hvdsBranch.genHVph1eta_,tmpphi,tmpeta);
+      const auto delR1 = reco::deltaR(genphoton1,photon);
       if (delR1 < mindR1) 
       {
 	mindR1 = delR1;
@@ -847,7 +871,7 @@ void DisPho::SetToyBranches(const std::vector<reco::GenParticle> & toys, const s
     {
       const auto & photon = photons[iphoton];
 
-      const auto delR = Config::deltaR(toyBranch.genphphi_,toyBranch.genpheta_,photon.phi(),photon.eta());
+      const auto delR = reco::deltaR(toy,photon);
       if (delR < mindR) 
       {
 	mindR = delR;
@@ -856,7 +880,7 @@ void DisPho::SetToyBranches(const std::vector<reco::GenParticle> & toys, const s
       
       if ( (photon.pt() >= ((1.f-genpTres) * toyBranch.genphpt_)) && (photon.pt() <= ((1.f+genpTres) * toyBranch.genphpt_)) )
       {
-	const auto delR_ptres = Config::deltaR(toyBranch.genphphi_,toyBranch.genpheta_,photon.phi(),photon.eta());
+	const auto delR_ptres = reco::deltaR(toy,photon);
 	if (delR_ptres < mindR_ptres) 
 	{
 	  mindR_ptres = delR_ptres;
@@ -865,7 +889,7 @@ void DisPho::SetToyBranches(const std::vector<reco::GenParticle> & toys, const s
 	
 	if (toy.isPromptFinalState())
 	{
-	  const auto delR_status = Config::deltaR(toyBranch.genphphi_,toyBranch.genpheta_,photon.phi(),photon.eta());
+	  const auto delR_status = reco::deltaR(toy,photon);
 	  if (delR_status < mindR_status) 
 	  {
 	    mindR_status = delR_status;
@@ -895,8 +919,8 @@ void DisPho::SetTriggerBranches()
   hltDiPho70 = (triggerBitMap.count(Config::DiPho70Path.c_str()) ? triggerBitMap[Config::DiPho70Path.c_str()] : false);
   hltDiPho3022M90 = (triggerBitMap.count(Config::DiPho3022M90Path.c_str()) ? triggerBitMap[Config::DiPho3022M90Path.c_str()] : false);
   hltDiPho30PV18PV = (triggerBitMap.count(Config::DiPho30PV18PVPath.c_str()) ? triggerBitMap[Config::DiPho30PV18PVPath.c_str()] : false);
+  hltEle32WPT = (triggerBitMap.count(Config::Ele32WPTPath.c_str()) ? triggerBitMap[Config::Ele32WPTPath.c_str()] : false);
   hltDiEle33MW = (triggerBitMap.count(Config::DiEle33MWPath.c_str()) ? triggerBitMap[Config::DiEle33MWPath.c_str()] : false);
-  hltDiEle27WPT = (triggerBitMap.count(Config::DiEle27WPTPath.c_str()) ? triggerBitMap[Config::DiEle27WPTPath.c_str()] : false);
   hltJet500 = (triggerBitMap.count(Config::Jet500Path.c_str()) ? triggerBitMap[Config::Jet500Path.c_str()] : false);
 }
 
@@ -1030,6 +1054,133 @@ void DisPho::SetJetBranches(const std::vector<pat::Jet> & jets, const int nJets)
     jetNHM [ijet] = jet.neutralMultiplicity();
     jetCHM [ijet] = jet.chargedMultiplicity();
   }
+}
+
+void DisPho::InitializeJetBranchesMC(const int nJets)
+{
+  jetScale.clear();
+  jetSmear.clear();
+  jetSmearDown.clear();
+  jetSmearUp.clear();
+  jetIsGen.clear();
+  
+  jetScale.resize(nJets);
+  jetSmear.resize(nJets);
+  jetSmearDown.resize(nJets);
+  jetSmearUp.resize(nJets);
+  jetIsGen.resize(nJets);
+
+  for (auto ijet = 0; ijet < nJets; ijet++)
+  {
+    jetScale    [i] = -9999.f;
+    jetSmear    [i] = -9999.f;
+    jetSmearDown[i] = -9999.f;
+    jetSmearUp  [i] = -9999.f;
+    jetIsGen    [i] = -1;
+  }
+}
+
+void DisPho::SetJetBranchesMC(const std::vector<pat::Jet> & jets, const int nJets, const edm::Handle<std::vector<reco::GenJet> > & genjetsH, 
+			      jetCorrectionUncertainty & jetCorrUnc, const JME::JetResolution & jetRes, const JME::JetResolutionScaleFactor & jetRes_sf)
+{
+  // copy from https://github.com/cms-sw/cmssw/blob/master/PhysicsTools/PatUtils/interface/SmearedJetProducerT.h#L208-L215
+  unsigned int runNum_uint = static_cast <unsigned int> (run);
+  unsigned int lumiNum_uint = static_cast <unsigned int> (lumi);
+  unsigned int evNum_uint = static_cast <unsigned int> (event);
+  unsigned int jet0eta = uint32_t(jets.empty() ? 0 : jets[0].eta()/0.01);
+  std::mt19937 mt_rand(1 + jet0eta + (lumiNum_uint<<10) + (runNum_uint<<20) + evNum_uint);
+
+  // get genjets
+  const auto & genjets = *(genjetsH);
+
+  // loop over jets to get scale and smearings
+  for (auto ijet = 0; ijet < nJets; ijet++)
+  {
+    const auto & jet = jets[ijet];
+    const auto pt  = jetpt[ijet];
+    const auto eta = jeteta[ijet];
+
+    // set JEC uncs
+    jecUnc.setJetPt (pt);
+    jecUnc.setJetEta(eta);
+    
+    jetScale[ijet] = jecUnc.getUncertainty(true);
+
+    // jet JER uncs
+    const auto jer         = jetRes   .getResolution ({{JME::Binning::JetPt, pt}, {JME::Binning::JetEta, eta}, {JME::Binning::Rho, rho}});
+    const auto jer_sf      = jetRes_sf.getScaleFactor({{JME::Binning::JetEta, eta}}, Variation::NOMINAL);
+    const auto jer_sf_down = jetRes_sf.getScaleFactor({{JME::Binning::JetEta, eta}}, Variation::DOWN);
+    const auto jer_sf_up   = jetRes_sf.getScaleFactor({{JME::Binning::JetEta, eta}}, Variation::UP);
+
+    // get genjet
+    auto igenjet = DisPho::GenJetMatcher(jet,genjets,jer);
+
+    if (igenjet > 0) // if matched, use scaling method
+    {
+      const auto ptres = 1.f - (genjets[igenjet].pt() / pt);
+
+      jetSmear    [ijet] = 1.f + ((jer_sf      - 1.f) * ptres);
+      jetSmearDown[ijet] = 1.f + ((jer_sf_down - 1.f) * ptres);
+      jetSmearUp  [ijet] = 1.f + ((jer_sf_up   - 1.f) * ptres);
+
+      jetIsGen    [ijet] = 1;
+    }
+    else // if not matched, try to do stochastic smear, otherwise return 1.f
+    {
+      DisPho::GetStochasticSmear(mt_rand,jer,jer_sf     ,jetSmear    [ijet]); // nominal
+      DisPho::GetStochasticSmear(mt_rand,jer,jer_sf_down,jetSmearDown[ijet]); // down
+      DisPho::GetStochasticSmear(mt_rand,jer,jer_sf_up  ,jetSmearUp  [ijet]); // up
+
+      jetIsGen[ijet] = 0;
+    }
+
+    // final checks
+    const auto energy = jetE[ijet];
+    DisPho::CheckJetSmear(energy,jetSmear    [ijet]);
+    DisPho::CheckJetSmear(energy,jetSmearDown[ijet]);
+    DisPho::CheckJetSmear(energy,jetSmearUp  [ijet]);
+  }
+}
+
+int DisPho::GenJetMatcher(const pat::Jet & jet, const std::vector<reco::GenJet> & genjets, const float jer)
+{
+  auto igenjet = -1;
+  auto mindR = genjetdRmin;
+
+  for (auto i = 0U; i < genjets.size(); i++)
+  {
+    const auto & genjet = genjets[i];
+    const auto delR = reco::deltaR(jet, genjet);
+    
+    if (delR < mindR)
+    {
+      if (std::abs(genJet.pt() - jet.pt()) < (genjetpTfactor * jer * jet.pt()))
+      {
+	mindR = delR;
+	igenjet = i;
+      }
+    }
+  }
+  
+  return igenjet;
+}
+
+void DisPho::GetStochasticSmear(std::mt19937 & mt_rand, const float jer, const float jer_sf, float & jet_smear)
+{
+  if (jer_sf > 1.f)
+  {
+    std::normal_distribution<float> norm_dist(0.f, jer * std::sqrt(jer_sf * jer_sf - 1.f));
+    jet_smear = 1.f + norm_dist(mt_rand);
+  }
+  else
+  {
+    jet_smear = 1.f;
+  }
+}
+
+void DisPho::CheckJetSmear(const float energy, float & jet_smear)
+{    
+  if (energy * jet_smear < smearjetEmin) smearFactor = minJetESmear / energy;
 }
 
 void DisPho::InitializeRecHitBranches(const int nRecHits)
@@ -1206,19 +1357,12 @@ void DisPho::InitializePhoBranches()
 
     phoBranch.gedID_ = -1;
     phoBranch.ootID_ = -1;
-
-    if (isMC)
-    {
-      if (isGMSB || isHVDS) phoBranch.isSignal_ = -9999;
-      phoBranch.isGen_ = false;
-    }
   }
 }
 
 void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nPhotons, const uiiumap & recHitMap,
 			    const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE,
-			    const edm::Handle<std::vector<reco::Track> > & tracksH,
-			    const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH)
+			    const edm::Handle<std::vector<reco::Track> > & tracksH)
 {
   nphotons = photons.size();
   
@@ -1230,17 +1374,14 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     const auto & pho = photon.photon();
     
     // basic kinematic with v2: https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaMiniAODV2#Applying_the_Energy_Scale_and_sm
-    const auto & phop4 = pho.p4() * (pho.pat::Photon::userFloat("ecalEnergyPostCorr") / pho.pat::Photon::energy());
+    const auto phop4 = pho.p4() * (pho.pat::Photon::userFloat("ecalEnergyPostCorr") / pho.pat::Photon::energy());
     phoBranch.E_   = phop4.energy();
     phoBranch.Pt_  = phop4.pt();
     phoBranch.Phi_ = phop4.phi();
     phoBranch.Eta_ = phop4.eta();
 
+    // save pt for later use
     const auto phopt = phoBranch.Pt_;
-
-    // scale and smearing
-    phoBranch.Scale_ = pho.pat::Photon::userFloat("energyScaleValue");
-    phoBranch.Smear_ = pho.pat::Photon::userFloat("energySigmaValue");
 
     // super cluster info from photon
     const auto & phosc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
@@ -1380,45 +1521,81 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     if      (pho.photonID("tight-oot"))  {phoBranch.ootID_ = 3;}
     else if (pho.photonID("loose-oot"))  {phoBranch.ootID_ = 1;}
     else                                 {phoBranch.ootID_ = 0;}
-
-    // extra info for gen matching
-    if (isMC)
-    {
-      if (isGMSB)
-      {
-	// matched to photon from leading neutralino == 1
-	// matched to photon from subleading neutralino == 2
-	// matched to both photons from both neutralinos (probably will never happen) == 3
-	// no corresponding match == 0
-
-	const auto & gmsbBranch0 = gmsbBranches[0];
-	const auto & gmsbBranch1 = gmsbBranches[1];
-	
-	if      (iphoton == gmsbBranch0.genphmatch_ && iphoton != gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 1;
-	else if (iphoton != gmsbBranch0.genphmatch_ && iphoton == gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 2;
-	else if (iphoton == gmsbBranch0.genphmatch_ && iphoton == gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 3; 
-	else                                                                               phoBranch.isSignal_ = 0;
-      } // end block over isGMSB
-      
-      if (isHVDS) 
-      {
-	// since we have N vPions to explore, store the result as an int mask
-	// ones digit is leading vPion, tens as subleading, hundreds as subsub, etc.
-	// matched to leading photon and not to subleading photon == 1
-	// matched to subleading photon and not to leading photon == 2
-	// matched to both photons inside vPion == 3
-	// no corresponding match == 0
-	
-	for (auto ihvds = 0; ihvds < Config::nHVDSs; ihvds++)
-	{
-	  phoBranch.isSignal_ += (DisPho::CheckMatchHVDS(iphoton,hvdsBranches[ihvds]) * std::pow(10,ihvds));
-	} // end loop over all possible HVDSs
-      } // end block over is HVDS
-      
-      // standard dR matching
-      phoBranch.isGen_ = oot::GenToObjectMatching(photon,genparticlesH,genpTres,gendRmin);
-    } // end block over is MC
   } // end loop over nPhotons
+}
+
+void DisPho::InitializePhoBranchesMC()
+{
+  for (auto iphoton = 0; iphoton < Config::nPhotons; iphoton++)
+  {
+    auto & phoBranch = phoBranches[iphoton];
+
+    if (isGMSB || isHVDS) phoBranch.isSignal_ = -9999;
+    phoBranch.isGen_ = false;
+    
+    phoBranch.Scale_ = -9999.f;
+    phoBranch.Smear_ = -9999.f;
+  }
+}
+
+void DisPho::SetPhoBranchesMC(const std::vector<oot::Photon> photons, const int nPhotons, 
+			      const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH)
+{
+  for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
+  {
+    // get objects
+    const auto & photon = photons[iphoton];
+    auto & phoBranch = phoBranches[iphoton];
+    const auto & pho = photon.photon();
+    
+    // extra info for gen matching
+    if (isGMSB)
+    {
+      // matched to photon from leading neutralino == 1
+      // matched to photon from subleading neutralino == 2
+      // matched to both photons from both neutralinos (probably will never happen) == 3
+      // no corresponding match == 0
+      
+      const auto & gmsbBranch0 = gmsbBranches[0];
+      const auto & gmsbBranch1 = gmsbBranches[1];
+      
+      if      (iphoton == gmsbBranch0.genphmatch_ && iphoton != gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 1;
+      else if (iphoton != gmsbBranch0.genphmatch_ && iphoton == gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 2;
+      else if (iphoton == gmsbBranch0.genphmatch_ && iphoton == gmsbBranch1.genphmatch_) phoBranch.isSignal_ = 3; 
+      else                                                                               phoBranch.isSignal_ = 0;
+    } // end block over isGMSB
+      
+    if (isHVDS) 
+    {
+      // since we have N vPions to explore, store the result as an int mask
+      // ones digit is leading vPion, tens as subleading, hundreds as subsub, etc.
+      // matched to leading photon and not to subleading photon == 1
+      // matched to subleading photon and not to leading photon == 2
+      // matched to both photons inside vPion == 3
+      // no corresponding match == 0
+      
+      for (auto ihvds = 0; ihvds < Config::nHVDSs; ihvds++)
+      {
+	phoBranch.isSignal_ += (DisPho::CheckMatchHVDS(iphoton,hvdsBranches[ihvds]) * std::pow(10,ihvds));
+      } // end loop over all possible HVDSs
+    } // end block over is HVDS
+  
+    // standard dR matching
+    phoBranch.isGen_ = oot::GenToObjectMatching(photon,genparticlesH,genpTres,gendRmin);
+    
+    // scale and smearing uncs
+    const auto phoE = phoBranch.E_; // assumed this already set!!!
+      
+    // eval up/down, then save bigger one (diff is order of one of MeV's...
+    const auto down_scale = std::abs(phoE-pho.pat::Photon::userFloat("energyScaleDown"));
+    const auto up_scale   = std::abs(pho.pat::Photon::userFloat("energyScaleUp")-phoE);
+    phoBranch.Scale_ = (up_scale > down_scale ? up_scale : down_scale);
+
+    // eval up/down, then save bigger one (diff is order of one of MeV's...
+    const auto down_smear = std::abs(phoE-pho.pat::Photon::userFloat("energySigmaDown"));
+    const auto up_smear   = std::abs(pho.pat::Photon::userFloat("energySigmaUp")-phoE);
+    phoBranch.Smear_ = (up_smear > down_smear ? up_smear : down_smear);
+  }
 }
 
 int DisPho::CheckMatchHVDS(const int iphoton, const hvdsStruct& hvdsBranch)
@@ -1559,12 +1736,20 @@ void DisPho::MakeAndFillConfigTree()
   float genpTres_tmp = genpTres;
   float trackdRmin_tmp = trackdRmin;
   float trackpTmin_tmp = trackpTmin;
+  float genjetdRmin_tmp = genjetdRmin;
+  float genjetpTfactor_tmp = genjetpTfactor;
   configtree->Branch("dRmin", &dRmin_tmp, "dRmin/F");
   configtree->Branch("pTres", &pTres_tmp, "pTres/F");
   configtree->Branch("gendRmin", &gendRmin_tmp, "gendRmin/F");
   configtree->Branch("genpTres", &genpTres_tmp, "genpTres/F");
   configtree->Branch("trackdRmin", &trackdRmin_tmp, "trackdRmin/F");
   configtree->Branch("trackpTmin", &trackpTmin_tmp, "trackpTmin/F");
+  configtree->Branch("genjetdRmin", &genjetdRmin_tmp, "genjetdRmin/F");
+  configtree->Branch("genjetpTfactor", &genjetpTfactor_tmp, "genjetpTfactor/F");
+
+  // JER extra info
+  float smearjetEmin_tmp = smearjetEmin;
+  configtree->Branch("smearjetEmin", &smearjetEmin_tmp, "smearjetEmin/F");
 
   // trigger info
   std::string inputPaths_tmp = inputPaths;
@@ -1727,8 +1912,8 @@ void DisPho::MakeEventTree()
   disphotree->Branch("hltDiPho70", &hltDiPho70, "hltDiPho70/O");
   disphotree->Branch("hltDiPho3022M90", &hltDiPho3022M90, "hltDiPho3022M90/O");
   disphotree->Branch("hltDiPho30PV18PV", &hltDiPho30PV18PV, "hltDiPho30PV18PV/O");
+  disphotree->Branch("hltEle32WPT", &hltEle32WPT, "hltEle32WPT/O");
   disphotree->Branch("hltDiEle33MW", &hltDiEle33MW, "hltDiEle33MW/O");
-  disphotree->Branch("hltDiEle27WPT", &hltDiEle27WPT, "hltDiEle27WPT/O");
   disphotree->Branch("hltJet500", &hltJet500, "hltJet500/O");
 
   // MET Filter Info
@@ -1773,6 +1958,15 @@ void DisPho::MakeEventTree()
   disphotree->Branch("jetNHM", &jetNHM);
   disphotree->Branch("jetCHM", &jetCHM);
 
+  if (isMC)
+  {
+    disphotree->Branch("jetScale", &jetScale);
+    disphotree->Branch("jetSmear", &jetSmear);
+    disphotree->Branch("jetSmearDown", &jetSmearDown);
+    disphotree->Branch("jetSmearUp", &jetSmearUp);
+    disphotree->Branch("jetIsGen", &jetIsGen);
+  }
+
   // RecHit Info
   disphotree->Branch("nrechits", &nrechits, "nrechits/I");
   if (storeRecHits)
@@ -1806,9 +2000,6 @@ void DisPho::MakeEventTree()
     disphotree->Branch(Form("phopt_%i",iphoton), &phoBranch.Pt_, Form("phopt_%i/F",iphoton));
     disphotree->Branch(Form("phoeta_%i",iphoton), &phoBranch.Eta_, Form("phoeta_%i/F",iphoton));
     disphotree->Branch(Form("phophi_%i",iphoton), &phoBranch.Phi_, Form("phophi_%i/F",iphoton));
-
-    disphotree->Branch(Form("phoscale_%i",iphoton), &phoBranch.Scale_, Form("phoscale_%i/F",iphoton));
-    disphotree->Branch(Form("phosmear_%i",iphoton), &phoBranch.Smear_, Form("phosmear_%i/F",iphoton));
 
     disphotree->Branch(Form("phoscE_%i",iphoton), &phoBranch.scE_, Form("phoscE_%i/F",iphoton));
     disphotree->Branch(Form("phosceta_%i",iphoton), &phoBranch.scEta_, Form("phosceta_%i/F",iphoton));
@@ -1872,6 +2063,9 @@ void DisPho::MakeEventTree()
     {
       if (isGMSB || isHVDS) disphotree->Branch(Form("phoisSignal_%i",iphoton), &phoBranch.isSignal_, Form("phoisSignal_%i/I",iphoton));
       disphotree->Branch(Form("phoisGen_%i",iphoton), &phoBranch.isGen_, Form("phoisGen_%i/O",iphoton));
+
+      disphotree->Branch(Form("phoscale_%i",iphoton), &phoBranch.Scale_, Form("phoscale_%i/F",iphoton));
+      disphotree->Branch(Form("phosmear_%i",iphoton), &phoBranch.Smear_, Form("phosmear_%i/F",iphoton));
     } // end block over isMC
   } // end loop over nPhotons
 }

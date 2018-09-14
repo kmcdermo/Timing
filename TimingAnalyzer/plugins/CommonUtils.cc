@@ -187,8 +187,8 @@ namespace oot
 
 	idpVec idpairs;
 	idpairs = {{"loose-ged",false}, {"medium-ged",false}, {"tight-ged",false}, {"loose-oot",false}, {"tight-oot",false}};
-	oot::GetGEDPhoVID(photon,idpairs,rho,isOOT);
-	oot::GetOOTPhoVID(photon,idpairs,rho,isOOT);
+	oot::GetGEDPhoVID      (photon,idpairs);
+	oot::GetOOTPhoVIDByHand(photon,idpairs,rho);
 	
 	bool isGoodID = true;
 	if (phIDmin != "none")
@@ -348,7 +348,7 @@ namespace oot
      	jets.erase(std::remove_if(jets.begin(),jets.end(),
 				  [dRmin,&photon](const auto & jet)
 				  {
-				    return (Config::deltaR(jet.phi(),jet.eta(),photon.phi(),photon.eta()) < dRmin);
+				    return (reco::deltaR(jet,photon) < dRmin);
 				  }),jets.end());
       }
     }
@@ -461,73 +461,71 @@ namespace oot
   //                //
   ////////////////////
 
-  void GetGEDPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho, const bool isOOT)
+  void GetGEDPhoVID(const pat::Photon & photon, idpVec & idpairs)
   {
-    if (!isOOT) // get info straight from madv2
-    {
-      idpairs[2].second = photon.photonID("cutBasedPhotonID-Fall17-94X-V1-tight");
-      idpairs[1].second = photon.photonID("cutBasedPhotonID-Fall17-94X-V1-medium");
-      idpairs[0].second = photon.photonID("cutBasedPhotonID-Fall17-94X-V1-loose");
-    }
-    else 
-    {
-      // needed for cuts
-      const float eta = std::abs(photon.superCluster()->eta());
-      const float pt  = photon.pt();
-      
-      // cut variables
-      const float HoverE = photon.hadTowOverEm();
-      const float Sieie  = photon.full5x5_sigmaIetaIeta();
-      // Isolations are currently wrong! need to recompute them apparently : 
-      // https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedPhotonIdentificationRun2#Selection_implementation_details
-      // https://twiki.cern.ch/twiki/bin/view/CMS/EgammaPFBasedIsolationRun2#Recipe_for_accessing_PF_isol_AN1
-      // https://github.com/cms-sw/cmssw/blob/master/RecoEgamma/PhotonIdentification/plugins/PhotonIDValueMapProducer.cc#L338-L395
-      const float ChgHadIso = std::max(photon.chargedHadronIso() - (rho * oot::GetChargedHadronEA(eta))                                         ,0.f);
-      const float NeuHadIso = std::max(photon.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(eta)) - (oot::GetNeutralHadronPtScale(eta,pt)),0.f);
-      const float PhoIso    = std::max(photon.photonIso()        - (rho * oot::GetGammaEA        (eta)) - (oot::GetGammaPtScale        (eta,pt)),0.f);
+    idpairs[2].second = photon.photonID("cutBasedPhotonID-Fall17-94X-V1-tight");
+    idpairs[1].second = photon.photonID("cutBasedPhotonID-Fall17-94X-V1-medium");
+    idpairs[0].second = photon.photonID("cutBasedPhotonID-Fall17-94X-V1-loose");
+  }
 
-      if (eta < Config::etaEBcutoff)
+  void GetGEDPhoVIDByHand(const pat::Photon & photon, idpVec & idpairs, const float rho)
+  {
+    // needed for cuts
+    const float eta = std::abs(photon.superCluster()->eta());
+    const float pt  = photon.pt();
+    
+    // cut variables
+    const float HoverE = photon.hadTowOverEm();
+    const float Sieie  = photon.full5x5_sigmaIetaIeta();
+    // Isolations are currently wrong! need to recompute them apparently : 
+    // https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedPhotonIdentificationRun2#Selection_implementation_details
+    // https://twiki.cern.ch/twiki/bin/view/CMS/EgammaPFBasedIsolationRun2#Recipe_for_accessing_PF_isol_AN1
+    // https://github.com/cms-sw/cmssw/blob/master/RecoEgamma/PhotonIdentification/plugins/PhotonIDValueMapProducer.cc#L338-L395
+    const float ChgHadIso = std::max(photon.chargedHadronIso() - (rho * oot::GetChargedHadronEA(eta))                                         ,0.f);
+    const float NeuHadIso = std::max(photon.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(eta)) - (oot::GetNeutralHadronPtScale(eta,pt)),0.f);
+    const float PhoIso    = std::max(photon.photonIso()        - (rho * oot::GetGammaEA        (eta)) - (oot::GetGammaPtScale        (eta,pt)),0.f);
+    
+    if (eta < Config::etaEBcutoff)
+    {
+      if      ((HoverE < 0.020) && (Sieie < 0.0103) && (ChgHadIso < 1.158) && (NeuHadIso < 1.267) && (PhoIso < 2.065)) 
       {
-	if      ((HoverE < 0.020) && (Sieie < 0.0103) && (ChgHadIso < 1.158) && (NeuHadIso < 1.267) && (PhoIso < 2.065)) 
-        {
-	  idpairs[2].second = true;
-	  idpairs[1].second = true;
-	  idpairs[0].second = true;
-	}
-	else if ((HoverE < 0.035) && (Sieie < 0.0103) && (ChgHadIso < 1.416) && (NeuHadIso < 2.491) && (PhoIso < 2.952)) 
-        {
-	  idpairs[2].second = false;
-	  idpairs[1].second = true;
-	  idpairs[0].second = true;
-	}  
- 	else if ((HoverE < 0.105) && (Sieie < 0.0103) && (ChgHadIso < 2.839) && (NeuHadIso < 9.188) && (PhoIso < 2.956)) 
-        {
-	  idpairs[2].second = false;
-	  idpairs[1].second = false;
-	  idpairs[0].second = true;
-	}   
+	idpairs[2].second = true;
+	idpairs[1].second = true;
+	idpairs[0].second = true;
       }
-      else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax)
+      else if ((HoverE < 0.035) && (Sieie < 0.0103) && (ChgHadIso < 1.416) && (NeuHadIso < 2.491) && (PhoIso < 2.952)) 
       {
-	if      ((HoverE < 0.025) && (Sieie < 0.0271) && (ChgHadIso < 0.575) && (NeuHadIso < 8.916) && (PhoIso < 3.272)) 
-        {
-	  idpairs[2].second = true;
-	  idpairs[1].second = true;
-	  idpairs[0].second = true;
-	}
-	else if ((HoverE < 0.027) && (Sieie < 0.0271) && (ChgHadIso < 1.012) && (NeuHadIso < 9.131) && (PhoIso < 4.095)) 
-        {
-	  idpairs[2].second = false;
-	  idpairs[1].second = true;
-	  idpairs[0].second = true;
-	}   
-	else if ((HoverE < 0.029) && (Sieie < 0.0276) && (ChgHadIso < 2.150) && (NeuHadIso < 10.471) && (PhoIso < 4.895)) 
-        {
-	  idpairs[2].second = false;
-	  idpairs[1].second = false;
-	  idpairs[0].second = true;
-	}   
+	idpairs[2].second = false;
+	idpairs[1].second = true;
+	idpairs[0].second = true;
+      }  
+      else if ((HoverE < 0.105) && (Sieie < 0.0103) && (ChgHadIso < 2.839) && (NeuHadIso < 9.188) && (PhoIso < 2.956)) 
+      {
+	idpairs[2].second = false;
+	idpairs[1].second = false;
+	idpairs[0].second = true;
+      }   
+    }
+    else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax)
+    {
+      if      ((HoverE < 0.025) && (Sieie < 0.0271) && (ChgHadIso < 0.575) && (NeuHadIso < 8.916) && (PhoIso < 3.272)) 
+      {
+	idpairs[2].second = true;
+	idpairs[1].second = true;
+	idpairs[0].second = true;
       }
+      else if ((HoverE < 0.027) && (Sieie < 0.0271) && (ChgHadIso < 1.012) && (NeuHadIso < 9.131) && (PhoIso < 4.095)) 
+      {
+	idpairs[2].second = false;
+	idpairs[1].second = true;
+	idpairs[0].second = true;
+      }   
+      else if ((HoverE < 0.029) && (Sieie < 0.0276) && (ChgHadIso < 2.150) && (NeuHadIso < 10.471) && (PhoIso < 4.895)) 
+      {
+	idpairs[2].second = false;
+	idpairs[1].second = false;
+	idpairs[0].second = true;
+      }   
     }
   }
 
@@ -537,7 +535,7 @@ namespace oot
   //               //
   ///////////////////
 
-  void GetOOTPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho, const bool isOOT)
+  void GetOOTPhoVIDByHand(const pat::Photon & photon, idpVec& idpairs, const float rho)
   {
     // needed for cuts
     const float eta = std::abs(photon.superCluster()->eta());

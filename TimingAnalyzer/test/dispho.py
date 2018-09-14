@@ -45,6 +45,11 @@ options.register('gendRmin',0.1,VarParsing.multiplicity.singleton,VarParsing.var
 options.register('genpTres',0.5,VarParsing.multiplicity.singleton,VarParsing.varType.float,'gen pT resolution cut');
 options.register('trackdRmin',0.2,VarParsing.multiplicity.singleton,VarParsing.varType.float,'track dR minimum cut');
 options.register('trackpTmin',5.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'track pT minimum cut');
+options.register('genjetdRmin',0.2,VarParsing.multiplicity.singleton,VarParsing.varType.float,'genjet dR minimum cut for smearing');
+options.register('genjetpTfactor',3.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'genjet pT resolution factor for smearing');
+
+## extra JER info
+options.register('smearjetEmin',0.01,VarParsing.multiplicity.singleton,VarParsing.varType.float,'min jet E for smearing');
 
 ## trigger input
 options.register('inputPaths','/afs/cern.ch/user/k/kmcdermo/public/input/HLTpathsWExtras.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input signal paths');
@@ -124,6 +129,10 @@ print "gendRmin       : ",options.gendRmin
 print "genpTres       : ",options.genpTres
 print "trackdRmin     : ",options.trackdRmin
 print "trackpTmin     : ",options.trackpTmin
+print "genjetdRmin    : ",options.genjetdRmin
+print "genjetpTfactor : ",options.genjetpTfactor
+print "       -- Extra JER --"
+print "smearjetEmin   : ",options.smearjetEmin
 print "        -- Trigger --"
 print "inputPaths     : ",options.inputPaths
 print "inputFilters   : ",options.inputFilters
@@ -158,10 +167,12 @@ print "     #####################"
 process = cms.Process(options.processName)
 
 ## Load the standard set of configuration modules
+process.load("Configuration.Geometry.GeometryRecoDB_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.GeometryDB_cff')
-process.load('Configuration.StandardSequences.MagneticField_38T_cff')
-process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
+process.load('Configuration.StandardSequences.MagneticField_cff')
+process.load('Configuration.StandardSequences.tFrontierConditions_GlobalTag_condDBv2_cff')
+process.load("Geometry.CaloEventSetup.CaloTowerConstituents_cfi")
 
 ## Message Logger settings
 process.load("FWCore.MessageService.MessageLogger_cfi")
@@ -207,7 +218,7 @@ else                       : ootPhotonsTag = cms.InputTag("")
 from PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi import unpackedTracksAndVertices
 process.unpackedTracksAndVertices = unpackedTracksAndVertices.clone()
 
-## MET corrections for 2017 data
+## MET corrections for 2017 data: https://twiki.cern.ch/twiki/bin/view/CMS/MissingETUncertaintyPrescription#Instructions_for_9_4_X_X_9_for_2
 from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
 runMetCorAndUncFromMiniAOD (
         process,
@@ -215,6 +226,21 @@ runMetCorAndUncFromMiniAOD (
         fixEE2017 = True,
         postfix = "ModifiedMET"
 )
+
+## Apply JECs : https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#CorrPatJets
+from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
+updateJetCollection (
+   process,
+   jetSource = cms.InputTag('slimmedJets'),
+   labelName = 'UpdatedJEC',
+   jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']), 'None')
+)
+
+## Apply Scale/Smearing to ootPhotons : Hacked for sure
+from RecoEgamma.EgammaTools.EgammaPostRecoTools_OOT import setupEgammaPostRecoSeq
+setupEgammaPostRecoSeq(process,
+                       runVID=True,
+                       era='2017-Nov17ReReco')
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("DisPho",
@@ -269,7 +295,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    ## MET
    mets = cms.InputTag("slimmedMETsModifiedMET"),
    ## jets			    	
-   jets = cms.InputTag("slimmedJets"),
+   jets = cms.InputTag("updatedPatJetsUpdatedJEC"),
    ## photons		
    photons    = cms.InputTag("slimmedPhotons"),
    ootPhotons = ootPhotonsTag,
@@ -293,7 +319,7 @@ process.tree = cms.EDAnalyzer("DisPho",
 )
 
 # Set up the path
-process.treePath = cms.Path(process.unpackedTracksAndVertices + process.fullPatMetSequenceModifiedMET + process.tree)
+process.treePath = cms.Path(process.setupEgammaPostRecoSeq + process.unpackedTracksAndVertices + process.fullPatMetSequenceModifiedMET + process.tree)
 
 ### Extra bits from other configs
 process.options = cms.untracked.PSet(

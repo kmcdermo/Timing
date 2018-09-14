@@ -20,6 +20,7 @@
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/JetReco/interface/GenJet.h"
 
 // DataFormats
 #include "DataFormats/Common/interface/ValueMap.h"
@@ -62,6 +63,15 @@
 // ECAL Record info (Pedestals)
 #include "CondFormats/EcalObjects/interface/EcalPedestals.h"
 #include "CondFormats/DataRecord/interface/EcalPedestalsRcd.h"
+
+// JECS
+#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
+#include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
+#include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
+
+// JERs
+#include "CondFormats/JetMETObjects/interface/JetResolutionObject.h"
+#include "JetMETCorrections/Modules/interface/JetResolution.h"
 
 // ROOT
 #include "TH1F.h"
@@ -125,6 +135,13 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void InitializeJetBranches(const int nJets);
   void SetJetBranches(const std::vector<pat::Jet> & jet, const int nJets);
 
+  void InitializeJetBranchesMC(const int nJets);
+  void SetJetBranchesMC(const std::vector<pat::Jet> & jet, const int nJets, const edm::Handle<std::vector<reco::GenJet> > & genjetsH,
+			jetCorrectionUncertainty & jetCorrUnc, const JME::JetResolution & jetRes, const JME::JetResolutionScaleFactor & jetRes_sf);
+  int GenJetMatcher(const pat::Jet & jet, const std::vector<reco::GenJet> & genjets, const float jer);  
+  void GetStochasticSmear(std::mt19937 & mt_rand, const float jer, const float jer_sf, float & jet_smear);
+  void CheckJetSmear(const float energy, float & jet_smear);
+
   void InitializeRecHitBranches(const int nRecHits);
   void SetRecHitBranches(const EcalRecHitCollection * recHitsEB, const CaloSubdetectorGeometry * barrelGeometry,
 			 const EcalRecHitCollection * recHitsEE, const CaloSubdetectorGeometry * endcapGeometry,
@@ -135,8 +152,11 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void InitializePhoBranches();
   void SetPhoBranches(const std::vector<oot::Photon> photons, const int nPhotons, const uiiumap & recHitMap,
 		      const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE,
-		      const edm::Handle<std::vector<reco::Track> > & tracksH,
-		      const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH);
+		      const edm::Handle<std::vector<reco::Track> > & tracksH);
+
+  void InitializePhoBranchesMC();
+  void SetPhoBranchesMC(const std::vector<oot::Photon> photons, const int nPhotons, 
+			const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH);
   int  CheckMatchHVDS(const int iphoton, const hvdsStruct& hvdsBranch);
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
@@ -189,6 +209,11 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const float genpTres;
   const float trackdRmin;
   const float trackpTmin;
+  const float genjetdRmin;
+  const float genjetpTfactor;
+
+  // JER extra info
+  const float smearjetEmin;
 
   // triggers
   const std::string inputPaths;
@@ -306,8 +331,8 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   bool hltDiPho70;
   bool hltDiPho3022M90;
   bool hltDiPho30PV18PV;
+  bool hltEle32WPT;
   bool hltDiEle33MW;
-  bool hltDiEle27WPT;
   bool hltJet500;
 
   // met filter info
@@ -350,6 +375,9 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   std::vector<float> jetNHM;
   std::vector<float> jetCHM;
 
+  std::vector<float> jetScale, jetSmear, jetSmearDown, jetSmearUp;
+  std::vector<int>   jetIsGen;
+
   // RecHits
   int nrechits;
   std::vector<float> rhX, rhY, rhZ, rhE, rhtime;
@@ -364,3 +392,4 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 };
 
 #endif
+o

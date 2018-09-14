@@ -14,13 +14,14 @@
 #include <algorithm>
 #include <memory>
 #include <tuple>
+#include <random>
 
 //////////////////////////
 //                      //
 // Standard Definitions //
 //                      //
 //////////////////////////
-#include "TVector2.h"
+#include "DataFormats/Math/interface/deltaR.h"
 
 namespace Config
 {
@@ -51,8 +52,8 @@ namespace Config
   static const std::string DiPho70Path = "HLT_DoublePhoton70_v";
   static const std::string DiPho3022M90Path = "HLT_Diphoton30_22_R9Id_OR_IsoCaloId_AND_HE_R9Id_Mass90_v";
   static const std::string DiPho30PV18PVPath = "HLT_Diphoton30PV_18PV_R9Id_AND_IsoCaloId_AND_HE_R9Id_PixelVeto_Mass55_v";
+  static const std::string Ele32WPTPath = "HLT_Ele32_WPTight_Gsf_L1DoubleEG_v";
   static const std::string DiEle33MWPath = "HLT_DoubleEle33_CaloIdL_MW_v";
-  static const std::string DiEle27WPTPath = "HLT_DiEle27_WPTightCaloOnly_L1DoubleEG_v";
   static const std::string Jet500Path = "HLT_PFJet500_v";
 
   // trigger filter related strings
@@ -81,11 +82,6 @@ namespace Config
   inline float eta   (const float x, const float y, const float z)
   {
     return -1.0f*std::log(std::tan(Config::theta(Config::hypo(x,y),z)/2.f));
-  }
-  inline float deltaR(const float phi1, const float eta1, const float phi2, const float eta2)
-  {
-    if (std::isnan(phi1) or std::isnan(phi2)) return std::numeric_limits<float>::quiet_NaN();
-    else return Config::hypo(TVector2::Phi_mpi_pi(phi1-phi2),eta1-eta2);
   }
 
   // check to see if file exists
@@ -225,8 +221,9 @@ namespace oot
   float GetEcalPFClPtScale(const float eta, const float pt);
   float GetHcalPFClPtScale(const float eta, const float pt);
   float GetTrackPtScale(const float eta, const float pt);
-  void GetGEDPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho, const bool isOOT);
-  void GetOOTPhoVID(const pat::Photon & photon, idpVec& idpairs, const float rho, const bool isOOT);
+  void GetGEDPhoVID(const pat::Photon & photon, idpVec& idpairs);
+  void GetGEDPhoVIDByHand(const pat::Photon & photon, idpVec& idpairs);
+  void GetOOTPhoVIDByHand(const pat::Photon & photon, idpVec& idpairs, const float rho);
   int GetPFJetID(const pat::Jet & jet);
   void SplitPhotons(std::vector<oot::Photon>& photons, const int nmax);
   void StoreOnlyPho(std::vector<oot::Photon>& photons, const int nmax, const bool isOOT);
@@ -254,7 +251,7 @@ namespace oot
 	  if (triggerObject.pt() < ((1.f-pTres) * obj.pt())) continue;
 	  if (triggerObject.pt() > ((1.f+pTres) * obj.pt())) continue;
 	}
-	if (Config::deltaR(obj.phi(),obj.eta(),triggerObject.phi(),triggerObject.eta()) < dRmin)
+	if (reco::deltaR(obj,triggerObject) < dRmin)
 	{
 	  isHLTMatched[filterName] = true; 
 	  break;
@@ -272,7 +269,7 @@ namespace oot
       for (const auto & track : *tracksH)
       {
 	if (track.pt() < trackpTmin) continue;
-	if (Config::deltaR(obj.phi(),obj.eta(),track.phi(),track.eta()) < trackdRmin)
+	if (reco::deltaR(obj,track) < trackdRmin)
 	{
 	  return true;
 	} // end check over deltaR
@@ -294,7 +291,7 @@ namespace oot
 	if (genpart.pt() < ((1.f-pTres) * obj.pt())) continue;
 	if (genpart.pt() > ((1.f+pTres) * obj.pt())) continue;
 	
-	const float dR = Config::deltaR(obj.phi(),obj.eta(),genpart.phi(),genpart.eta());
+	const float dR = reco::deltaR(obj,genpart);
 	if (dR < dRmin) 
 	{
 	  return true;
