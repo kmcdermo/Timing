@@ -130,10 +130,10 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void SetADCToGeVBranches(const edm::ESHandle<EcalADCToGeVConstant> & adcToGeVH);
 
   void InitializeMETBranches();
-  void SetMETBranches(const edm::Handle<std::vector<pat::MET> > & metsH);
+  void SetMETBranches(const pat::MET & t1pfMET);
 
   void InitializeMETBranchesMC();
-  void SetMETBranchesMC();
+  void SetMETBranchesMC(const pat::MET & t1pfMET);
 
   void InitializeJetBranches(const int nJets);
   void SetJetBranches(const std::vector<pat::Jet> & jet, const int nJets);
@@ -362,7 +362,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // MET
   float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
   float t1pfMETptJetScaleDown,t1pfMETptJetScaleUp,t1pfMETptJetSmearDown,t1pfMETptJetSmearUp;
-  float t1pfMETptUnclusDown,t1pfMETptUnclusUp,t1pfMETptPhoEnDown,t1pfMETptPhoEnUp;
+  float t1pfMETptUnclusDown,t1pfMETptUnclusUp,t1pfMETptPhoScaleDown,t1pfMETptPhoScaleUp;
 
   // jets
   int njets;

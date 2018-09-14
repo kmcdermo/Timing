@@ -538,8 +538,10 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (isMC) DisPho::InitializeMETBranchesMC();
   if (metsH.isValid())
   {
-    DisPho::SetMETBranches(metsH);
-    if (isMC) DisPho::SetMETBranchesMC();
+    const auto & t1pfMET = (*metsH)[0];
+    
+    DisPho::SetMETBranches(t1pfMET);
+    if (isMC) DisPho::SetMETBranchesMC(t1pfMET);
   }
 
   /////////////////////////
@@ -992,28 +994,27 @@ void DisPho::InitializeMETBranchesMC()
   t1pfMETptPhoScaleDown = -9999.f;
 }
 
-void DisPho::SetMETBranches(const edm::Handle<std::vector<pat::MET> > & metsH)
+void DisPho::SetMETBranches(const pat::MET & t1pfMET)
 {
-  const auto & t1pfMET = (*metsH)[0];
-
   t1pfMETpt    = t1pfMET.pt();
   t1pfMETphi   = t1pfMET.phi();
   t1pfMETsumEt = t1pfMET.sumEt();
 }
-
-void DisPho::SetMETBranchesMC()
+			    
+void DisPho::SetMETBranchesMC(const pat::MET & t1pfMET)
 {
-  t1pfMETptJetScaleUp   = pat::MET::shiftedPt(pat::MET::METUncertainty::JetResUp);
-  t1pfMETptJetScaleDown = pat::MET::shiftedPt(pat::MET::METUncertainty::JetResDown);
+  t1pfMETptJetScaleUp   = t1pfMET.shiftedPt(pat::MET::METUncertainty::JetResUp);
+  t1pfMETptJetScaleDown = t1pfMET.shiftedPt(pat::MET::METUncertainty::JetResDown);
 
-  t1pfMETptJetSmearDown = pat::MET::shiftedPt(pat::MET::METUncertainty::JetResDownSmear);
-  t1pfMETptJetSmearUp   = pat::MET::shiftedPt(pat::MET::METUncertainty::JetResUpSmear);
+  // exception?? https://github.com/cms-sw/cmssw/blob/CMSSW_8_0_X/DataFormats/PatCandidates/src/MET.cc#L213
+  //  t1pfMETptJetSmearDown = t1pfMET.shiftedPt(pat::MET::METUncertainty::JetResDownSmear);
+  //  t1pfMETptJetSmearUp   = t1pfMET.shiftedPt(pat::MET::METUncertainty::JetResUpSmear);
 
-  t1pfMETptUnclusDown = pat::MET::shiftedPt(pat::MET::METUncertainty::UnclusteredEnDown);
-  t1pfMETptUnclusUp   = pat::MET::shiftedPt(pat::MET::METUncertainty::UnclusteredEnUp);
+  t1pfMETptUnclusDown = t1pfMET.shiftedPt(pat::MET::METUncertainty::UnclusteredEnDown);
+  t1pfMETptUnclusUp   = t1pfMET.shiftedPt(pat::MET::METUncertainty::UnclusteredEnUp);
 
-  t1pfMETptPhoScaleDown = pat::MET::shiftedPt(pat::MET::METUncertainty::PhotonEnDown);
-  t1pfMETptPhoScaleUp   = pat::MET::shiftedPt(pat::MET::METUncertainty::PhotonEnUp);
+  t1pfMETptPhoScaleDown = t1pfMET.shiftedPt(pat::MET::METUncertainty::PhotonEnDown);
+  t1pfMETptPhoScaleUp   = t1pfMET.shiftedPt(pat::MET::METUncertainty::PhotonEnUp);
 }
 
 void DisPho::InitializeJetBranches(const int nJets)

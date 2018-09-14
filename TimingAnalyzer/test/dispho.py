@@ -171,7 +171,7 @@ process.load("Configuration.Geometry.GeometryRecoDB_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('Configuration.StandardSequences.GeometryDB_cff')
 process.load('Configuration.StandardSequences.MagneticField_cff')
-process.load('Configuration.StandardSequences.tFrontierConditions_GlobalTag_condDBv2_cff')
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 process.load("Geometry.CaloEventSetup.CaloTowerConstituents_cfi")
 
 ## Message Logger settings
@@ -314,10 +314,17 @@ process.tree = cms.EDAnalyzer("DisPho",
    genxyz0  = cms.InputTag("genParticles", "xyz0"),
    pileup   = cms.InputTag("slimmedAddPileupInfo"),
    genparts = cms.InputTag("prunedGenParticles"),
+   genjets  = cms.InputTag("slimmedGenJets"),
 )
 
 # Set up the path
-process.treePath = cms.Path(process.setupEgammaPostRecoSeq + process.unpackedTracksAndVertices + process.fullPatMetSequenceModifiedMET + process.tree)
+process.treePath = cms.Path(
+	process.egammaPostRecoSeq +
+	process.patJetCorrFactorsUpdatedJEC +
+	process.updatedPatJetsUpdatedJEC +
+	process.fullPatMetSequenceModifiedMET +
+	process.unpackedTracksAndVertices +
+	process.tree)
 
 ### Extra bits from other configs
 process.options = cms.untracked.PSet(
