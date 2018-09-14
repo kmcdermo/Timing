@@ -550,7 +550,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (jetsH.isValid()) // check to make sure reco jets exist
   {
     DisPho::SetJetBranches(jets,nJets);
-    if (isMC && jetCorrH.isValid() && genjetsH.isValid()) DisPho::SetJetBranchesMC(jets,nJets,genjetsH,jetCorrUnc,jetRes,JetRes_sf);
+    if (isMC && jetCorrH.isValid() && genjetsH.isValid()) DisPho::SetJetBranchesMC(jets,nJets,genjetsH,jetCorrUnc,jetRes,jetRes_sf);
   }
 
   //////////////
@@ -576,7 +576,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (isMC) DisPho::InitializePhoBranchesMC();
   if (photonsH.isValid() || ootPhotonsH.isValid()) // standard handle check
   {
-    DisPho::SetPhoBranches(photons,nPhotons,recHitMap,recHitsEB,recHitsEE,tracksH,genparticlesH);
+    DisPho::SetPhoBranches(photons,nPhotons,recHitMap,recHitsEB,recHitsEE,tracksH);
     if (isMC) DisPho::SetPhoBranchesMC(photons,nPhotons,genparticlesH);
   }
 
@@ -723,7 +723,7 @@ void DisPho::SetGMSBBranches(const std::vector<reco::GenParticle> & neutralinos,
   
     // set gravitino daughter stuff
     const auto grdaughter     =  (neutralino.daughter(0)->pdgId() == 1000039)?0:1;
-    const auto & gengravitino = *(neutralino.daughter(grdaughter))l
+    const auto & gengravitino = *(neutralino.daughter(grdaughter));
     
     gmsbBranch.gengrmass_ = gengravitino.mass();
     gmsbBranch.gengrE_    = gengravitino.energy();
@@ -1072,16 +1072,16 @@ void DisPho::InitializeJetBranchesMC(const int nJets)
 
   for (auto ijet = 0; ijet < nJets; ijet++)
   {
-    jetScale    [i] = -9999.f;
-    jetSmear    [i] = -9999.f;
-    jetSmearDown[i] = -9999.f;
-    jetSmearUp  [i] = -9999.f;
-    jetIsGen    [i] = -1;
+    jetScale    [ijet] = -9999.f;
+    jetSmear    [ijet] = -9999.f;
+    jetSmearDown[ijet] = -9999.f;
+    jetSmearUp  [ijet] = -9999.f;
+    jetIsGen    [ijet] = -1;
   }
 }
 
 void DisPho::SetJetBranchesMC(const std::vector<pat::Jet> & jets, const int nJets, const edm::Handle<std::vector<reco::GenJet> > & genjetsH, 
-			      jetCorrectionUncertainty & jetCorrUnc, const JME::JetResolution & jetRes, const JME::JetResolutionScaleFactor & jetRes_sf)
+			      JetCorrectionUncertainty & jetCorrUnc, const JME::JetResolution & jetRes, const JME::JetResolutionScaleFactor & jetRes_sf)
 {
   // copy from https://github.com/cms-sw/cmssw/blob/master/PhysicsTools/PatUtils/interface/SmearedJetProducerT.h#L208-L215
   unsigned int runNum_uint = static_cast <unsigned int> (run);
@@ -1101,10 +1101,10 @@ void DisPho::SetJetBranchesMC(const std::vector<pat::Jet> & jets, const int nJet
     const auto eta = jeteta[ijet];
 
     // set JEC uncs
-    jecUnc.setJetPt (pt);
-    jecUnc.setJetEta(eta);
+    jetCorrUnc.setJetPt (pt);
+    jetCorrUnc.setJetEta(eta);
     
-    jetScale[ijet] = jecUnc.getUncertainty(true);
+    jetScale[ijet] = jetCorrUnc.getUncertainty(true);
 
     // jet JER uncs
     const auto jer         = jetRes   .getResolution ({{JME::Binning::JetPt, pt}, {JME::Binning::JetEta, eta}, {JME::Binning::Rho, rho}});
@@ -1154,7 +1154,7 @@ int DisPho::GenJetMatcher(const pat::Jet & jet, const std::vector<reco::GenJet> 
     
     if (delR < mindR)
     {
-      if (std::abs(genJet.pt() - jet.pt()) < (genjetpTfactor * jer * jet.pt()))
+      if (std::abs(genjet.pt() - jet.pt()) < (genjetpTfactor * jer * jet.pt()))
       {
 	mindR = delR;
 	igenjet = i;
@@ -1180,7 +1180,7 @@ void DisPho::GetStochasticSmear(std::mt19937 & mt_rand, const float jer, const f
 
 void DisPho::CheckJetSmear(const float energy, float & jet_smear)
 {    
-  if (energy * jet_smear < smearjetEmin) smearFactor = minJetESmear / energy;
+  if (energy * jet_smear < smearjetEmin) jet_smear = smearjetEmin / energy;
 }
 
 void DisPho::InitializeRecHitBranches(const int nRecHits)

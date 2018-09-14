@@ -137,8 +137,8 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   void InitializeJetBranchesMC(const int nJets);
   void SetJetBranchesMC(const std::vector<pat::Jet> & jet, const int nJets, const edm::Handle<std::vector<reco::GenJet> > & genjetsH,
-			jetCorrectionUncertainty & jetCorrUnc, const JME::JetResolution & jetRes, const JME::JetResolutionScaleFactor & jetRes_sf);
-  int GenJetMatcher(const pat::Jet & jet, const std::vector<reco::GenJet> & genjets, const float jer);  
+			JetCorrectionUncertainty & jetCorrUnc, const JME::JetResolution & jetRes, const JME::JetResolutionScaleFactor & jetRes_sf);
+  int GenJetMatcher(const pat::Jet & jet, const std::vector<reco::GenJet> & genjets, const float jer);
   void GetStochasticSmear(std::mt19937 & mt_rand, const float jer, const float jer_sf, float & jet_smear);
   void CheckJetSmear(const float energy, float & jet_smear);
 
@@ -392,4 +392,4 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 };
 
 #endif
-o
+
