@@ -535,9 +535,11 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //              //
   //////////////////
   DisPho::InitializeMETBranches();
+  if (isMC) DisPho::InitializeMETBranchesMC();
   if (metsH.isValid())
   {
     DisPho::SetMETBranches(metsH);
+    if (isMC) DisPho::SetMETBranchesMC();
   }
 
   /////////////////////////
@@ -975,6 +977,21 @@ void DisPho::InitializeMETBranches()
   t1pfMETsumEt = -9999.f;
 }
 
+void DisPho::InitializeMETBranchesMC()
+{
+  t1pfMETptJetScaleUp   = -9999.f;
+  t1pfMETptJetScaleDown = -9999.f;
+
+  t1pfMETptJetSmearUp   = -9999.f;
+  t1pfMETptJetSmearDown = -9999.f;
+
+  t1pfMETptUnclusUp   = -9999.f;
+  t1pfMETptUnclusDown = -9999.f;
+
+  t1pfMETptPhoScaleUp   = -9999.f;
+  t1pfMETptPhoScaleDown = -9999.f;
+}
+
 void DisPho::SetMETBranches(const edm::Handle<std::vector<pat::MET> > & metsH)
 {
   const auto & t1pfMET = (*metsH)[0];
@@ -982,6 +999,21 @@ void DisPho::SetMETBranches(const edm::Handle<std::vector<pat::MET> > & metsH)
   t1pfMETpt    = t1pfMET.pt();
   t1pfMETphi   = t1pfMET.phi();
   t1pfMETsumEt = t1pfMET.sumEt();
+}
+
+void DisPho::SetMETBranchesMC()
+{
+  t1pfMETptJetScaleUp   = pat::MET::shiftedPt(pat::MET::METUncertainty::JetResUp);
+  t1pfMETptJetScaleDown = pat::MET::shiftedPt(pat::MET::METUncertainty::JetResDown);
+
+  t1pfMETptJetSmearDown = pat::MET::shiftedPt(pat::MET::METUncertainty::JetResDownSmear);
+  t1pfMETptJetSmearUp   = pat::MET::shiftedPt(pat::MET::METUncertainty::JetResUpSmear);
+
+  t1pfMETptUnclusDown = pat::MET::shiftedPt(pat::MET::METUncertainty::UnclusteredEnDown);
+  t1pfMETptUnclusUp   = pat::MET::shiftedPt(pat::MET::METUncertainty::UnclusteredEnUp);
+
+  t1pfMETptPhoScaleDown = pat::MET::shiftedPt(pat::MET::METUncertainty::PhotonEnDown);
+  t1pfMETptPhoScaleUp   = pat::MET::shiftedPt(pat::MET::METUncertainty::PhotonEnUp);
 }
 
 void DisPho::InitializeJetBranches(const int nJets)
@@ -1941,6 +1973,18 @@ void DisPho::MakeEventTree()
   disphotree->Branch("t1pfMETpt", &t1pfMETpt, "t1pfMETpt/F");
   disphotree->Branch("t1pfMETphi", &t1pfMETphi, "t1pfMETphi/F");
   disphotree->Branch("t1pfMETsumEt", &t1pfMETsumEt, "t1pfMETsumEt/F");
+
+  if (isMC)
+  {
+    disphotree->Branch("t1pfMETptJetScaleDown", &t1pfMETptJetScaleDown, "t1pfMETptJetScaleDown/F");
+    disphotree->Branch("t1pfMETptJetScaleUp", &t1pfMETptJetScaleUp, "t1pfMETptJetScaleUp/F");
+    disphotree->Branch("t1pfMETptJetSmearDown", &t1pfMETptJetSmearDown, "t1pfMETptJetSmearDown/F");
+    disphotree->Branch("t1pfMETptJetSmearUp", &t1pfMETptJetSmearUp, "t1pfMETptJetSmearUp/F");
+    disphotree->Branch("t1pfMETptUnclusDown", &t1pfMETptUnclusDown, "t1pfMETptUnclusDown/F");
+    disphotree->Branch("t1pfMETptUnclusUp", &t1pfMETptUnclusUp, "t1pfMETptUnclusUp/F");
+    disphotree->Branch("t1pfMETptPhoScaleDown", &t1pfMETptPhoScaleDown, "t1pfMETptPhoScaleDown/F");
+    disphotree->Branch("t1pfMETptPhoScaleUp", &t1pfMETptPhoScaleUp, "t1pfMETptPhoScaleUp/F");
+  }
 
   // Jet info
   disphotree->Branch("njets", &njets, "njets/I");
