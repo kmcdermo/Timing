@@ -3,9 +3,8 @@
 #include "Skimmer.cpp+"
 
 void runSkimmer(const TString & indir, const TString & outdir, const TString & filename,
-		const Float_t sumwgts, const TString & puwgtfilename = "",
-		const TString & skimtype = "Standard", const Bool_t redophoid = false)
+		const Float_t sumwgts, const TString & puwgtfilename = "", const TString & skimtype = "Standard")
 {
-  Skimmer skimmer(indir, outdir, filename, sumwgts, puwgtfilename, skimtype, redophoid);
+  Skimmer skimmer(indir, outdir, filename, sumwgts, puwgtfilename, skimtype);
   skimmer.EventLoop();
 }

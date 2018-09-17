@@ -258,6 +258,7 @@ namespace Common
 
   // Check inputs
   void CheckValidFile(const TFile * file, const TString & filename);
+  Bool_t isGoodFile(const TFile * file, const TString & filename);
   void CheckValidTree(const TTree * tree, const TString & treename, const TString & filename);
   template <typename T>
   void CheckValidHist(const T * hist, const TString & histname, const TString & filename)

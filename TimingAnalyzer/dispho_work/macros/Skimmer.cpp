@@ -4,9 +4,9 @@
 #include <iostream>
 
 Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & filename, 
-		 const Float_t sumwgts, const TString & puwgtfilename, const TString & skimtype
-  fInDir(indir), fOutDir(outdir), fFileName(filename), 
-  fSumWgts(sumwgts), fPUWgtFileName(puwgtfilename), fSkimType(skimtype)
+		 const Float_t sumwgts, const TString & puwgtfilename, const TString & skimtype)
+  : fInDir(indir), fOutDir(outdir), fFileName(filename), 
+    fSumWgts(sumwgts), fPUWgtFileName(puwgtfilename), fSkimType(skimtype)
 {
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
@@ -25,7 +25,7 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   // Get input file
   const TString infilename = Form("%s/%s", fInDir.Data(), fFileName.Data());
   fInFile = TFile::Open(infilename.Data());
-  Common::CheckValidFile(fInFile,infilename);
+  if (!Common::isGoodFile(fInFile,infilename)) exit(1);
 
   // Get input config tree
   const TString inconfigtreename = Form("%s/%s",Common::rootdir.Data(),Common::configtreename.Data());
@@ -59,7 +59,7 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
 
     const TString pufilename = (useOld ? Form("%s/%s/%s.root",Common::eosDir.Data(),Common::baseDir.Data(),Common::puwgtFileName.Data()) : Form("%s",fPUWgtFileName.Data()));
     fInPUWgtFile = TFile::Open(pufilename.Data());
-    Common::CheckValidFile(fInPUWgtFile,pufilename);
+    if (!Common::isGoodFile(fInPUWgtFile,pufilename)) exit(1);
 
     const TString puhistname = (useOld ? Form("%s",Common::puwgtHistName.Data()) : Form("%s_%s",Common::puTrueHistName.Data(),Common::puwgtHistName.Data()));
     fInPUWgtHist = (TH1F*)fInPUWgtFile->Get(puhistname.Data());
@@ -757,7 +757,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 
 	  if ((*fInRecHits.E)[irh] > 120.f) continue;
 
-	  outpho.nrechitsLT120;
+	  outpho.nrechitsLT120++;
 	  outpho.meantimeLT120 += (*fInRecHits.time)[irh];
 	}
 
@@ -787,8 +787,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	}
 
 	// TOF correction, HACK: FIXME!!!
-	const auto d_orig = Common::hypot(outpho.seedX,outpho.seedY,outpho.seedZ);
-	const auto d_pv   = Common::hypot(fOutEvent.vtxX-outpho.seedX,fOutEvent.vtxY-outpho.seedY,fOutEvent.vtxZ-outpho.seedZ);
+	const auto d_orig = Common::hypot(seedX,seedY,seedZ);
+	const auto d_pv   = Common::hypot(fOutEvent.vtxX-seedX,fOutEvent.vtxY-seedY,fOutEvent.vtxZ-seedZ);
 	
 	outpho.seedTOF = (d_orig-d_pv) / Common::sol;
       }
@@ -799,8 +799,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	//	outpho.seedID   = 0;
 	
 	outpho.nrechits      = -1;
-	outpho.nrechitsLT120 = -1;
 	outpho.meantime      = -9999.f;
+	outpho.nrechitsLT120 = -1;
 	outpho.meantimeLT120 = -9999.f;
 
 	outpho.seedTOF  = -9999.f;

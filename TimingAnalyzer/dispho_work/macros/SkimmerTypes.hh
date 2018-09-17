@@ -486,7 +486,7 @@ struct Pho
   TBranch * b_e2x2;
   TBranch * b_e3x3;
   TBranch * b_e5x5;
-  Tbranch * b_smaj;
+  TBranch * b_smaj;
   TBranch * b_smin;
   TBranch * b_alpha;
   TBranch * b_seed;

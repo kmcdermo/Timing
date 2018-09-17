@@ -46,21 +46,21 @@ namespace Common
   void SetupSamples()
   {
     // QCD HT binned
-    Common::SampleMap["MC/QCD_HT/100to200"]   = "QCD";
-    Common::SampleMap["MC/QCD_HT/200to300"]   = "QCD";
-    Common::SampleMap["MC/QCD_HT/300to500"]   = "QCD";
-    Common::SampleMap["MC/QCD_HT/500to700"]   = "QCD";
-    Common::SampleMap["MC/QCD_HT/700to1000"]  = "QCD";
-    Common::SampleMap["MC/QCD_HT/1000to1500"] = "QCD";
-    Common::SampleMap["MC/QCD_HT/1500to2000"] = "QCD";
-    Common::SampleMap["MC/QCD_HT/2000toInf"]  = "QCD";
+    // Common::SampleMap["MC/QCD_HT/100to200"]   = "QCD";
+    // Common::SampleMap["MC/QCD_HT/200to300"]   = "QCD";
+    // Common::SampleMap["MC/QCD_HT/300to500"]   = "QCD";
+    // Common::SampleMap["MC/QCD_HT/500to700"]   = "QCD";
+    // Common::SampleMap["MC/QCD_HT/700to1000"]  = "QCD";
+    // Common::SampleMap["MC/QCD_HT/1000to1500"] = "QCD";
+    // Common::SampleMap["MC/QCD_HT/1500to2000"] = "QCD";
+    // Common::SampleMap["MC/QCD_HT/2000toInf"]  = "QCD";
   
-    // GJets HT binned
-    Common::SampleMap["MC/GJets_HT/40To100"]  = "GJets";
-    Common::SampleMap["MC/GJets_HT/100To200"] = "GJets";
-    Common::SampleMap["MC/GJets_HT/200To400"] = "GJets";
-    Common::SampleMap["MC/GJets_HT/400To600"] = "GJets";
-    Common::SampleMap["MC/GJets_HT/600ToInf"] = "GJets";
+    // // GJets HT binned
+    // Common::SampleMap["MC/GJets_HT/40To100"]  = "GJets";
+    // Common::SampleMap["MC/GJets_HT/100To200"] = "GJets";
+    // Common::SampleMap["MC/GJets_HT/200To400"] = "GJets";
+    // Common::SampleMap["MC/GJets_HT/400To600"] = "GJets";
+    // Common::SampleMap["MC/GJets_HT/600ToInf"] = "GJets";
     
     // DYLL
     Common::SampleMap["MC/DYJetsToLL/base"] = "DYLL";
@@ -866,6 +866,12 @@ namespace Common
     {
       std::cout << "Successfully opened file: " << filename.Data() << std::endl;
     }
+  }
+
+  Bool_t isGoodFile(const TFile * file, const TString & filename)
+  {
+    if (file == (TFile*) NULL) return false;
+    else return true;
   }
 
   void CheckValidTree(const TTree * tree, const TString & treename, const TString & filename)
