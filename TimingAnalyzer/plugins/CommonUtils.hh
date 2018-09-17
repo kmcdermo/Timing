@@ -29,6 +29,9 @@ namespace Config
   constexpr float PI    = 3.14159265358979323846;
   constexpr float TWOPI = 2.0*PI;
 
+  // other useful constants
+  constexpr float sol = 29.9792458; // speed of light in cm/ns
+
   // ECAL size
   constexpr float etaEBcutoff = 1.479;
   constexpr float etaEBmax = 1.4442;

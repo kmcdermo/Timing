@@ -1223,6 +1223,7 @@ void DisPho::InitializeRecHitBranches(const int nRecHits)
   rhZ.clear();
   rhE.clear();
   rhtime.clear();
+  rhTOF.clear();
   rhID.clear();
   rhisOOT.clear();
   rhisGS6.clear();
@@ -1239,6 +1240,7 @@ void DisPho::InitializeRecHitBranches(const int nRecHits)
   rhZ.resize(nRecHits);
   rhE.resize(nRecHits);
   rhtime.resize(nRecHits);
+  rhTOF.resize(nRecHits);
   rhID.resize(nRecHits);
   rhisOOT.resize(nRecHits);
   rhisGS6.resize(nRecHits);
@@ -1257,6 +1259,7 @@ void DisPho::InitializeRecHitBranches(const int nRecHits)
     rhZ   [i] = -9999.f;
     rhE   [i] = -9999.f;
     rhtime[i] = -9999.f;
+    rhTOF [i] = -9999.f;
 
     rhisOOT[i] = false;
     rhisGS6[i] = false;
@@ -1321,6 +1324,12 @@ void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloS
 	rhpedrms6 [pos] = ped.rms(2);
 	rhpedrms1 [pos] = ped.rms(3);
       }
+
+      // compute TOF
+      const auto d_orig = Config::hypo(rhX[pos],rhY[pos],rhZ[pos]);
+      const auto d_pv   = Config::hypo(rhX[pos]-vtxX,rhY[pos]-vtxY,rhZ[pos]-vtxZ);
+	
+      rhTOF[pos] = (d_orig-d_pv) / Config::sol;
     }
   }
 }
@@ -2021,6 +2030,7 @@ void DisPho::MakeEventTree()
     disphotree->Branch("rhZ", &rhZ);
     disphotree->Branch("rhE", &rhE);
     disphotree->Branch("rhtime", &rhtime);
+    disphotree->Branch("rhTOF", &rhTOF);
     disphotree->Branch("rhID", &rhID);
     disphotree->Branch("rhisOOT", &rhisOOT);
     disphotree->Branch("rhisGS6", &rhisGS6);
