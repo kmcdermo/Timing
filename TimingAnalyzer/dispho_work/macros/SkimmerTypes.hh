@@ -127,7 +127,6 @@ struct Event
   Bool_t    hltDiPho3022M90;
   Bool_t    hltDiPho30PV18PV;
   Bool_t    hltDiEle33MW;
-  Bool_t    hltDiEle27WPT;
   Bool_t    hltJet500;
   Bool_t    metPV;
   Bool_t    metBeamHalo;
@@ -183,7 +182,6 @@ struct Event
   std::string s_hltDiPho3022M90 = "hltDiPho3022M90";
   std::string s_hltDiPho30PV18PV = "hltDiPho30PV18PV";
   std::string s_hltDiEle33MW = "hltDiEle33MW";
-  std::string s_hltDiEle27WPT = "hltDiEle27WPT";  
   std::string s_hltJet500 = "hltJet500";
   std::string s_metPV = "metPV";
   std::string s_metBeamHalo = "metBeamHalo";
@@ -232,7 +230,6 @@ struct Event
   TBranch * b_hltDiPho3022M90;
   TBranch * b_hltDiPho30PV18PV;
   TBranch * b_hltDiEle33MW;
-  TBranch * b_hltDiEle27WPT;  
   TBranch * b_hltJet500;
   TBranch * b_metPV;
   TBranch * b_metBeamHalo;
@@ -401,13 +398,12 @@ struct Pho
   // MC types
   Bool_t  isGen;
   Int_t   isSignal;
-  // HACK: FIXME!!! Will redo once from ntuples level
-  Float_t seedX;
-  Float_t seedY;
-  Float_t seedZ;
-  Float_t seedTOF;
-  // HACK: FIXME
+  // Derived types
+  Int_t   nrechits;
   Float_t meantime;
+  Int_t   nrechitsLT120;
+  Float_t meantimeLT120;
+  Float_t seedTOF;
   
   // branch names
   std::string s_E = "phoE";
@@ -456,11 +452,11 @@ struct Pho
   std::string s_seedID = "phoseedID";
   std::string s_isGen = "phoisGen";
   std::string s_isSignal = "phoisSignal";
-  std::string s_seedX = "phoseedX";
-  std::string s_seedY = "phoseedY";
-  std::string s_seedZ = "phoseedZ";
-  std::string s_seedTOF = "phoseedTOF";
+  std::string s_nrechits = "phonrechits";
   std::string s_meantime = "phomeantime";
+  std::string s_nrechitsLT120 = "phonrechitsLT120";
+  std::string s_meantimeLT120 = "phomeantimeLT120";
+  std::string s_seedTOF = "phoseedTOF";
 
   // tbranches
   TBranch * b_E;
@@ -490,7 +486,7 @@ struct Pho
   TBranch * b_e2x2;
   TBranch * b_e3x3;
   TBranch * b_e5x5;
-  TBranch * b_smaj;
+  Tbranch * b_smaj;
   TBranch * b_smin;
   TBranch * b_alpha;
   TBranch * b_seed;
@@ -509,11 +505,11 @@ struct Pho
   TBranch * b_seedID;
   TBranch * b_isGen;
   TBranch * b_isSignal;
-  TBranch * b_phoseedX;
-  TBranch * b_phoseedY;
-  TBranch * b_phoseedZ;
-  TBranch * b_phoseedTOF;
-  TBranch * b_phomeantime;
+  TBranch * b_nrechits;
+  TBranch * b_meantime;
+  TBranch * b_nrechitsLT120;
+  TBranch * b_meantimeLT120;
+  TBranch * b_seedTOF;
 };
 typedef std::vector<Pho> PhoVec;
 

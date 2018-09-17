@@ -17,8 +17,7 @@ class Skimmer
 public:
   // functions
   Skimmer(const TString & indir, const TString & outdir, const TString & filename, 
-	  const Float_t sumwgts, const TString & puwgtfilename = "", 
-	  const TString & skimtype = "Standard", const Bool_t redophoid = false);
+	  const Float_t sumwgts, const TString & puwgtfilename = "", const TString & skimtype = "Standard");
   ~Skimmer();
 
   // setup skim type
@@ -56,21 +55,6 @@ public:
   void FillOutJets(const UInt_t entry);
   void FillOutPhos(const UInt_t entry);
 
-  // helper functions for output
-  Int_t GetGEDPhoVID(const Pho & outpho);
-  Int_t GetOOTPhoVID(const Pho & outpho);
-  Float_t GetChargedHadronEA(const Float_t eta);
-  Float_t GetNeutralHadronEA(const Float_t eta); 
-  Float_t GetGammaEA(const Float_t eta); 
-  Float_t GetEcalPFClEA(const Float_t eta);
-  Float_t GetHcalPFClEA(const Float_t eta);
-  Float_t GetTrackEA(const Float_t eta);
-  Float_t GetNeutralHadronPtScale(const Float_t eta, const Float_t pt);
-  Float_t GetGammaPtScale(const Float_t eta, const Float_t pt);
-  Float_t GetEcalPFClPtScale(const Float_t eta, const Float_t pt);
-  Float_t GetHcalPFClPtScale(const Float_t eta, const Float_t pt);
-  Float_t GetTrackPtScale(const Float_t eta, const Float_t pt);
-
 private:
   // I/O
   const TString fInDir;
@@ -79,7 +63,6 @@ private:
   const Float_t fSumWgts;
   const TString fPUWgtFileName;
   const TString fSkimType;
-  const Bool_t  fRedoPhoID;
   std::map<std::string,int> cutLabels;
   Bool_t fIsMC;
 

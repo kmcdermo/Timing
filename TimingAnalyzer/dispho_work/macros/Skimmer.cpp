@@ -4,11 +4,9 @@
 #include <iostream>
 
 Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & filename, 
-		 const Float_t sumwgts, const TString & puwgtfilename, 
-		 const TString & skimtype, const Bool_t redophoid) :
+		 const Float_t sumwgts, const TString & puwgtfilename, const TString & skimtype
   fInDir(indir), fOutDir(outdir), fFileName(filename), 
-  fSumWgts(sumwgts), fPUWgtFileName(puwgtfilename), 
-  fSkimType(skimtype), fRedoPhoID(redophoid)
+  fSumWgts(sumwgts), fPUWgtFileName(puwgtfilename), fSkimType(skimtype)
 {
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
@@ -159,9 +157,9 @@ void Skimmer::EventLoop()
     else if (!fOutConfig.isToy && (fSkim == Zee))
     {
       // cut on HLT right away
-      fInEvent.b_hltDiEle33MW->GetEntry(entry);
+      //      fInEvent.b_hltDiEle33MW->GetEntry(entry);
       
-      if (!fInEvent.hltDiEle33MW) continue;
+      //       if (!fInEvent.hltDiEle33MW) continue;
       fOutCutFlow->Fill((cutLabels["diEleHLT"]*1.f)-0.5f,wgt);
 
       // build list of "good electrons"
@@ -170,8 +168,8 @@ void Skimmer::EventLoop()
       {
 	auto & inpho = fInPhos[ipho];
 	
-	inpho.b_pt->GetEntry(entry);
-	if (inpho.pt < 40.f) continue;
+	// 	inpho.b_pt->GetEntry(entry);
+	// 	if (inpho.pt < 40.f) continue;
 
 	inpho.b_hasPixSeed->GetEntry(entry);
 	if (!inpho.hasPixSeed) continue;
@@ -488,7 +486,6 @@ void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt)
   fInEvent.b_hltDiPho30PV18PV->GetEntry(entry);
   fInEvent.b_hltDiEle33MW->GetEntry(entry);
   fInEvent.b_hltJet500->GetEntry(entry);
-  fInEvent.b_hltDiEle27WPT->GetEntry(entry);
   fInEvent.b_nvtx->GetEntry(entry);
   fInEvent.b_vtxX->GetEntry(entry);
   fInEvent.b_vtxY->GetEntry(entry);
@@ -540,7 +537,6 @@ void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt)
   fOutEvent.hltDiPho3022M90 = fInEvent.hltDiPho3022M90;
   fOutEvent.hltDiPho30PV18PV = fInEvent.hltDiPho30PV18PV;
   fOutEvent.hltDiEle33MW = fInEvent.hltDiEle33MW;
-  fOutEvent.hltDiEle27WPT = fInEvent.hltDiEle27WPT;
   fOutEvent.hltJet500 = fInEvent.hltJet500;
   fOutEvent.nvtx = fInEvent.nvtx;
   fOutEvent.vtxX = fInEvent.vtxX;
@@ -644,14 +640,14 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     // inpho.b_HcalPFClIsoC->GetEntry(entry);
     // inpho.b_TrkIsoC->GetEntry(entry);
     inpho.b_sieie->GetEntry(entry);
-    inpho.b_sipip->GetEntry(entry);
-    inpho.b_sieip->GetEntry(entry);
-    inpho.b_e2x2->GetEntry(entry);
-    inpho.b_e3x3->GetEntry(entry);
-    inpho.b_e5x5->GetEntry(entry);
+//     inpho.b_sipip->GetEntry(entry);
+//     inpho.b_sieip->GetEntry(entry);
+//     inpho.b_e2x2->GetEntry(entry);
+//     inpho.b_e3x3->GetEntry(entry);
+//     inpho.b_e5x5->GetEntry(entry);
     inpho.b_smaj->GetEntry(entry);
     inpho.b_smin->GetEntry(entry);
-    inpho.b_alpha->GetEntry(entry);
+//     inpho.b_alpha->GetEntry(entry);
     inpho.b_suisseX->GetEntry(entry);
     inpho.b_isOOT->GetEntry(entry);
     inpho.b_isEB->GetEntry(entry);
@@ -671,7 +667,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     {
       inpho.b_seedtime->GetEntry(entry);
       inpho.b_seedE   ->GetEntry(entry);
-      inpho.b_seedID  ->GetEntry(entry);
+      //      inpho.b_seedID  ->GetEntry(entry);
     }
     
     if (fIsMC)
@@ -692,7 +688,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     fInRecHits.b_E->GetEntry(entry);
     fInRecHits.b_time->GetEntry(entry);
     fInRecHits.b_OOT->GetEntry(entry);
-    fInRecHits.b_ID->GetEntry(entry);
+    //    fInRecHits.b_ID->GetEntry(entry);
   }
 
   // set output photon branches
@@ -723,14 +719,14 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     // outpho.HcalPFClIsoC = inpho.HcalPFClIsoC;
     // outpho.TrkIsoC = inpho.TrkIsoC;
     outpho.sieie = inpho.sieie;
-    outpho.sipip = inpho.sipip;
-    outpho.sieip = inpho.sieip;
-    outpho.e2x2 = inpho.e2x2;
-    outpho.e3x3 = inpho.e3x3;
-    outpho.e5x5 = inpho.e5x5;
+//     outpho.sipip = inpho.sipip;
+//     outpho.sieip = inpho.sieip;
+//     outpho.e2x2 = inpho.e2x2;
+//     outpho.e3x3 = inpho.e3x3;
+//     outpho.e5x5 = inpho.e5x5;
     outpho.smaj = inpho.smaj;
     outpho.smin = inpho.smin;
-    outpho.alpha = inpho.alpha;
+//     outpho.alpha = inpho.alpha;
     outpho.suisseX = inpho.suisseX;
     outpho.isOOT = inpho.isOOT;
     outpho.isEB = inpho.isEB;
@@ -738,17 +734,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     outpho.isTrk = inpho.isTrk;
     outpho.passEleVeto = inpho.passEleVeto;
     outpho.hasPixSeed = inpho.hasPixSeed;
-
-    if (fRedoPhoID)
-    {
-      inpho.gedID >= 0 ? Skimmer::GetGEDPhoVID(outpho) : -1;
-      inpho.ootID >= 0 ? Skimmer::GetOOTPhoVID(outpho) : -1;
-    }
-    else
-    {
-      outpho.gedID = inpho.gedID;
-      outpho.ootID = inpho.ootID;
-    }
+    outpho.gedID = inpho.gedID;
+    outpho.ootID = inpho.ootID;
 
     if (fInConfig.storeRecHits)
     {
@@ -756,65 +743,74 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       {
 	outpho.seedtime = (*fInRecHits.time)[inpho.seed];
 	outpho.seedE    = (*fInRecHits.E)   [inpho.seed];
-	outpho.seedID   = (*fInRecHits.ID)  [inpho.seed];
+	//	outpho.seedID   = (*fInRecHits.ID)  [inpho.seed];
 
-	// HACK: FIXME!!!
+	// compute mean time
+	outpho.nrechits = 0;
+	outpho.meantime = 0.f;
+	outpho.nrechitsLT120 = 0;
+	outpho.meantimeLT120 = 0.f;
+	for (const auto irh : (*inpho.recHits))
+	{
+	  outpho.nrechits++;
+	  outpho.meantime += (*fInRecHits.time)[irh];
+
+	  if ((*fInRecHits.E)[irh] > 120.f) continue;
+
+	  outpho.nrechitsLT120;
+	  outpho.meantimeLT120 += (*fInRecHits.time)[irh];
+	}
+
+	if   (outpho.nrechits > 0) outpho.meantime /= outpho.nrechits;
+	else outpho.meantime = -9999.f;
+
+	if   (outpho.nrechitsLT120 > 0) outpho.meantimeLT120 /= outpho.nrechitsLT120;
+	else outpho.meantimeLT120 = -9999.f;
+
+	// TOF CORRECTION : HACK FOR NOW!
+	auto seedX = 0.f;
+	auto seedY = 0.f;
+	auto seedZ = 0.f;
 	if (outpho.isEB)
 	{
-	  outpho.seedX = Common::radEB * std::cos((*fInRecHits.phi)[inpho.seed]);
-	  outpho.seedY = Common::radEB * std::sin((*fInRecHits.phi)[inpho.seed]);
-	  outpho.seedZ = Common::radEB / Common::uneta((*fInRecHits.eta)[inpho.seed]);
+	  seedX = Common::radEB * std::cos((*fInRecHits.phi)[inpho.seed]);
+	  seedY = Common::radEB * std::sin((*fInRecHits.phi)[inpho.seed]);
+	  seedZ = Common::radEB / Common::uneta((*fInRecHits.eta)[inpho.seed]);
 	}
 	else
 	{
 	  const auto rad = Common::zEE * Common::uneta((*fInRecHits.eta)[inpho.seed]);
 	  
-	  outpho.seedX = rad * std::cos((*fInRecHits.phi)[inpho.seed]);
-	  outpho.seedY = rad * std::sin((*fInRecHits.phi)[inpho.seed]);
-	  outpho.seedZ = Common::zEE;
+	  seedX = rad * std::cos((*fInRecHits.phi)[inpho.seed]);
+	  seedY = rad * std::sin((*fInRecHits.phi)[inpho.seed]);
+	  seedZ = Common::zEE;
 	}
 
 	// TOF correction, HACK: FIXME!!!
-	const auto r_curv = outpho.pt / (Common::helix);
-	const auto d_pvT  = Common::hypot(fOutEvent.vtxX-outpho.seedX,fOutEvent.vtxY-outpho.seedY);
-	const auto arc_leng = r_curv * std::acos(1.f-(std::pow(d_pvT,2.f)/(2.f*std::pow(r_curv,2.f))));
-	const auto d_pv   = Common::hypot(arc_leng,fOutEvent.vtxZ-outpho.seedZ);
 	const auto d_orig = Common::hypot(outpho.seedX,outpho.seedY,outpho.seedZ);
+	const auto d_pv   = Common::hypot(fOutEvent.vtxX-outpho.seedX,fOutEvent.vtxY-outpho.seedY,fOutEvent.vtxZ-outpho.seedZ);
 	
 	outpho.seedTOF = (d_orig-d_pv) / Common::sol;
-
-	// compute mean time
-	outpho.meantime = 0.f;
-	auto rhcounter = 0;
-	for (auto irh = 0; irh < fInEvent.nrechits; irh++)
-	{
-	  if ((*fInRecHits.E)[irh] > 120.f) continue;
-	  rhcounter++;
-	  outpho.meantime += (*fInRecHits.time)[irh];
-	}
-
-	if (rhcounter > 0) outpho.meantime /= rhcounter;
-	else outpho.meantime = -9999.f;
       }
       else
       {
 	outpho.seedtime = -9999.f;
 	outpho.seedE    = -9999.f;
-	outpho.seedID   = 0;
+	//	outpho.seedID   = 0;
 	
-	outpho.seedX    = -9999.f;
-	outpho.seedY    = -9999.f;
-	outpho.seedZ    = -9999.f;
-	outpho.seedTOF  = -9999.f;
+	outpho.nrechits      = -1;
+	outpho.nrechitsLT120 = -1;
+	outpho.meantime      = -9999.f;
+	outpho.meantimeLT120 = -9999.f;
 
-	outpho.meantime = -9999.f;
+	outpho.seedTOF  = -9999.f;
       }
     }
     else
     {
       outpho.seedtime = inpho.seedtime;
       outpho.seedE    = inpho.seedE;
-      outpho.seedID   = inpho.seedID;
+      //      outpho.seedID   = inpho.seedID;
     }
     
     if (fIsMC)
@@ -946,7 +942,7 @@ void Skimmer::InitInBranchVecs()
     fInRecHits.E = 0;
     fInRecHits.time = 0;
     fInRecHits.OOT = 0;
-    fInRecHits.ID = 0;
+    //    fInRecHits.ID = 0;
 
     for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
     {
@@ -1059,7 +1055,6 @@ void Skimmer::InitInBranches()
   fInTree->SetBranchAddress(fInEvent.s_hltDiPho3022M90.c_str(), &fInEvent.hltDiPho3022M90, &fInEvent.b_hltDiPho3022M90);
   fInTree->SetBranchAddress(fInEvent.s_hltDiPho30PV18PV.c_str(), &fInEvent.hltDiPho30PV18PV, &fInEvent.b_hltDiPho30PV18PV);
   fInTree->SetBranchAddress(fInEvent.s_hltDiEle33MW.c_str(), &fInEvent.hltDiEle33MW, &fInEvent.b_hltDiEle33MW);
-  fInTree->SetBranchAddress(fInEvent.s_hltDiEle27WPT.c_str(), &fInEvent.hltDiEle27WPT, &fInEvent.b_hltDiEle27WPT);
   fInTree->SetBranchAddress(fInEvent.s_hltJet500.c_str(), &fInEvent.hltJet500, &fInEvent.b_hltJet500);
   
   fInTree->SetBranchAddress(fInEvent.s_metPV.c_str(), &fInEvent.metPV, &fInEvent.b_metPV);
@@ -1105,7 +1100,7 @@ void Skimmer::InitInBranches()
     fInTree->SetBranchAddress(fInRecHits.s_E.c_str(), &fInRecHits.E, &fInRecHits.b_E);
     fInTree->SetBranchAddress(fInRecHits.s_time.c_str(), &fInRecHits.time, &fInRecHits.b_time);
     fInTree->SetBranchAddress(fInRecHits.s_OOT.c_str(), &fInRecHits.OOT, &fInRecHits.b_OOT);
-    fInTree->SetBranchAddress(fInRecHits.s_ID.c_str(), &fInRecHits.ID, &fInRecHits.b_ID);
+    //    fInTree->SetBranchAddress(fInRecHits.s_ID.c_str(), &fInRecHits.ID, &fInRecHits.b_ID);
   }
 
   fInTree->SetBranchAddress(fInEvent.s_nphotons.c_str(), &fInEvent.nphotons, &fInEvent.b_nphotons);
@@ -1134,14 +1129,14 @@ void Skimmer::InitInBranches()
     // fInTree->SetBranchAddress(Form("%s_%i",pho.s_HcalPFClIsoC.c_str(),ipho), &pho.HcalPFClIsoC, &pho.b_HcalPFClIsoC);
     // fInTree->SetBranchAddress(Form("%s_%i",pho.s_TrkIsoC.c_str(),ipho), &pho.TrkIsoC, &pho.b_TrkIsoC);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_sieie.c_str(),ipho), &pho.sieie, &pho.b_sieie);
-    fInTree->SetBranchAddress(Form("%s_%i",pho.s_sipip.c_str(),ipho), &pho.sipip, &pho.b_sipip);
-    fInTree->SetBranchAddress(Form("%s_%i",pho.s_sieip.c_str(),ipho), &pho.sieip, &pho.b_sieip);
-    fInTree->SetBranchAddress(Form("%s_%i",pho.s_e2x2.c_str(),ipho), &pho.e2x2, &pho.b_e2x2);
-    fInTree->SetBranchAddress(Form("%s_%i",pho.s_e3x3.c_str(),ipho), &pho.e3x3, &pho.b_e3x3);
-    fInTree->SetBranchAddress(Form("%s_%i",pho.s_e5x5.c_str(),ipho), &pho.e5x5, &pho.b_e5x5);
+//     fInTree->SetBranchAddress(Form("%s_%i",pho.s_sipip.c_str(),ipho), &pho.sipip, &pho.b_sipip);
+//     fInTree->SetBranchAddress(Form("%s_%i",pho.s_sieip.c_str(),ipho), &pho.sieip, &pho.b_sieip);
+//     fInTree->SetBranchAddress(Form("%s_%i",pho.s_e2x2.c_str(),ipho), &pho.e2x2, &pho.b_e2x2);
+//     fInTree->SetBranchAddress(Form("%s_%i",pho.s_e3x3.c_str(),ipho), &pho.e3x3, &pho.b_e3x3);
+//     fInTree->SetBranchAddress(Form("%s_%i",pho.s_e5x5.c_str(),ipho), &pho.e5x5, &pho.b_e5x5);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_smaj.c_str(),ipho), &pho.smaj, &pho.b_smaj);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_smin.c_str(),ipho), &pho.smin, &pho.b_smin);
-    fInTree->SetBranchAddress(Form("%s_%i",pho.s_alpha.c_str(),ipho), &pho.alpha, &pho.b_alpha);
+    //    fInTree->SetBranchAddress(Form("%s_%i",pho.s_alpha.c_str(),ipho), &pho.alpha, &pho.b_alpha);
     if (fInConfig.storeRecHits)
     {
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seed.c_str(),ipho), &pho.seed, &pho.b_seed);
@@ -1151,7 +1146,7 @@ void Skimmer::InitInBranches()
     {
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime, &pho.b_seedtime);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE, &pho.b_seedE);
-      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID, &pho.b_seedID);
+      //      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID, &pho.b_seedID);
     }
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX, &pho.b_suisseX);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_isOOT.c_str(),ipho), &pho.isOOT, &pho.b_isOOT);
@@ -1404,7 +1399,6 @@ void Skimmer::InitOutBranches()
   fOutTree->Branch(fOutEvent.s_hltDiPho3022M90.c_str(), &fOutEvent.hltDiPho3022M90);
   fOutTree->Branch(fOutEvent.s_hltDiPho30PV18PV.c_str(), &fOutEvent.hltDiPho30PV18PV);
   fOutTree->Branch(fOutEvent.s_hltDiEle33MW.c_str(), &fOutEvent.hltDiEle33MW);
-  fOutTree->Branch(fOutEvent.s_hltDiEle27WPT.c_str(), &fOutEvent.hltDiEle27WPT);
   fOutTree->Branch(fOutEvent.s_hltJet500.c_str(), &fOutEvent.hltJet500);
 
   fOutTree->Branch(fOutEvent.s_nvtx.c_str(), &fOutEvent.nvtx);
@@ -1459,15 +1453,15 @@ void Skimmer::InitOutBranches()
     // fOutTree->Branch(Form("%s_%i",pho.s_HcalPFClIsoC.c_str(),ipho), &pho.HcalPFClIsoC);
     // fOutTree->Branch(Form("%s_%i",pho.s_TrkIsoC.c_str(),ipho), &pho.TrkIsoC);
     fOutTree->Branch(Form("%s_%i",pho.s_sieie.c_str(),ipho), &pho.sieie);
-    fOutTree->Branch(Form("%s_%i",pho.s_sipip.c_str(),ipho), &pho.sipip);
-    fOutTree->Branch(Form("%s_%i",pho.s_sieip.c_str(),ipho), &pho.sieip);
-    fOutTree->Branch(Form("%s_%i",pho.s_e2x2.c_str(),ipho), &pho.e2x2);
-    fOutTree->Branch(Form("%s_%i",pho.s_e3x3.c_str(),ipho), &pho.e3x3);
-    fOutTree->Branch(Form("%s_%i",pho.s_e5x5.c_str(),ipho), &pho.e5x5);
+//     fOutTree->Branch(Form("%s_%i",pho.s_sipip.c_str(),ipho), &pho.sipip);
+//     fOutTree->Branch(Form("%s_%i",pho.s_sieip.c_str(),ipho), &pho.sieip);
+//     fOutTree->Branch(Form("%s_%i",pho.s_e2x2.c_str(),ipho), &pho.e2x2);
+//     fOutTree->Branch(Form("%s_%i",pho.s_e3x3.c_str(),ipho), &pho.e3x3);
+//     fOutTree->Branch(Form("%s_%i",pho.s_e5x5.c_str(),ipho), &pho.e5x5);
     fOutTree->Branch(Form("%s_%i",pho.s_smaj.c_str(),ipho), &pho.smaj);
     fOutTree->Branch(Form("%s_%i",pho.s_smin.c_str(),ipho), &pho.smin);
     fOutTree->Branch(Form("%s_%i",pho.s_alpha.c_str(),ipho), &pho.alpha);
-    fOutTree->Branch(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX);
+    //    fOutTree->Branch(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX);
     fOutTree->Branch(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime);
     fOutTree->Branch(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE);
     fOutTree->Branch(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID);;
@@ -1489,14 +1483,14 @@ void Skimmer::InitOutBranches()
       }
     }
 
-    // HACK: FIXME!!!
-    fOutTree->Branch(Form("%s_%i",pho.s_seedX.c_str(),ipho), &pho.seedX);
-    fOutTree->Branch(Form("%s_%i",pho.s_seedY.c_str(),ipho), &pho.seedY);
-    fOutTree->Branch(Form("%s_%i",pho.s_seedZ.c_str(),ipho), &pho.seedZ);
-    fOutTree->Branch(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF);
-
-    // HACK!
+    // Derived types
+    fOutTree->Branch(Form("%s_%i",pho.s_nrechits.c_str(),ipho), &pho.nrechits);
     fOutTree->Branch(Form("%s_%i",pho.s_meantime.c_str(),ipho), &pho.meantime);
+    fOutTree->Branch(Form("%s_%i",pho.s_nrechitsLT120.c_str(),ipho), &pho.nrechitsLT120);
+    fOutTree->Branch(Form("%s_%i",pho.s_meantimeLT120.c_str(),ipho), &pho.meantimeLT120);
+
+    // HACK: FIXME!!!
+    fOutTree->Branch(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF);
   } // end loop over nPhotons
 
   // add event weight
@@ -1591,221 +1585,5 @@ void Skimmer::SetSkim()
   {
     std::cerr << fSkimType.Data() << " is not a valid skim selection! Exiting..." << std::endl;
     exit(1);
-  }
-}
-
-/////////////////////
-//                 //
-// Effective Areas //
-//                 //
-/////////////////////
-
-Float_t Skimmer::GetChargedHadronEA(const Float_t eta)
-{
-  if      (eta <  1.0)                  return 0.0385;
-  else if (eta >= 1.0   && eta < 1.479) return 0.0468;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0435;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.0378;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.0338;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.0314;
-  else if (eta >= 2.4)                  return 0.0269;
-  else                                  return 0.;
-}
-  
-Float_t Skimmer::GetNeutralHadronEA(const Float_t eta) 
-{
-  if      (eta <  1.0)                  return 0.0636;
-  else if (eta >= 1.0   && eta < 1.479) return 0.1103;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0759;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.0236;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.0151;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.00007;
-  else if (eta >= 2.4)                  return 0.0132;
-  else                                  return 0.;
-}
-  
-Float_t Skimmer::GetGammaEA(const Float_t eta) 
-{
-  if      (eta <  1.0)                  return 0.1240;
-  else if (eta >= 1.0   && eta < 1.479) return 0.1093;
-  else if (eta >= 1.479 && eta < 2.0  ) return 0.0631;
-  else if (eta >= 2.0   && eta < 2.2  ) return 0.0779;
-  else if (eta >= 2.2   && eta < 2.3  ) return 0.0999;
-  else if (eta >= 2.3   && eta < 2.4  ) return 0.1155;
-  else if (eta >= 2.4)                  return 0.1373;
-  else                                  return 0.;
-}
-
-Float_t Skimmer::GetEcalPFClEA(const Float_t eta)
-{
-  if   (eta < Common::etaEBcutoff) return 0.167;
-  else                             return 0.f;
-}
-
-Float_t Skimmer::GetHcalPFClEA(const Float_t eta)
-{
-  if   (eta < Common::etaEBcutoff) return 0.108;
-  else                             return 0.f;
-}
-
-Float_t Skimmer::GetTrackEA(const Float_t eta)
-{
-  if   (eta < Common::etaEBcutoff) return 0.113;
-  else                             return 0.f;
-}
-
-////////////////
-//            //
-// pT scaling //
-//            //
-////////////////
-
-Float_t Skimmer::GetNeutralHadronPtScale(const Float_t eta, const Float_t pt)
-{
-  if      (eta <  Common::etaEBcutoff)                           return 0.0126*pt+0.000026*pt*pt;
-  else if (eta >= Common::etaEBcutoff && eta < Common::etaEEmax) return 0.0119*pt+0.000025*pt*pt;
-  else                                                           return 0.f;
-}
-
-Float_t Skimmer::GetGammaPtScale(const Float_t eta, const Float_t pt)
-{
-  if      (eta <  Common::etaEBcutoff)                           return 0.0035*pt;
-  else if (eta >= Common::etaEBcutoff && eta < Common::etaEEmax) return 0.0040*pt;
-  else                                                           return 0.f;
-}
-
-Float_t Skimmer::GetEcalPFClPtScale(const Float_t eta, const Float_t pt)
-{
-  if   (eta <  Common::etaEBcutoff) return 0.0028*pt;
-  else                              return 0.f;
-}
-
-Float_t Skimmer::GetHcalPFClPtScale(const Float_t eta, const Float_t pt)
-{
-  if   (eta <  Common::etaEBcutoff) return 0.0087*pt;
-  else                              return 0.f;
-}
-
-Float_t Skimmer::GetTrackPtScale(const Float_t eta, const Float_t pt)
-{
-  if   (eta <  Common::etaEBcutoff) return 0.0056*pt;
-  else                              return 0.f;
-}
-
-////////////////////
-//                //
-// GED Photon VID //
-//                //
-////////////////////
-
-Int_t Skimmer::GetGEDPhoVID(const Pho & outpho)
-{
-  // needed for cuts
-  const Float_t eta = std::abs(outpho.sceta);
-  const Float_t pt  = outpho.pt;
-  
-  // cut variables
-  const Float_t HoverE    = outpho.HoE;
-  const Float_t Sieie     = outpho.sieie;
-  const Float_t ChgHadIso = std::max(outpho.ChgHadIso - (fOutEvent.rho * Skimmer::GetChargedHadronEA(eta))                                             ,0.f);
-  const Float_t NeuHadIso = std::max(outpho.NeuHadIso - (fOutEvent.rho * Skimmer::GetNeutralHadronEA(eta)) - (Skimmer::GetNeutralHadronPtScale(eta,pt)),0.f);
-  const Float_t PhoIso    = std::max(outpho.PhoIso    - (fOutEvent.rho * Skimmer::GetGammaEA        (eta)) - (Skimmer::GetGammaPtScale        (eta,pt)),0.f);
-  
-  if (eta < Common::etaEBcutoff)
-  {
-    if      ((HoverE < 0.020) && (Sieie < 0.0103) && (ChgHadIso < 1.158) && (NeuHadIso < 1.267) && (PhoIso < 2.065)) 
-    {
-      return 3;
-    }
-    else if ((HoverE < 0.035) && (Sieie < 0.0103) && (ChgHadIso < 1.416) && (NeuHadIso < 2.491) && (PhoIso < 2.952)) 
-    {
-      return 2;
-    }   
-    else if ((HoverE < 0.105) && (Sieie < 0.0103) && (ChgHadIso < 2.839) && (NeuHadIso < 9.188) && (PhoIso < 2.956)) 
-    {
-      return 1;
-    } 
-    else
-    {
-      return 0;
-    }
-  }
-  else if (eta >= Common::etaEBcutoff && eta < Common::etaEEmax)
-  {
-    if      ((HoverE < 0.025) && (Sieie < 0.0271) && (ChgHadIso < 0.575) && (NeuHadIso < 8.916) && (PhoIso < 3.272)) 
-    {
-      return 3;
-    }
-    else if ((HoverE < 0.027) && (Sieie < 0.0271) && (ChgHadIso < 1.012) && (NeuHadIso < 9.131) && (PhoIso < 4.095)) 
-    {
-      return 2;
-    }   
-    else if ((HoverE < 0.029) && (Sieie < 0.0276) && (ChgHadIso < 2.150) && (NeuHadIso < 10.471) && (PhoIso < 4.895)) 
-    {
-      return 1;
-    }   
-    else
-    {
-      return 0;
-    }
-  }
-  else
-  {
-    return -1;
-  }
-}
-
-///////////////////
-//               //
-// OOT Photon ID //
-//               //
-///////////////////
-
-Int_t Skimmer::GetOOTPhoVID(const Pho & outpho)
-{
-  // needed for cuts
-  const Float_t eta = std::abs(outpho.sceta);
-  const Float_t pt  = outpho.pt;
-  
-  // cut variables
-  const Float_t HoverE      = outpho.HoE;
-  const Float_t Sieie       = outpho.sieie;
-  const Float_t EcalPFClIso = std::max(outpho.EcalPFClIso - (fOutEvent.rho * Skimmer::GetEcalPFClEA(eta)) - (Skimmer::GetEcalPFClPtScale(eta,pt)),0.f);
-  const Float_t HcalPFClIso = std::max(outpho.HcalPFClIso - (fOutEvent.rho * Skimmer::GetHcalPFClEA(eta)) - (Skimmer::GetHcalPFClPtScale(eta,pt)),0.f);
-  const Float_t TrkIso      = std::max(outpho.TrkIso      - (fOutEvent.rho * Skimmer::GetTrackEA   (eta)) - (Skimmer::GetTrackPtScale   (eta,pt)),0.f);
-  
-  if (eta < Common::etaEBcutoff)
-  {
-    if      ((HoverE < 0.020) && (Sieie < 0.0103) && (EcalPFClIso < 2.f) && (HcalPFClIso < 5.f) && (TrkIso < 3.f)) 
-    {
-      return 3;
-    }   
-    else if ((HoverE < 0.105) && (Sieie < 0.0103) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 6.f)) 
-    {
-      return 1;
-    }   
-    else
-    {
-      return 0;
-    }
-  }
-  else if (eta >= Common::etaEBcutoff && eta < Common::etaEEmax)
-  {
-    if      ((HoverE < 0.025) && (Sieie < 0.0271) && (EcalPFClIso < 2.f) && (HcalPFClIso < 5.f) && (TrkIso < 3.f)) 
-    {
-      return 3;
-    }   
-    else if ((HoverE < 0.029) && (Sieie < 0.0276) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 6.f)) 
-    {
-      return 1;
-    }   
-    else
-    {
-      return 0;
-    }
-  }
-  else
-  {
-    return -1;
   }
 }
