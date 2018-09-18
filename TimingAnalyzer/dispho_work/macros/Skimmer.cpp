@@ -153,6 +153,27 @@ void Skimmer::EventLoop()
       {
 	fPhoList.emplace_back(ipho);
       }
+
+      // filter on MET Flags
+      fInEvent.b_metPV->GetEntry(entry);
+      fInEvent.b_metBeamHalo->GetEntry(entry);
+      fInEvent.b_metHBHENoise->GetEntry(entry);
+      fInEvent.b_metHBHEisoNoise->GetEntry(entry);
+      fInEvent.b_metECALTP->GetEntry(entry);
+      fInEvent.b_metPFMuon->GetEntry(entry);
+      fInEvent.b_metPFChgHad->GetEntry(entry);
+      fInEvent.b_metECALCalib->GetEntry(entry);
+      if (!fInEvent.metPV || !fInEvent.metBeamHalo || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || 
+       	  !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad || !fInEvent.metECALCalib) continue;
+
+      fInEvent.b_metEESC->GetEntry(entry);
+      if (!fIsMC && !fInEvent.metEESC) continue;
+      
+      // fill cutflow for MET filters
+      fOutCutFlow->Fill((cutLabels["METFlag"]*1.f)-0.5f,wgt);
+      //      fOutCutFlow   ->Fill((cutLabels["METFlag"]*1.f)-0.5f);
+      //      fOutCutFlowWgt->Fill((cutLabels["METFlag"]*1.f)-0.5f,wgt);
+      //      fOutCutFlowScl->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
     }
     else if (!fOutConfig.isToy && (fSkim == Zee))
     {
@@ -263,44 +284,23 @@ void Skimmer::EventLoop()
       }
     }
 
-    // common skim params
+    // common skim params for MC
     if (!fOutConfig.isToy)
     {
-      // filter on MET Flags
-      fInEvent.b_metPV->GetEntry(entry);
-      fInEvent.b_metBeamHalo->GetEntry(entry);
-      fInEvent.b_metHBHENoise->GetEntry(entry);
-      fInEvent.b_metHBHEisoNoise->GetEntry(entry);
-      fInEvent.b_metECALTP->GetEntry(entry);
-      fInEvent.b_metPFMuon->GetEntry(entry);
-      fInEvent.b_metPFChgHad->GetEntry(entry);
-      fInEvent.b_metECALCalib->GetEntry(entry);
-      if (!fInEvent.metPV || !fInEvent.metBeamHalo || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || 
-       	  !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad || !fInEvent.metECALCalib) continue;
-
-      fInEvent.b_metEESC->GetEntry(entry);
-      if (!fIsMC && !fInEvent.metEESC) continue;
-      
-      // fill cutflow for MET filters
-      fOutCutFlow->Fill((cutLabels["METFlag"]*1.f)-0.5f,wgt);
-      //      fOutCutFlow   ->Fill((cutLabels["METFlag"]*1.f)-0.5f);
-      //      fOutCutFlowWgt->Fill((cutLabels["METFlag"]*1.f)-0.5f,wgt);
-      //      fOutCutFlowScl->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
-      
       // cut on crappy pu
-      if (fIsMC) 
+      if (fIsMC)
       {
 	fInEvent.b_genputrue->GetEntry(entry);
 	if ((fInEvent.genputrue < 0) || (UInt_t(fInEvent.genputrue) >= fPUWeights.size())) continue;
       }
-      
+
       // fill cutflow
       fOutCutFlow->Fill((cutLabels["badPU"]*1.f)-0.5f,wgt);
       //      fOutCutFlow   ->Fill((cutLabels["badPU"]*1.f)-0.5f);
       //      fOutCutFlowWgt->Fill((cutLabels["badPU"]*1.f)-0.5f,wgt);
       //      fOutCutFlowScl->Fill((cutLabels["badPU"]*1.f)-0.5f,evtwgt);
     }
-
+    
     // end of skim, now copy... dropping rechits
     if (fOutConfig.isGMSB) Skimmer::FillOutGMSBs(entry);
     if (fOutConfig.isHVDS) Skimmer::FillOutHVDSs(entry);
