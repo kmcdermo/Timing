@@ -562,13 +562,10 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Rec Hits //
   //          //
   //////////////
-  if (storeRecHits)
+  DisPho::InitializeRecHitBranches(nRecHits);
+  if (recHitsEBH.isValid() && recHitsEEH.isValid())
   {
-    DisPho::InitializeRecHitBranches(nRecHits);
-    if (recHitsEBH.isValid() && recHitsEEH.isValid())
-    {
-      DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,recHitsEE,endcapGeometry,pedestalsH,recHitMap);
-    }
+    DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,recHitsEE,endcapGeometry,pedestalsH,recHitMap);
   }
 
   //////////////////
@@ -1385,9 +1382,22 @@ void DisPho::InitializePhoBranches()
     }
     else
     {
-      phoBranch.seedtime_ = -9999.f;
-      phoBranch.seedE_    = -9999.f;
-      phoBranch.seedID_   = 0; // non-ideal
+      phoBranch.seedX_        = -9999.f;
+      phoBranch.seedY_        = -9999.f;
+      phoBranch.seedZ_        = -9999.f;
+      phoBranch.seedE_        = -9999.f;
+      phoBranch.seedtime_     = -9999.f;
+      phoBranch.seedTOF_      = -9999.f;
+      phoBranch.seedID_       = 0; // non-ideal
+      phoBranch.seedisOOT_    = -1;
+      phoBranch.seedisGS6_    = -1;
+      phoBranch.seedisGS1_    = -1;
+      phoBranch.seedped12_    = -9999.f;
+      phoBranch.seedped6_     = -9999.f;
+      phoBranch.seedped1_     = -9999.f;
+      phoBranch.seedpedrms12_ = -9999.f;
+      phoBranch.seedpedrms6_  = -9999.f;
+      phoBranch.seedpedrms1_  = -9999.f;
     }
   
     phoBranch.suisseX_ = -9999.f;
@@ -1523,20 +1533,68 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     // save seed info + swiss cross
     if (recHitMap.count(seedRawId)) 
     {
+      const auto seedpos = recHitMap.at(seedRawId); 
       if (storeRecHits) 
       {
 	// store just the seed for accessing through recHit branches
-	phoBranch.seed_ = recHitMap.at(seedRawId);
+	phoBranch.seed_ = seedpos;
       }
       else
       {
-	// store basic info about the seed
-	auto seedRecHit = recHits->find(seedDetId);
-	if (seedRecHit != recHits->end()) // standard check (redundant)
-	{
-	  phoBranch.seedtime_  = seedRecHit->time();
-	  phoBranch.seedE_     = seedRecHit->energy();
-	  phoBranch.seedID_    = seedRawId;
+	phoBranch.seedX = rhX[seedpos];
+	phoBranch.seedY = rhY[seedpos];
+	phoBranch.seedZ = rhZ[seedpos];
+	phoBranch.seedE = rhE[seedpos];
+	phoBranch.seedtime = rhtime[seedpos];
+	phoBranch.seedTOF = rhTOF[seedpos];
+	phoBranch.seedID = rhID[seedpos];
+
+      rhZ   [pos] = recHitPos.z();
+      rhE   [pos] = recHit.energy();
+      rhtime[pos] = recHit.time();
+      rhID  [pos] = rawId;
+
+      // flags: isOOT, isGainSwitch6/1
+      rhisOOT[pos] = recHit.checkFlag(EcalRecHit::kOutOfTime);
+      rhisGS6[pos] = recHit.checkFlag(EcalRecHit::kHasSwitchToGain6);
+      rhisGS1[pos] = recHit.checkFlag(EcalRecHit::kHasSwitchToGain1);
+
+      // record info
+      const auto & pediter = pedestalsH->find(recHitId);
+      if (pediter != pedestalsH->end())
+      {
+	const auto & ped = (*pediter);
+
+	rhped12[pos] = ped.mean(1);
+	rhped6 [pos] = ped.mean(2);
+	rhped1 [pos] = ped.mean(3);
+
+	rhpedrms12[pos] = ped.rms(1);
+	rhpedrms6 [pos] = ped.rms(2);
+	rhpedrms1 [pos] = ped.rms(3);
+      }
+
+      // compute TOF
+      const auto d_orig = Config::hypo(rhX[pos],rhY[pos],rhZ[pos]);
+      const auto d_pv   = Config::hypo(rhX[pos]-vtxX,rhY[pos]-vtxY,rhZ[pos]-vtxZ);
+	
+      rhTOF[pos] = (d_orig-d_pv) / Config::sol;
+
+      phoBranch.seedE_        = -9999.f;
+      phoBranch.seedtime_     = -9999.f;
+      phoBranch.seedTOF_      = -9999.f;
+      phoBranch.seedID_       = 0; // non-ideal
+      phoBranch.seedisOOT_    = -1;
+      phoBranch.seedisGS6_    = -1;
+      phoBranch.seedisGS1_    = -1;
+      phoBranch.seedped12_    = -9999.f;
+      phoBranch.seedped6_     = -9999.f;
+      phoBranch.seedped1_     = -9999.f;
+      phoBranch.seedpedrms12_ = -9999.f;
+      phoBranch.seedpedrms6_  = -9999.f;
+      phoBranch.seedpedrms1_  = -9999.f;
+
+
 	}
       }
     

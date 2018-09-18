@@ -55,8 +55,8 @@ void SignalSkimmer::MakeSkimsFromTrees()
     Common::CheckValidTree(intree,Common::disphotreename,infilename);
 
     // Get Input Cut Flow Histogram 
-    auto inhist = (TH1F*)infile->Get(Form("%s",Common::h_cutflowname.Data()));
-    Common::CheckValidHist(inhist,Common::h_cutflowname,infilename);
+    auto inhist = (TH1F*)infile->Get(Form("%s",Common::h_cutflow_scaledname.Data()));
+    Common::CheckValidHist(inhist,Common::h_cutflow_scaledname,infilename);
 
     // Init Output Cut Flow Histogram 
     std::map<TString,Int_t> binlabels;
