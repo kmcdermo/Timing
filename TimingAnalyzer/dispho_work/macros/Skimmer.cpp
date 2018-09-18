@@ -215,19 +215,25 @@ void Skimmer::EventLoop()
 
 	  // get invariant mass
 	  pho1vec += pho2vec;
-	  phopairs.emplace_back(good_phos[i],good_phos[j],std::abs(pho1vec.M()-Common::Zmass));
+	  phopairs.emplace_back(good_phos[i],good_phos[j],pho1vec.M());
 	}
       }
 
       // sort the mass structs
-      std::sort(phopairs.begin(),phopairs.end(),[](const auto & phopair1, const auto & phopair2){return phopair1.mass < phopair2.mass;});
+      std::sort(phopairs.begin(),phopairs.end(),
+		[=](const auto & phopair1, const auto & phopair2)
+		{
+		  const auto diff1 = std::abs(phopair1.mass-Common::Zmass);
+		  const auto diff2 = std::abs(phopair2.mass-Common::Zmass);
+		  return diff1 < diff2;
+		});
           
       // get best pair
       const auto & phopair = phopairs[0];
       
       // make sure within 30 GeV
-      if (phopair.mass > 30) continue;
-      fOutCutFlow->Fill((cutLabels["diPhoMZ30"]*1.f)-0.5f,wgt);
+      if ((phopair.mass < 60.f) || (phopair.mass > 150.f)) continue;
+      fOutCutFlow->Fill((cutLabels["diPhoMZrange"]*1.f)-0.5f,wgt);
 
       // re-order photons based on pairs
       auto & pho1 = fInPhos[phopair.ipho1];
@@ -1528,7 +1534,7 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
     cutLabels["diEleHLT"] = ++inNbinsX_new;
     cutLabels["goodPho1"] = ++inNbinsX_new;
     cutLabels["goodPho2"] = ++inNbinsX_new;
-    cutLabels["diPhoMZ30"] = ++inNbinsX_new;
+    cutLabels["diPhoMZrange"] = ++inNbinsX_new;
   }
   else
   {
