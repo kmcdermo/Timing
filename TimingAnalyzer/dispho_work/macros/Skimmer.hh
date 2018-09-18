@@ -76,7 +76,7 @@ private:
   TTree * fInTree; 
   TTree * fInConfigTree;
   TH1F  * fInCutFlow;
-  //  TH1F  * fInCutFlowWgt;
+  TH1F  * fInCutFlowWgt;
   TFile * fInPUWgtFile;
   TH1F  * fInPUWgtHist;
   Float_t fSampleWeight;

@@ -50,7 +50,7 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   fInCutFlow = (TH1F*)fInFile->Get(inh_cutflowname.Data());
   Common::CheckValidHist(fInCutFlow,inh_cutflowname,infilename);
 
-  const TString inh_cutflow_wgtname = Form("%s/%s_wgt",Common::rootdir.Data(),Common::h_cutflow_wgtname.Data());
+  const TString inh_cutflow_wgtname = Form("%s/%s",Common::rootdir.Data(),Common::h_cutflow_wgtname.Data());
   fInCutFlowWgt = (TH1F*)fInFile->Get(inh_cutflow_wgtname.Data());
   Common::CheckValidHist(fInCutFlowWgt,inh_cutflow_wgtname,infilename);
 
@@ -974,7 +974,6 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       // outpho.seedTOF = inpho.seedTOF;
       // outpho.seedID = inpho.seedID;
       // outpho.seedisOOT = inpho.seedisOOT;
-      outpho.seedisOOT = inpho.seedisGS6;
       outpho.seedisGS6 = inpho.seedisGS1;
       outpho.seedisGS1 = inpho.seedisGS6;
       outpho.seedped12 = inpho.seedped12;
@@ -1735,9 +1734,9 @@ void Skimmer::InitOutBranches()
 
 void Skimmer::InitOutCutFlowHists()
 {
-  Skimmer::InitOutCutFlowHist(fInCutFlow,fOutCutFlow,Config::h_cutflowname);
-  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowWgt,Config::h_cutflow_wgtname);
-  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowScl,Config::h_cutflow_scaledname);
+  Skimmer::InitOutCutFlowHist(fInCutFlow,fOutCutFlow,Common::h_cutflowname);
+  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowWgt,Common::h_cutflow_wgtname);
+  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowScl,Common::h_cutflow_scaledname);
 
   // rescale input of scaled histogram by sample weight!
   fOutCutFlowScl->Scale(fSampleWeight);

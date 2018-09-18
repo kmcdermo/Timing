@@ -201,7 +201,7 @@ struct Event
   std::string s_hltDiPho70 = "hltDiPho70";
   std::string s_hltDiPho3022M90 = "hltDiPho3022M90";
   std::string s_hltDiPho30PV18PV = "hltDiPho30PV18PV";
-  std::string s_hltEle32MWPT = "hltEle32WPT";
+  std::string s_hltEle32WPT = "hltEle32WPT";
   std::string s_hltDiEle33MW = "hltDiEle33MW";
   std::string s_hltJet500 = "hltJet500";
   std::string s_metPV = "metPV";
@@ -360,7 +360,7 @@ struct RecHits
   std::vector<Int_t>   * isGS1;
   std::vector<Float_t> * ped12;
   std::vector<Float_t> * ped6;
-  std::vector<Float_t> * oped1;
+  std::vector<Float_t> * ped1;
   std::vector<Float_t> * pedrms12;
   std::vector<Float_t> * pedrms6;
   std::vector<Float_t> * pedrms1;
