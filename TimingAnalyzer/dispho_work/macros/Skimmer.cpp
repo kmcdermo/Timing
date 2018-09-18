@@ -25,7 +25,7 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   // Get input file
   const TString infilename = Form("%s/%s", fInDir.Data(), fFileName.Data());
   fInFile = TFile::Open(infilename.Data());
-  if (!Common::isGoodFile(fInFile,infilename)) exit(1);
+  Common::CheckValidFile(fInFile,infilename);
 
   // Get input config tree
   const TString inconfigtreename = Form("%s/%s",Common::rootdir.Data(),Common::configtreename.Data());
@@ -55,11 +55,8 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   fPUWeights.clear();
   if (fIsMC)
   {
-    const Bool_t useOld = (fPUWgtFileName == "");
-
-    const TString pufilename = (useOld ? Form("%s/%s/%s.root",Common::eosDir.Data(),Common::baseDir.Data(),Common::puwgtFileName.Data()) : Form("%s",fPUWgtFileName.Data()));
-    fInPUWgtFile = TFile::Open(pufilename.Data());
-    if (!Common::isGoodFile(fInPUWgtFile,pufilename)) exit(1);
+    fInPUWgtFile = TFile::Open(fPUWgtFileName);
+    Common::CheckValidFile(fInPUWgtFile,fPUWgtFileName);
 
     const TString puhistname = (useOld ? Form("%s",Common::puwgtHistName.Data()) : Form("%s_%s",Common::puTrueHistName.Data(),Common::puwgtHistName.Data()));
     fInPUWgtHist = (TH1F*)fInPUWgtFile->Get(puhistname.Data());

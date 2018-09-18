@@ -27,7 +27,7 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
     // first get the file
     const TString infilename = Form("%s/%s",indir.Data(),infile.Data());
     auto file = TFile::Open(infilename.Data());
-    if (!Common::isGoodFile(file,infilename)) continue;
+    Common::CheckValidFile(file,infilename);
     file->cd();
     
     // get input hists + add it up
@@ -62,7 +62,7 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
   // input data file
   const TString indatafilename = Form("%s/%s.root",Common::eosDir.Data(),Common::dataPUFileName.Data());
   auto indatafile = TFile::Open(indatafilename.Data());
-  if (!Common::isGoodFile(indatafile,indatafilename)) exit(1);
+  Common::CheckValidFile(indatafile,indatafilename);
   indatafile->cd();
   
   // Get data hist
