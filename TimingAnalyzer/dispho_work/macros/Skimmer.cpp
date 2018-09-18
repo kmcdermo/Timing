@@ -1528,6 +1528,7 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
     cutLabels["nPhotons"] = ++inNbinsX_new;
     cutLabels["ph0isEB"] = ++inNbinsX_new;
     cutLabels["ph0pt70"] = ++inNbinsX_new;
+    cutLabels["METFlag"] = ++inNbinsX_new;
   }
   else if (fSkim == Zee)
   {
@@ -1543,7 +1544,6 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
   }
 
   // common skim
-  cutLabels["METFlag"] = ++inNbinsX_new;
   cutLabels["badPU"] = ++inNbinsX_new;
 
   // make new cut flow
