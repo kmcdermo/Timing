@@ -148,6 +148,7 @@ void Skimmer::EventLoop()
       //      fOutCutFlowWgt->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
       //      fOutCutFlowScl->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);
 
+      // fill photon list in standard fashion
       fPhoList.clear();
       for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
       {
