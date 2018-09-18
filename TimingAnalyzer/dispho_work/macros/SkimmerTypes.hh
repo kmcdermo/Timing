@@ -365,7 +365,7 @@ struct RecHits
   std::vector<Float_t> * pedrms6;
   std::vector<Float_t> * pedrms1;
 
-  std::string s_X = "rhZ";
+  std::string s_X = "rhX";
   std::string s_Y = "rhY";
   std::string s_Z = "rhZ";
   std::string s_E = "rhE";
@@ -444,6 +444,9 @@ struct Pho
   Int_t   gedID;
   Int_t   ootID;
   // RecHit Info (whether stored directly or read through rec hit information)
+  Float_t seedX;
+  Float_t seedY;
+  Float_t seedZ;
   Float_t seedE;
   Float_t seedtime;
   Float_t seedTOF;
@@ -453,6 +456,9 @@ struct Pho
   Float_t seedped12;
   Float_t seedped6;
   Float_t seedped1;
+  Float_t seedpedrms12;
+  Float_t seedpedrms6;
+  Float_t seedpedrms1;
   // MC types
   Bool_t  isGen;
   Int_t   isSignal;
@@ -507,6 +513,9 @@ struct Pho
   std::string s_hasPixSeed = "phohasPixSeed";
   std::string s_gedID = "phogedID";
   std::string s_ootID = "phoootID";
+  std::string s_seedX = "phoseedX";
+  std::string s_seedY = "phoseedY";
+  std::string s_seedZ = "phoseedZ";
   std::string s_seedE = "phoseedE";
   std::string s_seedtime = "phoseedtime";
   std::string s_seedTOF = "phoseedTOF";
@@ -516,6 +525,10 @@ struct Pho
   std::string s_seedped12 = "phoseedped12";
   std::string s_seedped6 = "phoseedped6";
   std::string s_seedped1 = "phoseedped1";
+  std::string s_seedpedrms12 = "phoseedpedrms12";
+  std::string s_seedpedrms6 = "phoseedpedrms6";
+  std::string s_seedpedrms1 = "phoseedpedrms1";
+  std::string s_isGen = "phoisGen";
   std::string s_isSignal = "phoisSignal";
   std::string s_seedTT = "phoseedTT";
   std::string s_nrechits = "phonrechits";
@@ -567,6 +580,9 @@ struct Pho
   TBranch * b_hasPixSeed;
   TBranch * b_gedID;
   TBranch * b_ootID;
+  TBranch * b_seedX;
+  TBranch * b_seedY;
+  TBranch * b_seedZ;
   TBranch * b_seedE;
   TBranch * b_seedtime;
   TBranch * b_seedTOF;
@@ -576,6 +592,9 @@ struct Pho
   TBranch * b_seedped12;
   TBranch * b_seedped6;
   TBranch * b_seedped1;
+  TBranch * b_seedpedrms12;
+  TBranch * b_seedpedrms6;
+  TBranch * b_seedpedrms1;
   TBranch * b_isGen;
   TBranch * b_isSignal;
   TBranch * b_seedTT;

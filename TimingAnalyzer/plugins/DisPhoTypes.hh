@@ -124,11 +124,27 @@ struct phoStruct
   float Smin_;
   float alpha_;
 
+  // storeRecHits
   int seed_;
   std::vector<int> recHits_;
-  float seedtime_;
+
+  // store seed only
+  float seedX_;
+  float seedY_;
+  float seedZ_;
   float seedE_;
+  float seedtime_;
+  float seedTOF_;
   unsigned int seedID_;
+  int seedisOOT_;
+  int seedisGS6_;
+  int seedisGS1_;
+  float seedped12_;
+  float seedped6_;
+  float seedped1_;
+  float seedpedrms12_;
+  float seedpedrms6_;
+  float seedpedrms1_;
 
   float suisseX_;
   

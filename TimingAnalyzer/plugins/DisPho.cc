@@ -1548,54 +1548,15 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
 	phoBranch.seedtime = rhtime[seedpos];
 	phoBranch.seedTOF = rhTOF[seedpos];
 	phoBranch.seedID = rhID[seedpos];
-
-      rhZ   [pos] = recHitPos.z();
-      rhE   [pos] = recHit.energy();
-      rhtime[pos] = recHit.time();
-      rhID  [pos] = rawId;
-
-      // flags: isOOT, isGainSwitch6/1
-      rhisOOT[pos] = recHit.checkFlag(EcalRecHit::kOutOfTime);
-      rhisGS6[pos] = recHit.checkFlag(EcalRecHit::kHasSwitchToGain6);
-      rhisGS1[pos] = recHit.checkFlag(EcalRecHit::kHasSwitchToGain1);
-
-      // record info
-      const auto & pediter = pedestalsH->find(recHitId);
-      if (pediter != pedestalsH->end())
-      {
-	const auto & ped = (*pediter);
-
-	rhped12[pos] = ped.mean(1);
-	rhped6 [pos] = ped.mean(2);
-	rhped1 [pos] = ped.mean(3);
-
-	rhpedrms12[pos] = ped.rms(1);
-	rhpedrms6 [pos] = ped.rms(2);
-	rhpedrms1 [pos] = ped.rms(3);
-      }
-
-      // compute TOF
-      const auto d_orig = Config::hypo(rhX[pos],rhY[pos],rhZ[pos]);
-      const auto d_pv   = Config::hypo(rhX[pos]-vtxX,rhY[pos]-vtxY,rhZ[pos]-vtxZ);
-	
-      rhTOF[pos] = (d_orig-d_pv) / Config::sol;
-
-      phoBranch.seedE_        = -9999.f;
-      phoBranch.seedtime_     = -9999.f;
-      phoBranch.seedTOF_      = -9999.f;
-      phoBranch.seedID_       = 0; // non-ideal
-      phoBranch.seedisOOT_    = -1;
-      phoBranch.seedisGS6_    = -1;
-      phoBranch.seedisGS1_    = -1;
-      phoBranch.seedped12_    = -9999.f;
-      phoBranch.seedped6_     = -9999.f;
-      phoBranch.seedped1_     = -9999.f;
-      phoBranch.seedpedrms12_ = -9999.f;
-      phoBranch.seedpedrms6_  = -9999.f;
-      phoBranch.seedpedrms1_  = -9999.f;
-
-
-	}
+	phoBranch.seedisOOT = rhisOOT[seedpos];
+	phoBranch.seedisGS6 = rhisGS6[seedpos];
+	phoBranch.seedisGS1 = rhisGS1[seedpos];
+	phoBranch.seedped12 = rhped12[seedpos];
+	phoBranch.seedped6 = rhped6[seedpos];
+	phoBranch.seedped1 = rhped1[seedpos];
+	phoBranch.seedpedrms12 = rhpedrms12[seedpos];
+	phoBranch.seedpedrms6 = rhpedrms6[seedpos];
+	phoBranch.seedpedrms1 = rhpedrms1[seedpos];
       }
     
       // swiss cross
@@ -2165,9 +2126,22 @@ void DisPho::MakeEventTree()
     }
     else 
     {
-      disphotree->Branch(Form("phoseedtime_%i",iphoton), &phoBranch.seedtime_, Form("phoseedtime_%i/F",iphoton));
+      disphotree->Branch(Form("phoseedX_%i",iphoton), &phoBranch.seedX_, Form("phoseedX_%i/F",iphoton));
+      disphotree->Branch(Form("phoseedY_%i",iphoton), &phoBranch.seedY_, Form("phoseedY_%i/F",iphoton));
+      disphotree->Branch(Form("phoseedZ_%i",iphoton), &phoBranch.seedZ_, Form("phoseedZ_%i/F",iphoton));
       disphotree->Branch(Form("phoseedE_%i",iphoton), &phoBranch.seedE_, Form("phoseedE_%i/F",iphoton));
+      disphotree->Branch(Form("phoseedtime_%i",iphoton), &phoBranch.seedtime_, Form("phoseedtime_%i/F",iphoton));
+      disphotree->Branch(Form("phoseedTOF_%i",iphoton), &phoBranch.seedTOF_, Form("phoseedTOF_%i/F",iphoton));
       disphotree->Branch(Form("phoseedID_%i",iphoton), &phoBranch.seedID_, Form("phoseedID_%i/i",iphoton));
+      disphotree->Branch(Form("phoseedisOOT_%i",iphoton), &phoBranch.seedisOOT_, Form("phoseedisOOT_%i/i",iphoton));
+      disphotree->Branch(Form("phoseedisGS6_%i",iphoton), &phoBranch.seedisGS6_, Form("phoseedisGS6_%i/i",iphoton));
+      disphotree->Branch(Form("phoseedisGS1_%i",iphoton), &phoBranch.seedisGS1_, Form("phoseedisGS1_%i/i",iphoton));
+      disphotree->Branch(Form("phoseedped12_%i",iphoton), &phoBranch.seedped12_, Form("phoseedped12_%i/i",iphoton));
+      disphotree->Branch(Form("phoseedped6_%i",iphoton), &phoBranch.seedped6_, Form("phoseedped6_%i/i",iphoton));
+      disphotree->Branch(Form("phoseedped1_%i",iphoton), &phoBranch.seedped1_, Form("phoseedped1_%i/i",iphoton));
+      disphotree->Branch(Form("phoseedpedrms12_%i",iphoton), &phoBranch.seedpedrms12_, Form("phoseedpedrms12_%i/i",iphoton));
+      disphotree->Branch(Form("phoseedpedrms6_%i",iphoton), &phoBranch.seedpedrms6_, Form("phoseedpedrms6_%i/i",iphoton));
+      disphotree->Branch(Form("phoseedpedrms1_%i",iphoton), &phoBranch.seedpedrms1_, Form("phoseedpedrms1_%i/i",iphoton));
     }
 
     disphotree->Branch(Form("phosuisseX_%i",iphoton), &phoBranch.suisseX_, Form("phosuisseX_%i/F",iphoton));

@@ -751,9 +751,22 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     }
     else
     {
+      // inpho.b_seedX->GetEntry(entry);
+      // inpho.b_seedY->GetEntry(entry);
+      // inpho.b_seedZ->GetEntry(entry);
+      inpho.b_seedE->GetEntry(entry);
       inpho.b_seedtime->GetEntry(entry);
-      inpho.b_seedE   ->GetEntry(entry);
-      // inpho.b_seedID  ->GetEntry(entry);
+      // inpho.b_seedTOF->GetEntry(entry);
+      // inpho.b_seedID->GetEntry(entry);
+      // inpho.b_seedisOOT->GetEntry(entry);
+      inpho.b_seedisGS6->GetEntry(entry);
+      inpho.b_seedisGS1->GetEntry(entry);
+      inpho.b_seedped12->GetEntry(entry);
+      inpho.b_seedped6->GetEntry(entry);
+      inpho.b_seedped1->GetEntry(entry);
+      // inpho.b_seedpedrms12->GetEntry(entry);
+      // inpho.b_seedpedrms6->GetEntry(entry);
+      // inpho.b_seedpedrms1->GetEntry(entry);
     }
     
     if (fIsMC)
@@ -769,9 +782,9 @@ void Skimmer::FillOutPhos(const UInt_t entry)
   // get input recHits if needed
   if (fInConfig.storeRecHits)
   {
-    fInRecHits.b_X->GetEntry(entry);
-    fInRecHits.b_Y->GetEntry(entry);
-    fInRecHits.b_Z->GetEntry(entry);
+    // fInRecHits.b_X->GetEntry(entry);
+    // fInRecHits.b_Y->GetEntry(entry);
+    // fInRecHits.b_Z->GetEntry(entry);
     fInRecHits.b_E->GetEntry(entry);
     fInRecHits.b_time->GetEntry(entry);
     // fInRecHits.b_TOF->GetEntry(entry);
@@ -841,19 +854,27 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       // store seed info + derived types if seed exists
       if (seed >= 0)
       {
-	outpho.seedE    = (*fInRecHits.E)   [seed];
+	// outpho.seedX = (*fInRecHits.X)[seed];
+	// outpho.seedY = (*fInRecHits.Y)[seed];
+	// outpho.seedZ = (*fInRecHits.Z)[seed];
+	outpho.seedE = (*fInRecHits.E)[seed];
+
 	outpho.seedtime = (*fInRecHits.time)[seed];
 	outpho.seedTOF  = (*fInRecHits.TOF) [seed];
 
 	// get trigger tower
-	// outpho.seedID = (*fInRecHits.ID)[seed];
-	// outpho.seedTT = Common::GetTriggerTower((*fInRecHits.ID)[seed]);
+	// outpho.seedID    = (*fInRecHits.ID)[seed];
+	// outpho.seedisOOT = (*fInRecHits.isOOT)[seed];
+	// outpho.seedTT    = Common::GetTriggerTower((*fInRecHits.ID)[seed]);
 
 	outpho.seedisGS6 = (*fInRecHits.isGS6)[seed];
 	outpho.seedisGS1 = (*fInRecHits.isGS1)[seed];
 	outpho.seedped12 = (*fInRecHits.ped12)[seed];
 	outpho.seedped6  = (*fInRecHits.ped6) [seed];
 	outpho.seedped1  = (*fInRecHits.ped1) [seed];
+	// outpho.seedpedrms12 = (*fInRecHits.pedrms12)[seed];
+	// outpho.seedpedrms6  = (*fInRecHits.pedrms6) [seed];
+	// outpho.seedpedrms1  = (*fInRecHits.pedrms1) [seed];
 
 	// compute mean time, weighted time
 	outpho.nrechits = 0;
@@ -910,12 +931,26 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       } // end check that seed exists
       else
       {
-	outpho.seedE    = -9999.f;
+	// outpho.seedX = -9999.f;
+	// outpho.seedY = -9999.f;
+	// outpho.seedZ = -9999.f;
+	outpho.seedE = -9999.f;
+
 	outpho.seedtime = -9999.f;
 	outpho.seedTOF  = -9999.f;	
 
-	// outpho.seedID   = 0;
-	// outpho.seedTT = -9999;
+	// outpho.seedID    = 0;
+	// outpho.seedisOOT = -1;
+	// outpho.seedTT    = -9999;
+
+	outpho.seedisGS6 = -1;
+	outpho.seedisGS1 = -1;
+	outpho.seedped12 = -9999.f;
+	outpho.seedped6  = -9999.f;
+	outpho.seedped1  = -9999.f;
+	// outpho.seedpedrms12 = -9999.f;
+	// outpho.seedpedrms6 = -9999.f;
+	// outpho.seedpedrms1 = -9999.f;
 
 	outpho.seedTT = -9999;
 	
@@ -931,9 +966,23 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     }
     else
     {
-      outpho.seedE    = inpho.seedE;
+      // outpho.seedX = inpho.seedX;
+      // outpho.seedY = inpho.seedY;
+      // outpho.seedZ = inpho.seedZ;
+      outpho.seedE = inpho.seedE;
       outpho.seedtime = inpho.seedtime;
-      // outpho.seedID   = inpho.seedID;
+      // outpho.seedTOF = inpho.seedTOF;
+      // outpho.seedID = inpho.seedID;
+      // outpho.seedisOOT = inpho.seedisOOT;
+      outpho.seedisOOT = inpho.seedisGS6;
+      outpho.seedisGS6 = inpho.seedisGS1;
+      outpho.seedisGS1 = inpho.seedisGS6;
+      outpho.seedped12 = inpho.seedped12;
+      outpho.seedped6 = inpho.seedped6;
+      outpho.seedped1 = inpho.seedped1;
+      // outpho.seedpedrms12 = inpho.seedpedrms12
+      // outpho.seedpedrms6 = inpho.seedpedrms6;
+      // outpho.seedpedrms1 = inpho.seedpedrms1;
     }
     
     if (fIsMC)
@@ -1291,9 +1340,22 @@ void Skimmer::InitInBranches()
     }
     else
     {
-      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime, &pho.b_seedtime);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedX.c_str(),ipho), &pho.seedX, &pho.b_seedX);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedY.c_str(),ipho), &pho.seedY, &pho.b_seedY);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedZ.c_str(),ipho), &pho.seedZ, &pho.b_seedZ);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE, &pho.b_seedE);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime, &pho.b_seedtime);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF, &pho.b_seedTOF);
       // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID, &pho.b_seedID);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT, &pho.b_seedisOOT);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisGS6.c_str(),ipho), &pho.seedisGS6, &pho.b_seedisGS6);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisGS1.c_str(),ipho), &pho.seedisGS1, &pho.b_seedisGS1);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped12.c_str(),ipho), &pho.seedped12, &pho.b_seedped12);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped6.c_str(),ipho), &pho.seedped6, &pho.b_seedped6);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped1.c_str(),ipho), &pho.seedped1, &pho.b_seedped1);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedpedrms12.c_str(),ipho), &pho.seedpedrms12, &pho.b_seedpedrms12);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedpedrms6.c_str(),ipho), &pho.seedpedrms6, &pho.b_seedpedrms6);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedpedrms1.c_str(),ipho), &pho.seedpedrms1, &pho.b_seedpedrms1);
     }
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX, &pho.b_suisseX);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_isOOT.c_str(),ipho), &pho.isOOT, &pho.b_isOOT);
@@ -1617,17 +1679,24 @@ void Skimmer::InitOutBranches()
     // fOutTree->Branch(Form("%s_%i",pho.s_e5x5.c_str(),ipho), &pho.e5x5);
     fOutTree->Branch(Form("%s_%i",pho.s_smaj.c_str(),ipho), &pho.smaj);
     fOutTree->Branch(Form("%s_%i",pho.s_smin.c_str(),ipho), &pho.smin);
-    fOutTree->Branch(Form("%s_%i",pho.s_alpha.c_str(),ipho), &pho.alpha);
-    // fOutTree->Branch(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX);
-    fOutTree->Branch(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE);   
+    // fOutTree->Branch(Form("%s_%i",pho.s_alpha.c_str(),ipho), &pho.alpha);
+    fOutTree->Branch(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedX.c_str(),ipho), &pho.seedX);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedY.c_str(),ipho), &pho.seedY);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedZ.c_str(),ipho), &pho.seedZ);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE);
     fOutTree->Branch(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime);
     fOutTree->Branch(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF);
     // fOutTree->Branch(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT);
     fOutTree->Branch(Form("%s_%i",pho.s_seedisGS6.c_str(),ipho), &pho.seedisGS6);
     fOutTree->Branch(Form("%s_%i",pho.s_seedisGS1.c_str(),ipho), &pho.seedisGS1);
     fOutTree->Branch(Form("%s_%i",pho.s_seedped12.c_str(),ipho), &pho.seedped12);
     fOutTree->Branch(Form("%s_%i",pho.s_seedped6.c_str(),ipho), &pho.seedped6);
     fOutTree->Branch(Form("%s_%i",pho.s_seedped1.c_str(),ipho), &pho.seedped1);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedpedrms12.c_str(),ipho), &pho.seedpedrms12);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedpedrms6.c_str(),ipho), &pho.seedpedrms6);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedpedrms1.c_str(),ipho), &pho.seedpedrms1);
     fOutTree->Branch(Form("%s_%i",pho.s_isOOT.c_str(),ipho), &pho.isOOT);
     fOutTree->Branch(Form("%s_%i",pho.s_isEB.c_str(),ipho), &pho.isEB);
     fOutTree->Branch(Form("%s_%i",pho.s_isHLT.c_str(),ipho), &pho.isHLT);
@@ -1666,15 +1735,17 @@ void Skimmer::InitOutBranches()
 
 void Skimmer::InitOutCutFlowHists()
 {
-  Skimmer::InitOutCutFlowHist(fInCutFlow,fOutCutFlow,"");
-  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowWgt,"_wgt");
-  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowScl,"_scaled");
+  Skimmer::InitOutCutFlowHist(fInCutFlow,fOutCutFlow,Config::h_cutflowname);
+  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowWgt,Config::h_cutflow_wgtname);
+  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowScl,Config::h_cutflow_scaledname);
+
+  // rescale input of scaled histogram by sample weight!
   fOutCutFlowScl->Scale(fSampleWeight);
   fOutCutFlowScl->SetTitle("Scaled");
   fOutCutFlowScl->GetYaxis()->SetTitle("nEvents");
 }
 
-void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow, const TString & label)
+void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow, const TString & histname)
 {
   // get cut flow labels
   const auto inNbinsX = inh_cutflow->GetNbinsX();
@@ -1712,7 +1783,7 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
   cutLabels["badPU"] = ++inNbinsX_new;
 
   // make new cut flow
-  outh_cutflow = new TH1F(Form("%s%s",Common::h_cutflowname.Data(),label.Data()),inh_cutflow->GetTitle(),cutLabels.size(),0,cutLabels.size());
+  outh_cutflow = new TH1F(Form("%s",histname.Data()),inh_cutflow->GetTitle(),cutLabels.size(),0,cutLabels.size());
   outh_cutflow->Sumw2();
 
   for (const auto & cutlabel : cutLabels)
