@@ -314,17 +314,22 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
   const auto & DataLabel = DataInfo.label;
   const auto & MCLabel   = MCInfo  .label;
 
-  // bool to allow negative values
-  const Bool_t canBeNeg = (key.Contains("mu",TString::kExact));
-  
   // make canvas first
   auto Canvas = new TCanvas("Canvas_"+key,"");
   Canvas->cd();
   Canvas->SetLogy(isLogy);
 
-  const Float_t factor = (isLogy ? 3.f : 1.5f);
-  min = (min > 0.f ? (min / factor) : (min * factor));
-  max = (max > 0.f ? (max * factor) : (max / factor));
+  if (key.Contains("sigma",TString::kExact))
+  {
+    min = 0.f;
+    max = 1.f;
+  }
+  else
+  {
+    const Float_t factor = (isLogy ? 3.f : 1.5f);
+    min = (min > 0.f ? (min / factor) : (min * factor));
+    max = (max > 0.f ? (max * factor) : (max / factor));
+  }
 
   // set min, max
   DataHist->SetMinimum(min);

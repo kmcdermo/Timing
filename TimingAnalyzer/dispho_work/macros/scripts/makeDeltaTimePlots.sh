@@ -20,10 +20,10 @@ diphodir="dipho"
 fragdir="plot_config/fragments"
 
 ## eta regions
-declare -a dietas=("EBEB")
+declare -a dietas=("EBEB" "EEEE" "Full")
 
 ## vars
-declare -a vars_map=("seedE_eff seedE")
+declare -a vars_map=("pt_eff pt" "E_eff E" "seedE_eff seedE" "time_delta time")
 
 ## logx vars
 declare -a logx_vars=("pt_0" "pt_1" "pt_eff" "E_0" "E_1" "E_eff" "seedE_eff")
@@ -38,7 +38,7 @@ pt_eff="p_{T}^{Eff} GeV/c 0 10 100 0 1 10"
 E_0="E GeV 0 10 100 0 1 10"
 E_1="E GeV 0 10 100 0 1 10"
 E_eff="E_{eff} GeV 0 10 100 0 1 10"
-seedE_eff="seedE_{eff} GeV 0 1 10 0 1 10"
+seedE_eff="E_{eff}^{seed} GeV 0 1 10 0 1 10"
 declare -a sigmafit_vars=(pt_0 pt_1 pt_eff E_0 E_1 E_eff seedE_eff)
 
 ###############
@@ -89,7 +89,7 @@ do
 	elif [[ "${var}" == *"_eff" ]]
 	then
 	    title="Effective ${title}"
-	    x_var="((${x_var}_0*${x_var}_0)/sqrt(pow(${x_var}_0,2)+pow(${x_var}_1,2)))"
+	    x_var="((${x_var}_0*${x_var}_1)/sqrt(pow(${x_var}_0,2)+pow(${x_var}_1,2)))"
 	elif [[ "${var}" == *"_delta" ]]
 	then
 	    title="#Delta(${title})"
