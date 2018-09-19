@@ -1,0 +1,5 @@
+var=phomeantimeLT120
+title=Photon Mean (rechitE < 120 GeV) Time
+unit=[ns]
+bins=CONSTANT 30 -3 3
+ytitle=Events

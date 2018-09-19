@@ -24,18 +24,19 @@ then
 fi
 
 ## vars
-declare -a vars=("pt" "E" "eta" "time" "nvtx")
+declare -a vars=("pt" "E" "seedE" "time" "meantime" "meantimeLT120")
 
 ## logx vars
-declare -a logx_vars=("pt" "E")
+declare -a logx_vars=("pt" "E" "seedE")
 
 ## do full era vars for mu hists
-declare -a mualleras_vars=("pt")
+declare -a mualleras_vars=()
 
 ## sigma fit vars
 pt="p_{T} GeV/c 0 10 100 0 1 10"
 E="E GeV 0 10 100 0 1 10"
-declare -a sigmafit_vars=(pt E)
+seedE="seedE GeV 0 1 10 0 1 10"
+declare -a sigmafit_vars=(pt E seedE)
 
 ###############
 ## Run code! ##
@@ -51,7 +52,7 @@ do echo ${!pho} | while read -r index pho_label
 	for var in "${vars[@]}"
 	do 
 	    ## only plot time vars for pho1
-	    if [[ "${pho}" == "pho1" ]] && [[ "${var}" != "time" ]]
+	    if [[ "${pho}" == "pho1" ]] && [[ "${var}" != *"time"* ]]
 	    then
 		continue
 	    fi
@@ -153,7 +154,7 @@ do echo ${!pho} | while read -r index pho_label
 	    for eta in "${etas[@]}"
 	    do
 		## only do Full detector for time plot only
-		if [[ "${eta}" == "Full" ]] && [[ "${var}" != "time" ]]
+		if [[ "${eta}" == "Full" ]] && [[ "${var}" != *"time"* ]]
 		then
 		    continue
 		fi
@@ -166,7 +167,7 @@ do echo ${!pho} | while read -r index pho_label
 		> "${cut}"
 
 		## write common cut
-		common_cut="hltDiEle33MW&&!phoisOOT_0&&!phoisOOT_1&&phohasPixSeed_0&&phohasPixSeed_1"
+		common_cut="(1)"
 		eta_cut="phoisEB_${index}"
 		if [[ "${eta}" == "EB" ]]
 		then
@@ -220,7 +221,7 @@ do echo ${!pho} | while read -r index pho_label
 		echo "y_var_sign=${mc_corr}" >> "${plot2D}"
 
 		## add corrections if plotting time --> currently disabled time vs time plot
-		if [[ "${var}" == "time" ]]
+		if [[ "${var}" == *"time"* ]]
 		then
 		    echo "x_var_data=${data_corr}" >> "${plot}"
 		    echo "x_var_bkgd=${mc_corr}" >> "${plot}"
@@ -310,7 +311,7 @@ do echo ${!pho} | while read -r index pho_label
 			    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile}" "${outdir}"
 
 			    ## run 2D plotter, passing 2D plots to make fits for all vars except vs time
-			    if [[ "${var}" != "time" ]]
+			    if [[ "${var}" != *"time"* ]]
 			    then
                  	        ## extra outfile names
 				outfile2D="time_${index}_vs_${outfile}"

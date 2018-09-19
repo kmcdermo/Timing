@@ -1,3 +1,9 @@
+phoseedE_0
+phoseedE_0_zoomer
+phonrechits_0_EB
+phonrechits_0_EE
+phonrechitsLT120_0_EB
+phonrechitsLT120_0_EE
 phoE_0
 phoE_0_zoomer
 phopt_0_zoom
@@ -5,6 +11,12 @@ phopt_0_zoomer
 phophi_0
 phoeta_0
 
+phoseedE_1
+phoseedE_1_zoomer
+phonrechits_1_EB
+phonrechits_1_EE
+phonrechitsLT120_1_EB
+phonrechitsLT120_1_EE
 phoE_1
 phoE_1_zoomer
 phopt_1_zoom

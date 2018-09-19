@@ -1,0 +1,9 @@
+plot_title=Leading Photon nRecHits [E < 120 GeV] (EB)
+
+x_title=Leading Photon nRecHits [E < 120 GeV] (EB)
+x_scale=LIN
+x_var=((phonrechitsLT120_0*phoisEB_0)+(!phoisEB_0*-9999))
+x_bins=CONSTANT 50 0 50
+
+y_title=Events
+y_scale=LOG

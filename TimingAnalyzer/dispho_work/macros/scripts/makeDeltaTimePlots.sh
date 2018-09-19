@@ -20,13 +20,13 @@ diphodir="dipho"
 fragdir="plot_config/fragments"
 
 ## eta regions
-declare -a dietas=("EBEB" "EBEE" "EEEE" "Full")
+declare -a dietas=("EBEB")
 
 ## vars
-declare -a vars_map=("pt_0 pt" "pt_1 pt" "pt_eff pt" "E_0 E" "E_1 E" "E_eff E" "eta_0 eta" "eta_1 eta" "time_0 time" "time_1 time" "time_delta time" "nvtx nvtx")
+declare -a vars_map=("seedE_eff seedE")
 
 ## logx vars
-declare -a logx_vars=("pt_0" "pt_1" "pt_eff" "E_0" "E_1" "E_eff")
+declare -a logx_vars=("pt_0" "pt_1" "pt_eff" "E_0" "E_1" "E_eff" "seedE_eff")
 
 ## do full era vars for mu hists
 declare -a mualleras_vars=()
@@ -38,7 +38,8 @@ pt_eff="p_{T}^{Eff} GeV/c 0 10 100 0 1 10"
 E_0="E GeV 0 10 100 0 1 10"
 E_1="E GeV 0 10 100 0 1 10"
 E_eff="E_{eff} GeV 0 10 100 0 1 10"
-declare -a sigmafit_vars=(pt_0 pt_1 pt_eff E_0 E_1 E_eff)
+seedE_eff="seedE_{eff} GeV 0 1 10 0 1 10"
+declare -a sigmafit_vars=(pt_0 pt_1 pt_eff E_0 E_1 E_eff seedE_eff)
 
 ###############
 ## Run code! ##
@@ -88,7 +89,7 @@ do
 	elif [[ "${var}" == *"_eff" ]]
 	then
 	    title="Effective ${title}"
-	    x_var="sqrt(${x_var}_0*${x_var}_1)"
+	    x_var="((${x_var}_0*${x_var}_0)/sqrt(pow(${x_var}_0,2)+pow(${x_var}_1,2)))"
 	elif [[ "${var}" == *"_delta" ]]
 	then
 	    title="#Delta(${title})"
@@ -232,7 +233,7 @@ do
 	    > "${cut}"
 
 	    ## write common cut
-	    common_cut="hltDiEle33MW&&!phoisOOT_0&&!phoisOOT_1&&phohasPixSeed_0&&phohasPixSeed_1"
+	    common_cut="(phoseedE_0>10&&phoseedE_0<120)&&(phoseedE_1>10&&phoseedE_1<120)"
 	    eta_cut="phoisEB"
 	    if [[ "${eta}" == "EBEB" ]]
 	    then

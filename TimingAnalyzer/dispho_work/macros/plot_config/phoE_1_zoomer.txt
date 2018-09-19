@@ -1,4 +1,4 @@
-plot_title=Subleading Energy [GeV]
+plot_title=Subleading Photon Energy [GeV]
 
 x_title=Subleading Photon Energy [GeV]
 x_scale=LIN

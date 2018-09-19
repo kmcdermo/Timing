@@ -1,0 +1,9 @@
+plot_title=Subleading Photon nRecHits [E < 120 GeV] (EB)
+
+x_title=Subleading Photon nRecHits [E < 120 GeV] (EB)
+x_scale=LIN
+x_var=((phonrechitsLT120_1*phoisEB_1)+(!phoisEB_1*-9999))
+x_bins=CONSTANT 50 0 50
+
+y_title=Events
+y_scale=LOG

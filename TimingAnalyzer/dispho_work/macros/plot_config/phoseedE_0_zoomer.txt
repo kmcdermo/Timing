@@ -1,8 +1,8 @@
-plot_title=Leading Photon Energy [GeV]
+plot_title=Leading Photon Seed Energy [GeV]
 
-x_title=Leading Photon Energy [GeV]
+x_title=Leading Photon Seed Energy [GeV]
 x_scale=LIN
-x_var=phoE_0
+x_var=phoseedE_0
 x_bins=VARIABLE 0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300 320 340 360 380 400 425 450 475 500
 
 y_title=Events/GeV
