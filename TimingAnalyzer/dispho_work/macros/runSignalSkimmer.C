@@ -2,8 +2,8 @@
 #include "Common.cpp+"
 #include "SignalSkimmer.cpp+"
 
-void runSignalSkimmer(const TString & cutconfig, const TString outfiletext)
+void runSignalSkimmer(const TString & cutflowconfig, const TString & outfiletext)
 {
-  SignalSkimmer skimmer(cutconfig,outfiletext);
+  SignalSkimmer skimmer(cutflowconfig,outfiletext);
   skimmer.MakeSkims();
 }

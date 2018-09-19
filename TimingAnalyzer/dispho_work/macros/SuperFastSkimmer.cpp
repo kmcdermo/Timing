@@ -1,9 +1,11 @@
-#include "SignalSkimmer.hh"
+#include "SuperFastSkimmer.hh"
 
-SignalSkimmer::SignalSkimmer(const TString & cutflowconfig, const TString & outtext)
-  : fCutFlowConfig(cutflowconfig), fOutFileText(outtext)
+SuperFastSkimmer::SuperFastSkimmer(const TString & cutflowconfig, const TString & infilename, 
+				   const Bool_t issignalfile, const TString & outtext)
+  : fCutFlowConfig(cutflowconfig), fInFileName(infilename), 
+    fIsSignalFile(issignalfile), fOutFileText(outtext)
 {
-  std::cout << "Initializing SignalSkimmer..." << std::endl;
+  std::cout << "Initializing SuperFastSkimmer..." << std::endl;
 
   ////////////////
   //            //
@@ -11,30 +13,37 @@ SignalSkimmer::SignalSkimmer(const TString & cutflowconfig, const TString & outt
   //            //
   ////////////////
 
+  // get input file
+  fInFile = TFile::Open(Form("%s",fInFileName.Data()));
+  Common::CheckValidFile(fInFile,fInFileName);
+
   // setup samples and such
-  SignalSkimmer::SetupCommon();
+  SuperFastSkimmer::SetupCommon();
 
   // output root file containing every tree
   fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
 }
 
-SignalSkimmer::~SignalSkimmer()
+SuperFastSkimmer::~SuperFastSkimmer()
 {
   // delete everything else already not deleted
   delete fConfigPave;
   delete fOutFile;
+
+  // delete input
+  delete fInFile;
 }
 
-void SignalSkimmer::MakeSkims()
+void SuperFastSkimmer::MakeSkims()
 {
   // Make TEntryLists for each cut, clone and save final tree
-  SignalSkimmer::MakeSkimsFromTrees();
+  SuperFastSkimmer::MakeSkimsFromTrees();
 
   // Write Out Config
-  SignalSkimmer::MakeConfigPave();
+  SuperFastSkimmer::MakeConfigPave();
 }
 
-void SignalSkimmer::MakeSkimsFromTrees()
+void SuperFastSkimmer::MakeSkimsFromTrees()
 {
   std::cout << "Skimming trees from cut flow vector..." << std::endl;
 
@@ -45,29 +54,32 @@ void SignalSkimmer::MakeSkimsFromTrees()
     const auto & sample = SamplePair.second;
     std::cout << "Working on input: " << input.Data() << std::endl;
 
-    // Get File
-    const TString infilename = Form("%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),input.Data(),Common::tupleFileName.Data());
-    auto infile = TFile::Open(Form("%s",infilename.Data()));
-    Common::CheckValidFile(infile,infilename);
-	
-    // Get TTree
-    auto intree = (TTree*)infile->Get(Form("%s",Common::disphotreename.Data()));
-    Common::CheckValidTree(intree,Common::disphotreename,infilename);
+    // Get Input/Output names for hist and tree
+    const auto & iotreename = Common::TreeNameMap[sample];
+    const auto & iohistname = (fIsSignalFile) ? Common::SignalCutFlowHistNameMap[sample] : Common::CutFlowHistNameMap[sample]);
+
+    // Get Input TTree
+    auto intree = (TTree*)fInFile->Get(Form("%s",iotreename.Data()));
+    Common::CheckValidTree(intree,iotreename,fInFileName);
 
     // Get Input Cut Flow Histogram 
-    auto inhist = (TH1F*)infile->Get(Form("%s",Common::h_cutflowname.Data()));
-    Common::CheckValidHist(inhist,Common::h_cutflowname,infilename);
+    auto inhist = (TH1F*)infile->Get(Form("%s",iohistname.Data()));
+    Common::CheckValidHist(inhist,iohistname,fInFileName);
+
+    // temporarily rename so as not to confuse things
+    intree->SetName("tmpInTree");
+    inhist->SetName("tmpInHist");
 
     // Init Output Cut Flow Histogram 
     std::map<TString,Int_t> binlabels;
-    auto outhist = Common::SetupOutCutFlowHist(inhist,Common::SignalCutFlowHistNameMap[sample],binlabels);
+    auto outhist = Common::SetupOutCutFlowHist(inhist,iohistname,binlabels);
 
     // Initialize map of lists
     std::map<TString,TEntryList*> listmap;
     fOutFile->cd();
-    SignalSkimmer::InitListMap(listmap,sample);
+    SuperFastSkimmer::InitListMap(listmap,sample);
 
-    // use evt wgt to fill cutflow hist
+    // Set tmp wgt for filling output histogram
     Float_t evtwgt = 0;
     TBranch * b_evtwgt = 0;
     intree->SetBranchAddress("evtwgt",&evtwgt,&b_evtwgt);
@@ -115,7 +127,7 @@ void SignalSkimmer::MakeSkimsFromTrees()
     // Write out a copy of the last skim
     fOutFile->cd();
     auto outtree = intree->CopyTree("");
-    outtree->SetName(Form("%s",Common::TreeNameMap[sample].Data()));
+    outtree->SetName(Form("%s",iotreename.Data()));
     outtree->Write(outtree->GetName(),TObject::kWriteDelete);
 
     // Write out hist
@@ -138,11 +150,10 @@ void SignalSkimmer::MakeSkimsFromTrees()
     delete outtree;
     delete inhist;
     delete intree;
-    delete infile;
   } // end loop over signal samples
 }
 
-void SignalSkimmer::MakeConfigPave()
+void SuperFastSkimmer::MakeConfigPave()
 {
   std::cout << "Dumping config to a pave..." << std::endl;
 
@@ -151,33 +162,44 @@ void SignalSkimmer::MakeConfigPave()
   fConfigPave->SetName(Form("%s",Common::pavename.Data()));
   
   // give grand title
-  fConfigPave->AddText("***** SignalSkimmer Config *****");
+  fConfigPave->AddText("***** SuperFastSkimmer Config *****");
 
   // dump cut config
-  Common::AddTextFromInputConfig(fConfigPave,"SignalSkimmer Cut Config",fCutFlowConfig);
+  Common::AddTextFromInputConfig(fConfigPave,"SuperFastSkimmer Cut Config",fCutFlowConfig);
+
+  // padding
+  Common::AddPaddingToPave(fConfigPave,3);
+
+  // save name of infile
+  fConfigPave->AddText(Form("InFile name: %s (isSignal : %s",fInFileName.Data(),Common::PrintBool(fIsSignalFile)));
+
+  // dump in old config
+  Common::AddTextFromInputPave(fConfigPave,fInFile);
 
   // save to output file
   fOutFile->cd();
   fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
-void SignalSkimmer::SetupCommon()
+void SuperFastSkimmer::SetupCommon()
 {
   std::cout << "Setting up Common..." << std::endl;
 
-  Common::SetupSignalSamples();
+  if (fIsSignalFile) Common::SetupSignalSamples();
+  else               Common::SetupSamples();
   Common::SetupGroups();
   Common::SetupTreeNames();
-  Common::SetupSignalCutFlowHistNames();
+  if (fIsSignalFile) Common::SetupSignalCutFlowHistNames();
+  else               Common::SetupCutFlowHistNames();
   Common::SetupCutFlow(fCutFlowConfig);
 }
 
-void SignalSkimmer::InitListMap(std::map<TString,TEntryList*> & listmap, const TString & signal)
+void SuperFastSkimmer::InitListMap(std::map<TString,TEntryList*> & listmap, const TString & sample)
 {
   // loop over vector of cuts, make new list for each
   for (const auto & CutFlowPair : Common::CutFlowPairVec)
   {
     const auto & label  = CutFlowPair.first;
-    listmap[label] = new TEntryList(Form("%s_%s_EntryList",signal.Data(),label.Data()),"EntryList");
+    listmap[label] = new TEntryList(Form("%s_%s_EntryList",sample.Data(),label.Data()),"EntryList");
   }
 }
