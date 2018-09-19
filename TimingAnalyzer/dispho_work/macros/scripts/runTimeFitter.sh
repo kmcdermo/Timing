@@ -24,15 +24,15 @@ PrepOutDir ${fulldir}
 ## copy everything
 for canvscale in "${canvscales[@]}"
 do
-    if [[ "${canvscale}" == "log" ]]
-    then
-	continue ## skip making logy plots for now
-    fi
-
     for ext in "${exts[@]}"
     do
 	for output in "${outputs[@]}"
 	do
+	    if [[ "${canvscale}" == "log" ]] && [[ "${output}" == "mu" ]]
+	    then
+		continue ## do not produce logy plots for mu
+	    fi
+
 	    cp ${output}_${outfiletext}_${canvscale}.${ext} ${fulldir}
 	    cp ${output}_${outfiletext}_${canvscale}_logx.${ext} ${fulldir}
 	done
