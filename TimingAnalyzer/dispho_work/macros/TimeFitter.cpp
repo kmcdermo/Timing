@@ -133,7 +133,7 @@ void TimeFitter::MakePlots(FitStruct & DataInfo, FitStruct & MCInfo)
 
     // lin first, then log --> log disabled for now
     TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,false);
-    //    TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,true);
+    if (key.Contains("sigma",TString::kExact)) TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,true);
   }
 }
 
@@ -321,7 +321,7 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
 
   if (key.Contains("sigma",TString::kExact))
   {
-    min = 0.f;
+    min = (isLogy ? 0.1f : 0.f);
     max = 1.f;
   }
   else
@@ -329,6 +329,20 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
     const Float_t factor = (isLogy ? 3.f : 1.5f);
     min = (min > 0.f ? (min / factor) : (min * factor));
     max = (max > 0.f ? (max * factor) : (max / factor));
+
+    if (key.Contains("mu",TString::kExact))
+    {
+      if (min < -10.f) 
+      {
+	min = -1.f;
+	if (max < min) max = 0.f;
+      }
+      if (max > 10.f)
+      {
+	max = 1.f;
+	if (max < min) min = 0.f;
+      }
+    }
   }
 
   // set min, max
