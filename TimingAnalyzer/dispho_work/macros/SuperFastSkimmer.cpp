@@ -47,23 +47,21 @@ void SuperFastSkimmer::MakeSkimsFromTrees()
 {
   std::cout << "Skimming trees from cut flow vector..." << std::endl;
 
-  for (const auto & SamplePair : Common::SampleMap)
+  for (const auto & GroupPair : Common::GroupMap)
   {
-    // Init
-    const auto & input  = SamplePair.first;
-    const auto & sample = SamplePair.second;
-    std::cout << "Working on input: " << input.Data() << std::endl;
-
-    // Get Input/Output names for hist and tree
+    // Init: get input/output names for hist and tree
+    const auto & sample     = GroupPair.first;
     const auto & iotreename = Common::TreeNameMap[sample];
-    const auto & iohistname = (fIsSignalFile) ? Common::SignalCutFlowHistNameMap[sample] : Common::CutFlowHistNameMap[sample]);
+    const auto & iohistname = ((fIsSignalFile) ? Common::SignalCutFlowHistNameMap[sample] : Common::GroupCutFlowHistNameMap[sample]);
+
+    std::cout << "Working on input: " << sample.Data() << std::endl;
 
     // Get Input TTree
     auto intree = (TTree*)fInFile->Get(Form("%s",iotreename.Data()));
     Common::CheckValidTree(intree,iotreename,fInFileName);
 
     // Get Input Cut Flow Histogram 
-    auto inhist = (TH1F*)infile->Get(Form("%s",iohistname.Data()));
+    auto inhist = (TH1F*)fInFile->Get(Form("%s",iohistname.Data()));
     Common::CheckValidHist(inhist,iohistname,fInFileName);
 
     // temporarily rename so as not to confuse things
@@ -90,8 +88,8 @@ void SuperFastSkimmer::MakeSkimsFromTrees()
       // Get entry list
       const auto & label = CutFlowPair.first;
       auto & list = listmap[label];
-      list->SetDirectory(infile);
-      infile->cd();
+      list->SetDirectory(fInFile);
+      fInFile->cd();
 
       //////////////// **************** HACK FOR NOW!!!! **************** ////////////////
       if (label.Contains("HLT",TString::kExact) && sample.EqualTo("GMSB_L200_CTau400")) continue;
@@ -171,7 +169,7 @@ void SuperFastSkimmer::MakeConfigPave()
   Common::AddPaddingToPave(fConfigPave,3);
 
   // save name of infile
-  fConfigPave->AddText(Form("InFile name: %s (isSignal : %s",fInFileName.Data(),Common::PrintBool(fIsSignalFile)));
+  fConfigPave->AddText(Form("InFile name: %s (isSignal : %s",fInFileName.Data(),Common::PrintBool(fIsSignalFile).Data()));
 
   // dump in old config
   Common::AddTextFromInputPave(fConfigPave,fInFile);
@@ -190,7 +188,7 @@ void SuperFastSkimmer::SetupCommon()
   Common::SetupGroups();
   Common::SetupTreeNames();
   if (fIsSignalFile) Common::SetupSignalCutFlowHistNames();
-  else               Common::SetupCutFlowHistNames();
+  else               Common::SetupGroupCutFlowHistNames();
   Common::SetupCutFlow(fCutFlowConfig);
 }
 

@@ -22,7 +22,7 @@ class SuperFastSkimmer
 {
 public:
   SuperFastSkimmer(const TString & cutflowconfig, const TString & infilename,
-		   const Boo_t issignalfile, const TString & outfiletext);
+		   const Bool_t issignalfile, const TString & outfiletext);
   ~SuperFastSkimmer();
 
   // Initialize
@@ -47,6 +47,9 @@ private:
   const Bool_t  fIsSignalFile;
   const TString fOutFileText;
 
+  // Input
+  TFile * fInFile;
+  
   // Output
   TFile * fOutFile;
   TPaveText * fConfigPave;
