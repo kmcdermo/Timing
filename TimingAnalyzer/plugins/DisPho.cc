@@ -1261,6 +1261,8 @@ void DisPho::InitializeRecHitBranches(const int nRecHits)
     rhtime[i] = -9999.f;
     rhTOF [i] = -9999.f;
 
+    rhID  [i] = -1;
+
     rhisOOT[i] = false;
     rhisGS6[i] = false;
     rhisGS1[i] = false;
