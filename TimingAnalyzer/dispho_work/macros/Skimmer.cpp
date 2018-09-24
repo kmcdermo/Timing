@@ -756,8 +756,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       // inpho.b_seedZ->GetEntry(entry);
       inpho.b_seedE->GetEntry(entry);
       inpho.b_seedtime->GetEntry(entry);
-      // inpho.b_seedTOF->GetEntry(entry);
-      // inpho.b_seedID->GetEntry(entry);
+      inpho.b_seedTOF->GetEntry(entry);
+      inpho.b_seedID->GetEntry(entry);
       // inpho.b_seedisOOT->GetEntry(entry);
       inpho.b_seedisGS6->GetEntry(entry);
       inpho.b_seedisGS1->GetEntry(entry);
@@ -787,11 +787,12 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     // fInRecHits.b_Z->GetEntry(entry);
     fInRecHits.b_E->GetEntry(entry);
     fInRecHits.b_time->GetEntry(entry);
-    // fInRecHits.b_TOF->GetEntry(entry);
+    fInRecHits.b_TOF->GetEntry(entry);
     // fInRecHits.b_ID->GetEntry(entry);
     // fInRecHits.b_isOOT->GetEntry(entry);
     fInRecHits.b_isGS6->GetEntry(entry);
     fInRecHits.b_isGS1->GetEntry(entry);
+    fInRecHits.b_adcToGeV->GetEntry(entry);
     fInRecHits.b_ped12->GetEntry(entry);
     fInRecHits.b_ped6->GetEntry(entry);
     fInRecHits.b_ped1->GetEntry(entry);
@@ -863,12 +864,15 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.seedTOF  = (*fInRecHits.TOF) [seed];
 
 	// get trigger tower
+	outpho.seedTT = Common::GetTriggerTower((*fInRecHits.ID)[seed]);
+	
 	// outpho.seedID    = (*fInRecHits.ID)[seed];
 	// outpho.seedisOOT = (*fInRecHits.isOOT)[seed];
-	// outpho.seedTT    = Common::GetTriggerTower((*fInRecHits.ID)[seed]);
 
 	outpho.seedisGS6 = (*fInRecHits.isGS6)[seed];
 	outpho.seedisGS1 = (*fInRecHits.isGS1)[seed];
+	outpho.seedadcToGeV = (*fInRecHits.adcToGeV)[seed];
+
 	outpho.seedped12 = (*fInRecHits.ped12)[seed];
 	outpho.seedped6  = (*fInRecHits.ped6) [seed];
 	outpho.seedped1  = (*fInRecHits.ped1) [seed];
@@ -941,10 +945,11 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 
 	// outpho.seedID    = 0;
 	// outpho.seedisOOT = -1;
-	// outpho.seedTT    = -9999;
+	outpho.seedTT    = -9999;
 
 	outpho.seedisGS6 = -1;
 	outpho.seedisGS1 = -1;
+	outpho.seedadcToGeV = -9999.f;
 	outpho.seedped12 = -9999.f;
 	outpho.seedped6  = -9999.f;
 	outpho.seedped1  = -9999.f;
@@ -963,7 +968,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.weightedtime      = -9999.f;
 	outpho.weightedtimeLT120 = -9999.f;
       }
-    }
+    } // end check over store rechits
     else
     {
       // outpho.seedX = inpho.seedX;
@@ -971,11 +976,13 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       // outpho.seedZ = inpho.seedZ;
       outpho.seedE = inpho.seedE;
       outpho.seedtime = inpho.seedtime;
-      // outpho.seedTOF = inpho.seedTOF;
+      outpho.seedTOF = inpho.seedTOF;
       // outpho.seedID = inpho.seedID;
       // outpho.seedisOOT = inpho.seedisOOT;
+      outpho.seedTT = Common::GetTriggerTower(inpho.seedID)
       outpho.seedisGS6 = inpho.seedisGS1;
       outpho.seedisGS1 = inpho.seedisGS6;
+      outpho.seedadcToGeV = inpho.seedadcToGeV;
       outpho.seedped12 = inpho.seedped12;
       outpho.seedped6 = inpho.seedped6;
       outpho.seedped1 = inpho.seedped1;
@@ -1121,6 +1128,7 @@ void Skimmer::InitInBranchVecs()
     // fInRecHits.isOOT = 0;
     fInRecHits.isGS6 = 0;
     fInRecHits.isGS1 = 0;
+    fInRecHits.adcToGeV = 0;
     fInRecHits.ped12 = 0;
     fInRecHits.ped6 = 0;
     fInRecHits.ped1 = 0;
@@ -1290,6 +1298,7 @@ void Skimmer::InitInBranches()
     // fInTree->SetBranchAddress(fInRecHits.s_isOOT.c_str(), &fInRecHits.isOOT, &fInRecHits.b_isOOT);
     fInTree->SetBranchAddress(fInRecHits.s_isGS6.c_str(), &fInRecHits.isGS6, &fInRecHits.b_isGS6);
     fInTree->SetBranchAddress(fInRecHits.s_isGS1.c_str(), &fInRecHits.isGS1, &fInRecHits.b_isGS1);
+    fInTree->SetBranchAddress(fInRecHits.s_adcToGeV.c_str(), &fInRecHits.adcToGeV, &fInRecHits.b_adcToGeV);
     fInTree->SetBranchAddress(fInRecHits.s_ped12.c_str(), &fInRecHits.ped12, &fInRecHits.b_ped12);
     fInTree->SetBranchAddress(fInRecHits.s_ped6.c_str(), &fInRecHits.ped6, &fInRecHits.b_ped6);
     fInTree->SetBranchAddress(fInRecHits.s_ped1.c_str(), &fInRecHits.ped1, &fInRecHits.b_ped1);
@@ -1344,11 +1353,12 @@ void Skimmer::InitInBranches()
       // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedZ.c_str(),ipho), &pho.seedZ, &pho.b_seedZ);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE, &pho.b_seedE);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime, &pho.b_seedtime);
-      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF, &pho.b_seedTOF);
-      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID, &pho.b_seedID);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF, &pho.b_seedTOF);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID, &pho.b_seedID);
       // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT, &pho.b_seedisOOT);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisGS6.c_str(),ipho), &pho.seedisGS6, &pho.b_seedisGS6);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisGS1.c_str(),ipho), &pho.seedisGS1, &pho.b_seedisGS1);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedadcToGeV.c_str(),ipho), &pho.seedadcToGeV, &pho.b_seedadcToGeV);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped12.c_str(),ipho), &pho.seedped12, &pho.b_seedped12);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped6.c_str(),ipho), &pho.seedped6, &pho.b_seedped6);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped1.c_str(),ipho), &pho.seedped1, &pho.b_seedped1);
@@ -1690,6 +1700,7 @@ void Skimmer::InitOutBranches()
     // fOutTree->Branch(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT);
     fOutTree->Branch(Form("%s_%i",pho.s_seedisGS6.c_str(),ipho), &pho.seedisGS6);
     fOutTree->Branch(Form("%s_%i",pho.s_seedisGS1.c_str(),ipho), &pho.seedisGS1);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedadcToGeV.c_str(),ipho), &pho.seedadcToGeV);
     fOutTree->Branch(Form("%s_%i",pho.s_seedped12.c_str(),ipho), &pho.seedped12);
     fOutTree->Branch(Form("%s_%i",pho.s_seedped6.c_str(),ipho), &pho.seedped6);
     fOutTree->Branch(Form("%s_%i",pho.s_seedped1.c_str(),ipho), &pho.seedped1);

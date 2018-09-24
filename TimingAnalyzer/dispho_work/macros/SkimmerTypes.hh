@@ -358,6 +358,7 @@ struct RecHits
   std::vector<Int_t>   * isOOT;
   std::vector<Int_t>   * isGS6;
   std::vector<Int_t>   * isGS1;
+  std::vector<Float_t> * adcToGeV;
   std::vector<Float_t> * ped12;
   std::vector<Float_t> * ped6;
   std::vector<Float_t> * ped1;
@@ -375,6 +376,7 @@ struct RecHits
   std::string s_isOOT = "rhisOOT";
   std::string s_isGS6 = "rhisGS6";
   std::string s_isGS1 = "rhisGS1";
+  std::string s_adcToGeV = "rhadcToGeV";
   std::string s_ped12 = "rhped12";
   std::string s_ped6 = "rhped6";
   std::string s_ped1 = "rhped1";
@@ -392,6 +394,7 @@ struct RecHits
   TBranch * b_isOOT;
   TBranch * b_isGS6;
   TBranch * b_isGS1;
+  TBranch * b_adcToGeV;
   TBranch * b_ped12;
   TBranch * b_ped6;
   TBranch * b_ped1;
@@ -453,6 +456,7 @@ struct Pho
   UInt_t  seedID;
   Int_t   seedisGS6;
   Int_t   seedisGS1;
+  Float_t seedadcToGeV;
   Float_t seedped12;
   Float_t seedped6;
   Float_t seedped1;
@@ -522,6 +526,7 @@ struct Pho
   std::string s_seedID = "phoseedID";
   std::string s_seedisGS6 = "phoseedisGS6";
   std::string s_seedisGS1 = "phoseedisGS1";
+  std::string s_seedadcToGeV = "phoseedadcToGeV";
   std::string s_seedped12 = "phoseedped12";
   std::string s_seedped6 = "phoseedped6";
   std::string s_seedped1 = "phoseedped1";
@@ -589,6 +594,7 @@ struct Pho
   TBranch * b_seedID;
   TBranch * b_seedisGS6;
   TBranch * b_seedisGS1;
+  TBranch * b_seedadcToGeV;
   TBranch * b_seedped12;
   TBranch * b_seedped6;
   TBranch * b_seedped1;
