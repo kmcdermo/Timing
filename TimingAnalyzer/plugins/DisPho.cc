@@ -1509,8 +1509,15 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
       {
 	phoBranch.recHits_.emplace_back(rhiter->first);
       }
+
+      //  sort rec hit list in photon by rechitE which is already stored for this event
+      std::sort(phoBranch.recHits_.begin(),phoBranch.recHits_.end(),
+		[&](const auto rh1, const auto rh2)
+		{
+		  return (rhE[rh1] > rhE[rh2]);
+		});
     }
-    
+  
     // save seed info + swiss cross
     if (recHitMap.count(seedRawId)) 
     {
@@ -1533,7 +1540,7 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     
       // swiss cross
       if (recHits->size() > 0) phoBranch.suisseX_ = EcalTools::swissCross(seedDetId, *recHits, rhEmin);
-    }
+    } // end check over if seed exists
     
     // some standard booleans
     phoBranch.isOOT_ = photon.isOOT();
