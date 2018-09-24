@@ -29,11 +29,26 @@
 #include <algorithm>
 #include <sys/stat.h>
 
+// ECAL Enums
+enum ECAL {EB, EM, EP};
+
 // Sample Enums
 enum SampleGroup {isData, isBkgd, isSignal, isToy};
 
 // Variable Enums
 enum Variable {X, Y};
+
+// ECAL DetID
+struct DetIDStruct
+{
+  DetIDStruct() {}
+  DetIDStruct(const Int_t i1, const Int_t i2, const ECAL & ecal) 
+    : i1(i1), i2(i2), ecal(ecal) {}
+  
+  const Int_t i1; // EB: iphi, EE: ix
+  const Int_t i2; // EB: ieta, EE: iy
+  const ECAL ecal; // EB, EM, EP
+};
 
 // Era Struct
 struct EraStruct
@@ -95,6 +110,11 @@ namespace Common
   constexpr Float_t etaEEmax    = 2.5;
   constexpr Float_t radEB       = 129.f;
   constexpr Float_t zEE         = 314.f;
+  extern std::map<UInt_t,DetIDStruct> DetIDMap;
+  static const TString DetIDConfig = "ecal_config/detids.txt";
+  ECAL GetECALEnum(const TString & ecal);
+  void SetupDetIDs();
+  Bool_t IsCrossNeighbor(const UInt_t detid1, const UInt_t detid2);
 
   // Physics info
   constexpr Float_t helix = 0.0114; // 0.3 * 3.8 T / (100 cm / m), 0.3 = sol m/ns --> constant in radius of curv.

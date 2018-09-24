@@ -19,6 +19,9 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   // Set skim type first
   Skimmer::SetSkim();
 
+  // get detids if skim needs it
+  if (fSkim == DiXtal) Common::SetupDetIDs();
+
   // Get era info
   Common::SetupEras();
 
@@ -131,15 +134,15 @@ void Skimmer::EventLoop()
       //      fOutCutFlowWgt->Fill((cutLabels["nPhotons"]*1.f)-0.5f,wgt);
       //      fOutCutFlowScl->Fill((cutLabels["nPhotons"]*1.f)-0.5f,evtwgt);
       
-      fInPhos[0].b_isEB->GetEntry(entry);
-      if (!fInPhos[0].isEB) continue;
+      fInPhos.front().b_isEB->GetEntry(entry);
+      if (!fInPhos.front().isEB) continue;
       fOutCutFlow->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,wgt);
       //      fOutCutFlow   ->Fill((cutLabels["ph0isEB"]*1.f)-0.5f);
       //      fOutCutFlowWgt->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,wgt);
       //      fOutCutFlowScl->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,evtwgt);
 
-      fInPhos[0].b_pt->GetEntry(entry);
-      if (fInPhos[0].pt < 70.f) continue;
+      fInPhos.front().b_pt->GetEntry(entry);
+      if (fInPhos.front().pt < 70.f) continue;
       fOutCutFlow->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
       //      fOutCutFlow   ->Fill((cutLabels["ph0pt70"]*1.f)-0.5f);
       //      fOutCutFlowWgt->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
@@ -167,11 +170,7 @@ void Skimmer::EventLoop()
       //      fOutCutFlowScl->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
 
       // fill photon list in standard fashion
-      fPhoList.clear();
-      for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
-      {
-	fPhoList.emplace_back(ipho);
-      }
+      Skimmer::FillPhoListStandard();
     }
     else if (!fOutConfig.isToy && (fSkim == Zee))
     {
@@ -248,7 +247,7 @@ void Skimmer::EventLoop()
 		});
           
       // get best pair
-      const auto & phopair = phopairs[0];
+      const auto & phopair = phopairs.front();
       
       // make sure within 30 GeV
       if ((phopair.mass < 60.f) || (phopair.mass > 150.f)) continue;
@@ -277,12 +276,13 @@ void Skimmer::EventLoop()
     {
       // get rechits
       fInRecHits.b_E->GetEntry(entry);
-
+      fInRecHits.b_ID->GetEntry(entry);
 
       // loop over photons, getting pairs of rec hits that are most energetic and match!
+      std::vector<std::pair<Int_t,Int_t> > good_pairs;
       for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
       {	
-	auto & pho = fInPhos[ipho];
+	auto & inpho = fInPhos[ipho];
 
 	// skip OOT for now
 	pho.b_isOOT->GetEntry(entry);
@@ -291,32 +291,70 @@ void Skimmer::EventLoop()
 	// sieie cut: currently off -- 
 	// pho.b_isEB->GetEntry(entry);
 	// pho.b_sieie->GetEntry(entry);
+	// pho.b_smaj->GetEntry(entry);
+	// pho.b_smin->GetEntry(entry);
 	// if ((pho.isEB && pho.sieie > 0.0103) || (!pho.isEB && pho.sieie > 0.0271)) continue;
 	
-	// sort rec hit list by E!
-	pho.b_recHits->GetEntry(entry);
-	std::sort(pho.recHits->begin(),pho.recHits->end(),
+	// HACK!!! New ntuples will sort rec hit list by E!
+	inpho.b_recHits->GetEntry(entry);
+	std::sort(inpho.recHits->begin(),inpho.recHits->end(),
 		  [&](const auto rh1, const auto rh2)
 		  {
 		    return ((*fInRecHits.E)[rh1] > (*fInRecHits.E)[rh2]);
 		  });
 	
+	// get pair of rechits that are good candidates : double loop, yo
 	const auto n = pho.recHits->size();
 	for (auto i = 0U; i < n; i++)
 	{
-	  
-	  for (auto j = i+1; j < n
+	  Bool_t isGoodPair = false;
 
+	  const auto rh_i = (*inpho.recHits)[i]; // position within event rec hits vector
+	  const auto E_i  = (*fInRecHits.E) [rh_i];
+	  const auto id_i = (*fInRecHits.ID)[rh_i];
 
-      }
+	  for (auto j = i+1; j < n; j++)
+	  {
+	    const auto rh_j = (*inpho.recHits)[j]; // position within event rec hits vector
+	    const auto E_j  = (*fInRecHits.E) [rh_j];
+	    const auto id_j = (*fInRecHits.ID)[rh_j];
+
+	    if (E_i > (1.2f * E_j)) break; // need to be within 20% of energy
+	    if (Common::IsCrossNeighbor(id_i,id_j)) // neighboring crystals
+	    {
+	      good_pairs.emplace_back(rh_i,rh_j);
+	      isGoodPair = true;
+	      break;
+	    } 
+	  } // end inner double loop over rechits
+	  if (isGoodPair) break;
+	} // end outer double loop over rechits
+      } // end loop over photons
+
+      // skip if no pairs found
+      if (good_pairs.size() == 0) continue;
+      fOutCutFlow->Fill((cutLabels["goodDiXtal"]*1.f)-0.5f,wgt);
+
+      // sort pairs by highest energy for E1
+      std::sort(good_pairs.begin(),good_pairs.end(),
+		[&](const auto & pair1, const auto & pair2)
+		{
+		  return ((*fInRecHits.E)[pair1.first] > (*fInRecHits.E)[pair2.first]);
+		});
+
+      // now do the unholiest of exercises... set seed ids of first and second photon to pair ids
+      const auto & pair = good_pairs.front();
+
+      fInPhotons.seed = pair.first;
+      fInPhotons.seed = pair.second;
+
+      // set pho list in standard fashion
+      Skimmer::FillPhoListStandard();
     }
     else
     {
-      fPhoList.clear();
-      for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
-      {
-	fPhoList.emplace_back(ipho);
-      }
+      // no skim, just set photon list
+      Skimmer::FillPhoListStandard();
     }
 
     // common skim params for MC
@@ -681,14 +719,14 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     // inpho.b_HcalPFClIsoC->GetEntry(entry);
     // inpho.b_TrkIsoC->GetEntry(entry);
     inpho.b_sieie->GetEntry(entry);
-//     inpho.b_sipip->GetEntry(entry);
-//     inpho.b_sieip->GetEntry(entry);
-//     inpho.b_e2x2->GetEntry(entry);
-//     inpho.b_e3x3->GetEntry(entry);
-//     inpho.b_e5x5->GetEntry(entry);
+    //  inpho.b_sipip->GetEntry(entry);
+    // inpho.b_sieip->GetEntry(entry);
+    // inpho.b_e2x2->GetEntry(entry);
+    // inpho.b_e3x3->GetEntry(entry);
+    // inpho.b_e5x5->GetEntry(entry);
     inpho.b_smaj->GetEntry(entry);
     inpho.b_smin->GetEntry(entry);
-//     inpho.b_alpha->GetEntry(entry);
+    // inpho.b_alpha->GetEntry(entry);
     inpho.b_suisseX->GetEntry(entry);
     inpho.b_isOOT->GetEntry(entry);
     inpho.b_isEB->GetEntry(entry);
@@ -701,14 +739,14 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 
     if (fInConfig.storeRecHits)
     {
-      inpho.b_seed->GetEntry(entry);
+      if (fSkim != DiXtal) inpho.b_seed->GetEntry(entry); // DiXtal has unholy way of storing seed id... see skim above
       inpho.b_recHits->GetEntry(entry);
     }
     else
     {
       inpho.b_seedtime->GetEntry(entry);
       inpho.b_seedE   ->GetEntry(entry);
-      //      inpho.b_seedID  ->GetEntry(entry);
+      // inpho.b_seedID  ->GetEntry(entry);
     }
     
     if (fIsMC)
@@ -729,7 +767,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     fInRecHits.b_E->GetEntry(entry);
     fInRecHits.b_time->GetEntry(entry);
     fInRecHits.b_OOT->GetEntry(entry);
-    //    fInRecHits.b_ID->GetEntry(entry);
+    // fInRecHits.b_ID->GetEntry(entry);
   }
 
   // set output photon branches
@@ -760,14 +798,14 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     // outpho.HcalPFClIsoC = inpho.HcalPFClIsoC;
     // outpho.TrkIsoC = inpho.TrkIsoC;
     outpho.sieie = inpho.sieie;
-//     outpho.sipip = inpho.sipip;
-//     outpho.sieip = inpho.sieip;
-//     outpho.e2x2 = inpho.e2x2;
-//     outpho.e3x3 = inpho.e3x3;
-//     outpho.e5x5 = inpho.e5x5;
+    // outpho.sipip = inpho.sipip;
+    // outpho.sieip = inpho.sieip;
+    // outpho.e2x2 = inpho.e2x2;
+    // outpho.e3x3 = inpho.e3x3;
+    // outpho.e5x5 = inpho.e5x5;
     outpho.smaj = inpho.smaj;
     outpho.smin = inpho.smin;
-//     outpho.alpha = inpho.alpha;
+    // outpho.alpha = inpho.alpha;
     outpho.suisseX = inpho.suisseX;
     outpho.isOOT = inpho.isOOT;
     outpho.isEB = inpho.isEB;
@@ -784,7 +822,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       {
 	outpho.seedtime = (*fInRecHits.time)[inpho.seed];
 	outpho.seedE    = (*fInRecHits.E)   [inpho.seed];
-	//	outpho.seedID   = (*fInRecHits.ID)  [inpho.seed];
+	// outpho.seedID   = (*fInRecHits.ID)  [inpho.seed];
 
 	// compute mean time
 	outpho.nrechits = 0;
@@ -837,7 +875,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       {
 	outpho.seedtime = -9999.f;
 	outpho.seedE    = -9999.f;
-	//	outpho.seedID   = 0;
+	// outpho.seedID   = 0;
 	
 	outpho.nrechits      = -1;
 	outpho.meantime      = -9999.f;
@@ -851,7 +889,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     {
       outpho.seedtime = inpho.seedtime;
       outpho.seedE    = inpho.seedE;
-      //      outpho.seedID   = inpho.seedID;
+      // outpho.seedID   = inpho.seedID;
     }
     
     if (fIsMC)
@@ -983,7 +1021,7 @@ void Skimmer::InitInBranchVecs()
     fInRecHits.E = 0;
     fInRecHits.time = 0;
     fInRecHits.OOT = 0;
-    //    fInRecHits.ID = 0;
+    if (fSkim == DiXtal) fInRecHits.ID = 0;
 
     for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
     {
@@ -1141,7 +1179,7 @@ void Skimmer::InitInBranches()
     fInTree->SetBranchAddress(fInRecHits.s_E.c_str(), &fInRecHits.E, &fInRecHits.b_E);
     fInTree->SetBranchAddress(fInRecHits.s_time.c_str(), &fInRecHits.time, &fInRecHits.b_time);
     fInTree->SetBranchAddress(fInRecHits.s_OOT.c_str(), &fInRecHits.OOT, &fInRecHits.b_OOT);
-    //    fInTree->SetBranchAddress(fInRecHits.s_ID.c_str(), &fInRecHits.ID, &fInRecHits.b_ID);
+    if (fSkim == DiXtal) fInTree->SetBranchAddress(fInRecHits.s_ID.c_str(), &fInRecHits.ID, &fInRecHits.b_ID);
   }
 
   fInTree->SetBranchAddress(fInEvent.s_nphotons.c_str(), &fInEvent.nphotons, &fInEvent.b_nphotons);
@@ -1170,14 +1208,14 @@ void Skimmer::InitInBranches()
     // fInTree->SetBranchAddress(Form("%s_%i",pho.s_HcalPFClIsoC.c_str(),ipho), &pho.HcalPFClIsoC, &pho.b_HcalPFClIsoC);
     // fInTree->SetBranchAddress(Form("%s_%i",pho.s_TrkIsoC.c_str(),ipho), &pho.TrkIsoC, &pho.b_TrkIsoC);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_sieie.c_str(),ipho), &pho.sieie, &pho.b_sieie);
-//     fInTree->SetBranchAddress(Form("%s_%i",pho.s_sipip.c_str(),ipho), &pho.sipip, &pho.b_sipip);
-//     fInTree->SetBranchAddress(Form("%s_%i",pho.s_sieip.c_str(),ipho), &pho.sieip, &pho.b_sieip);
-//     fInTree->SetBranchAddress(Form("%s_%i",pho.s_e2x2.c_str(),ipho), &pho.e2x2, &pho.b_e2x2);
-//     fInTree->SetBranchAddress(Form("%s_%i",pho.s_e3x3.c_str(),ipho), &pho.e3x3, &pho.b_e3x3);
-//     fInTree->SetBranchAddress(Form("%s_%i",pho.s_e5x5.c_str(),ipho), &pho.e5x5, &pho.b_e5x5);
+    // fInTree->SetBranchAddress(Form("%s_%i",pho.s_sipip.c_str(),ipho), &pho.sipip, &pho.b_sipip);
+    // fInTree->SetBranchAddress(Form("%s_%i",pho.s_sieip.c_str(),ipho), &pho.sieip, &pho.b_sieip);
+    // fInTree->SetBranchAddress(Form("%s_%i",pho.s_e2x2.c_str(),ipho), &pho.e2x2, &pho.b_e2x2);
+    // fInTree->SetBranchAddress(Form("%s_%i",pho.s_e3x3.c_str(),ipho), &pho.e3x3, &pho.b_e3x3);
+    // fInTree->SetBranchAddress(Form("%s_%i",pho.s_e5x5.c_str(),ipho), &pho.e5x5, &pho.b_e5x5);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_smaj.c_str(),ipho), &pho.smaj, &pho.b_smaj);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_smin.c_str(),ipho), &pho.smin, &pho.b_smin);
-    //    fInTree->SetBranchAddress(Form("%s_%i",pho.s_alpha.c_str(),ipho), &pho.alpha, &pho.b_alpha);
+    // fInTree->SetBranchAddress(Form("%s_%i",pho.s_alpha.c_str(),ipho), &pho.alpha, &pho.b_alpha);
     if (fInConfig.storeRecHits)
     {
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seed.c_str(),ipho), &pho.seed, &pho.b_seed);
@@ -1187,7 +1225,7 @@ void Skimmer::InitInBranches()
     {
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime, &pho.b_seedtime);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE, &pho.b_seedE);
-      //      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID, &pho.b_seedID);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID, &pho.b_seedID);
     }
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX, &pho.b_suisseX);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_isOOT.c_str(),ipho), &pho.isOOT, &pho.b_isOOT);
@@ -1494,18 +1532,18 @@ void Skimmer::InitOutBranches()
     // fOutTree->Branch(Form("%s_%i",pho.s_HcalPFClIsoC.c_str(),ipho), &pho.HcalPFClIsoC);
     // fOutTree->Branch(Form("%s_%i",pho.s_TrkIsoC.c_str(),ipho), &pho.TrkIsoC);
     fOutTree->Branch(Form("%s_%i",pho.s_sieie.c_str(),ipho), &pho.sieie);
-//     fOutTree->Branch(Form("%s_%i",pho.s_sipip.c_str(),ipho), &pho.sipip);
-//     fOutTree->Branch(Form("%s_%i",pho.s_sieip.c_str(),ipho), &pho.sieip);
-//     fOutTree->Branch(Form("%s_%i",pho.s_e2x2.c_str(),ipho), &pho.e2x2);
-//     fOutTree->Branch(Form("%s_%i",pho.s_e3x3.c_str(),ipho), &pho.e3x3);
-//     fOutTree->Branch(Form("%s_%i",pho.s_e5x5.c_str(),ipho), &pho.e5x5);
+    // fOutTree->Branch(Form("%s_%i",pho.s_sipip.c_str(),ipho), &pho.sipip);
+    // fOutTree->Branch(Form("%s_%i",pho.s_sieip.c_str(),ipho), &pho.sieip);
+    // fOutTree->Branch(Form("%s_%i",pho.s_e2x2.c_str(),ipho), &pho.e2x2);
+    // fOutTree->Branch(Form("%s_%i",pho.s_e3x3.c_str(),ipho), &pho.e3x3);
+    // fOutTree->Branch(Form("%s_%i",pho.s_e5x5.c_str(),ipho), &pho.e5x5);
     fOutTree->Branch(Form("%s_%i",pho.s_smaj.c_str(),ipho), &pho.smaj);
     fOutTree->Branch(Form("%s_%i",pho.s_smin.c_str(),ipho), &pho.smin);
     fOutTree->Branch(Form("%s_%i",pho.s_alpha.c_str(),ipho), &pho.alpha);
-    //    fOutTree->Branch(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX);
+    // fOutTree->Branch(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX);
     fOutTree->Branch(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime);
     fOutTree->Branch(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE);
-    fOutTree->Branch(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID);;
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID);;
     fOutTree->Branch(Form("%s_%i",pho.s_isOOT.c_str(),ipho), &pho.isOOT);
     fOutTree->Branch(Form("%s_%i",pho.s_isEB.c_str(),ipho), &pho.isEB);
     fOutTree->Branch(Form("%s_%i",pho.s_isHLT.c_str(),ipho), &pho.isHLT);
@@ -1572,6 +1610,10 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
     cutLabels["goodPho2"] = ++inNbinsX_new;
     cutLabels["diPhoMZrange"] = ++inNbinsX_new;
   }
+  else if (fSkim == DiXtal)
+  {
+    cutLabels["goodDiXtal"] = ++inNbinsX_new;
+  }
   else
   {
     std::cerr << "How did this happen?? Somehow, fSkim was not setup! Exiting..." << std::endl;
@@ -1610,6 +1652,15 @@ void Skimmer::GetPUWeights()
   for (auto ibin = 1; ibin <= fInPUWgtHist->GetNbinsX(); ibin++)
   {
     fPUWeights.emplace_back(fInPUWgtHist->GetBinContent(ibin));
+  }
+}
+
+void Skimmer::FillPhoListStandard()
+{      
+  fPhoList.clear();
+  for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
+  {
+    fPhoList.emplace_back(ipho);
   }
 }
 

@@ -55,6 +55,9 @@ public:
   void FillOutJets(const UInt_t entry);
   void FillOutPhos(const UInt_t entry);
 
+  // helper functions
+  void FillPhoListStandard();
+
 private:
   // I/O
   const TString fInDir;

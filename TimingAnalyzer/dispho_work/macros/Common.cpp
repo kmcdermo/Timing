@@ -4,6 +4,55 @@
 
 namespace Common
 {
+  // ECAL INFO
+  
+  ECAL GetECALEnum(const TString & ecal)
+  {
+    if      (ecal.EqualTo("EB" ,TString::kExact)) return ECAL::EB;
+    else if (ecal.EqualTo("EE-",TString::kExact)) return ECAL::EM;
+    else if (ecal.EqualTo("EE+",TString::kExact)) return ECAL::EP;
+    else
+    {
+      std::cerr << "How did this happen?? ecal read in as: " << ecal.Data()
+		<< " is not allowed! Continuing with -1..." << std::endl;
+      return -1;
+    }
+  }
+
+  std::map<UInt_t,DetIDStruct> DetIDMap;
+  void SetupDetIDs()
+  {
+    std::ifstream infile(Common::DetIDConfig.Data(), std::ios::in);
+    
+    UInt_t detid;
+    Int_t i1, i2;
+    TString ecal;
+
+    while (infile >> detid >> i1 >> i2 >> ecal)
+    {
+      Common::DetIDMap[detid] = {i1,i2,Common::GetECALEnum(ecal)};
+    }
+  }
+
+  Bool_t IsCrossNeighbor(const UInt_t detid1, const UInt_t detid2)
+  {
+    const auto & idinfo1 = Common::DetIDMap[detid1];
+    const auto & idinfo2 = Common::DetIDMap[detid2];
+    const auto diff_i1 = std::abs(idinfo1.i1-idinfo2.i1);
+    const auto diff_i2 = std::abs(idinfo1.i2-idinfo2.i2);
+
+    if (idinfo1 == EB)
+    {
+      return (((diff_i1 == 1 || diff_i1 == 360) && diff_i2 == 0) || (diff_i1 == 0 && diff_i2 == 1));
+    }
+    else
+    {
+      return ((diff_i1 == 1 && diff_2 == 0) || (diff_i1 == 0 && diff_i2 == 1));
+    }
+  }
+
+  // SAMPLE AND CONFIG INFO
+
   TString PrimaryDataset;
   std::map<TString,EraStruct> EraMap;
   std::map<TString,TString> SampleMap;
