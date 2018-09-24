@@ -139,6 +139,7 @@ struct phoStruct
   int seedisOOT_;
   int seedisGS6_;
   int seedisGS1_;
+  float seedadcToGeV_;
   float seedped12_;
   float seedped6_;
   float seedped1_;

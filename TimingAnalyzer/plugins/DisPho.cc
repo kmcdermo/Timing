@@ -205,7 +205,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByToken(jetsToken, jetsH);
   std::vector<pat::Jet> jets; jets.reserve(jetsH->size());
 
-  // RecHits
+  // ECAL RECHITS
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
   iEvent.getByToken(recHitsEBToken, recHitsEBH);
   const EcalRecHitCollection * recHitsEB = recHitsEBH.product();
@@ -214,7 +214,11 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   const EcalRecHitCollection * recHitsEE = recHitsEEH.product();
   uiiumap recHitMap;
 
-  // PHOTONS + IDS
+  /////////////
+  // PHOTONS //
+  /////////////
+
+  // GEDPHOTONS + IDS
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
   int phosize = photonsH->size();
@@ -226,22 +230,41 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
     phosize += ootPhotonsH->size();
   }
+
   // total photons vector
   std::vector<oot::Photon> photons; photons.reserve(phosize);
 
-  // geometry (from ECAL ELF)
+  // GEOMETRY : https://gitlab.cern.ch/shervin/ECALELF
   edm::ESHandle<CaloGeometry> caloGeoH;
   iSetup.get<CaloGeometryRecord>().get(caloGeoH);
   const CaloSubdetectorGeometry * barrelGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
   const CaloSubdetectorGeometry * endcapGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
-  // ECAL Records from https://github.com/ferriff/usercode/blob/master/DBDump/plugins/DBDump.cc
-  // ADCToGeV
+  //////////////////
+  // ECAL RECORDS // 
+  //////////////////
+
+  // Laser constants : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h
+  edm::ESHandle<EcalLaserDbService> laserH;
+  iSetup.get<EcalLaserDbRecord>().get(laserH);
+
+  // Intercalibration constants : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h
+  edm::ESHandle<EcalIntercalibConstants> interCalibH;
+  const EcalIntercalibConstantMap *      interCalibMap;
+  iSetup.get<EcalIntercalibConstantsRcd>().get(interCalibH);
+  interCalibMap = &interCalibH->getMap();
+  
+  // ADCToGeV : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h
   edm::ESHandle<EcalADCToGeVConstant> adcToGeVH;
   iSetup.get<EcalADCToGeVConstantRcd>().get(adcToGeVH);
-  // Pedestals
+
+  // Pedestals : https://github.com/ferriff/usercode/blob/master/DBDump/plugins/DBDump.cc
   edm::ESHandle<EcalPedestals> pedestalsH;
   iSetup.get<EcalPedestalsRcd>().get(pedestalsH);
+
+  /////////////////
+  // JET DB INFO //
+  /////////////////
 
   // JECs : https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#CorrPatJets  
   edm::ESHandle<JetCorrectorParametersCollection> jetCorrH;
@@ -252,7 +275,10 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   JME::JetResolution jetRes = JME::JetResolution::get(iSetup, "AK4PFchs_pt");
   JME::JetResolutionScaleFactor jetRes_sf = JME::JetResolutionScaleFactor::get(iSetup, "AK4PFchs");
 
-  // GEN INFO
+  //////////////
+  // GEN INFO //
+  //////////////
+
   edm::Handle<GenEventInfoProduct> genevtInfoH;
   edm::Handle<float>   gent0H;
   edm::Handle<Point3D> genxyz0H;
@@ -294,6 +320,12 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       DisPho::SetGenPUBranches(pileupInfoH);
     } // end check over pileup
   }
+
+  //////////////////////
+  //                  //
+  // Set Event Weight //
+  //                  //
+  //////////////////////
   const Float_t wgt = (isMC ? genwgt : 1.f);
 
   // Fill total cutflow regardless of cuts
@@ -459,7 +491,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (isGMSB) 
     {
       DisPho::InitializeGMSBBranches();
-      if (genparticlesH.isValid()) 
+      if (genparticlesH.isValid() && (photonsH.isValid() || ootPhotonsH.isValid()))
       {
 	DisPho::SetGMSBBranches(neutralinos,photons,nPhotons);
       } // check genparticles are okay
@@ -469,7 +501,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (isHVDS) 
     {
       DisPho::InitializeHVDSBranches();
-      if (genparticlesH.isValid()) 
+      if (genparticlesH.isValid() && (photonsH.isValid() || ootPhotonsH.isValid()))
       {
 	DisPho::SetHVDSBranches(vPions,photons,nPhotons);
       } // check genparticles are okay
@@ -479,7 +511,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (isToy) 
     {
       DisPho::InitializeToyBranches();
-      if (genparticlesH.isValid())
+      if (genparticlesH.isValid() && (photonsH.isValid() || ootPhotonsH.isValid()))
       {
 	DisPho::SetToyBranches(toys,photons,nPhotons);
       } // check genparticles are okay
@@ -518,17 +550,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     DisPho::SetPVBranches(verticesH);
   }
 
-  /////////////////////
-  //                 //
-  // ADCToGeV (ECAL) //
-  //                 //
-  /////////////////////
-  DisPho::InitializeADCToGeVBranches();
-  if (adcToGeVH.isValid())
-  {
-    DisPho::SetADCToGeVBranches(adcToGeVH);
-  }
-    
   //////////////////
   //              //
   // Type1 PF Met //
@@ -563,9 +584,10 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //          //
   //////////////
   DisPho::InitializeRecHitBranches(nRecHits);
-  if (recHitsEBH.isValid() && recHitsEEH.isValid())
+  if (recHitsEBH.isValid() && recHitsEEH.isValid() && caloGeoH.isValid() && adcToGeVH.isValid() && laserH.isValid() && interCalibH.isValid() && pedestalsH.isValid())
   {
-    DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,recHitsEE,endcapGeometry,pedestalsH,recHitMap);
+    DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,recHitsEE,endcapGeometry,
+			      recHitMap,iEvent,laserH,interCalibMap,adcToGeVH,pedestalsH);
   }
 
   //////////////////
@@ -575,10 +597,10 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //////////////////
   DisPho::InitializePhoBranches();
   if (isMC) DisPho::InitializePhoBranchesMC();
-  if (photonsH.isValid() || ootPhotonsH.isValid()) // standard handle check
+  if ((photonsH.isValid() || ootPhotonsH.isValid()) && recHitsEBH.isValid() && recHitsEEH.isValid() && tracksH.isValid()) // standard handle check
   {
     DisPho::SetPhoBranches(photons,nPhotons,recHitMap,recHitsEB,recHitsEE,tracksH);
-    if (isMC) DisPho::SetPhoBranchesMC(photons,nPhotons,genparticlesH);
+    if (isMC && genparticlesH.isValid()) DisPho::SetPhoBranchesMC(photons,nPhotons,genparticlesH);
   }
 
   ///////////////
@@ -957,18 +979,6 @@ void DisPho::SetPVBranches(const edm::Handle<std::vector<reco::Vertex> > & verti
   vtxZ = primevtx.position().z();
 }
 
-void DisPho::InitializeADCToGeVBranches()
-{
-  adcToGeVEB = -9999.f;
-  adcToGeVEE = -9999.f;
-}
-
-void DisPho::SetADCToGeVBranches(const edm::ESHandle<EcalADCToGeVConstant> & adcToGeVH)
-{
-  adcToGeVEB = adcToGeVH->getEBValue();
-  adcToGeVEE = adcToGeVH->getEEValue();
-}
-
 void DisPho::InitializeMETBranches()
 {
   t1pfMETpt    = -9999.f;
@@ -1225,6 +1235,7 @@ void DisPho::InitializeRecHitBranches(const int nRecHits)
   rhisOOT.clear();
   rhisGS6.clear();
   rhisGS1.clear();
+  rhadcToGeV.clear();
   rhped12.clear();
   rhped6.clear();
   rhped1.clear();
@@ -1242,6 +1253,7 @@ void DisPho::InitializeRecHitBranches(const int nRecHits)
   rhisOOT.resize(nRecHits);
   rhisGS6.resize(nRecHits);
   rhisGS1.resize(nRecHits);
+  rhadcToGeV.resize(nRecHits);
   rhped12.resize(nRecHits);
   rhped6.resize(nRecHits);
   rhped1.resize(nRecHits);
@@ -1264,6 +1276,8 @@ void DisPho::InitializeRecHitBranches(const int nRecHits)
     rhisGS6[i] = false;
     rhisGS1[i] = false;
 
+    rhadcToGeV[i] = -9999.f;
+
     rhped12[i] = -9999.f;
     rhped6 [i] = -9999.f;
     rhped1 [i] = -9999.f;
@@ -1276,16 +1290,20 @@ void DisPho::InitializeRecHitBranches(const int nRecHits)
 
 void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHitsEB, const CaloSubdetectorGeometry * barrelGeometry,
 			       const EcalRecHitCollection * recHitsEE, const CaloSubdetectorGeometry * endcapGeometry,
-			       const edm::ESHandle<EcalPedestals> & pedestalsH, const uiiumap & recHitMap)
+			       const uiiumap & recHitMap, const edm::Event & iEvent,
+			       const edm::ESHandle<EcalLaserDbService> & laserH, const EcalIntercalibConstantMap * interCalibMap, 
+			       const edm::ESHandle<EcalADCToGeVConstant> & adcToGeVH, const edm::ESHandle<EcalPedestals> & pedestalsH)
 {
   nrechits = recHitMap.size();
   
-  DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,pedestalsH,recHitMap);
-  DisPho::SetRecHitBranches(recHitsEE,endcapGeometry,pedestalsH,recHitMap);
+  DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,recHitMap,iEvent,laserH,interCalibMap,adcToGeVH->getEBValue(),pedestalsH);
+  DisPho::SetRecHitBranches(recHitsEE,endcapGeometry,recHitMap,iEvent,laserH,interCalibMap,adcToGeVH->getEEValue(),pedestalsH);
 }
 
-void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloSubdetectorGeometry * geometry, 
-			       const edm::ESHandle<EcalPedestals> & pedestalsH, const uiiumap & recHitMap)
+void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloSubdetectorGeometry * geometry,
+			       const uiiumap & recHitMap, const edm::Event & iEvent, 
+			       const edm::ESHandle<EcalLaserDbService> & laserH, const EcalIntercalibConstantMap * interCalibMap,
+			       const float adcToGeV, const edm::ESHandle<EcalPedestals> & pedestalsH)
 {
   for (const auto recHit : *recHits)
   {
@@ -1309,7 +1327,13 @@ void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloS
       rhisGS6[pos] = recHit.checkFlag(EcalRecHit::kHasSwitchToGain6);
       rhisGS1[pos] = recHit.checkFlag(EcalRecHit::kHasSwitchToGain1);
 
-      // record info
+      // adcToGeVInfo : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/src/EcalClusterLazyTools.cc#0204
+      const auto laser = laserH->getLaserCorrection(recHitId,iEvent.time());
+      const auto interCalibIter = interCalibMap->find(recHitId);
+      const auto interCalib = ((interCalibIter != interCalibMap->end()) ? (*interCalibIter) : - 1.f);
+      if ((laser > 0.f) && (interCalib > 0.f) && (adcToGeV > 0.f)) rhadcToGeV[pos] = (laser*interCalib*adcToGeV);
+
+      // pedestal info
       const auto & pediter = pedestalsH->find(recHitId);
       if (pediter != pedestalsH->end())
       {
@@ -1392,6 +1416,7 @@ void DisPho::InitializePhoBranches()
       phoBranch.seedisOOT_    = -1;
       phoBranch.seedisGS6_    = -1;
       phoBranch.seedisGS1_    = -1;
+      phoBranch.seedadcToGeV_ = -9999.f;
       phoBranch.seedped12_    = -9999.f;
       phoBranch.seedped6_     = -9999.f;
       phoBranch.seedped1_     = -9999.f;
@@ -1541,22 +1566,23 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
       }
       else
       {
-	phoBranch.seedX = rhX[seedpos];
-	phoBranch.seedY = rhY[seedpos];
-	phoBranch.seedZ = rhZ[seedpos];
-	phoBranch.seedE = rhE[seedpos];
-	phoBranch.seedtime = rhtime[seedpos];
-	phoBranch.seedTOF = rhTOF[seedpos];
-	phoBranch.seedID = rhID[seedpos];
-	phoBranch.seedisOOT = rhisOOT[seedpos];
-	phoBranch.seedisGS6 = rhisGS6[seedpos];
-	phoBranch.seedisGS1 = rhisGS1[seedpos];
-	phoBranch.seedped12 = rhped12[seedpos];
-	phoBranch.seedped6 = rhped6[seedpos];
-	phoBranch.seedped1 = rhped1[seedpos];
-	phoBranch.seedpedrms12 = rhpedrms12[seedpos];
-	phoBranch.seedpedrms6 = rhpedrms6[seedpos];
-	phoBranch.seedpedrms1 = rhpedrms1[seedpos];
+	phoBranch.seedX_ = rhX[seedpos];
+	phoBranch.seedY_ = rhY[seedpos];
+	phoBranch.seedZ_ = rhZ[seedpos];
+	phoBranch.seedE_ = rhE[seedpos];
+	phoBranch.seedtime_ = rhtime[seedpos];
+	phoBranch.seedTOF_ = rhTOF[seedpos];
+	phoBranch.seedID_ = rhID[seedpos];
+	phoBranch.seedisOOT_ = rhisOOT[seedpos];
+	phoBranch.seedisGS6_ = rhisGS6[seedpos];
+	phoBranch.seedisGS1_ = rhisGS1[seedpos];
+	phoBranch.seedadcToGeV_ = rhadcToGeV[seedpos];
+	phoBranch.seedped12_ = rhped12[seedpos];
+	phoBranch.seedped6_ = rhped6[seedpos];
+	phoBranch.seedped1_ = rhped1[seedpos];
+	phoBranch.seedpedrms12_ = rhpedrms12[seedpos];
+	phoBranch.seedpedrms6_ = rhpedrms6[seedpos];
+	phoBranch.seedpedrms1_ = rhpedrms1[seedpos];
       }
     
       // swiss cross
@@ -2002,10 +2028,6 @@ void DisPho::MakeEventTree()
   disphotree->Branch("vtxX", &vtxX, "vtxX/F");
   disphotree->Branch("vtxY", &vtxY, "vtxY/F");
   disphotree->Branch("vtxZ", &vtxZ, "vtxZ/F");
-
-  // ADCtoGeV info
-  disphotree->Branch("adcToGeVEB", &adcToGeVEB, "adcToGeVEB/F");
-  disphotree->Branch("adcToGeVEE", &adcToGeVEE, "adcToGeVEE/F");
   
   // MET info
   disphotree->Branch("t1pfMETpt", &t1pfMETpt, "t1pfMETpt/F");
@@ -2063,6 +2085,7 @@ void DisPho::MakeEventTree()
     disphotree->Branch("rhisOOT", &rhisOOT);
     disphotree->Branch("rhisGS6", &rhisGS6);
     disphotree->Branch("rhisGS1", &rhisGS1);
+    disphotree->Branch("rhadcToGeV", &rhadcToGeV);
     disphotree->Branch("rhped12", &rhped12);
     disphotree->Branch("rhped6", &rhped6);
     disphotree->Branch("rhped1", &rhped1);
@@ -2136,6 +2159,7 @@ void DisPho::MakeEventTree()
       disphotree->Branch(Form("phoseedisOOT_%i",iphoton), &phoBranch.seedisOOT_, Form("phoseedisOOT_%i/i",iphoton));
       disphotree->Branch(Form("phoseedisGS6_%i",iphoton), &phoBranch.seedisGS6_, Form("phoseedisGS6_%i/i",iphoton));
       disphotree->Branch(Form("phoseedisGS1_%i",iphoton), &phoBranch.seedisGS1_, Form("phoseedisGS1_%i/i",iphoton));
+      disphotree->Branch(Form("phoseedadcToGeV_%i",iphoton), &phoBranch.seedadcToGeV_, Form("phoseedadcToGeV_%i/i",iphoton));
       disphotree->Branch(Form("phoseedped12_%i",iphoton), &phoBranch.seedped12_, Form("phoseedped12_%i/i",iphoton));
       disphotree->Branch(Form("phoseedped6_%i",iphoton), &phoBranch.seedped6_, Form("phoseedped6_%i/i",iphoton));
       disphotree->Branch(Form("phoseedped1_%i",iphoton), &phoBranch.seedped1_, Form("phoseedped1_%i/i",iphoton));

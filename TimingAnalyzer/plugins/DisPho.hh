@@ -56,6 +56,18 @@
 #include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 
+// ECAL Record info (Laser Constants)
+#include "CalibCalorimetry/EcalLaserCorrection/interface/EcalLaserDbService.h"
+#include "CalibCalorimetry/EcalLaserCorrection/interface/EcalLaserDbRecord.h"
+
+// ECAL Record info (Intercalibration Constants)
+#include "CondFormats/EcalObjects/interface/EcalIntercalibConstants.h"
+#include "CondFormats/DataRecord/interface/EcalIntercalibConstantsRcd.h"
+
+// ECAL Record info (ADCToGeV)
+#include "CondFormats/EcalObjects/interface/EcalADCToGeVConstant.h"
+#include "CondFormats/DataRecord/interface/EcalADCToGeVConstantRcd.h"
+
 // ECAL Record info (ADCToGeV)
 #include "CondFormats/EcalObjects/interface/EcalADCToGeVConstant.h"
 #include "CondFormats/DataRecord/interface/EcalADCToGeVConstantRcd.h"
@@ -126,9 +138,6 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void InitializePVBranches();
   void SetPVBranches(const edm::Handle<std::vector<reco::Vertex> > & verticesH);
 
-  void InitializeADCToGeVBranches();
-  void SetADCToGeVBranches(const edm::ESHandle<EcalADCToGeVConstant> & adcToGeVH);
-
   void InitializeMETBranches();
   void SetMETBranches(const pat::MET & t1pfMET);
 
@@ -148,9 +157,13 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void InitializeRecHitBranches(const int nRecHits);
   void SetRecHitBranches(const EcalRecHitCollection * recHitsEB, const CaloSubdetectorGeometry * barrelGeometry,
 			 const EcalRecHitCollection * recHitsEE, const CaloSubdetectorGeometry * endcapGeometry,
-			 const edm::ESHandle<EcalPedestals> & pedestalsH, const uiiumap & recHitMap);
+			 const uiiumap & recHitMap, const edm::Event & iEvent,
+			 const edm::ESHandle<EcalLaserDbService> & laserH, const EcalIntercalibConstantMap * interCalibMap,
+			 const edm::ESHandle<EcalADCToGeVConstant> & adcToGeVH, const edm::ESHandle<EcalPedestals> & pedestalsH);
   void SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloSubdetectorGeometry * geometry,
-			 const edm::ESHandle<EcalPedestals> & pedestalsH, const uiiumap& recHitMap);
+			 const uiiumap & recHitMap, const edm::Event & iEvent, 
+			 const edm::ESHandle<EcalLaserDbService> & laserH, const EcalIntercalibConstantMap * interCalibMap,
+			 const float adcToGeV, const edm::ESHandle<EcalPedestals> & pedestalsH);
 
   void InitializePhoBranches();
   void SetPhoBranches(const std::vector<oot::Photon> photons, const int nPhotons, const uiiumap & recHitMap,
@@ -356,9 +369,6 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // rho
   float rho;
 
-  // ecal info
-  float adcToGeVEB, adcToGeVEE;
-
   // MET
   float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
   float t1pfMETptJetScaleDown,t1pfMETptJetScaleUp,t1pfMETptJetSmearDown,t1pfMETptJetSmearUp;
@@ -388,6 +398,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   std::vector<float> rhX, rhY, rhZ, rhE, rhtime, rhTOF;
   std::vector<unsigned int> rhID;
   std::vector<bool> rhisOOT, rhisGS6, rhisGS1;
+  std::vector<float> rhadcToGeV;
   std::vector<float> rhped12, rhped6, rhped1;
   std::vector<float> rhpedrms12, rhpedrms6, rhpedrms1;
 
