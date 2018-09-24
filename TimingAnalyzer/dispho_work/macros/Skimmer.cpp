@@ -4,9 +4,9 @@
 #include <iostream>
 
 Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & filename, 
-		 const Float_t sumwgts, const TString & puwgtfilename, const TString & skimtype)
+		 const Float_t sumwgts, const TString & skimtype, const TString & puwgtfilename)
   : fInDir(indir), fOutDir(outdir), fFileName(filename), 
-    fSumWgts(sumwgts), fPUWgtFileName(puwgtfilename), fSkimType(skimtype)
+    fSumWgts(sumwgts), fSkimType(skimtype), fPUWgtFileName(puwgtfilename)
 {
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
@@ -61,9 +61,9 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
     fInPUWgtFile = TFile::Open(fPUWgtFileName);
     Common::CheckValidFile(fInPUWgtFile,fPUWgtFileName);
 
-    const TString puhistname = (useOld ? Form("%s",Common::puwgtHistName.Data()) : Form("%s_%s",Common::puTrueHistName.Data(),Common::puwgtHistName.Data()));
+    const TString puhistname = Form("%s_%s",Common::puTrueHistName.Data(),Common::puwgtHistName.Data());
     fInPUWgtHist = (TH1F*)fInPUWgtFile->Get(puhistname.Data());
-    Common::CheckValidHist(fInPUWgtHist,puhistname,pufilename);
+    Common::CheckValidHist(fInPUWgtHist,puhistname,fPUWgtFileName);
 
     Skimmer::GetPUWeights();
   }
@@ -279,21 +279,25 @@ void Skimmer::EventLoop()
       fInRecHits.b_ID->GetEntry(entry);
 
       // loop over photons, getting pairs of rec hits that are most energetic and match!
-      std::vector<std::pair<Int_t,Int_t> > good_pairs;
+      std::vector<DiXtalInfo> good_pairs;
       for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
       {	
 	auto & inpho = fInPhos[ipho];
 
 	// skip OOT for now
-	pho.b_isOOT->GetEntry(entry);
-	if (pho.isOOT) continue;
+	inpho.b_isOOT->GetEntry(entry);
+	if (inpho.isOOT) continue;
 	
-	// sieie cut: currently off -- 
-	// pho.b_isEB->GetEntry(entry);
-	// pho.b_sieie->GetEntry(entry);
-	// pho.b_smaj->GetEntry(entry);
-	// pho.b_smin->GetEntry(entry);
-	// if ((pho.isEB && pho.sieie > 0.0103) || (!pho.isEB && pho.sieie > 0.0271)) continue;
+	inpho.b_smaj->GetEntry(entry);
+	inpho.b_smin->GetEntry(entry);
+
+	if (inpho.smin > 0.3) continue;
+	if (inpho.smaj > 0.5) continue;
+
+	inpho.b_isEB->GetEntry(entry);
+
+	// inpho.b_sieie->GetEntry(entry);
+	// if ((inpho.isEB && inpho.sieie > 0.0103) || (!inpho.isEB && inpho.sieie > 0.0271)) continue;
 	
 	// HACK!!! New ntuples will sort rec hit list by E!
 	inpho.b_recHits->GetEntry(entry);
@@ -304,7 +308,7 @@ void Skimmer::EventLoop()
 		  });
 	
 	// get pair of rechits that are good candidates : double loop, yo
-	const auto n = pho.recHits->size();
+	const auto n = inpho.recHits->size();
 	for (auto i = 0U; i < n; i++)
 	{
 	  Bool_t isGoodPair = false;
@@ -322,7 +326,7 @@ void Skimmer::EventLoop()
 	    if (E_i > (1.2f * E_j)) break; // need to be within 20% of energy
 	    if (Common::IsCrossNeighbor(id_i,id_j)) // neighboring crystals
 	    {
-	      good_pairs.emplace_back(rh_i,rh_j);
+	      good_pairs.emplace_back(rh_i,rh_j,inpho.isEB);
 	      isGoodPair = true;
 	      break;
 	    } 
@@ -339,14 +343,15 @@ void Skimmer::EventLoop()
       std::sort(good_pairs.begin(),good_pairs.end(),
 		[&](const auto & pair1, const auto & pair2)
 		{
-		  return ((*fInRecHits.E)[pair1.first] > (*fInRecHits.E)[pair2.first]);
+		  return ((*fInRecHits.E)[pair1.rh1] > (*fInRecHits.E)[pair2.rh2]);
 		});
 
       // now do the unholiest of exercises... set seed ids of first and second photon to pair ids
       const auto & pair = good_pairs.front();
-
-      fInPhotons.seed = pair.first;
-      fInPhotons.seed = pair.second;
+      fInPhos[0].seed = pair.rh1;
+      fInPhos[1].seed = pair.rh2;
+      fInPhos[0].isEB = pair.isEB;
+      fInPhos[1].isEB = pair.isEB;
 
       // set pho list in standard fashion
       Skimmer::FillPhoListStandard();
@@ -379,7 +384,7 @@ void Skimmer::EventLoop()
     if (fOutConfig.isHVDS) Skimmer::FillOutHVDSs(entry);
     if (fOutConfig.isToy)  Skimmer::FillOutToys(entry);
     Skimmer::FillOutEvent(entry,evtwgt);
-    Skimmer::FillOutJets(entry);
+    if (fSkim != DiXtal) Skimmer::FillOutJets(entry);
     Skimmer::FillOutPhos(entry);
 
     // fill the tree
@@ -719,7 +724,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     // inpho.b_HcalPFClIsoC->GetEntry(entry);
     // inpho.b_TrkIsoC->GetEntry(entry);
     inpho.b_sieie->GetEntry(entry);
-    //  inpho.b_sipip->GetEntry(entry);
+    // inpho.b_sipip->GetEntry(entry);
     // inpho.b_sieip->GetEntry(entry);
     // inpho.b_e2x2->GetEntry(entry);
     // inpho.b_e3x3->GetEntry(entry);
@@ -771,7 +776,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
   }
 
   // set output photon branches
-  for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
+  for (auto ipho = 0; ipho < fNOutPhos; ipho++) 
   {
     const auto & inpho = fInPhos[fPhoList[ipho]];
     auto & outpho = fOutPhos[ipho];
@@ -1491,23 +1496,26 @@ void Skimmer::InitOutBranches()
   fOutTree->Branch(fOutEvent.s_t1pfMETsumEt.c_str(), &fOutEvent.t1pfMETsumEt);
 
   fOutTree->Branch(fOutEvent.s_njets.c_str(), &fOutEvent.njets);
-  fOutTree->Branch(fOutJets.s_E.c_str(), &fOutJets.E_f);
-  fOutTree->Branch(fOutJets.s_pt.c_str(), &fOutJets.pt_f);
-  fOutTree->Branch(fOutJets.s_phi.c_str(), &fOutJets.phi_f);
-  fOutTree->Branch(fOutJets.s_eta.c_str(), &fOutJets.eta_f);
-  fOutTree->Branch(fOutJets.s_ID.c_str(), &fOutJets.ID_i);
-  // fOutTree->Branch(fOutJets.s_NHF.c_str(), &fOutJets.NHF_f);
-  // fOutTree->Branch(fOutJets.s_NEMF.c_str(), &fOutJets.NEMF_f);
-  // fOutTree->Branch(fOutJets.s_CHF.c_str(), &fOutJets.CHF_f);
-  // fOutTree->Branch(fOutJets.s_CEMF.c_str(), &fOutJets.CEMF_f);
-  // fOutTree->Branch(fOutJets.s_MUF.c_str(), &fOutJets.MUF_f);
-  // fOutTree->Branch(fOutJets.s_NHM.c_str(), &fOutJets.NHM_f);
-  // fOutTree->Branch(fOutJets.s_CHM.c_str(), &fOutJets.CHM_f);
-
+  if (fSkim != DiXtal)
+  {
+    fOutTree->Branch(fOutJets.s_E.c_str(), &fOutJets.E_f);
+    fOutTree->Branch(fOutJets.s_pt.c_str(), &fOutJets.pt_f);
+    fOutTree->Branch(fOutJets.s_phi.c_str(), &fOutJets.phi_f);
+    fOutTree->Branch(fOutJets.s_eta.c_str(), &fOutJets.eta_f);
+    fOutTree->Branch(fOutJets.s_ID.c_str(), &fOutJets.ID_i);
+    // fOutTree->Branch(fOutJets.s_NHF.c_str(), &fOutJets.NHF_f);
+    // fOutTree->Branch(fOutJets.s_NEMF.c_str(), &fOutJets.NEMF_f);
+    // fOutTree->Branch(fOutJets.s_CHF.c_str(), &fOutJets.CHF_f);
+    // fOutTree->Branch(fOutJets.s_CEMF.c_str(), &fOutJets.CEMF_f);
+    // fOutTree->Branch(fOutJets.s_MUF.c_str(), &fOutJets.MUF_f);
+    // fOutTree->Branch(fOutJets.s_NHM.c_str(), &fOutJets.NHM_f);
+    // fOutTree->Branch(fOutJets.s_CHM.c_str(), &fOutJets.CHM_f);
+  }
+  
   fOutTree->Branch(fOutEvent.s_nrechits.c_str(), &fOutEvent.nrechits);
 
   fOutTree->Branch(fOutEvent.s_nphotons.c_str(), &fOutEvent.nphotons);
-  for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
+  for (auto ipho = 0; ipho < fNOutPhos; ipho++) 
   {
     auto & pho = fOutPhos[ipho];
     fOutTree->Branch(Form("%s_%i",pho.s_E.c_str(),ipho), &pho.E);
@@ -1679,4 +1687,7 @@ void Skimmer::SetSkim()
     std::cerr << fSkimType.Data() << " is not a valid skim selection! Exiting..." << std::endl;
     exit(1);
   }
+
+  // reduce output of DiXtal
+  fNOutPhos = (fSkim == DiXtal ? 2 : Common::nPhotons);
 }

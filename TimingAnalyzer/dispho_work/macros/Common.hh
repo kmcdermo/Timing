@@ -30,7 +30,7 @@
 #include <sys/stat.h>
 
 // ECAL Enums
-enum ECAL {EB, EM, EP};
+enum ECAL {EB, EM, EP, NONE};
 
 // Sample Enums
 enum SampleGroup {isData, isBkgd, isSignal, isToy};
@@ -45,9 +45,9 @@ struct DetIDStruct
   DetIDStruct(const Int_t i1, const Int_t i2, const ECAL & ecal) 
     : i1(i1), i2(i2), ecal(ecal) {}
   
-  const Int_t i1; // EB: iphi, EE: ix
-  const Int_t i2; // EB: ieta, EE: iy
-  const ECAL ecal; // EB, EM, EP
+  Int_t i1; // EB: iphi, EE: ix
+  Int_t i2; // EB: ieta, EE: iy
+  ECAL ecal; // EB, EM, EP
 };
 
 // Era Struct

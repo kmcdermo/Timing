@@ -12,12 +12,24 @@
 #include <map>
 #include <cmath>
 
+// simple struct for pairs of detids
+struct DiXtalInfo
+{
+  DiXtalInfo(){}
+  DiXtalInfo(const Int_t rh1, const Int_t rh2, const Bool_t isEB) 
+    : rh1(rh1), rh2(rh2), isEB(isEB) {}
+  
+  Int_t rh1;
+  Int_t rh2;
+  Bool_t isEB;
+};
+
 class Skimmer 
 {
 public:
   // functions
   Skimmer(const TString & indir, const TString & outdir, const TString & filename, 
-	  const Float_t sumwgts, const TString & puwgtfilename = "", const TString & skimtype = "Standard");
+	  const Float_t sumwgts, const TString & skimtype = "Standard", const TString & puwgtfilename = "");
   ~Skimmer();
 
   // setup skim type
@@ -64,10 +76,11 @@ private:
   const TString fOutDir;
   const TString fFileName;
   const Float_t fSumWgts;
-  const TString fPUWgtFileName;
   const TString fSkimType;
+  const TString fPUWgtFileName;
   std::map<std::string,int> cutLabels;
   Bool_t fIsMC;
+  Float_t fNOutPhos;
 
   // Input
   SkimEnum fSkim;

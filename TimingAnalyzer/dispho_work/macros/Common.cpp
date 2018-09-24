@@ -14,8 +14,8 @@ namespace Common
     else
     {
       std::cerr << "How did this happen?? ecal read in as: " << ecal.Data()
-		<< " is not allowed! Continuing with -1..." << std::endl;
-      return -1;
+		<< " is not allowed! Continuing with NONE..." << std::endl;
+      return ECAL::NONE;
     }
   }
 
@@ -41,13 +41,13 @@ namespace Common
     const auto diff_i1 = std::abs(idinfo1.i1-idinfo2.i1);
     const auto diff_i2 = std::abs(idinfo1.i2-idinfo2.i2);
 
-    if (idinfo1 == EB)
+    if (idinfo1.ecal == EB)
     {
       return (((diff_i1 == 1 || diff_i1 == 360) && diff_i2 == 0) || (diff_i1 == 0 && diff_i2 == 1));
     }
     else
     {
-      return ((diff_i1 == 1 && diff_2 == 0) || (diff_i1 == 0 && diff_i2 == 1));
+      return ((diff_i1 == 1 && diff_i2 == 0) || (diff_i1 == 0 && diff_i2 == 1));
     }
   }
 
