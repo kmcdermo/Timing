@@ -6,7 +6,7 @@
 
 #include "TBranch.h"
 
-enum SkimEnum {Standard, Zee};
+enum SkimEnum {Standard, Zee, DiXtal};
 
 struct MassStruct
 {

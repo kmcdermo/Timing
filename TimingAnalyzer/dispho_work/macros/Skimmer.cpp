@@ -145,13 +145,6 @@ void Skimmer::EventLoop()
       //      fOutCutFlowWgt->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
       //      fOutCutFlowScl->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);
 
-      // fill photon list in standard fashion
-      fPhoList.clear();
-      for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
-      {
-	fPhoList.emplace_back(ipho);
-      }
-
       // filter on MET Flags
       fInEvent.b_metPV->GetEntry(entry);
       fInEvent.b_metBeamHalo->GetEntry(entry);
@@ -172,6 +165,13 @@ void Skimmer::EventLoop()
       //      fOutCutFlow   ->Fill((cutLabels["METFlag"]*1.f)-0.5f);
       //      fOutCutFlowWgt->Fill((cutLabels["METFlag"]*1.f)-0.5f,wgt);
       //      fOutCutFlowScl->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
+
+      // fill photon list in standard fashion
+      fPhoList.clear();
+      for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
+      {
+	fPhoList.emplace_back(ipho);
+      }
     }
     else if (!fOutConfig.isToy && (fSkim == Zee))
     {
@@ -273,6 +273,43 @@ void Skimmer::EventLoop()
 	fPhoList.emplace_back(ipho);
       }
     } // end of ZeeSkim
+    else if (!fOutConfig.isToy && (fSkim == DiXtal)) // this is a hack selection, which mixes up seeds and photons --> do NOT use this for analysis
+    {
+      // get rechits
+      fInRecHits.b_E->GetEntry(entry);
+
+
+      // loop over photons, getting pairs of rec hits that are most energetic and match!
+      for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
+      {	
+	auto & pho = fInPhos[ipho];
+
+	// skip OOT for now
+	pho.b_isOOT->GetEntry(entry);
+	if (pho.isOOT) continue;
+	
+	// sieie cut: currently off -- 
+	// pho.b_isEB->GetEntry(entry);
+	// pho.b_sieie->GetEntry(entry);
+	// if ((pho.isEB && pho.sieie > 0.0103) || (!pho.isEB && pho.sieie > 0.0271)) continue;
+	
+	// sort rec hit list by E!
+	pho.b_recHits->GetEntry(entry);
+	std::sort(pho.recHits->begin(),pho.recHits->end(),
+		  [&](const auto rh1, const auto rh2)
+		  {
+		    return ((*fInRecHits.E)[rh1] > (*fInRecHits.E)[rh2]);
+		  });
+	
+	const auto n = pho.recHits->size();
+	for (auto i = 0U; i < n; i++)
+	{
+	  
+	  for (auto j = i+1; j < n
+
+
+      }
+    }
     else
     {
       fPhoList.clear();
@@ -1585,6 +1622,7 @@ void Skimmer::SetSkim()
 {
   if      (fSkimType.EqualTo("Standard",TString::kExact)) fSkim = Standard;
   else if (fSkimType.EqualTo("Zee"     ,TString::kExact)) fSkim = Zee;
+  else if (fSkimType.EqualTo("DiXtal"  ,TString::kExact)) fSkim = DiXtal;
   else
   {
     std::cerr << fSkimType.Data() << " is not a valid skim selection! Exiting..." << std::endl;
