@@ -734,7 +734,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     // inpho.b_alpha->GetEntry(entry);
     inpho.b_suisseX->GetEntry(entry);
     inpho.b_isOOT->GetEntry(entry);
-    inpho.b_isEB->GetEntry(entry);
+    if (fSkim != DiXtal) inpho.b_isEB->GetEntry(entry);
     inpho.b_isHLT->GetEntry(entry);
     inpho.b_isTrk->GetEntry(entry);
     inpho.b_passEleVeto->GetEntry(entry);
