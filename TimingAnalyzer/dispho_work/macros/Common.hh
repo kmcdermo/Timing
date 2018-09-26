@@ -42,11 +42,12 @@ enum Variable {X, Y};
 struct DetIDStruct
 {
   DetIDStruct() {}
-  DetIDStruct(const Int_t i1, const Int_t i2, const ECAL & ecal) 
-    : i1(i1), i2(i2), ecal(ecal) {}
+  DetIDStruct(const Int_t i1, const Int_t i2, const Int_t TT, const ECAL & ecal) 
+    : i1(i1), i2(i2), TT(TT), ecal(ecal) {}
   
   Int_t i1; // EB: iphi, EE: ix
   Int_t i2; // EB: ieta, EE: iy
+  Int_t TT; // trigger tower
   ECAL ecal; // EB, EM, EP
 };
 
@@ -111,10 +112,17 @@ namespace Common
   constexpr Float_t radEB       = 129.f;
   constexpr Float_t zEE         = 314.f;
   extern std::map<UInt_t,DetIDStruct> DetIDMap;
-  static const TString DetIDConfig = "ecal_config/detids.txt";
+  static const TString DetIDConfig   = "ecal_config/reducedinfo_detids.txt";
+  static const TString DetIDConfigEB = "ecal_config/fullinfo_detids_EB.txt";
+  static const TString DetIDConfigEE = "ecal_config/fullinfo_detids_EE.txt";
   ECAL GetECALEnum(const TString & ecal);
   void SetupDetIDs();
+  void SetupDetIDsEB();
+  void SetupDetIDsEE();
+  Int_t WrapIPhi(const Int_t iphi);
   Bool_t IsCrossNeighbor(const UInt_t detid1, const UInt_t detid2);
+  Bool_t IsWithinRadius(const UInt_t detid1, const UInt_t detid2, const Int_t radius);
+  Int_t GetTriggerTower(const UInt_t detid);
 
   // Physics info
   constexpr Float_t helix = 0.0114; // 0.3 * 3.8 T / (100 cm / m), 0.3 = sol m/ns --> constant in radius of curv.

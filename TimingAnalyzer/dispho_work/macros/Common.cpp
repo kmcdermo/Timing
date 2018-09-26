@@ -22,33 +22,79 @@ namespace Common
   std::map<UInt_t,DetIDStruct> DetIDMap;
   void SetupDetIDs()
   {
-    std::ifstream infile(Common::DetIDConfig.Data(), std::ios::in);
+    Common::SetupDetIDsEB();
+    Common::SetupDetIDsEE();
+  }
+  
+  void SetupDetIDsEB()
+  {
+    std::ifstream infile(Common::DetIDConfigEB.Data(), std::ios::in);
     
-    UInt_t detid;
-    Int_t i1, i2;
-    TString ecal;
+    UInt_t cmsswId, dbID;
+    Int_t hashedId, iphi, ieta, absieta, FED, SM, TT25, iTT, strip5, Xtal, phiSM, etaSM; 
+    TString pos;
 
-    while (infile >> detid >> i1 >> i2 >> ecal)
+    while (infile >> cmsswId >> dbID >> hashedId >> iphi >> ieta >> absieta >> pos >> FED >> SM >> TT25 >> iTT >> strip5 >> Xtal >> phiSM >> etaSM)
     {
-      Common::DetIDMap[detid] = {i1,i2,Common::GetECALEnum(ecal)};
+      Common::DetIDMap[cmssid] = {iphi,ieta,TT25,ECAL::EB};
     }
+  }
+
+  void SetupDetIDsEE()
+  {
+    std::ifstream infile(Common::DetIDConfigEE.Data(), std::ios::in);
+
+    UInt_t cmsswId, dbID;
+    Int_t hashedId, side, ix, iy, SC, iSC, Fed, TTCCU, strip, Xtal, quadrant; 
+    TString EE;
+
+    while (infile >> cmsswId >> dbID >> hashedId >> side >> ix >> iy >> SC >> iSC >> Fed >> EE >> TTCCU >> strip >> Xtal >> quadrant)
+    {
+      Common::DetIDMap[cmssid] = {ix,iy,TTCCU,((side>0) ? ECAL::EP : ECAL::EM)};
+    }
+  }
+
+  Int_t WrapIPhi(const Int_t iphi)
+  {
+    if (iphi >= 360) return iphi-360;
+    else             return iphi;
   }
 
   Bool_t IsCrossNeighbor(const UInt_t detid1, const UInt_t detid2)
   {
     const auto & idinfo1 = Common::DetIDMap[detid1];
     const auto & idinfo2 = Common::DetIDMap[detid2];
-    const auto diff_i1 = std::abs(idinfo1.i1-idinfo2.i1);
+
+    const auto tmp_diff_i1 = std::abs(idinfo1.i1-idinfo2.i1);
+    const auto diff_i1 = ((idinfo1.ecal == ECAL::EB) ? Common::WrapIPhi(tmp_diff_i1) : tmp_diff_i1);
     const auto diff_i2 = std::abs(idinfo1.i2-idinfo2.i2);
 
-    if (idinfo1.ecal == EB)
+    return ((diff_i1 == 1 && diff_i2 == 0) || (diff_i1 == 0 && diff_i2 == 1));
+  }
+
+  Bool_t IsWithinRadius(const UInt_t detid1, const UInt_t detid2, const Int_t radius)
+  {
+    const auto & idinfo1 = Common::DetIDMap[detid1];
+    const auto & idinfo2 = Common::DetIDMap[detid2];
+
+    const auto tmp_diff_i1 = std::abs(idinfo1.i1-idinfo2.i1);
+    const auto diff_i1 = ((idinfo1.ecal == ECAL::EB) ? Common::WrapIPhi(tmp_diff_i1) : tmp_diff_i1);
+    const auto diff_i2 = std::abs(idinfo1.i2-idinfo2.i2);
+
+    Bool_t withinRadius = false;
+
+    for (auto i = 0; i <= radius; i++)
     {
-      return (((diff_i1 == 1 || diff_i1 == 360) && diff_i2 == 0) || (diff_i1 == 0 && diff_i2 == 1));
+      if      (diff_i1 == i && diff_i2 == radius) {withinRadius = true; break;}
+      else if (diff_i2 == i && diff_ii == radius) {withinRadius = true; break;}
     }
-    else
-    {
-      return ((diff_i1 == 1 && diff_i2 == 0) || (diff_i1 == 0 && diff_i2 == 1));
-    }
+
+    return withinRadius;
+  }
+
+  Int_t GetTriggerTower(const UInt_t detid)
+  {
+    return Common::DetIDMap[detid].TT;
   }
 
   // SAMPLE AND CONFIG INFO
