@@ -1,0 +1,9 @@
+plot_title=Subleading Photon Seed Energy [GeV]
+
+x_title=Subleading Photon Seed Energy [GeV]
+x_scale=LOG
+x_var=phoseedE_1
+x_bins=VARIABLE 1 2 3 4 5 6 7 8 9 10 12 14 16 16.5 17 17.5 18 18.5 19 19.5 20 20.5 21 21.5 22 22.5 23 23.5 24 25 26 27 28 29 30 32 34 36 38 40 45 50 55 60 65 70 75 80 85 90 95 100 110 120
+
+y_title=Events/GeV
+y_scale=LOG

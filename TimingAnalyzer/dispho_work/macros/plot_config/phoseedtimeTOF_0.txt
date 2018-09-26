@@ -1,0 +1,9 @@
+plot_title=Leading Photon Seed Time (Corrected: TOF) [ns]
+
+x_title=Leading Photon Seed Time (Corrected: TOF) [ns]
+x_scale=LIN
+x_var=phoseedtime_0+phoseedTOF_0
+x_bins=CONSTANT 30 -3 3
+
+y_title=Events
+y_scale=LOG

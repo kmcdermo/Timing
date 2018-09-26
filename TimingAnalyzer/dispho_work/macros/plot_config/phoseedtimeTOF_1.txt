@@ -1,0 +1,9 @@
+plot_title=Subleading Photon Seed Time (Corrected: TOF) [ns]
+
+x_title=Subleading Photon Seed Time (Corrected: TOF) [ns]
+x_scale=LIN
+x_var=phoseedtime_1+phoseedTOF_1
+x_bins=CONSTANT 30 -3 3
+
+y_title=Events
+y_scale=LOG

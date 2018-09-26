@@ -1,0 +1,11 @@
+plot_title=Photon Seed Time [ns] vs nVertices
+
+x_title=nVertices
+x_var=nvtx
+x_bins=CONSTANT 150 0 150
+
+y_title=Photon Seed Time [ns]
+y_var=phoseedtime_0
+y_bins=CONTSTANT 240 -3 3
+
+z_title=Events

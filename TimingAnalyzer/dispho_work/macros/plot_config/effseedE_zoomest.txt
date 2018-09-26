@@ -1,0 +1,9 @@
+plot_title=Effective Photon Seed Energy [GeV]
+
+x_title=Effective Photon Seed Energy [GeV]
+x_scale=LIN
+x_var=((phoseedE_0*phoseedE_1)/(sqrt(pow(phoseedE_0,2)+pow(phoseedE_1,2))))
+x_bins=CONSTANT 100 15 25
+
+y_title=Events/GeV
+y_scale=LOG

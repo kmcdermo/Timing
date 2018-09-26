@@ -1,0 +1,9 @@
+plot_title=Leading Photon Seed SHIFT [ns]
+
+x_title=Leading Photon Seed SHIFT [ns]
+x_scale=LIN
+x_var=phoseedtimeSHIFT_0
+x_bins=CONSTANT 100 -1 1
+
+y_title=Events
+y_scale=LOG

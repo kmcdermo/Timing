@@ -1,0 +1,5 @@
+var=phoseedtimeSMEAR
+title=Photon Seed Time SMEAR Correction
+unit=[ns]
+bins=CONSTANT 30 -3 3
+ytitle=Events
