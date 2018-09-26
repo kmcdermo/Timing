@@ -399,6 +399,7 @@ struct Pho
   Bool_t  isGen;
   Int_t   isSignal;
   // Derived types
+  Int_t   seedTT;
   Int_t   nrechits;
   Float_t meantime;
   Int_t   nrechitsLT120;
@@ -452,6 +453,7 @@ struct Pho
   std::string s_seedID = "phoseedID";
   std::string s_isGen = "phoisGen";
   std::string s_isSignal = "phoisSignal";
+  std::string s_seedTT = "phoseedTT";
   std::string s_nrechits = "phonrechits";
   std::string s_meantime = "phomeantime";
   std::string s_nrechitsLT120 = "phonrechitsLT120";
@@ -505,6 +507,7 @@ struct Pho
   TBranch * b_seedID;
   TBranch * b_isGen;
   TBranch * b_isSignal;
+  TBranch * b_seedTT;
   TBranch * b_nrechits;
   TBranch * b_meantime;
   TBranch * b_nrechitsLT120;

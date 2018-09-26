@@ -288,16 +288,11 @@ void Skimmer::EventLoop()
 	inpho.b_isOOT->GetEntry(entry);
 	if (inpho.isOOT) continue;
 	
-	inpho.b_smaj->GetEntry(entry);
 	inpho.b_smin->GetEntry(entry);
+	inpho.b_smaj->GetEntry(entry);
 
 	if (inpho.smin > 0.3) continue;
 	if (inpho.smaj > 0.5) continue;
-
-	inpho.b_isEB->GetEntry(entry);
-
-	// inpho.b_sieie->GetEntry(entry);
-	// if ((inpho.isEB && inpho.sieie > 0.0103) || (!inpho.isEB && inpho.sieie > 0.0271)) continue;
 	
 	// HACK!!! New ntuples will sort rec hit list by E!
 	inpho.b_recHits->GetEntry(entry);
@@ -326,7 +321,7 @@ void Skimmer::EventLoop()
 	    if (E_i > (1.2f * E_j)) break; // need to be within 20% of energy
 	    if (Common::IsCrossNeighbor(id_i,id_j)) // neighboring crystals
 	    {
-	      good_pairs.emplace_back(rh_i,rh_j,inpho.isEB);
+	      good_pairs.emplace_back(rh_i,rh_j,ipho);
 	      isGoodPair = true;
 	      break;
 	    } 
@@ -348,13 +343,21 @@ void Skimmer::EventLoop()
 
       // now do the unholiest of exercises... set seed ids of first and second photon to pair ids
       const auto & pair = good_pairs.front();
-      fInPhos[0].seed = pair.rh1;
-      fInPhos[1].seed = pair.rh2;
-      fInPhos[0].isEB = pair.isEB;
-      fInPhos[1].isEB = pair.isEB;
+      const auto rh1 = pair.rh1;
+      const auto rh2 = pair.rh2;
+      const auto iph = pair.iph;
+      fInPhos[0].seed = rh1;
+      fInPhos[1].seed = rh2;
 
       // set pho list in standard fashion
-      Skimmer::FillPhoListStandard();
+      fPhoList.clear();
+      fPhoList.emplace_back(pair.ipho);
+      fPhoList.emplace_back(pair.ipho);
+      for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
+      {
+	if (ipho == iph) continue;
+	if (fPhoList.size() < Common::nPhotons) fPhoList.emplace_back(ipho);
+      }
     }
     else
     {
@@ -734,7 +737,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     // inpho.b_alpha->GetEntry(entry);
     inpho.b_suisseX->GetEntry(entry);
     inpho.b_isOOT->GetEntry(entry);
-    if (fSkim != DiXtal) inpho.b_isEB->GetEntry(entry);
+    inpho.b_isEB->GetEntry(entry);
     inpho.b_isHLT->GetEntry(entry);
     inpho.b_isTrk->GetEntry(entry);
     inpho.b_passEleVeto->GetEntry(entry);
@@ -772,7 +775,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     fInRecHits.b_E->GetEntry(entry);
     fInRecHits.b_time->GetEntry(entry);
     fInRecHits.b_OOT->GetEntry(entry);
-    // fInRecHits.b_ID->GetEntry(entry);
+    fInRecHits.b_ID->GetEntry(entry);
   }
 
   // set output photon branches
@@ -829,6 +832,9 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.seedE    = (*fInRecHits.E)   [inpho.seed];
 	// outpho.seedID   = (*fInRecHits.ID)  [inpho.seed];
 
+	// get trigger tower
+	outpho.seedTT = Common::GetTriggerTower((*fInRecHits.ID)[inpho.seed]);
+
 	// compute mean time
 	outpho.nrechits = 0;
 	outpho.meantime = 0.f;
@@ -881,6 +887,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.seedtime = -9999.f;
 	outpho.seedE    = -9999.f;
 	// outpho.seedID   = 0;
+
+	outpho.seedTT = -9999;
 	
 	outpho.nrechits      = -1;
 	outpho.meantime      = -9999.f;
@@ -1026,7 +1034,7 @@ void Skimmer::InitInBranchVecs()
     fInRecHits.E = 0;
     fInRecHits.time = 0;
     fInRecHits.OOT = 0;
-    if (fSkim == DiXtal) fInRecHits.ID = 0;
+    fInRecHits.ID = 0;
 
     for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
     {
@@ -1184,7 +1192,7 @@ void Skimmer::InitInBranches()
     fInTree->SetBranchAddress(fInRecHits.s_E.c_str(), &fInRecHits.E, &fInRecHits.b_E);
     fInTree->SetBranchAddress(fInRecHits.s_time.c_str(), &fInRecHits.time, &fInRecHits.b_time);
     fInTree->SetBranchAddress(fInRecHits.s_OOT.c_str(), &fInRecHits.OOT, &fInRecHits.b_OOT);
-    if (fSkim == DiXtal) fInTree->SetBranchAddress(fInRecHits.s_ID.c_str(), &fInRecHits.ID, &fInRecHits.b_ID);
+    fInTree->SetBranchAddress(fInRecHits.s_ID.c_str(), &fInRecHits.ID, &fInRecHits.b_ID);
   }
 
   fInTree->SetBranchAddress(fInEvent.s_nphotons.c_str(), &fInEvent.nphotons, &fInEvent.b_nphotons);
@@ -1571,6 +1579,7 @@ void Skimmer::InitOutBranches()
     }
 
     // Derived types
+    fOutTree->Branch(Form("%s_%i",pho.s_seedTT.c_str(),ipho), &pho.seedTT);
     fOutTree->Branch(Form("%s_%i",pho.s_nrechits.c_str(),ipho), &pho.nrechits);
     fOutTree->Branch(Form("%s_%i",pho.s_meantime.c_str(),ipho), &pho.meantime);
     fOutTree->Branch(Form("%s_%i",pho.s_nrechitsLT120.c_str(),ipho), &pho.nrechitsLT120);
