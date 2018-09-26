@@ -36,7 +36,7 @@ namespace Common
 
     while (infile >> cmsswId >> dbID >> hashedId >> iphi >> ieta >> absieta >> pos >> FED >> SM >> TT25 >> iTT >> strip5 >> Xtal >> phiSM >> etaSM)
     {
-      Common::DetIDMap[cmssid] = {iphi,ieta,TT25,ECAL::EB};
+      Common::DetIDMap[cmsswId] = {iphi,ieta,TT25,ECAL::EB};
     }
   }
 
@@ -50,7 +50,7 @@ namespace Common
 
     while (infile >> cmsswId >> dbID >> hashedId >> side >> ix >> iy >> SC >> iSC >> Fed >> EE >> TTCCU >> strip >> Xtal >> quadrant)
     {
-      Common::DetIDMap[cmssid] = {ix,iy,TTCCU,((side>0) ? ECAL::EP : ECAL::EM)};
+      Common::DetIDMap[cmsswId] = {ix,iy,TTCCU,((side>0) ? ECAL::EP : ECAL::EM)};
     }
   }
 
@@ -86,7 +86,7 @@ namespace Common
     for (auto i = 0; i <= radius; i++)
     {
       if      (diff_i1 == i && diff_i2 == radius) {withinRadius = true; break;}
-      else if (diff_i2 == i && diff_ii == radius) {withinRadius = true; break;}
+      else if (diff_i2 == i && diff_i1 == radius) {withinRadius = true; break;}
     }
 
     return withinRadius;

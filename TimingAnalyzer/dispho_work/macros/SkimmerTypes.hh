@@ -8,6 +8,7 @@
 
 enum SkimEnum {Standard, Zee, DiXtal};
 
+// struct for containing electrons in Z
 struct MassStruct
 {
   MassStruct() {}
@@ -17,6 +18,18 @@ struct MassStruct
   Int_t ipho1;
   Int_t ipho2;
   Float_t mass;
+};
+
+// simple struct for pairs of detids
+struct DiXtalInfo
+{
+  DiXtalInfo(){}
+  DiXtalInfo(const Int_t rh1, const Int_t rh2, const Int_t iph) 
+    : rh1(rh1), rh2(rh2), iph(iph) {}
+  
+  Int_t rh1;
+  Int_t rh2;
+  Int_t iph;
 };
 
 struct Configuration

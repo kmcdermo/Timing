@@ -12,18 +12,6 @@
 #include <map>
 #include <cmath>
 
-// simple struct for pairs of detids
-struct DiXtalInfo
-{
-  DiXtalInfo(){}
-  DiXtalInfo(const Int_t rh1, const Int_t rh2, const Bool_t isEB) 
-    : rh1(rh1), rh2(rh2), isEB(isEB) {}
-  
-  Int_t rh1;
-  Int_t rh2;
-  Bool_t isEB;
-};
-
 class Skimmer 
 {
 public:

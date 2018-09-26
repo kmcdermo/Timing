@@ -343,21 +343,13 @@ void Skimmer::EventLoop()
 
       // now do the unholiest of exercises... set seed ids of first and second photon to pair ids
       const auto & pair = good_pairs.front();
-      const auto rh1 = pair.rh1;
-      const auto rh2 = pair.rh2;
-      const auto iph = pair.iph;
-      fInPhos[0].seed = rh1;
-      fInPhos[1].seed = rh2;
+      fOutPhos[0].seed = pair.rh1;
+      fOutPhos[1].seed = pair.rh2;
 
       // set pho list in standard fashion
       fPhoList.clear();
-      fPhoList.emplace_back(pair.ipho);
-      fPhoList.emplace_back(pair.ipho);
-      for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
-      {
-	if (ipho == iph) continue;
-	if (fPhoList.size() < Common::nPhotons) fPhoList.emplace_back(ipho);
-      }
+      fPhoList.emplace_back(pair.iph);
+      fPhoList.emplace_back(pair.iph);
     }
     else
     {
@@ -747,7 +739,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 
     if (fInConfig.storeRecHits)
     {
-      if (fSkim != DiXtal) inpho.b_seed->GetEntry(entry); // DiXtal has unholy way of storing seed id... see skim above
+      inpho.b_seed->GetEntry(entry);
       inpho.b_recHits->GetEntry(entry);
     }
     else
@@ -826,14 +818,18 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 
     if (fInConfig.storeRecHits)
     {
-      if (inpho.seed >= 0)
+      // something unholy and utterly disgusting
+      const auto seed = (fSkim != DiXtal) ? inpho.seed : outpho.seed;
+
+      // store seed info + derived types if seed exists
+      if (seed >= 0)
       {
-	outpho.seedtime = (*fInRecHits.time)[inpho.seed];
-	outpho.seedE    = (*fInRecHits.E)   [inpho.seed];
-	// outpho.seedID   = (*fInRecHits.ID)  [inpho.seed];
+	outpho.seedtime = (*fInRecHits.time)[seed];
+	outpho.seedE    = (*fInRecHits.E)   [seed];
+	// outpho.seedID   = (*fInRecHits.ID)  [seed];
 
 	// get trigger tower
-	outpho.seedTT = Common::GetTriggerTower((*fInRecHits.ID)[inpho.seed]);
+	outpho.seedTT = Common::GetTriggerTower((*fInRecHits.ID)[seed]);
 
 	// compute mean time
 	outpho.nrechits = 0;
@@ -863,16 +859,16 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	auto seedZ = 0.f;
 	if (outpho.isEB)
 	{
-	  seedX = Common::radEB * std::cos((*fInRecHits.phi)[inpho.seed]);
-	  seedY = Common::radEB * std::sin((*fInRecHits.phi)[inpho.seed]);
-	  seedZ = Common::radEB / Common::uneta((*fInRecHits.eta)[inpho.seed]);
+	  seedX = Common::radEB * std::cos((*fInRecHits.phi)[seed]);
+	  seedY = Common::radEB * std::sin((*fInRecHits.phi)[seed]);
+	  seedZ = Common::radEB / Common::uneta((*fInRecHits.eta)[seed]);
 	}
 	else
 	{
-	  const auto rad = Common::zEE * Common::uneta((*fInRecHits.eta)[inpho.seed]);
+	  const auto rad = Common::zEE * Common::uneta((*fInRecHits.eta)[seed]);
 	  
-	  seedX = rad * std::cos((*fInRecHits.phi)[inpho.seed]);
-	  seedY = rad * std::sin((*fInRecHits.phi)[inpho.seed]);
+	  seedX = rad * std::cos((*fInRecHits.phi)[seed]);
+	  seedY = rad * std::sin((*fInRecHits.phi)[seed]);
 	  seedZ = Common::zEE;
 	}
 
