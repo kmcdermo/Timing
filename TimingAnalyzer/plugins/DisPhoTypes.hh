@@ -134,6 +134,7 @@ struct phoStruct
   float seedZ_;
   float seedE_;
   float seedtime_;
+  float seedtimeErr_;
   float seedTOF_;
   unsigned int seedID_;
   int seedisOOT_;

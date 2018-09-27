@@ -353,6 +353,7 @@ struct RecHits
   std::vector<Float_t> * Z;
   std::vector<Float_t> * E;
   std::vector<Float_t> * time;
+  std::vector<Float_t> * timeErr;
   std::vector<Float_t> * TOF;
   std::vector<UInt_t>  * ID;
   std::vector<Int_t>   * isOOT;
@@ -371,6 +372,7 @@ struct RecHits
   std::string s_Z = "rhZ";
   std::string s_E = "rhE";
   std::string s_time = "rhtime";
+  std::string s_timeErr = "rhtimeErr";
   std::string s_TOF = "rhTOF";
   std::string s_ID = "rhID";
   std::string s_isOOT = "rhisOOT";
@@ -389,6 +391,7 @@ struct RecHits
   TBranch * b_Z;
   TBranch * b_E;
   TBranch * b_time;
+  TBranch * b_timeErr;
   TBranch * b_TOF;
   TBranch * b_ID;
   TBranch * b_isOOT;
@@ -452,6 +455,7 @@ struct Pho
   Float_t seedZ;
   Float_t seedE;
   Float_t seedtime;
+  Float_t seedtimeErr;
   Float_t seedTOF;
   UInt_t  seedID;
   Int_t   seedisGS6;
@@ -522,6 +526,7 @@ struct Pho
   std::string s_seedZ = "phoseedZ";
   std::string s_seedE = "phoseedE";
   std::string s_seedtime = "phoseedtime";
+  std::string s_seedtimeErr = "phoseedtimeErr";
   std::string s_seedTOF = "phoseedTOF";
   std::string s_seedID = "phoseedID";
   std::string s_seedisGS6 = "phoseedisGS6";
@@ -590,6 +595,7 @@ struct Pho
   TBranch * b_seedZ;
   TBranch * b_seedE;
   TBranch * b_seedtime;
+  TBranch * b_seedtimeErr;
   TBranch * b_seedTOF;
   TBranch * b_seedID;
   TBranch * b_seedisGS6;

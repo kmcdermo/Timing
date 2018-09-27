@@ -756,6 +756,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       // inpho.b_seedZ->GetEntry(entry);
       inpho.b_seedE->GetEntry(entry);
       inpho.b_seedtime->GetEntry(entry);
+      inpho.b_seedtimeErr->GetEntry(entry);
       inpho.b_seedTOF->GetEntry(entry);
       inpho.b_seedID->GetEntry(entry);
       // inpho.b_seedisOOT->GetEntry(entry);
@@ -787,8 +788,9 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     // fInRecHits.b_Z->GetEntry(entry);
     fInRecHits.b_E->GetEntry(entry);
     fInRecHits.b_time->GetEntry(entry);
+    fInRecHits.b_timeErr->GetEntry(entry);
     fInRecHits.b_TOF->GetEntry(entry);
-    // fInRecHits.b_ID->GetEntry(entry);
+    fInRecHits.b_ID->GetEntry(entry);
     // fInRecHits.b_isOOT->GetEntry(entry);
     fInRecHits.b_isGS6->GetEntry(entry);
     fInRecHits.b_isGS1->GetEntry(entry);
@@ -861,6 +863,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.seedE = (*fInRecHits.E)[seed];
 
 	outpho.seedtime = (*fInRecHits.time)[seed];
+	outpho.seedtimeErr = (*fInRecHits.timeErr)[seed];
 	outpho.seedTOF  = (*fInRecHits.TOF) [seed];
 
 	// get trigger tower
@@ -940,8 +943,9 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	// outpho.seedZ = -9999.f;
 	outpho.seedE = -9999.f;
 
-	outpho.seedtime = -9999.f;
-	outpho.seedTOF  = -9999.f;	
+	outpho.seedtime    = -9999.f;
+	outpho.seedtimeErr = -9999.f;
+	outpho.seedTOF     = -9999.f;	
 
 	// outpho.seedID    = 0;
 	// outpho.seedisOOT = -1;
@@ -1118,11 +1122,12 @@ void Skimmer::InitInBranchVecs()
 
   if (fInConfig.storeRecHits) 
   {
-    fInRecHits.X = 0;
-    fInRecHits.Y = 0;
-    fInRecHits.Z = 0;
+    // fInRecHits.X = 0;
+    // fInRecHits.Y = 0;
+    // fInRecHits.Z = 0;
     fInRecHits.E = 0;
     fInRecHits.time = 0;
+    fInRecHits.timeErr = 0;
     fInRecHits.TOF = 0;
     fInRecHits.ID = 0;
     // fInRecHits.isOOT = 0;
@@ -1288,11 +1293,12 @@ void Skimmer::InitInBranches()
   fInTree->SetBranchAddress(fInEvent.s_nrechits.c_str(), &fInEvent.nrechits, &fInEvent.b_nrechits);
   if (fInConfig.storeRecHits)
   {
-    fInTree->SetBranchAddress(fInRecHits.s_X.c_str(), &fInRecHits.X, &fInRecHits.b_X);
-    fInTree->SetBranchAddress(fInRecHits.s_Y.c_str(), &fInRecHits.Y, &fInRecHits.b_Y);
-    fInTree->SetBranchAddress(fInRecHits.s_Z.c_str(), &fInRecHits.Z, &fInRecHits.b_Z);
+    // fInTree->SetBranchAddress(fInRecHits.s_X.c_str(), &fInRecHits.X, &fInRecHits.b_X);
+    // fInTree->SetBranchAddress(fInRecHits.s_Y.c_str(), &fInRecHits.Y, &fInRecHits.b_Y);
+    // fInTree->SetBranchAddress(fInRecHits.s_Z.c_str(), &fInRecHits.Z, &fInRecHits.b_Z);
     fInTree->SetBranchAddress(fInRecHits.s_E.c_str(), &fInRecHits.E, &fInRecHits.b_E);
     fInTree->SetBranchAddress(fInRecHits.s_time.c_str(), &fInRecHits.time, &fInRecHits.b_time);
+    fInTree->SetBranchAddress(fInRecHits.s_timeErr.c_str(), &fInRecHits.timeErr, &fInRecHits.b_timeErr);
     fInTree->SetBranchAddress(fInRecHits.s_TOF.c_str(), &fInRecHits.TOF, &fInRecHits.b_TOF);
     fInTree->SetBranchAddress(fInRecHits.s_ID.c_str(), &fInRecHits.ID, &fInRecHits.b_ID);
     // fInTree->SetBranchAddress(fInRecHits.s_isOOT.c_str(), &fInRecHits.isOOT, &fInRecHits.b_isOOT);
@@ -1353,6 +1359,7 @@ void Skimmer::InitInBranches()
       // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedZ.c_str(),ipho), &pho.seedZ, &pho.b_seedZ);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE, &pho.b_seedE);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime, &pho.b_seedtime);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedtimeErr.c_str(),ipho), &pho.seedtimeErr, &pho.b_seedtimeErr);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF, &pho.b_seedTOF);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID, &pho.b_seedID);
       // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT, &pho.b_seedisOOT);
@@ -1695,6 +1702,7 @@ void Skimmer::InitOutBranches()
     // fOutTree->Branch(Form("%s_%i",pho.s_seedZ.c_str(),ipho), &pho.seedZ);
     fOutTree->Branch(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE);
     fOutTree->Branch(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedtimeErr.c_str(),ipho), &pho.seedtimeErr);
     fOutTree->Branch(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF);
     // fOutTree->Branch(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID);
     // fOutTree->Branch(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT);

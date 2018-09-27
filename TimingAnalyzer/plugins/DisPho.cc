@@ -562,7 +562,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     const auto & t1pfMET = (*metsH)[0];
     
     DisPho::SetMETBranches(t1pfMET);
-    if (isMC) DisPho::SetMETBranchesMC(t1pfMET);
   }
 
   /////////////////////////
@@ -986,21 +985,6 @@ void DisPho::InitializeMETBranches()
   t1pfMETsumEt = -9999.f;
 }
 
-void DisPho::InitializeMETBranchesMC()
-{
-  t1pfMETptJetScaleUp   = -9999.f;
-  t1pfMETptJetScaleDown = -9999.f;
-
-  t1pfMETptJetSmearUp   = -9999.f;
-  t1pfMETptJetSmearDown = -9999.f;
-
-  t1pfMETptUnclusUp   = -9999.f;
-  t1pfMETptUnclusDown = -9999.f;
-
-  t1pfMETptPhoScaleUp   = -9999.f;
-  t1pfMETptPhoScaleDown = -9999.f;
-}
-
 void DisPho::SetMETBranches(const pat::MET & t1pfMET)
 {
   t1pfMETpt    = t1pfMET.pt();
@@ -1008,22 +992,6 @@ void DisPho::SetMETBranches(const pat::MET & t1pfMET)
   t1pfMETsumEt = t1pfMET.sumEt();
 }
 			    
-void DisPho::SetMETBranchesMC(const pat::MET & t1pfMET)
-{
-  t1pfMETptJetScaleUp   = t1pfMET.shiftedPt(pat::MET::METUncertainty::JetResUp);
-  t1pfMETptJetScaleDown = t1pfMET.shiftedPt(pat::MET::METUncertainty::JetResDown);
-
-  // exception?? https://github.com/cms-sw/cmssw/blob/CMSSW_8_0_X/DataFormats/PatCandidates/src/MET.cc#L213
-  //  t1pfMETptJetSmearDown = t1pfMET.shiftedPt(pat::MET::METUncertainty::JetResDownSmear);
-  //  t1pfMETptJetSmearUp   = t1pfMET.shiftedPt(pat::MET::METUncertainty::JetResUpSmear);
-
-  t1pfMETptUnclusDown = t1pfMET.shiftedPt(pat::MET::METUncertainty::UnclusteredEnDown);
-  t1pfMETptUnclusUp   = t1pfMET.shiftedPt(pat::MET::METUncertainty::UnclusteredEnUp);
-
-  t1pfMETptPhoScaleDown = t1pfMET.shiftedPt(pat::MET::METUncertainty::PhotonEnDown);
-  t1pfMETptPhoScaleUp   = t1pfMET.shiftedPt(pat::MET::METUncertainty::PhotonEnUp);
-}
-
 void DisPho::InitializeJetBranches(const int nJets)
 {
   jetE.clear();
@@ -1230,6 +1198,7 @@ void DisPho::InitializeRecHitBranches(const int nRecHits)
   rhZ.clear();
   rhE.clear();
   rhtime.clear();
+  rhtimeErr.clear();
   rhTOF.clear();
   rhID.clear();
   rhisOOT.clear();
@@ -1248,6 +1217,7 @@ void DisPho::InitializeRecHitBranches(const int nRecHits)
   rhZ.resize(nRecHits);
   rhE.resize(nRecHits);
   rhtime.resize(nRecHits);
+  rhtimeErr.resize(nRecHits);
   rhTOF.resize(nRecHits);
   rhID.resize(nRecHits);
   rhisOOT.resize(nRecHits);
@@ -1263,14 +1233,16 @@ void DisPho::InitializeRecHitBranches(const int nRecHits)
 
   for (auto i = 0; i < nRecHits; i++)
   {
-    rhX   [i] = -9999.f;
-    rhY   [i] = -9999.f;
-    rhZ   [i] = -9999.f;
-    rhE   [i] = -9999.f;
-    rhtime[i] = -9999.f;
-    rhTOF [i] = -9999.f;
+    rhX[i] = -9999.f;
+    rhY[i] = -9999.f;
+    rhZ[i] = -9999.f;
+    rhE[i] = -9999.f;
 
-    rhID  [i] = 0; // non-ideal
+    rhtime   [i] = -9999.f;
+    rhtimeErr[i] = -9999.f;
+    rhTOF    [i] = -9999.f;
+    
+    rhID[i] = 0; // non-ideal
 
     rhisOOT[i] = false;
     rhisGS6[i] = false;
@@ -1315,12 +1287,20 @@ void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloS
       const auto recHitPos = geometry->getGeometry(recHitId)->getPosition();
       
       // save position, energy, and time of each rechit to a vector
-      rhX   [pos] = recHitPos.x();
-      rhY   [pos] = recHitPos.y();
-      rhZ   [pos] = recHitPos.z();
-      rhE   [pos] = recHit.energy();
-      rhtime[pos] = recHit.time();
-      rhID  [pos] = rawId;
+      rhX[pos] = recHitPos.x();
+      rhY[pos] = recHitPos.y();
+      rhZ[pos] = recHitPos.z();
+      rhE[pos] = recHit.energy();
+
+      // time info: compute TOF
+      const auto d_orig = Config::hypo(rhX[pos],rhY[pos],rhZ[pos]);
+      const auto d_pv   = Config::hypo(rhX[pos]-vtxX,rhY[pos]-vtxY,rhZ[pos]-vtxZ);
+      rhtime   [pos] = recHit.time();
+      rhtimeErr[pos] = recHit.timeError();
+      rhTOF    [pos] = (d_orig-d_pv) / Config::sol;
+      
+      // detid
+      rhID[pos] = rawId;
 
       // flags: isOOT, isGainSwitch6/1
       rhisOOT[pos] = recHit.checkFlag(EcalRecHit::kOutOfTime);
@@ -1347,12 +1327,6 @@ void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloS
 	rhpedrms6 [pos] = ped.rms(2);
 	rhpedrms1 [pos] = ped.rms(3);
       }
-
-      // compute TOF
-      const auto d_orig = Config::hypo(rhX[pos],rhY[pos],rhZ[pos]);
-      const auto d_pv   = Config::hypo(rhX[pos]-vtxX,rhY[pos]-vtxY,rhZ[pos]-vtxZ);
-	
-      rhTOF[pos] = (d_orig-d_pv) / Config::sol;
     }
   }
 }
@@ -1411,6 +1385,7 @@ void DisPho::InitializePhoBranches()
       phoBranch.seedZ_        = -9999.f;
       phoBranch.seedE_        = -9999.f;
       phoBranch.seedtime_     = -9999.f;
+      phoBranch.seedtimeErr_  = -9999.f;
       phoBranch.seedTOF_      = -9999.f;
       phoBranch.seedID_       = 0; // non-ideal
       phoBranch.seedisOOT_    = -1;
@@ -1571,6 +1546,7 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
 	phoBranch.seedZ_ = rhZ[seedpos];
 	phoBranch.seedE_ = rhE[seedpos];
 	phoBranch.seedtime_ = rhtime[seedpos];
+	phoBranch.seedtimeErr_ = rhtimeErr[seedpos];
 	phoBranch.seedTOF_ = rhTOF[seedpos];
 	phoBranch.seedID_ = rhID[seedpos];
 	phoBranch.seedisOOT_ = rhisOOT[seedpos];
@@ -2034,18 +2010,6 @@ void DisPho::MakeEventTree()
   disphotree->Branch("t1pfMETphi", &t1pfMETphi, "t1pfMETphi/F");
   disphotree->Branch("t1pfMETsumEt", &t1pfMETsumEt, "t1pfMETsumEt/F");
 
-  if (isMC)
-  {
-    disphotree->Branch("t1pfMETptJetScaleDown", &t1pfMETptJetScaleDown, "t1pfMETptJetScaleDown/F");
-    disphotree->Branch("t1pfMETptJetScaleUp", &t1pfMETptJetScaleUp, "t1pfMETptJetScaleUp/F");
-    disphotree->Branch("t1pfMETptJetSmearDown", &t1pfMETptJetSmearDown, "t1pfMETptJetSmearDown/F");
-    disphotree->Branch("t1pfMETptJetSmearUp", &t1pfMETptJetSmearUp, "t1pfMETptJetSmearUp/F");
-    disphotree->Branch("t1pfMETptUnclusDown", &t1pfMETptUnclusDown, "t1pfMETptUnclusDown/F");
-    disphotree->Branch("t1pfMETptUnclusUp", &t1pfMETptUnclusUp, "t1pfMETptUnclusUp/F");
-    disphotree->Branch("t1pfMETptPhoScaleDown", &t1pfMETptPhoScaleDown, "t1pfMETptPhoScaleDown/F");
-    disphotree->Branch("t1pfMETptPhoScaleUp", &t1pfMETptPhoScaleUp, "t1pfMETptPhoScaleUp/F");
-  }
-
   // Jet info
   disphotree->Branch("njets", &njets, "njets/I");
   disphotree->Branch("jetE", &jetE);
@@ -2080,6 +2044,7 @@ void DisPho::MakeEventTree()
     disphotree->Branch("rhZ", &rhZ);
     disphotree->Branch("rhE", &rhE);
     disphotree->Branch("rhtime", &rhtime);
+    disphotree->Branch("rhtimeErr", &rhtimeErr);
     disphotree->Branch("rhTOF", &rhTOF);
     disphotree->Branch("rhID", &rhID);
     disphotree->Branch("rhisOOT", &rhisOOT);
@@ -2154,6 +2119,7 @@ void DisPho::MakeEventTree()
       disphotree->Branch(Form("phoseedZ_%i",iphoton), &phoBranch.seedZ_, Form("phoseedZ_%i/F",iphoton));
       disphotree->Branch(Form("phoseedE_%i",iphoton), &phoBranch.seedE_, Form("phoseedE_%i/F",iphoton));
       disphotree->Branch(Form("phoseedtime_%i",iphoton), &phoBranch.seedtime_, Form("phoseedtime_%i/F",iphoton));
+      disphotree->Branch(Form("phoseedtimeErr_%i",iphoton), &phoBranch.seedtimeErr_, Form("phoseedtimeErr_%i/F",iphoton));
       disphotree->Branch(Form("phoseedTOF_%i",iphoton), &phoBranch.seedTOF_, Form("phoseedTOF_%i/F",iphoton));
       disphotree->Branch(Form("phoseedID_%i",iphoton), &phoBranch.seedID_, Form("phoseedID_%i/i",iphoton));
       disphotree->Branch(Form("phoseedisOOT_%i",iphoton), &phoBranch.seedisOOT_, Form("phoseedisOOT_%i/i",iphoton));

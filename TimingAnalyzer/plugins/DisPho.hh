@@ -371,8 +371,6 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // MET
   float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
-  float t1pfMETptJetScaleDown,t1pfMETptJetScaleUp,t1pfMETptJetSmearDown,t1pfMETptJetSmearUp;
-  float t1pfMETptUnclusDown,t1pfMETptUnclusUp,t1pfMETptPhoScaleDown,t1pfMETptPhoScaleUp;
 
   // jets
   int njets;
@@ -395,7 +393,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // RecHits
   int nrechits;
-  std::vector<float> rhX, rhY, rhZ, rhE, rhtime, rhTOF;
+  std::vector<float> rhX, rhY, rhZ, rhE, rhtime, rhtimeErr, rhTOF;
   std::vector<unsigned int> rhID;
   std::vector<bool> rhisOOT, rhisGS6, rhisGS1;
   std::vector<float> rhadcToGeV;
