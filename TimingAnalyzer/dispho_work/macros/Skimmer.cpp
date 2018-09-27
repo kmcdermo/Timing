@@ -862,9 +862,9 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	// outpho.seedZ = (*fInRecHits.Z)[seed];
 	outpho.seedE = (*fInRecHits.E)[seed];
 
-	outpho.seedtime = (*fInRecHits.time)[seed];
+	outpho.seedtime    = (*fInRecHits.time)   [seed];
 	outpho.seedtimeErr = (*fInRecHits.timeErr)[seed];
-	outpho.seedTOF  = (*fInRecHits.TOF) [seed];
+	outpho.seedTOF     = (*fInRecHits.TOF)    [seed];
 
 	// get trigger tower
 	outpho.seedTT = Common::GetTriggerTower((*fInRecHits.ID)[seed]);
@@ -980,6 +980,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       // outpho.seedZ = inpho.seedZ;
       outpho.seedE = inpho.seedE;
       outpho.seedtime = inpho.seedtime;
+      outpho.seedtimeErr = inpho.seedtimeErr;
       outpho.seedTOF = inpho.seedTOF;
       // outpho.seedID = inpho.seedID;
       // outpho.seedisOOT = inpho.seedisOOT;
