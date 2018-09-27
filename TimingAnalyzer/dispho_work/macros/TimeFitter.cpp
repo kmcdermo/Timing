@@ -317,6 +317,8 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
   // make canvas first
   auto Canvas = new TCanvas("Canvas_"+key,"");
   Canvas->cd();
+  Canvas->SetGridx();
+  Canvas->SetGridy();
   Canvas->SetLogy(isLogy);
 
   if (key.Contains("sigma",TString::kExact))
@@ -368,7 +370,7 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
     MCFit  ->Draw("same");
 
     // setup output text
-    FitText = new TPaveText(0.22,0.6,0.52,0.92,"NDC");
+    FitText = new TPaveText(0.52,0.605,0.82,0.925,"NDC");
     FitText->SetName("SigmaFitText");
     
     FitText->AddText(Form("#sigma(t)=#frac{N}{%s} #oplus %sC",fSigmaVarText.Data(),fUseSqrt2?"#sqrt{2}":""));
@@ -384,7 +386,7 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
   }
 
   // make legend
-  auto Legend = new TLegend(0.72,0.85,0.82,0.92);
+  auto Legend = new TLegend(0.72,0.855,0.82,0.925);
   Legend->SetName("Legend_"+key);
   Legend->SetBorderSize(1);
   Legend->SetLineColor(kBlack);
