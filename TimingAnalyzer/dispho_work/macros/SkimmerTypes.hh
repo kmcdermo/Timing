@@ -414,10 +414,12 @@ struct Pho
   // Derived types
   Int_t   seedTT;
   Int_t   nrechits;
-  Float_t meantime;
   Int_t   nrechitsLT120;
+  Float_t meantime;
   Float_t meantimeLT120;
   Float_t seedTOF;
+  Float_t weightedtime;
+  Float_t weightedtimeLT120;
   
   // branch names
   std::string s_E = "phoE";
@@ -468,10 +470,12 @@ struct Pho
   std::string s_isSignal = "phoisSignal";
   std::string s_seedTT = "phoseedTT";
   std::string s_nrechits = "phonrechits";
-  std::string s_meantime = "phomeantime";
   std::string s_nrechitsLT120 = "phonrechitsLT120";
+  std::string s_meantime = "phomeantime";
   std::string s_meantimeLT120 = "phomeantimeLT120";
   std::string s_seedTOF = "phoseedTOF";
+  std::string s_weightedtime = "phoweightedtime";
+  std::string s_weightedtimeLT120 = "phoweightedtimeLT120";
 
   // tbranches
   TBranch * b_E;
@@ -522,10 +526,12 @@ struct Pho
   TBranch * b_isSignal;
   TBranch * b_seedTT;
   TBranch * b_nrechits;
-  TBranch * b_meantime;
   TBranch * b_nrechitsLT120;
+  TBranch * b_meantime;
   TBranch * b_meantimeLT120;
   TBranch * b_seedTOF;
+  TBranch * b_weightedtime;
+  TBranch * b_weightedtimeLT120;
 };
 typedef std::vector<Pho> PhoVec;
 

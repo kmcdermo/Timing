@@ -124,6 +124,10 @@ namespace Common
   Bool_t IsWithinRadius(const UInt_t detid1, const UInt_t detid2, const Int_t radius);
   Int_t GetTriggerTower(const UInt_t detid);
 
+  // Time constants: local resolution from same towers
+  constexpr Float_t timefitN = 2.2; // GeV * ns
+  constexpr Float_t timefitC = 0.0957; // ns
+
   // Physics info
   constexpr Float_t helix = 0.0114; // 0.3 * 3.8 T / (100 cm / m), 0.3 = sol m/ns --> constant in radius of curv.
   constexpr Float_t Zmass = 91.1876;

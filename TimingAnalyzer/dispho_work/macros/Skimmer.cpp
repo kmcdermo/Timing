@@ -831,27 +831,58 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	// get trigger tower
 	outpho.seedTT = Common::GetTriggerTower((*fInRecHits.ID)[seed]);
 
-	// compute mean time
+	// compute mean time, weighted time
 	outpho.nrechits = 0;
-	outpho.meantime = 0.f;
 	outpho.nrechitsLT120 = 0;
+	outpho.meantime = 0.f;
 	outpho.meantimeLT120 = 0.f;
+	outpho.weightedtime = 0.f;
+	outpho.weightedtimeLT120 = 0.f;
+	Float_t sumweights      = 0.f;
+	Float_t sumweightsLT120 = 0.f;
 	for (const auto irh : (*inpho.recHits))
 	{
-	  outpho.nrechits++;
-	  outpho.meantime += (*fInRecHits.time)[irh];
+	  const Float_t rh_E = (*fInRecHits.E)   [irh]; 
+	  const Float_t rh_T = (*fInRecHits.time)[irh];
+	  const Float_t inv_weight_2 = 1.f/(std::pow(Common::timefitN/rh_E,2)+2.f*std::pow(Common::timefitC,2));
 
-	  if ((*fInRecHits.E)[irh] > 120.f) continue;
+	  outpho.nrechits++;
+	  outpho.meantime += rh_T;
+
+	  outpho.weightedtime += rh_T*inv_weight_2;
+	  sumweights          += inv_weight_2;
+	  
+	  if (rh_E > 120.f) continue;
 
 	  outpho.nrechitsLT120++;
-	  outpho.meantimeLT120 += (*fInRecHits.time)[irh];
+	  outpho.meantimeLT120 += rh_T;
+
+	  outpho.weightedtimeLT120 += rh_T*inv_weight_2;
+	  sumweightsLT120          += inv_weight_2;
 	}
 
-	if   (outpho.nrechits > 0) outpho.meantime /= outpho.nrechits;
-	else outpho.meantime = -9999.f;
+	// set the derived types
+	if   (outpho.nrechits > 0)
+	{
+	  outpho.meantime     /= outpho.nrechits;
+	  outpho.weightedtime /= sumweights;
+	}
+	else 
+	{
+	  outpho.meantime     = -9999.f;
+	  outpho.weightedtime = -9999.f;
+	}
 
-	if   (outpho.nrechitsLT120 > 0) outpho.meantimeLT120 /= outpho.nrechitsLT120;
-	else outpho.meantimeLT120 = -9999.f;
+	if   (outpho.nrechitsLT120 > 0)
+	{
+	  outpho.meantimeLT120     /= outpho.nrechitsLT120;
+	  outpho.weightedtimeLT120 /= sumweightsLT120;
+	}
+	else
+	{
+	  outpho.meantimeLT120     = -9999.f;
+	  outpho.weightedtimeLT120 = -9999.f;
+	}
 
 	// TOF CORRECTION : HACK FOR NOW!
 	auto seedX = 0.f;
@@ -877,7 +908,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	const auto d_pv   = Common::hypot(fOutEvent.vtxX-seedX,fOutEvent.vtxY-seedY,fOutEvent.vtxZ-seedZ);
 	
 	outpho.seedTOF = (d_orig-d_pv) / Common::sol;
-      }
+      } // end check that seed exists
       else
       {
 	outpho.seedtime = -9999.f;
@@ -886,12 +917,14 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 
 	outpho.seedTT = -9999;
 	
-	outpho.nrechits      = -1;
-	outpho.meantime      = -9999.f;
-	outpho.nrechitsLT120 = -1;
-	outpho.meantimeLT120 = -9999.f;
-
 	outpho.seedTOF  = -9999.f;
+
+	outpho.nrechits          = -1;
+	outpho.nrechitsLT120     = -1;
+	outpho.meantime          = -9999.f;
+	outpho.meantimeLT120     = -9999.f;
+	outpho.weightedtime      = -9999.f;
+	outpho.weightedtimeLT120 = -9999.f;
       }
     }
     else
@@ -1576,13 +1609,18 @@ void Skimmer::InitOutBranches()
 
     // Derived types
     fOutTree->Branch(Form("%s_%i",pho.s_seedTT.c_str(),ipho), &pho.seedTT);
-    fOutTree->Branch(Form("%s_%i",pho.s_nrechits.c_str(),ipho), &pho.nrechits);
-    fOutTree->Branch(Form("%s_%i",pho.s_meantime.c_str(),ipho), &pho.meantime);
-    fOutTree->Branch(Form("%s_%i",pho.s_nrechitsLT120.c_str(),ipho), &pho.nrechitsLT120);
-    fOutTree->Branch(Form("%s_%i",pho.s_meantimeLT120.c_str(),ipho), &pho.meantimeLT120);
 
     // HACK: FIXME!!!
     fOutTree->Branch(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF);
+    if (fInConfig.storeRecHits)
+    {
+      fOutTree->Branch(Form("%s_%i",pho.s_nrechits.c_str(),ipho), &pho.nrechits);
+      fOutTree->Branch(Form("%s_%i",pho.s_nrechitsLT120.c_str(),ipho), &pho.nrechitsLT120);
+      fOutTree->Branch(Form("%s_%i",pho.s_meantime.c_str(),ipho), &pho.meantime);
+      fOutTree->Branch(Form("%s_%i",pho.s_meantimeLT120.c_str(),ipho), &pho.meantimeLT120);
+      fOutTree->Branch(Form("%s_%i",pho.s_weightedtime.c_str(),ipho), &pho.weightedtime);
+      fOutTree->Branch(Form("%s_%i",pho.s_weightedtimeLT120.c_str(),ipho), &pho.weightedtimeLT120);
+    }
   } // end loop over nPhotons
 
   // add event weight
