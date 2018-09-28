@@ -961,10 +961,6 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	// outpho.seedpedrms6 = -9999.f;
 	// outpho.seedpedrms1 = -9999.f;
 
-	outpho.seedTT = -9999;
-	
-	outpho.seedTOF  = -9999.f;
-
 	outpho.nrechits          = -1;
 	outpho.nrechitsLT120     = -1;
 	outpho.meantime          = -9999.f;
