@@ -141,9 +141,6 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void InitializeMETBranches();
   void SetMETBranches(const pat::MET & t1pfMET);
 
-  void InitializeMETBranchesMC();
-  void SetMETBranchesMC(const pat::MET & t1pfMET);
-
   void InitializeJetBranches(const int nJets);
   void SetJetBranches(const std::vector<pat::Jet> & jet, const int nJets);
 
@@ -374,22 +371,12 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   // jets
   int njets;
-  std::vector<float> jetE;
-  std::vector<float> jetpt;
-  std::vector<float> jetphi;
-  std::vector<float> jeteta;
+  std::vector<float> jetE, jetpt, jetphi, jeteta;
   std::vector<int>   jetID;
+  std::vector<float> jetNHF, jetNEMF, jetCHF, jetCEMF, jetMUF, jetNHM, jetCHM;
 
-  std::vector<float> jetNHF;
-  std::vector<float> jetNEMF;
-  std::vector<float> jetCHF;
-  std::vector<float> jetCEMF;
-  std::vector<float> jetMUF;
-  std::vector<float> jetNHM;
-  std::vector<float> jetCHM;
-
-  std::vector<float> jetScale, jetSmear, jetSmearDown, jetSmearUp;
-  std::vector<int>   jetIsGen;
+  std::vector<float> jetscaleRel, jetsmearSF, jetsmearDownSF, jetsmearUpSF;
+  std::vector<int>   jetisGen;
 
   // RecHits
   int nrechits;

@@ -556,7 +556,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //              //
   //////////////////
   DisPho::InitializeMETBranches();
-  if (isMC) DisPho::InitializeMETBranchesMC();
   if (metsH.isValid())
   {
     const auto & t1pfMET = (*metsH)[0];
@@ -999,7 +998,6 @@ void DisPho::InitializeJetBranches(const int nJets)
   jetphi.clear();
   jeteta.clear();
   jetID.clear();
-
   jetNHF.clear();
   jetNEMF.clear();
   jetCHF.clear();
@@ -1013,7 +1011,6 @@ void DisPho::InitializeJetBranches(const int nJets)
   jetphi.resize(nJets);
   jeteta.resize(nJets);
   jetID.resize(nJets);
-
   jetNHF.resize(nJets);
   jetNEMF.resize(nJets);
   jetCHF.resize(nJets);
@@ -1028,6 +1025,7 @@ void DisPho::InitializeJetBranches(const int nJets)
     jetpt [i] = -9999.f;
     jetphi[i] = -9999.f;
     jeteta[i] = -9999.f;
+
     jetID [i] = -9999;
 
     jetNHF [i] = -9999.f;
@@ -1052,6 +1050,7 @@ void DisPho::SetJetBranches(const std::vector<pat::Jet> & jets, const int nJets)
     jetpt [ijet] = jet.pt();
     jetphi[ijet] = jet.phi();
     jeteta[ijet] = jet.eta();
+
     jetID [ijet] = oot::GetPFJetID(jet);
 
     jetNHF [ijet] = jet.neutralHadronEnergyFraction();
@@ -1066,36 +1065,39 @@ void DisPho::SetJetBranches(const std::vector<pat::Jet> & jets, const int nJets)
 
 void DisPho::InitializeJetBranchesMC(const int nJets)
 {
-  jetScale.clear();
-  jetSmear.clear();
-  jetSmearDown.clear();
-  jetSmearUp.clear();
-  jetIsGen.clear();
+  jetscaleRel.clear();
+  jetsmearSF.clear();
+  jetsmearDownSF.clear();
+  jetsmearUpSF.clear();
+  jetisGen.clear();
   
-  jetScale.resize(nJets);
-  jetSmear.resize(nJets);
-  jetSmearDown.resize(nJets);
-  jetSmearUp.resize(nJets);
-  jetIsGen.resize(nJets);
+  jetscaleRel.resize(nJets);
+  jetsmearSF.resize(nJets);
+  jetsmearDownSF.resize(nJets);
+  jetsmearUpSF.resize(nJets);
+  jetisGen.resize(nJets);
 
   for (auto ijet = 0; ijet < nJets; ijet++)
   {
-    jetScale    [ijet] = -9999.f;
-    jetSmear    [ijet] = -9999.f;
-    jetSmearDown[ijet] = -9999.f;
-    jetSmearUp  [ijet] = -9999.f;
-    jetIsGen    [ijet] = -1;
+    jetscaleRel   [ijet] = -9999.f;
+
+    jetsmearSF    [ijet] = -9999.f;
+    jetsmearDownSF[ijet] = -9999.f;
+    jetsmearUpSF  [ijet] = -9999.f;
+
+    jetisGen[ijet] = -1;
   }
 }
 
 void DisPho::SetJetBranchesMC(const std::vector<pat::Jet> & jets, const int nJets, const edm::Handle<std::vector<reco::GenJet> > & genjetsH, 
 			      JetCorrectionUncertainty & jetCorrUnc, const JME::JetResolution & jetRes, const JME::JetResolutionScaleFactor & jetRes_sf)
 {
-  // copy from https://github.com/cms-sw/cmssw/blob/master/PhysicsTools/PatUtils/interface/SmearedJetProducerT.h#L208-L215
-  unsigned int runNum_uint = static_cast <unsigned int> (run);
-  unsigned int lumiNum_uint = static_cast <unsigned int> (lumi);
-  unsigned int evNum_uint = static_cast <unsigned int> (event);
-  unsigned int jet0eta = uint32_t(jets.empty() ? 0 : jets[0].eta()/0.01);
+  // JER procedure explanation from https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetResolution#Smearing_procedures
+  // JER implementation copied from https://github.com/cms-sw/cmssw/blob/master/PhysicsTools/PatUtils/interface/SmearedJetProducerT.h#L208-L215
+  const auto runNum_uint = static_cast <unsigned int> (run);
+  const auto lumiNum_uint = static_cast <unsigned int> (lumi);
+  const auto evNum_uint = static_cast <unsigned int> (event);
+  const auto jet0eta = uint32_t(jets.empty() ? 0 : jets[0].eta()/0.01);
   std::mt19937 mt_rand(1 + jet0eta + (lumiNum_uint<<10) + (runNum_uint<<20) + evNum_uint);
 
   // get genjets
@@ -1112,7 +1114,7 @@ void DisPho::SetJetBranchesMC(const std::vector<pat::Jet> & jets, const int nJet
     jetCorrUnc.setJetPt (pt);
     jetCorrUnc.setJetEta(eta);
     
-    jetScale[ijet] = jetCorrUnc.getUncertainty(true);
+    jetscaleRel[ijet] = jetCorrUnc.getUncertainty(true);
 
     // jet JER uncs
     const auto jer         = jetRes   .getResolution ({{JME::Binning::JetPt, pt}, {JME::Binning::JetEta, eta}, {JME::Binning::Rho, rho}});
@@ -1127,26 +1129,26 @@ void DisPho::SetJetBranchesMC(const std::vector<pat::Jet> & jets, const int nJet
     {
       const auto ptres = 1.f - (genjets[igenjet].pt() / pt);
 
-      jetSmear    [ijet] = 1.f + ((jer_sf      - 1.f) * ptres);
-      jetSmearDown[ijet] = 1.f + ((jer_sf_down - 1.f) * ptres);
-      jetSmearUp  [ijet] = 1.f + ((jer_sf_up   - 1.f) * ptres);
+      jetsmearSF    [ijet] = 1.f + ((jer_sf      - 1.f) * ptres);
+      jetsmearDownSF[ijet] = 1.f + ((jer_sf_down - 1.f) * ptres);
+      jetsmearUpSF  [ijet] = 1.f + ((jer_sf_up   - 1.f) * ptres);
 
-      jetIsGen    [ijet] = 1;
+      jetisGen[ijet] = 1;
     }
     else // if not matched, try to do stochastic smear, otherwise return 1.f
     {
-      DisPho::GetStochasticSmear(mt_rand,jer,jer_sf     ,jetSmear    [ijet]); // nominal
-      DisPho::GetStochasticSmear(mt_rand,jer,jer_sf_down,jetSmearDown[ijet]); // down
-      DisPho::GetStochasticSmear(mt_rand,jer,jer_sf_up  ,jetSmearUp  [ijet]); // up
+      DisPho::GetStochasticSmear(mt_rand,jer,jer_sf     ,jetsmearSF    [ijet]); // nominal
+      DisPho::GetStochasticSmear(mt_rand,jer,jer_sf_down,jetsmearDownSF[ijet]); // down
+      DisPho::GetStochasticSmear(mt_rand,jer,jer_sf_up  ,jetsmearUpSF  [ijet]); // up
 
-      jetIsGen[ijet] = 0;
+      jetisGen[ijet] = 0;
     }
 
     // final checks
     const auto energy = jetE[ijet];
-    DisPho::CheckJetSmear(energy,jetSmear    [ijet]);
-    DisPho::CheckJetSmear(energy,jetSmearDown[ijet]);
-    DisPho::CheckJetSmear(energy,jetSmearUp  [ijet]);
+    DisPho::CheckJetSmear(energy,jetsmearSF    [ijet]);
+    DisPho::CheckJetSmear(energy,jetsmearDownSF[ijet]);
+    DisPho::CheckJetSmear(energy,jetsmearUpSF  [ijet]);
   }
 }
 
@@ -1338,9 +1340,9 @@ void DisPho::InitializePhoBranches()
     auto & phoBranch = phoBranches[iphoton];
 
     phoBranch.E_ = -9999.f;
-    phoBranch.Pt_ = -9999.f;
-    phoBranch.Eta_ = -9999.f;
-    phoBranch.Phi_ = -9999.f;
+    phoBranch.pt_ = -9999.f;
+    phoBranch.eta_ = -9999.f;
+    phoBranch.phi_ = -9999.f;
 
     phoBranch.scE_ = -9999.f;
     phoBranch.scPhi_ = -9999.f;
@@ -1365,12 +1367,12 @@ void DisPho::InitializePhoBranches()
     phoBranch.HcalPFClIsoC_ = -9999.f;
     phoBranch.TrkIsoC_ = -9999.f;
 
-    phoBranch.Sieie_ = -9999.f;
-    phoBranch.Sipip_ = -9999.f;
-    phoBranch.Sieip_ = -9999.f;
+    phoBranch.sieie_ = -9999.f;
+    phoBranch.sipip_ = -9999.f;
+    phoBranch.sieip_ = -9999.f;
 
-    phoBranch.Smaj_ = -9999.f;
-    phoBranch.Smin_ = -9999.f;
+    phoBranch.smaj_ = -9999.f;
+    phoBranch.smin_ = -9999.f;
     phoBranch.alpha_ = -9999.f;
 
     if (storeRecHits)
@@ -1430,9 +1432,9 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     // basic kinematic with v2: https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaMiniAODV2#Applying_the_Energy_Scale_and_sm
     const auto phop4 = pho.p4() * (pho.pat::Photon::userFloat("ecalEnergyPostCorr") / pho.pat::Photon::energy());
     phoBranch.E_   = phop4.energy();
-    phoBranch.Pt_  = phop4.pt();
-    phoBranch.Phi_ = phop4.phi();
-    phoBranch.Eta_ = phop4.eta();
+    phoBranch.pt_  = phop4.pt();
+    phoBranch.phi_ = phop4.phi();
+    phoBranch.eta_ = phop4.eta();
 
     // save pt for later use
     const auto phopt = phoBranch.Pt_;
@@ -1442,8 +1444,8 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     const auto scEta = phosc->eta();
 
     phoBranch.scE_   = phosc->energy();
-    phoBranch.scPhi_ = phosc->phi();
-    phoBranch.scEta_ = phosc->eta();
+    phoBranch.scphi_ = phosc->phi();
+    phoBranch.sceta_ = phosc->eta();
 
     // ID-like variables
     phoBranch.HoE_ = pho.hadTowOverEm(); // used in ID + trigger (single tower HoverE)
@@ -1472,9 +1474,9 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     const auto & phoshape = pho.full5x5_showerShapeVariables(); 
 
     // cluster shape variables
-    phoBranch.Sieie_ = phoshape.sigmaIetaIeta;
-    phoBranch.Sipip_ = phoshape.sigmaIphiIphi;
-    phoBranch.Sieip_ = phoshape.sigmaIetaIphi;
+    phoBranch.sieie_ = phoshape.sigmaIetaIeta;
+    phoBranch.sipip_ = phoshape.sigmaIphiIphi;
+    phoBranch.sieip_ = phoshape.sigmaIetaIphi;
 
     // other cluster shape variables
     phoBranch.e2x2_ = phoshape.e2x2;
@@ -1492,8 +1494,8 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     {
       const auto & ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phosc, *recHits);
       // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
-      phoBranch.Smaj_  = ph2ndMoments.sMaj;
-      phoBranch.Smin_  = ph2ndMoments.sMin;
+      phoBranch.smaj_  = ph2ndMoments.sMaj;
+      phoBranch.smin_  = ph2ndMoments.sMin;
       phoBranch.alpha_ = ph2ndMoments.alpha;
     }
 
@@ -1605,8 +1607,8 @@ void DisPho::InitializePhoBranchesMC()
     if (isGMSB || isHVDS) phoBranch.isSignal_ = -9999;
     phoBranch.isGen_ = false;
     
-    phoBranch.Scale_ = -9999.f;
-    phoBranch.Smear_ = -9999.f;
+    phoBranch.scaleAbs_ = -9999.f;
+    phoBranch.smearAbs_ = -9999.f;
   }
 }
 
@@ -1661,12 +1663,12 @@ void DisPho::SetPhoBranchesMC(const std::vector<oot::Photon> photons, const int 
     // eval up/down, then save bigger one (diff is order of one of MeV's...
     const auto down_scale = std::abs(phoE-pho.pat::Photon::userFloat("energyScaleDown"));
     const auto up_scale   = std::abs(pho.pat::Photon::userFloat("energyScaleUp")-phoE);
-    phoBranch.Scale_ = (up_scale > down_scale ? up_scale : down_scale);
+    phoBranch.scaleAbs_   = (up_scale > down_scale ? up_scale : down_scale);
 
     // eval up/down, then save bigger one (diff is order of one of MeV's...
     const auto down_smear = std::abs(phoE-pho.pat::Photon::userFloat("energySigmaDown"));
     const auto up_smear   = std::abs(pho.pat::Photon::userFloat("energySigmaUp")-phoE);
-    phoBranch.Smear_ = (up_smear > down_smear ? up_smear : down_smear);
+    phoBranch.smearAbs_   = (up_smear > down_smear ? up_smear : down_smear);
   }
 }
 
@@ -2016,6 +2018,7 @@ void DisPho::MakeEventTree()
   disphotree->Branch("jetpt", &jetpt);
   disphotree->Branch("jeteta", &jeteta);
   disphotree->Branch("jetphi", &jetphi);
+
   disphotree->Branch("jetID", &jetID);
 
   disphotree->Branch("jetNHF", &jetNHF);
@@ -2028,11 +2031,11 @@ void DisPho::MakeEventTree()
 
   if (isMC)
   {
-    disphotree->Branch("jetScale", &jetScale);
-    disphotree->Branch("jetSmear", &jetSmear);
-    disphotree->Branch("jetSmearDown", &jetSmearDown);
-    disphotree->Branch("jetSmearUp", &jetSmearUp);
-    disphotree->Branch("jetIsGen", &jetIsGen);
+    disphotree->Branch("jetscaleRel", &jetscaleRel);
+    disphotree->Branch("jetsmearSF", &jetsmearSF);
+    disphotree->Branch("jetsmearDownSF", &jetsmearDownSF);
+    disphotree->Branch("jetsmearUpSF", &jetsmearUpSF);
+    disphotree->Branch("jetisGen", &jetisGen);
   }
 
   // RecHit Info
@@ -2068,13 +2071,13 @@ void DisPho::MakeEventTree()
     auto & phoBranch = phoBranches[iphoton];
 
     disphotree->Branch(Form("phoE_%i",iphoton), &phoBranch.E_, Form("phoE_%i/F",iphoton));
-    disphotree->Branch(Form("phopt_%i",iphoton), &phoBranch.Pt_, Form("phopt_%i/F",iphoton));
-    disphotree->Branch(Form("phoeta_%i",iphoton), &phoBranch.Eta_, Form("phoeta_%i/F",iphoton));
-    disphotree->Branch(Form("phophi_%i",iphoton), &phoBranch.Phi_, Form("phophi_%i/F",iphoton));
+    disphotree->Branch(Form("phopt_%i",iphoton), &phoBranch.pt_, Form("phopt_%i/F",iphoton));
+    disphotree->Branch(Form("phoeta_%i",iphoton), &phoBranch.eta_, Form("phoeta_%i/F",iphoton));
+    disphotree->Branch(Form("phophi_%i",iphoton), &phoBranch.phi_, Form("phophi_%i/F",iphoton));
 
     disphotree->Branch(Form("phoscE_%i",iphoton), &phoBranch.scE_, Form("phoscE_%i/F",iphoton));
-    disphotree->Branch(Form("phosceta_%i",iphoton), &phoBranch.scEta_, Form("phosceta_%i/F",iphoton));
-    disphotree->Branch(Form("phoscphi_%i",iphoton), &phoBranch.scPhi_, Form("phoscphi_%i/F",iphoton));
+    disphotree->Branch(Form("phosceta_%i",iphoton), &phoBranch.sceta_, Form("phosceta_%i/F",iphoton));
+    disphotree->Branch(Form("phoscphi_%i",iphoton), &phoBranch.scphi_, Form("phoscphi_%i/F",iphoton));
 
     disphotree->Branch(Form("phoHoE_%i",iphoton), &phoBranch.HoE_, Form("phoHoE_%i/F",iphoton));
     disphotree->Branch(Form("phor9_%i",iphoton), &phoBranch.r9_, Form("phor9_%i/F",iphoton));
@@ -2095,16 +2098,16 @@ void DisPho::MakeEventTree()
     disphotree->Branch(Form("phoHcalPFClIsoC_%i",iphoton), &phoBranch.HcalPFClIsoC_, Form("phoHcalPFClIsoC_%i/F",iphoton));
     disphotree->Branch(Form("phoTrkIsoC_%i",iphoton), &phoBranch.TrkIsoC_, Form("phoTrkIsoC_%i/F",iphoton));
 
-    disphotree->Branch(Form("phosieie_%i",iphoton), &phoBranch.Sieie_, Form("phosieie_%i/F",iphoton));
-    disphotree->Branch(Form("phosipip_%i",iphoton), &phoBranch.Sipip_, Form("phosipip_%i/F",iphoton));
-    disphotree->Branch(Form("phosieip_%i",iphoton), &phoBranch.Sieip_, Form("phosieip_%i/F",iphoton));
+    disphotree->Branch(Form("phosieie_%i",iphoton), &phoBranch.sieie_, Form("phosieie_%i/F",iphoton));
+    disphotree->Branch(Form("phosipip_%i",iphoton), &phoBranch.sipip_, Form("phosipip_%i/F",iphoton));
+    disphotree->Branch(Form("phosieip_%i",iphoton), &phoBranch.sieip_, Form("phosieip_%i/F",iphoton));
 
     disphotree->Branch(Form("phoe2x2_%i",iphoton), &phoBranch.e2x2_, Form("phoe2x2_%i/F",iphoton));
     disphotree->Branch(Form("phoe3x3_%i",iphoton), &phoBranch.e3x3_, Form("phoe3x3_%i/F",iphoton));
     disphotree->Branch(Form("phoe5x5_%i",iphoton), &phoBranch.e5x5_, Form("phoe5x5_%i/F",iphoton));
 
-    disphotree->Branch(Form("phosmaj_%i",iphoton), &phoBranch.Smaj_, Form("phosmaj_%i/F",iphoton));
-    disphotree->Branch(Form("phosmin_%i",iphoton), &phoBranch.Smin_, Form("phosmin_%i/F",iphoton));
+    disphotree->Branch(Form("phosmaj_%i",iphoton), &phoBranch.smaj_, Form("phosmaj_%i/F",iphoton));
+    disphotree->Branch(Form("phosmin_%i",iphoton), &phoBranch.smin_, Form("phosmin_%i/F",iphoton));
     disphotree->Branch(Form("phoalpha_%i",iphoton), &phoBranch.alpha_, Form("phoalpha_%i/F",iphoton));
 
     if (storeRecHits)
@@ -2150,8 +2153,8 @@ void DisPho::MakeEventTree()
       if (isGMSB || isHVDS) disphotree->Branch(Form("phoisSignal_%i",iphoton), &phoBranch.isSignal_, Form("phoisSignal_%i/I",iphoton));
       disphotree->Branch(Form("phoisGen_%i",iphoton), &phoBranch.isGen_, Form("phoisGen_%i/O",iphoton));
 
-      disphotree->Branch(Form("phoscale_%i",iphoton), &phoBranch.Scale_, Form("phoscale_%i/F",iphoton));
-      disphotree->Branch(Form("phosmear_%i",iphoton), &phoBranch.Smear_, Form("phosmear_%i/F",iphoton));
+      disphotree->Branch(Form("phoscaleAbs_%i",iphoton), &phoBranch.scaleAbs_, Form("phoscaleAbs_%i/F",iphoton));
+      disphotree->Branch(Form("phosmearAbs_%i",iphoton), &phoBranch.smearAbs_, Form("phosmearAbs_%i/F",iphoton));
     } // end block over isMC
   } // end loop over nPhotons
 }
