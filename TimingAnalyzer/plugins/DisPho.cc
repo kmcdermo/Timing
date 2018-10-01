@@ -352,7 +352,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   if (metsH.isValid())
   {
-    if ((*metsH)[0].pt() > blindMET && applyBlindMET) return;
+    if ((*metsH).front().pt() > blindMET && applyBlindMET) return;
   }  
   h_cutflow    ->Fill((cutflowLabelMap["METBlinding"]*1.f));
   h_cutflow_wgt->Fill((cutflowLabelMap["METBlinding"]*1.f),wgt);
@@ -558,7 +558,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   DisPho::InitializeMETBranches();
   if (metsH.isValid())
   {
-    const auto & t1pfMET = (*metsH)[0];
+    const auto & t1pfMET = (*metsH).front();
     
     DisPho::SetMETBranches(t1pfMET);
   }
@@ -970,7 +970,7 @@ void DisPho::SetPVBranches(const edm::Handle<std::vector<reco::Vertex> > & verti
 {
   nvtx = verticesH->size();
   
-  const auto & primevtx = (*verticesH)[0];
+  const auto & primevtx = (*verticesH).front();
 
   vtxX = primevtx.position().x();
   vtxY = primevtx.position().y();
@@ -1097,7 +1097,7 @@ void DisPho::SetJetBranchesMC(const std::vector<pat::Jet> & jets, const int nJet
   const auto runNum_uint = static_cast <unsigned int> (run);
   const auto lumiNum_uint = static_cast <unsigned int> (lumi);
   const auto evNum_uint = static_cast <unsigned int> (event);
-  const auto jet0eta = uint32_t(jets.empty() ? 0 : jets[0].eta()/0.01);
+  const auto jet0eta = uint32_t(jets.empty() ? 0 : jets.front().eta()/0.01);
   std::mt19937 mt_rand(1 + jet0eta + (lumiNum_uint<<10) + (runNum_uint<<20) + evNum_uint);
 
   // get genjets
@@ -1345,8 +1345,8 @@ void DisPho::InitializePhoBranches()
     phoBranch.phi_ = -9999.f;
 
     phoBranch.scE_ = -9999.f;
-    phoBranch.scPhi_ = -9999.f;
-    phoBranch.scEta_ = -9999.f;
+    phoBranch.scphi_ = -9999.f;
+    phoBranch.sceta_ = -9999.f;
 
     phoBranch.HoE_ = -9999.f;
     phoBranch.r9_ = -9999.f;
@@ -1436,16 +1436,16 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     phoBranch.phi_ = phop4.phi();
     phoBranch.eta_ = phop4.eta();
 
-    // save pt for later use
-    const auto phopt = phoBranch.Pt_;
-
     // super cluster info from photon
     const auto & phosc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
-    const auto scEta = phosc->eta();
 
     phoBranch.scE_   = phosc->energy();
     phoBranch.scphi_ = phosc->phi();
     phoBranch.sceta_ = phosc->eta();
+
+    // save pt, SC eta for later use
+    const auto phoPt = phoBranch.pt_;
+    const auto scEta = std::abs(phoBranch.sceta_);
 
     // ID-like variables
     phoBranch.HoE_ = pho.hadTowOverEm(); // used in ID + trigger (single tower HoverE)
@@ -1463,12 +1463,12 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
 
     // corrected values for isolations
     phoBranch.ChgHadIsoC_ = std::max(phoBranch.ChgHadIso_ - (rho * oot::GetChargedHadronEA(scEta))                                              ,0.f);
-    phoBranch.NeuHadIsoC_ = std::max(phoBranch.NeuHadIso_ - (rho * oot::GetNeutralHadronEA(scEta)) - (oot::GetNeutralHadronPtScale(scEta,phopt)),0.f);
-    phoBranch.PhoIsoC_    = std::max(phoBranch.PhoIso_    - (rho * oot::GetGammaEA        (scEta)) - (oot::GetGammaPtScale        (scEta,phopt)),0.f);
+    phoBranch.NeuHadIsoC_ = std::max(phoBranch.NeuHadIso_ - (rho * oot::GetNeutralHadronEA(scEta)) - (oot::GetNeutralHadronPtScale(scEta,phoPt)),0.f);
+    phoBranch.PhoIsoC_    = std::max(phoBranch.PhoIso_    - (rho * oot::GetGammaEA        (scEta)) - (oot::GetGammaPtScale        (scEta,phoPt)),0.f);
 
-    phoBranch.EcalPFClIsoC_ = std::max(phoBranch.EcalPFClIso_ - (rho * oot::GetEcalPFClEA(scEta)) - (oot::GetEcalPFClPtScale(scEta,phopt)),0.f);
-    phoBranch.HcalPFClIsoC_ = std::max(phoBranch.HcalPFClIso_ - (rho * oot::GetHcalPFClEA(scEta)) - (oot::GetHcalPFClPtScale(scEta,phopt)),0.f);
-    phoBranch.TrkIsoC_      = std::max(phoBranch.TrkIso_      - (rho * oot::GetTrackEA   (scEta)) - (oot::GetTrackPtScale   (scEta,phopt)),0.f);
+    phoBranch.EcalPFClIsoC_ = std::max(phoBranch.EcalPFClIso_ - (rho * oot::GetEcalPFClEA(scEta)) - (oot::GetEcalPFClPtScale(scEta,phoPt)),0.f);
+    phoBranch.HcalPFClIsoC_ = std::max(phoBranch.HcalPFClIso_ - (rho * oot::GetHcalPFClEA(scEta)) - (oot::GetHcalPFClPtScale(scEta,phoPt)),0.f);
+    phoBranch.TrkIsoC_      = std::max(phoBranch.TrkIso_      - (rho * oot::GetTrackEA   (scEta)) - (oot::GetTrackPtScale   (scEta,phoPt)),0.f);
 
     // Shower Shape Objects
     const auto & phoshape = pho.full5x5_showerShapeVariables(); 
