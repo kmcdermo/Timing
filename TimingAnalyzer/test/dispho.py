@@ -218,7 +218,7 @@ runMetCorAndUncFromMiniAOD (
         process,
         isData = not options.isMC,
         fixEE2017 = True,
-	fixEE2017Params = {'userawPt': True, 'PtThreshold':50.0, 'MinEtaThreshold':2.65, 'MaxEtaThreshold': 3.139},
+	fixEE2017Params = {'userawPt':True, 'PtThreshold':50.0, 'MinEtaThreshold':2.65, 'MaxEtaThreshold':3.139},
         postfix = "ModifiedMET"
 )
 
@@ -233,9 +233,7 @@ updateJetCollection (
 
 ## Apply Scale/Smearing to ootPhotons : Hacked for sure
 from RecoEgamma.EgammaTools.EgammaPostRecoTools_OOT import setupEgammaPostRecoSeq
-setupEgammaPostRecoSeq(process,
-                       runVID=True,
-                       era='2017-Nov17ReReco')
+setupEgammaPostRecoSeq(process)
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("DisPho",
