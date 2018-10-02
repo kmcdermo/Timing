@@ -182,7 +182,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 		# reminiaod data: 94X_dataRun2_v6
-		#'file:/afs/cern.ch/work/k/kmcdermo/public/files/SPH_2017E_miniAODv2.root'
+		'file:/afs/cern.ch/work/k/kmcdermo/public/files/SPH_2017E_miniAODv2.root'
 		# reminiaod GJets, GT: 94X_mc2017_realistic_v14
 		#'file:/afs/cern.ch/work/k/kmcdermo/public/files/GJets_600toInf_miniAODv2.root'
 		))
@@ -318,7 +318,7 @@ process.tree = cms.EDAnalyzer("DisPho",
 
 # Set up the path
 process.treePath = cms.Path(
-	process.egammaPostRecoSeq +
+	process.ootPhotonPostRecoSeq +
 	process.patJetCorrFactorsUpdatedJEC +
 	process.updatedPatJetsUpdatedJEC +
 	process.fullPatMetSequenceModifiedMET +
