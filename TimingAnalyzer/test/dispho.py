@@ -231,7 +231,11 @@ updateJetCollection (
    jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']), 'None')
 )
 
-## Apply Scale/Smearing to ootPhotons : Hacked for sure
+## Add OOT VID to gedPhotons
+from RecoEgamma.EgammaTools.GEDPhotonPostRecoTools_OOTVID import setupGEDPhotonPostRecoSeq
+setupGEDPhotonPostRecoSeq(process)
+
+## Apply Scale/Smearing + GED and OOT VID to ootPhotons
 from RecoEgamma.EgammaTools.OOTPhotonPostRecoTools import setupOOTPhotonPostRecoSeq
 setupOOTPhotonPostRecoSeq(process)
 
@@ -318,12 +322,14 @@ process.tree = cms.EDAnalyzer("DisPho",
 
 # Set up the path
 process.treePath = cms.Path(
-	process.ootPhotonPostRecoSeq +
 	process.patJetCorrFactorsUpdatedJEC +
 	process.updatedPatJetsUpdatedJEC +
 	process.fullPatMetSequenceModifiedMET +
 	process.unpackedTracksAndVertices +
-	process.tree)
+	process.gedPhotonPostRecoSeq +
+	process.ootPhotonPostRecoSeq +
+	process.tree
+)
 
 ### Extra bits from other configs
 process.options = cms.untracked.PSet(

@@ -10,32 +10,17 @@ cmsenv
 git cms-init
 
 git cms-merge-topic cms-met:METFixEE2017_949_v2
-git cms-merge-topic kmcdermo:scale_and_smear_OOT
-git cms-merge-topic kmcdermo:add_OOT_VID
+git cms-merge-topic kmcdermo:post_reco_OOT_AND_add_OOT_VID
 
 git clone git@github.com:kmcdermo/Timing.git
 
 scram b -j 16
 ```
 
-Made ```kmcdermo:add_OOT_VID``` with the following:
-
-```
-cmsrel CMSSW_9_4_10
-cd CMSSW_9_4_10/src
-cmsenv
-git cms-init
-git cms-addpkg RecoEgamma/PhotonIdentification
-
-git remote add lsoffi git@github.com:lsoffi/cmssw.git
-git fetch lsoffi 
-git fetch lsoffi CMSSW_10_1_1_OOT_PhotonID_wSMaj
-
-git cherry-pick 97c1dbf29693ee3b023f2f5c245470eae91c8614
-git cherry-pick fa0403fac422c262f072368937144baff9b265f4
-```
-
-then comment out ```absEta``` in ```RecoEgamma/PhotonIdentification/plugins/cuts/PhoSMajCut.cc``` to remove warning, add, commit, and push.
+Made ```kmcdermo:post_reco_OOT_AND_add_OOT_VID``` with the following:
+- ```kmcdermo:post_reco_OOT```: adds scale/smear + GED cut-based VID for OOT photons
+- combo of squashed commits from: ```lsoffi:CMSSW_10_1_1_OOT_PhotonID_wSMaj``` and ```kmcdermo:add_OOT_VID```
+- add commits for OOT VID for GED and OOT Photons
 
 -----------------------
 
