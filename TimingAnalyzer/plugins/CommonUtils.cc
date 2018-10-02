@@ -535,6 +535,12 @@ namespace oot
   //               //
   ///////////////////
 
+  void GetOOTPhoVID(const pat::Photon & photon, idpVec & idpairs)
+  {
+    idpairs[4].second = photon.photonID("cutBasedPhotonID-Fall17-94X-OOT-V1-tight");
+    idpairs[3].second = photon.photonID("cutBasedPhotonID-Fall17-94X-OOT-V1-loose");
+  }
+
   void GetOOTPhoVIDByHand(const pat::Photon & photon, idpVec& idpairs, const float rho)
   {
     // needed for cuts

@@ -232,8 +232,8 @@ updateJetCollection (
 )
 
 ## Apply Scale/Smearing to ootPhotons : Hacked for sure
-from RecoEgamma.EgammaTools.EgammaPostRecoTools_OOT import setupEgammaPostRecoSeq
-setupEgammaPostRecoSeq(process)
+from RecoEgamma.EgammaTools.OOTPhotonPostRecoTools import setupOOTPhotonPostRecoSeq
+setupOOTPhotonPostRecoSeq(process)
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("DisPho",
