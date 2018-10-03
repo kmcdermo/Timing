@@ -1,0 +1,5 @@
+var=phoweightedtimeLT120
+title=Photon Weighted Time (rechitE < 120 GeV)
+unit=[ns]
+bins=CONSTANT 30 -3 3
+ytitle=Events

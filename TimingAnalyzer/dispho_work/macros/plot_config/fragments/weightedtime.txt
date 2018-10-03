@@ -1,0 +1,5 @@
+var=phoweightedtime
+title=Photon Weighted Time
+unit=[ns]
+bins=CONSTANT 30 -3 3
+ytitle=Events
