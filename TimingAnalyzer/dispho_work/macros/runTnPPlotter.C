@@ -1,9 +1,9 @@
 #include "TString.h"
 #include "Common.cpp+"
-#include "TnPPloter.cpp+"
+#include "TnPPlotter.cpp+"
 
-void runTnPPloter(const TString & infilename, const TString & outfiletext)
+void runTnPPlotter(const TString & infilename, const TString & outfiletext)
 {
-  TnPPloter plotter(infilename,outfiletext);
+  TnPPlotter plotter(infilename,outfiletext);
   plotter.MakeTnPPlots();
 }

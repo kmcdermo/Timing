@@ -45,7 +45,7 @@ class TnPPlotter
 {
 public:
   TnPPlotter(const TString & infilename, const TString & outfiletext);
-  ~TnPPlotter() {}
+  ~TnPPlotter();
 
   // Initialize
   void SetupCommon();
@@ -58,6 +58,7 @@ public:
   // Subroutines for plotting
   void EventLoop();
   void MakeGraph();
+  void GetGraphMinMax();
   void MakeRatioOutput();
   void MakeLegend();
   void InitOutputCanvPads();

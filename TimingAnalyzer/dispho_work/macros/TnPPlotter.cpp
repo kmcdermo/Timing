@@ -129,7 +129,7 @@ void TnPPlotter::EventLoop()
       // Loop over entries in tree //
       ///////////////////////////////
 
-      const auto nEntries = tree->GetEntries();
+      const auto nEntries = intree->GetEntries();
       for (auto entry = 0U; entry < nEntries; entry++)
       {
 	// dump status check
@@ -202,7 +202,7 @@ void TnPPlotter::MakeRatioOutput()
       const auto & eff = EffMap[label];
       auto & hist = HistMap[label];
 
-      for (auto ibinX = 1; ibinX <= eff->GetXaxis()->GetNbins(); ibinX++)
+      for (auto ibinX = 1; ibinX <= hist->GetXaxis()->GetNbins(); ibinX++)
       { 
 	const auto val     = eff->GetEfficiency(ibinX);
 	const auto err_low = eff->GetEfficiencyErrorLow(ibinX);
@@ -291,8 +291,8 @@ void TnPPlotter::MakeLegend()
     leg->SetLineColor(kBlack);
     
     // add to legend
-    leg->AddEntry(DataGraph,"Data","epl");
-    leg->AddEntry(MCGraph  ,"MC"  ,"epl");
+    leg->AddEntry(data_graph,"Data","epl");
+    leg->AddEntry(mc_graph  ,"MC"  ,"epl");
 
     // save to output
     leg->Write(leg->GetName(),TObject::kWriteDelete);
@@ -366,13 +366,13 @@ void TnPPlotter::DrawLowerPad()
     LowerPadMap[eta]->cd();
 
     // draw th1 first so line can appear, then draw over it (and set Y axis divisions)
-    RatioHist[eta]->Draw("EP"); 
+    HistMap[eta]->Draw("EP"); 
 
     // set params for line then draw
-    RatioLine[eta]->Draw("SAME");
+    RatioLineMap[eta]->Draw("SAME");
 
     // redraw to go over line
-    RatioHist[eta]->Draw("EP SAME");
+    HistMap[eta]->Draw("EP SAME");
   }
 }
 
@@ -410,19 +410,24 @@ void TnPPlotter::PrintCanvas(const TString & eta, const Bool_t isLogy)
   UpperPadMap[eta]->cd();
   UpperPadMap[eta]->SetLogy(isLogy);
 
-  // get relevant graph
+  // get relevant graph and min+max
   auto & graph = GraphMap["Data_"+eta];
+  auto & minmax = fMinMaxMap[eta];
+
+  // get tmp min/max
+  const auto min = minmax.ymin;
+  const auto max = minmax.ymax;
 
   // set min and max
   if (isLogy)
   {
-    graph->GetHistogram()->SetMinimum(fMinY/1.5);
-    graph->GetHistogram()->SetMaximum(fMaxY*1.5);
+    graph->GetHistogram()->SetMinimum(min/1.5);
+    graph->GetHistogram()->SetMaximum(max*1.5);
   }
   else 
   {
-    graph->GetHistogram()->SetMinimum( fMinY > 0 ? fMinY/1.05 : fMinY*1.05 );
-    graph->GetHistogram()->SetMaximum( fMaxY > 0 ? fMaxY*1.05 : fMaxY/1.05 );      
+    graph->GetHistogram()->SetMinimum( min > 0 ? min/1.05 : min*1.05 );
+    graph->GetHistogram()->SetMaximum( max > 0 ? max*1.05 : max/1.05 );      
   }
 
   // save canvas as images
@@ -438,7 +443,7 @@ void TnPPlotter::MakeConfigPave()
   auto fConfigPave = (TPaveText*)fOutFile->Get(Form("%s",Common::pavename.Data()));
 
   // add some padding to new stuff
-  Common::AddPaddingToPave(ConfigPave,3);
+  Common::AddPaddingToPave(fConfigPave,3);
 
   // give grand title
   fConfigPave->AddText("***** TnPPlotter Config *****");
