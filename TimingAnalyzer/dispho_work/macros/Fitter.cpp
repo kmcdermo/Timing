@@ -47,15 +47,15 @@ Fitter::~Fitter()
   delete fX;
   delete fXRooBins;
 
-  Fitter::DeleteMap(fNPredSignMap);
+  Common::DeleteMap(fNPredSignMap);
   delete fNPredBkgd;
-  Fitter::DeleteMap(fFracMap);
+  Common::DeleteMap(fFracMap);
 
-  Fitter::DeleteMap(fHistMapY);
-  Fitter::DeleteMap(fHistMapX);
-  Fitter::DeleteMap(fHistMap2D);
+  Common::DeleteMap(fHistMapY);
+  Common::DeleteMap(fHistMapX);
+  Common::DeleteMap(fHistMap2D);
 
-  Fitter::DeleteMap(fHistMap2DTmp);
+  Common::DeleteMap(fHistMap2DTmp);
   
   delete fSRFile;
   delete fQCDFile;
@@ -1581,15 +1581,8 @@ void Fitter::DeleteFitInfo(FitInfo & fitInfo)
 {
   std::cout << "Deleting remaining bits of fitInfo: " << fitInfo.Text.Data() << std::endl;
   
-  Fitter::DeleteMap(fitInfo.DataHistMap);
-  Fitter::DeleteMap(fitInfo.HistPdfMap);
+  Common::DeleteMap(fitInfo.DataHistMap);
+  Common::DeleteMap(fitInfo.HistPdfMap);
 
   delete fitInfo.BkgdPdf;
-}
-
-template <typename T>
-void Fitter::DeleteMap(T & Map)
-{
-  for (auto & Pair : Map) delete Pair.second;
-  Map.clear();			  
 }

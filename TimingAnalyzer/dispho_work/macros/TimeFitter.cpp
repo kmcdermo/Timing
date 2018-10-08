@@ -904,16 +904,10 @@ void TimeFitter::DeleteInfo(FitStruct & FitInfo)
     delete FitInfo.SigmaForm;
   }
 
-  TimeFitter::DeleteMap(FitInfo.ResultsMap);
-  TimeFitter::DeleteMap(FitInfo.FitMap);
-  TimeFitter::DeleteMap(FitInfo.FormMap);
-  TimeFitter::DeleteMap(FitInfo.Hist1DMap);
+  Common::DeleteMap(FitInfo.ResultsMap);
+  Common::DeleteMap(FitInfo.FitMap);
+  Common::DeleteMap(FitInfo.FormMap);
+  Common::DeleteMap(FitInfo.Hist1DMap);
 
   delete FitInfo.Hist2D;
-}
-
-template <typename T>
-void TimeFitter::DeleteMap(T & Map)
-{
-  for (auto & Pair : Map) delete Pair.second;
 }

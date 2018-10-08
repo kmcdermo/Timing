@@ -140,7 +140,7 @@ namespace Common
   constexpr    Float_t invfbToinvpb   = 1000.f; // conversion for the world's dumbest unit
   static const TString extraText      = "Preliminary";
   static const TString eosDir         = "/eos/cms/store/user/kmcdermo/nTuples";
-  static const TString baseDir        = "skims/2017/rereco_v4_metcorr_Zee";
+  static const TString baseDir        = "skims/2017/Zee_TnP";
   static const TString tupleFileName  = "tree.root";
   static const TString rootdir        = "tree";
   static const TString configtreename = "configtree";
@@ -481,6 +481,14 @@ namespace Common
       const auto & CR = sample;
       GetSRPredFromCR(CR,HistMap,HistMapTmp,VarBins,KFMap[CR],XFMap[CR]);
     }
+  }
+
+  // common function for deleting map pairs that are dynamically allocated
+  template <typename T>
+  void DeleteMap(T & Map)
+  {
+    for (auto & Pair : Map) delete Pair.second;
+    Map.clear();
   }
 };
 

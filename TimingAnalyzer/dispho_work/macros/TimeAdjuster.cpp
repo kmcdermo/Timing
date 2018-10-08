@@ -31,7 +31,7 @@ TimeAdjuster::~TimeAdjuster()
 {
   std::cout << "Tidying up in the destructor..." << std::endl;
 
-  TimeAdjuster::DeleteMap(fInFileMap);
+  Common::DeleteMap(fInFileMap);
 
   delete fSignalSkimFile;
   delete fSkimFile;
@@ -541,13 +541,7 @@ void TimeAdjuster::DeleteInfo(FitStruct & FitInfo)
   const auto & label = FitInfo.label;
   std::cout << "Deleting info for: " << label.Data() << std::endl;
 
-  TimeAdjuster::DeleteMap(FitInfo.MuHistMap);
-  TimeAdjuster::DeleteMap(FitInfo.SigmaHistMap);
-  //  TimeAdjuster::DeleteMap(FitInfo.SigmaFitMap);
-}
-
-template <typename T>
-void TimeAdjuster::DeleteMap(T & Map)
-{
-  for (auto & Pair : Map) delete Pair.second;
+  Common::DeleteMap(FitInfo.MuHistMap);
+  Common::DeleteMap(FitInfo.SigmaHistMap);
+  //  Common::DeleteMap(FitInfo.SigmaFitMap);
 }

@@ -96,10 +96,6 @@ public:
   // Meta data
   void MakeConfigPave(TFile *& SkimFile);
 
-  // Helper functions
-  template <typename T>
-  void DeleteMap(T & Map);
-
 private:
   // settings
   const TString fSkimFileName;

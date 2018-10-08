@@ -80,8 +80,6 @@ public:
 
   // Deleting
   void DeleteFitInfo(FitInfo & fitInfo);
-  template <typename T>
-  void DeleteMap(T & Map);
 
   // Main calls
   void DoMain();
