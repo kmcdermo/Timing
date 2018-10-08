@@ -16,11 +16,14 @@ fulldir=${topdir}/${disphodir}/${dir}
 PrepOutDir ${fulldir}
 
 ## copy everything
-for canvscale in "${canvscales[@]}"
+for eta in "${etas[@]}"
 do
-    for ext in "${exts[@]}"
+    for canvscale in "${canvscales[@]}"
     do
-	cp ${outfiletext}_${canvscale}.${ext} ${fulldir}
+	for ext in "${exts[@]}"
+	do
+	    cp ${outfiletext}_${eta}_${canvscale}.${ext} ${fulldir}
+	done
     done
 done
 cp ${outfiletext}.root ${fulldir}

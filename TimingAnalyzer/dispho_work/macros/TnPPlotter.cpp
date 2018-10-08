@@ -100,8 +100,9 @@ void TnPPlotter::EventLoop()
     
     std::cout << "Working on tree: " << treename.Data() << std::endl;
 
-    // sample label
-    const TString sample_label = ((Common::GroupMap[sample] == isData) ? "Data" : "MC");
+    // data vs mc
+    const Bool_t isMC = (Common::GroupMap[sample] != isData);
+    const TString sample_label = (isMC ? "MC" : "Data");
 	
     // Get tree
     fInFile->cd();
@@ -124,6 +125,8 @@ void TnPPlotter::EventLoop()
 
       // weights
       Float_t evtwgt; TBranch * b_evtwgt; intree->SetBranchAddress("evtwgt",&evtwgt,&b_evtwgt);
+      Float_t puwgt; TBranch * b_puwgt; 
+      if (isMC) intree->SetBranchAddress("puwgt",&puwgt,&b_puwgt);
 
       ///////////////////////////////
       // Loop over entries in tree //
@@ -145,11 +148,14 @@ void TnPPlotter::EventLoop()
 	b_phopt_1->GetEntry(entry);
 	b_evtwgt->GetEntry(entry);
 	
+	// get pu weights for MC
+	if (isMC) b_puwgt->GetEntry(entry);
+
 	// eta label
-	const TString eta_label = ((phoisEB_1) ? "EB" : "EE");
+	const TString eta_label = (phoisEB_1 ? "EB" : "EE");
 
 	// fill tefficiency
-	EffMap[sample_label+"_"+eta_label]->FillWeighted(phoisTrk_1,evtwgt,phopt_1); 
+	EffMap[sample_label+"_"+eta_label]->FillWeighted(phoisTrk_1,(isMC?evtwgt*puwgt:evtwgt),phopt_1); 
       } // end loop over entries
       
       // delete it all
@@ -209,12 +215,12 @@ void TnPPlotter::MakeRatioOutput()
 	const auto err_up  = eff->GetEfficiencyErrorUp (ibinX);
 	const auto err     = ((err_low > err_up) ? err_low : err_up);
 
-	hist->GetBinContent(val);
-	hist->GetBinError  (err);
+	hist->SetBinContent(ibinX,val);
+	hist->SetBinError  (ibinX,err);
       }
     }
   }
-
+  
   // make ratio output hists and lines
   for (const auto & eta : fEtas)
   {
@@ -226,6 +232,9 @@ void TnPPlotter::MakeRatioOutput()
     ratio_hist->Add(data_hist);
     ratio_hist->Divide(mc_hist);
 
+    ratio_hist->SetMinimum(-0.1); // Define Y ..
+    ratio_hist->SetMaximum( 2.1); // .. range
+    
     // ratio line
     auto & ratioline = RatioLineMap[eta];
     ratioline = new TLine();
@@ -256,19 +265,6 @@ void TnPPlotter::GetGraphMinMax()
     minmax.xmax = ((data_graph->GetXaxis()->GetXmax() > mc_graph->GetXaxis()->GetXmax()) ? data_graph->GetXaxis()->GetXmax() : mc_graph->GetXaxis()->GetXmax());
     minmax.ymin = ((data_graph->GetYaxis()->GetXmin() < mc_graph->GetYaxis()->GetXmin()) ? data_graph->GetYaxis()->GetXmin() : mc_graph->GetYaxis()->GetXmin());
     minmax.ymax = ((data_graph->GetYaxis()->GetXmax() > mc_graph->GetYaxis()->GetXmax()) ? data_graph->GetYaxis()->GetXmax() : mc_graph->GetYaxis()->GetXmax());
-    
-    // set ratio hist, line x-size
-    auto & ratiohist = HistMap[eta];
-    auto & ratioline = RatioLineMap[eta];
-
-    ratiohist->GetXaxis()->SetRangeUser(minmax.xmin,minmax.xmax);
-
-    ratioline->SetX1(minmax.xmin);
-    ratioline->SetX2(minmax.xmax);
-    
-    // save to output
-    fOutFile->cd();
-    ratioline->Write("RatioLine_"+eta,TObject::kWriteDelete);
   }
 }
 
@@ -365,6 +361,20 @@ void TnPPlotter::DrawLowerPad()
     LowerPadMap[eta]->Draw();
     LowerPadMap[eta]->cd();
 
+    // set ratio hist, line x-size
+    auto & minmax     = fMinMaxMap[eta];
+    auto & ratiohist = HistMap[eta];
+    auto & ratioline = RatioLineMap[eta];
+
+    ratiohist->GetXaxis()->SetRangeUser(minmax.xmin,minmax.xmax);
+
+    ratioline->SetX1(minmax.xmin);
+    ratioline->SetX2(minmax.xmax);
+    
+    // save to output
+    fOutFile->cd();
+    ratioline->Write("RatioLine_"+eta,TObject::kWriteDelete);
+
     // draw th1 first so line can appear, then draw over it (and set Y axis divisions)
     HistMap[eta]->Draw("EP"); 
 
@@ -431,7 +441,7 @@ void TnPPlotter::PrintCanvas(const TString & eta, const Bool_t isLogy)
   }
 
   // save canvas as images
-  Common::SaveAs(outcanv,Form("%s_%s",fOutFileText.Data(),(isLogy?"log":"lin")));
+  Common::SaveAs(outcanv,Form("%s_%s_%s",fOutFileText.Data(),eta.Data(),(isLogy?"log":"lin")));
 }
 
 void TnPPlotter::MakeConfigPave()
@@ -440,7 +450,8 @@ void TnPPlotter::MakeConfigPave()
 
   // create the pave, copying in old info
   fOutFile->cd();
-  auto fConfigPave = (TPaveText*)fOutFile->Get(Form("%s",Common::pavename.Data()));
+  fConfigPave = new TPaveText();
+  fConfigPave->SetName(Form("%s",Common::pavename.Data()));
 
   // add some padding to new stuff
   Common::AddPaddingToPave(fConfigPave,3);
@@ -480,7 +491,9 @@ void TnPPlotter::SetupOutputEffs()
 {
   std::cout << "Setup Output Efficiencies..." << std::endl;
 
-  const TString x_title = "Efficiency vs Tag p_{T} [GeV/c]";
+  const TString x_title = "Tag p_{T} [GeV/c]";
+  const TString y_title = "Efficiency of isTrk";
+  const TString title = y_title+" vs. "+x_title;
   const std::vector<Double_t> xBins = {0,10,20,30,40,50,60,70,80,90,100,120,140,160,180,200,225,250,275,300,325,350,375,400,450,500,550,600,700,800,1000,1500,2000,2500,3000,4000,5000};
   const Double_t * x_bins = &xBins[0];
 
@@ -494,17 +507,18 @@ void TnPPlotter::SetupOutputEffs()
     for (const auto & eta : fEtas)
     {
       const TString label = sample+"_"+eta;
-      const TString x_label = "("+sample+" "+eta+")";
+      const TString title_label = "("+sample+" "+eta+")";
 
       auto & eff = EffMap[label];
-      eff = new TEfficiency(label+"_Eff",x_title+" "+x_label+";"+x_title+" "+x_label+";#epsilon",xBins.size()-1,x_bins);
+      eff = new TEfficiency(label+"_Eff",title+" "+title_label+";"+x_title+" "+title_label+";"+y_title,xBins.size()-1,x_bins);
       eff->SetLineColor  (colorMap[sample]);
       eff->SetMarkerColor(colorMap[sample]);
+      eff->SetUseWeightedEvents();
 
       auto & hist = HistMap[label];
-      hist = new TH1F(label+"_Hist",x_title+" "+x_label,xBins.size()-1,x_bins);
-      hist->GetXaxis()->SetTitle(x_title+" "+x_label);
-      hist->GetYaxis()->SetTitle("#epsilon");
+      hist = new TH1F(label+"_Hist",title+" "+x_title+" "+title_label,xBins.size()-1,x_bins);
+      hist->GetXaxis()->SetTitle(x_title+" "+title_label);
+      hist->GetYaxis()->SetTitle(y_title);
       hist->Sumw2();
     }
   }
@@ -513,8 +527,8 @@ void TnPPlotter::SetupOutputEffs()
   for (const auto & eta : fEtas)
   {
     auto & hist = HistMap[eta];
-    hist = new TH1F(eta+"_Hist","Ratio of "+x_title+" ("+eta+")",xBins.size()-1,x_bins);
-    hist->GetXaxis()->SetTitle("Ratio of "+x_title+" ("+eta+")");
+    hist = new TH1F(eta+"_Hist","Ratio of "+title+" ("+eta+")",xBins.size()-1,x_bins);
+    hist->GetXaxis()->SetTitle(x_title+" ("+eta+")");
     hist->GetYaxis()->SetTitle("Data/MC");
     hist->SetLineColor(kBlack);
     hist->SetMarkerColor(kBlack);
@@ -522,8 +536,6 @@ void TnPPlotter::SetupOutputEffs()
 
     // set other options (from TTreePlotter)
     hist->SetStats(0);      // No statistics on lower plot
-    hist->SetMinimum(-0.1); // Define Y ..
-    hist->SetMaximum( 2.1); // .. range
     hist->GetYaxis()->SetNdivisions(505);
     hist->GetXaxis()->SetLabelSize  (Common::LabelSize   / Common::height_lp); 
     hist->GetXaxis()->SetLabelOffset(Common::LabelOffset / Common::height_lp); 
