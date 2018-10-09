@@ -60,7 +60,7 @@ void FastSkimmer::MakeListFromTrees()
     std::cout << "Working on sample name: " << samplename.Data() << std::endl;
 
     // Get File
-    const TString filename = Form("%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),input.Data(),Common::tupleFileName.Data());
+    const TString filename = Form("%s/%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),fInSkimDir.Data(),input.Data(),Common::tupleFileName.Data());
     auto file = TFile::Open(Form("%s",filename.Data()));
     Common::CheckValidFile(file,filename);
     file->cd();
@@ -210,7 +210,7 @@ void FastSkimmer::MakeSkimsFromEntryLists(TFile *& TreeFile, std::map<TString,TT
     std::cout << "Working on sample name: " << samplename.Data() << std::endl;
     
     // Get File
-    const TString infilename = Form("%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),input.Data(),Common::tupleFileName.Data());
+    const TString infilename = Form("%s/%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),fInSkimDir.Data(),input.Data(),Common::tupleFileName.Data());
     auto infile = TFile::Open(Form("%s",infilename.Data()));
     Common::CheckValidFile(infile,infilename);
     

@@ -22,8 +22,8 @@
 class FastSkimmer
 {
 public:
-  FastSkimmer(const TString & cutflowconfig, const TString & pdname, const TString & outfiletext, 
-	      const Bool_t doskim = true, const TString & sampleconfig = "");
+  FastSkimmer(const TString & cutflowconfig, const TString & pdname, const TString & inskimdir,
+	      const TString & outfiletext, const Bool_t doskim = true, const TString & sampleconfig = "");
   ~FastSkimmer();
 
   // Initialize
@@ -49,6 +49,7 @@ private:
   // Settings
   const TString fCutFlowConfig;
   const TString fPDName;
+  const TString fInSkimDir;
   const TString fOutFileText;
   const Bool_t  fDoSkim;
   const TString fSampleConfig;

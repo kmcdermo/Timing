@@ -1,7 +1,7 @@
 #include "SignalSkimmer.hh"
 
-SignalSkimmer::SignalSkimmer(const TString & cutflowconfig, const TString & outtext)
-  : fCutFlowConfig(cutflowconfig), fOutFileText(outtext)
+SignalSkimmer::SignalSkimmer(const TString & cutflowconfig, const TString & inskimdir, const TString & outtext)
+  : fCutFlowConfig(cutflowconfig), fInSkimDir(inskimdir), fOutFileText(outtext)
 {
   std::cout << "Initializing SignalSkimmer..." << std::endl;
 
@@ -46,7 +46,7 @@ void SignalSkimmer::MakeSkimsFromTrees()
     std::cout << "Working on input: " << input.Data() << std::endl;
 
     // Get File
-    const TString infilename = Form("%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),input.Data(),Common::tupleFileName.Data());
+    const TString infilename = Form("%s/%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),fInSkimDir.Data(),input.Data(),Common::tupleFileName.Data());
     auto infile = TFile::Open(Form("%s",infilename.Data()));
     Common::CheckValidFile(infile,infilename);
 	

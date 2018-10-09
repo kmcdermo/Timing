@@ -21,7 +21,7 @@
 class SignalSkimmer
 {
 public:
-  SignalSkimmer(const TString & cutflowconfig, const TString & outfiletext);
+  SignalSkimmer(const TString & cutflowconfig, const TString & inskimdir, const TString & outfiletext);
   ~SignalSkimmer();
 
   // Initialize
@@ -42,6 +42,7 @@ public:
 private:
   // Settings
   const TString fCutFlowConfig;
+  const TString fInSkimDir;
   const TString fOutFileText;
 
   // Output
