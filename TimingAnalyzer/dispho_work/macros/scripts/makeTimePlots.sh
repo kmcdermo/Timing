@@ -24,7 +24,7 @@ then
 fi
 
 ## vars
-declare -a vars=("pt" "E" "seedE" "time" "meantime" "meantimeLT120")
+declare -a vars=("seedE" "E")
 
 ## logx vars
 declare -a logx_vars=("pt" "E" "seedE")
@@ -115,7 +115,7 @@ do echo ${!pho} | while read -r index pho_label
 		then
 		    time_bins=$( ReadConfig "${line}" )
 		fi
-	    done < "${fragdir}/time.${inTextExt}"
+	    done < "${fragdir}/time.${inTextExt}" ## or weightedTimeLT120
 
 	    ## add units to title
 	    time_title+=" ${time_unit}"
@@ -159,31 +159,33 @@ do echo ${!pho} | while read -r index pho_label
 		    continue
 		fi
 
-		#########################
-		## make eta cut config ##
-		#########################
+		#####################
+		## make cut config ##
+		#####################
 
 		cut="tmp_cut_config.txt"
 		> "${cut}"
 
-		## write common cut
+		## eta cuts
 		common_cut="(1)"
-		eta_cut="phoisEB_${index}"
-		if [[ "${eta}" == "EB" ]]
+
+		eta_cut_base="phoisEB_${index}"
+		if [[ "${eta}" == "Full" ]]
 		then
-		    echo "common_cut=((${eta_cut})&&(${common_cut}))" >> "${cut}"
+		    eta_cut="(1)"
+		elif [[ "${eta}" == "EB" ]]
+		then
+		    eta_cut="(${eta_cut_base})"
 		elif [[ "${eta}" == "EE" ]]
 		then
-		    echo "common_cut=(!(${eta_cut})&&(${common_cut}))" >> "${cut}"
-		elif [[ "${eta}" == "Full" ]]
-		then
-		    echo "common_cut=(${common_cut})" >> "${cut}"
+		    eta_cut="(!${eta_cut_base})"
 		else
 		    echo "How did this happen?? Did not choose a correct option for eta: ${eta} ... Exiting..."
 		    exit
 		fi
 
 		## write the remainder of cuts
+		echo "common_cut=${eta_cut}" >> "${cut}"
 		echo "data_cut=" >> "${cut}"
 		echo "bkgd_cut=" >> "${cut}"
 		echo "sign_cut=" >> "${cut}"

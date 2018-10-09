@@ -10,7 +10,7 @@ source scripts/common_variables.sh
 ############
 
 ## command line inputs
-outdirbase=${1:-"ntuples_v5/time_study"}
+outdirbase=${1:-"ntuples_v5p1/time_study_final/single_object"}
 
 ## other config
 nodir="no_corrs"
@@ -20,41 +20,32 @@ smeardir="smear_corrs"
 
 filedump="tmp_infiles.${inTextExt}"
 
-#################
-## Run scripts ##
-#################
+####################
+## Raw time plots ##
+####################
 
-## 1) Plot generic kinematics, time before corrections
-## 2) Make shift corrections
-## 3) Make smear corrections
-## 4) Final plots + delta time plots with all corrections
+## lauch plots with no corrections
+echo "Making time related plots with no corrections"
+./scripts/makeTimePlots.sh "${outdirbase}/${nodir}" "false" "false" "false" "false"
 
-##############################
-## Plots before corrections ##
-##############################
-
-## make generic plots
-echo "Making 1D generic plots"
-./scripts/make1Dplots.sh "${outdirbase}/basic_plots" "standard_plots_zee" "false"
-
-## launch delta time plots with NO TOF+SHIFT+SMEAR corrections
-echo "Making deltaT related plots with NO TOF, SHIFT, SMEAR corrections"
-./scripts/makeDeltaTimePlots.sh "${outdirbase}/${nodir}" "false" "false" "false"
+## plot raw TOF
+echo "Making raw TOF plots"
+./scripts/makeCorrPlots.sh "${outdirbase}/${tofdir}" "TOF"
 
 ############################
 ## Make shift corrections ##
 ############################
 
 ## lauch plots with no corrections
-echo "Making time related plots without TOF, SHIFT, SMEAR corrections"
-./scripts/makeTimePlots.sh "${outdirbase}/${nodir}" "false" "false" "false" "true" "${filedump}"
+echo "Making time related plots with TOF corrections"
+./scripts/makeTimePlots.sh "${outdirbase}/${tofdir}" "true" "false" "false" "true" "${filedump}"
 
 ## launch time adjuster, over each input selection
 for input in "${inputs[@]}"
 do echo ${!input} | while read -r label infile insigfile sel varwgtmap
     do
- 	echo "Running time adjuster for computing shift corrections for: ${label}" 
-  	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" 1 0
+  	echo "Running time adjuster for computing shift corrections for: ${label}" 
+   	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" 1 0
     done
 done
 
@@ -69,39 +60,35 @@ echo "Making raw shift plots"
 ## Make smear corrections ##
 ############################
 
-## lauch plots with SHIFT corrections
-echo "Making time related plots without SMEAR corrections; with SHIFT corrections"
-./scripts/makeTimePlots.sh "${outdirbase}/${shiftdir}" "false" "true" "false" "true" "${filedump}"
+## lauch plots with tof, shift, and smear corrections
+echo "Making time related plots with TOF + SHIFT corrections"
+./scripts/makeTimePlots.sh "${outdirbase}/${tofdir}" "true" "true" "false" "true" "${filedump}"
 
 ## launch time adjuster, over each input selection
 for input in "${inputs[@]}"
 do echo ${!input} | while read -r label infile insigfile sel varwgtmap
     do
-	echo "Running time adjuster for computing smear corrections for: ${label}"
-	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" 0 1
+  	echo "Running time adjuster for computing smear corrections for: ${label}" 
+   	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" 0 1
     done
 done
 
 ## rm tmp file
 rm "${filedump}"
 
-## plot raw smear
+## plot raw shift
 echo "Making raw smear plots"
-./scripts/makeCorrPlots.sh "${outdirbase}/${smeardir}" "SMEAR"
+./scripts/makeCorrPlots.sh "${outdirbase}/${shiftdir}" "SMEAR"
 
-##########################
-## Final plots and such ##
-##########################
+#################
+## Final plots ##
+#################
 
-## lauch plots with SHIFT+SMEAR corrections
-echo "Making time related plots with SHIFT and SMEAR corrections"
-./scripts/makeTimePlots.sh "${outdirbase}/${smeardir}" "false" "true" "true" "false"
+## lauch plots with TOF + SHIFT + SMEAR corrections
+echo "Making time related plots with TOF + SHIFT + SMEAR corrections"
+./scripts/makeTimePlots.sh "${outdirbase}/${shiftdir}" "true" "true" "true" "false"
 
-## launch delta time plots with SHIFT+SMEAR corrections
-echo "Making deltaT related plots with SHIFT and SMEAR corrections"
-./scripts/makeDeltaTimePlots.sh "${outdirbase}/${smeardir}" "false" "true" "true"
-
-## final prep dir
+## Final prep dir
 echo "Final prep outdir"
 PrepOutDir "${topdir}/${disphodir}/${outdirbase}"
 

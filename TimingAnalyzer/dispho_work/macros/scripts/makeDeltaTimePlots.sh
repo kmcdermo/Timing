@@ -21,10 +21,10 @@ diphodir="dipho"
 fragdir="plot_config/fragments"
 
 ## eta regions
-declare -a dietas=("EBEB" "EEEE" "Full")
+declare -a dietas=("EBEB")
 
 ## vars
-declare -a vars_map=("pt_eff pt" "E_eff E" "seedE_eff seedE" "time_delta time")
+declare -a vars_map=("seedE_eff seedE")
 
 ## logx vars
 declare -a logx_vars=("pt_0" "pt_1" "pt_eff" "E_0" "E_1" "E_eff" "seedE_eff")
