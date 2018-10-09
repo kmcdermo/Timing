@@ -226,27 +226,49 @@ do
 		continue
 	    fi
 	    
-	    #########################
-	    ## make eta cut config ##
-	    #########################
+	    #####################
+	    ## make cut config ##
+	    #####################
 
 	    cut="tmp_cut_config.txt"
 	    > "${cut}"
 
-	    ## write the remainder of cuts
+	    ## eta cuts
+            eta_cut_base="phoisEB"
+            if [[ "${eta}" == "Full" ]]
+            then
+		eta_cut="(1)"
+            elif [[ "${eta}" == "EBEB" ]]
+            then
+		eta_cut="(${eta_cut_base}_0&&${eta_cut_base}_1)"
+            elif [[ "${eta}" == "EBEE" ]]
+            then
+		eta_cut="((${eta_cut_base}_0&&!${eta_cut_base}_1)||(!${eta_cut_base}_0&&${eta_cut_base}_1))"
+            elif [[ "${eta}" == "EEEE" ]]
+            then
+		eta_cut="(!${eta_cut_base}_0&&!${eta_cut_base}_1)"
+	    else
+		echo "How did this happen?? Did not choose a correct option for dieta: ${eta} ... Exiting..."
+		exit
+	    fi
+	    
+	    ## trigger tower cuts
 	    if [[ "${triggertower}" == "Inclusive" ]]
 	    then
-		echo "common_cut=(1)" >> "${cut}"
+		TT_cut="(1)"
 	    elif [[ "${triggertower}" == "Same" ]]
 	    then
-		echo "common_cut=(phoseedTT_0==phoseedTT_1)" >> "${cut}"
+		TT_cut="(phoseedTT_0==phoseedTT_1)"
 	    elif [[ "${triggertower}" == "Different" ]]
 	    then
-		echo "common_cut=(phoseedTT_0!=phoseedTT_1)" >> "${cut}"
+		TT_cut="(phoseedTT_0!=phoseedTT_1)"
 	    else
 		echo "Yikes, triggertower cannot be: ${triggertower} ... Exiting..."
 		exit
 	    fi
+
+	    ## write the remainder of cuts
+	    echo "common_cut=${eta_cut}&&${TT_cut}" >> "${cut}"
 	    echo "data_cut=" >> "${cut}"
 	    echo "bkgd_cut=" >> "${cut}"
 	    echo "sign_cut=" >> "${cut}"
