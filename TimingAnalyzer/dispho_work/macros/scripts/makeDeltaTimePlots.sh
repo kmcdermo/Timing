@@ -14,6 +14,7 @@ outdirbase=${1:-"ntuples_v4/checks_v4/era_plots"}
 usetof=${2:-"false"}
 useshift=${3:-"false"}
 usesmear=${4:-"false"}
+triggertower=${5:"Inclusive"}
 
 ## other info
 diphodir="dipho"
@@ -232,27 +233,20 @@ do
 	    cut="tmp_cut_config.txt"
 	    > "${cut}"
 
-	    ## write common cut
-	    common_cut="(phoseedE_0>10&&phoseedE_0<120)&&(phoseedE_1>10&&phoseedE_1<120)"
-	    eta_cut="phoisEB"
-	    if [[ "${eta}" == "EBEB" ]]
+	    ## write the remainder of cuts
+	    if [[ "${triggertower}" == "Inclusive" ]]
 	    then
-		echo "common_cut=((${eta_cut}_0&&${eta_cut}_1)&&(${common_cut}))" >> "${cut}"
-	    elif [[ "${eta}" == "EBEE" ]]
+		echo "common_cut=(1)" >> "${cut}"
+	    elif [[ "${triggertower}" == "Same" ]]
 	    then
-		echo "common_cut=(((${eta_cut}_0&&!${eta_cut}_1)||(!${eta_cut}_0&&${eta_cut}_1))&&(${common_cut}))" >> "${cut}"
-	    elif [[ "${eta}" == "EEEE" ]]
+		echo "common_cut=(phoseedTT_0==phoseedTT_1)" >> "${cut}"
+	    elif [[ "${triggertower}" == "Different" ]]
 	    then
-		echo "common_cut=((!${eta_cut}_0&&!${eta_cut}_1)&&(${common_cut}))" >> "${cut}"
-	    elif [[ "${eta}" == "Full" ]]
-	    then
-		echo "common_cut=(${common_cut})" >> "${cut}"
+		echo "common_cut=(phoseedTT_0!=phoseedTT_1)" >> "${cut}"
 	    else
-		echo "How did this happen?? Did not choose a correct option for dieta: ${eta} ... Exiting..."
+		echo "Yikes, triggertower cannot be: ${triggertower} ... Exiting..."
 		exit
 	    fi
-	    
-	    ## write the remainder of cuts
 	    echo "data_cut=" >> "${cut}"
 	    echo "bkgd_cut=" >> "${cut}"
 	    echo "sign_cut=" >> "${cut}"
