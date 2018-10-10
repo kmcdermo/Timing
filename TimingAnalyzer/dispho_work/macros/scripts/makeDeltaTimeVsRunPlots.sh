@@ -15,6 +15,7 @@ usetof=${2:-"false"}
 useshift=${3:-"false"}
 usesmear=${4:-"false"}
 triggertower=${5:-"Inclusive"}
+effseedE=${6:-0} # (15 for Zee, 30 for dixtal)
 
 ## other info
 var="runno"
@@ -163,8 +164,11 @@ do
 	exit
     fi
 
+    ## effseedE cut
+    effseedE_cut="(((phoseedE_0*phoseedE_1)/(sqrt(pow(phoseedE_0,2)+pow(phoseedE_1,2))))>${effseedE})"
+
     ## write the remainder of cuts
-    echo "common_cut=${eta_cut}&&${TT_cut}" >> "${cut}"
+    echo "common_cut=${eta_cut}&&${TT_cut}&&${effseedE_cut}" >> "${cut}"
     echo "data_cut=" >> "${cut}"
     echo "bkgd_cut=" >> "${cut}"
     echo "sign_cut=" >> "${cut}"
