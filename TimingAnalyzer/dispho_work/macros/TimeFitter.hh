@@ -6,8 +6,6 @@
 #include "TFile.h"
 #include "TH2F.h"
 #include "TH1F.h"
-#include "TFormula.h"
-#include "TF1.h"
 #include "TString.h"
 #include "TColor.h"
 #include "TCanvas.h"
@@ -25,8 +23,9 @@
 #include <string>
 #include <algorithm>
 
-// Common include
+// Common include(s)
 #include "Common.hh"
+#include "CommonTimeFit.hh"
 
 // fit struct
 struct FitStruct
@@ -38,26 +37,11 @@ struct FitStruct
   const TString inHistName;
 
   TH2F * Hist2D;
-  std::map<Int_t,TH1F*>     Hist1DMap;
-  std::map<Int_t,TFormula*> FormMap;
-  std::map<Int_t,TF1*>      FitMap;
-  std::map<TString,TH1F*>   ResultsMap;
+  std::map<Int_t,TimeFitStruct> TimeFitStructMap;
+  std::map<TString,TH1F*> ResultsMap;
 
   TFormula * SigmaForm;
   TF1 * SigmaFit;
-};
-
-// fit result struct
-struct FitResult
-{
-  FitResult() {}
-  
-  Float_t chi2ndf;
-  Float_t chi2prob;
-  Float_t mu;
-  Float_t emu;
-  Float_t sigma;
-  Float_t esigma;
 };
 
 // sigma fit params
@@ -69,8 +53,6 @@ struct SigmaFitParams
   Float_t val;
   Float_t up;
 };
-
-enum FitEnum {Gaus1, Gaus1core, Gaus2fm, Gaus2fmcore, Gaus3fm, Gaus3fmcore};
 
 class TimeFitter
 {
@@ -95,13 +77,10 @@ public:
   // subroutines for making fits to variables
   void MakeTimeFit(FitStruct & FitInfo);
   void GetInputHist(FitStruct & FitInfo);
+  void InitTimeFits(FitStruct & FitInfo);
   void Project2Dto1DHists(FitStruct & FitInfo);
   void Fit1DHists(FitStruct & FitInfo);
   void ExtractFitResults(FitStruct & FitInfo);
-
-  // helper functions for making fits to variables
-  void PrepFit(TH1F *& hist1D, TFormula *& form, TF1 *& fit);
-  void GetFitResult(const TF1 * fit, FitResult & result);
 
   // subroutines for making fits to sigma
   void MakeSigmaFit(FitStruct & FitInfo);
@@ -140,7 +119,7 @@ private:
   Bool_t fDoLogX; // technically, read in from miscconfig
 
   // var fit config
-  FitEnum fFit;
+  TimeFitType fTimeFitType;
   Float_t fRangeLow;
   Float_t fRangeUp;
   TString fTimeText;

@@ -84,9 +84,12 @@ void TimeFitter::MakeTimeFit(FitStruct & FitInfo)
 {
   const auto & label = FitInfo.label;
   std::cout << "Making time fits for: " << label.Data() << std::endl;
-  
+
   // Get input hist
   TimeFitter::GetInputHist(FitInfo);
+
+  // Init time fits
+  TimeFitter::InitTimeFits(FitInfo);
 
   // Project out 2D hists into map
   TimeFitter::Project2Dto1DHists(FitInfo);
@@ -154,6 +157,21 @@ void TimeFitter::GetInputHist(FitStruct & FitInfo)
   Hist2D->Write(Hist2D->GetName(),TObject::kWriteDelete);
 }
 
+void TimeFitter::InitTimeFits(FitStruct & FitInfo)
+{
+  const auto & label = FitInfo.label;
+  std::cout << "Initializing TimeFitStructMap for: " << label.Data() << std::endl;
+  
+  // get inputs/outputs
+  auto & TimeFitStructMap = FitInfo.TimeFitStructMap;
+
+  // setup a time fit struct for each bin!
+  for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
+  {
+    TimeFitStructMap[ibinX](fTimeFitType,fRangeLow,fRangeUp);
+  }
+}
+
 void TimeFitter::Project2Dto1DHists(FitStruct & FitInfo)
 {
   const auto & label = FitInfo.label;
@@ -161,13 +179,13 @@ void TimeFitter::Project2Dto1DHists(FitStruct & FitInfo)
   
   // get inputs/outputs
   const auto & Hist2D = FitInfo.Hist2D;
-  auto & Hist1DMap = FitInfo.Hist1DMap;
+  auto & TimeFitStructMap = FitInfo.TimeFitStructMap;
   const TString histname = Hist2D->GetName();
 
   for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
   {
-    auto & hist1D = Hist1DMap[ibinX];
-    hist1D = (TH1F*)Hist2D->ProjectionY(Form("%s_ibin%i",histname.Data(),ibinX),ibinX,ibinX);
+    auto & hist = TimeFitStructMap[ibinX].hist;
+    hist = (TH1F*)Hist2D->ProjectionY(Form("%s_ibin%i",histname.Data(),ibinX),ibinX,ibinX);
   }
 }
 
@@ -177,28 +195,27 @@ void TimeFitter::Fit1DHists(FitStruct & FitInfo)
   std::cout << "Fitting hists for: " << label.Data() << std::endl;
   
   // get inputs/outputs
-  auto & Hist1DMap = FitInfo.Hist1DMap;
-  auto & FormMap   = FitInfo.FormMap;
-  auto & FitMap    = FitInfo.FitMap;
+  auto & TimeFitStructMap = FitInfo.TimeFitStructMap;
 
   for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
   {
-    // get hist, and skip if no entries
-    auto & hist1D = Hist1DMap[ibinX];
-    if (hist1D->GetEntries() == 0) continue;
+    // get pair input
+    auto & TimeFit = TimeFitStructMap[ibinX];
 
-    // get form+fit, and prep them
-    auto & form = FormMap[ibinX];
-    auto & fit  = FitMap [ibinX];
-    TimeFitter::PrepFit(hist1D,form,fit);
+    // get hist, and skip if no entries
+    if (TimeFit.isEmpty()) continue;
+
+    // Prep the fit
+    TimeFit.PrepFit();
     
     // do the fit!
-    hist1D->Fit(fit->GetName(),"RBQ0");
+    TimeFit.DoFit();
 
     // save output
     fOutFile->cd();
-    hist1D->Write(hist1D->GetName(),TObject::kWriteDelete);
-    fit->Write(fit->GetName(),TObject::kWriteDelete);
+    TimeFit.hist->Write(TimeFit.hist->GetName(),TObject::kWriteDelete);
+    TimeFit.form->Write(TimeFit.form->GetName(),TObject::kWriteDelete);
+    TimeFit.fit->Write(TimeFit.fit->GetName(),TObject::kWriteDelete);
   }
 }
 
@@ -208,8 +225,8 @@ void TimeFitter::ExtractFitResults(FitStruct & FitInfo)
   std::cout << "Extracting results for: " << label.Data() << std::endl;
 
   // get inputs/outputs
-  const auto & FitMap = FitInfo.FitMap;
-  auto & ResultsMap   = FitInfo.ResultsMap;
+  auto & TimeFitStructMap = FitInfo.TimeFitStructMap;
+  auto & ResultsMap = FitInfo.ResultsMap;
   
   // setup hists
   ResultsMap["chi2ndf"]  = TimeFitter::SetupHist("#chi^{2}/NDF","chi2ndf",label);
@@ -223,12 +240,12 @@ void TimeFitter::ExtractFitResults(FitStruct & FitInfo)
     // skip if fit not present
     if (!FitMap.count(ibinX)) continue;
 
-    // get fit
-    const auto & fit = FitMap.at(ibinX);
+    // get time fit
+    auto & TimeFit = TimeFitStructMap[ibinX];
 
     // get results
-    FitResult result;
-    TimeFitter::GetFitResult(fit,result);
+    TimeFit.GetFitResult();
+    const auto & result = TimeFit.result;
 
     // set bin content
     ResultsMap["chi2ndf"] ->SetBinContent(ibinX,result.chi2ndf);
@@ -435,140 +452,11 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
   delete Canvas;
 }
 
-void TimeFitter::PrepFit(TH1F *& hist1D, TFormula *& form, TF1 *& fit)
-{
-  // Word on fit notation
-  // "GausN" == N Gaussians fit
-  // "fm" == "fixed mean", i.e. for N Gaussian fit, all Gaussians share the same mu
-  // "core" == mid point of range of fit is mean of the histogram, range is n times the std. dev of hist
-
-  // set tmp init vals
-  Float_t norm  = hist1D->Integral(fXVarBins?"width":"") / Common::SqrtPI;
-  Float_t mu    = hist1D->GetMean();
-  Float_t sigma = hist1D->GetStdDev(); 
-
-  // range vars
-  auto rangelow = 0.f;
-  auto rangeup  = 0.f;
-
-  // make tmp fit first if not gausNcore, set range
-  if (fFit == Gaus1 || fFit == Gaus2fm || fFit == Gaus3fm)
-  {
-    // set range for tmp and main fit
-    rangelow = fRangeLow;
-    rangeup  = fRangeUp;
-
-    auto tmp_form = new TFormula("tmp_formula","[0]*exp(-0.5*((x-[1])/[2])**2)");
-    auto tmp_fit  = new TF1("tmp_fit",tmp_form->GetName(),rangelow,rangeup);
-
-    tmp_fit->SetParameter(0,norm);
-    tmp_fit->SetParameter(1,mu);
-    tmp_fit->SetParameter(2,sigma); tmp_fit->SetParLimits(2,0,10);
-
-    // fit hist with tmp tf1
-    hist1D->Fit(tmp_fit->GetName(),"RBQ0");
-
-    norm  = tmp_fit->GetParameter(0); // constant
-    mu    = tmp_fit->GetParameter(1); // mu
-    sigma = tmp_fit->GetParameter(2); // sigma
-
-    delete tmp_form;
-    delete tmp_fit;
-  }
-  else // "core" fits
-  {
-    // set range for main fit
-    rangelow = (mu-(fRangeLow*sigma));
-    rangeup  = (mu+(fRangeUp *sigma));
-  }
-  
-  // names for fits and formulas
-  const TString histname = hist1D->GetName();
-  const TString formname = histname+"_formula";
-  const TString fitname  = histname+"_fit";
-
-  if (fFit == Gaus1 || fFit == Gaus1core)
-  {
-    form = new TFormula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)");
-    fit  = new TF1(fitname.Data(),form->GetName(),rangelow,rangeup);
-
-    fit->SetParName(0,"N");      fit->SetParameter(0,norm);
-    fit->SetParName(1,"#mu");    fit->SetParameter(1,mu);
-    fit->SetParName(2,"#sigma"); fit->SetParameter(2,sigma); fit->SetParLimits(2,0,10);
-  }
-  else if (fFit == Gaus2fm || fFit == Gaus2fmcore)
-  {
-    form = new TFormula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)");
-    fit  = new TF1(fitname.Data(),form->GetName(),rangelow,rangeup);
-
-    fit->SetParName(0,"N_{1}");      fit->SetParameter(0,norm);
-    fit->SetParName(1,"#mu");        fit->SetParameter(1,mu);
-    fit->SetParName(2,"#sigma_{1}"); fit->SetParameter(2,sigma);   fit->SetParLimits(2,0,10);
-    fit->SetParName(3,"N_{2}");      fit->SetParameter(3,norm/10);
-    fit->SetParName(4,"#sigma_{2}"); fit->SetParameter(4,sigma*4); fit->SetParLimits(4,0,10);
-  }
-  else if (fFit == Gaus3fm || fFit == Gaus3fmcore)
-  {
-    form = new TFormula(formname.Data(),"[0]*exp(-0.5*((x-[1])/[2])**2)+[3]*exp(-0.5*((x-[1])/[4])**2)+[5]*exp(-0.5*((x-[1])/[6])**2)");
-    fit  = new TF1(fitname.Data(),form->GetName(),rangelow,rangeup);
-
-    fit->SetParName(0,"N_{1}");      fit->SetParameter(0,norm*0.8);  fit->SetParLimits(0,norm*0.5,norm);
-    fit->SetParName(1,"#mu");        fit->SetParameter(1,mu);
-    fit->SetParName(2,"#sigma_{1}"); fit->SetParameter(2,sigma*0.7); fit->SetParLimits(2,sigma*0.5,sigma);
-    fit->SetParName(3,"N_{2}");      fit->SetParameter(3,norm*0.3);  fit->SetParLimits(3,norm*0.1,norm*0.5);
-    fit->SetParName(4,"#sigma_{2}"); fit->SetParameter(4,sigma*1.4); fit->SetParLimits(4,sigma,sigma*1.5);
-    fit->SetParName(5,"N_{3}");      fit->SetParameter(5,norm*0.01); fit->SetParLimits(5,norm*0.005,norm*0.1);
-    fit->SetParName(6,"#sigma_{3}"); fit->SetParameter(6,sigma*2.5); fit->SetParLimits(6,sigma*1.5,sigma*5.0);
-  }
-  else
-  {
-    std::cerr << "How did this happen?? Fit was not set for prepping fits! Exiting..." << std::endl;
-    exit(1);
-  }
   
   // save formula
   fOutFile->cd();
   form->Write(form->GetName(),TObject::kWriteDelete);
-}
 
-void TimeFitter::GetFitResult(const TF1 * fit, FitResult & result)
-{
-  // get common results
-  result.mu       = fit->GetParameter(1);
-  result.emu      = fit->GetParError (1);
-  result.chi2ndf  = fit->GetChisquare();
-  result.chi2prob = fit->GetProb();
-
-  if (fFit == Gaus1 || fFit == Gaus1core)
-  {
-    result.sigma  = fit->GetParameter(2);
-    result.esigma = fit->GetParError (2);
-  }
-  else if (fFit == Gaus2fm || fFit == Gaus2fmcore)
-  {
-    const Float_t const1 = fit->GetParameter(0); 
-    const Float_t const2 = fit->GetParameter(3);
-    const Float_t denom  = const1 + const2;
-
-    result.sigma  = (const1*fit->GetParameter(2)+const2*fit->GetParameter(4))/denom;
-    result.esigma = std::hypot(const1*fit->GetParError(2),const2*fit->GetParError(4))/denom;
-  }
-  else if (fFit == Gaus3fm || fFit == Gaus3fmcore)
-  {
-    const Double_t const1 = fit->GetParameter(0); 
-    const Double_t const2 = fit->GetParameter(3);
-    const Double_t const3 = fit->GetParameter(5);
-    const Double_t denom  = const1 + const2 + const3;
-    
-    result.sigma  = (const1*fit->GetParameter(2) + const2*fit->GetParameter(4) + const3*fit->GetParameter(6))/denom;
-    result.esigma = std::hypot(std::hypot(const1*fit->GetParError(2),const2*fit->GetParError(4)),const3*fit->GetParError(6))/denom; // need c++17...
-  }
-  else
-  {
-    std::cerr << "How did this happen?? Fit was not set for getting results! Exiting..." << std::endl;
-    exit(1);
-  }
-}
 
 void TimeFitter::GetMinMax(const TH1F * hist, Float_t & min, Float_t & max, const TString & key)
 {
@@ -794,17 +682,7 @@ void TimeFitter::SetupTimeFitConfig()
     else if (str.find("fit_type=") != std::string::npos)
     {
       str = Common::RemoveDelim(str,"fit_type=");
-      if      (str.find("Gaus1")       != std::string::npos) fFit = Gaus1;
-      if      (str.find("Gaus1core")   != std::string::npos) fFit = Gaus1core;
-      else if (str.find("Gaus2fm")     != std::string::npos) fFit = Gaus2fm;
-      else if (str.find("Gaus2fmcore") != std::string::npos) fFit = Gaus2fmcore;
-      else if (str.find("Gaus3fm")     != std::string::npos) fFit = Gaus3fm;
-      else if (str.find("Gaus3fmcore") != std::string::npos) fFit = Gaus3fmcore;
-      else
-      {
-	std::cerr << "Specified a non-supported fit type: " << str.c_str() << " ... Exiting..." << std::endl;
-	exit(1);
-      }
+      Common::SetupTimeFitType(str,fTimeFitType);
     }
     else if (str.find("range_low=") != std::string::npos) // if "core" = how many sigma from mean down, else absolute low edge of fit
     {
@@ -905,9 +783,16 @@ void TimeFitter::DeleteInfo(FitStruct & FitInfo)
   }
 
   Common::DeleteMap(FitInfo.ResultsMap);
-  Common::DeleteMap(FitInfo.FitMap);
-  Common::DeleteMap(FitInfo.FormMap);
-  Common::DeleteMap(FitInfo.Hist1DMap);
+
+  // loop over good bins to delete things
+  for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
+  {
+    // get pair input
+    auto & TimeFit = TimeFitStructMap[ibinX];
+
+    // delete internal members
+    TimeFit.DeleteInternal();
+  }
 
   delete FitInfo.Hist2D;
 }
