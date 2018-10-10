@@ -24,7 +24,7 @@ then
 fi
 
 ## vars
-declare -a vars=("E" "pho${base_time_var}_0")
+declare -a vars=("E" "${base_time_var}")
 
 ## logx vars
 declare -a logx_vars=("pt" "E" "seedE")
