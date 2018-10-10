@@ -10,7 +10,7 @@ source scripts/common_variables.sh
 ############
 
 ## command line inputs
-outdirbase=${1:-"ntuples_v5p1/time_study_final/single_object"}
+outdirbase=${1:-"ntuples_v5p1/time_study_091018/single_object_seedtime"}
 
 ## other config
 nodir="no_corrs"
@@ -62,7 +62,7 @@ echo "Making raw shift plots"
 
 ## lauch plots with tof, shift, and smear corrections
 echo "Making time related plots with TOF + SHIFT corrections"
-./scripts/makeTimePlots.sh "${outdirbase}/${tofdir}" "true" "true" "false" "true" "${filedump}"
+./scripts/makeTimePlots.sh "${outdirbase}/${shiftdir}" "true" "true" "false" "true" "${filedump}"
 
 ## launch time adjuster, over each input selection
 for input in "${inputs[@]}"
@@ -78,7 +78,7 @@ rm "${filedump}"
 
 ## plot raw shift
 echo "Making raw smear plots"
-./scripts/makeCorrPlots.sh "${outdirbase}/${shiftdir}" "SMEAR"
+./scripts/makeCorrPlots.sh "${outdirbase}/${smeardir}" "SMEAR"
 
 #################
 ## Final plots ##
@@ -86,7 +86,7 @@ echo "Making raw smear plots"
 
 ## lauch plots with TOF + SHIFT + SMEAR corrections
 echo "Making time related plots with TOF + SHIFT + SMEAR corrections"
-./scripts/makeTimePlots.sh "${outdirbase}/${shiftdir}" "true" "true" "true" "false"
+./scripts/makeTimePlots.sh "${outdirbase}/${smeardir}" "true" "true" "true" "false"
 
 ## Final prep dir
 echo "Final prep outdir"
