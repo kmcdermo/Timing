@@ -55,7 +55,7 @@ public:
 
   // additional helper functions
   void GetMinMax(const TH1F * hist, Float_t & min, Float_t & max, const TString & key);
-  TH1F * SetupHist(const TString & ytitle, const TString & yextra, const TString & label);
+  TH1F * SetupHist(const TString & ytitle, const TString & yextra);
 
 private:
   // settings

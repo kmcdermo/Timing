@@ -70,7 +70,7 @@ void TimeVsRunFitter::MakeTimeVsRunFits()
   TimeVsRunFitter::GetInputHist();
 
   // Init time fits
-  TimeFitter::InitTimeFits();
+  TimeVsRunFitter::InitTimeFits();
 
   // Project out 2D hists into map
   TimeVsRunFitter::Project2Dto1DHists();
@@ -159,10 +159,10 @@ void TimeVsRunFitter::ExtractFitResults()
   std::cout << "Extracting results..." << std::endl;
 
   // setup hists
-  ResultsMap["chi2ndf"]  = TimeVsRunFitter::SetupHist("#chi^{2}/NDF","chi2ndf",label);
-  ResultsMap["chi2prob"] = TimeVsRunFitter::SetupHist("#chi^{2} Prob.","chi2prob",label);
-  ResultsMap["mu"]       = TimeVsRunFitter::SetupHist(Form("#mu_{%s} [ns]",fTimeText.Data()),"mu",label);
-  ResultsMap["sigma"]    = TimeVsRunFitter::SetupHist(Form("#sigma_{%s} [ns]",fTimeText.Data()),"sigma",label);
+  ResultsMap["chi2ndf"]  = TimeVsRunFitter::SetupHist("#chi^{2}/NDF","chi2ndf");
+  ResultsMap["chi2prob"] = TimeVsRunFitter::SetupHist("#chi^{2} Prob.","chi2prob");
+  ResultsMap["mu"]       = TimeVsRunFitter::SetupHist(Form("#mu_{%s} [ns]",fTimeText.Data()),"mu");
+  ResultsMap["sigma"]    = TimeVsRunFitter::SetupHist(Form("#sigma_{%s} [ns]",fTimeText.Data()),"sigma");
 
   // set bin content!
   for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
@@ -210,7 +210,7 @@ void TimeVsRunFitter::MakePlots()
     TimeVsRunFitter::GetMinMax(DataHist,min,max,key);
 
     // lin first, then log if applicable
-    TimeVsRunFitter::PrintCanvas(min.max,key,false);
+    TimeVsRunFitter::PrintCanvas(min,max,key,false);
     if (key.EqualTo("sigma",TString::kExact)) TimeVsRunFitter::PrintCanvas(min,max,key,true);
   }
 }
@@ -434,6 +434,10 @@ void TimeVsRunFitter::SetupTimeFitConfig()
       str = Common::RemoveDelim(str,"range_up=");
       fRangeUp = std::atof(str.c_str());
     }
+    else if (str.find("time_text=") != std::string::npos)
+    {
+      fTimeText = Common::RemoveDelim(str,"time_text=");
+    }
     else
     {
       std::cerr << "Aye... your fit config is messed up, try again! Offending line: " << str.c_str() << std::endl;
@@ -443,13 +447,13 @@ void TimeVsRunFitter::SetupTimeFitConfig()
   }
 }
 
-TH1F * TimeVsRunFitter::SetupHist(const TString & ytitle, const TString & yextra, const TString & label)
+TH1F * TimeVsRunFitter::SetupHist(const TString & ytitle, const TString & yextra)
 {
   // get bins
   const auto xbins = &fXBins[0];
 
   // make new hist
-  auto hist = new TH1F(label+"_"+yextra,fTitle+" "+ytitle+";"+fXTitle+";"+ytitle,fNBinsX,xbins);
+  auto hist = new TH1F("Data_"+yextra,fTitle+" "+ytitle+";"+fXTitle+";"+ytitle,fNBinsX,xbins);
   hist->Sumw2();
 
   return hist;

@@ -51,7 +51,7 @@ do
     then
 	unit=$( ReadConfig "${line}" )
     fi
-done < "${fragdir}/${runno}.${inTextExt}"
+done < "${fragdir}/${var}.${inTextExt}"
 
 ## add units to title
 if [[ "${unit}" != "" ]]

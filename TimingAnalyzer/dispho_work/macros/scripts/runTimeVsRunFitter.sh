@@ -13,7 +13,7 @@ dir=${5:-"test"}
 declare -a outputs=("mu" "sigma") ## can add back chi2prob, chi2ndf
 
 ## first make plot
-root -l -b -q runTimeFitter.C\(\"${infilename}\",\"${plotconfig}\",\"${timefitconfig}\",\"${outfiletext}\"\)
+root -l -b -q runTimeVsRunFitter.C\(\"${infilename}\",\"${plotconfig}\",\"${timefitconfig}\",\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}
