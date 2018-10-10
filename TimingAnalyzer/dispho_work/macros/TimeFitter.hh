@@ -115,7 +115,6 @@ private:
   std::vector<Double_t> fXBins;
   Int_t fNBinsX;
   Bool_t fXVarBins;
-  TString fYTitle;
   Bool_t fDoLogX; // technically, read in from miscconfig
 
   // var fit config

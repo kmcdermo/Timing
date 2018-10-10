@@ -38,7 +38,7 @@ TimeFitter::TimeFitter(const TString & infilename, const TString & plotconfig, c
 
 TimeFitter::~TimeFitter()
 {
-  std::cout << "Tidying up in destructor" << std::endl;
+  std::cout << "Tidying up in destructor..." << std::endl;
 
   delete fConfigPave;
 
@@ -130,13 +130,12 @@ void TimeFitter::MakePlots(FitStruct & DataInfo, FitStruct & MCInfo)
     // tmp max, min
     Float_t min =  1e9;
     Float_t max = -1e9;
-    
     TimeFitter::GetMinMax(DataHist,min,max,key);
     TimeFitter::GetMinMax(MCHist  ,min,max,key);
 
     // lin first, then log --> log disabled for now
     TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,false);
-    if (key.Contains("sigma",TString::kExact)) TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,true);
+    if (key.EqualTo("sigma",TString::kExact)) TimeFitter::PrintCanvas(DataInfo,MCInfo,min,max,key,true);
   }
 }
 
@@ -338,7 +337,7 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
   Canvas->SetGridy();
   Canvas->SetLogy(isLogy);
 
-  if (key.Contains("sigma",TString::kExact))
+  if (key.EqualTo("sigma",TString::kExact))
   {
     min = (isLogy ? 0.1f : 0.f);
     max = 1.f;
@@ -349,7 +348,7 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
     min = (min > 0.f ? (min / factor) : (min * factor));
     max = (max > 0.f ? (max * factor) : (max / factor));
 
-    if (key.Contains("mu",TString::kExact))
+    if (key.EqualTo("mu",TString::kExact))
     {
       if (min < -10.f) 
       {
@@ -459,7 +458,7 @@ void TimeFitter::GetMinMax(const TH1F * hist, Float_t & min, Float_t & max, cons
     const auto content = hist->GetBinContent(ibinX);
     
     // bool to allow negative values
-    const Bool_t canBeNeg = (key.Contains("mu",TString::kExact));
+    const Bool_t canBeNeg = (key.EqualTo("mu",TString::kExact));
     
     if ( ((!canBeNeg && min > 0.f) || (canBeNeg)) && content < min) min = content;
     if ( ((!canBeNeg && max > 0.f) || (canBeNeg)) && content > max) max = content;
@@ -634,10 +633,6 @@ void TimeFitter::SetupPlotConfig()
       Common::SetupBins(str,fXBins,fXVarBins);
       fNBinsX = fXBins.size()-1;
     }
-    else if (str.find("y_title=") != std::string::npos)
-    {
-      fYTitle = Common::RemoveDelim(str,"y_title=");
-    }
   }
 }
 
@@ -745,11 +740,11 @@ TH1F * TimeFitter::SetupHist(const TString & ytitle, const TString & yextra, con
   hist->Sumw2();
 
   Color_t color = kBlack;
-  if (label.Contains("Data",TString::kExact))
+  if (label.EqualTo("Data",TString::kExact))
   {
     color = kRed;
   }
-  else if (label.Contains("MC",TString::kExact))
+  else if (label.EqualTo("MC",TString::kExact))
   {
     color = kBlue;
   }
