@@ -65,8 +65,9 @@ export smear_corr="pho${base_time_var}SMEAR"
 ## time fit info
 export fitinfo="Gaus1core 2 2"
 
-## time adjust var
-export timeadjvar="phoE_0"
+## time adjust variables
+export base_adjust_var="phoE"
+export adjust_var="${base_adjust_var}_0"
 
 ## extra event weight info
 export wgtvar="phopt_0"

@@ -15,7 +15,7 @@ usetof=${2:-"false"}
 useshift=${3:-"false"}
 usesmear=${4:-"false"}
 writefiles=${5:-"false"}
-filedump=${6:-"${timeadjvar}_infiles.${inTextExt}"}
+filedump=${6:-"${adjust_var}_infiles.${inTextExt}"}
 
 ## create filedump
 if [[ "${writefiles}" == "true" ]]
@@ -24,7 +24,7 @@ then
 fi
 
 ## vars
-declare -a vars=("E")
+declare -a vars=("E" "pho${base_time_var}_0")
 
 ## logx vars
 declare -a logx_vars=("pt" "E" "seedE")
@@ -326,7 +326,7 @@ do echo ${!pho} | while read -r index pho_label
 				./scripts/runTimeFitter.sh "${outfile2D}.root" "${plot2D}" "${misc_fit}" "${timefit_config}" "${era}" "${outfile}_${timefile}" "${outdir}"
 				
 			        ## write out time files for correction computations
-				if [[ "${writefiles}" == "true" ]] && [[ "${x_var}" == "${timeadjvar}" ]] && [[ "${eta}" != "Full" ]]
+				if [[ "${writefiles}" == "true" ]] && [[ "${x_var}" == "${adjust_var}" ]] && [[ "${eta}" != "Full" ]]
 				then
 				    echo "${eta}_${era}=${outfile}_${timefile}.root" >> "${filedump}"
 				fi

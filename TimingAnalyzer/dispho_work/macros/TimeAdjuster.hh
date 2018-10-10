@@ -40,18 +40,17 @@ struct Event
 struct Photon
 {
   // old vars
-  Float_t pt;
+  Float_t adjustvar;
   Bool_t  isEB;
   // new vars
   Float_t timeSHIFT;
   Float_t timeSMEAR;
   
-  // strings : new vars are defined globally
-  std::string s_pt = "phopt";
+  // strings 
   std::string s_isEB = "phoisEB";
 
   // branches
-  TBranch * b_pt;
+  TBranch * b_adjustvar;
   TBranch * b_isEB;
   TBranch * b_timeSHIFT;
   TBranch * b_timeSMEAR;
@@ -72,7 +71,7 @@ class TimeAdjuster
 {
 public:
   TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig,
-	       const TString & stime, const Bool_t doshift, const Bool_t dosmear);
+	       const TString & sadjustvar, const TString & stime, const Bool_t doshift, const Bool_t dosmear);
   ~TimeAdjuster();
 
   // Config
@@ -100,6 +99,7 @@ private:
   const TString fSkimFileName;
   const TString fSignalSkimFileName;
   const TString fInFilesConfig;
+  const TString fSAdjustVar;
   const TString fSTime;
   const Bool_t  fDoShift;
   const Bool_t  fDoSmear;

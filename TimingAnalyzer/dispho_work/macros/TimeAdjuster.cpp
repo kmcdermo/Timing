@@ -2,9 +2,9 @@
 #include "TimeAdjuster.hh"
 
 TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig,
-			   const TString & stime, const Bool_t doshift, const Bool_t dosmear)
+			   const TString & sadjustvar, const TString & stime, const Bool_t doshift, const Bool_t dosmear)
   : fSkimFileName(skimfilename), fSignalSkimFileName(signalskimfilename), fInFilesConfig(infilesconfig),
-    fSTime(stime), fDoShift(doshift), fDoSmear(dosmear)
+    fSAdjustVar(sadjustvar), fSTime(stime), fDoShift(doshift), fDoSmear(dosmear)
 {
   std::cout << "Initializing TimeAdjuster..." << std::endl;
 
@@ -103,11 +103,11 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
     auto & pho = phos[ipho];
 
     // set old
-    tree->SetBranchAddress(Form("%s_%i",pho.s_pt.c_str(),ipho),&pho.pt,&pho.b_pt);
+    tree->SetBranchAddress(Form("%s_%i",fSAdjustVar.Data(),ipho),&pho.adjustvar,&pho.b_adjustvar);
     tree->SetBranchAddress(Form("%s_%i",pho.s_isEB.c_str(),ipho),&pho.isEB,&pho.b_isEB);
 
     // make new
-    pho.b_timeSHIFT = tree->Branch(Form("%s_%i",fSTimeSHIFT.c_str(),ipho),&pho.timeSHIFT,Form("%s_%i/F",fSTimeSHIFT.c_str(),ipho));
+    pho.b_timeSHIFT = tree->Branch(Form("%s_%i",fSTimeSHIFT.Data(),ipho),&pho.timeSHIFT,Form("%s_%i/F",fSTimeSHIFT.Data(),ipho));
   }
 
   /////////////////////////////
@@ -140,7 +140,7 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
       auto & pho = phos[ipho];
       
       // get branch
-      pho.b_pt->GetEntry(entry);
+      pho.b_adjustvar->GetEntry(entry);
       pho.b_isEB->GetEntry(entry);
       
       // get the correction
@@ -148,7 +148,7 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
       const auto & hist = DataInfo.MuHistMap[key];
       
       // get bin which corresponds to the pt of the object
-      const auto bin = hist->FindBin(pho.pt);
+      const auto bin = hist->FindBin(pho.adjustvar);
 
       // set correction branch if bin is found, else no correction
       if (bin != 0 && bin != hist->GetXaxis()->GetNbins()+1)
@@ -241,12 +241,12 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	auto & pho = phos[ipho];
 	
 	// set old
-	tree->SetBranchAddress(Form("%s_%i",pho.s_pt.c_str(),ipho),&pho.pt,&pho.b_pt);
+	tree->SetBranchAddress(Form("%s_%i",fSAdjustVar.Data(),ipho),&pho.adjustvar,&pho.b_adjustvar);
 	tree->SetBranchAddress(Form("%s_%i",pho.s_isEB.c_str(),ipho),&pho.isEB,&pho.b_isEB);
 
 	// make new
-	if (fDoShift) pho.b_timeSHIFT = tree->Branch(Form("%s_%i",fSTimeSHIFT.c_str(),ipho),&pho.timeSHIFT,Form("%s_%i/F",fSTimeSHIFT.c_str(),ipho));
-	if (fDoSmear) pho.b_timeSMEAR = tree->Branch(Form("%s_%i",fSTimeSMEAR.c_str(),ipho),&pho.timeSMEAR,Form("%s_%i/F",fSTimeSMEAR.c_str(),ipho));
+	if (fDoShift) pho.b_timeSHIFT = tree->Branch(Form("%s_%i",fSTimeSHIFT.Data(),ipho),&pho.timeSHIFT,Form("%s_%i/F",fSTimeSHIFT.Data(),ipho));
+	if (fDoSmear) pho.b_timeSMEAR = tree->Branch(Form("%s_%i",fSTimeSMEAR.Data(),ipho),&pho.timeSMEAR,Form("%s_%i/F",fSTimeSMEAR.Data(),ipho));
       }
 
       /////////////////////////////
@@ -270,7 +270,7 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	  auto & pho = phos[ipho];
 	  
 	  // get branch
-	  pho.b_pt->GetEntry(entry);
+	  pho.b_adjustvar->GetEntry(entry);
 	  pho.b_isEB->GetEntry(entry);
       
 	  // era to use
@@ -286,7 +286,7 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	    const auto & hist = MCInfo.MuHistMap[key];
 
 	    // get the bin for the pt of the object
-	    const auto bin = hist->FindBin(pho.pt);
+	    const auto bin = hist->FindBin(pho.adjustvar);
 	    
 	    // set correction branch if bin is found, else no correction
 	    if (bin != 0 && bin != hist->GetXaxis()->GetNbins()+1)
@@ -312,8 +312,8 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	    const auto & mchist   = MCInfo  .SigmaHistMap[key];
 
 	    // get the right bins based on pt
-	    const auto & databin = datahist->FindBin(pho.pt);
-	    const auto & mcbin   = mchist  ->FindBin(pho.pt);
+	    const auto & databin = datahist->FindBin(pho.adjustvar);
+	    const auto & mcbin   = mchist  ->FindBin(pho.adjustvar);
 	    
 	    // make smear if bins within range
 	    if ( (databin != 0 && databin != datahist->GetXaxis()->GetNbins()+1) && (mcbin != 0 && mcbin != mchist->GetXaxis()->GetNbins()+1) )
@@ -462,7 +462,8 @@ void TimeAdjuster::MakeConfigPave(TFile *& SkimFile)
   // give grand title
   ConfigPave->AddText("***** TimeAdjuster Config *****");
 
-  // Store which time used
+  // Store which adjust variable and time used
+  ConfigPave->AddText(Form("Adjust var used: %s",fSAdjustVar.Data()));
   ConfigPave->AddText(Form("Time used: %s",fSTime.Data()));
 
   // store which correction performed
