@@ -37,7 +37,7 @@ struct FitStruct
   const TString inHistName;
 
   TH2F * Hist2D;
-  std::map<Int_t,TimeFitStruct> TimeFitStructMap;
+  std::map<Int_t,TimeFitStruct*> TimeFitStructMap;
   std::map<TString,TH1F*> ResultsMap;
 
   TFormula * SigmaForm;

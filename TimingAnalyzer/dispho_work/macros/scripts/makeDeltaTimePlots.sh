@@ -330,7 +330,7 @@ do
 	    timefit_config="tmp_timefit_config.${inTextExt}"
 	    > "${timefit_config}"
 	    
-	    echo "time_text=#Delta(T)" >> "${timefit_config}"
+	    echo "time_text=#DeltaT" >> "${timefit_config}"
 	    echo ${fitinfo} | while read -r fittype rangelow rangeup
 	    do
 		echo "fit_type=${fittype}" >> "${timefit_config}"

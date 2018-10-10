@@ -1,5 +1,6 @@
 #include "TString.h"
 #include "Common.cpp+"
+#include "CommonTimeFit.cpp+"
 #include "TimeFitter.cpp+"
 
 void runTimeFitter(const TString & infilename, const TString & plotconfig, const TString & miscconfig,

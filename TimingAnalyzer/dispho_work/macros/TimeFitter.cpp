@@ -168,7 +168,7 @@ void TimeFitter::InitTimeFits(FitStruct & FitInfo)
   // setup a time fit struct for each bin!
   for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
   {
-    TimeFitStructMap[ibinX](fTimeFitType,fRangeLow,fRangeUp);
+    TimeFitStructMap[ibinX] = new TimeFitStruct(fTimeFitType,fRangeLow,fRangeUp);
   }
 }
 
@@ -184,7 +184,7 @@ void TimeFitter::Project2Dto1DHists(FitStruct & FitInfo)
 
   for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
   {
-    auto & hist = TimeFitStructMap[ibinX].hist;
+    auto & hist = TimeFitStructMap[ibinX]->hist;
     hist = (TH1F*)Hist2D->ProjectionY(Form("%s_ibin%i",histname.Data(),ibinX),ibinX,ibinX);
   }
 }
@@ -203,19 +203,19 @@ void TimeFitter::Fit1DHists(FitStruct & FitInfo)
     auto & TimeFit = TimeFitStructMap[ibinX];
 
     // get hist, and skip if no entries
-    if (TimeFit.isEmpty()) continue;
+    if (TimeFit->isEmpty()) continue;
 
     // Prep the fit
-    TimeFit.PrepFit();
+    TimeFit->PrepFit();
     
     // do the fit!
-    TimeFit.DoFit();
+    TimeFit->DoFit();
 
     // save output
     fOutFile->cd();
-    TimeFit.hist->Write(TimeFit.hist->GetName(),TObject::kWriteDelete);
-    TimeFit.form->Write(TimeFit.form->GetName(),TObject::kWriteDelete);
-    TimeFit.fit->Write(TimeFit.fit->GetName(),TObject::kWriteDelete);
+    TimeFit->hist->Write(TimeFit->hist->GetName(),TObject::kWriteDelete);
+    TimeFit->form->Write(TimeFit->form->GetName(),TObject::kWriteDelete);
+    TimeFit->fit->Write(TimeFit->fit->GetName(),TObject::kWriteDelete);
   }
 }
 
@@ -237,15 +237,15 @@ void TimeFitter::ExtractFitResults(FitStruct & FitInfo)
   // set bin content!
   for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
   {
-    // skip if fit not present
-    if (!FitMap.count(ibinX)) continue;
-
     // get time fit
     auto & TimeFit = TimeFitStructMap[ibinX];
 
+    // skip if fit not present
+    if (TimeFit->isEmpty()) continue;
+
     // get results
-    TimeFit.GetFitResult();
-    const auto & result = TimeFit.result;
+    TimeFit->GetFitResult();
+    const auto & result = TimeFit->result;
 
     // set bin content
     ResultsMap["chi2ndf"] ->SetBinContent(ibinX,result.chi2ndf);
@@ -451,12 +451,6 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
   delete Legend;
   delete Canvas;
 }
-
-  
-  // save formula
-  fOutFile->cd();
-  form->Write(form->GetName(),TObject::kWriteDelete);
-
 
 void TimeFitter::GetMinMax(const TH1F * hist, Float_t & min, Float_t & max, const TString & key)
 {
@@ -785,13 +779,17 @@ void TimeFitter::DeleteInfo(FitStruct & FitInfo)
   Common::DeleteMap(FitInfo.ResultsMap);
 
   // loop over good bins to delete things
+  auto & TimeFitStructMap = FitInfo.TimeFitStructMap;
   for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
   {
     // get pair input
     auto & TimeFit = TimeFitStructMap[ibinX];
 
     // delete internal members
-    TimeFit.DeleteInternal();
+    TimeFit->DeleteInternal();
+
+    // finally, delete the object itself
+    delete TimeFit;
   }
 
   delete FitInfo.Hist2D;

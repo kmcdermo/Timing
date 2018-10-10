@@ -156,13 +156,13 @@ void TimeFitStruct::GetFitResult()
 
 void TimeFitStruct::DeleteInternal()
 {
-  // always delete projected hist
-  delete hist;
-  
-  // skip further deletes if no entries
+  // skip dependent deletes if no entries
   if (!isEmpty())
   {
-    delete form;
     delete fit;
+    delete form;
   }
+
+  // always delete hist
+  delete hist;
 }
