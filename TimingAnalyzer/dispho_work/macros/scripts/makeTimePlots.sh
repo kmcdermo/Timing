@@ -24,7 +24,7 @@ then
 fi
 
 ## vars
-declare -a vars=("seedE" "E")
+declare -a vars=("E")
 
 ## logx vars
 declare -a logx_vars=("pt" "E" "seedE")
@@ -115,7 +115,7 @@ do echo ${!pho} | while read -r index pho_label
 		then
 		    time_bins=$( ReadConfig "${line}" )
 		fi
-	    done < "${fragdir}/time.${inTextExt}" ## or weightedTimeLT120
+	    done < "${fragdir}/${base_time_var}.${inTextExt}" ## time or weightedtimeLT120
 
 	    ## add units to title
 	    time_title+=" ${time_unit}"

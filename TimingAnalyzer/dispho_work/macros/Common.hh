@@ -242,7 +242,8 @@ namespace Common
   // output info
   static const TString outIntText = "_integrals";
   static const TString outFitText = "_fitinfo";
-  static const std::vector<TString> extensions = {"png","pdf","eps"};
+  //  static const std::vector<TString> extensions = {"eps", "png","pdf"};
+  static const std::vector<TString> extensions = {"png","pdf"};
   static const TString outTextExt = "log";
 
   // plotting style

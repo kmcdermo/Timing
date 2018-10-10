@@ -2,9 +2,9 @@
 #include "TimeAdjuster.hh"
 
 TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig,
-			   const Bool_t doshift, const Bool_t dosmear)
+			   const TString & stime, const Bool_t doshift, const Bool_t dosmear)
   : fSkimFileName(skimfilename), fSignalSkimFileName(signalskimfilename), fInFilesConfig(infilesconfig),
-    fDoShift(doshift), fDoSmear(dosmear)
+    fSTime(stime), fDoShift(doshift), fDoSmear(dosmear)
 {
   std::cout << "Initializing TimeAdjuster..." << std::endl;
 
@@ -17,6 +17,7 @@ TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signals
   // init configuration
   TimeAdjuster::SetupCommon();
   TimeAdjuster::SetupInFilesConfig();
+  TimeAdjuster::SetupStrings();
 
   // open skim file
   fSkimFile = TFile::Open(Form("%s",fSkimFileName.Data()),"UPDATE");
@@ -106,7 +107,7 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
     tree->SetBranchAddress(Form("%s_%i",pho.s_isEB.c_str(),ipho),&pho.isEB,&pho.b_isEB);
 
     // make new
-    pho.b_seedtimeSHIFT = tree->Branch(Form("%s_%i",pho.s_seedtimeSHIFT.c_str(),ipho),&pho.seedtimeSHIFT,Form("%s_%i/F",pho.s_seedtimeSHIFT.c_str(),ipho));
+    pho.b_timeSHIFT = tree->Branch(Form("%s_%i",fSTimeSHIFT.c_str(),ipho),&pho.timeSHIFT,Form("%s_%i/F",fSTimeSHIFT.c_str(),ipho));
   }
 
   /////////////////////////////
@@ -153,15 +154,15 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
       if (bin != 0 && bin != hist->GetXaxis()->GetNbins()+1)
       {
 	const auto shift = hist->GetBinContent(bin);
-	pho.seedtimeSHIFT = -shift;
+	pho.timeSHIFT = -shift;
       }
       else
       {
-	pho.seedtimeSHIFT = 0.f;
+	pho.timeSHIFT = 0.f;
       }
       
       // fill branch
-      pho.b_seedtimeSHIFT->Fill();
+      pho.b_timeSHIFT->Fill();
     } // end loop over nphotons on file
 
     // store remainder photons
@@ -170,10 +171,10 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
       auto & pho = phos[ipho];
 
       // set remainder
-      pho.seedtimeSHIFT = -9999.f;
+      pho.timeSHIFT = -9999.f;
       
       // fill branch
-      pho.b_seedtimeSHIFT->Fill();
+      pho.b_timeSHIFT->Fill();
     } // end loop over remainder photons
     
   } // end loop over entries
@@ -244,8 +245,8 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	tree->SetBranchAddress(Form("%s_%i",pho.s_isEB.c_str(),ipho),&pho.isEB,&pho.b_isEB);
 
 	// make new
-	if (fDoShift) pho.b_seedtimeSHIFT = tree->Branch(Form("%s_%i",pho.s_seedtimeSHIFT.c_str(),ipho),&pho.seedtimeSHIFT,Form("%s_%i/F",pho.s_seedtimeSHIFT.c_str(),ipho));
-	if (fDoSmear) pho.b_seedtimeSMEAR = tree->Branch(Form("%s_%i",pho.s_seedtimeSMEAR.c_str(),ipho),&pho.seedtimeSMEAR,Form("%s_%i/F",pho.s_seedtimeSMEAR.c_str(),ipho));
+	if (fDoShift) pho.b_timeSHIFT = tree->Branch(Form("%s_%i",fSTimeSHIFT.c_str(),ipho),&pho.timeSHIFT,Form("%s_%i/F",fSTimeSHIFT.c_str(),ipho));
+	if (fDoSmear) pho.b_timeSMEAR = tree->Branch(Form("%s_%i",fSTimeSMEAR.c_str(),ipho),&pho.timeSMEAR,Form("%s_%i/F",fSTimeSMEAR.c_str(),ipho));
       }
 
       /////////////////////////////
@@ -291,11 +292,11 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	    if (bin != 0 && bin != hist->GetXaxis()->GetNbins()+1)
 	    {
 	      const auto shift = hist->GetBinContent(bin);
-	      pho.seedtimeSHIFT = -shift;
+	      pho.timeSHIFT = -shift;
 	    }
 	    else
 	    {
-	      pho.seedtimeSHIFT = 0.f;
+	      pho.timeSHIFT = 0.f;
 	    }
 	  }
 
@@ -318,17 +319,17 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	    if ( (databin != 0 && databin != datahist->GetXaxis()->GetNbins()+1) && (mcbin != 0 && mcbin != mchist->GetXaxis()->GetNbins()+1) )
 	    {
 	      const auto sigma  = std::sqrt(std::pow(datahist->GetBinContent(databin),2.f)-std::pow(mchist->GetBinContent(mcbin),2.f));
-	      pho.seedtimeSMEAR = rand->Gaus(0.f,sigma);
+	      pho.timeSMEAR = rand->Gaus(0.f,sigma);
 	    }
 	    else
 	    {
-	      pho.seedtimeSMEAR = 0.f;
+	      pho.timeSMEAR = 0.f;
 	    }
 	  }
 
 	  // fill branches
-	  if (fDoShift) pho.b_seedtimeSHIFT->Fill();
-	  if (fDoSmear) pho.b_seedtimeSMEAR->Fill();
+	  if (fDoShift) pho.b_timeSHIFT->Fill();
+	  if (fDoSmear) pho.b_timeSMEAR->Fill();
 	} // end loop over nphotons on file
 
 	// store remainder photons
@@ -337,12 +338,12 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	  auto & pho = phos[ipho];
 
 	  // set remainders
-	  if (fDoShift) pho.seedtimeSHIFT = -9999.f;
-	  if (fDoSmear) pho.seedtimeSMEAR = -9999.f;
+	  if (fDoShift) pho.timeSHIFT = -9999.f;
+	  if (fDoSmear) pho.timeSMEAR = -9999.f;
       
 	  // fill branches
-	  if (fDoShift) pho.b_seedtimeSHIFT->Fill();
-	  if (fDoSmear) pho.b_seedtimeSMEAR->Fill();
+	  if (fDoShift) pho.b_timeSHIFT->Fill();
+	  if (fDoSmear) pho.b_timeSMEAR->Fill();
 	} // end loop over remainder photons
     
       } // end loop over entries
@@ -460,7 +461,10 @@ void TimeAdjuster::MakeConfigPave(TFile *& SkimFile)
 
   // give grand title
   ConfigPave->AddText("***** TimeAdjuster Config *****");
-  
+
+  // Store which time used
+  ConfigPave->AddText(Form("Time used: %s",fSTime.Data()));
+
   // store which correction performed
   ConfigPave->AddText(Form("DoShift: %s",Common::PrintBool(fDoShift).Data()));
   ConfigPave->AddText(Form("DoSmear: %s",Common::PrintBool(fDoSmear).Data()));
@@ -502,6 +506,12 @@ void TimeAdjuster::SetupCommon()
   Common::SetupSignalSamples();
   Common::SetupGroups();
   Common::SetupTreeNames();
+}
+
+void TimeAdjuster::SetupStrings()
+{
+  if (fDoShift) fSTimeSHIFT = "pho"+fSTime+"SHIFT";
+  if (fDoSmear) fSTimeSMEAR = "pho"+fSTime+"SMEAR";
 }
 
 void TimeAdjuster::SetupInFilesConfig()

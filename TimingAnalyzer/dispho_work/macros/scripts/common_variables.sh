@@ -28,40 +28,48 @@ export disphodir="dispho/plots"
 ## common derived output info
 export limitdir="limits"
 
-declare -a exts=("eps" "png" "pdf")
+#declare -a exts=("eps" "png" "pdf")
+declare -a exts=("png" "pdf")
 export exts
 
-declare -a canvscales=("lin" "log")
+#declare -a canvscales=("lin" "log")
+declare -a canvscales=("log")
 export canvscales
 
 ## eras
-declare -a eras=("2017B" "2017C" "2017D" "2017E" "2017F" "Full")
+#declare -a eras=("2017B" "2017C" "2017D" "2017E" "2017F" Full")
+declare -a eras=("Full")
 export eras
 export MainEra="Full"
 
 ## etas
-declare -a etas=("EB" "EE" "Full")
+#declare -a etas=("EB" "EE" "Full")
+declare -a etas=("EB" "EE")
 export etas
 
 ## phos
 export pho0="0 Leading"
 export pho1="1 Subleading"
-declare -a phos=("pho0" "pho1")
+#declare -a phos=("pho0" "pho1")
+declare -a phos=("pho0")
 export phos
+
+## base time variable for input to resolution + corrections
+export base_time_var="seedtime"
 
 ## time corrections
 export tof_corr="phoseedTOF"
-export shift_corr="phoseedtimeSHIFT"
-export smear_corr="phoseedtimeSMEAR"
+export shift_corr="pho${base_time_var}SHIFT"
+export smear_corr="pho${base_time_var}SMEAR"
 
-## weight info
-export wgtvar="phopt_0"
-
-## fit info
+## time fit info
 export fitinfo="Gaus1core 2 2"
 
 ## time adjust var
-export timeadjvar="phopt_0"
+export timeadjvar="phoE_0"
+
+## extra event weight info
+export wgtvar="phopt_0"
 
 ## CR + SR info: label skim signal_skim additional_cuts (var wgt map)
 export GJets="cr_gjets_DEG v4/orig/gjets v4/orig/signals_gjets always_true"
@@ -74,7 +82,9 @@ export SR="${Signal} empty"
 #declare -a inputs=(CR_GJets CR_QCD SR)
 
 ## Zee 
-export Zee="Zee_DEG v4_metcorr_Zee/zee v4_metcorr_Zee/signals_zee cuts_v4/zee"
+export Zee="Zee zee_TnP/skim zee_TnP/signals_skim always_true"
+#export Zee="Zee zee_timestudy/skim zee_timestudy/signals_skim always_true"
+#export Zee="Dixtal dixtal/skim dixtal/signals_skim always_true"
 export ZEE="${Zee} empty"
 declare -a inputs=(ZEE)
 export inputs

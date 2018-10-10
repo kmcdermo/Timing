@@ -10,7 +10,7 @@ source scripts/common_variables.sh
 ############
 
 ## command line inputs
-outdirbase=${1:-"ntuples_v5p1/time_study_091018/single_object_seedtime"}
+outdirbase=${1:-"ntuples_v5p1/time_study_091018/single_object_${base_time_var}"}
 
 ## other config
 nodir="no_corrs"
@@ -45,7 +45,7 @@ for input in "${inputs[@]}"
 do echo ${!input} | while read -r label infile insigfile sel varwgtmap
     do
   	echo "Running time adjuster for computing shift corrections for: ${label}" 
-   	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" 1 0
+   	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" "${base_time_var}" 1 0
     done
 done
 
@@ -69,7 +69,7 @@ for input in "${inputs[@]}"
 do echo ${!input} | while read -r label infile insigfile sel varwgtmap
     do
   	echo "Running time adjuster for computing smear corrections for: ${label}" 
-   	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" 0 1
+   	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" "${base_time_var}" 0 1
     done
 done
 

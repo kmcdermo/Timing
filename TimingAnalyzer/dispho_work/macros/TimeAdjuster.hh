@@ -43,20 +43,18 @@ struct Photon
   Float_t pt;
   Bool_t  isEB;
   // new vars
-  Float_t seedtimeSHIFT;
-  Float_t seedtimeSMEAR;
+  Float_t timeSHIFT;
+  Float_t timeSMEAR;
   
-  // strings
+  // strings : new vars are defined globally
   std::string s_pt = "phopt";
   std::string s_isEB = "phoisEB";
-  std::string s_seedtimeSHIFT = "phoseedtimeSHIFT";
-  std::string s_seedtimeSMEAR = "phoseedtimeSMEAR";
 
   // branches
   TBranch * b_pt;
   TBranch * b_isEB;
-  TBranch * b_seedtimeSHIFT;
-  TBranch * b_seedtimeSMEAR;
+  TBranch * b_timeSHIFT;
+  TBranch * b_timeSMEAR;
 };
 
 struct FitStruct
@@ -74,12 +72,13 @@ class TimeAdjuster
 {
 public:
   TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig,
-	       const Bool_t doshift, const Bool_t dosmear);
+	       const TString & stime, const Bool_t doshift, const Bool_t dosmear);
   ~TimeAdjuster();
 
   // Config
   void SetupCommon();
   void SetupInFilesConfig();
+  void SetupStrings();
 
   // Main calls
   void AdjustTime();
@@ -101,8 +100,13 @@ private:
   const TString fSkimFileName;
   const TString fSignalSkimFileName;
   const TString fInFilesConfig;
+  const TString fSTime;
   const Bool_t  fDoShift;
   const Bool_t  fDoSmear;
+
+  // config strings
+  TString fSTimeSHIFT;
+  TString fSTimeSMEAR;
 
   // inputs
   std::map<TString,TString> fInFileNameMap;

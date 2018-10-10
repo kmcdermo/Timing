@@ -122,7 +122,7 @@ do
 	    then
 		time_bins=$( ReadConfig "${line}" )
 	    fi
-	done < "${fragdir}/time.${inTextExt}"
+	done < "${fragdir}/${base_time_var}.${inTextExt}"
 	
         ## add in photon indices
 	time_var="${time_var}_0-${time_var}_1"

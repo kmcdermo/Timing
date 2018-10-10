@@ -3,8 +3,8 @@
 #include "TimeAdjuster.cpp+"
 
 void runTimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig, 
-		     const Bool_t doshift, const Bool_t dosmear)
+		     const TString & stime, const Bool_t doshift, const Bool_t dosmear)
 {
-  TimeAdjuster adjuster(skimfilename,signalskimfilename,infilesconfig,doshift,dosmear);
+  TimeAdjuster adjuster(skimfilename,signalskimfilename,infilesconfig,stime,doshift,dosmear);
   adjuster.AdjustTime();
 }
