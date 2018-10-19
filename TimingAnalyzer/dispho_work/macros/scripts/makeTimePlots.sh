@@ -166,9 +166,10 @@ do echo ${!pho} | while read -r index pho_label
 		cut="tmp_cut_config.txt"
 		> "${cut}"
 
-		## eta cuts
-		common_cut="(1)"
+		## common cuts
+		common_cut="(phohasPixSeed_0&&phohasPixSeed_1)"
 
+		## eta cuts
 		eta_cut_base="phoisEB_${index}"
 		if [[ "${eta}" == "Full" ]]
 		then
@@ -185,7 +186,7 @@ do echo ${!pho} | while read -r index pho_label
 		fi
 
 		## write the remainder of cuts
-		echo "common_cut=${eta_cut}" >> "${cut}"
+		echo "common_cut=${common_cut}&&${eta_cut}" >> "${cut}"
 		echo "data_cut=" >> "${cut}"
 		echo "bkgd_cut=" >> "${cut}"
 		echo "sign_cut=" >> "${cut}"

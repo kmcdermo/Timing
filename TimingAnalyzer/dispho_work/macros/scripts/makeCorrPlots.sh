@@ -58,24 +58,27 @@ do echo ${!pho} | while read -r index pho_label
 	    cut="tmp_cut_config.txt"
 	    > "${cut}"
 
-	    ## write common cut
-	    common_cut="hltDiEle33MW&&!phoisOOT_0&&!phoisOOT_1&&phohasPixSeed_0&&phohasPixSeed_1"
-	    eta_cut="phoisEB_${index}"
-	    if [[ "${eta}" == "EB" ]]
+	    ## common cuts
+	    common_cut="(phohasPixSeed_0&&phohasPixSeed_1)"
+	    
+	    ## eta cuts
+	    eta_cut_base="phoisEB_${index}"
+	    if [[ "${eta}" == "Full" ]]
 	    then
-		echo "common_cut=((${eta_cut})&&(${common_cut}))" >> "${cut}"
+		eta_cut="(1)"
+	    elif [[ "${eta}" == "EB" ]]
+	    then
+		    eta_cut="(${eta_cut_base})"
 	    elif [[ "${eta}" == "EE" ]]
 	    then
-		echo "common_cut=(!(${eta_cut})&&(${common_cut}))" >> "${cut}"
-	    elif [[ "${eta}" == "Full" ]]
-	    then
-		echo "common_cut=(${common_cut})" >> "${cut}"
+		eta_cut="(!${eta_cut_base})"
 	    else
 		echo "How did this happen?? Did not choose a correct option for eta: ${eta} ... Exiting..."
 		exit
 	    fi
 	    
-            ## write the remainder of cuts
+	    ## write the remainder of cuts
+	    echo "common_cut=${common_cut}&&${eta_cut}" >> "${cut}"
 	    echo "data_cut=" >> "${cut}"
 	    echo "bkgd_cut=" >> "${cut}"
 	    echo "sign_cut=" >> "${cut}"
