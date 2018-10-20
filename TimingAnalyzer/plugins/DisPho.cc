@@ -142,10 +142,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
 
   // photons + ids
   photonsToken = consumes<std::vector<pat::Photon> > (photonsTag);
-  if (not ootPhotonsTag.label().empty())
-  {
-    ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
-  }
+  ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
 
   // only for simulated samples
   if (isGMSB || isHVDS || isBkgd || isToy || isADD)
@@ -221,15 +218,13 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // GEDPHOTONS + IDS
   edm::Handle<std::vector<pat::Photon> > photonsH;
   iEvent.getByToken(photonsToken, photonsH);
-  int phosize = photonsH->size();
-
+ 
   // OOTPHOTONS + IDS
   edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
-  if (not ootPhotonsToken.isUninitialized())
-  {
-    iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
-    phosize += ootPhotonsH->size();
-  }
+  iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
+ 
+  // how many total photons
+  const int phosize = photonsH->size() + ootPhotonsH->size();
 
   // total photons vector
   std::vector<oot::Photon> photons; photons.reserve(phosize);

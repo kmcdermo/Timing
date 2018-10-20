@@ -58,9 +58,6 @@ options.register('inputFilters','/afs/cern.ch/user/k/kmcdermo/public/input/HLTfi
 ## met filter input
 options.register('inputFlags','/afs/cern.ch/user/k/kmcdermo/public/input/METflags.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input MET filter flags');
 
-## ootphoton tags
-options.register('useOOTPhotons',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to use ootPhoton collections in analyzer');
-
 ## data or MC options
 options.register('isMC',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate data or MC');
 options.register('isGMSB',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate GMSB');
@@ -138,8 +135,6 @@ print "inputPaths     : ",options.inputPaths
 print "inputFilters   : ",options.inputFilters
 print "       -- MET Filters --"
 print "inputFlags     : ",options.inputFlags
-print "       -- ootPhotons --"
-print "useOOTPhotons  : ",options.useOOTPhotons
 print "        -- MC Info --"
 print "isMC           : ",options.isMC
 if options.isMC:
@@ -204,10 +199,6 @@ process.TFileService = cms.Service("TFileService",
 if   options.isMC : triggerFlagsProcess = "PAT"
 else              : triggerFlagsProcess = "RECO"
 
-## pick up ootPhotons if they exist
-if   options.useOOTPhotons : ootPhotonsTag = cms.InputTag("slimmedOOTPhotons")
-else                       : ootPhotonsTag = cms.InputTag("")
-
 ## generate track collection at miniAOD
 from PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi import unpackedTracksAndVertices
 process.unpackedTracksAndVertices = unpackedTracksAndVertices.clone()
@@ -230,10 +221,6 @@ updateJetCollection (
    labelName = 'UpdatedJEC',
    jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']), 'None')
 )
-
-## Add OOT VID to gedPhotons
-from RecoEgamma.EgammaTools.GEDPhotonPostRecoTools_OOTVID import setupGEDPhotonPostRecoSeq
-setupGEDPhotonPostRecoSeq(process)
 
 ## Apply Scale/Smearing + GED and OOT VID to ootPhotons
 from RecoEgamma.EgammaTools.OOTPhotonPostRecoTools import setupOOTPhotonPostRecoSeq
@@ -299,7 +286,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    jets = cms.InputTag("updatedPatJetsUpdatedJEC"),
    ## photons		
    photons    = cms.InputTag("slimmedPhotons"),
-   ootPhotons = ootPhotonsTag,
+   ootPhotons = cms.InputTag("slimmedOOTPhotons"),
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
@@ -326,7 +313,6 @@ process.treePath = cms.Path(
 	process.updatedPatJetsUpdatedJEC +
 	process.fullPatMetSequenceModifiedMET +
 	process.unpackedTracksAndVertices +
-	process.gedPhotonPostRecoSeq +
 	process.ootPhotonPostRecoSeq +
 	process.tree
 )

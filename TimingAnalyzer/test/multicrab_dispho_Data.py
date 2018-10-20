@@ -87,22 +87,23 @@ def main():
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
         config.Site.storageSite      = 'T2_CH_CERN'
-        config.Data.outLFNDirBase    = '/store/user/kmcdermo/nTuples/unskimmed/analysis/'
+        config.Data.outLFNDirBase    = '/store/group/phys_exotica/displacedPhotons/nTuples/2017/analysis/unskimmed'
         #--------------------------------------------------------
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/SinglePhoton/Run2017B-17Nov2017-v1/MINIAOD'],
-            ['/SinglePhoton/Run2017C-17Nov2017-v1/MINIAOD'],
-            ['/SinglePhoton/Run2017D-17Nov2017-v1/MINIAOD'],
-            ['/SinglePhoton/Run2017E-17Nov2017-v1/MINIAOD'],
-            ['/SinglePhoton/Run2017F-17Nov2017-v1/MINIAOD'],
+            ['/SinglePhoton/Run2017B-31Mar2018-v1/MINIAOD'],
+            ['/SinglePhoton/Run2017C-31Mar2018-v1/MINIAOD'],
+            ['/SinglePhoton/Run2017D-31Mar2018-v1/MINIAOD'],
+            ['/SinglePhoton/Run2017E-31Mar2018-v1/MINIAOD'],
+            ['/SinglePhoton/Run2017F-31Mar2018-v1/MINIAOD'],
 
-            ['/DoubleEG/Run2017B-17Nov2017-v1/MINIAOD'],
-            ['/DoubleEG/Run2017C-17Nov2017-v1/MINIAOD'],
-            ['/DoubleEG/Run2017D-17Nov2017-v1/MINIAOD'],
-            ['/DoubleEG/Run2017E-17Nov2017-v1/MINIAOD'],
-            ['/DoubleEG/Run2017F-17Nov2017-v1/MINIAOD'],
+            ['/DoubleEG/Run2017B-31Mar2018-v1/MINIAOD'],
+            ['/DoubleEG/Run2017C-31Mar2018-v1/MINIAOD'],
+            ['/DoubleEG/Run2017D-31Mar2018-v1/MINIAOD'],
+            ['/DoubleEG/Run2017E-31Mar2018-v1/MINIAOD'],
+            ['/DoubleEG/Run2017F-31Mar2018-v1/MINIAOD'],
+
             ]
  
         for inDO in inputDataAndOpts:
@@ -112,8 +113,7 @@ def main():
 
             config.General.requestName   = primaryDataset+"_"+runEra
 
-            # FIXME: 94X_dataRun2_ReReco_EOY17_v2 --> 94X_dataRun2_v6 when using ReMiniAOD
-            config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_ReReco_EOY17_v6','splitPho=False','nThreads='+str(config.JobType.numCores),
+            config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_v6','splitPho=False','nThreads='+str(config.JobType.numCores),
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)

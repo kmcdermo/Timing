@@ -187,8 +187,11 @@ namespace oot
 
 	idpVec idpairs;
 	idpairs = {{"loose-ged",false}, {"medium-ged",false}, {"tight-ged",false}, {"loose-oot",false}, {"tight-oot",false}};
-	oot::GetGEDPhoVID      (photon,idpairs);
-	oot::GetOOTPhoVIDByHand(photon,idpairs,rho);
+
+	oot::GetGEDPhoVID(photon,idpairs);
+
+	if (isOOT) oot::GetOOTPhoVID      (photon,idpairs);
+	else       oot::GetOOTPhoVIDByHand(photon,idpairs,rho);
 	
 	bool isGoodID = true;
 	if (phIDmin != "none")
