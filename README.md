@@ -11,6 +11,11 @@ git cms-init
 
 git cms-merge-topic cms-met:METFixEE2017_949_v2
 git cms-merge-topic kmcdermo:scale_and_smear_OOT
+git clone git@github.com:kmcdermo/Timing.git
+
+pushd Timing
+git remote rename origin kmcdermo
+popd
 
 scram b -j 16
 ```
