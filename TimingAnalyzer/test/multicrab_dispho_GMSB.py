@@ -197,6 +197,7 @@ def main():
             try:
                 print "Submitting for input dataset %s" % (inDO[0])
                 crabCommand(options.crabCmd, config = config, *options.crabCmdOpts.split())
+                os.system("rm -rf %s/crab_%s/inputs" % (config.General.workArea, config.General.requestName))
             except HTTPException as hte:
                 print "Submission for input dataset %s failed: %s" % (inDO[0], hte.headers)
             except ClientException as cle:
