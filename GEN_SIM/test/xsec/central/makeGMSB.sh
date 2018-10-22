@@ -22,6 +22,6 @@ do
 	xsec=$( grep "${lambda} ${ctau} " gmsb_xsecs.txt | cut -d " " -f 3)
 	br=$( grep "${lambda} ${ctau} " all_params.txt | cut -d " " -f 5)
 
-	echo "['/GMSB_L-${lambda}TeV_Ctau-${ctau_s}cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM', '${xsec}', '1', '${br}', 'isGMSB']," >> "${tmpoutput}"
+	echo "['/GMSB_L-${lambda}TeV_Ctau-${ctau_s}cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM', '${xsec}', '1', '${br}']," >> "${tmpoutput}"
     done
 done
