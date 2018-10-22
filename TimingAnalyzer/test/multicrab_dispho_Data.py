@@ -113,7 +113,7 @@ def main():
 
             config.General.requestName   = primaryDataset+"_"+runEra
 
-            config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_v6','splitPho=False','nThreads='+str(config.JobType.numCores),
+            config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_v6','nThreads='+str(config.JobType.numCores),
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
