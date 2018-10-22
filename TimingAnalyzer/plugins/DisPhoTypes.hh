@@ -73,25 +73,16 @@ struct toyStruct
   int genphmatch_status_;
 };
 
-struct jetStruct
-{
-  float E_;
-  float Pt_;
-  float Phi_;
-  float Eta_;
-  int   ID_;
-};
-
 struct phoStruct
 {
   float E_;
-  float Pt_;
-  float Phi_;
-  float Eta_;
+  float pt_;
+  float phi_;
+  float eta_;
 
   float scE_;
-  float scPhi_;
-  float scEta_;
+  float scphi_;
+  float sceta_;
 
   float HoE_;
   float r9_;
@@ -112,23 +103,41 @@ struct phoStruct
   float HcalPFClIsoC_;
   float TrkIsoC_;
 
-  float Sieie_; 
-  float Sipip_;
-  float Sieip_;
+  float sieie_; 
+  float sipip_;
+  float sieip_;
 
   float e2x2_;
   float e3x3_;
   float e5x5_;
 
-  float Smaj_;
-  float Smin_;
+  float smaj_;
+  float smin_;
   float alpha_;
 
+  // storeRecHits
   int seed_;
   std::vector<int> recHits_;
-  float seedtime_;
+
+  // store seed only
+  float seedX_;
+  float seedY_;
+  float seedZ_;
   float seedE_;
+  float seedtime_;
+  float seedtimeErr_;
+  float seedTOF_;
   unsigned int seedID_;
+  int seedisOOT_;
+  int seedisGS6_;
+  int seedisGS1_;
+  float seedadcToGeV_;
+  float seedped12_;
+  float seedped6_;
+  float seedped1_;
+  float seedpedrms12_;
+  float seedpedrms6_;
+  float seedpedrms1_;
 
   float suisseX_;
   
@@ -147,8 +156,8 @@ struct phoStruct
   int  isSignal_;
   bool isGen_;
 
-  float Scale_;
-  float Smear_;
+  float scaleAbs_;
+  float smearAbs_;
 };
 
 #endif

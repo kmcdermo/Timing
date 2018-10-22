@@ -148,6 +148,9 @@ namespace Common
   static const TString h_cutflowname  = "h_cutflow";
   static const TString pavename       = "Config";
 
+  static const TString h_cutflow_wgtname    = Common::h_cutflowname+"_wgt";
+  static const TString h_cutflow_scaledname = Common::h_cutflowname+"_scaled";
+
   static const Int_t   nPUBins        = 150;
   static const TString dataPUFileName = "datapu";
   static const TString dataPUHistName = "pileup";

@@ -338,7 +338,7 @@ namespace Common
       const auto & input = SamplePair.first;
       const auto samplename = Common::ReplaceSlashWithUnderscore(input);
 
-      Common::SampleCutFlowHistNameMap[input] = samplename+"_"+Common::h_cutflowname;
+      Common::SampleCutFlowHistNameMap[input] = samplename+"_"+Common::h_cutflow_scaledname;
     }
   }
 
@@ -350,7 +350,7 @@ namespace Common
       const auto group    = GroupPair.second;
       if (group == SampleGroup::isSignal) continue;
 
-      Common::GroupCutFlowHistNameMap[sample] = sample+"_"+Common::h_cutflowname;
+      Common::GroupCutFlowHistNameMap[sample] = sample+"_"+Common::h_cutflow_scaledname;
     }
   }
 
@@ -362,7 +362,7 @@ namespace Common
       const auto group    = GroupPair.second;
       if (group != SampleGroup::isSignal) continue;
 
-      Common::SignalCutFlowHistNameMap[sample] = sample+"_"+Common::h_cutflowname;
+      Common::SignalCutFlowHistNameMap[sample] = sample+"_"+Common::h_cutflow_scaledname;
     }
   }
 

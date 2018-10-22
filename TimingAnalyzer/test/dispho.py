@@ -58,9 +58,6 @@ options.register('inputFilters','/afs/cern.ch/user/k/kmcdermo/public/input/HLTfi
 ## met filter input
 options.register('inputFlags','/afs/cern.ch/user/k/kmcdermo/public/input/METflags.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input MET filter flags');
 
-## ootphoton tags
-options.register('useOOTPhotons',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to use ootPhoton collections in analyzer');
-
 ## data or MC options
 options.register('isMC',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate data or MC');
 options.register('isGMSB',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate GMSB');
@@ -138,8 +135,6 @@ print "inputPaths     : ",options.inputPaths
 print "inputFilters   : ",options.inputFilters
 print "       -- MET Filters --"
 print "inputFlags     : ",options.inputFlags
-print "       -- ootPhotons --"
-print "useOOTPhotons  : ",options.useOOTPhotons
 print "        -- MC Info --"
 print "isMC           : ",options.isMC
 if options.isMC:
@@ -204,10 +199,6 @@ process.TFileService = cms.Service("TFileService",
 if   options.isMC : triggerFlagsProcess = "PAT"
 else              : triggerFlagsProcess = "RECO"
 
-## pick up ootPhotons if they exist
-if   options.useOOTPhotons : ootPhotonsTag = cms.InputTag("slimmedOOTPhotons")
-else                       : ootPhotonsTag = cms.InputTag("")
-
 ## generate track collection at miniAOD
 from PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi import unpackedTracksAndVertices
 process.unpackedTracksAndVertices = unpackedTracksAndVertices.clone()
@@ -218,6 +209,7 @@ runMetCorAndUncFromMiniAOD (
         process,
         isData = not options.isMC,
         fixEE2017 = True,
+	fixEE2017Params = {'userawPt':True, 'PtThreshold':50.0, 'MinEtaThreshold':2.65, 'MaxEtaThreshold':3.139},
         postfix = "ModifiedMET"
 )
 
@@ -230,11 +222,9 @@ updateJetCollection (
    jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']), 'None')
 )
 
-## Apply Scale/Smearing to ootPhotons : Hacked for sure
-from RecoEgamma.EgammaTools.EgammaPostRecoTools_OOT import setupEgammaPostRecoSeq
-setupEgammaPostRecoSeq(process,
-                       runVID=True,
-                       era='2017-Nov17ReReco')
+## Apply Scale/Smearing + GED and OOT VID to ootPhotons
+from RecoEgamma.EgammaTools.OOTPhotonPostRecoTools import setupOOTPhotonPostRecoSeq
+setupOOTPhotonPostRecoSeq(process)
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("DisPho",
@@ -296,7 +286,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    jets = cms.InputTag("updatedPatJetsUpdatedJEC"),
    ## photons		
    photons    = cms.InputTag("slimmedPhotons"),
-   ootPhotons = ootPhotonsTag,
+   ootPhotons = cms.InputTag("slimmedOOTPhotons"),
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
@@ -319,12 +309,13 @@ process.tree = cms.EDAnalyzer("DisPho",
 
 # Set up the path
 process.treePath = cms.Path(
-	process.egammaPostRecoSeq +
 	process.patJetCorrFactorsUpdatedJEC +
 	process.updatedPatJetsUpdatedJEC +
 	process.fullPatMetSequenceModifiedMET +
 	process.unpackedTracksAndVertices +
-	process.tree)
+	process.ootPhotonPostRecoSeq +
+	process.tree
+)
 
 ### Extra bits from other configs
 process.options = cms.untracked.PSet(

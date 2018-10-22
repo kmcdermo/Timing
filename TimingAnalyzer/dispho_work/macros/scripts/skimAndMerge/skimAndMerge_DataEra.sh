@@ -13,7 +13,7 @@ skimtype=${5:-"Standard"}
 usePUWeights=0
 
 ## global vars
-database="${dataset}_Run2017${era}-17Nov2017-${version}"
+database="${dataset}_Run2017${era}-31Mar2018-${version}"
 text="${dataset}_2017${era}_${version}"
 
 ## directories needed

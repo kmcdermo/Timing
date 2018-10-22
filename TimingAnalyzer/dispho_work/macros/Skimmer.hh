@@ -44,7 +44,7 @@ public:
   void InitOutStructs();
   void InitOutBranches();
   void InitOutCutFlowHists();
-  void InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow, const TString & label);
+  void InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow, const TString & name);
 
   // skim and fill outputs
   void EventLoop();
@@ -76,7 +76,7 @@ private:
   TTree * fInTree; 
   TTree * fInConfigTree;
   TH1F  * fInCutFlow;
-  //  TH1F  * fInCutFlowWgt;
+  TH1F  * fInCutFlowWgt;
   TFile * fInPUWgtFile;
   TH1F  * fInPUWgtHist;
   Float_t fSampleWeight;
@@ -100,8 +100,8 @@ private:
   TTree * fOutTree; 
   TTree * fOutConfigTree;
   TH1F  * fOutCutFlow;
-  // TH1F  * fOutCutFlowWgt;
-  // TH1F  * fOutCutFlowScl;
+  TH1F  * fOutCutFlowWgt;
+  TH1F  * fOutCutFlowScl;
 
   GmsbVec fOutGMSBs;
   HvdsVec fOutHVDSs;

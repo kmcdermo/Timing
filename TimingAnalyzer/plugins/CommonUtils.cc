@@ -187,8 +187,11 @@ namespace oot
 
 	idpVec idpairs;
 	idpairs = {{"loose-ged",false}, {"medium-ged",false}, {"tight-ged",false}, {"loose-oot",false}, {"tight-oot",false}};
-	oot::GetGEDPhoVID      (photon,idpairs);
-	oot::GetOOTPhoVIDByHand(photon,idpairs,rho);
+
+	oot::GetGEDPhoVID(photon,idpairs);
+
+	if (isOOT) oot::GetOOTPhoVID      (photon,idpairs);
+	else       oot::GetOOTPhoVIDByHand(photon,idpairs,rho);
 	
 	bool isGoodID = true;
 	if (phIDmin != "none")
@@ -534,6 +537,12 @@ namespace oot
   // OOT Photon ID //
   //               //
   ///////////////////
+
+  void GetOOTPhoVID(const pat::Photon & photon, idpVec & idpairs)
+  {
+    idpairs[4].second = photon.photonID("cutBasedPhotonID-Fall17-94X-OOT-V1-tight");
+    idpairs[3].second = photon.photonID("cutBasedPhotonID-Fall17-94X-OOT-V1-loose");
+  }
 
   void GetOOTPhoVIDByHand(const pat::Photon & photon, idpVec& idpairs, const float rho)
   {

@@ -63,6 +63,9 @@ struct Configuration
   Float_t genpTres;
   Float_t trackdRmin;
   Float_t trackpTmin;
+  Float_t genjetdRmin;
+  Float_t genjetpTfactor;
+  Float_t smearjetEmin;
   std::string * inputPaths;
   std::string inputPaths_s;
   std::string * inputFilters;
@@ -108,6 +111,9 @@ struct Configuration
   std::string s_genpTres = "genpTres";
   std::string s_trackdRmin = "trackdRmin";
   std::string s_trackpTmin = "trackpTmin";
+  std::string s_genjetdRmin = "genjetdRmin";
+  std::string s_genjetpTfactor = "genjetpTfactor";
+  std::string s_smearjetEmin = "smearjetEmin";
   std::string s_inputPaths = "inputPaths";
   std::string s_inputFilters = "inputFilters";
   std::string s_inputFlags = "inputFlags";
@@ -139,6 +145,7 @@ struct Event
   Bool_t    hltDiPho70;
   Bool_t    hltDiPho3022M90;
   Bool_t    hltDiPho30PV18PV;
+  Bool_t    hltEle32WPT;
   Bool_t    hltDiEle33MW;
   Bool_t    hltJet500;
   Bool_t    metPV;
@@ -194,6 +201,7 @@ struct Event
   std::string s_hltDiPho70 = "hltDiPho70";
   std::string s_hltDiPho3022M90 = "hltDiPho3022M90";
   std::string s_hltDiPho30PV18PV = "hltDiPho30PV18PV";
+  std::string s_hltEle32WPT = "hltEle32WPT";
   std::string s_hltDiEle33MW = "hltDiEle33MW";
   std::string s_hltJet500 = "hltJet500";
   std::string s_metPV = "metPV";
@@ -242,6 +250,7 @@ struct Event
   TBranch * b_hltDiPho70;
   TBranch * b_hltDiPho3022M90;
   TBranch * b_hltDiPho30PV18PV;
+  TBranch * b_hltEle32WPT;
   TBranch * b_hltDiEle33MW;
   TBranch * b_hltJet500;
   TBranch * b_metPV;
@@ -339,26 +348,62 @@ struct Jet
 
 struct RecHits
 {
-  std::vector<Float_t> * eta;
-  std::vector<Float_t> * phi;
+  std::vector<Float_t> * X;
+  std::vector<Float_t> * Y;
+  std::vector<Float_t> * Z;
   std::vector<Float_t> * E;
   std::vector<Float_t> * time;
-  std::vector<Int_t>   * OOT;
+  std::vector<Float_t> * timeErr;
+  std::vector<Float_t> * TOF;
   std::vector<UInt_t>  * ID;
+  std::vector<Int_t>   * isOOT;
+  std::vector<Int_t>   * isGS6;
+  std::vector<Int_t>   * isGS1;
+  std::vector<Float_t> * adcToGeV;
+  std::vector<Float_t> * ped12;
+  std::vector<Float_t> * ped6;
+  std::vector<Float_t> * ped1;
+  std::vector<Float_t> * pedrms12;
+  std::vector<Float_t> * pedrms6;
+  std::vector<Float_t> * pedrms1;
 
-  std::string s_eta = "rheta";
-  std::string s_phi = "rhphi";
+  std::string s_X = "rhX";
+  std::string s_Y = "rhY";
+  std::string s_Z = "rhZ";
   std::string s_E = "rhE";
   std::string s_time = "rhtime";
-  std::string s_OOT = "rhOOT";
+  std::string s_timeErr = "rhtimeErr";
+  std::string s_TOF = "rhTOF";
   std::string s_ID = "rhID";
+  std::string s_isOOT = "rhisOOT";
+  std::string s_isGS6 = "rhisGS6";
+  std::string s_isGS1 = "rhisGS1";
+  std::string s_adcToGeV = "rhadcToGeV";
+  std::string s_ped12 = "rhped12";
+  std::string s_ped6 = "rhped6";
+  std::string s_ped1 = "rhped1";
+  std::string s_pedrms12 = "rhpedrms12";
+  std::string s_pedrms6 = "rhpedrms6";
+  std::string s_pedrms1 = "rhpedrms1";
 
-  TBranch * b_eta;
-  TBranch * b_phi;
+  TBranch * b_X;
+  TBranch * b_Y;
+  TBranch * b_Z;
   TBranch * b_E;
   TBranch * b_time;
-  TBranch * b_OOT;
+  TBranch * b_timeErr;
+  TBranch * b_TOF;
   TBranch * b_ID;
+  TBranch * b_isOOT;
+  TBranch * b_isGS6;
+  TBranch * b_isGS1;
+  TBranch * b_adcToGeV;
+  TBranch * b_ped12;
+  TBranch * b_ped6;
+  TBranch * b_ped1;
+  TBranch * b_pedrms12;
+  TBranch * b_pedrms6;
+  TBranch * b_pedrms1;
 };
 
 struct Pho
@@ -404,10 +449,24 @@ struct Pho
   Bool_t  hasPixSeed;
   Int_t   gedID;
   Int_t   ootID;
-  // !storeRecHits
-  Float_t seedtime;
+  // RecHit Info (whether stored directly or read through rec hit information)
+  Float_t seedX;
+  Float_t seedY;
+  Float_t seedZ;
   Float_t seedE;
+  Float_t seedtime;
+  Float_t seedtimeErr;
+  Float_t seedTOF;
   UInt_t  seedID;
+  Int_t   seedisGS6;
+  Int_t   seedisGS1;
+  Float_t seedadcToGeV;
+  Float_t seedped12;
+  Float_t seedped6;
+  Float_t seedped1;
+  Float_t seedpedrms12;
+  Float_t seedpedrms6;
+  Float_t seedpedrms1;
   // MC types
   Bool_t  isGen;
   Int_t   isSignal;
@@ -417,7 +476,6 @@ struct Pho
   Int_t   nrechitsLT120;
   Float_t meantime;
   Float_t meantimeLT120;
-  Float_t seedTOF;
   Float_t weightedtime;
   Float_t weightedtimeLT120;
   
@@ -463,9 +521,23 @@ struct Pho
   std::string s_hasPixSeed = "phohasPixSeed";
   std::string s_gedID = "phogedID";
   std::string s_ootID = "phoootID";
-  std::string s_seedtime = "phoseedtime";
+  std::string s_seedX = "phoseedX";
+  std::string s_seedY = "phoseedY";
+  std::string s_seedZ = "phoseedZ";
   std::string s_seedE = "phoseedE";
+  std::string s_seedtime = "phoseedtime";
+  std::string s_seedtimeErr = "phoseedtimeErr";
+  std::string s_seedTOF = "phoseedTOF";
   std::string s_seedID = "phoseedID";
+  std::string s_seedisGS6 = "phoseedisGS6";
+  std::string s_seedisGS1 = "phoseedisGS1";
+  std::string s_seedadcToGeV = "phoseedadcToGeV";
+  std::string s_seedped12 = "phoseedped12";
+  std::string s_seedped6 = "phoseedped6";
+  std::string s_seedped1 = "phoseedped1";
+  std::string s_seedpedrms12 = "phoseedpedrms12";
+  std::string s_seedpedrms6 = "phoseedpedrms6";
+  std::string s_seedpedrms1 = "phoseedpedrms1";
   std::string s_isGen = "phoisGen";
   std::string s_isSignal = "phoisSignal";
   std::string s_seedTT = "phoseedTT";
@@ -473,7 +545,6 @@ struct Pho
   std::string s_nrechitsLT120 = "phonrechitsLT120";
   std::string s_meantime = "phomeantime";
   std::string s_meantimeLT120 = "phomeantimeLT120";
-  std::string s_seedTOF = "phoseedTOF";
   std::string s_weightedtime = "phoweightedtime";
   std::string s_weightedtimeLT120 = "phoweightedtimeLT120";
 
@@ -519,9 +590,23 @@ struct Pho
   TBranch * b_hasPixSeed;
   TBranch * b_gedID;
   TBranch * b_ootID;
-  TBranch * b_seedtime;
+  TBranch * b_seedX;
+  TBranch * b_seedY;
+  TBranch * b_seedZ;
   TBranch * b_seedE;
+  TBranch * b_seedtime;
+  TBranch * b_seedtimeErr;
+  TBranch * b_seedTOF;
   TBranch * b_seedID;
+  TBranch * b_seedisGS6;
+  TBranch * b_seedisGS1;
+  TBranch * b_seedadcToGeV;
+  TBranch * b_seedped12;
+  TBranch * b_seedped6;
+  TBranch * b_seedped1;
+  TBranch * b_seedpedrms12;
+  TBranch * b_seedpedrms6;
+  TBranch * b_seedpedrms1;
   TBranch * b_isGen;
   TBranch * b_isSignal;
   TBranch * b_seedTT;
@@ -529,7 +614,6 @@ struct Pho
   TBranch * b_nrechitsLT120;
   TBranch * b_meantime;
   TBranch * b_meantimeLT120;
-  TBranch * b_seedTOF;
   TBranch * b_weightedtime;
   TBranch * b_weightedtimeLT120;
 };

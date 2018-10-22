@@ -226,6 +226,7 @@ namespace oot
   float GetTrackPtScale(const float eta, const float pt);
   void GetGEDPhoVID(const pat::Photon & photon, idpVec& idpairs);
   void GetGEDPhoVIDByHand(const pat::Photon & photon, idpVec& idpairs);
+  void GetOOTPhoVID(const pat::Photon & photon, idpVec& idpairs);
   void GetOOTPhoVIDByHand(const pat::Photon & photon, idpVec& idpairs, const float rho);
   int GetPFJetID(const pat::Jet & jet);
   void SplitPhotons(std::vector<oot::Photon>& photons, const int nmax);

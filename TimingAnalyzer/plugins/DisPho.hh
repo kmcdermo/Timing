@@ -56,6 +56,18 @@
 #include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 
+// ECAL Record info (Laser Constants)
+#include "CalibCalorimetry/EcalLaserCorrection/interface/EcalLaserDbService.h"
+#include "CalibCalorimetry/EcalLaserCorrection/interface/EcalLaserDbRecord.h"
+
+// ECAL Record info (Intercalibration Constants)
+#include "CondFormats/EcalObjects/interface/EcalIntercalibConstants.h"
+#include "CondFormats/DataRecord/interface/EcalIntercalibConstantsRcd.h"
+
+// ECAL Record info (ADCToGeV)
+#include "CondFormats/EcalObjects/interface/EcalADCToGeVConstant.h"
+#include "CondFormats/DataRecord/interface/EcalADCToGeVConstantRcd.h"
+
 // ECAL Record info (ADCToGeV)
 #include "CondFormats/EcalObjects/interface/EcalADCToGeVConstant.h"
 #include "CondFormats/DataRecord/interface/EcalADCToGeVConstantRcd.h"
@@ -126,14 +138,8 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void InitializePVBranches();
   void SetPVBranches(const edm::Handle<std::vector<reco::Vertex> > & verticesH);
 
-  void InitializeADCToGeVBranches();
-  void SetADCToGeVBranches(const edm::ESHandle<EcalADCToGeVConstant> & adcToGeVH);
-
   void InitializeMETBranches();
   void SetMETBranches(const pat::MET & t1pfMET);
-
-  void InitializeMETBranchesMC();
-  void SetMETBranchesMC(const pat::MET & t1pfMET);
 
   void InitializeJetBranches(const int nJets);
   void SetJetBranches(const std::vector<pat::Jet> & jet, const int nJets);
@@ -148,9 +154,13 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void InitializeRecHitBranches(const int nRecHits);
   void SetRecHitBranches(const EcalRecHitCollection * recHitsEB, const CaloSubdetectorGeometry * barrelGeometry,
 			 const EcalRecHitCollection * recHitsEE, const CaloSubdetectorGeometry * endcapGeometry,
-			 const edm::ESHandle<EcalPedestals> & pedestalsH, const uiiumap & recHitMap);
+			 const uiiumap & recHitMap, const edm::Event & iEvent,
+			 const edm::ESHandle<EcalLaserDbService> & laserH, const EcalIntercalibConstantMap * interCalibMap,
+			 const edm::ESHandle<EcalADCToGeVConstant> & adcToGeVH, const edm::ESHandle<EcalPedestals> & pedestalsH);
   void SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloSubdetectorGeometry * geometry,
-			 const edm::ESHandle<EcalPedestals> & pedestalsH, const uiiumap& recHitMap);
+			 const uiiumap & recHitMap, const edm::Event & iEvent, 
+			 const edm::ESHandle<EcalLaserDbService> & laserH, const EcalIntercalibConstantMap * interCalibMap,
+			 const float adcToGeV, const edm::ESHandle<EcalPedestals> & pedestalsH);
 
   void InitializePhoBranches();
   void SetPhoBranches(const std::vector<oot::Photon> photons, const int nPhotons, const uiiumap & recHitMap,
@@ -356,38 +366,24 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // rho
   float rho;
 
-  // ecal info
-  float adcToGeVEB, adcToGeVEE;
-
   // MET
   float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
-  float t1pfMETptJetScaleDown,t1pfMETptJetScaleUp,t1pfMETptJetSmearDown,t1pfMETptJetSmearUp;
-  float t1pfMETptUnclusDown,t1pfMETptUnclusUp,t1pfMETptPhoScaleDown,t1pfMETptPhoScaleUp;
 
   // jets
   int njets;
-  std::vector<float> jetE;
-  std::vector<float> jetpt;
-  std::vector<float> jetphi;
-  std::vector<float> jeteta;
+  std::vector<float> jetE, jetpt, jetphi, jeteta;
   std::vector<int>   jetID;
+  std::vector<float> jetNHF, jetNEMF, jetCHF, jetCEMF, jetMUF, jetNHM, jetCHM;
 
-  std::vector<float> jetNHF;
-  std::vector<float> jetNEMF;
-  std::vector<float> jetCHF;
-  std::vector<float> jetCEMF;
-  std::vector<float> jetMUF;
-  std::vector<float> jetNHM;
-  std::vector<float> jetCHM;
-
-  std::vector<float> jetScale, jetSmear, jetSmearDown, jetSmearUp;
-  std::vector<int>   jetIsGen;
+  std::vector<float> jetscaleRel, jetsmearSF, jetsmearDownSF, jetsmearUpSF;
+  std::vector<int>   jetisGen;
 
   // RecHits
   int nrechits;
-  std::vector<float> rhX, rhY, rhZ, rhE, rhtime, rhTOF;
+  std::vector<float> rhX, rhY, rhZ, rhE, rhtime, rhtimeErr, rhTOF;
   std::vector<unsigned int> rhID;
   std::vector<bool> rhisOOT, rhisGS6, rhisGS1;
+  std::vector<float> rhadcToGeV;
   std::vector<float> rhped12, rhped6, rhped1;
   std::vector<float> rhpedrms12, rhpedrms6, rhpedrms1;
 

@@ -50,9 +50,9 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   fInCutFlow = (TH1F*)fInFile->Get(inh_cutflowname.Data());
   Common::CheckValidHist(fInCutFlow,inh_cutflowname,infilename);
 
-  // const TString inh_cutflow_wgtname = Form("%s/%s_wgt",Common::rootdir.Data(),Common::h_cutflow_wgtname.Data());
-  // fInCutFlowWgt = (TH1F*)fInFile->Get(inh_cutflow_wgtname.Data());
-  // Common::CheckValidHist(fInCutFlowWgt,inh_cutflow_wgtname,infilename);
+  const TString inh_cutflow_wgtname = Form("%s/%s",Common::rootdir.Data(),Common::h_cutflow_wgtname.Data());
+  fInCutFlowWgt = (TH1F*)fInFile->Get(inh_cutflow_wgtname.Data());
+  Common::CheckValidHist(fInCutFlowWgt,inh_cutflow_wgtname,infilename);
 
   // Get PU weights input
   fPUWeights.clear();
@@ -101,8 +101,8 @@ Skimmer::~Skimmer()
   delete fInConfigTree;
   delete fInFile;
 
-  //  delete fOutCutFlowScl;
-  //  delete fOutCutFlowWgt;
+  delete fOutCutFlowScl;
+  delete fOutCutFlowWgt;
   delete fOutCutFlow;
   delete fOutTree;
   delete fOutConfigTree;
@@ -129,24 +129,21 @@ void Skimmer::EventLoop()
       // leading photon skim section
       fInEvent.b_nphotons->GetEntry(entry);
       if (fInEvent.nphotons <= 0) continue;
-      fOutCutFlow->Fill((cutLabels["nPhotons"]*1.f)-0.5f,wgt);
-      //      fOutCutFlow   ->Fill((cutLabels["nPhotons"]*1.f)-0.5f);
-      //      fOutCutFlowWgt->Fill((cutLabels["nPhotons"]*1.f)-0.5f,wgt);
-      //      fOutCutFlowScl->Fill((cutLabels["nPhotons"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow   ->Fill((cutLabels["nPhotons"]*1.f)-0.5f);
+      fOutCutFlowWgt->Fill((cutLabels["nPhotons"]*1.f)-0.5f,wgt);
+      fOutCutFlowScl->Fill((cutLabels["nPhotons"]*1.f)-0.5f,evtwgt);
       
       fInPhos.front().b_isEB->GetEntry(entry);
       if (!fInPhos.front().isEB) continue;
-      fOutCutFlow->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,wgt);
-      //      fOutCutFlow   ->Fill((cutLabels["ph0isEB"]*1.f)-0.5f);
-      //      fOutCutFlowWgt->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,wgt);
-      //      fOutCutFlowScl->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow   ->Fill((cutLabels["ph0isEB"]*1.f)-0.5f);
+      fOutCutFlowWgt->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,wgt);
+      fOutCutFlowScl->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,evtwgt);
 
       fInPhos.front().b_pt->GetEntry(entry);
       if (fInPhos.front().pt < 70.f) continue;
-      fOutCutFlow->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
-      //      fOutCutFlow   ->Fill((cutLabels["ph0pt70"]*1.f)-0.5f);
-      //      fOutCutFlowWgt->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
-      //      fOutCutFlowScl->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow   ->Fill((cutLabels["ph0pt70"]*1.f)-0.5f);
+      fOutCutFlowWgt->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
+      fOutCutFlowScl->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);
 
       // filter on MET Flags
       fInEvent.b_metPV->GetEntry(entry);
@@ -164,10 +161,9 @@ void Skimmer::EventLoop()
       if (!fIsMC && !fInEvent.metEESC) continue;
       
       // fill cutflow for MET filters
-      fOutCutFlow->Fill((cutLabels["METFlag"]*1.f)-0.5f,wgt);
-      //      fOutCutFlow   ->Fill((cutLabels["METFlag"]*1.f)-0.5f);
-      //      fOutCutFlowWgt->Fill((cutLabels["METFlag"]*1.f)-0.5f,wgt);
-      //      fOutCutFlowScl->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow   ->Fill((cutLabels["METFlag"]*1.f)-0.5f);
+      fOutCutFlowWgt->Fill((cutLabels["METFlag"]*1.f)-0.5f,wgt);
+      fOutCutFlowScl->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
 
       // fill photon list in standard fashion
       Skimmer::FillPhoListStandard();
@@ -178,7 +174,9 @@ void Skimmer::EventLoop()
       //      fInEvent.b_hltDiEle33MW->GetEntry(entry);
       
       //       if (!fInEvent.hltDiEle33MW) continue;
-      fOutCutFlow->Fill((cutLabels["diEleHLT"]*1.f)-0.5f,wgt);
+      fOutCutFlow   ->Fill((cutLabels["diEleHLT"]*1.f)-0.5f);
+      fOutCutFlowWgt->Fill((cutLabels["diEleHLT"]*1.f)-0.5f,wgt);
+      fOutCutFlowScl->Fill((cutLabels["diEleHLT"]*1.f)-0.5f,evtwgt);
 
       // build list of "good electrons"
       std::vector<Int_t> good_phos;
@@ -203,11 +201,15 @@ void Skimmer::EventLoop()
       
       // make sure have at least 1 good photon
       if (good_phos.size() < 1) continue;
-      fOutCutFlow->Fill((cutLabels["goodPho1"]*1.f)-0.5f,wgt);
+      fOutCutFlow   ->Fill((cutLabels["goodPho1"]*1.f)-0.5f);
+      fOutCutFlowWgt->Fill((cutLabels["goodPho1"]*1.f)-0.5f,wgt);
+      fOutCutFlowScl->Fill((cutLabels["goodPho1"]*1.f)-0.5f,evtwgt);
 
       // make sure have at least 2 good photons
       if (good_phos.size() < 2) continue;
-      fOutCutFlow->Fill((cutLabels["goodPho2"]*1.f)-0.5f,wgt);
+      fOutCutFlow   ->Fill((cutLabels["goodPho2"]*1.f)-0.5f);
+      fOutCutFlowWgt->Fill((cutLabels["goodPho2"]*1.f)-0.5f,wgt);
+      fOutCutFlowScl->Fill((cutLabels["goodPho2"]*1.f)-0.5f,evtwgt);
 
       // object for containing mass pairs
       std::vector<MassStruct> phopairs;
@@ -251,7 +253,9 @@ void Skimmer::EventLoop()
       
       // make sure within 30 GeV
       if ((phopair.mass < 60.f) || (phopair.mass > 150.f)) continue;
-      fOutCutFlow->Fill((cutLabels["diPhoMZrange"]*1.f)-0.5f,wgt);
+      fOutCutFlow   ->Fill((cutLabels["diPhoMZrange"]*1.f)-0.5f);
+      fOutCutFlowWgt->Fill((cutLabels["diPhoMZrange"]*1.f)-0.5f,wgt);
+      fOutCutFlowScl->Fill((cutLabels["diPhoMZrange"]*1.f)-0.5f,evtwgt);
 
       // re-order photons based on pairs
       auto & pho1 = fInPhos[phopair.ipho1];
@@ -332,7 +336,9 @@ void Skimmer::EventLoop()
 
       // skip if no pairs found
       if (good_pairs.size() == 0) continue;
-      fOutCutFlow->Fill((cutLabels["goodDiXtal"]*1.f)-0.5f,wgt);
+      fOutCutFlow   ->Fill((cutLabels["goodDiXtal"]*1.f)-0.5f);
+      fOutCutFlowWgt->Fill((cutLabels["goodDiXtal"]*1.f)-0.5f,wgt);
+      fOutCutFlowScl->Fill((cutLabels["goodDiXtal"]*1.f)-0.5f,evtwgt);
 
       // sort pairs by highest energy for E1
       std::sort(good_pairs.begin(),good_pairs.end(),
@@ -368,10 +374,9 @@ void Skimmer::EventLoop()
       }
 
       // fill cutflow
-      fOutCutFlow->Fill((cutLabels["badPU"]*1.f)-0.5f,wgt);
-      //      fOutCutFlow   ->Fill((cutLabels["badPU"]*1.f)-0.5f);
-      //      fOutCutFlowWgt->Fill((cutLabels["badPU"]*1.f)-0.5f,wgt);
-      //      fOutCutFlowScl->Fill((cutLabels["badPU"]*1.f)-0.5f,evtwgt);
+      fOutCutFlow   ->Fill((cutLabels["badPU"]*1.f)-0.5f);
+      fOutCutFlowWgt->Fill((cutLabels["badPU"]*1.f)-0.5f,wgt);
+      fOutCutFlowScl->Fill((cutLabels["badPU"]*1.f)-0.5f,evtwgt);
     }
     
     // end of skim, now copy... dropping rechits
@@ -389,8 +394,8 @@ void Skimmer::EventLoop()
   // write out the output!
   fOutFile->cd();
   fOutCutFlow->Write();
-  //  fOutCutFlowWgt->Write();
-  //  fOutCutFlowScl->Write();
+  fOutCutFlowWgt->Write();
+  fOutCutFlowScl->Write();
   fOutConfigTree->Write();
   fOutTree->Write();
 }
@@ -563,6 +568,7 @@ void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt)
   fInEvent.b_hltDiPho70->GetEntry(entry);
   fInEvent.b_hltDiPho3022M90->GetEntry(entry);
   fInEvent.b_hltDiPho30PV18PV->GetEntry(entry);
+  fInEvent.b_hltEle32WPT->GetEntry(entry);
   fInEvent.b_hltDiEle33MW->GetEntry(entry);
   fInEvent.b_hltJet500->GetEntry(entry);
   fInEvent.b_nvtx->GetEntry(entry);
@@ -615,6 +621,7 @@ void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt)
   fOutEvent.hltDiPho70 = fInEvent.hltDiPho70;
   fOutEvent.hltDiPho3022M90 = fInEvent.hltDiPho3022M90;
   fOutEvent.hltDiPho30PV18PV = fInEvent.hltDiPho30PV18PV;
+  fOutEvent.hltEle32WPT = fInEvent.hltEle32WPT;
   fOutEvent.hltDiEle33MW = fInEvent.hltDiEle33MW;
   fOutEvent.hltJet500 = fInEvent.hltJet500;
   fOutEvent.nvtx = fInEvent.nvtx;
@@ -744,9 +751,23 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     }
     else
     {
+      // inpho.b_seedX->GetEntry(entry);
+      // inpho.b_seedY->GetEntry(entry);
+      // inpho.b_seedZ->GetEntry(entry);
+      inpho.b_seedE->GetEntry(entry);
       inpho.b_seedtime->GetEntry(entry);
-      inpho.b_seedE   ->GetEntry(entry);
-      // inpho.b_seedID  ->GetEntry(entry);
+      inpho.b_seedtimeErr->GetEntry(entry);
+      inpho.b_seedTOF->GetEntry(entry);
+      inpho.b_seedID->GetEntry(entry);
+      // inpho.b_seedisOOT->GetEntry(entry);
+      inpho.b_seedisGS6->GetEntry(entry);
+      inpho.b_seedisGS1->GetEntry(entry);
+      inpho.b_seedped12->GetEntry(entry);
+      inpho.b_seedped6->GetEntry(entry);
+      inpho.b_seedped1->GetEntry(entry);
+      // inpho.b_seedpedrms12->GetEntry(entry);
+      // inpho.b_seedpedrms6->GetEntry(entry);
+      // inpho.b_seedpedrms1->GetEntry(entry);
     }
     
     if (fIsMC)
@@ -762,12 +783,24 @@ void Skimmer::FillOutPhos(const UInt_t entry)
   // get input recHits if needed
   if (fInConfig.storeRecHits)
   {
-    fInRecHits.b_eta->GetEntry(entry);
-    fInRecHits.b_phi->GetEntry(entry);
+    // fInRecHits.b_X->GetEntry(entry);
+    // fInRecHits.b_Y->GetEntry(entry);
+    // fInRecHits.b_Z->GetEntry(entry);
     fInRecHits.b_E->GetEntry(entry);
     fInRecHits.b_time->GetEntry(entry);
-    fInRecHits.b_OOT->GetEntry(entry);
+    fInRecHits.b_timeErr->GetEntry(entry);
+    fInRecHits.b_TOF->GetEntry(entry);
     fInRecHits.b_ID->GetEntry(entry);
+    // fInRecHits.b_isOOT->GetEntry(entry);
+    fInRecHits.b_isGS6->GetEntry(entry);
+    fInRecHits.b_isGS1->GetEntry(entry);
+    fInRecHits.b_adcToGeV->GetEntry(entry);
+    fInRecHits.b_ped12->GetEntry(entry);
+    fInRecHits.b_ped6->GetEntry(entry);
+    fInRecHits.b_ped1->GetEntry(entry);
+    // fInRecHits.b_pedrms12->GetEntry(entry);
+    // fInRecHits.b_pedrms6->GetEntry(entry);
+    // fInRecHits.b_pedrms1->GetEntry(entry);
   }
 
   // set output photon branches
@@ -824,12 +857,31 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       // store seed info + derived types if seed exists
       if (seed >= 0)
       {
-	outpho.seedtime = (*fInRecHits.time)[seed];
-	outpho.seedE    = (*fInRecHits.E)   [seed];
-	// outpho.seedID   = (*fInRecHits.ID)  [seed];
+	// outpho.seedX = (*fInRecHits.X)[seed];
+	// outpho.seedY = (*fInRecHits.Y)[seed];
+	// outpho.seedZ = (*fInRecHits.Z)[seed];
+	outpho.seedE = (*fInRecHits.E)[seed];
+
+	outpho.seedtime    = (*fInRecHits.time)   [seed];
+	outpho.seedtimeErr = (*fInRecHits.timeErr)[seed];
+	outpho.seedTOF     = (*fInRecHits.TOF)    [seed];
 
 	// get trigger tower
 	outpho.seedTT = Common::GetTriggerTower((*fInRecHits.ID)[seed]);
+	
+	// outpho.seedID    = (*fInRecHits.ID)[seed];
+	// outpho.seedisOOT = (*fInRecHits.isOOT)[seed];
+
+	outpho.seedisGS6 = (*fInRecHits.isGS6)[seed];
+	outpho.seedisGS1 = (*fInRecHits.isGS1)[seed];
+	outpho.seedadcToGeV = (*fInRecHits.adcToGeV)[seed];
+
+	outpho.seedped12 = (*fInRecHits.ped12)[seed];
+	outpho.seedped6  = (*fInRecHits.ped6) [seed];
+	outpho.seedped1  = (*fInRecHits.ped1) [seed];
+	// outpho.seedpedrms12 = (*fInRecHits.pedrms12)[seed];
+	// outpho.seedpedrms6  = (*fInRecHits.pedrms6) [seed];
+	// outpho.seedpedrms1  = (*fInRecHits.pedrms1) [seed];
 
 	// compute mean time, weighted time
 	outpho.nrechits = 0;
@@ -883,41 +935,31 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	  outpho.meantimeLT120     = -9999.f;
 	  outpho.weightedtimeLT120 = -9999.f;
 	}
-
-	// TOF CORRECTION : HACK FOR NOW!
-	auto seedX = 0.f;
-	auto seedY = 0.f;
-	auto seedZ = 0.f;
-	if (outpho.isEB)
-	{
-	  seedX = Common::radEB * std::cos((*fInRecHits.phi)[seed]);
-	  seedY = Common::radEB * std::sin((*fInRecHits.phi)[seed]);
-	  seedZ = Common::radEB / Common::uneta((*fInRecHits.eta)[seed]);
-	}
-	else
-	{
-	  const auto rad = Common::zEE * Common::uneta((*fInRecHits.eta)[seed]);
-	  
-	  seedX = rad * std::cos((*fInRecHits.phi)[seed]);
-	  seedY = rad * std::sin((*fInRecHits.phi)[seed]);
-	  seedZ = Common::zEE;
-	}
-
-	// TOF correction, HACK: FIXME!!!
-	const auto d_orig = Common::hypot(seedX,seedY,seedZ);
-	const auto d_pv   = Common::hypot(fOutEvent.vtxX-seedX,fOutEvent.vtxY-seedY,fOutEvent.vtxZ-seedZ);
-	
-	outpho.seedTOF = (d_orig-d_pv) / Common::sol;
       } // end check that seed exists
       else
       {
-	outpho.seedtime = -9999.f;
-	outpho.seedE    = -9999.f;
-	// outpho.seedID   = 0;
+	// outpho.seedX = -9999.f;
+	// outpho.seedY = -9999.f;
+	// outpho.seedZ = -9999.f;
+	outpho.seedE = -9999.f;
 
-	outpho.seedTT = -9999;
-	
-	outpho.seedTOF  = -9999.f;
+	outpho.seedtime    = -9999.f;
+	outpho.seedtimeErr = -9999.f;
+	outpho.seedTOF     = -9999.f;	
+
+	// outpho.seedID    = 0;
+	// outpho.seedisOOT = -1;
+	outpho.seedTT    = -9999;
+
+	outpho.seedisGS6 = -1;
+	outpho.seedisGS1 = -1;
+	outpho.seedadcToGeV = -9999.f;
+	outpho.seedped12 = -9999.f;
+	outpho.seedped6  = -9999.f;
+	outpho.seedped1  = -9999.f;
+	// outpho.seedpedrms12 = -9999.f;
+	// outpho.seedpedrms6 = -9999.f;
+	// outpho.seedpedrms1 = -9999.f;
 
 	outpho.nrechits          = -1;
 	outpho.nrechitsLT120     = -1;
@@ -926,12 +968,28 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.weightedtime      = -9999.f;
 	outpho.weightedtimeLT120 = -9999.f;
       }
-    }
+    } // end check over store rechits
     else
     {
+      // outpho.seedX = inpho.seedX;
+      // outpho.seedY = inpho.seedY;
+      // outpho.seedZ = inpho.seedZ;
+      outpho.seedE = inpho.seedE;
       outpho.seedtime = inpho.seedtime;
-      outpho.seedE    = inpho.seedE;
-      // outpho.seedID   = inpho.seedID;
+      outpho.seedtimeErr = inpho.seedtimeErr;
+      outpho.seedTOF = inpho.seedTOF;
+      // outpho.seedID = inpho.seedID;
+      // outpho.seedisOOT = inpho.seedisOOT;
+      outpho.seedTT = Common::GetTriggerTower(inpho.seedID)
+      outpho.seedisGS6 = inpho.seedisGS1;
+      outpho.seedisGS1 = inpho.seedisGS6;
+      outpho.seedadcToGeV = inpho.seedadcToGeV;
+      outpho.seedped12 = inpho.seedped12;
+      outpho.seedped6 = inpho.seedped6;
+      outpho.seedped1 = inpho.seedped1;
+      // outpho.seedpedrms12 = inpho.seedpedrms12
+      // outpho.seedpedrms6 = inpho.seedpedrms6;
+      // outpho.seedpedrms1 = inpho.seedpedrms1;
     }
     
     if (fIsMC)
@@ -995,6 +1053,9 @@ void Skimmer::InitInConfigBranches()
   fInConfigTree->SetBranchAddress(fInConfig.s_genpTres.c_str(), &fInConfig.genpTres);
   fInConfigTree->SetBranchAddress(fInConfig.s_trackdRmin.c_str(), &fInConfig.trackdRmin);
   fInConfigTree->SetBranchAddress(fInConfig.s_trackpTmin.c_str(), &fInConfig.trackpTmin);
+  fInConfigTree->SetBranchAddress(fInConfig.s_genjetdRmin.c_str(), &fInConfig.genjetdRmin);
+  fInConfigTree->SetBranchAddress(fInConfig.s_genjetpTfactor.c_str(), &fInConfig.genjetpTfactor);
+  fInConfigTree->SetBranchAddress(fInConfig.s_smearjetEmin.c_str(), &fInConfig.smearjetEmin);
   fInConfigTree->SetBranchAddress(fInConfig.s_inputPaths.c_str(), &fInConfig.inputPaths);
   fInConfigTree->SetBranchAddress(fInConfig.s_inputFilters.c_str(), &fInConfig.inputFilters);
   fInConfigTree->SetBranchAddress(fInConfig.s_inputFlags.c_str(), &fInConfig.inputFlags);
@@ -1058,12 +1119,24 @@ void Skimmer::InitInBranchVecs()
 
   if (fInConfig.storeRecHits) 
   {
-    fInRecHits.eta = 0;
-    fInRecHits.phi = 0;
+    // fInRecHits.X = 0;
+    // fInRecHits.Y = 0;
+    // fInRecHits.Z = 0;
     fInRecHits.E = 0;
     fInRecHits.time = 0;
-    fInRecHits.OOT = 0;
+    fInRecHits.timeErr = 0;
+    fInRecHits.TOF = 0;
     fInRecHits.ID = 0;
+    // fInRecHits.isOOT = 0;
+    fInRecHits.isGS6 = 0;
+    fInRecHits.isGS1 = 0;
+    fInRecHits.adcToGeV = 0;
+    fInRecHits.ped12 = 0;
+    fInRecHits.ped6 = 0;
+    fInRecHits.ped1 = 0;
+    // fInRecHits.pedrms12 = 0;
+    // fInRecHits.pedrms6 = 0;
+    // fInRecHits.pedrms1 = 0;
 
     for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
     {
@@ -1175,6 +1248,7 @@ void Skimmer::InitInBranches()
   fInTree->SetBranchAddress(fInEvent.s_hltDiPho70.c_str(), &fInEvent.hltDiPho70, &fInEvent.b_hltDiPho70);
   fInTree->SetBranchAddress(fInEvent.s_hltDiPho3022M90.c_str(), &fInEvent.hltDiPho3022M90, &fInEvent.b_hltDiPho3022M90);
   fInTree->SetBranchAddress(fInEvent.s_hltDiPho30PV18PV.c_str(), &fInEvent.hltDiPho30PV18PV, &fInEvent.b_hltDiPho30PV18PV);
+  fInTree->SetBranchAddress(fInEvent.s_hltEle32WPT.c_str(), &fInEvent.hltEle32WPT, &fInEvent.b_hltEle32WPT);
   fInTree->SetBranchAddress(fInEvent.s_hltDiEle33MW.c_str(), &fInEvent.hltDiEle33MW, &fInEvent.b_hltDiEle33MW);
   fInTree->SetBranchAddress(fInEvent.s_hltJet500.c_str(), &fInEvent.hltJet500, &fInEvent.b_hltJet500);
   
@@ -1216,12 +1290,24 @@ void Skimmer::InitInBranches()
   fInTree->SetBranchAddress(fInEvent.s_nrechits.c_str(), &fInEvent.nrechits, &fInEvent.b_nrechits);
   if (fInConfig.storeRecHits)
   {
-    fInTree->SetBranchAddress(fInRecHits.s_eta.c_str(), &fInRecHits.eta, &fInRecHits.b_eta);
-    fInTree->SetBranchAddress(fInRecHits.s_phi.c_str(), &fInRecHits.phi, &fInRecHits.b_phi);
+    // fInTree->SetBranchAddress(fInRecHits.s_X.c_str(), &fInRecHits.X, &fInRecHits.b_X);
+    // fInTree->SetBranchAddress(fInRecHits.s_Y.c_str(), &fInRecHits.Y, &fInRecHits.b_Y);
+    // fInTree->SetBranchAddress(fInRecHits.s_Z.c_str(), &fInRecHits.Z, &fInRecHits.b_Z);
     fInTree->SetBranchAddress(fInRecHits.s_E.c_str(), &fInRecHits.E, &fInRecHits.b_E);
     fInTree->SetBranchAddress(fInRecHits.s_time.c_str(), &fInRecHits.time, &fInRecHits.b_time);
-    fInTree->SetBranchAddress(fInRecHits.s_OOT.c_str(), &fInRecHits.OOT, &fInRecHits.b_OOT);
+    fInTree->SetBranchAddress(fInRecHits.s_timeErr.c_str(), &fInRecHits.timeErr, &fInRecHits.b_timeErr);
+    fInTree->SetBranchAddress(fInRecHits.s_TOF.c_str(), &fInRecHits.TOF, &fInRecHits.b_TOF);
     fInTree->SetBranchAddress(fInRecHits.s_ID.c_str(), &fInRecHits.ID, &fInRecHits.b_ID);
+    // fInTree->SetBranchAddress(fInRecHits.s_isOOT.c_str(), &fInRecHits.isOOT, &fInRecHits.b_isOOT);
+    fInTree->SetBranchAddress(fInRecHits.s_isGS6.c_str(), &fInRecHits.isGS6, &fInRecHits.b_isGS6);
+    fInTree->SetBranchAddress(fInRecHits.s_isGS1.c_str(), &fInRecHits.isGS1, &fInRecHits.b_isGS1);
+    fInTree->SetBranchAddress(fInRecHits.s_adcToGeV.c_str(), &fInRecHits.adcToGeV, &fInRecHits.b_adcToGeV);
+    fInTree->SetBranchAddress(fInRecHits.s_ped12.c_str(), &fInRecHits.ped12, &fInRecHits.b_ped12);
+    fInTree->SetBranchAddress(fInRecHits.s_ped6.c_str(), &fInRecHits.ped6, &fInRecHits.b_ped6);
+    fInTree->SetBranchAddress(fInRecHits.s_ped1.c_str(), &fInRecHits.ped1, &fInRecHits.b_ped1);
+    // fInTree->SetBranchAddress(fInRecHits.s_pedrms12.c_str(), &fInRecHits.pedrms12, &fInRecHits.b_pedrms12);
+    // fInTree->SetBranchAddress(fInRecHits.s_pedrms6.c_str(), &fInRecHits.pedrms6, &fInRecHits.b_pedrms6);
+    // fInTree->SetBranchAddress(fInRecHits.s_pedrms1.c_str(), &fInRecHits.pedrms1, &fInRecHits.b_pedrms1);
   }
 
   fInTree->SetBranchAddress(fInEvent.s_nphotons.c_str(), &fInEvent.nphotons, &fInEvent.b_nphotons);
@@ -1265,9 +1351,24 @@ void Skimmer::InitInBranches()
     }
     else
     {
-      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime, &pho.b_seedtime);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedX.c_str(),ipho), &pho.seedX, &pho.b_seedX);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedY.c_str(),ipho), &pho.seedY, &pho.b_seedY);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedZ.c_str(),ipho), &pho.seedZ, &pho.b_seedZ);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE, &pho.b_seedE);
-      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID, &pho.b_seedID);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime, &pho.b_seedtime);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedtimeErr.c_str(),ipho), &pho.seedtimeErr, &pho.b_seedtimeErr);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF, &pho.b_seedTOF);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID, &pho.b_seedID);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT, &pho.b_seedisOOT);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisGS6.c_str(),ipho), &pho.seedisGS6, &pho.b_seedisGS6);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisGS1.c_str(),ipho), &pho.seedisGS1, &pho.b_seedisGS1);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedadcToGeV.c_str(),ipho), &pho.seedadcToGeV, &pho.b_seedadcToGeV);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped12.c_str(),ipho), &pho.seedped12, &pho.b_seedped12);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped6.c_str(),ipho), &pho.seedped6, &pho.b_seedped6);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped1.c_str(),ipho), &pho.seedped1, &pho.b_seedped1);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedpedrms12.c_str(),ipho), &pho.seedpedrms12, &pho.b_seedpedrms12);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedpedrms6.c_str(),ipho), &pho.seedpedrms6, &pho.b_seedpedrms6);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedpedrms1.c_str(),ipho), &pho.seedpedrms1, &pho.b_seedpedrms1);
     }
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX, &pho.b_suisseX);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_isOOT.c_str(),ipho), &pho.isOOT, &pho.b_isOOT);
@@ -1319,6 +1420,9 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfigTree->Branch(fOutConfig.s_genpTres.c_str(), &fOutConfig.genpTres);
   fOutConfigTree->Branch(fOutConfig.s_trackdRmin.c_str(), &fOutConfig.trackdRmin);
   fOutConfigTree->Branch(fOutConfig.s_trackpTmin.c_str(), &fOutConfig.trackpTmin);
+  fOutConfigTree->Branch(fOutConfig.s_genjetdRmin.c_str(), &fOutConfig.genjetdRmin);
+  fOutConfigTree->Branch(fOutConfig.s_genjetpTfactor.c_str(), &fOutConfig.genjetpTfactor);
+  fOutConfigTree->Branch(fOutConfig.s_smearjetEmin.c_str(), &fOutConfig.smearjetEmin);
   fOutConfigTree->Branch(fOutConfig.s_inputPaths.c_str(), &fOutConfig.inputPaths_s);
   fOutConfigTree->Branch(fOutConfig.s_inputFilters.c_str(), &fOutConfig.inputFilters_s);
   fOutConfigTree->Branch(fOutConfig.s_inputFlags.c_str(), &fOutConfig.inputFlags_s);
@@ -1363,6 +1467,9 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfig.genpTres = fInConfig.genpTres;
   fOutConfig.trackdRmin = fInConfig.trackdRmin;
   fOutConfig.trackpTmin = fInConfig.trackpTmin;
+  fOutConfig.genjetdRmin = fInConfig.genjetdRmin;
+  fOutConfig.genjetpTfactor = fInConfig.genjetpTfactor;
+  fOutConfig.smearjetEmin = fInConfig.smearjetEmin;
   fOutConfig.inputPaths_s = fInConfig.inputPaths->c_str();
   fOutConfig.inputFilters_s = fInConfig.inputFilters->c_str();
   fOutConfig.inputFlags_s = fInConfig.inputFlags->c_str();
@@ -1519,6 +1626,7 @@ void Skimmer::InitOutBranches()
   fOutTree->Branch(fOutEvent.s_hltDiPho70.c_str(), &fOutEvent.hltDiPho70);
   fOutTree->Branch(fOutEvent.s_hltDiPho3022M90.c_str(), &fOutEvent.hltDiPho3022M90);
   fOutTree->Branch(fOutEvent.s_hltDiPho30PV18PV.c_str(), &fOutEvent.hltDiPho30PV18PV);
+  fOutTree->Branch(fOutEvent.s_hltEle32WPT.c_str(), &fOutEvent.hltEle32WPT);
   fOutTree->Branch(fOutEvent.s_hltDiEle33MW.c_str(), &fOutEvent.hltDiEle33MW);
   fOutTree->Branch(fOutEvent.s_hltJet500.c_str(), &fOutEvent.hltJet500);
 
@@ -1584,11 +1692,26 @@ void Skimmer::InitOutBranches()
     // fOutTree->Branch(Form("%s_%i",pho.s_e5x5.c_str(),ipho), &pho.e5x5);
     fOutTree->Branch(Form("%s_%i",pho.s_smaj.c_str(),ipho), &pho.smaj);
     fOutTree->Branch(Form("%s_%i",pho.s_smin.c_str(),ipho), &pho.smin);
-    fOutTree->Branch(Form("%s_%i",pho.s_alpha.c_str(),ipho), &pho.alpha);
-    // fOutTree->Branch(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX);
-    fOutTree->Branch(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime);
+    // fOutTree->Branch(Form("%s_%i",pho.s_alpha.c_str(),ipho), &pho.alpha);
+    fOutTree->Branch(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedX.c_str(),ipho), &pho.seedX);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedY.c_str(),ipho), &pho.seedY);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedZ.c_str(),ipho), &pho.seedZ);
     fOutTree->Branch(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE);
-    // fOutTree->Branch(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID);;
+    fOutTree->Branch(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedtimeErr.c_str(),ipho), &pho.seedtimeErr);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedisGS6.c_str(),ipho), &pho.seedisGS6);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedisGS1.c_str(),ipho), &pho.seedisGS1);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedadcToGeV.c_str(),ipho), &pho.seedadcToGeV);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedped12.c_str(),ipho), &pho.seedped12);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedped6.c_str(),ipho), &pho.seedped6);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedped1.c_str(),ipho), &pho.seedped1);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedpedrms12.c_str(),ipho), &pho.seedpedrms12);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedpedrms6.c_str(),ipho), &pho.seedpedrms6);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedpedrms1.c_str(),ipho), &pho.seedpedrms1);
     fOutTree->Branch(Form("%s_%i",pho.s_isOOT.c_str(),ipho), &pho.isOOT);
     fOutTree->Branch(Form("%s_%i",pho.s_isEB.c_str(),ipho), &pho.isEB);
     fOutTree->Branch(Form("%s_%i",pho.s_isHLT.c_str(),ipho), &pho.isHLT);
@@ -1610,8 +1733,6 @@ void Skimmer::InitOutBranches()
     // Derived types
     fOutTree->Branch(Form("%s_%i",pho.s_seedTT.c_str(),ipho), &pho.seedTT);
 
-    // HACK: FIXME!!!
-    fOutTree->Branch(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF);
     if (fInConfig.storeRecHits)
     {
       fOutTree->Branch(Form("%s_%i",pho.s_nrechits.c_str(),ipho), &pho.nrechits);
@@ -1629,15 +1750,17 @@ void Skimmer::InitOutBranches()
 
 void Skimmer::InitOutCutFlowHists()
 {
-  Skimmer::InitOutCutFlowHist(fInCutFlow,fOutCutFlow,"");
-  //  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowWgt,"_wgt");
-  //  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowScl,"_scaled");
-  //  fOutCutFlowScl->Scale(fSampleWeight);
-  //  fOutCutFlowScl->SetTitle("Scaled");
-  //  fOutCutFlowScl->GetYaxis()->SetTitle("nEvents");
+  Skimmer::InitOutCutFlowHist(fInCutFlow,fOutCutFlow,Common::h_cutflowname);
+  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowWgt,Common::h_cutflow_wgtname);
+  Skimmer::InitOutCutFlowHist(fInCutFlowWgt,fOutCutFlowScl,Common::h_cutflow_scaledname);
+
+  // rescale input of scaled histogram by sample weight!
+  fOutCutFlowScl->Scale(fSampleWeight);
+  fOutCutFlowScl->SetTitle("Scaled");
+  fOutCutFlowScl->GetYaxis()->SetTitle("nEvents");
 }
 
-void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow, const TString & label)
+void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow, const TString & histname)
 {
   // get cut flow labels
   const auto inNbinsX = inh_cutflow->GetNbinsX();
@@ -1675,7 +1798,7 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
   cutLabels["badPU"] = ++inNbinsX_new;
 
   // make new cut flow
-  outh_cutflow = new TH1F(Form("%s%s",Common::h_cutflowname.Data(),label.Data()),inh_cutflow->GetTitle(),cutLabels.size(),0,cutLabels.size());
+  outh_cutflow = new TH1F(Form("%s",histname.Data()),inh_cutflow->GetTitle(),cutLabels.size(),0,cutLabels.size());
   outh_cutflow->Sumw2();
 
   for (const auto & cutlabel : cutLabels)
