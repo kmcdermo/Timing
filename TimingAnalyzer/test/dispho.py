@@ -180,6 +180,8 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		'file:/afs/cern.ch/work/k/kmcdermo/public/files/SPH_2017E_miniAODv2.root'
 		# reminiaod GJets, GT: 94X_mc2017_realistic_v14
 		#'file:/afs/cern.ch/work/k/kmcdermo/public/files/GJets_600toInf_miniAODv2.root'
+		# miniaodv2 GMSB, GT: 94X_mc2017_realistic_v14
+		#'file:/afs/cern.ch/work/k/kmcdermo/public/files/GMSB_L600TeV_Ctau400cm_miniAODv2.root'
 		))
 
 ## How many events to process
