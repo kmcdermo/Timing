@@ -63,34 +63,34 @@ Made ```kmcdermo:post_reco_OOT_AND_add_OOT_VID``` with the following:
 
 - pho* [photons 0-3] 
   - passEleVeto = photon passes electron veto
-  -hasPixSeed = photon has pixel seed
-  -HoE = hadTowerOverEM (single HCAL tower over EM energy)
-  -r9 = seed E / 3x3 E
-  -sieie = sigma_ieta,ieta
-  -sipip = sigma_iphi,iphi
-  -sieip = sigma_ieta,iphi
-  -smaj = S_major (semi-major axis)
-  -smin = S_minor (semi-minor axis)
-  -alpha = angle of smaj to origin
-  -suisseX = swisscross, seed energy / four surrounding energy
-  -gedID = GED cut-based ID
-  -ootID = OOT cut-based ID
-  -Iso = Isolation
-  -IsoC = Isolation corrected for (rho, pt)
-    -ChgHadIso = Charged Hadron Iso
-    -NeuHadIso = Neutral Hadron Iso
-    -PhoIso = Photon Iso
-    -EcalPFClIso = ECAL PF Cluster Iso
-    -HcalPFClIso = HCAL PF Cluster Iso
-    -TrkIso = Tracker Iso (hollow cone dR < 0.3)
-  -recHits = vector of indices inside rh* branches for each photon
-  -seed = index of seed rec hit for photon
-  -seed* = value of seed rec hit branch
-  -is (bools)
-    -isEB = seed rechit is from ECAL barrel, else assumed endcap
-    -isSignal = photon is matched to gen photon from signal particle
-    -isOOT = if true, photon is from OOT collection, else from GED collection
-    -isTrk = if true, object is matched to a single track pT > 5 within dR < 0.2
+  - hasPixSeed = photon has pixel seed
+  - HoE = hadTowerOverEM (single HCAL tower over EM energy)
+  - r9 = seed E / 3x3 E
+  - sieie = sigma_ieta,ieta
+  - sipip = sigma_iphi,iphi
+  - sieip = sigma_ieta,iphi
+  - smaj = S_major (semi-major axis)
+  - smin = S_minor (semi-minor axis)
+  - alpha = angle of smaj to origin
+  - suisseX = swisscross, seed energy / four surrounding energy
+  - gedID = GED cut-based ID
+  - ootID = OOT cut-based ID
+  - Iso = Isolation
+  - IsoC = Isolation corrected for (rho, pt)
+    - ChgHadIso = Charged Hadron Iso
+    - NeuHadIso = Neutral Hadron Iso
+    - PhoIso = Photon Iso
+    - EcalPFClIso = ECAL PF Cluster Iso
+    - HcalPFClIso = HCAL PF Cluster Iso
+    - TrkIso = Tracker Iso (hollow cone dR < 0.3)
+  - recHits = vector of indices inside rh* branches for each photon
+  - seed = index of seed rec hit for photon
+  - seed* = value of seed rec hit branch
+  - is (bools)
+    - isEB = seed rechit is from ECAL barrel, else assumed endcap
+    - isSignal = photon is matched to gen photon from signal particle
+    - isOOT = if true, photon is from OOT collection, else from GED collection
+    - isTrk = if true, object is matched to a single track pT > 5 within dR < 0.2
 
 uncertainties:
 - *Abs = (Absolute) Uncertainty = energy +/- *Abs
