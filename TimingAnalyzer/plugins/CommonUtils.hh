@@ -68,7 +68,7 @@ namespace Config
 
   // MET Filter flag names
   static const std::string PVFlag = "Flag_goodVertices";
-  static const std::string BeamHaloFlag = "Flag_globalTightHalo2016Filter";
+  static const std::string BeamHaloFlag = "Flag_globalSuperTightHalo2016Filter";
   static const std::string HBHENoiseFlag = "Flag_HBHENoiseFilter";
   static const std::string HBHEisoNoiseFlag = "Flag_HBHENoiseIsoFilter";
   static const std::string ECALTPFlag = "Flag_EcalDeadCellTriggerPrimitiveFilter";
