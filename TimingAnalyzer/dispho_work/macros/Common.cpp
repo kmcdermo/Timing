@@ -213,22 +213,39 @@ namespace Common
 
   void SetupSignalSamples()
   {
-    const std::vector<TString> lambdas = {"100","150","200","250","300","350","400"};
-    const std::vector<TString> ctaus   = {"0p1","10","600","1200"};
+    // GMSB
+    const std::vector<TString> lambdas = {"100","150","200","250","300","350","400","500","600"}; // TeV
+    const std::vector<TString> gctaus  = {"0p001","0p1","10","200","400","600","800","1000","1200","10000"}; // cm
 
     // loop over all possible GMSBs...
     for (const auto & lambda : lambdas)
     {
-      for (const auto & ctau : ctaus)
+      for (const auto & ctau : gctaus)
       {
-	Common::SampleMap["MC/GMSB/L"+lambda+"TeV_CTau"+ctau+"cm"] = "GMSB_L"+lambda+"_CTau"+ctau;
+	TString sctau = ctau;
+	if (ctau.EqualTo("0p1") && !(lambda.EqualTo("500") || lambda.EqualTo("600"))) sctau = "0_1";
+	Common::SampleMap["MC/GMSB/L-"+lambda+"TeV_Ctau-"+sctau+"cm"] = "GMSB_L"+lambda+"_CTau"+ctau;
       }
     }
 
-    // temp...
-    Common::SampleMap["MC/GMSB/L200TeV_CTau400cm"] = "GMSB_L200_CTau400";
+    // HVDS
+    const std::vector<TString> mzps = {"300","500","800","1000"}; // GeV
+    const std::vector<TString> mdps = {"20","40","60"}; // GeV
+    const std::vector<TString> hctaus = {"1","100","500","1000","2500","10000"}; // mm
 
-    // eventually do HVDS...
+    // loop over all possible HVDSs...
+    for (const auto & mzp : mzps)
+    {
+      for (const auto & mdp : mdps)
+      {
+	for (const auto & ctau : hctaus)
+	{
+	  const Int_t ictau = ctau.Atoi()*10; // mm to cm
+	  TString sctau = Form("%i",ictau);
+	  Common::SampleMap["MC/HVDS/MZp-"+mzp+"_MDP-"+mdp+"_Ctau-"+ctau+"mm"] = "HVDS_MZp"+mzp+"_MDP"+mdp+"_CTau"+sctau;
+	}
+      }
+    }
   }
 
   void SetupGroups()
@@ -296,6 +313,15 @@ namespace Common
 	
 	const TString ctau(sample(i_ctau+l_ctau,sample.Length()-i_ctau-l_ctau));
 	Common::SignalSubGroupMap["GMSB_CTau"+ctau+"cm"].emplace_back(sample);
+      }
+      else if (group == "HVDS")
+      {
+	const TString s_ctau = "_CTau";
+	auto i_ctau = sample.Index(s_ctau);
+	auto l_ctau = s_ctau.Length();
+	
+	const TString ctau(sample(i_ctau+l_ctau,sample.Length()-i_ctau-l_ctau));
+	Common::SignalSubGroupMap["HVDS_CTau"+ctau+"cm"].emplace_back(sample);
       }
     }
   }
@@ -378,15 +404,18 @@ namespace Common
 
   void SetupSignalSubGroupColors()
   {
-    // GMSB: add more as we go
+    // GMSB
+    Common::SignalSubGroupColorMap["GMSB_CTau0p001cm"] = {kBlue,"Down"};
     Common::SignalSubGroupColorMap["GMSB_CTau0p1cm"] = {kAzure,"Up"};
     Common::SignalSubGroupColorMap["GMSB_CTau10cm"]  = {kSpring,"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau200cm"] = {kRed,"Up"};
     Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kPink,"Down"};
     Common::SignalSubGroupColorMap["GMSB_CTau600cm"] = {kViolet,"Down"};
     Common::SignalSubGroupColorMap["GMSB_CTau1200cm"] = {kOrange,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau10000cm"] = {kMagenta,"Up"};
 
-    // deal with HVDS later...
-  }
+    // HVDS
+   }
 
   void SetupColors()
   {

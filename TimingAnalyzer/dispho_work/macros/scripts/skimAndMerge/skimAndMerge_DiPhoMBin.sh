@@ -7,6 +7,9 @@ label=${1}
 tune=${2}
 bin=${3}
 
+## other input vars
+usePUWeights=1
+
 ## global vars
 mcbase="DiPhotonJetsBox"
 binlabel=${bin}
@@ -19,9 +22,9 @@ fi
 text="${mcbase}_${binlabel}"
 
 ## directories needed
-indir="${inbase}/analysis/${mcbase}_${bin}${tune}/${label}_${mcbase}_${bin}${tune}"
+indir="${inbase}/${mcbase}_${bin}${tune}/${label}_${mcbase}_${bin}${tune}"
 tmpdir="${tmpbase}/${mcbase}/${binlabel}"
 outdir="${outbase}/MC/${mcbase}/${binlabel}"
 
 ## process this bin
-./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} 1
+./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} ${usePUweights}

@@ -81,9 +81,6 @@ void SignalSkimmer::MakeSkimsFromTrees()
       list->SetDirectory(infile);
       infile->cd();
 
-      //////////////// **************** HACK FOR NOW!!!! **************** ////////////////
-      if (label.Contains("HLT",TString::kExact) && sample.EqualTo("GMSB_L200_CTau400")) continue;
-    
       std::cout << "Computing entries for cut: " << label.Data() << std::endl;
 
       // get cut string
