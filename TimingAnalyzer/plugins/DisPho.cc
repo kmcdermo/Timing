@@ -1362,6 +1362,10 @@ void DisPho::InitializePhoBranches()
     phoBranch.HcalPFClIsoC_ = -9999.f;
     phoBranch.TrkIsoC_ = -9999.f;
 
+    phoBranch.e2x2_ = -9999.f;
+    phoBranch.e3x3_ = -9999.f;
+    phoBranch.e5x5_ = -9999.f;
+
     phoBranch.sieie_ = -9999.f;
     phoBranch.sipip_ = -9999.f;
     phoBranch.sieip_ = -9999.f;

@@ -9,6 +9,7 @@
 #include "TH2F.h"
 #include "TGraphAsymmErrors.h"
 #include "TF1.h"
+#include "TMath.h"
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TStyle.h"
@@ -133,6 +134,7 @@ namespace Common
   constexpr Float_t Zmass = 91.1876;
 
   // generic computation functions
+  inline Float_t phi(const Float_t x, const Float_t y){return TMath::ATan2(y,x);}
   inline Float_t uneta(const Float_t eta){return std::tan(2.f*std::atan(std::exp(-1.f*eta)));}
   inline Float_t hypot(const Float_t x, const Float_t y, const Float_t z = 0.f){return std::sqrt(std::pow(x,2.f)+std::pow(y,2.f)+std::pow(z,2.f));}
 

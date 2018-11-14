@@ -16,12 +16,14 @@ class Skimmer
 {
 public:
   // functions
-  Skimmer(const TString & indir, const TString & outdir, const TString & filename, 
-	  const Float_t sumwgts, const TString & skimtype = "Standard", const TString & puwgtfilename = "");
+  Skimmer(const TString & indir, const TString & outdir, const TString & filename, const TString & skimconfig);
   ~Skimmer();
 
-  // setup skim type
-  void SetSkim();
+  // skim config
+  void SetupDefaults();
+  void SetupSkimConfig();
+  void SetupSkimType();
+  void SetupEnergyCorrection();
 
   // setup config inputs
   void GetInConfig();
@@ -55,6 +57,9 @@ public:
   void FillOutJets(const UInt_t entry);
   void FillOutPhos(const UInt_t entry);
 
+  // Correct MET
+  void CorrectMET();
+
   // helper functions
   void FillPhoListStandard();
 
@@ -63,15 +68,22 @@ private:
   const TString fInDir;
   const TString fOutDir;
   const TString fFileName;
-  const Float_t fSumWgts;
-  const TString fSkimType;
-  const TString fPUWgtFileName;
+  const TString fSkimConfig;
+
+  // Config
+  SkimEnum fSkim;
+  Float_t fSumWgts;
+  TString fPUWgtFileName;
+  ECorr fJEC;
+  ECorr fJER;
+  ECorr fPhoSc;
+  ECorr fPhoSm;
+
   std::map<std::string,int> cutLabels;
   Bool_t fIsMC;
   Float_t fNOutPhos;
 
   // Input
-  SkimEnum fSkim;
   TFile * fInFile;
   TTree * fInTree; 
   TTree * fInConfigTree;

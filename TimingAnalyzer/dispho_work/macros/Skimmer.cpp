@@ -3,10 +3,9 @@
 
 #include <iostream>
 
-Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & filename, 
-		 const Float_t sumwgts, const TString & skimtype, const TString & puwgtfilename)
-  : fInDir(indir), fOutDir(outdir), fFileName(filename), 
-    fSumWgts(sumwgts), fSkimType(skimtype), fPUWgtFileName(puwgtfilename)
+Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & filename, const TString & skimconfig)
+
+  : fInDir(indir), fOutDir(outdir), fFileName(filename), fSkimConfig(skimconfig)
 {
   // because root is dumb?
   gROOT->ProcessLine("#include <vector>");
@@ -16,8 +15,9 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   ////////////////////////
   std::cout << "Setting up inputs for skim" << std::endl;
 
-  // Set skim type first
-  Skimmer::SetSkim();
+  // Set skim config options 
+  Skimmer::SetupDefaults();
+  Skimmer::SetupSkimConfig();
 
   // get detids if skim needs it
   if (fSkim == DiXtal) Common::SetupDetIDs();
@@ -386,6 +386,7 @@ void Skimmer::EventLoop()
     Skimmer::FillOutEvent(entry,evtwgt);
     if (fSkim != DiXtal) Skimmer::FillOutJets(entry);
     Skimmer::FillOutPhos(entry);
+    if (fIsMC) Skimmer::CorrectMET();
 
     // fill the tree
     fOutTree->Fill();
@@ -674,12 +675,6 @@ void Skimmer::FillOutJets(const UInt_t entry)
   fInJets.b_eta->GetEntry(entry);
   fInJets.b_ID->GetEntry(entry);
 
-  fOutJets.E_f.swap( (*fInJets.E) );
-  fOutJets.pt_f.swap( (*fInJets.pt) );
-  fOutJets.phi_f.swap( (*fInJets.phi) );
-  fOutJets.eta_f.swap( (*fInJets.eta) );
-  fOutJets.ID_i.swap( (*fInJets.ID) );
-
   // fInJets.b_NHF->GetEntry(entry);
   // fInJets.b_NEMF->GetEntry(entry);
   // fInJets.b_CHF->GetEntry(entry);
@@ -688,13 +683,84 @@ void Skimmer::FillOutJets(const UInt_t entry)
   // fInJets.b_NHM->GetEntry(entry);
   // fInJets.b_CHM->GetEntry(entry);
 
-  // fOutJets.NHF_f.swap( (*fInJets.NHF) );
-  // fOutJets.NEMF_f.swap( (*fInJets.NEMF) );
-  // fOutJets.CHF_f.swap( (*fInJets.CHF) );
-  // fOutJets.CEMF_f.swap( (*fInJets.CEMF) );
-  // fOutJets.MUF_f.swap( (*fInJets.MUF) );
-  // fOutJets.NHM_f.swap( (*fInJets.NHM) );
-  // fOutJets.CHM_f.swap( (*fInJets.CHM) );
+  const UInt_t nJets = fInJets.E_f->size();
+
+  // resize outputs
+  fOutJets.E_f.resize(nJets);
+  fOutJets.pt_f.resize(nJets);
+  fOutJets.phi_f.resize(nJets);
+  fOutJets.eta_f.resize(nJets);
+  fOutJets.ID_f.resize(nJets);
+
+  // fOutJets.NHF_f.resize(nJets);
+  // fOutJets.NEMF_f.resize(nJets);
+  // fOutJets.CHF_f.resize(nJets);
+  // fOutJets.CEMF_f.resize(nJets);
+  // fOutJets.MUF_f.resize(nJets);
+  // fOutJets.NHM_f.resize(nJets);
+  // fOutJets.CHM_f.resize(nJets);
+
+  // copy in: non-ideal (swap won't work, as we need the input values for MET corrections)
+  for (auto ijet = 0; ijet < nJets; ijet++)
+  {
+    fOutJets.E_f[ijet] = (*fInJets.E)[ijet];
+    fOutJets.pt_f[ijet] = (*fInJets.pt)[ijet];
+    fOutJets.phi_f[ijet] = (*fInJets.phi)[ijet];
+    fOutJets.eta_f[ijet] = (*fInJets.eta)[ijet];
+    fOutJets.ID_i[ijet] = (*fInJets.ID)[ijet];
+    
+    // fOutJets.NHF_f[ijet] = (*fInJets.NHF)[ijet];
+    // fOutJets.NEMF_f[ijet] = (*fInJets.NEMF)[ijet];
+    // fOutJets.CHF_f[ijet] = (*fInJets.CHF)[ijet];
+    // fOutJets.CEMF_f[ijet] = (*fInJets.CEMF)[ijet];
+    // fOutJets.MUF_f[ijet] = (*fInJets.MUF)[ijet];
+    // fOutJets.NHM_f[ijet] = (*fInJets.NHM)[ijet];
+    // fOutJets.CHM_f[ijet] = (*fInJets.CHM)[ijet];
+  }
+
+  // apply energy corrections
+  if (fIsMC)
+  {
+    // Read the JEC's and JER's
+    if      (fJER == ECorr::Nominal) fInJets.b_smearSF    ->GetEntry(entry);
+    else if (fJER == ECorr::Down)    fInJets.b_smearDownSF->GetEntry(entry);
+    else if (fJER == ECorr::Up)      fInJets.b_smearUpSF  ->GetEntry(entry);
+
+    if (fJEC == ECorr::Down || fJEC == ECorr::Up) fInJets.b_scaleRel->GetEntry(entry);
+    
+    // Apply JEC's and JER's
+    for (auto ijet = 0U; ijet < nJets; ijet++)
+    {
+      // JER's Uncs --> Apply nominal smearing always!
+      if (fJER == ECorr::Nominal)
+      {
+	fOutJets.E_f [ijet] *= (*fInJets.smearSF)[ijet];
+	fOutJets.pt_f[ijet] *= (*fInJets.smearSF)[ijet];
+      }
+      else if (fJER == ECorr::Down)
+      {
+	fOutJets.E_f [ijet] *= (*fInJets.smearDownSF)[ijet];
+	fOutJets.pt_f[ijet] *= (*fInJets.smearDownSF)[ijet];
+      }
+      else if (fJER == ECorr::Up)
+      {
+	fOutJets.E_f [ijet] *= (*fInJets.smearUpSF)[ijet];
+	fOutJets.pt_f[ijet] *= (*fInJets.smearUpSF)[ijet];
+      }
+      
+      // JEC's for Unc.
+      if (fJEC == ECorr::Down)
+      {
+	fOutJets.E_f [ijet] *= (1.f - (*fInJets.scaleRel)[ijet]);
+	fOutJets.pt_f[ijet] *= (1.f - (*fInJets.scaleRel)[ijet]);
+      }
+      else if (fJEC == ECorr::Up)
+      {
+	fOutJets.E_f [ijet] *= (1.f + (*fInJets.scaleRel)[ijet]);
+	fOutJets.pt_f[ijet] *= (1.f + (*fInJets.scaleRel)[ijet]);
+      }
+    }
+  }
 }
 
 void Skimmer::FillOutPhos(const UInt_t entry)
@@ -756,7 +822,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       // inpho.b_seedZ->GetEntry(entry);
       inpho.b_seedE->GetEntry(entry);
       inpho.b_seedtime->GetEntry(entry);
-      inpho.b_seedtimeErr->GetEntry(entry);
+      // inpho.b_seedtimeErr->GetEntry(entry);
       inpho.b_seedTOF->GetEntry(entry);
       inpho.b_seedID->GetEntry(entry);
       // inpho.b_seedisOOT->GetEntry(entry);
@@ -777,6 +843,9 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       {
 	inpho.b_isSignal->GetEntry(entry);
       }
+
+      if (fPhoSc == ECorr::Down || fPhoSc == ECorr::Up) inpho.b_scaleAbs->GetEntry(entry);
+      if (fPhoSm == ECorr::Down || fPhoSm == ECorr::Up) inpho.b_smearAbs->GetEntry(entry);
     }
   }
 
@@ -788,7 +857,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     // fInRecHits.b_Z->GetEntry(entry);
     fInRecHits.b_E->GetEntry(entry);
     fInRecHits.b_time->GetEntry(entry);
-    fInRecHits.b_timeErr->GetEntry(entry);
+    // fInRecHits.b_timeErr->GetEntry(entry);
     fInRecHits.b_TOF->GetEntry(entry);
     fInRecHits.b_ID->GetEntry(entry);
     // fInRecHits.b_isOOT->GetEntry(entry);
@@ -863,7 +932,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.seedE = (*fInRecHits.E)[seed];
 
 	outpho.seedtime    = (*fInRecHits.time)   [seed];
-	outpho.seedtimeErr = (*fInRecHits.timeErr)[seed];
+	// outpho.seedtimeErr = (*fInRecHits.timeErr)[seed];
 	outpho.seedTOF     = (*fInRecHits.TOF)    [seed];
 
 	// get trigger tower
@@ -944,7 +1013,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.seedE = -9999.f;
 
 	outpho.seedtime    = -9999.f;
-	outpho.seedtimeErr = -9999.f;
+	// outpho.seedtimeErr = -9999.f;
 	outpho.seedTOF     = -9999.f;	
 
 	// outpho.seedID    = 0;
@@ -976,7 +1045,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       // outpho.seedZ = inpho.seedZ;
       outpho.seedE = inpho.seedE;
       outpho.seedtime = inpho.seedtime;
-      outpho.seedtimeErr = inpho.seedtimeErr;
+      // outpho.seedtimeErr = inpho.seedtimeErr;
       outpho.seedTOF = inpho.seedTOF;
       // outpho.seedID = inpho.seedID;
       // outpho.seedisOOT = inpho.seedisOOT;
@@ -999,6 +1068,77 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       {
 	outpho.isSignal = inpho.isSignal;
       }
+
+      // apply photon scale uncs
+      if (fPhoSc == ECor::Down)
+      {
+	outpho.E  -= inpho.scaleAbs;
+	outpho.pt -= inpho.scaleAbs;
+      }
+      else if (fPhoSc == ECor::Up)
+      {
+	outpho.E  += inpho.scaleAbs;
+	outpho.pt += inpho.scaleAbs;
+      }
+      
+      // apply photon smear uncs
+      if (fPhoSm == ECor::Down)
+      {
+	outpho.E  -= inpho.smearAbs;
+	outpho.pt -= inpho.smearAbs;
+      }
+      else if (fPhoSm == ECor::Up)
+      {
+	outpho.E  += inpho.smearAbs;
+	outpho.pt += inpho.smearAbs;
+      }
+    }
+  }
+}
+
+void Skimmer::CorrectMET()
+{
+  // first, do jets
+  if (fJER == ECorr::Down || fJER == ECorr::Up || fJER == ECorr::Nominal || fJEC == ECorr::Down || fJEC == ECorr::Up)
+  {
+    const UInt_t nJets = fOutJets.pt_f.size();
+    for (auto ijet = 0U; ijet < nJets; ijet++)
+    {
+      const auto metpt  = fOutEvent.t1pfMETpt;
+      const auto metphi = fOutEvent.t1pfMETphi;
+
+      const auto ijetpt = (*fInJets.pt)[ijet];
+      const auto ojetpt = fOutJets.pt_f[ijet];
+      const auto jetphi = fOutJets.phi_f[ijet];
+
+      const Float_t x = (metpt * std::cos(metphi)) + ((ijetpt - ojetpt) * std::cos(jetphi));
+      const Float_t y = (metpt * std::sin(metphi)) + ((ijetpt - ojetpt) * std::sin(jetphi));
+
+      fOutEvent.t1pfMETphi = Common::phi  (x,y);
+      fOutEvent.t1pfMETpt  = Common::hypot(x,y);
+    }
+  }
+
+  // then, do photons
+  if (fPhoSc == ECorr::Down || fPhoSc == ECorr::Up || fPhoSm == ECorr::Down || fPhoSm == ECorr::Up)
+  {
+    for (auto ipho = 0; ipho < fNOutPhos; ipho++) 
+    {
+      const auto & inpho  = fInPhos[fPhoList[ipho]];
+      const auto & outpho = fOutPhos[ipho];
+      
+      const auto metpt  = fOutEvent.t1pfMETpt;
+      const auto metphi = fOutEvent.t1pfMETphi;
+      
+      const auto iphopt = inpho.pt;
+      const auto ophopt = outphp.pt;
+      const auto phophi = outpho.phi;
+      
+      const Float_t x = (metpt * std::cos(metphi)) + ((iphopt - ophopt) * std::cos(phophi));
+      const Float_t y = (metpt * std::sin(metphi)) + ((iphopt - ophopt) * std::sin(phophi));
+      
+      fOutEvent.t1pfMETphi = Common::phi  (x,y);
+      fOutEvent.t1pfMETpt  = Common::hypot(x,y);
     }
   }
 }
@@ -1117,6 +1257,15 @@ void Skimmer::InitInBranchVecs()
   // fInJets.NHM = 0;
   // fInJets.CHM = 0;
 
+  if (fIsMC)
+  {
+    if (fJEC == ECorr::Down || fJEC == ECorr::Up) fInJets.scaleRel = 0;
+    if (fJER == ECorr::Nominal) fInJets.smearSF = 0;
+    else if (fJER == ECorr::Down) fInJets.smearDownSF = 0;
+    else if (fJER == ECorr::Up) fInJets.smearUpSF = 0;
+    fInJets.isGen = 0;
+  }
+
   if (fInConfig.storeRecHits) 
   {
     // fInRecHits.X = 0;
@@ -1124,7 +1273,7 @@ void Skimmer::InitInBranchVecs()
     // fInRecHits.Z = 0;
     fInRecHits.E = 0;
     fInRecHits.time = 0;
-    fInRecHits.timeErr = 0;
+    // fInRecHits.timeErr = 0;
     fInRecHits.TOF = 0;
     fInRecHits.ID = 0;
     // fInRecHits.isOOT = 0;
@@ -1287,6 +1436,15 @@ void Skimmer::InitInBranches()
   // fInTree->SetBranchAddress(fInJets.s_NHM.c_str(), &fInJets.NHM, &fInJets.b_NHM);
   // fInTree->SetBranchAddress(fInJets.s_CHM.c_str(), &fInJets.CHM, &fInJets.b_CHM);
 
+  if (fIsMC)
+  {
+    if (fJEC == ECorr::Down || fJEC == ECorr::Up) fInTree->SetBranchAddress(fInJets.s_scaleRel.c_str(), &fInJets.scaleRel, &fInJets.b_scaleRel);
+    if (fJER == ECorr::Nominal) fInTree->SetBranchAddress(fInJets.s_smearSF.c_str(), &fInJets.smearSF, &fInJets.b_smearSF);
+    else if (fJER == ECorr::Down) fInTree->SetBranchAddress(fInJets.s_smearDownSF.c_str(), &fInJets.smearDownSF, &fInJets.b_smearDownSF);
+    else if (fJER == ECorr::Up) fInTree->SetBranchAddress(fInJets.s_smearUpSF.c_str(), &fInJets.smearUpSF, &fInJets.b_smearUpSF);
+    fInTree->SetBranchAddress(fInJets.s_isGen.c_str(), &fInJets.isGen, &fInJets.b_isGen);
+  }
+
   fInTree->SetBranchAddress(fInEvent.s_nrechits.c_str(), &fInEvent.nrechits, &fInEvent.b_nrechits);
   if (fInConfig.storeRecHits)
   {
@@ -1295,7 +1453,7 @@ void Skimmer::InitInBranches()
     // fInTree->SetBranchAddress(fInRecHits.s_Z.c_str(), &fInRecHits.Z, &fInRecHits.b_Z);
     fInTree->SetBranchAddress(fInRecHits.s_E.c_str(), &fInRecHits.E, &fInRecHits.b_E);
     fInTree->SetBranchAddress(fInRecHits.s_time.c_str(), &fInRecHits.time, &fInRecHits.b_time);
-    fInTree->SetBranchAddress(fInRecHits.s_timeErr.c_str(), &fInRecHits.timeErr, &fInRecHits.b_timeErr);
+    // fInTree->SetBranchAddress(fInRecHits.s_timeErr.c_str(), &fInRecHits.timeErr, &fInRecHits.b_timeErr);
     fInTree->SetBranchAddress(fInRecHits.s_TOF.c_str(), &fInRecHits.TOF, &fInRecHits.b_TOF);
     fInTree->SetBranchAddress(fInRecHits.s_ID.c_str(), &fInRecHits.ID, &fInRecHits.b_ID);
     // fInTree->SetBranchAddress(fInRecHits.s_isOOT.c_str(), &fInRecHits.isOOT, &fInRecHits.b_isOOT);
@@ -1356,7 +1514,7 @@ void Skimmer::InitInBranches()
       // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedZ.c_str(),ipho), &pho.seedZ, &pho.b_seedZ);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE, &pho.b_seedE);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime, &pho.b_seedtime);
-      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedtimeErr.c_str(),ipho), &pho.seedtimeErr, &pho.b_seedtimeErr);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedtimeErr.c_str(),ipho), &pho.seedtimeErr, &pho.b_seedtimeErr);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF, &pho.b_seedTOF);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID, &pho.b_seedID);
       // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT, &pho.b_seedisOOT);
@@ -1387,6 +1545,9 @@ void Skimmer::InitInBranches()
       {
 	fInTree->SetBranchAddress(Form("%s_%i",pho.s_isSignal.c_str(),ipho), &pho.isSignal, &pho.b_isSignal);
       }
+
+      if (fPhoSc == ECorr::Down || fPhoSc == ECorr::Up) fInTree->SetBranchAddress(Form("%s_%i",pho.s_scaleAbs.c_str(),ipho), &pho.scaleAbs, &pho.b_scaleAbs);
+      if (fPhoSm == ECorr::Down || fPhoSm == ECorr::Up) fInTree->SetBranchAddress(Form("%s_%i",pho.s_smearAbs.c_str(),ipho), &pho.smearAbs, &pho.b_smearAbs);
     }
   }
 }
@@ -1699,7 +1860,7 @@ void Skimmer::InitOutBranches()
     // fOutTree->Branch(Form("%s_%i",pho.s_seedZ.c_str(),ipho), &pho.seedZ);
     fOutTree->Branch(Form("%s_%i",pho.s_seedE.c_str(),ipho), &pho.seedE);
     fOutTree->Branch(Form("%s_%i",pho.s_seedtime.c_str(),ipho), &pho.seedtime);
-    fOutTree->Branch(Form("%s_%i",pho.s_seedtimeErr.c_str(),ipho), &pho.seedtimeErr);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedtimeErr.c_str(),ipho), &pho.seedtimeErr);
     fOutTree->Branch(Form("%s_%i",pho.s_seedTOF.c_str(),ipho), &pho.seedTOF);
     // fOutTree->Branch(Form("%s_%i",pho.s_seedID.c_str(),ipho), &pho.seedID);
     // fOutTree->Branch(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT);
@@ -1838,22 +1999,95 @@ void Skimmer::FillPhoListStandard()
   }
 }
 
-///////////////////////
-//                   //
-// Read in skim type //
-//                   //
-///////////////////////
-void Skimmer::SetSkim()
+///////////////////////////
+// Configure the skimmer //
+///////////////////////////
+
+void Skimmer::SetupDefaults()
 {
-  if      (fSkimType.EqualTo("Standard",TString::kExact)) fSkim = Standard;
-  else if (fSkimType.EqualTo("Zee"     ,TString::kExact)) fSkim = Zee;
-  else if (fSkimType.EqualTo("DiXtal"  ,TString::kExact)) fSkim = DiXtal;
-  else
+  fSkim = SkimEnum::Standard;
+  fSumWgts = 1.f;
+  fJEC = ECorr::Nominal;
+  fJER = ECorr::Nominal;
+  fPhoSc = ECorr::Nominal;
+  fPhoSm = ECorr::Nominal;
+}
+
+void Skimmer::SetupSkimConfig()
+{
+  std::cout << "Reading skim config..." << std::endl;
+
+  std::ifstream infile(Form("%s",miscconfig.Data()),std::ios::in);
+  std::string str;
+  while (std::getline(infile,str))
   {
-    std::cerr << fSkimType.Data() << " is not a valid skim selection! Exiting..." << std::endl;
-    exit(1);
+    if (str == "") continue;
+    else if (str.find("skim_type=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"skim_type=");
+      Skimmer::SetupSkimType(str);
+    }
+    else if (str.find("sum_wgts=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"sum_wgts=");
+      fSumWgts = Common::Atof(str);
+    }
+    else if (str.find("puwgt_filename=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"puwgt_filename=");
+      fPUWgtFileName = str;
+    }
+    else if (str.find("jet_scale=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"jet_scale=");
+      Skimmer::SetupEnergyCorrection(str,fJEC,"jet_scale");
+    }
+    else if (str.find("jet_resol=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"jet_resol=");
+      Skimmer::SetupEnergyCorrection(str,fJER,"jet_resol");
+    }
+    else if (str.find("pho_scale=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"pho_scale=");
+      Skimmer::SetupEnergyCorrection(str,fPhoSc,"pho_scale");
+    }
+    else if (str.find("pho_smear=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"pho_smear=");
+      Skimmer::SetupEnergyCorrection(str,fPhoSm,"pho_smear");
+    }
+    else
+    {
+      std::cerr << "Specified a non-known option: " << str.c_str() << " ...Exiting..." << std::endl;
+      exit(1);
+    }
   }
 
   // reduce output of DiXtal
   fNOutPhos = (fSkim == DiXtal ? 2 : Common::nPhotons);
+}
+
+void Skimmer::SetupSkimType(const TString & skim_type)
+{
+  if      (skim_type.EqualTo("Standard",TString::kExact)) fSkim = SkimEnum::Standard;
+  else if (skim_type.EqualTo("Zee"     ,TString::kExact)) fSkim = SkimEnum::Zee;
+  else if (skim_type.EqualTo("DiXtal"  ,TString::kExact)) fSkim = SkimEnum::DiXtal;
+  else
+  {
+    std::cerr << skim_type.Data() << " is not a valid skim selection! Exiting..." << std::endl;
+    exit(1);
+  }
+}
+
+void Skimmer::SetupEnergyCorrection(const TString & str, ECorrEnum & ecorr, const TString & text)
+{
+  if      (str.EqualTo("Nominal",TString::kExact)) ecorr = ECorr::Nominal;
+  else if (str.EqualTo("Down"   ,TString::kExact)) ecorr = ECorr::Down;
+  else if (str.EqualTo("Up"     ,TString::kExact)) ecorr = ECorr::Up;
+  else
+  {
+    std::cerr << str.Data() << " is not a valid " << text.Data() << " selection! Exiting..." << std::endl;
+    exit(1);
+  }
 }

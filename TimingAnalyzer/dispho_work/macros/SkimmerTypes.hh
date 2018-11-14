@@ -7,6 +7,7 @@
 #include "TBranch.h"
 
 enum SkimEnum {Standard, Zee, DiXtal};
+enum Ecorr {Nominal, Down, Up};
 
 // struct for containing electrons in Z
 struct MassStruct
@@ -303,6 +304,12 @@ struct Jet
   std::vector<Float_t> * NHM;
   std::vector<Float_t> * CHM;
 
+  std::vector<Float_t> * scaleRel;
+  std::vector<Float_t> * smearSF;
+  std::vector<Float_t> * smearDownSF;
+  std::vector<Float_t> * smearUpSF;
+  std::vector<Int_t>   * isGen;
+
   std::vector<Float_t> E_f;
   std::vector<Float_t> pt_f;
   std::vector<Float_t> phi_f;
@@ -316,6 +323,12 @@ struct Jet
   std::vector<Float_t> MUF_f;
   std::vector<Float_t> NHM_f;
   std::vector<Float_t> CHM_f;
+
+  std::vector<Float_t> scaleRel_f;
+  std::vector<Float_t> smearSF_f;
+  std::vector<Float_t> smearDownSF_f;
+  std::vector<Float_t> smearUpSF_f;
+  std::vector<Int_t>   isGen_i;
 
   std::string s_E = "jetE";
   std::string s_pt = "jetpt";
@@ -331,6 +344,12 @@ struct Jet
   std::string s_NHM = "jetNHM";
   std::string s_CHM = "jetCHM";
 
+  std::string s_scaleRel = "jetscaleRel";
+  std::string s_smearSF = "jetsmearSF";
+  std::string s_smearDownSF = "jetsmearDownSF";
+  std::string s_smearUpSF = "jetsmearUpSF";
+  std::string s_isGen = "jetisGen";
+
   TBranch * b_E;
   TBranch * b_pt;
   TBranch * b_phi;
@@ -344,6 +363,12 @@ struct Jet
   TBranch * b_MUF;
   TBranch * b_NHM;
   TBranch * b_CHM;
+
+  TBranch * b_scaleRel;
+  TBranch * b_smearSF;
+  TBranch * b_smearDownSF;
+  TBranch * b_smearUpSF;
+  TBranch * b_isGen;
 };
 
 struct RecHits
@@ -470,6 +495,8 @@ struct Pho
   // MC types
   Bool_t  isGen;
   Int_t   isSignal;
+  Float_t scaleAbs;
+  Float_t smearAbs;
   // Derived types
   Int_t   seedTT;
   Int_t   nrechits;
@@ -540,6 +567,8 @@ struct Pho
   std::string s_seedpedrms1 = "phoseedpedrms1";
   std::string s_isGen = "phoisGen";
   std::string s_isSignal = "phoisSignal";
+  std::string s_scaleAbs = "phoscaleAbs";
+  std::string s_smearAbs = "phosmearAbs";
   std::string s_seedTT = "phoseedTT";
   std::string s_nrechits = "phonrechits";
   std::string s_nrechitsLT120 = "phonrechitsLT120";
@@ -609,6 +638,8 @@ struct Pho
   TBranch * b_seedpedrms1;
   TBranch * b_isGen;
   TBranch * b_isSignal;
+  TBranch * b_scaleAbs;
+  TBranch * b_smearAbs;
   TBranch * b_seedTT;
   TBranch * b_nrechits;
   TBranch * b_nrechitsLT120;
