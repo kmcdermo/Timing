@@ -3,8 +3,8 @@
 source scripts/skimAndMerge/common_variables.sh
 
 ## input
-label=${1}
-tune=${2}
+label=${1:-"bkgd"}
+tune=${2:-"Sherpa"}
 
 for sample in M40_80 MGG-80toInf
 do

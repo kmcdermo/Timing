@@ -3,7 +3,8 @@
 source scripts/skimAndMerge/common_variables.sh
 
 ## input
-label=${1}
+gmsblabel=${1:-"gmsb"}
+hvdslabel=${2:-"hvds"}
 
 ## GMSB
 for lambda in 100 150 200 250 300 350 400 500 600
@@ -21,7 +22,7 @@ do
 	fi
 
 	gridpoint="L-${lambda}TeV_Ctau-${sctau}cm"
-	nohup ./scripts/skimAndMerge/skimAndMerge_SignalGridPoint.sh ${label} "GMSB" ${gridpoint} >& GMSB_${gridpoint}_Skim.log &
+	nohup ./scripts/skimAndMerge/skimAndMerge_SignalGridPoint.sh ${gmsblabel} "GMSB" ${gridpoint} >& GMSB_${gridpoint}_Skim.log &
     done
 done
 
@@ -33,7 +34,7 @@ do
 	for ctau in 1 100 500 1000 2500 10000
 	do
 	    gridpoint="MZp-${mzp}_MDP-${mdp}_Ctau-${ctau}mm"
-	    nohup ./scripts/skimAndMerge/skimAndMerge_SignalGridPoint.sh ${label} "HVDS" ${gridpoint} >& HVDS_${gridpoint}_Skim.log &
+	    nohup ./scripts/skimAndMerge/skimAndMerge_SignalGridPoint.sh ${hvdslabel} "HVDS" ${gridpoint} >& HVDS_${gridpoint}_Skim.log &
 	done
     done
 done
