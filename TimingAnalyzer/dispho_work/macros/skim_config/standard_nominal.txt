@@ -1,0 +1,7 @@
+skim_type=Standard
+
+pho_scale=Nominal
+pho_smear=Nominal
+
+jet_scale=Nominal
+jet_resol=Nominal

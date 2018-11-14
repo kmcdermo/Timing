@@ -7,7 +7,6 @@ label=${1}
 sample=${2}
 mcbase=${3}
 dir=${4}
-skimtype=${5:-"Standard"}
 
 ## other input vars
 usePUWeights=1
@@ -16,9 +15,9 @@ usePUWeights=1
 text="${mcbase}_${sample}"
 
 ## directories needed
-indir="${inbase}/analysis/${sample}/${label}_${sample}"
+indir="${inbase}/${sample}/${label}_${sample}"
 tmpdir="${tmpbase}/${mcbase}/${sample}"
 outdir="${outbase}/MC/${mcbase}/${dir}"
 
 ## process this bin
-./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} ${usePUWeights} ${skimtype}
+./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} ${usePUWeights}

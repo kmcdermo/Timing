@@ -10,15 +10,18 @@ tmpdir=${3}
 outdir=${4}
 
 usePUWeights=${5:-0}
-skimtype=${6:-"Standard"}
 
 ## global vars
 files="${text}_files.log"
 wgtfile="${text}_wgt.log"
-puwgtfile="${text}_puwgt.root"
 tmpfiles="tmp_${files}"
 timestamp=$(ls ${indir})
 eosdir="${indir}/${timestamp}/0000"
+inskimconfig="skim_config/standard_nominal.txt"
+skimconfig="${text}_skim_config.log"
+
+## make skim config
+cp ${inskimconfig} ${skimconfig}
 
 ## holla back
 echo "Processing:" ${text} 
@@ -37,11 +40,16 @@ mkdir -p ${tmpdir}
 echo "Getting sum of weights"
 ./scripts/computeSumWeights.sh ${eosdir} ${files} ${wgtfile}
 sumwgts=$(grep "Sum_of_weights: " ${wgtfile} | cut -d " " -f 2)
+echo "sum_wgts="${sumwgts} >> ${skimconfig}
 
 ## produce pu distribution
 if (( ${usePUWeights} == 1 )) ; then
     echo "Computing PU Weights"
+    puwgtfile="${text}_puwgt.root"
+
     ./scripts/computePUWeights.sh ${eosdir} ${files} ${puwgtfile}
+
+    echo "puwgt_filename="${puwgtfile} >> ${skimconfig}
 fi
 
 ## read in each file and skim
@@ -50,7 +58,8 @@ nfiles=$(wc -l ${files})
 counter="1"
 while IFS='' read -r line || [[ -n "${line}" ]]; do
     echo "Working on file" ${counter} "out of" ${nfiles} "[filename: ${line}]"
-    ./scripts/runSkimmer.sh ${eosdir} ${tmpdir} ${line} ${sumwgts} ${skimtype} ${puwgtfile}
+
+    ./scripts/runSkimmer.sh ${eosdir} ${tmpdir} ${line}
     counter=$((${counter} + 1))
 done < "${files}"
 
@@ -58,8 +67,9 @@ done < "${files}"
 echo "Removing log files"
 rm ${wgtfile}
 rm ${files}
+rm ${skimconfig}
 
-## Hadd on tmp 
+## Hadd on tmp
 echo "Hadding skims on tmp and then removing individual skim files"
 hadd -O -k ${tmpdir}/${outfile} ${tmpdir}/${infiles}
 rm -rf ${tmpdir}/${infiles}

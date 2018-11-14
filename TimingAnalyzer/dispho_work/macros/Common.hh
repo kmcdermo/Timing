@@ -141,8 +141,8 @@ namespace Common
   // input
   constexpr    Float_t invfbToinvpb   = 1000.f; // conversion for the world's dumbest unit
   static const TString extraText      = "Preliminary";
-  static const TString eosDir         = "/eos/cms/store/user/kmcdermo/nTuples";
-  static const TString baseDir        = "skims/2017";
+  static const TString eosDir         = "/eos/cms/group/phys_exotica/displacedPhotons/nTuples/2017/analysis";
+  static const TString baseDir        = "skims";
   static const TString tupleFileName  = "tree.root";
   static const TString rootdir        = "tree";
   static const TString configtreename = "configtree";
