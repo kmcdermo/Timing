@@ -22,8 +22,8 @@ public:
   // skim config
   void SetupDefaults();
   void SetupSkimConfig();
-  void SetupSkimType();
-  void SetupEnergyCorrection();
+  void SetupSkimType(const TString & skim_type);
+  void SetupEnergyCorrection(const TString & str, ECorr & ecorr, const TString & text);
 
   // setup config inputs
   void GetInConfig();
@@ -71,7 +71,7 @@ private:
   const TString fSkimConfig;
 
   // Config
-  SkimEnum fSkim;
+  SkimType fSkim;
   Float_t fSumWgts;
   TString fPUWgtFileName;
   ECorr fJEC;

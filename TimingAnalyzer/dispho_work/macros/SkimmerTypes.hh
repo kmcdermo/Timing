@@ -6,8 +6,8 @@
 
 #include "TBranch.h"
 
-enum SkimEnum {Standard, Zee, DiXtal};
-enum Ecorr {Nominal, Down, Up};
+enum SkimType {Standard, Zee, DiXtal};
+enum ECorr {Nominal, Down, Up};
 
 // struct for containing electrons in Z
 struct MassStruct

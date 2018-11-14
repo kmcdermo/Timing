@@ -59,7 +59,7 @@ counter="1"
 while IFS='' read -r line || [[ -n "${line}" ]]; do
     echo "Working on file" ${counter} "out of" ${nfiles} "[filename: ${line}]"
 
-    ./scripts/runSkimmer.sh ${eosdir} ${tmpdir} ${line}
+    ./scripts/runSkimmer.sh ${eosdir} ${tmpdir} ${line} ${skimconfig}
     counter=$((${counter} + 1))
 done < "${files}"
 

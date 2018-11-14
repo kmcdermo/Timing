@@ -20,7 +20,7 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   Skimmer::SetupSkimConfig();
 
   // get detids if skim needs it
-  if (fSkim == DiXtal) Common::SetupDetIDs();
+  if (fSkim == SkimType::DiXtal) Common::SetupDetIDs();
 
   // Get era info
   Common::SetupEras();
@@ -124,7 +124,7 @@ void Skimmer::EventLoop()
     const auto evtwgt = fSampleWeight * wgt; // sample weight for data == 1
 
     // perform skim: standard
-    if (!fOutConfig.isToy && (fSkim == Standard)) // do not apply skim selection on toy config
+    if (!fOutConfig.isToy && (fSkim == SkimType::Standard)) // do not apply skim selection on toy config
     {
       // leading photon skim section
       fInEvent.b_nphotons->GetEntry(entry);
@@ -168,7 +168,7 @@ void Skimmer::EventLoop()
       // fill photon list in standard fashion
       Skimmer::FillPhoListStandard();
     }
-    else if (!fOutConfig.isToy && (fSkim == Zee))
+    else if (!fOutConfig.isToy && (fSkim == SkimType::Zee))
     {
       // cut on HLT right away
       //      fInEvent.b_hltDiEle33MW->GetEntry(entry);
@@ -276,7 +276,7 @@ void Skimmer::EventLoop()
 	fPhoList.emplace_back(ipho);
       }
     } // end of ZeeSkim
-    else if (!fOutConfig.isToy && (fSkim == DiXtal)) // this is a hack selection, which mixes up seeds and photons --> do NOT use this for analysis
+    else if (!fOutConfig.isToy && (fSkim == SkimType::DiXtal)) // this is a hack selection, which mixes up seeds and photons --> do NOT use this for analysis
     {
       // get rechits
       fInRecHits.b_E->GetEntry(entry);
@@ -384,7 +384,7 @@ void Skimmer::EventLoop()
     if (fOutConfig.isHVDS) Skimmer::FillOutHVDSs(entry);
     if (fOutConfig.isToy)  Skimmer::FillOutToys(entry);
     Skimmer::FillOutEvent(entry,evtwgt);
-    if (fSkim != DiXtal) Skimmer::FillOutJets(entry);
+    if (fSkim != SkimType::DiXtal) Skimmer::FillOutJets(entry);
     Skimmer::FillOutPhos(entry);
     if (fIsMC) Skimmer::CorrectMET();
 
@@ -683,14 +683,14 @@ void Skimmer::FillOutJets(const UInt_t entry)
   // fInJets.b_NHM->GetEntry(entry);
   // fInJets.b_CHM->GetEntry(entry);
 
-  const UInt_t nJets = fInJets.E_f->size();
+  const UInt_t nJets = fInJets.E->size();
 
   // resize outputs
   fOutJets.E_f.resize(nJets);
   fOutJets.pt_f.resize(nJets);
   fOutJets.phi_f.resize(nJets);
   fOutJets.eta_f.resize(nJets);
-  fOutJets.ID_f.resize(nJets);
+  fOutJets.ID_i.resize(nJets);
 
   // fOutJets.NHF_f.resize(nJets);
   // fOutJets.NEMF_f.resize(nJets);
@@ -701,7 +701,7 @@ void Skimmer::FillOutJets(const UInt_t entry)
   // fOutJets.CHM_f.resize(nJets);
 
   // copy in: non-ideal (swap won't work, as we need the input values for MET corrections)
-  for (auto ijet = 0; ijet < nJets; ijet++)
+  for (auto ijet = 0U; ijet < nJets; ijet++)
   {
     fOutJets.E_f[ijet] = (*fInJets.E)[ijet];
     fOutJets.pt_f[ijet] = (*fInJets.pt)[ijet];
@@ -921,7 +921,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     if (fInConfig.storeRecHits)
     {
       // something unholy and utterly disgusting
-      const auto seed = (fSkim != DiXtal) ? inpho.seed : outpho.seed;
+      const auto seed = (fSkim != SkimType::DiXtal) ? inpho.seed : outpho.seed;
 
       // store seed info + derived types if seed exists
       if (seed >= 0)
@@ -1049,7 +1049,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       outpho.seedTOF = inpho.seedTOF;
       // outpho.seedID = inpho.seedID;
       // outpho.seedisOOT = inpho.seedisOOT;
-      outpho.seedTT = Common::GetTriggerTower(inpho.seedID)
+      outpho.seedTT = Common::GetTriggerTower(inpho.seedID);
       outpho.seedisGS6 = inpho.seedisGS1;
       outpho.seedisGS1 = inpho.seedisGS6;
       outpho.seedadcToGeV = inpho.seedadcToGeV;
@@ -1070,24 +1070,24 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       }
 
       // apply photon scale uncs
-      if (fPhoSc == ECor::Down)
+      if (fPhoSc == ECorr::Down)
       {
 	outpho.E  -= inpho.scaleAbs;
 	outpho.pt -= inpho.scaleAbs;
       }
-      else if (fPhoSc == ECor::Up)
+      else if (fPhoSc == ECorr::Up)
       {
 	outpho.E  += inpho.scaleAbs;
 	outpho.pt += inpho.scaleAbs;
       }
       
       // apply photon smear uncs
-      if (fPhoSm == ECor::Down)
+      if (fPhoSm == ECorr::Down)
       {
 	outpho.E  -= inpho.smearAbs;
 	outpho.pt -= inpho.smearAbs;
       }
-      else if (fPhoSm == ECor::Up)
+      else if (fPhoSm == ECorr::Up)
       {
 	outpho.E  += inpho.smearAbs;
 	outpho.pt += inpho.smearAbs;
@@ -1131,7 +1131,7 @@ void Skimmer::CorrectMET()
       const auto metphi = fOutEvent.t1pfMETphi;
       
       const auto iphopt = inpho.pt;
-      const auto ophopt = outphp.pt;
+      const auto ophopt = outpho.pt;
       const auto phophi = outpho.phi;
       
       const Float_t x = (metpt * std::cos(metphi)) + ((iphopt - ophopt) * std::cos(phophi));
@@ -1802,7 +1802,7 @@ void Skimmer::InitOutBranches()
   fOutTree->Branch(fOutEvent.s_t1pfMETsumEt.c_str(), &fOutEvent.t1pfMETsumEt);
 
   fOutTree->Branch(fOutEvent.s_njets.c_str(), &fOutEvent.njets);
-  if (fSkim != DiXtal)
+  if (fSkim != SkimType::DiXtal)
   {
     fOutTree->Branch(fOutJets.s_E.c_str(), &fOutJets.E_f);
     fOutTree->Branch(fOutJets.s_pt.c_str(), &fOutJets.pt_f);
@@ -1931,21 +1931,21 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
   }
   auto inNbinsX_new = inNbinsX;
 
-  if (fSkim == Standard)
+  if (fSkim == SkimType::Standard)
   {
     cutLabels["nPhotons"] = ++inNbinsX_new;
     cutLabels["ph0isEB"] = ++inNbinsX_new;
     cutLabels["ph0pt70"] = ++inNbinsX_new;
     cutLabels["METFlag"] = ++inNbinsX_new;
   }
-  else if (fSkim == Zee)
+  else if (fSkim == SkimType::Zee)
   {
     cutLabels["diEleHLT"] = ++inNbinsX_new;
     cutLabels["goodPho1"] = ++inNbinsX_new;
     cutLabels["goodPho2"] = ++inNbinsX_new;
     cutLabels["diPhoMZrange"] = ++inNbinsX_new;
   }
-  else if (fSkim == DiXtal)
+  else if (fSkim == SkimType::DiXtal)
   {
     cutLabels["goodDiXtal"] = ++inNbinsX_new;
   }
@@ -2005,7 +2005,7 @@ void Skimmer::FillPhoListStandard()
 
 void Skimmer::SetupDefaults()
 {
-  fSkim = SkimEnum::Standard;
+  fSkim = SkimType::Standard;
   fSumWgts = 1.f;
   fJEC = ECorr::Nominal;
   fJER = ECorr::Nominal;
@@ -2017,7 +2017,7 @@ void Skimmer::SetupSkimConfig()
 {
   std::cout << "Reading skim config..." << std::endl;
 
-  std::ifstream infile(Form("%s",miscconfig.Data()),std::ios::in);
+  std::ifstream infile(Form("%s",fSkimConfig.Data()),std::ios::in);
   std::string str;
   while (std::getline(infile,str))
   {
@@ -2065,14 +2065,14 @@ void Skimmer::SetupSkimConfig()
   }
 
   // reduce output of DiXtal
-  fNOutPhos = (fSkim == DiXtal ? 2 : Common::nPhotons);
+  fNOutPhos = (fSkim == SkimType::DiXtal ? 2 : Common::nPhotons);
 }
 
 void Skimmer::SetupSkimType(const TString & skim_type)
 {
-  if      (skim_type.EqualTo("Standard",TString::kExact)) fSkim = SkimEnum::Standard;
-  else if (skim_type.EqualTo("Zee"     ,TString::kExact)) fSkim = SkimEnum::Zee;
-  else if (skim_type.EqualTo("DiXtal"  ,TString::kExact)) fSkim = SkimEnum::DiXtal;
+  if      (skim_type.EqualTo("Standard",TString::kExact)) fSkim = SkimType::Standard;
+  else if (skim_type.EqualTo("Zee"     ,TString::kExact)) fSkim = SkimType::Zee;
+  else if (skim_type.EqualTo("DiXtal"  ,TString::kExact)) fSkim = SkimType::DiXtal;
   else
   {
     std::cerr << skim_type.Data() << " is not a valid skim selection! Exiting..." << std::endl;
@@ -2080,7 +2080,7 @@ void Skimmer::SetupSkimType(const TString & skim_type)
   }
 }
 
-void Skimmer::SetupEnergyCorrection(const TString & str, ECorrEnum & ecorr, const TString & text)
+void Skimmer::SetupEnergyCorrection(const TString & str, ECorr & ecorr, const TString & text)
 {
   if      (str.EqualTo("Nominal",TString::kExact)) ecorr = ECorr::Nominal;
   else if (str.EqualTo("Down"   ,TString::kExact)) ecorr = ECorr::Down;
