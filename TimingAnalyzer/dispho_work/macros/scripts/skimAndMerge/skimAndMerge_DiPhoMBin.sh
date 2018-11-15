@@ -27,4 +27,4 @@ tmpdir="${tmpbase}/${mcbase}/${binlabel}"
 outdir="${outbase}/MC/${mcbase}/${binlabel}"
 
 ## process this bin
-./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} ${usePUweights}
+./scripts/skimAndMerge/processSkimAndMerge.sh ${text} ${indir} ${tmpdir} ${outdir} ${usePUWeights}

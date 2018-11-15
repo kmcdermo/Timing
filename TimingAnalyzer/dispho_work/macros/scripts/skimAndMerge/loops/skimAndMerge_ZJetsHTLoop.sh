@@ -4,7 +4,7 @@ source scripts/skimAndMerge/common_variables.sh
 
 ## input
 label=${1:-"bkgd"}
-tune=${2:-"TuneCP5_13TeV-madgraphMLM-pythia8"}
+tune=${2:-"13TeV-madgraph"}
 
 for bin in 100To200 200To400 400To600 600To800 800To1200 1200To2500 2500ToInf
 do

@@ -19,7 +19,7 @@ WZG="TuneCP5_13TeV-amcatnlo-pythia8"
 declare -a samples=(WW WZ WGGJets WWG WWW WWZ WZZ WZG)
 
 ## loop time
-for sample in "${sample[@]}"
+for sample in "${samples[@]}"
 do
     nohup ./scripts/skimAndMerge/skimAndMerge_WX.sh ${label} ${sample} ${!sample} >& WX_${sample}_Skim.log &
 done

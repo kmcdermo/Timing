@@ -17,7 +17,7 @@ TGGJets="TuneCP5_PSweights_13TeV-MadGraph-madspin-pythia8"
 declare -a samples=(TTJets TGJets TTGJets ttZJets ttWJets TGGJets)
 
 ## loop time
-for sample in "${sample[@]}"
+for sample in "${samples[@]}"
 do
     nohup ./scripts/skimAndMerge/skimAndMerge_TX.sh ${label} ${sample} ${!sample} >& TX_${sample}_Skim.log &
 done

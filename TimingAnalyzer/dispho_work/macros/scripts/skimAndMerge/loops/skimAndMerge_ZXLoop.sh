@@ -14,7 +14,7 @@ ZZZ="TuneCP5_13TeV-amcatnlo-pythia8"
 declare -a samples=(ZZ ZGGJets ZZZ)
 
 ## loop time
-for sample in "${sample[@]}"
+for sample in "${samples[@]}"
 do
     nohup ./scripts/skimAndMerge/skimAndMerge_ZX.sh ${label} ${sample} ${!sample} >& ZX_${sample}_Skim.log &
 done

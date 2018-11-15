@@ -324,6 +324,12 @@ namespace Common
   // may actually want an invalid tree/file...
   Bool_t IsNullFile(const TString & filename);
   Bool_t IsNullTree(const TTree * tree);
+  template <typename T>
+  Bool_t IsNullHist(const T * hist)
+  {
+    return (hist == (T*) NULL);
+  }
+  Bool_t IsNullF1(const TF1 * f1);
 
   // check for negative bins and set to zero if so
   void CheckNegativeBins(std::map<TString,TH1F*> & HistMap);

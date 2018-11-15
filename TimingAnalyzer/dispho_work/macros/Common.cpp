@@ -173,13 +173,13 @@ namespace Common
     Common::SampleMap["MC/TX/TGGJets"] = "TX";
 
     // W+X
-    Common::SampleMap["MC/WX/WJetsToLNu_HT/100To200"]   = "WX";
-    Common::SampleMap["MC/WX/WJetsToLNu_HT/200To400"]   = "WX";
-    Common::SampleMap["MC/WX/WJetsToLNu_HT/400To600"]   = "WX";
-    Common::SampleMap["MC/WX/WJetsToLNu_HT/600To800"]   = "WX";
-    Common::SampleMap["MC/WX/WJetsToLNu_HT/800To1200"]  = "WX";
-    Common::SampleMap["MC/WX/WJetsToLNu_HT/1200To2500"] = "WX";
-    Common::SampleMap["MC/WX/WJetsToLNu_HT/2500ToInf"]  = "WX";
+    Common::SampleMap["MC/WJetsToLNu_HT/100To200"]   = "WX";
+    Common::SampleMap["MC/WJetsToLNu_HT/200To400"]   = "WX";
+    Common::SampleMap["MC/WJetsToLNu_HT/400To600"]   = "WX";
+    Common::SampleMap["MC/WJetsToLNu_HT/600To800"]   = "WX";
+    Common::SampleMap["MC/WJetsToLNu_HT/800To1200"]  = "WX";
+    Common::SampleMap["MC/WJetsToLNu_HT/1200To2500"] = "WX";
+    Common::SampleMap["MC/WJetsToLNu_HT/2500ToInf"]  = "WX";
 
     Common::SampleMap["MC/WX/WW"]      = "WX";
     Common::SampleMap["MC/WX/WZ"]      = "WX";
@@ -191,13 +191,13 @@ namespace Common
     Common::SampleMap["MC/WX/WZG"]     = "WX";
 
     // Z+X
-    Common::SampleMap["MC/ZX/ZJetsToNuNu_HT/100To200"]   = "ZX";
-    Common::SampleMap["MC/ZX/ZJetsToNuNu_HT/200To400"]   = "ZX";
-    Common::SampleMap["MC/ZX/ZJetsToNuNu_HT/400To600"]   = "ZX";
-    Common::SampleMap["MC/ZX/ZJetsToNuNu_HT/600To800"]   = "ZX";
-    Common::SampleMap["MC/ZX/ZJetsToNuNu_HT/800To1200"]  = "ZX";
-    Common::SampleMap["MC/ZX/ZJetsToNuNu_HT/1200To2500"] = "ZX";
-    Common::SampleMap["MC/ZX/ZJetsToNuNu_HT/2500ToInf"]  = "ZX";
+    Common::SampleMap["MC/ZJetsToNuNu_HT/100To200"]   = "ZX";
+    Common::SampleMap["MC/ZJetsToNuNu_HT/200To400"]   = "ZX";
+    Common::SampleMap["MC/ZJetsToNuNu_HT/400To600"]   = "ZX";
+    Common::SampleMap["MC/ZJetsToNuNu_HT/600To800"]   = "ZX";
+    Common::SampleMap["MC/ZJetsToNuNu_HT/800To1200"]  = "ZX";
+    Common::SampleMap["MC/ZJetsToNuNu_HT/1200To2500"] = "ZX";
+    Common::SampleMap["MC/ZJetsToNuNu_HT/2500ToInf"]  = "ZX";
 
     Common::SampleMap["MC/ZX/ZZ"] = "ZX";
     Common::SampleMap["MC/ZX/ZGGJets"] = "ZX";
@@ -1049,6 +1049,10 @@ namespace Common
   Bool_t IsNullTree(const TTree * tree)
   {
     return (tree == (TTree*) NULL);
+  }
+  Bool_t IsNullF1(const TF1 * f1)
+  {
+    return (f1 == (TF1*) NULL);
   }
   
   void CheckNegativeBins(std::map<TString,TH1F*> & HistMap)
