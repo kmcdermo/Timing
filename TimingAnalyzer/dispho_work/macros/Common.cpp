@@ -229,23 +229,23 @@ namespace Common
     }
 
     // HVDS
-    const std::vector<TString> mzps = {"300","500","800","1000"}; // GeV
-    const std::vector<TString> mdps = {"20","40","60"}; // GeV
-    const std::vector<TString> hctaus = {"1","100","500","1000","2500","10000"}; // mm
+    // const std::vector<TString> mzps = {"300","500","800","1000"}; // GeV
+    // const std::vector<TString> mdps = {"20","40","60"}; // GeV
+    // const std::vector<TString> hctaus = {"1","100","500","1000","2500","10000"}; // mm
 
-    // loop over all possible HVDSs...
-    for (const auto & mzp : mzps)
-    {
-      for (const auto & mdp : mdps)
-      {
-	for (const auto & ctau : hctaus)
-	{
-	  const Int_t ictau = ctau.Atoi()*10; // mm to cm
-	  TString sctau = Form("%i",ictau);
-	  Common::SampleMap["MC/HVDS/MZp-"+mzp+"_MDP-"+mdp+"_Ctau-"+ctau+"mm"] = "HVDS_MZp"+mzp+"_MDP"+mdp+"_CTau"+sctau;
-	}
-      }
-    }
+    // // loop over all possible HVDSs...
+    // for (const auto & mzp : mzps)
+    // {
+    //   for (const auto & mdp : mdps)
+    //   {
+    // 	for (const auto & ctau : hctaus)
+    // 	{
+    // 	  const Int_t ictau = ctau.Atoi()*10; // mm to cm
+    // 	  TString sctau = Form("%i",ictau);
+    // 	  Common::SampleMap["MC/HVDS/MZp-"+mzp+"_MDP-"+mdp+"_Ctau-"+ctau+"mm"] = "HVDS_MZp"+mzp+"_MDP"+mdp+"_CTau"+sctau;
+    // 	}
+    //   }
+    // }
   }
 
   void SetupGroups()
@@ -314,15 +314,15 @@ namespace Common
 	const TString ctau(sample(i_ctau+l_ctau,sample.Length()-i_ctau-l_ctau));
 	Common::SignalSubGroupMap["GMSB_CTau"+ctau+"cm"].emplace_back(sample);
       }
-      else if (group == "HVDS")
-      {
-	const TString s_ctau = "_CTau";
-	auto i_ctau = sample.Index(s_ctau);
-	auto l_ctau = s_ctau.Length();
+      // else if (group == "HVDS")
+      // {
+      // 	const TString s_ctau = "_CTau";
+      // 	auto i_ctau = sample.Index(s_ctau);
+      // 	auto l_ctau = s_ctau.Length();
 	
-	const TString ctau(sample(i_ctau+l_ctau,sample.Length()-i_ctau-l_ctau));
-	Common::SignalSubGroupMap["HVDS_CTau"+ctau+"cm"].emplace_back(sample);
-      }
+      // 	const TString ctau(sample(i_ctau+l_ctau,sample.Length()-i_ctau-l_ctau));
+      // 	Common::SignalSubGroupMap["HVDS_CTau"+ctau+"cm"].emplace_back(sample);
+      // }
     }
   }
   
@@ -415,7 +415,7 @@ namespace Common
     Common::SignalSubGroupColorMap["GMSB_CTau10000cm"] = {kMagenta,"Up"};
 
     // HVDS
-   }
+  }
 
   void SetupColors()
   {

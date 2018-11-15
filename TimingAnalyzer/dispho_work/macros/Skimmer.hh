@@ -11,6 +11,7 @@
 #include <vector>
 #include <map>
 #include <cmath>
+#include <numeric>
 
 class Skimmer 
 {

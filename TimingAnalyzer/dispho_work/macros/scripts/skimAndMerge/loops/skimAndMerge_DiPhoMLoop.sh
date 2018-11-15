@@ -8,5 +8,5 @@ tune=${2:-"Sherpa"}
 
 for sample in M40_80 MGG-80toInf
 do
-    ./scripts/skimAndMerge/skimAndMerge_DiPhoMBin.sh ${label} ${tune} ${sample}
+    nohup ./scripts/skimAndMerge/skimAndMerge_DiPhoMBin.sh ${label} ${tune} ${sample} >& DiPho_${sample}_Skim.log &
 done
