@@ -170,7 +170,7 @@ namespace Common
     Common::SampleMap["MC/TX/TTGJets"] = "TX";
     Common::SampleMap["MC/TX/TTWJets"] = "TX";
     Common::SampleMap["MC/TX/TTZJets"] = "TX";
-    Common::SampleMap["MC/TX/TGGJets"] = "TX";
+    // Common::SampleMap["MC/TX/TGGJets"] = "TX"; // on tape recall
 
     // W+X
     Common::SampleMap["MC/WJetsToLNu_HT/100To200"]   = "WX";

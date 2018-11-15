@@ -18,8 +18,7 @@ void testForTrees()
     // Init
     const auto & input    = SamplePair.first;
     const auto samplename = Common::ReplaceSlashWithUnderscore(input);
-
-    std::cout << "Looking at: " << input << std::endl;
+    //    std::cout << "Looking at: " << input << std::endl;
 
     // Get File
     const TString filename = Form("%s/%s/%s/%s/%s",Common::eosDir.Data(),Common::baseDir.Data(),skimdir.Data(),input.Data(),Common::tupleFileName.Data());
@@ -39,6 +38,10 @@ void testForTrees()
     {
       std::cout << "sample: " << samplename.Data() << " has null tree" << std::endl;
     }
+    else
+    {
+      delete tree;
+    }
     
     // Get Input Cut Flow Histogram 
     auto hist = (TH1F*)file->Get(Form("%s",Common::h_cutflow_scaledname.Data()));
@@ -47,5 +50,11 @@ void testForTrees()
     {
       std::cout << "sample: " << samplename.Data() << " has null hist" << std::endl;
     }
+    else
+    {
+      delete hist;
+    }
+
+    delete file;
   }
 }

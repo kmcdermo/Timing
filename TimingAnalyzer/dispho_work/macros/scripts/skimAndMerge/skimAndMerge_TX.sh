@@ -13,8 +13,11 @@ usePUWeights=1
 ## global vars
 if [[ "${sample}" == *"ttZ"* ]]
 then
-    mcbase="TTZ"
+    extra=$( echo "${sample}" | cut -d "Z" -f 2)
+    mcbase="TTZ${extra}"
 elif [[ "${sample}" == *"ttW"* ]]
+then
+    extra=$( echo "${sample}" | cut -d "W" -f 2)
     mcbase="TTW"
 else
     mcbase="${sample}"
