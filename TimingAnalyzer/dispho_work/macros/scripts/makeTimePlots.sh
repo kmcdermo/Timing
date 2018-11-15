@@ -33,7 +33,7 @@ declare -a logx_vars=("pt" "E" "seedE")
 declare -a mualleras_vars=()
 
 ## sigma fit vars
-pt="p_{T} GeV/c 0 10 100 0 1 10"
+pt="p_{T} GeV 0 10 100 0 1 10"
 E="E GeV 0 10 100 0 1 10"
 seedE="seedE GeV 0 1 10 0 1 10"
 declare -a sigmafit_vars=(pt E seedE)

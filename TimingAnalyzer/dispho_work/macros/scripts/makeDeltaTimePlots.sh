@@ -33,9 +33,9 @@ declare -a logx_vars=("pt_0" "pt_1" "pt_eff" "E_0" "E_1" "E_eff" "seedE_eff")
 declare -a mualleras_vars=()
 
 ## sigma fit vars
-pt_0="p_{T} GeV/c 0 10 100 0 1 10"
-pt_1="p_{T} GeV/c 0 10 100 0 1 10"
-pt_eff="p_{T}^{Eff} GeV/c 0 10 100 0 1 10"
+pt_0="p_{T} GeV 0 10 100 0 1 10"
+pt_1="p_{T} GeV 0 10 100 0 1 10"
+pt_eff="p_{T}^{Eff} GeV 0 10 100 0 1 10"
 E_0="E GeV 0 10 100 0 1 10"
 E_1="E GeV 0 10 100 0 1 10"
 E_eff="E_{eff} GeV 0 10 100 0 1 10"

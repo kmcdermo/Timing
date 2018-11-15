@@ -1,9 +1,9 @@
-plot_title=Leading Jet p_{T} [GeV/c]
+plot_title=Leading Jet p_{T} [GeV]
 
-x_title=Leading Jet p_{T} [GeV/c]
+x_title=Leading Jet p_{T} [GeV]
 x_scale=LIN
 x_var=((Sum$(1*(jetpt>30))>0)*jetpt[0]+(Sum$(1*(jetpt>30))<=0)*-9999)
 x_bins=VARIABLE 0 25 50 75 100 150 200 250 300 350 400 500 600 700 800 1000 1500 2000 3000 5000
 
-y_title=Events/GeV/c
+y_title=Events/GeV
 y_scale=LOG
