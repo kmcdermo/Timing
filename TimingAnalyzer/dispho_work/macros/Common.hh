@@ -496,6 +496,31 @@ namespace Common
     for (auto & Pair : Map) delete Pair.second;
     Map.clear();
   }
+
+  // reorder a vector by a vector of indices
+  template <class T>
+  void ReorderVector(std::vector<T>& vals, std::vector<UInt_t> idxs)
+  {
+    UInt_t i, j, k;
+    T t;
+    for (i = 0; i < vals.size(); i++)
+    {
+      if (i != idxs[i])
+      {
+	t = vals[i];
+	k = i;
+	while (i != (j = idxs[k]))
+	{
+	  // every move places a value in it's final location
+	  vals[k] = vals[j];
+	  idxs[k] = k;
+	  k = j;
+	}
+	vals[k] = t;
+	idxs[k] = k;
+      }
+    }
+  }
 };
 
 #endif
