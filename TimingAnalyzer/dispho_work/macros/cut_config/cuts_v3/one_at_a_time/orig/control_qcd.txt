@@ -1,7 +1,0 @@
-ph0std (phopt_0>70&&phoisEB_0)
-ph0r9GT0p5 (phor9_0>0.5)
-ph0SieieLT0p015 (phosieie_0<0.015)
-ph0HoELT0p12 (phoHoE_0<0.12)
-ph0InvertIsoOR_v1 ((phoisOOT_0==0&&((phoChgHadIso_0-((abs(phosceta_0)<1.0)*(rho*0.0385))+((abs(phosceta_0)>=1.0&&(abs(phosceta_0)<1.479))*(rho*0.0468))>3.0)||(phoNeuHadIso_0-(((abs(phosceta_0)<1.0)*(rho*0.0636))+((abs(phosceta_0)>=1.0&&(abs(phosceta_0)<1.479))*(rho*0.1103)))-(phopt_0*0.0126)-(phopt_0*phopt_0*0.000026)>10.0)||(phoPhoIso_0-(((abs(phosceta_0)<1.0)*(rho*0.1240))+((abs(phosceta_0)>=1.0&&(abs(phosceta_0)<1.479))*(rho*0.1093)))-(phopt_0*0.0035)>3.0)))||(phoisOOT_0==1&&(phoTrkIso_0-(phopt_0*0.0056)-(rho*0.113)>7.0)))
-nJetsGTE3 (Sum$(1*(jetpt>30))>=3)
-HLTdegbit (hltDiPho3022M90)
