@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ## combine info
-export combdir="/afs/cern.ch/work/k/kmcdermo/private/dispho/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit/working"
+export combdir="/afs/cern.ch/work/k/kmcdermo/private/dispho/Analysis/combine/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit/working"
 export datacard="datacard.txt"
 
 ## config info

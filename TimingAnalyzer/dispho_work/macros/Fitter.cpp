@@ -74,21 +74,21 @@ void Fitter::DoMain()
   Fitter::PrepareCommon();
   
   // Do the fit in 2D
-  FitInfo FitInfo2D(RooArgList(*fX,*fY),"2D",TwoD);
+  FitInfo FitInfo2D(RooArgList(*fX,*fY),"2D",FitType::TwoD);
   Fitter::PreparePdfs(fHistMap2D,FitInfo2D);
   if (fDoFits) Fitter::MakeFit(FitInfo2D);
   if (fMakeWS) Fitter::ImportToWS(FitInfo2D);
   Fitter::DeleteFitInfo(FitInfo2D);
 
   // Do the fit in 1D -- X
-  FitInfo FitInfoX(RooArgList(*fX),"1D_projX",X);
+  FitInfo FitInfoX(RooArgList(*fX),"1D_projX",FitType::ProjX);
   Fitter::PreparePdfs(fHistMapX,FitInfoX);
   if (fDoFits) Fitter::MakeFit(FitInfoX);
   if (fMakeWS) Fitter::ImportToWS(FitInfoX);
   Fitter::DeleteFitInfo(FitInfoX);
 
   // Do the fit in 1D -- Y
-  FitInfo FitInfoY(RooArgList(*fY),"1D_projY",Y);
+  FitInfo FitInfoY(RooArgList(*fY),"1D_projY",FitType::ProjY);
   Fitter::PreparePdfs(fHistMapY,FitInfoY);
   if (fDoFits) Fitter::MakeFit(FitInfoY);
   if (fMakeWS) Fitter::ImportToWS(FitInfoY);
@@ -764,16 +764,16 @@ void Fitter::MakeFit(FitInfo & fitInfo)
     if (ifit % (fNFits/fNDraw) == 0)
     {
       // Draw fit(s) in 1D
-      if (fitInfo.Fit == TwoD)
+      if (fitInfo.Fit == FitType::TwoD)
       {
 	Fitter::DrawFit(fX,Form("%i_xfit",ifit),fitInfo);
 	Fitter::DrawFit(fY,Form("%i_yfit",ifit),fitInfo);
       }
-      else if (fitInfo.Fit == X)
+      else if (fitInfo.Fit == FitType::ProjX)
       {
 	Fitter::DrawFit(fX,Form("%i_fit",ifit),fitInfo);
       }
-      else if (fitInfo.Fit == Y)
+      else if (fitInfo.Fit == FitType::ProjY)
       {
 	Fitter::DrawFit(fY,Form("%i_fit",ifit),fitInfo);
       }
@@ -916,14 +916,14 @@ void Fitter::DrawFit(RooRealVar *& var, const TString & title, const FitInfo & f
   const TString signname  = ((!fBkgdOnly) ? Form("%s_Fit_Hist",fitInfo.SignExtPdf->GetName()) : "");
 
   // Get the plots
-  if      ((fitInfo.Fit == X) || (fitInfo.Fit == Y))
+  if      ((fitInfo.Fit == FitType::ProjX) || (fitInfo.Fit == FitType::ProjY))
   {
     // create histograms straight from pdfs (norms already taken care of!)
     modelHist = (TH1F*)fitInfo.ModelPdf  ->createHistogram(Form("%s",modelname.Data()),*var);
     bkgdHist  = (TH1F*)fitInfo.BkgdExtPdf->createHistogram(Form("%s",bkgdname .Data()),*var);
     if (!fBkgdOnly) signHist = (TH1F*)fitInfo.SignExtPdf->createHistogram(Form("%s",signname.Data()),*var);
   }
-  else if (fitInfo.Fit == TwoD)
+  else if (fitInfo.Fit == FitType::TwoD)
   {
     // get other var
     auto & projvar = (isX ? fY : fX);
@@ -1124,7 +1124,7 @@ void Fitter::DumpWS(const FitInfo & fitInfo, const TString & label)
   TCanvas * canv = new TCanvas();
   RooPlot * frame = nullptr;
   TH1F * hist = nullptr;
-  if (fitInfo.Fit == TwoD || fitInfo.Fit == X)
+  if (fitInfo.Fit == FitType::TwoD || fitInfo.Fit == FitType::ProjX)
   {
     frame = fX->frame();
     fitInfo.BkgdPdf->plotOn(frame);
@@ -1139,7 +1139,7 @@ void Fitter::DumpWS(const FitInfo & fitInfo, const TString & label)
     delete frame;
   }
   
-  if (fitInfo.Fit == TwoD || fitInfo.Fit == Y)
+  if (fitInfo.Fit == FitType::TwoD || fitInfo.Fit == FitType::ProjY)
   {
     frame = fY->frame();
     fitInfo.BkgdPdf->plotOn(frame);
@@ -1154,7 +1154,7 @@ void Fitter::DumpWS(const FitInfo & fitInfo, const TString & label)
     delete frame;
   }
   
-  if (fitInfo.Fit == TwoD)
+  if (fitInfo.Fit == FitType::TwoD)
   {
     auto xpdf = fitInfo.BkgdPdf->createProjection(*fY);
 

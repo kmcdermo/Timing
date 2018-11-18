@@ -411,6 +411,8 @@ namespace Common
     Common::SignalSubGroupColorMap["GMSB_CTau200cm"] = {kRed,"Up"};
     Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kPink,"Down"};
     Common::SignalSubGroupColorMap["GMSB_CTau600cm"] = {kViolet,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau800cm"] = {kYellow,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau1000cm"] = {kTeal,"Down"};
     Common::SignalSubGroupColorMap["GMSB_CTau1200cm"] = {kOrange,"Down"};
     Common::SignalSubGroupColorMap["GMSB_CTau10000cm"] = {kMagenta,"Up"};
 
@@ -442,7 +444,7 @@ namespace Common
 	else if (Common::SignalSubGroupColorMap[group].increment == "Down") counter--;
 	else    
 	{
-	  std::cerr << "Yikes, you messed up the signal sub group color config pretty bad, try again..." << std::endl;
+	  std::cerr << "Yikes, you messed up the signal sub group color config pretty bad for group: " << group.Data() << " ...try again..." << std::endl;
 	  exit(1);
 	}
       }

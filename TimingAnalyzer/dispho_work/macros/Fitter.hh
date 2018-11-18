@@ -40,7 +40,7 @@
 #include "Common.hh"
 
 // Special enum for type of fit
-enum FitType {TwoD, X, Y};
+enum FitType {TwoD, ProjX, ProjY};
 
 // Special struct for each fit
 struct FitInfo

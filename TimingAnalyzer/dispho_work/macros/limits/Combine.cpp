@@ -26,7 +26,7 @@ namespace Combine
     std::cout << "Setting up GMSB..." << std::endl;
 
     // read in parameters... 
-    std::fstream inparams("signal_config/all_params.txt");
+    std::fstream inparams("signal_config/gmsb_params.txt");
     Float_t mass, width, br;
     TString lambda, ctau;
     
@@ -42,7 +42,7 @@ namespace Combine
     }
   
     // read in xsecs...
-    std::fstream inxsecs("signal_config/all_xsecs.txt");
+    std::fstream inxsecs("signal_config/gmsb_xsecs.txt");
     Float_t xsec, exsec;
     
     while (inxsecs >> lambda >> ctau >> xsec >> exsec)

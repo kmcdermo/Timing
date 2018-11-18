@@ -1,6 +1,6 @@
 #include "Limits1D.hh"
 
-Limits1D::Limits1D(const TString & indir, const TString & infilename, const Bool_t doobserved, const TString & outtext)
+Limits1D::Limits1D(const TString & indir, const TString & infilename, const Bool_t doobserved, const TString & era, const TString & outtext)
   : fInDir(indir), fInFileName(infilename), fDoObserved(doobserved), fEra(era), fOutText(outtext)
 {  
   // setup first

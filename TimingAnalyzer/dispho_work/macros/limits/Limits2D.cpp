@@ -506,7 +506,7 @@ void Limits2D::SetupLimitConfig()
   }
 }
 
-void Limits2D::SetupCombine()
+void Limits2D::SetupCommon()
 {
   std::cout << "Setup Common Config..." << std::endl;
 
