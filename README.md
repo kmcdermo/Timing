@@ -2,7 +2,7 @@
 
 Update to README: old 80X code removed, but still have GEN_SIM...
 
-setup:
+standard setup:
 ```
 cmsrel CMSSW_9_4_10
 cd CMSSW_9_4_10/src
@@ -19,6 +19,12 @@ popd
 
 scram b -j 32
 ```
+
+will also need to setup combine somewhere:
+https://cms-hcomb.gitbooks.io/combine/content/part1/#for-end-users-that-dont-need-to-commit-or-do-any-development
+
+Change the relative path for the setup in ```limits/scripts/common_variables.sh```
+
 
 Made ```kmcdermo:post_reco_OOT_AND_add_OOT_VID``` with the following:
 - ```kmcdermo:post_reco_OOT```: adds scale/smear + GED cut-based VID for OOT photons
