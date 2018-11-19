@@ -16,14 +16,16 @@
 struct GMSBinfo
 {
   GMSBinfo() {}
-  GMSBinfo(const TString & s_lambda, const Int_t lambda, const TString & s_ctau, const Float_t ctau, const Float_t mass, const Float_t width, const Float_t br)
-    : s_lambda(s_lambda), lambda(lambda), s_ctau(s_ctau), ctau(ctau), mass(mass), width(width), br(br) {}
+  GMSBinfo(const TString & s_lambda, const Int_t lambda, const TString & s_ctau, const Float_t ctau, 
+	   const Float_t gen_ctau, const Float_t mass, const Float_t width, const Float_t br)
+    : s_lambda(s_lambda), lambda(lambda), s_ctau(s_ctau), ctau(ctau), gen_ctau(gen_ctau), mass(mass), width(width), br(br) {}
 
   // model params
   TString s_lambda;
   Int_t lambda; // TeV
   TString s_ctau;
   Float_t ctau; // cm
+  Float_t gen_ctau; // cm
   Float_t mass; // GeV/c^2
   Float_t width; // GeV
   Float_t br;

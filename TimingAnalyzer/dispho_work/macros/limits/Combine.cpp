@@ -27,18 +27,18 @@ namespace Combine
 
     // read in parameters... 
     std::fstream inparams("signal_config/gmsb_params.txt");
-    Float_t mass, width, br;
+    Float_t gen_ctau, mass, width, br;
     TString lambda, ctau;
     
-    while (inparams >> lambda >> ctau >> mass >> width >> br)
+    while (inparams >> lambda >> ctau >> gen_ctau >> mass >> width >> br)
     {
-      const TString s_ctau = (ctau.EqualTo("0.1") ? "0p1" : ctau);
+      const TString s_ctau = Common::ReplaceDotWithP(ctau);
       const TString name = "GMSB_L"+lambda+"TeV_CTau"+s_ctau+"cm";
       
       const Int_t i_lambda = lambda.Atoi();
       const Float_t f_ctau = ctau.Atof();
      
-      Combine::GMSBMap[name] = {lambda,i_lambda,s_ctau,f_ctau,mass,width,br};
+      Combine::GMSBMap[name] = {lambda,i_lambda,s_ctau,f_ctau,gen_ctau,mass,width,br};
     }
   
     // read in xsecs...
@@ -47,7 +47,7 @@ namespace Combine
     
     while (inxsecs >> lambda >> ctau >> xsec >> exsec)
     {
-      const TString s_ctau = (ctau.EqualTo("0.1") ? "0p1" : ctau);
+      const TString s_ctau = Common::ReplaceDotWithP(ctau);
       const TString name = "GMSB_L"+lambda+"TeV_CTau"+s_ctau+"cm";
       
       Combine::GMSBMap[name].xsec  = xsec;
