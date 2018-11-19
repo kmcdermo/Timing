@@ -105,9 +105,6 @@ namespace Combine
   {
     std::cout << "Removing GMSB Samples from GMSBMap..." << std::endl;
 
-    // ****************** HACK FOR NOW *************** //
-    Combine::GMSBMap.erase("GMSB_L200TeV_CTau400cm");
-
     std::vector<TString> keysToRemove;
     for (const auto & GMSBPair : Combine::GMSBMap)
     {

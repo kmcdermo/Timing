@@ -100,7 +100,7 @@ void SignalSkimmer::MakeSkimsFromTrees()
       	if (localEntry < 0) break;
       
       	b_evtwgt->GetEntry(localEntry);
-      	outhist->Fill((binlabels[label]*1.f)-0.5f,1.f);
+      	outhist->Fill((binlabels[label]*1.f)-0.5f,evtwgt);
       }
 
       // recursively set entry list for input tree

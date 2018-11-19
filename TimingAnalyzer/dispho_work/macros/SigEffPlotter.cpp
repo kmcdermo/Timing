@@ -291,9 +291,6 @@ void SigEffPlotter::SetupCommon()
 
   Common::SetupSignalSamples();
 
-  //// ************** HACK FOR NOW ********************* ////
-  Common::SampleMap.erase("MC/GMSB/L200TeV_CTau400cm");
-
   Common::SetupGroups();
   Common::SetupSignalGroups();
   Common::SetupSignalCutFlowHistNames();

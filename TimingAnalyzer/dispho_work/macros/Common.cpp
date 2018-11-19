@@ -165,7 +165,7 @@ namespace Common
     Common::SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = "DiPho";
 
     // T+X
-    Common::SampleMap["MC/TX/TTJets"]  = "TX";
+    //    Common::SampleMap["MC/TX/TTJets"]  = "TX"; // tmp for now...
     Common::SampleMap["MC/TX/TGJets"]  = "TX";
     Common::SampleMap["MC/TX/TTGJets"] = "TX";
     Common::SampleMap["MC/TX/TTWJets"] = "TX";
