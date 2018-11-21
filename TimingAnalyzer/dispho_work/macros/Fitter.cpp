@@ -1421,7 +1421,7 @@ void Fitter::SetupPlotConfig()
     else if (str.find("blinding=") != std::string::npos)
     {
       str = Common::RemoveDelim(str,"blinding=");
-      Common::SetupBlinding(str,fBlinds);
+      Common::SetupBlockRange(str,fBlinds);
     }
     else if ((str.find("plot_title=") != std::string::npos) ||
 	     (str.find("x_var=") != std::string::npos)      ||

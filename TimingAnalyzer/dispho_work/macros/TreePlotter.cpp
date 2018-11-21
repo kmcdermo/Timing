@@ -901,7 +901,7 @@ void TreePlotter::SetupPlotConfig(const TString & plotconfig)
     else if (str.find("blinding=") != std::string::npos)
     {
       str = Common::RemoveDelim(str,"blinding=");
-      Common::SetupBlinding(str,fBlinds);
+      Common::SetupBlockRange(str,fBlinds);
     }
     else 
     {

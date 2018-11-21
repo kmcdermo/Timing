@@ -101,7 +101,7 @@ protected:
   std::vector<TString> fXLabels;
   TString fYTitle;
   Bool_t  fIsLogY;
-  std::vector<BlindStruct> fBlinds;
+  std::vector<BlockStruct> fBlinds;
 
   // other plotting config
   std::vector<TString> fPlotSignalVec;

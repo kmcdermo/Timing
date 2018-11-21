@@ -64,11 +64,11 @@ struct EraStruct
   Float_t lumi;
 };
 
-// Blind Struct
-struct BlindStruct
+// Block Struct
+struct BlockStruct
 {
-  BlindStruct() {}
-  BlindStruct(const Float_t xlow, const Float_t xup, 
+  BlockStruct() {}
+  BlockStruct(const Float_t xlow, const Float_t xup, 
 	      const Float_t ylow = std::numeric_limits<float>::lowest(), 
 	      const Float_t yup = std::numeric_limits<float>::max())
     : xlow(xlow), xup(xup), ylow(ylow), yup(yup) {} 
@@ -224,8 +224,10 @@ namespace Common
   // Setup hists
   void SetupBins(std::string & str, std::vector<Double_t> & bins, Bool_t & var_bins);
   void SetupBinLabels(std::string & str, std::vector<TString> & binlabels);
-  void SetupBlinding(const std::string & str, std::vector<BlindStruct> & blinding);
   void SetupScale(const std::string & str, Bool_t & scale);
+
+  // Setup blinding regions and/or regions to count
+  void SetupBlockRange(const std::string & str, std::vector<BlockStruct> & block);
 
   // Misc setup
   void SetupVarBinsBool(const TString & label, const TString & plotconfig, Bool_t & var_bins);

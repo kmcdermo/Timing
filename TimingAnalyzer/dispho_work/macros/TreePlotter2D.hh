@@ -82,7 +82,7 @@ protected:
   Bool_t fYVarBins;
   std::vector<TString> fYLabels;
   TString fZTitle;
-  std::vector<BlindStruct> fBlinds;
+  std::vector<BlockStruct> fBlinds;
 
   // other plotting config
   Bool_t fBlindData;

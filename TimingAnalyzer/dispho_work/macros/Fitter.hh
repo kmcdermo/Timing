@@ -214,7 +214,7 @@ private:
   
   // Blinding (for TH's)
   Bool_t fBlindData;
-  std::vector<BlindStruct> fBlinds;
+  std::vector<BlockStruct> fBlinds;
 
   // Roo vars and bins
   RooRealVar * fX;

@@ -820,7 +820,24 @@ namespace Common
     while (ss >> binlabel) binlabels.push_back(binlabel);
   }
 
-  void SetupBlinding(const std::string & str, std::vector<BlindStruct> & blinding)
+  void SetupScale(const std::string & str, Bool_t & scale)
+  {
+    if      (str.find("LOG") != std::string::npos)
+    {
+      scale = true;
+    }
+    else if (str.find("LIN") != std::string::npos)
+    {
+      scale = false;
+    }
+    else 
+    {
+      std::cerr << "Aye, scale is either LOG or LIN! Exiting..." << std::endl;
+      exit(1);
+    }
+  }
+  
+  void SetupBlockRange(const std::string & str, std::vector<BlockStruct> & block)
   {
     std::stringstream ss(str);
     std::string cutblock;
@@ -840,33 +857,16 @@ namespace Common
       }
 
       // emplace parameters back as xlow,xup,ylow,yup
-      if      (tmpvec.size() == 2) blinding.emplace_back(tmpvec[0],tmpvec[1]);
-      else if (tmpvec.size() == 4) blinding.emplace_back(tmpvec[0],tmpvec[1],tmpvec[2],tmpvec[3]);
+      if      (tmpvec.size() == 2) block.emplace_back(tmpvec[0],tmpvec[1]);
+      else if (tmpvec.size() == 4) block.emplace_back(tmpvec[0],tmpvec[1],tmpvec[2],tmpvec[3]);
       else   
       {
-	std::cerr << "Cutblock: " << cutblock.c_str() << " is formatted incorrectly! Exiting..." << std::endl;
+	std::cerr << "Block range: " << cutblock.c_str() << " is formatted incorrectly! Exiting..." << std::endl;
 	exit(1);
       }
     }
   } 
 
-  void SetupScale(const std::string & str, Bool_t & scale)
-  {
-    if      (str.find("LOG") != std::string::npos)
-    {
-      scale = true;
-    }
-    else if (str.find("LIN") != std::string::npos)
-    {
-      scale = false;
-    }
-    else 
-    {
-      std::cerr << "Aye, scale is either LOG or LIN! Exiting..." << std::endl;
-      exit(1);
-    }
-  }
-  
   void SetupVarBinsBool(const TString & label, const TString & plotconfig, Bool_t & var_bins)
   {
     std::cout << "Reading plot config for var_bins bool..." << std::endl;
