@@ -258,8 +258,7 @@ void SRPlotter::DeleteMemory(const Bool_t deleteSRHists)
   
   if (deleteSRHists)
   {
-    for (auto & HistPair : SRPlotter::HistMap) delete HistPair.second;
-    SRPlotter::HistMap.clear();
+    Common::DeleteMap(SRPlotter::HistMap);
   }
 }
 

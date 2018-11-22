@@ -209,6 +209,7 @@ namespace Common
   void SetupSignalSubGroupColors();
   void SetupColors();
   void SetupLabels();
+  void SetWhichVar(const TString & var, const Variable & Var);
   void SetVar(const TString & var, const Variable Var);
   void SetVarMod(const TString & varmod, const Variable Var, const SampleGroup sample);
   void SetupCuts(const TString & cutconfig);
@@ -227,7 +228,7 @@ namespace Common
   void SetupScale(const std::string & str, Bool_t & scale);
 
   // Setup blinding regions and/or regions to count
-  void SetupBlockRange(const std::string & str, std::vector<BlockStruct> & block);
+  void SetupBlockRanges(const std::string & str, std::vector<BlockStruct> & block);
 
   // Misc setup
   void SetupVarBinsBool(const TString & label, const TString & plotconfig, Bool_t & var_bins);

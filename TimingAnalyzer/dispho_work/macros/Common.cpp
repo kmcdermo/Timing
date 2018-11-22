@@ -567,6 +567,23 @@ namespace Common
     }
   }
   
+  void SetWhichVar(const TString & var, const Variable & Var)
+  {
+    if (var == "X")
+    {
+      Var = Variable::X;
+    }
+    else if (var == "Y")
+    {
+      Var = Variable::Y;
+    }
+    else
+    {
+      std::cerr << "var: " << var.Data() << " is not an allowed variable type! Exiting..." << std::endl;
+      exit(1);
+    }
+  }
+
   void SetVar(const TString & var, const Variable Var)
   {
     for (const auto & GroupPair : Common::GroupMap)
@@ -837,7 +854,7 @@ namespace Common
     }
   }
   
-  void SetupBlockRange(const std::string & str, std::vector<BlockStruct> & block)
+  void SetupBlockRanges(const std::string & str, std::vector<BlockStruct> & block)
   {
     std::stringstream ss(str);
     std::string cutblock;

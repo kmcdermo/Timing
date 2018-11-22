@@ -256,8 +256,7 @@ void TreePlotter2D::DeleteMemory(const Bool_t deleteInternal)
   delete BkgdHist;
   delete DataHist; 
 
-  for (auto & HistPair : HistMap) delete HistPair.second;
-  HistMap.clear();
+  Common::DeleteMap(HistMap);
 
   delete fOutFile;
   delete fTDRStyle;
@@ -381,7 +380,7 @@ void TreePlotter2D::SetupPlotConfig(const TString & plotconfig)
     else if (str.find("blinding=") != std::string::npos)
     {
       str = Common::RemoveDelim(str,"blinding=");
-      Common::SetupBlockRange(str,fBlinds);
+      Common::SetupBlockRanges(str,fBlinds);
     }
     else 
     {
