@@ -18,6 +18,7 @@ export plotconfigdir="plot_config"
 export rescaleconfigdir="rescale_config"
 export srplotconfigdir="srplot_config"
 export varwgtconfigdir="varwgt_config"
+export xcontdumpconfigdir="xcontdump_config"
 export fragdir="plot_config/fragments"
 
 ## common output info
