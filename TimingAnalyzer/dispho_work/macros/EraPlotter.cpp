@@ -183,8 +183,8 @@ void EraPlotter::SetupLegend()
     Legend->AddEntry(DataHistVec[iera],Form("%s",fEras[iera].Data()),"elp");
   }
 
-  Legend->AddEntry(BkgdHist,"Bkgd","f");
-  Legend->AddEntry(BkgdHistErr,"Bkgd Unc.","f");
+  Legend->AddEntry(BkgdHist,Common::BkgdSampleName.Data(),"f");
+  Legend->AddEntry(BkgdHistErr,Form("%s Unc.",Common::BkgdSampleName.Data()),"f");
 
   // output
   fOutFile->cd();

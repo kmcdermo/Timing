@@ -166,7 +166,7 @@ void Fitter::GetInputHists()
   Common::SetupSRMCHists(fSRFile,fHistMap2DTmp);
 
   // EWK MC
-  fHistMap2D["EWK"] = (TH2F*)fSRFile->Get(Form("%s",Common::EWKHistName.Data())); // MC prediction of all other MC backgrounds aside from GJets and QCD
+  fHistMap2D[Common::EWKSampleName] = (TH2F*)fSRFile->Get(Form("%s",Common::EWKHistName.Data())); // MC prediction of all other MC backgrounds aside from GJets and QCD
 
   // Real Data
   if (!fGenData)
@@ -228,15 +228,14 @@ void Fitter::DumpInputInfo()
   }
   
   // Combine Bkgd samples
-  const TString bkgdtext = "Bkgd";
-  auto bkgdHist = (TH2F*)fHistMap2D["EWK"]->Clone(Form("%sHist",bkgdtext.Data()));
+  auto bkgdHist = (TH2F*)fHistMap2D[Common::EWKSampleName]->Clone(Form("%sHist",Common::BkgdSampleName.Data()));
   for (const auto & BkgdGroupPair : Common::BkgdGroupMap)
   {
     const auto & sample = BkgdGroupPair.first;
     if (!Common::IsCR(sample)) continue;
     bkgdHist->Add(fHistMap2D[sample]);
   }
-  Fitter::DumpIntegralsAndDraw(bkgdHist,bkgdtext,false,true);
+  Fitter::DumpIntegralsAndDraw(bkgdHist,Common::BkgdSampleName,false,true);
   if (!fBkgdOnly) Fitter::DumpSignificance(bkgdHist);
   delete bkgdHist;
 

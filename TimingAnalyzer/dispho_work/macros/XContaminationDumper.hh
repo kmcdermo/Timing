@@ -30,6 +30,8 @@ struct ContInfo
 
   Double_t int_full;
   Double_t int_err_full;
+  Double_t frac_full;
+  Double_t frac_err_full;
 
   Double_t int_1D;
   Double_t int_err_1D;
@@ -56,8 +58,8 @@ public:
   void SetupOutSignalHists();
 
   // Additional setup functions
-  void SetupLambdas();
-  void SetupCTaus();
+  void SetupLambdas(const std::string & str);
+  void SetupCTaus(const std::string & str);
   TH2F * MakeSignalHist(const TString & name, const TString & title);
   
   // Main calls
@@ -107,4 +109,7 @@ private:
   TFile * fOutFile;
   std::map<TString,TH2F*> fHistMap;
   TPaveText * fConfigPave;
-}
+};
+
+#endif
+

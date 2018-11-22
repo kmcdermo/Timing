@@ -185,7 +185,8 @@ namespace Common
   extern std::vector<std::pair<TString,TString> > CutFlowPairVec;
 
   // special name for Bkgd Hist
-  static const TString BkgdHistName = "Bkgd_Hist";
+  static const TString BkgdSampleName = "Bkgd";
+  static const TString BkgdHistName   = Common::BkgdSampleName+"_Hist";
   
   // special name for EWK histogram
   static const TString EWKSampleName = "EWK";
@@ -209,7 +210,7 @@ namespace Common
   void SetupSignalSubGroupColors();
   void SetupColors();
   void SetupLabels();
-  void SetWhichVar(const TString & var, const Variable & Var);
+  void SetWhichVar(const TString & var, Variable & Var);
   void SetVar(const TString & var, const Variable Var);
   void SetVarMod(const TString & varmod, const Variable Var, const SampleGroup sample);
   void SetupCuts(const TString & cutconfig);
@@ -319,10 +320,13 @@ namespace Common
   {
     return (sample.Contains("GJets",TString::kExact) || sample.Contains("QCD",TString::kExact));
   }
-
+  Bool_t IsBkgd(const TString & sample)
+  {
+    return (sample.Contains(Common::BkgdSampleName,TString::kExact));
+  }
   Bool_t IsEWK(const TString & sample)
   {
-    return (sample.Contains("EWK",TString::kExact));
+    return (sample.Contains(Common::EWKSampleName,TString::kExact));
   }
 
   // may actually want an invalid tree/file...

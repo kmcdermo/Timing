@@ -2,8 +2,8 @@
 
 XContaminationDumper::XContaminationDumper(const TString & infilename, const TString & xcontdumpconfig, 
 					   const TString & plotconfig, const TString & era, const TString & outfiletext) 
-  : infilename(fInFileName), xcontdumpconfig(fXContDumpConfig),
-    plotconfig(fPlotConfig), era(fEra), outfiletext(fOutFileText)
+  : fInFileName(infilename), fXContDumpConfig(xcontdumpconfig),
+    fPlotConfig(plotconfig), fEra(era), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -30,7 +30,7 @@ XContaminationDumper::XContaminationDumper(const TString & infilename, const TSt
 
   // setup samples, output hists
   XContaminationDumper::SetupSampleVec();
-  XContaminationDumper::SetupSignalOutHists();
+  XContaminationDumper::SetupOutSignalHists();
 }
 
 XContaminationDumper::~XContaminationDumper()
@@ -81,7 +81,19 @@ void XContaminationDumper::PrepContMap()
   for (const auto & sample : fSampleVec)
   {
     fInFile->cd();
-    fContMap[sample] = {(TH2F*)fInFile->Get(Form("%s_Plotted",Common::HistNameMap[sample].Data()))};
+
+    if (Common::IsEWK(sample))
+    {
+      fContMap[sample] = {(TH2F*)fInFile->Get(Form("%s",Common::EWKHistName.Data()))};
+    }
+    else if (Common::IsBkgd(sample))
+    {
+      fContMap[sample] = {(TH2F*)fInFile->Get(Form("%s",Common::BkgdHistName.Data()))};
+    }
+    else
+    {
+      fContMap[sample] = {(TH2F*)fInFile->Get(Form("%s",Common::HistNameMap[sample].Data()))};
+    }
   }
 
   // scaling up hists to integral predicted values
@@ -92,7 +104,7 @@ void XContaminationDumper::PrepContMap()
     {
       const auto & sample = ContPair.first;
       auto & info = ContPair.second;
-      
+
       auto & hist = info.hist;
       Common::Scale(hist,isUp,fXVarBins,fYVarBins);
     }
@@ -109,7 +121,7 @@ void XContaminationDumper::ComputeDumpInfos()
     XContaminationDumper::ComputeIntegrals(sample);
     
     // compute fractions for predicted MC
-    if ((Config::GroupMap[sample] != isData) && sample != "Bkgd")
+    if ((Common::GroupMap[sample] != isData) && !Common::IsBkgd(sample))
     {
       XContaminationDumper::ComputeFractions(sample);
     }
@@ -128,13 +140,13 @@ void XContaminationDumper::ComputeIntegrals(const TString & sample)
   const auto xmax_full = hist->GetXaxis()->GetNbins();
   const auto ymax_full = hist->GetYaxis()->GetNbins();
 
-  info.int_full = hist->GetIntegralAndError(1,xmax_full,1,ymax_full,info.int_err_full);
+  info.int_full = hist->IntegralAndError(1,xmax_full,1,ymax_full,info.int_err_full);
 
   // tmp variables for computing block integrals + errors
   Double_t hist_int = 0., hist_err = 0., tmp_err = 0.;
     
   // do 1D block range first
-  for (const auto & block1D : fBlocks1D)
+  for (const auto & block : fBlocks1D)
   {
     // get bin range
     const auto xmin = hist->GetXaxis()->FindBin((fVar1D == Variable::X) ? block.xlow : std::numeric_limits<float>::lowest());
@@ -143,7 +155,7 @@ void XContaminationDumper::ComputeIntegrals(const TString & sample)
     const auto ymax = hist->GetYaxis()->FindBin((fVar1D == Variable::Y) ? block.xup  : std::numeric_limits<float>::max());
     
     // get integrals and errors
-    hist_int += hist->GetIntegralAndError(xmin,xmax,ymin,ymax,tmp_err);
+    hist_int += hist->IntegralAndError(xmin,xmax,ymin,ymax,tmp_err);
     hist_err += tmp_err*tmp_err;
   }
     
@@ -155,7 +167,7 @@ void XContaminationDumper::ComputeIntegrals(const TString & sample)
   hist_int = 0., hist_err = 0., tmp_err = 0.;
   
   // now do 2D block
-  for (const auto & block2D : fBlocks2D)
+  for (const auto & block : fBlocks2D)
   {
     // get bin range
     const auto xmin = hist->GetXaxis()->FindBin(block.xlow);
@@ -164,7 +176,7 @@ void XContaminationDumper::ComputeIntegrals(const TString & sample)
     const auto ymax = hist->GetYaxis()->FindBin(block.yup);
     
     // get integrals and errors
-    hist_int += hist->GetIntegralAndError(xmin,xmax,ymin,ymax,tmp_err);
+    hist_int += hist->IntegralAndError(xmin,xmax,ymin,ymax,tmp_err);
     hist_err += tmp_err*tmp_err;
   }
   
@@ -178,11 +190,15 @@ void XContaminationDumper::ComputeFractions(const TString & sample)
   std::cout << "Getting fractions for sample: " << sample.Data() << std::endl;
 
   // get structs
-  const auto & bkgd = fContMap["Bkgd"];
+  const auto & bkgd = fContMap[Common::BkgdSampleName];
   auto & info = fContMap[sample];
 
   if (Common::IsCR(sample) || Common::IsEWK(sample)) // Backgrounds, compute ratios for background predicted as denom
   {
+    // full
+    info.frac_full = info.frac_full / bkgd.frac_full;
+    info.frac_err_full = info.frac_full * Common::hypot(info.frac_err_full/info.frac_full,bkgd.frac_err_full/bkgd.frac_full);
+
     // 1D block
     info.frac_1D = info.int_1D / bkgd.int_1D;
     info.frac_err_1D = info.frac_1D * Common::hypot(info.int_err_1D/info.int_1D,bkgd.int_err_1D/bkgd.int_1D);
@@ -193,6 +209,10 @@ void XContaminationDumper::ComputeFractions(const TString & sample)
   }
   else if (Common::GroupMap[sample] == SampleGroup::isSignal) // MC signals, compute ratios for background + signal predicted as denom
   {
+    // full
+    info.frac_full = info.frac_full / (info.frac_full + bkgd.frac_full);
+    info.frac_err_full = Common::hypot(info.frac_err_full*bkgd.frac_full,bkgd.frac_err_full*info.frac_full) / std::pow(info.frac_full+bkgd.frac_full,2);
+
     // 1D block
     info.frac_1D = info.int_1D / (info.int_1D + bkgd.int_1D);
     info.frac_err_1D = Common::hypot(info.int_err_1D*bkgd.int_1D,bkgd.int_err_1D*info.int_1D) / std::pow(info.int_1D+bkgd.int_1D,2);
@@ -213,7 +233,7 @@ void XContaminationDumper::DumpTextFile()
   std::cout << "Dumping into text file..." << std::endl;
   
   // main file
-  std::ofstream outfile(Form("%s_contdump.txt",fOutFileText.Data()),std::ios_base::trunc);
+  std::ofstream outfile(Form("%s_contdump.%s",fOutFileText.Data(),Common::outTextExt.Data()),std::ios_base::trunc);
 
   // loop over samples
   for (const auto & sample : fSampleVec)
@@ -223,9 +243,18 @@ void XContaminationDumper::DumpTextFile()
     // get info and then dump!
     const auto & info = fContMap[sample];
 
-    outfile << info.int_full << "+/-" << info.int_err_full << " "
-	    << info.int_1D << "+/-" << info.int_err_1D << " "
-	    << info.int_2D << "+/-" << info.int_err_2D << std::endl;
+    if ((Common::GroupMap[sample] == SampleGroup::isData) || (Common::IsBkgd(sample)))
+    { 
+      outfile << info.int_full << "+/-" << info.int_err_full << " "
+	      << info.int_1D << "+/-" << info.int_err_1D << " "
+	      << info.int_2D << "+/-" << info.int_err_2D << std::endl;
+    }
+    else
+    {
+      outfile << info.frac_full << "+/-" << info.frac_err_full << " "
+	      << info.frac_1D << "+/-" << info.frac_err_1D << " "
+	      << info.frac_2D << "+/-" << info.frac_err_2D << std::endl;
+    }
   }
 }
 
@@ -245,16 +274,16 @@ void XContaminationDumper::FillSignalHists()
       const auto & info = fContMap["GMSB_L"+lambda+"_CTau"+ctau];
 
       // full
-      fHistMap["full"]->SetBinContent(ilambda+1,ictau+1,info.int_full);
-      fHistMap["full"]->SetBinError  (ilambda+1,ictau+1,info.int_err_full);
+      fHistMap["full"]->SetBinContent(ilambda+1,ictau+1,info.frac_full);
+      fHistMap["full"]->SetBinError  (ilambda+1,ictau+1,info.frac_err_full);
 
       // block1D
-      fHistMap["block1D"]->SetBinContent(ilambda+1,ictau+1,info.int_1D);
-      fHistMap["block1D"]->SetBinError  (ilambda+1,ictau+1,info.int_err_1D);
+      fHistMap["block1D"]->SetBinContent(ilambda+1,ictau+1,info.frac_1D);
+      fHistMap["block1D"]->SetBinError  (ilambda+1,ictau+1,info.frac_err_1D);
 
       // block2D
-      fHistMap["block2D"]->SetBinContent(ilambda+1,ictau+1,info.int_2D);
-      fHistMap["block2D"]->SetBinError  (ilambda+1,ictau+1,info.int_err_2D);
+      fHistMap["block2D"]->SetBinContent(ilambda+1,ictau+1,info.frac_2D);
+      fHistMap["block2D"]->SetBinError  (ilambda+1,ictau+1,info.frac_err_2D);
     }
   }
 
@@ -304,7 +333,7 @@ void XContaminationDumper::MakeConfigPave()
   Common::AddEraInfoToPave(fConfigPave,fEra);
 
   // dump config
-  Common::AddTextFromInputConfig(fConfigPave,"XContDump Config",fXContConfig);
+  Common::AddTextFromInputConfig(fConfigPave,"XContDump Config",fXContDumpConfig);
 
   // plot config
   Common::AddTextFromInputConfig(fConfigPave,"Plot Config",fPlotConfig);
@@ -348,7 +377,7 @@ void XContaminationDumper::SetupXContDumpConfig()
     else if (str.find("1D_var=") != std::string::npos)
     {
       str = Common::RemoveDelim(str,"1D_var=");
-      fVar1D = Common::SetWhichVar(str);
+      Common::SetWhichVar(str,fVar1D);
     }
     else if (str.find("1D_range=") != std::string::npos)
     {
@@ -363,12 +392,12 @@ void XContaminationDumper::SetupXContDumpConfig()
     else if (str.find("lambdas=") != std::string::npos)
     {
       str = Common::RemoveDelim(str,"lambdas=");
-      fLambdas = XContaminationDumper::SetupLambdas();
+      XContaminationDumper::SetupLambdas(str);
     }
     else if (str.find("ctaus=") != std::string::npos)
     {
       str = Common::RemoveDelim(str,"ctaus=");
-      fCTaus = XContaminationDumper::SetupCTaus();
+      XContaminationDumper::SetupCTaus(str);
     }
     else 
     {
@@ -379,12 +408,32 @@ void XContaminationDumper::SetupXContDumpConfig()
   }
 }
 
+void XContaminationDumper::SetupLambdas(const std::string & str)
+{
+  std::stringstream ss(str);
+  std::string lambda;
+  while (ss >> lambda)
+  {
+    fLambdas.emplace_back(lambda);
+  }
+}
+
+void XContaminationDumper::SetupCTaus(const std::string & str)
+{
+  std::stringstream ss(str);
+  std::string ctau;
+  while (ss >> ctau)
+  {
+    fCTaus.emplace_back(ctau);
+  }
+}
+
 void XContaminationDumper::SetupSampleVec()
 {
   std::cout << "Settting up sample vec..." << std::endl;
 
   // data + bkgd mc
-  fSampleVec = {"Data","Bkgd","QCD","GJets","EWK"};
+  fSampleVec = {"Data",Common::BkgdSampleName,"QCD","GJets",Common::EWKSampleName};
   
   // signal mc
   for (const auto & lambda : fLambdas)

@@ -5,6 +5,7 @@ source scripts/common_variables.sh
 
 ## Command Line Input
 outdir=${1:-"madv2_v1/checks_v2/dumps"}
+usewgts=${2:-"true"}
 
 ## 2D plot config
 plot="met_vs_time"
@@ -20,6 +21,11 @@ do
 
     echo ${!input} | while read -r label infile insigfile sel varwgtmap
     do
+	## check for no weights
+	if [[ "${usewgts}" == "false" ]]; then
+	    varwgtmap="empty"
+	fi
+
 	## tmp out name
 	outtext="${plot}_${label}"
 

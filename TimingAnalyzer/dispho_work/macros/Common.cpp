@@ -284,7 +284,7 @@ namespace Common
       }
     }
 
-    Common::BkgdGroupMap["EWK"] = SampleGroup::isBkgd;
+    Common::BkgdGroupMap[Common::EWKSampleName] = SampleGroup::isBkgd;
   }
 
   void SetupSignalGroups()
@@ -567,7 +567,7 @@ namespace Common
     }
   }
   
-  void SetWhichVar(const TString & var, const Variable & Var)
+  void SetWhichVar(const TString & var, Variable & Var)
   {
     if (var == "X")
     {
