@@ -13,6 +13,7 @@ dir=${6:-"plots"}
 
 ## 2D plots
 declare -a plots=("full" "block1D" "block2D")
+declare -a events=("int" "frac")
 
 ## first make plot
 root -l -b -q runXContaminationDumper.C\(\"${infilename}\",\"${xcontdumpconfig}\",\"${plotconfig}\",\"${era}\",\"${outfiletext}\"\)
@@ -24,13 +25,16 @@ PrepOutDir ${fulldir}
 ## copy everything
 for plot in "${plots[@]}"
 do
-    for ext in "${exts[@]}"
+    for event in "${events[@]}"
     do
-	cp ${outfiletext}_${plot}.${ext} ${fulldir}
+	for ext in "${exts[@]}"
+	do
+	    cp ${outfiletext}_${plot}_${event}.${ext} ${fulldir}
+	done
     done
 done
 
-cp ${outfiletext}.root ${outfiletext}"_contdump".${outTextExt} ${fulldir}
+cp ${outfiletext}.root ${outfiletext}.${outTextExt} ${fulldir}
 
 ## Final message
 echo "Finished XContaminationDumping for plot:" ${infilename}

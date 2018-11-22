@@ -60,7 +60,7 @@ public:
   // Additional setup functions
   void SetupLambdas(const std::string & str);
   void SetupCTaus(const std::string & str);
-  TH2F * MakeSignalHist(const TString & name, const TString & title);
+  TH2F * MakeSignalHist(const TString & name, const TString & title, const Bool_t isIntegral);
   
   // Main calls
   void MakeContaminationDump();

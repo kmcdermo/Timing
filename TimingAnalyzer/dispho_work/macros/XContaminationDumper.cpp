@@ -121,10 +121,9 @@ void XContaminationDumper::ComputeDumpInfos()
     XContaminationDumper::ComputeIntegrals(sample);
     
     // compute fractions for predicted MC
-    if ((Common::GroupMap[sample] != isData) && !Common::IsBkgd(sample))
-    {
-      XContaminationDumper::ComputeFractions(sample);
-    }
+    if ((Common::GroupMap[sample] == SampleGroup::isData) || (Common::IsBkgd(sample))) continue;
+
+    XContaminationDumper::ComputeFractions(sample);
   }
 }
 
@@ -193,11 +192,11 @@ void XContaminationDumper::ComputeFractions(const TString & sample)
   const auto & bkgd = fContMap[Common::BkgdSampleName];
   auto & info = fContMap[sample];
 
-  if (Common::IsCR(sample) || Common::IsEWK(sample)) // Backgrounds, compute ratios for background predicted as denom
+  if (Common::GroupMap[sample] == SampleGroup::isBkgd) // Backgrounds, compute ratios for background predicted as denom
   {
     // full
-    info.frac_full = info.frac_full / bkgd.frac_full;
-    info.frac_err_full = info.frac_full * Common::hypot(info.frac_err_full/info.frac_full,bkgd.frac_err_full/bkgd.frac_full);
+    info.frac_full = info.int_full / bkgd.int_full;
+    info.frac_err_full = info.frac_full * Common::hypot(info.int_err_full/info.int_full,bkgd.int_err_full/bkgd.int_full);
 
     // 1D block
     info.frac_1D = info.int_1D / bkgd.int_1D;
@@ -210,8 +209,8 @@ void XContaminationDumper::ComputeFractions(const TString & sample)
   else if (Common::GroupMap[sample] == SampleGroup::isSignal) // MC signals, compute ratios for background + signal predicted as denom
   {
     // full
-    info.frac_full = info.frac_full / (info.frac_full + bkgd.frac_full);
-    info.frac_err_full = Common::hypot(info.frac_err_full*bkgd.frac_full,bkgd.frac_err_full*info.frac_full) / std::pow(info.frac_full+bkgd.frac_full,2);
+    info.frac_full = info.int_full / (info.int_full + bkgd.int_full);
+    info.frac_err_full = Common::hypot(info.int_err_full*bkgd.int_full,bkgd.int_err_full*info.int_full) / std::pow(info.int_full+bkgd.int_full,2);
 
     // 1D block
     info.frac_1D = info.int_1D / (info.int_1D + bkgd.int_1D);
@@ -233,7 +232,8 @@ void XContaminationDumper::DumpTextFile()
   std::cout << "Dumping into text file..." << std::endl;
   
   // main file
-  std::ofstream outfile(Form("%s_contdump.%s",fOutFileText.Data(),Common::outTextExt.Data()),std::ios_base::trunc);
+  std::ofstream outfile(Form("%s.%s",fOutFileText.Data(),Common::outTextExt.Data()),std::ios_base::trunc);
+  outfile << "Sample Full Block1D Block2D" << std::endl;
 
   // loop over samples
   for (const auto & sample : fSampleVec)
@@ -245,13 +245,15 @@ void XContaminationDumper::DumpTextFile()
 
     if ((Common::GroupMap[sample] == SampleGroup::isData) || (Common::IsBkgd(sample)))
     { 
-      outfile << info.int_full << "+/-" << info.int_err_full << " "
+      outfile << sample.Data() << " "
+	      << info.int_full << "+/-" << info.int_err_full << " "
 	      << info.int_1D << "+/-" << info.int_err_1D << " "
 	      << info.int_2D << "+/-" << info.int_err_2D << std::endl;
     }
     else
     {
-      outfile << info.frac_full << "+/-" << info.frac_err_full << " "
+      outfile << sample.Data() << " "
+	      << info.frac_full << "+/-" << info.frac_err_full << " "
 	      << info.frac_1D << "+/-" << info.frac_err_1D << " "
 	      << info.frac_2D << "+/-" << info.frac_err_2D << std::endl;
     }
@@ -274,16 +276,22 @@ void XContaminationDumper::FillSignalHists()
       const auto & info = fContMap["GMSB_L"+lambda+"_CTau"+ctau];
 
       // full
-      fHistMap["full"]->SetBinContent(ilambda+1,ictau+1,info.frac_full);
-      fHistMap["full"]->SetBinError  (ilambda+1,ictau+1,info.frac_err_full);
+      fHistMap["full_int"] ->SetBinContent(ilambda+1,ictau+1,info.int_full);
+      fHistMap["full_int"] ->SetBinError  (ilambda+1,ictau+1,info.int_err_full);
+      fHistMap["full_frac"]->SetBinContent(ilambda+1,ictau+1,info.frac_full);
+      fHistMap["full_frac"]->SetBinError  (ilambda+1,ictau+1,info.frac_err_full);
 
       // block1D
-      fHistMap["block1D"]->SetBinContent(ilambda+1,ictau+1,info.frac_1D);
-      fHistMap["block1D"]->SetBinError  (ilambda+1,ictau+1,info.frac_err_1D);
+      fHistMap["block1D_int"] ->SetBinContent(ilambda+1,ictau+1,info.int_1D);
+      fHistMap["block1D_int"] ->SetBinError  (ilambda+1,ictau+1,info.int_err_1D);
+      fHistMap["block1D_frac"]->SetBinContent(ilambda+1,ictau+1,info.frac_1D);
+      fHistMap["block1D_frac"]->SetBinError  (ilambda+1,ictau+1,info.frac_err_1D);
 
       // block2D
-      fHistMap["block2D"]->SetBinContent(ilambda+1,ictau+1,info.frac_2D);
-      fHistMap["block2D"]->SetBinError  (ilambda+1,ictau+1,info.frac_err_2D);
+      fHistMap["block2D_int"] ->SetBinContent(ilambda+1,ictau+1,info.int_2D);
+      fHistMap["block2D_int"] ->SetBinError  (ilambda+1,ictau+1,info.int_err_2D);
+      fHistMap["block2D_frac"]->SetBinContent(ilambda+1,ictau+1,info.frac_2D);
+      fHistMap["block2D_frac"]->SetBinError  (ilambda+1,ictau+1,info.frac_err_2D);
     }
   }
 
@@ -308,7 +316,7 @@ void XContaminationDumper::PrintSignalHists()
     auto canv = new TCanvas();
     canv->cd();
  
-    hist->Draw("COLZ TEXT");
+    hist->Draw("COLZ TEXTE");
 
     Common::CMSLumi(canv,0,fEra);
     Common::SaveAs(canv,Form("%s_%s",fOutFileText.Data(),key.Data()));
@@ -363,6 +371,10 @@ void XContaminationDumper::SetupCommon()
 
   Common::SetupVarBinsBool("x_bins=",fPlotConfig,fXVarBins);
   Common::SetupVarBinsBool("y_bins=",fPlotConfig,fYVarBins);
+
+  // Append Groups
+  Common::GroupMap[Common::EWKSampleName]  = SampleGroup::isBkgd;
+  Common::GroupMap[Common::BkgdSampleName] = SampleGroup::isBkgd;
 }
 
 void XContaminationDumper::SetupXContDumpConfig()
@@ -448,21 +460,28 @@ void XContaminationDumper::SetupSampleVec()
 void XContaminationDumper::SetupOutSignalHists()
 {
   std::cout << "Settting up signal out hists..." << std::endl;
-  
-  fHistMap["full"] = XContaminationDumper::MakeSignalHist("sig_over_sig_plus_bkgd_full","S/S+B Full");
-  fHistMap["block1D"] = XContaminationDumper::MakeSignalHist("sig_over_sig_plus_bkgd_block1D","S/S+B 1D Block");
-  fHistMap["block2D"] = XContaminationDumper::MakeSignalHist("sig_over_sig_plus_bkgd_block2D","S/S+B 2D Block");
+
+  // integral counts
+  fHistMap["full_int"] = XContaminationDumper::MakeSignalHist("num_signal_full","nSignal Full",true);
+  fHistMap["block1D_int"] = XContaminationDumper::MakeSignalHist("num_signal_block1D","nSignal 1D Block",true);
+  fHistMap["block2D_int"] = XContaminationDumper::MakeSignalHist("num_signal_block2D","nSignal 2D Block",true);
+
+  // fractional S/S+B
+  fHistMap["full_frac"] = XContaminationDumper::MakeSignalHist("sig_over_sig_plus_bkgd_full","S/S+B Full",false);
+  fHistMap["block1D_frac"] = XContaminationDumper::MakeSignalHist("sig_over_sig_plus_bkgd_block1D","S/S+B 1D Block",false);
+  fHistMap["block2D_frac"] = XContaminationDumper::MakeSignalHist("sig_over_sig_plus_bkgd_block2D","S/S+B 2D Block",false);
 }
 
-TH2F * XContaminationDumper::MakeSignalHist(const TString & name, const TString & title)
+TH2F * XContaminationDumper::MakeSignalHist(const TString & name, const TString & title, const Bool_t isIntegral)
 {
   fOutFile->cd();
 
   auto hist = new TH2F(name.Data(),title.Data(),fLambdas.size(),0,fLambdas.size(),fCTaus.size(),0,fCTaus.size());
+  hist->SetMarkerSize(1.8f);
+  hist->Sumw2();
+
   hist->GetXaxis()->SetTitle("#Lambda [TeV]");
   hist->GetYaxis()->SetTitle("c#tau [ns]");
-  hist->GetZaxis()->SetTitle("S/S+B");
-  hist->Sumw2();
 
   for (auto ibinX = 1; ibinX <= hist->GetXaxis()->GetNbins(); ibinX++)
   {
@@ -474,7 +493,16 @@ TH2F * XContaminationDumper::MakeSignalHist(const TString & name, const TString 
     hist->GetYaxis()->SetBinLabel(ibinY,fLambdas[ibinY-1]);
   }
 
-  hist->GetZaxis()->SetRangeUser(0.f,1.f);
-  
+  if (isIntegral)
+  {
+    hist->GetZaxis()->SetTitle("nSignal Events");
+    hist->GetZaxis()->SetRangeUser(0.f,100.f);
+  }
+  else // fractions
+  {
+    hist->GetZaxis()->SetTitle("S/S+B");
+    hist->GetZaxis()->SetRangeUser(0.f,1.f);
+  }
+
   return hist;
 }

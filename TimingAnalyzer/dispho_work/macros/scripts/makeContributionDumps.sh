@@ -33,7 +33,7 @@ do
 	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc2D}.${inTextExt}" "${MainEra}" "${outtext}" "${outdir}"
 
 	## dump cross contamination
-	./scripts/runXContaminationDumper.sh "${outtext}.root" "${xcontdumpconfigdir}/${plot}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${MainEra}" "${outtext}" "${outdir}"
+	./scripts/runXContaminationDumper.sh "${outtext}.root" "${xcontdumpconfigdir}/${plot}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${MainEra}" "${outtext}_contdump" "${outdir}"
     done
 done
 
