@@ -5,7 +5,7 @@ source scripts/common_variables.sh
 
 ## Command Line Input
 outdir=${1:-"madv2_v1/checks_v2/dumps"}
-usewgts=${2:-"true"}
+usewgts=${2:-"false"}
 
 ## 2D plot config
 plot="met_vs_time"

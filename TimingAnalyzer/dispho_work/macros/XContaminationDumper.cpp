@@ -312,10 +312,11 @@ void XContaminationDumper::PrintSignalHists()
   {
     const auto & key = HistPair.first;
     auto & hist = HistPair.second;
-
+    
     auto canv = new TCanvas();
     canv->cd();
- 
+    if (key.Contains("int",TString::kExact)) canv->SetLogz(1);
+
     hist->Draw("COLZ TEXTE");
 
     Common::CMSLumi(canv,0,fEra);
@@ -496,7 +497,7 @@ TH2F * XContaminationDumper::MakeSignalHist(const TString & name, const TString 
   if (isIntegral)
   {
     hist->GetZaxis()->SetTitle("nSignal Events");
-    hist->GetZaxis()->SetRangeUser(0.f,100.f);
+    hist->GetZaxis()->SetRangeUser(1e-5,1e5);
   }
   else // fractions
   {
