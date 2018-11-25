@@ -491,7 +491,7 @@ TH2F * XContaminationDumper::MakeSignalHist(const TString & name, const TString 
 
   for (auto ibinY = 1; ibinY <= hist->GetYaxis()->GetNbins(); ibinY++)
   {
-    hist->GetYaxis()->SetBinLabel(ibinY,fLambdas[ibinY-1]);
+    hist->GetYaxis()->SetBinLabel(ibinY,fCTaus[ibinY-1]);
   }
 
   if (isIntegral)
