@@ -115,18 +115,28 @@ void TnPPlotter::EventLoop()
       // Initialize variables //
       //////////////////////////
 
-      // tag
-      Bool_t phohasPixSeed_0; TBranch * b_phohasPixSeed_0; intree->SetBranchAddress("phohasPixSeed_0",&phohasPixSeed_0,&b_phohasPixSeed_0);
-
-      // probe
-      Bool_t phoisEB_1; TBranch * b_phoisEB_1; intree->SetBranchAddress("phoisEB_1",&phoisEB_1,&b_phoisEB_1);
-      Bool_t phoisTrk_1; TBranch * b_phoisTrk_1; intree->SetBranchAddress("phoisTrk_1",&phoisTrk_1,&b_phoisTrk_1);
-      Float_t phopt_1; TBranch * b_phopt_1; intree->SetBranchAddress("phopt_1",&phopt_1,&b_phopt_1);
-
       // weights
       Float_t evtwgt; TBranch * b_evtwgt; intree->SetBranchAddress("evtwgt",&evtwgt,&b_evtwgt);
-      Float_t puwgt; TBranch * b_puwgt; 
-      if (isMC) intree->SetBranchAddress("puwgt",&puwgt,&b_puwgt);
+      Float_t puwgt; TBranch * b_puwgt; if (isMC) intree->SetBranchAddress("puwgt",&puwgt,&b_puwgt);
+
+      // HLT 
+      Bool_t hltDiEle33MW; TBranch * b_hltDiEle33MW; inree->SetBranchAddress("hltDiEle33MW",&hltDiEle33MW,&b_hltDiEle33MW);
+
+      ///////////////////////
+      // Setup TnP Structs //
+      ///////////////////////
+
+      TnPStruct leadingEl; // leading electron can be tag
+      intree->SetBranchAddress("phohasPixSeed_0",&leadingEl.phohasPixSeed_tag,&leadingEl.b_phohasPixSeed_tag);
+      intree->SetBranchAddress("phoisEB_1"      ,&leadingEl.phoisEB_probe    ,&leadingEl.b_phoisEB_probe);
+      intree->SetBranchAddress("phoisTrk_1"     ,&leadingEl.phoisTrk_probe   ,&leadingEl.b_phoisTrk_probe);
+      intree->SetBranchAddress("phopt_1"        ,&leadingEl.phopt_probe      ,&leadingEl.b_phopt_probe);
+
+      TnPStruct subleadingEl; // subleading electron can be tag
+      intree->SetBranchAddress("phohasPixSeed_1",&subleadingEl.phohasPixSeed_tag,&subleadingEl.b_phohasPixSeed_tag);
+      intree->SetBranchAddress("phoisEB_0"      ,&subleadingEl.phoisEB_probe    ,&subleadingEl.b_phoisEB_probe);
+      intree->SetBranchAddress("phoisTrk_0"     ,&subleadingEl.phoisTrk_probe   ,&subleadingEl.b_phoisTrk_probe);
+      intree->SetBranchAddress("phopt_0"        ,&subleadingEl.phopt_probe      ,&subleadingEl.b_phopt_probe);
 
       ///////////////////////////////
       // Loop over entries in tree //
@@ -138,24 +148,23 @@ void TnPPlotter::EventLoop()
 	// dump status check
 	if (entry%Common::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
 	
-	// require tag
-	b_phohasPixSeed_0->GetEntry(entry);
-	if (!phohasPixSeed_0) continue;
+	// require hlt
+	// b_hltDiEle33MW->GetEntry(entry);
+	// if (!hltDiEle33MW) continue;
 
-	// only need the entry for the single branches
-	b_phoisEB_1->GetEntry(entry);
-	b_phoisTrk_1->GetEntry(entry);
-	b_phopt_1->GetEntry(entry);
+	// require pt cuts (probes on opposite leg)
+	// subleadingEl.b_phopt_probe->GetEntry(entry);
+	// if (subleadingEl.phopt_probe < 40.f) continue;
+	// leadingEl   .b_phopt_probe->GetEntry(entry);
+	// if (leadingEl.phopt_probe < 40.f) continue;
+
+	// get weights
 	b_evtwgt->GetEntry(entry);
-	
-	// get pu weights for MC
 	if (isMC) b_puwgt->GetEntry(entry);
 
-	// eta label
-	const TString eta_label = (phoisEB_1 ? "EB" : "EE");
-
-	// fill tefficiency
-	EffMap[sample_label+"_"+eta_label]->FillWeighted(phoisTrk_1,(isMC?evtwgt*puwgt:evtwgt),phopt_1); 
+	// Fill plots
+	TnPPlotter::FillTnP(leadingEl   ,entry,sample_label,(isMC?evtwgt*puwgt:evtwgt));
+	TnPPlotter::FillTnP(subleadingEl,entry,sample_label,(isMC?evtwgt*puwgt:evtwgt));
       } // end loop over entries
       
       // delete it all
@@ -174,6 +183,25 @@ void TnPPlotter::EventLoop()
     const auto & eff = EffPair.second;
     fOutFile->cd();
     eff->Write(eff->GetName(),TObject::kWriteDelete);
+  }
+}
+
+void TnPPlotter::FillTnP(TnpStruct & info, const UInt_t entry, const TString & sample_label, const Float_t wgt)
+{
+  // require tag
+  info.b_phohasPixSeed_tag->GetEntry(entry);
+  if (phohasPixSeed_0)
+  {
+    // get remaining pieces (pts already loaded if cutting on them, but redo it anyway)
+    info.b_phoisEB_probe ->GetEntry(entry);
+    info.b_phoisTrk_probe->GetEntry(entry);
+    info.b_phopt_probe   ->GetEntry(entry);
+  
+    // eta label
+    const TString eta_label = (info.phoisEB_probe ? "EB" : "EE");
+  
+    // fill tefficiency
+    EffMap[sample_label+"_"+eta_label]->FillWeighted(info.phoisTrk_probe,wgt,info.phopt_probe);
   }
 }
 
@@ -491,10 +519,10 @@ void TnPPlotter::SetupOutputEffs()
 {
   std::cout << "Setup Output Efficiencies..." << std::endl;
 
-  const TString x_title = "Tag p_{T} [GeV/c]";
+  const TString x_title = "Probe p_{T} [GeV/c]";
   const TString y_title = "Efficiency of isTrk";
   const TString title = y_title+" vs. "+x_title;
-  const std::vector<Double_t> xBins = {0,10,20,30,40,50,60,70,80,90,100,120,140,160,180,200,225,250,275,300,325,350,375,400,450,500,550,600,700,800,1000,1500,2000,2500,3000,4000,5000};
+  const std::vector<Double_t> xBins = {0,50,100,250,500,1000,5000};
   const Double_t * x_bins = &xBins[0];
 
   std::map<TString,Color_t> colorMap;

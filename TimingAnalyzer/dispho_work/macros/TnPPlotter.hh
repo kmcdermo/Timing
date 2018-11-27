@@ -31,6 +31,21 @@
 // Common include
 #include "Common.hh"
 
+struct TnPStruct
+{
+  TnPStruct() {}
+
+  Bool_t phohasPixSeed_tag;
+  Bool_t phoisEB_probe; 
+  Bool_t phoisTrk_probe;
+  Float_t phopt_probe;
+
+  TBranch * b_phohasPixSeed_tag;
+  TBranch * b_phoisEB_probe;
+  TBranch * b_phoisTrk_probe;
+  TBranch * b_phopt_probe;
+};
+
 struct MinMaxStruct
 {
   MinMaxStruct() {}
@@ -67,6 +82,7 @@ public:
   void SaveOutput();
 
   // Helper functions
+  void FillTnP(TnpStruct & info, const UInt_t entry, const TString & sample_label, const Float_t wgt);
   void PrintCanvas(const TString & eta, const Bool_t isLogy);
   
   // Meta data and extra info
