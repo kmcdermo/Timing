@@ -230,8 +230,8 @@ void TimeFitter::ExtractFitResults(FitStruct & FitInfo)
   // setup hists
   ResultsMap["chi2ndf"]  = TimeFitter::SetupHist("#chi^{2}/NDF","chi2ndf",label);
   ResultsMap["chi2prob"] = TimeFitter::SetupHist("#chi^{2} Prob.","chi2prob",label);
-  ResultsMap["mu"]       = TimeFitter::SetupHist(Form("#mu_{%s} [ns]",fTimeText.Data()),"mu",label);
-  ResultsMap["sigma"]    = TimeFitter::SetupHist(Form("#sigma_{%s} [ns]",fTimeText.Data()),"sigma",label);
+  ResultsMap["mu"]       = TimeFitter::SetupHist(Form("#mu(%s) [ns]",fTimeText.Data()),"mu",label);
+  ResultsMap["sigma"]    = TimeFitter::SetupHist(Form("#sigma(%s) [ns]",fTimeText.Data()),"sigma",label);
 
   // set bin content!
   for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
@@ -339,7 +339,7 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
 
   if (key.EqualTo("sigma",TString::kExact))
   {
-    min = (isLogy ? 0.1f : 0.f);
+    min = (isLogy ? 0.07f : 0.f);
     max = 1.f;
   }
   else
@@ -390,10 +390,10 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
     FitText->SetName("SigmaFitText");
     
     FitText->AddText(Form("#sigma(t)=#frac{N}{%s} #oplus %sC",fSigmaVarText.Data(),fUseSqrt2?"#sqrt{2}":""));
-    FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f [%s ns]",DataLabel.Data(),DataFit->GetParameter(0),DataFit->GetParError(0),fSigmaVarUnit.Data()));
-    FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f [ns]"   ,DataLabel.Data(),DataFit->GetParameter(1),DataFit->GetParError(1)));
-    FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f [%s ns]",MCLabel  .Data(),MCFit  ->GetParameter(0),MCFit  ->GetParError(0),fSigmaVarUnit.Data()));
-    FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f [ns]"   ,MCLabel  .Data(),MCFit  ->GetParameter(1),MCFit  ->GetParError(1)));
+    FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f [%sns]",DataLabel.Data(),DataFit->GetParameter(0),DataFit->GetParError(0),fSigmaVarUnit.Data()));
+    FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f [ns]"  ,DataLabel.Data(),DataFit->GetParameter(1),DataFit->GetParError(1)));
+    FitText->AddText(Form("N^{%s} = %4.1f #pm %3.1f [%sns]",MCLabel  .Data(),MCFit  ->GetParameter(0),MCFit  ->GetParError(0),fSigmaVarUnit.Data()));
+    FitText->AddText(Form("C^{%s} = %6.4f #pm %6.4f [ns]"  ,MCLabel  .Data(),MCFit  ->GetParameter(1),MCFit  ->GetParError(1)));
     FitText->SetTextAlign(11);
     FitText->SetFillColorAlpha(FitText->GetFillColor(),0);
 
@@ -704,6 +704,9 @@ void TimeFitter::SetupTimeFitConfig()
     else if (str.find("sigma_var_unit=") != std::string::npos)
     {
       fSigmaVarUnit = Common::RemoveDelim(str,"sigma_var_unit=");
+
+      // set to null character if none is specified
+      if (fSigmaVarUnit.EqualTo("NONE",TString::kExact)) fSigmaVarUnit = "";
     }
     else if (str.find("sigma_init_N_params=") != std::string::npos)
     {
@@ -742,11 +745,11 @@ TH1F * TimeFitter::SetupHist(const TString & ytitle, const TString & yextra, con
   Color_t color = kBlack;
   if (label.EqualTo("Data",TString::kExact))
   {
-    color = kRed;
+    color = kBlue;
   }
   else if (label.EqualTo("MC",TString::kExact))
   {
-    color = kBlue;
+    color = kRed;
   }
   else
   {

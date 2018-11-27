@@ -297,16 +297,10 @@ void Skimmer::EventLoop()
 
 	if (inpho.smin > 0.3) continue;
 	if (inpho.smaj > 0.5) continue;
-	
-	// HACK!!! New ntuples will sort rec hit list by E!
-	inpho.b_recHits->GetEntry(entry);
-	std::sort(inpho.recHits->begin(),inpho.recHits->end(),
-		  [&](const auto rh1, const auto rh2)
-		  {
-		    return ((*fInRecHits.E)[rh1] > (*fInRecHits.E)[rh2]);
-		  });
-	
+		
 	// get pair of rechits that are good candidates : double loop, yo
+	inpho.b_recHits->GetEntry(entry);
+
 	const auto n = inpho.recHits->size();
 	for (auto i = 0U; i < n; i++)
 	{
@@ -859,9 +853,9 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       inpho.b_seedped12->GetEntry(entry);
       inpho.b_seedped6->GetEntry(entry);
       inpho.b_seedped1->GetEntry(entry);
-      // inpho.b_seedpedrms12->GetEntry(entry);
-      // inpho.b_seedpedrms6->GetEntry(entry);
-      // inpho.b_seedpedrms1->GetEntry(entry);
+      inpho.b_seedpedrms12->GetEntry(entry);
+      inpho.b_seedpedrms6->GetEntry(entry);
+      inpho.b_seedpedrms1->GetEntry(entry);
     }
     
     if (fIsMC)
@@ -895,9 +889,9 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     fInRecHits.b_ped12->GetEntry(entry);
     fInRecHits.b_ped6->GetEntry(entry);
     fInRecHits.b_ped1->GetEntry(entry);
-    // fInRecHits.b_pedrms12->GetEntry(entry);
-    // fInRecHits.b_pedrms6->GetEntry(entry);
-    // fInRecHits.b_pedrms1->GetEntry(entry);
+    fInRecHits.b_pedrms12->GetEntry(entry);
+    fInRecHits.b_pedrms6->GetEntry(entry);
+    fInRecHits.b_pedrms1->GetEntry(entry);
   }
 
   // set output photon branches
@@ -976,9 +970,9 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.seedped12 = (*fInRecHits.ped12)[seed];
 	outpho.seedped6  = (*fInRecHits.ped6) [seed];
 	outpho.seedped1  = (*fInRecHits.ped1) [seed];
-	// outpho.seedpedrms12 = (*fInRecHits.pedrms12)[seed];
-	// outpho.seedpedrms6  = (*fInRecHits.pedrms6) [seed];
-	// outpho.seedpedrms1  = (*fInRecHits.pedrms1) [seed];
+	outpho.seedpedrms12 = (*fInRecHits.pedrms12)[seed];
+	outpho.seedpedrms6  = (*fInRecHits.pedrms6) [seed];
+	outpho.seedpedrms1  = (*fInRecHits.pedrms1) [seed];
 
 	// compute mean time, weighted time
 	outpho.nrechits = 0;
@@ -1054,9 +1048,9 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.seedped12 = -9999.f;
 	outpho.seedped6  = -9999.f;
 	outpho.seedped1  = -9999.f;
-	// outpho.seedpedrms12 = -9999.f;
-	// outpho.seedpedrms6 = -9999.f;
-	// outpho.seedpedrms1 = -9999.f;
+	outpho.seedpedrms12 = -9999.f;
+	outpho.seedpedrms6 = -9999.f;
+	outpho.seedpedrms1 = -9999.f;
 
 	outpho.nrechits          = -1;
 	outpho.nrechitsLT120     = -1;
@@ -1084,9 +1078,9 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       outpho.seedped12 = inpho.seedped12;
       outpho.seedped6 = inpho.seedped6;
       outpho.seedped1 = inpho.seedped1;
-      // outpho.seedpedrms12 = inpho.seedpedrms12
-      // outpho.seedpedrms6 = inpho.seedpedrms6;
-      // outpho.seedpedrms1 = inpho.seedpedrms1;
+      outpho.seedpedrms12 = inpho.seedpedrms12;
+      outpho.seedpedrms6 = inpho.seedpedrms6;
+      outpho.seedpedrms1 = inpho.seedpedrms1;
     }
     
     if (fIsMC)
@@ -1311,9 +1305,9 @@ void Skimmer::InitInBranchVecs()
     fInRecHits.ped12 = 0;
     fInRecHits.ped6 = 0;
     fInRecHits.ped1 = 0;
-    // fInRecHits.pedrms12 = 0;
-    // fInRecHits.pedrms6 = 0;
-    // fInRecHits.pedrms1 = 0;
+    fInRecHits.pedrms12 = 0;
+    fInRecHits.pedrms6 = 0;
+    fInRecHits.pedrms1 = 0;
 
     for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
     {
@@ -1491,9 +1485,9 @@ void Skimmer::InitInBranches()
     fInTree->SetBranchAddress(fInRecHits.s_ped12.c_str(), &fInRecHits.ped12, &fInRecHits.b_ped12);
     fInTree->SetBranchAddress(fInRecHits.s_ped6.c_str(), &fInRecHits.ped6, &fInRecHits.b_ped6);
     fInTree->SetBranchAddress(fInRecHits.s_ped1.c_str(), &fInRecHits.ped1, &fInRecHits.b_ped1);
-    // fInTree->SetBranchAddress(fInRecHits.s_pedrms12.c_str(), &fInRecHits.pedrms12, &fInRecHits.b_pedrms12);
-    // fInTree->SetBranchAddress(fInRecHits.s_pedrms6.c_str(), &fInRecHits.pedrms6, &fInRecHits.b_pedrms6);
-    // fInTree->SetBranchAddress(fInRecHits.s_pedrms1.c_str(), &fInRecHits.pedrms1, &fInRecHits.b_pedrms1);
+    fInTree->SetBranchAddress(fInRecHits.s_pedrms12.c_str(), &fInRecHits.pedrms12, &fInRecHits.b_pedrms12);
+    fInTree->SetBranchAddress(fInRecHits.s_pedrms6.c_str(), &fInRecHits.pedrms6, &fInRecHits.b_pedrms6);
+    fInTree->SetBranchAddress(fInRecHits.s_pedrms1.c_str(), &fInRecHits.pedrms1, &fInRecHits.b_pedrms1);
   }
 
   fInTree->SetBranchAddress(fInEvent.s_nphotons.c_str(), &fInEvent.nphotons, &fInEvent.b_nphotons);
@@ -1552,9 +1546,9 @@ void Skimmer::InitInBranches()
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped12.c_str(),ipho), &pho.seedped12, &pho.b_seedped12);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped6.c_str(),ipho), &pho.seedped6, &pho.b_seedped6);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped1.c_str(),ipho), &pho.seedped1, &pho.b_seedped1);
-      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedpedrms12.c_str(),ipho), &pho.seedpedrms12, &pho.b_seedpedrms12);
-      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedpedrms6.c_str(),ipho), &pho.seedpedrms6, &pho.b_seedpedrms6);
-      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedpedrms1.c_str(),ipho), &pho.seedpedrms1, &pho.b_seedpedrms1);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedpedrms12.c_str(),ipho), &pho.seedpedrms12, &pho.b_seedpedrms12);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedpedrms6.c_str(),ipho), &pho.seedpedrms6, &pho.b_seedpedrms6);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedpedrms1.c_str(),ipho), &pho.seedpedrms1, &pho.b_seedpedrms1);
     }
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_suisseX.c_str(),ipho), &pho.suisseX, &pho.b_suisseX);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_isOOT.c_str(),ipho), &pho.isOOT, &pho.b_isOOT);
@@ -1898,9 +1892,9 @@ void Skimmer::InitOutBranches()
     fOutTree->Branch(Form("%s_%i",pho.s_seedped12.c_str(),ipho), &pho.seedped12);
     fOutTree->Branch(Form("%s_%i",pho.s_seedped6.c_str(),ipho), &pho.seedped6);
     fOutTree->Branch(Form("%s_%i",pho.s_seedped1.c_str(),ipho), &pho.seedped1);
-    // fOutTree->Branch(Form("%s_%i",pho.s_seedpedrms12.c_str(),ipho), &pho.seedpedrms12);
-    // fOutTree->Branch(Form("%s_%i",pho.s_seedpedrms6.c_str(),ipho), &pho.seedpedrms6);
-    // fOutTree->Branch(Form("%s_%i",pho.s_seedpedrms1.c_str(),ipho), &pho.seedpedrms1);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedpedrms12.c_str(),ipho), &pho.seedpedrms12);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedpedrms6.c_str(),ipho), &pho.seedpedrms6);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedpedrms1.c_str(),ipho), &pho.seedpedrms1);
     fOutTree->Branch(Form("%s_%i",pho.s_isOOT.c_str(),ipho), &pho.isOOT);
     fOutTree->Branch(Form("%s_%i",pho.s_isEB.c_str(),ipho), &pho.isEB);
     fOutTree->Branch(Form("%s_%i",pho.s_isHLT.c_str(),ipho), &pho.isHLT);

@@ -161,8 +161,8 @@ void TimeVsRunFitter::ExtractFitResults()
   // setup hists
   ResultsMap["chi2ndf"]  = TimeVsRunFitter::SetupHist("#chi^{2}/NDF","chi2ndf");
   ResultsMap["chi2prob"] = TimeVsRunFitter::SetupHist("#chi^{2} Prob.","chi2prob");
-  ResultsMap["mu"]       = TimeVsRunFitter::SetupHist(Form("#mu_{%s} [ns]",fTimeText.Data()),"mu");
-  ResultsMap["sigma"]    = TimeVsRunFitter::SetupHist(Form("#sigma_{%s} [ns]",fTimeText.Data()),"sigma");
+  ResultsMap["mu"]       = TimeVsRunFitter::SetupHist(Form("#mu(%s) [ns]",fTimeText.Data()),"mu");
+  ResultsMap["sigma"]    = TimeVsRunFitter::SetupHist(Form("#sigma(%s) [ns]",fTimeText.Data()),"sigma");
 
   // set bin content!
   for (auto ibinX = 1; ibinX <= fNBinsX; ibinX++)
@@ -232,7 +232,7 @@ void TimeVsRunFitter::PrintCanvas(Float_t min, Float_t max, const TString & key,
   // set min, max
   if (key.EqualTo("sigma",TString::kExact))
   {
-    min = (isLogy ? 0.1f : 0.f);
+    min = (isLogy ? 0.07f : 0.f);
     max = 1.f;
   }
   else

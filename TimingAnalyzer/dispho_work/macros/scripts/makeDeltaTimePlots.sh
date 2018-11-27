@@ -10,7 +10,7 @@ source scripts/common_variables.sh
 ############
 
 ## command line inputs
-outdirbase=${1:-"ntuples_v4/checks_v4/era_plots"}
+outdirbase=${1:-"madv2_v1/timing/Zee"}
 usetof=${2:-"false"}
 useshift=${3:-"false"}
 usesmear=${4:-"false"}
@@ -24,10 +24,10 @@ fragdir="plot_config/fragments"
 declare -a dietas=("EBEB")
 
 ## vars
-declare -a vars_map=("seedE_eff seedE")
+declare -a vars_map=("A_eff A") # "seedE_eff seedE"
 
 ## logx vars
-declare -a logx_vars=("pt_0" "pt_1" "pt_eff" "E_0" "E_1" "E_eff" "seedE_eff")
+declare -a logx_vars=("pt_0" "pt_1" "pt_eff" "E_0" "E_1" "E_eff" "seedE_eff" "A_eff")
 
 ## do full era vars for mu hists
 declare -a mualleras_vars=()
@@ -40,7 +40,8 @@ E_0="E GeV 0 10 100 0 1 10"
 E_1="E GeV 0 10 100 0 1 10"
 E_eff="E_{eff} GeV 0 10 100 0 1 10"
 seedE_eff="E_{eff}^{seed} GeV 0 1 10 0 1 10"
-declare -a sigmafit_vars=(pt_0 pt_1 pt_eff E_0 E_1 E_eff seedE_eff)
+A_eff="A_{eff}/#sigma_{n} NONE 0 50 100 0 .5 1"
+declare -a sigmafit_vars=(pt_0 pt_1 pt_eff E_0 E_1 E_eff seedE_eff A_eff)
 
 ###############
 ## Run code! ##
@@ -89,8 +90,16 @@ do
 	    x_var="${x_var}_1"
 	elif [[ "${var}" == *"_eff" ]]
 	then
-	    title="Effective ${title}"
-	    x_var="((${x_var}_0*${x_var}_1)/sqrt(pow(${x_var}_0,2)+pow(${x_var}_1,2)))"
+	    if [[ "${var}" == "A_eff" ]]
+	    then
+		title="${title}_{eff}/#sigma_{n}"
+		xvar0="(phoseedE_0/phoseedadcToGeV_0)/phoseedpedrms12_0"
+		xvar1="(phoseedE_1/phoseedadcToGeV_1)/phoseedpedrms12_1"
+		x_var="((${xvar0}*${xvar1})/sqrt(pow(${xvar0},2)+pow(${xvar1},2)))"
+	    else
+		title="Effective ${title}"
+		x_var="((${x_var}_0*${x_var}_1)/sqrt(pow(${x_var}_0,2)+pow(${x_var}_1,2)))"
+	    fi
 	elif [[ "${var}" == *"_delta" ]]
 	then
 	    title="#Delta(${title})"
@@ -330,7 +339,7 @@ do
 	    timefit_config="tmp_timefit_config.${inTextExt}"
 	    > "${timefit_config}"
 	    
-	    echo "time_text=#DeltaT" >> "${timefit_config}"
+	    echo "time_text=t_{1}-t_{2}" >> "${timefit_config}"
 	    echo ${fitinfo} | while read -r fittype rangelow rangeup
 	    do
 		echo "fit_type=${fittype}" >> "${timefit_config}"
@@ -348,8 +357,8 @@ do
 		do
 		    echo "sigma_var_text=${var_text}" >> "${timefit_config}"
 		    echo "sigma_var_unit=${var_unit}" >> "${timefit_config}"
-			echo "sigma_init_N_params=${N_low} ${N_val} ${N_up}" >> "${timefit_config}"
-			echo "sigma_init_C_params=${C_low} ${C_val} ${C_up}" >> "${timefit_config}"
+		    echo "sigma_init_N_params=${N_low} ${N_val} ${N_up}" >> "${timefit_config}"
+		    echo "sigma_init_C_params=${C_low} ${C_val} ${C_up}" >> "${timefit_config}"
 		done
 	    else
 		echo "do_sigma_fit=0" >> "${timefit_config}"
