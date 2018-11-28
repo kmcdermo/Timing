@@ -974,57 +974,74 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.seedpedrms6  = (*fInRecHits.pedrms6) [seed];
 	outpho.seedpedrms1  = (*fInRecHits.pedrms1) [seed];
 
-	// compute mean time, weighted time
+	// compute mean time, weighted time, AND
+	// weighted time "TOF": really compute weighted time with TOF, then subtract this from weighted time to get "TOF"
 	outpho.nrechits = 0;
 	outpho.nrechitsLT120 = 0;
 	outpho.meantime = 0.f;
 	outpho.meantimeLT120 = 0.f;
 	outpho.weightedtime = 0.f;
 	outpho.weightedtimeLT120 = 0.f;
+	outpho.weightedtimeTOF  = 0.f;
+	outpho.weightedtimeLT120TOF = 0.f;
 	Float_t sumweights      = 0.f;
 	Float_t sumweightsLT120 = 0.f;
 	for (const auto irh : (*inpho.recHits))
 	{
-	  const Float_t rh_E = (*fInRecHits.E)   [irh]; 
+	  const Float_t rh_E = (*fInRecHits.E)   [irh];
 	  const Float_t rh_T = (*fInRecHits.time)[irh];
-	  const Float_t inv_weight_2 = 1.f/(std::pow(Common::timefitN/rh_E,2)+2.f*std::pow(Common::timefitC,2));
+	  const Float_t rh_A = (rh_E/(*fInRecHits.adcToGeV)[irh])/(*fInRecHits.pedrms12)[irh]; // amplitude normalized by pedestal noise
+	  const Float_t inv_weight_2 = 1.f/(std::pow(Common::timefitN/rh_A,2)+2.f*std::pow(Common::timefitC,2));
+	  const Float_t rh_TOF = (*fInRecHits.TOF)[irh];
 
 	  outpho.nrechits++;
 	  outpho.meantime += rh_T;
 
-	  outpho.weightedtime += rh_T*inv_weight_2;
-	  sumweights          += inv_weight_2;
+	  outpho.weightedtime    += rh_T*inv_weight_2;
+	  outpho.weightedtimeTOF += (rh_T+rh_TOF)*inv_weight_2;
+	  sumweights             += inv_weight_2;
 	  
 	  if (rh_E > 120.f) continue;
 
 	  outpho.nrechitsLT120++;
 	  outpho.meantimeLT120 += rh_T;
 
-	  outpho.weightedtimeLT120 += rh_T*inv_weight_2;
-	  sumweightsLT120          += inv_weight_2;
+	  outpho.weightedtimeLT120    += rh_T*inv_weight_2;
+	  outpho.weightedtimeLT120TOF += (rh_T+rh_TOF)*inv_weight_2;
+	  sumweightsLT120             += inv_weight_2;
 	}
 
 	// set the derived types
 	if   (outpho.nrechits > 0)
 	{
-	  outpho.meantime     /= outpho.nrechits;
-	  outpho.weightedtime /= sumweights;
+	  outpho.meantime        /= outpho.nrechits;
+	  outpho.weightedtime    /= sumweights;
+	  outpho.weightedtimeTOF /= sumweights;
+
+	  // hack for weighted time "TOF"
+	  outpho.weightedtimeTOF -= outpho.weightedtime;
 	}
 	else 
 	{
-	  outpho.meantime     = -9999.f;
-	  outpho.weightedtime = -9999.f;
+	  outpho.meantime        = -9999.f;
+	  outpho.weightedtime    = -9999.f;
+	  outpho.weightedtimeTOF = -9999.f*2.f;
 	}
 
 	if   (outpho.nrechitsLT120 > 0)
 	{
-	  outpho.meantimeLT120     /= outpho.nrechitsLT120;
-	  outpho.weightedtimeLT120 /= sumweightsLT120;
+	  outpho.meantimeLT120        /= outpho.nrechitsLT120;
+	  outpho.weightedtimeLT120    /= sumweightsLT120;
+	  outpho.weightedtimeLT120TOF /= sumweightsLT120;
+
+	  // hack for weighted time "TOF"
+	  outpho.weightedtimeLT120TOF -= outpho.weightedtimeLT120;
 	}
 	else
 	{
-	  outpho.meantimeLT120     = -9999.f;
-	  outpho.weightedtimeLT120 = -9999.f;
+	  outpho.meantimeLT120        = -9999.f;
+	  outpho.weightedtimeLT120    = -9999.f;
+	  outpho.weightedtimeLT120TOF = -9999.f*2.f;
 	}
       } // end check that seed exists
       else
@@ -1052,12 +1069,14 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.seedpedrms6 = -9999.f;
 	outpho.seedpedrms1 = -9999.f;
 
-	outpho.nrechits          = -1;
-	outpho.nrechitsLT120     = -1;
-	outpho.meantime          = -9999.f;
-	outpho.meantimeLT120     = -9999.f;
-	outpho.weightedtime      = -9999.f;
-	outpho.weightedtimeLT120 = -9999.f;
+	outpho.nrechits             = -1;
+	outpho.nrechitsLT120        = -1;
+	outpho.meantime             = -9999.f;
+	outpho.meantimeLT120        = -9999.f;
+	outpho.weightedtime         = -9999.f;
+	outpho.weightedtimeLT120    = -9999.f;
+	outpho.weightedtimeTOF      = -9999.f*2.f;
+	outpho.weightedtimeLT120TOF = -9999.f*2.f;
       }
     } // end check over store rechits
     else
@@ -1924,6 +1943,8 @@ void Skimmer::InitOutBranches()
       fOutTree->Branch(Form("%s_%i",pho.s_meantimeLT120.c_str(),ipho), &pho.meantimeLT120);
       fOutTree->Branch(Form("%s_%i",pho.s_weightedtime.c_str(),ipho), &pho.weightedtime);
       fOutTree->Branch(Form("%s_%i",pho.s_weightedtimeLT120.c_str(),ipho), &pho.weightedtimeLT120);
+      fOutTree->Branch(Form("%s_%i",pho.s_weightedtimeTOF.c_str(),ipho), &pho.weightedtimeTOF);
+      fOutTree->Branch(Form("%s_%i",pho.s_weightedtimeLT120TOF.c_str(),ipho), &pho.weightedtimeLT120TOF);
     }
   } // end loop over nPhotons
 

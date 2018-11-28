@@ -505,6 +505,8 @@ struct Pho
   Float_t meantimeLT120;
   Float_t weightedtime;
   Float_t weightedtimeLT120;
+  Float_t weightedtimeTOF;
+  Float_t weightedtimeLT120TOF;
   
   // branch names
   std::string s_E = "phoE";
@@ -576,6 +578,8 @@ struct Pho
   std::string s_meantimeLT120 = "phomeantimeLT120";
   std::string s_weightedtime = "phoweightedtime";
   std::string s_weightedtimeLT120 = "phoweightedtimeLT120";
+  std::string s_weightedtimeTOF = "phoweightedtimeTOF";
+  std::string s_weightedtimeLT120TOF = "phoweightedtimeLT120TOF";
 
   // tbranches
   TBranch * b_E;
@@ -647,6 +651,8 @@ struct Pho
   TBranch * b_meantimeLT120;
   TBranch * b_weightedtime;
   TBranch * b_weightedtimeLT120;
+  TBranch * b_weightedtimeTOF;
+  TBranch * b_weightedtimeLT120TOF;
 };
 typedef std::vector<Pho> PhoVec;
 
