@@ -82,7 +82,7 @@ public:
   void SaveOutput();
 
   // Helper functions
-  void FillTnP(TnpStruct & info, const UInt_t entry, const TString & sample_label, const Float_t wgt);
+  void FillTnP(TnPStruct & info, const UInt_t entry, const TString & sample_label, const Float_t wgt);
   void PrintCanvas(const TString & eta, const Bool_t isLogy);
   
   // Meta data and extra info

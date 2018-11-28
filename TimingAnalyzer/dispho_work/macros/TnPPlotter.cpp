@@ -120,7 +120,7 @@ void TnPPlotter::EventLoop()
       Float_t puwgt; TBranch * b_puwgt; if (isMC) intree->SetBranchAddress("puwgt",&puwgt,&b_puwgt);
 
       // HLT 
-      Bool_t hltDiEle33MW; TBranch * b_hltDiEle33MW; inree->SetBranchAddress("hltDiEle33MW",&hltDiEle33MW,&b_hltDiEle33MW);
+      Bool_t hltDiEle33MW; TBranch * b_hltDiEle33MW; intree->SetBranchAddress("hltDiEle33MW",&hltDiEle33MW,&b_hltDiEle33MW);
 
       ///////////////////////
       // Setup TnP Structs //
@@ -149,14 +149,14 @@ void TnPPlotter::EventLoop()
 	if (entry%Common::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
 	
 	// require hlt
-	// b_hltDiEle33MW->GetEntry(entry);
-	// if (!hltDiEle33MW) continue;
+	b_hltDiEle33MW->GetEntry(entry);
+	if (!hltDiEle33MW) continue;
 
 	// require pt cuts (probes on opposite leg)
-	// subleadingEl.b_phopt_probe->GetEntry(entry);
-	// if (subleadingEl.phopt_probe < 40.f) continue;
-	// leadingEl   .b_phopt_probe->GetEntry(entry);
-	// if (leadingEl.phopt_probe < 40.f) continue;
+	subleadingEl.b_phopt_probe->GetEntry(entry);
+	if (subleadingEl.phopt_probe < 40.f) continue;
+	leadingEl   .b_phopt_probe->GetEntry(entry);
+	if (leadingEl.phopt_probe < 40.f) continue;
 
 	// get weights
 	b_evtwgt->GetEntry(entry);
@@ -186,11 +186,11 @@ void TnPPlotter::EventLoop()
   }
 }
 
-void TnPPlotter::FillTnP(TnpStruct & info, const UInt_t entry, const TString & sample_label, const Float_t wgt)
+void TnPPlotter::FillTnP(TnPStruct & info, const UInt_t entry, const TString & sample_label, const Float_t wgt)
 {
   // require tag
   info.b_phohasPixSeed_tag->GetEntry(entry);
-  if (phohasPixSeed_0)
+  if (info.phohasPixSeed_tag)
   {
     // get remaining pieces (pts already loaded if cutting on them, but redo it anyway)
     info.b_phoisEB_probe ->GetEntry(entry);
@@ -260,8 +260,8 @@ void TnPPlotter::MakeRatioOutput()
     ratio_hist->Add(data_hist);
     ratio_hist->Divide(mc_hist);
 
-    ratio_hist->SetMinimum(-0.1); // Define Y ..
-    ratio_hist->SetMaximum( 2.1); // .. range
+    ratio_hist->SetMinimum( 0.98); // Define Y ..
+    ratio_hist->SetMaximum( 1.02); // .. range
     
     // ratio line
     auto & ratioline = RatioLineMap[eta];
@@ -289,10 +289,14 @@ void TnPPlotter::GetGraphMinMax()
     auto & mc_graph   = GraphMap["MC_"  +eta];
     auto & minmax     = fMinMaxMap[eta];
 
-    minmax.xmin = ((data_graph->GetXaxis()->GetXmin() < mc_graph->GetXaxis()->GetXmin()) ? data_graph->GetXaxis()->GetXmin() : mc_graph->GetXaxis()->GetXmin());
-    minmax.xmax = ((data_graph->GetXaxis()->GetXmax() > mc_graph->GetXaxis()->GetXmax()) ? data_graph->GetXaxis()->GetXmax() : mc_graph->GetXaxis()->GetXmax());
-    minmax.ymin = ((data_graph->GetYaxis()->GetXmin() < mc_graph->GetYaxis()->GetXmin()) ? data_graph->GetYaxis()->GetXmin() : mc_graph->GetYaxis()->GetXmin());
-    minmax.ymax = ((data_graph->GetYaxis()->GetXmax() > mc_graph->GetYaxis()->GetXmax()) ? data_graph->GetYaxis()->GetXmax() : mc_graph->GetYaxis()->GetXmax());
+    // minmax.xmin = ((data_graph->GetXaxis()->GetXmin() < mc_graph->GetXaxis()->GetXmin()) ? data_graph->GetXaxis()->GetXmin() : mc_graph->GetXaxis()->GetXmin());
+    // minmax.xmax = ((data_graph->GetXaxis()->GetXmax() > mc_graph->GetXaxis()->GetXmax()) ? data_graph->GetXaxis()->GetXmax() : mc_graph->GetXaxis()->GetXmax());
+    // minmax.ymin = ((data_graph->GetYaxis()->GetXmin() < mc_graph->GetYaxis()->GetXmin()) ? data_graph->GetYaxis()->GetXmin() : mc_graph->GetYaxis()->GetXmin());
+    // minmax.ymax = ((data_graph->GetYaxis()->GetXmax() > mc_graph->GetYaxis()->GetXmax()) ? data_graph->GetYaxis()->GetXmax() : mc_graph->GetYaxis()->GetXmax());
+    minmax.xmin = 0.f;
+    minmax.xmax = 1000.f;
+    minmax.ymin = 0.97f;
+    minmax.ymax = 1.02f;
   }
 }
 
@@ -309,7 +313,7 @@ void TnPPlotter::MakeLegend()
 
     // make legend
     auto & leg = LegendMap[eta];
-    leg = new TLegend(0.72,0.855,0.82,0.925);
+    leg = new TLegend(0.72,0.755,0.82,0.925);
     leg->SetName("Legend_"+eta);
     leg->SetBorderSize(1);
     leg->SetLineColor(kBlack);
@@ -365,6 +369,8 @@ void TnPPlotter::DrawUpperPad()
 
     // once grapahs are drawn, have axis objects to use: have to scale TDR style values by height of upper pad
     data_graph->GetXaxis()->SetLimits(minmax.xmin,minmax.xmax);
+    data_graph->Draw("P SAME");
+    UpperPadMap[eta]->Update();
     
     data_graph->GetXaxis()->SetLabelSize(0);
     data_graph->GetXaxis()->SetTitleSize(0);
@@ -390,7 +396,7 @@ void TnPPlotter::DrawLowerPad()
     LowerPadMap[eta]->cd();
 
     // set ratio hist, line x-size
-    auto & minmax     = fMinMaxMap[eta];
+    auto & minmax    = fMinMaxMap[eta];
     auto & ratiohist = HistMap[eta];
     auto & ratioline = RatioLineMap[eta];
 
@@ -457,16 +463,19 @@ void TnPPlotter::PrintCanvas(const TString & eta, const Bool_t isLogy)
   const auto max = minmax.ymax;
 
   // set min and max
-  if (isLogy)
-  {
-    graph->GetHistogram()->SetMinimum(min/1.5);
-    graph->GetHistogram()->SetMaximum(max*1.5);
-  }
-  else 
-  {
-    graph->GetHistogram()->SetMinimum( min > 0 ? min/1.05 : min*1.05 );
-    graph->GetHistogram()->SetMaximum( max > 0 ? max*1.05 : max/1.05 );      
-  }
+  // if (isLogy)
+  // {
+  //   graph->GetHistogram()->SetMinimum(min/1.5);
+  //   graph->GetHistogram()->SetMaximum(max*1.5);
+  // }
+  // else 
+  // {
+  //   graph->GetHistogram()->SetMinimum( min > 0 ? min/1.05 : min*1.05 );
+  //   graph->GetHistogram()->SetMaximum( max > 0 ? max*1.05 : max/1.05 );      
+  // }
+
+  graph->GetHistogram()->SetMinimum(min);
+  graph->GetHistogram()->SetMaximum(max);
 
   // save canvas as images
   Common::SaveAs(outcanv,Form("%s_%s_%s",fOutFileText.Data(),eta.Data(),(isLogy?"log":"lin")));
@@ -519,15 +528,15 @@ void TnPPlotter::SetupOutputEffs()
 {
   std::cout << "Setup Output Efficiencies..." << std::endl;
 
-  const TString x_title = "Probe p_{T} [GeV/c]";
+  const TString x_title = "Probe p_{T} [GeV]";
   const TString y_title = "Efficiency of isTrk";
   const TString title = y_title+" vs. "+x_title;
-  const std::vector<Double_t> xBins = {0,50,100,250,500,1000,5000};
+  const std::vector<Double_t> xBins = {0,50,100,250,500,1000};
   const Double_t * x_bins = &xBins[0];
 
   std::map<TString,Color_t> colorMap;
-  colorMap["Data"] = kRed;
-  colorMap["MC"] = kBlue;
+  colorMap["Data"] = kBlue;
+  colorMap["MC"] = kRed;
 
   // make raw efficiencies
   for (const auto & sample : fSamples)
