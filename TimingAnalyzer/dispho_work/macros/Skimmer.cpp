@@ -123,6 +123,11 @@ void Skimmer::EventLoop()
     const auto wgt    = (fIsMC ? fInEvent.genwgt : 1.f);
     const auto evtwgt = fSampleWeight * wgt; // sample weight for data == 1
 
+    // always fill to ensure no data was lost
+    fOutCutFlow   ->Fill((cutLabels["AlwaysTrue"]*1.f)-0.5f);
+    fOutCutFlowWgt->Fill((cutLabels["AlwaysTrue"]*1.f)-0.5f,wgt);
+    fOutCutFlowScl->Fill((cutLabels["AlwaysTrue"]*1.f)-0.5f,evtwgt);
+    
     // perform skim: standard
     if (!fOutConfig.isToy && (fSkim == SkimType::Standard)) // do not apply skim selection on toy config
     {
@@ -1974,6 +1979,10 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
   }
   auto inNbinsX_new = inNbinsX;
 
+  // always add safety counter
+  cutLabels["AlwaysTrue"] = ++inNbinsX_new;
+
+  // labels for each skim
   if (fSkim == SkimType::Standard)
   {
     cutLabels["nPhotons"] = ++inNbinsX_new;
