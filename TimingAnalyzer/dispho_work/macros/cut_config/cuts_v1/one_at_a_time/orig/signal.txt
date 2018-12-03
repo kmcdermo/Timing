@@ -1,7 +1,0 @@
-ph0std (phopt_0>70&&phoisEB_0)
-ph0r90GTp9 (phor9_0>0.9)
-ph0sminLT0p4 (phosmin_0<0.4)
-ph0IDTight ((phoisOOT_0==0&&phogedID_0==3&&!phoisTrk_0)||(phoisOOT_0==1&&phoootID_0==3&&!phoisTrk_0))
-nJetsGTE3 (Sum$(1*(jetpt>30))>=3)
-HT400 (Sum$(jetpt*(jetpt>30))>400)
-HLTbit (hltSignal)

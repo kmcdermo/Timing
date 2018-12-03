@@ -1,4 +1,0 @@
-common_cut=(hltDiEle33MW&&!phoisOOT_0&&!phoisOOT_1&&phohasPixSeed_0&&phohasPixSeed_1)
-data_cut=
-bkgd_cut=
-sign_cut=
