@@ -6,7 +6,7 @@
 
 #include "TBranch.h"
 
-enum SkimType {Standard, Zee, DiXtal};
+enum SkimType {Standard, Zee, DiXtal, AlwaysTrue, AlwaysFalse};
 enum ECorr {Nominal, Down, Up};
 
 // struct for containing electrons in Z

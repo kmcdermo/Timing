@@ -124,12 +124,12 @@ void Skimmer::EventLoop()
     const auto evtwgt = fSampleWeight * wgt; // sample weight for data == 1
 
     // always fill to ensure no data was lost
-    fOutCutFlow   ->Fill((cutLabels["AlwaysTrue"]*1.f)-0.5f);
-    fOutCutFlowWgt->Fill((cutLabels["AlwaysTrue"]*1.f)-0.5f,wgt);
-    fOutCutFlowScl->Fill((cutLabels["AlwaysTrue"]*1.f)-0.5f,evtwgt);
-    
+    fOutCutFlow   ->Fill((cutLabels["PreSkim"]*1.f)-0.5f);
+    fOutCutFlowWgt->Fill((cutLabels["PreSkim"]*1.f)-0.5f,wgt);
+    fOutCutFlowScl->Fill((cutLabels["PreSkim"]*1.f)-0.5f,evtwgt);
+
     // perform skim: standard
-    if (!fOutConfig.isToy && (fSkim == SkimType::Standard)) // do not apply skim selection on toy config
+    if (fSkim == SkimType::Standard) // do not apply skim selection on toy config
     {
       // leading photon skim section
       fInEvent.b_nphotons->GetEntry(entry);
@@ -173,7 +173,7 @@ void Skimmer::EventLoop()
       // fill photon list in standard fashion
       Skimmer::FillPhoListStandard();
     }
-    else if (!fOutConfig.isToy && (fSkim == SkimType::Zee))
+    else if (fSkim == SkimType::Zee)
     {
       // cut on HLT right away
       //      fInEvent.b_hltDiEle33MW->GetEntry(entry);
@@ -281,7 +281,7 @@ void Skimmer::EventLoop()
 	fPhoList.emplace_back(ipho);
       }
     } // end of ZeeSkim
-    else if (!fOutConfig.isToy && (fSkim == SkimType::DiXtal)) // this is a hack selection, which mixes up seeds and photons --> do NOT use this for analysis
+    else if (fSkim == SkimType::DiXtal) // this is a hack selection, which mixes up seeds and photons --> do NOT use this for analysis
     {
       // get rechits
       fInRecHits.b_E->GetEntry(entry);
@@ -356,14 +356,22 @@ void Skimmer::EventLoop()
       fPhoList.emplace_back(pair.iph);
       fPhoList.emplace_back(pair.iph);
     }
+    else if (fSkim == SkimType::AlwaysTrue) // no skim, just set photon list
+    {
+      Skimmer::FillPhoListStandard();
+    }
+    else if (fSkim == SkimType::AlwaysFalse) // just skip all events! testing purposes only...
+    {
+      continue;
+    }
     else
     {
-      // no skim, just set photon list
-      Skimmer::FillPhoListStandard();
+      std::cerr << "How did this happen?? Somehow SkimType Enum is not one that is specified... Exiting..."  << std::endl;
+      exit(1);
     }
 
     // common skim params for MC
-    if (!fOutConfig.isToy)
+    if (fSkim != SkimType::AlwaysTrue)
     {
       // cut on crappy pu
       if (fIsMC)
@@ -1980,7 +1988,7 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
   auto inNbinsX_new = inNbinsX;
 
   // always add safety counter
-  cutLabels["AlwaysTrue"] = ++inNbinsX_new;
+  cutLabels["PreSkim"] = ++inNbinsX_new;
 
   // labels for each skim
   if (fSkim == SkimType::Standard)
@@ -2122,9 +2130,12 @@ void Skimmer::SetupSkimConfig()
 
 void Skimmer::SetupSkimType(const TString & skim_type)
 {
-  if      (skim_type.EqualTo("Standard",TString::kExact)) fSkim = SkimType::Standard;
-  else if (skim_type.EqualTo("Zee"     ,TString::kExact)) fSkim = SkimType::Zee;
-  else if (skim_type.EqualTo("DiXtal"  ,TString::kExact)) fSkim = SkimType::DiXtal;
+  if      (skim_type.EqualTo("Standard"   ,TString::kExact)) fSkim = SkimType::Standard;
+  else if (skim_type.EqualTo("Zee"        ,TString::kExact)) fSkim = SkimType::Zee;
+  else if (skim_type.EqualTo("DiXtal"     ,TString::kExact)) fSkim = SkimType::DiXtal;
+  else if (skim_type.EqualTo("DiXtal"     ,TString::kExact)) fSkim = SkimType::DiXtal;
+  else if (skim_type.EqualTo("AlwaysTrue" ,TString::kExact)) fSkim = SkimType::AlwaysTrue;
+  else if (skim_type.EqualTo("AlwaysFalse",TString::kExact)) fSkim = SkimType::AlwaysFalse;
   else
   {
     std::cerr << skim_type.Data() << " is not a valid skim selection! Exiting..." << std::endl;
