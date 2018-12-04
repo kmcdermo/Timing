@@ -14,7 +14,7 @@ ttWJets="TuneCP5_13TeV_madgraphMLM_pythia8"
 # TGGJets="TuneCP5_PSweights_13TeV-MadGraph-madspin-pythia8" # on tape recall, will need to resubmit later
 
 ## all samples together now
-declare -a samples=(TTJets TGJets TTGJets ttZJets ttWJets TGGJets)
+declare -a samples=(TTJets TGJets TTGJets ttZJets ttWJets) #TGGJets)
 
 ## loop time
 for sample in "${samples[@]}"
