@@ -466,9 +466,9 @@ namespace oot
 
   void GetGEDPhoVID(const pat::Photon & photon, idpVec & idpairs)
   {
-    idpairs[2].second = photon.photonID(GEDPhotonTightVID.c_str());
-    idpairs[1].second = photon.photonID(GEDPhotonMediumVID.c_str());
-    idpairs[0].second = photon.photonID(GEDPhotonLooseVID.c_str());
+    idpairs[2].second = photon.photonID(Config::GEDPhotonTightVID.c_str());
+    idpairs[1].second = photon.photonID(Config::GEDPhotonMediumVID.c_str());
+    idpairs[0].second = photon.photonID(Config::GEDPhotonLooseVID.c_str());
   }
 
   void GetGEDPhoVIDByHand(const pat::Photon & photon, idpVec & idpairs, const float rho)
@@ -540,8 +540,8 @@ namespace oot
 
   void GetOOTPhoVID(const pat::Photon & photon, idpVec & idpairs)
   {
-    idpairs[4].second = photon.photonID(OOTPhotonTightVID.c_str());
-    idpairs[3].second = photon.photonID(OOTPhotonLooseVID.c_str());
+    idpairs[4].second = photon.photonID(Config::OOTPhotonTightVID.c_str());
+    idpairs[3].second = photon.photonID(Config::OOTPhotonLooseVID.c_str());
   }
 
   void GetOOTPhoVIDByHand(const pat::Photon & photon, idpVec& idpairs, const float rho)

@@ -231,11 +231,6 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByToken(muonsToken, muonsH);
   std::vector<pat::Muon> muons; muons.reserve(muonsH->size());
 
-  // JETS
-  edm::Handle<std::vector<pat::Jet> > jetsH;
-  iEvent.getByToken(jetsToken, jetsH);
-  std::vector<pat::Jet> jets; jets.reserve(jetsH->size());
-
   // ECAL RECHITS
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
   iEvent.getByToken(recHitsEBToken, recHitsEBH);
@@ -1267,7 +1262,7 @@ void DisPho::SetElectronBranches(const std::vector<pat::Electron> & electrons)
   // loop over prepped electrons: know that loose is subset of medium which is a subset of tight
   for (const auto & electron : electrons)
   {
-    if (electron.electronID(ElectronTightVID.c_str()))
+    if (electron.electronID(Config::ElectronTightVID.c_str()))
     {
       nelLowL++;
       nelLowM++;
@@ -1279,7 +1274,7 @@ void DisPho::SetElectronBranches(const std::vector<pat::Electron> & electrons)
       nelHighM++;
       nelHighT++;
     }
-    else if (electron.electronID(ElectronMediumVID.c_str()))
+    else if (electron.electronID(Config::ElectronMediumVID.c_str()))
     {
       nelLowL++;
       nelLowM++;
@@ -1289,7 +1284,7 @@ void DisPho::SetElectronBranches(const std::vector<pat::Electron> & electrons)
       nelHighL++;
       nelHighM++;
     }
-    else if (electron.electronID(ElectronLooseVID.c_str()))
+    else if (electron.electronID(Config::ElectronLooseVID.c_str()))
     {
       nelLowL++;
 
@@ -1326,7 +1321,7 @@ void DisPho::SetMuonBranches(const std::vector<pat::Muon> & muons)
     else
     {
       if (muon.passed(reco::Muon::CutBasedIdLoose &reco::Muon::PFIsoLoose))
-      { 
+      {
 	nmuLowL++;
 	nmuHighL++;
       }

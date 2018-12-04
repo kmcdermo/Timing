@@ -255,7 +255,7 @@ namespace oot
   {
     for (const auto & lep : *lepsH)
     {
-      if (lep < leppTmin) continue;
+      if (lep.pt() < leppTmin) continue;
       
       bool isMatched = false; // consider dR matching to photons only
       for (const auto & photon : photons)

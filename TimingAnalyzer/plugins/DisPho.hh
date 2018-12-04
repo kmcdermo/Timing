@@ -201,10 +201,6 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const float jetpTmin;
   const float jetEtamax;
   const int jetIDmin;
-  const float ellowpTmin;
-  const float elhighpTmin;
-  const float mulowpTmin;
-  const float muhighpTmin;
   const float rhEmin;
   const float phpTmin;
   const std::string phIDmin;
@@ -216,6 +212,12 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const bool splitPho;
   const bool onlyGED;
   const bool onlyOOT;
+
+  // lepton prep cuts
+  const float ellowpTmin;
+  const float elhighpTmin;
+  const float mulowpTmin;
+  const float muhighpTmin;
 
   // rechit storing options
   const bool storeRecHits;
