@@ -63,10 +63,9 @@ void checkValidSkims(const TString & pdname, const TString & inskimdir)
     }
     
     // Now check!
-    const auto diff = std::abs(tree_integral - hist_integral);
-    if (diff > 1.f)
+    const auto percent = (std::abs(tree_integral - hist_integral) / tree_integral) * 100.f;
+    if (percent > 1e-4)
     {
-      const auto percent = (diff / tree_integral) * 100.f;
       std::cout << samplename.Data() << " is invalid! Missing: "
 		<< std::setw(5) << percent << "%" << std::endl;
     }
