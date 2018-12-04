@@ -995,7 +995,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	outpho.meantimeLT120 = 0.f;
 	outpho.weightedtime = 0.f;
 	outpho.weightedtimeLT120 = 0.f;
-	outpho.weightedtimeTOF  = 0.f;
+	outpho.weightedtimeTOF = 0.f;
 	outpho.weightedtimeLT120TOF = 0.f;
 	Float_t sumweights      = 0.f;
 	Float_t sumweightsLT120 = 0.f;
