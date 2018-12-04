@@ -2,7 +2,7 @@
 
 Update to README: old 80X code removed, but still have GEN_SIM...
 
-standard setup:
+Standard setup:
 ```
 cmsrel CMSSW_9_4_10
 cd CMSSW_9_4_10/src
@@ -20,11 +20,10 @@ popd
 scram b -j 32
 ```
 
-will also need to setup combine somewhere:
+Will also need to setup combine somewhere in a separate CMSSW release area:
 https://cms-hcomb.gitbooks.io/combine/content/part1/#for-end-users-that-dont-need-to-commit-or-do-any-development
 
-Change the relative path for the setup in ```limits/scripts/common_variables.sh```
-
+Change the relative path for the setup in ```limits/scripts/common_variables.sh```. Currently using Higgs combine with CMSSW_8_1_0. 
 
 Made ```kmcdermo:post_reco_OOT_AND_add_OOT_VID``` with the following:
 - ```kmcdermo:post_reco_OOT```: adds scale/smear + GED cut-based VID for OOT photons
@@ -92,6 +91,7 @@ Made ```kmcdermo:post_reco_OOT_AND_add_OOT_VID``` with the following:
   - recHits = vector of indices inside rh* branches for each photon
   - seed = index of seed rec hit for photon
   - seed* = value of seed rec hit branch
+  - weighttime* = cluster weighted time, computed at first level skim
   - is (bools)
     - isEB = seed rechit is from ECAL barrel, else assumed endcap
     - isSignal = photon is matched to gen photon from signal particle
@@ -119,23 +119,35 @@ Each script calls config: ```test/dispho.py```. Make sure to configure correctly
 - NTuplizer  : plugins/Dispho.cc/hh and plugins/DisPhoTypes.hh
 - HelperUtils: plugins/CommonUtils.cc/hh
 
-Output of ntuples end up in EOS space: currently configured for /eos/cms/group/phys_exotica/displacedPhotons/nTuples/2017. Now begin macro chain of analysis: 
+Output of ntuples end up in EOS group space: currently configured for /eos/cms/group/phys_exotica/displacedPhotons/nTuples/2017. Now begin macro chain of analysis: 
 
 - cd to ```dispho_work/macros```.
 - Produce skims with new time branches, event weights, basic core skim + met flags: scripts/skimAndMerge/*.sh
   - Also makes PU weights...
   - Can launch skims in parallel with loops in background
-- Produce data+bkgd mc skims: scripts/runFastSkimmer.sh
-- Produce signal skims: scripts/runSignalSkimmer.sh
+- Produce data+bkgd mc skims into a single file: scripts/runFastSkimmer.sh
+- Produce signal skims into single file: scripts/runSignalSkimmer.sh
 - Make sure to do both for GJets CR, QCD CR, and SR selection
 
 - Then run the scripts for making the variable weight trees in CR to SR: scripts/makeWgtsAndPlots.sh
 - Then check 1D final plots: scripts/makePlotsForSR.sh
 - Finally, run 2D plots for fis: scripts/makeLimits.sh
 
---------------------------------
-to do:
+Plots outputted to lxplus eos user space: /eos/user/k/kmcdermo/www/dispho/plots
 
+--------------------------------
+
+### Old files of interest stored in cms user kmcdermo space
+
+- Backup of older fast skims: /eos/cms/store/user/kmcdermo/nTuples/BACKUP/afs/cern.ch/work/k/kmcdermo/private/dispho/Analysis
+  - production directory is older mirror of development directory
+  - CMSSW_9_4_10 is copy of since deprecated skims
+- Backup of since deprecated skims (original output from CRAB deleted): /eos/cms/store/user/kmcdermo/nTuples/skims
+- Backup of since deprecated unskimmed CRAB output for OOT VID studies: /eos/cms/store/user/kmcdermo/nTuples/unskimmed
+
+--------------------------------
+
+### To do:
 - switch ctau to tau [ns]
 - make sure to use REAL ctau in limit plots... update scripts to read in this value
 - make exclusion in 2D vs neutralino mass

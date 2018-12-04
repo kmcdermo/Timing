@@ -166,7 +166,7 @@ void SuperFastSkimmer::MakeConfigPave()
   Common::AddPaddingToPave(fConfigPave,3);
 
   // save name of infile
-  fConfigPave->AddText(Form("InFile name: %s (isSignal : %s",fInFileName.Data(),Common::PrintBool(fIsSignalFile).Data()));
+  fConfigPave->AddText(Form("InFile name: %s (isSignal : %s)",fInFileName.Data(),Common::PrintBool(fIsSignalFile).Data()));
 
   // dump in old config
   Common::AddTextFromInputPave(fConfigPave,fInFile);
