@@ -27,6 +27,12 @@ options.register('splitPho',False,VarParsing.multiplicity.singleton,VarParsing.v
 options.register('onlyGED',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store only leading GED photons, at most four');
 options.register('onlyOOT',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store only leading OOT photons, at most four');
 
+## lepton prep cuts
+options.register('ellowpTmin',20.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'electron low pT minimum cut');
+options.register('elhighpTmin',50.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'electron high pT minimum cut');
+options.register('mulowpTmin',20.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'muon low pT minimum cut');
+options.register('muhighpTmin',50.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'muon high pT minimum cut');
+
 ## rechit storing options
 options.register('storeRecHits',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'store all rechits above rhEmin');
 
@@ -47,6 +53,7 @@ options.register('trackdRmin',0.2,VarParsing.multiplicity.singleton,VarParsing.v
 options.register('trackpTmin',5.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'track pT minimum cut');
 options.register('genjetdRmin',0.2,VarParsing.multiplicity.singleton,VarParsing.varType.float,'genjet dR minimum cut for smearing');
 options.register('genjetpTfactor',3.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'genjet pT resolution factor for smearing');
+options.register('leptondRmin',0.3,VarParsing.multiplicity.singleton,VarParsing.varType.float,'lepton dR minimum cut for veto');
 
 ## extra JER info
 options.register('smearjetEmin',0.01,VarParsing.multiplicity.singleton,VarParsing.varType.float,'min jet E for smearing');
@@ -110,6 +117,11 @@ print "     -- Photon Storing --"
 print "splitPho       : ",options.splitPho
 print "onlyGED        : ",options.onlyGED
 print "onlyOOT        : ",options.onlyOOT
+print "      -- Lepton Prep --"
+print "ellowpTmin     : ",options.ellowpTmin
+print "elhighpTmin    : ",options.elhighpTmin
+print "mulowpTmin     : ",options.mulowpTmin
+print "muhighpTmin    : ",options.muhighpTmin
 print "     -- RecHit Storing --"
 print "storeRecHits   : ",options.storeRecHits
 print "   -- Event Pre-Selection --"
@@ -128,6 +140,7 @@ print "trackdRmin     : ",options.trackdRmin
 print "trackpTmin     : ",options.trackpTmin
 print "genjetdRmin    : ",options.genjetdRmin
 print "genjetpTfactor : ",options.genjetpTfactor
+print "leptondRmin    : ",options.leptondRmin
 print "       -- Extra JER --"
 print "smearjetEmin   : ",options.smearjetEmin
 print "        -- Trigger --"
@@ -248,6 +261,11 @@ process.tree = cms.EDAnalyzer("DisPho",
    splitPho = cms.bool(options.splitPho),
    onlyGED  = cms.bool(options.onlyGED),
    onlyOOT  = cms.bool(options.onlyOOT),
+   ## lepton prep cuts 
+   ellowpTmin  = cms.double(options.ellowpTmin),
+   elhighpTmin = cms.double(options.elhighpTmin),
+   mulowpTmin  = cms.double(options.mulowpTmin),
+   muhighpTmin = cms.double(options.muhighpTmin),
    ## recHit storing options
    storeRecHits = cms.bool(options.storeRecHits),
    ## pre-selection
@@ -266,6 +284,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    trackpTmin = cms.double(options.trackpTmin),
    genjetdRmin = cms.double(options.genjetdRmin),
    genjetpTfactor = cms.double(options.genjetpTfactor),
+   leptondRmin = cms.double(options.leptondRmin),
    ## extra JER info
    smearjetEmin = cms.double(options.smearjetEmin),
    ## triggers
@@ -284,15 +303,19 @@ process.tree = cms.EDAnalyzer("DisPho",
    rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## MET
    mets = cms.InputTag("slimmedMETsModifiedMET"),
-   ## jets			    	
+   ## jets
    jets = cms.InputTag("updatedPatJetsUpdatedJEC"),
-   ## photons		
+   ## electrons
+   electrons = cms.InputTag("slimmedElectrons"),
+   ## muons
+   muons = cms.InputTag("slimmedMuons"),
+   ## photons
    photons    = cms.InputTag("slimmedPhotons"),
    ootPhotons = cms.InputTag("slimmedOOTPhotons"),
-   ## ecal recHits			      
+   ## ecal recHits
    recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
-   ## gen info			     
+   ## gen info
    isGMSB   = cms.bool(options.isGMSB),
    isHVDS   = cms.bool(options.isHVDS),
    isBkgd   = cms.bool(options.isBkgd),

@@ -29,6 +29,9 @@
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
+#include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/MuonReco/interface/MuonSelectors.h"
 
 // DetIds 
 #include "DataFormats/DetId/interface/DetId.h"
@@ -120,7 +123,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   void SetGenT0Branches(const edm::Handle<float> & gent0H);
 
   void InitializeGenPUBranches();
-  void SetGenPUBranches(edm::Handle<std::vector<PileupSummaryInfo> > & pileupInfoH);
+  void SetGenPUBranches(const edm::Handle<std::vector<PileupSummaryInfo> > & pileupInfoH);
 
   void InitializeGMSBBranches();
   void SetGMSBBranches(const std::vector<reco::GenParticle> & neutralinos, const std::vector<oot::Photon> & photons, const int nPhotons);
@@ -150,6 +153,12 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   int GenJetMatcher(const pat::Jet & jet, const std::vector<reco::GenJet> & genjets, const float jer);
   void GetStochasticSmear(std::mt19937 & mt_rand, const float jer, const float jer_sf, float & jet_smear);
   void CheckJetSmear(const float energy, float & jet_smear);
+  
+  void InitializeElectronBranches();
+  void SetElectronBranches(const std::vector<pat::Electron> & electrons);
+
+  void InitializeMuonBranches();
+  void SetMuonBranches(const std::vector<pat::Muon> & muons);  
 
   void InitializeRecHitBranches(const int nRecHits);
   void SetRecHitBranches(const EcalRecHitCollection * recHitsEB, const CaloSubdetectorGeometry * barrelGeometry,
@@ -192,6 +201,10 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const float jetpTmin;
   const float jetEtamax;
   const int jetIDmin;
+  const float ellowpTmin;
+  const float elhighpTmin;
+  const float mulowpTmin;
+  const float muhighpTmin;
   const float rhEmin;
   const float phpTmin;
   const std::string phIDmin;
@@ -224,6 +237,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const float trackpTmin;
   const float genjetdRmin;
   const float genjetpTfactor;
+  const float leptondRmin;
 
   // JER extra info
   const float smearjetEmin;
@@ -266,6 +280,14 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // jets
   const edm::InputTag jetsTag;
   edm::EDGetTokenT<std::vector<pat::Jet> > jetsToken;
+
+  // electrons
+  const edm::InputTag electronsTag;
+  edm::EDGetTokenT<std::vector<pat::Electron> > electronsToken;
+
+  // muons
+  const edm::InputTag muonsTag;
+  edm::EDGetTokenT<std::vector<pat::Muon> > muonsToken;
 
   // ECAL RecHits
   const edm::InputTag recHitsEBTag;
@@ -377,6 +399,12 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   std::vector<float> jetscaleRel, jetsmearSF, jetsmearDownSF, jetsmearUpSF;
   std::vector<int>   jetisGen;
+
+  // electrons
+  int nelLowL, nelLowM, nelLowT, nelHighL, nelHighM, nelHighT;
+
+  // muons
+  int nmuLowL, nmuLowM, nmuLowT, nmuHighL, nmuHighM, nmuHighT;
 
   // RecHits
   int nrechits;

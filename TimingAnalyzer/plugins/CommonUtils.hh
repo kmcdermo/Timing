@@ -77,6 +77,16 @@ namespace Config
   static const std::string EESCFlag = "Flag_eeBadScFilter";
   static const std::string ECALCalibFlag = "Flag_ecalBadCalibFilter";
 
+  // VID names
+  static const std::string GEDPhotonLooseVID = "cutBasedPhotonID-Fall17-94X-V1-loose";
+  static const std::string GEDPhotonMediumVID = "cutBasedPhotonID-Fall17-94X-V1-medium";
+  static const std::string GEDPhotonTightVID = "cutBasedPhotonID-Fall17-94X-V1-tight";
+  static const std::string OOTPhotonLooseVID = "cutBasedPhotonID-Fall17-94X-OOT-V1-loose";
+  static const std::string OOTPhotonTightVID = "cutBasedPhotonID-Fall17-94X-OOT-V1-tight";
+  static const std::string ElectronLooseVID = "cutBasedElectronID-Fall17-94X-V1-loose";
+  static const std::string ElectronMediumVID = "cutBasedElectronID-Fall17-94X-V1-medium";
+  static const std::string ElectronTightVID = "cutBasedElectronID-Fall17-94X-V1-tight";
+
   // inline math functions
   inline float rad2  (const float x, const float y, const float z = 0.f){return x*x + y*y + z*z;}
   inline float hypo  (const float x, const float y, const float z = 0.f){return std::sqrt(Config::rad2(x,y,z));}
@@ -232,13 +242,47 @@ namespace oot
   void SplitPhotons(std::vector<oot::Photon>& photons, const int nmax);
   void StoreOnlyPho(std::vector<oot::Photon>& photons, const int nmax, const bool isOOT);
 
+  ///////////////////////////
+  //                       //
+  // Lepton Prep Functions //
+  //                       //
+  ///////////////////////////
+  
+  template <typename Lep>
+  void PrepLeptons(const edm::Handle<std::vector<Lep> > & lepsH, std::vector<Lep> & leps,
+		   const std::vector<oot::Photon> & photons, const float leppTmin = 0.f, 
+		   const float lepdRmin = 100.f)
+  {
+    for (const auto & lep : *lepsH)
+    {
+      if (lep < leppTmin) continue;
+      
+      bool isMatched = false; // consider dR matching to photons only
+      for (const auto & photon : photons)
+      {
+	if (reco::deltaR(lep,photon) < lepdRmin)
+	{
+	  isMatched = true;
+	  break;
+	}
+      }
+
+      if (isMatched) continue;
+
+      // emplace back
+      leps.emplace_back(lep);
+    }
+
+    // sort by pt for good measure
+    std::sort(leps.begin(),leps.end(),sortByPt);
+  }
+
   ////////////////////////
   //                    //
   // Matching Functions //
   //                    //
   ////////////////////////
 
-  // templates MUST be in header if included elsewhere
   template <typename Obj>
   void HLTToObjectMatching(const trigObjVecMap & triggerObjectsByFilterMap, strBitMap & isHLTMatched, 
 			   const Obj& obj, const float pTres = 1.f, const float dRmin = 100.f)

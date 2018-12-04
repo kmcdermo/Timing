@@ -23,6 +23,12 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   onlyGED (iConfig.existsAs<bool>("onlyGED")  ? iConfig.getParameter<bool>("onlyGED")  : false),
   onlyOOT (iConfig.existsAs<bool>("onlyOOT")  ? iConfig.getParameter<bool>("onlyOOT")  : false),
 
+  // lepton prep cuts
+  ellowpTmin(iConfig.existsAs<double>("ellowpTmin") ? iConfig.getParameter<double>("ellowpTmin") : 20.f),
+  elhighpTmin(iConfig.existsAs<double>("elhighpTmin") ? iConfig.getParameter<double>("elhighpTmin") : 50.f),
+  mulowpTmin(iConfig.existsAs<double>("mulowpTmin") ? iConfig.getParameter<double>("mulowpTmin") : 20.f),
+  muhighpTmin(iConfig.existsAs<double>("muhighpTmin") ? iConfig.getParameter<double>("muhighpTmin") : 50.f),
+
   // recHits storing
   storeRecHits(iConfig.existsAs<bool>("storeRecHits") ? iConfig.getParameter<bool>("storeRecHits") : true),
 
@@ -43,6 +49,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   trackpTmin(iConfig.existsAs<double>("trackpTmin") ? iConfig.getParameter<double>("trackpTmin") : 5.f),
   genjetdRmin(iConfig.existsAs<double>("genjetdRmin") ? iConfig.getParameter<double>("genjetdRmin") : 0.2), // 0.4 from AK4PF / 2
   genjetpTfactor(iConfig.existsAs<double>("genjetpTfactor") ? iConfig.getParameter<double>("genjetpTfactor") : 3.f),
+  leptondRmin(iConfig.existsAs<double>("leptondRmin") ? iConfig.getParameter<double>("leptondRmin") : 0.3),
 
   // JER extra info
   smearjetEmin(iConfig.existsAs<double>("smearjetEmin") ? iConfig.getParameter<double>("smearjetEmin") : 0.01),
@@ -72,7 +79,13 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // jets
   jetsTag(iConfig.getParameter<edm::InputTag>("jets")),  
 
-  //recHits
+  // electrons
+  electronsTag(iConfig.getParameter<edm::InputTag>("electrons")),  
+
+  // muons
+  muonsTag(iConfig.getParameter<edm::InputTag>("muons")),  
+
+  // recHits
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
   recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE")),
 
@@ -136,6 +149,12 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // jets
   jetsToken = consumes<std::vector<pat::Jet> > (jetsTag);
 
+  // electrons
+  electronsToken = consumes<std::vector<pat::Electron> > (electronsTag);
+
+  // muons
+  muonsToken = consumes<std::vector<pat::Muon> > (muonsTag);
+
   // rechits
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
   recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
@@ -196,6 +215,21 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // MET
   edm::Handle<std::vector<pat::MET> > metsH;
   iEvent.getByToken(metsToken, metsH);
+
+  // JETS
+  edm::Handle<std::vector<pat::Jet> > jetsH;
+  iEvent.getByToken(jetsToken, jetsH);
+  std::vector<pat::Jet> jets; jets.reserve(jetsH->size());
+
+  // ELECTRONS
+  edm::Handle<std::vector<pat::Electron> > electronsH;
+  iEvent.getByToken(electronsToken, electronsH);
+  std::vector<pat::Electron> electrons; electrons.reserve(electronsH->size());
+
+  // MUONS
+  edm::Handle<std::vector<pat::Muon> > muonsH;
+  iEvent.getByToken(muonsToken, muonsH);
+  std::vector<pat::Muon> muons; muons.reserve(muonsH->size());
 
   // JETS
   edm::Handle<std::vector<pat::Jet> > jetsH;
@@ -385,7 +419,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   ///////////////////
   oot::PrunePhotons(photons,recHitsEB,recHitsEE,seedTimemin);
   oot::PruneJets(jets,photons,dRmin);
-		
+
   /////////////////////////////
   //                         //
   // Photon Storing Options  //
@@ -394,7 +428,15 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (splitPho) oot::SplitPhotons(photons,Config::nPhotons/2);     // split photons by OOT and GED (store at most nPhotons/2 of each)
   if (onlyGED)  oot::StoreOnlyPho(photons,Config::nPhotons,false); // store only GED photons, top nPhotons only
   if (onlyOOT)  oot::StoreOnlyPho(photons,Config::nPhotons,true);  // store only OOT photons, top nPhotons only
-  
+
+  /////////////////////
+  //                 //
+  // Lepton Prepping //
+  //                 //
+  /////////////////////
+  oot::PrepLeptons(electronsH,electrons,photons,ellowpTmin,leptondRmin); // consider only electrons NOT matched to our photons
+  oot::PrepLeptons(muonsH,muons,photons,mulowpTmin,leptondRmin); // consider only muons NOT matched to our photons
+		
   ///////////////////////////////
   //                           //
   // Object Counts for Storing //
@@ -571,6 +613,28 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (isMC && jetCorrH.isValid() && genjetsH.isValid()) DisPho::SetJetBranchesMC(jets,nJets,genjetsH,jetCorrUnc,jetRes,jetRes_sf);
   }
 
+  ///////////////
+  //           //
+  // Electrons //
+  //           //
+  ///////////////
+  DisPho::InitializeElectronBranches();
+  if (electronsH.isValid())
+  {
+    DisPho::SetElectronBranches(electrons);
+  }
+
+  ///////////
+  //       //
+  // Muons //
+  //       //
+  ///////////
+  DisPho::InitializeMuonBranches();
+  if (muonsH.isValid())
+  {
+    DisPho::SetMuonBranches(muons);
+  }
+
   //////////////
   //          //
   // Rec Hits //
@@ -652,7 +716,7 @@ void DisPho::InitializeGenPUBranches()
   genputrue = -9999;
 }
 
-void DisPho::SetGenPUBranches(edm::Handle<std::vector<PileupSummaryInfo> > & pileupInfoH)
+void DisPho::SetGenPUBranches(const edm::Handle<std::vector<PileupSummaryInfo> > & pileupInfoH)
 {
   for (const auto & puinfo : *pileupInfoH)
   {
@@ -1186,6 +1250,98 @@ void DisPho::GetStochasticSmear(std::mt19937 & mt_rand, const float jer, const f
 void DisPho::CheckJetSmear(const float energy, float & jet_smear)
 {    
   if (energy * jet_smear < smearjetEmin) jet_smear = smearjetEmin / energy;
+}
+
+void DisPho::InitializeElectronBranches()
+{
+  nelLowL  = 0;
+  nelLowM  = 0;
+  nelLowT  = 0;
+  nelHighL = 0;
+  nelHighM = 0;
+  nelHighT = 0;
+}
+
+void DisPho::SetElectronBranches(const std::vector<pat::Electron> & electrons)
+{
+  // loop over prepped electrons: know that loose is subset of medium which is a subset of tight
+  for (const auto & electron : electrons)
+  {
+    if (electron.electronID(ElectronTightVID.c_str()))
+    {
+      nelLowL++;
+      nelLowM++;
+      nelLowT++;
+
+      if (electron.pt() < elhighpTmin) continue;
+
+      nelHighL++;
+      nelHighM++;
+      nelHighT++;
+    }
+    else if (electron.electronID(ElectronMediumVID.c_str()))
+    {
+      nelLowL++;
+      nelLowM++;
+
+      if (electron.pt() < elhighpTmin) continue;
+
+      nelHighL++;
+      nelHighM++;
+    }
+    else if (electron.electronID(ElectronLooseVID.c_str()))
+    {
+      nelLowL++;
+
+      if (electron.pt() < elhighpTmin) continue;
+      
+      nelHighL++;
+    }
+  }
+}
+
+void DisPho::InitializeMuonBranches()
+{
+  nmuLowL  = 0;
+  nmuLowM  = 0;
+  nmuLowT  = 0;
+  nmuHighL = 0;
+  nmuHighM = 0;
+  nmuHighT = 0;
+}
+
+void DisPho::SetMuonBranches(const std::vector<pat::Muon> & muons)
+{
+  // loop over muons, check if passed ID && loose PF iso, from MEZ
+  //  --> unclear if medium is subset of tight... so have to do this inefficiently
+  // https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideMuonIdRun2#Muon_selectors_Since_9_4_X
+  for (const auto & muon : muons)
+  {
+    if (muon.pt() < muhighpTmin)
+    {
+      if (muon.passed(reco::Muon::CutBasedIdLoose &reco::Muon::PFIsoLoose)) nmuLowL++;
+      if (muon.passed(reco::Muon::CutBasedIdMedium&reco::Muon::PFIsoLoose)) nmuLowM++;
+      if (muon.passed(reco::Muon::CutBasedIdTight &reco::Muon::PFIsoLoose)) nmuLowT++;
+    }
+    else
+    {
+      if (muon.passed(reco::Muon::CutBasedIdLoose &reco::Muon::PFIsoLoose))
+      { 
+	nmuLowL++;
+	nmuHighL++;
+      }
+      if (muon.passed(reco::Muon::CutBasedIdMedium&reco::Muon::PFIsoLoose))
+      { 
+	nmuLowM++;
+	nmuHighM++;
+      }
+      if (muon.passed(reco::Muon::CutBasedIdTight &reco::Muon::PFIsoLoose))
+      { 
+	nmuLowT++;
+	nmuHighT++;
+      }
+    }
+  }
 }
 
 void DisPho::InitializeRecHitBranches(const int nRecHits)
@@ -1784,6 +1940,16 @@ void DisPho::MakeAndFillConfigTree()
   configtree->Branch("onlyGED", &onlyGED_tmp, "onlyGED/O");
   configtree->Branch("onlyOOT", &onlyOOT_tmp, "onlyOOT/O");
 
+  // lepton prep cuts
+  float ellowpTmin_tmp = ellowpTmin;
+  float elhighpTmin_tmp = elhighpTmin;
+  float mulowpTmin_tmp = mulowpTmin;
+  float muhighpTmin_tmp = muhighpTmin;
+  configtree->Branch("ellowpTmin", &ellowpTmin_tmp, "ellowpTmin/F");
+  configtree->Branch("elhighpTmin", &elhighpTmin_tmp, "elhighpTmin/F");
+  configtree->Branch("mulowpTmin", &mulowpTmin_tmp, "mulowpTmin/F");
+  configtree->Branch("muhighpTmin", &muhighpTmin_tmp, "muhighpTmin/F");
+
   // rec hit storing options
   bool storeRecHits_tmp = storeRecHits;
   configtree->Branch("storeRecHits", &storeRecHits_tmp, "storeRecHits/O");
@@ -1811,6 +1977,7 @@ void DisPho::MakeAndFillConfigTree()
   float trackpTmin_tmp = trackpTmin;
   float genjetdRmin_tmp = genjetdRmin;
   float genjetpTfactor_tmp = genjetpTfactor;
+  float leptondRmin_tmp = leptondRmin;
   configtree->Branch("dRmin", &dRmin_tmp, "dRmin/F");
   configtree->Branch("pTres", &pTres_tmp, "pTres/F");
   configtree->Branch("gendRmin", &gendRmin_tmp, "gendRmin/F");
@@ -1819,6 +1986,7 @@ void DisPho::MakeAndFillConfigTree()
   configtree->Branch("trackpTmin", &trackpTmin_tmp, "trackpTmin/F");
   configtree->Branch("genjetdRmin", &genjetdRmin_tmp, "genjetdRmin/F");
   configtree->Branch("genjetpTfactor", &genjetpTfactor_tmp, "genjetpTfactor/F");
+  configtree->Branch("leptondRmin", &leptondRmin_tmp, "leptondRmin/F");
 
   // JER extra info
   float smearjetEmin_tmp = smearjetEmin;
@@ -2036,6 +2204,22 @@ void DisPho::MakeEventTree()
     disphotree->Branch("jetsmearUpSF", &jetsmearUpSF);
     disphotree->Branch("jetisGen", &jetisGen);
   }
+
+  // Electron Info
+  disphotree->Branch("nelLowL", &nelLowL, "nelLowL/I");
+  disphotree->Branch("nelLowM", &nelLowM, "nelLowM/I");
+  disphotree->Branch("nelLowT", &nelLowT, "nelLowT/I");
+  disphotree->Branch("nelHighL", &nelHighL, "nelHighL/I");
+  disphotree->Branch("nelHighM", &nelHighM, "nelHighM/I");
+  disphotree->Branch("nelHighT", &nelHighT, "nelHighT/I");
+
+  // Muon Info
+  disphotree->Branch("nmuLowL", &nmuLowL, "nmuLowL/I");
+  disphotree->Branch("nmuLowM", &nmuLowM, "nmuLowM/I");
+  disphotree->Branch("nmuLowT", &nmuLowT, "nmuLowT/I");
+  disphotree->Branch("nmuHighL", &nmuHighL, "nmuHighL/I");
+  disphotree->Branch("nmuHighM", &nmuHighM, "nmuHighM/I");
+  disphotree->Branch("nmuHighT", &nmuHighT, "nmuHighT/I");
 
   // RecHit Info
   disphotree->Branch("nrechits", &nrechits, "nrechits/I");
