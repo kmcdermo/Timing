@@ -18,7 +18,7 @@ then
 elif [[ "${sample}" == *"ttW"* ]]
 then
     extra=$( echo "${sample}" | cut -d "W" -f 2)
-    mcbase="TTW"
+    mcbase="TTW${extra}"
 else
     mcbase="${sample}"
 fi
