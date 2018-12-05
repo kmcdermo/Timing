@@ -61,12 +61,12 @@ HLTPlots::HLTPlots(const edm::ParameterSet& iConfig):
   
   // set test options
   const TestResults initResults = {false,-1};
-  effTestMap["L1"]      = {{""                             ,Config::L1Trigger.c_str()      ,-1,-1},initResults};
-  effTestMap["L1toHLT"] = {{Config::L1Trigger.c_str()      ,Config::L1toHLTFilter.c_str()  ,-1,-1},initResults};
-  effTestMap["ET"]      = {{Config::L1toHLTFilter.c_str()  ,Config::ETFilter.c_str()       ,-1,-1},initResults};
-  effTestMap["PhoID"]   = {{Config::ETFilter.c_str()       ,Config::PhoIDLastFilter.c_str(),-1,-1},initResults};
-  effTestMap["DispID"]  = {{Config::PhoIDLastFilter.c_str(),Config::DispIDFilter.c_str()   ,-1,-1},initResults};
-  effTestMap["HT"]      = {{Config::DispIDFilter.c_str()   ,Config::SignalPath.c_str()     ,-1,-1},initResults};
+  effTestMap["L1"]      = {{""                     ,Config::L1Trigger      ,-1,-1},initResults};
+  effTestMap["L1toHLT"] = {{Config::L1Trigger      ,Config::L1toHLTFilter  ,-1,-1},initResults};
+  effTestMap["ET"]      = {{Config::L1toHLTFilter  ,Config::ETFilter       ,-1,-1},initResults};
+  effTestMap["PhoID"]   = {{Config::ETFilter       ,Config::PhoIDLastFilter,-1,-1},initResults};
+  effTestMap["DispID"]  = {{Config::PhoIDLastFilter,Config::DispIDFilter   ,-1,-1},initResults};
+  effTestMap["HT"]      = {{Config::DispIDFilter   ,Config::SignalPath     ,-1,-1},initResults};
   for (auto & effTestPair : effTestMap)
   {
     // init options

@@ -429,6 +429,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // Lepton Prepping //
   //                 //
   /////////////////////
+
   oot::PrepLeptons(electronsH,electrons,photons,ellowpTmin,leptondRmin); // consider only electrons NOT matched to our photons
   oot::PrepLeptons(muonsH,muons,photons,mulowpTmin,leptondRmin); // consider only muons NOT matched to our photons
 		
@@ -985,31 +986,31 @@ void DisPho::SetRecordInfo(const edm::Event & iEvent)
 
 void DisPho::SetTriggerBranches()
 {
-  hltSignal = (triggerBitMap.count(Config::SignalPath.c_str()) ? triggerBitMap[Config::SignalPath.c_str()] : false);
-  hltRefPhoID = (triggerBitMap.count(Config::RefPhoIDPath.c_str()) ? triggerBitMap[Config::RefPhoIDPath.c_str()] : false);
-  hltRefDispID = (triggerBitMap.count(Config::RefDispIDPath.c_str()) ? triggerBitMap[Config::RefDispIDPath.c_str()] : false);
-  hltRefHT = (triggerBitMap.count(Config::RefHTPath.c_str()) ? triggerBitMap[Config::RefHTPath.c_str()] : false);
-  hltPho50 = (triggerBitMap.count(Config::Pho50Path.c_str()) ? triggerBitMap[Config::Pho50Path.c_str()] : false);
-  hltPho200 = (triggerBitMap.count(Config::Pho200Path.c_str()) ? triggerBitMap[Config::Pho200Path.c_str()] : false);
-  hltDiPho70 = (triggerBitMap.count(Config::DiPho70Path.c_str()) ? triggerBitMap[Config::DiPho70Path.c_str()] : false);
-  hltDiPho3022M90 = (triggerBitMap.count(Config::DiPho3022M90Path.c_str()) ? triggerBitMap[Config::DiPho3022M90Path.c_str()] : false);
-  hltDiPho30PV18PV = (triggerBitMap.count(Config::DiPho30PV18PVPath.c_str()) ? triggerBitMap[Config::DiPho30PV18PVPath.c_str()] : false);
-  hltEle32WPT = (triggerBitMap.count(Config::Ele32WPTPath.c_str()) ? triggerBitMap[Config::Ele32WPTPath.c_str()] : false);
-  hltDiEle33MW = (triggerBitMap.count(Config::DiEle33MWPath.c_str()) ? triggerBitMap[Config::DiEle33MWPath.c_str()] : false);
-  hltJet500 = (triggerBitMap.count(Config::Jet500Path.c_str()) ? triggerBitMap[Config::Jet500Path.c_str()] : false);
+  hltSignal = (triggerBitMap.count(Config::SignalPath) ? triggerBitMap[Config::SignalPath] : false);
+  hltRefPhoID = (triggerBitMap.count(Config::RefPhoIDPath) ? triggerBitMap[Config::RefPhoIDPath] : false);
+  hltRefDispID = (triggerBitMap.count(Config::RefDispIDPath) ? triggerBitMap[Config::RefDispIDPath] : false);
+  hltRefHT = (triggerBitMap.count(Config::RefHTPath) ? triggerBitMap[Config::RefHTPath] : false);
+  hltPho50 = (triggerBitMap.count(Config::Pho50Path) ? triggerBitMap[Config::Pho50Path] : false);
+  hltPho200 = (triggerBitMap.count(Config::Pho200Path) ? triggerBitMap[Config::Pho200Path] : false);
+  hltDiPho70 = (triggerBitMap.count(Config::DiPho70Path) ? triggerBitMap[Config::DiPho70Path] : false);
+  hltDiPho3022M90 = (triggerBitMap.count(Config::DiPho3022M90Path) ? triggerBitMap[Config::DiPho3022M90Path] : false);
+  hltDiPho30PV18PV = (triggerBitMap.count(Config::DiPho30PV18PVPath) ? triggerBitMap[Config::DiPho30PV18PVPath] : false);
+  hltEle32WPT = (triggerBitMap.count(Config::Ele32WPTPath) ? triggerBitMap[Config::Ele32WPTPath] : false);
+  hltDiEle33MW = (triggerBitMap.count(Config::DiEle33MWPath) ? triggerBitMap[Config::DiEle33MWPath] : false);
+  hltJet500 = (triggerBitMap.count(Config::Jet500Path) ? triggerBitMap[Config::Jet500Path] : false);
 }
 
 void DisPho::SetMETFilterBranches()
 {
-  metPV = (triggerFlagMap.count(Config::PVFlag.c_str()) ? triggerFlagMap[Config::PVFlag.c_str()] : false);
-  metBeamHalo = (triggerFlagMap.count(Config::BeamHaloFlag.c_str()) ? triggerFlagMap[Config::BeamHaloFlag.c_str()] : false);
-  metHBHENoise = (triggerFlagMap.count(Config::HBHENoiseFlag.c_str()) ? triggerFlagMap[Config::HBHENoiseFlag.c_str()] : false);
-  metHBHEisoNoise = (triggerFlagMap.count(Config::HBHEisoNoiseFlag.c_str()) ? triggerFlagMap[Config::HBHEisoNoiseFlag.c_str()] : false);
-  metECALTP = (triggerFlagMap.count(Config::ECALTPFlag.c_str()) ? triggerFlagMap[Config::ECALTPFlag.c_str()] : false);
-  metPFMuon = (triggerFlagMap.count(Config::PFMuonFlag.c_str()) ? triggerFlagMap[Config::PFMuonFlag.c_str()] : false);
-  metPFChgHad = (triggerFlagMap.count(Config::PFChgHadFlag.c_str()) ? triggerFlagMap[Config::PFChgHadFlag.c_str()] : false);
-  metEESC = (triggerFlagMap.count(Config::EESCFlag.c_str()) ? triggerFlagMap[Config::EESCFlag.c_str()] : false);
-  metECALCalib = (triggerFlagMap.count(Config::ECALCalibFlag.c_str()) ? triggerFlagMap[Config::ECALCalibFlag.c_str()] : false);
+  metPV = (triggerFlagMap.count(Config::PVFlag) ? triggerFlagMap[Config::PVFlag] : false);
+  metBeamHalo = (triggerFlagMap.count(Config::BeamHaloFlag) ? triggerFlagMap[Config::BeamHaloFlag] : false);
+  metHBHENoise = (triggerFlagMap.count(Config::HBHENoiseFlag) ? triggerFlagMap[Config::HBHENoiseFlag] : false);
+  metHBHEisoNoise = (triggerFlagMap.count(Config::HBHEisoNoiseFlag) ? triggerFlagMap[Config::HBHEisoNoiseFlag] : false);
+  metECALTP = (triggerFlagMap.count(Config::ECALTPFlag) ? triggerFlagMap[Config::ECALTPFlag] : false);
+  metPFMuon = (triggerFlagMap.count(Config::PFMuonFlag) ? triggerFlagMap[Config::PFMuonFlag] : false);
+  metPFChgHad = (triggerFlagMap.count(Config::PFChgHadFlag) ? triggerFlagMap[Config::PFChgHadFlag] : false);
+  metEESC = (triggerFlagMap.count(Config::EESCFlag) ? triggerFlagMap[Config::EESCFlag] : false);
+  metECALCalib = (triggerFlagMap.count(Config::ECALCalibFlag) ? triggerFlagMap[Config::ECALCalibFlag] : false);
 }
 
 void DisPho::InitializePVBranches()
@@ -1262,7 +1263,7 @@ void DisPho::SetElectronBranches(const std::vector<pat::Electron> & electrons)
   // loop over prepped electrons: know that loose is subset of medium which is a subset of tight
   for (const auto & electron : electrons)
   {
-    if (electron.electronID(Config::ElectronTightVID.c_str()))
+    if (electron.electronID(Config::ElectronTightVID))
     {
       nelLowL++;
       nelLowM++;
@@ -1274,7 +1275,7 @@ void DisPho::SetElectronBranches(const std::vector<pat::Electron> & electrons)
       nelHighM++;
       nelHighT++;
     }
-    else if (electron.electronID(Config::ElectronMediumVID.c_str()))
+    else if (electron.electronID(Config::ElectronMediumVID))
     {
       nelLowL++;
       nelLowM++;
@@ -1284,12 +1285,11 @@ void DisPho::SetElectronBranches(const std::vector<pat::Electron> & electrons)
       nelHighL++;
       nelHighM++;
     }
-    else if (electron.electronID(Config::ElectronLooseVID.c_str()))
+    else if (electron.electronID(Config::ElectronLooseVID))
     {
       nelLowL++;
 
       if (electron.pt() < elhighpTmin) continue;
-      
       nelHighL++;
     }
   }
@@ -1725,8 +1725,8 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     strBitMap isHLTMatched;
     for (const auto & filter : filterNames) isHLTMatched[filter] = false;
     oot::HLTToObjectMatching(triggerObjectsByFilterMap,isHLTMatched,photon,pTres,dRmin);
-    const std::string filter = Config::DispIDFilter.c_str();
-    phoBranch.isHLT_ = (isHLTMatched.count(filter.c_str()) ? isHLTMatched[filter.c_str()] : false);
+    const std::string filter = Config::DispIDFilter;
+    phoBranch.isHLT_ = (isHLTMatched.count(filter) ? isHLTMatched[filter] : false);
 
     // check for simple track veto
     phoBranch.isTrk_ = oot::TrackToObjectMatching(tracksH,photon,trackpTmin,trackdRmin);
