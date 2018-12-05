@@ -31,15 +31,15 @@ do
     done
 done
 
-# ## HVDS
-# for mdp in 20 40 60
-# do
-#     for mzp in 300 500 800 1000
-#     do
-# 	for ctau in 1 100 500 1000 2500 10000
-# 	do
-# 	    gridpoint="MZp-${mzp}_MDP-${mdp}_Ctau-${ctau}mm"
-# 	    nohup ./scripts/skimAndMerge/skimAndMerge_SignalGridPoint.sh ${hvdslabel} "HVDS" ${gridpoint} ${hvdstune} >& HVDS_${gridpoint}_Skim.log &
-# 	done
-#     done
-# done
+## HVDS
+for mdp in 20 40 60
+do
+    for mzp in 300 500 800 1000
+    do
+	for ctau in 1 100 500 1000 2500 10000
+	do
+	    gridpoint="MZp-${mzp}_MDP-${mdp}_Ctau-${ctau}mm"
+	    nohup ./scripts/skimAndMerge/skimAndMerge_SignalGridPoint.sh ${hvdslabel} "HVDS" ${gridpoint} ${hvdstune} >& HVDS_${gridpoint}_Skim.log &
+	done
+    done
+done

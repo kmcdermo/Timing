@@ -51,6 +51,10 @@ struct Configuration
   Bool_t  splitPho;
   Bool_t  onlyGED;
   Bool_t  onlyOOT;
+  Float_t ellowpTmin;
+  Float_t elhighpTmin;
+  Float_t mulowpTmin;
+  Float_t muhighpTmin;
   Bool_t  storeRecHits;
   Bool_t  applyTrigger;
   Float_t minHT;
@@ -66,6 +70,7 @@ struct Configuration
   Float_t trackpTmin;
   Float_t genjetdRmin;
   Float_t genjetpTfactor;
+  Float_t leptondRmin;
   Float_t smearjetEmin;
   std::string * inputPaths;
   std::string inputPaths_s;
@@ -100,6 +105,10 @@ struct Configuration
   std::string s_splitPho = "splitPho";
   std::string s_onlyGED = "onlyGED";
   std::string s_onlyOOT = "onlyOOT";
+  std::string s_ellowpTmin = "ellowpTmin";
+  std::string s_elhighpTmin = "elhighpTmin";
+  std::string s_mulowpTmin = "mulowpTmin";
+  std::string s_muhighpTmin = "muhighpTmin";
   std::string s_storeRecHits = "storeRecHits";
   std::string s_applyTrigger = "applyTrigger";
   std::string s_minHT = "minHT";
@@ -114,6 +123,7 @@ struct Configuration
   std::string s_trackpTmin = "trackpTmin";
   std::string s_genjetdRmin = "genjetdRmin";
   std::string s_genjetpTfactor = "genjetpTfactor";
+  std::string s_leptondRmin = "leptondRmin";
   std::string s_smearjetEmin = "smearjetEmin";
   std::string s_inputPaths = "inputPaths";
   std::string s_inputFilters = "inputFilters";
@@ -169,8 +179,21 @@ struct Event
   Float_t   t1pfMETsumEt;
 
   Int_t     njets;
+  Int_t     nelLowL;
+  Int_t     nelLowM;
+  Int_t     nelLowT;
+  Int_t     nelHighL;
+  Int_t     nelHighM;
+  Int_t     nelHighT;
+  Int_t     nmuLowL;
+  Int_t     nmuLowM;
+  Int_t     nmuLowT;
+  Int_t     nmuHighL;
+  Int_t     nmuHighM;
+  Int_t     nmuHighT;
   Int_t     nrechits;
   Int_t     nphotons;
+
   Float_t   evtwgt;
 
   // MC Types
@@ -223,6 +246,18 @@ struct Event
   std::string s_t1pfMETphi = "t1pfMETphi";
   std::string s_t1pfMETsumEt = "t1pfMETsumEt";
   std::string s_njets = "njets";
+  std::string s_nelLowL = "nelLowL";
+  std::string s_nelLowM = "nelLowM";
+  std::string s_nelLowT = "nelLowT";
+  std::string s_nelHighL = "nelHighL";
+  std::string s_nelHighM = "nelHighM";
+  std::string s_nelHighT = "nelHighT";
+  std::string s_nmuLowL = "nmuLowL";
+  std::string s_nmuLowM = "nmuLowM";
+  std::string s_nmuLowT = "nmuLowT";
+  std::string s_nmuHighL = "nmuHighL";
+  std::string s_nmuHighM = "nmuHighM";
+  std::string s_nmuHighT = "nmuHighT";
   std::string s_nrechits = "nrechits";
   std::string s_nphotons = "nphotons";
   std::string s_evtwgt = "evtwgt";
@@ -272,10 +307,22 @@ struct Event
   TBranch * b_t1pfMETphi;
   TBranch * b_t1pfMETsumEt;
   TBranch * b_njets;
+  TBranch * b_nelLowL;
+  TBranch * b_nelLowM;
+  TBranch * b_nelLowT;
+  TBranch * b_nelHighL;
+  TBranch * b_nelHighM;
+  TBranch * b_nelHighT;
+  TBranch * b_nmuLowL;
+  TBranch * b_nmuLowM;
+  TBranch * b_nmuLowT;
+  TBranch * b_nmuHighL;
+  TBranch * b_nmuHighM;
+  TBranch * b_nmuHighT;
   TBranch * b_nrechits;
   TBranch * b_nphotons;
   TBranch * b_evtwgt;
-  TBranch * b_genwgt;  
+  TBranch * b_genwgt;
   TBranch * b_genx0;
   TBranch * b_geny0;
   TBranch * b_genz0;
