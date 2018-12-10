@@ -16,8 +16,7 @@ static const Float_t xlow     = 0.f;
 static const Float_t xhigh    = 1000.f;
 static const TString cutvar   = "phoseedtime_0";
 static const TString cutlabel = "Time";
-// std::vector<Float_t> cutbins  = {-3.f,-1.f,0.f,1.f,3.f,10.f};
-std::vector<Float_t> cutbins  = {-5.f,0.f,5.f};
+std::vector<Float_t> cutbins  = {-2.f,1.f,3.f,25.f};
 
 static const TString filename  = "skims/v1/orig_2phosCR/qcd.root";
 static const TString selection = "1";
@@ -27,7 +26,11 @@ static const TString label     = "QCDCR_Data_MET_TimeSplit";
 // static const TString selection = "phoisEB_0&&phopt_0>40&&phoisEB_1&&phopt_1>40&&hltDiEle33MW";
 // static const TString label     = "DYCR_Data_MET_TimeSplits";
 
-static const TString outdir = "/eos/user/k/kmcdermo/www/dispho/plots/madv2_v1/test/adish_abcd";
+// static const TString filename  = "skims/v1/orig_2phosCR/gjets.root";
+// static const TString selection = "1";
+// static const TString label     = "GJetsCR_Data_MET_TimeSplit";
+
+static const TString outdir = "/eos/user/k/kmcdermo/www/dispho/plots/madv2_v1/test/adish_abcd_v2";
 
 void split_categories1D()
 {

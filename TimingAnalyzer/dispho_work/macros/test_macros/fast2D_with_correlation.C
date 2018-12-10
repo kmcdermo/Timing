@@ -1,17 +1,12 @@
 #include "Common.cpp+"
 
-static const TString filename  = "skims/v1/orig_2phosCR/qcd.root";
-static const TString selection = "";
-static const TString label     = "QCDCR_Data_MET_v_Time_ZoomOut";
-
-// static const TString filename  = "skims/v1/zee/skim.root";
-// static const TString selection = "phoisEB_0&&phopt_0>40&&phoisEB_1&&phopt_1>40&&hltDiEle33MW";
-// static const TString label     = "DYCR_Data_MET_v_Time";
-
-static const TString outdir = "/eos/user/k/kmcdermo/www/dispho/plots/madv2_v1/test/adish_abcd";
-
-void fast2D_with_correlation()
+void fast2D_with_correlation(const TString & filename, TString selection, const TString & label, const TString & textfile, const TString & outdir)
 {
+  // get text file
+  std::ofstream norms(textfile.Data(),std::ios_base::app);
+
+  if (selection.EqualTo("NONE")) selection = "";
+
   // set style
   auto tdrStyle = new TStyle("TDRStyle","Style for P-TDR");
   Common::SetTDRStyle(tdrStyle);
@@ -26,20 +21,42 @@ void fast2D_with_correlation()
   Common::CheckValidTree(tree,treename,filename);
 
   // setup hist
-  auto hist = new TH2F("hist","MET vs Time;Photon Seed Time [ns];MET [GeV]",100,-25,25,40,0,1000); 
+  Double_t xbins[3] = {-2,3,25};
+  Double_t ybins[3] = {0,200,3000};
+  auto hist = new TH2F("hist","MET vs Time;Photon Seed Time [ns];MET [GeV]",2,xbins,2,ybins);
+  hist->SetMarkerSize(2);
   hist->Sumw2();
 
   // fill hist
   std::cout << "Filling hist..." << std::endl;
   tree->Draw("t1pfMETpt:phoseedtime_0>>hist",selection.Data(),"goff");
 
+  // fill output file
+  std::cout << "Filling text file..." << std::endl;
+  const auto A = hist->GetBinContent(1,1);
+  const auto B = hist->GetBinContent(1,2);
+  const auto C = hist->GetBinContent(2,2);
+  const auto D = hist->GetBinContent(2,1);
+
+  const auto Aunc = hist->GetBinError(1,1);
+  const auto Bunc = hist->GetBinError(1,2);
+  const auto Dunc = hist->GetBinError(2,1);
+
+  const auto predC    = B*D/A;
+  const auto predCunc = predC*std::sqrt(std::pow(Bunc/B,2)+std::pow(Dunc/D,2)+std::pow(Aunc/A,2));
+
+  norms << label.Data() << ","
+	<< A << "," << B << "," << C << "," << D << ","
+	<< B/A << "," << C/D << "," << D/A << "," << C/B << ","
+	<< predC << "," << predCunc << std::endl;
+  
   // draw it
   std::cout << "Drawing and saving..." << std::endl;
   auto canv = new TCanvas();
   canv->cd();
   canv->SetLogz(1);
 
-  hist->Draw("colz");
+  hist->Draw("colz text");
 
   // print correlation
   auto text = new TPaveText(0.68,0.7,0.81,0.93,"NDC");
@@ -49,12 +66,14 @@ void fast2D_with_correlation()
   text->Draw("same");
 
   // save it
+  const TString outname = label+"_Data_MET_v_Time_Box";
+
   Common::CMSLumi(canv,0,"Full");
-  Common::SaveAs(canv,label);
+  Common::SaveAs(canv,outname);
 
   // move it to www
-  gSystem->Exec("mv "+label+".png "+outdir);
-  gSystem->Exec("mv "+label+".pdf "+outdir);
+  gSystem->Exec("mv "+outname+".png "+outdir);
+  gSystem->Exec("mv "+outname+".pdf "+outdir);
 
   // delete it all
   std::cout << "Deleting..." << std::endl;
