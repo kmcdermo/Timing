@@ -1,11 +1,11 @@
 #!/bin/bash
 
-gjets="skims/v1/orig_2phosCR/gjets.root GJetsCR" 
-qcd="skims/v1/orig_2phosCR/qcd.root QCDCR"
+gjets="skims/v2/orig_2phosCR/gjets.root GJetsCR" 
+qcd="skims/v2/orig_2phosCR/qcd.root QCDCR"
 declare -a inputs=(gjets qcd)
 
 basedir="/eos/user/k/kmcdermo/www"
-dir="dispho/plots/madv2_v1/test/adish_abcd_v1"
+dir="dispho/plots/madv2_v2/test/adish_abcd_v1"
 outdir=${basedir}/${dir}
 mkdir -p ${outdir}
 
@@ -16,9 +16,11 @@ do
 	textfilename="${label}_C_region_v1.txt"
 	> ${textfilename}
 
-	root -l -b -q list_of_events.C\(\"${filename}\",\"${textfilename}\"\)
+	outfilename="${label}_C_region_v1.root"
 
-	mv ${textfilename} ${outdir}
+	root -l -b -q test_macros/list_of_events.C\(\"${filename}\",\"${textfilename}\",\"${outfilename}\"\)
+
+	mv ${textfilename} ${outfilename} ${outdir}
     done
 done
 

@@ -23,13 +23,13 @@ void fast2D_with_correlation(const TString & filename, TString selection, const 
   // setup hist
   Double_t xbins[3] = {-2,3,25};
   Double_t ybins[3] = {0,200,3000};
-  auto hist = new TH2F("hist","MET vs Time;Photon Seed Time [ns];MET [GeV]",2,xbins,2,ybins);
+  auto hist = new TH2F("hist","MET vs Time;Photon Weighted Time [ns];MET [GeV]",2,xbins,2,ybins);
   hist->SetMarkerSize(2);
   hist->Sumw2();
 
   // fill hist
   std::cout << "Filling hist..." << std::endl;
-  tree->Draw("t1pfMETpt:phoseedtime_0>>hist",selection.Data(),"goff");
+  tree->Draw("t1pfMETpt:phoweightedtimeLT120_0>>hist",selection.Data(),"goff");
 
   // fill output file
   std::cout << "Filling text file..." << std::endl;
