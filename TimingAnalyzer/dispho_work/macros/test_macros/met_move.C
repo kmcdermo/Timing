@@ -221,7 +221,6 @@ void met_move(const TString & filename, const TString & treename, const TString 
     auto & hist = HistMap[Info.name];
 
     hist->SetMarkerSize(tdrStyle->GetMarkerSize()+(0.2f*(1-(ihist/(nHists-1)))));
-    std::cout << hist->GetMarkerSize() << std::endl;
     hist->Draw(ihist>0?"ep same":"ep");
   }
   leg->Draw("same");
