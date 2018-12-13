@@ -479,7 +479,8 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
       //      if (iphoton > 0) break; // only consider first photon
 
-      if (pho.pt() < phgoodpTmin) continue;
+      const auto pt = pho.pt() * pho.pat::Photon::userFloat("ecalEnergyPostCorr") / pho.pat::Photon::energy();
+      if (pt < phgoodpTmin) continue;
 
       // const float sceta = std::abs(pho.superCluster()->eta());
       // if (sceta > Config::etaEBcutoff) continue;
