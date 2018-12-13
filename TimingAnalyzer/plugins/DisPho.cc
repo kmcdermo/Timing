@@ -61,8 +61,9 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   triggerObjectsTag(iConfig.getParameter<edm::InputTag>("triggerObjects")),
   
   // MET flags
-  inputFlags     (iConfig.existsAs<std::string>("inputFlags") ? iConfig.getParameter<std::string>("inputFlags") : ""),
-  triggerFlagsTag(iConfig.getParameter<edm::InputTag>("triggerFlags")),
+  inputFlags         (iConfig.existsAs<std::string>("inputFlags") ? iConfig.getParameter<std::string>("inputFlags") : ""),
+  triggerFlagsTag    (iConfig.getParameter<edm::InputTag>("triggerFlags")),
+  ecalBadCalibFlagTag(iConfig.getParameter<edm::InputTag>("ecalBadCalibFlag")),
 
   // tracks
   tracksTag(iConfig.getParameter<edm::InputTag>("tracks")),
@@ -129,7 +130,8 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   oot::ReadInFilterNames(inputFilters,filterNames,triggerObjectsByFilterMap);
 
   // MET flags
-  triggerFlagsToken = consumes<edm::TriggerResults> (triggerFlagsTag);
+  triggerFlagsToken     = consumes<edm::TriggerResults> (triggerFlagsTag);
+  ecalBadCalibFlagToken = consumes<bool> (ecalBadCalibFlagTag);
 
   // read in from a stream the trigger paths for saving
   oot::ReadInTriggerNames(inputFlags,flagNames,triggerFlagMap);
@@ -199,6 +201,8 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // MET FLAGS
   edm::Handle<edm::TriggerResults> triggerFlagsH;
   iEvent.getByToken(triggerFlagsToken, triggerFlagsH);
+  edm::Handle<bool> ecalBadCalibFlagH;
+  iEvent.getByToken(ecalBadCalibFlagToken, ecalBadCalibFlagH);
 
   // TRACKS
   edm::Handle<std::vector<reco::Track> > tracksH;
@@ -570,7 +574,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // MET Filter Info //
   //                 //
   /////////////////////
-  DisPho::SetMETFilterBranches();
+  DisPho::SetMETFilterBranches(ecalBadCalibFlagH);
 
   /////////////////////////
   //                     //   
@@ -1000,7 +1004,7 @@ void DisPho::SetTriggerBranches()
   hltJet500 = (triggerBitMap.count(Config::Jet500Path) ? triggerBitMap[Config::Jet500Path] : false);
 }
 
-void DisPho::SetMETFilterBranches()
+void DisPho::SetMETFilterBranches(const edm::Handle<bool> & ecalBadCalibFlagH)
 {
   metPV = (triggerFlagMap.count(Config::PVFlag) ? triggerFlagMap[Config::PVFlag] : false);
   metBeamHalo = (triggerFlagMap.count(Config::BeamHaloFlag) ? triggerFlagMap[Config::BeamHaloFlag] : false);
@@ -1011,6 +1015,9 @@ void DisPho::SetMETFilterBranches()
   metPFChgHad = (triggerFlagMap.count(Config::PFChgHadFlag) ? triggerFlagMap[Config::PFChgHadFlag] : false);
   metEESC = (triggerFlagMap.count(Config::EESCFlag) ? triggerFlagMap[Config::EESCFlag] : false);
   metECALCalib = (triggerFlagMap.count(Config::ECALCalibFlag) ? triggerFlagMap[Config::ECALCalibFlag] : false);
+
+  // special remade calib flag
+  metECALBadCalib = (ecalBadCalibFlagH.isValid() ? *(ecalBadCalibFlagH.product()) : false);
 }
 
 void DisPho::InitializePVBranches()
@@ -2162,6 +2169,7 @@ void DisPho::MakeEventTree()
   disphotree->Branch("metPFChgHad", &metPFChgHad, "metPFChgHad/O");
   disphotree->Branch("metEESC", &metEESC, "metEESC/O");
   disphotree->Branch("metECALCalib", &metECALCalib, "metECALCalib/O");
+  disphotree->Branch("metECALBadCalib", &metECALBadCalib, "metECALBadCalib/O");
 
   // Vertex info
   disphotree->Branch("nvtx", &nvtx, "nvtx/I");

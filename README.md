@@ -11,6 +11,7 @@ git cms-init
 
 git cms-merge-topic cms-met:METFixEE2017_949_v2
 git cms-merge-topic kmcdermo:post_reco_OOT_AND_add_OOT_VID
+git cms-addpkg RecoMET/METFilters
 
 git clone git@github.com:kmcdermo/Timing.git
 pushd Timing

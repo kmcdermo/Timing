@@ -168,6 +168,7 @@ struct Event
   Bool_t    metPFChgHad;
   Bool_t    metEESC;
   Bool_t    metECALCalib;
+  Bool_t    metECALBadCalib;
 
   Int_t     nvtx;
   Float_t   vtxX;
@@ -237,6 +238,7 @@ struct Event
   std::string s_metPFChgHad = "metPFChgHad";
   std::string s_metEESC = "metEESC";
   std::string s_metECALCalib = "metECALCalib";
+  std::string s_metECALBadCalib = "metECALBadCalib";
   std::string s_nvtx = "nvtx";
   std::string s_vtxX = "vtxX";
   std::string s_vtxY = "vtxY";
@@ -298,6 +300,7 @@ struct Event
   TBranch * b_metPFChgHad;
   TBranch * b_metEESC;
   TBranch * b_metECALCalib;
+  TBranch * b_metECALBadCalib;
   TBranch * b_nvtx;
   TBranch * b_vtxX;
   TBranch * b_vtxY;

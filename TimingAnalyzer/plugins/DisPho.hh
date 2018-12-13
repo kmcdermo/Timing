@@ -136,7 +136,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
 
   void SetRecordInfo(const edm::Event& iEvent);
   void SetTriggerBranches();
-  void SetMETFilterBranches();
+  void SetMETFilterBranches(const edm::Handle<bool> & ecalBadCalibFlagH);
 
   void InitializePVBranches();
   void SetPVBranches(const edm::Handle<std::vector<reco::Vertex> > & verticesH);
@@ -262,6 +262,8 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   strBitMap triggerFlagMap;
   const edm::InputTag triggerFlagsTag;
   edm::EDGetTokenT<edm::TriggerResults> triggerFlagsToken;
+  const edm::InputTag ecalBadCalibFlagTag;
+  edm::EDGetTokenT<bool> ecalBadCalibFlagToken;
 
   // Tracks
   const edm::InputTag tracksTag;
@@ -382,6 +384,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   bool metPFChgHad;
   bool metEESC;
   bool metECALCalib;
+  bool metECALBadCalib;
 
   // vertices
   int nvtx;
