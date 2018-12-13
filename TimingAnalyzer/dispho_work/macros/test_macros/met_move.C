@@ -1,45 +1,19 @@
-#include "Common.cpp+"
+#include "met_move.hh"
 
-struct Photon
+constexpr Float_t mindR = 0.3;
+constexpr Float_t scale_dot = 0.2;
+
+void met_move(const TString & filename, const TString & treename, const TString & textfilename, const TString & outfiletext)
 {
-  Photon(){}
+  // set style
+  auto tdrStyle = new TStyle("TDRStyle","Style for P-TDR");
+  Common::SetTDRStyle(tdrStyle);
+  Common::SetupEras();
 
-  Float_t pt = 0.f; 
-  Float_t phi = 0.f;
-  Float_t eta = 0.f;
-  Bool_t isOOT = 0;
-  
-  TBranch * b_pt = 0;
-  TBranch * b_phi = 0;
-  TBranch * b_eta = 0;
-  TBranch * b_isOOT = 0;
-
-  const std::string s_pt = "pt";
-  const std::string s_phi = "phi";
-  const std::string s_eta = "eta";
-  const std::string s_isOOT = "isOOT";
-};
-
-inline Float_t deltaR(const Float_t phi1, const Float_t eta1, const Float_t phi2, const Float_t eta2)
-{
-  auto delphi = std::abs(phi1-phi2);
-  if (delphi > Common::PI) delphi -= Common::TwoPI;
-  return Common::hypot(eta1-eta2,delphi);
-}
-
-inline void resetBoolVec(std::vector<Bool_t> & vec)
-{
-  for (auto && obj : vec) obj = false;
-}
-
-void met_move()
-{
   // get inputs
-  const TString filename = "skims/v2/orig_2phosCR/gjets.root";
   auto file = TFile::Open(filename.Data(),"UPDATE");
   Common::CheckValidFile(file,filename);
   
-  const TString treename = "Data_Tree";
   auto tree = (TTree*)file->Get(treename.Data());
   Common::CheckValidTree(tree,treename,filename);
 
@@ -62,10 +36,28 @@ void met_move()
   // transients: needed for not double counting
   std::vector<Bool_t> isRemovedVec(Common::nPhotons);
 
-  // output
+  // output branches
   Float_t hackedMETpt = 0.f; const std::string s_hackedMETpt = "hackedMETpt"; TBranch * b_hackedMETpt = tree->Branch(Form("%s",s_hackedMETpt.c_str()),&hackedMETpt,Form("%s/F",s_hackedMETpt.c_str()));
   Float_t hackedMETphi = 0.f; const std::string s_hackedMETphi = "hackedMETphi"; TBranch * b_hackedMETphi = tree->Branch(Form("%s",s_hackedMETphi.c_str()),&hackedMETphi,Form("%s/F",s_hackedMETphi.c_str()));
 
+  // output hists
+  std::vector<HistInfo> Infos = 
+  {
+    {"h_t1pfMETpt","Old MET","MET [GeV]","Events",50,0,1000.f,"Old MET",kRed},
+    {"h_hackedMETpt","New MET","MET [GeV]","Events",50,0,1000.f,"New MET",kBlue}
+  };
+  std::map<TString,TH1F*> HistMap;
+  MakeHists(HistMap,Infos);
+  const auto nHists = Infos.size();
+
+  // output textfile and counters
+  std::ofstream textfile(textfilename.Data(),std::ios::trunc);
+  Int_t nGED = 0;
+  Int_t nOOT = 0;
+  Int_t nOOT_unmatched = 0;
+  Int_t nOOT_matchedGT = 0;
+  Int_t nOOT_matchedLT = 0;
+  
   const auto nEntries = tree->GetEntries();
   for (auto entry = 0U; entry < nEntries; entry++)
   {
@@ -107,7 +99,15 @@ void met_move()
     {
       const auto & photon_i = photonVec[ipho];
       
-      if (!photon_i.isOOT) continue;
+      if (!photon_i.isOOT)
+      { 
+	nGED++;
+	continue;
+      }
+      else
+      {
+	nOOT++;
+      }
 
       // if OOT is completely unmatched, add it to MET
       Bool_t isMatched = false;
@@ -120,7 +120,7 @@ void met_move()
 	if (isRemovedVec[jpho]) continue;
 
 	const auto dR = deltaR(photon_i.phi,photon_i.eta,photon_j.phi,photon_j.eta);
-	if (dR < 0.3)
+	if (dR < mindR)
 	{
 	  // compute components
 	  const Float_t x = hackedMETpt*std::cos(hackedMETphi) - photon_i.pt*std::cos(photon_i.phi) + photon_j.pt*std::cos(photon_j.phi);
@@ -134,24 +134,36 @@ void met_move()
 	  isRemovedVec[jpho] = true;
 	  isMatched = true;
 
+	  // add to counter
+	  nOOT_matchedGT++;
+
 	  // only consider the first one matched!
 	  break;
 	} // end check dR
       } // end loop over j phos
 
       // backward check for matching --> do NOT add to MET, since OOT photon is lower pt
-      for (auto jpho = ipho-1; jpho >= 0; jpho--)
+      if (!isMatched) 
       {
-	const auto & photon_j = photonVec[jpho];
+	for (auto jpho = ipho-1; jpho >= 0; jpho--)
+        {
+	  const auto & photon_j = photonVec[jpho];
 
-	if (photon_j.isOOT) continue;
-	if (isRemovedVec[jpho]) continue;
+	  if (photon_j.isOOT) continue;
+	  if (isRemovedVec[jpho]) continue;
 
-	const auto dR = deltaR(photon_i.phi,photon_i.eta,photon_j.phi,photon_j.eta);
-	if (dR < 0.3)
-	{
-	  isMatched = true;
-	  break;
+	  const auto dR = deltaR(photon_i.phi,photon_i.eta,photon_j.phi,photon_j.eta);
+	  if (dR < mindR)
+	  {
+	    // set bool
+	    isMatched = true;
+	    
+	    // add counter
+	    nOOT_matchedLT++;
+	    
+	    // only consider first match!
+	    break;
+	  }
 	}
       }
 
@@ -165,6 +177,9 @@ void met_move()
 	// make new met
 	hackedMETpt  = Common::hypot(x,y);
 	hackedMETphi = Common::phi  (x,y);
+
+	// add to counter
+	nOOT_unmatched++;
       } // end check over is not matched ootPhoton
 
     } // end loop over i phos
@@ -172,13 +187,54 @@ void met_move()
     // store new branches
     b_hackedMETpt->Fill();
     b_hackedMETphi->Fill();
-
+    
+    // fill hists
+    HistMap["h_t1pfMETpt"]->Fill(t1pfMETpt);
+    HistMap["h_hackedMETpt"]->Fill(hackedMETpt);
+    
   } // end loop over entries
 
   // write out tree
   tree->Write(tree->GetName(),TObject::kWriteDelete);
 
+  // write to ouput text file the counters
+  textfile << "Events: " << nEntries << std::endl;
+  textfile << "nGED Photons: " << nGED << std::endl;
+  textfile << "nOOT Photons: " << nOOT << std::endl;
+  textfile << "nOOT Photons (Non-overlapping): " << nOOT_unmatched << std::endl;
+  textfile << "nOOT Photons (Overlapping and pT > GED): " << nOOT_matchedGT << std::endl;
+  textfile << "nOOT Photons (Overlapping and pT < GED): " << nOOT_matchedLT << std::endl;
+
+  // draw some histograms --> quick!
+  auto canv = new TCanvas();
+  canv->cd();
+  canv->SetLogy();
+
+  // make legend
+  auto leg = new TLegend(0.6,0.7,0.8,0.9);
+  for (const auto & Info : Infos) leg->AddEntry(HistMap[Info.name],Info.label.Data(),"epl");
+
+  // draw hists + legend
+  for (auto ihist = 0; ihist < nHists; ihist++)
+  {
+    const auto & Info = Infos[ihist];
+    auto & hist = HistMap[Info.name];
+
+    hist->SetMarkerSize(tdrStyle->GetMarkerSize()+(0.2f*(1-(ihist/(nHists-1)))));
+    std::cout << hist->GetMarkerSize() << std::endl;
+    hist->Draw(ihist>0?"ep same":"ep");
+  }
+  leg->Draw("same");
+
+  // save 
+  Common::CMSLumi(canv,0,"Full");
+  Common::SaveAs(canv,outfiletext);
+
   // delete it all
+  delete leg;
+  delete canv;
+  for (auto & HistPair : HistMap) delete HistPair.second;
   delete tree;
   delete file;
+  delete tdrStyle;
 }
