@@ -28,6 +28,8 @@ void list_of_events(const TString & filename, const TString & textfilename, cons
   Float_t phor9_0 = 0.f; TBranch * b_phor9_0 = 0; const std::string s_phor9_0 = "phor9_0"; tree->SetBranchAddress(s_phor9_0.c_str(), &phor9_0, &b_phor9_0);
   Float_t phosieie_0 = 0.f; TBranch * b_phosieie_0 = 0; const std::string s_phosieie_0 = "phosieie_0"; tree->SetBranchAddress(s_phosieie_0.c_str(), &phosieie_0, &b_phosieie_0);
   Float_t phosuisseX_0 = 0.f; TBranch * b_phosuisseX_0 = 0; const std::string s_phosuisseX_0 = "phosuisseX_0"; tree->SetBranchAddress(s_phosuisseX_0.c_str(), &phosuisseX_0, &b_phosuisseX_0);
+  Float_t phosmaj_0 = 0.f; TBranch * b_phosmaj_0 = 0; const std::string s_phosmaj_0 = "phosmaj_0"; tree->SetBranchAddress(s_phosmaj_0.c_str(), &phosmaj_0, &b_phosmaj_0);
+  Float_t phosmin_0 = 0.f; TBranch * b_phosmin_0 = 0; const std::string s_phosmin_0 = "phosmin_0"; tree->SetBranchAddress(s_phosmin_0.c_str(), &phosmin_0, &b_phosmin_0);
   Float_t phoseedE_0 = 0.f; TBranch * b_phoseedE_0 = 0; const std::string s_phoseedE_0 = "phoseedE_0"; tree->SetBranchAddress(s_phoseedE_0.c_str(), &phoseedE_0, &b_phoseedE_0);
   Float_t phoseedtime_0 = 0.f; TBranch * b_phoseedtime_0 = 0; const std::string s_phoseedtime_0 = "phoseedtime_0"; tree->SetBranchAddress(s_phoseedtime_0.c_str(), &phoseedtime_0, &b_phoseedtime_0);
   Float_t phoweightedtimeLT120_0 = 0.f; TBranch * b_phoweightedtimeLT120_0 = 0; const std::string s_phoweightedtimeLT120_0 = "phoweightedtimeLT120_0"; tree->SetBranchAddress(s_phoweightedtimeLT120_0.c_str(), &phoweightedtimeLT120_0, &b_phoweightedtimeLT120_0);
@@ -53,6 +55,8 @@ void list_of_events(const TString & filename, const TString & textfilename, cons
   Float_t phor9_1 = 0.f; TBranch * b_phor9_1 = 0; const std::string s_phor9_1 = "phor9_1"; tree->SetBranchAddress(s_phor9_1.c_str(), &phor9_1, &b_phor9_1);
   Float_t phosieie_1 = 0.f; TBranch * b_phosieie_1 = 0; const std::string s_phosieie_1 = "phosieie_1"; tree->SetBranchAddress(s_phosieie_1.c_str(), &phosieie_1, &b_phosieie_1);
   Float_t phosuisseX_1 = 0.f; TBranch * b_phosuisseX_1 = 0; const std::string s_phosuisseX_1 = "phosuisseX_1"; tree->SetBranchAddress(s_phosuisseX_1.c_str(), &phosuisseX_1, &b_phosuisseX_1);
+  Float_t phosmaj_1 = 0.f; TBranch * b_phosmaj_1 = 0; const std::string s_phosmaj_1 = "phosmaj_1"; tree->SetBranchAddress(s_phosmaj_1.c_str(), &phosmaj_1, &b_phosmaj_1);
+  Float_t phosmin_1 = 0.f; TBranch * b_phosmin_1 = 0; const std::string s_phosmin_1 = "phosmin_1"; tree->SetBranchAddress(s_phosmin_1.c_str(), &phosmin_1, &b_phosmin_1);
   Float_t phoseedE_1 = 0.f; TBranch * b_phoseedE_1 = 0; const std::string s_phoseedE_1 = "phoseedE_1"; tree->SetBranchAddress(s_phoseedE_1.c_str(), &phoseedE_1, &b_phoseedE_1);
   Float_t phoseedtime_1 = 0.f; TBranch * b_phoseedtime_1 = 0; const std::string s_phoseedtime_1 = "phoseedtime_1"; tree->SetBranchAddress(s_phoseedtime_1.c_str(), &phoseedtime_1, &b_phoseedtime_1);
   Float_t phoweightedtimeLT120_1 = 0.f; TBranch * b_phoweightedtimeLT120_1 = 0; const std::string s_phoweightedtimeLT120_1 = "phoweightedtimeLT120_1"; tree->SetBranchAddress(s_phoweightedtimeLT120_1.c_str(), &phoweightedtimeLT120_1, &b_phoweightedtimeLT120_1);
@@ -98,6 +102,8 @@ void list_of_events(const TString & filename, const TString & textfilename, cons
   Float_t o_phor9_0 = 0.f; outtree->Branch(s_phor9_0.c_str(), &o_phor9_0);
   Float_t o_phosieie_0 = 0.f; outtree->Branch(s_phosieie_0.c_str(), &o_phosieie_0);
   Float_t o_phosuisseX_0 = 0.f; outtree->Branch(s_phosuisseX_0.c_str(), &o_phosuisseX_0);
+  Float_t o_phosmaj_0 = 0.f; outtree->Branch(s_phosmaj_0.c_str(), &o_phosmaj_0);
+  Float_t o_phosmin_0 = 0.f; outtree->Branch(s_phosmin_0.c_str(), &o_phosmin_0);
   Float_t o_phoseedE_0 = 0.f; outtree->Branch(s_phoseedE_0.c_str(), &o_phoseedE_0);
   Float_t o_phoseedtime_0 = 0.f; outtree->Branch(s_phoseedtime_0.c_str(), &o_phoseedtime_0);
   Float_t o_phoweightedtimeLT120_0 = 0.f; outtree->Branch(s_phoweightedtimeLT120_0.c_str(), &o_phoweightedtimeLT120_0);
@@ -122,6 +128,8 @@ void list_of_events(const TString & filename, const TString & textfilename, cons
   Float_t o_phor9_1 = 0.f; outtree->Branch(s_phor9_1.c_str(), &o_phor9_1);
   Float_t o_phosieie_1 = 0.f; outtree->Branch(s_phosieie_1.c_str(), &o_phosieie_1);
   Float_t o_phosuisseX_1 = 0.f; outtree->Branch(s_phosuisseX_1.c_str(), &o_phosuisseX_1);
+  Float_t o_phosmaj_1 = 0.f; outtree->Branch(s_phosmaj_1.c_str(), &o_phosmaj_1);
+  Float_t o_phosmin_1 = 0.f; outtree->Branch(s_phosmin_1.c_str(), &o_phosmin_1);
   Float_t o_phoseedE_1 = 0.f; outtree->Branch(s_phoseedE_1.c_str(), &o_phoseedE_1);
   Float_t o_phoseedtime_1 = 0.f; outtree->Branch(s_phoseedtime_1.c_str(), &o_phoseedtime_1);
   Float_t o_phoweightedtimeLT120_1 = 0.f; outtree->Branch(s_phoweightedtimeLT120_1.c_str(), &o_phoweightedtimeLT120_1);
@@ -158,12 +166,12 @@ void list_of_events(const TString & filename, const TString & textfilename, cons
   for (auto ientry = 0U; ientry < nentries; ientry++)
   {
     b_phoseedtime_0->GetEntry(ientry);
-    if (phoseedtime_0 <  3.f) continue;
-    if (phoseedtime_0 > 25.f) continue;
+    // if (phoseedtime_0 <  3.f) continue;
+    // if (phoseedtime_0 > 25.f) continue;
 
     b_t1pfMETpt->GetEntry(ientry);
-    if (t1pfMETpt <  100.f) continue;
-    if (t1pfMETpt > 3000.f) continue;
+    // if (t1pfMETpt <  100.f) continue;
+    // if (t1pfMETpt > 3000.f) continue;
 
     b_run->GetEntry(ientry);
     b_lumi->GetEntry(ientry);
@@ -193,6 +201,8 @@ void list_of_events(const TString & filename, const TString & textfilename, cons
     b_phor9_0->GetEntry(ientry);
     b_phosieie_0->GetEntry(ientry);
     b_phosuisseX_0->GetEntry(ientry);
+    b_phosmaj_0->GetEntry(ientry);
+    b_phosmin_0->GetEntry(ientry);
     b_phoseedE_0->GetEntry(ientry);
     b_phoweightedtimeLT120_0->GetEntry(ientry);
 
@@ -203,6 +213,8 @@ void list_of_events(const TString & filename, const TString & textfilename, cons
     o_phor9_0 = phor9_0;
     o_phosieie_0 = phosieie_0;
     o_phosuisseX_0 = phosuisseX_0;
+    o_phosmaj_0 = phosmaj_0;
+    o_phosmin_0 = phosmin_0;
     o_phoseedE_0 = phoseedE_0;
     o_phoseedtime_0 = phoseedtime_0;
     o_phoweightedtimeLT120_0 = phoweightedtimeLT120_0;
@@ -232,6 +244,8 @@ void list_of_events(const TString & filename, const TString & textfilename, cons
     b_phor9_1->GetEntry(ientry);
     b_phosieie_1->GetEntry(ientry);
     b_phosuisseX_1->GetEntry(ientry);
+    b_phosmaj_1->GetEntry(ientry);
+    b_phosmin_1->GetEntry(ientry);
     b_phoseedE_1->GetEntry(ientry);
     b_phoseedtime_1->GetEntry(ientry);
     b_phoweightedtimeLT120_1->GetEntry(ientry);
@@ -243,6 +257,8 @@ void list_of_events(const TString & filename, const TString & textfilename, cons
     o_phor9_1 = phor9_1;
     o_phosieie_1 = phosieie_1;
     o_phosuisseX_1 = phosuisseX_1;
+    o_phosmaj_1 = phosmaj_1;
+    o_phosmin_1 = phosmin_1;
     o_phoseedE_1 = phoseedE_1;
     o_phoseedtime_1 = phoseedtime_1;
     o_phoweightedtimeLT120_1 = phoweightedtimeLT120_1;
@@ -312,6 +328,12 @@ void list_of_events(const TString & filename, const TString & textfilename, cons
 
       o_dphi_jet0pho0 = std::abs(TVector2::Phi_mpi_pi((*jetphi)[0]-phophi_0));
     }
+    else
+    {
+      o_jetpt_0 = -9999.f;
+      o_jetphi_0 = -9999.f;
+      o_jeteta_0 = -9999.f;
+    }
 
     if (o_nJets30 > 1)
     {
@@ -321,12 +343,24 @@ void list_of_events(const TString & filename, const TString & textfilename, cons
 
       o_jet1pt_over_pho0pt = (*jetpt)[1] / phopt_0;
     }
+    else
+    {
+      o_jetpt_1 = -9999.f;
+      o_jetphi_1 = -9999.f;
+      o_jeteta_1 = -9999.f;
+    }
 
     if (o_nJets30 > 2)
     {
       o_jetpt_2 = (*jetpt)[2];
       o_jetphi_2 = (*jetphi)[2];
       o_jeteta_2 = (*jeteta)[2];
+    }
+    else
+    {
+      o_jetpt_2 = -9999.f;
+      o_jetphi_2 = -9999.f;
+      o_jeteta_2 = -9999.f;
     }
 
     // fill outtree

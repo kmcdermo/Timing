@@ -13,10 +13,10 @@ for input in "${inputs[@]}"
 do
     echo ${!input} | while read -r filename label
     do
-	textfilename="${label}_C_region_v1.txt"
+	textfilename="${label}_all_regions.txt"
 	> ${textfilename}
 
-	outfilename="${label}_C_region_v1.root"
+	outfilename="${label}_all_regions.root"
 
 	root -l -b -q test_macros/list_of_events.C\(\"${filename}\",\"${textfilename}\",\"${outfilename}\"\)
 
