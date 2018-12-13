@@ -29,7 +29,7 @@ inline Float_t deltaR(const Float_t phi1, const Float_t eta1, const Float_t phi2
 
 inline void resetBoolVec(std::vector<Bool_t> & vec)
 {
-  for (auto obj : vec) obj = false;
+  for (auto && obj : vec) obj = false;
 }
 
 void met_move()
