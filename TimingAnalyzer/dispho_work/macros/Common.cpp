@@ -1021,7 +1021,7 @@ namespace Common
     }
   }
 
-  Bool_t isGoodFile(const TFile * file, const TString & filename)
+  Bool_t isGoodFile(const TFile * file)
   {
     if (file == (TFile*) NULL) return false;
     else return true;

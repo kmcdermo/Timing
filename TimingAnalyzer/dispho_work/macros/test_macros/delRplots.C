@@ -101,7 +101,7 @@ void delRplots(const TString & filename, const TString & outfiletext)
   Bool_t phoisOOT_0 = 0; TBranch * b_phoisOOT_0 = 0; const std::string s_phoisOOT_0 = "phoisOOT_0"; tree->SetBranchAddress(s_phoisOOT_0.c_str(), &phoisOOT_0, &b_phoisOOT_0);
   Float_t phoseedE_0 = 0.f; TBranch * b_phoseedE_0 = 0; const std::string s_phoseedE_0 = "phoseedE_0"; tree->SetBranchAddress(s_phoseedE_0.c_str(), &phoseedE_0, &b_phoseedE_0);
   Float_t phoseedtime_0 = 0.f; TBranch * b_phoseedtime_0 = 0; const std::string s_phoseedtime_0 = "phoseedtime_0"; tree->SetBranchAddress(s_phoseedtime_0.c_str(), &phoseedtime_0, &b_phoseedtime_0);
-  Float_t phoweightedtime_0 = 0.f; TBranch * b_phoweightedtime_0 = 0; const std::string s_phoweightedtime_0 = "phoweightedtime_0"; tree->SetBranchAddress(s_phoweightedtime_0.c_str(), &phoweightedtime_0, &b_phoweightedtime_0);
+  Float_t phoweightedtimeLT120_0 = 0.f; TBranch * b_phoweightedtimeLT120_0 = 0; const std::string s_phoweightedtimeLT120_0 = "phoweightedtimeLT120_0"; tree->SetBranchAddress(s_phoweightedtimeLT120_0.c_str(), &phoweightedtimeLT120_0, &b_phoweightedtimeLT120_0);
 
   Float_t phoE_1 = 0.f; TBranch * b_phoE_1 = 0; const std::string s_phoE_1 = "phoE_1"; tree->SetBranchAddress(s_phoE_1.c_str(), &phoE_1, &b_phoE_1);
   Float_t phopt_1 = 0.f; TBranch * b_phopt_1 = 0; const std::string s_phopt_1 = "phopt_1"; tree->SetBranchAddress(s_phopt_1.c_str(), &phopt_1, &b_phopt_1);
@@ -110,7 +110,7 @@ void delRplots(const TString & filename, const TString & outfiletext)
   Bool_t phoisOOT_1 = 0; TBranch * b_phoisOOT_1 = 0; const std::string s_phoisOOT_1 = "phoisOOT_1"; tree->SetBranchAddress(s_phoisOOT_1.c_str(), &phoisOOT_1, &b_phoisOOT_1);
   Float_t phoseedE_1 = 0.f; TBranch * b_phoseedE_1 = 0; const std::string s_phoseedE_1 = "phoseedE_1"; tree->SetBranchAddress(s_phoseedE_1.c_str(), &phoseedE_1, &b_phoseedE_1);
   Float_t phoseedtime_1 = 0.f; TBranch * b_phoseedtime_1 = 0; const std::string s_phoseedtime_1 = "phoseedtime_1"; tree->SetBranchAddress(s_phoseedtime_1.c_str(), &phoseedtime_1, &b_phoseedtime_1);
-  Float_t phoweightedtime_1 = 0.f; TBranch * b_phoweightedtime_1 = 0; const std::string s_phoweightedtime_1 = "phoweightedtime_1"; tree->SetBranchAddress(s_phoweightedtime_1.c_str(), &phoweightedtime_1, &b_phoweightedtime_1);
+  Float_t phoweightedtimeLT120_1 = 0.f; TBranch * b_phoweightedtimeLT120_1 = 0; const std::string s_phoweightedtimeLT120_1 = "phoweightedtimeLT120_1"; tree->SetBranchAddress(s_phoweightedtimeLT120_1.c_str(), &phoweightedtimeLT120_1, &b_phoweightedtimeLT120_1);
 
   // labels
   const TString common = "isOOT_pho";
@@ -128,9 +128,9 @@ void delRplots(const TString & filename, const TString & outfiletext)
     {"delseedtime","#Delta Seed Time (#DeltaR<0.3)","#Delta Seed Time (#DeltaR<0.3)","Events",20,0.f,10.f},
     {"seedtime0","Seed Time #gamma_{0} (#DeltaR<0.3)","Seed Time #gamma_{0} (#DeltaR<0.3)","Events",30,-5.f,25.f},
     {"seedtime1","Seed Time #gamma_{1} (#DeltaR<0.3)","Seed Time #gamma_{1} (#DeltaR<0.3)","Events",30,-5.f,25.f},
-    {"delweightedtime","#Delta Weighted Time (#DeltaR<0.3)","#Delta Weighted Time (#DeltaR<0.3)","Events",20,0.f,10.f},
-    {"weightedtime0","Weighted Time #gamma_{0} (#DeltaR<0.3)","Weighted Time #gamma_{0} (#DeltaR<0.3)","Events",30,-5.f,25.f},
-    {"weightedtime1","Weighted Time #gamma_{1} (#DeltaR<0.3)","Weighted Time #gamma_{1} (#DeltaR<0.3)","Events",30,-5.f,25.f}
+    {"delweightedtimeLT120","#Delta Weighted Time (#DeltaR<0.3)","#Delta Weighted Time (#DeltaR<0.3)","Events",20,0.f,10.f},
+    {"weightedtimeLT1200","Weighted Time #gamma_{0} (#DeltaR<0.3)","Weighted Time #gamma_{0} (#DeltaR<0.3)","Events",30,-5.f,25.f},
+    {"weightedtimeLT1201","Weighted Time #gamma_{1} (#DeltaR<0.3)","Weighted Time #gamma_{1} (#DeltaR<0.3)","Events",30,-5.f,25.f}
   };
   for (auto & Info : InfoVec) Info.name.Append("_"+common);
 
@@ -159,14 +159,14 @@ void delRplots(const TString & filename, const TString & outfiletext)
     b_phoeta_0->GetEntry(ientry);
     b_phoseedE_0->GetEntry(ientry);
     b_phoseedtime_0->GetEntry(ientry);
-    b_phoweightedtime_0->GetEntry(ientry);
+    b_phoweightedtimeLT120_0->GetEntry(ientry);
 
     b_phoE_1->GetEntry(ientry);
     b_phophi_1->GetEntry(ientry);
     b_phoeta_1->GetEntry(ientry);
     b_phoseedE_1->GetEntry(ientry);
     b_phoseedtime_1->GetEntry(ientry);
-    b_phoweightedtime_1->GetEntry(ientry);
+    b_phoweightedtimeLT120_1->GetEntry(ientry);
 
     const auto dR = deltaR(phophi_0,phoeta_0,phophi_1,phoeta_1);
 
@@ -182,9 +182,9 @@ void delRplots(const TString & filename, const TString & outfiletext)
       HistMap[Form("delseedtime_%s",label.Data())]->Fill(std::abs(phoseedtime_0-phoseedtime_1));
       HistMap[Form("seedtime0_%s",label.Data())]->Fill(phoseedtime_0);
       HistMap[Form("seedtime1_%s",label.Data())]->Fill(phoseedtime_1);
-      HistMap[Form("delweightedtime_%s",label.Data())]->Fill(std::abs(phoweightedtime_0-phoweightedtime_1));
-      HistMap[Form("weightedtime0_%s",label.Data())]->Fill(phoweightedtime_0);
-      HistMap[Form("weightedtime1_%s",label.Data())]->Fill(phoweightedtime_1);
+      HistMap[Form("delweightedtimeLT120_%s",label.Data())]->Fill(std::abs(phoweightedtimeLT120_0-phoweightedtimeLT120_1));
+      HistMap[Form("weightedtimeLT1200_%s",label.Data())]->Fill(phoweightedtimeLT120_0);
+      HistMap[Form("weightedtimeLT1201_%s",label.Data())]->Fill(phoweightedtimeLT120_1);
     }
   }
   std::cout << "Total integral: " << nentries << std::endl;
