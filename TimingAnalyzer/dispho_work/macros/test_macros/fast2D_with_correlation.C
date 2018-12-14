@@ -1,11 +1,21 @@
 #include "Common.cpp+"
 
-void fast2D_with_correlation(const TString & filename, TString selection, const TString & label, const TString & textfile, const TString & outdir)
+void fast2D_with_correlation(const TString & filename, const TString & treename, TString selection, const TString & label, 
+			     const TString & timevar, const TString & timelabel, const TString & metvar, const TString & metlabel,
+			     const TString & textfile, const TString & outdir)
 {
   // get text file
   std::ofstream norms(textfile.Data(),std::ios_base::app);
 
-  if (selection.EqualTo("NONE")) selection = "";
+  if      (selection.EqualTo("NONE",TString::kExact))
+  {
+    selection = "";
+  }
+  else if (selection.Contains("MC",TString::kExact))
+  {
+    selection.ReplaceAll("MC","");
+    selection += " * (evtwgt * puwgt)";
+  }
 
   // set style
   auto tdrStyle = new TStyle("TDRStyle","Style for P-TDR");
@@ -16,20 +26,19 @@ void fast2D_with_correlation(const TString & filename, TString selection, const 
   auto file = TFile::Open(filename.Data());
   Common::CheckValidFile(file,filename);
   
-  const TString treename = "Data_Tree";
   auto tree = (TTree*)file->Get(treename.Data());
   Common::CheckValidTree(tree,treename,filename);
 
-  // setup hist
+  // setup hist --> adjust by hand for each version
   Double_t xbins[3] = {-2,3,25};
-  Double_t ybins[3] = {0,200,3000};
-  auto hist = new TH2F("hist","MET vs Time;Photon Weighted Time [ns];MET [GeV]",2,xbins,2,ybins);
+  Double_t ybins[3] = {0,100,3000};
+  auto hist = new TH2F("hist",Form("MET vs Time;Photon %s Time [ns];%s MET [GeV]",timelabel.Data(),metlabel.Data()),2,xbins,2,ybins);
   hist->SetMarkerSize(2);
   hist->Sumw2();
 
   // fill hist
   std::cout << "Filling hist..." << std::endl;
-  tree->Draw("t1pfMETpt:phoweightedtimeLT120_0>>hist",selection.Data(),"goff");
+  tree->Draw(Form("%s:%s>>hist",metvar.Data(),timevar.Data()),selection.Data(),"goff");
 
   // fill output file
   std::cout << "Filling text file..." << std::endl;
@@ -66,7 +75,7 @@ void fast2D_with_correlation(const TString & filename, TString selection, const 
   text->Draw("same");
 
   // save it
-  const TString outname = label+"_Data_MET_v_Time_Box";
+  const TString outname = label+"_"+metlabel+"MET_"+timelabel+"Time_Box";
 
   Common::CMSLumi(canv,0,"Full");
   Common::SaveAs(canv,outname);
