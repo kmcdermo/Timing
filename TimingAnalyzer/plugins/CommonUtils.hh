@@ -204,7 +204,7 @@ namespace oot
   void PrepRecHits(const EcalRecHitCollection * recHitsEB, 
 		   const EcalRecHitCollection * recHitsEE,
 		   uiiumap & recHitMap, const float rhEmin = 0.f);
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
+  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH, 
 		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
 		   std::vector<oot::Photon> & photons, const float rho,
 		   const float phpTmin = 0.f, const std::string & phIDmin = "none");

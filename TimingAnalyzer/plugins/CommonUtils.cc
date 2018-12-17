@@ -162,14 +162,14 @@ namespace oot
     }
   }
 
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
+  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH, 
 		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
 		   std::vector<oot::Photon> & photons, const float rho,
 		   const float phpTmin, const std::string & phIDmin)
   {
     // get VIDs of GED photons first (both GED ID and OOT ID), then OOT photons
     // put both GED and OOT photons in a common container, sorting by pT at the end
-    oot::PrepPhotons(photonsH,photons,false,rho,phpTmin,phIDmin);
+    oot::PrepPhotons(gedPhotonsH,photons,false,rho,phpTmin,phIDmin);
     oot::PrepPhotons(ootPhotonsH,photons,true,rho,phpTmin,phIDmin);
 
     std::sort(photons.begin(),photons.end(),oot::sortByPt);

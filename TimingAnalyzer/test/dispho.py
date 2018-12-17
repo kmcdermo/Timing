@@ -190,11 +190,11 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
 		# reminiaod data: 94X_dataRun2_v6
-		'/store/user/kmcdermo/files/SPH_2017E_miniAODv2.root'
+		#'/store/user/kmcdermo/files/SPH_2017E_miniAODv2.root'
 		# reminiaod GJets, GT: 94X_mc2017_realistic_v14
 		#'/store/user/kmcdermo/files/GJets_600toInf_miniAODv2.root'
 		# miniaodv2 GMSB, GT: 94X_mc2017_realistic_v14
-		#'/store/user/kmcdermo/files/GMSB_L600TeV_Ctau400cm_miniAODv2.root'
+		'/store/user/kmcdermo/files/GMSB_L600TeV_Ctau400cm_miniAODv2.root'
 		))
 
 ## How many events to process
@@ -331,7 +331,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    ## muons
    muons = cms.InputTag("slimmedMuons"),
    ## photons
-   photons    = cms.InputTag("slimmedPhotons"),
+   gedPhotons = cms.InputTag("slimmedPhotons"),
    ootPhotons = cms.InputTag("slimmedOOTPhotons"),
    ## ecal recHits
    recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
@@ -366,7 +366,8 @@ process.treePath = cms.Path(
 
 ### Extra bits from other configs
 process.options = cms.untracked.PSet(
-	numberOfThreads=cms.untracked.uint32(options.nThreads)
+	numberOfThreads=cms.untracked.uint32(options.nThreads),
+	numberOfStreams=cms.untracked.uint32(options.nThreads/2)
 )
 
 from FWCore.ParameterSet.Utilities import convertToUnscheduled

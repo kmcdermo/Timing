@@ -91,7 +91,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE")),
 
   // photons + ids
-  photonsTag(iConfig.getParameter<edm::InputTag>("photons")),
+  gedPhotonsTag(iConfig.getParameter<edm::InputTag>("gedPhotons")),
 
   // ootPhotons + ids
   ootPhotonsTag(iConfig.getParameter<edm::InputTag>("ootPhotons")),
@@ -162,7 +162,7 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
 
   // photons + ids
-  photonsToken = consumes<std::vector<pat::Photon> > (photonsTag);
+  gedPhotonsToken = consumes<std::vector<pat::Photon> > (gedPhotonsTag);
   ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
 
   // only for simulated samples
@@ -249,15 +249,15 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   /////////////
 
   // GEDPHOTONS + IDS
-  edm::Handle<std::vector<pat::Photon> > photonsH;
-  iEvent.getByToken(photonsToken, photonsH);
+  edm::Handle<std::vector<pat::Photon> > gedPhotonsH;
+  iEvent.getByToken(gedPhotonsToken, gedPhotonsH);
  
   // OOTPHOTONS + IDS
   edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
   iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
  
   // how many total photons
-  const int phosize = photonsH->size() + ootPhotonsH->size();
+  const int phosize = gedPhotonsH->size() + ootPhotonsH->size();
 
   // total photons vector
   std::vector<oot::Photon> photons; photons.reserve(phosize);
@@ -409,7 +409,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
   oot::PrepJets(jetsH,jets,jetpTmin,jetEtamax,jetIDmin);
   oot::PrepRecHits(recHitsEB,recHitsEE,recHitMap,rhEmin);
-  oot::PrepPhotons(photonsH,ootPhotonsH,photons,rho,phpTmin,phIDmin);
+  oot::PrepPhotons(gedPhotonsH,ootPhotonsH,photons,rho,phpTmin,phIDmin);
 
   ///////////////////
   //               //
@@ -470,7 +470,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   // photon pre-selection: at least one good photon in event
   bool isphgood = false;
-  if (photonsH.isValid() || ootPhotonsH.isValid()) 
+  if (gedPhotonsH.isValid() || ootPhotonsH.isValid()) 
   {
     for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
     {
@@ -529,7 +529,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (isGMSB) 
     {
       DisPho::InitializeGMSBBranches();
-      if (genparticlesH.isValid() && (photonsH.isValid() || ootPhotonsH.isValid()))
+      if (genparticlesH.isValid() && (gedPhotonsH.isValid() || ootPhotonsH.isValid()))
       {
 	DisPho::SetGMSBBranches(neutralinos,photons,nPhotons);
       } // check genparticles are okay
@@ -539,7 +539,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (isHVDS) 
     {
       DisPho::InitializeHVDSBranches();
-      if (genparticlesH.isValid() && (photonsH.isValid() || ootPhotonsH.isValid()))
+      if (genparticlesH.isValid() && (gedPhotonsH.isValid() || ootPhotonsH.isValid()))
       {
 	DisPho::SetHVDSBranches(vPions,photons,nPhotons);
       } // check genparticles are okay
@@ -549,7 +549,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (isToy) 
     {
       DisPho::InitializeToyBranches();
-      if (genparticlesH.isValid() && (photonsH.isValid() || ootPhotonsH.isValid()))
+      if (genparticlesH.isValid() && (gedPhotonsH.isValid() || ootPhotonsH.isValid()))
       {
 	DisPho::SetToyBranches(toys,photons,nPhotons);
       } // check genparticles are okay
@@ -655,7 +655,7 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   //////////////////
   DisPho::InitializePhoBranches();
   if (isMC) DisPho::InitializePhoBranchesMC();
-  if ((photonsH.isValid() || ootPhotonsH.isValid()) && recHitsEBH.isValid() && recHitsEEH.isValid() && tracksH.isValid()) // standard handle check
+  if ((gedPhotonsH.isValid() || ootPhotonsH.isValid()) && recHitsEBH.isValid() && recHitsEEH.isValid() && tracksH.isValid()) // standard handle check
   {
     DisPho::SetPhoBranches(photons,nPhotons,recHitMap,recHitsEB,recHitsEE,tracksH);
     if (isMC && genparticlesH.isValid()) DisPho::SetPhoBranchesMC(photons,nPhotons,genparticlesH);

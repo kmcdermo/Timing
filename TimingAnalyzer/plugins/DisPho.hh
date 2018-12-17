@@ -299,9 +299,9 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const edm::InputTag recHitsEETag;
   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEToken;
 
-  // photons + ids
-  const edm::InputTag photonsTag;
-  edm::EDGetTokenT<std::vector<pat::Photon> > photonsToken;
+  // gedPhotons + ids
+  const edm::InputTag gedPhotonsTag;
+  edm::EDGetTokenT<std::vector<pat::Photon> > gedPhotonsToken;
 
   // ootPhotons + ids
   const edm::InputTag ootPhotonsTag;
