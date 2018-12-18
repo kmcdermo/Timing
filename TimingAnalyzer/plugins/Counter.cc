@@ -1,10 +1,6 @@
 #include "Timing/TimingAnalyzer/plugins/Counter.hh"
 
-// N == None
-// L == Loose
-// T == Tight
-
-Counter::Counter(const edm::ParameterSet& iConfig): 
+Counter::Counter(const edm::ParameterSet & iConfig): 
   // matching criteria
   dRmin(iConfig.existsAs<double>("dRmin") ? iConfig.getParameter<double>("dRmin") : 0.3),
   pTmin(iConfig.existsAs<double>("pTmin") ? iConfig.getParameter<double>("pTmin") : 20.0),
@@ -54,41 +50,25 @@ Counter::Counter(const edm::ParameterSet& iConfig):
 
 Counter::~Counter() {}
 
-void Counter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
+void Counter::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup) 
 {
+  ///////////////////////
+  // Get Event Objects //
+  ///////////////////////
+
   // PF CANDIDATES
-  iEvent.getByToken(candsToken, candsH);
-  cands = *candsH;
+  Counter::GetObjects(iEvent);
 
-  // MET
-  iEvent.getByToken(metsToken, metsH);
-  mets = *metsH;
+  //////////////////
+  // Prep Objects //
+  //////////////////
 
-  // GEDPHOTONS + IDS
-  iEvent.getByToken(gedPhotonsToken, gedPhotonsH);
-  gedPhotons = *gedPhotonsH;
+  // rescale photon pts by corrections
+  Counter::PrepPhotonP4();
 
-  // OOTPHOTONS + IDS
-  iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
-  ootPhotons = *ootPhotonsH;
-
-  // GEN INFO
-  if (isMC)
-  {
-    // gen evt record
-    iEvent.getByToken(genevtInfoToken, genevtInfoH);
-    genevtInfo = *genevtInfoH;
-
-    // pileup info
-    iEvent.getByToken(pileupInfosToken, pileupInfosH);
-    pileupInfos = *pileupInfosH;
-
-    // gen particles
-    iEvent.getByToken(genpartsToken, genparticlesH);
-    genparticles = *genparticlesH;
-
-    Counter::SetMCInfo();
-  }
+  ////////////////////
+  // Set Event Info //
+  ////////////////////
 
   // reset counters
   Counter::ResetCounters();
@@ -105,12 +85,87 @@ void Counter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   // set photon counters
   Counter::SetPhotonCounters();
 
-  // MET
+  // reset photon phis
+  Counter::ResetPhotonPhis();
+
+  // set photon phis
+  Counter::SetPhotonPhis();
+
+  // set met info
   Counter::SetMETInfo();
 
-  // fill tree
+  if (isMC)
+  {
+    // set event record info
+    Counter::SetMCInfo();
+  }
+
+  ///////////////
+  // Fill Tree //
+  ///////////////
+
   tree->Fill();
 }
+
+//////////////////////////
+// Event Prep Functions //
+//////////////////////////
+
+void Counter::GetObjects(const edm::Event & iEvent)
+{
+  // PF cands
+  iEvent.getByToken(candsToken, candsH);
+  cands = *candsH;
+
+  // MET
+  iEvent.getByToken(metsToken, metsH);
+  mets = *metsH;
+
+  // GEDPHOTONS + IDS
+  iEvent.getByToken(gedPhotonsToken, gedPhotonsH);
+  gedPhotons = *gedPhotonsH;
+
+  // OOTPHOTONS + IDS
+  iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
+  ootPhotons = *ootPhotonsH;
+
+  if (isMC)
+  {
+    // GEN EVENT RECORD
+    iEvent.getByToken(genevtInfoToken, genevtInfoH);
+    genevtInfo = *genevtInfoH;
+
+    // PILEUP INFO
+    iEvent.getByToken(pileupInfosToken, pileupInfosH);
+    pileupInfos = *pileupInfosH;
+
+    // GEN PARTICLES
+    iEvent.getByToken(genpartsToken, genparticlesH);
+    genparticles = *genparticlesH;
+  }
+}
+
+void Counter::PrepPhotonP4()
+{
+  Counter::PrepPhotonP4(gedPhotons);
+  Counter::PrepPhotonP4(ootPhotons);
+}
+
+void Counter::PrepPhotonP4(std::vector<pat::Photon> & photons)
+{
+  for (auto & photon : photons)
+  {
+    // tmp p4 : scale it by the correction factor
+    const auto p4 = photon.p4() * photon.userFloat("ecalEnergyPostCorr")/photon.energy();
+
+    // set the p4
+    photon.setP4(p4);
+  }
+}
+
+////////////////////
+// Main Functions //
+////////////////////
 
 void Counter::SetMCInfo()
 {
@@ -243,6 +298,31 @@ void Counter::SetPhotonCounter(const std::vector<int> & indices, int & counter)
   }
 }
 
+void Counter::SetPhotonPhis()
+{
+  Counter::SetPhotonPhis(matchedGTGED_N,matchedLTGED_N,unmatchedGED_N,matchedGTGEDphi_N,unmatchedGEDphi_N);
+  Counter::SetPhotonPhis(matchedGTGED_L,matchedLTGED_L,unmatchedGED_L,matchedGTGEDphi_L,unmatchedGEDphi_L);
+  Counter::SetPhotonPhis(matchedGTGED_T,matchedLTGED_T,unmatchedGED_T,matchedGTGEDphi_T,unmatchedGEDphi_T);
+}
+
+void Counter::SetPhotonPhis(const std::vector<int> & matchedGTGED, const std::vector<int> & matchedLTGED, const std::vector<int> & unmatchedGED, 
+			    std::vector<float> & matchedGTGEDphi, std::vector<float> & unmatchedGEDphi)
+{
+  for (auto ioot = 0; ioot < nOOT_N; ioot++)
+  {
+    // skip if matched, but lower in pT
+    if (matchedLTGED[ioot] < 0) continue;
+
+    // get ootPhoton info --> will use it regardless!
+    const auto & ootPhoton = ootPhotons[ioot];
+    const auto ootphi = ootPhoton.phi();
+
+    // set phis
+    if      (matchedGTGED[ioot] >= 0) matchedGTGEDphi.emplace_back(ootphi);
+    else if (unmatchedGED[ioot] >  0) unmatchedGEDphi.emplace_back(ootphi);
+  }
+}
+
 void Counter::SetMETInfo()
 {
   const auto & t1pfMET = mets.front();
@@ -272,27 +352,15 @@ void Counter::SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::
 
     // get ootPhoton info --> will use it regardless!
     const auto & ootPhoton = ootPhotons[ioot];
-    const auto ootpt  = (ootPhoton.userFloat("ecalEnergyPostCorr")/ootPhoton.energy())*ootPhoton.pt();
+    const auto ootpt  = ootPhoton.pt();
     const auto ootphi = ootPhoton.phi();
     
-    // first change MET with non-overlapping OOT photons
-    if (unmatchedGED[ioot] > 0)
-    {
-      // get compnonents
-      const auto x = ootMETpt*std::cos(ootMETphi) - ootpt*std::cos(ootphi);
-      const auto y = ootMETpt*std::sin(ootMETphi) - ootpt*std::sin(ootphi);
-      
-      // make new met
-      ootMETpt  = Config::hypo(x,y);
-      ootMETphi = Config::phi (x,y);
-    } // end check over non-overlapping OOT photons
-
-    // then, change MET with overlapping OOT photons
+    // first, change MET with overlapping OOT photons; then check if totally unmatched
     if (matchedGTGED[ioot] >= 0)
     {
       // get gedPhoton info
       const auto & gedPhoton = gedPhotons[matchedGTGED[ioot]];
-      const auto gedpt  = (gedPhoton.userFloat("ecalEnergyPostCorr")/gedPhoton.energy())*gedPhoton.pt();
+      const auto gedpt  = gedPhoton.pt();
       const auto gedphi = gedPhoton.phi();
 
       // get compnonents
@@ -303,6 +371,16 @@ void Counter::SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::
       ootMETpt  = Config::hypo(x,y);
       ootMETphi = Config::phi (x,y);
     } // end check over overlapping OOT photons
+    else if (unmatchedGED[ioot] > 0)
+    {
+      // get compnonents
+      const auto x = ootMETpt*std::cos(ootMETphi) - ootpt*std::cos(ootphi);
+      const auto y = ootMETpt*std::sin(ootMETphi) - ootpt*std::sin(ootphi);
+      
+      // make new met
+      ootMETpt  = Config::hypo(x,y);
+      ootMETphi = Config::phi (x,y);
+    } // end check over non-overlapping OOT photons
   } // end loop over OOT photons
 }
 
@@ -310,35 +388,38 @@ void Counter::SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::
 // Helper Functions //
 //////////////////////
 
-bool Counter::isOOT_GT_GED(const pat::Photon & gedPhoton, const pat::Photon & ootPhoton)
+inline bool Counter::isOOT_GT_GED(const pat::Photon & gedPhoton, const pat::Photon & ootPhoton)
 {
-  const auto gedpt = (gedPhoton.userFloat("ecalEnergyPostCorr")/gedPhoton.energy())*gedPhoton.pt();
-  const auto ootpt = (ootPhoton.userFloat("ecalEnergyPostCorr")/ootPhoton.energy())*ootPhoton.pt();
-  return (ootpt > gedpt);
+  return (ootPhoton.pt() > gedPhoton.pt());
 }
 
 void Counter::ResetCounters()
 {
-  nGED_N = 0;
-  nOOT_N = 0;
-  nOOT_matchedGTGED_N = 0;
-  nOOT_matchedLTGED_N = 0;
-  nOOT_unmatchedGED_N = 0;
-  nOOT_matchedCands_N = 0;
+  Counter::ResetCounter(nGED_N);
+  Counter::ResetCounter(nOOT_N);
+  Counter::ResetCounter(nOOT_matchedGTGED_N);
+  Counter::ResetCounter(nOOT_matchedLTGED_N);
+  Counter::ResetCounter(nOOT_unmatchedGED_N);
+  Counter::ResetCounter(nOOT_matchedCands_N);
 
-  nGED_L = 0;
-  nOOT_L = 0;
-  nOOT_matchedGTGED_L = 0;
-  nOOT_matchedLTGED_L = 0;
-  nOOT_unmatchedGED_L = 0;
-  nOOT_matchedCands_L = 0;
+  Counter::ResetCounter(nGED_L);
+  Counter::ResetCounter(nOOT_L);
+  Counter::ResetCounter(nOOT_matchedGTGED_L);
+  Counter::ResetCounter(nOOT_matchedLTGED_L);
+  Counter::ResetCounter(nOOT_unmatchedGED_L);
+  Counter::ResetCounter(nOOT_matchedCands_L);
  
-  nGED_T = 0;
-  nOOT_T = 0;
-  nOOT_matchedGTGED_T = 0;
-  nOOT_matchedLTGED_T = 0;
-  nOOT_unmatchedGED_T = 0;
-  nOOT_matchedCands_T = 0;
+  Counter::ResetCounter(nGED_T);
+  Counter::ResetCounter(nOOT_T);
+  Counter::ResetCounter(nOOT_matchedGTGED_T);
+  Counter::ResetCounter(nOOT_matchedLTGED_T);
+  Counter::ResetCounter(nOOT_unmatchedGED_T);
+  Counter::ResetCounter(nOOT_matchedCands_T);
+}
+
+void Counter::ResetCounter(int & counter)
+{
+  counter = 0;
 }
 
 void Counter::ResetPhotonIndices()
@@ -365,25 +446,33 @@ void Counter::ResetPhotonIndices(std::vector<int> & indices)
   for (auto & index : indices) index = -1;
 }
 
+void Counter::ResetPhotonPhis()
+{
+  Counter::ResetPhotonPhis(matchedGTGEDphi_N);
+  Counter::ResetPhotonPhis(unmatchedGEDphi_N);
+
+  Counter::ResetPhotonPhis(matchedGTGEDphi_L);
+  Counter::ResetPhotonPhis(unmatchedGEDphi_L);
+
+  Counter::ResetPhotonPhis(matchedGTGEDphi_T);
+  Counter::ResetPhotonPhis(unmatchedGEDphi_T);
+}
+
+void Counter::ResetPhotonPhis(std::vector<float> & phis)
+{
+  phis.clear();
+}
+
 ////////////////////////
 // Internal Functions //
 ////////////////////////
-			   
+
 void Counter::beginJob()
 {
   edm::Service<TFileService> fs;
   
-  // Event tree
+  // Event tree: N = None, L = Loose, T = Tight
   tree = fs->make<TTree>("tree","tree");
-
-  // MC info
-  if (isMC)
-  {
-    tree->Branch("genwgt", &genwgt, "genwgt/F");
-    tree->Branch("xsec", &xsec, "xsec/F");
-    tree->Branch("BR", &BR, "BR/F");
-    tree->Branch("genputrue", &genputrue, "genputrue/I");
-  }
 
   // counter info
   tree->Branch("nGED_N", &nGED_N, "nGED_N/I");
@@ -407,6 +496,16 @@ void Counter::beginJob()
   tree->Branch("nOOT_unmatchedGED_T", &nOOT_unmatchedGED_T, "nOOT_unmatchedGED_T/I");
   tree->Branch("nOOT_matchedCands_T", &nOOT_matchedCands_T, "nOOT_matchedCands_T/I");
 
+  // phi info
+  tree->Branch("matchedGTGEDphi_N", &matchedGTGEDphi_N);
+  tree->Branch("unmatchedGEDphi_N", &unmatchedGEDphi_N);
+
+  tree->Branch("matchedGTGEDphi_L", &matchedGTGEDphi_L);
+  tree->Branch("unmatchedGEDphi_L", &unmatchedGEDphi_L);
+
+  tree->Branch("matchedGTGEDphi_T", &matchedGTGEDphi_T);
+  tree->Branch("unmatchedGEDphi_T", &unmatchedGEDphi_T);
+
   // MET info
   tree->Branch("t1pfMETpt", &t1pfMETpt, "t1pfMETpt/F");
   tree->Branch("t1pfMETphi", &t1pfMETphi, "t1pfMETphi/F");
@@ -421,15 +520,24 @@ void Counter::beginJob()
 
   tree->Branch("ootMETpt_T", &ootMETpt_T, "ootMETpt_T/F");
   tree->Branch("ootMETphi_T", &ootMETphi_T, "ootMETphi_T/F");
+
+  // MC info
+  if (isMC)
+  {
+    tree->Branch("genwgt", &genwgt, "genwgt/F");
+    tree->Branch("xsec", &xsec, "xsec/F");
+    tree->Branch("BR", &BR, "BR/F");
+    tree->Branch("genputrue", &genputrue, "genputrue/I");
+  }
 }
 
 void Counter::endJob() {}
 
-void Counter::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
+void Counter::beginRun(const edm::Run & iRun, const edm::EventSetup & iSetup) {}
 
-void Counter::endRun(edm::Run const&, edm::EventSetup const&) {}
+void Counter::endRun(const edm::Run & iRun, const edm::EventSetup & iSetup) {}
 
-void Counter::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
+void Counter::fillDescriptions(edm::ConfigurationDescriptions & descriptions) 
 {
   edm::ParameterSetDescription desc;
   desc.setUnknown();

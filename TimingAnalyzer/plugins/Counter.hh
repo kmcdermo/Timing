@@ -46,10 +46,18 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   // Internal Functions //
   ////////////////////////
 
-  explicit Counter(const edm::ParameterSet&);
+  explicit Counter(const edm::ParameterSet & iConfig);
   ~Counter();
-  static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-  
+  static void fillDescriptions(edm::ConfigurationDescriptions & descriptions);
+
+  //////////////////////////
+  // Event Prep Functions //
+  //////////////////////////
+
+  void GetObjects(const edm::Event & iEvent);
+  void PrepPhotonP4();
+  void PrepPhotonP4(std::vector<pat::Photon> & photons);
+
   ////////////////////
   // Main Functions //
   ////////////////////
@@ -66,6 +74,11 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   void SetPhotonCounters();
   void SetPhotonCounter(const std::vector<int> & indices, int & counter);
 
+  
+  void SetPhotonPhis(const std::vector<int> & matchedGTGED, const std::vector<int> & matchedLTGED, const std::vector<int> & unmatchedGED, 
+		     std::vector<float> & matchedGTGEDphi, std::vector<float> & unmatchedGEDphi);
+  void SetPhotonPhis();
+
   void SetMETInfo();
   void SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::vector<int> & matchedLTGED,
 		       const std::vector<int> & unmatchedGED, float & ootMETpt, float & ootMETphi);
@@ -74,10 +87,16 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   // Helper Functions //
   //////////////////////
 
-  bool isOOT_GT_GED(const pat::Photon & gedPhoton, const pat::Photon & ootPhoton);
+  inline bool isOOT_GT_GED(const pat::Photon & gedPhoton, const pat::Photon & ootPhoton);
+
   void ResetCounters();
+  void ResetCounter(int & counter);
+
   void ResetPhotonIndices();
   void ResetPhotonIndices(std::vector<int> & indices);
+
+  void ResetPhotonPhis();
+  void ResetPhotonPhis(std::vector<float> & phis);
 
  private:
 
@@ -86,15 +105,15 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   ////////////////////////
 
   virtual void beginJob() override;
-  virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
+  virtual void analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup) override;
   virtual void endJob() override;
   
-  virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
-  virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
+  virtual void beginRun(const edm::Run & iRun, const edm::EventSetup & iSetup) override;
+  virtual void endRun(const edm::Run & iRun, const edm::EventSetup & iSetup) override;
 
-  //////////////////
-  // Data Members //
-  //////////////////
+  ///////////////////
+  // Input Members //
+  ///////////////////
 
   // match config 
   const float dRmin;
@@ -143,55 +162,36 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   edm::Handle<std::vector<reco::GenParticle> > genparticlesH;
   std::vector<reco::GenParticle> genparticles;
 
-  // MC config
+  // MC config --> also output!
   const bool isMC;
   float xsec;
   float BR;
 
-  // temporary internal members for photon indices
-  std::vector<int> matchedGTGED_N;
-  std::vector<int> matchedLTGED_N;
-  std::vector<int> unmatchedGED_N;
-  std::vector<int> matchedCands_N;
+  ///////////////////////////
+  // Temp Internal Members //
+  ///////////////////////////
 
-  std::vector<int> matchedGTGED_L;
-  std::vector<int> matchedLTGED_L;
-  std::vector<int> unmatchedGED_L;
-  std::vector<int> matchedCands_L;
+  // photon indices
+  std::vector<int> matchedGTGED_N, matchedLTGED_N, unmatchedGED_N, matchedCands_N;
+  std::vector<int> matchedGTGED_L, matchedLTGED_L, unmatchedGED_L, matchedCands_L;
+  std::vector<int> matchedGTGED_T, matchedLTGED_T, unmatchedGED_T, matchedCands_T;
 
-  std::vector<int> matchedGTGED_T;
-  std::vector<int> matchedLTGED_T;
-  std::vector<int> unmatchedGED_T;
-  std::vector<int> matchedCands_T;
+  ////////////////////
+  // Output Members //
+  ////////////////////
 
-  // output event level ntuple
+  // tree
   TTree * tree;
  
-  // MC info
-  float genwgt;
-  int genputrue;
-
   // counters
-  int nGED_N;
-  int nOOT_N;
-  int nOOT_matchedGTGED_N;
-  int nOOT_matchedLTGED_N;
-  int nOOT_unmatchedGED_N;
-  int nOOT_matchedCands_N;
+  int nGED_N, nOOT_N, nOOT_matchedGTGED_N, nOOT_matchedLTGED_N, nOOT_unmatchedGED_N, nOOT_matchedCands_N;
+  int nGED_L, nOOT_L, nOOT_matchedGTGED_L, nOOT_matchedLTGED_L, nOOT_unmatchedGED_L, nOOT_matchedCands_L;
+  int nGED_T, nOOT_T, nOOT_matchedGTGED_T, nOOT_matchedLTGED_T, nOOT_unmatchedGED_T, nOOT_matchedCands_T;
 
-  int nGED_L;
-  int nOOT_L;
-  int nOOT_matchedGTGED_L;
-  int nOOT_matchedLTGED_L;
-  int nOOT_unmatchedGED_L;
-  int nOOT_matchedCands_L;
-
-  int nGED_T;
-  int nOOT_T;
-  int nOOT_matchedGTGED_T;
-  int nOOT_matchedLTGED_T;
-  int nOOT_unmatchedGED_T;
-  int nOOT_matchedCands_T;
+  // photon phis
+  std::vector<float> matchedGTGEDphi_N, unmatchedGEDphi_N;
+  std::vector<float> matchedGTGEDphi_L, unmatchedGEDphi_L;
+  std::vector<float> matchedGTGEDphi_T, unmatchedGEDphi_T;
 
   // MET
   float t1pfMETpt, t1pfMETphi;
@@ -199,6 +199,10 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   float ootMETpt_N, ootMETphi_N;
   float ootMETpt_L, ootMETphi_L;
   float ootMETpt_T, ootMETphi_T;
+
+  // MC info
+  float genwgt;
+  int genputrue;
 };
 
 #endif
