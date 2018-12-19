@@ -56,49 +56,19 @@ void Counter::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup)
   // Get Event Objects //
   ///////////////////////
 
-  // PF CANDIDATES
   Counter::GetObjects(iEvent);
 
   //////////////////
   // Prep Objects //
   //////////////////
 
-  // rescale photon pts by corrections
-  Counter::PrepPhotonP4();
+  Counter::PrepObjects();
 
   ////////////////////
   // Set Event Info //
   ////////////////////
 
-  // reset counters
-  Counter::ResetCounters();
-
-  // set basic counters
-  Counter::SetBasicCounters();
-
-  // reset photon indices
-  Counter::ResetPhotonIndices();
-
-  // set photon indices
-  Counter::SetPhotonIndices();
-
-  // set photon counters
-  Counter::SetPhotonCounters();
-
-  // reset photon phis
-  Counter::ResetPhotonPhis();
-
-  // set photon phis
-  Counter::SetPhotonPhis();
-
-  // set met info
-  Counter::SetMETInfo();
-
-  if (isMC)
-  {
-    // set event record info
-    Counter::SetMCInfo();
-  }
+  Counter::SetEventInfo();
 
   ///////////////
   // Fill Tree //
@@ -113,7 +83,7 @@ void Counter::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup)
 
 void Counter::GetObjects(const edm::Event & iEvent)
 {
-  // PF cands
+  // PF CANDIDATES
   iEvent.getByToken(candsToken, candsH);
   cands = *candsH;
 
@@ -145,21 +115,12 @@ void Counter::GetObjects(const edm::Event & iEvent)
   }
 }
 
-void Counter::PrepPhotonP4()
+void Counter::PrepObjects()
 {
-  Counter::PrepPhotonP4(gedPhotons);
-  Counter::PrepPhotonP4(ootPhotons);
-}
-
-void Counter::PrepPhotonP4(std::vector<pat::Photon> & photons)
-{
-  for (auto & photon : photons)
+  if (isMC)
   {
-    // tmp p4 : scale it by the correction factor
-    const auto p4 = photon.p4() * photon.userFloat("ecalEnergyPostCorr")/photon.energy();
-
-    // set the p4
-    photon.setP4(p4);
+    // match to gmsb photons
+    oot::PrepNeutralinos(genparticlesH,neutralinos);
   }
 }
 
@@ -167,17 +128,40 @@ void Counter::PrepPhotonP4(std::vector<pat::Photon> & photons)
 // Main Functions //
 ////////////////////
 
-void Counter::SetMCInfo()
+void Counter::SetEventInfo()
 {
-  genwgt = genevtInfo.weight();
-  for (const auto & pileupInfo : pileupInfos)
-  {
-    if (pileupInfo.getBunchCrossing() == 0) 
-    {
-      genputrue = pileupInfo.getTrueNumInteractions();
-      break;
-    } // end check over correct BX
-  } // end loop over PU
+  // reset counters
+  Counter::ResetCounters();
+
+  // set basic counters
+  Counter::SetBasicCounters();
+
+  // reset photon indices
+  Counter::ResetPhotonIndices();
+
+  // set photon indices
+  Counter::SetPhotonIndices();
+
+  // set photon counters
+  Counter::SetPhotonCounters();
+
+  // reset photon phis
+  Counter::ResetPhotonPhis();
+
+  // set photon phis
+  Counter::SetPhotonPhis();
+
+  // set met info
+  Counter::SetMETInfo();
+
+  if (isMC)
+  { 
+    // set event record info
+    Counter::SetMCInfo();
+
+    // set pt residuals
+    //    Counter::SetPtResiduals();
+  }
 }
 
 void Counter::SetBasicCounters()
@@ -201,72 +185,86 @@ void Counter::SetBasicCounters()
 
 void Counter::SetPhotonIndices()
 {
-  Counter::SetPhotonIndices("NONE","NONE",matchedGTGED_N,matchedLTGED_N,unmatchedGED_N,matchedCands_N);
-  Counter::SetPhotonIndices(Config::GEDPhotonLooseVID,Config::OOTPhotonLooseVID,matchedGTGED_L,matchedLTGED_L,unmatchedGED_L,matchedCands_L);
-  Counter::SetPhotonIndices(Config::GEDPhotonTightVID,Config::OOTPhotonTightVID,matchedGTGED_T,matchedLTGED_T,unmatchedGED_T,matchedCands_T);
+  Counter::SetPhotonIndices("NONE","NONE",matchedOOT_N,matchedGTGED_N,matchedLTGED_N,unmatchedGED_N,matchedCands_N);
+  Counter::SetPhotonIndices(Config::GEDPhotonLooseVID,Config::OOTPhotonLooseVID,matchedOOT_L,matchedGTGED_L,matchedLTGED_L,unmatchedGED_L,matchedCands_L);
+  Counter::SetPhotonIndices(Config::GEDPhotonTightVID,Config::OOTPhotonTightVID,matchedOOT_T,matchedGTGED_T,matchedLTGED_T,unmatchedGED_T,matchedCands_T);
 }
 
-void Counter::SetPhotonIndices(const std::string & gedVID, const std::string & ootVID,
+void Counter::SetPhotonIndices(const std::string & gedVID, const std::string & ootVID, std::vector<int> & matchedOOT,
 			       std::vector<int> & matchedGTGED, std::vector<int> & matchedLTGED,
 			       std::vector<int> & unmatchedGED, std::vector<int> & matchedCands)
 {
-  // save on dereference
-  const auto & cands = *candsH;
-  const auto & gedPhotons = *gedPhotonsH;
-  const auto & ootPhotons = *ootPhotonsH;
-
   // save on check size
   const auto nCands = cands.size();
 
   // loop over OOT photons, setting indices
   for (auto ioot = 0; ioot < nOOT_N; ioot++)
   {
+    // get ootPhoton
     const auto & ootPhoton = ootPhotons[ioot];
 
+    // cut on ootVID
     if (ootVID != "NONE") 
       if (!ootPhoton.photonID(ootVID)) continue;
 
-    auto isMatched = true;
+    // temporaries needed for matching to GED
+    auto matchedGED = -1;
+    auto mindR = dRmin;
 
+    // loop over GED photons, looking for best dR match
     for (auto iged = 0; iged < nGED_N; iged++)
     {
+      // skip if already matched
+      if (matchedOOT[iged] >= 0) continue;
+
+      // get gedPhoton
       const auto & gedPhoton = gedPhotons[iged];
 
+      // cut on VID
       if (gedVID != "NONE") 
 	if (!gedPhoton.photonID(gedVID)) continue;
       
-      if (reco::deltaR(ootPhoton,gedPhoton) < dRmin)
+      // cut on lowest deltaR
+      const auto phodR = reco::deltaR(ootPhoton,gedPhoton);
+      if (phodR < mindR)
       {
-	if   (Counter::isOOT_GT_GED(gedPhoton,ootPhoton)) matchedGTGED[ioot] = iged;
-	else                                              matchedLTGED[ioot] = iged;
+	// set tmp index
+	matchedGED = iged;
 
-	isMatched = true;
-	break;
+	// set next min threshold
+	mindR = phodR;
       } // end check over deltaR match
     } // end loop over ged photons
 
-    if (!isMatched)
+    // assign pT masking and GED photon masking (for skipping on next OOT)
+    if (matchedGED >= 0) 
     {
+      const auto & gedPhoton = gedPhotons[matchedGED];
+      matchedOOT[matchedGED] = ioot;
+
+      if   (Counter::GetPhotonPt(ootPhoton) > Counter::GetPhotonPt(gedPhoton)) matchedGTGED[ioot] = matchedGED;
+      else                                                                     matchedLTGED[ioot] = matchedGED;
+    }
+    else // OOT photon is truly unmatched to GED
+    {
+      // mask it for later use
       unmatchedGED[ioot] = 1;
 
+      // loop over pf cands, checking to see if it is picked up by a PF candidate
       for (auto icand = 0U; icand < nCands; icand++)
       {
+	// get pf cand
 	const auto & cand = cands[icand];
-	
-	if (cand.pt() < pTmin) continue;
-	for (auto iged = 0; iged < nGED_N; iged++)
-	{
-	  const auto & gedPhoton = gedPhotons[iged];
 
-	  if (gedVID != "NONE") 
-	    if (!gedPhoton.photonID(gedVID)) continue;
-	  if (reco::deltaR(gedPhoton,cand) < dRmin) continue;
-	  if (reco::deltaR(ootPhoton,cand) < dRmin)
-	  {
-	    matchedCands[ioot] = icand;
-	    break;
-	  } // end deltaR match to pfcand
-	} // end loop over ged photons
+	// forget about the junk
+	if (cand.pt() < pTmin) continue;
+	
+	// just check to see if it is matched just once
+	if (reco::deltaR(ootPhoton,cand) < dRmin)
+	{
+	  matchedCands[ioot] = icand;
+	  break;
+	} // end deltaR match to pfcand
       } // end loop over pf cands
     } // end block over unmatched OOT phos
   } // end loop over ootPhotons
@@ -352,7 +350,7 @@ void Counter::SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::
 
     // get ootPhoton info --> will use it regardless!
     const auto & ootPhoton = ootPhotons[ioot];
-    const auto ootpt  = ootPhoton.pt();
+    const auto ootpt  = Counter::GetPhotonPt(ootPhoton);
     const auto ootphi = ootPhoton.phi();
     
     // first, change MET with overlapping OOT photons; then check if totally unmatched
@@ -360,7 +358,7 @@ void Counter::SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::
     {
       // get gedPhoton info
       const auto & gedPhoton = gedPhotons[matchedGTGED[ioot]];
-      const auto gedpt  = gedPhoton.pt();
+      const auto gedpt  = Counter::GetPhotonPt(gedPhoton);
       const auto gedphi = gedPhoton.phi();
 
       // get compnonents
@@ -384,13 +382,77 @@ void Counter::SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::
   } // end loop over OOT photons
 }
 
+void Counter::SetMCInfo()
+{
+  genwgt = genevtInfo.weight();
+  for (const auto & pileupInfo : pileupInfos)
+  {
+    if (pileupInfo.getBunchCrossing() == 0) 
+    {
+      genputrue = pileupInfo.getTrueNumInteractions();
+      break;
+    } // end check over correct BX
+  } // end loop over PU
+}
+
+// void Counter::PrepPhotonCollection()
+// {
+//   Counter::PrepPhotonCollection(photons_N,matchedOOT_N,matchedGTGED_N)
+
+
+// }
+
+// void Counter::SetPtResiduals()
+// {
+//   Counter::SetPtResiduals(afterGEDptres_N,beforeOOTptres_N,afterOOTptres_N);
+//   Counter::SetPtResiduals(matchedOOT_L,matchedGTGED_L,beforeGEDptres_L,afterGEDptres_L,beforeOOTptres_L,afterOOTptres_L);
+//   Counter::SetPtResiduals(matchedOOT_T,matchedGTGED_T,beforeGEDptres_T,afterGEDptres_T,beforeOOTptres_T,afterOOTptres_T);
+// }
+
+// void Counter::SetPtResiduals(const std::vector<int> & matchedOOT, const std::vector<int> & matchedGTGED,
+// 			     const std::vector<float> & beforeGEDptres, const std::vector<float> & afterGEDptres,
+// 			     const std::vector<float> & beforeOOTptres, const std::vector<float> & afterOOTptres)
+// {
+//   // loop over neutralinos, find best photon, compute before and after pt residual
+//   for (const auto & neutralino : neutralinos)
+//   {
+//     // get photon daughter stuff
+//     const auto phdaughter  =  (neutralino.daughter(0)->pdgId() == 22)?0:1;
+//     const auto & genPhoton = *(neutralino.daughter(phdaughter));
+
+//     // check for a reco match!
+//     auto mindR = gendRmin;
+    
+//     // First check 
+//     for (auto iged = 0; iged < nGED_N; iged++)
+//     {
+//       // skip GED photons that are matched OOT, but OOT pt > GED pt
+//       const auto ootMatched = matchedOOT[iged];
+//       if (ootMatched >= 0)
+// 	if (matchedGTGED[ootMatched] >= 0) continue;
+
+//       // get gedPhoton
+//       const auto & gedPhoton = gedPhotons[iged];
+
+//       // 
+//       const auto phodR = reco::deltaR(genPhoton,gedPhoton);
+//       if (phodR < mindR) 
+//       {
+// 	mindR = phodR;
+//       } // end check over deltaR
+//     } // end loop over reco photons
+
+
+//   } // end loop over neutralinos
+// }
+
 //////////////////////
 // Helper Functions //
 //////////////////////
 
-inline bool Counter::isOOT_GT_GED(const pat::Photon & gedPhoton, const pat::Photon & ootPhoton)
+inline float Counter::GetPhotonPt(const pat::Photon & photon)
 {
-  return (ootPhoton.pt() > gedPhoton.pt());
+  return (photon.userFloat("ecalEnergyPostCorr")/photon.energy())*photon.pt();
 }
 
 void Counter::ResetCounters()
@@ -424,43 +486,46 @@ void Counter::ResetCounter(int & counter)
 
 void Counter::ResetPhotonIndices()
 {
-  Counter::ResetPhotonIndices(matchedGTGED_N);
-  Counter::ResetPhotonIndices(matchedLTGED_N);
-  Counter::ResetPhotonIndices(unmatchedGED_N);
-  Counter::ResetPhotonIndices(matchedCands_N);
+  Counter::ResetPhotonIndices(matchedOOT_N,nGED_N);
+  Counter::ResetPhotonIndices(matchedGTGED_N,nOOT_N);
+  Counter::ResetPhotonIndices(matchedLTGED_N,nOOT_N);
+  Counter::ResetPhotonIndices(unmatchedGED_N,nOOT_N);
+  Counter::ResetPhotonIndices(matchedCands_N,nOOT_N);
 
-  Counter::ResetPhotonIndices(matchedGTGED_L);
-  Counter::ResetPhotonIndices(matchedLTGED_L);
-  Counter::ResetPhotonIndices(unmatchedGED_L);
-  Counter::ResetPhotonIndices(matchedCands_L);
+  Counter::ResetPhotonIndices(matchedOOT_L,nGED_N);
+  Counter::ResetPhotonIndices(matchedGTGED_L,nOOT_N);
+  Counter::ResetPhotonIndices(matchedLTGED_L,nOOT_N);
+  Counter::ResetPhotonIndices(unmatchedGED_L,nOOT_N);
+  Counter::ResetPhotonIndices(matchedCands_L,nOOT_N);
 
-  Counter::ResetPhotonIndices(matchedGTGED_T);
-  Counter::ResetPhotonIndices(matchedLTGED_T);
-  Counter::ResetPhotonIndices(unmatchedGED_T);
-  Counter::ResetPhotonIndices(matchedCands_T);
+  Counter::ResetPhotonIndices(matchedOOT_T,nGED_N);
+  Counter::ResetPhotonIndices(matchedGTGED_T,nOOT_N);
+  Counter::ResetPhotonIndices(matchedLTGED_T,nOOT_N);
+  Counter::ResetPhotonIndices(unmatchedGED_T,nOOT_N);
+  Counter::ResetPhotonIndices(matchedCands_T,nOOT_N);
 }
 
-void Counter::ResetPhotonIndices(std::vector<int> & indices)
+void Counter::ResetPhotonIndices(std::vector<int> & indices, const int size)
 {
-  indices.resize(nOOT_N); // loop over all oot photons in the event
+  indices.resize(size); // loop over photons of one type in the event
   for (auto & index : indices) index = -1;
 }
 
 void Counter::ResetPhotonPhis()
 {
-  Counter::ResetPhotonPhis(matchedGTGEDphi_N);
-  Counter::ResetPhotonPhis(unmatchedGEDphi_N);
+  Counter::ResetPhotonVars(matchedGTGEDphi_N);
+  Counter::ResetPhotonVars(unmatchedGEDphi_N);
 
-  Counter::ResetPhotonPhis(matchedGTGEDphi_L);
-  Counter::ResetPhotonPhis(unmatchedGEDphi_L);
+  Counter::ResetPhotonVars(matchedGTGEDphi_L);
+  Counter::ResetPhotonVars(unmatchedGEDphi_L);
 
-  Counter::ResetPhotonPhis(matchedGTGEDphi_T);
-  Counter::ResetPhotonPhis(unmatchedGEDphi_T);
+  Counter::ResetPhotonVars(matchedGTGEDphi_T);
+  Counter::ResetPhotonVars(unmatchedGEDphi_T);
 }
 
-void Counter::ResetPhotonPhis(std::vector<float> & phis)
+void Counter::ResetPhotonVars(std::vector<float> & vars)
 {
-  phis.clear();
+  vars.clear();
 }
 
 ////////////////////////

@@ -55,26 +55,24 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   //////////////////////////
 
   void GetObjects(const edm::Event & iEvent);
-  void PrepPhotonP4();
-  void PrepPhotonP4(std::vector<pat::Photon> & photons);
-
+  void PrepObjects();
+ 
   ////////////////////
   // Main Functions //
   ////////////////////
-
-  void SetMCInfo();
+  
+  void SetEventInfo();
 
   void SetBasicCounters();
 
   void SetPhotonIndices();
-  void SetPhotonIndices(const std::string & gedVID, const std::string & ootVID,
+  void SetPhotonIndices(const std::string & gedVID, const std::string & ootVID, std::vector<int> & matchedOOT,
 			std::vector<int> & matchedGTGED, std::vector<int> & matchedLTGED,
 			std::vector<int> & unmatchedGED, std::vector<int> & matchedCands);
 
   void SetPhotonCounters();
   void SetPhotonCounter(const std::vector<int> & indices, int & counter);
 
-  
   void SetPhotonPhis(const std::vector<int> & matchedGTGED, const std::vector<int> & matchedLTGED, const std::vector<int> & unmatchedGED, 
 		     std::vector<float> & matchedGTGEDphi, std::vector<float> & unmatchedGEDphi);
   void SetPhotonPhis();
@@ -83,20 +81,23 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   void SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::vector<int> & matchedLTGED,
 		       const std::vector<int> & unmatchedGED, float & ootMETpt, float & ootMETphi);
 
+  void SetMCInfo();
+
   //////////////////////
   // Helper Functions //
   //////////////////////
 
-  inline bool isOOT_GT_GED(const pat::Photon & gedPhoton, const pat::Photon & ootPhoton);
+  inline float GetPhotonPt(const pat::Photon & photon);
+  inline bool IsOOT_GT_GED(const pat::Photon & gedPhoton, const pat::Photon & ootPhoton);
 
   void ResetCounters();
   void ResetCounter(int & counter);
 
   void ResetPhotonIndices();
-  void ResetPhotonIndices(std::vector<int> & indices);
+  void ResetPhotonIndices(std::vector<int> & indices, const int size);
 
   void ResetPhotonPhis();
-  void ResetPhotonPhis(std::vector<float> & phis);
+  void ResetPhotonVars(std::vector<float> & vars);
 
  private:
 
@@ -172,9 +173,12 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   ///////////////////////////
 
   // photon indices
-  std::vector<int> matchedGTGED_N, matchedLTGED_N, unmatchedGED_N, matchedCands_N;
-  std::vector<int> matchedGTGED_L, matchedLTGED_L, unmatchedGED_L, matchedCands_L;
-  std::vector<int> matchedGTGED_T, matchedLTGED_T, unmatchedGED_T, matchedCands_T;
+  std::vector<int> matchedOOT_N, matchedGTGED_N, matchedLTGED_N, unmatchedGED_N, matchedCands_N;
+  std::vector<int> matchedOOT_L, matchedGTGED_L, matchedLTGED_L, unmatchedGED_L, matchedCands_L;
+  std::vector<int> matchedOOT_T, matchedGTGED_T, matchedLTGED_T, unmatchedGED_T, matchedCands_T;
+
+  // neutralinos
+  genPartVec neutralinos;
 
   ////////////////////
   // Output Members //
