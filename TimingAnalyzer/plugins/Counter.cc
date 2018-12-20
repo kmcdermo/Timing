@@ -394,11 +394,15 @@ void Counter::SetPhotonPhis(const std::vector<int> & matchedGTGED, const std::ve
 void Counter::SetMETInfo()
 {
   const auto & t1pfMET = mets.front();
-  const auto & genMET = *(t1pfMET.genMET());
   t1pfMETpt = t1pfMET.pt();
   t1pfMETphi = t1pfMET.phi();
-  genMETpt = genMET.pt();
-  genMETphi = genMET.phi();
+
+  if (isMC)
+  {
+    const auto & genMET = *(t1pfMET.genMET());
+    genMETpt = genMET.pt();
+    genMETphi = genMET.phi();
+  }
   
   Counter::SetCorrectedMET(matchedGTGED_N,matchedLTGED_N,unmatchedGED_N,ootMETpt_N,ootMETphi_N);
   Counter::SetCorrectedMET(matchedGTGED_L,matchedLTGED_L,unmatchedGED_L,ootMETpt_L,ootMETphi_L);
@@ -758,8 +762,12 @@ void Counter::beginJob()
   // MET info
   tree->Branch("t1pfMETpt", &t1pfMETpt, "t1pfMETpt/F");
   tree->Branch("t1pfMETphi", &t1pfMETphi, "t1pfMETphi/F");
-  tree->Branch("genMETpt", &genMETpt, "genMETpt/F");
-  tree->Branch("genMETphi", &genMETphi, "genMETphi/F");
+
+  if (isMC)
+  {
+    tree->Branch("genMETpt", &genMETpt, "genMETpt/F");
+    tree->Branch("genMETphi", &genMETphi, "genMETphi/F");
+  }
 
   tree->Branch("ootMETpt_N", &ootMETpt_N, "ootMETpt_N/F");
   tree->Branch("ootMETphi_N", &ootMETphi_N, "ootMETphi_N/F");
