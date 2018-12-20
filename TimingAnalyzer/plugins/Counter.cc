@@ -420,7 +420,7 @@ void Counter::SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::
   for (auto ioot = 0; ioot < nOOT_N; ioot++)
   {
     // skip if matched, but lower in pT
-    if (matchedLTGED[ioot] < 0) continue;
+    if (matchedLTGED[ioot] >= 0) continue;
 
     // get ootPhoton info --> will use it regardless!
     const auto & ootPhoton = ootPhotons[ioot];
