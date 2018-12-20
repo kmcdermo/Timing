@@ -10,6 +10,9 @@ options.register('dRmin',0.3,VarParsing.multiplicity.singleton,VarParsing.varTyp
 options.register('pTmin',20.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'pT minimum cut');
 options.register('pTres',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'pT resolution cut');
 
+## debug it all?
+options.register('debug',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to dump info');
+
 ## data or MC options
 options.register('isMC',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate data or MC');
 options.register('xsec',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'cross section in pb');
@@ -25,7 +28,7 @@ options.register('demoMode',False,VarParsing.multiplicity.singleton,VarParsing.v
 options.register('processName','TREE',VarParsing.multiplicity.singleton,VarParsing.varType.string,'process name to be considered');
 
 ## outputFile Name
-options.register('outputFileName','dispho.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,'output file name created by cmsRun');
+options.register('outputFileName','counter.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,'output file name created by cmsRun');
 
 ## etra bits
 options.register('nThreads',8,VarParsing.multiplicity.singleton,VarParsing.varType.int,'number of threads per job');
@@ -35,13 +38,13 @@ options.register('runUnscheduled',False,VarParsing.multiplicity.singleton,VarPar
 ## parsing command line arguments
 options.parseArguments()
 
-if options.isGMSB or options.isHVDS or options.isBkgd or options.isToy or options.isADD: options.isMC = True
-
 print "     ##### Settings ######"
 print "        -- Matching --"
 print "dRmin          : ",options.dRmin
 print "pTmin          : ",options.pTmin
 print "pTres          : ",options.pTres
+print "         -- Debug --"
+print "debug          : ",options.debug
 print "        -- MC Info --"
 print "isMC           : ",options.isMC
 if options.isMC:
@@ -80,7 +83,23 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		# reminiaod data: 94X_dataRun2_v6
 		#'/store/user/kmcdermo/files/SPH_2017E_miniAODv2.root'
 		# miniaodv2 GMSB, GT: 94X_mc2017_realistic_v14
-		'/store/user/kmcdermo/files/GMSB_L600TeV_Ctau400cm_miniAODv2.root'
+		#'/store/user/kmcdermo/files/GMSB_L600TeV_Ctau200cm_miniAODv2.root'
+
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/100000/A0C1FB84-F0D8-E811-829F-484D7E8DF0FA.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/100000/9273BB85-F0D8-E811-9A57-0CC47A706CDE.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/FA78EC1A-E0BA-E811-9524-F02FA768CCD8.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/C4CB870D-E0BA-E811-84A3-A0369FC51A44.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/C0DEB1AC-DFBA-E811-923B-E0071B6C9DF0.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/A201B427-E0BA-E811-96F6-A0369FD20DA0.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/9ECFB21D-E0BA-E811-86F0-0242AC1C0500.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/8CDA606C-E0BA-E811-AE5C-20CF3027A607.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/82E04C6B-E0BA-E811-8C51-7CD30AD09316.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/5C24B427-E0BA-E811-832B-A0369FD20DA0.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/48885419-E0BA-E811-896D-A4BF0108B77A.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/34374E75-E0BA-E811-8125-002590E7D5AE.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/0EB82B7E-E0BA-E811-8289-0026B9278610.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/0CA2A332-E0BA-E811-85BA-002590785950.root',
+		'/store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/0068A170-E0BA-E811-952E-0017A4771074.root'
 		))
 
 ## How many events to process
@@ -111,11 +130,13 @@ from RecoEgamma.EgammaTools.OOTPhotonPostRecoTools import setupOOTPhotonPostReco
 setupOOTPhotonPostRecoSeq(process)
 
 # Make the tree 
-process.tree = cms.EDAnalyzer("DisPho",
+process.tree = cms.EDAnalyzer("Counter",
    ## matched criteria
    dRmin = cms.double(options.dRmin),
    pTmin = cms.double(options.pTmin),
    pTres = cms.double(options.pTres),
+   ## debug config
+   debug = cms.bool(options.debug),			      
    ## cands
    cands = cms.InputTag("packedPFCandidates"),
    ## MET
@@ -124,7 +145,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    gedPhotons = cms.InputTag("slimmedPhotons"),
    ootPhotons = cms.InputTag("slimmedOOTPhotons"),
    ## gen info
-   isMC   = cms.bool(options.isMC),
+   isMC     = cms.bool(options.isMC),
    xsec     = cms.double(options.xsec),
    BR       = cms.double(options.BR),
    genevt   = cms.InputTag("generator"),

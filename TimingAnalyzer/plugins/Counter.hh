@@ -34,6 +34,28 @@
 // Common Utilities
 #include "Timing/TimingAnalyzer/plugins/CommonUtils.hh"
 
+////////////////////////
+// GED/OOT Photon Idx //
+////////////////////////
+
+struct ReducedPhoton
+{
+  ReducedPhoton() {}
+  ReducedPhoton(const int idx, const bool isGED) : idx(idx), isGED(isGED) {}
+
+  int idx;
+  bool isGED;
+};
+
+/////////////////////
+// Extra Functions //
+/////////////////////
+
+inline float GetPhotonPt(const pat::Photon & photon)
+{
+  return (photon.userFloat("ecalEnergyPostCorr")/photon.energy())*photon.pt();
+}
+
 //////////////////////
 // Class Definition //
 //////////////////////
@@ -56,7 +78,11 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
 
   void GetObjects(const edm::Event & iEvent);
   void PrepObjects();
- 
+  void SortPhotonsByPt(std::vector<pat::Photon> & photons);
+
+  void PrepPhotonCollections();
+  void PrepPhotonCollection(std::vector<ReducedPhoton> & reducedPhotons, const std::vector<int> & matchedOOT, const std::vector<int> & matchedLTGED);
+
   ////////////////////
   // Main Functions //
   ////////////////////
@@ -83,12 +109,14 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
 
   void SetMCInfo();
 
+  void SetEResiduals();
+  void SetEResiduals(const std::vector<ReducedPhoton> & reducedPhotons,
+		     std::vector<float> & beforeGEDEres, std::vector<float> & afterGEDEres,
+		     std::vector<float> & beforeOOTEres, std::vector<float> & afterOOTEres);
+
   //////////////////////
   // Helper Functions //
   //////////////////////
-
-  inline float GetPhotonPt(const pat::Photon & photon);
-  inline bool IsOOT_GT_GED(const pat::Photon & gedPhoton, const pat::Photon & ootPhoton);
 
   void ResetCounters();
   void ResetCounter(int & counter);
@@ -97,7 +125,24 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   void ResetPhotonIndices(std::vector<int> & indices, const int size);
 
   void ResetPhotonPhis();
+  void ResetEResiduals();
   void ResetPhotonVars(std::vector<float> & vars);
+
+  void ResetPhotonCollections();
+  void ResetPhotonCollection(std::vector<ReducedPhoton> & reducedPhotons);
+
+  /////////////////////
+  // DEBUG FUNCTIONS //
+  /////////////////////
+
+  void DumpPhotons(const edm::Event & iEvent);
+  void DumpPhotons(const std::string & group, const std::vector<int> & matchedOOT,
+		   const std::vector<int> & matchedGTGED, const std::vector<int> & matchedLTGED,
+		   const std::vector<int> & unmatchedGED);
+  void DumpPhotons(const std::vector<pat::Photon> & photons, const int size, 
+		   const std::vector<int> & indices, const bool check, const std::string & label,
+		   const std::vector<pat::Photon> & refPhotons);
+  void DumpPhoton(const int i, const pat::Photon & photon, const std::string & prefix, const std::string & suffix);
 
  private:
 
@@ -120,6 +165,9 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   const float dRmin;
   const float pTmin;
   const float pTres;
+
+  // debug config
+  const bool debug;
 
   // cands
   const edm::InputTag candsTag;
@@ -180,6 +228,11 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   // neutralinos
   genPartVec neutralinos;
 
+  // reduced photon index collections
+  std::vector<ReducedPhoton> reducedPhotons_N;
+  std::vector<ReducedPhoton> reducedPhotons_L;
+  std::vector<ReducedPhoton> reducedPhotons_T;
+
   ////////////////////
   // Output Members //
   ////////////////////
@@ -207,6 +260,11 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   // MC info
   float genwgt;
   int genputrue;
+
+  // E residuals
+  std::vector<float> beforeGEDEres_N, afterGEDEres_N, beforeOOTEres_N, afterOOTEres_N;
+  std::vector<float> beforeGEDEres_L, afterGEDEres_L, beforeOOTEres_L, afterOOTEres_L;
+  std::vector<float> beforeGEDEres_T, afterGEDEres_T, beforeOOTEres_T, afterOOTEres_T;
 };
 
 #endif
