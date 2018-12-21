@@ -4,7 +4,10 @@ Counter::Counter(const edm::ParameterSet & iConfig):
   // matching criteria
   dRmin(iConfig.existsAs<double>("dRmin") ? iConfig.getParameter<double>("dRmin") : 0.3),
   pTmin(iConfig.existsAs<double>("pTmin") ? iConfig.getParameter<double>("pTmin") : 20.0),
-  pTres(iConfig.existsAs<double>("pTres") ? iConfig.getParameter<double>("pTres") : 1.0),
+  pTres(iConfig.existsAs<double>("pTres") ? iConfig.getParameter<double>("pTres") : 0.5),
+
+  // use GED VID
+  useGEDVID(iConfig.existsAs<bool>("useGEDVID") ? iConfig.getParameter<bool>("useGEDVID") : false),
 
   // debug it all
   debug(iConfig.existsAs<bool>("debug") ? iConfig.getParameter<bool>("debug") : false),
@@ -256,8 +259,8 @@ void Counter::SetBasicCounters()
 void Counter::SetPhotonIndices()
 {
   Counter::SetPhotonIndices("NONE","NONE",matchedOOT_N,matchedGTGED_N,matchedLTGED_N,unmatchedGED_N,matchedCands_N);
-  Counter::SetPhotonIndices(Config::GEDPhotonLooseVID,Config::OOTPhotonLooseVID,matchedOOT_L,matchedGTGED_L,matchedLTGED_L,unmatchedGED_L,matchedCands_L);
-  Counter::SetPhotonIndices(Config::GEDPhotonTightVID,Config::OOTPhotonTightVID,matchedOOT_T,matchedGTGED_T,matchedLTGED_T,unmatchedGED_T,matchedCands_T);
+  Counter::SetPhotonIndices((useGEDVID?Config::GEDPhotonLooseVID:"NONE"),Config::OOTPhotonLooseVID,matchedOOT_L,matchedGTGED_L,matchedLTGED_L,unmatchedGED_L,matchedCands_L);
+  Counter::SetPhotonIndices((useGEDVID?Config::GEDPhotonTightVID:"NONE"),Config::OOTPhotonTightVID,matchedOOT_T,matchedGTGED_T,matchedLTGED_T,unmatchedGED_T,matchedCands_T);
 }
 
 void Counter::SetPhotonIndices(const std::string & gedVID, const std::string & ootVID, std::vector<int> & matchedOOT,
@@ -319,15 +322,23 @@ void Counter::SetPhotonIndices(const std::string & gedVID, const std::string & o
     {
       // mask it for later use
       unmatchedGED[ioot] = 1;
+      
+      // get oot photon pt
+      const auto ootPt = GetPhotonPt(ootPhoton);
 
       // loop over pf cands, checking to see if it is picked up by a PF candidate
       for (auto icand = 0U; icand < nCands; icand++)
       {
-	// get pf cand
+	// get pf cand + pt
 	const auto & cand = cands[icand];
+	const auto candpt = cand.pt();
 
 	// forget about the junk
 	if (cand.pt() < pTmin) continue;
+	
+	// pt resolution
+	if (ootPt < ((1.f-pTres) * candpt)) continue;
+	if (ootPt > ((1.f+pTres) * candpt)) continue;
 	
 	// just check to see if it is matched just once
 	if (reco::deltaR(ootPhoton,cand) < dRmin)
@@ -362,7 +373,7 @@ void Counter::SetPhotonCounter(const std::vector<int> & indices, int & counter)
 {
   for (const auto index : indices)
   {
-    if (index > 0) counter++;
+    if (index >= 0) counter++;
   }
 }
 
@@ -379,7 +390,7 @@ void Counter::SetPhotonPhis(const std::vector<int> & matchedGTGED, const std::ve
   for (auto ioot = 0; ioot < nOOT_N; ioot++)
   {
     // skip if matched, but lower in pT
-    if (matchedLTGED[ioot] < 0) continue;
+    if (matchedLTGED[ioot] >= 0) continue;
 
     // get ootPhoton info --> will use it regardless!
     const auto & ootPhoton = ootPhotons[ioot];

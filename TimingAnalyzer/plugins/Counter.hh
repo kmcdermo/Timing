@@ -166,6 +166,9 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   const float pTmin;
   const float pTres;
 
+  // useGEDVID
+  const bool useGEDVID;
+
   // debug config
   const bool debug;
 

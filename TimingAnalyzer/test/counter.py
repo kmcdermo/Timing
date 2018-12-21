@@ -8,7 +8,10 @@ options = VarParsing('python')
 ## matching cuts
 options.register('dRmin',0.3,VarParsing.multiplicity.singleton,VarParsing.varType.float,'dR minimum cut');
 options.register('pTmin',20.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'pT minimum cut');
-options.register('pTres',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'pT resolution cut');
+options.register('pTres',0.5,VarParsing.multiplicity.singleton,VarParsing.varType.float,'pT resolution cut');
+
+## useGEDVID
+options.register('useGEDVID',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to use GED VID in cuts');
 
 ## debug it all?
 options.register('debug',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to dump info');
@@ -43,6 +46,8 @@ print "        -- Matching --"
 print "dRmin          : ",options.dRmin
 print "pTmin          : ",options.pTmin
 print "pTres          : ",options.pTres
+print "        -- GED VID --"
+print "useGEDVID      : ",options.useGEDVID
 print "         -- Debug --"
 print "debug          : ",options.debug
 print "        -- MC Info --"
@@ -135,8 +140,10 @@ process.tree = cms.EDAnalyzer("Counter",
    dRmin = cms.double(options.dRmin),
    pTmin = cms.double(options.pTmin),
    pTres = cms.double(options.pTres),
+   ## ged vid
+   useGEDVID = cms.bool(options.useGEDVID),
    ## debug config
-   debug = cms.bool(options.debug),			      
+   debug = cms.bool(options.debug),		      
    ## cands
    cands = cms.InputTag("packedPFCandidates"),
    ## MET
