@@ -1,9 +1,0 @@
-#!/bin/sh
-
-indir=$1
-outdir=$2
-
-for i in 1 2 3 4 5 6 7 8 9
-do
-    ./doskim.sh ${indir}/${outdir}${i}
-done
