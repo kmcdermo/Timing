@@ -1,8 +1,0 @@
-ApplyrhECut 1
-rhECut 1.f
-ApplyECALAcceptCut 1
-ApplyEBOnly 0
-ApplyEEOnly 0
-ApplyPhMCMatchingCut 0
-ApplyExactPhMCMatch 0
-ApplyAntiPhMCMatch 0
