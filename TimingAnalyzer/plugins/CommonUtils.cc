@@ -49,66 +49,58 @@ namespace oot
     } // check to make sure text file exists
   }
 
-  void PrepNeutralinos(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, genPartVec& neutralinos)
+  void PrepNeutralinos(const std::vector<reco::GenParticle> & genparticles, std::vector<reco::GenParticle> & neutralinos)
   {
-    if (genparticlesH.isValid())
+    int nNeutoPhGr = 0;
+    for (const auto & genparticle : genparticles) // loop over gen particles
     {
-      int nNeutoPhGr = 0;
-      for (const auto & genparticle : *genparticlesH) // loop over gen particles
+      if (nNeutoPhGr == 2) break;
+      
+      if (genparticle.pdgId() == 1000022 && genparticle.numberOfDaughters() == 2)
       {
-	if (nNeutoPhGr == 2) break;
-
-	if (genparticle.pdgId() == 1000022 && genparticle.numberOfDaughters() == 2)
+	if ((genparticle.daughter(0)->pdgId() == 22 && genparticle.daughter(1)->pdgId() == 1000039) ||
+	    (genparticle.daughter(1)->pdgId() == 22 && genparticle.daughter(0)->pdgId() == 1000039)) 
 	{
-	  if ((genparticle.daughter(0)->pdgId() == 22 && genparticle.daughter(1)->pdgId() == 1000039) ||
-	      (genparticle.daughter(1)->pdgId() == 22 && genparticle.daughter(0)->pdgId() == 1000039)) 
-	  {
-	    nNeutoPhGr++;
-	    neutralinos.emplace_back(genparticle);
-	  } // end conditional over matching daughter ids
-	} // end conditional over neutralino id
-      } // end loop over gen particles
-
-      std::sort(neutralinos.begin(),neutralinos.end(),oot::sortByPt);
-    } // end check over valid
+	  nNeutoPhGr++;
+	  neutralinos.emplace_back(genparticle);
+	} // end conditional over matching daughter ids
+      } // end conditional over neutralino id
+    } // end loop over gen particles
+    
+    std::sort(neutralinos.begin(),neutralinos.end(),oot::sortByPt);
   }
 
-  void PrepVPions(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, genPartVec& vPions)
+  void PrepVPions(const std::vector<reco::GenParticle> & genparticles, std::vector<reco::GenParticle> & vPions)
   {
-    if (genparticlesH.isValid()) // make sure gen particles exist --> only do this for GMSB
-    {
-      for (const auto & genparticle : *genparticlesH) // loop over gen particles
-      {
-	if (genparticle.pdgId() == 4900111 && genparticle.numberOfDaughters() == 2)
-    	{
-	  if (genparticle.daughter(0)->pdgId() == 22 && genparticle.daughter(1)->pdgId() == 22)
-	  {
-	    vPions.emplace_back(genparticle);
-	  } // end check over both gen photons	
-	} // end check over vPions
-      } // end loop over gen particles
 
-      std::sort(vPions.begin(),vPions.end(),oot::sortByPt);
-    }
-  }
-
-  void PrepToys(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, genPartVec& toys)
-  {
-    if (genparticlesH.isValid()) // make sure gen particles exist --> only do this for GMSB
+    for (const auto & genparticle : genparticles) // loop over gen particles
     {
-      for (const auto & genparticle : *genparticlesH) // loop over gen particles
+      if (genparticle.pdgId() == 4900111 && genparticle.numberOfDaughters() == 2)
       {
-	if (genparticle.pdgId() == 22)
+	if (genparticle.daughter(0)->pdgId() == 22 && genparticle.daughter(1)->pdgId() == 22)
 	{
-	  toys.emplace_back(genparticle);
-	} // end check over photons
-      } // end loop over gen particles
+	  vPions.emplace_back(genparticle);
+	} // end check over both gen photons	
+      } // end check over vPions
+    } // end loop over gen particles
 
-      std::sort(toys.begin(),toys.end(),oot::sortByPt);
-    }
+    std::sort(vPions.begin(),vPions.end(),oot::sortByPt);
   }
 
-  void PrepTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, 
+  void PrepToys(const std::vector<reco::GenParticle> & genparticles, std::vector<reco::GenParticle> & toys)
+  {
+    for (const auto & genparticle : genparticles) // loop over gen particles
+    {
+      if (genparticle.pdgId() == 22)
+      {
+	toys.emplace_back(genparticle);
+      } // end check over photons
+    } // end loop over gen particles
+    
+    std::sort(toys.begin(),toys.end(),oot::sortByPt);
+  }
+
+  void PrepTriggerBits(edm::TriggerResults & triggerResults,
 		       const edm::Event & iEvent, strBitMap & triggerBitMap)
   {
     for (auto & triggerBitPair : triggerBitMap) 
@@ -116,23 +108,20 @@ namespace oot
       triggerBitPair.second = false;
     }
     
-    if (triggerResultsH.isValid())
+    const edm::TriggerNames &triggerNames = iEvent.triggerNames(triggerResults);
+    for (std::size_t itrig = 0; itrig < triggerNames.size(); itrig++)
     {
-      const edm::TriggerNames &triggerNames = iEvent.triggerNames(*triggerResultsH);
-      for (std::size_t itrig = 0; itrig < triggerNames.size(); itrig++)
-      {
-	std::string triggerName = triggerNames.triggerName(itrig);
+      std::string triggerName = triggerNames.triggerName(itrig);
       
-	for (auto & triggerBitPair : triggerBitMap) 
-	{
-	  if (triggerName.find(triggerBitPair.first) != std::string::npos) triggerBitPair.second = triggerResultsH->accept(itrig);
-	} // end loop over user path names
-      } // end loop over trigger names
-    } // end check over valid TriggerResults
+      for (auto & triggerBitPair : triggerBitMap) 
+      {
+	if (triggerName.find(triggerBitPair.first) != std::string::npos) triggerBitPair.second = triggerResults.accept(itrig);
+      } // end loop over user path names
+    } // end loop over trigger names
   }
   
-  void PrepTriggerObjects(const edm::Handle<edm::TriggerResults> & triggerResultsH,
-			  const edm::Handle<std::vector<pat::TriggerObjectStandAlone> > & triggerObjectsH,
+  void PrepTriggerObjects(const edm::TriggerResults & triggerResults,
+			  const std::vector<pat::TriggerObjectStandAlone> & triggerObjects,
 			  const edm::Event & iEvent, trigObjVecMap & triggerObjectsByFilterMap)
   {
     // clear first
@@ -142,78 +131,72 @@ namespace oot
     }
     
     // store all the trigger objects needed to be checked later
-    if (triggerObjectsH.isValid() && triggerResultsH.isValid())
+    const edm::TriggerNames &triggerNames = iEvent.triggerNames(triggerResults);
+    for (pat::TriggerObjectStandAlone triggerObject : triggerObjects)
     {
-      const edm::TriggerNames &triggerNames = iEvent.triggerNames(*triggerResultsH);
-      for (pat::TriggerObjectStandAlone triggerObject : *triggerObjectsH) 
+      triggerObject.unpackPathNames(triggerNames);
+      triggerObject.unpackFilterLabels(iEvent, triggerResults);
+      for (auto & triggerObjectsByFilterPair : triggerObjectsByFilterMap)
       {
-	triggerObject.unpackPathNames(triggerNames);
-	triggerObject.unpackFilterLabels(iEvent, *triggerResultsH);
-	for (auto& triggerObjectsByFilterPair : triggerObjectsByFilterMap)
-	{	
-	  if (triggerObject.hasFilterLabel(triggerObjectsByFilterPair.first)) triggerObjectsByFilterPair.second.emplace_back(triggerObject);
-	} // end loop over user filter names
-      } // end loop over trigger objects
+	if (triggerObject.hasFilterLabel(triggerObjectsByFilterPair.first)) triggerObjectsByFilterPair.second.emplace_back(triggerObject);
+      } // end loop over user filter names
+    } // end loop over trigger objects
 
-      for (auto& triggerObjectsByFilterPair : triggerObjectsByFilterMap)
-      {
-	std::sort(triggerObjectsByFilterPair.second.begin(),triggerObjectsByFilterPair.second.end(),oot::sortByPt);
-      }
+    for (auto & triggerObjectsByFilterPair : triggerObjectsByFilterMap)
+    {
+      std::sort(triggerObjectsByFilterPair.second.begin(),triggerObjectsByFilterPair.second.end(),oot::sortByPt);
     }
   }
 
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH, 
-		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
+  void PrepPhotons(const std::vector<pat::Photon> & gedPhotonsH, 
+		   const std::vector<pat::Photon> & ootPhotonsH,
 		   std::vector<oot::Photon> & photons, const float rho,
 		   const float phpTmin, const std::string & phIDmin)
   {
     // get VIDs of GED photons first (both GED ID and OOT ID), then OOT photons
     // put both GED and OOT photons in a common container, sorting by pT at the end
-    oot::PrepPhotons(gedPhotonsH,photons,false,rho,phpTmin,phIDmin);
-    oot::PrepPhotons(ootPhotonsH,photons,true,rho,phpTmin,phIDmin);
+    oot::PrepPhotons(gedPhotons,photons,false,rho,phpTmin,phIDmin);
+    oot::PrepPhotons(ootPhotons,photons,true,rho,phpTmin,phIDmin);
 
     std::sort(photons.begin(),photons.end(),oot::sortByPt);
   }
 
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
-		   std::vector<oot::Photon> & photons, const bool isOOT,
+  void PrepPhotons(const std::vector<pat::Photon> & inphotons,
+		   std::vector<oot::Photon> & outphotons, const bool isOOT,
 		   const float rho, const float phpTmin, const std::string & phIDmin)
   {
-    if (photonsH.isValid()) // standard handle check
+    for (const auto & photon : inphotons)
     {
-      for (const auto & photon : *photonsH)
+      if (photon.pt() < phpTmin) continue;
+
+      idpVec idpairs;
+      idpairs = {{"loose-ged",false}, {"medium-ged",false}, {"tight-ged",false}, {"loose-oot",false}, {"tight-oot",false}};
+      
+      oot::GetGEDPhoVID(photon,idpairs);
+      
+      if (isOOT) oot::GetOOTPhoVID      (photon,idpairs);
+      else       oot::GetOOTPhoVIDByHand(photon,idpairs,rho);
+      
+      bool isGoodID = true;
+      if (phIDmin != "none")
       {
-	if (photon.pt() < phpTmin) continue;
-
-	idpVec idpairs;
-	idpairs = {{"loose-ged",false}, {"medium-ged",false}, {"tight-ged",false}, {"loose-oot",false}, {"tight-oot",false}};
-
-	oot::GetGEDPhoVID(photon,idpairs);
-
-	if (isOOT) oot::GetOOTPhoVID      (photon,idpairs);
-	else       oot::GetOOTPhoVIDByHand(photon,idpairs,rho);
-	
-	bool isGoodID = true;
-	if (phIDmin != "none")
+	for (const auto & idpair : idpairs) 
 	{
-	  for (const auto & idpair : idpairs) 
+	  if (idpair.first.find(phIDmin) != std::string::npos) // correct for GED or OOT!
 	  {
-	    if (idpair.first.find(phIDmin) != std::string::npos) // correct for GED or OOT!
+	    if ((isOOT && idpair.first.find("oot")) || (!isOOT && idpair.first.find("ged")))
 	    {
-	      if ((isOOT && idpair.first.find("oot")) || (!isOOT && idpair.first.find("ged")))
-	      {
-		if (!idpair.second) isGoodID = false;
-		break;
-	      }
+	      if (!idpair.second) isGoodID = false;
+	      break;
 	    }
 	  }
 	}
-	if (!isGoodID) continue;
+      }
+      if (!isGoodID) continue;
 
-	photons.emplace_back(photon,isOOT);
-	photons.back().photon_nc().setPhotonIDs(idpairs);
-      } // end loop over photons
-    } // isValid
+      outphotons.emplace_back(photon,isOOT);
+      outphotons.back().photon_nc().setPhotonIDs(idpairs);
+    } // end loop over photons
   }
 
   void PrepRecHits(const EcalRecHitCollection * recHitsEB,
@@ -237,75 +220,20 @@ namespace oot
     }
   }
     
-  void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, 
-		std::vector<pat::Jet> & jets, const float jetpTmin, 
+  void PrepJets(const std::vector<pat::Jet> & injets,
+		std::vector<pat::Jet> & outjets, const float jetpTmin, 
 		const float jetEtamax, const int jetID)
   {
-    if (jetsH.isValid()) // standard handle check
+    for (const auto & jet : injets)
     {
-      for (const auto& jet : *jetsH)
-      {
-	if (jet.pt() < jetpTmin) continue;
-	if (std::abs(jet.eta()) > jetEtamax) continue;
-	if (oot::GetPFJetID(jet) < jetID) continue;
-
-	jets.emplace_back(jet);
-      }
+      if (jet.pt() < jetpTmin) continue;
+      if (std::abs(jet.eta()) > jetEtamax) continue;
+      if (oot::GetPFJetID(jet) < jetID) continue;
       
-      std::sort(jets.begin(),jets.end(),oot::sortByPt);
+      outjets.emplace_back(jet);
     }
-  }  
-
-  void PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
-		     const edm::Handle<edm::ValueMap<bool> > & electronVetoIdMapH, 
-		     const edm::Handle<edm::ValueMap<bool> > & electronLooseIdMapH, 
-		     const edm::Handle<edm::ValueMap<bool> > & electronMediumIdMapH, 
-		     const edm::Handle<edm::ValueMap<bool> > & electronTightIdMapH, 
-		     std::vector<pat::Electron> & electrons)
-  {
-    if (electronsH.isValid()) // standard handle check
-    {
-      const edm::ValueMap<bool> electronVetoIdMap   = *electronVetoIdMapH;
-      const edm::ValueMap<bool> electronLooseIdMap  = *electronLooseIdMapH;
-      const edm::ValueMap<bool> electronMediumIdMap = *electronMediumIdMapH;
-      const edm::ValueMap<bool> electronTightIdMap  = *electronTightIdMapH;
-
-      // create and initialize temp id-value vector
-      std::vector<std::vector<pat::Electron::IdPair> > idpairs(electrons.size());
-      for (size_t iel = 0; iel < idpairs.size(); iel++)
-      {
-	idpairs[iel].resize(4);
-	idpairs[iel][0] = {"veto"  ,false};
-	idpairs[iel][1] = {"loose" ,false};
-	idpairs[iel][2] = {"medium",false};
-	idpairs[iel][3] = {"tight" ,false};
-      }
-
-      int ielH = 0; // dumb counter because iterators only work with VID
-      for (std::vector<pat::Electron>::const_iterator phiter = electronsH->begin(); phiter != electronsH->end(); ++phiter) // loop over electron vector
-      {
-	// Get the VID of the electron
-	const edm::Ptr<pat::Electron> electronPtr(electronsH, phiter - electronsH->begin());
-	
-	// store VID in temp struct
-	// veto < loose < medium < tight
-	if (electronVetoIdMap  [electronPtr]) idpairs[ielH][0].second = true;
-	if (electronLooseIdMap [electronPtr]) idpairs[ielH][1].second = true;
-	if (electronMediumIdMap[electronPtr]) idpairs[ielH][2].second = true;
-	if (electronTightIdMap [electronPtr]) idpairs[ielH][3].second = true;
-	
-	ielH++;
-      }
       
-      // set the ID-value for each electron in other collection
-      for (size_t iel = 0; iel < electrons.size(); iel++)
-      {
-	electrons[iel].setElectronIDs(idpairs[iel]);
-      }
-      
-      // now finally sort vector by pT
-      std::sort(electrons.begin(),electrons.end(),oot::sortByPt);
-    }
+    std::sort(outjets.begin(),outjets.end(),oot::sortByPt);
   }  
 
   ///////////////////

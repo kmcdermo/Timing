@@ -140,13 +140,6 @@ typedef std::unordered_map<uint32_t,int> uiiumap;
 ///////////////
 typedef std::vector<pat::Photon::IdPair> idpVec;
 
-//////////////
-//          //
-// MC Types //
-//          //
-//////////////
-typedef std::vector<reco::GenParticle> genPartVec;
-
 /////////////////////////////
 //                         //
 // Trigger Object Typedefs //
@@ -180,43 +173,31 @@ namespace oot
   // sort by pt template
   const auto sortByPt = [](const auto& obj1, const auto& obj2) {return obj1.pt() > obj2.pt();};
 
-  // sort by closest to z-mass
-  inline bool minimizeByZmass(const triple& pair1, const triple& pair2)
-  {
-    return std::get<2>(pair1)<std::get<2>(pair2);
-  }
-
   void ReadInTriggerNames(const std::string & inputPaths, std::vector<std::string> & pathNames, 
 			  strBitMap & triggerBits);
   void ReadInFilterNames(const std::string & inputFilters, std::vector<std::string> & filterNames, 
 			 trigObjVecMap & triggerObjectsByFilter);
-  void PrepNeutralinos(const edm::Handle<std::vector<reco::GenParticle> >& genparticlesH, genPartVec& neutralinos);
-  void PrepVPions(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, genPartVec& vPions);
-  void PrepToys(const edm::Handle<std::vector<reco::GenParticle> >& genparticlesH, genPartVec& toys);
-  void PrepTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, 
+  void PrepNeutralinos(const std::vector<reco::GenParticle> & genparticles, std::vector<reco::GenParticle> & neutralinos);
+  void PrepVPions(const std::vector<reco::GenParticle> & genparticles, std::vector<reco::GenParticle> & vPions);
+  void PrepToys(const std::vector<reco::GenParticle> & genparticles, std::vector<reco::GenParticle> & toys);
+  void PrepTriggerBits(edm::TriggerResults & triggerResults, 
 		       const edm::Event & iEvent, strBitMap & triggerBitMap);
-  void PrepTriggerObjects(const edm::Handle<edm::TriggerResults> & triggerResultsH,
-			  const edm::Handle<std::vector<pat::TriggerObjectStandAlone> > & triggerObjectsH,
+  void PrepTriggerObjects(const edm::TriggerResults & triggerResults,
+			  const std::vector<pat::TriggerObjectStandAlone> & triggerObjects,
 			  const edm::Event & iEvent, trigObjVecMap & triggerObjectsByFilterMap);
-  void PrepJets(const edm::Handle<std::vector<pat::Jet> > & jetsH, 
-		std::vector<pat::Jet> & jets, const float jetpTmin = 0.f, 
+  void PrepJets(const std::vector<pat::Jet> & injets, 
+		std::vector<pat::Jet> & outjets, const float jetpTmin = 0.f, 
 		const float jetEtamax = 100.f, const int jetID = -1);
   void PrepRecHits(const EcalRecHitCollection * recHitsEB, 
 		   const EcalRecHitCollection * recHitsEE,
 		   uiiumap & recHitMap, const float rhEmin = 0.f);
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH, 
-		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
+  void PrepPhotons(const std::vector<pat::Photon> & gedPhotons, 
+		   const std::vector<pat::Photon> & ootPhotons,
 		   std::vector<oot::Photon> & photons, const float rho,
 		   const float phpTmin = 0.f, const std::string & phIDmin = "none");
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
-		   std::vector<oot::Photon> & photons, const bool isOOT,
+  void PrepPhotons(const std::vector<pat::Photon> & inphotons, 
+		   std::vector<oot::Photon> & outphotons, const bool isOOT,
 		   const float rho, const float phpTmin = 0.f, const std::string & phIDmin = "none");
-  void PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
-		     const edm::Handle<edm::ValueMap<bool> > & electronVetoIdMapH, 
-		     const edm::Handle<edm::ValueMap<bool> > & electronLooseIdMapH, 
-		     const edm::Handle<edm::ValueMap<bool> > & electronMediumIdMapH, 
-		     const edm::Handle<edm::ValueMap<bool> > & electronTightIdMapH, 
-		     std::vector<pat::Electron> & electrons);
   void PrunePhotons(std::vector<oot::Photon> & photons,
 		    const EcalRecHitCollection * recHitsEB,
 		    const EcalRecHitCollection * recHitsEE,
@@ -249,11 +230,11 @@ namespace oot
   ///////////////////////////
   
   template <typename Lep>
-  void PrepLeptons(const edm::Handle<std::vector<Lep> > & lepsH, std::vector<Lep> & leps,
+  void PrepLeptons(const std::vector<Lep> & inleps, std::vector<Lep> & outleps,
 		   const std::vector<oot::Photon> & photons, const float leppTmin = 0.f, 
 		   const float lepdRmin = 100.f)
   {
-    for (const auto & lep : *lepsH)
+    for (const auto & lep : inleps)
     {
       if (lep.pt() < leppTmin) continue;
       
@@ -270,11 +251,11 @@ namespace oot
       if (isMatched) continue;
 
       // emplace back
-      leps.emplace_back(lep);
+      outleps.emplace_back(lep);
     }
 
     // sort by pt for good measure
-    std::sort(leps.begin(),leps.end(),sortByPt);
+    std::sort(outleps.begin(),outleps.end(),sortByPt);
   }
 
   ////////////////////////
@@ -309,43 +290,37 @@ namespace oot
   }
 
   template <typename Obj>
-  bool TrackToObjectMatching(const edm::Handle<std::vector<reco::Track> > & tracksH, const Obj& obj, 
+  bool TrackToObjectMatching(const std::vector<reco::Track> & tracks, const Obj& obj, 
 			     const float trackpTmin = 0.f, const float trackdRmin = 100.f)
   {
-    if (tracksH.isValid())
+    for (const auto & track : tracks)
     {
-      for (const auto & track : *tracksH)
+      if (track.pt() < trackpTmin) continue;
+      if (reco::deltaR(obj,track) < trackdRmin)
       {
-	if (track.pt() < trackpTmin) continue;
-	if (reco::deltaR(obj,track) < trackdRmin)
-	{
-	  return true;
-	} // end check over deltaR
-      } // end loop over tracks
-    } // end check over valid tracks
+	return true;
+      } // end check over deltaR
+    } // end loop over tracks
     return false;
   }
 
   template <typename Obj>
-  bool GenToObjectMatching(const Obj& obj, const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH,
+  bool GenToObjectMatching(const Obj& obj, const std::vector<reco::GenParticle> & genparticles,
 			   const float pTres = 1.f, const float dRmin = 100.f)
   {
-    if (genparticlesH.isValid()) // make sure gen particles exist
+    for (const auto & genpart : genparticles)
     {
-      for (const auto & genpart : *genparticlesH)
+      if (genpart.pdgId() != 22 || !genpart.isPromptFinalState()) continue;
+      
+      if (genpart.pt() < ((1.f-pTres) * obj.pt())) continue;
+      if (genpart.pt() > ((1.f+pTres) * obj.pt())) continue;
+      
+      const float dR = reco::deltaR(obj,genpart);
+      if (dR < dRmin) 
       {
-	if (genpart.pdgId() != 22 || !genpart.isPromptFinalState()) continue;
-
-	if (genpart.pt() < ((1.f-pTres) * obj.pt())) continue;
-	if (genpart.pt() > ((1.f+pTres) * obj.pt())) continue;
-	
-	const float dR = reco::deltaR(obj,genpart);
-	if (dR < dRmin) 
-	{
-	  return true;
-	} // end check over dRmin
-      } // end loop over gen particles
-    } // end check over gen particles exist
+	return true;
+      } // end check over dRmin
+    } // end loop over gen particles
     return false;      
   } 
 };
