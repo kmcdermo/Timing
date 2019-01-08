@@ -321,7 +321,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## rho
-   rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
+   rho = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## MET
    mets = cms.InputTag("slimmedMETsModifiedMET"),
    ## jets
@@ -348,7 +348,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    genevt   = cms.InputTag("generator"),
    gent0    = cms.InputTag("genParticles", "t0"),
    genxyz0  = cms.InputTag("genParticles", "xyz0"),
-   pileup   = cms.InputTag("slimmedAddPileupInfo"),
+   pileups  = cms.InputTag("slimmedAddPileupInfo"),
    genparts = cms.InputTag("prunedGenParticles"),
    genjets  = cms.InputTag("slimmedGenJets"),
 )

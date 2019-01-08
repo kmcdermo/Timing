@@ -154,7 +154,7 @@ namespace oot
   class Photon
   {
   public: 
-    Photon(const pat::Photon & photon, const bool isOOT) : photon_(std::move(photon)), isOOT_(isOOT) {}
+    Photon(const pat::Photon & photon, const bool isOOT) : photon_(photon), isOOT_(isOOT) {}
     ~Photon() {}
 
     const pat::Photon& photon() const {return photon_;} 
@@ -169,6 +169,11 @@ namespace oot
     pat::Photon photon_;
     bool isOOT_;
   };
+
+  inline float GetPhotonPt(const pat::Photon & photon)
+  {
+    return (photon.userFloat("ecalEnergyPostCorr")/photon.energy())*photon.pt();
+  }
 
   // sort by pt template
   const auto sortByPt = [](const auto& obj1, const auto& obj2) {return obj1.pt() > obj2.pt();};
@@ -191,7 +196,7 @@ namespace oot
   void PrepRecHits(const EcalRecHitCollection * recHitsEB, 
 		   const EcalRecHitCollection * recHitsEE,
 		   uiiumap & recHitMap, const float rhEmin = 0.f);
-  void PrepPhotons(const std::vector<pat::Photon> & gedPhotons, 
+   void PrepPhotons(const std::vector<pat::Photon> & gedPhotons, 
 		   const std::vector<pat::Photon> & ootPhotons,
 		   std::vector<oot::Photon> & photons, const float rho,
 		   const float phpTmin = 0.f, const std::string & phIDmin = "none");

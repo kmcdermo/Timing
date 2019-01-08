@@ -51,11 +51,6 @@ struct ReducedPhoton
 // Extra Functions //
 /////////////////////
 
-inline float GetPhotonPt(const pat::Photon & photon)
-{
-  return (photon.userFloat("ecalEnergyPostCorr")/photon.energy())*photon.pt();
-}
-
 //////////////////////
 // Class Definition //
 //////////////////////
@@ -229,7 +224,7 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   std::vector<int> matchedOOT_T, matchedGTGED_T, matchedLTGED_T, unmatchedGED_T, matchedCands_T;
 
   // neutralinos
-  genPartVec neutralinos;
+  std::vector<reco::GenParticle> neutralinos;
 
   // reduced photon index collections
   std::vector<ReducedPhoton> reducedPhotons_N;

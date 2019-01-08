@@ -97,33 +97,26 @@ void Counter::GetObjects(const edm::Event & iEvent)
 {
   // PF CANDIDATES
   iEvent.getByToken(candsToken, candsH);
-  cands = *candsH;
 
   // MET
   iEvent.getByToken(metsToken, metsH);
-  mets = *metsH;
 
   // GEDPHOTONS + IDS
   iEvent.getByToken(gedPhotonsToken, gedPhotonsH);
-  gedPhotons = *gedPhotonsH;
 
   // OOTPHOTONS + IDS
   iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
-  ootPhotons = *ootPhotonsH;
 
   if (isMC)
   {
     // GEN EVENT RECORD
     iEvent.getByToken(genevtInfoToken, genevtInfoH);
-    genevtInfo = *genevtInfoH;
 
     // PILEUP INFO
     iEvent.getByToken(pileupInfosToken, pileupInfosH);
-    pileupInfos = *pileupInfosH;
 
     // GEN PARTICLES
     iEvent.getByToken(genpartsToken, genparticlesH);
-    genparticles = *genparticlesH;
   }
 }
 
@@ -182,8 +175,8 @@ void Counter::PrepPhotonCollection(std::vector<ReducedPhoton> & reducedPhotons, 
   std::sort(reducedPhotons.begin(),reducedPhotons.end(),
 	    [&](const auto & reducedPhoton1, const auto & reducedPhoton2)
 	    {
-	      const auto & photon1 = (reducedPhoton1.isGED?gedPhotons[reducedPhoton1.idx]:ootPhotons[reducedPhoton1.idx]);
-	      const auto & photon2 = (reducedPhoton2.isGED?gedPhotons[reducedPhoton2.idx]:ootPhotons[reducedPhoton2.idx]);
+	      const auto & photon1 = (reducedPhoton1.isGED?(*gedPhotonsH)[reducedPhoton1.idx]:(*ootPhotons)[reducedPhoton1.idx]);
+	      const auto & photon2 = (reducedPhoton2.isGED?(*gedPhotonsH)[reducedPhoton2.idx]:(*ootPhotons)[reducedPhoton2.idx]);
 	      return (GetPhotonPt(photon1) > GetPhotonPt(photon2));
 	    });
 }
@@ -241,7 +234,7 @@ void Counter::SetBasicCounters()
 {
   // nGED
   nGED_N = gedPhotons.size();
-  for (const auto & gedPhoton : gedPhotons)
+  for (const auto & gedPhoton : *gedPhotonsH)
   {
     if (gedPhoton.photonID(Config::GEDPhotonLooseVID)) nGED_L++;
     if (gedPhoton.photonID(Config::GEDPhotonTightVID)) nGED_T++;
@@ -249,7 +242,7 @@ void Counter::SetBasicCounters()
 
   // nOOT
   nOOT_N = ootPhotons.size();
-  for (const auto & ootPhoton : ootPhotons)
+  for (const auto & ootPhoton : *ootPhotonsH)
   {
     if (ootPhoton.photonID(Config::OOTPhotonLooseVID)) nOOT_L++;
     if (ootPhoton.photonID(Config::OOTPhotonTightVID)) nOOT_T++;
@@ -268,13 +261,13 @@ void Counter::SetPhotonIndices(const std::string & gedVID, const std::string & o
 			       std::vector<int> & unmatchedGED, std::vector<int> & matchedCands)
 {
   // save on check size
-  const auto nCands = cands.size();
+  const auto nCands = candsH->size();
 
   // loop over OOT photons, setting indices
   for (auto ioot = 0; ioot < nOOT_N; ioot++)
   {
     // get ootPhoton
-    const auto & ootPhoton = ootPhotons[ioot];
+    const auto & ootPhoton = (*ootPhotonsH)[ioot];
 
     // cut on ootVID
     if (ootVID != "NONE") 
@@ -291,7 +284,7 @@ void Counter::SetPhotonIndices(const std::string & gedVID, const std::string & o
       if (matchedOOT[iged] >= 0) continue;
 
       // get gedPhoton
-      const auto & gedPhoton = gedPhotons[iged];
+      const auto & gedPhoton = (*gedPhotonsH)[iged];
 
       // cut on VID
       if (gedVID != "NONE") 
@@ -312,7 +305,7 @@ void Counter::SetPhotonIndices(const std::string & gedVID, const std::string & o
     // assign pT masking and GED photon masking (for skipping on next OOT)
     if (matchedGED >= 0) 
     {
-      const auto & gedPhoton = gedPhotons[matchedGED];
+      const auto & gedPhoton = (*gedPhotonsH)[matchedGED];
       matchedOOT[matchedGED] = ioot;
 
       if   (GetPhotonPt(ootPhoton) > GetPhotonPt(gedPhoton)) matchedGTGED[ioot] = matchedGED;

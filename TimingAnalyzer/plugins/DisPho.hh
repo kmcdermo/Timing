@@ -191,6 +191,10 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
 
+  ///////////
+  // INPUT //
+  ///////////
+
   // blinding
   const unsigned int blindSF;
   const bool applyBlindSF;
@@ -244,68 +248,146 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // JER extra info
   const float smearjetEmin;
 
-  // triggers
+  // trigger + filter inputs
   const std::string inputPaths;
   std::vector<std::string> pathNames;
   strBitMap triggerBitMap;
   const std::string inputFilters;
   std::vector<std::string> filterNames;
+
+  // trigger results
   const edm::InputTag triggerResultsTag;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
+  edm::Handle<edm::TriggerResults> triggerResultsH;
+  edm::TriggerResults triggerResults;
+
+  // trigger objects
   const edm::InputTag triggerObjectsTag;
   edm::EDGetTokenT<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsToken;
+  edm::Handle<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsH;
+  std::vector<pat::TriggerObjectStandAlone> triggerObjects;
+
+  // trigger object output map
   trigObjVecMap triggerObjectsByFilterMap; // first index is filter label, second is trigger objects
 
-  // met filters
+  // met filter inputs
   const std::string inputFlags;
   std::vector<std::string> flagNames;
   strBitMap triggerFlagMap;
+
+  // met filters (trigger flags)
   const edm::InputTag triggerFlagsTag;
   edm::EDGetTokenT<edm::TriggerResults> triggerFlagsToken;
+  edm::Handle<edm::TriggerResults> triggerFlagsH;
+  edm::TriggerResults triggerFlags;
+
   const edm::InputTag ecalBadCalibFlagTag;
   edm::EDGetTokenT<bool> ecalBadCalibFlagToken;
+  edm::Handle<bool> ecalBadCalibFlagH;
+  bool ecalBadCalibFlag;
 
   // Tracks
   const edm::InputTag tracksTag;
   edm::EDGetTokenT<std::vector<reco::Track> > tracksToken;
+  edm::Handle<std::vector<reco::Track> > tracksH;
+  std::vector<reco::Track> tracks;
 
   // vertices
   const edm::InputTag verticesTag;
   edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken;
+  edm::Handle<std::vector<reco::Vertex> > verticesH;
+  std::vector<reco::Vertex> vertices;
 
   // rhos
   const edm::InputTag rhosTag;
   edm::EDGetTokenT<double> rhosToken;
+  edm::Handle<double> rhosH;
+  float rho;
 
   // mets
   const edm::InputTag metsTag;
   edm::EDGetTokenT<std::vector<pat::MET> > metsToken;
+  edm::Handle<std::vector<pat::MET> > metsH;
+  std::vector<pat::MET> mets;
 
   // jets
   const edm::InputTag jetsTag;
   edm::EDGetTokenT<std::vector<pat::Jet> > jetsToken;
+  edm::Handle<std::vector<pat::Jet> > jetsH;
+  std::vector<pat::Jet> injets;
+  std::vector<pat::Jet> outjets;
 
   // electrons
   const edm::InputTag electronsTag;
   edm::EDGetTokenT<std::vector<pat::Electron> > electronsToken;
+  edm::Handle<std::vector<pat::Electron> > electronsH;
+  std::vector<pat::Electron> inelectrons;
+  std::vector<pat::Electron> outelectrons;
 
   // muons
   const edm::InputTag muonsTag;
   edm::EDGetTokenT<std::vector<pat::Muon> > muonsToken;
+  edm::Handle<std::vector<pat::Muon> > muonsH;
+  std::vector<pat::Muon> inmuons;
+  std::vector<pat::Muon> outmuons;
 
   // ECAL RecHits
   const edm::InputTag recHitsEBTag;
   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBToken;
+  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
+  const EcalRecHitCollection * recHitsEB;
+
   const edm::InputTag recHitsEETag;
   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEToken;
+  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
+  const EcalRecHitCollection * recHitsEE;
 
-  // gedPhotons + ids
+  // RecHit Map
+  uiiumap recHitMap;
+
+  // gedPhotons
   const edm::InputTag gedPhotonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > gedPhotonsToken;
+  edm::Handle<std::vector<pat::Photon> > gedPhotonsH;
+  std::vector<pat::Photon> gedPhotons;
 
-  // ootPhotons + ids
+  // ootPhotons
   const edm::InputTag ootPhotonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > ootPhotonsToken;
+  edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
+  std::vector<pat::Photon> ootPhotons;
+
+  // output photons
+  std::vector<oot::Photon> photons;
+
+  // geometry
+  edm::ESHandle<CaloGeometry> caloGeoH;
+  const CaloSubdetectorGeometry * barrelGeometry;
+  const CaloSubdetectorGeometry * endcapGeometry;
+
+  // laser correction
+  edm::ESHandle<EcalLaserDbService> laserH;
+  EcalLaserDbService laser;
+
+  // intercalibration constants
+  edm::ESHandle<EcalIntercalibConstants> interCalibH;
+  const EcalIntercalibConstantMap * interCalibMap;
+
+  // ADCtoGeV constants
+  edm::ESHandle<EcalADCToGeVConstant> adcToGeVH;
+  float adcToGeVEB;
+  float adcToGeVEE;
+
+  // Pedestals
+  edm::ESHandle<EcalPedestals> pedestalsH;
+  EcalPedestals pedestals;
+
+  // JECS
+  edm::ESHandle<JetCorrectorParametersCollection> jetCorrH;
+  JetCorrectionUncertainty jetCorrUnc;
+
+  JME::JetResolution jetRes;
+  JME::JetResolutionScaleFactor jetRes_sf;
 
   // Gen Particles and MC info
   const bool isGMSB;
@@ -317,12 +399,45 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   const float filterEff;
   const float BR;
   bool isMC;
-  edm::EDGetTokenT<GenEventInfoProduct>             genevtInfoToken;
-  edm::EDGetTokenT<Point3D>                         genxyz0Token;
-  edm::EDGetTokenT<float>                           gent0Token;
-  edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfoToken;
-  edm::EDGetTokenT<std::vector<reco::GenParticle> > genpartsToken;
-  edm::EDGetTokenT<std::vector<reco::GenJet> >      genjetsToken;
+
+  // gen event
+  edm::EDGetTokenT<GenEventInfoProduct> genevtInfoToken;
+  edm::Handle<GenEventInfoProduct> genevtInfoH;
+  GenEventInfoProduct genevtInfo;
+
+  // gen time
+  edm::EDGetTokenT<float> gent0Token;
+  edm::Handle<float> gent0H;
+  float gent0;
+
+  // gen vtx
+  edm::EDGetTokenT<Point3D> genxyz0Token;
+  edm::Handle<Point3D> genxyz0H;
+  Point3D genxyz0;
+
+  // pileup
+  edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfosToken;
+  edm::Handle<std::vector<PileupSummaryInfo> > pileupInfosH;
+  std::vector<PileupSummaryInfo> pileupInfos;
+
+  // genparticles
+  edm::EDGetTokenT<std::vector<reco::GenParticle> > genparticlesToken;
+  edm::Handle<std::vector<reco::GenParticle> > genparticlesH;
+  std::vector<reco::GenParticle> genparticles;
+
+  // output genparticles
+  std::vector<reco::GenParticle> neutralinos;
+  std::vector<reco::GenParticle> vPions;
+  std::vector<reco::GenParticle> toys;
+
+  // genjets
+  edm::EDGetTokenT<std::vector<reco::GenJet> > genjetsToken;
+  edm::Handle<std::vector<reco::GenJet> > genjetsH;
+  std::vector<reco::GenJet> genjets;
+
+  ////////////
+  // OUTPUT //
+  ////////////
 
   // output histograms
   TH1F * h_cutflow;
@@ -341,7 +456,7 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
  
   // MC info
   float genwgt;
-  float genx0,geny0,genz0,gent0;
+  float genx0,geny0,genz0;
   int genpuobs, genputrue;
 
   // gmsb
@@ -389,9 +504,6 @@ class DisPho : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::W
   // vertices
   int nvtx;
   float vtxX, vtxY, vtxZ;
-
-  // rho
-  float rho;
 
   // MET
   float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;

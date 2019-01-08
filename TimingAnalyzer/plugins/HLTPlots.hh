@@ -99,15 +99,29 @@ struct TestStruct
 class HLTPlots : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
  public:
-  explicit HLTPlots(const edm::ParameterSet&);
+  explicit HLTPlots(const edm::ParameterSet & iConfig);
   ~HLTPlots();
 
+  void GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSetup);
+  
+  void PrepObjects();
+
+  bool ApplyPreSelection();
+
+  void SetTriggerInfo();
   void InitializeTriggerBranches();
+
+  void SetJetInfo();
   void ClearJetBranches();
   void InitializeJetBranches();
+
+  void SetPhotonInfo();
   void ClearRecoPhotonBranches();
   void InitializeRecoPhotonBranches();
 
+  void SetGoodPhotons();
+
+  void PerformTests();
   void ResetTestResults();
   void GetDenomPhs(const std::vector<int> & goodphs, const int idenom, std::vector<int> & denomphs);
   void GetFirstLegResult(const std::vector<int> & goodphs, const std::string & label);
@@ -118,11 +132,11 @@ class HLTPlots : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
   
  private:
   virtual void beginJob() override;
-  virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
+  virtual void analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup) override;
   virtual void endJob() override;
   
-  virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
-  virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
+  virtual void beginRun(edm::Run const & iRun, edm::EventSetup const & iSetup) override;
+  virtual void endRun(edm::Run const & iRun, edm::EventSetup const & iSetup) override;
 
   // pre-selection options
   const bool applyTriggerPS;
@@ -142,43 +156,75 @@ class HLTPlots : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
   const float trackpTmin;
   const float trackdRmin;
 
-  // triggers
+  // trigger inputs
   const std::string inputPaths;
   std::vector<std::string> pathNames;
   strBitMap triggerBitMap;
+
   const std::string inputFilters;
   std::vector<std::string> filterNames;
+
+  // trigger results
   const edm::InputTag triggerResultsTag;
   edm::EDGetTokenT<edm::TriggerResults> triggerResultsToken;
+  edm::Handle<edm::TriggerResults> triggerResultsH;
+  edm::TriggerResults triggerResults;
+
+  // trigger objects
   const edm::InputTag triggerObjectsTag;
   edm::EDGetTokenT<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsToken;
+  edm::Handle<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsH;  
+  std::vector<pat::TriggerObjectStandAlone> triggerObjects;
+  
+  // final maps
   trigObjVecMap triggerObjectsByFilterMap; // first index is filter label, second is trigger objects
   std::map<std::string,TestStruct> effTestMap;
 
   // rhos
   const edm::InputTag rhosTag;
   edm::EDGetTokenT<double> rhosToken;
+  edm::Handle<double> rhosH;
+  float rho;
 
   // jets
   const edm::InputTag jetsTag;
   edm::EDGetTokenT<std::vector<pat::Jet> > jetsToken;
+  edm::Handle<std::vector<pat::Jet> > jetsH;
+  std::vector<pat::Jet> injets;
+  std::vector<pat::Jet> outjets;
 
   // photons
-  const edm::InputTag photonsTag;
-  edm::EDGetTokenT<std::vector<pat::Photon> > photonsToken;
+  const edm::InputTag gedPhotonsTag;
+  edm::EDGetTokenT<std::vector<pat::Photon> > gedPhotonsToken;
+  edm::Handle<std::vector<pat::Photon> > gedPhotonsH;
+  std::vector<pat::Photon> gedPhotons;
 
   const edm::InputTag ootPhotonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > ootPhotonsToken;
+  edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
+  std::vector<pat::Photon> ootPhotons;
 
   // ECAL RecHits
   const edm::InputTag recHitsEBTag;
   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBToken;
+  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
+  edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > * recHitsEB;
+
   const edm::InputTag recHitsEETag;
   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEToken;
+  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
+  edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > * recHitsEE;
 
   // Tracks
   const edm::InputTag tracksTag;
   edm::EDGetTokenT<std::vector<reco::Track> > tracksToken;
+  edm::Handle<std::vector<reco::Track> > tracksH;
+  std::vector<reco::Track> tracks;
+
+  // geometry
+  edm::ESHandle<CaloGeometry> calogeoH;
+  const CaloSubdetectorGeometry * barrelGeometry;
+  const CaloSubdetectorGeometry * endcapGeometry;
 
   // output hists
   std::map<std::string,TEfficiency*> effETEBs;
@@ -218,6 +264,9 @@ class HLTPlots : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one:
   
   // all rec hit info
   std::vector<int> phnrh;
+
+  // good photon indices
+  std::vector<int> goodphs;
 };
 
 #endif

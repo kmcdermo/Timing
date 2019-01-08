@@ -27,9 +27,6 @@ options.register('trackdRmin',0.2,VarParsing.multiplicity.singleton,VarParsing.v
 options.register('inputPaths','/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input signal paths');
 options.register('inputFilters','/afs/cern.ch/user/k/kmcdermo/public/input/HLTfilters.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input signal filters');
 
-## flag to use ootPhoton collections (should be false if the collection is missing from the data!!
-options.register('useOOTPhotons',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to use ootPhoton collections in analyzer');
-
 ## GT to be used    
 options.register('globalTag','92X_dataRun2_Prompt_v9',VarParsing.multiplicity.singleton,VarParsing.varType.string,'global tag to be used');
 
@@ -62,8 +59,6 @@ print "trackpTmin     : ",options.trackpTmin
 print "        -- Trigger --"
 print "inputPaths     : ",options.inputPaths
 print "inputFilters   : ",options.inputFilters
-print "       -- ootPhotons --"
-print "useOOTPhotons  : ",options.useOOTPhotons
 print "           -- GT --"
 print "globalTag      : ",options.globalTag	
 print "         -- Output --"
@@ -104,13 +99,28 @@ process.GlobalTag.globaltag = options.globalTag
 process.TFileService = cms.Service("TFileService", 
 		                   fileName = cms.string(options.outputFileName))
 
-## get ootPhotons if they exist
-if   options.useOOTPhotons : ootPhotonsTag = cms.InputTag("slimmedOOTPhotons")
-else                       : ootPhotonsTag = cms.InputTag("")
-
-## make track collection
+## generate track collection at miniAOD
 from PhysicsTools.PatAlgos.slimming.unpackedTracksAndVertices_cfi import unpackedTracksAndVertices
 process.unpackedTracksAndVertices = unpackedTracksAndVertices.clone()
+
+## MET corrections for 2017 data: https://twiki.cern.ch/twiki/bin/view/CMS/MissingETUncertaintyPrescription#Instructions_for_9_4_X_X_9_for_2
+from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
+runMetCorAndUncFromMiniAOD (
+        process,
+        isData = not options.isMC,
+        fixEE2017 = True,
+	fixEE2017Params = {'userawPt':True, 'PtThreshold':50.0, 'MinEtaThreshold':2.65, 'MaxEtaThreshold':3.139},
+        postfix = "ModifiedMET"
+)
+
+## Apply JECs : https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#CorrPatJets
+from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
+updateJetCollection (
+   process,
+   jetSource = cms.InputTag('slimmedJets'),
+   labelName = 'UpdatedJEC',
+   jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']), 'None')
+)
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("HLTPlots",
@@ -135,10 +145,10 @@ process.tree = cms.EDAnalyzer("HLTPlots",
    ## rho
    rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## jets			    	
-   jets = cms.InputTag("slimmedJets"),
+   jets = cms.InputTag("updatedPatJetsUpdatedJEC"),
    ## photons		
-   photons    = cms.InputTag("slimmedPhotons"),
-   ootPhotons = ootPhotonsTag,
+   gedPhotons = cms.InputTag("slimmedPhotons"),
+   ootPhotons = cms.InputTag("slimmedOOTPhotons"),
    ## ecal recHits			      
    recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
@@ -147,4 +157,12 @@ process.tree = cms.EDAnalyzer("HLTPlots",
 )
 
 # Set up the path
-process.treePath = cms.Path(process.unpackedTracksAndVertices + process.tree)
+process.treePath = cms.Path(
+	process.patJetCorrFactorsUpdatedJEC +
+	process.updatedPatJetsUpdatedJEC +
+	process.fullPatMetSequenceModifiedMET +
+	process.unpackedTracksAndVertices +
+	process.ootPhotonPostRecoSeq +
+	process.tree
+)
+
