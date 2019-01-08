@@ -140,13 +140,6 @@ typedef std::unordered_map<uint32_t,int> uiiumap;
 ///////////////
 typedef std::vector<pat::Photon::IdPair> idpVec;
 
-//////////////
-//          //
-// MC Types //
-//          //
-//////////////
-typedef std::vector<reco::GenParticle> genPartVec;
-
 /////////////////////////////
 //                         //
 // Trigger Object Typedefs //
@@ -180,19 +173,13 @@ namespace oot
   // sort by pt template
   const auto sortByPt = [](const auto& obj1, const auto& obj2) {return obj1.pt() > obj2.pt();};
 
-  // sort by closest to z-mass
-  inline bool minimizeByZmass(const triple& pair1, const triple& pair2)
-  {
-    return std::get<2>(pair1)<std::get<2>(pair2);
-  }
-
   void ReadInTriggerNames(const std::string & inputPaths, std::vector<std::string> & pathNames, 
 			  strBitMap & triggerBits);
   void ReadInFilterNames(const std::string & inputFilters, std::vector<std::string> & filterNames, 
 			 trigObjVecMap & triggerObjectsByFilter);
-  void PrepNeutralinos(const edm::Handle<std::vector<reco::GenParticle> >& genparticlesH, genPartVec& neutralinos);
-  void PrepVPions(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, genPartVec& vPions);
-  void PrepToys(const edm::Handle<std::vector<reco::GenParticle> >& genparticlesH, genPartVec& toys);
+  void PrepNeutralinos(const edm::Handle<std::vector<reco::GenParticle> >& genparticlesH, std::vector<reco::GenParticle> & neutralinos);
+  void PrepVPions(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, std::vector<reco::GenParticle> & vPions);
+  void PrepToys(const edm::Handle<std::vector<reco::GenParticle> >& genparticlesH, std::vector<reco::GenParticle> & toys);
   void PrepTriggerBits(edm::Handle<edm::TriggerResults> & triggerResultsH, 
 		       const edm::Event & iEvent, strBitMap & triggerBitMap);
   void PrepTriggerObjects(const edm::Handle<edm::TriggerResults> & triggerResultsH,
@@ -211,12 +198,6 @@ namespace oot
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
 		   std::vector<oot::Photon> & photons, const bool isOOT,
 		   const float rho, const float phpTmin = 0.f, const std::string & phIDmin = "none");
-  void PrepElectrons(const edm::Handle<std::vector<pat::Electron> > & electronsH, 
-		     const edm::Handle<edm::ValueMap<bool> > & electronVetoIdMapH, 
-		     const edm::Handle<edm::ValueMap<bool> > & electronLooseIdMapH, 
-		     const edm::Handle<edm::ValueMap<bool> > & electronMediumIdMapH, 
-		     const edm::Handle<edm::ValueMap<bool> > & electronTightIdMapH, 
-		     std::vector<pat::Electron> & electrons);
   void PrunePhotons(std::vector<oot::Photon> & photons,
 		    const EcalRecHitCollection * recHitsEB,
 		    const EcalRecHitCollection * recHitsEE,
@@ -285,7 +266,7 @@ namespace oot
 
   template <typename Obj>
   void HLTToObjectMatching(const trigObjVecMap & triggerObjectsByFilterMap, strBitMap & isHLTMatched, 
-			   const Obj& obj, const float pTres = 1.f, const float dRmin = 100.f)
+			   const Obj & obj, const float pTres = 1.f, const float dRmin = 100.f)
   {
     for (const auto & triggerObjectsByFilterPair : triggerObjectsByFilterMap)
     {
@@ -309,7 +290,7 @@ namespace oot
   }
 
   template <typename Obj>
-  bool TrackToObjectMatching(const edm::Handle<std::vector<reco::Track> > & tracksH, const Obj& obj, 
+  bool TrackToObjectMatching(const edm::Handle<std::vector<reco::Track> > & tracksH, const Obj & obj, 
 			     const float trackpTmin = 0.f, const float trackdRmin = 100.f)
   {
     if (tracksH.isValid())
@@ -327,7 +308,7 @@ namespace oot
   }
 
   template <typename Obj>
-  bool GenToObjectMatching(const Obj& obj, const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH,
+  bool GenToObjectMatching(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, const Obj & obj,
 			   const float pTres = 1.f, const float dRmin = 100.f)
   {
     if (genparticlesH.isValid()) // make sure gen particles exist

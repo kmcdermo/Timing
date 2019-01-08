@@ -47,22 +47,13 @@ struct ReducedPhoton
   bool isGED;
 };
 
-/////////////////////
-// Extra Functions //
-/////////////////////
-
-inline float GetPhotonPt(const pat::Photon & photon)
-{
-  return (photon.userFloat("ecalEnergyPostCorr")/photon.energy())*photon.pt();
-}
-
 //////////////////////
 // Class Definition //
 //////////////////////
 
 class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::WatchRuns> 
 {
- public:
+public:
 
   ////////////////////////
   // Internal Functions //
@@ -78,6 +69,7 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
 
   void GetObjects(const edm::Event & iEvent);
   void PrepObjects();
+  void InitializeObjects();
   void SortPhotonsByPt(std::vector<pat::Photon> & photons);
 
   void PrepPhotonCollections();
@@ -132,6 +124,15 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   void ResetPhotonCollection(std::vector<ReducedPhoton> & reducedPhotons);
 
   /////////////////////
+  // Extra Functions //
+  /////////////////////
+  
+  static inline float GetPhotonPt(const pat::Photon & photon)
+  {
+    return (photon.userFloat("ecalEnergyPostCorr")/photon.energy())*photon.pt();
+  }
+
+  /////////////////////
   // DEBUG FUNCTIONS //
   /////////////////////
 
@@ -144,7 +145,7 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
 		   const std::vector<pat::Photon> & refPhotons);
   void DumpPhoton(const int i, const pat::Photon & photon, const std::string & prefix, const std::string & suffix);
 
- private:
+private:
 
   ////////////////////////
   // Internal functions //
@@ -176,13 +177,11 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   const edm::InputTag candsTag;
   edm::EDGetTokenT<std::vector<pat::PackedCandidate> > candsToken;
   edm::Handle<std::vector<pat::PackedCandidate> > candsH;
-  std::vector<pat::PackedCandidate> cands;
 
   // mets
   const edm::InputTag metsTag;
   edm::EDGetTokenT<std::vector<pat::MET> > metsToken;
   edm::Handle<std::vector<pat::MET> > metsH;
-  std::vector<pat::MET> mets;
 
   // gedPhotons
   const edm::InputTag gedPhotonsTag;
@@ -196,28 +195,25 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
   std::vector<pat::Photon> ootPhotons;
 
+  // MC config --> also output!
+  const bool isMC;
+  float xsec;
+  float BR;
+
   // gen evt record
-  const edm::InputTag genevtInfoTag;
-  edm::EDGetTokenT<GenEventInfoProduct> genevtInfoToken;
-  edm::Handle<GenEventInfoProduct> genevtInfoH;
-  GenEventInfoProduct genevtInfo;
+  const edm::InputTag genEvtInfoTag;
+  edm::EDGetTokenT<GenEventInfoProduct> genEvtInfoToken;
+  edm::Handle<GenEventInfoProduct> genEvtInfoH;
 
   // pileup info
   const edm::InputTag pileupInfosTag;
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfosToken;
   edm::Handle<std::vector<PileupSummaryInfo> > pileupInfosH;
-  std::vector<PileupSummaryInfo> pileupInfos;
 
   // gen particles
-  const edm::InputTag genpartsTag;
-  edm::EDGetTokenT<std::vector<reco::GenParticle> > genpartsToken;
-  edm::Handle<std::vector<reco::GenParticle> > genparticlesH;
-  std::vector<reco::GenParticle> genparticles;
-
-  // MC config --> also output!
-  const bool isMC;
-  float xsec;
-  float BR;
+  const edm::InputTag genParticlesTag;
+  edm::EDGetTokenT<std::vector<reco::GenParticle> > genParticlesToken;
+  edm::Handle<std::vector<reco::GenParticle> > genParticlesH;
 
   ///////////////////////////
   // Temp Internal Members //
@@ -229,7 +225,7 @@ class Counter : public edm::one::EDAnalyzer<edm::one::SharedResources,edm::one::
   std::vector<int> matchedOOT_T, matchedGTGED_T, matchedLTGED_T, unmatchedGED_T, matchedCands_T;
 
   // neutralinos
-  genPartVec neutralinos;
+  std::vector<reco::GenParticle> neutralinos;
 
   // reduced photon index collections
   std::vector<ReducedPhoton> reducedPhotons_N;

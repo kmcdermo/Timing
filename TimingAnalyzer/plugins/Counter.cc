@@ -22,15 +22,15 @@ Counter::Counter(const edm::ParameterSet & iConfig):
   gedPhotonsTag(iConfig.getParameter<edm::InputTag>("gedPhotons")),
   ootPhotonsTag(iConfig.getParameter<edm::InputTag>("ootPhotons")),
 
-  // MC objects
-  genevtInfoTag(iConfig.getParameter<edm::InputTag>("genevt")),
-  pileupInfosTag(iConfig.getParameter<edm::InputTag>("pileup")),
-  genpartsTag(iConfig.getParameter<edm::InputTag>("genparts")),
-
   // MC config
   isMC(iConfig.existsAs<bool>("isMC") ? iConfig.getParameter<bool>("isMC") : false),
   xsec(iConfig.existsAs<double>("xsec") ? iConfig.getParameter<double>("xsec") : 1.0),
-  BR(iConfig.existsAs<double>("BR") ? iConfig.getParameter<double>("BR") : 1.0)
+  BR(iConfig.existsAs<double>("BR") ? iConfig.getParameter<double>("BR") : 1.0),
+
+  // MC objects
+  genEvtInfoTag(iConfig.getParameter<edm::InputTag>("genEvt")),
+  pileupInfosTag(iConfig.getParameter<edm::InputTag>("pileups")),
+  genParticlesTag(iConfig.getParameter<edm::InputTag>("genParticles"))
 {
   usesResource();
   usesResource("TFileService");
@@ -48,9 +48,9 @@ Counter::Counter(const edm::ParameterSet & iConfig):
   // MC
   if (isMC)
   {
-    genevtInfoToken  = consumes<GenEventInfoProduct>             (genevtInfoTag);
-    pileupInfosToken = consumes<std::vector<PileupSummaryInfo> > (pileupInfosTag);
-    genpartsToken    = consumes<std::vector<reco::GenParticle> > (genpartsTag);
+    genEvtInfoToken   = consumes<GenEventInfoProduct>             (genEvtInfoTag);
+    pileupInfosToken  = consumes<std::vector<PileupSummaryInfo> > (pileupInfosTag);
+    genParticlesToken = consumes<std::vector<reco::GenParticle> > (genParticlesTag);
   }
 }
 
@@ -63,6 +63,12 @@ void Counter::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup)
   ///////////////////////
 
   Counter::GetObjects(iEvent);
+
+  ////////////////////////
+  // Initialize Objects //
+  ////////////////////////
+
+  Counter::InitializeObjects();
 
   //////////////////
   // Prep Objects //
@@ -96,50 +102,52 @@ void Counter::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup)
 void Counter::GetObjects(const edm::Event & iEvent)
 {
   // PF CANDIDATES
-  iEvent.getByToken(candsToken, candsH);
-  cands = *candsH;
+  iEvent.getByToken(candsToken,candsH);
 
   // MET
-  iEvent.getByToken(metsToken, metsH);
-  mets = *metsH;
+  iEvent.getByToken(metsToken,metsH);
 
-  // GEDPHOTONS + IDS
-  iEvent.getByToken(gedPhotonsToken, gedPhotonsH);
-  gedPhotons = *gedPhotonsH;
+  // GEDPHOTONS
+  iEvent.getByToken(gedPhotonsToken,gedPhotonsH);
 
-  // OOTPHOTONS + IDS
-  iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
-  ootPhotons = *ootPhotonsH;
+  // OOTPHOTONS
+  iEvent.getByToken(ootPhotonsToken,ootPhotonsH);
 
   if (isMC)
   {
     // GEN EVENT RECORD
-    iEvent.getByToken(genevtInfoToken, genevtInfoH);
-    genevtInfo = *genevtInfoH;
+    iEvent.getByToken(genEvtInfoToken,genEvtInfoH);
 
     // PILEUP INFO
-    iEvent.getByToken(pileupInfosToken, pileupInfosH);
-    pileupInfos = *pileupInfosH;
+    iEvent.getByToken(pileupInfosToken,pileupInfosH);
 
     // GEN PARTICLES
-    iEvent.getByToken(genpartsToken, genparticlesH);
-    genparticles = *genparticlesH;
+    iEvent.getByToken(genParticlesToken,genParticlesH);
   }
+}
+
+void Counter::InitializeObjects()
+{
+  // GED PHOTONS
+  gedPhotons.clear();
+  if (gedPhotonsH.isValid()) gedPhotons = *gedPhotonsH;
+
+  // OOT PHOTONS
+  ootPhotons.clear();
+  if (ootPhotonsH.isValid()) ootPhotons = *ootPhotonsH;
+
+  // NEUTRALINOS
+  if (isMC) neutralinos.clear();
 }
 
 void Counter::PrepObjects()
 {
+  // Ensure photons sorted by modified pt
   Counter::SortPhotonsByPt(gedPhotons);
   Counter::SortPhotonsByPt(ootPhotons);
-
-  if (isMC)
-  {
-    // clear the neutralinos first
-    neutralinos.clear();
-
-    // match to gmsb photons
-    oot::PrepNeutralinos(genparticlesH,neutralinos);
-  }
+  
+  // match to gmsb photons
+  if (isMC) oot::PrepNeutralinos(genParticlesH,neutralinos);
 }
 
 void Counter::SortPhotonsByPt(std::vector<pat::Photon> & photons)
@@ -147,7 +155,7 @@ void Counter::SortPhotonsByPt(std::vector<pat::Photon> & photons)
   std::sort(photons.begin(),photons.end(),
 	    [](const auto & photon1, const auto & photon2)
 	    {
-	      return GetPhotonPt(photon1) > GetPhotonPt(photon2);
+	      return Counter::GetPhotonPt(photon1) > Counter::GetPhotonPt(photon2);
 	    });
 }
 
@@ -184,7 +192,7 @@ void Counter::PrepPhotonCollection(std::vector<ReducedPhoton> & reducedPhotons, 
 	    {
 	      const auto & photon1 = (reducedPhoton1.isGED?gedPhotons[reducedPhoton1.idx]:ootPhotons[reducedPhoton1.idx]);
 	      const auto & photon2 = (reducedPhoton2.isGED?gedPhotons[reducedPhoton2.idx]:ootPhotons[reducedPhoton2.idx]);
-	      return (GetPhotonPt(photon1) > GetPhotonPt(photon2));
+	      return (Counter::GetPhotonPt(photon1) > Counter::GetPhotonPt(photon2));
 	    });
 }
 
@@ -267,9 +275,6 @@ void Counter::SetPhotonIndices(const std::string & gedVID, const std::string & o
 			       std::vector<int> & matchedGTGED, std::vector<int> & matchedLTGED,
 			       std::vector<int> & unmatchedGED, std::vector<int> & matchedCands)
 {
-  // save on check size
-  const auto nCands = cands.size();
-
   // loop over OOT photons, setting indices
   for (auto ioot = 0; ioot < nOOT_N; ioot++)
   {
@@ -315,8 +320,8 @@ void Counter::SetPhotonIndices(const std::string & gedVID, const std::string & o
       const auto & gedPhoton = gedPhotons[matchedGED];
       matchedOOT[matchedGED] = ioot;
 
-      if   (GetPhotonPt(ootPhoton) > GetPhotonPt(gedPhoton)) matchedGTGED[ioot] = matchedGED;
-      else                                                   matchedLTGED[ioot] = matchedGED;
+      if   (Counter::GetPhotonPt(ootPhoton) > Counter::GetPhotonPt(gedPhoton)) matchedGTGED[ioot] = matchedGED;
+      else                                                                     matchedLTGED[ioot] = matchedGED;
     }
     else // OOT photon is truly unmatched to GED
     {
@@ -324,13 +329,16 @@ void Counter::SetPhotonIndices(const std::string & gedVID, const std::string & o
       unmatchedGED[ioot] = 1;
       
       // get oot photon pt
-      const auto ootPt = GetPhotonPt(ootPhoton);
+      const auto ootPt = Counter::GetPhotonPt(ootPhoton);
 
       // loop over pf cands, checking to see if it is picked up by a PF candidate
-      for (auto icand = 0U; icand < nCands; icand++)
+      auto icand = -1;
+      for (const auto & cand : *candsH)
       {
-	// get pf cand + pt
-	const auto & cand = cands[icand];
+	// set counter up given control statements
+	icand++;
+
+	// get pt of candidate
 	const auto candpt = cand.pt();
 
 	// forget about the junk
@@ -404,7 +412,7 @@ void Counter::SetPhotonPhis(const std::vector<int> & matchedGTGED, const std::ve
 
 void Counter::SetMETInfo()
 {
-  const auto & t1pfMET = mets.front();
+  const auto & t1pfMET = (*metsH).front();
   t1pfMETpt = t1pfMET.pt();
   t1pfMETphi = t1pfMET.phi();
 
@@ -435,7 +443,7 @@ void Counter::SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::
 
     // get ootPhoton info --> will use it regardless!
     const auto & ootPhoton = ootPhotons[ioot];
-    const auto ootpt  = GetPhotonPt(ootPhoton);
+    const auto ootpt  = Counter::GetPhotonPt(ootPhoton);
     const auto ootphi = ootPhoton.phi();
     
     // first, change MET with overlapping OOT photons; then check if totally unmatched
@@ -443,7 +451,7 @@ void Counter::SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::
     {
       // get gedPhoton info
       const auto & gedPhoton = gedPhotons[matchedGTGED[ioot]];
-      const auto gedpt  = GetPhotonPt(gedPhoton);
+      const auto gedpt  = Counter::GetPhotonPt(gedPhoton);
       const auto gedphi = gedPhoton.phi();
 
       // get compnonents
@@ -469,8 +477,8 @@ void Counter::SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::
 
 void Counter::SetMCInfo()
 {
-  genwgt = genevtInfo.weight();
-  for (const auto & pileupInfo : pileupInfos)
+  genwgt = (*genEvtInfoH).weight();
+  for (const auto & pileupInfo : *pileupInfosH)
   {
     if (pileupInfo.getBunchCrossing() == 0) 
     {

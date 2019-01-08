@@ -152,12 +152,12 @@ process.tree = cms.EDAnalyzer("Counter",
    gedPhotons = cms.InputTag("slimmedPhotons"),
    ootPhotons = cms.InputTag("slimmedOOTPhotons"),
    ## gen info
-   isMC     = cms.bool(options.isMC),
-   xsec     = cms.double(options.xsec),
-   BR       = cms.double(options.BR),
-   genevt   = cms.InputTag("generator"),
-   pileup   = cms.InputTag("slimmedAddPileupInfo"),
-   genparts = cms.InputTag("prunedGenParticles"),
+   isMC         = cms.bool(options.isMC),
+   xsec         = cms.double(options.xsec),
+   BR           = cms.double(options.BR),
+   genEvt       = cms.InputTag("generator"),
+   pileups      = cms.InputTag("slimmedAddPileupInfo"),
+   genParticles = cms.InputTag("prunedGenParticles"),
 )
 
 # Set up the path

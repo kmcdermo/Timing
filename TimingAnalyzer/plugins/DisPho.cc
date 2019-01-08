@@ -1,6 +1,6 @@
 #include "Timing/TimingAnalyzer/plugins/DisPho.hh"
 
-DisPho::DisPho(const edm::ParameterSet& iConfig): 
+DisPho::DisPho(const edm::ParameterSet & iConfig): 
   // blinding cuts
   blindSF(iConfig.existsAs<int>("blindSF") ? iConfig.getParameter<int>("blindSF") : 1000),
   applyBlindSF(iConfig.existsAs<bool>("applyBlindSF") ? iConfig.getParameter<bool>("applyBlindSF") : false),
@@ -71,8 +71,8 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // vertices
   verticesTag(iConfig.getParameter<edm::InputTag>("vertices")),
 
-  // rhos
-  rhosTag(iConfig.getParameter<edm::InputTag>("rhos")),
+  // rho
+  rhoTag(iConfig.getParameter<edm::InputTag>("rho")),
 
   // mets
   metsTag(iConfig.getParameter<edm::InputTag>("mets")),  
@@ -90,23 +90,31 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
   recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE")),
 
-  // photons + ids
+  // gedphotons
   gedPhotonsTag(iConfig.getParameter<edm::InputTag>("gedPhotons")),
 
-  // ootPhotons + ids
+  // ootPhotons
   ootPhotonsTag(iConfig.getParameter<edm::InputTag>("ootPhotons")),
 
-  ///////////// GEN INFO
-  // isMC or Data --> default Data
+  // isMC
   isGMSB(iConfig.existsAs<bool>("isGMSB") ? iConfig.getParameter<bool>("isGMSB") : false),
   isHVDS(iConfig.existsAs<bool>("isHVDS") ? iConfig.getParameter<bool>("isHVDS") : false),
   isBkgd(iConfig.existsAs<bool>("isBkgd") ? iConfig.getParameter<bool>("isBkgd") : false),
   isToy (iConfig.existsAs<bool>("isToy")  ? iConfig.getParameter<bool>("isToy")  : false),
   isADD (iConfig.existsAs<bool>("isADD")  ? iConfig.getParameter<bool>("isADD")  : false),
   
+  // MC config
   xsec(iConfig.existsAs<double>("xsec") ? iConfig.getParameter<double>("xsec") : 1.0),
   filterEff(iConfig.existsAs<double>("filterEff") ? iConfig.getParameter<double>("filterEff") : 1.0),
-  BR(iConfig.existsAs<double>("BR") ? iConfig.getParameter<double>("BR") : 1.0)
+  BR(iConfig.existsAs<double>("BR") ? iConfig.getParameter<double>("BR") : 1.0),
+
+  // gen objects
+  genEvtInfoTag(iConfig.getParameter<edm::InputTag>("genEvt")),
+  gent0Tag(iConfig.getParameter<edm::InputTag>("gent0")),
+  genxyz0Tag(iConfig.getParameter<edm::InputTag>("genxyz0")),
+  pileupInfosTag(iConfig.getParameter<edm::InputTag>("pileups")),
+  genParticlesTag(iConfig.getParameter<edm::InputTag>("genParticles")),
+  genJetsTag(iConfig.getParameter<edm::InputTag>("genJets"))
 {
   usesResource();
   usesResource("TFileService");
@@ -142,8 +150,8 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // vertices
   verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
 
-  // rhos
-  rhosToken = consumes<double> (rhosTag);
+  // rho
+  rhoToken = consumes<double> (rhoTag);
 
   // mets
   metsToken = consumes<std::vector<pat::MET> > (metsTag);
@@ -151,17 +159,15 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   // jets
   jetsToken = consumes<std::vector<pat::Jet> > (jetsTag);
 
-  // electrons
+  // leptons
   electronsToken = consumes<std::vector<pat::Electron> > (electronsTag);
-
-  // muons
   muonsToken = consumes<std::vector<pat::Muon> > (muonsTag);
 
   // rechits
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
   recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
 
-  // photons + ids
+  // photons
   gedPhotonsToken = consumes<std::vector<pat::Photon> > (gedPhotonsTag);
   ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
 
@@ -169,12 +175,12 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
   if (isGMSB || isHVDS || isBkgd || isToy || isADD)
   {
     isMC = true;
-    genevtInfoToken = consumes<GenEventInfoProduct>             (iConfig.getParameter<edm::InputTag>("genevt"));
-    gent0Token      = consumes<float>                           (iConfig.getParameter<edm::InputTag>("gent0"));
-    genxyz0Token    = consumes<Point3D>                         (iConfig.getParameter<edm::InputTag>("genxyz0"));
-    pileupInfoToken = consumes<std::vector<PileupSummaryInfo> > (iConfig.getParameter<edm::InputTag>("pileup"));
-    genpartsToken   = consumes<std::vector<reco::GenParticle> > (iConfig.getParameter<edm::InputTag>("genparts"));
-    genjetsToken    = consumes<std::vector<reco::GenJet> >      (iConfig.getParameter<edm::InputTag>("genjets"));
+    genEvtInfoToken   = consumes<GenEventInfoProduct>             (genEvtInfoTag);
+    gent0Token        = consumes<float>                           (gent0Tag);
+    genxyz0Token      = consumes<Point3D>                         (genxyz0Tag);
+    pileupInfosToken  = consumes<std::vector<PileupSummaryInfo> > (pileupInfosTag);
+    genParticlesToken = consumes<std::vector<reco::GenParticle> > (genParticlesTag);
+    genJetsToken      = consumes<std::vector<reco::GenJet> >      (genJetsTag);
   }
   else 
   {
@@ -184,110 +190,124 @@ DisPho::DisPho(const edm::ParameterSet& iConfig):
 
 DisPho::~DisPho() {}
 
-void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
+void DisPho::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup)
 {
-  ////////////////////////
-  //                    //
-  // Get Object Handles //
-  //                    //
-  ////////////////////////
-  // TRIGGERS
-  edm::Handle<edm::TriggerResults> triggerResultsH;
-  iEvent.getByToken(triggerResultsToken, triggerResultsH);
+  /////////////////
+  // Get Objects //
+  /////////////////
 
-  edm::Handle<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsH;
-  iEvent.getByToken(triggerObjectsToken, triggerObjectsH);
+  DisPho::GetObjects(iEvent,iSetup);
+
+  ////////////////////////
+  // Initialize Objects //
+  ////////////////////////  
+
+  DisPho::InitializeObjects(iEvent);
+
+  /////////////////
+  // Get Weights //
+  /////////////////
+
+  DisPho::GetWeights();
+
+  ///////////////////////
+  // Always fill hists //
+  ///////////////////////
+
+  DisPho::AlwaysFillHists();
+
+  ////////////////////
+  // Apply Blinding //
+  ////////////////////
+
+  if (DisPho::ApplyBlindSF()) return;
+  DisPho::FillBlindSF();
+
+  if (DisPho::ApplyBlindMET()) return;
+  DisPho::FillBlindMET();
+  
+  //////////////////
+  // Prep Objects //
+  //////////////////
+
+  DisPho::PrepObjects(iEvent);
+
+  /////////////////////////
+  // Apply pre-selection //
+  /////////////////////////
+
+  if (DisPho::ApplyPreSelectionTrigger()) return;
+  DisPho::FillPreSelectionTrigger();
+
+  if (DisPho::ApplyPreSelectionHT()) return;
+  DisPho::FillPreSelectionHT();
+
+  if (DisPho::ApplyPreSelectionGoodPhoton()) return;
+  DisPho::FillPreSelectionGoodPhoton();
+
+  ////////////////////////////
+  // Fill Tree From Objects //
+  ////////////////////////////
+
+  DisPho::FillTreeFromObjects(iEvent);
+}
+
+void DisPho::GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSetup)
+{
+  // TRIGGER RESULTS
+  iEvent.getByToken(triggerResultsToken,triggerResultsH);
+
+  // TRIGGER OBJECTS
+  iEvent.getByToken(triggerObjectsToken,triggerObjectsH);
 
   // MET FLAGS
-  edm::Handle<edm::TriggerResults> triggerFlagsH;
-  iEvent.getByToken(triggerFlagsToken, triggerFlagsH);
-  edm::Handle<bool> ecalBadCalibFlagH;
-  iEvent.getByToken(ecalBadCalibFlagToken, ecalBadCalibFlagH);
+  iEvent.getByToken(triggerFlagsToken,triggerFlagsH);
+  iEvent.getByToken(ecalBadCalibFlagToken,ecalBadCalibFlagH);
 
   // TRACKS
-  edm::Handle<std::vector<reco::Track> > tracksH;
-  iEvent.getByToken(tracksToken, tracksH);
+  iEvent.getByToken(tracksToken,tracksH);
 
   // VERTICES
-  edm::Handle<std::vector<reco::Vertex> > verticesH;
-  iEvent.getByToken(verticesToken, verticesH);
+  iEvent.getByToken(verticesToken,verticesH);
   
-  // RHOS
-  edm::Handle<double> rhosH;
-  iEvent.getByToken(rhosToken, rhosH);
+  // RHO
+  iEvent.getByToken(rhoToken,rhoH);
 
   // MET
-  edm::Handle<std::vector<pat::MET> > metsH;
-  iEvent.getByToken(metsToken, metsH);
+  iEvent.getByToken(metsToken,metsH);
 
   // JETS
-  edm::Handle<std::vector<pat::Jet> > jetsH;
-  iEvent.getByToken(jetsToken, jetsH);
-  std::vector<pat::Jet> jets; jets.reserve(jetsH->size());
+  iEvent.getByToken(jetsToken,jetsH);
 
-  // ELECTRONS
-  edm::Handle<std::vector<pat::Electron> > electronsH;
-  iEvent.getByToken(electronsToken, electronsH);
-  std::vector<pat::Electron> electrons; electrons.reserve(electronsH->size());
-
-  // MUONS
-  edm::Handle<std::vector<pat::Muon> > muonsH;
-  iEvent.getByToken(muonsToken, muonsH);
-  std::vector<pat::Muon> muons; muons.reserve(muonsH->size());
+  // LEPTONS
+  iEvent.getByToken(electronsToken,electronsH);
+  iEvent.getByToken(muonsToken,muonsH);
 
   // ECAL RECHITS
-  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
-  iEvent.getByToken(recHitsEBToken, recHitsEBH);
-  const EcalRecHitCollection * recHitsEB = recHitsEBH.product();
-  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
-  iEvent.getByToken(recHitsEEToken, recHitsEEH);
-  const EcalRecHitCollection * recHitsEE = recHitsEEH.product();
-  uiiumap recHitMap;
+  iEvent.getByToken(recHitsEBToken,recHitsEBH);
+  iEvent.getByToken(recHitsEEToken,recHitsEEH);
 
-  /////////////
-  // PHOTONS //
-  /////////////
-
-  // GEDPHOTONS + IDS
-  edm::Handle<std::vector<pat::Photon> > gedPhotonsH;
-  iEvent.getByToken(gedPhotonsToken, gedPhotonsH);
+  // PHOTONS
+  iEvent.getByToken(gedPhotonsToken,gedPhotonsH);
+  iEvent.getByToken(ootPhotonsToken,ootPhotonsH);
  
-  // OOTPHOTONS + IDS
-  edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
-  iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
- 
-  // how many total photons
-  const int phosize = gedPhotonsH->size() + ootPhotonsH->size();
-
-  // total photons vector
-  std::vector<oot::Photon> photons; photons.reserve(phosize);
-
   // GEOMETRY : https://gitlab.cern.ch/shervin/ECALELF
-  edm::ESHandle<CaloGeometry> caloGeoH;
   iSetup.get<CaloGeometryRecord>().get(caloGeoH);
-  const CaloSubdetectorGeometry * barrelGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
-  const CaloSubdetectorGeometry * endcapGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
 
   //////////////////
   // ECAL RECORDS // 
   //////////////////
 
   // Laser constants : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h
-  edm::ESHandle<EcalLaserDbService> laserH;
   iSetup.get<EcalLaserDbRecord>().get(laserH);
 
   // Intercalibration constants : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h
-  edm::ESHandle<EcalIntercalibConstants> interCalibH;
-  const EcalIntercalibConstantMap *      interCalibMap;
   iSetup.get<EcalIntercalibConstantsRcd>().get(interCalibH);
-  interCalibMap = &interCalibH->getMap();
   
   // ADCToGeV : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h
-  edm::ESHandle<EcalADCToGeVConstant> adcToGeVH;
   iSetup.get<EcalADCToGeVConstantRcd>().get(adcToGeVH);
 
   // Pedestals : https://github.com/ferriff/usercode/blob/master/DBDump/plugins/DBDump.cc
-  edm::ESHandle<EcalPedestals> pedestalsH;
   iSetup.get<EcalPedestalsRcd>().get(pedestalsH);
 
   /////////////////
@@ -295,67 +315,118 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   /////////////////
 
   // JECs : https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#CorrPatJets  
-  edm::ESHandle<JetCorrectorParametersCollection> jetCorrH;
   iSetup.get<JetCorrectionsRecord>().get("AK4PFchs",jetCorrH); 
-  JetCorrectionUncertainty jetCorrUnc((*jetCorrH)["Uncertainty"]);
 
   // JERs : https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyResolution#Accessing_factors_from_Global_Ta
-  JME::JetResolution jetRes = JME::JetResolution::get(iSetup, "AK4PFchs_pt");
-  JME::JetResolutionScaleFactor jetRes_sf = JME::JetResolutionScaleFactor::get(iSetup, "AK4PFchs");
+  jetRes = JME::JetResolution::get(iSetup,"AK4PFchs_pt");
+  jetRes_sf = JME::JetResolutionScaleFactor::get(iSetup,"AK4PFchs");
 
   //////////////
   // GEN INFO //
   //////////////
 
-  edm::Handle<GenEventInfoProduct> genevtInfoH;
-  edm::Handle<float>   gent0H;
-  edm::Handle<Point3D> genxyz0H;
-  edm::Handle<std::vector<PileupSummaryInfo> > pileupInfoH;
-  edm::Handle<std::vector<reco::GenParticle> > genparticlesH;
-  edm::Handle<std::vector<reco::GenJet> > genjetsH;
-  genPartVec neutralinos;
-  genPartVec vPions;
-  genPartVec toys;
+  if (isMC)
+  {
+    iEvent.getByToken(genEvtInfoToken,genEvtInfoH);
+    iEvent.getByToken(genxyz0Token,genxyz0H);
+    iEvent.getByToken(gent0Token,gent0H);
+    iEvent.getByToken(pileupInfosToken,pileupInfosH);
+    iEvent.getByToken(genParticlesToken,genParticlesH);
+    iEvent.getByToken(genJetsToken,genJetsH);
+  }
+}
+
+void DisPho::InitializeObjects(const edm::Event & iEvent)
+{
+  // INPUT + OUTPUT RHO
+  rho = rhoH.isValid() ? *(rhoH.product()) : 0.f;
+
+  // OUPUT JETS
+  jets.clear(); 
+  if (jetsH.isValid()) jets.reserve(jetsH->size());
+
+  // OUTPUT ELECTRONS
+  electrons.clear(); 
+  if (electronsH.isValid()) electrons.reserve(electronsH->size());
+
+  // OUTPUT MUONS
+  muons.clear(); 
+  if (muonsH.isValid()) muons.reserve(muonsH->size());
+
+  // INPUT ECAL RECHITS
+  if (recHitsEBH.isValid()) recHitsEB = recHitsEBH.product();
+  if (recHitsEEH.isValid()) recHitsEE = recHitsEEH.product();
+
+  // OUTPUT RECHIT MAP
+  recHitMap.clear();
+
+  // OUTPUT PHOTONS
+  photons.clear();
+  if (gedPhotonsH.isValid() && ootPhotonsH.isValid()) photons.reserve(gedPhotonsH->size()+ootPhotonsH->size());
+
+  // GEOMETRY
+  if (caloGeoH.isValid())
+  {
+    barrelGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalSubdetector::EcalBarrel);
+    endcapGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalSubdetector::EcalEndcap);
+  }
+
+  // LASER
+  if (laserH.isValid()) evTime = iEvent.time();
+
+  // INTERCALIB
+  if (interCalibH.isValid()) interCalibMap = &interCalibH->getMap();
+  
+  // ADCTOGEV
+  if (adcToGeVH.isValid())
+  {
+    adcToGeVEB = adcToGeVH->getEBValue();
+    adcToGeVEE = adcToGeVH->getEEValue();
+  }
+  
+  //////////////
+  // GEN INFO //
+  //////////////
 
   if (isMC)
   {
-    iEvent.getByToken(genevtInfoToken, genevtInfoH);
-    iEvent.getByToken(genxyz0Token   , genxyz0H);
-    iEvent.getByToken(gent0Token     , gent0H);
-    iEvent.getByToken(pileupInfoToken, pileupInfoH);
-    iEvent.getByToken(genpartsToken  , genparticlesH);
-    iEvent.getByToken(genjetsToken   , genjetsH);
-
-    ///////////////////////
-    //                   //
-    // Event weight info //
-    //                   //
-    ///////////////////////
-    DisPho::InitializeGenEvtBranches();
-    if (genevtInfoH.isValid()) 
-    {
-      DisPho::SetGenEvtBranches(genevtInfoH);
-    }
-
-    /////////////////////
-    //                 //
-    // Gen pileup info //
-    //                 //
-    /////////////////////
-    DisPho::InitializeGenPUBranches();
-    if (pileupInfoH.isValid()) // standard check for pileup
-    {
-      DisPho::SetGenPUBranches(pileupInfoH);
-    } // end check over pileup
+    if (isGMSB) neutralinos.clear();
+    if (isHVDS) vPions.clear();
+    if (isToy) toys.clear();
   }
+}
+ 
+void DisPho::GetWeights()
+{
+  /////////////////
+  // gen weights //
+  /////////////////
+
+  if (isMC)
+  {  
+    ///////////////////////
+    // Event weight info //
+    ///////////////////////
+
+    genwgt = (genEvtInfoH.isValid() ? genEvtInfoH->weight() : 0.f);
+    
+    /////////////////////
+    // Gen pileup info //
+    /////////////////////
+
+    DisPho::InitializeGenPUBranches();
+    if (pileupInfosH.isValid()) DisPho::SetGenPUBranches();
+  } // end check on isMC
 
   //////////////////////
-  //                  //
   // Set Event Weight //
-  //                  //
   //////////////////////
-  const Float_t wgt = (isMC ? genwgt : 1.f);
 
+  wgt = (isMC ? genwgt : 1.f);
+}
+
+void DisPho::AlwaysFillHists()
+{
   // Fill total cutflow regardless of cuts
   h_cutflow    ->Fill((cutflowLabelMap["All"]*1.f));
   h_cutflow_wgt->Fill((cutflowLabelMap["All"]*1.f),wgt);
@@ -368,42 +439,43 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     h_genputrue    ->Fill(genputrue);
     h_genputrue_wgt->Fill(genputrue,wgt);
   }
+}
 
-  //////////////
-  //          //
-  // Blinding //
-  //          //
-  //////////////
-  if (event%blindSF!=0 && applyBlindSF) return;
+inline bool DisPho::ApplyBlindSF()
+{
+  return (event%blindSF!=0 && applyBlindSF);
+}
+
+void DisPho::FillBlindSF()
+{
   h_cutflow    ->Fill((cutflowLabelMap["nEvBlinding"]*1.f));
   h_cutflow_wgt->Fill((cutflowLabelMap["nEvBlinding"]*1.f),wgt);
+}
 
-  if (metsH.isValid())
+inline bool DisPho::ApplyBlindMET()
+{
+  if (applyBlindMET && metsH.isValid())
   {
-    if ((*metsH).front().pt() > blindMET && applyBlindMET) return;
-  }  
+    return ((*metsH).front().pt() > blindMET);
+  }
+  else return false;
+}
+
+void DisPho::FillBlindMET()
+{
   h_cutflow    ->Fill((cutflowLabelMap["METBlinding"]*1.f));
   h_cutflow_wgt->Fill((cutflowLabelMap["METBlinding"]*1.f),wgt);
+}
 
-  /////////
-  //     //
-  // Rho //
-  //     //
-  /////////
-  DisPho::InitializeRhoBranches();
-  if (rhosH.isValid())
-  {
-    DisPho::SetRhoBranches(rhosH);
-  }
-
+void DisPho::PrepObjects(const edm::Event & iEvent)
+{
   /////////////////////
-  //                 //
   // Object Prepping //
-  //                 //
   /////////////////////
-  if (isGMSB) oot::PrepNeutralinos(genparticlesH,neutralinos);
-  if (isHVDS) oot::PrepVPions(genparticlesH,vPions);
-  if (isToy)  oot::PrepToys(genparticlesH,toys);
+
+  if (isGMSB) oot::PrepNeutralinos(genParticlesH,neutralinos);
+  if (isHVDS) oot::PrepVPions(genParticlesH,vPions);
+  if (isToy)  oot::PrepToys(genParticlesH,toys);
   oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
   oot::PrepTriggerBits(triggerFlagsH,iEvent,triggerFlagMap);
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
@@ -412,79 +484,94 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   oot::PrepPhotons(gedPhotonsH,ootPhotonsH,photons,rho,phpTmin,phIDmin);
 
   ///////////////////
-  //               //
   // Extra Pruning //
-  //               //
   ///////////////////
+
   oot::PrunePhotons(photons,recHitsEB,recHitsEE,seedTimemin);
   oot::PruneJets(jets,photons,dRmin);
 
   /////////////////////////////
-  //                         //
   // Photon Storing Options  //
-  //                         //
   /////////////////////////////
+
   if (splitPho) oot::SplitPhotons(photons,Config::nPhotons/2);     // split photons by OOT and GED (store at most nPhotons/2 of each)
   if (onlyGED)  oot::StoreOnlyPho(photons,Config::nPhotons,false); // store only GED photons, top nPhotons only
   if (onlyOOT)  oot::StoreOnlyPho(photons,Config::nPhotons,true);  // store only OOT photons, top nPhotons only
 
   /////////////////////
-  //                 //
   // Lepton Prepping //
-  //                 //
   /////////////////////
 
   oot::PrepLeptons(electronsH,electrons,photons,ellowpTmin,leptondRmin); // consider only electrons NOT matched to our photons
   oot::PrepLeptons(muonsH,muons,photons,mulowpTmin,leptondRmin); // consider only muons NOT matched to our photons
 		
   ///////////////////////////////
-  //                           //
   // Object Counts for Storing //
-  //                           //
   ///////////////////////////////
-  const int nJets    = std::min(int(jets.size()),Config::nJets);
-  const int nRecHits = recHitMap.size();
-  const int nPhotons = std::min(int(photons.size()),Config::nPhotons);
+  nJets    = std::min(int(jets.size()),Config::nJets);
+  nRecHits = recHitMap.size();
+  nPhotons = std::min(int(photons.size()),Config::nPhotons);
+}
 
-  /////////////////////////
-  //                     //
-  // Apply pre-selection //
-  //                     //
-  /////////////////////////
-  // trigger pre-selection
-  bool triggered = false;
-  for (const auto & triggerBitPair : triggerBitMap)
+bool DisPho::ApplyPreSelectionTrigger()
+{
+  if (applyTrigger)
   {
-    if (triggerBitPair.second) {triggered = true; break;}
+    auto triggered = false;
+  
+    for (const auto & triggerBitPair : triggerBitMap)
+    {
+      if (triggerBitPair.second) {triggered = true; break;}
+    }
+
+    return !triggered;
   }
-  if (!triggered && applyTrigger) return;
+  else return false;
+}
+
+void DisPho::FillPreSelectionTrigger()
+{
   h_cutflow    ->Fill((cutflowLabelMap["Trigger"]*1.f));
   h_cutflow_wgt->Fill((cutflowLabelMap["Trigger"]*1.f),wgt);
+}
 
-  // HT pre-selection
-  auto jetHT = 0.f;
-  for (auto ijet = 0; ijet < nJets; ijet++) jetHT += jets[ijet].pt();
-  if (jetHT < minHT && applyHT) return;
+bool DisPho::ApplyPreSelectionHT()
+{
+  if (applyHT)
+  {
+    auto jetHT = 0.f;
+    for (auto ijet = 0; ijet < nJets; ijet++) jetHT += jets[ijet].pt();
+    return (jetHT < minHT);
+  }
+  else return false;
+}
+
+void DisPho::FillPreSelectionHT()
+{
   h_cutflow    ->Fill((cutflowLabelMap["H_{T}"]*1.f));
   h_cutflow_wgt->Fill((cutflowLabelMap["H_{T}"]*1.f),wgt);
+}
 
-  // photon pre-selection: at least one good photon in event
-  bool isphgood = false;
-  if (gedPhotonsH.isValid() || ootPhotonsH.isValid()) 
+bool DisPho::ApplyPreSelectionGoodPhoton()
+{
+  if (applyPhGood)
   {
+    // photon pre-selection: at least one good photon in event
+    auto isphgood = false;
+    
     for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
     {
       const auto & photon = photons[iphoton];
       const auto & pho = photon.photon();
-
+      
       //      if (iphoton > 0) break; // only consider first photon
-
+      
       const auto pt = pho.pt() * pho.pat::Photon::userFloat("ecalEnergyPostCorr") / pho.pat::Photon::energy();
       if (pt < phgoodpTmin) continue;
-
+      
       // const float sceta = std::abs(pho.superCluster()->eta());
       // if (sceta > Config::etaEBcutoff) continue;
-
+      
       if (phgoodIDmin != "none")
       {
 	if (!photon.isOOT() && !pho.photonID(phgoodIDmin+"-ged")) continue;
@@ -492,212 +579,163 @@ void DisPho::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       }
       
       isphgood = true; break;
-    } 
-  } // end check
-  if (!isphgood && applyPhGood) return;
+    } // end loop over photons
+
+    return !isphgood;
+  }
+  else return false; 
+}
+
+void DisPho::FillPreSelectionGoodPhoton()
+{
   h_cutflow    ->Fill((cutflowLabelMap["Good Photon"]*1.f));
   h_cutflow_wgt->Fill((cutflowLabelMap["Good Photon"]*1.f),wgt);
+}
 
+void DisPho::FillTreeFromObjects(const edm::Event & iEvent)
+{
   /////////////
-  //         //
   // MC Info //
-  //         //
   /////////////
-  if (isMC) 
-  {
-    ////////////////
-    //            //
-    // xyzt0 info //
-    //            //
-    ////////////////
-    DisPho::InitializeGenPointBranches();
-    if (genxyz0H.isValid()) // standard check 3D point
-    {
-      DisPho::SetGenXYZ0Branches(genxyz0H);
-    }
-    if (gent0H.isValid()) // standard check on t0
-    {
-      DisPho::SetGenT0Branches(gent0H);
-    }
-      
-    ///////////////////////
-    //                   //
-    // Gen particle info //
-    //                   //
-    ///////////////////////
-    // GMSB
-    if (isGMSB) 
-    {
-      DisPho::InitializeGMSBBranches();
-      if (genparticlesH.isValid() && (gedPhotonsH.isValid() || ootPhotonsH.isValid()))
-      {
-	DisPho::SetGMSBBranches(neutralinos,photons,nPhotons);
-      } // check genparticles are okay
-    } // isGMSB
 
-    // HVDS
-    if (isHVDS) 
-    {
-      DisPho::InitializeHVDSBranches();
-      if (genparticlesH.isValid() && (gedPhotonsH.isValid() || ootPhotonsH.isValid()))
-      {
-	DisPho::SetHVDSBranches(vPions,photons,nPhotons);
-      } // check genparticles are okay
-    } // isHVDS
-
-    // ToyMC
-    if (isToy) 
-    {
-      DisPho::InitializeToyBranches();
-      if (genparticlesH.isValid() && (gedPhotonsH.isValid() || ootPhotonsH.isValid()))
-      {
-	DisPho::SetToyBranches(toys,photons,nPhotons);
-      } // check genparticles are okay
-    } // isHVDS
-  } // isMC
+  if (isMC) DisPho::SetMCInfo();
 
   ///////////////////////////
-  //                       //
   // Event, lumi, run info //
-  //                       //
   ///////////////////////////
+
   DisPho::SetRecordInfo(iEvent);
 
   //////////////////
-  //              //
   // Trigger Info //
-  //              //
   //////////////////
+
   DisPho::SetTriggerBranches();
 
   /////////////////////
-  //                 //
   // MET Filter Info //
-  //                 //
   /////////////////////
-  DisPho::SetMETFilterBranches(ecalBadCalibFlagH);
+
+  DisPho::SetMETFilterBranches();
 
   /////////////////////////
-  //                     //   
   // Primary Vertex info //
-  //                     //
   /////////////////////////
+
   DisPho::InitializePVBranches();
-  if (verticesH.isValid())
-  {
-    DisPho::SetPVBranches(verticesH);
-  }
+  if (verticesH.isValid()) DisPho::SetPVBranches();
 
   //////////////////
-  //              //
   // Type1 PF Met //
-  //              //
   //////////////////
+
   DisPho::InitializeMETBranches();
   if (metsH.isValid())
   {
     const auto & t1pfMET = (*metsH).front();
-    
     DisPho::SetMETBranches(t1pfMET);
   }
 
   /////////////////////////
-  //                     //
   // Jets (AK4 standard) //
-  //                     //
   /////////////////////////
-  DisPho::InitializeJetBranches(nJets);
-  if (isMC) DisPho::InitializeJetBranchesMC(nJets);
-  if (jetsH.isValid()) // check to make sure reco jets exist
+
+  DisPho::InitializeJetBranches();
+  DisPho::SetJetBranches();
+
+  if (isMC)
   {
-    DisPho::SetJetBranches(jets,nJets);
-    if (isMC && jetCorrH.isValid() && genjetsH.isValid()) DisPho::SetJetBranchesMC(jets,nJets,genjetsH,jetCorrUnc,jetRes,jetRes_sf);
+    DisPho::InitializeJetBranchesMC();
+    DisPho::SetJetBranchesMC();
   }
 
   ///////////////
-  //           //
   // Electrons //
-  //           //
   ///////////////
+
   DisPho::InitializeElectronBranches();
-  if (electronsH.isValid())
-  {
-    DisPho::SetElectronBranches(electrons);
-  }
+  DisPho::SetElectronBranches();
 
   ///////////
-  //       //
   // Muons //
-  //       //
   ///////////
+
   DisPho::InitializeMuonBranches();
-  if (muonsH.isValid())
-  {
-    DisPho::SetMuonBranches(muons);
-  }
+  DisPho::SetMuonBranches();
 
   //////////////
-  //          //
   // Rec Hits //
-  //          //
   //////////////
-  DisPho::InitializeRecHitBranches(nRecHits);
-  if (recHitsEBH.isValid() && recHitsEEH.isValid() && caloGeoH.isValid() && adcToGeVH.isValid() && laserH.isValid() && interCalibH.isValid() && pedestalsH.isValid())
-  {
-    DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,recHitsEE,endcapGeometry,
-			      recHitMap,iEvent,laserH,interCalibMap,adcToGeVH,pedestalsH);
-  }
+
+  DisPho::InitializeRecHitBranches();
+  DisPho::SetRecHitBranches();
 
   //////////////////
-  //              //
   // Reco Photons //
-  //              //
   //////////////////
+
   DisPho::InitializePhoBranches();
-  if (isMC) DisPho::InitializePhoBranchesMC();
-  if ((gedPhotonsH.isValid() || ootPhotonsH.isValid()) && recHitsEBH.isValid() && recHitsEEH.isValid() && tracksH.isValid()) // standard handle check
+  DisPho::SetPhoBranches();
+  if (isMC) 
   {
-    DisPho::SetPhoBranches(photons,nPhotons,recHitMap,recHitsEB,recHitsEE,tracksH);
-    if (isMC && genparticlesH.isValid()) DisPho::SetPhoBranchesMC(photons,nPhotons,genparticlesH);
+    DisPho::InitializePhoBranchesMC();
+    DisPho::SetPhoBranchesMC();
   }
 
   ///////////////
-  //           //
   // Fill Tree //
-  //           //
   ///////////////
+
   disphotree->Fill();
 }
 
-void DisPho::InitializeRhoBranches()
+void DisPho::SetMCInfo()
 {
-  rho = 0.f;
-}
+  ////////////////
+  // xyzt0 info //
+  ////////////////
+  
+  DisPho::InitializeGenPointBranches();
+  if (gent0H.isValid()) DisPho::SetGenT0Branches();
+  if (genxyz0H.isValid()) DisPho::SetGenXYZ0Branches();
+  
+  ///////////////////////
+  // Gen particle info //
+  ///////////////////////
 
-void DisPho::SetRhoBranches(const edm::Handle<double> & rhosH)
-{
-  rho = *(rhosH.product());
-}
+  if (isGMSB) 
+  {
+    DisPho::InitializeGMSBBranches();
+    DisPho::SetGMSBBranches();
+  } // isGMSB
 
-void DisPho::InitializeGenEvtBranches()
-{
-  genwgt = -9999.f;
-}
+  if (isHVDS) 
+  {
+    DisPho::InitializeHVDSBranches();
+    DisPho::SetHVDSBranches();
+  } // isHVDS
 
-void DisPho::SetGenEvtBranches(const edm::Handle<GenEventInfoProduct> & genevtInfoH)
-{
-  genwgt = genevtInfoH->weight();
+  if (isToy) 
+  {
+    DisPho::InitializeToyBranches();
+    DisPho::SetToyBranches();
+  } // isHVDS
 }
 
 void DisPho::InitializeGenPointBranches()
 {
+  gent0 = -9999.f;
   genx0 = -9999.f;
   geny0 = -9999.f;
   genz0 = -9999.f;
-  gent0 = -9999.f;
 }
 
-void DisPho::SetGenXYZ0Branches(const edm::Handle<Point3D> & genxyz0H)
+void DisPho::SetGenT0Branches()
+{
+  gent0 = *(gent0H.product());
+}
+
+void DisPho::SetGenXYZ0Branches()
 {
   const auto & genxyz0 = *(genxyz0H.product());
 
@@ -706,25 +744,20 @@ void DisPho::SetGenXYZ0Branches(const edm::Handle<Point3D> & genxyz0H)
   genz0 = genxyz0.Z();
 }
 
-void DisPho::SetGenT0Branches(const edm::Handle<float> & gent0H)
-{
-  gent0 = *(gent0H.product());
-}
-
 void DisPho::InitializeGenPUBranches()
 {
   genpuobs = -9999; 
   genputrue = -9999;
 }
 
-void DisPho::SetGenPUBranches(const edm::Handle<std::vector<PileupSummaryInfo> > & pileupInfoH)
+void DisPho::SetGenPUBranches()
 {
-  for (const auto & puinfo : *pileupInfoH)
+  for (const auto & pileupInfo : *pileupInfosH)
   {
-    if (puinfo.getBunchCrossing() == 0) 
+    if (pileupInfo.getBunchCrossing() == 0) 
     {
-      genpuobs  = puinfo.getPU_NumInteractions();
-      genputrue = puinfo.getTrueNumInteractions();
+      genpuobs  = pileupInfo.getPU_NumInteractions();
+      genputrue = pileupInfo.getTrueNumInteractions();
       
       break;
     } // end check over correct BX
@@ -748,7 +781,7 @@ void DisPho::InitializeGMSBBranches()
   }
 } 
 
-void DisPho::SetGMSBBranches(const std::vector<reco::GenParticle> & neutralinos, const std::vector<oot::Photon> & photons, const int nPhotons)
+void DisPho::SetGMSBBranches()
 {
   nNeutoPhGr = neutralinos.size();
   
@@ -831,7 +864,7 @@ void DisPho::InitializeHVDSBranches()
   }
 }
 
-void DisPho::SetHVDSBranches(const std::vector<reco::GenParticle> & vPions, const std::vector<oot::Photon> & photons, const int nPhotons)
+void DisPho::SetHVDSBranches()
 {
   nvPions = vPions.size();
   
@@ -932,7 +965,7 @@ void DisPho::InitializeToyBranches()
   }
 }
 
-void DisPho::SetToyBranches(const std::vector<reco::GenParticle> & toys, const std::vector<oot::Photon> & photons, const int nPhotons)
+void DisPho::SetToyBranches()
 {
   nToyPhs = toys.size();
   
@@ -1005,7 +1038,7 @@ void DisPho::SetTriggerBranches()
   hltJet500 = (triggerBitMap.count(Config::Jet500Path) ? triggerBitMap[Config::Jet500Path] : false);
 }
 
-void DisPho::SetMETFilterBranches(const edm::Handle<bool> & ecalBadCalibFlagH)
+void DisPho::SetMETFilterBranches()
 {
   metPV = (triggerFlagMap.count(Config::PVFlag) ? triggerFlagMap[Config::PVFlag] : false);
   metBeamHalo = (triggerFlagMap.count(Config::BeamHaloFlag) ? triggerFlagMap[Config::BeamHaloFlag] : false);
@@ -1029,7 +1062,7 @@ void DisPho::InitializePVBranches()
   vtxZ = -9999.f;
 }
 
-void DisPho::SetPVBranches(const edm::Handle<std::vector<reco::Vertex> > & verticesH)
+void DisPho::SetPVBranches()
 {
   nvtx = verticesH->size();
   
@@ -1054,7 +1087,7 @@ void DisPho::SetMETBranches(const pat::MET & t1pfMET)
   t1pfMETsumEt = t1pfMET.sumEt();
 }
 			    
-void DisPho::InitializeJetBranches(const int nJets)
+void DisPho::InitializeJetBranches()
 {
   jetE.clear();
   jetpt.clear();
@@ -1101,7 +1134,7 @@ void DisPho::InitializeJetBranches(const int nJets)
   }
 }
 
-void DisPho::SetJetBranches(const std::vector<pat::Jet> & jets, const int nJets)
+void DisPho::SetJetBranches()
 {
   njets = jets.size();
 
@@ -1126,7 +1159,7 @@ void DisPho::SetJetBranches(const std::vector<pat::Jet> & jets, const int nJets)
   }
 }
 
-void DisPho::InitializeJetBranchesMC(const int nJets)
+void DisPho::InitializeJetBranchesMC()
 {
   jetscaleRel.clear();
   jetsmearSF.clear();
@@ -1152,9 +1185,11 @@ void DisPho::InitializeJetBranchesMC(const int nJets)
   }
 }
 
-void DisPho::SetJetBranchesMC(const std::vector<pat::Jet> & jets, const int nJets, const edm::Handle<std::vector<reco::GenJet> > & genjetsH, 
-			      JetCorrectionUncertainty & jetCorrUnc, const JME::JetResolution & jetRes, const JME::JetResolutionScaleFactor & jetRes_sf)
+void DisPho::SetJetBranchesMC()
 {
+  // JEC : ugh to do this here
+  JetCorrectionUncertainty jetCorrUnc((*jetCorrH)["Uncertainty"]);
+
   // JER procedure explanation from https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetResolution#Smearing_procedures
   // JER implementation copied from https://github.com/cms-sw/cmssw/blob/master/PhysicsTools/PatUtils/interface/SmearedJetProducerT.h#L208-L215
   const auto runNum_uint = static_cast <unsigned int> (run);
@@ -1162,9 +1197,6 @@ void DisPho::SetJetBranchesMC(const std::vector<pat::Jet> & jets, const int nJet
   const auto evNum_uint = static_cast <unsigned int> (event);
   const auto jet0eta = uint32_t(jets.empty() ? 0 : jets.front().eta()/0.01);
   std::mt19937 mt_rand(1 + jet0eta + (lumiNum_uint<<10) + (runNum_uint<<20) + evNum_uint);
-
-  // get genjets
-  const auto & genjets = *(genjetsH);
 
   // loop over jets to get scale and smearings
   for (auto ijet = 0; ijet < nJets; ijet++)
@@ -1186,11 +1218,12 @@ void DisPho::SetJetBranchesMC(const std::vector<pat::Jet> & jets, const int nJet
     const auto jer_sf_up   = jetRes_sf.getScaleFactor({{JME::Binning::JetEta, eta}}, Variation::UP);
 
     // get genjet
-    auto igenjet = DisPho::GenJetMatcher(jet,genjets,jer);
+    auto igenjet = DisPho::GenJetMatcher(jet,genJetsH,jer);
 
     if (igenjet > 0) // if matched, use scaling method
     {
-      const auto ptres = 1.f - (genjets[igenjet].pt() / pt);
+      const auto & genJet = (*genJetsH)[igenjet];
+      const auto ptres = 1.f - (genJet.pt() / pt);
 
       jetsmearSF    [ijet] = 1.f + ((jer_sf      - 1.f) * ptres);
       jetsmearDownSF[ijet] = 1.f + ((jer_sf_down - 1.f) * ptres);
@@ -1215,27 +1248,30 @@ void DisPho::SetJetBranchesMC(const std::vector<pat::Jet> & jets, const int nJet
   }
 }
 
-int DisPho::GenJetMatcher(const pat::Jet & jet, const std::vector<reco::GenJet> & genjets, const float jer)
+int DisPho::GenJetMatcher(const pat::Jet & jet, const edm::Handle<std::vector<reco::GenJet> > & genJetsH, const float jer)
 {
-  auto igenjet = -1;
   auto mindR = genjetdRmin;
 
-  for (auto i = 0U; i < genjets.size(); i++)
+  auto igenjet = 0; // counter
+  auto matchedjet = -1; // return value
+  for (const auto & genJet : *genJetsH)
   {
-    const auto & genjet = genjets[i];
-    const auto delR = reco::deltaR(jet, genjet);
+    const auto delR = reco::deltaR(jet, genJet);
     
     if (delR < mindR)
     {
-      if (std::abs(genjet.pt() - jet.pt()) < (genjetpTfactor * jer * jet.pt()))
+      if (std::abs(genJet.pt() - jet.pt()) < (genjetpTfactor * jer * jet.pt()))
       {
 	mindR = delR;
-	igenjet = i;
+	matchedjet = igenjet;
       }
     }
+
+    // increment jet counter
+    igenjet++;
   }
   
-  return igenjet;
+  return matchedjet;
 }
 
 void DisPho::GetStochasticSmear(std::mt19937 & mt_rand, const float jer, const float jer_sf, float & jet_smear)
@@ -1266,7 +1302,7 @@ void DisPho::InitializeElectronBranches()
   nelHighT = 0;
 }
 
-void DisPho::SetElectronBranches(const std::vector<pat::Electron> & electrons)
+void DisPho::SetElectronBranches()
 {
   // loop over prepped electrons: know that loose is subset of medium which is a subset of tight
   for (const auto & electron : electrons)
@@ -1313,7 +1349,7 @@ void DisPho::InitializeMuonBranches()
   nmuHighT = 0;
 }
 
-void DisPho::SetMuonBranches(const std::vector<pat::Muon> & muons)
+void DisPho::SetMuonBranches()
 {
   // loop over muons, check if passed ID && loose PF iso, from MEZ
   //  --> unclear if medium is subset of tight... so have to do this inefficiently
@@ -1347,7 +1383,7 @@ void DisPho::SetMuonBranches(const std::vector<pat::Muon> & muons)
   }
 }
 
-void DisPho::InitializeRecHitBranches(const int nRecHits)
+void DisPho::InitializeRecHitBranches()
 {
   rhX.clear();
   rhY.clear();
@@ -1416,22 +1452,15 @@ void DisPho::InitializeRecHitBranches(const int nRecHits)
   }
 }
 
-void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHitsEB, const CaloSubdetectorGeometry * barrelGeometry,
-			       const EcalRecHitCollection * recHitsEE, const CaloSubdetectorGeometry * endcapGeometry,
-			       const uiiumap & recHitMap, const edm::Event & iEvent,
-			       const edm::ESHandle<EcalLaserDbService> & laserH, const EcalIntercalibConstantMap * interCalibMap, 
-			       const edm::ESHandle<EcalADCToGeVConstant> & adcToGeVH, const edm::ESHandle<EcalPedestals> & pedestalsH)
+void DisPho::SetRecHitBranches()
 {
   nrechits = recHitMap.size();
   
-  DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,recHitMap,iEvent,laserH,interCalibMap,adcToGeVH->getEBValue(),pedestalsH);
-  DisPho::SetRecHitBranches(recHitsEE,endcapGeometry,recHitMap,iEvent,laserH,interCalibMap,adcToGeVH->getEEValue(),pedestalsH);
+  DisPho::SetRecHitBranches(recHitsEB,barrelGeometry,adcToGeVEB);
+  DisPho::SetRecHitBranches(recHitsEE,endcapGeometry,adcToGeVEE);
 }
 
-void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloSubdetectorGeometry * geometry,
-			       const uiiumap & recHitMap, const edm::Event & iEvent, 
-			       const edm::ESHandle<EcalLaserDbService> & laserH, const EcalIntercalibConstantMap * interCalibMap,
-			       const float adcToGeV, const edm::ESHandle<EcalPedestals> & pedestalsH)
+void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloSubdetectorGeometry * geometry, const float adcToGeV)
 {
   for (const auto recHit : *recHits)
   {
@@ -1464,7 +1493,7 @@ void DisPho::SetRecHitBranches(const EcalRecHitCollection * recHits, const CaloS
       rhisGS1[pos] = recHit.checkFlag(EcalRecHit::kHasSwitchToGain1);
 
       // adcToGeVInfo : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/src/EcalClusterLazyTools.cc#0204
-      const auto laser = laserH->getLaserCorrection(recHitId,iEvent.time());
+      const auto laser = laserH->getLaserCorrection(recHitId,evTime);
       const auto interCalibIter = interCalibMap->find(recHitId);
       const auto interCalib = ((interCalibIter != interCalibMap->end()) ? (*interCalibIter) : - 1.f);
       if ((laser > 0.f) && (interCalib > 0.f) && (adcToGeV > 0.f)) rhadcToGeV[pos] = (laser*interCalib*adcToGeV);
@@ -1574,9 +1603,7 @@ void DisPho::InitializePhoBranches()
   }
 }
 
-void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nPhotons, const uiiumap & recHitMap,
-			    const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE,
-			    const edm::Handle<std::vector<reco::Track> > & tracksH)
+void DisPho::SetPhoBranches()
 {
   nphotons = photons.size();
   
@@ -1644,7 +1671,7 @@ void DisPho::SetPhoBranches(const std::vector<oot::Photon> photons, const int nP
     // use seed to get geometry and recHits
     const auto & seedDetId = phosc->seed()->seed(); // seed detid
     const auto seedRawId = seedDetId.rawId(); // crystal number
-    const bool isEB = (seedDetId.subdetId() == EcalBarrel); // which subdet
+    const auto isEB = (seedDetId.subdetId() == EcalBarrel); // which subdet
     const auto recHits = (isEB ? recHitsEB : recHitsEE); 
 
     // 2nd moments from official calculation
@@ -1770,8 +1797,7 @@ void DisPho::InitializePhoBranchesMC()
   }
 }
 
-void DisPho::SetPhoBranchesMC(const std::vector<oot::Photon> photons, const int nPhotons, 
-			      const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH)
+void DisPho::SetPhoBranchesMC()
 {
   for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
   {
@@ -1813,7 +1839,7 @@ void DisPho::SetPhoBranchesMC(const std::vector<oot::Photon> photons, const int 
     } // end block over is HVDS
   
     // standard dR matching
-    phoBranch.isGen_ = oot::GenToObjectMatching(photon,genparticlesH,genpTres,gendRmin);
+    phoBranch.isGen_ = oot::GenToObjectMatching(genParticlesH,photon,genpTres,gendRmin);
     
     // scale and smearing uncs
     const auto phoE = phoBranch.E_; // assumed this already set!!!
@@ -1830,7 +1856,7 @@ void DisPho::SetPhoBranchesMC(const std::vector<oot::Photon> photons, const int 
   }
 }
 
-int DisPho::CheckMatchHVDS(const int iphoton, const hvdsStruct& hvdsBranch)
+int DisPho::CheckMatchHVDS(const int iphoton, const hvdsStruct & hvdsBranch)
 {
   if      (iphoton == hvdsBranch.genHVph0match_ && iphoton != hvdsBranch.genHVph1match_) return 1;
   else if (iphoton != hvdsBranch.genHVph0match_ && iphoton == hvdsBranch.genHVph1match_) return 2;
@@ -2036,12 +2062,13 @@ void DisPho::MakeEventTree()
   if (isMC)
   {
     disphotree->Branch("genwgt", &genwgt, "genwgt/F");
+    disphotree->Branch("genpuobs", &genpuobs, "genpuobs/I");
+    disphotree->Branch("genputrue", &genputrue, "genputrue/I");
+
+    disphotree->Branch("gent0", &gent0, "gent0/F");
     disphotree->Branch("genx0", &genx0, "genx0/F");
     disphotree->Branch("geny0", &geny0, "geny0/F");
     disphotree->Branch("genz0", &genz0, "genz0/F");
-    disphotree->Branch("gent0", &gent0, "gent0/F");
-    disphotree->Branch("genpuobs", &genpuobs, "genpuobs/I");
-    disphotree->Branch("genputrue", &genputrue, "genputrue/I");
   }
 
   // GMSB Info
@@ -2348,11 +2375,11 @@ void DisPho::MakeEventTree()
 
 void DisPho::endJob() {}
 
-void DisPho::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
+void DisPho::beginRun(edm::Run const & iRun, edm::EventSetup const & iSetup) {}
 
-void DisPho::endRun(edm::Run const&, edm::EventSetup const&) {}
+void DisPho::endRun(edm::Run const & iRun, edm::EventSetup const & iSetup) {}
 
-void DisPho::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
+void DisPho::fillDescriptions(edm::ConfigurationDescriptions & descriptions)
 {
   edm::ParameterSetDescription desc;
   desc.setUnknown();

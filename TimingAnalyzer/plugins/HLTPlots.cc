@@ -23,14 +23,14 @@ HLTPlots::HLTPlots(const edm::ParameterSet& iConfig):
   triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
   triggerObjectsTag(iConfig.getParameter<edm::InputTag>("triggerObjects")),
   
-  // rhos
-  rhosTag(iConfig.getParameter<edm::InputTag>("rhos")),
+  // rho
+  rhoTag(iConfig.getParameter<edm::InputTag>("rho")),
   
   // jets
   jetsTag(iConfig.getParameter<edm::InputTag>("jets")),  
 
   // photons
-  photonsTag(iConfig.getParameter<edm::InputTag>("photons")),  
+  gedPhotonsTag(iConfig.getParameter<edm::InputTag>("gedPhotons")),  
   
   // ootPhotons
   ootPhotonsTag(iConfig.getParameter<edm::InputTag>("ootPhotons")),  
@@ -71,7 +71,7 @@ HLTPlots::HLTPlots(const edm::ParameterSet& iConfig):
   {
     // init options
     auto & options = effTestPair.second.options;
-    for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
+    for (auto ifilter = 0U; ifilter < filterNames.size(); ifilter++)
     {
       const auto & filterName = filterNames[ifilter];
       if (filterName == options.denomName) options.idenom = ifilter;
@@ -79,18 +79,15 @@ HLTPlots::HLTPlots(const edm::ParameterSet& iConfig):
     }
   }
 
-  // rhos
-  rhosToken = consumes<double> (rhosTag);
+  // rho
+  rhoToken = consumes<double> (rhoTag);
 
   // jets
   jetsToken = consumes<std::vector<pat::Jet> > (jetsTag);
 
   // photons
-  photonsToken = consumes<std::vector<pat::Photon> > (photonsTag);
-  if (not ootPhotonsTag.label().empty())
-  {
-    ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
-  }
+  gedPhotonsToken = consumes<std::vector<pat::Photon> > (gedPhotonsTag);
+  ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
 
   // rechits
   recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
@@ -102,243 +99,294 @@ HLTPlots::HLTPlots(const edm::ParameterSet& iConfig):
 
 HLTPlots::~HLTPlots() {}
 
-void HLTPlots::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup) 
+void HLTPlots::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup)
 {
-  // RHOS
-  edm::Handle<double> rhosH;
-  iEvent.getByToken(rhosToken, rhosH);
-  const float rho = rhosH.isValid() ? *(rhosH.product()) : 0.f;
+  ///////////////////////
+  // Get Event Objects //
+  ///////////////////////
 
-  // TRIGGERS
-  edm::Handle<edm::TriggerResults> triggerResultsH;
-  iEvent.getByToken(triggerResultsToken, triggerResultsH);
+  HLTPlots::GetObjects(iEvent,iSetup);
 
-  edm::Handle<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsH;
-  iEvent.getByToken(triggerObjectsToken, triggerObjectsH);
+  ////////////////////////
+  // Initialize Objects //
+  ////////////////////////
+
+  HLTPlots::InitializeObjects();
+
+  //////////////////
+  // Prep Objects //
+  //////////////////
+
+  HLTPlots::PrepObjects(iEvent);
+
+  ///////////////////
+  // Pre-Selection //
+  ///////////////////
+
+  // if event does not pass pre-selection, skip it!
+  if (HLTPlots::ApplyPreSelection()) return;
+
+  //////////////////////
+  // Set trigger info //
+  //////////////////////
+
+  HLTPlots::SetTriggerInfo();
+
+  //////////////////
+  // Set jet info //
+  //////////////////
+
+  HLTPlots::SetJetInfo();
+
+  /////////////////////
+  // Set photon info //
+  /////////////////////
+
+  HLTPlots::SetPhotonInfo();
+
+  //////////////////////
+  // Set Good Photons //
+  //////////////////////
+
+  HLTPlots::SetGoodPhotons();
+
+  // if no good photons, skip the event!
+  if (goodphs.size() == 0) return; 
+
+  ///////////////////
+  // Perform Tests //
+  ///////////////////
+
+  HLTPlots::PerformTests();
+}
+
+void HLTPlots::GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSetup)
+{
+  // RHO
+  iEvent.getByToken(rhoToken,rhoH);
+
+  // TRIGGER RESULTS
+  iEvent.getByToken(triggerResultsToken,triggerResultsH);
+
+  // TRIGGER OBJECTS
+  iEvent.getByToken(triggerObjectsToken,triggerObjectsH);
 
   // JETS
-  edm::Handle<std::vector<pat::Jet> > jetsH;
-  iEvent.getByToken(jetsToken, jetsH);
-  std::vector<pat::Jet> jets; jets.reserve(jetsH->size());
+  iEvent.getByToken(jetsToken,jetsH);
 
-  // PHOTONS
-  edm::Handle<std::vector<pat::Photon> > photonsH;
-  iEvent.getByToken(photonsToken, photonsH);
-  int phosize = photonsH->size();
+  // GED PHOTONS
+  iEvent.getByToken(gedPhotonsToken,gedPhotonsH);
 
-  edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
-  if (not ootPhotonsToken.isUninitialized())
-  {
-    iEvent.getByToken(ootPhotonsToken, ootPhotonsH);
-    phosize += ootPhotonsH->size();
-  }
-  std::vector<oot::Photon> photons; photons.reserve(phosize);
+  // OOT PHOTONS
+  iEvent.getByToken(ootPhotonsToken,ootPhotonsH);
 
   // RecHits
-  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
-  iEvent.getByToken(recHitsEBToken, recHitsEBH);
-  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
-  iEvent.getByToken(recHitsEEToken, recHitsEEH);
+  iEvent.getByToken(recHitsEBToken,recHitsEBH);
+  iEvent.getByToken(recHitsEEToken,recHitsEEH);
 
   // Tracks
-  edm::Handle<std::vector<reco::Track> > tracksH;
-  iEvent.getByToken(tracksToken, tracksH);
+  iEvent.getByToken(tracksToken,tracksH);
 
   // geometry (from ECAL ELF)
-  edm::ESHandle<CaloGeometry> calogeoH;
   iSetup.get<CaloGeometryRecord>().get(calogeoH);
-  const CaloSubdetectorGeometry * barrelGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalBarrel);
-  const CaloSubdetectorGeometry * endcapGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal, EcalEndcap);
+}
 
-  // do some prepping of objects
-  oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
+void HLTPlots::InitializeObjects()
+{
+  // INPUT RHO
+  rho = rhoH.isValid() ? *(rhoH.product()) : 0.f;
 
-  ///////////////////
-  //               //
-  // Pre-selection //
-  //               //
-  ///////////////////
-  if (applyTriggerPS && triggerBitMap.count(psPath))
+  // INPUT RECHITS
+  if (recHitsEBH.isValid()) recHitsEB = recHitsEBH.product();
+  if (recHitsEEH.isValid()) recHitsEE = recHitsEEH.product();
+
+  // INPUT GEOMETRY
+  if (calogeoH.isValid())
   {
-    if (!triggerBitMap[psPath]) return;
+    barrelGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal,EcalSubdetector::EcalBarrel);
+    endcapGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal,EcalSubdetector::EcalEndcap);
   }
 
-  // prep everything else after pre-selection
+  // OUTPUT JETS
+  jets.clear(); 
+  if (jetsH.isValid()) jets.reserve(jetsH->size());
+
+  // OUTPUT PHOTONS
+  photons.clear();
+  if (gedPhotonsH.isValid() && ootPhotonsH.isValid()) photons.reserve(gedPhotonsH->size()+ootPhotonsH->size());
+  goodphs.clear();
+}
+
+void HLTPlots::PrepObjects(const edm::Event & iEvent)
+{
+  oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
   oot::PrepJets(jetsH,jets,jetpTmin,jetEtamax,jetIDmin);
-  oot::PrepPhotons(photonsH,ootPhotonsH,photons,rho,phpTmin);
+  oot::PrepPhotons(gedPhotonsH,ootPhotonsH,photons,rho,phpTmin);
+}
 
-  //////////////////
-  //              //
-  // Trigger Info //
-  //              //
-  //////////////////
+bool HLTPlots::ApplyPreSelection()
+{
+  if (applyTriggerPS && triggerBitMap.count(psPath))
+  {
+    if (!triggerBitMap[psPath]) return true;
+    else return false;
+  }
+  else return false;
+}
+
+void HLTPlots::SetTriggerInfo()
+{
   HLTPlots::InitializeTriggerBranches();
-  if (triggerResultsH.isValid())
+  for (auto ipath = 0U; ipath < pathNames.size(); ipath++)
   {
-    for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
-    {
-      triggerBits[ipath] = triggerBitMap[pathNames[ipath]];
-    }
-  } // end check over valid TriggerResults
+    triggerBits[ipath] = triggerBitMap[pathNames[ipath]];
+  }
+}
 
-  /////////////////////////
-  //                     //
-  // Jets (AK4 standard) //
-  //                     //
-  /////////////////////////
+void HLTPlots::SetJetInfo()
+{
   HLTPlots::ClearJetBranches();
-  if (jetsH.isValid()) // check to make sure reco jets exist
+  njets = jets.size();
+  if (njets > 0) HLTPlots::InitializeJetBranches();
+
+  auto ijet = 0;
+  for (const auto & jet : jets)
   {
-    njets = jets.size();
-    if (njets > 0) HLTPlots::InitializeJetBranches();
+    jetE  [ijet] = jet.energy();
+    jetpt [ijet] = jet.pt();
+    jetphi[ijet] = jet.phi();
+    jeteta[ijet] = jet.eta();
 
-    int ijet = 0;
-    for (const auto & jet : jets)
-    {
-      jetE  [ijet] = jet.energy();
-      jetpt [ijet] = jet.pt();
-      jetphi[ijet] = jet.phi();
-      jeteta[ijet] = jet.eta();
-
-      pfJetHT += jetpt[ijet];
-            
-      ijet++;
-    } // end loop over reco jets
-  } // end check over reco jets
-  
-  //////////////////
-  //              //
-  // Reco Photons //
-  //              //
-  //////////////////
+    pfJetHT += jetpt[ijet];
+    
+    ijet++;
+  } // end loop over reco jets
+}
+ 
+void HLTPlots::SetPhotonInfo()
+{
   HLTPlots::ClearRecoPhotonBranches();
-  if (photonsH.isValid() || ootPhotonsH.isValid()) // standard handle check
+  nphotons = photons.size();
+  if (nphotons > 0) HLTPlots::InitializeRecoPhotonBranches();
+  
+  auto iph = 0;
+  for (const auto & photon : photons)
   {
-    nphotons = photons.size();
-    if (nphotons > 0) HLTPlots::InitializeRecoPhotonBranches();
-
-    int iph = 0;
-    for (const auto & photon : photons)
+    const auto & pho = photon.photon();
+    
+    // from ootPhoton collection
+    phisOOT[iph] = photon.isOOT();
+    
+    // standard photon branches
+    phE  [iph] = pho.energy();
+    phpt [iph] = pho.pt();
+    phphi[iph] = pho.phi();
+    pheta[iph] = pho.eta();
+    
+    // check for HLT filter matches!
+    strBitMap isHLTMatched;
+    for (const auto & filter : filterNames) isHLTMatched[filter] = false;
+    oot::HLTToObjectMatching(triggerObjectsByFilterMap,isHLTMatched,photon,pTres,dRmin);
+    for (auto ifilter = 0U; ifilter < filterNames.size(); ifilter++)
     {
-      const pat::Photon& pho = photon.photon();
-
-      // from ootPhoton collection
-      phisOOT[iph] = photon.isOOT();
-      
-      // standard photon branches
-      phE  [iph] = pho.energy();
-      phpt [iph] = pho.pt();
-      phphi[iph] = pho.phi();
-      pheta[iph] = pho.eta();
-
-      // check for HLT filter matches!
-      strBitMap isHLTMatched;
-      for (const auto & filter : filterNames) isHLTMatched[filter] = false;
-      oot::HLTToObjectMatching(triggerObjectsByFilterMap,isHLTMatched,photon,pTres,dRmin);
-      for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
-      {
-	phIsHLTMatched[iph][ifilter] = isHLTMatched[filterNames[ifilter]];
-      }
-
-      // check for simple track veto
-      phIsTrack[iph] = oot::TrackToObjectMatching(tracksH,photon,trackpTmin,trackdRmin);
-
-      // super cluster from photon
-      const reco::SuperClusterRef& phsc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
-      phscE  [iph] = phsc->energy();
-      phsceta[iph] = phsc->eta();
-      phscphi[iph] = phsc->phi();
-
-      // Shower Shape Objects
-      const reco::Photon::ShowerShape& phshape = pho.full5x5_showerShapeVariables(); // pho.showerShapeVariables();
-
-      // ID-like variables
-      phHoE[iph] = pho.hadTowOverEm(); // ID + trigger == single tower
-      phr9 [iph] = pho.r9();
-
-      // pseudo-track veto
-      phPixSeed[iph] = pho.passElectronVeto();
-      phEleVeto[iph] = pho.hasPixelSeed();
-
-      // cluster shape variables
-      phsieie[iph] = phshape.sigmaIetaIeta;
-      phsipip[iph] = phshape.sigmaIphiIphi;
-      phsieip[iph] = phshape.sigmaIetaIphi;
-
-      // PF Isolations
-      const float sceta = std::abs(phsceta[iph]);
-      phChgIso[iph] = std::max(pho.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
-      phNeuIso[iph] = std::max(pho.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);
-      phIso   [iph] = std::max(pho.photonIso()        - (rho * oot::GetGammaEA        (sceta)),0.f);
-
-      // PF Cluster Isolations
-      phPFClEcalIso[iph] = pho.ecalPFClusterIso();
-      phPFClHcalIso[iph] = pho.hcalPFClusterIso();
-
-      // Track Isolation (dR of outer cone < 0.3 as matching in trigger)
-      phHollowTkIso[iph] = pho.trkSumPtHollowConeDR03();
+      phIsHLTMatched[iph][ifilter] = isHLTMatched[filterNames[ifilter]];
+    }
+    
+    // check for simple track veto
+    phIsTrack[iph] = oot::TrackToObjectMatching(tracksH,photon,trackpTmin,trackdRmin);
+    
+    // super cluster from photon
+    const auto & phsc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
+    phscE  [iph] = phsc->energy();
+    phsceta[iph] = phsc->eta();
+    phscphi[iph] = phsc->phi();
+    
+    // Shower Shape Objects
+    const auto & phshape = pho.full5x5_showerShapeVariables(); // pho.showerShapeVariables();
+    
+    // ID-like variables
+    phHoE[iph] = pho.hadTowOverEm(); // ID + trigger == single tower
+    phr9 [iph] = pho.r9();
+    
+    // pseudo-track veto
+    phPixSeed[iph] = pho.passElectronVeto();
+    phEleVeto[iph] = pho.hasPixelSeed();
+    
+    // cluster shape variables
+    phsieie[iph] = phshape.sigmaIetaIeta;
+    phsipip[iph] = phshape.sigmaIphiIphi;
+    phsieip[iph] = phshape.sigmaIetaIphi;
+    
+    // PF Isolations
+    const auto sceta = std::abs(phsceta[iph]);
+    phChgIso[iph] = std::max(pho.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
+    phNeuIso[iph] = std::max(pho.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);
+    phIso   [iph] = std::max(pho.photonIso()        - (rho * oot::GetGammaEA        (sceta)),0.f);
+    
+    // PF Cluster Isolations
+    phPFClEcalIso[iph] = pho.ecalPFClusterIso();
+    phPFClHcalIso[iph] = pho.hcalPFClusterIso();
+    
+    // Track Isolation (dR of outer cone < 0.3 as matching in trigger)
+    phHollowTkIso[iph] = pho.trkSumPtHollowConeDR03();
      
-      // use seed to get geometry and recHits
-      const DetId seedDetId = phsc->seed()->seed(); //seed detid
-      const bool isEB = (seedDetId.subdetId() == EcalBarrel); //which subdet
-      const EcalRecHitCollection * recHits = (isEB ? recHitsEBH : recHitsEEH).product();
-      const EcalRecHitCollection::const_iterator seedRecHit = recHits->find(seedDetId);
+    // use seed to get geometry and recHits
+    const auto seedDetId = phsc->seed()->seed(); //seed detid
+    const auto isEB = (seedDetId.subdetId() == EcalSubdetector::EcalBarrel); //which subdet
+    const auto recHits = (isEB ? recHitsEB : recHitsEE);
+    const auto seedRecHit = recHits->find(seedDetId);
+    
+    if (seedRecHit != recHits->end())
+    {
+      // save position, energy, and time of each rechit to a vector
+      const auto seedPos = isEB ? barrelGeometry->getGeometry(seedDetId)->getPosition() : endcapGeometry->getGeometry(seedDetId)->getPosition();
+      phseedeta [iph] = seedPos.eta();
+      phseedphi [iph] = seedPos.phi();
       
-      if (seedRecHit != recHits->end())
+      phseedE   [iph] = seedRecHit->energy();
+      phseedtime[iph] = seedRecHit->time();
+      phseedID  [iph] = int(seedDetId.rawId());
+      phseedOOT [iph] = int(seedRecHit->checkFlag(EcalRecHit::kOutOfTime));
+      
+      if (recHits->size() > 0)
       {
-	// save position, energy, and time of each rechit to a vector
-	const auto seedPos = isEB ? barrelGeometry->getGeometry(seedDetId)->getPosition() : endcapGeometry->getGeometry(seedDetId)->getPosition();
-	phseedeta [iph] = seedPos.eta();
-	phseedphi [iph] = seedPos.phi();
+	// radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
+	const auto ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phsc, *recHits);
+	phsmaj [iph] = ph2ndMoments.sMaj;
+	phsmin [iph] = ph2ndMoments.sMin;
+	phalpha[iph] = ph2ndMoments.alpha;
+	
+	// map of rec hit ids
+	uiiumap phrhIDmap;
+	
+	// all rechits in superclusters
+	const auto hitsAndFractions = phsc->hitsAndFractions();
+	
+	for (const auto & hitAndFraction : hitsAndFractions) // loop over all rec hits in SC
+        {
+	  const auto recHitId = hitAndFraction.first; // get detid of crystal
+	  const auto recHit = recHits->find(recHitId); // get the underlying rechit
+	  if (recHit != recHits->end()) // standard check
+	  { 
+	    phrhIDmap[recHitId.rawId()]++;
+	  } // end standard check recHit
+	} // end loop over hits and fractions
+	
+	phnrh[iph] = phrhIDmap.size();
+      } // end check over recHits size
+    } // end check over seed recHit exists
+    
+    iph++; // increment photon counter
+  } // end loop over photon vector
+}
 
-	phseedE   [iph] = seedRecHit->energy();
-	phseedtime[iph] = seedRecHit->time();
-	phseedID  [iph] = int(seedDetId.rawId());
-	phseedOOT [iph] = int(seedRecHit->checkFlag(EcalRecHit::kOutOfTime));
-
-      	if (recHits->size() > 0)
-	{
-	  // radius of semi-major,minor axis is the inverse square root of the eigenvalues of the covariance matrix
-	  const Cluster2ndMoments ph2ndMoments = noZS::EcalClusterTools::cluster2ndMoments( *phsc, *recHits);
-	  phsmaj [iph] = ph2ndMoments.sMaj;
-	  phsmin [iph] = ph2ndMoments.sMin;
-	  phalpha[iph] = ph2ndMoments.alpha;
-
-	  // map of rec hit ids
-	  uiiumap phrhIDmap;
-      
-	  // all rechits in superclusters
-	  const DetIdPairVec hitsAndFractions = phsc->hitsAndFractions();
-
-	  for (const auto & hitAndFraction : hitsAndFractions) // loop over all rec hits in SC
-          {
-	    const DetId recHitId = hitAndFraction.first; // get detid of crystal
-	    EcalRecHitCollection::const_iterator recHit = recHits->find(recHitId); // get the underlying rechit
-	    if (recHit != recHits->end()) // standard check
-	    { 
-	      phrhIDmap[recHitId.rawId()]++;
-	    } // end standard check recHit
-	  } // end loop over hits and fractions
-
-	  phnrh[iph] = phrhIDmap.size();
-	} // end check over recHits size
-      } // end check over seed recHit exists
-
-      iph++; // increment photon counter
-    } // end loop over photon vector
-  } // end check over photon handle valid
-
-  /////////////////////////////
-  //                         //
-  // Pre-Select Good Photons //
-  //                         //
-  /////////////////////////////
-  std::vector<int> goodphs;
-  for (int iph = 0; iph < nphotons; iph++)
+void HLTPlots::SetGoodPhotons()
+{
+  for (auto iph = 0; iph < nphotons; iph++)
   {
-    const float pt = phpt[iph];
-    const float eta = std::abs(phsceta[iph]);
+    const auto pt = phpt[iph];
+    const auto eta = std::abs(phsceta[iph]);
 
     if (phr9[iph] < 0.95) continue;
     if (phsmaj[iph] > 1.f) continue;
@@ -373,15 +421,11 @@ void HLTPlots::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       goodphs.emplace_back(iph);
     } // end check over EE
   } // end loop over photons
+}
 
-  // need at least one good photon!
-  if (goodphs.size() == 0) return;
-
-  ///////////////////
-  //               //
-  // Perform Tests //
-  //               //
-  ///////////////////
+void HLTPlots::PerformTests()
+{
+  // Reset test results
   HLTPlots::ResetTestResults();
 
   // Get Results
@@ -390,7 +434,7 @@ void HLTPlots::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   HLTPlots::GetStandardLegResult(goodphs,"ET",false);
 
   // filter photons below pt < threshold
-  const float ptcut = 70.f;
+  const auto ptcut = 70.f;
   goodphs.erase(std::remove_if(goodphs.begin(),goodphs.end(),[&](const auto iph){return phpt[iph] < ptcut;}),goodphs.end());
 
   HLTPlots::GetStandardLegResult(goodphs,"PhoID",false);
@@ -407,7 +451,7 @@ void HLTPlots::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     const auto & label  = effTestPair.first;
     const auto   passed = effTestPair.second.results.passed;
     
-    const float eta = std::abs(phsceta[iph]);
+    const auto eta = std::abs(phsceta[iph]);
     if (eta < Config::etaEBmax)
     {
       effETEBs[label]->Fill(passed,phpt[iph]);
@@ -443,7 +487,7 @@ void HLTPlots::GetDenomPhs(const std::vector<int> & goodphs, const int idenom, s
 {
   for (const auto iph : goodphs)
   {
-    bool isGoodDenom = true;
+    auto isGoodDenom = true;
 
     for (auto ifilter = 0; ifilter <= idenom; ifilter++)
     { 
@@ -492,7 +536,11 @@ void HLTPlots::GetStandardLegResult(const std::vector<int> & goodphs, const std:
   if (denomphs.size() == 0) return;
 
   // sort by most delayed photon
-  if (sortByTime) std::sort(denomphs.begin(),denomphs.end(),[&](const int iph1, const int iph2){return phseedtime[iph1]>phseedtime[iph2];});
+  if (sortByTime) std::sort(denomphs.begin(),denomphs.end(),
+			    [&](const auto iph1, const auto iph2)
+			    {
+			      return phseedtime[iph1]>phseedtime[iph2];
+			    });
 
   // get numer
   for (const auto iph : denomphs)
@@ -536,7 +584,7 @@ void HLTPlots::GetLastLegResult(const std::vector<int> & goodphs, const std::str
 
 void HLTPlots::InitializeTriggerBranches()
 {
-  for (std::size_t ipath = 0; ipath < pathNames.size(); ipath++)
+  for (auto ipath = 0U; ipath < pathNames.size(); ipath++)
   { 
     triggerBits[ipath] = false;
   }
@@ -561,7 +609,7 @@ void HLTPlots::InitializeJetBranches()
   jetphi.resize(njets);
   jeteta.resize(njets);
 
-  for (int ijet = 0; ijet < njets; ijet++)
+  for (auto ijet = 0; ijet < njets; ijet++)
   {
     jetE  [ijet] = -9999.f;
     jetpt [ijet] = -9999.f;
@@ -665,7 +713,7 @@ void HLTPlots::InitializeRecoPhotonBranches()
   phseedID.resize(nphotons);
   phseedOOT.resize(nphotons);
 
-  for (int iph = 0; iph < nphotons; iph++)
+  for (auto iph = 0; iph < nphotons; iph++)
   {
     phisOOT[iph] = -1;
 
@@ -701,7 +749,7 @@ void HLTPlots::InitializeRecoPhotonBranches()
     phnrh    [iph] = -9999;
 
     phIsHLTMatched[iph].resize(filterNames.size());
-    for (std::size_t ifilter = 0; ifilter < filterNames.size(); ifilter++)
+    for (auto ifilter = 0U; ifilter < filterNames.size(); ifilter++)
     {
       phIsHLTMatched[iph][ifilter] = -1; // false
     }
@@ -721,13 +769,13 @@ void HLTPlots::beginJob()
 {
   edm::Service<TFileService> fs;
 
-  const int nbinsxET = 20;
+  const auto nbinsxET = 20;
   double xbinsET[nbinsxET+1] = {20,30,40,45,50,52,54,56,58,60,62,64,66,68,70,75,80,100,200,500,1000};
 
-  const int nbinsxTime = 18;
+  const auto nbinsxTime = 18;
   double xbinsTime[nbinsxTime+1] = {-10,-5,-3,-2.5,-2,-1.5,-1,-0.5,0,0.5,1,1.5,2,2.5,3,5,10,15,25};
 
-  const int nbinsxHT = 23;
+  const auto nbinsxHT = 23;
   double xbinsHT[nbinsxHT+1] = {100,150,200,250,300,325,350,375,400,425,450,475,500,525,550,575,600,625,650,700,750,1000,1500,2000};
   
   for (const auto & effTestPair : effTestMap)
@@ -745,11 +793,11 @@ void HLTPlots::beginJob()
 
 void HLTPlots::endJob() {}
 
-void HLTPlots::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup) {}
+void HLTPlots::beginRun(edm::Run const & iRun, edm::EventSetup const & iSetup) {}
 
-void HLTPlots::endRun(edm::Run const&, edm::EventSetup const&) {}
+void HLTPlots::endRun(edm::Run const & iRun, edm::EventSetup const & iSetup) {}
 
-void HLTPlots::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
+void HLTPlots::fillDescriptions(edm::ConfigurationDescriptions & descriptions)
 {
   edm::ParameterSetDescription desc;
   desc.setUnknown();

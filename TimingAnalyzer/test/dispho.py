@@ -321,7 +321,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    ## vertices
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## rho
-   rhos = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
+   rho = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## MET
    mets = cms.InputTag("slimmedMETsModifiedMET"),
    ## jets
@@ -337,20 +337,20 @@ process.tree = cms.EDAnalyzer("DisPho",
    recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
    recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
    ## gen info
-   isGMSB   = cms.bool(options.isGMSB),
-   isHVDS   = cms.bool(options.isHVDS),
-   isBkgd   = cms.bool(options.isBkgd),
-   isToy    = cms.bool(options.isToy),
-   isADD    = cms.bool(options.isADD),
-   xsec     = cms.double(options.xsec),
-   filterEff= cms.double(options.filterEff),
-   BR       = cms.double(options.BR),
-   genevt   = cms.InputTag("generator"),
-   gent0    = cms.InputTag("genParticles", "t0"),
-   genxyz0  = cms.InputTag("genParticles", "xyz0"),
-   pileup   = cms.InputTag("slimmedAddPileupInfo"),
-   genparts = cms.InputTag("prunedGenParticles"),
-   genjets  = cms.InputTag("slimmedGenJets"),
+   isGMSB       = cms.bool(options.isGMSB),
+   isHVDS       = cms.bool(options.isHVDS),
+   isBkgd       = cms.bool(options.isBkgd),
+   isToy        = cms.bool(options.isToy),
+   isADD        = cms.bool(options.isADD),
+   xsec         = cms.double(options.xsec),
+   filterEff    = cms.double(options.filterEff),
+   BR           = cms.double(options.BR),
+   genEvt       = cms.InputTag("generator"),
+   gent0        = cms.InputTag("genParticles", "t0"),
+   genxyz0      = cms.InputTag("genParticles", "xyz0"),
+   pileups      = cms.InputTag("slimmedAddPileupInfo"),
+   genParticles = cms.InputTag("prunedGenParticles"),
+   genJets      = cms.InputTag("slimmedGenJets"),
 )
 
 # Set up the path
