@@ -148,28 +148,14 @@ typedef std::vector<pat::Photon::IdPair> idpVec;
 typedef std::map<std::string,bool> strBitMap;
 typedef std::map<std::string,std::vector<pat::TriggerObjectStandAlone> > trigObjVecMap;
 
+/////////////////////////////////
+//                             //
+// Namespace for OOT Utilities //
+//                             //
+/////////////////////////////////
+
 namespace oot
 {
-  // special ootPhoton class
-  class Photon
-  {
-  public: 
-    Photon(const pat::Photon & photon, const bool isOOT) : photon_(std::move(photon)), isOOT_(isOOT) {}
-    ~Photon() {}
-
-    const pat::Photon& photon() const {return photon_;} 
-    pat::Photon& photon_nc() {return photon_;} 
-    bool isOOT() const {return isOOT_;}
-
-    float pt() const {return photon_.pt();}
-    float phi() const {return photon_.phi();}
-    float eta() const {return photon_.eta();}
-
-  private:
-    pat::Photon photon_;
-    bool isOOT_;
-  };
-
   // sort by pt template
   const auto sortByPt = [](const auto& obj1, const auto& obj2) {return obj1.pt() > obj2.pt();};
 
@@ -193,16 +179,16 @@ namespace oot
 		   uiiumap & recHitMap, const float rhEmin = 0.f);
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH, 
 		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
-		   std::vector<oot::Photon> & photons, const float rho,
+		   std::vector<pat::Photon> & photons, const float rho,
 		   const float phpTmin = 0.f, const std::string & phIDmin = "none");
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
-		   std::vector<oot::Photon> & photons, const bool isOOT,
+  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH,
+		   std::vector<pat::Photon> & photons, const bool isOOT,
 		   const float rho, const float phpTmin = 0.f, const std::string & phIDmin = "none");
-  void PrunePhotons(std::vector<oot::Photon> & photons,
+  void PrunePhotons(std::vector<pat::Photon> & photons,
 		    const EcalRecHitCollection * recHitsEB,
 		    const EcalRecHitCollection * recHitsEE,
 		    const float seedTimemin = -10000.f);
-  void PruneJets(std::vector<pat::Jet> & jets, const std::vector<oot::Photon> & photons, 
+  void PruneJets(std::vector<pat::Jet> & jets, const std::vector<pat::Photon> & photons, 
 		 const float dRmin = 100.f);
   float GetChargedHadronEA(const float eta);
   float GetNeutralHadronEA(const float eta);
@@ -220,8 +206,8 @@ namespace oot
   void GetOOTPhoVID(const pat::Photon & photon, idpVec& idpairs);
   void GetOOTPhoVIDByHand(const pat::Photon & photon, idpVec& idpairs, const float rho);
   int GetPFJetID(const pat::Jet & jet);
-  void SplitPhotons(std::vector<oot::Photon>& photons, const int nmax);
-  void StoreOnlyPho(std::vector<oot::Photon>& photons, const int nmax, const bool isOOT);
+  void SplitPhotons(std::vector<pat::Photon> & photons, const int nmax);
+  void StoreOnlyPho(std::vector<pat::Photon> & photons, const int nmax, const bool isOOT);
 
   ///////////////////////////
   //                       //
@@ -231,7 +217,7 @@ namespace oot
   
   template <typename Lep>
   void PrepLeptons(const edm::Handle<std::vector<Lep> > & lepsH, std::vector<Lep> & leps,
-		   const std::vector<oot::Photon> & photons, const float leppTmin = 0.f, 
+		   const std::vector<pat::Photon> & photons, const float leppTmin = 0.f, 
 		   const float lepdRmin = 100.f)
   {
     for (const auto & lep : *lepsH)

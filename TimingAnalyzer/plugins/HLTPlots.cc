@@ -273,16 +273,14 @@ void HLTPlots::SetPhotonInfo()
   auto iph = 0;
   for (const auto & photon : photons)
   {
-    const auto & pho = photon.photon();
-    
     // from ootPhoton collection
-    phisOOT[iph] = photon.isOOT();
+    phisOOT[iph] = *(photon.userData<bool>("isOOT"));
     
     // standard photon branches
-    phE  [iph] = pho.energy();
-    phpt [iph] = pho.pt();
-    phphi[iph] = pho.phi();
-    pheta[iph] = pho.eta();
+    phE  [iph] = photon.energy();
+    phpt [iph] = photon.pt();
+    phphi[iph] = photon.phi();
+    pheta[iph] = photon.eta();
     
     // check for HLT filter matches!
     strBitMap isHLTMatched;
@@ -297,21 +295,21 @@ void HLTPlots::SetPhotonInfo()
     phIsTrack[iph] = oot::TrackToObjectMatching(tracksH,photon,trackpTmin,trackdRmin);
     
     // super cluster from photon
-    const auto & phsc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
+    const auto & phsc = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
     phscE  [iph] = phsc->energy();
     phsceta[iph] = phsc->eta();
     phscphi[iph] = phsc->phi();
     
     // Shower Shape Objects
-    const auto & phshape = pho.full5x5_showerShapeVariables(); // pho.showerShapeVariables();
+    const auto & phshape = photon.full5x5_showerShapeVariables(); // photon.showerShapeVariables();
     
     // ID-like variables
-    phHoE[iph] = pho.hadTowOverEm(); // ID + trigger == single tower
-    phr9 [iph] = pho.r9();
+    phHoE[iph] = photon.hadTowOverEm(); // ID + trigger == single tower
+    phr9 [iph] = photon.r9();
     
     // pseudo-track veto
-    phPixSeed[iph] = pho.passElectronVeto();
-    phEleVeto[iph] = pho.hasPixelSeed();
+    phPixSeed[iph] = photon.passElectronVeto();
+    phEleVeto[iph] = photon.hasPixelSeed();
     
     // cluster shape variables
     phsieie[iph] = phshape.sigmaIetaIeta;
@@ -320,16 +318,16 @@ void HLTPlots::SetPhotonInfo()
     
     // PF Isolations
     const auto sceta = std::abs(phsceta[iph]);
-    phChgIso[iph] = std::max(pho.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
-    phNeuIso[iph] = std::max(pho.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);
-    phIso   [iph] = std::max(pho.photonIso()        - (rho * oot::GetGammaEA        (sceta)),0.f);
+    phChgIso[iph] = std::max(photon.chargedHadronIso() - (rho * oot::GetChargedHadronEA(sceta)),0.f);
+    phNeuIso[iph] = std::max(photon.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(sceta)),0.f);
+    phIso   [iph] = std::max(photon.photonIso()        - (rho * oot::GetGammaEA        (sceta)),0.f);
     
     // PF Cluster Isolations
-    phPFClEcalIso[iph] = pho.ecalPFClusterIso();
-    phPFClHcalIso[iph] = pho.hcalPFClusterIso();
+    phPFClEcalIso[iph] = photon.ecalPFClusterIso();
+    phPFClHcalIso[iph] = photon.hcalPFClusterIso();
     
     // Track Isolation (dR of outer cone < 0.3 as matching in trigger)
-    phHollowTkIso[iph] = pho.trkSumPtHollowConeDR03();
+    phHollowTkIso[iph] = photon.trkSumPtHollowConeDR03();
      
     // use seed to get geometry and recHits
     const auto seedDetId = phsc->seed()->seed(); //seed detid

@@ -562,20 +562,19 @@ bool DisPho::ApplyPreSelectionGoodPhoton()
     for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
     {
       const auto & photon = photons[iphoton];
-      const auto & pho = photon.photon();
       
       //      if (iphoton > 0) break; // only consider first photon
       
-      const auto pt = pho.pt() * pho.pat::Photon::userFloat("ecalEnergyPostCorr") / pho.pat::Photon::energy();
+      const auto pt = photon.pt() * photon.pat::Photon::userFloat("ecalEnergyPostCorr") / photon.pat::Photon::energy();
       if (pt < phgoodpTmin) continue;
       
-      // const float sceta = std::abs(pho.superCluster()->eta());
+      // const float sceta = std::abs(photon.superCluster()->eta());
       // if (sceta > Config::etaEBcutoff) continue;
       
       if (phgoodIDmin != "none")
       {
-	if (!photon.isOOT() && !pho.photonID(phgoodIDmin+"-ged")) continue;
-	if ( photon.isOOT() && !pho.photonID(phgoodIDmin+"-oot")) continue;
+	if (!*(photon.userData<bool>("isOOT")) && !photon.photonID(phgoodIDmin+"-ged")) continue;
+	if ( *(photon.userData<bool>("isOOT")) && !photon.photonID(phgoodIDmin+"-oot")) continue;
       }
       
       isphgood = true; break;
@@ -1612,17 +1611,16 @@ void DisPho::SetPhoBranches()
     // get objects
     const auto & photon = photons[iphoton];
     auto & phoBranch = phoBranches[iphoton];
-    const auto & pho = photon.photon();
     
     // basic kinematic with v2: https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaMiniAODV2#Applying_the_Energy_Scale_and_sm
-    const auto phop4 = pho.p4() * (pho.pat::Photon::userFloat("ecalEnergyPostCorr") / pho.pat::Photon::energy());
+    const auto phop4 = photon.p4() * (photon.pat::Photon::userFloat("ecalEnergyPostCorr") / photon.pat::Photon::energy());
     phoBranch.E_   = phop4.energy();
     phoBranch.pt_  = phop4.pt();
     phoBranch.phi_ = phop4.phi();
     phoBranch.eta_ = phop4.eta();
 
     // super cluster info from photon
-    const auto & phosc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
+    const auto & phosc = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
 
     phoBranch.scE_   = phosc->energy();
     phoBranch.scphi_ = phosc->phi();
@@ -1633,18 +1631,18 @@ void DisPho::SetPhoBranches()
     const auto scEta = std::abs(phoBranch.sceta_);
 
     // ID-like variables
-    phoBranch.HoE_ = pho.hadTowOverEm(); // used in ID + trigger (single tower HoverE)
-    phoBranch.r9_  = pho.r9(); // used in slimming in PAT + trigger
+    phoBranch.HoE_ = photon.hadTowOverEm(); // used in ID + trigger (single tower HoverE)
+    phoBranch.r9_  = photon.r9(); // used in slimming in PAT + trigger
 
     // PF Isolations : GED ID
-    phoBranch.ChgHadIso_ = pho.chargedHadronIso();
-    phoBranch.NeuHadIso_ = pho.neutralHadronIso();
-    phoBranch.PhoIso_    = pho.photonIso();
+    phoBranch.ChgHadIso_ = photon.chargedHadronIso();
+    phoBranch.NeuHadIso_ = photon.neutralHadronIso();
+    phoBranch.PhoIso_    = photon.photonIso();
 
     // PF Cluster Isos : OOT ID
-    phoBranch.EcalPFClIso_ = pho.ecalPFClusterIso();
-    phoBranch.HcalPFClIso_ = pho.hcalPFClusterIso();
-    phoBranch.TrkIso_      = pho.trkSumPtHollowConeDR03();
+    phoBranch.EcalPFClIso_ = photon.ecalPFClusterIso();
+    phoBranch.HcalPFClIso_ = photon.hcalPFClusterIso();
+    phoBranch.TrkIso_      = photon.trkSumPtHollowConeDR03();
 
     // corrected values for isolations
     phoBranch.ChgHadIsoC_ = std::max(phoBranch.ChgHadIso_ - (rho * oot::GetChargedHadronEA(scEta))                                              ,0.f);
@@ -1656,7 +1654,7 @@ void DisPho::SetPhoBranches()
     phoBranch.TrkIsoC_      = std::max(phoBranch.TrkIso_      - (rho * oot::GetTrackEA   (scEta)) - (oot::GetTrackPtScale   (scEta,phoPt)),0.f);
 
     // Shower Shape Objects
-    const auto & phoshape = pho.full5x5_showerShapeVariables(); 
+    const auto & phoshape = photon.full5x5_showerShapeVariables(); 
 
     // cluster shape variables
     phoBranch.sieie_ = phoshape.sigmaIetaIeta;
@@ -1753,7 +1751,7 @@ void DisPho::SetPhoBranches()
     } // end check over if seed exists
     
     // some standard booleans
-    phoBranch.isOOT_ = photon.isOOT();
+    phoBranch.isOOT_ = *(photon.userData<bool>("isOOT"));
     phoBranch.isEB_  = isEB;
 
     // HLT Matching!
@@ -1767,19 +1765,19 @@ void DisPho::SetPhoBranches()
     phoBranch.isTrk_ = oot::TrackToObjectMatching(tracksH,photon,trackpTmin,trackdRmin);
 
     // other track vetoes
-    phoBranch.passEleVeto_ = pho.passElectronVeto();
-    phoBranch.hasPixSeed_  = pho.hasPixelSeed();
+    phoBranch.passEleVeto_ = photon.passElectronVeto();
+    phoBranch.hasPixSeed_  = photon.hasPixelSeed();
   
     // 0 --> did not pass anything, 1 --> loose pass, 2 --> medium pass, 3 --> tight pass
     // GED first
-    if      (pho.photonID("tight-ged"))  {phoBranch.gedID_ = 3;}
-    else if (pho.photonID("medium-ged")) {phoBranch.gedID_ = 2;}
-    else if (pho.photonID("loose-ged"))  {phoBranch.gedID_ = 1;}
-    else                                 {phoBranch.gedID_ = 0;}
+    if      (photon.photonID("tight-ged"))  {phoBranch.gedID_ = 3;}
+    else if (photon.photonID("medium-ged")) {phoBranch.gedID_ = 2;}
+    else if (photon.photonID("loose-ged"))  {phoBranch.gedID_ = 1;}
+    else                                    {phoBranch.gedID_ = 0;}
     // OOT second
-    if      (pho.photonID("tight-oot"))  {phoBranch.ootID_ = 3;}
-    else if (pho.photonID("loose-oot"))  {phoBranch.ootID_ = 1;}
-    else                                 {phoBranch.ootID_ = 0;}
+    if      (photon.photonID("tight-oot"))  {phoBranch.ootID_ = 3;}
+    else if (photon.photonID("loose-oot"))  {phoBranch.ootID_ = 1;}
+    else                                    {phoBranch.ootID_ = 0;}
   } // end loop over nPhotons
 }
 
@@ -1804,7 +1802,6 @@ void DisPho::SetPhoBranchesMC()
     // get objects
     const auto & photon = photons[iphoton];
     auto & phoBranch = phoBranches[iphoton];
-    const auto & pho = photon.photon();
     
     // extra info for gen matching
     if (isGMSB)
@@ -1845,13 +1842,13 @@ void DisPho::SetPhoBranchesMC()
     const auto phoE = phoBranch.E_; // assumed this already set!!!
       
     // eval up/down, then save bigger one (diff is order of one of MeV's...
-    const auto down_scale = std::abs(phoE-pho.pat::Photon::userFloat("energyScaleDown"));
-    const auto up_scale   = std::abs(pho.pat::Photon::userFloat("energyScaleUp")-phoE);
+    const auto down_scale = std::abs(phoE-photon.pat::Photon::userFloat("energyScaleDown"));
+    const auto up_scale   = std::abs(photon.pat::Photon::userFloat("energyScaleUp")-phoE);
     phoBranch.scaleAbs_   = (up_scale > down_scale ? up_scale : down_scale);
 
     // eval up/down, then save bigger one (diff is order of one of MeV's...
-    const auto down_smear = std::abs(phoE-pho.pat::Photon::userFloat("energySigmaDown"));
-    const auto up_smear   = std::abs(pho.pat::Photon::userFloat("energySigmaUp")-phoE);
+    const auto down_smear = std::abs(phoE-photon.pat::Photon::userFloat("energySigmaDown"));
+    const auto up_smear   = std::abs(photon.pat::Photon::userFloat("energySigmaUp")-phoE);
     phoBranch.smearAbs_   = (up_smear > down_smear ? up_smear : down_smear);
   }
 }

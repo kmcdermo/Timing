@@ -235,7 +235,7 @@ private:
   edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
   
   // output photons
-  std::vector<oot::Photon> photons; 
+  std::vector<pat::Photon> photons;
   std::vector<int> goodphs;
 
   // EB RecHits

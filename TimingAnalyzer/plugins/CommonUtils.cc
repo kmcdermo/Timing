@@ -53,7 +53,7 @@ namespace oot
   {
     if (genparticlesH.isValid())
     {
-      int nNeutoPhGr = 0;
+      auto nNeutoPhGr = 0;
       for (const auto & genparticle : *genparticlesH) // loop over gen particles
       {
 	if (nNeutoPhGr == 2) break;
@@ -118,10 +118,10 @@ namespace oot
     
     if (triggerResultsH.isValid())
     {
-      const edm::TriggerNames &triggerNames = iEvent.triggerNames(*triggerResultsH);
-      for (std::size_t itrig = 0; itrig < triggerNames.size(); itrig++)
+      const auto & triggerNames = iEvent.triggerNames(*triggerResultsH);
+      for (auto itrig = 0U; itrig < triggerNames.size(); itrig++)
       {
-	std::string triggerName = triggerNames.triggerName(itrig);
+	const auto & triggerName = triggerNames.triggerName(itrig);
       
 	for (auto & triggerBitPair : triggerBitMap) 
 	{
@@ -136,7 +136,7 @@ namespace oot
 			  const edm::Event & iEvent, trigObjVecMap & triggerObjectsByFilterMap)
   {
     // clear first
-    for (auto& triggerObjectsByFilterPair : triggerObjectsByFilterMap)
+    for (auto & triggerObjectsByFilterPair : triggerObjectsByFilterMap)
     {
       triggerObjectsByFilterPair.second.clear();
     }
@@ -144,18 +144,18 @@ namespace oot
     // store all the trigger objects needed to be checked later
     if (triggerObjectsH.isValid() && triggerResultsH.isValid())
     {
-      const edm::TriggerNames &triggerNames = iEvent.triggerNames(*triggerResultsH);
+      const auto & triggerNames = iEvent.triggerNames(*triggerResultsH);
       for (pat::TriggerObjectStandAlone triggerObject : *triggerObjectsH) 
       {
 	triggerObject.unpackPathNames(triggerNames);
 	triggerObject.unpackFilterLabels(iEvent, *triggerResultsH);
-	for (auto& triggerObjectsByFilterPair : triggerObjectsByFilterMap)
+	for (auto & triggerObjectsByFilterPair : triggerObjectsByFilterMap)
 	{	
 	  if (triggerObject.hasFilterLabel(triggerObjectsByFilterPair.first)) triggerObjectsByFilterPair.second.emplace_back(triggerObject);
 	} // end loop over user filter names
       } // end loop over trigger objects
 
-      for (auto& triggerObjectsByFilterPair : triggerObjectsByFilterMap)
+      for (auto & triggerObjectsByFilterPair : triggerObjectsByFilterMap)
       {
 	std::sort(triggerObjectsByFilterPair.second.begin(),triggerObjectsByFilterPair.second.end(),oot::sortByPt);
       }
@@ -164,63 +164,65 @@ namespace oot
 
   void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH, 
 		   const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
-		   std::vector<oot::Photon> & photons, const float rho,
+		   std::vector<pat::Photon> & photons, const float rho,
 		   const float phpTmin, const std::string & phIDmin)
   {
     // get VIDs of GED photons first (both GED ID and OOT ID), then OOT photons
     // put both GED and OOT photons in a common container, sorting by pT at the end
-    oot::PrepPhotons(gedPhotonsH,photons,false,rho,phpTmin,phIDmin);
-    oot::PrepPhotons(ootPhotonsH,photons,true,rho,phpTmin,phIDmin);
+    if (gedPhotonsH.isValid()) oot::PrepPhotons(gedPhotonsH,photons,false,rho,phpTmin,phIDmin);
+    if (ootPhotonsH.isValid()) oot::PrepPhotons(ootPhotonsH,photons,true,rho,phpTmin,phIDmin);
 
     std::sort(photons.begin(),photons.end(),oot::sortByPt);
   }
 
-  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, 
-		   std::vector<oot::Photon> & photons, const bool isOOT,
+  void PrepPhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH,
+		   std::vector<pat::Photon> & photons, const bool isOOT,
 		   const float rho, const float phpTmin, const std::string & phIDmin)
   {
-    if (photonsH.isValid()) // standard handle check
+    for (const auto & photon : *photonsH)
     {
-      for (const auto & photon : *photonsH)
+      if (photon.pt() < phpTmin) continue;
+      
+      idpVec idpairs;
+      idpairs = {{"loose-ged",false}, {"medium-ged",false}, {"tight-ged",false}, {"loose-oot",false}, {"tight-oot",false}};
+      
+      oot::GetGEDPhoVID(photon,idpairs);
+      
+      if (isOOT) oot::GetOOTPhoVID      (photon,idpairs);
+      else       oot::GetOOTPhoVIDByHand(photon,idpairs,rho);
+      
+      auto isGoodID = true;
+      if (phIDmin != "none")
       {
-	if (photon.pt() < phpTmin) continue;
-
-	idpVec idpairs;
-	idpairs = {{"loose-ged",false}, {"medium-ged",false}, {"tight-ged",false}, {"loose-oot",false}, {"tight-oot",false}};
-
-	oot::GetGEDPhoVID(photon,idpairs);
-
-	if (isOOT) oot::GetOOTPhoVID      (photon,idpairs);
-	else       oot::GetOOTPhoVIDByHand(photon,idpairs,rho);
-	
-	bool isGoodID = true;
-	if (phIDmin != "none")
+	for (const auto & idpair : idpairs) 
 	{
-	  for (const auto & idpair : idpairs) 
+	  if (idpair.first.find(phIDmin) != std::string::npos) // correct for GED or OOT!
 	  {
-	    if (idpair.first.find(phIDmin) != std::string::npos) // correct for GED or OOT!
+	    if ((isOOT && idpair.first.find("oot")) || (!isOOT && idpair.first.find("ged")))
 	    {
-	      if ((isOOT && idpair.first.find("oot")) || (!isOOT && idpair.first.find("ged")))
-	      {
-		if (!idpair.second) isGoodID = false;
-		break;
-	      }
+	      if (!idpair.second) isGoodID = false;
+	      break;
 	    }
 	  }
 	}
-	if (!isGoodID) continue;
+      }
+      if (!isGoodID) continue;
 
-	photons.emplace_back(photon,isOOT);
-	photons.back().photon_nc().setPhotonIDs(idpairs);
-      } // end loop over photons
-    } // isValid
+      // save it in the final vector!
+      photons.emplace_back(photon);
+
+      // and then modify it!
+      auto & tmpphoton = photons.back();
+      tmpphoton.setPhotonIDs(idpairs);
+      tmpphoton.addUserData<bool>("isOOT",isOOT);
+    } // end loop over photons
   }
 
   void PrepRecHits(const EcalRecHitCollection * recHitsEB,
 		   const EcalRecHitCollection * recHitsEE,
 		   uiiumap & recHitMap, const float rhEmin)
   {
-    int i = 0;
+    auto i = 0;
     for (const auto & recHit : *recHitsEB)
     {
       if (recHit.energy() > rhEmin)
@@ -262,7 +264,7 @@ namespace oot
   //               //
   ///////////////////
 
-  void PrunePhotons(std::vector<oot::Photon> & photons,
+  void PrunePhotons(std::vector<pat::Photon> & photons,
 		    const EcalRecHitCollection * recHitsEB,
 		    const EcalRecHitCollection * recHitsEE,
 		    const float seedTimemin)
@@ -270,28 +272,27 @@ namespace oot
     photons.erase(std::remove_if(photons.begin(),photons.end(),
 				 [seedTimemin,&recHitsEB,&recHitsEE](const auto & photon)
 				 {
-				   const pat::Photon & pho = photon.photon();
-				   const reco::SuperClusterRef& phosc = pho.superCluster().isNonnull() ? pho.superCluster() : pho.parentSuperCluster();
-				   const DetId & seedDetId = phosc->seed()->seed(); // get seed detid
-				   const EcalRecHitCollection * recHits = ((seedDetId.subdetId() == EcalBarrel) ? recHitsEB : recHitsEE); // which recHits to use
-				   EcalRecHitCollection::const_iterator seedHit = recHits->find(seedDetId); // get the underlying rechit
-				   const float seedTime = ((seedHit != recHits->end()) ? seedHit->time() : -9999.f);
+				   const auto & phosc = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
+				   const auto & seedDetId = phosc->seed()->seed(); // get seed detid
+				   const auto recHits = ((seedDetId.subdetId() == EcalBarrel) ? recHitsEB : recHitsEE); // which recHits to use
+				   const auto seedHit = recHits->find(seedDetId); // get the underlying rechit
+				   const auto seedTime = ((seedHit != recHits->end()) ? seedHit->time() : -9999.f);
 				   return (seedTime < seedTimemin);
 				 }),photons.end());
   }
 
-  void PruneJets(std::vector<pat::Jet> & jets, const std::vector<oot::Photon> & photons,
+  void PruneJets(std::vector<pat::Jet> & jets, const std::vector<pat::Photon> & photons,
 		 const float dRmin)
   {
     if (photons.size() > 0)
     {
       // only clean out w.r.t. to leading photon... can do more later
-      const auto & photon = photons[0].photon();
+      const auto & photon = photons.front();
 
       // apply loose selection on photon 
-      const float HoverE = photon.hadTowOverEm();
-      const float Sieie  = photon.full5x5_sigmaIetaIeta();
-      const float eta = std::abs(photon.superCluster()->eta());
+      const auto HoverE = photon.hadTowOverEm();
+      const auto Sieie  = photon.full5x5_sigmaIetaIeta();
+      const auto eta = std::abs(photon.superCluster()->eta());
       
       // cuts set to be looser than trigger values by .05 in H/E and 0.005 in Sieie
       if ( ((eta < Config::etaEBcutoff) && (HoverE < 0.25) && (Sieie < 0.019)) || ((eta >= Config::etaEBcutoff && eta < Config::etaEEmax) && (HoverE < 0.2) && (Sieie < 0.04)) )
@@ -492,7 +493,7 @@ namespace oot
     idpairs[3].second = photon.photonID(Config::OOTPhotonLooseVID);
   }
 
-  void GetOOTPhoVIDByHand(const pat::Photon & photon, idpVec& idpairs, const float rho)
+  void GetOOTPhoVIDByHand(const pat::Photon & photon, idpVec & idpairs, const float rho)
   {
     // needed for cuts
     const float eta = std::abs(photon.superCluster()->eta());
@@ -522,6 +523,7 @@ namespace oot
   // PFJet ID //
   //          //
   //////////////
+
   int GetPFJetID(const pat::Jet & jet) // https://twiki.cern.ch/twiki/bin/view/CMS/JetID13TeVRun2017
   {
     const float eta = std::abs(jet.eta());
@@ -569,27 +571,28 @@ namespace oot
   // Storing Functions //
   //                   //
   ///////////////////////
-  void SplitPhotons(std::vector<oot::Photon>& photons, const int nmax)
+
+  void SplitPhotons(std::vector<pat::Photon> & photons, const int nmax)
   {
     std::vector<int> gedphos;
     std::vector<int> ootphos;
 
-    int ipho = 0;
+    auto ipho = 0;
     for (const auto & photon : photons)
     {
-      (!photon.isOOT() ? gedphos : ootphos).emplace_back(ipho++);
+      (!*(photon.userData<bool>("isOOT")) ? gedphos : ootphos).emplace_back(ipho++);
     }
     
-    std::vector<oot::Photon> tmpphotons;
+    std::vector<pat::Photon> tmpphotons;
 
     const int ngedphos = gedphos.size();
-    for (int i = 0; i < nmax; i++)
+    for (auto i = 0; i < nmax; i++)
     {
       if (ngedphos > i) tmpphotons.emplace_back(photons[gedphos[i]]);
     }
 
     const int nootphos = ootphos.size();
-    for (int i = 0; i < nmax; i++)
+    for (auto i = 0; i < nmax; i++)
     {
       if (nootphos > i) tmpphotons.emplace_back(photons[ootphos[i]]);
     }
@@ -597,17 +600,17 @@ namespace oot
     photons.swap(tmpphotons);
   }
 
-  void StoreOnlyPho(std::vector<oot::Photon>& photons, const int nmax, const bool isOOT)
+  void StoreOnlyPho(std::vector<pat::Photon> & photons, const int nmax, const bool isOOT)
   {
-    std::vector<oot::Photon> tmpphotons;
+    std::vector<pat::Photon> tmpphotons;
 
-    int ipho = 0;
+    auto ipho = 0;
     for (const auto & photon : photons)
     {
       if (ipho >= nmax) break;
       ipho++;
 
-      if (photon.isOOT() == isOOT) tmpphotons.emplace_back(photon);
+      if (*(photon.userData<bool>("isOOT")) == isOOT) tmpphotons.emplace_back(photon);
     }
 
     photons.swap(tmpphotons);
