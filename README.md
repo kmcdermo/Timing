@@ -4,12 +4,11 @@ Update to README: old 80X code removed, but still have GEN_SIM...
 
 Standard setup:
 ```
-cmsrel CMSSW_9_4_10
-cd CMSSW_9_4_10/src
+cmsrel CMSSW_9_4_12
+cd CMSSW_9_4_12/src
 cmsenv
 git cms-init
 
-git cms-merge-topic cms-met:METFixEE2017_949_v2
 git cms-merge-topic kmcdermo:post_reco_OOT_AND_add_OOT_VID
 git cms-addpkg RecoMET/METFilters
 
@@ -18,8 +17,10 @@ pushd Timing
 git remote rename origin kmcdermo
 popd
 
-scram b -j 32
+scram b -j 8
 ```
+
+N.B. The previous instruction to include: ```git cms-merge-topic cms-met:METFixEE2017_949_v2``` has been dropped as this code is merged in 9_4_12.
 
 Will also need to setup combine somewhere in a separate CMSSW release area:
 https://cms-hcomb.gitbooks.io/combine/content/part1/#for-end-users-that-dont-need-to-commit-or-do-any-development
