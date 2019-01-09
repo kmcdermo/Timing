@@ -143,20 +143,11 @@ void Counter::InitializeObjects()
 void Counter::PrepObjects()
 {
   // Ensure photons sorted by modified pt
-  Counter::SortPhotonsByPt(gedPhotons);
-  Counter::SortPhotonsByPt(ootPhotons);
+  oot::SortPhotonsByPt(gedPhotons);
+  oot::SortPhotonsByPt(ootPhotons);
   
   // match to gmsb photons
   if (isMC) oot::PrepNeutralinos(genParticlesH,neutralinos);
-}
-
-void Counter::SortPhotonsByPt(std::vector<pat::Photon> & photons)
-{
-  std::sort(photons.begin(),photons.end(),
-	    [](const auto & photon1, const auto & photon2)
-	    {
-	      return Counter::GetPhotonPt(photon1) > Counter::GetPhotonPt(photon2);
-	    });
 }
 
 void Counter::PrepPhotonCollections()
@@ -192,7 +183,7 @@ void Counter::PrepPhotonCollection(std::vector<ReducedPhoton> & reducedPhotons, 
 	    {
 	      const auto & photon1 = (reducedPhoton1.isGED?gedPhotons[reducedPhoton1.idx]:ootPhotons[reducedPhoton1.idx]);
 	      const auto & photon2 = (reducedPhoton2.isGED?gedPhotons[reducedPhoton2.idx]:ootPhotons[reducedPhoton2.idx]);
-	      return (Counter::GetPhotonPt(photon1) > Counter::GetPhotonPt(photon2));
+	      return (oot::GetPhotonPt(photon1) > oot::GetPhotonPt(photon2));
 	    });
 }
 
@@ -320,8 +311,8 @@ void Counter::SetPhotonIndices(const std::string & gedVID, const std::string & o
       const auto & gedPhoton = gedPhotons[matchedGED];
       matchedOOT[matchedGED] = ioot;
 
-      if   (Counter::GetPhotonPt(ootPhoton) > Counter::GetPhotonPt(gedPhoton)) matchedGTGED[ioot] = matchedGED;
-      else                                                                     matchedLTGED[ioot] = matchedGED;
+      if   (oot::GetPhotonPt(ootPhoton) > oot::GetPhotonPt(gedPhoton)) matchedGTGED[ioot] = matchedGED;
+      else                                                             matchedLTGED[ioot] = matchedGED;
     }
     else // OOT photon is truly unmatched to GED
     {
@@ -329,7 +320,7 @@ void Counter::SetPhotonIndices(const std::string & gedVID, const std::string & o
       unmatchedGED[ioot] = 1;
       
       // get oot photon pt
-      const auto ootPt = Counter::GetPhotonPt(ootPhoton);
+      const auto ootPt = oot::GetPhotonPt(ootPhoton);
 
       // loop over pf cands, checking to see if it is picked up by a PF candidate
       auto icand = -1;
@@ -443,7 +434,7 @@ void Counter::SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::
 
     // get ootPhoton info --> will use it regardless!
     const auto & ootPhoton = ootPhotons[ioot];
-    const auto ootpt  = Counter::GetPhotonPt(ootPhoton);
+    const auto ootpt  = oot::GetPhotonPt(ootPhoton);
     const auto ootphi = ootPhoton.phi();
     
     // first, change MET with overlapping OOT photons; then check if totally unmatched
@@ -451,7 +442,7 @@ void Counter::SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::
     {
       // get gedPhoton info
       const auto & gedPhoton = gedPhotons[matchedGTGED[ioot]];
-      const auto gedpt  = Counter::GetPhotonPt(gedPhoton);
+      const auto gedpt  = oot::GetPhotonPt(gedPhoton);
       const auto gedphi = gedPhoton.phi();
 
       // get compnonents

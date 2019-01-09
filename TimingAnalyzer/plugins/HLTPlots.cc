@@ -278,7 +278,7 @@ void HLTPlots::SetPhotonInfo()
     
     // standard photon branches
     phE  [iph] = photon.energy();
-    phpt [iph] = photon.pt();
+    phpt [iph] = oot::GetPhotonPt(photon);
     phphi[iph] = photon.phi();
     pheta[iph] = photon.eta();
     

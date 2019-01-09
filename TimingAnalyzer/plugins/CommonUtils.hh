@@ -156,9 +156,23 @@ typedef std::map<std::string,std::vector<pat::TriggerObjectStandAlone> > trigObj
 
 namespace oot
 {
-  // sort by pt template
-  const auto sortByPt = [](const auto& obj1, const auto& obj2) {return obj1.pt() > obj2.pt();};
+  // photon corrected pt
+  inline float GetPhotonPt(const pat::Photon & photon){return (photon.pt()*(photon.userFloat("ecalEnergyPostCorr")/photon.energy()));}
 
+  // sort by photon corrected pt
+  inline void SortPhotonsByPt(std::vector<pat::Photon> & photons)
+  {
+    std::sort(photons.begin(),photons.end(),
+	      [](const auto & photon1, const auto & photon2)
+	      {
+		return oot::GetPhotonPt(photon1) > oot::GetPhotonPt(photon2);
+	      });
+  }
+
+  // sort by pt template
+  const auto sortByPt = [](const auto & obj1, const auto & obj2) {return obj1.pt() > obj2.pt();};
+
+  // object prep
   void ReadInTriggerNames(const std::string & inputPaths, std::vector<std::string> & pathNames, 
 			  strBitMap & triggerBits);
   void ReadInFilterNames(const std::string & inputFilters, std::vector<std::string> & filterNames, 
@@ -190,6 +204,8 @@ namespace oot
 		    const float seedTimemin = -10000.f);
   void PruneJets(std::vector<pat::Jet> & jets, const std::vector<pat::Photon> & photons, 
 		 const float dRmin = 100.f);
+
+  // object ID
   float GetChargedHadronEA(const float eta);
   float GetNeutralHadronEA(const float eta);
   float GetGammaEA(const float eta);
@@ -206,6 +222,8 @@ namespace oot
   void GetOOTPhoVID(const pat::Photon & photon, idpVec& idpairs);
   void GetOOTPhoVIDByHand(const pat::Photon & photon, idpVec& idpairs, const float rho);
   int GetPFJetID(const pat::Jet & jet);
+
+  // photon storage
   void SplitPhotons(std::vector<pat::Photon> & photons, const int nmax);
   void StoreOnlyPho(std::vector<pat::Photon> & photons, const int nmax, const bool isOOT);
 

@@ -565,7 +565,7 @@ bool DisPho::ApplyPreSelectionGoodPhoton()
       
       //      if (iphoton > 0) break; // only consider first photon
       
-      const auto pt = photon.pt() * photon.pat::Photon::userFloat("ecalEnergyPostCorr") / photon.pat::Photon::energy();
+      const auto pt = oot::GetPhotonPt(photon);
       if (pt < phgoodpTmin) continue;
       
       // const float sceta = std::abs(photon.superCluster()->eta());
@@ -823,8 +823,8 @@ void DisPho::SetGMSBBranches()
     {
       const auto & photon = photons[iphoton];
       
-      if (photon.pt() < ((1.f-genpTres) * gmsbBranch.genphpt_)) continue;
-      if (photon.pt() > ((1.f+genpTres) * gmsbBranch.genphpt_)) continue;
+      if (oot::GetPhotonPt(photon) < ((1.f-genpTres) * gmsbBranch.genphpt_)) continue;
+      if (oot::GetPhotonPt(photon) > ((1.f+genpTres) * gmsbBranch.genphpt_)) continue;
       
       const auto delR = reco::deltaR(genphoton,photon);
       if (delR < mindR) 
@@ -914,7 +914,7 @@ void DisPho::SetHVDSBranches()
     for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
     {
       const auto & photon = photons[iphoton];
-      const auto tmppt = photon.pt();
+      const auto tmppt = oot::GetPhotonPt(photon);
 
       // check gen photon 0
       if (tmppt < ((1.f-genpTres) * hvdsBranch.genHVph0pt_)) continue;
@@ -991,7 +991,7 @@ void DisPho::SetToyBranches()
 	toyBranch.genphmatch_ = iphoton; 
       } // end check over deltaR
       
-      if ( (photon.pt() >= ((1.f-genpTres) * toyBranch.genphpt_)) && (photon.pt() <= ((1.f+genpTres) * toyBranch.genphpt_)) )
+      if ( (oot::GetPhotonPt(photon) >= ((1.f-genpTres) * toyBranch.genphpt_)) && (oot::GetPhotonPt(photon) <= ((1.f+genpTres) * toyBranch.genphpt_)) )
       {
 	const auto delR_ptres = reco::deltaR(toy,photon);
 	if (delR_ptres < mindR_ptres) 

@@ -70,7 +70,6 @@ public:
   void GetObjects(const edm::Event & iEvent);
   void PrepObjects();
   void InitializeObjects();
-  void SortPhotonsByPt(std::vector<pat::Photon> & photons);
 
   void PrepPhotonCollections();
   void PrepPhotonCollection(std::vector<ReducedPhoton> & reducedPhotons, const std::vector<int> & matchedOOT, const std::vector<int> & matchedLTGED);
@@ -122,15 +121,6 @@ public:
 
   void ResetPhotonCollections();
   void ResetPhotonCollection(std::vector<ReducedPhoton> & reducedPhotons);
-
-  /////////////////////
-  // Extra Functions //
-  /////////////////////
-  
-  static inline float GetPhotonPt(const pat::Photon & photon)
-  {
-    return (photon.userFloat("ecalEnergyPostCorr")/photon.energy())*photon.pt();
-  }
 
   /////////////////////
   // DEBUG FUNCTIONS //
