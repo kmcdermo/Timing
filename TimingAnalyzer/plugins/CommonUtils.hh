@@ -203,7 +203,7 @@ namespace oot
 		    const EcalRecHitCollection * recHitsEE,
 		    const float seedTimemin = -10000.f);
   void PruneJets(std::vector<pat::Jet> & jets, const std::vector<pat::Photon> & photons, 
-		 const float dRmin = 100.f);
+		 const int nPhosmax = 0, const float dRmin = 100.f);
 
   // object ID
   float GetChargedHadronEA(const float eta);

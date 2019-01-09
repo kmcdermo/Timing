@@ -48,6 +48,7 @@ struct Configuration
   std::string * phIDmin;
   std::string phIDmin_s;
   Float_t seedTimemin;
+  Int_t   nPhosmax;
   Bool_t  splitPho;
   Bool_t  onlyGED;
   Bool_t  onlyOOT;
@@ -102,6 +103,7 @@ struct Configuration
   std::string s_phpTmin = "phpTmin";
   std::string s_phIDmin = "phIDmin";
   std::string s_seedTimemin = "seedTimemin";
+  std::string s_nPhosmax = "nPhosmax";
   std::string s_splitPho = "splitPho";
   std::string s_onlyGED = "onlyGED";
   std::string s_onlyOOT = "onlyOOT";

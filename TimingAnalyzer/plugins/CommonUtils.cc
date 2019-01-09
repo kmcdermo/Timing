@@ -282,10 +282,10 @@ namespace oot
   }
 
   void PruneJets(std::vector<pat::Jet> & jets, const std::vector<pat::Photon> & photons,
-		 const float dRmin)
+		 const int nPhosmax, const float dRmin)
   {
-    // clean out w.r.t. to leading and subleading photon... can do more later
-    const auto nPhos = std::min<int>(photons.size(),2);
+    // clean out w.r.t. to nMaxPhos
+    const auto nPhos = std::min<int>(photons.size(),nPhosmax);
 
     // loop over at most the leading photons and clean...
     for (auto ipho = 0; ipho < nPhos; ipho++)

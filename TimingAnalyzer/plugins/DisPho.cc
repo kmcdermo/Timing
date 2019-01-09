@@ -17,6 +17,7 @@ DisPho::DisPho(const edm::ParameterSet & iConfig):
 
   // object extra pruning cuts
   seedTimemin(iConfig.existsAs<double>("seedTimemin") ? iConfig.getParameter<double>("seedTimemin") : -25.f),
+  nPhosmax(iConfig.existsAs<int>("nPhosmax") ? iConfig.getParameter<int>("nPhosmax") : 2),
 
   // photon storing
   splitPho(iConfig.existsAs<bool>("splitPho") ? iConfig.getParameter<bool>("splitPho") : false),
@@ -488,7 +489,7 @@ void DisPho::PrepObjects(const edm::Event & iEvent)
   ///////////////////
 
   oot::PrunePhotons(photons,recHitsEB,recHitsEE,seedTimemin);
-  oot::PruneJets(jets,photons,dRmin);
+  oot::PruneJets(jets,photons,nPhosmax,dRmin);
 
   /////////////////////////////
   // Photon Storing Options  //
@@ -1956,7 +1957,9 @@ void DisPho::MakeAndFillConfigTree()
 
   // object extra pruning
   float seedTimemin_tmp = seedTimemin;
-  configtree->Branch("seedTimemin", &seedTimemin_tmp, "seedTimemin/F");
+  int nPhosmax_tmp = nPhosmax;
+  configtree->Branch("seedTimemin", &seedTimemin_tmp, "seedTimemin/I");
+  configtree->Branch("nPhosmax", &nPhosmax_tmp, "nPhosmax/I");
 
   // photon storing options
   bool splitPho_tmp = splitPho;

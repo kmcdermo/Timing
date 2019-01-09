@@ -245,6 +245,7 @@ private:
 
   // object extra pruning
   const float seedTimemin;
+  const int nPhosmax;
 
   // photon storing options
   const bool splitPho;

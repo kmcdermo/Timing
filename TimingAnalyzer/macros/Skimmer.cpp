@@ -1258,6 +1258,7 @@ void Skimmer::InitInConfigBranches()
   fInConfigTree->SetBranchAddress(fInConfig.s_phpTmin.c_str(), &fInConfig.phpTmin);
   fInConfigTree->SetBranchAddress(fInConfig.s_phIDmin.c_str(), &fInConfig.phIDmin);
   fInConfigTree->SetBranchAddress(fInConfig.s_seedTimemin.c_str(), &fInConfig.seedTimemin);
+  fInConfigTree->SetBranchAddress(fInConfig.s_nPhosmax.c_str(), &fInConfig.nPhosmax);
   fInConfigTree->SetBranchAddress(fInConfig.s_splitPho.c_str(), &fInConfig.splitPho);
   fInConfigTree->SetBranchAddress(fInConfig.s_onlyGED.c_str(), &fInConfig.onlyGED);
   fInConfigTree->SetBranchAddress(fInConfig.s_onlyOOT.c_str(), &fInConfig.onlyOOT);
@@ -1665,6 +1666,7 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfigTree->Branch(fOutConfig.s_phpTmin.c_str(), &fOutConfig.phpTmin);
   fOutConfigTree->Branch(fOutConfig.s_phIDmin.c_str(), &fOutConfig.phIDmin_s);
   fOutConfigTree->Branch(fOutConfig.s_seedTimemin.c_str(), &fOutConfig.seedTimemin);
+  fOutConfigTree->Branch(fOutConfig.s_nPhosmax.c_str(), &fOutConfig.nPhosmax);
   fOutConfigTree->Branch(fOutConfig.s_splitPho.c_str(), &fOutConfig.splitPho);
   fOutConfigTree->Branch(fOutConfig.s_onlyGED.c_str(), &fOutConfig.onlyGED);
   fOutConfigTree->Branch(fOutConfig.s_onlyOOT.c_str(), &fOutConfig.onlyOOT);
@@ -1717,6 +1719,7 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfig.phpTmin = fInConfig.phpTmin;
   fOutConfig.phIDmin_s = fInConfig.phIDmin->c_str();
   fOutConfig.seedTimemin = fInConfig.seedTimemin;
+  fOutConfig.nPhosmax = fInConfig.nPhosmax;
   fOutConfig.splitPho = fInConfig.splitPho;
   fOutConfig.onlyGED = fInConfig.onlyGED;
   fOutConfig.onlyOOT = fInConfig.onlyOOT;
