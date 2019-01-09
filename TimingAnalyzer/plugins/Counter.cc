@@ -738,26 +738,26 @@ void Counter::beginJob()
   tree = fs->make<TTree>("tree","tree");
 
   // counter info
-  tree->Branch("nGED_N", &nGED_N, "nGED_N/I");
-  tree->Branch("nOOT_N", &nOOT_N, "nOOT_N/I");
-  tree->Branch("nOOT_matchedGTGED_N", &nOOT_matchedGTGED_N, "nOOT_matchedGTGED_N/I");
-  tree->Branch("nOOT_matchedLTGED_N", &nOOT_matchedLTGED_N, "nOOT_matchedLTGED_N/I");
-  tree->Branch("nOOT_unmatchedGED_N", &nOOT_unmatchedGED_N, "nOOT_unmatchedGED_N/I");
-  tree->Branch("nOOT_matchedCands_N", &nOOT_matchedCands_N, "nOOT_matchedCands_N/I");
+  tree->Branch("nGED_N", &nGED_N);
+  tree->Branch("nOOT_N", &nOOT_N);
+  tree->Branch("nOOT_matchedGTGED_N", &nOOT_matchedGTGED_N);
+  tree->Branch("nOOT_matchedLTGED_N", &nOOT_matchedLTGED_N);
+  tree->Branch("nOOT_unmatchedGED_N", &nOOT_unmatchedGED_N);
+  tree->Branch("nOOT_matchedCands_N", &nOOT_matchedCands_N);
 
-  tree->Branch("nGED_L", &nGED_L, "nGED_L/I");
-  tree->Branch("nOOT_L", &nOOT_L, "nOOT_L/I");
-  tree->Branch("nOOT_matchedGTGED_L", &nOOT_matchedGTGED_L, "nOOT_matchedGTGED_L/I");
-  tree->Branch("nOOT_matchedLTGED_L", &nOOT_matchedLTGED_L, "nOOT_matchedLTGED_L/I");
-  tree->Branch("nOOT_unmatchedGED_L", &nOOT_unmatchedGED_L, "nOOT_unmatchedGED_L/I");
-  tree->Branch("nOOT_matchedCands_L", &nOOT_matchedCands_L, "nOOT_matchedCands_L/I");
+  tree->Branch("nGED_L", &nGED_L);
+  tree->Branch("nOOT_L", &nOOT_L);
+  tree->Branch("nOOT_matchedGTGED_L", &nOOT_matchedGTGED_L);
+  tree->Branch("nOOT_matchedLTGED_L", &nOOT_matchedLTGED_L);
+  tree->Branch("nOOT_unmatchedGED_L", &nOOT_unmatchedGED_L);
+  tree->Branch("nOOT_matchedCands_L", &nOOT_matchedCands_L);
  
-  tree->Branch("nGED_T", &nGED_T, "nGED_T/I");
-  tree->Branch("nOOT_T", &nOOT_T, "nOOT_T/I");
-  tree->Branch("nOOT_matchedGTGED_T", &nOOT_matchedGTGED_T, "nOOT_matchedGTGED_T/I");
-  tree->Branch("nOOT_matchedLTGED_T", &nOOT_matchedLTGED_T, "nOOT_matchedLTGED_T/I");
-  tree->Branch("nOOT_unmatchedGED_T", &nOOT_unmatchedGED_T, "nOOT_unmatchedGED_T/I");
-  tree->Branch("nOOT_matchedCands_T", &nOOT_matchedCands_T, "nOOT_matchedCands_T/I");
+  tree->Branch("nGED_T", &nGED_T);
+  tree->Branch("nOOT_T", &nOOT_T);
+  tree->Branch("nOOT_matchedGTGED_T", &nOOT_matchedGTGED_T);
+  tree->Branch("nOOT_matchedLTGED_T", &nOOT_matchedLTGED_T);
+  tree->Branch("nOOT_unmatchedGED_T", &nOOT_unmatchedGED_T);
+  tree->Branch("nOOT_matchedCands_T", &nOOT_matchedCands_T);
 
   // phi info
   tree->Branch("matchedGTGEDphi_N", &matchedGTGEDphi_N);
@@ -770,31 +770,31 @@ void Counter::beginJob()
   tree->Branch("unmatchedGEDphi_T", &unmatchedGEDphi_T);
 
   // MET info
-  tree->Branch("t1pfMETpt", &t1pfMETpt, "t1pfMETpt/F");
-  tree->Branch("t1pfMETphi", &t1pfMETphi, "t1pfMETphi/F");
+  tree->Branch("t1pfMETpt", &t1pfMETpt);
+  tree->Branch("t1pfMETphi", &t1pfMETphi);
 
   if (isMC)
   {
-    tree->Branch("genMETpt", &genMETpt, "genMETpt/F");
-    tree->Branch("genMETphi", &genMETphi, "genMETphi/F");
+    tree->Branch("genMETpt", &genMETpt);
+    tree->Branch("genMETphi", &genMETphi);
   }
 
-  tree->Branch("ootMETpt_N", &ootMETpt_N, "ootMETpt_N/F");
-  tree->Branch("ootMETphi_N", &ootMETphi_N, "ootMETphi_N/F");
+  tree->Branch("ootMETpt_N", &ootMETpt_N);
+  tree->Branch("ootMETphi_N", &ootMETphi_N);
 
-  tree->Branch("ootMETpt_L", &ootMETpt_L, "ootMETpt_L/F");
-  tree->Branch("ootMETphi_L", &ootMETphi_L, "ootMETphi_L/F");
+  tree->Branch("ootMETpt_L", &ootMETpt_L);
+  tree->Branch("ootMETphi_L", &ootMETphi_L);
 
-  tree->Branch("ootMETpt_T", &ootMETpt_T, "ootMETpt_T/F");
-  tree->Branch("ootMETphi_T", &ootMETphi_T, "ootMETphi_T/F");
+  tree->Branch("ootMETpt_T", &ootMETpt_T);
+  tree->Branch("ootMETphi_T", &ootMETphi_T);
 
   // MC info
   if (isMC)
   {
-    tree->Branch("genwgt", &genwgt, "genwgt/F");
-    tree->Branch("xsec", &xsec, "xsec/F");
-    tree->Branch("BR", &BR, "BR/F");
-    tree->Branch("genputrue", &genputrue, "genputrue/I");
+    tree->Branch("genwgt", &genwgt);
+    tree->Branch("xsec", &xsec);
+    tree->Branch("BR", &BR);
+    tree->Branch("genputrue", &genputrue);
 
     tree->Branch("beforeGEDEres_N", &beforeGEDEres_N);
     tree->Branch("afterGEDEres_N", &afterGEDEres_N);
