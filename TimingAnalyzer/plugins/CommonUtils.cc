@@ -284,15 +284,18 @@ namespace oot
   void PruneJets(std::vector<pat::Jet> & jets, const std::vector<pat::Photon> & photons,
 		 const float dRmin)
   {
-    if (photons.size() > 0)
+    // clean out w.r.t. to leading and subleading photon... can do more later
+    const auto nPhos = std::min<int>(photons.size(),2);
+
+    // loop over at most the leading photons and clean...
+    for (auto ipho = 0; ipho < nPhos; ipho++)
     {
-      // only clean out w.r.t. to leading photon... can do more later
-      const auto & photon = photons.front();
+      const auto & photon = photons[ipho];
 
       // apply loose selection on photon 
       const auto HoverE = photon.hadTowOverEm();
       const auto Sieie  = photon.full5x5_sigmaIetaIeta();
-      const auto eta = std::abs(photon.superCluster()->eta());
+      const auto eta    = std::abs(photon.superCluster()->eta());
       
       // cuts set to be looser than trigger values by .05 in H/E and 0.005 in Sieie
       if ( ((eta < Config::etaEBcutoff) && (HoverE < 0.25) && (Sieie < 0.019)) || ((eta >= Config::etaEBcutoff && eta < Config::etaEEmax) && (HoverE < 0.2) && (Sieie < 0.04)) )
