@@ -201,12 +201,14 @@ struct Event
 
   // MC Types
   Float_t   genwgt;
+  Float_t   gent0;
   Float_t   genx0;
   Float_t   geny0;
   Float_t   genz0;
-  Float_t   gent0;
   Int_t     genpuobs;
   Int_t     genputrue;
+  Float_t   genMETpt;
+  Float_t   genMETphi;
   Float_t   puwgt;
   // GMSB
   Int_t     nNeutoPhGr;
@@ -266,12 +268,14 @@ struct Event
   std::string s_nphotons = "nphotons";
   std::string s_evtwgt = "evtwgt";
   std::string s_genwgt = "genwgt";  
+  std::string s_gent0 = "gent0";
   std::string s_genx0 = "genx0";
   std::string s_geny0 = "geny0";
   std::string s_genz0 = "genz0";
-  std::string s_gent0 = "gent0";
   std::string s_genpuobs = "genpuobs";
   std::string s_genputrue = "genputrue";
+  std::string s_genMETpt = "genMETpt";
+  std::string s_genMETphi = "genMETphi";
   std::string s_puwgt = "puwgt";
   std::string s_nNeutoPhGr = "nNeutoPhGr";
   std::string s_nvPions = "nvPions";
@@ -334,6 +338,8 @@ struct Event
   TBranch * b_gent0;
   TBranch * b_genpuobs;
   TBranch * b_genputrue;
+  TBranch * b_genMETpt;
+  TBranch * b_genMETphi;
   TBranch * b_puwgt;
   TBranch * b_nNeutoPhGr;
   TBranch * b_nvPions;

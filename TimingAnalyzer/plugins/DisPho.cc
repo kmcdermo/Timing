@@ -630,10 +630,13 @@ void DisPho::FillTreeFromObjects(const edm::Event & iEvent)
   //////////////////
 
   DisPho::InitializeMETBranches();
+  if (isMC) DisPho::InitializeMETBranchesMC();
+
   if (metsH.isValid())
   {
     const auto & t1pfMET = (*metsH).front();
     DisPho::SetMETBranches(t1pfMET);
+    if (isMC) DisPho::SetMETBranchesMC(t1pfMET);
   }
 
   /////////////////////////
@@ -1080,11 +1083,25 @@ void DisPho::InitializeMETBranches()
   t1pfMETsumEt = -9999.f;
 }
 
+void DisPho::InitializeMETBranchesMC()
+{
+  genMETpt  = -9999.f;
+  genMETphi = -9999.f;
+}
+
 void DisPho::SetMETBranches(const pat::MET & t1pfMET)
 {
   t1pfMETpt    = t1pfMET.pt();
   t1pfMETphi   = t1pfMET.phi();
   t1pfMETsumEt = t1pfMET.sumEt();
+}
+
+void DisPho::SetMETBranchesMC(const pat::MET & t1pfMET)
+{
+  const auto & genMET = *(t1pfMET.genMET());
+
+  genMETpt  = genMET.pt();
+  genMETphi = genMET.phi();
 }
 			    
 void DisPho::InitializeJetBranches()
@@ -2209,6 +2226,13 @@ void DisPho::MakeEventTree()
   disphotree->Branch("t1pfMETpt", &t1pfMETpt);
   disphotree->Branch("t1pfMETphi", &t1pfMETphi);
   disphotree->Branch("t1pfMETsumEt", &t1pfMETsumEt);
+
+  // GEN MET info
+  if (isMC)
+  { 
+    disphotree->Branch("genMETpt", &genMETpt);
+    disphotree->Branch("genMETphi", &genMETphi);
+  }
 
   // Jet info
   disphotree->Branch("njets", &njets);

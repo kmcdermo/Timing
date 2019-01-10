@@ -188,6 +188,8 @@ public:
 
   void InitializeMETBranches();
   void SetMETBranches(const pat::MET & t1pfMET);
+  void InitializeMETBranchesMC();
+  void SetMETBranchesMC(const pat::MET & t1pfMET);
 
   void InitializeJetBranches();
   void SetJetBranches();
@@ -535,8 +537,11 @@ private:
   int nvtx;
   float vtxX, vtxY, vtxZ;
 
-  // MET
+  // Type-1 PF MET
   float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
+
+  // GEN MET
+  float genMETpt, genMETphi;
 
   // jets
   int njets;

@@ -615,6 +615,8 @@ void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt)
     fInEvent.b_gent0->GetEntry(entry);
     fInEvent.b_genpuobs->GetEntry(entry);
     fInEvent.b_genputrue->GetEntry(entry);
+    fInEvent.b_genMETpt->GetEntry(entry);
+    fInEvent.b_genMETphi->GetEntry(entry);
 
     if (fInConfig.isGMSB)
     {
@@ -681,6 +683,8 @@ void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt)
     fOutEvent.gent0 = fInEvent.gent0;
     fOutEvent.genpuobs = fInEvent.genpuobs;
     fOutEvent.genputrue = fInEvent.genputrue;
+    fOutEvent.genMETpt = fInEvent.genMETpt;
+    fOutEvent.genMETphi = fInEvent.genMETphi;
 
     if (fOutConfig.isGMSB)
     {
@@ -1391,7 +1395,9 @@ void Skimmer::InitInBranches()
     fInTree->SetBranchAddress(fInEvent.s_gent0.c_str(), &fInEvent.gent0, &fInEvent.b_gent0);
     fInTree->SetBranchAddress(fInEvent.s_genpuobs.c_str(), &fInEvent.genpuobs, &fInEvent.b_genpuobs);
     fInTree->SetBranchAddress(fInEvent.s_genputrue.c_str(), &fInEvent.genputrue, &fInEvent.b_genputrue);
-    
+    fInTree->SetBranchAddress(fInEvent.s_genMETpt.c_str(), &fInEvent.genMETpt, &fInEvent.b_genMETpt);
+    fInTree->SetBranchAddress(fInEvent.s_genMETphi.c_str(), &fInEvent.genMETphi, &fInEvent.b_genMETphi);
+
     if (fInConfig.isGMSB)
     {
       fInTree->SetBranchAddress(fInEvent.s_nNeutoPhGr.c_str(), &fInEvent.nNeutoPhGr, &fInEvent.b_nNeutoPhGr);
@@ -1807,6 +1813,8 @@ void Skimmer::InitOutBranches()
     fOutTree->Branch(fOutEvent.s_gent0.c_str(), &fOutEvent.gent0);
     fOutTree->Branch(fOutEvent.s_genpuobs.c_str(), &fOutEvent.genpuobs);
     fOutTree->Branch(fOutEvent.s_genputrue.c_str(), &fOutEvent.genputrue);
+    fOutTree->Branch(fOutEvent.s_genMETpt.c_str(), &fOutEvent.genMETpt);
+    fOutTree->Branch(fOutEvent.s_genMETphi.c_str(), &fOutEvent.genMETphi);
 
     if (fOutConfig.isGMSB)
     {
