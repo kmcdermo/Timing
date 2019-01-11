@@ -34,6 +34,7 @@
 // DataFormats
 #include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
+#include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 
 // DetIds 
@@ -119,7 +120,7 @@ public:
   // Event Prep Functions //
   //////////////////////////
   
-  void GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSetup);
+  bool GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSetup);
   void InitializeObjects();
   void PrepObjects(const edm::Event & iEvent);
 
@@ -127,7 +128,7 @@ public:
   // Main Functions //
   ////////////////////
 
-  bool ApplyPreSelection();
+  inline bool ApplyPreSelection();
 
   void SetTriggerInfo();
   void InitializeTriggerBranches();
@@ -176,10 +177,11 @@ private:
   const std::string psPath; 
 
   // cuts on objects
-  const float phpTmin;
   const float jetpTmin;
   const int   jetIDmin;
   const float jetEtamax;
+  const float phpTmin;
+  const std::string phIDmin;
   
   // trig dR matching criteria
   const float dRmin;
@@ -207,7 +209,7 @@ private:
   edm::Handle<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsH;
 
   // trigger I/O
-  trigObjVecMap triggerObjectsByFilterMap; // first index is filter label, second is trigger objects
+  std::map<std::string,std::vector<pat::TriggerObjectStandAlone> > triggerObjectsByFilterMap; // first index is filter label, second is trigger objects
   std::map<std::string,TestStruct> effTestMap;
 
   // rho
@@ -215,6 +217,14 @@ private:
   edm::EDGetTokenT<double> rhoToken;
   edm::Handle<double> rhoH;
   float rho;
+
+  // mets
+  const edm::InputTag metsTag;
+  edm::EDGetTokenT<std::vector<pat::MET> > metsToken;
+  edm::Handle<std::vector<pat::MET> > metsH;
+
+  // output met
+  pat::MET t1pfMET;
 
   // jets
   const edm::InputTag jetsTag;
@@ -256,7 +266,7 @@ private:
   edm::Handle<std::vector<reco::Track> > tracksH;
 
   // geometry (from ECAL ELF)
-  edm::ESHandle<CaloGeometry> calogeoH;
+  edm::ESHandle<CaloGeometry> caloGeoH;
   const CaloSubdetectorGeometry * barrelGeometry;
   const CaloSubdetectorGeometry * endcapGeometry;
 

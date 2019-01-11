@@ -325,7 +325,7 @@ process.tree = cms.EDAnalyzer("DisPho",
    vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## rho
    rho = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
-   ## MET
+   ## METs
    mets = cms.InputTag("slimmedMETsModifiedMET"),
    ## jets
    jets = cms.InputTag("updatedPatJetsUpdatedJEC"),

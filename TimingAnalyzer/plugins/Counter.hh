@@ -67,7 +67,7 @@ public:
   // Event Prep Functions //
   //////////////////////////
 
-  void GetObjects(const edm::Event & iEvent);
+  bool GetObjects(const edm::Event & iEvent);
   void PrepObjects();
   void InitializeObjects();
 

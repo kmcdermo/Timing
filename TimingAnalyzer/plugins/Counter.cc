@@ -32,6 +32,7 @@ Counter::Counter(const edm::ParameterSet & iConfig):
   pileupInfosTag(iConfig.getParameter<edm::InputTag>("pileups")),
   genParticlesTag(iConfig.getParameter<edm::InputTag>("genParticles"))
 {
+  // internal setup
   usesResource();
   usesResource("TFileService");
 
@@ -62,7 +63,7 @@ void Counter::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup)
   // Get Event Objects //
   ///////////////////////
 
-  Counter::GetObjects(iEvent);
+  if (!Counter::GetObjects(iEvent)) return;
 
   ////////////////////////
   // Initialize Objects //
@@ -99,42 +100,52 @@ void Counter::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup)
 // Event Prep Functions //
 //////////////////////////
 
-void Counter::GetObjects(const edm::Event & iEvent)
+bool Counter::GetObjects(const edm::Event & iEvent)
 {
   // PF CANDIDATES
   iEvent.getByToken(candsToken,candsH);
+  if (oot::BadHandle(candsH,"cands")) return false;
 
   // MET
   iEvent.getByToken(metsToken,metsH);
+  if (oot::BadHandle(metsH,"mets")) return false;
 
   // GEDPHOTONS
   iEvent.getByToken(gedPhotonsToken,gedPhotonsH);
-
+  if (oot::BadHandle(gedPhotonsH,"gedPhotons")) return false;
+  
   // OOTPHOTONS
   iEvent.getByToken(ootPhotonsToken,ootPhotonsH);
+  if (oot::BadHandle(ootPhotonsH,"ootPhotons")) return false;
 
   if (isMC)
   {
     // GEN EVENT RECORD
     iEvent.getByToken(genEvtInfoToken,genEvtInfoH);
+    if (oot::BadHandle(genEvtInfoH,"genEvtInfo")) return false;
 
     // PILEUP INFO
     iEvent.getByToken(pileupInfosToken,pileupInfosH);
-
+    if (oot::BadHandle(pileupInfosH,"pileupInfos")) return false;
+  
     // GEN PARTICLES
     iEvent.getByToken(genParticlesToken,genParticlesH);
+    if (oot::BadHandle(genParticlesH,"genParticles")) return false;
   }
+
+  // if no bad handles, return true
+  return true;
 }
 
 void Counter::InitializeObjects()
 {
   // GED PHOTONS
   gedPhotons.clear();
-  if (gedPhotonsH.isValid()) gedPhotons = *gedPhotonsH;
+  gedPhotons = *gedPhotonsH;
 
   // OOT PHOTONS
   ootPhotons.clear();
-  if (ootPhotonsH.isValid()) ootPhotons = *ootPhotonsH;
+  ootPhotons = *ootPhotonsH;
 
   // NEUTRALINOS
   if (isMC) neutralinos.clear();

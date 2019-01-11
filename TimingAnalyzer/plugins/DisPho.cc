@@ -1,6 +1,6 @@
 #include "Timing/TimingAnalyzer/plugins/DisPho.hh"
 
-DisPho::DisPho(const edm::ParameterSet & iConfig): 
+DisPho::DisPho(const edm::ParameterSet & iConfig) :
   // blinding cuts
   blindSF(iConfig.existsAs<int>("blindSF") ? iConfig.getParameter<int>("blindSF") : 1000),
   applyBlindSF(iConfig.existsAs<bool>("applyBlindSF") ? iConfig.getParameter<bool>("applyBlindSF") : false),
@@ -117,20 +117,21 @@ DisPho::DisPho(const edm::ParameterSet & iConfig):
   genParticlesTag(iConfig.getParameter<edm::InputTag>("genParticles")),
   genJetsTag(iConfig.getParameter<edm::InputTag>("genJets"))
 {
+  // internal setup
   usesResource();
   usesResource("TFileService");
 
+  // set isMC
+  if (isGMSB || isHVDS || isBkgd || isToy || isADD) isMC = true;
+  else                                              isMC = false;             
+
+  // setup tokens
+  DisPho::ConsumeTokens();
+
   // labels for cut flow histogram
   std::vector<std::string> cutflowLabelVec = {"All","nEvBlinding","METBlinding","Trigger","H_{T}","Good Photon"};
-  int ibin = 0;
-  for (const auto & cutflowLabel : cutflowLabelVec)
-  {
-    cutflowLabelMap[cutflowLabel] = ibin++;
-  }
-
-  // triggers
-  triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
-  triggerObjectsToken = consumes<std::vector<pat::TriggerObjectStandAlone> > (triggerObjectsTag);
+  auto ibin = 0;
+  for (const auto & cutflowLabel : cutflowLabelVec) cutflowLabelMap[cutflowLabel] = ibin++;
 
   // read in from a stream the trigger paths for saving
   oot::ReadInTriggerNames(inputPaths,pathNames,triggerBitMap);
@@ -138,12 +139,19 @@ DisPho::DisPho(const edm::ParameterSet & iConfig):
   // read in from a stream the hlt objects/labels to match to
   oot::ReadInFilterNames(inputFilters,filterNames,triggerObjectsByFilterMap);
 
+  // read in from a stream the trigger paths for saving
+  oot::ReadInTriggerNames(inputFlags,flagNames,triggerFlagMap);
+}
+
+void DisPho::ConsumeTokens()
+{
+  // triggers
+  triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
+  triggerObjectsToken = consumes<std::vector<pat::TriggerObjectStandAlone> > (triggerObjectsTag);
+
   // MET flags
   triggerFlagsToken     = consumes<edm::TriggerResults> (triggerFlagsTag);
   ecalBadCalibFlagToken = consumes<bool> (ecalBadCalibFlagTag);
-
-  // read in from a stream the trigger paths for saving
-  oot::ReadInTriggerNames(inputFlags,flagNames,triggerFlagMap);
 
   // tracks 
   tracksToken = consumes<std::vector<reco::Track> > (tracksTag);
@@ -173,19 +181,14 @@ DisPho::DisPho(const edm::ParameterSet & iConfig):
   ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
 
   // only for simulated samples
-  if (isGMSB || isHVDS || isBkgd || isToy || isADD)
+  if (isMC)
   {
-    isMC = true;
     genEvtInfoToken   = consumes<GenEventInfoProduct>             (genEvtInfoTag);
     gent0Token        = consumes<float>                           (gent0Tag);
     genxyz0Token      = consumes<Point3D>                         (genxyz0Tag);
     pileupInfosToken  = consumes<std::vector<PileupSummaryInfo> > (pileupInfosTag);
     genParticlesToken = consumes<std::vector<reco::GenParticle> > (genParticlesTag);
     genJetsToken      = consumes<std::vector<reco::GenJet> >      (genJetsTag);
-  }
-  else 
-  {
-    isMC = false;
   }
 }
 
@@ -197,7 +200,7 @@ void DisPho::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup)
   // Get Objects //
   /////////////////
 
-  DisPho::GetObjects(iEvent,iSetup);
+  if (!DisPho::GetObjects(iEvent,iSetup)) return;
 
   ////////////////////////
   // Initialize Objects //
@@ -221,10 +224,13 @@ void DisPho::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup)
   // Apply Blinding //
   ////////////////////
 
-  if (DisPho::ApplyBlindSF()) return;
+  if (applyBlindSF && DisPho::ApplyBlindSF()) return;
   DisPho::FillBlindSF();
 
-  if (DisPho::ApplyBlindMET()) return;
+  // Get MET corrected in time for apply blinding MET --> early object prep
+  oot::PrepPhotonsCorrectMET(gedPhotonsH,ootPhotonsH,photons,t1pfMET,rho,dRmin,phpTmin,phIDmin);
+
+  if (applyBlindMET && DisPho::ApplyBlindMET()) return;
   DisPho::FillBlindMET();
   
   //////////////////
@@ -237,13 +243,13 @@ void DisPho::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup)
   // Apply pre-selection //
   /////////////////////////
 
-  if (DisPho::ApplyPreSelectionTrigger()) return;
+  if (applyTrigger && DisPho::ApplyPreSelectionTrigger()) return;
   DisPho::FillPreSelectionTrigger();
 
-  if (DisPho::ApplyPreSelectionHT()) return;
+  if (applyHT && DisPho::ApplyPreSelectionHT()) return;
   DisPho::FillPreSelectionHT();
 
-  if (DisPho::ApplyPreSelectionGoodPhoton()) return;
+  if (applyPhGood && DisPho::ApplyPreSelectionGoodPhoton()) return;
   DisPho::FillPreSelectionGoodPhoton();
 
   ////////////////////////////
@@ -253,47 +259,105 @@ void DisPho::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup)
   DisPho::FillTreeFromObjects(iEvent);
 }
 
-void DisPho::GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSetup)
+///////////////////////////
+// Object Prep Functions //
+///////////////////////////
+
+// get handles from tokens --> ensure they exist!
+bool DisPho::GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSetup)
+{
+  //////////////////////
+  // Standard Objects //
+  //////////////////////
+
+  if (!DisPho::GetStandardObjects(iEvent)) return false;
+
+  ///////////////////////////
+  // Calibration Constants //
+  ///////////////////////////
+  
+  if (!DisPho::GetCalibrationConstants(iSetup)) return false;
+
+  ////////////////
+  // MC Objects //
+  ////////////////
+
+  if (isMC)
+  {
+    if (!DisPho::GetMCObjects(iEvent)) return false;
+  }
+
+  // if no bad handles, return true
+  return true;
+}
+
+bool DisPho::GetStandardObjects(const edm::Event & iEvent)
 {
   // TRIGGER RESULTS
   iEvent.getByToken(triggerResultsToken,triggerResultsH);
-
+  if (oot::BadHandle(triggerResultsH,"triggerResults")) return false;
+      
   // TRIGGER OBJECTS
   iEvent.getByToken(triggerObjectsToken,triggerObjectsH);
+  if (oot::BadHandle(triggerObjectsH,"triggerObjects")) return false;
 
   // MET FLAGS
   iEvent.getByToken(triggerFlagsToken,triggerFlagsH);
+  if (oot::BadHandle(triggerFlagsH,"triggerFlags")) return false;
+
   iEvent.getByToken(ecalBadCalibFlagToken,ecalBadCalibFlagH);
+  if (oot::BadHandle(ecalBadCalibFlagH,"ecalBadCalibFlag")) return false;
 
   // TRACKS
   iEvent.getByToken(tracksToken,tracksH);
+  if (oot::BadHandle(tracksH,"tracks")) return false;
 
   // VERTICES
   iEvent.getByToken(verticesToken,verticesH);
-  
+  if (oot::BadHandle(verticesH,"vertices")) return false;
+
   // RHO
   iEvent.getByToken(rhoToken,rhoH);
+  if (oot::BadHandle(rhoH,"rho")) return false;
 
-  // MET
+  // METS
   iEvent.getByToken(metsToken,metsH);
+  if (oot::BadHandle(metsH,"mets")) return false;
 
   // JETS
   iEvent.getByToken(jetsToken,jetsH);
+  if (oot::BadHandle(jetsH,"jets")) return false;
 
   // LEPTONS
   iEvent.getByToken(electronsToken,electronsH);
+  if (oot::BadHandle(electronsH,"electrons")) return false;
+
   iEvent.getByToken(muonsToken,muonsH);
+  if (oot::BadHandle(muonsH,"muons")) return false;
 
   // ECAL RECHITS
   iEvent.getByToken(recHitsEBToken,recHitsEBH);
+  if (oot::BadHandle(recHitsEBH,"recHitsEB")) return false;
+
   iEvent.getByToken(recHitsEEToken,recHitsEEH);
+  if (oot::BadHandle(recHitsEEH,"recHitsEE")) return false;
 
   // PHOTONS
   iEvent.getByToken(gedPhotonsToken,gedPhotonsH);
+  if (oot::BadHandle(gedPhotonsH,"gedPhotons")) return false;
+
   iEvent.getByToken(ootPhotonsToken,ootPhotonsH);
- 
+  if (oot::BadHandle(ootPhotonsH,"ootPhotons")) return false;
+
+  // if no bad handles, return true
+  return true;
+}
+
+bool DisPho::GetCalibrationConstants(const edm::EventSetup & iSetup)
+{
   // GEOMETRY : https://gitlab.cern.ch/shervin/ECALELF
   iSetup.get<CaloGeometryRecord>().get(caloGeoH);
+  if (oot::BadHandle(caloGeoH,"caloGeo")) return false;
 
   //////////////////
   // ECAL RECORDS // 
@@ -301,15 +365,19 @@ void DisPho::GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSetu
 
   // Laser constants : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h
   iSetup.get<EcalLaserDbRecord>().get(laserH);
+  if (oot::BadHandle(laserH,"laser")) return false;
 
   // Intercalibration constants : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h
   iSetup.get<EcalIntercalibConstantsRcd>().get(interCalibH);
+  if (oot::BadHandle(interCalibH,"interCalib")) return false;
   
   // ADCToGeV : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h
   iSetup.get<EcalADCToGeVConstantRcd>().get(adcToGeVH);
+  if (oot::BadHandle(adcToGeVH,"adcToGeV")) return false;
 
   // Pedestals : https://github.com/ferriff/usercode/blob/master/DBDump/plugins/DBDump.cc
   iSetup.get<EcalPedestalsRcd>().get(pedestalsH);
+  if (oot::BadHandle(pedestalsH,"pedestals")) return false;
 
   /////////////////
   // JET DB INFO //
@@ -317,78 +385,90 @@ void DisPho::GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSetu
 
   // JECs : https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#CorrPatJets  
   iSetup.get<JetCorrectionsRecord>().get("AK4PFchs",jetCorrH); 
+  if (oot::BadHandle(jetCorrH,"jetCorr")) return false;
 
   // JERs : https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyResolution#Accessing_factors_from_Global_Ta
   jetRes = JME::JetResolution::get(iSetup,"AK4PFchs_pt");
   jetRes_sf = JME::JetResolutionScaleFactor::get(iSetup,"AK4PFchs");
 
+  // if no bad handles, return true
+  return true;
+}
+
+bool DisPho::GetMCObjects(const edm::Event & iEvent)
+{
   //////////////
   // GEN INFO //
   //////////////
 
-  if (isMC)
-  {
-    iEvent.getByToken(genEvtInfoToken,genEvtInfoH);
-    iEvent.getByToken(genxyz0Token,genxyz0H);
-    iEvent.getByToken(gent0Token,gent0H);
-    iEvent.getByToken(pileupInfosToken,pileupInfosH);
-    iEvent.getByToken(genParticlesToken,genParticlesH);
-    iEvent.getByToken(genJetsToken,genJetsH);
-  }
+  iEvent.getByToken(genEvtInfoToken,genEvtInfoH);
+  if (oot::BadHandle(genEvtInfoH,"genEvtInfo")) return false;
+  
+  iEvent.getByToken(gent0Token,gent0H);
+  if (oot::BadHandle(gent0H,"gent0")) return false;
+  
+  iEvent.getByToken(genxyz0Token,genxyz0H);
+  if (oot::BadHandle(genxyz0H,"genxyz0")) return false;
+  
+  iEvent.getByToken(pileupInfosToken,pileupInfosH);
+  if (oot::BadHandle(pileupInfosH,"pileupInfos")) return false;
+  
+  iEvent.getByToken(genParticlesToken,genParticlesH);
+  if (oot::BadHandle(genParticlesH,"genParticles")) return false;
+  
+  iEvent.getByToken(genJetsToken,genJetsH);
+  if (oot::BadHandle(genJetsH,"genJets")) return false;
+
+  // no bad handles, so return that everything is ok!
+  return true;
 }
 
 void DisPho::InitializeObjects(const edm::Event & iEvent)
 {
   // INPUT + OUTPUT RHO
-  rho = rhoH.isValid() ? *(rhoH.product()) : 0.f;
+  rho = *(rhoH.product());
+
+  // OUTPUT MET
+  t1pfMET = pat::MET(metsH->front());
 
   // OUPUT JETS
   jets.clear(); 
-  if (jetsH.isValid()) jets.reserve(jetsH->size());
+  jets.reserve(jetsH->size());
 
   // OUTPUT ELECTRONS
   electrons.clear(); 
-  if (electronsH.isValid()) electrons.reserve(electronsH->size());
+  electrons.reserve(electronsH->size());
 
   // OUTPUT MUONS
   muons.clear(); 
-  if (muonsH.isValid()) muons.reserve(muonsH->size());
+  muons.reserve(muonsH->size());
 
   // INPUT ECAL RECHITS
-  if (recHitsEBH.isValid()) recHitsEB = recHitsEBH.product();
-  if (recHitsEEH.isValid()) recHitsEE = recHitsEEH.product();
+  recHitsEB = recHitsEBH.product();
+  recHitsEE = recHitsEEH.product();
 
   // OUTPUT RECHIT MAP
   recHitMap.clear();
 
   // OUTPUT PHOTONS
   photons.clear();
-  if (gedPhotonsH.isValid() && ootPhotonsH.isValid()) photons.reserve(gedPhotonsH->size()+ootPhotonsH->size());
+  photons.reserve(gedPhotonsH->size()+ootPhotonsH->size());
 
   // GEOMETRY
-  if (caloGeoH.isValid())
-  {
-    barrelGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalSubdetector::EcalBarrel);
-    endcapGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalSubdetector::EcalEndcap);
-  }
+  barrelGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalSubdetector::EcalBarrel);
+  endcapGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal, EcalSubdetector::EcalEndcap);
 
   // LASER
-  if (laserH.isValid()) evTime = iEvent.time();
+  evTime = iEvent.time();
 
   // INTERCALIB
-  if (interCalibH.isValid()) interCalibMap = &interCalibH->getMap();
+  interCalibMap = &interCalibH->getMap();
   
   // ADCTOGEV
-  if (adcToGeVH.isValid())
-  {
-    adcToGeVEB = adcToGeVH->getEBValue();
-    adcToGeVEE = adcToGeVH->getEEValue();
-  }
+  adcToGeVEB = adcToGeVH->getEBValue();
+  adcToGeVEE = adcToGeVH->getEEValue();
   
-  //////////////
-  // GEN INFO //
-  //////////////
-
+  // GEN INFO
   if (isMC)
   {
     if (isGMSB) neutralinos.clear();
@@ -409,14 +489,14 @@ void DisPho::GetWeights()
     // Event weight info //
     ///////////////////////
 
-    genwgt = (genEvtInfoH.isValid() ? genEvtInfoH->weight() : 0.f);
+    genwgt = genEvtInfoH->weight();
     
     /////////////////////
     // Gen pileup info //
     /////////////////////
 
     DisPho::InitializeGenPUBranches();
-    if (pileupInfosH.isValid()) DisPho::SetGenPUBranches();
+    DisPho::SetGenPUBranches();
   } // end check on isMC
 
   //////////////////////
@@ -424,6 +504,26 @@ void DisPho::GetWeights()
   //////////////////////
 
   wgt = (isMC ? genwgt : 1.f);
+}
+
+void DisPho::InitializeGenPUBranches()
+{
+  genpuobs = -9999; 
+  genputrue = -9999;
+}
+
+void DisPho::SetGenPUBranches()
+{
+  for (const auto & pileupInfo : *pileupInfosH)
+  {
+    if (pileupInfo.getBunchCrossing() == 0) 
+    {
+      genpuobs  = pileupInfo.getPU_NumInteractions();
+      genputrue = pileupInfo.getTrueNumInteractions();
+      
+      break;
+    } // end check over correct BX
+  } // end loop over PU
 }
 
 void DisPho::AlwaysFillHists()
@@ -442,32 +542,6 @@ void DisPho::AlwaysFillHists()
   }
 }
 
-inline bool DisPho::ApplyBlindSF()
-{
-  return (event%blindSF!=0 && applyBlindSF);
-}
-
-void DisPho::FillBlindSF()
-{
-  h_cutflow    ->Fill((cutflowLabelMap["nEvBlinding"]*1.f));
-  h_cutflow_wgt->Fill((cutflowLabelMap["nEvBlinding"]*1.f),wgt);
-}
-
-inline bool DisPho::ApplyBlindMET()
-{
-  if (applyBlindMET && metsH.isValid())
-  {
-    return ((*metsH).front().pt() > blindMET);
-  }
-  else return false;
-}
-
-void DisPho::FillBlindMET()
-{
-  h_cutflow    ->Fill((cutflowLabelMap["METBlinding"]*1.f));
-  h_cutflow_wgt->Fill((cutflowLabelMap["METBlinding"]*1.f),wgt);
-}
-
 void DisPho::PrepObjects(const edm::Event & iEvent)
 {
   /////////////////////
@@ -482,7 +556,6 @@ void DisPho::PrepObjects(const edm::Event & iEvent)
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
   oot::PrepJets(jetsH,jets,jetpTmin,jetEtamax,jetIDmin);
   oot::PrepRecHits(recHitsEB,recHitsEE,recHitMap,rhEmin);
-  oot::PrepPhotons(gedPhotonsH,ootPhotonsH,photons,rho,phpTmin,phIDmin);
 
   ///////////////////
   // Extra Pruning //
@@ -509,25 +582,48 @@ void DisPho::PrepObjects(const edm::Event & iEvent)
   ///////////////////////////////
   // Object Counts for Storing //
   ///////////////////////////////
+
   nJets    = std::min(int(jets.size()),Config::nJets);
   nRecHits = recHitMap.size();
   nPhotons = std::min(int(photons.size()),Config::nPhotons);
 }
 
+////////////////////////////////
+// Blinding and Pre-Selection //
+////////////////////////////////
+
+inline bool DisPho::ApplyBlindSF()
+{
+  return (event%blindSF!=0);
+}
+
+void DisPho::FillBlindSF()
+{
+  h_cutflow    ->Fill((cutflowLabelMap["nEvBlinding"]*1.f));
+  h_cutflow_wgt->Fill((cutflowLabelMap["nEvBlinding"]*1.f),wgt);
+}
+
+inline bool DisPho::ApplyBlindMET()
+{
+  return (t1pfMET.pt() > blindMET);
+}
+
+void DisPho::FillBlindMET()
+{
+  h_cutflow    ->Fill((cutflowLabelMap["METBlinding"]*1.f));
+  h_cutflow_wgt->Fill((cutflowLabelMap["METBlinding"]*1.f),wgt);
+}
+
 bool DisPho::ApplyPreSelectionTrigger()
 {
-  if (applyTrigger)
-  {
-    auto triggered = false;
+  auto triggered = false;
   
-    for (const auto & triggerBitPair : triggerBitMap)
-    {
-      if (triggerBitPair.second) {triggered = true; break;}
-    }
-
-    return !triggered;
+  for (const auto & triggerBitPair : triggerBitMap)
+  {
+    if (triggerBitPair.second) {triggered = true; break;}
   }
-  else return false;
+  
+  return !triggered;
 }
 
 void DisPho::FillPreSelectionTrigger()
@@ -538,13 +634,9 @@ void DisPho::FillPreSelectionTrigger()
 
 bool DisPho::ApplyPreSelectionHT()
 {
-  if (applyHT)
-  {
-    auto jetHT = 0.f;
-    for (auto ijet = 0; ijet < nJets; ijet++) jetHT += jets[ijet].pt();
-    return (jetHT < minHT);
-  }
-  else return false;
+  auto jetHT = 0.f;
+  for (auto ijet = 0; ijet < nJets; ijet++) jetHT += jets[ijet].pt();
+  return (jetHT < minHT);
 }
 
 void DisPho::FillPreSelectionHT()
@@ -555,35 +647,31 @@ void DisPho::FillPreSelectionHT()
 
 bool DisPho::ApplyPreSelectionGoodPhoton()
 {
-  if (applyPhGood)
+  // photon pre-selection: at least one good photon in event
+  auto isphgood = false;
+  
+  for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
   {
-    // photon pre-selection: at least one good photon in event
-    auto isphgood = false;
+    const auto & photon = photons[iphoton];
     
-    for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
+    //      if (iphoton > 0) break; // only consider first photon
+    
+    const auto pt = oot::GetPhotonPt(photon);
+    if (pt < phgoodpTmin) continue;
+    
+    // const float sceta = std::abs(photon.superCluster()->eta());
+    // if (sceta > Config::etaEBcutoff) continue;
+    
+    if (phgoodIDmin != "none")
     {
-      const auto & photon = photons[iphoton];
-      
-      //      if (iphoton > 0) break; // only consider first photon
-      
-      const auto pt = oot::GetPhotonPt(photon);
-      if (pt < phgoodpTmin) continue;
-      
-      // const float sceta = std::abs(photon.superCluster()->eta());
-      // if (sceta > Config::etaEBcutoff) continue;
-      
-      if (phgoodIDmin != "none")
-      {
-	if (!*(photon.userData<bool>("isOOT")) && !photon.photonID(phgoodIDmin+"-ged")) continue;
-	if ( *(photon.userData<bool>("isOOT")) && !photon.photonID(phgoodIDmin+"-oot")) continue;
-      }
-      
-      isphgood = true; break;
-    } // end loop over photons
-
-    return !isphgood;
-  }
-  else return false; 
+      if (!*(photon.userData<bool>("isOOT")) && !photon.photonID(phgoodIDmin+"-ged")) continue;
+      if ( *(photon.userData<bool>("isOOT")) && !photon.photonID(phgoodIDmin+"-oot")) continue;
+    }
+    
+    isphgood = true; break;
+  } // end loop over photons
+  
+  return !isphgood;
 }
 
 void DisPho::FillPreSelectionGoodPhoton()
@@ -591,6 +679,10 @@ void DisPho::FillPreSelectionGoodPhoton()
   h_cutflow    ->Fill((cutflowLabelMap["Good Photon"]*1.f));
   h_cutflow_wgt->Fill((cutflowLabelMap["Good Photon"]*1.f),wgt);
 }
+
+//////////////////////////////////////
+// Fill Tree from Objects Functions //
+//////////////////////////////////////
 
 void DisPho::FillTreeFromObjects(const edm::Event & iEvent)
 {
@@ -623,20 +715,19 @@ void DisPho::FillTreeFromObjects(const edm::Event & iEvent)
   /////////////////////////
 
   DisPho::InitializePVBranches();
-  if (verticesH.isValid()) DisPho::SetPVBranches();
+  DisPho::SetPVBranches();
 
   //////////////////
   // Type1 PF Met //
   //////////////////
 
   DisPho::InitializeMETBranches();
-  if (isMC) DisPho::InitializeMETBranchesMC();
+  DisPho::SetMETBranches();
 
-  if (metsH.isValid())
+  if (isMC) 
   {
-    const auto & t1pfMET = (*metsH).front();
-    DisPho::SetMETBranches(t1pfMET);
-    if (isMC) DisPho::SetMETBranchesMC(t1pfMET);
+    DisPho::InitializeMETBranchesMC();
+    DisPho::SetMETBranchesMC();
   }
 
   /////////////////////////
@@ -699,8 +790,8 @@ void DisPho::SetMCInfo()
   ////////////////
   
   DisPho::InitializeGenPointBranches();
-  if (gent0H.isValid()) DisPho::SetGenT0Branches();
-  if (genxyz0H.isValid()) DisPho::SetGenXYZ0Branches();
+  DisPho::SetGenT0Branches();
+  DisPho::SetGenXYZ0Branches();
   
   ///////////////////////
   // Gen particle info //
@@ -745,26 +836,6 @@ void DisPho::SetGenXYZ0Branches()
   genx0 = genxyz0.X();
   geny0 = genxyz0.Y();
   genz0 = genxyz0.Z();
-}
-
-void DisPho::InitializeGenPUBranches()
-{
-  genpuobs = -9999; 
-  genputrue = -9999;
-}
-
-void DisPho::SetGenPUBranches()
-{
-  for (const auto & pileupInfo : *pileupInfosH)
-  {
-    if (pileupInfo.getBunchCrossing() == 0) 
-    {
-      genpuobs  = pileupInfo.getPU_NumInteractions();
-      genputrue = pileupInfo.getTrueNumInteractions();
-      
-      break;
-    } // end check over correct BX
-  } // end loop over PU
 }
 
 void DisPho::InitializeGMSBBranches()
@@ -831,7 +902,7 @@ void DisPho::SetGMSBBranches()
       if (oot::GetPhotonPt(photon) > ((1.f+genpTres) * gmsbBranch.genphpt_)) continue;
       
       const auto delR = reco::deltaR(genphoton,photon);
-      if (delR < mindR) 
+      if (delR < mindR)
       {
 	mindR = delR;
 	gmsbBranch.genphmatch_ = iphoton;
@@ -1054,7 +1125,7 @@ void DisPho::SetMETFilterBranches()
   metECALCalib = (triggerFlagMap.count(Config::ECALCalibFlag) ? triggerFlagMap[Config::ECALCalibFlag] : false);
 
   // special remade calib flag
-  metECALBadCalib = (ecalBadCalibFlagH.isValid() ? *(ecalBadCalibFlagH.product()) : false);
+  metECALBadCalib = *(ecalBadCalibFlagH.product());
 }
 
 void DisPho::InitializePVBranches()
@@ -1069,7 +1140,7 @@ void DisPho::SetPVBranches()
 {
   nvtx = verticesH->size();
   
-  const auto & primevtx = (*verticesH).front();
+  const auto & primevtx = verticesH->front();
 
   vtxX = primevtx.position().x();
   vtxY = primevtx.position().y();
@@ -1083,20 +1154,20 @@ void DisPho::InitializeMETBranches()
   t1pfMETsumEt = -9999.f;
 }
 
-void DisPho::InitializeMETBranchesMC()
-{
-  genMETpt  = -9999.f;
-  genMETphi = -9999.f;
-}
-
-void DisPho::SetMETBranches(const pat::MET & t1pfMET)
+void DisPho::SetMETBranches()
 {
   t1pfMETpt    = t1pfMET.pt();
   t1pfMETphi   = t1pfMET.phi();
-  t1pfMETsumEt = t1pfMET.sumEt();
+  t1pfMETsumEt = t1pfMET.userFloat("sumEt");
 }
 
-void DisPho::SetMETBranchesMC(const pat::MET & t1pfMET)
+void DisPho::InitializeMETBranchesMC()
+{
+  genMETpt    = -9999.f;
+  genMETphi   = -9999.f;
+}
+
+void DisPho::SetMETBranchesMC()
 {
   const auto & genMET = *(t1pfMET.genMET());
 
@@ -1164,7 +1235,7 @@ void DisPho::SetJetBranches()
     jetphi[ijet] = jet.phi();
     jeteta[ijet] = jet.eta();
 
-    jetID [ijet] = oot::GetPFJetID(jet);
+    jetID [ijet] = jet.userInt("jetID");
 
     jetNHF [ijet] = jet.neutralHadronEnergyFraction();
     jetNEMF[ijet] = jet.neutralEmEnergyFraction();
@@ -1631,7 +1702,7 @@ void DisPho::SetPhoBranches()
     auto & phoBranch = phoBranches[iphoton];
     
     // basic kinematic with v2: https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaMiniAODV2#Applying_the_Energy_Scale_and_sm
-    const auto phop4 = photon.p4() * (photon.pat::Photon::userFloat("ecalEnergyPostCorr") / photon.pat::Photon::energy());
+    const auto phop4 = photon.p4() * (photon.userFloat("ecalEnergyPostCorr") / photon.energy());
     phoBranch.E_   = phop4.energy();
     phoBranch.pt_  = phop4.pt();
     phoBranch.phi_ = phop4.phi();
@@ -1645,7 +1716,7 @@ void DisPho::SetPhoBranches()
     phoBranch.sceta_ = phosc->eta();
 
     // save pt, SC eta for later use
-    const auto phoPt = phoBranch.pt_;
+    const auto phoPt = photon.pt(); // use uncorrected pT for isolations
     const auto scEta = std::abs(phoBranch.sceta_);
 
     // ID-like variables
@@ -1698,7 +1769,7 @@ void DisPho::SetPhoBranches()
       phoBranch.smaj_  = ph2ndMoments.sMaj;
       phoBranch.smin_  = ph2ndMoments.sMin;
       phoBranch.alpha_ = ph2ndMoments.alpha;
-    }
+    } // end check over non-zero recHits
 
     // map of rec hit ids
     uiiumap phrhIDmap;
@@ -1731,7 +1802,7 @@ void DisPho::SetPhoBranches()
 		{
 		  return (rhE[rh1] > rhE[rh2]);
 		});
-    }
+    } // end check over storing recHits
   
     // save seed info + swiss cross
     if (recHitMap.count(seedRawId)) 
@@ -1762,7 +1833,7 @@ void DisPho::SetPhoBranches()
 	phoBranch.seedpedrms12_ = rhpedrms12[seedpos];
 	phoBranch.seedpedrms6_ = rhpedrms6[seedpos];
 	phoBranch.seedpedrms1_ = rhpedrms1[seedpos];
-      }
+      } // end check over storing rechits 
     
       // swiss cross
       if (recHits->size() > 0) phoBranch.suisseX_ = EcalTools::swissCross(seedDetId, *recHits, rhEmin);
@@ -1774,7 +1845,7 @@ void DisPho::SetPhoBranches()
 
     // HLT Matching!
     strBitMap isHLTMatched;
-    for (const auto & filter : filterNames) isHLTMatched[filter] = false;
+    oot::InitializeBitMap(filterNames,isHLTMatched);
     oot::HLTToObjectMatching(triggerObjectsByFilterMap,isHLTMatched,photon,pTres,dRmin);
     const auto filter = Config::DispIDFilter;
     phoBranch.isHLT_ = (isHLTMatched.count(filter) ? isHLTMatched[filter] : false);
@@ -1860,13 +1931,13 @@ void DisPho::SetPhoBranchesMC()
     const auto phoE = phoBranch.E_; // assumed this already set!!!
       
     // eval up/down, then save bigger one (diff is order of one of MeV's...
-    const auto down_scale = std::abs(phoE-photon.pat::Photon::userFloat("energyScaleDown"));
-    const auto up_scale   = std::abs(photon.pat::Photon::userFloat("energyScaleUp")-phoE);
+    const auto down_scale = std::abs(phoE-photon.userFloat("energyScaleDown"));
+    const auto up_scale   = std::abs(photon.userFloat("energyScaleUp")-phoE);
     phoBranch.scaleAbs_   = (up_scale > down_scale ? up_scale : down_scale);
 
     // eval up/down, then save bigger one (diff is order of one of MeV's...
-    const auto down_smear = std::abs(phoE-photon.pat::Photon::userFloat("energySigmaDown"));
-    const auto up_smear   = std::abs(photon.pat::Photon::userFloat("energySigmaUp")-phoE);
+    const auto down_smear = std::abs(phoE-photon.userFloat("energySigmaDown"));
+    const auto up_smear   = std::abs(photon.userFloat("energySigmaUp")-phoE);
     phoBranch.smearAbs_   = (up_smear > down_smear ? up_smear : down_smear);
   }
 }
@@ -1878,6 +1949,10 @@ int DisPho::CheckMatchHVDS(const int iphoton, const hvdsStruct & hvdsBranch)
   else if (iphoton == hvdsBranch.genHVph0match_ && iphoton == hvdsBranch.genHVph1match_) return 3;
   else                                                                                   return 0;
 }
+
+//////////////////////////////////////////
+// Internal and Analyzer Prep Functions //
+//////////////////////////////////////////
 
 void DisPho::beginJob() 
 {

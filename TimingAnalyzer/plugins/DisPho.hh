@@ -118,29 +118,33 @@ public:
   ////////////////////////
 
   explicit DisPho(const edm::ParameterSet & iConfig);
+  void ConsumeTokens();
   ~DisPho();
   static void fillDescriptions(edm::ConfigurationDescriptions & descriptions);  
 
-  ///////////////////////////
-  // Output Prep Functions //
-  ///////////////////////////
+  /////////////////////////////
+  // Analyzer Prep Functions //
+  /////////////////////////////
 
   void MakeHists();
   void MakeAndFillConfigTree();
   void MakeEventTree();
 
-  //////////////////////////
-  // Event Prep Functions //
-  //////////////////////////
+  ///////////////////////////
+  // Object Prep Functions //
+  ///////////////////////////
 
-  void GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSetup);
+  bool GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSetup);
+  bool GetStandardObjects(const edm::Event & iEvent);
+  bool GetCalibrationConstants(const  edm::EventSetup & iSetup);
+  bool GetMCObjects(const edm::Event & iEvent);
   void InitializeObjects(const edm::Event & iEvent);
 
   void GetWeights();
   void InitializeGenPUBranches();
   void SetGenPUBranches();
-
   void AlwaysFillHists();
+
   void PrepObjects(const edm::Event & iEvent);
 
   ////////////////////////////////
@@ -162,9 +166,9 @@ public:
   bool ApplyPreSelectionGoodPhoton();
   void FillPreSelectionGoodPhoton();
 
-  ////////////////////////////
-  // Fill Tree from Objects //
-  ////////////////////////////
+  //////////////////////////////////////
+  // Fill Tree from Objects Functions //
+  //////////////////////////////////////
 
   void FillTreeFromObjects(const edm::Event & iEvent);
 
@@ -187,9 +191,9 @@ public:
   void SetPVBranches();
 
   void InitializeMETBranches();
-  void SetMETBranches(const pat::MET & t1pfMET);
+  void SetMETBranches();
   void InitializeMETBranchesMC();
-  void SetMETBranchesMC(const pat::MET & t1pfMET);
+  void SetMETBranchesMC();
 
   void InitializeJetBranches();
   void SetJetBranches();
@@ -303,7 +307,7 @@ private:
   edm::Handle<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsH;
 
   // output triggers
-  trigObjVecMap triggerObjectsByFilterMap; // first index is filter label, second is trigger objects
+  std::map<std::string,std::vector<pat::TriggerObjectStandAlone> > triggerObjectsByFilterMap; // first index is filter label, second is trigger objects
 
   // met filter inputs
   const std::string inputFlags;
@@ -339,6 +343,9 @@ private:
   const edm::InputTag metsTag;
   edm::EDGetTokenT<std::vector<pat::MET> > metsToken;
   edm::Handle<std::vector<pat::MET> > metsH;
+
+  // output MET
+  pat::MET t1pfMET;
 
   // jets
   const edm::InputTag jetsTag;

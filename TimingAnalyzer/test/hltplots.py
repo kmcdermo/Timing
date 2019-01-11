@@ -144,6 +144,8 @@ process.tree = cms.EDAnalyzer("HLTPlots",
    triggerObjects = cms.InputTag("slimmedPatTrigger"),
    ## rho
    rho = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
+   ## METs
+   mets = cms.InputTag("slimmedMETsModifiedMET"),
    ## jets			    	
    jets = cms.InputTag("updatedPatJetsUpdatedJEC"),
    ## photons		

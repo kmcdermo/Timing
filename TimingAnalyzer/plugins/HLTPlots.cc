@@ -1,15 +1,16 @@
 #include "Timing/TimingAnalyzer/plugins/HLTPlots.hh"
 
-HLTPlots::HLTPlots(const edm::ParameterSet& iConfig): 
+HLTPlots::HLTPlots(const edm::ParameterSet & iConfig) :
   // pre-selection
   applyTriggerPS(iConfig.existsAs<bool>("applyTriggerPS") ? iConfig.getParameter<bool>("applyTriggerPS") : false),
   psPath        (iConfig.existsAs<std::string>("psPath")  ? iConfig.getParameter<std::string>("psPath") : "HLT_IsoMu27_v"),
 
   // cuts
-  phpTmin(iConfig.existsAs<double>("phpTmin") ? iConfig.getParameter<double>("phpTmin") : 20.0),
   jetpTmin(iConfig.existsAs<double>("jetpTmin") ? iConfig.getParameter<double>("jetpTmin") : 15.0),
   jetIDmin(iConfig.existsAs<int>("jetIDmin") ? iConfig.getParameter<int>("jetIDmin") : 1),
   jetEtamax(iConfig.existsAs<int>("jetEtamax") ? iConfig.getParameter<double>("jetEtamax") : 3.0),
+  phpTmin(iConfig.existsAs<double>("phpTmin") ? iConfig.getParameter<double>("phpTmin") : 20.0),
+  phIDmin(iConfig.existsAs<std::string>("phIDmin") ? iConfig.getParameter<std::string>("phIDmin") : "loose"),
   
   // matching cuts
   dRmin(iConfig.existsAs<double>("dRmin") ? iConfig.getParameter<double>("dRmin") : 0.3),
@@ -26,6 +27,9 @@ HLTPlots::HLTPlots(const edm::ParameterSet& iConfig):
   // rho
   rhoTag(iConfig.getParameter<edm::InputTag>("rho")),
   
+  // mets
+  metsTag(iConfig.getParameter<edm::InputTag>("mets")),  
+
   // jets
   jetsTag(iConfig.getParameter<edm::InputTag>("jets")),  
 
@@ -42,9 +46,10 @@ HLTPlots::HLTPlots(const edm::ParameterSet& iConfig):
   // tracks
   tracksTag(iConfig.getParameter<edm::InputTag>("tracks"))  
 {
+  // internal setup
   usesResource();
   usesResource("TFileService");
-    
+  
   // triggers
   triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
   triggerObjectsToken = consumes<std::vector<pat::TriggerObjectStandAlone> > (triggerObjectsTag);
@@ -82,6 +87,9 @@ HLTPlots::HLTPlots(const edm::ParameterSet& iConfig):
   // rho
   rhoToken = consumes<double> (rhoTag);
 
+  // mets
+  metsToken = consumes<std::vector<pat::MET> > (metsTag);
+
   // jets
   jetsToken = consumes<std::vector<pat::Jet> > (jetsTag);
 
@@ -105,7 +113,7 @@ void HLTPlots::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup
   // Get Event Objects //
   ///////////////////////
 
-  HLTPlots::GetObjects(iEvent,iSetup);
+  if (!HLTPlots::GetObjects(iEvent,iSetup)) return;
 
   ////////////////////////
   // Initialize Objects //
@@ -124,7 +132,7 @@ void HLTPlots::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup
   ///////////////////
 
   // if event does not pass pre-selection, skip it!
-  if (HLTPlots::ApplyPreSelection()) return;
+  if (applyTriggerPS && HLTPlots::ApplyPreSelection()) return;
 
   //////////////////////
   // Set trigger info //
@@ -160,60 +168,78 @@ void HLTPlots::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup
   HLTPlots::PerformTests();
 }
 
-void HLTPlots::GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSetup)
+bool HLTPlots::GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSetup)
 {
   // RHO
   iEvent.getByToken(rhoToken,rhoH);
+  if (oot::BadHandle(rhoH,"rho")) return false;
 
   // TRIGGER RESULTS
   iEvent.getByToken(triggerResultsToken,triggerResultsH);
+  if (oot::BadHandle(triggerResultsH,"triggerResults")) return false;
 
   // TRIGGER OBJECTS
   iEvent.getByToken(triggerObjectsToken,triggerObjectsH);
+  if (oot::BadHandle(triggerObjectsH,"triggerObjects")) return false;
+
+  // METS
+  iEvent.getByToken(metsToken,metsH);
+  if (oot::BadHandle(metsH,"mets")) return false;
 
   // JETS
   iEvent.getByToken(jetsToken,jetsH);
+  if (oot::BadHandle(jetsH,"jets")) return false;
 
   // GED PHOTONS
   iEvent.getByToken(gedPhotonsToken,gedPhotonsH);
+  if (oot::BadHandle(gedPhotonsH,"gedPhotons")) return false;
 
   // OOT PHOTONS
   iEvent.getByToken(ootPhotonsToken,ootPhotonsH);
+  if (oot::BadHandle(ootPhotonsH,"ootPhotons")) return false;
 
   // RecHits
   iEvent.getByToken(recHitsEBToken,recHitsEBH);
+  if (oot::BadHandle(recHitsEBH,"recHitsEB")) return false;
+
   iEvent.getByToken(recHitsEEToken,recHitsEEH);
+  if (oot::BadHandle(recHitsEEH,"recHitsEE")) return false;
 
   // Tracks
   iEvent.getByToken(tracksToken,tracksH);
+  if (oot::BadHandle(tracksH,"tracks")) return false;
 
   // geometry (from ECAL ELF)
-  iSetup.get<CaloGeometryRecord>().get(calogeoH);
+  iSetup.get<CaloGeometryRecord>().get(caloGeoH);
+  if (oot::BadHandle(caloGeoH,"caloGeo")) return false;
+
+  // if no bad handles, return true
+  return true;
 }
 
 void HLTPlots::InitializeObjects()
 {
   // INPUT RHO
-  rho = rhoH.isValid() ? *(rhoH.product()) : 0.f;
+  rho = *(rhoH.product());
 
   // INPUT RECHITS
-  if (recHitsEBH.isValid()) recHitsEB = recHitsEBH.product();
-  if (recHitsEEH.isValid()) recHitsEE = recHitsEEH.product();
+  recHitsEB = recHitsEBH.product();
+  recHitsEE = recHitsEEH.product();
 
   // INPUT GEOMETRY
-  if (calogeoH.isValid())
-  {
-    barrelGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal,EcalSubdetector::EcalBarrel);
-    endcapGeometry = calogeoH->getSubdetectorGeometry(DetId::Ecal,EcalSubdetector::EcalEndcap);
-  }
+  barrelGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal,EcalSubdetector::EcalBarrel);
+  endcapGeometry = caloGeoH->getSubdetectorGeometry(DetId::Ecal,EcalSubdetector::EcalEndcap);
+
+  // OUTPUT MET
+  t1pfMET = pat::MET(metsH->front());
 
   // OUTPUT JETS
   jets.clear(); 
-  if (jetsH.isValid()) jets.reserve(jetsH->size());
+  jets.reserve(jetsH->size());
 
   // OUTPUT PHOTONS
   photons.clear();
-  if (gedPhotonsH.isValid() && ootPhotonsH.isValid()) photons.reserve(gedPhotonsH->size()+ootPhotonsH->size());
+  photons.reserve(gedPhotonsH->size()+ootPhotonsH->size());
   goodphs.clear();
 }
 
@@ -222,15 +248,14 @@ void HLTPlots::PrepObjects(const edm::Event & iEvent)
   oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
   oot::PrepJets(jetsH,jets,jetpTmin,jetEtamax,jetIDmin);
-  oot::PrepPhotons(gedPhotonsH,ootPhotonsH,photons,rho,phpTmin);
+  oot::PrepPhotonsCorrectMET(gedPhotonsH,ootPhotonsH,photons,t1pfMET,rho,dRmin,phpTmin,phIDmin);
 }
 
-bool HLTPlots::ApplyPreSelection()
+inline bool HLTPlots::ApplyPreSelection()
 {
-  if (applyTriggerPS && triggerBitMap.count(psPath))
+  if (triggerBitMap.count(psPath))
   {
-    if (!triggerBitMap[psPath]) return true;
-    else return false;
+    return !triggerBitMap[psPath];
   }
   else return false;
 }
@@ -284,7 +309,7 @@ void HLTPlots::SetPhotonInfo()
     
     // check for HLT filter matches!
     strBitMap isHLTMatched;
-    for (const auto & filter : filterNames) isHLTMatched[filter] = false;
+    oot::InitializeBitMap(filterNames,isHLTMatched);
     oot::HLTToObjectMatching(triggerObjectsByFilterMap,isHLTMatched,photon,pTres,dRmin);
     for (auto ifilter = 0U; ifilter < filterNames.size(); ifilter++)
     {
