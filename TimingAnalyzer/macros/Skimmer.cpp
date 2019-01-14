@@ -590,18 +590,18 @@ void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt)
   fInEvent.b_t1pfMETphi->GetEntry(entry);
   fInEvent.b_t1pfMETsumEt->GetEntry(entry);
   fInEvent.b_njets->GetEntry(entry);
-  // fInEvent.b_nelLowL->GetEntry(entry);
-  // fInEvent.b_nelLowM->GetEntry(entry);
-  // fInEvent.b_nelLowT->GetEntry(entry);
-  // fInEvent.b_nelHighL->GetEntry(entry);
-  // fInEvent.b_nelHighM->GetEntry(entry);
-  // fInEvent.b_nelHighT->GetEntry(entry);
-  // fInEvent.b_nmuLowL->GetEntry(entry);
-  // fInEvent.b_nmuLowM->GetEntry(entry);
-  // fInEvent.b_nmuLowT->GetEntry(entry);
-  // fInEvent.b_nmuHighL->GetEntry(entry);
-  // fInEvent.b_nmuHighM->GetEntry(entry);
-  // fInEvent.b_nmuHighT->GetEntry(entry);
+  fInEvent.b_nelLowL->GetEntry(entry);
+  fInEvent.b_nelLowM->GetEntry(entry);
+  fInEvent.b_nelLowT->GetEntry(entry);
+  fInEvent.b_nelHighL->GetEntry(entry);
+  fInEvent.b_nelHighM->GetEntry(entry);
+  fInEvent.b_nelHighT->GetEntry(entry);
+  fInEvent.b_nmuLowL->GetEntry(entry);
+  fInEvent.b_nmuLowM->GetEntry(entry);
+  fInEvent.b_nmuLowT->GetEntry(entry);
+  fInEvent.b_nmuHighL->GetEntry(entry);
+  fInEvent.b_nmuHighM->GetEntry(entry);
+  fInEvent.b_nmuHighT->GetEntry(entry);
   fInEvent.b_nrechits->GetEntry(entry);
   fInEvent.b_nphotons->GetEntry(entry);
 
@@ -657,18 +657,18 @@ void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt)
   fOutEvent.t1pfMETphi = fInEvent.t1pfMETphi;
   fOutEvent.t1pfMETsumEt = fInEvent.t1pfMETsumEt;
   fOutEvent.njets = fInEvent.njets;
-  // fOutEvent.nelLowL = fInEvent.nelLowL;
-  // fOutEvent.nelLowM = fInEvent.nelLowM;
-  // fOutEvent.nelLowT = fInEvent.nelLowT;
-  // fOutEvent.nelHighL = fInEvent.nelHighL;
-  // fOutEvent.nelHighM = fInEvent.nelHighM;
-  // fOutEvent.nelHighT = fInEvent.nelHighT;
-  // fOutEvent.nmuLowL = fInEvent.nmuLowL;
-  // fOutEvent.nmuLowM = fInEvent.nmuLowM;
-  // fOutEvent.nmuLowT = fInEvent.nmuLowT;
-  // fOutEvent.nmuHighL = fInEvent.nmuHighL;
-  // fOutEvent.nmuHighM = fInEvent.nmuHighM;
-  // fOutEvent.nmuHighT = fInEvent.nmuHighT;
+  fOutEvent.nelLowL = fInEvent.nelLowL;
+  fOutEvent.nelLowM = fInEvent.nelLowM;
+  fOutEvent.nelLowT = fInEvent.nelLowT;
+  fOutEvent.nelHighL = fInEvent.nelHighL;
+  fOutEvent.nelHighM = fInEvent.nelHighM;
+  fOutEvent.nelHighT = fInEvent.nelHighT;
+  fOutEvent.nmuLowL = fInEvent.nmuLowL;
+  fOutEvent.nmuLowM = fInEvent.nmuLowM;
+  fOutEvent.nmuLowT = fInEvent.nmuLowT;
+  fOutEvent.nmuHighL = fInEvent.nmuHighL;
+  fOutEvent.nmuHighM = fInEvent.nmuHighM;
+  fOutEvent.nmuHighT = fInEvent.nmuHighT;
   fOutEvent.nrechits = fInEvent.nrechits;
   fOutEvent.nphotons = fInEvent.nphotons;
   fOutEvent.evtwgt   = evtwgt;
@@ -1266,10 +1266,10 @@ void Skimmer::InitInConfigBranches()
   fInConfigTree->SetBranchAddress(fInConfig.s_splitPho.c_str(), &fInConfig.splitPho);
   fInConfigTree->SetBranchAddress(fInConfig.s_onlyGED.c_str(), &fInConfig.onlyGED);
   fInConfigTree->SetBranchAddress(fInConfig.s_onlyOOT.c_str(), &fInConfig.onlyOOT);
-  // fInConfigTree->SetBranchAddress(fInConfig.s_ellowpTmin.c_str(), &fInConfig.ellowpTmin);
-  // fInConfigTree->SetBranchAddress(fInConfig.s_elhighpTmin.c_str(), &fInConfig.elhighpTmin);
-  // fInConfigTree->SetBranchAddress(fInConfig.s_mulowpTmin.c_str(), &fInConfig.mulowpTmin);
-  // fInConfigTree->SetBranchAddress(fInConfig.s_muhighpTmin.c_str(), &fInConfig.muhighpTmin);
+  fInConfigTree->SetBranchAddress(fInConfig.s_ellowpTmin.c_str(), &fInConfig.ellowpTmin);
+  fInConfigTree->SetBranchAddress(fInConfig.s_elhighpTmin.c_str(), &fInConfig.elhighpTmin);
+  fInConfigTree->SetBranchAddress(fInConfig.s_mulowpTmin.c_str(), &fInConfig.mulowpTmin);
+  fInConfigTree->SetBranchAddress(fInConfig.s_muhighpTmin.c_str(), &fInConfig.muhighpTmin);
   fInConfigTree->SetBranchAddress(fInConfig.s_storeRecHits.c_str(), &fInConfig.storeRecHits);
   fInConfigTree->SetBranchAddress(fInConfig.s_applyTrigger.c_str(), &fInConfig.applyTrigger);
   fInConfigTree->SetBranchAddress(fInConfig.s_minHT.c_str(), &fInConfig.minHT);
@@ -1284,7 +1284,7 @@ void Skimmer::InitInConfigBranches()
   fInConfigTree->SetBranchAddress(fInConfig.s_trackpTmin.c_str(), &fInConfig.trackpTmin);
   fInConfigTree->SetBranchAddress(fInConfig.s_genjetdRmin.c_str(), &fInConfig.genjetdRmin);
   fInConfigTree->SetBranchAddress(fInConfig.s_genjetpTfactor.c_str(), &fInConfig.genjetpTfactor);
-  // fInConfigTree->SetBranchAddress(fInConfig.s_leptondRmin.c_str(), &fInConfig.leptondRmin);
+  fInConfigTree->SetBranchAddress(fInConfig.s_leptondRmin.c_str(), &fInConfig.leptondRmin);
   fInConfigTree->SetBranchAddress(fInConfig.s_smearjetEmin.c_str(), &fInConfig.smearjetEmin);
   fInConfigTree->SetBranchAddress(fInConfig.s_inputPaths.c_str(), &fInConfig.inputPaths);
   fInConfigTree->SetBranchAddress(fInConfig.s_inputFilters.c_str(), &fInConfig.inputFilters);
@@ -1538,18 +1538,18 @@ void Skimmer::InitInBranches()
     fInTree->SetBranchAddress(fInJets.s_isGen.c_str(), &fInJets.isGen, &fInJets.b_isGen);
   }
 
-  // fInTree->SetBranchAddress(fInEvent.s_nelLowL.c_str(), &fInEvent.nelLowL, &fInEvent.b_nelLowL);
-  // fInTree->SetBranchAddress(fInEvent.s_nelLowM.c_str(), &fInEvent.nelLowM, &fInEvent.b_nelLowM);
-  // fInTree->SetBranchAddress(fInEvent.s_nelLowT.c_str(), &fInEvent.nelLowT, &fInEvent.b_nelLowT);
-  // fInTree->SetBranchAddress(fInEvent.s_nelHighL.c_str(), &fInEvent.nelHighL, &fInEvent.b_nelHighL);
-  // fInTree->SetBranchAddress(fInEvent.s_nelHighM.c_str(), &fInEvent.nelHighM, &fInEvent.b_nelHighM);
-  // fInTree->SetBranchAddress(fInEvent.s_nelHighT.c_str(), &fInEvent.nelHighT, &fInEvent.b_nelHighT);
-  // fInTree->SetBranchAddress(fInEvent.s_nmuLowL.c_str(), &fInEvent.nmuLowL, &fInEvent.b_nmuLowL);
-  // fInTree->SetBranchAddress(fInEvent.s_nmuLowM.c_str(), &fInEvent.nmuLowM, &fInEvent.b_nmuLowM);
-  // fInTree->SetBranchAddress(fInEvent.s_nmuLowT.c_str(), &fInEvent.nmuLowT, &fInEvent.b_nmuLowT);
-  // fInTree->SetBranchAddress(fInEvent.s_nmuHighL.c_str(), &fInEvent.nmuHighL, &fInEvent.b_nmuHighL);
-  // fInTree->SetBranchAddress(fInEvent.s_nmuHighM.c_str(), &fInEvent.nmuHighM, &fInEvent.b_nmuHighM);
-  // fInTree->SetBranchAddress(fInEvent.s_nmuHighT.c_str(), &fInEvent.nmuHighT, &fInEvent.b_nmuHighT);
+  fInTree->SetBranchAddress(fInEvent.s_nelLowL.c_str(), &fInEvent.nelLowL, &fInEvent.b_nelLowL);
+  fInTree->SetBranchAddress(fInEvent.s_nelLowM.c_str(), &fInEvent.nelLowM, &fInEvent.b_nelLowM);
+  fInTree->SetBranchAddress(fInEvent.s_nelLowT.c_str(), &fInEvent.nelLowT, &fInEvent.b_nelLowT);
+  fInTree->SetBranchAddress(fInEvent.s_nelHighL.c_str(), &fInEvent.nelHighL, &fInEvent.b_nelHighL);
+  fInTree->SetBranchAddress(fInEvent.s_nelHighM.c_str(), &fInEvent.nelHighM, &fInEvent.b_nelHighM);
+  fInTree->SetBranchAddress(fInEvent.s_nelHighT.c_str(), &fInEvent.nelHighT, &fInEvent.b_nelHighT);
+  fInTree->SetBranchAddress(fInEvent.s_nmuLowL.c_str(), &fInEvent.nmuLowL, &fInEvent.b_nmuLowL);
+  fInTree->SetBranchAddress(fInEvent.s_nmuLowM.c_str(), &fInEvent.nmuLowM, &fInEvent.b_nmuLowM);
+  fInTree->SetBranchAddress(fInEvent.s_nmuLowT.c_str(), &fInEvent.nmuLowT, &fInEvent.b_nmuLowT);
+  fInTree->SetBranchAddress(fInEvent.s_nmuHighL.c_str(), &fInEvent.nmuHighL, &fInEvent.b_nmuHighL);
+  fInTree->SetBranchAddress(fInEvent.s_nmuHighM.c_str(), &fInEvent.nmuHighM, &fInEvent.b_nmuHighM);
+  fInTree->SetBranchAddress(fInEvent.s_nmuHighT.c_str(), &fInEvent.nmuHighT, &fInEvent.b_nmuHighT);
 
   fInTree->SetBranchAddress(fInEvent.s_nrechits.c_str(), &fInEvent.nrechits, &fInEvent.b_nrechits);
   if (fInConfig.storeRecHits)
@@ -1676,10 +1676,10 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfigTree->Branch(fOutConfig.s_splitPho.c_str(), &fOutConfig.splitPho);
   fOutConfigTree->Branch(fOutConfig.s_onlyGED.c_str(), &fOutConfig.onlyGED);
   fOutConfigTree->Branch(fOutConfig.s_onlyOOT.c_str(), &fOutConfig.onlyOOT);
-  // fOutConfigTree->Branch(fOutConfig.s_ellowpTmin.c_str(), &fOutConfig.ellowpTmin);
-  // fOutConfigTree->Branch(fOutConfig.s_elhighpTmin.c_str(), &fOutConfig.elhighpTmin);
-  // fOutConfigTree->Branch(fOutConfig.s_mulowpTmin.c_str(), &fOutConfig.mulowpTmin);
-  // fOutConfigTree->Branch(fOutConfig.s_muhighpTmin.c_str(), &fOutConfig.muhighpTmin);
+  fOutConfigTree->Branch(fOutConfig.s_ellowpTmin.c_str(), &fOutConfig.ellowpTmin);
+  fOutConfigTree->Branch(fOutConfig.s_elhighpTmin.c_str(), &fOutConfig.elhighpTmin);
+  fOutConfigTree->Branch(fOutConfig.s_mulowpTmin.c_str(), &fOutConfig.mulowpTmin);
+  fOutConfigTree->Branch(fOutConfig.s_muhighpTmin.c_str(), &fOutConfig.muhighpTmin);
   fOutConfigTree->Branch(fOutConfig.s_storeRecHits.c_str(), &fOutConfig.storeRecHits);
   fOutConfigTree->Branch(fOutConfig.s_applyTrigger.c_str(), &fOutConfig.applyTrigger);
   fOutConfigTree->Branch(fOutConfig.s_minHT.c_str(), &fOutConfig.minHT);
@@ -1694,7 +1694,7 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfigTree->Branch(fOutConfig.s_trackpTmin.c_str(), &fOutConfig.trackpTmin);
   fOutConfigTree->Branch(fOutConfig.s_genjetdRmin.c_str(), &fOutConfig.genjetdRmin);
   fOutConfigTree->Branch(fOutConfig.s_genjetpTfactor.c_str(), &fOutConfig.genjetpTfactor);
-  // fOutConfigTree->Branch(fOutConfig.s_leptondRmin.c_str(), &fOutConfig.leptondRmin);
+  fOutConfigTree->Branch(fOutConfig.s_leptondRmin.c_str(), &fOutConfig.leptondRmin);
   fOutConfigTree->Branch(fOutConfig.s_smearjetEmin.c_str(), &fOutConfig.smearjetEmin);
   fOutConfigTree->Branch(fOutConfig.s_inputPaths.c_str(), &fOutConfig.inputPaths_s);
   fOutConfigTree->Branch(fOutConfig.s_inputFilters.c_str(), &fOutConfig.inputFilters_s);
@@ -1729,10 +1729,10 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfig.splitPho = fInConfig.splitPho;
   fOutConfig.onlyGED = fInConfig.onlyGED;
   fOutConfig.onlyOOT = fInConfig.onlyOOT;
-  // fOutConfig.ellowpTmin = fInConfig.ellowpTmin;
-  // fOutConfig.elhighpTmin = fInConfig.elhighpTmin;
-  // fOutConfig.mulowpTmin = fInConfig.mulowpTmin;
-  // fOutConfig.muhighpTmin = fInConfig.muhighpTmin;
+  fOutConfig.ellowpTmin = fInConfig.ellowpTmin;
+  fOutConfig.elhighpTmin = fInConfig.elhighpTmin;
+  fOutConfig.mulowpTmin = fInConfig.mulowpTmin;
+  fOutConfig.muhighpTmin = fInConfig.muhighpTmin;
   fOutConfig.storeRecHits = false; // drop these now!
   fOutConfig.applyTrigger = fInConfig.applyTrigger;
   fOutConfig.minHT = fInConfig.minHT;
@@ -1747,7 +1747,7 @@ void Skimmer::InitAndSetOutConfig()
   fOutConfig.trackpTmin = fInConfig.trackpTmin;
   fOutConfig.genjetdRmin = fInConfig.genjetdRmin;
   fOutConfig.genjetpTfactor = fInConfig.genjetpTfactor;
-  // fOutConfig.leptondRmin = fInConfig.leptondRmin;
+  fOutConfig.leptondRmin = fInConfig.leptondRmin;
   fOutConfig.smearjetEmin = fInConfig.smearjetEmin;
   fOutConfig.inputPaths_s = fInConfig.inputPaths->c_str();
   fOutConfig.inputFilters_s = fInConfig.inputFilters->c_str();
@@ -1938,18 +1938,18 @@ void Skimmer::InitOutBranches()
     // fOutTree->Branch(fOutJets.s_CHM.c_str(), &fOutJets.CHM_f);
   }
 
-  // fOutTree->Branch(fOutEvent.s_nelLowL.c_str(), &fOutEvent.nelLowL);
-  // fOutTree->Branch(fOutEvent.s_nelLowM.c_str(), &fOutEvent.nelLowM);
-  // fOutTree->Branch(fOutEvent.s_nelLowT.c_str(), &fOutEvent.nelLowT);
-  // fOutTree->Branch(fOutEvent.s_nelHighL.c_str(), &fOutEvent.nelHighL);
-  // fOutTree->Branch(fOutEvent.s_nelHighM.c_str(), &fOutEvent.nelHighM);
-  // fOutTree->Branch(fOutEvent.s_nelHighT.c_str(), &fOutEvent.nelHighT);
-  // fOutTree->Branch(fOutEvent.s_nmuLowL.c_str(), &fOutEvent.nmuLowL);
-  // fOutTree->Branch(fOutEvent.s_nmuLowM.c_str(), &fOutEvent.nmuLowM);
-  // fOutTree->Branch(fOutEvent.s_nmuLowT.c_str(), &fOutEvent.nmuLowT);
-  // fOutTree->Branch(fOutEvent.s_nmuHighL.c_str(), &fOutEvent.nmuHighL);
-  // fOutTree->Branch(fOutEvent.s_nmuHighM.c_str(), &fOutEvent.nmuHighM);
-  // fOutTree->Branch(fOutEvent.s_nmuHighT.c_str(), &fOutEvent.nmuHighT);
+  fOutTree->Branch(fOutEvent.s_nelLowL.c_str(), &fOutEvent.nelLowL);
+  fOutTree->Branch(fOutEvent.s_nelLowM.c_str(), &fOutEvent.nelLowM);
+  fOutTree->Branch(fOutEvent.s_nelLowT.c_str(), &fOutEvent.nelLowT);
+  fOutTree->Branch(fOutEvent.s_nelHighL.c_str(), &fOutEvent.nelHighL);
+  fOutTree->Branch(fOutEvent.s_nelHighM.c_str(), &fOutEvent.nelHighM);
+  fOutTree->Branch(fOutEvent.s_nelHighT.c_str(), &fOutEvent.nelHighT);
+  fOutTree->Branch(fOutEvent.s_nmuLowL.c_str(), &fOutEvent.nmuLowL);
+  fOutTree->Branch(fOutEvent.s_nmuLowM.c_str(), &fOutEvent.nmuLowM);
+  fOutTree->Branch(fOutEvent.s_nmuLowT.c_str(), &fOutEvent.nmuLowT);
+  fOutTree->Branch(fOutEvent.s_nmuHighL.c_str(), &fOutEvent.nmuHighL);
+  fOutTree->Branch(fOutEvent.s_nmuHighM.c_str(), &fOutEvent.nmuHighM);
+  fOutTree->Branch(fOutEvent.s_nmuHighT.c_str(), &fOutEvent.nmuHighT);
   
   fOutTree->Branch(fOutEvent.s_nrechits.c_str(), &fOutEvent.nrechits);
 

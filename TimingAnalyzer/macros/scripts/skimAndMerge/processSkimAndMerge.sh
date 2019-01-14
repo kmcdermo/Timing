@@ -38,7 +38,7 @@ mkdir -p ${tmpdir}
 
 ## produce sum of weights
 echo "Getting sum of weights"
-./scripts/computeSumWeights.sh ${eosdir} ${files} ${wgtfile}
+./scripts/computeSumWeights.sh ${eosprefix}/${eosdir} ${files} ${wgtfile}
 sumwgts=$(grep "Sum_of_weights: " ${wgtfile} | cut -d " " -f 2)
 echo "sum_wgts="${sumwgts} >> ${skimconfig}
 
@@ -47,7 +47,7 @@ if (( ${usePUWeights} == 1 )) ; then
     echo "Computing PU Weights"
     puwgtfile="${text}_puwgt.root"
 
-    ./scripts/computePUWeights.sh ${eosdir} ${files} ${puwgtfile}
+    ./scripts/computePUWeights.sh ${eosprefix}/${eosdir} ${files} ${puwgtfile}
 
     echo "puwgt_filename="${puwgtfile} >> ${skimconfig}
 fi
@@ -59,7 +59,7 @@ counter="1"
 while IFS='' read -r line || [[ -n "${line}" ]]; do
     echo "Working on file" ${counter} "out of" ${nfiles} "[filename: ${line}]"
 
-    ./scripts/runSkimmer.sh ${eosdir} ${tmpdir} ${line} ${skimconfig}
+    ./scripts/runSkimmer.sh ${eosprefix}/${eosdir} ${tmpdir} ${line} ${skimconfig}
     counter=$((${counter} + 1))
 done < "${files}"
 
