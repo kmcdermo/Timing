@@ -3,6 +3,7 @@
 ##################
 ## Source First ##
 ##################
+
 source scripts/common_variables.sh
 
 ###################
@@ -10,13 +11,14 @@ source scripts/common_variables.sh
 ###################
 
 ## Command Line Input
-inlimitdir=${1:-"input"}
-inwsfile=${2:-"ws_final.root"}
-doobs=${3:-0}
-outdir=${4:-"ntuples_v4/full_chain"}
-docleanup=${5:-"true"}
+tmplimitdir=${1:-"tmp"}
+inplotsfile=${2:-"met_vs_time_box_SR.root"}
+doobs=${2:-0}
+outdir=${3:-"madv2_v3/checks_v1"}
+docleanup=${4:-"true"}
 
 ## Combine config
+inlimitdir="input"
 outcombname="AsymLim"
 outlimitdir="output"
 
@@ -30,24 +32,35 @@ outlimitplotdir="limits"
 ## Make Directories ##
 ######################
 
+mkdir -p "${inlimitdir}"
 mkdir -p "${outlimitdir}"
 
-###############################################
-## Extract Limits From Fitter : Run Combine! ##
-###############################################
+##########################
+## Make Datacards + WSs ##
+##########################
 
-./scripts/extractResults.sh "${inlimitdir}" "${inwsfile}" "${outcombname}" "${outlimitdir}" 
+echo "Making Datacards and WSs"
+./scripts/makeDatacardsAndWSs.sh "${tmplimitdir}" "${inplotsfile}" "${inlimitdir}"
+
+###########################################
+## Extract Limits From WS : Run Combine! ##
+###########################################
+
+echo "Extracting Results ABCD"
+./scripts/extractResultsABCD.sh "${inlimitdir}" "${outcombname}" "${outlimitdir}" 
 
 #########################
 ## Make 1D Limit Plots ##
 #########################
 
+echo "Running limits 1D"
 ./scripts/runLimits1D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${MainEra}" "${outlimit1D}" "${outdir}/${outlimitplotdir}"
 
 #########################
 ## Make 2D Limit Plots ##
 #########################
 
+echo "Running limits 2D"
 ./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" "${outlimit2D}" "${outdir}/${outlimitplotdir}"
 
 ###########################
@@ -55,7 +68,8 @@ mkdir -p "${outlimitdir}"
 ###########################
 
 if [[ "${docleanup}" == "true" ]]; then
-    echo "Cleaning up tmp dirs: ${inlimitdir}, ${outlimitdir}"
+    echo "Cleaning up tmp dirs: ${tmplimitdir}, ${inlimitdir}, ${outlimitdir}"
+    rm -r "${tmplimitdir}"
     rm -r "${inlimitdir}"
     rm -r "${outlimitdir}"
 fi
@@ -64,4 +78,4 @@ fi
 ## Final Message ##
 ###################
 
-echo "Finished making limit plots"
+echo "Finished making limit plots (ABCD)"

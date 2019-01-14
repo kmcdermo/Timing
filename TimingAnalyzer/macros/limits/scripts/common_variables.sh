@@ -2,9 +2,13 @@
 
 ## combine info
 export combdir="/afs/cern.ch/work/k/kmcdermo/private/dispho/Analysis/combine/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit/working"
-export datacard="datacard.txt"
+export carddir="cards"
+export base_datacard="datacard"
+export base_datacardABCD="datacardABCD"
+export base_wsfileABCD="ws_ABCD"
 
 ## config info
+export tmplExt="tmpl"
 export inTextExt="txt"
 
 ## config dir info

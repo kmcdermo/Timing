@@ -12,26 +12,15 @@ source scripts/common_variables.sh
 
 ## i/o params
 indir=${1:-"input"}
-infile=${2:-"ws_final.root"}
-outname=${3-"AsymLim"}
-outdir=${4:-"output"}
-
-## other global vars
-indatacard="${base_datacard}.${inTextExt}"
-
-#############################
-## replace input file name ##
-#############################
-
-cp "${carddir}/${base_datacard}.${tmplExt}" "${indir}/${indatacard}"
-sed -i "s/INPUT_FILE/${infile}/g" "${indir}/${indatacard}"
+outname=${2-"AsymLim"}
+outdir=${3:-"output"}
 
 ###########################################
 ## Ship things over to combine directory ##
 ###########################################
 
-cp "${indir}/${infile}" "${combdir}"
-cp "${indir}/${indatacard}" "${combdir}"
+cp "${indir}/${base_datacardABCD}*.txt" "${combdir}"
+cp "${indir}/${base_wsfileABCD}*.root" "${combdir}"
 
 #####################
 ## Now work there! ##
@@ -48,15 +37,10 @@ for lambda in 100 150 200 250 300 350 400 500 600
 do
     for ctau in 0p001 0p1 10 200 400 600 800 1000 1200 10000 
     do
-	name="GMSB_L${lambda}TeV_CTau${ctau}cm"
+	name="GMSB_L${lambda}_CTau${ctau}"
 	echo "Working on ${name}"
 
-	## make a new datacard for each signal, replacing PDF names
-	tmpdatacard="${base_datacard}_${name}.${inTextExt}"
-	cp "${indatacard}" "${tmpdatacard}"
-	sed -i "s/SIGNAL_PDF/GMSB_L${lambda}_CTau${ctau}_PDF/g" "${tmpdatacard}"
-
-	combine -M AsymptoticLimits "${tmpdatacard}" --run=expected --name "${name}"
+	combine -M AsymptoticLimits "${base_datacardABCD}_${name}.${inTextExt}" --run=expected --name "${name}"
     done
 done
 
@@ -84,4 +68,4 @@ cp "${combdir}/${outname}*.root" "${outdir}"
 ## Final message ##
 ###################
 
-echo "Finished ExtractingResults"
+echo "Finished ExtractingResultsABCD"
