@@ -13,10 +13,10 @@ rm *.root
 rm *.png
 rm *.pdf
 rm *.eps
+rm *.txt
 
 ## clean-up combine info
 rm ${combdir}/*.txt ${combdir}/*.root
-rm ${datacard}
 
 ## print out message
 this_dir=$( pwd )
