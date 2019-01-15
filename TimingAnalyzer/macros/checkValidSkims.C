@@ -5,6 +5,7 @@ void checkValidSkims(const TString & pdname, const TString & inskimdir)
 {
   Common::SetupPrimaryDataset(pdname);
   Common::SetupSamples();
+  Common::SetupSignalSamples();
 
   for (const auto & SamplePair : Common::SampleMap)
   {
@@ -22,11 +23,26 @@ void checkValidSkims(const TString & pdname, const TString & inskimdir)
     auto file = TFile::Open(Form("%s",filename.Data()));
     file->cd();
     
-    // Get TTree
-    auto tree = (TTree*)file->Get(Form("%s",Common::configtreename.Data()));
-    if (Common::IsNullTree(tree))
+    // Get Dispho TTree
+    auto disphotree = (TTree*)file->Get(Form("%s",Common::disphotreename.Data()));
+    if (Common::IsNullTree(disphotree))
     {
-      std::cerr << "Bad Tree: " << Common::configtreename.Data() << std::endl;
+      std::cerr << "Bad Tree: " << Common::disphotreename.Data() << " in file: " << filename.Data() << std::endl;
+      continue;
+    }
+    
+    // Check Entries in TTree
+    const auto nEntries = disphotree->GetEntries();
+    if (nEntries <= 0) 
+    {
+      std::cerr << "Bad nEntries: " << nEntries << " in tree: "<< Common::disphotreename.Data() << " in file: " << filename.Data() << std::endl;
+    }
+
+    // Get Config TTree
+    auto configtree = (TTree*)file->Get(Form("%s",Common::configtreename.Data()));
+    if (Common::IsNullTree(configtree))
+    {
+      std::cerr << "Bad Tree: " << Common::configtreename.Data() << " in file: " << filename.Data() << std::endl;
       continue;
     }
     
@@ -34,8 +50,8 @@ void checkValidSkims(const TString & pdname, const TString & inskimdir)
     auto sumWgts = 0.f, sampleWeight = 0.f; 
     TBranch * b_sumWgts, * b_sampleWeight;
     const std::string s_sumWgts = "sumWgts", s_sampleWeight = "sampleWeight";
-    tree->SetBranchAddress(s_sumWgts.c_str(),&sumWgts,&b_sumWgts);
-    tree->SetBranchAddress(s_sampleWeight.c_str(),&sampleWeight,&b_sampleWeight);
+    configtree->SetBranchAddress(s_sumWgts.c_str(),&sumWgts,&b_sumWgts);
+    configtree->SetBranchAddress(s_sampleWeight.c_str(),&sampleWeight,&b_sampleWeight);
     b_sumWgts->GetEntry(0);
     b_sampleWeight->GetEntry(0);
     //    const auto tree_integral = sumWgts * sampleWeight;
