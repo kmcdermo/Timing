@@ -1,7 +1,7 @@
 #include "Common.cpp+"
 
-void fast2D_with_correlation(const TString & filename, const TString & treename, TString selection, const TString & label, 
-			     const Double_t time_bin, const Double_t met_bin, const TString & textfile, const TString & outdir)
+void faster2D(const TString & filename, const TString & treename, TString selection, const TString & label, 
+	      const Double_t time_bin, const Double_t met_bin, const TString & textfile, const TString & outdir)
 {
   // get text file
   std::ofstream norms(textfile.Data(),std::ios_base::app);
@@ -41,33 +41,38 @@ void fast2D_with_correlation(const TString & filename, const TString & treename,
 
   // fill output file
   std::cout << "Filling text file..." << std::endl;
-  const auto A = hist->GetBinContent(1,1);
-  const auto B = hist->GetBinContent(1,2);
-  const auto C = hist->GetBinContent(2,2);
-  const auto D = hist->GetBinContent(2,1);
+  const auto obsA = hist->GetBinContent(1,1);
+  const auto obsB = hist->GetBinContent(1,2);
+  const auto obsC = hist->GetBinContent(2,2);
+  const auto obsD = hist->GetBinContent(2,1);
 
-  const auto Aunc = hist->GetBinError(1,1);
-  const auto Bunc = hist->GetBinError(1,2);
-  const auto Cunc = hist->GetBinError(2,2);
-  const auto Dunc = hist->GetBinError(2,1);
+  const auto obsAunc = hist->GetBinError(1,1);
+  const auto obsBunc = hist->GetBinError(1,2);
+  const auto obsCunc = hist->GetBinError(2,2);
+  const auto obsDunc = hist->GetBinError(2,1);
 
-  const auto BovA     = B/A;
-  const auto BovAunc  = BovA*std::sqrt(std::pow(Bunc/B,2)+std::pow(Aunc/A,2)); 
+  const auto BovA     = obsB/obsA;
+  const auto BovAunc  = BovA*std::sqrt(std::pow(obsBunc/obsB,2)+std::pow(obsAunc/obsA,2)); 
 
-  const auto DovA     = D/A;
-  const auto DovAunc  = DovA*std::sqrt(std::pow(Dunc/D,2)+std::pow(Aunc/A,2)); 
+  const auto DovA     = obsD/obsA;
+  const auto DovAunc  = DovA*std::sqrt(std::pow(obsDunc/obsD,2)+std::pow(obsAunc/obsA,2)); 
 
-  const auto predC    = B*D/A;
-  const auto predCunc = predC*std::sqrt(std::pow(Bunc/B,2)+std::pow(Dunc/D,2)+std::pow(Aunc/A,2));
+  const auto predC    = obsB*obsD/obsA;
+  const auto predCunc = predC*std::sqrt(std::pow(obsBunc/obsB,2)+std::pow(obsDunc/obsD,2)+std::pow(obsAunc/obsA,2));
 
-  norms << label.Data() << ","
-	<< A << "+/-" << Aunc << ","
-	<< B << "+/-" << Bunc << ","
-	<< C << "+/-" << Cunc << ","
-	<< D << "+/-" << Dunc << ","
+  const auto pullObsC  = (obsC-predC)/obsCunc;
+  const auto pullPredC = (obsC-predC)/predCunc;
+  const auto pullC     = (obsC-predC)/std::sqrt(std::pow(obsCunc,2)+std::pow(predCunc,2));
+
+  norms << label.Data() << "," << int(time_bin) << "," << int(met_bin) << ","
+	<< obsA << "+/-" << obsAunc << ","
+	<< obsB << "+/-" << obsBunc << ","
+	<< obsC << "+/-" << obsCunc << ","
+	<< obsD << "+/-" << obsDunc << ","
 	<< BovA << "+/-" << BovAunc << ","
 	<< DovA << "+/-" << DovAunc << ","
-	<< predC << "+/-" << predCunc << std::endl;
+	<< predC << "+/-" << predCunc << ","
+	<< pullObsC << "," << pullPredC << "," << pullC << std::endl;
   
   // draw it
   std::cout << "Drawing and saving..." << std::endl;
@@ -85,7 +90,7 @@ void fast2D_with_correlation(const TString & filename, const TString & treename,
   text->Draw("same");
 
   // save it
-  const TString outname = Form("%s_MET%i_Time%i",label.Data(),met_bin,time_bin);
+  const TString outname = Form("%s_MET%i_Time%i",label.Data(),int(met_bin),int(time_bin));
 
   Common::CMSLumi(canv,0,"Full");
   Common::SaveAs(canv,outname);
