@@ -513,10 +513,10 @@ namespace Common
   }
 
   // reorder a vector by a vector of indices
-  template <class T>
-  void ReorderVector(std::vector<T>& vals, std::vector<UInt_t> idxs)
+  template <class T, class U>
+  void ReorderVector(std::vector<T>& vals, std::vector<U> idxs)
   {
-    UInt_t i, j, k;
+    U i, j, k;
     T t;
     for (i = 0; i < vals.size(); i++)
     {

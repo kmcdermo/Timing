@@ -61,6 +61,9 @@ public:
   // Correct MET
   void CorrectMET();
 
+  // Reordering functions
+  void ReorderJets();
+
   // helper functions
   void FillPhoListStandard();
 

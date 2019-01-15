@@ -395,7 +395,11 @@ void Skimmer::EventLoop()
     Skimmer::FillOutEvent(entry,evtwgt);
     if (fSkim != SkimType::DiXtal) Skimmer::FillOutJets(entry);
     Skimmer::FillOutPhos(entry);
-    if (fIsMC) Skimmer::CorrectMET();
+    if (fIsMC) 
+    {
+      Skimmer::CorrectMET();
+      Skimmer::ReorderJets();
+    }
 
     // fill the tree
     fOutTree->Fill();
@@ -797,34 +801,6 @@ void Skimmer::FillOutJets(const UInt_t entry)
 	fOutJets.pt_f[ijet] *= (1.f + (*fInJets.scaleRel)[ijet]);
       }
     }
-
-    /////////////////
-    // sort by pt! //
-    /////////////////
-
-    // make list of indices, sort them by pt
-    std::vector<UInt_t> ijets(nJets);
-    std::iota(ijets.begin(),ijets.end(),0);
-    std::sort(ijets.begin(),ijets.end(),
-	      [&](const UInt_t ijet1, const UInt_t ijet2)
-	      {
-		return fOutJets.pt_f[ijet1]>fOutJets.pt_f[ijet2];
-	      });
-    
-    // use reorder function to sort all the output
-    Common::ReorderVector(fOutJets.E_f,ijets);
-    Common::ReorderVector(fOutJets.pt_f,ijets);
-    Common::ReorderVector(fOutJets.phi_f,ijets);
-    Common::ReorderVector(fOutJets.eta_f,ijets);
-    Common::ReorderVector(fOutJets.ID_i,ijets);
-    
-    // Common::ReorderVector(fOutJets.NHF_f,ijets);
-    // Common::ReorderVector(fOutJets.NEMF_f,ijets);
-    // Common::ReorderVector(fOutJets.CHF_f,ijets);
-    // Common::ReorderVector(fOutJets.CEMF_f,ijets);
-    // Common::ReorderVector(fOutJets.MUF_f,ijets);
-    // Common::ReorderVector(fOutJets.NHM_f,ijets);
-    // Common::ReorderVector(fOutJets.CHM_f,ijets);
   }
 }
 
@@ -1225,6 +1201,37 @@ void Skimmer::CorrectMET()
       fOutEvent.t1pfMETpt  = Common::hypot(x,y);
     }
   }
+}
+
+void Skimmer::ReorderJets()
+{
+  /////////////////
+  // sort by pt! //
+  /////////////////
+  
+  // make list of indices, sort them by pt
+  std::vector<Int_t> ijets(nJets);
+  std::iota(ijets.begin(),ijets.end(),0);
+  std::sort(ijets.begin(),ijets.end(),
+	    [&](const auto ijet1, const auto ijet2)
+	    {
+	      return fOutJets.pt_f[ijet1]>fOutJets.pt_f[ijet2];
+	    });
+  
+  // use reorder function to sort all the output
+  Common::ReorderVector(fOutJets.E_f,ijets);
+  Common::ReorderVector(fOutJets.pt_f,ijets);
+  Common::ReorderVector(fOutJets.phi_f,ijets);
+  Common::ReorderVector(fOutJets.eta_f,ijets);
+  Common::ReorderVector(fOutJets.ID_i,ijets);
+  
+  // Common::ReorderVector(fOutJets.NHF_f,ijets);
+  // Common::ReorderVector(fOutJets.NEMF_f,ijets);
+  // Common::ReorderVector(fOutJets.CHF_f,ijets);
+  // Common::ReorderVector(fOutJets.CEMF_f,ijets);
+  // Common::ReorderVector(fOutJets.MUF_f,ijets);
+  // Common::ReorderVector(fOutJets.NHM_f,ijets);
+  // Common::ReorderVector(fOutJets.CHM_f,ijets);
 }
 
 void Skimmer::GetInConfig()
