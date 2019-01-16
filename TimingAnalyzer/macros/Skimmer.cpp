@@ -2219,7 +2219,6 @@ void Skimmer::SetupSkimType(const TString & skim_type)
   if      (skim_type.EqualTo("Standard"   ,TString::kExact)) fSkim = SkimType::Standard;
   else if (skim_type.EqualTo("Zee"        ,TString::kExact)) fSkim = SkimType::Zee;
   else if (skim_type.EqualTo("DiXtal"     ,TString::kExact)) fSkim = SkimType::DiXtal;
-  else if (skim_type.EqualTo("DiXtal"     ,TString::kExact)) fSkim = SkimType::DiXtal;
   else if (skim_type.EqualTo("AlwaysTrue" ,TString::kExact)) fSkim = SkimType::AlwaysTrue;
   else if (skim_type.EqualTo("AlwaysFalse",TString::kExact)) fSkim = SkimType::AlwaysFalse;
   else
