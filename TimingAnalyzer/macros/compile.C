@@ -2,6 +2,7 @@
 #include "Skimmer.cpp+"
 #include "FastSkimmer.cpp+"
 #include "SignalSkimmer.cpp+"
+#include "SuperFastSkimmer.cpp+"
 #include "TreePlotter.cpp+"
 #include "TreePlotter2D.cpp+"
 
