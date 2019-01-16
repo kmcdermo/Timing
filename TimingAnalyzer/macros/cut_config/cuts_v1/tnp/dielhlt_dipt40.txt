@@ -1,0 +1,4 @@
+common_cut=((hltDiEle33MW&&phopt_0>40&&phopt_1>40)&&(phohasPixSeed_0||phohasPixSeed_1))
+data_cut=
+bkgd_cut=
+sign_cut=

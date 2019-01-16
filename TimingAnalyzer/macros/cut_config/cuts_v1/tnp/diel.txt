@@ -1,0 +1,4 @@
+common_cut=(phohasPixSeed_0||phohasPixSeed_1)
+data_cut=
+bkgd_cut=
+sign_cut=
