@@ -395,7 +395,7 @@ void Skimmer::EventLoop()
     Skimmer::FillOutEvent(entry,evtwgt);
     if (fSkim != SkimType::DiXtal) Skimmer::FillOutJets(entry);
     Skimmer::FillOutPhos(entry);
-    if (fIsMC) 
+    if (fSkim != SkimType::DiXtal && fIsMC)
     {
       Skimmer::CorrectMET();
       Skimmer::ReorderJets();
@@ -759,7 +759,7 @@ void Skimmer::FillOutJets(const UInt_t entry)
     // fOutJets.CHM_f[ijet] = (*fInJets.CHM)[ijet];
   }
 
-  // apply energy corrections, then sort!
+  // apply energy corrections, sort after MET correction!
   if (fIsMC)
   {
     // Read the JEC's and JER's
@@ -1210,7 +1210,7 @@ void Skimmer::ReorderJets()
   /////////////////
   
   // make list of indices, sort them by pt
-  std::vector<Int_t> ijets(nJets);
+  std::vector<UInt_t> ijets(fInJets.E->size());
   std::iota(ijets.begin(),ijets.end(),0);
   std::sort(ijets.begin(),ijets.end(),
 	    [&](const auto ijet1, const auto ijet2)
