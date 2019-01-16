@@ -30,7 +30,7 @@ do
     done
 done
 
-mv "${textfile}" "${outdir}"
+cp "${textfile}" "${outdir}"
 
 pushd "${basedir}"
 ./copyphp.sh "${dir}"

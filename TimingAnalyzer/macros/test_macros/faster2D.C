@@ -1,5 +1,10 @@
 #include "Common.cpp+"
 
+inline Double_t AssignVal(const Double_t val)
+{
+  return (val > 0.0) ? val : 1.0;
+}
+
 void faster2D(const TString & filename, const TString & treename, TString selection, const TString & label, 
 	      const Double_t time_bin, const Double_t met_bin, const TString & textfile, const TString & outdir)
 {
@@ -46,10 +51,10 @@ void faster2D(const TString & filename, const TString & treename, TString select
   const auto obsC = hist->GetBinContent(2,2);
   const auto obsD = hist->GetBinContent(2,1);
 
-  const auto obsAunc = hist->GetBinError(1,1);
-  const auto obsBunc = hist->GetBinError(1,2);
-  const auto obsCunc = hist->GetBinError(2,2);
-  const auto obsDunc = hist->GetBinError(2,1);
+  const auto obsAunc = AssignVal(hist->GetBinError(1,1));
+  const auto obsBunc = AssignVal(hist->GetBinError(1,2));
+  const auto obsCunc = AssignVal(hist->GetBinError(2,2));
+  const auto obsDunc = AssignVal(hist->GetBinError(2,1));
 
   const auto BovA     = obsB/obsA;
   const auto BovAunc  = BovA*std::sqrt(std::pow(obsBunc/obsB,2)+std::pow(obsAunc/obsA,2)); 
@@ -65,14 +70,14 @@ void faster2D(const TString & filename, const TString & treename, TString select
   const auto pullC     = (obsC-predC)/std::sqrt(std::pow(obsCunc,2)+std::pow(predCunc,2));
 
   norms << label.Data() << "," << int(time_bin) << "," << int(met_bin) << ","
-	<< obsA << "+/-" << obsAunc << ","
-	<< obsB << "+/-" << obsBunc << ","
-	<< obsC << "+/-" << obsCunc << ","
-	<< obsD << "+/-" << obsDunc << ","
-	<< BovA << "+/-" << BovAunc << ","
-	<< DovA << "+/-" << DovAunc << ","
-	<< predC << "+/-" << predCunc << ","
-	<< pullObsC << "," << pullPredC << "," << pullC << std::endl;
+	<< std::setprecision(3) << obsA << "+/-" << std::setprecision(3) << obsAunc << ","
+	<< std::setprecision(3) << obsB << "+/-" << std::setprecision(3) << obsBunc << ","
+	<< std::setprecision(3) << obsC << "+/-" << std::setprecision(3) << obsCunc << ","
+	<< std::setprecision(3) << obsD << "+/-" << std::setprecision(3) << obsDunc << ","
+	<< std::setprecision(3) << BovA << "+/-" << std::setprecision(3) << BovAunc << ","
+	<< std::setprecision(3) << DovA << "+/-" << std::setprecision(3) << DovAunc << ","
+	<< std::setprecision(3) << predC << "+/-" << std::setprecision(3) << predCunc << ","
+	<< std::setprecision(3) << pullObsC << "," << std::setprecision(3) << pullPredC << "," << std::setprecision(3) << pullC << std::endl;
   
   // draw it
   std::cout << "Drawing and saving..." << std::endl;
