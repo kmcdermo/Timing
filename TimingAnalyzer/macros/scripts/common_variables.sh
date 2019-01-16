@@ -74,9 +74,9 @@ export adjust_var="${base_adjust_var}_0"
 export wgtvar="phopt_0"
 
 ## CR + SR info: label skim signal_skim additional_cuts (var wgt map)
-export GJets="cr_gjets_DEG v1/gjets v1/signals_gjets always_true"
-export QCD="cr_qcd_DEG v1/qcd v1/signals_qcd always_true"
-export Signal="sr_SPH v1/sr v1/signals_sr always_true"
+export GJets="cr_gjets_DEG v3/orig_2phosCR/gjets v3/orig_2phosCR/signals_gjets always_true"
+export QCD="cr_qcd_DEG v3/orig_2phosCR/qcd v3/orig_2phosCR/signals_qcd always_true"
+export Signal="sr_SPH v3/orig_2phosCR/sr v3/orig_2phosCR/signals_sr always_true"
 
 export CR_GJets="${GJets} gjets_${wgtvar}_map"
 export CR_QCD="${QCD} qcd_${wgtvar}_map"

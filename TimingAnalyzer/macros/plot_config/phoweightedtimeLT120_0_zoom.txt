@@ -1,0 +1,9 @@
+plot_title=Leading Photon Weighted Time [ns]
+
+x_title=Leading Photon Weighted Time [ns]
+x_scale=LIN
+x_var=phoweightedtimeLT120_0
+x_bins=VARIABLE -5 -4 -3.5 -3 -2.5 -2 -1.75 -1.5 -1.25 -1 -0.8 -0.6 -0.5 -0.4 -0.3 -0.2 -0.1 0 0.1 0.2 0.3 0.4 0.5 0.6 0.8 1 1.25 1.5 1.75 2 2.5 3 3.5 4 5
+
+y_title=Events/ns
+y_scale=LOG
