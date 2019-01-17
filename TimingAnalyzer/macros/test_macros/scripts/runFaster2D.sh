@@ -15,7 +15,7 @@ declare -a met_bins=(50 75 100 150 200)
 
 textfile="MET_v_Time.csv"
 > ${textfile}
-echo "Control Region [Data],Time Boundary [ns],MET Boundary [GeV],obsA,obsB,obsC,obsD,c1{obsB/obsA},c2{obsD/obsA},predC{obsA*c1*c2},pullObsCLow{(obsC-predC)/obsCuncLow},pullObsCUp{(obsC-predC)/obsCuncUp},pullPredCLow{(obsC-predC)/predCuncLow},pullPredCUp{(obsC-predC)/predCuncUp},pullCLow{(obsC-predC)/sqrt(obsCuncLow^2+predCuncLow^2)},pullCUp{(obsC-predC)/sqrt(obsCuncUp^2+predCuncUp^2)}" >> ${textfile}
+echo "Control Region [Data],Time Boundary [ns],MET Boundary [GeV],obsA,obsB,obsC,obsD,c1{obsB/obsA},c2{obsD/obsA},predC{obsA*c1*c2},pullObsC{(obsC-predC)/obsCunc},pullObsCLow{(obsC-predC)/obsCuncLow},pullObsCUp{(obsC-predC)/obsCuncUp},pullPredC{(obsC-predC)/predCunc},pullPredCLow{(obsC-predC)/predCuncLow},pullPredCUp{(obsC-predC)/predCuncUp},pullC{(obsC-predC)/sqrt(obsCunc^2+predCunc^2)},pullCLow{(obsC-predC)/sqrt(obsCuncLow^2+predCuncLow^2)},pullCUp{(obsC-predC)/sqrt(obsCuncUp^2+predCuncUp^2)}" >> ${textfile}
 
 for time_bin in "${time_bins[@]}"
 do

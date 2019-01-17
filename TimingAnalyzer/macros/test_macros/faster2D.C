@@ -45,18 +45,22 @@ void faster2D(const TString & filename, const TString & treename, TString select
   //////////
 
   const auto obsA       = hist->GetBinContent (1,1);
+  const auto obsAunc    = hist->GetBinError   (1,1);
   const auto obsAuncLow = hist->GetBinErrorLow(1,1);
   const auto obsAuncUp  = hist->GetBinErrorUp (1,1);
 
   const auto obsB       = hist->GetBinContent (1,2);
+  const auto obsBunc    = hist->GetBinError   (1,2);
   const auto obsBuncLow = hist->GetBinErrorLow(1,2);
   const auto obsBuncUp  = hist->GetBinErrorUp (1,2);
 
   const auto obsC       = hist->GetBinContent (2,2);
+  const auto obsCunc    = hist->GetBinError   (2,2);
   const auto obsCuncLow = hist->GetBinErrorLow(2,2);
   const auto obsCuncUp  = hist->GetBinErrorUp (2,2);
 
   const auto obsD       = hist->GetBinContent (2,1);
+  const auto obsDunc    = hist->GetBinError   (2,1);
   const auto obsDuncLow = hist->GetBinErrorLow(2,1);
   const auto obsDuncUp  = hist->GetBinErrorUp (2,1);
 
@@ -65,14 +69,17 @@ void faster2D(const TString & filename, const TString & treename, TString select
   ////////////
 
   const auto BovA       = obsB/obsA;
+  const auto BovAunc    = BovA*std::sqrt(std::pow(obsBunc   /obsB,2)+std::pow(obsAunc   /obsA,2));
   const auto BovAuncLow = BovA*std::sqrt(std::pow(obsBuncLow/obsB,2)+std::pow(obsAuncLow/obsA,2)); 
   const auto BovAuncUp  = BovA*std::sqrt(std::pow(obsBuncUp /obsB,2)+std::pow(obsAuncUp /obsA,2)); 
 
   const auto DovA       = obsD/obsA;
+  const auto DovAunc    = DovA*std::sqrt(std::pow(obsDunc   /obsD,2)+std::pow(obsAunc   /obsA,2));
   const auto DovAuncLow = DovA*std::sqrt(std::pow(obsDuncLow/obsD,2)+std::pow(obsAuncLow/obsA,2)); 
   const auto DovAuncUp  = DovA*std::sqrt(std::pow(obsDuncUp /obsD,2)+std::pow(obsAuncUp /obsA,2)); 
 
   const auto predC       = obsB*obsD/obsA;
+  const auto predCunc    = predC*std::sqrt(std::pow(obsBunc   /obsB,2)+std::pow(obsDunc   /obsD,2)+std::pow(obsAunc   /obsA,2));
   const auto predCuncLow = predC*std::sqrt(std::pow(obsBuncLow/obsB,2)+std::pow(obsDuncLow/obsD,2)+std::pow(obsAuncLow/obsA,2));
   const auto predCuncUp  = predC*std::sqrt(std::pow(obsBuncUp /obsB,2)+std::pow(obsDuncUp /obsD,2)+std::pow(obsAuncUp /obsA,2));
 
@@ -80,12 +87,15 @@ void faster2D(const TString & filename, const TString & treename, TString select
   // pulls //
   ///////////
 
+  const auto pullObsC    = (obsC-predC)/obsCunc;
   const auto pullObsCLow = (obsC-predC)/obsCuncLow;
   const auto pullObsCUp  = (obsC-predC)/obsCuncUp;
 
+  const auto pullPredC    = (obsC-predC)/predCunc;
   const auto pullPredCLow = (obsC-predC)/predCuncLow;
   const auto pullPredCUp  = (obsC-predC)/predCuncUp;
 
+  const auto pullC    = (obsC-predC)/std::sqrt(std::pow(obsCunc   ,2)+std::pow(predCunc   ,2));
   const auto pullCLow = (obsC-predC)/std::sqrt(std::pow(obsCuncLow,2)+std::pow(predCuncLow,2));
   const auto pullCUp  = (obsC-predC)/std::sqrt(std::pow(obsCuncUp ,2)+std::pow(predCuncUp ,2));
 
@@ -93,16 +103,16 @@ void faster2D(const TString & filename, const TString & treename, TString select
   std::cout << "Filling text file..." << std::endl;
 
   norms << label.Data() << "," << int(time_bin) << "," << int(met_bin) << ","
-	<< std::setprecision(3) << obsA << " -" << std::setprecision(3) << obsAuncLow << " +" << std::setprecision(3) << obsAuncUp << ","
-	<< std::setprecision(3) << obsB << " -" << std::setprecision(3) << obsBuncLow << " +" << std::setprecision(3) << obsBuncUp << ","
-	<< std::setprecision(3) << obsC << " -" << std::setprecision(3) << obsCuncLow << " +" << std::setprecision(3) << obsCuncUp << ","
-	<< std::setprecision(3) << obsD << " -" << std::setprecision(3) << obsDuncLow << " +" << std::setprecision(3) << obsDuncUp << ","
-	<< std::setprecision(3) << BovA << " -" << std::setprecision(3) << BovAuncLow << " +" << std::setprecision(3) << BovAuncUp << ","
-	<< std::setprecision(3) << DovA << " -" << std::setprecision(3) << DovAuncLow << " +" << std::setprecision(3) << DovAuncUp << ","
-	<< std::setprecision(3) << predC << " -" << std::setprecision(3) << predCuncLow << " +" << std::setprecision(3) << predCuncUp << ","
-	<< std::setprecision(3) << pullObsCLow << "," << std::setprecision(3) << pullObsCUp << ","
-	<< std::setprecision(3) << pullPredCLow << "," << std::setprecision(3) << pullPredCUp << ","
-	<< std::setprecision(3) << pullCLow << "," << std::setprecision(3) << pullCUp << std::endl;
+	<< std::setprecision(3) << obsA << " +/- " << std::setprecision(3) << obsAunc << " -" << std::setprecision(3) << obsAuncLow << " +" << std::setprecision(3) << obsAuncUp << ","
+	<< std::setprecision(3) << obsB << " +/- " << std::setprecision(3) << obsBunc << " -" << std::setprecision(3) << obsBuncLow << " +" << std::setprecision(3) << obsBuncUp << ","
+	<< std::setprecision(3) << obsC << " +/- " << std::setprecision(3) << obsCunc << " -" << std::setprecision(3) << obsCuncLow << " +" << std::setprecision(3) << obsCuncUp << ","
+	<< std::setprecision(3) << obsD << " +/- " << std::setprecision(3) << obsDunc << " -" << std::setprecision(3) << obsDuncLow << " +" << std::setprecision(3) << obsDuncUp << ","
+	<< std::setprecision(3) << BovA << " +/- " << std::setprecision(3) << BovAunc << " -" << std::setprecision(3) << BovAuncLow << " +" << std::setprecision(3) << BovAuncUp << ","
+	<< std::setprecision(3) << DovA << " +/- " << std::setprecision(3) << DovAunc << " -" << std::setprecision(3) << DovAuncLow << " +" << std::setprecision(3) << DovAuncUp << ","
+	<< std::setprecision(3) << predC << " +/- " << std::setprecision(3) << predCunc << " -" << std::setprecision(3) << predCuncLow << " +" << std::setprecision(3) << predCuncUp << ","
+	<< std::setprecision(3) << pullObsC << "," << std::setprecision(3) << pullObsCLow << "," << std::setprecision(3) << pullObsCUp << ","
+	<< std::setprecision(3) << pullPredC << "," << std::setprecision(3) << pullPredCLow << "," << std::setprecision(3) << pullPredCUp << ","
+	<< std::setprecision(3) << pullC << "," << std::setprecision(3) << pullCLow << "," << std::setprecision(3) << pullCUp << std::endl;
   
   // draw it
   std::cout << "Drawing and saving..." << std::endl;
