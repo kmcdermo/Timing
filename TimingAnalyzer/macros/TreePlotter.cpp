@@ -653,6 +653,12 @@ TString TreePlotter::DumpIntegrals(const TString & outfiletext)
   const auto ratio = data_int/mc_int;
   const auto ratio_err = ratio*std::sqrt(std::pow(data_err/data_int,2)+std::pow(mc_err/mc_int,2));
   dumpfile << "Data/MC : " << ratio << " +/- " << ratio_err << std::endl;
+  
+  // Report ratio prior to scaling
+  if (fScaleMCToData)
+  {
+    dumpfile << "kFactor (Pre-Scaling) : " << fkFactor << " +/- " << fkFactorErr << std::endl;
+  }
 
   return filename;
 }
@@ -714,7 +720,17 @@ void TreePlotter::ScaleMCToData()
 {
   std::cout << "Scaling MC Bkgd to data..." << std::endl;
 
-  const auto sf = DataHist->Integral(fXVarBins?"width":"")/BkgdHist->Integral(fXVarBins?"width":"");
+  // Get MC Integral + Error
+  auto mc_err = 0.0;
+  const auto mc_int = BkgdHist->IntegralAndError(1,BkgdHist->GetXaxis()->GetNbins(),mc_err,(fXVarBins?"width":""));
+
+  // Get Data Integral + Error
+  auto data_err = 0.0;
+  const auto data_int = DataHist->IntegralAndError(1,DataHist->GetXaxis()->GetNbins(),data_err,(fXVarBins?"width":""));
+
+  // Make Ratio
+  fkFactor = data_int/mc_int;
+  fkFactorErr = fkFactor*std::sqrt(std::pow(data_err/data_int,2)+std::pow(mc_err/mc_int,2));
 
   // first scale each individual sample
   for (auto & HistPair : HistMap)
@@ -724,12 +740,12 @@ void TreePlotter::ScaleMCToData()
 
     if (Common::GroupMap[sample] == SampleGroup::isBkgd)
     {
-      hist->Scale(sf);
+      hist->Scale(fkFactor);
     }
   }
 
   // lastly, scale combo bkgd hist
-  BkgdHist->Scale(sf);
+  BkgdHist->Scale(fkFactor);
 }
 
 void TreePlotter::GetHistMinimum()
