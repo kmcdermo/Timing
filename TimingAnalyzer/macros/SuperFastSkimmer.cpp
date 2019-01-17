@@ -99,6 +99,9 @@ void SuperFastSkimmer::MakeSkimsFromTrees()
       // use ttree::draw() to generate entry list
       intree->Draw(Form(">>%s",list->GetName()),Form("%s",cutstring.Data()),"entrylist");
 
+      // recursively set entry list for input tree
+      intree->SetEntryList(list);
+
       // store result of number of entries into cutflow th1
       for (auto ientry = 0U; ientry < intree->GetEntries(); ientry++)
       {
@@ -112,9 +115,6 @@ void SuperFastSkimmer::MakeSkimsFromTrees()
       	b_evtwgt->GetEntry(localEntry);
       	outhist->Fill((binlabels[label]*1.f)-0.5f,evtwgt);
       }
-
-      // recursively set entry list for input tree
-      intree->SetEntryList(list);
     } // end loop over cuts
 
     std::cout << "Writing out..." << std::endl;

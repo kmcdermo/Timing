@@ -81,7 +81,7 @@ namespace Common
     const auto diff_i1 = ((idinfo1.ecal == ECAL::EB) ? Common::WrapIPhi(tmp_diff_i1) : tmp_diff_i1);
     const auto diff_i2 = std::abs(idinfo1.i2-idinfo2.i2);
 
-    Bool_t withinRadius = false;
+    auto withinRadius = false;
 
     for (auto i = 0; i <= radius; i++)
     {
@@ -222,7 +222,7 @@ namespace Common
     {
       for (const auto & ctau : gctaus)
       {
-	TString sctau = ctau;
+	auto sctau = ctau;
 	if (ctau.EqualTo("0p1") && !(lambda.EqualTo("500") || lambda.EqualTo("600"))) sctau = "0_1";
 	Common::SampleMap["MC/GMSB/L-"+lambda+"TeV_Ctau-"+sctau+"cm"] = "GMSB_L"+lambda+"_CTau"+ctau;
       }
@@ -435,7 +435,7 @@ namespace Common
       const auto & group   = SignalSubGroupPair.first;
       const auto & samples = SignalSubGroupPair.second;
     
-      Int_t counter = 0;
+      auto counter = 0;
       for (const auto & sample : samples)
       {
 	Common::ColorMap[sample] = Common::SignalSubGroupColorMap[group].color+counter;
@@ -889,7 +889,7 @@ namespace Common
     std::cout << "Reading plot config for var_bins bool..." << std::endl;
 
     // Bool used to see if we actually ever found the label!
-    Bool_t islabel = false;
+    auto islabel = false;
     
     std::vector<Double_t> tmp_bins; // tmp unused variable
     std::ifstream infile(Form("%s",plotconfig.Data()),std::ios::in);
@@ -983,8 +983,8 @@ namespace Common
     const auto inNbinsX = inhist->GetNbinsX();
     for (auto ibin = 1; ibin <= inNbinsX; ibin++) binlabels[inhist->GetXaxis()->GetBinLabel(ibin)] = ibin;
     
-    Int_t inNbinsX_new = inNbinsX;
-    for (const auto & SignalCutFlowPair : Common::CutFlowPairVec) binlabels[SignalCutFlowPair.first] = ++inNbinsX_new;
+    auto inNbinsX_new = inNbinsX;
+    for (const auto & CutFlowPair : Common::CutFlowPairVec) binlabels[CutFlowPair.first] = ++inNbinsX_new;
   
     // make new cut flow
     auto outhist = new TH1F(outname.Data(),inhist->GetTitle(),binlabels.size(),0,binlabels.size());
@@ -994,7 +994,7 @@ namespace Common
     {
       const auto & cut = binlabel.first;
       const auto ibin = binlabel.second;
-      
+
       outhist->GetXaxis()->SetBinLabel(ibin,cut.Data());
       
       if (ibin > inNbinsX) continue;
@@ -1002,7 +1002,7 @@ namespace Common
       outhist->SetBinContent(ibin,inhist->GetBinContent(ibin));
       outhist->SetBinError(ibin,inhist->GetBinError(ibin));
     }
-    
+
     outhist->GetYaxis()->SetTitle(inhist->GetYaxis()->GetTitle());
     
     return outhist;
@@ -1084,7 +1084,7 @@ namespace Common
       
       for (auto xbin = 1; xbin <= hist->GetXaxis()->GetNbins(); xbin++)
       {
-	const Float_t content = hist->GetBinContent(xbin);
+	const auto content = hist->GetBinContent(xbin);
 	if (content < 0.f) 
 	{
 	  hist->SetBinContent(xbin,0.f);
@@ -1106,7 +1106,7 @@ namespace Common
       {
 	for (auto ybin = 1; ybin <= hist->GetYaxis()->GetNbins(); ybin++)
         {
-	  const Float_t content = hist->GetBinContent(xbin,ybin);
+	  const auto content = hist->GetBinContent(xbin,ybin);
 	  if (content < 0.f) 
 	  {
 	    hist->SetBinContent(xbin,ybin,0.f);

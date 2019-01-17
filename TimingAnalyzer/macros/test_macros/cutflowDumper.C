@@ -66,8 +66,8 @@ void cutflowDumper(const TString & infilename, const TString & outfiletext)
     for (const auto & Sample : SampleVec)
     {
       const auto & hist = HistMap[Sample];
-      output <<  ","  << std::setprecision(3) << hist->GetBinContent(ibinX) 
-	     << "+/-" << std::setprecision(3) << hist->GetBinError  (ibinX);
+      output <<   ","   << std::setprecision(3) << hist->GetBinContent(ibinX) 
+	     << " +/- " << std::setprecision(3) << hist->GetBinError  (ibinX);
     }
    
     output << std::endl;
