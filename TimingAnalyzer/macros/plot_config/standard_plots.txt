@@ -59,3 +59,9 @@ phoseedtime_0_zoom
 
 phoweightedtimeLT120_0
 phoweightedtimeLT120_0_zoom
+
+phoseedtime_1
+phoseedtime_1_zoom
+
+phoweightedtimeLT120_1
+phoweightedtimeLT120_1_zoom
