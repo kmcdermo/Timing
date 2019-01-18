@@ -20,6 +20,9 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/EcalDetId/interface/EBDetId.h"
+#include "DataFormats/EcalDetId/interface/EEDetId.h"
+#include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
 #include "DataFormats/Math/interface/deltaR.h"
 
 // basic C++ types
@@ -271,6 +274,14 @@ namespace oot
 
   void SplitPhotons(std::vector<pat::Photon> & photons, const int nmax);
   void StoreOnlyPho(std::vector<pat::Photon> & photons, const int nmax, const bool isOOT);
+
+  /////////////////////
+  // Debug Functions //
+  /////////////////////
+
+  void DumpPhoton(const pat::Photon & photon, const bool isOOT,
+		  const EcalRecHitCollection * recHitsEB, 
+		  const EcalRecHitCollection * recHitsEE);
 
   ///////////////////////////
   // Lepton Prep Functions //

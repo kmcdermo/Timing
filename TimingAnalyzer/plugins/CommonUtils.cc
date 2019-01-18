@@ -416,7 +416,7 @@ namespace oot
 				 {
 				   const auto & phosc = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
 				   const auto & seedDetId = phosc->seed()->seed(); // get seed detid
-				   const auto recHits = ((seedDetId.subdetId() == EcalBarrel) ? recHitsEB : recHitsEE); // which recHits to use
+				   const auto recHits = ((seedDetId.subdetId() == EcalSubdetector::EcalBarrel) ? recHitsEB : recHitsEE); // which recHits to use
 				   const auto seedHit = recHits->find(seedDetId); // get the underlying rechit
 				   const auto seedTime = ((seedHit != recHits->end()) ? seedHit->time() : -9999.f);
 				   return (seedTime < seedTimemin);
@@ -740,4 +740,49 @@ namespace oot
 
     photons.swap(tmpphotons);
   }
+
+  /////////////////////
+  // Debug Functions //
+  /////////////////////
+
+  void DumpPhoton(const pat::Photon & photon, const bool isOOT,
+		  const EcalRecHitCollection * recHitsEB,
+		  const EcalRecHitCollection * recHitsEE)
+  {
+    std::cout << "pT: " << oot::GetPhotonPt(photon) << " phi: " << photon.phi() << " eta: " << photon.eta() << std::endl;
+    
+    const auto & phosc = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
+    const auto & seedDetId = phosc->seed()->seed(); // get seed detid
+    const auto isEB = (seedDetId.subdetId() == EcalSubdetector::EcalBarrel);
+    
+    std::cout << " isEB: " << isEB << " isOOT: " << isOOT << " seedId: " << seedDetId.rawId() << std::endl;
+    
+    const auto recHits = (isEB ? recHitsEB : recHitsEE); // get rechits
+    const auto & hitsAndFractions = phosc->hitsAndFractions(); // get vector of detids
+    
+    // loop over all rec hits in SC
+    for (auto hafitr = hitsAndFractions.begin(); hafitr != hitsAndFractions.end(); ++hafitr)
+    {
+      const auto & recHitDetId = hafitr->first; // get detid of crystal
+      const auto & recHit = recHits->find(recHitDetId);
+      const auto recHitId = recHitDetId.rawId();
+      
+      // standard check
+      if (recHit != recHits->end())
+      {
+	std::cout << "   rhId: " << recHitId << " E: " << recHit->energy() << " T: " << recHit->time() << " isOOT: " << recHit->checkFlag(EcalRecHit::kOutOfTime);
+	if (isEB)
+	{
+	  const EBDetId recHitEB(recHitId);
+	  std::cout << " ieta: " << recHitEB.ieta() << " iphi: " << recHitEB.iphi() << std::endl;
+	}
+	else
+        {
+	  const EEDetId recHitEE(recHitId);
+	  std::cout << " ix: " << recHitEE.ix() << " iy: " << recHitEE.iy() << std::endl;
+	}
+      }
+    } // end loop over hits and fractions
+  }
 };
+
