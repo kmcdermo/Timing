@@ -69,11 +69,12 @@ struct MatchingInfo
 // Photon info //
 /////////////////
 
-struct
+struct PhotonInfo
 {
   PhotonInfo() {}
 
-  std::vector<pat::Photons> photons;
+  std::string label;
+  std::vector<pat::Photon> photons;
   std::map<IDType,MatchingInfo> matchingInfoMap;
 };
 
@@ -97,8 +98,8 @@ public:
   // Internal Setup Functions //
   //////////////////////////////
 
-  void SetupVIDInfo();
-  void SetLabels(PhotonInfo & photonInfo);
+  void SetInternalInfo();
+  void SetLabels(PhotonInfo & photonInfo, const std::string & label);
 
   ///////////////////////////
   // Setup TTree Functions //
@@ -175,11 +176,11 @@ public:
   /////////////////////
 
   void DumpPhotons(const edm::Event & iEvent);
-  void DumpPhotons(const PhotonInfo & basePhotonInfo, const PhotonInfo & testPhotonInfo, const std::string & text);
+  void DumpPhotons(const PhotonInfo & basePhotonInfo, const std::vector<pat::Photon> & testPhotons);
   void DumpPhotons(const int ibase, const pat::Photon & basePhoton,
 		   const std::vector<pat::Photon> & basePhotons,
 		   const std::vector<pat::Photon> & testPhotons,
-		   const std::string & VID, const MatchingInfo & baseMatchingInfo);
+		   const MatchingInfo & baseMatchingInfo);
   void DumpPhotons(const pat::Photon & basePhoton, const std::vector<pat::Photon> & testPhotons, 
 		   const std::vector<int> & indices, const std::string & text);
   void DumpPhoton(const int i, const pat::Photon & photon, const std::string & prefix, const std::string & suffix);
@@ -212,6 +213,9 @@ private:
   // debug config
   const bool debug;
 
+  // MC config
+  const bool isMC;
+
   // mets
   const edm::InputTag metsTag;
   edm::EDGetTokenT<std::vector<pat::MET> > metsToken;
@@ -226,9 +230,6 @@ private:
   const edm::InputTag ootPhotonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > ootPhotonsToken;
   edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
-
-  // MC config --> also output!
-  const bool isMC;
 
   //////////////////////
   // Temp I/O Members //

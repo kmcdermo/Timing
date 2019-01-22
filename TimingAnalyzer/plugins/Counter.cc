@@ -9,8 +9,9 @@ Counter::Counter(const edm::ParameterSet & iConfig):
   dRmin(iConfig.existsAs<double>("dRmin") ? iConfig.getParameter<double>("dRmin") : 0.3),
   pTmin(iConfig.existsAs<double>("pTmin") ? iConfig.getParameter<double>("pTmin") : 20.0),
 
-  // use GED VID
+  // use VID
   useGEDVID(iConfig.existsAs<bool>("useGEDVID") ? iConfig.getParameter<bool>("useGEDVID") : false),
+  useOOTVID(iConfig.existsAs<bool>("useOOTVID") ? iConfig.getParameter<bool>("useOOTVID") : false),
 
   // debug it all
   debug(iConfig.existsAs<bool>("debug") ? iConfig.getParameter<bool>("debug") : false),
@@ -23,7 +24,7 @@ Counter::Counter(const edm::ParameterSet & iConfig):
 
   // photons
   gedPhotonsTag(iConfig.getParameter<edm::InputTag>("gedPhotons")),
-  ootPhotonsTag(iConfig.getParameter<edm::InputTag>("ootPhotons")),
+  ootPhotonsTag(iConfig.getParameter<edm::InputTag>("ootPhotons"))
 {
   // internal setup
   usesResource();
@@ -36,8 +37,8 @@ Counter::Counter(const edm::ParameterSet & iConfig):
   gedPhotonsToken = consumes<std::vector<pat::Photon> > (gedPhotonsTag);
   ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
 
-  // setup matching info: VIDs
-  Counter::SetupVIDInfo();
+  // setup photon infos
+  Counter::SetInternalInfo();
 }
 
 Counter::~Counter() {}
@@ -195,8 +196,8 @@ void Counter::SetBaseToTestIndices(PhotonInfo & basePhotonInfo, const PhotonInfo
   const auto & testMatchingInfoMap = testPhotonInfo.matchingInfoMap;
 
   // get photon counts
-  const auto nbase = baseMatchingInfoMap[N].npho;
-  const auto ntest = testMatchingInfoMap[N].npho;
+  const auto nbase = baseMatchingInfoMap.at(N).npho;
+  const auto ntest = testMatchingInfoMap.at(N).npho;
 
   // loop over matching map (VIDs)
   for (auto & baseMatchingInfoPair : baseMatchingInfoMap)
@@ -275,7 +276,7 @@ void Counter::SetBaseToBaseIndices(PhotonInfo & basePhotonInfo)
   auto & baseMatchingInfoMap = basePhotonInfo.matchingInfoMap;
  
   // get photon counts
-  const auto nbase = baseMatchingInfoMap[N].npho;
+  const auto nbase = baseMatchingInfoMap.at(N).npho;
 
   // loop over matching map (VIDs)
   for (auto & baseMatchingInfoPair : baseMatchingInfoMap)
@@ -485,7 +486,7 @@ void Counter::ResetOverlapIndices(PhotonInfo & photonInfo)
   auto & matchingInfoMap = photonInfo.matchingInfoMap;
 
   // get photon counts
-  const auto npho = matchingInfoMap[N].npho;
+  const auto npho = matchingInfoMap.at(N).npho;
 
   // loop over matching map (VIDs)
   for (auto & matchingInfoPair : matchingInfoMap)
@@ -523,35 +524,32 @@ void Counter::DumpPhotons(const edm::Event & iEvent)
 {
   std::cout << "------------------- EvtID: " << iEvent.id().event() << " -------------------" << std::endl;
 
-  Counter::DumpPhotons(gedInfo,ootInfo,"GED");
-  Counter::DumpPhotons(ootInfo,gedInfo,"OOT");
+  Counter::DumpPhotons(gedInfo,ootInfo.photons);
+  Counter::DumpPhotons(ootInfo,gedInfo.photons);
 
   std::cout << "-----------------------------------------------" << std::endl;
 }
 
-void Counter::DumpPhotons(const PhotonInfo & basePhotonInfo, const PhotonInfo & testPhotonInfo, const std::string & text)
+void Counter::DumpPhotons(const PhotonInfo & basePhotonInfo, const std::vector<pat::Photon> & testPhotons)
 {
-  std::cout << "========== " << text.c_str() << " Photons ==========" << std::endl;
+  std::cout << "========== " << basePhotonInfo.label.c_str() << " Photons ==========" << std::endl;
 
   // get photon refs
   const auto & basePhotons = basePhotonInfo.photons;
-  const auto & testPhotons = testPhotonInfo.photons;
 
   // get matching info map refs
   const auto & baseMatchingInfoMap = basePhotonInfo.matchingInfoMap;
-  const auto & testMatchingInfoMap = testPhotonInfo.matchingInfoMap;
 
   // get photon counts
-  const auto nbase = baseMatchingInfoMap[N].npho;
-  const auto ntest = testMatchingInfoMap[N].npho;
+  const auto nbase = baseMatchingInfoMap.at(N).npho;
 
   // loop over base photons, setting indices
   for (auto ibase = 0; ibase < nbase; ibase++)
   {
     // get base photon
     const auto & basePhoton = basePhotons[ibase];
-    const auto loose = basePhoton.photonID(baseMatchingInfoMap[L].baseVID);
-    const auto tight = basePhoton.photonID(baseMatchingInfoMap[T].baseVID);
+    const auto loose = basePhoton.photonID(baseMatchingInfoMap.at(L).baseVID);
+    const auto tight = basePhoton.photonID(baseMatchingInfoMap.at(T).baseVID);
 
     // dump basic info
     Counter::DumpPhoton(ibase,basePhoton," "," Loose: "+std::to_string(loose)+" Tight: "+std::to_string(tight));
@@ -560,7 +558,7 @@ void Counter::DumpPhotons(const PhotonInfo & basePhotonInfo, const PhotonInfo & 
     for (const auto & baseMatchingInfoPair : baseMatchingInfoMap)
     {
       // get matching info
-      const auto & baseMatchingInfo = baseMatchingInfo.second;
+      const auto & baseMatchingInfo = baseMatchingInfoPair.second;
 
       // dump it
       Counter::DumpPhotons(ibase,basePhoton,basePhotons,testPhotons,baseMatchingInfo);
@@ -597,7 +595,7 @@ void Counter::DumpPhotons(const pat::Photon & basePhoton, const std::vector<pat:
 			  const std::vector<int> & indices, const std::string & text)
 {
   // loop indices
-  for (const auto itest : base_to_tests_GT)
+  for (const auto itest : indices)
   {
     // get "test" photon
     const auto & testPhoton = testPhotons[itest];
@@ -624,7 +622,7 @@ void Counter::DumpPhoton(const int i, const pat::Photon & photon, const std::str
 // Internal Setup Functions //
 //////////////////////////////
 
-void Counter::SetupInternalInfo()
+void Counter::SetInternalInfo()
 {
   // GED
   gedInfo.matchingInfoMap[N].baseVID = "NONE";
@@ -645,12 +643,13 @@ void Counter::SetupInternalInfo()
   ootInfo.matchingInfoMap[T].testVID = (useGEDVID?Config::GEDPhotonTightVID:"NONE");
 
   // set labels
-  Counter::SetLabels(gedInfo);
-  Counter::SetLabels(ootInfo);
+  Counter::SetLabels(gedInfo,"GED");
+  Counter::SetLabels(ootInfo,"OOT");
 }
 
-void Counter::SetLabels(PhotonInfo & photonInfo)
+void Counter::SetLabels(PhotonInfo & photonInfo, const std::string & label)
 {
+  photonInfo.label = label;
   photonInfo.matchingInfoMap[N].label = "N";
   photonInfo.matchingInfoMap[L].label = "L";
   photonInfo.matchingInfoMap[T].label = "T";
@@ -708,11 +707,20 @@ void Counter::InitBranches(PhotonInfo & photonInfo, const std::string & base, co
     const auto & label = matchingInfo.label;
 
     // set branches
-    tree->Branch("n"+base+"_"+label,&npho);
-    tree->Branch("n"+base+"_to_"+test+"s_GT_"+label,&nbase_to_tests_GT);
-    tree->Branch("n"+base+"_to_"+test+"s_LT_"+label,&nbase_to_tests_LT);
-    tree->Branch("n"+base+"_unmatched_"+label,&nbase_unmatched);
-    tree->Branch("n"+base+"_to_"+base+"s_"+label,&nbase_to_bases);
+    const auto npho = "n"+base+"_"+label;
+    tree->Branch(npho.c_str(),&matchingInfo.npho);
+
+    const auto nbase_to_tests_GT = "n"+base+"_to_"+test+"s_GT_"+label;
+    tree->Branch(nbase_to_tests_GT.c_str(),&matchingInfo.nbase_to_tests_GT);
+    
+    const auto nbase_to_tests_LT = "n"+base+"_to_"+test+"s_LT_"+label; 
+    tree->Branch(nbase_to_tests_LT.c_str(),&matchingInfo.nbase_to_tests_LT);
+
+    const auto nbase_unmatched = "n"+base+"_unmatched_"+label;
+    tree->Branch(nbase_unmatched.c_str(),&matchingInfo.nbase_unmatched);
+
+    const auto nbase_to_bases = "n"+base+"_to_"+base+"s_"+label;
+    tree->Branch(nbase_to_bases.c_str(),&matchingInfo.nbase_to_bases);
   }
 }
 
