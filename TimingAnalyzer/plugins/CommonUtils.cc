@@ -749,13 +749,16 @@ namespace oot
 		  const EcalRecHitCollection * recHitsEB,
 		  const EcalRecHitCollection * recHitsEE)
   {
-    std::cout << "pT: " << oot::GetPhotonPt(photon) << " phi: " << photon.phi() << " eta: " << photon.eta() << std::endl;
+    std::cout << (isOOT ? "OOT" : "GED") << " Photon Info -->"
+	      << " pT: " << std::setprecision(3) << oot::GetPhotonPt(photon) 
+	      << " phi: " << std::setprecision(3) << photon.phi() 
+	      << " eta: " << std::setprecision(3) << photon.eta() << std::endl;
     
     const auto & phosc = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
     const auto & seedDetId = phosc->seed()->seed(); // get seed detid
     const auto isEB = (seedDetId.subdetId() == EcalSubdetector::EcalBarrel);
     
-    std::cout << " isEB: " << isEB << " isOOT: " << isOOT << " seedId: " << seedDetId.rawId() << std::endl;
+    std::cout << " isEB: " << isEB << " seedId: " << seedDetId.rawId() << std::endl;
     
     const auto recHits = (isEB ? recHitsEB : recHitsEE); // get rechits
     const auto & hitsAndFractions = phosc->hitsAndFractions(); // get vector of detids
@@ -770,17 +773,23 @@ namespace oot
       // standard check
       if (recHit != recHits->end())
       {
-	std::cout << "   rhId: " << recHitId << " E: " << recHit->energy() << " T: " << recHit->time() << " isOOT: " << recHit->checkFlag(EcalRecHit::kOutOfTime);
+	if (recHit->energy() < 1) continue;
+
+	std::cout << "   rhId: " << recHitId;
 	if (isEB)
 	{
 	  const EBDetId recHitEB(recHitId);
-	  std::cout << " ieta: " << recHitEB.ieta() << " iphi: " << recHitEB.iphi() << std::endl;
+	  std::cout << " ieta: " << recHitEB.ieta() << " iphi: " << recHitEB.iphi();
 	}
 	else
         {
 	  const EEDetId recHitEE(recHitId);
-	  std::cout << " ix: " << recHitEE.ix() << " iy: " << recHitEE.iy() << std::endl;
+	  std::cout << " ix: " << recHitEE.ix() << " iy: " << recHitEE.iy();
 	}
+	std::cout << " isOOT: " << recHit->checkFlag(EcalRecHit::kOutOfTime)
+		  << " energy: " << std::setprecision(3) << recHit->energy() 
+		  << " time: " << std::setprecision(3) << recHit->time() 
+		  << std::endl;
       }
     } // end loop over hits and fractions
   }
