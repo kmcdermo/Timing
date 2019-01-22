@@ -8,18 +8,16 @@ options = VarParsing('python')
 ## matching cuts
 options.register('dRmin',0.3,VarParsing.multiplicity.singleton,VarParsing.varType.float,'dR minimum cut');
 options.register('pTmin',20.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'pT minimum cut');
-options.register('pTres',0.5,VarParsing.multiplicity.singleton,VarParsing.varType.float,'pT resolution cut');
 
-## useGEDVID
+## useVID
 options.register('useGEDVID',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to use GED VID in cuts');
+options.register('useOOTVID',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to use OOT VID in cuts');
 
 ## debug it all?
 options.register('debug',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to dump info');
 
 ## data or MC options
 options.register('isMC',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to indicate data or MC');
-options.register('xsec',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'cross section in pb');
-options.register('BR',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'branching ratio of MC');
 
 ## GT to be used
 options.register('globalTag','94X_mc2017_realistic_v14',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
@@ -45,16 +43,13 @@ print "     ##### Settings ######"
 print "        -- Matching --"
 print "dRmin          : ",options.dRmin
 print "pTmin          : ",options.pTmin
-print "pTres          : ",options.pTres
-print "        -- GED VID --"
+print "          -- VID --"
 print "useGEDVID      : ",options.useGEDVID
+print "useOOTVID      : ",options.useOOTVID
 print "         -- Debug --"
 print "debug          : ",options.debug
 print "        -- MC Info --"
 print "isMC           : ",options.isMC
-if options.isMC:
-	print "xsec           : ",options.xsec
-	print "BR             : ",options.BR
 print "           -- GT --"
 print "globalTag      : ",options.globalTag	
 print "         -- Output --"
@@ -85,11 +80,6 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-		# reminiaod data: 94X_dataRun2_v6
-		#'/store/user/kmcdermo/files/SPH_2017E_miniAODv2.root'
-		# miniaodv2 GMSB, GT: 94X_mc2017_realistic_v14
-		#'/store/user/kmcdermo/files/GMSB_L600TeV_Ctau200cm_miniAODv2.root'
-
 		'root://xrootd-cms.infn.it//store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/100000/A0C1FB84-F0D8-E811-829F-484D7E8DF0FA.root',
 		'root://xrootd-cms.infn.it//store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/100000/9273BB85-F0D8-E811-9A57-0CC47A706CDE.root',
 		'root://xrootd-cms.infn.it//store/mc/RunIIFall17MiniAODv2/GMSB_L-600TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/00000/FA78EC1A-E0BA-E811-9524-F02FA768CCD8.root',
@@ -139,25 +129,18 @@ process.tree = cms.EDAnalyzer("Counter",
    ## matched criteria
    dRmin = cms.double(options.dRmin),
    pTmin = cms.double(options.pTmin),
-   pTres = cms.double(options.pTres),
-   ## ged vid
+   ## vid
    useGEDVID = cms.bool(options.useGEDVID),
+   useOOTVID = cms.bool(options.useOOTVID),
    ## debug config
-   debug = cms.bool(options.debug),		      
-   ## cands
-   cands = cms.InputTag("packedPFCandidates"),
+   debug = cms.bool(options.debug),	      
    ## MET
    mets = cms.InputTag("slimmedMETsModifiedMET"),
    ## photons
    gedPhotons = cms.InputTag("slimmedPhotons"),
    ootPhotons = cms.InputTag("slimmedOOTPhotons"),
    ## gen info
-   isMC         = cms.bool(options.isMC),
-   xsec         = cms.double(options.xsec),
-   BR           = cms.double(options.BR),
-   genEvt       = cms.InputTag("generator"),
-   pileups      = cms.InputTag("slimmedAddPileupInfo"),
-   genParticles = cms.InputTag("prunedGenParticles"),
+   isMC = cms.bool(options.isMC)
 )
 
 # Set up the path

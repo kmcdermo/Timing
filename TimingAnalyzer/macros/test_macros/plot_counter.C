@@ -162,74 +162,6 @@ void plot_counter(const TString & modifier)
     
     canv->SaveAs(basedir+modifier+"/"+label+"/nOOTphotons.pdf");
     delete leg; delete h_oot_GT; delete h_oot_LT; delete h_oot_UN;
-
-    ///////////////////
-    // Photon DelPhi //
-    ///////////////////
-    
-    auto h_std_UN = new TH1F("h_std_UN",";#Delta(#phi_{MET}^{RECO}-#phi_{#gamma}^{OOT});Fraction of Events",32,-3.2f,3.2f);
-    h_std_UN->SetLineColor(kRed+1); h_std_UN->SetMarkerColor(kRed+1); h_std_UN->Sumw2(); h_std_UN->SetStats(0);
-    tree->Draw(Form("TVector2::Phi_mpi_pi(t1pfMETphi-unmatchedGEDphi_%s[0])>>h_std_UN",cut.Data()),
-	       Form("nOOT_unmatchedGED_%s==1&&nOOT_matchedGTGED_%s==0",cut.Data(),cut.Data()),"goff"); h_std_UN->Scale(1.f/nEvs);
-
-    auto h_std_GT = new TH1F("h_std_GT",";#Delta(#phi_{MET}^{RECO}-#phi_{#gamma}^{OOT});Fraction of Events",32,-3.2f,3.2f);
-    h_std_GT->SetLineColor(kPink-9); h_std_GT->SetMarkerColor(kPink-9); h_std_GT->Sumw2(); h_std_GT->SetStats(0);
-    tree->Draw(Form("TVector2::Phi_mpi_pi(t1pfMETphi-matchedGTGEDphi_%s[0])>>h_std_GT",cut.Data()),
-	       Form("nOOT_matchedGTGED_%s==1&&nOOT_unmatchedGED_%s==0",cut.Data(),cut.Data()),"goff"); h_std_GT->Scale(1.f/nEvs);
-
-    h_oot_UN = new TH1F("h_oot_UN",";#Delta(#phi_{MET}^{RECO}-#phi_{#gamma}^{OOT});Fraction of Events",32,-3.2f,3.2f);
-    h_oot_UN->SetLineColor(kBlue); h_oot_UN->SetMarkerColor(kBlue); h_oot_UN->Sumw2(); h_oot_UN->SetStats(0);
-    tree->Draw(Form("TVector2::Phi_mpi_pi(ootMETphi_%s-unmatchedGEDphi_%s[0])>>h_oot_UN",cut.Data(),cut.Data()),
-	       Form("nOOT_unmatchedGED_%s==1&&nOOT_matchedGTGED_%s==0",cut.Data(),cut.Data()),"goff"); h_oot_UN->Scale(1.f/nEvs);
-    
-    h_oot_GT = new TH1F("h_oot_GT",";#Delta(#phi_{MET}^{RECO}-#phi_{#gamma}^{OOT});Fraction of Events",32,-3.2f,3.2f);
-    h_oot_GT->SetLineColor(kAzure+10); h_oot_GT->SetMarkerColor(kAzure+10); h_oot_GT->Sumw2(); h_oot_GT->SetStats(0);
-    tree->Draw(Form("TVector2::Phi_mpi_pi(ootMETphi_%s-matchedGTGEDphi_%s[0])>>h_oot_GT",cut.Data(),cut.Data()),
-	       Form("nOOT_matchedGTGED_%s==1&&nOOT_unmatchedGED_%s==0",cut.Data(),cut.Data()),"goff"); h_oot_GT->Scale(1.f/nEvs);
-
-    canv->SetLogy(0); h_oot_UN->SetMinimum(5e-5); h_oot_UN->Draw(); h_oot_GT->Draw("same"); h_std_UN->Draw("same"); h_std_GT->Draw("same");
-
-    leg = new TLegend(0.60,0.80,0.94,0.94);
-    leg->AddEntry(h_std_UN,"OOT != GED, T1PF MET","epl");
-    leg->AddEntry(h_std_GT,"OOT >  GED, T1PF MET","epl");
-    leg->AddEntry(h_oot_UN,"OOT != GED, Cor. MET","epl");
-    leg->AddEntry(h_oot_GT,"OOT >  GED, Cor. MET","epl");
-    leg->Draw("same");
-    
-    canv->SaveAs(basedir+modifier+"/"+label+"/phodelphi.pdf");
-    delete leg; delete h_std_UN; delete h_std_GT; delete h_oot_UN; delete h_oot_GT;
-
-    //////////////////
-    // Photon E res //
-    //////////////////
-   
-    auto h_ged_bef = new TH1F("h_ged_bef",";#Delta(E_{#gamma}^{GEN}-E_{#gamma}^{RECO});Fraction of nPhotons",50,-100.f,100.f);
-    h_ged_bef->SetLineColor(kRed+1); h_ged_bef->SetMarkerColor(kRed+1); h_ged_bef->Sumw2(); h_ged_bef->SetStats(0);
-    tree->Draw(Form("beforeGEDEres_%s>>h_ged_bef",cut.Data()),"","goff"); h_ged_bef->Scale(1.f/h_ged_bef->Integral());
-
-    auto h_ged_aft = new TH1F("h_ged_aft",";#Delta(E_{#gamma}^{GEN}-E_{#gamma}^{RECO});Fraction of nPhotons",50,-100.f,100.f);
-    h_ged_aft->SetLineColor(kPink-9); h_ged_aft->SetMarkerColor(kPink-9); h_ged_aft->Sumw2(); h_ged_aft->SetStats(0);
-    tree->Draw(Form("afterGEDEres_%s>>h_ged_aft",cut.Data()),"","goff"); h_ged_aft->Scale(1.f/h_ged_aft->Integral());
-
-    auto h_oot_bef = new TH1F("h_oot_bef",";#Delta(E_{#gamma}^{GEN}-E_{#gamma}^{RECO});Fraction of nPhotons",50,-100.f,100.f);
-    h_oot_bef->SetLineColor(kBlue); h_oot_bef->SetMarkerColor(kBlue); h_oot_bef->Sumw2(); h_oot_bef->SetStats(0);
-    tree->Draw(Form("beforeOOTEres_%s>>h_oot_bef",cut.Data()),"","goff"); h_oot_bef->Scale(1.f/h_oot_bef->Integral());
-
-    auto h_oot_aft = new TH1F("h_oot_aft",";#Delta(E_{#gamma}^{GEN}-E_{#gamma}^{RECO});Fraction of nPhotons",50,-100.f,100.f);
-    h_oot_aft->SetLineColor(kAzure-10); h_oot_aft->SetMarkerColor(kAzure-10); h_oot_aft->Sumw2(); h_oot_aft->SetStats(0);
-    tree->Draw(Form("afterOOTEres_%s>>h_oot_aft",cut.Data()),"","goff"); h_oot_aft->Scale(1.f/h_oot_aft->Integral());
-
-    canv->SetLogy(0); h_oot_aft->SetMinimum(5e-5); h_ged_bef->Draw(); h_oot_aft->Draw("same"); h_ged_aft->Draw("same"); h_oot_bef->Draw("same");
-
-    leg = new TLegend(0.60,0.80,0.94,0.94); 
-    leg->AddEntry(h_ged_bef,Form("GED (Before), #mu: %5.2f",h_ged_bef->GetMean()),"epl");
-    leg->AddEntry(h_ged_aft,Form("GED (After), #mu: %5.2f",h_ged_aft->GetMean()),"epl");
-    leg->AddEntry(h_oot_bef,Form("OOT (Before), #mu: %5.2f",h_oot_bef->GetMean()),"epl");
-    leg->AddEntry(h_oot_aft,Form("OOT (After), #mu: %5.2f",h_oot_aft->GetMean()),"epl");
-    leg->Draw("same");
-    
-    canv->SaveAs(basedir+modifier+"/"+label+"/phoEres.pdf");
-    delete leg; delete h_ged_bef; delete h_ged_aft; delete h_oot_bef; delete h_oot_aft;
   }
 
   //////////////
@@ -270,31 +202,4 @@ void plot_counter(const TString & modifier)
   canv->SetLogy(1);
   canv->SaveAs(basedir+modifier+"/nPhotons.pdf");
   delete leg; delete h_ged_N; delete h_ged_L; delete h_ged_T; delete h_oot_N; delete h_oot_L; delete h_oot_T;
-
-  //////////////
-  // PF Cands //
-  //////////////
-
-  h_oot_N = new TH1F("h_oot_N",";nPFCands Matched/Event;Fraction of Events",5,0,5);
-  h_oot_N->SetLineColor(kBlue); h_oot_N->SetMarkerColor(kBlue); h_oot_N->Sumw2(); h_oot_N->SetStats(0);
-  tree->Draw("nOOT_matchedCands_N>>h_oot_N","","goff"); h_oot_N->Scale(1.f/nEvs);
-
-  h_oot_L = new TH1F("h_oot_L",";nPFCands Matched/Event;Fraction of Events",5,0,5);
-  h_oot_L->SetLineColor(kAzure+10); h_oot_L->SetMarkerColor(kAzure+10); h_oot_L->Sumw2(); h_oot_L->SetStats(0);
-  tree->Draw("nOOT_matchedCands_L>>h_oot_L","","goff"); h_oot_L->Scale(1.f/nEvs);
-
-  h_oot_T = new TH1F("h_oot_T",";nPFCands Matched/Event;Fraction of Events",5,0,5);
-  h_oot_T->SetLineColor(kGreen+1); h_oot_T->SetMarkerColor(kGreen+1); h_oot_T->Sumw2(); h_oot_T->SetStats(0);
-  tree->Draw("nOOT_matchedCands_T>>h_oot_T","","goff"); h_oot_T->Scale(1.f/nEvs);
-
-  h_oot_N->SetMinimum(5e-5); h_oot_N->Draw(); h_oot_L->Draw("same"); h_oot_T->Draw("same");
-  leg = new TLegend(0.77,0.74,0.94,0.94);
-  leg->AddEntry(h_oot_N,Form("OOT, #mu: %4.2f",h_oot_N->GetMean()),"epl");
-  leg->AddEntry(h_oot_L,Form("OOT (Loose), #mu: %4.2f",h_oot_L->GetMean()),"epl");
-  leg->AddEntry(h_oot_T,Form("OOT (Tight), #mu: %4.2f",h_oot_T->GetMean()),"epl");
-  leg->Draw("same");
-
-  canv->SetLogy(1);
-  canv->SaveAs(basedir+modifier+"/nCands.pdf");
-  delete leg; delete h_oot_N; delete h_oot_L; delete h_oot_T;
 }

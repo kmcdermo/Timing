@@ -11,13 +11,7 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h" 
 
-// Gen Info
-#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
-#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-
 // DataFormats
-#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 
@@ -29,22 +23,58 @@
 #include <cmath>
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <vector>
+#include <map>
 
 // Common Utilities
 #include "Timing/TimingAnalyzer/plugins/CommonUtils.hh"
 
-////////////////////////
-// GED/OOT Photon Idx //
-////////////////////////
+///////////////////////////
+// Enum of Matching Type //
+///////////////////////////
 
-struct ReducedPhoton
+enum IDType {N,L,T};
+
+///////////////////////
+// Struct of indices //
+///////////////////////
+
+struct MatchingInfo
 {
-  ReducedPhoton() {}
-  ReducedPhoton(const int idx, const bool isGED) : idx(idx), isGED(isGED) {}
+  MatchingInfo() {}
 
-  int idx;
-  bool isGED;
+  // Self info
+  std::string label;
+  
+  // VID info
+  std::string baseVID;
+  std::string testVID;
+
+  // counters
+  int              npho;
+  std::vector<int> nbase_to_tests_GT;
+  std::vector<int> nbase_to_tests_LT;
+  int              nbase_unmatched;
+  std::vector<int> nbase_to_bases;
+
+  // indices
+  std::vector<std::vector<int> > bases_to_tests_GT;
+  std::vector<std::vector<int> > bases_to_tests_LT;
+  std::vector<int>               bases_unmatched;
+  std::vector<std::vector<int> > bases_to_bases;
+};
+
+/////////////////
+// Photon info //
+/////////////////
+
+struct
+{
+  PhotonInfo() {}
+
+  std::vector<pat::Photons> photons;
+  std::map<IDType,MatchingInfo> matchingInfoMap;
 };
 
 //////////////////////
@@ -63,76 +93,95 @@ public:
   ~Counter();
   static void fillDescriptions(edm::ConfigurationDescriptions & descriptions);
 
+  //////////////////////////////
+  // Internal Setup Functions //
+  //////////////////////////////
+
+  void SetupVIDInfo();
+  void SetLabels(PhotonInfo & photonInfo);
+
+  ///////////////////////////
+  // Setup TTree Functions //
+  ///////////////////////////
+
+  void MakeTree();
+  void InitBranches();
+  void InitBranches(PhotonInfo & photonInfo, const std::string & base, const std::string & test);
+
   //////////////////////////
   // Event Prep Functions //
   //////////////////////////
 
   bool GetObjects(const edm::Event & iEvent);
-  void PrepObjects();
   void InitializeObjects();
+  void PrepObjects();
 
-  void PrepPhotonCollections();
-  void PrepPhotonCollection(std::vector<ReducedPhoton> & reducedPhotons, const std::vector<int> & matchedOOT, const std::vector<int> & matchedLTGED);
-
-  ////////////////////
-  // Main Functions //
-  ////////////////////
+  ///////////////////
+  // Main Function //
+  ///////////////////
   
   void SetEventInfo();
 
+  ////////////////////////
+  // Set Basic Counters //
+  ////////////////////////
+
   void SetBasicCounters();
+  void SetBasicCounters(PhotonInfo & photonInfo);
 
-  void SetPhotonIndices();
-  void SetPhotonIndices(const std::string & gedVID, const std::string & ootVID, std::vector<int> & matchedOOT,
-			std::vector<int> & matchedGTGED, std::vector<int> & matchedLTGED,
-			std::vector<int> & unmatchedGED, std::vector<int> & matchedCands);
+  /////////////////////////
+  // Set Overlap Indices //
+  /////////////////////////
 
-  void SetPhotonCounters();
-  void SetPhotonCounter(const std::vector<int> & indices, int & counter);
+  void SetOverlapIndices();
+  void SetBaseToTestIndices(PhotonInfo & basePhotonInfo, const PhotonInfo & testPhotonInfo);
+  void SetBaseToBaseIndices(PhotonInfo & basePhotonInfo);
 
-  void SetPhotonPhis(const std::vector<int> & matchedGTGED, const std::vector<int> & matchedLTGED, const std::vector<int> & unmatchedGED, 
-		     std::vector<float> & matchedGTGEDphi, std::vector<float> & unmatchedGEDphi);
-  void SetPhotonPhis();
+  //////////////////////////
+  // Set Overlap Counters //
+  //////////////////////////
+
+  void SetOverlapCounters();
+  void SetOverlapCounters(PhotonInfo & photonInfo);
+  void SetOverlapCounter(const std::vector<std::vector<int> > & indicesvec, std::vector<int> & counter);
+  void SetOverlapCounter(const std::vector<int> & indices, int & counter);
+
+  //////////////////
+  // Set MET Info //
+  //////////////////
 
   void SetMETInfo();
-  void SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::vector<int> & matchedLTGED,
-		       const std::vector<int> & unmatchedGED, float & ootMETpt, float & ootMETphi);
 
-  void SetMCInfo();
-
-  void SetEResiduals();
-  void SetEResiduals(const std::vector<ReducedPhoton> & reducedPhotons,
-		     std::vector<float> & beforeGEDEres, std::vector<float> & afterGEDEres,
-		     std::vector<float> & beforeOOTEres, std::vector<float> & afterOOTEres);
-
-  //////////////////////
-  // Helper Functions //
-  //////////////////////
+  ////////////////////
+  // Reset Counters //
+  ////////////////////
 
   void ResetCounters();
+  void ResetCounters(PhotonInfo & photonInfo);
+  void ResetCounter(std::vector<int> & counter);
   void ResetCounter(int & counter);
 
-  void ResetPhotonIndices();
-  void ResetPhotonIndices(std::vector<int> & indices, const int size);
+  ///////////////////
+  // Reset Indices //
+  ///////////////////
 
-  void ResetPhotonPhis();
-  void ResetEResiduals();
-  void ResetPhotonVars(std::vector<float> & vars);
-
-  void ResetPhotonCollections();
-  void ResetPhotonCollection(std::vector<ReducedPhoton> & reducedPhotons);
+  void ResetOverlapIndices();
+  void ResetOverlapIndices(PhotonInfo & photonInfo);
+  void ResetOverlapIndices(std::vector<std::vector<int> > & indices, const int size);
+  void ResetOverlapIndices(std::vector<int> & indices, const int size);
 
   /////////////////////
   // DEBUG FUNCTIONS //
   /////////////////////
 
   void DumpPhotons(const edm::Event & iEvent);
-  void DumpPhotons(const std::string & group, const std::vector<int> & matchedOOT,
-		   const std::vector<int> & matchedGTGED, const std::vector<int> & matchedLTGED,
-		   const std::vector<int> & unmatchedGED);
-  void DumpPhotons(const std::vector<pat::Photon> & photons, const int size, 
-		   const std::vector<int> & indices, const bool check, const std::string & label,
-		   const std::vector<pat::Photon> & refPhotons);
+  void DumpPhotons(const PhotonInfo & basePhotonInfo, const PhotonInfo & testPhotonInfo, const std::string & text);
+  void DumpPhotons(const int ibase, const pat::Photon & basePhoton,
+		   const std::vector<pat::Photon> & basePhotons,
+		   const std::vector<pat::Photon> & testPhotons,
+		   const std::string & VID, const MatchingInfo & baseMatchingInfo);
+  void DumpPhotons(const pat::Photon & basePhoton, const std::vector<pat::Photon> & testPhotons, 
+		   const std::vector<int> & indices, const std::string & text);
   void DumpPhoton(const int i, const pat::Photon & photon, const std::string & prefix, const std::string & suffix);
 
 private:
@@ -155,18 +204,13 @@ private:
   // match config 
   const float dRmin;
   const float pTmin;
-  const float pTres;
 
-  // useGEDVID
+  // useOOTVID
   const bool useGEDVID;
+  const bool useOOTVID;
 
   // debug config
   const bool debug;
-
-  // cands
-  const edm::InputTag candsTag;
-  edm::EDGetTokenT<std::vector<pat::PackedCandidate> > candsToken;
-  edm::Handle<std::vector<pat::PackedCandidate> > candsH;
 
   // mets
   const edm::InputTag metsTag;
@@ -177,50 +221,21 @@ private:
   const edm::InputTag gedPhotonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > gedPhotonsToken;
   edm::Handle<std::vector<pat::Photon> > gedPhotonsH;
-  std::vector<pat::Photon> gedPhotons;
 
   // ootPhotons
   const edm::InputTag ootPhotonsTag;
   edm::EDGetTokenT<std::vector<pat::Photon> > ootPhotonsToken;
   edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
-  std::vector<pat::Photon> ootPhotons;
 
   // MC config --> also output!
   const bool isMC;
-  float xsec;
-  float BR;
 
-  // gen evt record
-  const edm::InputTag genEvtInfoTag;
-  edm::EDGetTokenT<GenEventInfoProduct> genEvtInfoToken;
-  edm::Handle<GenEventInfoProduct> genEvtInfoH;
+  //////////////////////
+  // Temp I/O Members //
+  //////////////////////
 
-  // pileup info
-  const edm::InputTag pileupInfosTag;
-  edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileupInfosToken;
-  edm::Handle<std::vector<PileupSummaryInfo> > pileupInfosH;
-
-  // gen particles
-  const edm::InputTag genParticlesTag;
-  edm::EDGetTokenT<std::vector<reco::GenParticle> > genParticlesToken;
-  edm::Handle<std::vector<reco::GenParticle> > genParticlesH;
-
-  ///////////////////////////
-  // Temp Internal Members //
-  ///////////////////////////
-
-  // photon indices
-  std::vector<int> matchedOOT_N, matchedGTGED_N, matchedLTGED_N, unmatchedGED_N, matchedCands_N;
-  std::vector<int> matchedOOT_L, matchedGTGED_L, matchedLTGED_L, unmatchedGED_L, matchedCands_L;
-  std::vector<int> matchedOOT_T, matchedGTGED_T, matchedLTGED_T, unmatchedGED_T, matchedCands_T;
-
-  // neutralinos
-  std::vector<reco::GenParticle> neutralinos;
-
-  // reduced photon index collections
-  std::vector<ReducedPhoton> reducedPhotons_N;
-  std::vector<ReducedPhoton> reducedPhotons_L;
-  std::vector<ReducedPhoton> reducedPhotons_T;
+  PhotonInfo gedInfo;
+  PhotonInfo ootInfo;
 
   ////////////////////
   // Output Members //
@@ -229,31 +244,12 @@ private:
   // tree
   TTree * tree;
  
-  // counters
-  int nGED_N, nOOT_N, nOOT_matchedGTGED_N, nOOT_matchedLTGED_N, nOOT_unmatchedGED_N, nOOT_matchedCands_N;
-  int nGED_L, nOOT_L, nOOT_matchedGTGED_L, nOOT_matchedLTGED_L, nOOT_unmatchedGED_L, nOOT_matchedCands_L;
-  int nGED_T, nOOT_T, nOOT_matchedGTGED_T, nOOT_matchedLTGED_T, nOOT_unmatchedGED_T, nOOT_matchedCands_T;
-
-  // photon phis
-  std::vector<float> matchedGTGEDphi_N, unmatchedGEDphi_N;
-  std::vector<float> matchedGTGEDphi_L, unmatchedGEDphi_L;
-  std::vector<float> matchedGTGEDphi_T, unmatchedGEDphi_T;
-
   // MET
   float t1pfMETpt, t1pfMETphi;
   float genMETpt, genMETphi;
   float ootMETpt_N, ootMETphi_N;
   float ootMETpt_L, ootMETphi_L;
   float ootMETpt_T, ootMETphi_T;
-
-  // MC info
-  float genwgt;
-  int genputrue;
-
-  // E residuals
-  std::vector<float> beforeGEDEres_N, afterGEDEres_N, beforeOOTEres_N, afterOOTEres_N;
-  std::vector<float> beforeGEDEres_L, afterGEDEres_L, beforeOOTEres_L, afterOOTEres_L;
-  std::vector<float> beforeGEDEres_T, afterGEDEres_T, beforeOOTEres_T, afterOOTEres_T;
 };
 
 #endif
