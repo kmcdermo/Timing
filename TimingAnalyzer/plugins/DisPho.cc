@@ -227,6 +227,58 @@ void DisPho::analyze(const edm::Event & iEvent, const edm::EventSetup & iSetup)
   if (applyBlindSF && DisPho::ApplyBlindSF()) return;
   DisPho::FillBlindSF();
 
+
+  if (isGMSB) oot::PrepNeutralinos(genParticlesH,neutralinos);
+
+  const auto nGED = int(gedPhotonsH->size());
+  for (const auto & ootPhoton : *ootPhotonsH)
+  {
+    auto matchedGED = -1; // tmp var to store index of matched GED photon
+    auto mindR = dRmin; // deltaR between OOT and GED --> can shrink!
+
+    // loop over all GED photons --> look for best match
+    for (auto iGED = 0; iGED < nGED; iGED++)
+    {
+      const auto & gedPhoton = (*gedPhotonsH)[iGED];
+      const auto dR = reco::deltaR(ootPhoton,gedPhoton);
+      
+      if (dR < mindR) // check if GED within OOT
+      {
+	matchedGED = iGED; // tmp var for storing best match
+	mindR = dR; // set mindR to dR to find best match
+      } // end check over mindR
+    } // end loop over gedPhotons
+    
+    if (matchedGED >= 0) // OOT matches GED
+    {
+      // first get GED photon
+      const auto & gedPhoton = (*gedPhotonsH)[matchedGED];
+
+      if (oot::GetPhotonPt(ootPhoton) > oot::GetPhotonPt(gedPhoton))
+      {
+	  for (const auto & neutralino : neutralinos)
+	  {
+	    // set photon daughter stuff
+	    const auto phdaughter  =  (neutralino.daughter(0)->pdgId() == 22)?0:1;
+	    const auto & genphoton = *(neutralino.daughter(phdaughter));
+
+	    if (reco::deltaR(genphoton,ootPhoton) < gendRmin)
+	    {
+	      std::cout << "Gen Photon Info -->" 
+			<< " pT: " << std::setprecision(3) << genphoton.pt() 
+			<< " phi: " << std::setprecision(3) << genphoton.phi()
+			<< " eta: " << std::setprecision(3) << genphoton.eta()
+			<< std::endl;
+	      oot::DumpPhoton(gedPhoton,false,recHitsEB,recHitsEE);
+	      oot::DumpPhoton(ootPhoton,true, recHitsEB,recHitsEE);
+	      exit(1);
+	    }
+	  }
+
+      }
+    } // end check over matched OOT to GED
+  } // end loop over ootPhotons
+
   // Get MET corrected in time for apply blinding MET --> early object prep
   oot::PrepPhotonsCorrectMET(gedPhotonsH,ootPhotonsH,photons,t1pfMET,rho,dRmin,phpTmin,phIDmin);
 
@@ -548,7 +600,6 @@ void DisPho::PrepObjects(const edm::Event & iEvent)
   // Object Prepping //
   /////////////////////
 
-  if (isGMSB) oot::PrepNeutralinos(genParticlesH,neutralinos);
   if (isHVDS) oot::PrepVPions(genParticlesH,vPions);
   if (isToy)  oot::PrepToys(genParticlesH,toys);
   oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
