@@ -26,6 +26,7 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include <unordered_set>
 
 // Common Utilities
 #include "Timing/TimingAnalyzer/plugins/CommonUtils.hh"
@@ -57,12 +58,19 @@ struct MatchingInfo
   std::vector<int> nbase_to_tests_LT;
   int              nbase_unmatched;
   std::vector<int> nbase_to_bases;
+  int              nbase_to_keep;
+  int              nbase_to_drop;
+  int              nbase_to_both; // should be an error!
 
   // indices
   std::vector<std::vector<int> > bases_to_tests_GT;
   std::vector<std::vector<int> > bases_to_tests_LT;
   std::vector<int>               bases_unmatched;
   std::vector<std::vector<int> > bases_to_bases;
+
+  // sets for defining keeps/drops
+  std::unordered_set<int> bases_to_keep;
+  std::unordered_set<int> bases_to_drop;
 };
 
 /////////////////
@@ -147,11 +155,26 @@ public:
   void SetOverlapCounter(const std::vector<std::vector<int> > & indicesvec, std::vector<int> & counter);
   void SetOverlapCounter(const std::vector<int> & indices, int & counter);
 
+  /////////////////////
+  // Set Photon Sets //
+  /////////////////////
+  
+  void SetPhotonSets();
+  void SetPhotonSets(PhotonInfo & basePhotonInfo, const PhotonInfo & testPhotonInfo);
+
+  /////////////////////////////
+  // Set Photon Set Counters //
+  /////////////////////////////
+
+  void SetPhotonSetCounters();
+  void SetPhotonSetCounters(PhotonInfo & photonInfo);
+
   //////////////////
   // Set MET Info //
   //////////////////
 
   void SetMETInfo();
+  void SetCorrectedMET(const IDType ID, float & ootMETpt, float & ootMETphi);
 
   ////////////////////
   // Reset Counters //
@@ -170,6 +193,14 @@ public:
   void ResetOverlapIndices(PhotonInfo & photonInfo);
   void ResetOverlapIndices(std::vector<std::vector<int> > & indices, const int size);
   void ResetOverlapIndices(std::vector<int> & indices, const int size);
+
+  ///////////////////////
+  // Reset Photon Sets //
+  ///////////////////////
+
+  void ResetPhotonSets();
+  void ResetPhotonSets(PhotonInfo & photonInfo);
+  void ResetPhotonSet(std::unordered_set<int> & indices);
 
   /////////////////////
   // DEBUG FUNCTIONS //

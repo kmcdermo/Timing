@@ -143,6 +143,15 @@ void Counter::SetEventInfo()
   // set photon counters
   Counter::SetOverlapCounters();
 
+  // reset photon sets
+  Counter::ResetPhotonSets();
+
+  // set the photon keep/drop sets
+  Counter::SetPhotonSets();
+
+  // set photon set counters
+  Counter::SetPhotonSetCounters();
+
   // set met info
   Counter::SetMETInfo();
 }
@@ -163,11 +172,14 @@ void Counter::SetBasicCounters(PhotonInfo & photonInfo)
   const auto & photons   = photonInfo.photons;
   auto & matchingInfoMap = photonInfo.matchingInfoMap;
 
-  matchingInfoMap[N].npho = photons.size();
+  // get size of photons
+  matchingInfoMap[IDType::N].npho = photons.size();
+
+  // loop over photons to check for VID
   for (const auto & photon : photons)
   {
-    if (photon.photonID(matchingInfoMap[L].baseVID)) matchingInfoMap[L].npho++;
-    if (photon.photonID(matchingInfoMap[T].baseVID)) matchingInfoMap[T].npho++;
+    if (photon.photonID(matchingInfoMap[IDType::L].baseVID)) matchingInfoMap[IDType::L].npho++;
+    if (photon.photonID(matchingInfoMap[IDType::T].baseVID)) matchingInfoMap[IDType::T].npho++;
   }
 }
 
@@ -196,8 +208,8 @@ void Counter::SetBaseToTestIndices(PhotonInfo & basePhotonInfo, const PhotonInfo
   const auto & testMatchingInfoMap = testPhotonInfo.matchingInfoMap;
 
   // get photon counts
-  const auto nbase = baseMatchingInfoMap.at(N).npho;
-  const auto ntest = testMatchingInfoMap.at(N).npho;
+  const auto nbase = baseMatchingInfoMap.at(IDType::N).npho;
+  const auto ntest = testMatchingInfoMap.at(IDType::N).npho;
 
   // loop over matching map (VIDs)
   for (auto & baseMatchingInfoPair : baseMatchingInfoMap)
@@ -276,7 +288,7 @@ void Counter::SetBaseToBaseIndices(PhotonInfo & basePhotonInfo)
   auto & baseMatchingInfoMap = basePhotonInfo.matchingInfoMap;
  
   // get photon counts
-  const auto nbase = baseMatchingInfoMap.at(N).npho;
+  const auto nbase = baseMatchingInfoMap.at(IDType::N).npho;
 
   // loop over matching map (VIDs)
   for (auto & baseMatchingInfoPair : baseMatchingInfoMap)
@@ -364,74 +376,185 @@ void Counter::SetOverlapCounter(const std::vector<int> & indices, int & counter)
   }
 }
 
+/////////////////////
+// Set Photon Sets //
+/////////////////////
+
+void Counter::SetPhotonSets()
+{
+  Counter::SetPhotonSets(gedInfo,ootInfo);
+  Counter::SetPhotonSets(ootInfo,gedInfo);
+}
+
+void Counter::SetPhotonSets(PhotonInfo & basePhotonInfo, const PhotonInfo & testPhotonInfo)
+{
+  // get size
+  const auto nbase = basePhotonInfo.matchingInfoMap.at(N).npho;
+
+  // loop over matching map (VIDs) from base
+  for (auto & baseMatchingInfoPair : basePhotonInfo.matchingInfoMap)
+  {
+    // get key + value
+    const auto & ID         = baseMatchingInfoPair.first;
+    auto & baseMatchingInfo = baseMatchingInfoPair.second;
+
+    // get indices (base)
+    const auto & bases_to_tests_GT = baseMatchingInfo.bases_to_tests_GT;
+    const auto & bases_to_tests_LT = baseMatchingInfo.bases_to_tests_LT;
+    const auto & bases_unmatched   = baseMatchingInfo.bases_unmatched;
+
+    // get sets
+    auto & bases_to_keep = baseMatchingInfo.bases_to_keep;
+    auto & bases_to_drop = baseMatchingInfo.bases_to_drop;
+
+    // loop over base indices first
+    for (auto ibase = 0; ibase < nbase; ibase++)
+    {
+      // to keep first
+      if (bases_to_tests_GT[ibase].size() > 0) bases_to_keep.emplace(ibase);
+      if (bases_unmatched[ibase] > 0)          bases_to_keep.emplace(ibase);   
+
+      // to drop second
+      if (bases_to_tests_LT[ibase].size() > 0) bases_to_drop.emplace(ibase);
+    } // end loop over N base photons
+
+    // get corresponding test info --> cross-check: should not be different than base
+    const auto & testMatchingInfo = testPhotonInfo.matchingInfoMap.at(ID);
+
+    // get indices (test)
+    const auto & tests_to_bases_GT = testMatchingInfo.bases_to_tests_GT;
+    const auto & tests_to_bases_LT = testMatchingInfo.bases_to_tests_LT;
+    
+    // to keep first
+    for (const auto & test_to_bases_LT : tests_to_bases_LT)
+    {
+      for (const auto ibase : test_to_bases_LT)
+      {
+	bases_to_keep.emplace(ibase);
+      } // end loop over base indices in test vectors
+    } // end loop over test indices
+
+    // to drop second
+    for (const auto & test_to_bases_GT : tests_to_bases_GT)
+    {
+      for (const auto ibase : test_to_bases_GT)
+      {
+	bases_to_drop.emplace(ibase);
+      } // end loop over base indices in test vectors
+    } // end loop over test indices
+
+  } // end loop over VID map
+}
+
+/////////////////////////////
+// Set Photon Set Counters //
+/////////////////////////////
+
+void Counter::SetPhotonSetCounters()
+{
+  Counter::SetPhotonSetCounters(gedInfo);
+  Counter::SetPhotonSetCounters(ootInfo);
+}
+
+void Counter::SetPhotonSetCounters(PhotonInfo & photonInfo)
+{
+  // get photons + matching info refs
+  auto & matchingInfoMap = photonInfo.matchingInfoMap;
+
+  // get size of photons
+  const auto npho = matchingInfoMap[IDType::N].npho;
+
+  // loop over matching map (VIDs)
+  for (auto & matchingInfoPair : matchingInfoMap)
+  {
+    // get value
+    auto & matchingInfo = matchingInfoPair.second;
+
+    // get sets
+    const auto & bases_to_keep = matchingInfo.bases_to_keep;
+    const auto & bases_to_drop = matchingInfo.bases_to_drop;
+
+    // set simple counters first
+    matchingInfo.nbase_to_keep = bases_to_keep.size();
+    matchingInfo.nbase_to_drop = bases_to_drop.size();
+
+    // cross-check for no overlaps
+    for (auto ipho = 0; ipho < npho; ipho++)
+    {
+      if (bases_to_keep.count(ipho) && bases_to_drop.count(ipho)) matchingInfo.nbase_to_both++; // SHOULD NEVER HAPPEN
+    } // end loop over nphos
+  } // end loop over VID map
+}
+
 //////////////////
 // Set MET Info //
 //////////////////
 
 void Counter::SetMETInfo()
 {
+  // reco met
   const auto & t1pfMET = (*metsH).front();
   t1pfMETpt = t1pfMET.pt();
   t1pfMETphi = t1pfMET.phi();
 
+  // gen met
   if (isMC)
   {
     const auto & genMET = *(t1pfMET.genMET());
     genMETpt = genMET.pt();
     genMETphi = genMET.phi();
   }
-  
-//   Counter::SetCorrectedMET(matchedGTGED_N,matchedLTGED_N,unmatchedGED_N,ootMETpt_N,ootMETphi_N);
-//   Counter::SetCorrectedMET(matchedGTGED_L,matchedLTGED_L,unmatchedGED_L,ootMETpt_L,ootMETphi_L);
-//   Counter::SetCorrectedMET(matchedGTGED_T,matchedLTGED_T,unmatchedGED_T,ootMETpt_T,ootMETphi_T);
+
+  // compute corrected MET
+  Counter::SetCorrectedMET(N,ootMETpt_N,ootMETphi_N);
+  Counter::SetCorrectedMET(L,ootMETpt_L,ootMETphi_L);
+  Counter::SetCorrectedMET(T,ootMETpt_T,ootMETphi_T);
 }
 
-// void Counter::SetCorrectedMET(const std::vector<int> & matchedGTGED, const std::vector<int> & matchedLTGED,
-// 			      const std::vector<int> & unmatchedGED, float & ootMETpt, float & ootMETphi)
-// {
-//   // initialize
-//   ootMETpt  = t1pfMETpt;
-//   ootMETphi = t1pfMETphi;
+void Counter::SetCorrectedMET(const IDType ID, float & ootMETpt, float & ootMETphi)
+{
+  // initialize px, py
+  auto ootMETpx = t1pfMETpt * std::cos(t1pfMETphi);
+  auto ootMETpy = t1pfMETpt * std::sin(t1pfMETphi);
 
-//   // change the MET
-//   for (auto ioot = 0; ioot < nOOT_N; ioot++)
-//   {
-//     // skip if matched, but lower in pT
-//     if (matchedLTGED[ioot] >= 0) continue;
+  // get input photons
+  const auto & gedPhotons = gedInfo.photons;
+  const auto & ootPhotons = ootInfo.photons;
 
-//     // get ootPhoton info --> will use it regardless!
-//     const auto & ootPhoton = ootPhotons[ioot];
-//     const auto ootpt  = oot::GetPhotonPt(ootPhoton);
-//     const auto ootphi = ootPhoton.phi();
+  // get matching info maps
+  const auto & gedMatchingInfo = gedInfo.matchingInfoMap.at(ID);
+  const auto & ootMatchingInfo = ootInfo.matchingInfoMap.at(ID);
+
+  // get photon sets
+  const auto & geds_to_drop = gedMatchingInfo.bases_to_drop;
+  const auto & oots_to_keep = ootMatchingInfo.bases_to_keep;
+
+  // change the MET --> drop GED first
+  for (const auto iged : geds_to_drop)
+  {
+    const auto & gedPhoton = gedPhotons[iged];
+    const auto gedpt  = oot::GetPhotonPt(gedPhoton);
+    const auto gedphi = gedPhoton.phi();
     
-//     // first, change MET with overlapping OOT photons; then check if totally unmatched
-//     if (matchedGTGED[ioot] >= 0)
-//     {
-//       // get gedPhoton info
-//       const auto & gedPhoton = gedPhotons[matchedGTGED[ioot]];
-//       const auto gedpt  = oot::GetPhotonPt(gedPhoton);
-//       const auto gedphi = gedPhoton.phi();
+    ootMETpx += (gedpt * std::cos(gedphi));
+    ootMETpy += (gedpt * std::sin(gedphi));
+  }
 
-//       // get compnonents
-//       const auto x = ootMETpt*std::cos(ootMETphi) - ootpt*std::cos(ootphi) + gedpt*std::cos(gedphi);
-//       const auto y = ootMETpt*std::sin(ootMETphi) - ootpt*std::sin(ootphi) + gedpt*std::sin(gedphi);
-  
-//       // make new met
-//       ootMETpt  = Config::hypo(x,y);
-//       ootMETphi = Config::phi (x,y);
-//     } // end check over overlapping OOT photons
-//     else if (unmatchedGED[ioot] > 0)
-//     {
-//       // get compnonents
-//       const auto x = ootMETpt*std::cos(ootMETphi) - ootpt*std::cos(ootphi);
-//       const auto y = ootMETpt*std::sin(ootMETphi) - ootpt*std::sin(ootphi);
+  // change the MET --> add OOT second
+  for (const auto ioot : oots_to_keep)
+  {
+    const auto & ootPhoton = ootPhotons[ioot];
+    const auto ootpt  = oot::GetPhotonPt(ootPhoton);
+    const auto ootphi = ootPhoton.phi();
+    
+    ootMETpx -= (ootpt * std::cos(ootphi));
+    ootMETpy -= (ootpt * std::sin(ootphi));
+  }
       
-//       // make new met
-//       ootMETpt  = Config::hypo(x,y);
-//       ootMETphi = Config::phi (x,y);
-//     } // end check over non-overlapping OOT photons
-//   } // end loop over OOT photons
-// }
+  // set the new met!
+  ootMETpt  = Config::hypo(ootMETpx,ootMETpy);
+  ootMETphi = Config::phi (ootMETpx,ootMETpy);
+}
 
 ////////////////////
 // Reset Counters //
@@ -457,6 +580,9 @@ void Counter::ResetCounters(PhotonInfo & photonInfo)
     Counter::ResetCounter(matchingInfo.nbase_to_tests_LT);
     Counter::ResetCounter(matchingInfo.nbase_unmatched);
     Counter::ResetCounter(matchingInfo.nbase_to_bases);
+    Counter::ResetCounter(matchingInfo.nbase_to_keep);
+    Counter::ResetCounter(matchingInfo.nbase_to_drop);
+    Counter::ResetCounter(matchingInfo.nbase_to_both);
   }
 }
 
@@ -486,7 +612,7 @@ void Counter::ResetOverlapIndices(PhotonInfo & photonInfo)
   auto & matchingInfoMap = photonInfo.matchingInfoMap;
 
   // get photon counts
-  const auto npho = matchingInfoMap.at(N).npho;
+  const auto npho = matchingInfoMap.at(IDType::N).npho;
 
   // loop over matching map (VIDs)
   for (auto & matchingInfoPair : matchingInfoMap)
@@ -516,6 +642,37 @@ void Counter::ResetOverlapIndices(std::vector<int> & indices, const int size)
   for (auto & index : indices) index = -1;
 }
 
+///////////////////////
+// Reset Photon Sets //
+///////////////////////
+
+void Counter::ResetPhotonSets()
+{
+  Counter::ResetPhotonSets(gedInfo);
+  Counter::ResetPhotonSets(ootInfo);
+}
+
+void Counter::ResetPhotonSets(PhotonInfo & photonInfo)
+{
+  // get matching map ref
+  auto & matchingInfoMap = photonInfo.matchingInfoMap;
+
+  // loop over matching map (VIDs)
+  for (auto & matchingInfoPair : matchingInfoMap)
+  {
+    // get value
+    auto & matchingInfo = matchingInfoPair.second;
+
+    Counter::ResetPhotonSet(matchingInfo.bases_to_keep);
+    Counter::ResetPhotonSet(matchingInfo.bases_to_drop);
+  }
+}
+
+void Counter::ResetPhotonSet(std::unordered_set<int> & indices)
+{
+  indices.clear();
+}
+
 /////////////////////
 // DEBUG FUNCTIONS //
 /////////////////////
@@ -532,8 +689,6 @@ void Counter::DumpPhotons(const edm::Event & iEvent)
 
 void Counter::DumpPhotons(const PhotonInfo & basePhotonInfo, const std::vector<pat::Photon> & testPhotons)
 {
-  std::cout << "========== " << basePhotonInfo.label.c_str() << " Photons ==========" << std::endl;
-
   // get photon refs
   const auto & basePhotons = basePhotonInfo.photons;
 
@@ -541,15 +696,21 @@ void Counter::DumpPhotons(const PhotonInfo & basePhotonInfo, const std::vector<p
   const auto & baseMatchingInfoMap = basePhotonInfo.matchingInfoMap;
 
   // get photon counts
-  const auto nbase = baseMatchingInfoMap.at(N).npho;
+  const auto nbase = baseMatchingInfoMap.at(IDType::N).npho;
+
+  // skip if no photons found
+  if (nbase == 0) return;
+
+  // print out header
+  std::cout << "========== " << basePhotonInfo.label.c_str() << " Photons ==========" << std::endl;
 
   // loop over base photons, setting indices
   for (auto ibase = 0; ibase < nbase; ibase++)
   {
     // get base photon
     const auto & basePhoton = basePhotons[ibase];
-    const auto loose = basePhoton.photonID(baseMatchingInfoMap.at(L).baseVID);
-    const auto tight = basePhoton.photonID(baseMatchingInfoMap.at(T).baseVID);
+    const auto loose = basePhoton.photonID(baseMatchingInfoMap.at(IDType::L).baseVID);
+    const auto tight = basePhoton.photonID(baseMatchingInfoMap.at(IDType::T).baseVID);
 
     // dump basic info
     Counter::DumpPhoton(ibase,basePhoton," "," Loose: "+std::to_string(loose)+" Tight: "+std::to_string(tight));
@@ -580,15 +741,23 @@ void Counter::DumpPhotons(const int ibase, const pat::Photon & basePhoton,
   const auto & base_unmatched   = baseMatchingInfo.bases_unmatched  [ibase];
   const auto & base_to_bases    = baseMatchingInfo.bases_to_bases   [ibase];
   
+  // get sets
+  const auto & bases_to_keep = baseMatchingInfo.bases_to_keep;
+  const auto & bases_to_drop = baseMatchingInfo.bases_to_drop;
+
   // dump photons from indices : overlaps
-  Counter::DumpPhotons(basePhoton,testPhotons,base_to_tests_GT,"GT Test ["+label+"]");
-  Counter::DumpPhotons(basePhoton,testPhotons,base_to_tests_LT,"LT Test ["+label+"]");
+  Counter::DumpPhotons(basePhoton,testPhotons,base_to_tests_GT,"GT ["+label+"]");
+  Counter::DumpPhotons(basePhoton,testPhotons,base_to_tests_LT,"LT ["+label+"]");
+
+  // dump weird situation
+  if (bases_to_keep.count(ibase) && bases_to_drop.count(ibase))
+    std::cout << " ==> ERROR: Photon has matched both greater than pT and lower pT than in test photons!" << std::endl;
 
   // dump if unmatched
-  if (base_unmatched) std::cout << "  --> Not matched to any test photon ["+label+"]." << std::endl;
+  if (base_unmatched > 0) std::cout << "  --> Not matched to any test photon ["+label+"]." << std::endl;
 
   // dump self overlaps
-  Counter::DumpPhotons(basePhoton,basePhotons,base_to_bases,"Self Test ["+label+"]");
+  Counter::DumpPhotons(basePhoton,basePhotons,base_to_bases,"Self ["+label+"]");
 }
 
 void Counter::DumpPhotons(const pat::Photon & basePhoton, const std::vector<pat::Photon> & testPhotons, 
@@ -605,7 +774,7 @@ void Counter::DumpPhotons(const pat::Photon & basePhoton, const std::vector<pat:
     stream << std::setprecision(3) << reco::deltaR(basePhoton,testPhoton);
 
     // dump it
-    Counter::DumpPhoton(itest,testPhoton,"  --> MATCH ","("+text+", delR: "+stream.str()+")");
+    Counter::DumpPhoton(itest,testPhoton,"  --> MATCH with "+text+" "," (delR: "+stream.str()+")");
   }
 }
 
@@ -625,22 +794,22 @@ void Counter::DumpPhoton(const int i, const pat::Photon & photon, const std::str
 void Counter::SetInternalInfo()
 {
   // GED
-  gedInfo.matchingInfoMap[N].baseVID = "NONE";
-  gedInfo.matchingInfoMap[L].baseVID = Config::GEDPhotonLooseVID;
-  gedInfo.matchingInfoMap[T].baseVID = Config::GEDPhotonTightVID;
+  gedInfo.matchingInfoMap[IDType::N].baseVID = "NONE";
+  gedInfo.matchingInfoMap[IDType::L].baseVID = Config::GEDPhotonLooseVID;
+  gedInfo.matchingInfoMap[IDType::T].baseVID = Config::GEDPhotonTightVID;
 
-  gedInfo.matchingInfoMap[N].testVID = "NONE";
-  gedInfo.matchingInfoMap[L].testVID = (useOOTVID?Config::OOTPhotonLooseVID:"NONE");
-  gedInfo.matchingInfoMap[T].testVID = (useOOTVID?Config::OOTPhotonTightVID:"NONE");
+  gedInfo.matchingInfoMap[IDType::N].testVID = "NONE";
+  gedInfo.matchingInfoMap[IDType::L].testVID = (useOOTVID?Config::OOTPhotonLooseVID:"NONE");
+  gedInfo.matchingInfoMap[IDType::T].testVID = (useOOTVID?Config::OOTPhotonTightVID:"NONE");
 
   // OOT
-  ootInfo.matchingInfoMap[N].baseVID = "NONE";
-  ootInfo.matchingInfoMap[L].baseVID = Config::OOTPhotonLooseVID;
-  ootInfo.matchingInfoMap[T].baseVID = Config::OOTPhotonTightVID;
+  ootInfo.matchingInfoMap[IDType::N].baseVID = "NONE";
+  ootInfo.matchingInfoMap[IDType::L].baseVID = Config::OOTPhotonLooseVID;
+  ootInfo.matchingInfoMap[IDType::T].baseVID = Config::OOTPhotonTightVID;
 
-  ootInfo.matchingInfoMap[N].testVID = "NONE";
-  ootInfo.matchingInfoMap[L].testVID = (useGEDVID?Config::GEDPhotonLooseVID:"NONE");
-  ootInfo.matchingInfoMap[T].testVID = (useGEDVID?Config::GEDPhotonTightVID:"NONE");
+  ootInfo.matchingInfoMap[IDType::N].testVID = "NONE";
+  ootInfo.matchingInfoMap[IDType::L].testVID = (useGEDVID?Config::GEDPhotonLooseVID:"NONE");
+  ootInfo.matchingInfoMap[IDType::T].testVID = (useGEDVID?Config::GEDPhotonTightVID:"NONE");
 
   // set labels
   Counter::SetLabels(gedInfo,"GED");
@@ -650,9 +819,9 @@ void Counter::SetInternalInfo()
 void Counter::SetLabels(PhotonInfo & photonInfo, const std::string & label)
 {
   photonInfo.label = label;
-  photonInfo.matchingInfoMap[N].label = "N";
-  photonInfo.matchingInfoMap[L].label = "L";
-  photonInfo.matchingInfoMap[T].label = "T";
+  photonInfo.matchingInfoMap[IDType::N].label = "N";
+  photonInfo.matchingInfoMap[IDType::L].label = "L";
+  photonInfo.matchingInfoMap[IDType::T].label = "T";
 }
 
 //////////////////////////
@@ -721,6 +890,15 @@ void Counter::InitBranches(PhotonInfo & photonInfo, const std::string & base, co
 
     const auto nbase_to_bases = "n"+base+"_to_"+base+"s_"+label;
     tree->Branch(nbase_to_bases.c_str(),&matchingInfo.nbase_to_bases);
+
+    const auto nbase_to_keep = "n"+base+"_to_keep_"+label;
+    tree->Branch(nbase_to_keep.c_str(),&matchingInfo.nbase_to_keep);
+
+    const auto nbase_to_drop = "n"+base+"_to_drop_"+label;
+    tree->Branch(nbase_to_drop.c_str(),&matchingInfo.nbase_to_drop);
+
+    const auto nbase_to_both = "n"+base+"_to_both_"+label;
+    tree->Branch(nbase_to_both.c_str(),&matchingInfo.nbase_to_both);
   }
 }
 
