@@ -220,7 +220,7 @@ namespace Common
   void SetupVarWgts(const TString & varwgtconfig);
   void SetupWeights();
   void SetupEraWeights(const TString & era);
-  void RemoveData();
+  void RemoveGroup(const SampleGroup isGroup);
   void KeepOnlySamples(const std::vector<TString> & samplevec);
   void KeepOnlySignals();
 

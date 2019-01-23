@@ -10,18 +10,16 @@ source scripts/common_variables.sh
 ###################
 
 ## Command Line Input
-outdir=${1:-"madv2_v3/checks_v1/full_chain"}
-docleanup=${2:-"true"}
+outdir=${1:-"madv2_v3/full_chain/ABCD"}
+is_blind=${2:-"true"}
+use_obs=${3:-"false"}
+docleanup=${4:-"true"}
 
-## 2D plot config
-plot="met_vs_time_box"
-misc2D="empty"
-outplot2Ddir="plots2D"
-outtext="${plot}"
+## Scan config
+ws_filename="ws_final.root"
 
 ## Limit config
-tmplimitdir="tmp"
-doobs=0
+inlimitdir="input"
 
 ######################
 ## Make Directories ##
@@ -29,24 +27,17 @@ doobs=0
 
 mkdir -p "${limitdir}/${inlimitdir}"
 
-#########################
-## Make 2D Input Plots ##
-#########################
+################################################
+## Make 2D Input Plots from Significance Scan ##
+################################################
 
-for input in "${inputs[@]}"
-do 
-    echo ${!input} | while read -r label infile insigfile sel varwgtmap
-    do
-	## tmp out name
-	outtext="${plot}_${label}"
+./scripts/makePlotsFromSigScan.sh "${outdir}" "{is_blind}" "${ws_filename}" "${docleanup}"
 
-	## make plot
-	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/empty.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc2D}.${inTextExt}" "${MainEra}" "${outtext}" "${outdir}/${outplot2Ddir}"
+###############################
+## Copy input into limit dir ##
+###############################
 
-	## cp root file to limit directory
-	cp "${outtext}.root" "${limitdir}/${tmplimitdir}"
-    done
-done
+cp "${ws_filename}" "${limitdir}/${inlimitdir}"
 
 #########################
 ## Move Into Limit Dir ##
@@ -58,7 +49,7 @@ pushd "${limitdir}"
 ## Run Combine + Plots ##
 #########################
 
-./scripts/makeLimitsABCD.sh "${tmplimitdir}" "${outtext}.root" ${doobs} "${outdir}" "${docleanup}"
+./scripts/makeLimitsABCD.sh "${inlimitdir}" "${ws_filename}" "${use_obs}" "${outdir}" "${docleanup}"
 
 #########################
 ## Snap Back When Done ##

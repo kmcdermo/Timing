@@ -32,6 +32,7 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insigna
   TreePlotter2D::SetupCommon();
   TreePlotter2D::SetupPlotConfig(fPlotConfig);
   TreePlotter2D::SetupMiscConfig(fMiscConfig);
+  if (fSkipBkgdMC) Common::RemoveGroup(SampleGroup::isBkgd);
   TreePlotter2D::SetupHists();
 
   // output root file
@@ -46,11 +47,14 @@ void TreePlotter2D::MakeTreePlot2D()
   // Make Data Output
   TreePlotter2D::MakeDataOutput();
 
-  // Make Bkgd Output
-  TreePlotter2D::MakeBkgdOutput();
-
-  // Make Ratio Output
-  TreePlotter2D::MakeRatioOutput();
+  if (!fSkipBkgdMC)
+  {
+    // Make Bkgd Output
+    TreePlotter2D::MakeBkgdOutput();
+    
+    // Make Ratio Output
+    TreePlotter2D::MakeRatioOutput();
+  }
 
   // Write Out Config
   TreePlotter2D::MakeConfigPave();
@@ -102,7 +106,7 @@ void TreePlotter2D::MakeHistFromTrees(TFile *& inFile, TFile *& inSignalFile)
   // rescale bins by widths if variable size
   if (fXVarBins || fYVarBins)
   {
-    const Bool_t isUp = false;
+    const auto isUp = false;
     for (auto & HistPair : HistMap)
     {
       auto & hist = HistPair.second;
@@ -250,10 +254,13 @@ void TreePlotter2D::MakeConfigPave()
 void TreePlotter2D::DeleteMemory(const Bool_t deleteInternal)
 {
   delete fConfigPave;
-  delete RatioMCErrs;
-  delete RatioHist;
-  delete EWKHist;
-  delete BkgdHist;
+  if (!fSkipBkgdMC)
+  {
+    delete RatioMCErrs;
+    delete RatioHist;
+    delete EWKHist;
+    delete BkgdHist;
+  }
   delete DataHist; 
 
   Common::DeleteMap(HistMap);
@@ -273,6 +280,7 @@ void TreePlotter2D::SetupDefaults()
   fXVarBins = false;
   fYVarBins = false;
   fBlindData = false;
+  fSkipBkgdMC = false;
 }
 
 void TreePlotter2D::SetupCommon()
@@ -425,6 +433,11 @@ void TreePlotter2D::SetupMiscConfig(const TString & miscconfig)
     {
       std::cout << "signals_only not currently implemented in 2D plotter, skipping..." << std::endl;
     }
+    else if (str.find("skip_bkgd_mc=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"skip_bkgd_mc=");
+      Common::SetupBool(str,fSkipBkgdMC);
+    }  
     else 
     {
       std::cerr << "Aye... your miscellaneous plot config is messed up, try again!" << std::endl;

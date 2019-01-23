@@ -1,4 +1,3 @@
-do_observed=0
 dump_bins=0
 
 x_min_width_div=10

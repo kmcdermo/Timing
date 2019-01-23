@@ -1,43 +1,58 @@
-#include "../Common.hh"
+#include "../Common.cpp+"
 
-void fillConstants(TH1F * hist, const TString & label, std::ofstream & output);
-void makeWS(TH1F * hist, const TString & tmpwsfile);
+// ROOT includes
+#include "TString.h"
+#include "TFile.h"
+#include "TH2F.h"
 
-void writeToWS(const TString & tmplimitdir, const TString & inplotsfile, 
-	       const TString & name, const TString & tmpwsfile)
+// c++ includes
+#include <iostream>
+
+void fillConstants(const TH2F * hist, const TString & label, std::ofstream & output);
+void makeWS(const TH2F * hist, TFile * iofile, const TString & ws_name);
+
+void writeToWS(const TString & inlimitdir, const TString & ws_filename, const TString & ws_name,
+	       const TString & tmplog_filename, const TString & sample)
 {
+  // setup config
+  Common::SetupSamples();
+  Common::SetupSignalSamples();
+  Common::SetupGroups();
+  Common::SetupHistNames();
+  Common::RemoveGroup(SampleGroup::isBkgd);
+
   // get input file
-  const TString infilename = tmplimitdir+"/"+inplotsfile;
-  auto infile = TFile::Open(infilename.Data());
-  Common::CheckValidFile(infile,infilename);
+  const auto iofilename = inlimitdir+"/"+ws_filename;
+  auto iofile = TFile::Open(iofilename.Data(),"UPDATE");
+  Common::CheckValidFile(iofile,iofilename);
   
   // get data hist
-  const TString datahistname = "Data_Hist";
-  auto datahist = (TH2F*)infile->Get(datahistname.Data());
-  Common::CheckValidHist(datahist,datahistname,infilename);
+  const auto datahistname = sample+"_"+Common::HistNameMap["Data"]+"_Plotted";
+  auto DataHist = (TH2F*)iofile->Get(datahistname.Data());
+  Common::CheckValidHist(DataHist,datahistname,iofilename);
 
   // get signal hist
-  const TString signhistname = name+"_Hist";
-  auto signhist = (TH2F*)infile->Get(signhistname.Data());
-  Common::CheckValidHist(signhist,signhistname,infilename);
+  const auto signhistname = Common::HistNameMap[sample];
+  auto SignHist = (TH2F*)iofile->Get(signhistname.Data());
+  Common::CheckValidHist(SignHist,signhistname,iofilename);
 
   // open output file
-  std::ofstream output(name+".txt",std::ios::trunc);
+  std::ofstream output(tmplog_filename.Data(),std::ios::trunc);
   
   // fill data + Make WS
-  fillConstants(datahist,"BIN",output);
-  makeWS(datahist,tmpwsfile);
+  fillConstants(DataHist,"BIN",output);
+  makeWS(DataHist,iofile,ws_name);
 
   // fill sig
-  fillConstants(signhist,"SIG",output);
+  fillConstants(SignHist,"SIG",output);
 
   // delete it all
-  delete signhist;
-  delete datahist;
-  delete infile;
+  delete SignHist;
+  delete DataHist;
+  delete iofile;
 }
 
-void fillConstants(TH1F * hist, const TString & label, std::ofstream & output)
+void fillConstants(const TH2F * hist, const TString & label, std::ofstream & output)
 {
   // get constants
   const auto A = hist->GetBinContent(1,1);
@@ -71,14 +86,11 @@ void fillConstants(TH1F * hist, const TString & label, std::ofstream & output)
   output << std::endl;
 }
 
-void makeWS(TH1F * hist, const TString & tmpwsfile)
+void makeWS(const TH2F * hist, TFile * iofile, const TString & ws_name)
 {
-  // get output file
-  auto outfile = TFile::Open(tmpwsfile.Data(),"RECREATE");
-  outfile->cd();
-
   // make WS
-  RooWorkspace workspace("workspace", "workspace");
+  iofile->cd();
+  auto workspace = new RooWorkspace(ws_name.Data(),ws_name.Data());
   
   // get constants
   auto in_bkgA = hist->GetBinContent(1,1);
@@ -91,14 +103,14 @@ void makeWS(TH1F * hist, const TString & tmpwsfile)
   RooRealVar DovA("DovA", "DovA", in_DovA, 0.0, 1.);
   
   // import vars into WS
-  workspace.import(bkgA);
-  workspace.import(BovA);
-  workspace.import(DovA);
+  workspace->import(bkgA);
+  workspace->import(BovA);
+  workspace->import(DovA);
   
   // save file
-  outfile->cd();
-  workspace.Write(workspace.GetName(),TObject::kWriteDelete);
+  iofile->cd();
+  workspace->Write(workspace->GetName(),TObject::kWriteDelete);
 
   // delete it all
-  delete outfile;
+  delete workspace;
 }

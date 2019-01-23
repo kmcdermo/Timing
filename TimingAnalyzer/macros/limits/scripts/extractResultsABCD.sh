@@ -11,16 +11,34 @@ source scripts/common_variables.sh
 ###################
 
 ## i/o params
-indir=${1:-"input"}
-outname=${2-"AsymLim"}
-outdir=${3:-"output"}
+inlimitdir=${1:-"input"}
+ws_filename=${2:-"ws_final.root"}
+use_obs=${3:-"false"}
+outcombname=${4:-"AsymLim"}
+outlimitdir=${5:-"output"}
+
+## derived params : run expected limits?
+if [[ "${use_obs}" == "true" ]]
+then
+    combine_extra=""
+else
+    combine_extra="--run=expected"
+fi
 
 ###########################################
 ## Ship things over to combine directory ##
 ###########################################
 
-cp "${indir}/${base_datacardABCD}*.txt" "${combdir}"
-cp "${indir}/${base_wsfileABCD}*.root" "${combdir}"
+for lambda in 100 150 200 250 300 350 400 500 600
+do
+    for ctau in 0p001 0p1 10 200 400 600 800 1000 1200 10000
+    do
+	sample="GMSB_L${lambda}_CTau${ctau}"
+	cp "${inlimitdir}/${base_datacardABCD}_${sample}.txt" "${combdir}"
+    done
+done
+
+cp "${inlimitdir}/${ws_filename}" "${combdir}"
 
 #####################
 ## Now work there! ##
@@ -35,12 +53,12 @@ eval `scram runtime -sh`
 
 for lambda in 100 150 200 250 300 350 400 500 600
 do
-    for ctau in 0p001 0p1 10 200 400 600 800 1000 1200 10000 
+    for ctau in 0p001 0p1 10 200 400 600 800 1000 1200 10000
     do
-	name="GMSB_L${lambda}_CTau${ctau}"
-	echo "Working on ${name}"
+	sample="GMSB_L${lambda}_CTau${ctau}"
+	echo "Working on ${sample}"
 
-	combine -M AsymptoticLimits "${base_datacardABCD}_${name}.${inTextExt}" --run=expected --name "${name}"
+	combine -M AsymptoticLimits "${base_datacardABCD}_${sample}.${inTextExt}" "${combine_extra}" --name "${sample}"
     done
 done
 
@@ -48,8 +66,8 @@ done
 ## rename ##
 ############
 
-rename "higgsCombine" "${outname}" "*.root"
-rename ".AsymptoticLimits.mH120" "" "*.root"
+rename "higgsCombine" "${outcombname}" *.root
+rename ".AsymptoticLimits.mH120" "" *.root
 
 ################
 ## Move back! ##
@@ -62,7 +80,7 @@ eval `scram runtime -sh`
 ## Ship things over to combine directory ##
 ###########################################
 
-cp "${combdir}/${outname}*.root" "${outdir}"
+cp "${combdir}/${outcombname}"*.root "${outlimitdir}"
 
 ###################
 ## Final message ##

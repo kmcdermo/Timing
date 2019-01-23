@@ -1,7 +1,9 @@
 #include "Limits2D.hh"
 
-Limits2D::Limits2D(const TString & indir, const TString & infilename, const TString & limitconfig, const TString & era, const TString & outtext)
-  : fInDir(indir), fInFileName(infilename), fLimitConfig(limitconfig), fEra(era), fOutText(outtext)
+Limits2D::Limits2D(const TString & indir, const TString & infilename, const Bool_t doobserved,
+		   const TString & limitconfig, const TString & era, const TString & outtext)
+  : fInDir(indir), fInFileName(infilename), fDoObserved(doobserved),
+    fLimitConfig(limitconfig), fEra(era), fOutText(outtext)
 {  
   // setup common first
   Limits2D::SetupDefaults();
@@ -450,7 +452,6 @@ void Limits2D::SetupDefaults()
 {
   std::cout << "Setup default values..." << std::endl;
   
-  fDoObserved = false;
   fDumpBins = false;
   fXMinWidthDiv = 10.f;
   fYMinWidthDiv = 10.f;
@@ -467,11 +468,6 @@ void Limits2D::SetupLimitConfig()
   while (std::getline(infile,str))
   {
     if (str == "") continue;
-    else if (str.find("do_observed=") != std::string::npos)
-    {
-      str = Common::RemoveDelim(str,"do_observed=");
-      Common::SetupBool(str,fDoObserved);
-    }
     else if (str.find("dump_bins=") != std::string::npos)
     {
       str = Common::RemoveDelim(str,"dump_bins=");

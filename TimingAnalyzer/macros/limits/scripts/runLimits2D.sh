@@ -6,13 +6,14 @@ source scripts/common_variables.sh
 ## config
 indir=${1:-"output"}
 infilename=${2:-"AsymLim"}
-limitconfig=${3:-"${limitconfigdir}/limits2D.${inTextExt}"}
-era=${4:-"Full"}
-outtext=${5:-"limit2D"}
-dir=${6:-"ntuples_v4/limits"}
+doobs=${3:-0}
+limitconfig=${4:-"${limitconfigdir}/limits2D.${inTextExt}"}
+era=${5:-"Full"}
+outtext=${6:-"limit2D"}
+dir=${7:-"ntuples_v4/limits"}
 
 ## run macro
-root -l -b -q runLimits2D.C\(\"${indir}\",\"${infilename}\",\"${limitconfig}\",\"${era}\",\"${outtext}\"\)
+root -l -b -q runLimits2D.C\(\"${indir}\",\"${infilename}\",${doobs},\"${limitconfig}\",\"${era}\",\"${outtext}\"\)
 
 ## make outdirs readable
 fulldir=${topdir}/${disphodir}/${dir}

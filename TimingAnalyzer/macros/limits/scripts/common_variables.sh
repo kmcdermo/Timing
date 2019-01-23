@@ -5,7 +5,6 @@ export combdir="/afs/cern.ch/work/k/kmcdermo/private/dispho/Analysis/combine/CMS
 export carddir="cards"
 export base_datacard="datacard"
 export base_datacardABCD="datacardABCD"
-export base_wsfileABCD="ws_ABCD"
 
 ## config info
 export tmplExt="tmpl"

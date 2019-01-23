@@ -13,7 +13,7 @@ source scripts/common_variables.sh
 ## i/o params
 indir=${1:-"input"}
 infile=${2:-"ws_final.root"}
-outname=${3-"AsymLim"}
+outname=${3:-"AsymLim"}
 outdir=${4:-"output"}
 
 ## other global vars

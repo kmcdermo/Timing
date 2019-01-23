@@ -34,7 +34,7 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
   TreePlotter::SetupDefaults();
   TreePlotter::SetupCommon();
   TreePlotter::SetupMiscConfig(fMiscConfig);
-  if (fSkipData) Common::RemoveData();
+  if (fSkipData) Common::RemoveGroup(SampleGroup::isData);
   if (fSignalsOnly) Common::KeepOnlySignals();
   TreePlotter::SetupPlotConfig(fPlotConfig);
 

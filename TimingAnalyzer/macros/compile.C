@@ -5,10 +5,11 @@
 #include "SuperFastSkimmer.cpp+"
 #include "TreePlotter.cpp+"
 #include "TreePlotter2D.cpp+"
+#include "SigEffPlotter.cpp+"
 
 #include <iostream>
 
 void compile()
 {
-  std::cout << "Compiled." << std::endl;
+  std::cout << "Compiled Main Code." << std::endl;
 }

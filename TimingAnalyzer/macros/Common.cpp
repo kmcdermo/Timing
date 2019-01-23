@@ -490,7 +490,7 @@ namespace Common
     // HVDS Labels when we get some samples...
   }
 
-  void RemoveData()
+  void RemoveGroup(const SampleGroup isGroup)
   {
     // erase by key first
     for (const auto & GroupPair : Common::GroupMap)
@@ -498,7 +498,7 @@ namespace Common
       const auto & sample = GroupPair.first;
       const auto & group  = GroupPair.second;
 
-      if (group != SampleGroup::isData) continue;
+      if (group != isGroup) continue;
 
       Common::TreeNameMap.erase(sample);
       Common::HistNameMap.erase(sample);
@@ -509,7 +509,7 @@ namespace Common
     // erase groups now
     for (auto iter = Common::GroupMap.cbegin(); iter != Common::GroupMap.cend();)
     {
-      if (iter->second == SampleGroup::isData) 
+      if (iter->second == isGroup) 
       {
 	Common::GroupMap.erase(iter++);
       }

@@ -11,14 +11,16 @@ source scripts/common_variables.sh
 ###################
 
 ## Command Line Input
-tmplimitdir=${1:-"tmp"}
-inplotsfile=${2:-"met_vs_time_box_SR.root"}
-doobs=${2:-0}
-outdir=${3:-"madv2_v3/checks_v1"}
-docleanup=${4:-"true"}
+inlimitdir=${1:-"input"}
+ws_filename=${2:-"ws_final.root"}
+use_obs=${3:-"false"}
+outdir=${4:-"madv2_v3/full_chain/ABCD"}
+docleanup=${5:-"true"}
+
+## Card config
+outcarddir="card_input"
 
 ## Combine config
-inlimitdir="input"
 outcombname="AsymLim"
 outlimitdir="output"
 
@@ -28,11 +30,18 @@ outlimit1D="limit1D"
 outlimit2D="limit2D"
 outlimitplotdir="limits"
 
+## derived input
+if [[ "use_obs" == "true" ]]
+then
+    doobs=1
+else
+    doobs=0
+fi
+
 ######################
 ## Make Directories ##
 ######################
 
-mkdir -p "${inlimitdir}"
 mkdir -p "${outlimitdir}"
 
 ##########################
@@ -40,14 +49,14 @@ mkdir -p "${outlimitdir}"
 ##########################
 
 echo "Making Datacards and WSs"
-./scripts/makeDatacardsAndWSs.sh "${tmplimitdir}" "${inplotsfile}" "${inlimitdir}"
+./scripts/makeDatacardsAndWSs.sh "${inlimitdir}" "${ws_filename}" "${outdir}/${outcarddir}" "${docleanup}"
 
 ###########################################
 ## Extract Limits From WS : Run Combine! ##
 ###########################################
 
 echo "Extracting Results ABCD"
-./scripts/extractResultsABCD.sh "${inlimitdir}" "${outcombname}" "${outlimitdir}" 
+./scripts/extractResultsABCD.sh "${inlimitdir}" "${ws_filename}" "${use_obs}" "${outcombname}" "${outlimitdir}" 
 
 #########################
 ## Make 1D Limit Plots ##
@@ -61,15 +70,14 @@ echo "Running limits 1D"
 #########################
 
 echo "Running limits 2D"
-./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" "${outlimit2D}" "${outdir}/${outlimitplotdir}"
+./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" "${outlimit2D}" "${outdir}/${outlimitplotdir}"
 
 ###########################
 ## Clean Up If Requested ##
 ###########################
 
 if [[ "${docleanup}" == "true" ]]; then
-    echo "Cleaning up tmp dirs: ${tmplimitdir}, ${inlimitdir}, ${outlimitdir}"
-    rm -r "${tmplimitdir}"
+    echo "Cleaning up tmp dirs: ${inlimitdir}, ${outlimitdir}"
     rm -r "${inlimitdir}"
     rm -r "${outlimitdir}"
 fi
