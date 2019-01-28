@@ -36,7 +36,9 @@ signif_list="significances_final_list.${outTextExt}"
 ##    B) Sort vectors in map by highest significance, keeping lower xy combos                   ##
 ##    C) Combine all MC + data hists into one root file (scale UP)                              ##
 ##                                                                                              ##
-## 3) Clean up the tmp stuff                                                                    ##
+## 3) Plot final significances                                                                  ##
+##                                                                                              ##
+## 4) Clean up the tmp stuff                                                                    ##
 ##################################################################################################
 
 ############
@@ -129,6 +131,16 @@ sigdir="inputs"
 
 ############
 ## Step 3 ##
+############
+
+## config
+sig_outtext="significances"
+
+## plot significances
+./scripts/plotSignificances.sh "${signif_list}" "${sig_outtext}" "${outdir}/${sigdir}"
+
+############
+## Step 4 ##
 ############
 
 ## delete tmp files

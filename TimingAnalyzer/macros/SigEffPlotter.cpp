@@ -257,7 +257,7 @@ void SigEffPlotter::DrawOutput(const Bool_t isLogY)
 
   // Draw legend and then save!
   fLegend->Draw("same");
-  Common::CMSLumi(fCanvas,0);
+  Common::CMSLumi(fCanvas,0,"Full");
   Common::SaveAs(fCanvas,fOutText+"_"+(isLogY?"log":"lin"));
 }
 
@@ -288,6 +288,8 @@ void SigEffPlotter::GetMinYMaxY()
 void SigEffPlotter::SetupCommon()
 {
   std::cout << "Setting up Common..." << std::endl;
+
+  Common::SetupEras();
 
   Common::SetupSignalSamples();
 
