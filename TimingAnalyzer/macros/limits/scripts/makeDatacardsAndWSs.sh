@@ -65,7 +65,7 @@ done
 ########################
 
 ## make out dirs
-fulldir=${topdir}/${disphodir}/${dir}
+fulldir=${topdir}/${disphodir}/${outdir}
 PrepOutDir ${fulldir}
 
 ## copy log file
