@@ -163,6 +163,12 @@ namespace Common
   static const TString puwgtFileName  = "puweights";
   static const TString puwgtHistName  = "PUWeightsHist";
 
+  // time adjust input files
+  static const TString shiftFileName_EB = "phoE_0_Zee_EB_Full_ShiftInput_091018.root";
+  static const TString shiftFileName_EE = "phoE_0_Zee_EE_Full_ShiftInput_091018.root";
+  static const TString smearFileName_EB = "phoE_0_Zee_EB_Full_SmearInput_091018.root";
+  static const TString smearFileName_EE = "phoE_0_Zee_EE_Full_SmearInput_091018.root";
+
   // Sample Information
   extern TString PrimaryDataset;
   extern std::map<TString,EraStruct> EraMap;

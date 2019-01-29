@@ -56,7 +56,7 @@ declare -a phos=("pho0")
 export phos
 
 ## base time variable for input to resolution + corrections
-export base_time_var="seedtime"
+export base_time_var="weightedtimeLT120"
 
 ## time corrections
 export tof_corr="phoseedTOF"
