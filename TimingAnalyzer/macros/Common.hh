@@ -144,6 +144,7 @@ namespace Common
   static const TString eosPreFix      = "root://eoscms.cern.ch";
   static const TString eosDir         = "/eos/cms/store/group/phys_exotica/displacedPhotons/nTuples/2017/analysis";
   static const TString baseDir        = "skims";
+  static const TString calibDir       = "calib";
   static const TString tupleFileName  = "tree.root";
   static const TString rootdir        = "tree";
   static const TString configtreename = "configtree";

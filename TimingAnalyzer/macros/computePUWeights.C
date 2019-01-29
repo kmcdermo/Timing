@@ -60,7 +60,7 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
   }
 
   // input data file
-  const TString indatafilename = Form("%s/%s/%s.root",Common::eosPreFix.Data(),Common::eosDir.Data(),Common::dataPUFileName.Data());
+  const TString indatafilename = Form("%s/%s/%s/%s.root",Common::eosPreFix.Data(),Common::eosDir.Data(),Common::calibDir.Data(),Common::dataPUFileName.Data());
   auto indatafile = TFile::Open(indatafilename.Data());
   Common::CheckValidFile(indatafile,indatafilename);
   indatafile->cd();
