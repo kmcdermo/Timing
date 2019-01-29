@@ -34,7 +34,7 @@ struct SignifStruct
 {
   SignifStruct () {}
   SignifStruct (const Double_t signif, const Double_t xbin_boundary, const Double_t ybin_boundary)
-    : signf(signif), xbin_boundary(xbin_boundary), ybin_boundary(ybin_boundary) {}
+    : signif(signif), xbin_boundary(xbin_boundary), ybin_boundary(ybin_boundary) {}
   
   Double_t signif;
   Double_t xbin_boundary;
@@ -55,7 +55,8 @@ void PrepBoundaries(const std::string & str, const std::string & delim, std::vec
 
 void countBoundaries(const ConfigStruct & config, const std::map<TString,SignifStruct> & SignifMap, 
 		     const TString & signif_outtext, TFile * outfile);
-void projectHist(TH2F * hist2D, const TString & proj, const TString & signif_outtext, TFile * outfile);
+void projectHist(TH2F * hist2D, const TString & s_hist, const TString & proj, 
+		 const TString & signif_outtext, TFile * outfile);
 void saveHist(TH1F * hist1D, const TString & s_hist1D, const TString & signif_outtext, const Bool_t isLogy);
 
 /////////////////////
@@ -91,8 +92,8 @@ void plotSignificances(const TString & signif_list, const TString & signif_confi
 
   // read list into map
   std::ifstream infile(signif_list.Data(),std::ios::in);
-  TString sample, xbin_boundary, ybin_boundary, infilename;
-  Double_t significance;
+  TString sample, infilename;
+  Double_t significance, xbin_boundary, ybin_boundary;
 
   while (infile >> sample >> significance >> xbin_boundary >> ybin_boundary >> infilename)
   {
@@ -159,7 +160,7 @@ void plotSignificances(const TString & signif_list, const TString & signif_confi
 
       if (SignifMap.count(signal))
       {
-	graph->SetPoint(isig,lambda.Atoi(),SignifMap.at(signal));
+	graph->SetPoint(isig,lambda.Atoi(),SignifMap.at(signal).signif);
       }
     }
 
@@ -225,6 +226,7 @@ void PrepBoundaries(const std::string & str, const std::string & delim, std::vec
 void ReadConfig(const TString & signif_config, ConfigStruct & config)
 {
   std::ifstream config_infile(signif_config.Data(),std::ios::in);
+  std::string str;
 
   while (std::getline(config_infile,str))
   {
@@ -263,7 +265,8 @@ void countBoundaries(const ConfigStruct & config, const std::map<TString,SignifS
   // make 2D hist, then project it
   outfile->cd();
  
-  const TString s_hist2D = "Boundaries";
+  const TString s_hist = "Boundaries";
+  const TString s_hist2D = s_hist+"2D";
   auto hist2D = new TH2F(s_hist2D.Data(),s_hist2D+";"+config.x_title+";"+config.y_title+";",
 			 config.xbin_boundaries.size()-1,&config.xbin_boundaries[0],
 			 config.ybin_boundaries.size()-1,&config.ybin_boundaries[0]);
@@ -291,7 +294,7 @@ void countBoundaries(const ConfigStruct & config, const std::map<TString,SignifS
     canv->SaveAs(signif_outtext+"_"+s_hist2D+"."+extension);
   }
 
-  outfile-cd();
+  outfile->cd();
   hist2D->Write(hist2D->GetName(),TObject::kWriteDelete);
  
   // delete canv
@@ -300,16 +303,17 @@ void countBoundaries(const ConfigStruct & config, const std::map<TString,SignifS
   // project in X, then Y, plot and save
   Common::Scale(hist2D,true,true,true); // scale back up first
 
-  projectHist(hist2D,"X",signif_outtext,outfile);
-  projectHist(hist2D,"Y",signif_outtext,outfile);
+  projectHist(hist2D,s_hist,"X",signif_outtext,outfile);
+  projectHist(hist2D,s_hist,"Y",signif_outtext,outfile);
 
   // delete the rest
   delete hist2D;
 }
 
-void projectHist(TH2F * hist2D, const TString & proj, const TString & signif_outtext, TFile * outfile)
+void projectHist(TH2F * hist2D, const TString & s_hist, const TString & proj, 
+		 const TString & signif_outtext, TFile * outfile)
 {
-  const TString s_hist1D = Form("%s_Proj%s",hist2D->GetName(),proj.Data());
+  const TString s_hist1D = s_hist+proj;
   const auto isX = proj.EqualTo("X",TString::kExact);
 
   auto hist1D = (TH1F*)( isX ? hist2D->ProjectionX(s_hist1D.Data()) : hist2D->ProjectionY(s_hist1D.Data()) );

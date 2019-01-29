@@ -141,7 +141,7 @@ sigdir="inputs"
 ## config
 signif_outtext="significances"
 signif_config="tmp_signif_config.${inTextExt}"
-> "${sig_config}"
+> "${signif_config}"
 
 ## fill config
 echo "x_title=${x_title}" >> "${signif_config}"

@@ -17,14 +17,17 @@ fulldir="${topdir}/${disphodir}/${dir}"
 PrepOutDir "${fulldir}"
 
 ## cp all to outdir
-for canvscale in "${canvscales[@]}"
+for ext in "${exts[@]}"
 do
-    for ext in "${exts[@]}"
+    for canvscale in "${canvscales[@]}"
     do
-	cp "${sig_outtext}_${canvscale}.${ext}" "${fulldir}"
+	cp "${signif_outtext}_${canvscale}.${ext}" "${fulldir}"
+	cp "${signif_outtext}_BoundariesX_${canvscale}.${ext}" "${fulldir}"
+	cp "${signif_outtext}_BoundariesY_${canvscale}.${ext}" "${fulldir}"
     done
+    cp "${signif_outtext}_Boundaries2D.${ext}" "${fulldir}"
 done
-cp "${sig_outtext}.root" "${fulldir}"
+cp "${signif_outtext}.root" "${fulldir}"
 
 ## Final message
 echo "Finished PlottingSignificances"
