@@ -129,7 +129,7 @@ done < "${xbin_boundaries}" # end loop over x-bins
 ############
 
 ## config
-sigdir="inputs"
+sigdir="significances"
 
 ## prepare ABCD file
 ./scripts/prepareABCDFile.sh "${signif_dump}" "${signif_list}" "${ws_filename}" "${outdir}/${sigdir}"

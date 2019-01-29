@@ -18,7 +18,7 @@ outdir=${4:-"madv2_v3/full_chain/ABCD"}
 docleanup=${5:-"true"}
 
 ## Card config
-outcarddir="card_input"
+outcarddir="combine_input"
 
 ## Combine config
 outcombname="AsymLim"

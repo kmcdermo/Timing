@@ -13,7 +13,7 @@ source scripts/common_variables.sh
 ## Command Line Input
 inlimitdir=${1:-"input"}
 ws_filename=${2:-"ws_final.root"}
-outdir=${3:-"madv2_v3/full_chain/ABCD/card_input"}
+outdir=${3:-"madv2_v3/full_chain/ABCD/combine_input"}
 docleanup=${4:-"true"}
 
 ## global info
@@ -57,6 +57,22 @@ do
 	then
 	    rm "${tmplog_file}"
 	fi
-
     done
 done
+
+########################
+## Copy Final WS File ##
+########################
+
+## make out dirs
+fulldir=${topdir}/${disphodir}/${dir}
+PrepOutDir ${fulldir}
+
+## copy log file
+cp "${ws_filename}" "${fulldir}"
+
+###################
+## Final Message ##
+###################
+
+echo "Finished MakingDatacardsAndWSs (ABCD)"

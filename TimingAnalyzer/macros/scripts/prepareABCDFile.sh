@@ -17,7 +17,7 @@ fulldir="${topdir}/${disphodir}/${dir}"
 PrepOutDir "${fulldir}"
 
 ## cp all to outdir
-cp "${signif_dump}" "${signif_list}" "${ws_filename}" "${fulldir}"
+cp "${signif_dump}" "${signif_list}" "${fulldir}"
 
 ## Final message
 echo "Finished PreparingABCDFile"
