@@ -82,8 +82,8 @@ do
 	echo "plot_title=MET [GeV] vs Photon Weighted Time [ns]" >> "${plot_config}"
 	echo "x_title=Photon Weighted Time [ns]" >> "${plot_config}"
 	echo "x_var=phoweightedtimeLT120_0" >> "${plot_config}"
-	echo "x_var_data=phoweightedtimeLT120SHIFT_0" >> "${plot_config}"
-	echo "x_var_sign=phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0" >> "${plot_config}"
+	echo "x_var_data=+phoweightedtimeLT120SHIFT_0" >> "${plot_config}"
+	echo "x_var_sign=+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0" >> "${plot_config}"
 	echo "x_bins=VARIABLE -2 ${xbin_boundary} 25" >> "${plot_config}"
 	echo "y_title=p_{T}^{miss} [GeV]" >> "${plot_config}"
 	echo "y_var=t1pfMETpt" >> "${plot_config}"
@@ -127,7 +127,7 @@ done < "${xbin_boundaries}" # end loop over x-bins
 sigdir="inputs"
 
 ## prepare ABCD file
-./scripts/prepareABCDFile.sh "${signif_dump}" "${signif_list}" "${ws_filename}" "${outdir}/{sigdir}"
+./scripts/prepareABCDFile.sh "${signif_dump}" "${signif_list}" "${ws_filename}" "${outdir}/${sigdir}"
 
 ############
 ## Step 3 ##
