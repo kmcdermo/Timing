@@ -5,11 +5,12 @@ source scripts/common_variables.sh
 
 ## config
 signif_list=${1:-"tmp_list.txt"}
-sig_outtext=${2:-"significances"}
-dir=${3:-"madv2_v3/full_chain/SR_Blinded/ABCD/inputs"}
+signif_config=${2:-"tmp_signif_config.txt"}
+signif_outtext=${3:-"significances"}
+dir=${4:-"madv2_v3/full_chain/SR_Blinded/ABCD/inputs"}
 
 ## run macro
-root -l -b -q plotSignificances.C\(\"${signif_list}\",\"${sig_outtext}\"\)
+root -l -b -q plotSignificances.C\(\"${signif_list}\",\"${signif_config}\",\"${signif_outtext}\"\)
 
 ## make out dirs
 fulldir="${topdir}/${disphodir}/${dir}"

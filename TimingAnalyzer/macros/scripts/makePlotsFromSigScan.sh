@@ -67,6 +67,11 @@ else
     blind_data=0
 fi
 
+## common info for titles
+plot_title="p_{T}^{miss} [GeV] vs Leading Photon Weighted Cluster Time [ns]"
+x_title="Leading Photon Weighted Cluster Time [ns]"
+y_title="p_{T}^{miss} [GeV]"
+
 ## loop over x bins
 while IFS='' read -r xbin_boundary || [[ -n "${xbin_boundary}" ]]
 do
@@ -79,13 +84,13 @@ do
 	> "${plot_config}"
 
 	## fill tmp plot config
-	echo "plot_title=MET [GeV] vs Photon Weighted Time [ns]" >> "${plot_config}"
-	echo "x_title=Photon Weighted Time [ns]" >> "${plot_config}"
+	echo "plot_title=${plot_title}" >> "${plot_config}"
+	echo "x_title=${x_title}" >> "${plot_config}"
 	echo "x_var=phoweightedtimeLT120_0" >> "${plot_config}"
 	echo "x_var_data=+phoweightedtimeLT120SHIFT_0" >> "${plot_config}"
 	echo "x_var_sign=+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0" >> "${plot_config}"
 	echo "x_bins=VARIABLE -2 ${xbin_boundary} 25" >> "${plot_config}"
-	echo "y_title=p_{T}^{miss} [GeV]" >> "${plot_config}"
+	echo "y_title=${y_title}" >> "${plot_config}"
 	echo "y_var=t1pfMETpt" >> "${plot_config}"
 	echo "y_bins=VARIABLE 0 ${ybin_boundary} 3000" >> "${plot_config}"
 	echo "z_title=Events/ns/GeV" >> "${plot_config}"
@@ -134,10 +139,18 @@ sigdir="inputs"
 ############
 
 ## config
-sig_outtext="significances"
+signif_outtext="significances"
+signif_config="tmp_signif_config.${inTextExt}"
+> "${sig_config}"
+
+## fill config
+echo "x_title=${x_title}" >> "${signif_config}"
+echo "y_title=${y_title}" >> "${signif_config}"
+echo "xbin_boundaries=${xbin_boundaries}" >> "${signif_config}"
+echo "ybin_boundaries=${ybin_boundaries}" >> "${signif_config}"
 
 ## plot significances
-./scripts/plotSignificances.sh "${signif_list}" "${sig_outtext}" "${outdir}/${sigdir}"
+./scripts/plotSignificances.sh "${signif_list}" "${signif_config}" "${signif_outtext}" "${outdir}/${sigdir}"
 
 ############
 ## Step 4 ##
