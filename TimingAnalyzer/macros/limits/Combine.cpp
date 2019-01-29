@@ -49,7 +49,7 @@ namespace Combine
     {
       const TString s_ctau = Common::ReplaceDotWithP(ctau);
       const TString name = "GMSB_L"+lambda+"_CTau"+s_ctau;
-
+      
       Combine::GMSBMap[name].xsec  = xsec;
       Combine::GMSBMap[name].exsec = exsec;
     }
@@ -111,7 +111,11 @@ namespace Combine
       const auto & name = GMSBPair.first;
       const auto & info = GMSBPair.second;
 
-      if (info.rvalmap.at("rexp") < 0.f) keysToRemove.emplace_back(name);
+      if (info.rvalmap.at("rexp") < 0.f) 
+      {
+	std::cerr << "Removing signal: " << name.Data() << std::endl;
+	keysToRemove.emplace_back(name);
+      }
     }
     
     for (const auto & keyToRemove : keysToRemove) Combine::GMSBMap.erase(keyToRemove);

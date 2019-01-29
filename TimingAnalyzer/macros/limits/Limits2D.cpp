@@ -107,7 +107,7 @@ void Limits2D::FillKnownBins()
       const auto yup     = ycenter + ywidth;
       
       // get name of gmsb sample
-      const TString name = "GMSB_L"+x_s+"TeV_CTau"+y_s+"cm";
+      const TString name = "GMSB_L"+x_s+"_CTau"+y_s;
 
       // set basic info for bins
       fKnownBins[i_fill][j_fill] = {xlow,xcenter,xup,ylow,ycenter,yup,Combine::GMSBMap[name].rvalmap};
@@ -132,12 +132,12 @@ void Limits2D::InterpolateKnownBins()
   const auto nx_fill = fKnownBins.size();
   for (auto i_fill = 0U; i_fill < nx_fill; i_fill++)
   {
-    const Bool_t isEdgeX = (i_fill == (nx_fill-1));
+    const auto isEdgeX = (i_fill == (nx_fill-1));
 
     const auto ny_fill = fKnownBins[i_fill].size();
     for (auto j_fill = 0U; j_fill < ny_fill; j_fill++)
     {
-      const Bool_t isEdgeY = (j_fill == (ny_fill-1));
+      const auto isEdgeY = (j_fill == (ny_fill-1));
 
       // bin numbers --> if at edges, do not overflow!
       const auto i_bin = (!isEdgeX ? i_fill : i_fill-1);
@@ -461,7 +461,7 @@ void Limits2D::SetupDefaults()
 
 void Limits2D::SetupLimitConfig()
 {
-  std::cout << "Reading limit config..." << std::endl;
+  std::cout << "Reading limit config: " << fLimitConfig.Data() << std::endl;
 
   std::ifstream infile(Form("%s",fLimitConfig.Data()),std::ios::in);
   std::string str;
@@ -516,5 +516,4 @@ void Limits2D::SetupCombine()
   Combine::SetupRValVec(fDoObserved);
   Combine::SetupGMSB(fInDir,fInFileName);
   Combine::RemoveGMSBSamples();
-  Combine::SetupGMSBSubGroups();
 }
