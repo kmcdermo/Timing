@@ -7,6 +7,10 @@ source scripts/common_variables.sh
 outdir=${1:-"ntuples_v4/checks_v3/full_chain"}
 docleanup=${2:-"true"}
 
+## for safety
+echo "Compiling ahead of time"
+./scripts/compile.sh
+
 ## make signal efficiencies
 echo "Making Signal Efficiencies"
 ./scripts/makeSignalEffs.sh "${outdir}/sig_effs"

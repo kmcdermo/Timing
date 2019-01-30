@@ -59,7 +59,7 @@ export phos
 export base_time_var="weightedtimeLT120"
 
 ## time corrections
-export tof_corr="phoseedTOF"
+export tof_corr="pho${base_time_var}TOF"
 export shift_corr="pho${base_time_var}SHIFT"
 export smear_corr="pho${base_time_var}SMEAR"
 
@@ -71,29 +71,20 @@ export base_adjust_var="phoE"
 export adjust_var="${base_adjust_var}_0"
 
 ## extra event weight info
-export wgtvar="phopt_0"
+export wgtvar="t1pfMETsumEt"
 
 ## CR + SR info: label skim signal_skim additional_cuts (var wgt map)
-export GJets="cr_gjets_DEG v3/orig_2phosCR/gjets v3/orig_2phosCR/signals_gjets always_true"
-export QCD="cr_qcd_DEG v3/orig_2phosCR/qcd v3/orig_2phosCR/signals_qcd always_true"
+export GJets="cr_gjets_DEG v3/orig_2phosCR/gjets v3/orig_2phosCR/signals_gjets cuts_v1/lepveto"
+export QCD="cr_qcd_DEG v3/orig_2phosCR/qcd v3/orig_2phosCR/signals_qcd cuts_v1/lepveto"
 export DYLL="cr_dyll_DEG v3/orig_2phosCR/dyll v3/orig_2phosCR/signals_dyll always_true"
-export Signal="sr_SPH v3/orig_2phosCR/sr v3/orig_2phosCR/signals_sr always_true"
-
-export GJets_lv="cr_gjets_DEG_lv v3/orig_2phosCR/gjets v3/orig_2phosCR/signals_gjets cuts_v1/lepveto"
-export QCD_lv="cr_qcd_DEG_lv v3/orig_2phosCR/qcd v3/orig_2phosCR/signals_qcd cuts_v1/lepveto"
-export Signal_lv="sr_SPH_lv v3/orig_2phosCR/sr v3/orig_2phosCR/signals_sr cuts_v1/lepveto"
+export Signal="sr_SPH v3/orig_2phosCR/sr v3/orig_2phosCR/signals_sr cuts_v1/lepveto"
 
 export CR_GJets="${GJets} gjets_${wgtvar}_map"
 export CR_QCD="${QCD} qcd_${wgtvar}_map"
 export CR_DYLL="${DYLL} dyll_${wgtvar}_map"
 export SR="${Signal} empty"
 
-export CR_GJets_lv="${GJets_lv} gjets_${wgtvar}_map"
-export CR_QCD_lv="${QCD_lv} qcd_${wgtvar}_map"
-export SR_lv="${Signal_lv} empty"
-
-#declare -a inputs=(CR_GJets CR_QCD DYLL SR CR_GJets_lv CR_QCD_lv SR_lv)
-declare -a inputs=(CR_GJets_lv CR_DYLL CR_QCD_lv SR_lv)
+declare -a inputs=(CR_GJets CR_QCD SR)
 
 ## Zee 
 #export Zee="Zee zee_TnP/skim zee_TnP/signals_skim always_true"

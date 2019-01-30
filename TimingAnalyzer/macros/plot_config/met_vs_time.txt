@@ -1,10 +1,14 @@
-plot_title=MET [GeV] vs Photon Seed Time [ns]
+plot_title=p_{T}^{miss} [GeV] vs Leading Photon Weighted Cluster Time [ns]
 
-x_title=Photon Seed Time [ns]
-x_var=phoseedtime_0
+x_title=Leading Photon Weighted Cluster Time [ns]
+
 x_bins=VARIABLE -5 -3 -2 -1.5 -1 -0.75 -0.5 -0.25 0 0.25 0.5 0.75 1 1.5 2 3 5 10 15 25
+x_var=phoweightedtimeLT120_0
+x_var_data=+phoweightedtimeLT120SHIFT_0
+x_var_bkgd=+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0
+x_var_sign=+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0
 
-y_title=MET [GeV]
+y_title=p_{T}^{miss} [GeV]
 y_var=t1pfMETpt
 y_bins=VARIABLE 0 10 20 30 40 50 60 70 80 90 100 120 140 160 180 200 225 250 275 300 325 350 375 400 450 500 750 1000 1500 3000
 
