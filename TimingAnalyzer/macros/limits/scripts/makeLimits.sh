@@ -37,6 +37,7 @@ mkdir -p "${outlimitdir}"
 ## Extract Limits From Fitter : Run Combine! ##
 ###############################################
 
+echo "Extracting Results"
 ./scripts/extractResults.sh "${inlimitdir}" "${inwsfile}" "${outcombname}" "${outlimitdir}" 
 
 #########################
