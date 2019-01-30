@@ -409,8 +409,8 @@ namespace Common
     Common::SignalSubGroupColorMap["GMSB_CTau0p1cm"] = {kAzure,"Up"};
     Common::SignalSubGroupColorMap["GMSB_CTau10cm"]  = {kSpring,"Up"};
     Common::SignalSubGroupColorMap["GMSB_CTau200cm"] = {kRed,"Up"};
-    Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kPink,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau600cm"] = {kViolet,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kPink+10,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau600cm"] = {kViolet+10,"Down"};
     Common::SignalSubGroupColorMap["GMSB_CTau800cm"] = {kYellow,"Down"};
     Common::SignalSubGroupColorMap["GMSB_CTau1000cm"] = {kTeal,"Down"};
     Common::SignalSubGroupColorMap["GMSB_CTau1200cm"] = {kOrange,"Down"};
