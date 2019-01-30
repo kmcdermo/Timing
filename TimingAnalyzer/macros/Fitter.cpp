@@ -1424,8 +1424,14 @@ void Fitter::SetupPlotConfig()
     }
     else if ((str.find("plot_title=") != std::string::npos) ||
 	     (str.find("x_var=") != std::string::npos)      ||
+	     (str.find("x_var_data=") != std::string::npos) ||
+	     (str.find("x_var_bkgd=") != std::string::npos) ||
+	     (str.find("x_var_sign=") != std::string::npos) ||
 	     (str.find("x_labels=") != std::string::npos)   ||
 	     (str.find("y_var=") != std::string::npos)      ||
+	     (str.find("y_var_data=") != std::string::npos) ||
+	     (str.find("y_var_bkgd=") != std::string::npos) ||
+	     (str.find("y_var_sign=") != std::string::npos) ||
 	     (str.find("y_labels=") != std::string::npos)   ||
 	     (str.find("z_title=") != std::string::npos))
     {

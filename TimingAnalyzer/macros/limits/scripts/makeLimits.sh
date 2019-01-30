@@ -43,13 +43,15 @@ mkdir -p "${outlimitdir}"
 ## Make 1D Limit Plots ##
 #########################
 
+echo "Running limits 1D"
 ./scripts/runLimits1D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${MainEra}" "${outlimit1D}" "${outdir}/${outlimitplotdir}"
 
 #########################
 ## Make 2D Limit Plots ##
 #########################
 
-./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" "${outlimit2D}" "${outdir}/${outlimitplotdir}"
+echo "Running limits 2D"
+./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" "${outlimit2D}" "${outdir}/${outlimitplotdir}"
 
 ###########################
 ## Clean Up If Requested ##

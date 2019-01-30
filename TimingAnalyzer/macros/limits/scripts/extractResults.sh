@@ -64,8 +64,8 @@ done
 ## rename ##
 ############
 
-rename "higgsCombine" "${outname}" "*.root"
-rename ".AsymptoticLimits.mH120" "" "*.root"
+rename "higgsCombine" "${outname}" *.root
+rename ".AsymptoticLimits.mH120" "" *.root
 
 ################
 ## Move back! ##
