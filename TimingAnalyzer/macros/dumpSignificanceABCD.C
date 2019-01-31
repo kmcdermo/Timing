@@ -59,9 +59,9 @@ void dumpSignificanceABCD(const TString & iofilename, const TString & xbin_bound
     if (blind_data)
     {
       // compute bkgd in ABD
-      const auto bkgd_A = DataHist->GetBinContent(1,1) - SignHist->GetBinContent(1,1);
-      const auto bkgd_B = DataHist->GetBinContent(1,2) - SignHist->GetBinContent(1,2);
-      const auto bkgd_D = DataHist->GetBinContent(2,1) - SignHist->GetBinContent(2,1);
+      const auto bkgd_A = std::max(DataHist->GetBinContent(1,1) - SignHist->GetBinContent(1,1),0.0);
+      const auto bkgd_B = std::max(DataHist->GetBinContent(1,2) - SignHist->GetBinContent(1,2),0.0);
+      const auto bkgd_D = std::max(DataHist->GetBinContent(2,1) - SignHist->GetBinContent(2,1),0.0);
 
       // assume signal strength of 1, so subtract signal from data for bkgd
       bkgd_C = (bkgd_B*bkgd_D)/bkgd_A;
