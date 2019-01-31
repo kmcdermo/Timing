@@ -10,7 +10,7 @@
 
 inline Double_t ComputeSignificance(const Double_t nbkgd, const Double_t nsign)
 {
-  if (nbkgd > 0.0) return nsign / std::sqrt(std::pow(nsign,2)+std::pow(nbkgd,2));
+  if ((nbkgd > 0.0) && (nsign > 0.0)) return nsign / std::sqrt(std::pow(nsign,2)+std::pow(nbkgd,2));
   else return std::nan("");
 }
 
