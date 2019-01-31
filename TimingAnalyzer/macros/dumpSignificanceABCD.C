@@ -34,33 +34,6 @@ void dumpSignificanceABCD(const TString & iofilename, const TString & xbin_bound
   auto DataHist = (TH2F*)iofile->Get(datahistname.Data());
   Common::CheckValidHist(DataHist,datahistname,iofilename);
   
-  // get ABD data contributions
-  const auto data_A = DataHist->GetBinContent(1,1);
-  const auto data_B = DataHist->GetBinContent(1,2);
-  const auto data_D = DataHist->GetBinContent(2,1);
-
-  // get data in C (either prediction or observed)
-  const auto data_C = (blind_data ? ((data_B*data_D)/data_A) : (DataHist->GetBinContent(2,2)));
-  
-  // set C bin if blinded
-  if (blind_data)
-  {
-    // get data unc
-    const auto data_A_unc = DataHist->GetBinError(1,1);
-    const auto data_B_unc = DataHist->GetBinError(1,2);
-    const auto data_D_unc = DataHist->GetBinError(2,1);
-
-    // compute C unc
-    const auto data_C_unc = data_C*std::sqrt(std::pow(data_B_unc/data_B,2)+std::pow(data_D_unc/data_D,2)+std::pow(data_A_unc/data_A,2));
-
-    // set the C bin
-    DataHist->SetBinContent(2,2,data_C);
-    DataHist->SetBinError  (2,2,data_C_unc);
-
-    // write it back to the file
-    DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
-  }
-
   // open output file: append it!
   std::ofstream outfile(signif_dump.Data(),std::ios::app);
   
@@ -78,17 +51,48 @@ void dumpSignificanceABCD(const TString & iofilename, const TString & xbin_bound
     auto SignHist = (TH2F*)iofile->Get(signhistname.Data());
     Common::CheckValidHist(SignHist,signhistname,iofilename);
 
-    // get ABCD sign contributions
-    const auto sign_A = SignHist->GetBinContent(1,1);
-    const auto sign_B = SignHist->GetBinContent(1,2);
+    // get C sign contribution
     const auto sign_C = SignHist->GetBinContent(2,2);
-    const auto sign_D = SignHist->GetBinContent(2,1);
-    
-    // assume signal strength of 1, so subtract signal from data for bkgd
-    const auto bkgd_A = data_A-sign_A;
-    const auto bkgd_B = data_B-sign_B;
-    const auto bkgd_C = data_C-sign_C;
-    const auto bkgd_D = data_D-sign_D;
+
+    // compute bkgd in C
+    auto bkgd_C = 0.0;
+    if (blind_data)
+    {
+      // compute bkgd in ABD
+      const auto bkgd_A = DataHist->GetBinContent(1,1) - SignHist->GetBinContent(1,1);
+      const auto bkgd_B = DataHist->GetBinContent(1,2) - SignHist->GetBinContent(1,2);
+      const auto bkgd_D = DataHist->GetBinContent(2,1) - SignHist->GetBinContent(2,1);
+
+      // assume signal strength of 1, so subtract signal from data for bkgd
+      bkgd_C = (bkgd_B*bkgd_D)/bkgd_A;
+      
+      // compute C unc
+      const auto bkgd_C_unc = bkgd_C*std::sqrt(
+					       ((std::pow(DataHist->GetBinError(1,1),2)+std::pow(SignHist->GetBinError(1,1),2))/std::pow(bkgd_A,2))+
+					       ((std::pow(DataHist->GetBinError(1,2),2)+std::pow(SignHist->GetBinError(1,2),2))/std::pow(bkgd_B,2))+
+					       ((std::pow(DataHist->GetBinError(2,1),2)+std::pow(SignHist->GetBinError(2,1),2))/std::pow(bkgd_D,2))
+					       );
+
+      // get signal C unc
+      const auto sign_C_unc = SignHist->GetBinError(2,2);
+      
+      // "data" C
+      const auto data_C = bkgd_C+sign_C;
+      const auto data_C_unc = std::sqrt(std::pow(bkgd_C_unc,2)+std::pow(sign_C_unc,2));
+
+      // set the C bin
+      DataHist->SetBinContent(2,2,data_C);
+      DataHist->SetBinError  (2,2,data_C_unc);
+      
+      // write it back to the file
+      DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
+    }
+    else
+    {
+      // unblinded
+      const auto data_C = DataHist->GetBinContent(2,2);
+      bkgd_C = data_C-sign_C;
+    }
 
     // compute significance in C
     const auto significance = ComputeSignificance(bkgd_C,sign_C);
