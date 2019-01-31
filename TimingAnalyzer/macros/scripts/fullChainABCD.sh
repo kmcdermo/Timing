@@ -23,7 +23,7 @@ echo "Making 1D Data/MC plots with no weights"
 
 ## make analysis plots + limits
 echo "Making analysis plots + limits"
-./scripts/makeAnalysisABCD.sh "${outdir}/ABCD" "${is_blind}" "${use_obs}" "${docleanup}"
+./scripts/makeAnalysisABCD.sh "${outdir}/results_ABCD" "${is_blind}" "${use_obs}" "${docleanup}"
 
 ## final prep dir
 echo "Final prep outdir"

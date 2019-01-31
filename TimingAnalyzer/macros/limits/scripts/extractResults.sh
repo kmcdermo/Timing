@@ -15,23 +15,17 @@ indir=${1:-"input"}
 infile=${2:-"ws_final.root"}
 outname=${3:-"AsymLim"}
 outdir=${4:-"output"}
+dir=${5:-"madv2_v3/full_chain/results/combine_input"}
 
-## other global vars
-indatacard="${base_datacard}.${inTextExt}"
-
-#############################
-## replace input file name ##
-#############################
-
-cp "${carddir}/${base_datacard}.${tmplExt}" "${indir}/${indatacard}"
-sed -i "s/INPUT_FILE/${infile}/g" "${indir}/${indatacard}"
+## data card template
+indatacard="${base_datacard}.${tmplExt}"
 
 ###########################################
 ## Ship things over to combine directory ##
 ###########################################
 
+cp "${carddir}/${indatacard}" "${combdir}"
 cp "${indir}/${infile}" "${combdir}"
-cp "${indir}/${indatacard}" "${combdir}"
 
 #####################
 ## Now work there! ##
@@ -56,6 +50,9 @@ do
 	cp "${indatacard}" "${tmpdatacard}"
 	sed -i "s/SIGNAL_PDF/GMSB_L${lambda}_CTau${ctau}_PDF/g" "${tmpdatacard}"
 
+	## also update to correct ws file!
+	sed -i "s/INPUT_FILE/${infile}/g" "${tmpdatacard}"
+
 	combine -M AsymptoticLimits "${tmpdatacard}" --run=expected --name "${name}"
     done
 done
@@ -74,11 +71,21 @@ rename ".AsymptoticLimits.mH120" "" *.root
 popd
 eval `scram runtime -sh`
 
-###########################################
-## Ship things over to combine directory ##
-###########################################
+##########################################
+## Ship things over to limits directory ##
+##########################################
 
-cp ${combdir}/${outname}*.root "${outdir}"
+cp "${combdir}/${outname}"*.root "${outdir}"
+
+######################################
+## Copy Combine Inputs to Plot dirs ##
+######################################
+
+fulldir="${topdir}/${disphodir}/${dir}"
+PrepOutDir "${fulldir}"
+
+cp "${indir}/${infile}" "${fulldir}"
+cp "${combdir}/${base_datacard}"*".${inTextExt}" "${fulldir}"
 
 ###################
 ## Final message ##

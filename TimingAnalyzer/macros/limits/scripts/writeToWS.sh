@@ -9,13 +9,13 @@ ws_filename=${2:-"ws_final.root"}
 ws_name=${3:-"workspace"}
 tmplog_filename=${4:-"tmp.log"}
 sample=${5:-"GMSB"}
-dir=${6:-"madv2_v3/full_chain/ABCD/combine_input"}
+outdir=${6:-"madv2_v3/full_chain/ABCD/combine_input/logs"}
 
 ## make workspace
 root -l -b -q writeToWS.C\(\"${inlimitdir}\",\"${ws_filename}\",\"${ws_name}\",\"${tmplog_filename}\",\"${sample}\"\)
 
 ## make out dirs
-fulldir=${topdir}/${disphodir}/${dir}
+fulldir="${topdir}/${disphodir}/${outdir}"
 PrepOutDir ${fulldir}
 
 ## copy log file

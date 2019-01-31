@@ -53,7 +53,7 @@ do
 	done
     done
 done
-cp ${outfiletext}.root ${outfiletext}.${outTextExt} ${fulldir}
+cp "${outfiletext}.${outTextExt}" "${fulldir}"
 
 ## Final message
 echo "Finished Fitting for fit:" ${fitconfig}

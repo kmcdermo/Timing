@@ -10,7 +10,7 @@ source scripts/common_variables.sh
 ###################
 
 ## Command Line Input
-outdir=${1:-"madv2_v3/full_chain/ABCD"}
+outdir=${1:-"madv2_v3/full_chain/results_ABCD"}
 is_blind=${2:-"true"}
 use_obs=${3:-"false"}
 docleanup=${4:-"true"}

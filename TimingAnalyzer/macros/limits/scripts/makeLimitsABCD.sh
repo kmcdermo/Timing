@@ -14,7 +14,7 @@ source scripts/common_variables.sh
 inlimitdir=${1:-"input"}
 ws_filename=${2:-"ws_final.root"}
 use_obs=${3:-"false"}
-outdir=${4:-"madv2_v3/full_chain/ABCD"}
+outdir=${4:-"madv2_v3/full_chain/results_ABCD"}
 docleanup=${5:-"true"}
 
 ## Card config

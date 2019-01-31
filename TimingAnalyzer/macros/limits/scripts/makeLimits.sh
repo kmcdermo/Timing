@@ -18,6 +18,7 @@ outdir=${4:-"ntuples_v4/full_chain"}
 docleanup=${5:-"true"}
 
 ## Combine config
+outcombinedir="combine_input"
 outcombname="AsymLim"
 outlimitdir="output"
 
@@ -38,7 +39,7 @@ mkdir -p "${outlimitdir}"
 ###############################################
 
 echo "Extracting Results"
-./scripts/extractResults.sh "${inlimitdir}" "${inwsfile}" "${outcombname}" "${outlimitdir}" 
+./scripts/extractResults.sh "${inlimitdir}" "${inwsfile}" "${outcombname}" "${outlimitdir}" "${outdir}/${outcombinedir}"
 
 #########################
 ## Make 1D Limit Plots ##

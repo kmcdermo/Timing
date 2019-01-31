@@ -17,6 +17,7 @@ outdir=${3:-"madv2_v3/full_chain/ABCD/combine_input"}
 docleanup=${4:-"true"}
 
 ## global info
+outlogdir="logs"
 ws_basename="workspace"
 
 #####################################
@@ -34,7 +35,7 @@ do
 	tmplog_file="${sample}.${outTextExt}"
 
 	echo "Working on ${sample}"
-	./scripts/writeToWS.sh "${inlimitdir}" "${ws_filename}" "${ws_name}" "${tmplog_file}" "${sample}" "${outdir}"
+	./scripts/writeToWS.sh "${inlimitdir}" "${ws_filename}" "${ws_name}" "${tmplog_file}" "${sample}" "${outdir}/${outlogdir}"
 
 	## write to datacard: copy template
 	cp "${carddir}/${base_datacardABCD}.${tmplExt}" "${datacard}"
@@ -60,16 +61,17 @@ do
     done
 done
 
-########################
-## Copy Final WS File ##
-########################
+################################
+## Copy Cards + Final WS File ##
+################################
 
 ## make out dirs
-fulldir=${topdir}/${disphodir}/${outdir}
-PrepOutDir ${fulldir}
+fulldir="${topdir}/${disphodir}/${outdir}"
+PrepOutDir "${fulldir}"
 
-## copy log file
-cp "${ws_filename}" "${fulldir}"
+## copy all files from input
+cp "${inlimitdir}/${ws_filename}" "${fulldir}"
+cp "${inlimitdir}/${base_datacardABCD}"*".${inTextExt}" "${fulldir}"
 
 ###################
 ## Final Message ##
