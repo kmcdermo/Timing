@@ -219,11 +219,15 @@ void Fitter::DumpInputInfo()
 {
   std::cout << "Making quick dump of input histograms..." << std::endl;
   
+  // output file
+  std::ofstream outFileDump(fOutFileText+"."+Common::outTextExt,std::ios::trunc);
+
+  // Bkgd indiv samples
   for (const auto & BkgdGroupPair : Common::BkgdGroupMap)
   {
     const auto & sample = BkgdGroupPair.first;
     auto hist = (TH2F*)fHistMap2D[sample]->Clone(Form("%sHist",sample.Data()));
-    Fitter::DumpIntegralsAndDraw(hist,sample,false,false);
+    Fitter::DumpIntegralsAndDraw(hist,outFileDump,sample,false,false);
     delete hist;
   }
   
@@ -235,7 +239,7 @@ void Fitter::DumpInputInfo()
     if (!Common::IsCR(sample)) continue;
     bkgdHist->Add(fHistMap2D[sample]);
   }
-  Fitter::DumpIntegralsAndDraw(bkgdHist,Common::BkgdSampleName,false,true);
+  Fitter::DumpIntegralsAndDraw(bkgdHist,outFileDump,Common::BkgdSampleName,false,true);
   if (!fBkgdOnly) Fitter::DumpSignificance(bkgdHist);
   delete bkgdHist;
 
@@ -246,7 +250,7 @@ void Fitter::DumpInputInfo()
     {
       const TString signtext = Form("%s_Sign",sample.Data());
       auto signHist = (TH2F*)fHistMap2D[sample]->Clone(Form("%sHist",signtext.Data()));
-      Fitter::DumpIntegralsAndDraw(signHist,signtext,false,true);
+      Fitter::DumpIntegralsAndDraw(signHist,outFileDump,signtext,false,true);
       delete signHist;
     }
   }
@@ -256,12 +260,12 @@ void Fitter::DumpInputInfo()
   {
     const TString datatext = "Data";
     auto dataHist = (TH2F*)fHistMap2D["Data"]->Clone(Form("%sHist",datatext.Data()));
-    Fitter::DumpIntegralsAndDraw(dataHist,datatext,fBlindData,true);
+    Fitter::DumpIntegralsAndDraw(dataHist,outFileDump,datatext,fBlindData,true);
     delete dataHist;
   }
 }
 
-void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bool_t isBlind, const Bool_t isDraw)
+void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, std::ofstream & outFileDump, const TString & text, const Bool_t isBlind, const Bool_t isDraw)
 {
   std::cout << "Dumping intregral and drawing for: " << hist2D->GetName() << std::endl;
   
@@ -292,7 +296,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
 
   // get integral and error full region
   hist_int = hist2D->IntegralAndError(1,hist2D->GetXaxis()->GetNbins(),1,hist2D->GetYaxis()->GetNbins(),hist_err);
-  std::cout << text.Data() << " Integral: " << hist_int << " +/- " << hist_err << std::endl;
+  outFileDump << text.Data() << " Integral: " << hist_int << " +/- " << hist_err << std::endl;
 
   // get integral and error over signal region (by summing up over each cell in each blinded region)
   Double_t sum_int  = 0.0;
@@ -309,7 +313,7 @@ void Fitter::DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bo
   }
   hist_int = sum_int;
   hist_err = std::sqrt(sum_err2);
-  std::cout << text.Data() << " Integral (In Blinded Region): " << hist_int << " +/- " << hist_err << std::endl;
+  outFileDump << text.Data() << " Integral (In Blinded Region): " << hist_int << " +/- " << hist_err << std::endl;
 
   // save it to the outfile
   fOutFile->cd();

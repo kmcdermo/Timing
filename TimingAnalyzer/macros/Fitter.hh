@@ -99,7 +99,7 @@ public:
 
   // Subroutines for dumping input info
   void DumpInputInfo();
-  void DumpIntegralsAndDraw(TH2F *& hist2D, const TString & text, const Bool_t isBlind, const Bool_t isDraw);
+  void DumpIntegralsAndDraw(TH2F *& hist2D, std::ofstream & outFileDump, const TString & text, const Bool_t isBlind, const Bool_t isDraw);
   void DrawProjection(TH2F *& hist2D, const TString & text, const Bool_t isBlind, const TString & proj);
   void SaveHist(TH1F *& hist, const TString & text);
   void SaveHist(TH1F *& hist, const TString & text, const Bool_t isLogY);
