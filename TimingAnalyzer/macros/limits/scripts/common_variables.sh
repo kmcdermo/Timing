@@ -17,7 +17,7 @@ export limitconfigdir="limit_config"
 export topdir="/eos/user/k/kmcdermo/www"
 export disphodir="dispho/plots"
 
-declare -a exts=("eps" "png" "pdf")
+declare -a exts=("png" "pdf")
 export exts
 
 ## era

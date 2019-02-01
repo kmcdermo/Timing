@@ -31,7 +31,7 @@ mkdir -p "${limitdir}/${inlimitdir}"
 ## Make 2D Input Plots from Significance Scan ##
 ################################################
 
-./scripts/makePlotsFromSigScan.sh "${outdir}" "{is_blind}" "${ws_filename}" "${docleanup}"
+./scripts/makePlotsFromSigScan.sh "${outdir}" "${is_blind}" "${ws_filename}" "${docleanup}"
 
 ###############################
 ## Copy input into limit dir ##
