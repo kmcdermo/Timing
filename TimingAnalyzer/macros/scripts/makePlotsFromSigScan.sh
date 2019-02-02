@@ -56,6 +56,7 @@ misc_config="misc_ABCD.${inTextExt}"
 
 ## fill tmp misc config
 echo "skip_bkgd_mc=1" >> "${misc_config}"
+echo "scale_to_bin_widths=0" >> "${misconfig}"
 
 ## set blinding
 if [[ "${is_blind}" == "true" ]]

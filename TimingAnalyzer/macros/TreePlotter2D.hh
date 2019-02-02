@@ -85,6 +85,7 @@ protected:
   std::vector<BlockStruct> fBlinds;
 
   // other plotting config
+  Bool_t fScaleToBinWidths;
   Bool_t fBlindData;
   Bool_t fSkipBkgdMC;
 

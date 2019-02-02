@@ -57,7 +57,7 @@ void TreePlotter2D::MakeTreePlot2D()
   }
 
   // Write Out Config
-  TreePlotter2D::MakeConfigPave();
+  //  TreePlotter2D::MakeConfigPave();
 
   // Delete Memory
   TreePlotter2D::DeleteMemory(true);
@@ -104,7 +104,7 @@ void TreePlotter2D::MakeHistFromTrees(TFile *& inFile, TFile *& inSignalFile)
   }
 
   // rescale bins by widths if variable size
-  if (fXVarBins || fYVarBins)
+  if (fScaleToBinWidths && (fXVarBins || fYVarBins))
   {
     const auto isUp = false;
     for (auto & HistPair : HistMap)
@@ -253,7 +253,7 @@ void TreePlotter2D::MakeConfigPave()
 
 void TreePlotter2D::DeleteMemory(const Bool_t deleteInternal)
 {
-  delete fConfigPave;
+  //  delete fConfigPave;
   if (!fSkipBkgdMC)
   {
     delete RatioMCErrs;
@@ -277,6 +277,7 @@ void TreePlotter2D::DeleteMemory(const Bool_t deleteInternal)
 
 void TreePlotter2D::SetupDefaults()
 {
+  fScaleToBinWidths = true;
   fXVarBins = false;
   fYVarBins = false;
   fBlindData = false;
@@ -408,6 +409,11 @@ void TreePlotter2D::SetupMiscConfig(const TString & miscconfig)
   while (std::getline(infile,str))
   {
     if (str == "") continue;
+    else if (str.find("scale_to_bin_widths=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"scale_to_bin_widths");
+      Common::SetupBool(str,fScaleToBinWidths);
+    }    
     else if (str.find("signal_to_model=") != std::string::npos) 
     {
       std::cout << "signal_to_model not implemented in 2D plotter, skipping..." << std::endl;

@@ -56,9 +56,6 @@ void prepareABCDFile(const TString & signif_dump, const TString & signif_list, c
   auto ws_file = TFile::Open(ws_filename.Data(),"RECREATE");
   Common::CheckValidFile(ws_file,ws_filename);
 
-  // bools for scaling
-  const auto isUp = true, xvarbins = true, yvarbins = true; // by hand: non-ideal but know this from hist configs
-
   // save best histograms per sample 
   for (auto & SigPair : SigMap)
   {
@@ -95,14 +92,12 @@ void prepareABCDFile(const TString & signif_dump, const TString & signif_list, c
     const auto datahistname = Common::HistNameMap["Data"]+"_Plotted";
     auto DataHist = (TH2F*)tmpfile->Get(datahistname.Data());
     Common::CheckValidHist(DataHist,datahistname,tmpfilename);
-    Common::Scale(DataHist,isUp,xvarbins,yvarbins);
     DataHist->SetName(sample+"_"+datahistname);
 
     // get signal hist + rename
     const auto signhistname = Common::HistNameMap[sample];
     auto SignHist = (TH2F*)tmpfile->Get(signhistname.Data());
     Common::CheckValidHist(SignHist,signhistname,tmpfilename);
-    Common::Scale(SignHist,isUp,xvarbins,yvarbins);
     
     // get pave text
     auto ConfigPave = (TPaveText*)tmpfile->Get(Form("%s",Common::pavename.Data()));
