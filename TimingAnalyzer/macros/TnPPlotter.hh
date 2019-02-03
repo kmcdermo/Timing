@@ -59,7 +59,7 @@ struct MinMaxStruct
 class TnPPlotter
 {
 public:
-  TnPPlotter(const TString & infilename, const TString & outfiletext);
+  TnPPlotter(const TString & infilename, const Bool_t savemetadata, const TString & outfiletext);
   ~TnPPlotter();
 
   // Initialize
@@ -91,6 +91,7 @@ public:
 private:
   // Settings
   const TString fInFileName;
+  const Bool_t  fSaveMetaData;
   const TString fOutFileText;
 
   // Additional settings

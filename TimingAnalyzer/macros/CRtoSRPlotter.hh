@@ -28,7 +28,8 @@
 class CRtoSRPlotter
 {
 public:
-  CRtoSRPlotter(const TString & crtosrconfig, const TString & era, const TString & outfiletext);
+  CRtoSRPlotter(const TString & crtosrconfig, const TString & era, 
+		const Bool_t savemetadata, const TString & outfiletext);
   ~CRtoSRPlotter();
 
   // Initialize
@@ -63,6 +64,7 @@ private:
   // Settings
   const TString fCRtoSRConfig;
   const TString fEra;
+  const Bool_t  fSaveMetaData;
   const TString fOutFileText;
 
   // CRtoSR info

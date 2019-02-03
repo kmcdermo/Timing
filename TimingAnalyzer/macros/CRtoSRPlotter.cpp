@@ -1,8 +1,9 @@
 // Class include
 #include "CRtoSRPlotter.hh"
 
-CRtoSRPlotter::CRtoSRPlotter(const TString & crtosrconfig, const TString & era, const TString & outfiletext)
-  : fCRtoSRConfig(crtosrconfig), fEra(era), fOutFileText(outfiletext)
+CRtoSRPlotter::CRtoSRPlotter(const TString & crtosrconfig, const TString & era,
+			     const Bool_t savemetadata, const TString & outfiletext)
+  : fCRtoSRConfig(crtosrconfig), fEra(era), fSaveMetaData(savemetadata), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -28,8 +29,8 @@ CRtoSRPlotter::CRtoSRPlotter(const TString & crtosrconfig, const TString & era, 
 CRtoSRPlotter::~CRtoSRPlotter()
 {
   std::cout << "Tidying up in the destructor..." << std::endl;
-
-  delete fConfigPave;
+  
+  if (fSaveMetaData) delete fConfigPave;
 
   delete Legend;
   delete OutCanv;
@@ -69,7 +70,7 @@ void CRtoSRPlotter::MakeCRtoSRPlot()
   }
 
   // dump meta info
-  CRtoSRPlotter::MakeConfigPave();
+  if (fSaveMetaData) CRtoSRPlotter::MakeConfigPave();
 }
 
 void CRtoSRPlotter::GetInputHists()

@@ -49,8 +49,8 @@ const auto sortPairs = [](const auto & obj1, const auto & obj2){return obj1.seco
 class Limits2D
 {
 public:
-  Limits2D(const TString & indir, const TString & infilename, const Bool_t doobserved,
-	   const TString & limitconfig, const TString & era, const TString & outtext);
+  Limits2D(const TString & indir, const TString & infilename, const Bool_t doobserved, const TString & limitconfig,
+	   const TString & era, const Bool_t savemetadata, const TString & outtext);
   ~Limits2D();
 
   // setup functions
@@ -82,6 +82,7 @@ private:
   const Bool_t  fDoObserved;
   const TString fLimitConfig;
   const TString fEra;
+  const Bool_t  fSaveMetaData;
   const TString fOutText;
   
   // config parameters

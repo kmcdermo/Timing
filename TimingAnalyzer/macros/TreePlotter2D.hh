@@ -29,7 +29,7 @@ public:
   TreePlotter2D() {}
   TreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
 		const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
-		const TString & era, const TString & outfiletext);
+		const TString & era, const Bool_t savemetadata, const TString & outfiletext);
   ~TreePlotter2D() {}  
 
   // Initialize
@@ -64,6 +64,7 @@ private:
   const TString fPlotConfig;
   const TString fMiscConfig;
   const TString fEra;
+  const Bool_t  fSaveMetaData;
   const TString fOutFileText;
 
   // input

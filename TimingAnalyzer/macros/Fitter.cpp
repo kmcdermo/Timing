@@ -5,8 +5,9 @@
 #include "TVirtualFitter.h"
 #include "RooPlot.h"
 
-Fitter::Fitter(const TString & fitconfig, const TString & miscconfig, const TString & outfiletext)
-  : fFitConfig(fitconfig), fMiscConfig(miscconfig), fOutFileText(outfiletext)
+Fitter::Fitter(const TString & fitconfig, const TString & miscconfig,
+	       const Bool_t savemetadata, const TString & outfiletext)
+  : fFitConfig(fitconfig), fMiscConfig(miscconfig), fSaveMetaData(savemetadata), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -39,7 +40,7 @@ Fitter::~Fitter()
 {
   std::cout << "Tidying up in the destructor..." << std::endl;
 
-  delete fConfigPave;
+  if (fSaveMetaData) delete fConfigPave;
 
   delete fY;
   delete fYRooBins;
@@ -98,7 +99,7 @@ void Fitter::DoMain()
   if (fDoFits) Fitter::SaveOutTree();
 
   // Save MetaData
-  Fitter::MakeConfigPave();
+  if (fSaveMetaData) Fitter::MakeConfigPave();
 }
 
 void Fitter::PrepareCommon()

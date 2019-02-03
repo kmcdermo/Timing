@@ -13,7 +13,8 @@ source scripts/common_variables.sh
 outdir=${1:-"madv2_v3/full_chain/ABCD"}
 is_blind=${2:-"true"}
 ws_filename=${3:-"ws_final.root"}
-docleanup=${4:-"true"}
+savemetadata=${4:-0}
+docleanup=${5:-"true"}
 
 ## global config
 signif_dump="significances_dump.${outTextExt}"
@@ -108,7 +109,7 @@ do
 		echo "Computing significance for ${outtext}"
 
         	## make plot
-		./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/empty.${inTextExt}" "${plot_config}" "${misc_config}" "${MainEra}" "${outtext}" "${outdir}/${outplot2Ddir}"
+		./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/empty.${inTextExt}" "${plot_config}" "${misc_config}" "${MainEra}" ${savemetadata} "${outtext}" "${outdir}/${outplot2Ddir}"
 
 		## dump significance
 		./scripts/dumpSignificanceABCD.sh "${outtext}.root" "${xbin_boundary}" "${ybin_boundary}" ${blind_data} "${signif_dump}"
@@ -133,7 +134,7 @@ done < "${xbin_boundaries}" # end loop over x-bins
 sigdir="significances"
 
 ## prepare ABCD file
-./scripts/prepareABCDFile.sh "${signif_dump}" "${signif_list}" "${ws_filename}" "${outdir}/${sigdir}"
+./scripts/prepareABCDFile.sh "${signif_dump}" "${signif_list}" ${savemetadata} "${ws_filename}" "${outdir}/${sigdir}"
 
 ############
 ## Step 3 ##

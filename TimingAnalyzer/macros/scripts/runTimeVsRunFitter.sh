@@ -7,13 +7,14 @@ source scripts/common_variables.sh
 infilename=${1:-"${skimdir}/sr.root"}
 plotconfig=${2:-"${plotconfigdir}/phopt_0.${inTextExt}"}
 timefitconfig=${3:-"time.${inTextExt}"}
-outfiletext=${4:-"plots"}
-dir=${5:-"test"}
+savemetadata=${4:-0}
+outfiletext=${5:-"plots"}
+dir=${6:-"test"}
 
 declare -a outputs=("mu" "sigma") ## can add back chi2prob, chi2ndf
 
 ## first make plot
-root -l -b -q runTimeVsRunFitter.C\(\"${infilename}\",\"${plotconfig}\",\"${timefitconfig}\",\"${outfiletext}\"\)
+root -l -b -q runTimeVsRunFitter.C\(\"${infilename}\",\"${plotconfig}\",\"${timefitconfig}\",${savemetadata},\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}

@@ -5,7 +5,8 @@ source scripts/common_variables.sh
 
 ## Command Line Input
 outdir=${1:-"madv2_v1/checks_v2/dumps"}
-usewgts=${2:-"false"}
+savemetadata=${2:-0}
+usewgts=${3:-"false"}
 
 ## 2D plot config
 plot="met_vs_time"
@@ -30,10 +31,10 @@ do
 	outtext="${plot}_${label}"
 
 	## make plot
-	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc2D}.${inTextExt}" "${MainEra}" "${outtext}" "${outdir}"
+	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc2D}.${inTextExt}" "${MainEra}" ${savemetadata} "${outtext}" "${outdir}"
 
 	## dump cross contamination
-	./scripts/runXContaminationDumper.sh "${outtext}.root" "${xcontdumpconfigdir}/${plot}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${MainEra}" "${outtext}_contdump" "${outdir}"
+	./scripts/runXContaminationDumper.sh "${outtext}.root" "${xcontdumpconfigdir}/${plot}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${MainEra}" ${savemetadata} "${outtext}_contdump" "${outdir}"
     done
 done
 

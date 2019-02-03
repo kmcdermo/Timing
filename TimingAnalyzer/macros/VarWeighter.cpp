@@ -1,8 +1,8 @@
 // Class include
 #include "VarWeighter.hh"
 
-VarWeighter::VarWeighter(const TString & varwgtconfig)
-  : fVarWgtConfig(varwgtconfig)
+VarWeighter::VarWeighter(const TString & varwgtconfig, const Bool_t savemetadata)
+  : fVarWgtConfig(varwgtconfig), fSaveMetaData(savemetadata)
 {
   std::cout << "Initializing VarWeighter..." << std::endl;
 
@@ -21,7 +21,7 @@ VarWeighter::~VarWeighter()
 {
   std::cout << "Tidying up in the destructor..." << std::endl;
 
-  delete fConfigPave;
+  if (fSaveMetaData) delete fConfigPave;
 
   for (auto & HistPair : HistMap) delete HistPair.second;
 
@@ -45,7 +45,7 @@ void VarWeighter::MakeVarWeights()
   VarWeighter::MakeWeightBranches();
 
   // dump meta info
-  VarWeighter::MakeConfigPave();
+  if (fSaveMetaData) VarWeighter::MakeConfigPave();
 }
 
 void VarWeighter::GetInputHists()

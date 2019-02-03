@@ -2,7 +2,7 @@
 
 TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
 			 const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
-			 const TString & era, const TString & outfiletext) 
+			 const TString & era, const Bool_t savemetadata, const TString & outfiletext) 
   : fInFileName(infilename), fInSignalFileName(insignalfilename), fCutConfig(cutconfig),
     fVarWgtMapConfig(varwgtmapconfig), fPlotConfig(plotconfig), fMiscConfig(miscconfig),
     fEra(era), fOutFileText(outfiletext)
@@ -32,6 +32,7 @@ TreePlotter::TreePlotter(const TString & infilename, const TString & insignalfil
 
   // setup config
   TreePlotter::SetupDefaults();
+  TreePlotter::SetupSaveMetaData(savemetadata);
   TreePlotter::SetupCommon();
   TreePlotter::SetupMiscConfig(fMiscConfig);
   if (fSkipData) Common::RemoveGroup(SampleGroup::isData);
@@ -76,7 +77,7 @@ void TreePlotter::MakeTreePlot()
   TreePlotter::SaveOutput(fOutFileText,fEra);
 
   // Write Out Config
-  TreePlotter::MakeConfigPave();
+  if (fSaveMetaData) TreePlotter::MakeConfigPave();
 
   // Dump integrals into text file
   TreePlotter::DumpIntegrals(fOutFileText);
@@ -668,7 +669,7 @@ void TreePlotter::DeleteMemory(const Bool_t deleteInternal)
   std::cout << "Deleting memory in TreePlotter... deleting internal: " << Common::PrintBool(deleteInternal).Data() << std::endl;
 
   // delete everything
-  delete fConfigPave;
+  if (fSaveMetaData) delete fConfigPave;
 
   delete LowerPad;
   delete UpperPad;
@@ -830,6 +831,13 @@ void TreePlotter::SetupDefaults()
   fBlindData = false;
   fSkipData = false;
   fSignalsOnly = false;
+  
+  fSaveMetaData = false;
+}
+
+void TreePlotter::SetupSaveMetaData(const Bool_t savemetadata)
+{
+  fSaveMetaData = savemetadata;
 }
 
 void TreePlotter::SetupCommon()

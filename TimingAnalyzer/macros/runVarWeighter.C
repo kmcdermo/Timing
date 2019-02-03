@@ -2,8 +2,8 @@
 #include "Common.cpp+"
 #include "VarWeighter.cpp+"
 
-void runVarWeighter(const TString & varwgtconfig)
+void runVarWeighter(const TString & varwgtconfig, const Bool_t savemetadata)
 {
-  VarWeighter weighter(varwgtconfig);
+  VarWeighter weighter(varwgtconfig,savemetadata);
   weighter.MakeVarWeights();
 }

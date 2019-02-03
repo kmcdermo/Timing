@@ -57,8 +57,8 @@ struct SigmaFitParams
 class TimeFitter
 {
 public:
-  TimeFitter(const TString & infilename, const TString & plotconfig, const TString & miscconfig,
-	     const TString & timefitconfig, const TString & era, const TString & outfiletext);
+  TimeFitter(const TString & infilename, const TString & plotconfig, const TString & miscconfig, const TString & timefitconfig,
+	     const TString & era, const Bool_t savemetadata, const TString & outfiletext);
   ~TimeFitter();
 
   // config
@@ -106,6 +106,7 @@ private:
   const TString fMiscConfig;
   const TString fTimeFitConfig;
   const TString fEra;
+  const Bool_t  fSaveMetaData;
   const TString fOutFileText;
 
   // style

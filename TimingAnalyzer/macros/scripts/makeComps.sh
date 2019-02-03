@@ -6,7 +6,8 @@ source ./scripts/common_variables.sh
 ## command line input
 indir=${1:-"compare_input"}
 plot=${2:-"met_zoom"}
-outdir=${3:-"ntuples_v5/checks_v4/era_comp"}
+savemetadata=${3:-0}
+outdir=${4:-"ntuples_v5/checks_v4/era_comp"}
 
 for era in "${eras[@]}"
 do
@@ -30,7 +31,7 @@ do
     echo "label_2=Before" >> "${tmp_config}"
 
     # run macro
-    ./scripts/runPlotComparator.sh "${tmp_config}" "${era}" "${era}_${plot}" "${outdir}"
+    ./scripts/runPlotComparator.sh "${tmp_config}" "${era}" ${savemetadata} "${era}_${plot}" "${outdir}"
 
     # tidy up
     rm -rf "${tmp_config}"

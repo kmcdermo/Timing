@@ -9,11 +9,12 @@ rescaleconfig=${2:-"${rescaleconfigdir}/qcdMC_to_gjetsMC.${inTextExt}"}
 plotconfig=${3:-"${plotconfigdir}/jetphi_0.${inTextExt}"}
 miscconfig=${4:-"${miscconfigdir}/misc.${inTextExt}"}
 era=${5:-"Full"}
-outfiletext=${6:-"rescaled_jetphi_0"}
-dir=${7:-"ntuples_v4/test"}
+savemetadata=${6:-0}
+outfiletext=${7:-"rescaled_jetphi_0"}
+dir=${8:-"ntuples_v4/test"}
 
 ## first make plot
-root -l -b -q runRescalePlotter.C\(\"${infilename}\",\"${rescaleconfig}\",\"${plotconfig}\",\"${miscconfig}\",\"${era}\",\"${outfiletext}\"\)
+root -l -b -q runRescalePlotter.C\(\"${infilename}\",\"${rescaleconfig}\",\"${plotconfig}\",\"${miscconfig}\",\"${era}\",${savemetadata},\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}

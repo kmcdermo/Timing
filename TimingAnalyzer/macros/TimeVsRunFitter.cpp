@@ -1,10 +1,10 @@
 #include "TimeVsRunFitter.hh"
 #include "TVirtualFitter.h"
 
-TimeVsRunFitter::TimeVsRunFitter(const TString & infilename, const TString & plotconfig,
-				 const TString & timefitconfig, const TString & outfiletext) :
-  fInFileName(infilename), fPlotConfig(plotconfig), 
-  fTimeFitConfig(timefitconfig), fOutFileText(outfiletext)
+TimeVsRunFitter::TimeVsRunFitter(const TString & infilename, const TString & plotconfig, const TString & timefitconfig,
+				 const Bool_t savemetadata, const TString & outfiletext) :
+  fInFileName(infilename), fPlotConfig(plotconfig), fTimeFitConfig(timefitconfig), 
+  fSaveMetaData(savemetadata), fOutFileText(outfiletext)
 {
   std::cout << "Initializing TimeVsRunFitter..." << std::endl;
 
@@ -38,7 +38,7 @@ TimeVsRunFitter::~TimeVsRunFitter()
 {
   std::cout << "Tidying up in destructor..." << std::endl;
 
-  delete fConfigPave;
+  if (fSaveMetaData) delete fConfigPave;
 
   Common::DeleteMap(ResultsMap);
 
@@ -85,7 +85,7 @@ void TimeVsRunFitter::MakeTimeVsRunFits()
   TimeVsRunFitter::MakePlots();
 
   // MakeConfigPave
-  TimeVsRunFitter::MakeConfigPave();
+  if (fSaveMetaData) TimeVsRunFitter::MakeConfigPave();
 
   // Dump mu's and sigma's into text file
   TimeVsRunFitter::DumpFitInfo();

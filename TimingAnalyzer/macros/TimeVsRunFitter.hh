@@ -28,8 +28,8 @@
 class TimeVsRunFitter
 {
 public:
-  TimeVsRunFitter(const TString & infilename, const TString & plotconfig,
-		  const TString & timefitconfig, const TString & outfiletext);
+  TimeVsRunFitter(const TString & infilename, const TString & plotconfig, const TString & timefitconfig,
+		  const Bool_t savemetadata, const TString & outfiletext);
   ~TimeVsRunFitter();
 
   // config
@@ -62,6 +62,7 @@ private:
   const TString fInFileName;
   const TString fPlotConfig;
   const TString fTimeFitConfig;
+  const Bool_t  fSaveMetaData;
   const TString fOutFileText;
 
   // style

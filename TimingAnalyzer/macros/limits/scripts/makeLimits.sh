@@ -15,7 +15,8 @@ inlimitdir=${1:-"input"}
 inwsfile=${2:-"ws_final.root"}
 doobs=${3:-0}
 outdir=${4:-"ntuples_v4/full_chain"}
-docleanup=${5:-"true"}
+savemetadata=${5:-0}
+docleanup=${6:-"true"}
 
 ## Combine config
 outcombinedir="combine_input"
@@ -53,7 +54,7 @@ echo "Running limits 1D"
 #########################
 
 echo "Running limits 2D"
-./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" "${outlimit2D}" "${outdir}/${outlimitplotdir}"
+./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" ${savemetadata} "${outlimit2D}" "${outdir}/${outlimitplotdir}"
 
 ###########################
 ## Clean Up If Requested ##

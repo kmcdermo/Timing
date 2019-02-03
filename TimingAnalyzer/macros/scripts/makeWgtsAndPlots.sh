@@ -5,7 +5,8 @@ source scripts/common_variables.sh
 
 ## command line options
 outdir=${1:-"ntuples_v4/checks_v3/DEG_test/varwgts"}
-docleanup=${2:-"true"}
+savemetadata=${2:-0}
+docleanup=${3:-"true"}
 
 ## text
 orig="_orig"
@@ -39,7 +40,7 @@ function makeTreePlot()
 	local misc=$( GetMisc ${input} ${plot} )
 	
 	## make the plot
-	./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" "${outfile}" "${outdir}/${plot}"
+	./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" ${savemetadata} "${outfile}" "${outdir}/${plot}"
     done
 }
 
@@ -72,7 +73,7 @@ function makeCRtoSRPlot()
     echo "Creating CRtoSR plot for: ${outfile}"
 
      ## make the plots
-    ./scripts/runCRtoSRPlotter.sh "${crtosrconfig}" "${MainEra}" "${outfile}" "${outdir}/${plot}"
+    ./scripts/runCRtoSRPlotter.sh "${crtosrconfig}" "${MainEra}" ${savemetadata} "${outfile}" "${outdir}/${plot}"
 }
 
 function makeVarWeights()
@@ -104,7 +105,7 @@ function makeVarWeights()
     echo "Making weights for: ${plot}, ${crinput}"
 
     ## make the weights
-    ./scripts/runVarWeighter.sh "${varwgtconfig}"
+    ./scripts/runVarWeighter.sh "${varwgtconfig}" ${savemetadata}
 
     ## make map needed for next plotter
     local varwgtmap="${varwgttmpdir}/${crinput}_${var}${map}.${inTextExt}"

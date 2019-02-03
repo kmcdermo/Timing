@@ -11,11 +11,12 @@ varwgtmapconfig=${4:-"${varwgtconfigdir}/empty.${inTextExt}"}
 plotconfig=${5:-"${plotconfigdir}/phopt_0.${inTextExt}"}
 miscconfig=${6:-"${miscconfigdir}/misc_blind.${inTextExt}"}
 era=${7:-"Full"}
-outfiletext=${8:-"plots"}
-dir=${9:-"test"}
+savemetadata=${8:-0}
+outfiletext=${9:-"plots"}
+dir=${10:-"test"}
 
 ## first make plot
-root -l -b -q runTreePlotter.C\(\"${infilename}\",\"${insignalfilename}\",\"${cutconfig}\",\"${varwgtmapconfig}\",\"${plotconfig}\",\"${miscconfig}\",\"${era}\",\"${outfiletext}\"\)
+root -l -b -q runTreePlotter.C\(\"${infilename}\",\"${insignalfilename}\",\"${cutconfig}\",\"${varwgtmapconfig}\",\"${plotconfig}\",\"${miscconfig}\",\"${era}\",${savemetadata},\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}

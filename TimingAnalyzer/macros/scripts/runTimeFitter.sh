@@ -9,13 +9,14 @@ plotconfig=${2:-"${plotconfigdir}/phopt_0.${inTextExt}"}
 miscconfig=${3:-"${miscconfigdir}/misc_blind.${inTextExt}"}
 timefitconfig=${4:-"time.${inTextExt}"}
 era=${5:-"full"}
-outfiletext=${6:-"plots"}
-dir=${7:-"test"}
+savemetadata=${6:-0}
+outfiletext=${7:-"plots"}
+dir=${8:-"test"}
 
 declare -a outputs=("mu" "sigma") ## can add back chi2prob, chi2ndf
 
 ## first make plot
-root -l -b -q runTimeFitter.C\(\"${infilename}\",\"${plotconfig}\",\"${miscconfig}\",\"${timefitconfig}\",\"${era}\",\"${outfiletext}\"\)
+root -l -b -q runTimeFitter.C\(\"${infilename}\",\"${plotconfig}\",\"${miscconfig}\",\"${timefitconfig}\",\"${era}\",${savemetadata},\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}

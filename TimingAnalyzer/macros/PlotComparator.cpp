@@ -1,7 +1,9 @@
 #include "PlotComparator.hh"
 
-PlotComparator::PlotComparator(const TString & compareconfig, const TString & era, const TString & outfiletext)
-  : fCompareConfig(compareconfig), fEra(era), fOutFileText(outfiletext)
+PlotComparator::PlotComparator(const TString & compareconfig, const TString & era,
+			       const Bool_t savemetadata, const TString & outfiletext)
+  : fCompareConfig(compareconfig), fEra(era),
+    fSaveMetaData(savemetadata), fOutFileText(outfiletext)
 {
   std::cout << "Initializing PlotComparator..." << std::endl;
 
@@ -26,8 +28,8 @@ PlotComparator::PlotComparator(const TString & compareconfig, const TString & er
 PlotComparator::~PlotComparator()
 {
   std::cout << "Tidying up in the destructor..." << std::endl;
-
-  delete fConfigPave;
+  
+  if (fSaveMetaData) delete fConfigPave;
   delete fLowerPad;
   delete fUpperPad;
   delete fOutCanv;
@@ -66,7 +68,7 @@ void PlotComparator::MakeComparisonPlot()
   PlotComparator::SaveOutput();
 
   // Write out config
-  PlotComparator::MakeConfigPave();
+  if (fSaveMetaData) PlotComparator::MakeConfigPave();
 }
 
 void PlotComparator::SetupInputs()

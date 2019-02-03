@@ -7,7 +7,8 @@ source scripts/common_variables.sh
 outdir=${1:-"madv2_v3/full_chain"}
 is_blind=${2:-"true"}
 use_obs=${3:-"false"}
-docleanup=${4:-"true"}
+savemetadata=${4:-0}
+docleanup=${5:-"true"}
 
 ## for safety
 echo "Compiling ahead of time"
@@ -19,11 +20,11 @@ echo "Making Signal Efficiencies"
 
 ## make Data/MC plots (no weights yet)
 echo "Making 1D Data/MC plots with no weights"
-./scripts/make1Dplots.sh "${outdir}/data_over_mc" "${reducedplotlist}" "false"
+./scripts/make1Dplots.sh "${outdir}/data_over_mc" "${reducedplotlist}" "false" ${savemetadata}
 
 ## make analysis plots + limits
 echo "Making analysis plots + limits"
-./scripts/makeAnalysisABCD.sh "${outdir}/results_ABCD" "${is_blind}" "${use_obs}" "${docleanup}"
+./scripts/makeAnalysisABCD.sh "${outdir}/results_ABCD" "${is_blind}" "${use_obs}" ${savemetadata} "${docleanup}"
 
 ## final prep dir
 echo "Final prep outdir"

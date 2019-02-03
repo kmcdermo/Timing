@@ -35,11 +35,12 @@ public:
   TreePlotter() {}
   TreePlotter(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
 	      const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
-	      const TString & era, const TString & outfiletext);
+	      const TString & era, const Bool_t savemetadata, const TString & outfiletext);
   ~TreePlotter() {}
 
   // Initialize
   void SetupDefaults();
+  void SetupSaveMetaData(const Bool_t savemetadata);
   void SetupCommon();
   void SetupPlotConfig(const TString & plotconfig);
   void SetupMiscConfig(const TString & miscconfig);
@@ -92,6 +93,9 @@ private:
   TFile * fInSignalFile;
 
 protected:
+  // config
+  Bool_t fSaveMetaData;
+
   // plot vars
   TString fTitle;
   TString fXTitle;

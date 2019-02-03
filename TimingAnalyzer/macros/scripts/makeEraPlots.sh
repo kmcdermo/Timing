@@ -13,6 +13,7 @@ source scripts/common_variables.sh
 outdir=${1:-"ntuples_v4/checks_v4/era_plots"}
 plot=${2:-"met_zoom"}
 usewgts=${3:-"true"}
+savemetadata=${4:-0}
 
 ################
 ## Run Script ##
@@ -64,7 +65,7 @@ do
 	##################
 	## Compare Eras ##
 	##################
-	./scripts/runEraPlotter.sh "${eraplotconfig}" "${plotconfigdir}/${plot}.${inTextExt}" "${baseoutfile}_era_comp" "${outdir}/${label}"
+	./scripts/runEraPlotter.sh "${eraplotconfig}" "${plotconfigdir}/${plot}.${inTextExt}" ${savemetadata} "${baseoutfile}_era_comp" "${outdir}/${label}"
 
 	#############
 	## Cleanup ##

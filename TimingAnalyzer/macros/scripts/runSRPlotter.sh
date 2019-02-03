@@ -7,11 +7,12 @@ source scripts/common_variables.sh
 srplotconfig=${1:-"${srplotconfigdir}/phoseedtime_0.${inTextExt}"}
 miscconfig=${2:-"${miscconfigdir}/misc_blind.${inTextExt}"}
 era=${3:-"Full"}
-outfiletext=${4:-"phoseedtime_0_SRPlot"}
-dir=${5:-"ntuples_v4/checks_v3/kF_v2"}
+savemetadata=${4:-0}
+outfiletext=${5:-"phoseedtime_0_SRPlot"}
+dir=${6:-"ntuples_v4/checks_v3/kF_v2"}
 
 ## first make plot
-root -l -b -q runSRPlotter.C\(\"${srplotconfig}\",\"${miscconfig}\",\"${era}\",\"${outfiletext}\"\)
+root -l -b -q runSRPlotter.C\(\"${srplotconfig}\",\"${miscconfig}\",\"${era}\",${savemetadata},\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}

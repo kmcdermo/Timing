@@ -1,10 +1,10 @@
 #include "TimeFitter.hh"
 #include "TVirtualFitter.h"
 
-TimeFitter::TimeFitter(const TString & infilename, const TString & plotconfig, const TString & miscconfig,
-		       const TString & timefitconfig, const TString & era, const TString & outfiletext) :
-  fInFileName(infilename), fPlotConfig(plotconfig), fMiscConfig(miscconfig),
-  fTimeFitConfig(timefitconfig), fEra(era), fOutFileText(outfiletext)
+TimeFitter::TimeFitter(const TString & infilename, const TString & plotconfig, const TString & miscconfig, const TString & timefitconfig,
+		       const TString & era, const Bool_t savemetadata, const TString & outfiletext) :
+  fInFileName(infilename), fPlotConfig(plotconfig), fMiscConfig(miscconfig), fTimeFitConfig(timefitconfig),
+  fEra(era), fSaveMetaData(savemetadata), fOutFileText(outfiletext)
 {
   std::cout << "Initializing TimeFitter..." << std::endl;
 
@@ -40,7 +40,7 @@ TimeFitter::~TimeFitter()
 {
   std::cout << "Tidying up in destructor..." << std::endl;
 
-  delete fConfigPave;
+  if (fSaveMetaData) delete fConfigPave;
 
   delete fOutFile;
   delete fTDRStyle;
@@ -70,7 +70,7 @@ void TimeFitter::MakeTimeFits()
   TimeFitter::MakePlots(DataInfo,MCInfo);
 
   // MakeConfigPave
-  TimeFitter::MakeConfigPave();
+  if (fSaveMetaData) TimeFitter::MakeConfigPave();
 
   // Dump mu's and sigma's into text file
   TimeFitter::DumpFitInfo(DataInfo,MCInfo);

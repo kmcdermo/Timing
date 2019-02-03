@@ -24,7 +24,7 @@
 class VarWeighter
 {
 public:
-  VarWeighter(const TString & crtosrconfig);
+  VarWeighter(const TString & crtosrconfig, const Bool_t savemetadata);
   ~VarWeighter();
 
   // Initialize
@@ -49,6 +49,7 @@ public:
 private:
   // Settings
   const TString fVarWgtConfig;
+  const Bool_t  fSaveMetaData;
 
   // VarWgt info
   TString fSample;

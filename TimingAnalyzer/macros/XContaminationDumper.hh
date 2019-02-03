@@ -47,8 +47,8 @@ struct ContInfo
 class XContaminationDumper
 {
 public:
-  XContaminationDumper(const TString & infilename, const TString & xcontdumpconfig, 
-		       const TString & plotconfig, const TString & era, const TString & outfiletext);
+  XContaminationDumper(const TString & infilename, const TString & xcontdumpconfig, const TString & plotconfig,
+		       const TString & era, const Bool_t savemetadata, const TString & outfiletext);
   ~XContaminationDumper();
 
   // Initialize
@@ -83,6 +83,7 @@ private:
   const TString fXContDumpConfig;
   const TString fPlotConfig;
   const TString fEra;
+  const Bool_t  fSaveMetaData;
   const TString fOutFileText;
 
   // style

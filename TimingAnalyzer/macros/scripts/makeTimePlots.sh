@@ -11,11 +11,12 @@ source scripts/common_variables.sh
 
 ## command line inputs
 outdirbase=${1:-"ntuples_v4/checks_v4/era_plots"}
-usetof=${2:-"false"}
-useshift=${3:-"false"}
-usesmear=${4:-"false"}
-writefiles=${5:-"false"}
-filedump=${6:-"${adjust_var}_infiles.${inTextExt}"}
+savemetadata=${2:-0}
+usetof=${3:-"false"}
+useshift=${4:-"false"}
+usesmear=${5:-"false"}
+writefiles=${6:-"false"}
+filedump=${7:-"${adjust_var}_infiles.${inTextExt}"}
 
 ## create filedump
 if [[ "${writefiles}" == "true" ]]
@@ -311,7 +312,7 @@ do echo ${!pho} | while read -r index pho_label
 			    outfile="${x_var}_${label}_${eta}_${era}"
 			    
 			    ## run 1D plotter
-			    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile}" "${outdir}"
+			    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" ${savemetadata} "${outfile}" "${outdir}"
 
 			    ## run 2D plotter, passing 2D plots to make fits for all vars except vs time
 			    if [[ "${var}" != *"time"* ]]
@@ -321,10 +322,10 @@ do echo ${!pho} | while read -r index pho_label
 				timefile="timefit"
 
 				## run 2D plotter
-				./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile2D}" "${outdir}"
+				./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" ${savemetadata} "${outfile2D}" "${outdir}"
 
 				## run fitter, getting 2D plots from before
-				./scripts/runTimeFitter.sh "${outfile2D}.root" "${plot2D}" "${misc_fit}" "${timefit_config}" "${era}" "${outfile}_${timefile}" "${outdir}"
+				./scripts/runTimeFitter.sh "${outfile2D}.root" "${plot2D}" "${misc_fit}" "${timefit_config}" "${era}" ${savemetadata} "${outfile}_${timefile}" "${outdir}"
 				
 			        ## write out time files for correction computations
 				if [[ "${writefiles}" == "true" ]] && [[ "${x_var}" == "${adjust_var}" ]] && [[ "${eta}" != "Full" ]]

@@ -11,11 +11,12 @@ source scripts/common_variables.sh
 
 ## command line inputs
 outdirbase=${1:-"ntuples_v4/checks_v4/era_plots"}
-usetof=${2:-"false"}
-useshift=${3:-"false"}
-usesmear=${4:-"false"}
-triggertower=${5:-"Inclusive"}
-effseedE=${6:-0} # (15 for Zee, 30 for dixtal)
+savemetadata=${2:-0}
+usetof=${3:-"false"}
+useshift=${4:-"false"}
+usesmear=${5:-"false"}
+triggertower=${6:-"Inclusive"}
+effseedE=${7:-0} # (15 for Zee, 30 for dixtal)
 
 ## other info
 var="runno"
@@ -228,10 +229,10 @@ do
 	    timefile="timefit"
 
 	    ## run 2D plotter
-	    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" "${outfile2D}" "${outdir}"
+	    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" ${savemetadata} "${outfile2D}" "${outdir}"
 
 	    ## run fitter, getting 2D plots from before
-	    ./scripts/runTimeVsRunFitter.sh "${outfile2D}.root" "${plot2D}" "${timefit_config}" "${outfile}_${timefile}" "${outdir}"
+	    ./scripts/runTimeVsRunFitter.sh "${outfile2D}.root" "${plot2D}" "${timefit_config}" ${savemetadata} "${outfile}_${timefile}" "${outdir}"
 	done ## read input
     done ## loop over inputs
 

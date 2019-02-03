@@ -11,7 +11,8 @@ source scripts/common_variables.sh
 
 ## command line inputs
 outdirbase=${1:-"ntuples_v4/checks_v4/era_plots"}
-var=${2:-"TOF"}
+savemetadata=${2:-0}
+var=${3:-"TOF"}
 
 for pho in "${phos[@]}"
 do echo ${!pho} | while read -r index pho_label
@@ -118,7 +119,7 @@ do echo ${!pho} | while read -r index pho_label
 			outfile="${x_var}_${label}_${eta}_${era}"
 			
 			## run 1D plotter
-			./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" "${outfile}" "${outdir}"
+			./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" ${savemetadata} "${outfile}" "${outdir}"
 			
 		    done ## read input
 		done ## loop over inputs

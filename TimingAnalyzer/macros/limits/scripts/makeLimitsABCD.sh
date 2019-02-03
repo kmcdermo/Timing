@@ -15,7 +15,8 @@ inlimitdir=${1:-"input"}
 ws_filename=${2:-"ws_final.root"}
 use_obs=${3:-"false"}
 outdir=${4:-"madv2_v3/full_chain/results_ABCD"}
-docleanup=${5:-"true"}
+savemetadata=${5:-0}
+docleanup=${6:-"true"}
 
 ## Card config
 outcarddir="combine_input"
@@ -70,7 +71,7 @@ echo "Running limits 1D"
 #########################
 
 echo "Running limits 2D"
-./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" "${outlimit2D}" "${outdir}/${outlimitplotdir}"
+./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" ${savemetadata} "${outlimit2D}" "${outdir}/${outlimitplotdir}"
 
 ###########################
 ## Clean Up If Requested ##

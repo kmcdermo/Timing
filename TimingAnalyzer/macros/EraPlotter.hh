@@ -30,7 +30,8 @@
 class EraPlotter
 {
 public:
-  EraPlotter(const TString & eraplotconfig, const TString & plotconfig, const TString & outfiletext);
+  EraPlotter(const TString & eraplotconfig, const TString & plotconfig, 
+	     const Bool_t savemetadata, const TString & outfiletext);
   ~EraPlotter();
 
   // Initialize
@@ -65,6 +66,7 @@ private:
   // Settings
   const TString fEraPlotConfig;
   const TString fPlotConfig;
+  const Bool_t  fSaveMetaData;
   const TString fOutFileText;
 
   // input

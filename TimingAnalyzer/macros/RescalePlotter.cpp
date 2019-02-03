@@ -1,7 +1,7 @@
 #include "RescalePlotter.hh"
 
-RescalePlotter::RescalePlotter(const TString & infilename, const TString & rescaleconfig, const TString & plotconfig,
-			       const TString & miscconfig, const TString & era, const TString & outfiletext) 
+RescalePlotter::RescalePlotter(const TString & infilename, const TString & rescaleconfig, const TString & plotconfig, const TString & miscconfig,
+			       const TString & era, const Bool_t savemetadata, const TString & outfiletext) 
   : fInFileName(infilename), fRescaleConfig(rescaleconfig), fPlotConfig(plotconfig),
     fMiscConfig(miscconfig), fEra(era), fOutFileText(outfiletext)
 {
@@ -26,6 +26,7 @@ RescalePlotter::RescalePlotter(const TString & infilename, const TString & resca
 
   // setup config
   TreePlotter::SetupDefaults();
+  TreePlotter::SetupSaveMetaData(savemetadata);
   RescalePlotter::SetupCommon();
   TreePlotter::SetupMiscConfig(fMiscConfig);
   if (TreePlotter::fSignalsOnly) Common::KeepOnlySignals();
@@ -70,7 +71,7 @@ void RescalePlotter::MakeRescaledPlot()
   TreePlotter::SaveOutput(fOutFileText,fEra);
 
   // Write Out Config
-  RescalePlotter::MakeConfigPave();
+  if (TreePlotter::fSaveMetaData) RescalePlotter::MakeConfigPave();
 
   // Dump integrals into text file
   TreePlotter::DumpIntegrals(fOutFileText);

@@ -6,14 +6,15 @@ source scripts/common_variables.sh
 ## config: defaults are for running combine
 fitconfig=${1:-"${fitconfigdir}/ws_final.${inTextExt}"} # full_model_bias.${inTextExt} : for bias study with sig + bkg (toy data)
 miscconfig=${2:-"${miscconfigdir}/misc_fit.${inTextExt}"} # misc_fit_model.${inTextExt} : for bias study with sig + bkg (toy data)
-outfiletext=${3:-"ws_final"}
-outdir=${4:-"ntuples_v4/checks_v3/fits"}
+savemetadata=${3-0}
+outfiletext=${4:-"ws_final"}
+outdir=${5:-"ntuples_v4/checks_v3/fits"}
 
 ## make array of dimensions
 declare -a dims=("2D" "projX" "projY")
 
 ## run macro
-root -b -q -l runFitter.C\(\"${fitconfig}\",\"${miscconfig}\",\"${outfiletext}\"\)
+root -b -q -l runFitter.C\(\"${fitconfig}\",\"${miscconfig}\",${savemetadata},\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${outdir}

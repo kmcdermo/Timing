@@ -1,8 +1,8 @@
 // Class include
 #include "TnPPlotter.hh"
 
-TnPPlotter::TnPPlotter(const TString & infilename, const TString & outfiletext)
-  : fInFileName(infilename), fOutFileText(outfiletext)
+TnPPlotter::TnPPlotter(const TString & infilename, const Bool_t savemetadata, const TString & outfiletext)
+  : fInFileName(infilename), fSaveMetaData(savemetadata), fOutFileText(outfiletext)
 {
   std::cout << "Initializing TnPPlotter..." << std::endl;
 
@@ -81,7 +81,7 @@ void TnPPlotter::MakeTnPPlots()
   TnPPlotter::SaveOutput();
 
   // Write Out Config
-  TnPPlotter::MakeConfigPave();
+  if (fSaveMetaData) TnPPlotter::MakeConfigPave();
 }
 
 void TnPPlotter::EventLoop()

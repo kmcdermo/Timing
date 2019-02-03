@@ -1,9 +1,9 @@
 #include "Limits2D.hh"
 
-Limits2D::Limits2D(const TString & indir, const TString & infilename, const Bool_t doobserved,
-		   const TString & limitconfig, const TString & era, const TString & outtext)
-  : fInDir(indir), fInFileName(infilename), fDoObserved(doobserved),
-    fLimitConfig(limitconfig), fEra(era), fOutText(outtext)
+Limits2D::Limits2D(const TString & indir, const TString & infilename, const Bool_t doobserved, const TString & limitconfig,
+		   const TString & era, const Bool_t savemetadata, const TString & outtext)
+  : fInDir(indir), fInFileName(infilename), fDoObserved(doobserved), fLimitConfig(limitconfig),
+    fEra(era), fSaveMetaData(savemetadata), fOutText(outtext)
 {  
   // setup common first
   Limits2D::SetupDefaults();
@@ -21,7 +21,7 @@ Limits2D::Limits2D(const TString & indir, const TString & infilename, const Bool
 
 Limits2D::~Limits2D() 
 {
-  delete fConfigPave;
+  if (fSaveMetaData) delete fConfigPave;
   for (auto & HistPair : fHistMap) delete HistPair.second;
   delete fOutFile;
   delete fTDRStyle;
@@ -48,7 +48,7 @@ void Limits2D::MakeLimits2D()
   Limits2D::DrawLimits();
   
   // save config pave
-  Limits2D::MakeConfigPave();
+  if (fSaveMetaData) Limits2D::MakeConfigPave();
 }
  
 void Limits2D::FillKnownBins()

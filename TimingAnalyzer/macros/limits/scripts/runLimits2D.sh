@@ -9,11 +9,12 @@ infilename=${2:-"AsymLim"}
 doobs=${3:-0}
 limitconfig=${4:-"${limitconfigdir}/limits2D.${inTextExt}"}
 era=${5:-"Full"}
-outtext=${6:-"limit2D"}
-dir=${7:-"ntuples_v4/limits"}
+savemetadata=${6:-0}
+outtext=${7:-"limit2D"}
+dir=${8:-"ntuples_v4/limits"}
 
 ## run macro
-root -l -b -q runLimits2D.C\(\"${indir}\",\"${infilename}\",${doobs},\"${limitconfig}\",\"${era}\",\"${outtext}\"\)
+root -l -b -q runLimits2D.C\(\"${indir}\",\"${infilename}\",${doobs},\"${limitconfig}\",\"${era}\",${savemetadata},\"${outtext}\"\)
 
 ## make outdirs readable
 fulldir=${topdir}/${disphodir}/${dir}

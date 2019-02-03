@@ -67,7 +67,8 @@ struct FitInfo
 class Fitter
 {
 public:
-  Fitter(const TString & fitconfig, const TString & miscconfig, const TString & outfiletext);
+  Fitter(const TString & fitconfig, const TString & miscconfig,
+	 const Bool_t savemetadata, const TString & outfiletext);
   ~Fitter();
 
   // Initialize
@@ -141,8 +142,9 @@ public:
 private:
   // settings
   const TString fFitConfig;
-  const TString fOutFileText;
   const TString fMiscConfig;
+  const Bool_t  fSaveMetaData;
+  const TString fOutFileText;
   TString fPlotConfig;
   TString fEra;
 

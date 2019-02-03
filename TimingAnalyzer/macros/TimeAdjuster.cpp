@@ -2,9 +2,9 @@
 #include "TimeAdjuster.hh"
 
 TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig,
-			   const TString & sadjustvar, const TString & stime, const Bool_t doshift, const Bool_t dosmear)
+			   const TString & sadjustvar, const TString & stime, const Bool_t doshift, const Bool_t dosmear, const Bool_t savemetadata)
   : fSkimFileName(skimfilename), fSignalSkimFileName(signalskimfilename), fInFilesConfig(infilesconfig),
-    fSAdjustVar(sadjustvar), fSTime(stime), fDoShift(doshift), fDoSmear(dosmear)
+    fSAdjustVar(sadjustvar), fSTime(stime), fDoShift(doshift), fDoSmear(dosmear), fSaveMetaData(savemetadata)
 {
   std::cout << "Initializing TimeAdjuster..." << std::endl;
 
@@ -57,8 +57,11 @@ void TimeAdjuster::AdjustTime()
   if (fDoShift || fDoSmear) TimeAdjuster::CorrectMC(DataInfo,MCInfo);
 
   // dump meta info
-  TimeAdjuster::MakeConfigPave(fSkimFile);
-  TimeAdjuster::MakeConfigPave(fSignalSkimFile);
+  if (fSaveMetaData) 
+  {
+    TimeAdjuster::MakeConfigPave(fSkimFile);
+    TimeAdjuster::MakeConfigPave(fSignalSkimFile);
+  }
 
   // delete info
   TimeAdjuster::DeleteInfo(DataInfo);

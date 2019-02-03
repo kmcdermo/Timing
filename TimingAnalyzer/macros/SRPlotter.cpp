@@ -1,6 +1,7 @@
 #include "SRPlotter.hh"
 
-SRPlotter::SRPlotter(const TString & srplotconfig, const TString & miscconfig, const TString & era, const TString & outfiletext) 
+SRPlotter::SRPlotter(const TString & srplotconfig, const TString & miscconfig, const TString & era,
+		     const Bool_t savemetadata, const TString & outfiletext) 
   : fSRPlotConfig(srplotconfig), fMiscConfig(miscconfig), fEra(era), fOutFileText(outfiletext)
 {
   std::cout << "Initializing SRPlotter..." << std::endl;
@@ -13,6 +14,7 @@ SRPlotter::SRPlotter(const TString & srplotconfig, const TString & miscconfig, c
 
   // setup config
   TreePlotter::SetupDefaults();
+  TreePlotter::SetupSaveMetaData(savemetadata);
   SRPlotter::SetupCommon();
   TreePlotter::SetupMiscConfig(fMiscConfig);
   SRPlotter::SetupSRPlotConfig();
@@ -127,7 +129,7 @@ void SRPlotter::CommonPlotter(const TString & outfiletext)
   TreePlotter::SaveOutput(outfiletext,fEra);
 
   // Write Out Config
-  SRPlotter::MakeConfigPave();
+  if (TreePlotter::fSaveMetaData) SRPlotter::MakeConfigPave();
 }
 
 void SRPlotter::ScaleCRByKFOnly(const TString & CR)

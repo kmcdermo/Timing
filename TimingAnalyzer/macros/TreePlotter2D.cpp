@@ -2,7 +2,7 @@
 
 TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
 			     const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
-			     const TString & era, const TString & outfiletext) 
+			     const TString & era, const Bool_t savemetadata, const TString & outfiletext) 
   : fInFileName(infilename), fInSignalFileName(insignalfilename), fCutConfig(cutconfig),
     fVarWgtMapConfig(varwgtmapconfig), fPlotConfig(plotconfig), fMiscConfig(miscconfig), 
     fEra(era), fOutFileText(outfiletext)
@@ -57,7 +57,7 @@ void TreePlotter2D::MakeTreePlot2D()
   }
 
   // Write Out Config
-  //  TreePlotter2D::MakeConfigPave();
+  if (fSaveMetaData) TreePlotter2D::MakeConfigPave();
 
   // Delete Memory
   TreePlotter2D::DeleteMemory(true);
@@ -253,7 +253,8 @@ void TreePlotter2D::MakeConfigPave()
 
 void TreePlotter2D::DeleteMemory(const Bool_t deleteInternal)
 {
-  //  delete fConfigPave;
+  if (fSaveMetaData) delete fConfigPave;
+
   if (!fSkipBkgdMC)
   {
     delete RatioMCErrs;

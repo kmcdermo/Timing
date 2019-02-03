@@ -6,11 +6,12 @@ source scripts/common_variables.sh
 ## config
 eraplotconfig=${1:-"etaplotconfig.${inTextExt}"}
 plotconfig=${2:-"${plotconfigdir}/met_zoom.${inTextExt}"}
-outfiletext=${3:-"plot_era"}
-dir=${4:-"test"}
+savemetadata=${3:-0}
+outfiletext=${4:-"plot_era"}
+dir=${5:-"test"}
 
 ## first make plot
-root -l -b -q runEraPlotter.C\(\"${eraplotconfig}\",\"${plotconfig}\",\"${outfiletext}\"\)
+root -l -b -q runEraPlotter.C\(\"${eraplotconfig}\",\"${plotconfig}\",${savemetadata},\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}

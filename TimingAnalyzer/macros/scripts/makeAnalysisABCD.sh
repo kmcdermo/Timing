@@ -13,7 +13,8 @@ source scripts/common_variables.sh
 outdir=${1:-"madv2_v3/full_chain/results_ABCD"}
 is_blind=${2:-"true"}
 use_obs=${3:-"false"}
-docleanup=${4:-"true"}
+savemetadata=${4:-0}
+docleanup=${5:-"true"}
 
 ## Scan config
 ws_filename="ws_final.root"
@@ -31,7 +32,7 @@ mkdir -p "${limitdir}/${inlimitdir}"
 ## Make 2D Input Plots from Significance Scan ##
 ################################################
 
-./scripts/makePlotsFromSigScan.sh "${outdir}" "${is_blind}" "${ws_filename}" "${docleanup}"
+./scripts/makePlotsFromSigScan.sh "${outdir}" "${is_blind}" "${ws_filename}" ${savemetadata} "${docleanup}"
 
 ###############################
 ## Copy input into limit dir ##
@@ -49,7 +50,7 @@ pushd "${limitdir}"
 ## Run Combine + Plots ##
 #########################
 
-./scripts/makeLimitsABCD.sh "${inlimitdir}" "${ws_filename}" "${use_obs}" "${outdir}" "${docleanup}"
+./scripts/makeLimitsABCD.sh "${inlimitdir}" "${ws_filename}" "${use_obs}" "${outdir}" ${savemetadata} "${docleanup}"
 
 #########################
 ## Snap Back When Done ##

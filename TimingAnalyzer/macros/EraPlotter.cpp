@@ -1,7 +1,8 @@
 #include "EraPlotter.hh"
 
-EraPlotter::EraPlotter(const TString & eraplotconfig, const TString & plotconfig, const TString & outfiletext)
-  : fEraPlotConfig(eraplotconfig), fPlotConfig(plotconfig), fOutFileText(outfiletext)
+EraPlotter::EraPlotter(const TString & eraplotconfig, const TString & plotconfig, 
+		       const Bool_t savemetadata, const TString & outfiletext)
+  : fEraPlotConfig(eraplotconfig), fPlotConfig(plotconfig), fSaveMetaData(savemetadata), fOutFileText(outfiletext)
 {
   //////////////////
   // Initializing //
@@ -26,7 +27,7 @@ EraPlotter::EraPlotter(const TString & eraplotconfig, const TString & plotconfig
 
 EraPlotter::~EraPlotter()
 {
-  delete fConfigPave;
+  if (fSaveMetaData) delete fConfigPave;
   
   delete LowerPad;
   delete UpperPad;
@@ -71,7 +72,7 @@ void EraPlotter::MakeEraPlot()
   EraPlotter::SaveOutput();
 
   // save metadata
-  EraPlotter::MakeConfigPave();
+  if (fSaveMetaData) EraPlotter::MakeConfigPave();
 }
 
 void EraPlotter::SetupInFiles()

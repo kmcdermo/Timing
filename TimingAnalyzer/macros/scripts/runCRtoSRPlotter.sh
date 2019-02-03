@@ -6,11 +6,12 @@ source scripts/common_variables.sh
 ## config
 crtosrconfig=${1:-"${crtosrconfigdir}/qcd_phoseedtime_0.${inTextExt}"}
 era=${2:-"Full"}
-outfiletext=${3:-"qcd_phoseedtime_0"}
-dir=${4:-"ntuples_v4/checks_v3/CRtoSR"}
+savemetadata=${3:-0}
+outfiletext=${4:-"qcd_phoseedtime_0"}
+dir=${5:-"ntuples_v4/checks_v3/CRtoSR"}
 
 ## first make plot
-root -l -b -q runCRtoSRPlotter.C\(\"${crtosrconfig}\",\"${era}\",\"${outfiletext}\"\)
+root -l -b -q runCRtoSRPlotter.C\(\"${crtosrconfig}\",\"${era}\",${savemetadata},\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}

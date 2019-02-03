@@ -11,7 +11,8 @@ source scripts/common_variables.sh
 
 ## Command Line Input
 outdir=${1:-"ntuples_v4/full_chain"}
-docleanup=${2:-"true"}
+savemetadata=${2:-0}
+docleanup=${3:-"true"}
 
 ## Tmp Info
 tmpdir="tmp"
@@ -58,7 +59,7 @@ do
 	outtext="${plot}_${label}"
 
 	## make plot
-	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc2D}.${inTextExt}" "${MainEra}" "${outtext}" "${outdir}/${outplot2Ddir}"
+	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc2D}.${inTextExt}" "${MainEra}" ${savemetadata} "${outtext}" "${outdir}/${outplot2Ddir}"
 
 	## cp root file to local directory
 	cp "${outtext}.root" "${infitdir}"
@@ -82,7 +83,7 @@ echo "era=${MainEra}" >> "${fitconfig}"
 ## Run Fitter Over Input Plots ##
 #################################
 
-./scripts/runFitter.sh "${fitconfig}" "${miscconfigdir}/${misc_fit}.${inTextExt}" "${fit}" "${outdir}/${outfitdir}"
+./scripts/runFitter.sh "${fitconfig}" "${miscconfigdir}/${misc_fit}.${inTextExt}" ${savemetadata} "${fit}" "${outdir}/${outfitdir}"
 
 #####################################
 ## Copy To Local Combine Directory ##
@@ -100,7 +101,7 @@ pushd "${limitdir}"
 ## Run Combine + Plots ##
 #########################
 
-./scripts/makeLimits.sh "${inlimitdir}" "${fit}.root" ${doobs} "${outdir}" "${docleanup}"
+./scripts/makeLimits.sh "${inlimitdir}" "${fit}.root" ${doobs} "${outdir}" ${savemetadata} "${docleanup}"
 
 #########################
 ## Snap Back When Done ##

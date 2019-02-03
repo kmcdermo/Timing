@@ -5,7 +5,8 @@ source scripts/common_variables.sh
 
 ## config
 outdir=${1:-"ntuples_v4/checks_v3/full_chain"}
-docleanup=${2:-"true"}
+savemetadata=${2:-0}
+docleanup=${3:-"true"}
 
 ## for safety
 echo "Compiling ahead of time"
@@ -17,19 +18,19 @@ echo "Making Signal Efficiencies"
 
 ## make Data/MC plots (no weights yet)
 echo "Making 1D Data/MC plots with no weights"
-./scripts/make1Dplots.sh "${outdir}/data_over_mc" "${reducedplotlist}" "false"
+./scripts/make1Dplots.sh "${outdir}/data_over_mc" "${reducedplotlist}" "false" ${savemetadata}
 
 ## make weights and related plots
 echo "Making variable event weights and plots"
-./scripts/makeWgtsAndPlots.sh "${outdir}/varwgts" "${docleanup}"
+./scripts/makeWgtsAndPlots.sh "${outdir}/varwgts" ${savemetadata} "${docleanup}"
 
 ## make SR plots
 echo "Making signal region plots"
-./scripts/makePlotsForSR.sh "${outdir}/srplots" "${reducedplotlist}" "${docleanup}"
+./scripts/makePlotsForSR.sh "${outdir}/srplots" "${reducedplotlist}" ${savemetadata} "${docleanup}"
 
 ## make limit plots
 echo "Making limit plots"
-./scripts/makeAnalysis.sh "${outdir}/results" "${docleanup}"
+./scripts/makeAnalysis.sh "${outdir}/results" ${savemetadata} "${docleanup}"
 
 ## final prep dir
 echo "Final prep outdir"

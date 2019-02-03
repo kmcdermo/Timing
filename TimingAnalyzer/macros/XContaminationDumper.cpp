@@ -1,9 +1,9 @@
 #include "XContaminationDumper.hh"
 
-XContaminationDumper::XContaminationDumper(const TString & infilename, const TString & xcontdumpconfig, 
-					   const TString & plotconfig, const TString & era, const TString & outfiletext) 
-  : fInFileName(infilename), fXContDumpConfig(xcontdumpconfig),
-    fPlotConfig(plotconfig), fEra(era), fOutFileText(outfiletext)
+XContaminationDumper::XContaminationDumper(const TString & infilename, const TString & xcontdumpconfig, const TString & plotconfig,
+					   const TString & era, const Bool_t savemetadata, const TString & outfiletext) 
+  : fInFileName(infilename), fXContDumpConfig(xcontdumpconfig), fPlotConfig(plotconfig),
+    fEra(era), fSaveMetaData(savemetadata), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -37,7 +37,7 @@ XContaminationDumper::~XContaminationDumper()
 {
   std::cout << "Tidying up in destructor..." << std::endl;
 
-  delete fConfigPave;
+  if (fSaveMetaData) delete fConfigPave;
 
   Common::DeleteMap(fHistMap);
 
@@ -70,7 +70,7 @@ void XContaminationDumper::MakeContaminationDump()
   XContaminationDumper::PrintSignalHists();
 
   // Dump meta info
-  XContaminationDumper::MakeConfigPave();
+  if (fSaveMetaData) XContaminationDumper::MakeConfigPave();
 }
 
 void XContaminationDumper::PrepContMap()

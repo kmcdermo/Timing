@@ -7,8 +7,8 @@
 class RescalePlotter : TreePlotter 
 {
 public:
-  RescalePlotter(const TString & infilename, const TString & rescaleconfig, const TString & plotconfig,
-		 const TString & miscconfig, const TString & era, const TString & outfiletext);
+  RescalePlotter(const TString & infilename, const TString & rescaleconfig, const TString & plotconfig, const TString & miscconfig,
+		 const TString & era, const Bool_t savemetadata, const TString & outfiletext);
   ~RescalePlotter() {}
 
   // setup functions

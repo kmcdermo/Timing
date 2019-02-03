@@ -24,7 +24,7 @@ struct SigStruct
   TString infilename;
 };
 
-void prepareABCDFile(const TString & signif_dump, const TString & signif_list, const TString & ws_filename)
+void prepareABCDFile(const TString & signif_dump, const TString & signif_list, const Bool_t savemetadata, const TString & ws_filename)
 {
   // setup config
   Common::SetupSamples();
@@ -99,18 +99,25 @@ void prepareABCDFile(const TString & signif_dump, const TString & signif_list, c
     auto SignHist = (TH2F*)tmpfile->Get(signhistname.Data());
     Common::CheckValidHist(SignHist,signhistname,tmpfilename);
     
-    // get pave text
-    auto ConfigPave = (TPaveText*)tmpfile->Get(Form("%s",Common::pavename.Data()));
-    ConfigPave->SetName(sample+"_"+Common::pavename);
-
     // now save it all to output file
     ws_file->cd();
     DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
     SignHist->Write(SignHist->GetName(),TObject::kWriteDelete);
-    ConfigPave->Write(ConfigPave->GetName(),TObject::kWriteDelete);
+
+    if (savemetadata)
+    {
+      // get pave text
+      tmpfile->cd();
+      auto ConfigPave = (TPaveText*)tmpfile->Get(Form("%s",Common::pavename.Data()));
+      ConfigPave->SetName(sample+"_"+Common::pavename);
     
+      ws_file->cd();
+      ConfigPave->Write(ConfigPave->GetName(),TObject::kWriteDelete);
+      
+      delete ConfigPave;
+    }
+
     // delete it all
-    delete ConfigPave;
     delete SignHist;
     delete DataHist;
     delete tmpfile;

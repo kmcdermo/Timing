@@ -10,11 +10,12 @@ varwgtmapconfig=${4:-"${varwgtconfigdir}/empty.${inTextExt}"}
 plotconfig=${5:-"${plotconfigdir}/met_vs_time.${inTextExt}"}
 miscconfig=${6:-"${miscconfigdir}/blind2D.${inTextExt}"}
 era=${7:-"Full"}
-outfiletext=${8:-"met_vs_time.root"}
-dir=${9:-"plots2D"}
+savemetadata=${8:-0}
+outfiletext=${9:-"met_vs_time.root"}
+dir=${10:-"plots2D"}
 
 ## run tree plotter first
-root -l -b -q runTreePlotter2D.C\(\"${infilename}\",\"${insignalfilename}\",\"${cutconfig}\",\"${varwgtmapconfig}\",\"${plotconfig}\",\"${miscconfig}\",\"${era}\",\"${outfiletext}\"\)
+root -l -b -q runTreePlotter2D.C\(\"${infilename}\",\"${insignalfilename}\",\"${cutconfig}\",\"${varwgtmapconfig}\",\"${plotconfig}\",\"${miscconfig}\",\"${era}\",${savemetadata},\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}

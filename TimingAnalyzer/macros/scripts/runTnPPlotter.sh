@@ -5,11 +5,12 @@ source scripts/common_variables.sh
 
 ## config
 infilename=${1:-"${skimdir}/sr.root"}
-outfiletext=${2:-"plots"}
-dir=${3:-"test"}
+savemetadata=${2:-0}
+outfiletext=${3:-"plots"}
+dir=${4:-"test"}
 
 ## first make plot
-root -l -b -q runTnPPlotter.C\(\"${infilename}\",\"${outfiletext}\"\)
+root -l -b -q runTnPPlotter.C\(\"${infilename}\",${savemetadata},\"${outfiletext}\"\)
 
 ## make out dirs
 fulldir=${topdir}/${disphodir}/${dir}
