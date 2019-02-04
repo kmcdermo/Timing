@@ -161,7 +161,7 @@ echo "ybin_boundaries=${ybin_boundaries}" >> "${signif_config}"
 ## delete tmp files
 if [[ "${docleanup}" == "true" ]]
 then
-    rm "${misc_config}" "${signif_dump}" "${signif_list}"
+    rm "${misc_config}" "${signif_config}" "${signif_dump}" "${signif_list}"
 fi
 
 ## end message
