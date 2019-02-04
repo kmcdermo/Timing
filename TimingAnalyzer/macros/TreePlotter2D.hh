@@ -34,6 +34,7 @@ public:
 
   // Initialize
   void SetupDefaults();
+  void SetupSaveMetaData(const Bool_t savemetadata);
   void SetupCommon();
   void SetupPlotConfig(const TString & plotconfig);
   void SetupMiscConfig(const TString & miscconfig);
@@ -64,7 +65,6 @@ private:
   const TString fPlotConfig;
   const TString fMiscConfig;
   const TString fEra;
-  const Bool_t  fSaveMetaData;
   const TString fOutFileText;
 
   // input
@@ -72,6 +72,9 @@ private:
   TFile * fInSignalFile;
 
 protected:
+  // Config
+  Bool_t fSaveMetaData;
+
   // plot vars
   TString fTitle;
   TString fXTitle;

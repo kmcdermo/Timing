@@ -29,6 +29,7 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insigna
 
   // setup hists
   TreePlotter2D::SetupDefaults();
+  TreePlotter2D::SetupSaveMetaData(savemetadata);
   TreePlotter2D::SetupCommon();
   TreePlotter2D::SetupPlotConfig(fPlotConfig);
   TreePlotter2D::SetupMiscConfig(fMiscConfig);
@@ -283,6 +284,12 @@ void TreePlotter2D::SetupDefaults()
   fYVarBins = false;
   fBlindData = false;
   fSkipBkgdMC = false;
+  fSaveMetaData = false;
+}
+
+void TreePlotter2D::SetupSaveMetaData(const Bool_t savemetadata)
+{
+  fSaveMetaData = savemetadata;
 }
 
 void TreePlotter2D::SetupCommon()
