@@ -83,9 +83,6 @@ void dumpSignificanceABCD(const TString & iofilename, const TString & xbin_bound
       // set the C bin
       DataHist->SetBinContent(2,2,data_C);
       DataHist->SetBinError  (2,2,data_C_unc);
-      
-      // write it back to the file
-      DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
     }
     else
     {
@@ -102,6 +99,11 @@ void dumpSignificanceABCD(const TString & iofilename, const TString & xbin_bound
 	    << xbin_boundary.Data() << " " << ybin_boundary.Data() << " "
 	    << iofilename.Data() << std::endl;
 
+    // write data hist to file + rename it
+    iofile->cd();
+    DataHist->SetName(sample+"_"+datahistname);
+    DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
+    
     // delete it all
     delete SignHist;
   }

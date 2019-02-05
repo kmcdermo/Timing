@@ -88,17 +88,16 @@ void prepareABCDFile(const TString & signif_dump, const TString & signif_list, c
     Common::CheckValidFile(tmpfile,tmpfilename);
     tmpfile->cd();
 
-    // get data hist + rename
-    const auto datahistname = Common::HistNameMap["Data"]+"_Plotted";
-    auto DataHist = (TH2F*)tmpfile->Get(datahistname.Data());
-    Common::CheckValidHist(DataHist,datahistname,tmpfilename);
-    DataHist->SetName(sample+"_"+datahistname);
-
     // get signal hist + rename
     const auto signhistname = Common::HistNameMap[sample];
     auto SignHist = (TH2F*)tmpfile->Get(signhistname.Data());
     Common::CheckValidHist(SignHist,signhistname,tmpfilename);
     
+    // get data hist
+    const auto datahistname = sample+"_"+Common::HistNameMap["Data"]+"_Plotted";
+    auto DataHist = (TH2F*)tmpfile->Get(datahistname.Data());
+    Common::CheckValidHist(DataHist,datahistname,tmpfilename);
+
     // now save it all to output file
     ws_file->cd();
     DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
