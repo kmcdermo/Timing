@@ -22,7 +22,7 @@ if [[ "${use_obs}" == "true" ]]
 then
     combine_extra=""
 else
-    combine_extra="--run=expected"
+    combine_extra="--run=blind"
 fi
 
 ###########################################

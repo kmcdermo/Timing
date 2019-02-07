@@ -53,7 +53,7 @@ do
 	## also update to correct ws file!
 	sed -i "s/INPUT_FILE/${infile}/g" "${tmpdatacard}"
 
-	combine -M AsymptoticLimits "${tmpdatacard}" --run=expected --name "${name}"
+	combine -M AsymptoticLimits "${tmpdatacard}" --run=blind --name "${name}"
     done
 done
 

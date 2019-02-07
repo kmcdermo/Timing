@@ -88,7 +88,7 @@ void dumpSignificanceABCD(const TString & iofilename, const TString & xbin_bound
     {
       // unblinded
       const auto data_C = DataHist->GetBinContent(2,2);
-      bkgd_C = data_C-sign_C;
+      bkgd_C = std::max(data_C-sign_C,0.0);
     }
 
     // compute significance in C
