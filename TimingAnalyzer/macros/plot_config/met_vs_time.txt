@@ -2,11 +2,11 @@ plot_title=p_{T}^{miss} [GeV] vs Leading Photon Weighted Cluster Time [ns]
 
 x_title=Leading Photon Weighted Cluster Time [ns]
 
-x_bins=VARIABLE -5 -3 -2 -1.5 -1 -0.75 -0.5 -0.25 0 0.25 0.5 0.75 1 1.5 2 3 5 10 15 25
 x_var=phoweightedtimeLT120_0
 x_var_data=+phoweightedtimeLT120SHIFT_0
 x_var_bkgd=+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0
 x_var_sign=+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0
+x_bins=VARIABLE -5 -3 -2 -1.5 -1 -0.75 -0.5 -0.25 0 0.25 0.5 0.75 1 1.5 2 3 5 10 15 25
 
 y_title=p_{T}^{miss} [GeV]
 y_var=t1pfMETpt
