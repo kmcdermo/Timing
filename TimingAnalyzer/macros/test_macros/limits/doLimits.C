@@ -10,9 +10,9 @@ struct Coord
 
 typedef std::vector<Coord> CoordVec;
 
-void setupCoordVecMap(std::map<TString,CoordVec> & coordVecMap)
+void setupCoordVecMap(std::map<TString,CoordVec> & coordVecMap, const TString & infilename)
 {
-  std::ifstream infile("old_gmsb.txt",std::ios::in);
+  std::ifstream infile(infilename.Data(),std::ios::in);
   TString label; Double_t x,y;
   
   while (infile >> label >> x >> y)
@@ -39,7 +39,7 @@ struct Opts
 
 void setupOptsMap(std::map<TString,Opts> & optsMap)
 {
-  std::ifstream infile("gmsb_config.txt",std::ios::in);
+  std::ifstream infile("input/gmsb_config.txt",std::ios::in);
   TString label; short style, width, color;
   
   while (infile >> label >> style >> width >> color)
@@ -51,7 +51,9 @@ void setupOptsMap(std::map<TString,Opts> & optsMap)
 void doLimits()
 {
   std::map<TString,CoordVec> coordVecMap;
-  setupCoordVecMap(coordVecMap);
+  setupCoordVecMap(coordVecMap,"input/old_gmsb.txt");
+  setupCoordVecMap(coordVecMap,"input/abcd_3x3.txt");
+  setupCoordVecMap(coordVecMap,"input/abcd_template.txt");
 
   std::map<TString,Opts> optsMap;
   setupOptsMap(optsMap);
@@ -110,9 +112,12 @@ void doLimits()
     graph->GetXaxis()->SetTitle("#Lambda [TeV]");
     graph->GetXaxis()->SetRangeUser(80,500);
     graph->GetYaxis()->SetTitle("c#tau [cm]");
-    graph->GetYaxis()->SetRangeUser(1e-1,1e5);
+    graph->GetYaxis()->SetRangeUser(1e-2,1e5);
     i++;
   }
 
   leg->Draw("same");
+
+  canv->SaveAs("limits.pdf");
+  canv->SaveAs("limits.png");
 }

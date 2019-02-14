@@ -2,3 +2,5 @@ ATLAS_8_TeV_#gamma#gamma 10 3 417
 CMS_8_TeV_#gamma 1 0 600
 CMS_8_TeV_#gamma#gamma 1 0 923
 CMS_7_TeV_#gamma 1 0 633
+CMS_13_TeV_#gamma_(ABCD_3x3) 3 3 616
+CMS_13_TeV_#gamma_(Template) 9 3 799
