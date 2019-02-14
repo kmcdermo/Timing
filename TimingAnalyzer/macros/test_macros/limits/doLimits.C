@@ -110,13 +110,23 @@ void doLimits()
     
     graph->Draw(i>0?Form("%s SAME",draw.Data()):Form("A%s",draw.Data()));
     graph->GetXaxis()->SetTitle("#Lambda [TeV]");
-    graph->GetXaxis()->SetRangeUser(80,500);
     graph->GetYaxis()->SetTitle("c#tau [cm]");
-    graph->GetYaxis()->SetRangeUser(1e-2,1e5);
+
+    graph->GetXaxis()->SetLimits(75,375);
+    graph->GetHistogram()->SetMinimum(1e-2);
+    graph->GetHistogram()->SetMaximum(1e5);
+
     i++;
   }
 
   leg->Draw("same");
+
+  // draw mass axis
+  auto axis = new TGaxis(100,0.1,350,0.1,139.7,503.4,505,"");
+  axis->SetTitle("M_{#tilde{#chi}^{0}_{1}} [GeV]");
+  axis->SetTitleSize(0.035);
+  axis->SetLabelSize(0.035);
+  axis->Draw();
 
   canv->SaveAs("limits.pdf");
   canv->SaveAs("limits.png");
