@@ -40,7 +40,7 @@ eval `scram runtime -sh`
 
 for lambda in 100 150 200 250 300 350 400 500 600
 do
-    for ctau in 0p001 0p1 10 200 400 600 800 1000 1200 10000 
+    for ctau in 0p001 0p1 10 200 400 600 800 1000 1200
     do
 	name="GMSB_L${lambda}_CTau${ctau}"
 	echo "Working on ${name}"
@@ -53,7 +53,7 @@ do
 	## also update to correct ws file!
 	sed -i "s/INPUT_FILE/${infile}/g" "${tmpdatacard}"
 
-	combine -M AsymptoticLimits "${tmpdatacard}" --run=blind --name "${name}"
+	combine -M AsymptoticLimits "${tmpdatacard}" --run=expected --name "${name}"
     done
 done
 

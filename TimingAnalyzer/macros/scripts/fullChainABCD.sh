@@ -14,17 +14,36 @@ docleanup=${5:-"true"}
 echo "Compiling ahead of time"
 ./scripts/compile.sh
 
-## make signal efficiencies
-echo "Making Signal Efficiencies"
-./scripts/makeSignalEffs.sh "${outdir}/sig_effs"
+## xs, ys
+declare -a xs=(0 0.5 1 1.5 2 3 5)
+declare -a ys=(50 100 150 200 300 500 1000)
 
-## make Data/MC plots (no weights yet)
-echo "Making 1D Data/MC plots with no weights"
-./scripts/make1Dplots.sh "${outdir}/data_over_mc" "${reducedplotlist}" "false" ${savemetadata}
+for x in "${xs[@]}"
+do
+    for y in "${ys[@]}"
+    do
+	echo "Making analysis plots + limits for ${x},${y}"
+	./scripts/makeAnalysisABCD.sh "${outdir}/x_${x}_y_${y}" "${is_blind}" "${use_obs}" ${savemetadata} "${docleanup}" "${x}" "${y}"
+    done
+done
+
+## x1_x2s, y1_y2s
+#declare -a x1_x2s=("0 1.5" "0 2" "0 5" "1 1.5" "1 2" "1 5" "1.5 3" "1.5 5" "2 5")
+#declare -a y1_y2s=("50 100" "50 200" "50 500" "100 200" "100 500" "200 500")
 
 ## make analysis plots + limits
-echo "Making analysis plots + limits"
-./scripts/makeAnalysisABCD.sh "${outdir}/results_ABCD" "${is_blind}" "${use_obs}" ${savemetadata} "${docleanup}"
+# for x1_x2 in "${x1_x2s[@]}"
+# do echo ${x1_x2} | while read -r x1 x2
+#     do
+# 	for y1_y2 in "${y1_y2s[@]}"
+# 	do echo ${y1_y2} | while read -r y1 y2
+# 	    do
+# 		echo "Making analysis plots + limits for ${x1}-${x2},${y1}-${y2}"
+# 		./scripts/makeAnalysisABCD.sh "${outdir}/x_${x1}_${x2}_y_${y1}_${y2}" "${is_blind}" "${use_obs}" ${savemetadata} "${docleanup}" "${x1}" "${x2}" "${y1}" "${y2}"
+# 	    done
+# 	done
+#     done
+# done
 
 ## final prep dir
 echo "Final prep outdir"

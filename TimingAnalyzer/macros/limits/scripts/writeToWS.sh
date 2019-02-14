@@ -5,21 +5,14 @@ source scripts/common_variables.sh
 
 ## Command Line Input
 inlimitdir=${1:-"input"}
-ws_filename=${2:-"ws_final.root"}
+ws_filename=${2:-"ws_inputs.root"}
 ws_name=${3:-"workspace"}
-tmplog_filename=${4:-"tmp.log"}
-sample=${5:-"GMSB"}
-outdir=${6:-"madv2_v3/full_chain/ABCD/combine_input/logs"}
+sample=${4:-"GMSB"}
+tmplog_file=${5:-"tmp.log"}
+outfile_name=${6:-"ws_final.root"}
 
 ## make workspace
-root -l -b -q writeToWS.C\(\"${inlimitdir}\",\"${ws_filename}\",\"${ws_name}\",\"${tmplog_filename}\",\"${sample}\"\)
-
-## make out dirs
-fulldir="${topdir}/${disphodir}/${outdir}"
-PrepOutDir ${fulldir}
-
-## copy log file
-cp "${tmplog_filename}" "${fulldir}"
+root -l -b -q writeToWS.C\(\"${inlimitdir}\",\"${ws_filename}\",\"${ws_name}\",\"${sample}\",\"${tmplog_file}\",\"${outfile_name}\"\)
 
 ## final message
 echo "Finished WritingToWS for sample: ${sample}"

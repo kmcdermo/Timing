@@ -12,17 +12,20 @@ source scripts/common_variables.sh
 
 ## i/o params
 inlimitdir=${1:-"input"}
-ws_filename=${2:-"ws_final.root"}
+ws_outfile_base=${2:-"ws"}
 use_obs=${3:-"false"}
 outcombname=${4:-"AsymLim"}
 outlimitdir=${5:-"output"}
+outdir=${6:-"limits"}
+
+logname="combine"
 
 ## derived params : run expected limits?
 if [[ "${use_obs}" == "true" ]]
 then
     combine_extra=""
 else
-    combine_extra="--run=blind"
+    combine_extra="--run=expected"
 fi
 
 ###########################################
@@ -30,7 +33,9 @@ fi
 ###########################################
 
 cp "${inlimitdir}/${base_datacardABCD}"*".txt" "${combdir}"
-cp "${inlimitdir}/${ws_filename}" "${combdir}"
+cp "${ws_outfile_base}_L"*.root "${combdir}"
+cp "scripts/extractResultsABCDSub.sh" "${combdir}"
+cp "scripts/common_variables.sh" "${combdir}"
 
 #####################
 ## Now work there! ##
@@ -45,14 +50,11 @@ eval `scram runtime -sh`
 
 for lambda in 100 150 200 250 300 350 400 500 600
 do
-    for ctau in 0p001 0p1 10 200 400 600 800 1000 1200 10000
-    do
-	sample="GMSB_L${lambda}_CTau${ctau}"
-	echo "Working on ${sample}"
-
-	combine -M AsymptoticLimits "${base_datacardABCD}_${sample}.${inTextExt}" "${combine_extra}" --name "${sample}"
-    done
+    echo "Doing lambda: ${lambda}"
+    ./extractResultsABCDSub.sh "${lambda}" "${combine_extra}" "${logname}" &
 done
+
+wait
 
 ############
 ## rename ##
@@ -72,7 +74,11 @@ eval `scram runtime -sh`
 ## Ship things over to combine directory ##
 ###########################################
 
-cp "${combdir}/${outcombname}"*.root "${outlimitdir}"
+## make out dirs
+fulldir="${topdir}/${disphodir}/${outdir}"
+PrepOutDir "${fulldir}"
+cp "${combdir}/${logname}"*".${outTextExt}" "${fulldir}"
+cp "${combdir}/${outcombname}"*.root "${fulldir}"
 
 ###################
 ## Final message ##

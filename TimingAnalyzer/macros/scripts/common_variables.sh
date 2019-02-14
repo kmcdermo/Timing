@@ -84,7 +84,8 @@ export CR_QCD="${QCD} qcd_${wgtvar}_map"
 export CR_DYLL="${DYLL} dyll_${wgtvar}_map"
 export SR="${Signal} empty"
 
-declare -a inputs=(CR_GJets CR_QCD SR)
+#declare -a inputs=(CR_GJets CR_QCD SR)
+declare -a inputs=(SR)
 
 ## Zee 
 #export Zee="Zee zee_TnP/skim zee_TnP/signals_skim always_true"

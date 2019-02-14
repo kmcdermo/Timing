@@ -15,14 +15,12 @@ is_blind=${2:-"true"}
 ws_filename=${3:-"ws_final.root"}
 savemetadata=${4:-0}
 docleanup=${5:-"true"}
-
-## global config
-signif_dump="significances_dump.${outTextExt}"
-signif_list="significances_final_list.${outTextExt}"
-
-## make tmp files
-> "${signif_dump}"
-> "${signif_list}"
+x=${6-""}
+y=${7-""}
+# x1=${6-""}
+# x2=${7-""}
+# y1=${8-""}
+# y2=${9-""}
 
 ##################################################################################################
 ##                                       Scan outline                                           ##
@@ -47,8 +45,6 @@ signif_list="significances_final_list.${outTextExt}"
 ############
 
 ## config
-xbin_boundaries="${fragdir}/time_boundaries.${inTextExt}"
-ybin_boundaries="${fragdir}/met_boundaries.${inTextExt}"
 outplot2Ddir="plots2D"
 
 ## make tmp misc config
@@ -74,94 +70,49 @@ plot_title="p_{T}^{miss} [GeV] vs Leading Photon Weighted Cluster Time [ns]"
 x_title="Leading Photon Weighted Cluster Time [ns]"
 y_title="p_{T}^{miss} [GeV]"
 
-## loop over x bins
-while IFS='' read -r xbin_boundary || [[ -n "${xbin_boundary}" ]]
+## make tmp config for plotting
+plot="met_${y}_vs_time_${x}_box"
+#plot="met_${y1}_${y2}_vs_time_${x1}_${x2}_box"
+plot_config="${plot}_config.${inTextExt}"
+> "${plot_config}"
+
+## fill tmp plot config
+echo "plot_title=${plot_title}" >> "${plot_config}"
+echo "x_title=${x_title}" >> "${plot_config}"
+echo "x_var=phoweightedtimeLT120_0" >> "${plot_config}"
+echo "x_var_data=+phoweightedtimeLT120SHIFT_0" >> "${plot_config}"
+echo "x_var_sign=+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0" >> "${plot_config}"
+echo "x_bins=VARIABLE -2 ${x} 25" >> "${plot_config}"
+#echo "x_bins=VARIABLE -2 ${x1} ${x2} 25" >> "${plot_config}"
+echo "y_title=${y_title}" >> "${plot_config}"
+echo "y_var=t1pfMETpt" >> "${plot_config}"
+echo "y_bins=VARIABLE 0 ${y} 3000" >> "${plot_config}"
+#echo "y_bins=VARIABLE 0 ${y1} ${y2} 3000" >> "${plot_config}"
+echo "z_title=Events/ns/GeV" >> "${plot_config}"
+echo "blinding=(${x},+Inf,${y},+Inf)" >> "${plot_config}"
+#echo "blinding=(${x2},+Inf,${y2},+Inf)" >> "${plot_config}"
+
+## loop over inputs (in reality, just SR) --> produce plots + significance dump
+for input in "${inputs[@]}"
 do
-    ## loop over y bins
-    while IFS='' read -r ybin_boundary || [[ -n "${ybin_boundary}" ]]
+    echo ${!input} | while read -r label infile insigfile sel varwgtmap
     do
-	## make tmp config for plotting
-	plot="met_${ybin_boundary}_vs_time_${xbin_boundary}_box"
-	plot_config="${plot}_config.${inTextExt}"
-	> "${plot_config}"
+        ## tmp out name
+	outtext="${plot}_${label}"
+	
+	echo "Computing significance for ${outtext}"
+	
+        ## make plot
+	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/empty.${inTextExt}" "${plot_config}" "${misc_config}" "${MainEra}" ${savemetadata} "${outtext}" "${outdir}/${outplot2Ddir}"
 
-	## fill tmp plot config
-	echo "plot_title=${plot_title}" >> "${plot_config}"
-	echo "x_title=${x_title}" >> "${plot_config}"
-	echo "x_var=phoweightedtimeLT120_0" >> "${plot_config}"
-	echo "x_var_data=+phoweightedtimeLT120SHIFT_0" >> "${plot_config}"
-	echo "x_var_sign=+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0" >> "${plot_config}"
-	echo "x_bins=VARIABLE -2 ${xbin_boundary} 25" >> "${plot_config}"
-	echo "y_title=${y_title}" >> "${plot_config}"
-	echo "y_var=t1pfMETpt" >> "${plot_config}"
-	echo "y_bins=VARIABLE 0 ${ybin_boundary} 3000" >> "${plot_config}"
-	echo "z_title=Events/ns/GeV" >> "${plot_config}"
-	echo "blinding=(${xbin_boundary},+Inf,${ybin_boundary},+Inf)" >> "${plot_config}"
-
-	## loop over inputs (in reality, just SR) --> produce plots + significance dump
-	for input in "${inputs[@]}"
-	do
-	    echo ${!input} | while read -r label infile insigfile sel varwgtmap
-	    do
-          	## tmp out name
-		outtext="${plot}_${label}"
-
-		echo "Computing significance for ${outtext}"
-
-        	## make plot
-		./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/empty.${inTextExt}" "${plot_config}" "${misc_config}" "${MainEra}" ${savemetadata} "${outtext}" "${outdir}/${outplot2Ddir}"
-
-		## dump significance
-		./scripts/dumpSignificanceABCD.sh "${outtext}.root" "${xbin_boundary}" "${ybin_boundary}" ${blind_data} "${signif_dump}"
-
-	    done # end read of input
-	done # end loop over input settings
-
-	## delete tmp files
-	if [[ "${docleanup}" == "true" ]]
-	then
-	    rm "${plot_config}"
-	fi
-
-    done < "${ybin_boundaries}" # end loop over y-bins
-done < "${xbin_boundaries}" # end loop over x-bins
-
-############
-## Step 2 ##
-############
-
-## config
-sigdir="significances"
-
-## prepare ABCD file
-./scripts/prepareABCDFile.sh "${signif_dump}" "${signif_list}" ${savemetadata} "${ws_filename}" "${outdir}/${sigdir}"
-
-############
-## Step 3 ##
-############
-
-## config
-signif_outtext="significances"
-signif_config="tmp_signif_config.${inTextExt}"
-> "${signif_config}"
-
-## fill config
-echo "x_title=${x_title}" >> "${signif_config}"
-echo "y_title=${y_title}" >> "${signif_config}"
-echo "xbin_boundaries=${xbin_boundaries}" >> "${signif_config}"
-echo "ybin_boundaries=${ybin_boundaries}" >> "${signif_config}"
-
-## plot significances
-./scripts/plotSignificances.sh "${signif_list}" "${signif_config}" "${signif_outtext}" "${outdir}/${sigdir}"
-
-############
-## Step 4 ##
-############
+	cp "${outtext}.root" "${ws_filename}"
+    done # end read of input
+done # end loop over input settings
 
 ## delete tmp files
 if [[ "${docleanup}" == "true" ]]
 then
-    rm "${misc_config}" "${signif_config}" "${signif_dump}" "${signif_list}"
+    rm "${plot_config}" "${misc_config}"
 fi
 
 ## end message

@@ -3,20 +3,23 @@ jmax 1 number of processes minus 1
 kmax 1 number of nuisance parameters
 ----------------------------------------------------------------------------------------------------------------------------------
 bin                        A               B               C               D  
-observation              BIN_A           BIN_B           BIN_C           BIN_D     
+observation              BIN_A           BIN_B           BIN_C           BIN_D
 ----------------------------------------------------------------------------------------------------------------------------------
-bin                    A       A       B       B       C       C       D       D  
-process               sig     bkg     sig     bkg     sig     bkg     sig     bkg  
-process                0       1       0       1       0       1       0       1    
-rate                 SIG_A     1     SIG_B     1     SIG_C     1     SIG_D     1
+bin                    A       A       B       B       C       C       D       D 
+process               sig     bkg     sig     bkg     sig     bkg     sig     bkg
+process                0       1       0       1       0       1       0       1 
+rate                 SIG_A     1     SIG_B     1     SIG_C     1     SIG_D     1 
 ----------------------------------------------------------------------------------------------------------------------------------
 CMS_lumi      lnN    1.023     -     1.023     -     1.023     -     1.023     -
 ----------------------------------------------------------------------------------------------------------------------------------
-bkgA rateParam A bkg INPUT_FILE:WORK_SPACE  
-bkgA rateParam B bkg INPUT_FILE:WORK_SPACE  
-BovA rateParam B bkg INPUT_FILE:WORK_SPACE
-bkgA rateParam D bkg INPUT_FILE:WORK_SPACE  
-DovA rateParam D bkg INPUT_FILE:WORK_SPACE  
-bkgA rateParam C bkg INPUT_FILE:WORK_SPACE  
-BovA rateParam C bkg INPUT_FILE:WORK_SPACE  
-DovA rateParam C bkg INPUT_FILE:WORK_SPACE  
+bkgA rateParam A bkg INPUT_FILE:WORK_SPACE
+
+bkgA rateParam B bkg INPUT_FILE:WORK_SPACE
+c1   rateParam B bkg INPUT_FILE:WORK_SPACE
+
+bkgA rateParam D bkg INPUT_FILE:WORK_SPACE
+c2   rateParam D bkg INPUT_FILE:WORK_SPACE
+
+bkgA rateParam C bkg INPUT_FILE:WORK_SPACE
+c1   rateParam C bkg INPUT_FILE:WORK_SPACE
+c2   rateParam C bkg INPUT_FILE:WORK_SPACE

@@ -4,7 +4,7 @@
 export combdir="/afs/cern.ch/work/k/kmcdermo/private/dispho/Analysis/combine/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit/working"
 export carddir="cards"
 export base_datacard="datacard"
-export base_datacardABCD="datacardABCD"
+export base_datacardABCD="datacardABCD2x2"
 
 ## config info
 export tmplExt="tmpl"

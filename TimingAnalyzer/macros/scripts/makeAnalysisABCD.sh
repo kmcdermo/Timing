@@ -15,9 +15,15 @@ is_blind=${2:-"true"}
 use_obs=${3:-"false"}
 savemetadata=${4:-0}
 docleanup=${5:-"true"}
+x=${6-""}
+y=${7-""}
+# x1=${6-""}
+# x2=${7-""}
+# y1=${8-""}
+# y2=${9-""}
 
 ## Scan config
-ws_filename="ws_final.root"
+ws_filename="ws_inputs.root"
 
 ## Limit config
 inlimitdir="input"
@@ -32,7 +38,8 @@ mkdir -p "${limitdir}/${inlimitdir}"
 ## Make 2D Input Plots from Significance Scan ##
 ################################################
 
-./scripts/makePlotsFromSigScan.sh "${outdir}" "${is_blind}" "${ws_filename}" ${savemetadata} "${docleanup}"
+./scripts/makePlotsFromSigScan.sh "${outdir}" "${is_blind}" "${ws_filename}" ${savemetadata} "${docleanup}" "${x}" "${y}"
+#./scripts/makePlotsFromSigScan.sh "${outdir}" "${is_blind}" "${ws_filename}" ${savemetadata} "${docleanup}" "${x1}" "${x2}" "${y1}" "${y2}"
 
 ###############################
 ## Copy input into limit dir ##
