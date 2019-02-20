@@ -110,52 +110,6 @@ void predictCorner(TH2F * DataHist, const Int_t i)
   DataHist->SetBinError  (i,i,data_TR_unc);
 }
 
-void predictC(TH2F * DataHist)
-{
-  // C = B*D / A
-  const auto data_A = DataHist->GetBinContent(1,1);
-  const auto data_B = DataHist->GetBinContent(1,2);
-  const auto data_D = DataHist->GetBinContent(2,1);
-
-  // predictions
-  auto data_C = (data_B*data_D)/data_A;
-  auto data_C_unc = data_C*std::sqrt(std::pow(DataHist->GetBinError(1,1)/data_A,2)+
-				     std::pow(DataHist->GetBinError(1,2)/data_B,2)+
-				     std::pow(DataHist->GetBinError(2,1)/data_D,2)
-				     );
-  
-  // ensure no nans
-  setNaN(data_C);
-  setNaN(data_C_unc);
-
-  // set the I bin
-  DataHist->SetBinContent(2,2,data_C);
-  DataHist->SetBinError  (2,2,data_C_unc);
-}
-
-void predictG(TH2F * DataHist)
-{
-  // G = E*I / A
-  const auto data_A = DataHist->GetBinContent(1,1);
-  const auto data_E = DataHist->GetBinContent(1,3);
-  const auto data_I = DataHist->GetBinContent(3,1);
-
-  // predictions
-  auto data_G = (data_E*data_I)/data_A;
-  auto data_G_unc = data_G*std::sqrt(std::pow(DataHist->GetBinError(1,1)/data_A,2)+
-				     std::pow(DataHist->GetBinError(1,3)/data_E,2)+
-				     std::pow(DataHist->GetBinError(3,1)/data_I,2)
-				     );
-  
-  // ensure no nans
-  setNaN(data_G);
-  setNaN(data_G_unc);
-
-  // set the I bin
-  DataHist->SetBinContent(3,3,data_G);
-  DataHist->SetBinError  (3,3,data_G_unc);
-}
-
 void makeWS2x2(const TH2F * DataHist, const TH2F * SignHist, const TString & outfile_name, const TString & ws_name)
 {
   // make file + WS
