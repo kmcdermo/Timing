@@ -2,8 +2,9 @@
 #include "ABCD.cpp+"
 #include "ABCDGenerator.cpp+"
 
-void runABCDGenerator(const Int_t nbinsX, const Int_t nbinsY)
+void runABCDGenerator(const TString & infilename, const TString & bininfoname,
+		      const TString & ratioinfoname, const TString & binratioinfoname)
 {
-  ABCDGenerator Generator(nbinsX,nbinsY);
+  ABCDGenerator Generator(infilename,bininfoname,ratioinfoname,binratioinfoname);
   Generator.ProduceABCDConfig();
 }

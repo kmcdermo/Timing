@@ -10,11 +10,6 @@ export base_datacardABCD="datacardABCD2x2"
 export tmplExt="tmpl"
 export inTextExt="txt"
 
-## auto generated ABCD info
-export bininfo="bininfo.${inTextExt}"
-export ratioinfo="ratioinfo.${inTextExt}"
-export binratioinfo="binratioinfo.${inTextExt}"
-
 ## config dir info
 export limitconfigdir="limit_config"
 

@@ -28,10 +28,13 @@ namespace ABCD
   std::map<Int_t,Int_t> RatioMap; // Ratio of bins name to numerator bin number
   std::map<Int_t,std::vector<Int_t> > BinRatioVecMap; // Global bin number to all ratios modifying it
 
-  // names of config files
-  static const TString BinInfoName = "bininfo.txt";
-  static const TString RatioInfoName = "ratioinfo.txt";
-  static const TString BinRatioInfoName = "binratioinfo.txt";
+  // Setup Functions
+  void SetupBinMap(const TString & binInfoName);
+  void SetupRatioMap(const TString & ratioInfoName);
+  void SetupBinRatioVecMap(const TString & binRatioInfoName);
+
+  // Dump ABCD Maps
+  void DumpInfo();
 };
 
 #endif

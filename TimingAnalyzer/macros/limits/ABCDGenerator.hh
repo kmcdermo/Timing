@@ -19,7 +19,12 @@
 //                                                                   //
 ///////////////////////////////////////////////////////////////////////
 
-#include "ABCD.cpp+"
+#include "ABCD.hh"
+#include "../Common.hh"
+
+#include "TString.h"
+#include "TFile.h"
+#include "TH2F.h"
 
 #include <vector>
 #include <fstream>
@@ -27,21 +32,32 @@
 class ABCDGenerator
 {
 public:
-  ABCDGenerator(const Int_t nbinsX, const Int_t nbinsY);
-  ~ABCDGenerator() {}
 
+  // internal calls
+  ABCDGenerator(const TString & infilename, const TString & bininfoname,
+		const TString & ratioinfoname, const TString & binratioinfoname);
+  ~ABCDGenerator() {}
+  
+  // configuration
+  void SetupCommon();
+  
   // main call
   void ProduceABCDConfig();
-
+  
   // calls for making config
+  void GetBinningScheme();
   void MakeMaxGrid();
   void PruneGrid();
   void WriteConfigs();
 
 private:
-  const Int_t fNbinsX;
-  const Int_t fNbinsY;
-  
+  const TString fInFileName;
+  const TString fBinInfoName;
+  const TString fRatioInfoName;
+  const TString fBinRatioInfoName;
+
+  Int_t fNbinsX;
+  Int_t fNbinsY;
   Int_t fNMaxBins;
 };
 

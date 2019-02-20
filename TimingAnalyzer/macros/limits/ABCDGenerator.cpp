@@ -1,14 +1,21 @@
 #include  "ABCDGenerator.hh"
 
-ABCDGenerator::ABCDGenerator(const Int_t nbinsX, const Int_t nbinsY)
-  : fNbinsX(nbinsX), fNbinsY(nbinsY)
+ABCDGenerator::ABCDGenerator(const TString & infilename, const TString & bininfoname,
+			     const TString & ratioinfoname, const TString & binratioinfoname)
+  : fInFileName(infilename), fBinInfoName(bininfoname),
+    fRatioInfoName(ratioinfoname), fBinRatioInfoName(binratioinfoname)
 {
-  // Set max range of NxN
-  fNMaxBins = std::max(fNbinsX,fNbinsY);
+  std::cout << "Initializing ABCDGenerator..." << std::endl;
+
+  // Common setup
+  ABCDGenerator::SetupCommon();
 }
 
 void ABCDGenerator::ProduceABCDConfig()
 {
+  // Get Binning scheme
+  ABCDGenerator::GetBinningScheme();
+  
   // produce maps for maximum extent in grid of NxN
   ABCDGenerator::MakeMaxGrid();
   
@@ -19,8 +26,34 @@ void ABCDGenerator::ProduceABCDConfig()
   ABCDGenerator::WriteConfigs();
 }
 
+void ABCDGenerator::GetBinningScheme()
+{
+  std::cout << "Getting binning from data hist..." << std::endl;
+
+  // get file + hist
+  auto infile = TFile::Open(fInFileName.Data());
+  Common::CheckValidFile(infile,fInFileName);
+  infile->cd();
+  
+  const TString inhistname = Common::HistNameMap["Data"]+"_Plotted";
+  auto inhist = (TH2F*)infile->Get(inhistname.Data());
+  Common::CheckValidHist(inhist,inhistname,fInFileName);
+
+  fNbinsX = hist->GetXaxis()->GetNbins();
+  fNbinsY = hist->GetYaxis()->GetNbins();
+
+  // Set max range of NxN
+  fNMaxBins = std::max(fNbinsX,fNbinsY);
+
+  // delete tmps
+  delete inhist;
+  delete infile;
+}
+
 void ABCDGenerator::MakeMaxGrid()
 {
+  std::cout << "Making generic maximally sized grid..." << std::endl;
+
   // temps needed for filling maps
   std::vector<Int_t> RatioXVec; // Ratios along x-axis
   std::vector<Int_t> RatioYVec; // Ratios along y-axis
@@ -81,6 +114,8 @@ void ABCDGenerator::MakeMaxGrid()
 
 void ABCDGenerator::PruneGrid()
 {
+  std::cout << "Pruning grid down to requested size..." << std::endl;
+
   // tmp vector ot bins beyond extent
   std::vector<Int_t> BinsToRemove;
   
@@ -125,19 +160,21 @@ void ABCDGenerator::PruneGrid()
 
 void ABCDGenerator::WriteConfigs()
 {
-  std::ofstream outbins(ABCD::BinInfoName.Data(),std::ios::trunc);
+  std::cout << "Writing ABCD configuration to text files..." << std::endl;
+
+  std::ofstream outbins(fBinInfoName.Data(),std::ios::trunc);
   for (const auto & BinPair : ABCD::BinMap)
   {
     outbins << BinPair.first << " " << BinPair.second.ibinX << " " << BinPair.second.ibinY << std::endl;
   }
 
-  std::ofstream outratios(ABCD::RatioInfoName.Data(),std::ios::trunc);
+  std::ofstream outratios(fRatioInfoName.Data(),std::ios::trunc);
   for (const auto & RatioPair : ABCD::RatioMap)
   {
     outratios << RatioPair.first << " " << RatioPair.second << std::endl;
   }
 
-  std::ofstream outbinratios(ABCD::BinRatioInfoName.Data(),std::ios::trunc);
+  std::ofstream outbinratios(fBinRatioInfoName.Data(),std::ios::trunc);
   for (const auto & BinRatioVecPair : ABCD::BinRatioVecMap)
   {
     outbinratios << BinRatioVecPair.first << " ";
@@ -147,4 +184,11 @@ void ABCDGenerator::WriteConfigs()
     }
     outbinratios << std::endl;
   }
+}
+
+void ABCDGenerator::SetupCommon()
+{
+  Common::SetupSamples();
+  Common::SetupGroups();
+  Common::SetupHistNames();
 }
