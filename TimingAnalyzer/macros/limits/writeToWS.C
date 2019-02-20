@@ -8,8 +8,9 @@
 // c++ includes
 #include <iostream>
 
+void setDFromTemplate(TH2F * DataHist);
 void predictC(TH2F * DataHist);
-void predictI(TH2F * DataHist);
+void predictG(TH2F * DataHist);
 void makeWS2x2(const TH2F * DataHist, const TH2F * SignHist, const TString & outfile_name, const TString & ws_name);
 void makeWS3x3(const TH2F * DataHist, const TH2F * SignHist, const TString & outfile_name, const TString & ws_name);
 void fillLog2x2(const TH2F * hist, const TString & label, std::ofstream & outfile);
@@ -40,6 +41,7 @@ void writeToWS(const TString & inlimitdir, const TString & ws_filename, const TS
   Common::CheckValidHist(SignHist,signhistname,infilename);
 
   // fill data + Make WS
+  setDFromTemplate(DataHist);
   predictC(DataHist);
   makeWS2x2(DataHist,SignHist,outfile_name,ws_name);
   //  predictI(DataHist);
@@ -61,6 +63,51 @@ void writeToWS(const TString & inlimitdir, const TString & ws_filename, const TS
 void setNaN(Double_t & c)
 {
   if (std::isnan(c)) c = 0.0;
+}
+
+void setDFromTemplate(TH2F * DataHist)
+{
+  // get input file
+  const TString tmplfilename = Form("%s/%s/%s/met_vs_time_templates.root",Common::eosPreFix.Data(),Common::eosDir.Data(),Common::calibDir.Data());
+  auto tmplfile = TFile::Open(tmplfilename.Data());
+  Common::CheckValidFile(tmplfile,tmplfilename);
+  
+  // get template hist
+  const TString tmplhistname = "Data_Hist_Plotted_Time_for_MET_0_to_200";
+  auto TmplHist = (TH2F*)tmplfile->Get(tmplhistname.Data());
+  Common::CheckValidHist(TmplHist,tmplhistname,tmplfilename);
+
+  // integral of A : include left edge, do not include right edge
+  const auto frac_A = TmplHist->Integral(TmplHist->GetXaxis()->FindBin(DataHist->GetXaxis()->GetBinLowEdge(1)),
+					 TmplHist->GetXaxis()->FindBin(DataHist->GetXaxis()->GetBinUpEdge (1))-1);
+
+  // set datahist
+  const auto data_D = DataHist->GetBinContent(1,1)*((1.0-frac_A)/frac_A);
+  DataHist->SetBinContent(2,1,data_D);
+  DataHist->SetBinError  (2,1,std::sqrt(data_D));
+}
+
+void predictCorner(TH2F * DataHist, const Int_t i)
+{
+  // TR = TL * BR / BL (T = Top, B = Bottom, L = Left, R = Right)
+  const auto data_BL = DataHist->GetBinContent(1,1);
+  const auto data_TL = DataHist->GetBinContent(1,i);
+  const auto data_BR = DataHist->GetBinContent(i,1);
+
+  // predictions
+  auto data_TR = (data_TL*data_BR)/data_BL;
+  auto data_TR_unc = data_TR*std::sqrt(std::pow(DataHist->GetBinError(1,1)/data_BL,2)+
+				       std::pow(DataHist->GetBinError(1,i)/data_TL,2)+
+				       std::pow(DataHist->GetBinError(i,1)/data_BR,2)
+				       );
+  
+  // ensure no nans
+  setNaN(data_TR);
+  setNaN(data_TR_unc);
+
+  // set the I bin
+  DataHist->SetBinContent(i,i,data_TR);
+  DataHist->SetBinError  (i,i,data_TR_unc);
 }
 
 void predictC(TH2F * DataHist)
@@ -86,27 +133,27 @@ void predictC(TH2F * DataHist)
   DataHist->SetBinError  (2,2,data_C_unc);
 }
 
-void predictI(TH2F * DataHist)
+void predictG(TH2F * DataHist)
 {
-  // I = E*G / A
+  // G = E*I / A
   const auto data_A = DataHist->GetBinContent(1,1);
   const auto data_E = DataHist->GetBinContent(1,3);
-  const auto data_G = DataHist->GetBinContent(3,1);
+  const auto data_I = DataHist->GetBinContent(3,1);
 
   // predictions
-  auto data_I = (data_E*data_G)/data_A;
-  auto data_I_unc = data_I*std::sqrt(std::pow(DataHist->GetBinError(1,1)/data_A,2)+
+  auto data_G = (data_E*data_I)/data_A;
+  auto data_G_unc = data_G*std::sqrt(std::pow(DataHist->GetBinError(1,1)/data_A,2)+
 				     std::pow(DataHist->GetBinError(1,3)/data_E,2)+
-				     std::pow(DataHist->GetBinError(3,1)/data_G,2)
+				     std::pow(DataHist->GetBinError(3,1)/data_I,2)
 				     );
   
   // ensure no nans
-  setNaN(data_I);
-  setNaN(data_I_unc);
+  setNaN(data_G);
+  setNaN(data_G_unc);
 
   // set the I bin
-  DataHist->SetBinContent(3,3,data_I);
-  DataHist->SetBinError  (3,3,data_I_unc);
+  DataHist->SetBinContent(3,3,data_G);
+  DataHist->SetBinError  (3,3,data_G_unc);
 }
 
 void makeWS2x2(const TH2F * DataHist, const TH2F * SignHist, const TString & outfile_name, const TString & ws_name)
@@ -165,14 +212,14 @@ void makeWS3x3(const TH2F * DataHist, const TH2F * SignHist, const TString & out
   const auto bkgd_E = std::max(DataHist->GetBinContent(1,3) - SignHist->GetBinContent(1,3),0.0);
 
   const auto bkgd_D = std::max(DataHist->GetBinContent(2,1) - SignHist->GetBinContent(2,1),0.0);
-  const auto bkgd_G = std::max(DataHist->GetBinContent(3,1) - SignHist->GetBinContent(3,1),0.0);
+  const auto bkgd_I = std::max(DataHist->GetBinContent(3,1) - SignHist->GetBinContent(3,1),0.0);
 
   // set params
   auto in_bkgA = bkgd_A;
   auto in_c1 = bkgd_B / bkgd_A;
   auto in_c2 = bkgd_D / bkgd_A;
   auto in_c3 = bkgd_E / bkgd_B;
-  auto in_c4 = bkgd_G / bkgd_D;
+  auto in_c4 = bkgd_I / bkgd_D;
 
   setNaN(in_c1);
   setNaN(in_c2);
@@ -219,9 +266,9 @@ void fillLog3x3(const TH2F * hist, const TString & label, std::ofstream & outfil
   outfile << Form("%s_D",label.Data()) << " " << hist->GetBinContent(2,1) << std::endl;
   outfile << Form("%s_E",label.Data()) << " " << hist->GetBinContent(1,3) << std::endl;
   outfile << Form("%s_F",label.Data()) << " " << hist->GetBinContent(2,3) << std::endl;
-  outfile << Form("%s_G",label.Data()) << " " << hist->GetBinContent(3,1) << std::endl;
+  outfile << Form("%s_G",label.Data()) << " " << hist->GetBinContent(3,3) << std::endl;
   outfile << Form("%s_H",label.Data()) << " " << hist->GetBinContent(3,2) << std::endl;
-  outfile << Form("%s_I",label.Data()) << " " << hist->GetBinContent(3,3) << std::endl;
+  outfile << Form("%s_I",label.Data()) << " " << hist->GetBinContent(3,1) << std::endl;
   outfile << std::endl;
 }
 
