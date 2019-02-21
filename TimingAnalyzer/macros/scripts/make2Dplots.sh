@@ -12,13 +12,13 @@ misc="empty"
 ## main loop
 for input in "${inputs[@]}"
 do 
-    echo ${!input} | while read -r label infile insigfile sel varwgtmap
+    echo ${!input} | while read -r label infile insigfile sel
     do
 	## make outfile text
 	outfile="${plot}_${label}"
 
 	## run script
-	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" ${savemetadata} "${outfile}" "${outdir}/${label}"
+	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" ${savemetadata} "${outfile}" "${outdir}/${label}"
     done
 done
 

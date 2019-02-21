@@ -189,7 +189,6 @@ namespace Common
   extern std::map<TString,TString> XVarMap;
   extern std::map<TString,TString> YVarMap;
   extern std::map<TString,TString> CutWgtMap;
-  extern std::map<TString,TString> VarWgtMap;
   extern std::vector<std::pair<TString,TString> > CutFlowPairVec;
 
   // special name for Bkgd Hist
@@ -224,7 +223,6 @@ namespace Common
   void SetupCuts(const TString & cutconfig);
   void SetupCutFlow(const TString & cutflowconfig);
   void SetupEraCuts(const TString & era);
-  void SetupVarWgts(const TString & varwgtconfig);
   void SetupWeights();
   void SetupEraWeights(const TString & era);
   void RemoveGroup(const SampleGroup isGroup);

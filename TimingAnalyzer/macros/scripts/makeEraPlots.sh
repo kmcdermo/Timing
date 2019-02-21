@@ -12,8 +12,7 @@ source scripts/common_variables.sh
 ## command line inputs
 outdir=${1:-"ntuples_v4/checks_v4/era_plots"}
 plot=${2:-"met_zoom"}
-usewgts=${3:-"true"}
-savemetadata=${4:-0}
+savemetadata=${3:-0}
 
 ################
 ## Run Script ##
@@ -22,15 +21,8 @@ savemetadata=${4:-0}
 ## loop over all inputs
 for input in "${inputs[@]}"
 do 
-    echo ${!input} | while read -r label infile insigfile sel varwgtmap
-    do
-	###########################
-	## Check For Use VarWgts ##
-	###########################
-	if [[ "${usewgts}" == "false" ]]; then
-	    varwgtmap="empty"
-	fi
-	
+    echo ${!input} | while read -r label infile insigfile sel
+    do	
 	##############################
 	## Define Base Outfile Text ##
 	##############################
@@ -56,7 +48,7 @@ do
 	    misc=$( GetMisc ${input} ${plot} )
 
 	    ## make plot for each era
-	    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${era}" "${outdir}/${label}"
+	    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${plotconfigdir}/${plot}.${inTextExt}" "${miscconfigdir}/${misc}.${inTextExt}" "${outfile}" "${era}" "${outdir}/${label}"
 
 	    ## record the era in config
 	    echo -n " ${era}" >> "${eraplotconfig}"

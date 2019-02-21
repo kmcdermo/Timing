@@ -66,12 +66,12 @@ echo "z_title=Events/ns/GeV" >> "${plot_config}"
 echo "blinding=(${xblind},+Inf,${yblind},+Inf)" >> "${plot_config}"
 
 ## use only SR
-echo "${SR}" | while read -r label infile insigfile sel varwgtmap
+echo "${SR}" | while read -r label infile insigfile sel
 do    
     ## make plot
     echo "Making 2D plot with ${label}"
 
-    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot_config}" "${misc_config}" "${MainEra}" ${save_meta_data} "${outfiletext}" "${outdir}/${outplot2Ddir}"
+    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${plot_config}" "${misc_config}" "${MainEra}" ${save_meta_data} "${outfiletext}" "${outdir}/${outplot2Ddir}"
 done
 
 ## delete tmp files

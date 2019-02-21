@@ -66,7 +66,7 @@ export fitinfo="Gaus1core 2 2"
 export base_adjust_var="phoE"
 export adjust_var="${base_adjust_var}_0"
 
-## CR + SR info: label skim signal_skim additional_cuts (var wgt map)
+## CR + SR info: label skim signal_skim additional_cuts
 export CR_GJets="cr_gjets_DEG v3/orig_2phosCR/gjets v3/orig_2phosCR/signals_gjets cuts_v1/lepveto"
 export CR_QCD="cr_qcd_DEG v3/orig_2phosCR/qcd v3/orig_2phosCR/signals_qcd cuts_v1/lepveto"
 export CR_DYLL="cr_dyll_DEG v3/orig_2phosCR/dyll v3/orig_2phosCR/signals_dyll always_true"

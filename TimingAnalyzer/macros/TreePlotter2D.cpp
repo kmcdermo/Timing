@@ -1,11 +1,10 @@
 #include "TreePlotter2D.hh"
 
 TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
-			     const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
-			     const TString & era, const Bool_t savemetadata, const TString & outfiletext) 
+			     const TString & plotconfig, const TString & miscconfig, const TString & era,
+			     const Bool_t savemetadata, const TString & outfiletext) 
   : fInFileName(infilename), fInSignalFileName(insignalfilename), fCutConfig(cutconfig),
-    fVarWgtMapConfig(varwgtmapconfig), fPlotConfig(plotconfig), fMiscConfig(miscconfig), 
-    fEra(era), fOutFileText(outfiletext)
+    fPlotConfig(plotconfig), fMiscConfig(miscconfig), fEra(era), fOutFileText(outfiletext)
 {
   std::cout << "Initializing..." << std::endl;
 
@@ -223,9 +222,6 @@ void TreePlotter2D::MakeConfigPave()
   // dump plot cut config first
   Common::AddTextFromInputConfig(fConfigPave,"TreePlotter2D Cut Config",fCutConfig);
 
-  // dump extra weights 
-  Common::AddTextFromInputConfig(fConfigPave,"VarWgtMap Config",fVarWgtMapConfig);
-
   // dump plot config
   Common::AddTextFromInputConfig(fConfigPave,"Plot Config",fPlotConfig);
 
@@ -304,7 +300,6 @@ void TreePlotter2D::SetupCommon()
   Common::SetupHistNames();
   Common::SetupCuts(fCutConfig);
   Common::SetupEraCuts(fEra);
-  Common::SetupVarWgts(fVarWgtMapConfig);
   Common::SetupWeights();
   Common::SetupEraWeights(fEra);
 }

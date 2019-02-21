@@ -28,8 +28,8 @@ class TreePlotter2D
 public:
   TreePlotter2D() {}
   TreePlotter2D(const TString & infilename, const TString & insignalfilename, const TString & cutconfig,
-		const TString & varwgtmapconfig, const TString & plotconfig, const TString & miscconfig,
-		const TString & era, const Bool_t savemetadata, const TString & outfiletext);
+		const TString & plotconfig, const TString & miscconfig, const TString & era,
+		const Bool_t savemetadata, const TString & outfiletext);
   ~TreePlotter2D() {}  
 
   // Initialize
@@ -61,7 +61,6 @@ private:
   const TString fInFileName;
   const TString fInSignalFileName;
   const TString fCutConfig;
-  const TString fVarWgtMapConfig;
   const TString fPlotConfig;
   const TString fMiscConfig;
   const TString fEra;

@@ -118,7 +118,6 @@ namespace Common
   std::map<TString,TString> XVarMap;
   std::map<TString,TString> YVarMap;
   std::map<TString,TString> CutWgtMap;
-  std::map<TString,TString> VarWgtMap;
   std::vector<std::pair<TString,TString> > CutFlowPairVec;
 
   void SetupPrimaryDataset(const TString & pdname)
@@ -737,18 +736,6 @@ namespace Common
     }  
   }
 
-  void SetupVarWgts(const TString & varwgtmapconfig)
-  {
-    std::cout << "Reading varwgtmap config..." << std::endl;
-    
-    std::ifstream infile(Form("%s",varwgtmapconfig.Data()),std::ios::in);
-    TString sample, varwgt;
-    while (infile >> sample >> varwgt)
-    {
-      Common::VarWgtMap[sample] += Form(" * (%s)",varwgt.Data());
-    }
-  }
-
   void SetupWeights()
   {
     // first encapsulate cut string
@@ -770,15 +757,6 @@ namespace Common
 	cutwgt += " * (evtwgt * puwgt)";
       }
     }  
-
-    // lastly, multiply any other weights from varwgt calculations
-    for (const auto & VarWgtPair : Common::VarWgtMap)
-    {
-      const auto & sample = VarWgtPair.first;
-      const auto & varwgt = VarWgtPair.second;
-      
-      Common::CutWgtMap[sample] += Form("%s",varwgt.Data());
-    }
   }
 
   void SetupEraWeights(const TString & era)

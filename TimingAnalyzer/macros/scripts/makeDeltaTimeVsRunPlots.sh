@@ -218,7 +218,7 @@ do
     ## Loop over inputs: Zee only ##
     ################################
     for input in "${inputs[@]}"
-    do echo ${!input} | while read -r label infile insigfile sel varwgtmap
+    do echo ${!input} | while read -r label infile insigfile sel
 	do
             ## outfile names
 	    outdir="${outdirbase}/${label}/${diphodir}/${eta}/${var}"
@@ -229,7 +229,7 @@ do
 	    timefile="timefit"
 
 	    ## run 2D plotter
-	    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" ${savemetadata} "${outfile2D}" "${outdir}"
+	    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${MainEra}" ${savemetadata} "${outfile2D}" "${outdir}"
 
 	    ## run fitter, getting 2D plots from before
 	    ./scripts/runTimeVsRunFitter.sh "${outfile2D}.root" "${plot2D}" "${timefit_config}" ${savemetadata} "${outfile}_${timefile}" "${outdir}"

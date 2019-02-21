@@ -22,7 +22,7 @@ echo "EE_Full=/eos/cms/store/group/phys_exotica/displacedPhotons/nTuples/2017/an
 
 ## launch time adjuster, over each input selection
 for input in "${inputs[@]}"
-do echo ${!input} | while read -r label infile insigfile sel varwgtmap
+do echo ${!input} | while read -r label infile insigfile sel
     do
   	echo "Running time adjuster for computing shift corrections for: ${label}" 
    	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" "${base_adjust_var}" "${base_time_var}" 1 0 ${savemetadata}
@@ -42,7 +42,7 @@ echo "EE_Full=/eos/cms/store/group/phys_exotica/displacedPhotons/nTuples/2017/an
 
 ## launch time adjuster, over each input selection
 for input in "${inputs[@]}"
-do echo ${!input} | while read -r label infile insigfile sel varwgtmap
+do echo ${!input} | while read -r label infile insigfile sel
     do
   	echo "Running time adjuster for computing smear corrections for: ${label}" 
    	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" "${base_adjust_var}" "${base_time_var}" 0 1 ${savemetadata}

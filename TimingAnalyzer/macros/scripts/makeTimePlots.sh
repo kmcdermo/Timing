@@ -305,14 +305,14 @@ do echo ${!pho} | while read -r index pho_label
 		    ## loop over inputs: Zee only ##
 		    ################################
 		    for input in "${inputs[@]}"
-		    do echo ${!input} | while read -r label infile insigfile sel varwgtmap
+		    do echo ${!input} | while read -r label infile insigfile sel
 			do
                  	    ## outfile names
 			    outdir="${outdirbase}/${label}/${pho}/${eta}/${var}"
 			    outfile="${x_var}_${label}_${eta}_${era}"
 			    
 			    ## run 1D plotter
-			    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" ${savemetadata} "${outfile}" "${outdir}"
+			    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" ${savemetadata} "${outfile}" "${outdir}"
 
 			    ## run 2D plotter, passing 2D plots to make fits for all vars except vs time
 			    if [[ "${var}" != *"time"* ]]
@@ -322,7 +322,7 @@ do echo ${!pho} | while read -r index pho_label
 				timefile="timefit"
 
 				## run 2D plotter
-				./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${varwgtconfigdir}/${varwgtmap}.${inTextExt}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" ${savemetadata} "${outfile2D}" "${outdir}"
+				./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" ${savemetadata} "${outfile2D}" "${outdir}"
 
 				## run fitter, getting 2D plots from before
 				./scripts/runTimeFitter.sh "${outfile2D}.root" "${plot2D}" "${misc_fit}" "${timefit_config}" "${era}" ${savemetadata} "${outfile}_${timefile}" "${outdir}"
