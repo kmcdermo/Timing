@@ -40,12 +40,12 @@ public:
   
   // configuration
   void SetupCommon();
+  void SetupBinningScheme();
   
   // main call
   void ProduceABCDConfig();
   
   // calls for making config
-  void GetBinningScheme();
   void MakeMaxGrid();
   void PruneGrid();
   void WriteConfigs();

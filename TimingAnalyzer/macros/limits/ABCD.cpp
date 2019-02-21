@@ -2,7 +2,23 @@
 
 namespace ABCD
 {
+  Int_t nbinsX;
+  Int_t nbinsY;
+  Int_t nMaxBins;
+  Int_t nbinsXY;
+  void SetupNBins(const TH2F * hist)
+  {
+    ABCD::nbinsX = hist->GetXaxis()->GetNbins();
+    ABCD::nbinsY = hist->GetYaxis()->GetNbins();
+    
+    // Set max range of NxN
+    ABCD::nMaxBins = std::max(nbinsX,nbinsY);
 
+    // Set total nBins
+    ABCD::nbinsXY = ABCD::nbinsX*ABCD::nbinsY;
+  }
+
+  std::map<Int_t,BinXY> BinMap;
   void SetupBinMap(const TString & binInfoName)
   {
     std::ifstream inbins(binInfoName.Data(),std::ios::in);
@@ -14,6 +30,7 @@ namespace ABCD
     }
   }
 
+  std::map<Int_t,Int_t> RatioMap;
   void SetupRatioMap(const TString & ratioInfoName)
   {
     std::ifstream inratios(ratioInfoName.Data(),std::ios::in);
@@ -25,6 +42,7 @@ namespace ABCD
     }
   }
 
+  std::map<Int_t,std::vector<Int_t> > BinRatioVecMap;
   void SetupBinRatioVecMap(const TString & binRatioInfoName)
   {
     std::ifstream inbinratios(binRatioInfoName.Data(),std::ios::in);

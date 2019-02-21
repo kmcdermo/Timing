@@ -9,14 +9,15 @@ rm *.d
 rm *.pcm
 
 ## delete local outputs
+rm *.${outTextExt}
 rm *.root
-rm *.png
-rm *.pdf
-rm *.eps
-rm *.txt
+for ext in "${exts[@]}"
+do
+    rm *.${ext}
+done
 
 ## clean-up combine info
-rm ${combdir}/*.txt ${combdir}/*.root
+rm "${combdir}/"*".${inTextExt}" "${combdir}/"*".root"
 
 ## print out message
 this_dir=$( pwd )

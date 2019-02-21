@@ -7,15 +7,13 @@ ABCDGenerator::ABCDGenerator(const TString & infilename, const TString & bininfo
 {
   std::cout << "Initializing ABCDGenerator..." << std::endl;
 
-  // Common setup
+  // Setup
   ABCDGenerator::SetupCommon();
+  ABCDGenerator::SetupBinningScheme();
 }
 
 void ABCDGenerator::ProduceABCDConfig()
 {
-  // Get Binning scheme
-  ABCDGenerator::GetBinningScheme();
-  
   // produce maps for maximum extent in grid of NxN
   ABCDGenerator::MakeMaxGrid();
   
@@ -24,30 +22,6 @@ void ABCDGenerator::ProduceABCDConfig()
 
   // write out configs
   ABCDGenerator::WriteConfigs();
-}
-
-void ABCDGenerator::GetBinningScheme()
-{
-  std::cout << "Getting binning from data hist..." << std::endl;
-
-  // get file + hist
-  auto infile = TFile::Open(fInFileName.Data());
-  Common::CheckValidFile(infile,fInFileName);
-  infile->cd();
-  
-  const TString inhistname = Common::HistNameMap["Data"]+"_Plotted";
-  auto inhist = (TH2F*)infile->Get(inhistname.Data());
-  Common::CheckValidHist(inhist,inhistname,fInFileName);
-
-  fNbinsX = hist->GetXaxis()->GetNbins();
-  fNbinsY = hist->GetYaxis()->GetNbins();
-
-  // Set max range of NxN
-  fNMaxBins = std::max(fNbinsX,fNbinsY);
-
-  // delete tmps
-  delete inhist;
-  delete infile;
 }
 
 void ABCDGenerator::MakeMaxGrid()
@@ -63,10 +37,10 @@ void ABCDGenerator::MakeMaxGrid()
   auto i_X = 0;
 
   // loop over NxN max grid (where N is the larger of nbinsX and nbinsY), setting global bin number and ratios
-  for (auto j = 1; j <= fNMaxBins; j++)
+  for (auto j = 1; j <= ABCD::nMaxBins; j++)
   {
     // increment max x-extent for given y-extent
-    if (i_X != fNMaxBins) i_X++;
+    if (i_X != ABCD::nMaxBins) i_X++;
     
     // increment bins to the right first
     for (auto i = 1; i < i_X; i++)
@@ -122,8 +96,8 @@ void ABCDGenerator::PruneGrid()
   // store which bins to drop
   for (const auto & BinPair : ABCD::BinMap)
   {
-    if (BinPair.second.ibinX > fNbinsX) BinsToRemove.emplace_back(BinPair.first);
-    if (BinPair.second.ibinY > fNbinsY) BinsToRemove.emplace_back(BinPair.first);
+    if (BinPair.second.ibinX > ABCD::nbinsX) BinsToRemove.emplace_back(BinPair.first);
+    if (BinPair.second.ibinY > ABCD::nbinsY) BinsToRemove.emplace_back(BinPair.first);
   }
 
   // now start erasing from maps by key
@@ -188,7 +162,30 @@ void ABCDGenerator::WriteConfigs()
 
 void ABCDGenerator::SetupCommon()
 {
+  std::cout << "Setup Common..." << std::endl;
+
   Common::SetupSamples();
   Common::SetupGroups();
   Common::SetupHistNames();
+}
+
+void ABCDGenerator::SetupBinningScheme()
+{
+  std::cout << "Getting binning from data hist..." << std::endl;
+
+  // get file + hist
+  auto infile = TFile::Open(fInFileName.Data());
+  Common::CheckValidFile(infile,fInFileName);
+  infile->cd();
+  
+  const TString inhistname = Common::HistNameMap["Data"]+"_Plotted";
+  auto inhist = (TH2F*)infile->Get(inhistname.Data());
+  Common::CheckValidHist(inhist,inhistname,fInFileName);
+
+  // set the values in ABCD
+  ABCD::SetupNBins(inhist);
+
+  // delete tmps
+  delete inhist;
+  delete infile;
 }

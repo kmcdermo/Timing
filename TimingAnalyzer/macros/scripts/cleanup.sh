@@ -15,9 +15,10 @@ rm *.pcm
 ## delete local outputs
 rm *.${outTextExt}
 rm *.root
-rm *.png
-rm *.pdf
-rm *.eps
+for ext in "${exts[@]}"
+do
+    rm *.${ext}
+done
 
 ## print out message
 this_dir=$( pwd )

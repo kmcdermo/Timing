@@ -21,4 +21,4 @@ PrepOutDir "${fulldir}"
 cp "${bininfoname}" "${ratioinfoname}" "${binratioinfoname}" "${fulldir}"
 
 ## Final message
-echo "Finished RunningLimits1D"
+echo "Finished GeneratingABCD"

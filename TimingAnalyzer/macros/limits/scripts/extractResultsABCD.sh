@@ -12,12 +12,15 @@ source scripts/common_variables.sh
 
 ## i/o params
 inlimitdir=${1:-"input"}
-ws_outfile_base=${2:-"ws"}
-use_obs=${3:-"false"}
-outcombname=${4:-"AsymLim"}
-outlimitdir=${5:-"output"}
-outdir=${6:-"limits"}
+wsfilename=${2:-"ws_final.root"}
+datacardname=${3:-"datacardABCD"}
+outdir=${4:-"limits"}
+outcombname=${5:-"AsymLim"}
+outlimitdir=${6:-"output"}
+use_obs=${7:-"false"}
+do_cleanup=${8:-"true"}
 
+## other global config
 logname="combine"
 
 ## derived params : run expected limits?
@@ -32,8 +35,8 @@ fi
 ## Ship things over to combine directory ##
 ###########################################
 
-cp "${inlimitdir}/${base_datacardABCD}"*".txt" "${combdir}"
-cp "${ws_outfile_base}_L"*.root "${combdir}"
+cp "${inlimitdir}/${datacardname}"*".${inTextExt}" "${combdir}"
+cp "${inlimitdir}/${wsfilename}" "${combdir}"
 cp "scripts/extractResultsABCDSub.sh" "${combdir}"
 cp "scripts/common_variables.sh" "${combdir}"
 
@@ -50,18 +53,29 @@ eval `scram runtime -sh`
 
 for lambda in 100 150 200 250 300 350 400 500 600
 do
-    echo "Doing lambda: ${lambda}"
-    ./extractResultsABCDSub.sh "${lambda}" "${combine_extra}" "${logname}" &
+    echo "Extracting results for lambda: ${lambda}"
+    ./extractResultsABCDSub.sh "${lambda}" "${datacardname}" "${combine_extra}" "${logname}" &
 done
 
 wait
 
-############
-## rename ##
-############
+###########################
+## Rename Combine Output ##
+###########################
 
-rename "higgsCombine" "${outcombname}" *.root
-rename ".AsymptoticLimits.mH120" "" *.root
+rename "higgsCombine" "${outcombname}" *".root"
+rename ".AsymptoticLimits.mH120" "" *".root"
+
+###########################
+## Clean Up If Requested ##
+###########################
+
+if [[ "${do_cleanup}" == "true" ]]
+then
+    echo "Cleaning up copied scripts"
+    rm "extractResultsABCDSub.sh"
+    rm "common_variables.sh"
+fi
 
 ################
 ## Move back! ##
@@ -78,7 +92,7 @@ eval `scram runtime -sh`
 fulldir="${topdir}/${disphodir}/${outdir}"
 PrepOutDir "${fulldir}"
 cp "${combdir}/${logname}"*".${outTextExt}" "${fulldir}"
-cp "${combdir}/${outcombname}"*.root "${fulldir}"
+cp "${combdir}/${outcombname}"*".root" "${fulldir}"
 
 ###################
 ## Final message ##
