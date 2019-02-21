@@ -1,2 +1,0 @@
-GJets t1pfMETsumEt_wgt
-Data t1pfMETsumEt_wgt

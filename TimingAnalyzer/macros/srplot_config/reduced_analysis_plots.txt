@@ -1,8 +1,0 @@
-phopt_0_full
-phopt_0_zoom
-
-met_full
-met_zoom
-
-phoweightedtimeLT120_0
-phoweightedtimeLT120_0_zoom

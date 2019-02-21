@@ -1,5 +1,0 @@
-CR_GJets_in=met_control_gjets_DoubleEG.root
-CR_QCD_in=met_control_qcd_DoubleEG.root
-SR_in=met_signal_SinglePhoton.root
-
-plot_config=plot_config/met.txt

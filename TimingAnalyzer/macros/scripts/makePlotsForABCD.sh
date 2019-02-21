@@ -3,6 +3,7 @@
 ##################
 ## Source First ##
 ##################
+
 source scripts/common_variables.sh
 
 ###################

@@ -10,48 +10,44 @@ export standardplotlist="standard_plots"
 export reducedplotlist="reduced_analysis_plots"
 
 ## config dir info
-export crtosrconfigdir="crtosr_config"
 export cutconfigdir="cut_config"
 export fitconfigdir="fit_config"
 export miscconfigdir="misc_config"
 export plotconfigdir="plot_config"
 export rescaleconfigdir="rescale_config"
-export srplotconfigdir="srplot_config"
-export varwgtconfigdir="varwgt_config"
-export xcontdumpconfigdir="xcontdump_config"
 export fragdir="plot_config/fragments"
+export limitconfigdir="limit_config"
+export systdir="syst_config"
 
 ## common output info
 export outTextExt="log"
 export topdir="/eos/user/k/kmcdermo/www"
 export disphodir="dispho/plots"
 
+## combine info
+export combdir="/afs/cern.ch/work/k/kmcdermo/private/dispho/Analysis/combine/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit/working"
+
 ## common derived output info
 export limitdir="limits"
 
-#declare -a exts=("eps" "png" "pdf")
 declare -a exts=("png" "pdf")
 export exts
 
 declare -a canvscales=("lin" "log")
-#declare -a canvscales=("log")
 export canvscales
 
 ## eras
-#declare -a eras=("2017B" "2017C" "2017D" "2017E" "2017F" Full")
 declare -a eras=("Full")
 export eras
 export MainEra="Full"
 
 ## etas
-#declare -a etas=("EB" "EE" "Full")
 declare -a etas=("EB" "EE")
 export etas
 
 ## phos
 export pho0="0 Leading"
 export pho1="1 Subleading"
-#declare -a phos=("pho0" "pho1")
 declare -a phos=("pho0")
 export phos
 
@@ -70,19 +66,11 @@ export fitinfo="Gaus1core 2 2"
 export base_adjust_var="phoE"
 export adjust_var="${base_adjust_var}_0"
 
-## extra event weight info
-export wgtvar="t1pfMETsumEt"
-
 ## CR + SR info: label skim signal_skim additional_cuts (var wgt map)
-export GJets="cr_gjets_DEG v3/orig_2phosCR/gjets v3/orig_2phosCR/signals_gjets cuts_v1/lepveto"
-export QCD="cr_qcd_DEG v3/orig_2phosCR/qcd v3/orig_2phosCR/signals_qcd cuts_v1/lepveto"
-export DYLL="cr_dyll_DEG v3/orig_2phosCR/dyll v3/orig_2phosCR/signals_dyll always_true"
-export Signal="sr_SPH v3/orig_2phosCR/sr v3/orig_2phosCR/signals_sr cuts_v1/lepveto"
-
-export CR_GJets="${GJets} gjets_${wgtvar}_map"
-export CR_QCD="${QCD} qcd_${wgtvar}_map"
-export CR_DYLL="${DYLL} dyll_${wgtvar}_map"
-export SR="${Signal} empty"
+export CR_GJets="cr_gjets_DEG v3/orig_2phosCR/gjets v3/orig_2phosCR/signals_gjets cuts_v1/lepveto"
+export CR_QCD="cr_qcd_DEG v3/orig_2phosCR/qcd v3/orig_2phosCR/signals_qcd cuts_v1/lepveto"
+export CR_DYLL="cr_dyll_DEG v3/orig_2phosCR/dyll v3/orig_2phosCR/signals_dyll always_true"
+export SR="sr_SPH v3/orig_2phosCR/sr v3/orig_2phosCR/signals_sr cuts_v1/lepveto"
 
 #declare -a inputs=(CR_GJets CR_QCD SR)
 declare -a inputs=(SR)
@@ -91,8 +79,7 @@ declare -a inputs=(SR)
 #export Zee="Zee zee_TnP/skim zee_TnP/signals_skim always_true"
 #export Zee="Zee zee_timestudy/skim zee_timestudy/signals_skim always_true"
 #export Zee="Dixtal dixtal/skim dixtal/signals_skim always_true"
-#export ZEE="${Zee} empty"
-#declare -a inputs=(ZEE)
+#declare -a inputs=(Zee)
 #export inputs
 
 ################################

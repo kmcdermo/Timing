@@ -1,3 +1,0 @@
-phopt_0_full phopt_0
-met_full t1pfMETpt
-t1pfMETsumEt_full t1pfMETsumEt

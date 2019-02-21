@@ -1,7 +1,0 @@
-1D_var=Y
-1D_range=(200,Inf)
-
-2D_range=(3,+Inf,200,+Inf)
-
-lambdas=100 350 600
-ctaus=0p1 200 1000

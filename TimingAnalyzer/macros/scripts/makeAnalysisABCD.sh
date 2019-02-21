@@ -3,6 +3,7 @@
 ##################
 ## Source First ##
 ##################
+
 source scripts/common_variables.sh
 
 ###################
@@ -30,29 +31,11 @@ plotfilename="${plotfiletext}.root"
 
 ./scripts/makePlotsForABCD.sh "${xbin}" "${xblind}" "${ybin}" "${yblind}" "${plotfiletext}" "${outdir}" "${is_blind}" ${save_meta_data} "${do_cleanup}"
 
-###############################
-## Copy input into limit dir ##
-###############################
-
-cp "${plotfilename}" "${limitdir}"
-
-#########################
-## Move Into Limit Dir ##
-#########################
-
-pushd "${limitdir}"
-
 #########################
 ## Run Combine + Plots ##
 #########################
 
 ./scripts/makeLimitsABCD.sh "${plotfilename}" "${outdir}" "${is_blind}" "${use_obs}" ${save_meta_data} "${do_cleanup}"
-
-#########################
-## Snap Back When Done ##
-#########################
-
-popd
 
 ###################
 ## Final Message ##
