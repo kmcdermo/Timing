@@ -105,8 +105,8 @@ void CombinePreparer::MakeWS(const TString & sample, const TH2F * SignHist, cons
     const auto ibinY = binXY.ibinY;
 
     // denominator bin (j)
-    const auto jbinX = ((bin%2==0)?ibinX-1:ibinX);
-    const auto jbinY = ((bin%2==0)?ibinY:ibinY-1);
+    const auto jbinX = ((ratio%2==0)?ibinX-1:ibinX);
+    const auto jbinY = ((ratio%2==0)?ibinY:ibinY-1);
 
     const auto ibkgd = std::max(DataHist->GetBinContent(ibinX,ibinY)-SignHist->GetBinContent(ibinX,ibinY),0.0);
     const auto jbkgd = std::max(DataHist->GetBinContent(jbinX,jbinY)-SignHist->GetBinContent(jbinX,jbinY),0.0);
