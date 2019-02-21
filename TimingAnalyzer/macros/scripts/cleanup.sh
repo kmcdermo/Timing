@@ -21,7 +21,7 @@ do
 done
 
 ## clean-up combine info
-rm "${combdir}/"*".${inTextExt}" "${combdir}/"*".root"
+rm "${combdir}/"*".${inTextExt}" "${combdir}/"*".${outTextExt}" "${combdir}/"*".root"
 
 ## print out message
 this_dir=$( pwd )

@@ -88,6 +88,12 @@ eval `scram runtime -sh`
 ## Ship things over to combine directory ##
 ###########################################
 
+cp "${combdir}/${outcombname}"*".root" "${outlimitdir}"
+
+##########################
+## Store logs in outdir ##
+##########################
+
 ## make out dirs
 fulldir="${topdir}/${disphodir}/${outdir}"
 PrepOutDir "${fulldir}"

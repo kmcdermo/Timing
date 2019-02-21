@@ -17,7 +17,7 @@ export plotconfigdir="plot_config"
 export rescaleconfigdir="rescale_config"
 export fragdir="plot_config/fragments"
 export limitconfigdir="limit_config"
-export systdir="syst_config"
+export systconfigdir="syst_config"
 
 ## common output info
 export outTextExt="log"

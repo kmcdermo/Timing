@@ -17,15 +17,15 @@ dir=${8:-"ntuples_v4/limits"}
 root -l -b -q runLimits2D.C\(\"${indir}\",\"${infilename}\",${doobs},\"${limitconfig}\",\"${era}\",${savemetadata},\"${outtext}\"\)
 
 ## make outdirs readable
-fulldir=${topdir}/${disphodir}/${dir}
-PrepOutDir ${fulldir}
+fulldir="${topdir}/${disphodir}/${dir}"
+PrepOutDir "${fulldir}"
 
 ## copy everything
 for ext in "${exts[@]}"
 do
-    cp ${outtext}*.${ext} ${fulldir}
+    cp "${outtext}"*".${ext}" "${fulldir}"
 done
-cp ${outtext}.root ${fulldir}
+cp "${outtext}.root" "${fulldir}"
 
 ## Final message
 echo "Finished RunningLimits2D"

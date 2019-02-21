@@ -9,21 +9,21 @@ infilename=${2:-"AsymLim"}
 doobserved=${3:-0}
 era=${4:-"Full"}
 outtext=${5:-"limit1D"}
-dir=${6:-"ntuples_v4/limits"}
+outdir=${6:-"ntuples_v4/limits"}
 
 ## run macro
 root -l -b -q runLimits1D.C\(\"${indir}\",\"${infilename}\",${doobserved},\"${era}\",\"${outtext}\"\)
 
 ## make outdirs readable
-fulldir=${topdir}/${disphodir}/${dir}
-PrepOutDir ${fulldir}
+fulldir="${topdir}/${disphodir}/${outdir}"
+PrepOutDir "${fulldir}"
 
 ## copy everything
 for ext in "${exts[@]}"
 do
-    cp ${outtext}*.${ext} ${fulldir}
+    cp "${outtext}"*".${ext}" "${fulldir}"
 done
-cp ${outtext}.root ${fulldir}
+cp "${outtext}.root" "${fulldir}"
 
 ## Final message
 echo "Finished RunningLimits1D"

@@ -54,7 +54,7 @@ mkdir -p "${outlimitdir}"
 ##########################
 
 echo "Making WSs and Datacards"
-./scripts/makeWSAndDatacardsABCD.sh "${plotfilename}" "${wsfilename}" "${datacardname}" "${outdir}/${incombdir}" "${inlimitdir}" "${is_blind}" "${do_cleanup}"
+./scripts/makeWSsAndDatacardsABCD.sh "${plotfilename}" "${wsfilename}" "${datacardname}" "${outdir}/${incombdir}" "${inlimitdir}" "${is_blind}" ${save_meta_data} "${do_cleanup}"
 
 ###########################################
 ## Extract Limits From WS : Run Combine! ##
@@ -75,7 +75,7 @@ echo "Running limits 1D"
 #########################
 
 echo "Running limits 2D"
-./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" ${savemetadata} "${outlimit2D}" "${outdir}/${outlimitplotdir}"
+./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" ${save_meta_data} "${outlimit2D}" "${outdir}/${outlimitplotdir}"
 
 ###########################
 ## Clean Up If Requested ##

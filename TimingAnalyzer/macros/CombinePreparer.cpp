@@ -132,7 +132,7 @@ void CombinePreparer::MakeDatacard(const TString & sample, const TH2F * SignHist
   std::ofstream datacard(fDatacardName+"_"+sample+"."+ABCD::inTextExt,std::ios::trunc);
   
   // generic filler
-  const TString filler = "---------------------------------------------------------------------------------------------------------------------------------------------------------------------";
+  const TString filler = "----------------------------------------------------------------------------------------------------------------------------------";
 
   // do each section!
   CombinePreparer::FillTopSection(datacard);
@@ -197,7 +197,7 @@ void CombinePreparer::FillProcessSection(std::ofstream & datacard, const TH2F * 
   for (const auto & BinPair : ABCD::BinMap)
   {
     const auto bin = BinPair.first;
-    datacard << Form("%s%d ",ABCD::binbase.Data(),bin);
+    datacard << Form("%s%d %s%d ",ABCD::binbase.Data(),bin,ABCD::binbase.Data(),bin);
   }
   datacard << std::endl;
 
