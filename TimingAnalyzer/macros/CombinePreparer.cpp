@@ -112,7 +112,7 @@ void CombinePreparer::MakeWS(const TString & sample, const TH2F * SignHist, cons
     const auto jbkgd = std::max(DataHist->GetBinContent(jbinX,jbinY)-SignHist->GetBinContent(jbinX,jbinY),0.0);
 
     // save ratio to workspace
-    RooRealVar c(Form("%s%d",ABCD::ratiobase.Data(),ratio),Form("%s%d",ABCD::ratiobase.Data(),ratio),checkNaN(ibkgd/jbkgd),0.0,10.0);
+    RooRealVar c(Form("%s%d",ABCD::ratiobase.Data(),ratio),Form("%s%d",ABCD::ratiobase.Data(),ratio),checkNaN(ibkgd/jbkgd),0.0,100.0);
     workspace->import(c);
   }
 
@@ -183,7 +183,8 @@ void CombinePreparer::FillObservationSection(std::ofstream & datacard)
     }
     else
     {
-      const auto pred = checkNaN(DataHist->GetBinContent(ibinX,1)*DataHist->GetBinContent(1,ibinY)/DataHist->GetBinContent(1,1));
+      // predict using surrounding bins the top right corner
+      const auto pred = checkNaN(DataHist->GetBinContent(ibinX-1,ibinY)*DataHist->GetBinContent(ibinX,ibinY-1)/DataHist->GetBinContent(ibinX-1,ibinY-1));
       datacard << Form("%f ",pred);
     }
   }
