@@ -12,12 +12,12 @@ namespace Combine
     std::cout << "Setting up RValVec..." << std::endl;
 
     // set up entries in tree, based on expectd, adjust accordingly
-    RValVec = {"r2sigdown","r1sigdown","rexp","r1sigup","r2sigup"};
-
+    Combine::RValVec = {"r2sigdown","r1sigdown","rexp","r1sigup","r2sigup"};
+    
     // adjust for observed limit
     if (doObserved)
     {
-      RValVec.insert(RValVec.begin(),"robs");
+      Combine::RValVec.insert(Combine::RValVec.begin(),"robs");
     }
   }
   
@@ -83,10 +83,22 @@ namespace Combine
 	intree->SetBranchAddress(s_limit.Data(),&limit,&b_limit);
 
 	// 5(6) Entries in tree, one for each quantile 
-	for (auto ientry = 0U; ientry < intree->GetEntries(); ientry++)
+	const auto nentries = intree->GetEntries();
+	if (nentries == Int_t(Combine::RValVec.size()))
 	{
-	  b_limit->GetEntry(ientry);
-	  info.rvalmap[Combine::RValVec[ientry]] = limit;
+	  for (auto ientry = 0U; ientry < intree->GetEntries(); ientry++)
+	  {
+	    b_limit->GetEntry(ientry);
+	    info.rvalmap[Combine::RValVec[ientry]] = limit;
+	  }
+	}
+	else
+	{
+	  for (const auto & RVal : Combine::RValVec)
+	  {
+	    info.rvalmap[RVal] = -1.f;
+	  }
+	  std::cout << "skipping this file: " << filename.Data() << std::endl;
 	}
 	
 	// delete once done
@@ -95,7 +107,7 @@ namespace Combine
       }
       else
       {
-	for (const auto & RVal : RValVec)
+	for (const auto & RVal : Combine::RValVec)
 	{
 	  info.rvalmap[RVal] = -1.f;
 	}
