@@ -376,7 +376,7 @@ void Limits2D::DrawLimits()
   fHistMap["r1sigup_cont"]->Draw("CONT3 same");
 
   // make legend and draw it
-  auto leg = new TLegend(0.2,0.7,0.4,0.8);
+  auto leg = new TLegend(0.6,0.7,0.8,0.8);
   leg->SetName("Legend");
   if (fDoObserved) leg->AddEntry(fHistMap["robs_cont"],"Observed 95% CL","L");
   leg->AddEntry(fHistMap["rexp_cont"],"Expected 95% CL","L");
