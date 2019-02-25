@@ -20,7 +20,7 @@ logname=${4:-"combine"}
 ## Loop over signals and run asymptotic limits ##
 #################################################
 
-for ctau in 0p001 0p1 10 200 400 600 800 1000 1200
+for ctau in 0p001 0p1 10 200 400 600 800 1000 1200 10000
 do
     sample="GMSB_L${lambda}_CTau${ctau}"
     echo "Running combine for: ${sample}"
