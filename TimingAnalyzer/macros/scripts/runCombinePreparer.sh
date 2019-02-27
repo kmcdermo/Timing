@@ -9,15 +9,12 @@ bininfoname=${2:-"bininfo.${inTextExt}"}
 ratioinfoname=${3:-"ratioinfo.${inTextExt}"}
 binratioinfoname=${4:-"binratioinfo.${inTextExt}"}
 systfilename=${5:-"${systconfigdir}/systematics.${inTextExt}"}
-wsname=${6:-"workspace"}
-datacardname=${7:-"datacardABCD"}
-blind_data=${8:-1}
-save_meta_data=${9:-0}
-wsfilename=${10:-"ws_final.root"}
-outdir=${11:-"madv2_v3/checks_v13"}
+datacardname=${6:-"datacardABCD"}
+blind_data=${7:-1}
+outdir=${8:-"madv2_v3/checks_v23"}
 
 ## run macro
-root -l -b -q runCombinePreparer.C\(\"${infilename}\",\"${bininfoname}\",\"${ratioinfoname}\",\"${binratioinfoname}\",\"${systfilename}\",\"${wsname}\",\"${datacardname}\",${blind_data},${save_meta_data},\"${wsfilename}\"\)
+root -l -b -q runCombinePreparer.C\(\"${infilename}\",\"${bininfoname}\",\"${ratioinfoname}\",\"${binratioinfoname}\",\"${systfilename}\",\"${datacardname}\",${blind_data}\)
 
 ## make outdirs readable
 fulldir="${topdir}/${disphodir}/${outdir}"

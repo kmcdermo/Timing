@@ -169,6 +169,11 @@ namespace Common
   static const TString smearFileName_EB = "phoE_0_Zee_EB_Full_SmearInput_091018.root";
   static const TString smearFileName_EE = "phoE_0_Zee_EE_Full_SmearInput_091018.root";
 
+  // time and met template info
+  static const TString templateFileName  = "met_vs_time_templates.root";
+  static const TString templateXHistName = "Data_Hist_Time_for_MET_0_to_100_Templates";
+  static const TString templateYHistName = "Data_Hist_MET_for_Time_m1_to_1_Templates";
+
   // Sample Information
   extern TString PrimaryDataset;
   extern std::map<TString,EraStruct> EraMap;
@@ -257,7 +262,6 @@ namespace Common
   // output info
   static const TString outIntText = "_integrals";
   static const TString outFitText = "_fitinfo";
-  //  static const std::vector<TString> extensions = {"eps", "png","pdf"};
   static const std::vector<TString> extensions = {"png","pdf"};
   static const TString outTextExt = "log";
 

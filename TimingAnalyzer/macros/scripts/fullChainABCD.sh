@@ -23,8 +23,8 @@ echo "Making 1D Data/MC plots with no weights"
 ./scripts/make1Dplots.sh "${outdir}/data_over_mc" "${reducedplotlist}" "false" ${save_meta_data}
 
 ## xs, ys
-declare -a xs=("0_2_5 5")
-declare -a ys=("50_100_200_500 200")
+declare -a xs=("1.5 1.5")
+declare -a ys=("150 150")
 
 ## loop over all bin combos
 for x in "${xs[@]}"

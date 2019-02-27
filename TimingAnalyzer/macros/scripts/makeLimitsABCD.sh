@@ -19,7 +19,6 @@ save_meta_data=${5:-0}
 do_cleanup=${6:-"true"}
 
 ## ABCD Config
-wsfilename="ws_final.root"
 datacardname="datacardABCD"
 incombdir="combine_input" # for www
 
@@ -53,15 +52,15 @@ mkdir -p "${outlimitdir}"
 ## Make WSs + Datacards ##
 ##########################
 
-echo "Making WSs and Datacards"
-./scripts/makeWSsAndDatacardsABCD.sh "${plotfilename}" "${wsfilename}" "${datacardname}" "${outdir}/${incombdir}" "${inlimitdir}" "${is_blind}" ${save_meta_data} "${do_cleanup}"
+echo "Making Datacards"
+./scripts/makeDatacardsABCD.sh "${plotfilename}" "${datacardname}" "${outdir}/${incombdir}" "${inlimitdir}" "${is_blind}" "${do_cleanup}"
 
 ###########################################
 ## Extract Limits From WS : Run Combine! ##
 ###########################################
 
 echo "Extracting Results ABCD"
-./scripts/extractResultsABCD.sh "${inlimitdir}" "${wsfilename}" "${datacardname}" "${outdir}/${outlimitplotdir}" "${outcombname}" "${outlimitdir}" "${use_obs}" "${do_cleanup}"
+./scripts/extractResultsABCD.sh "${inlimitdir}" "${datacardname}" "${outdir}/${outlimitplotdir}" "${outcombname}" "${outlimitdir}" "${use_obs}" "${do_cleanup}"
 
 #########################
 ## Make 1D Limit Plots ##

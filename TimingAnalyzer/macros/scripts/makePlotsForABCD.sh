@@ -31,7 +31,7 @@ misc_config="misc_ABCD.${inTextExt}"
 > "${misc_config}"
 
 ## fill tmp misc config
-echo "skip_bkgd_mc=1" >> "${misc_config}"
+#echo "skip_bkgd_mc=1" >> "${misc_config}"
 echo "scale_to_bin_widths=0" >> "${misc_config}"
 
 ## set blinding

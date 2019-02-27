@@ -2,15 +2,12 @@
 
 CombinePreparer::CombinePreparer(const TString & infilename, const TString & bininfoname,
 				 const TString & ratioinfoname, const TString & binratioinfoname,
-				 const TString & systfilename, const TString & wsname,
-				 const TString & datacardname, const Bool_t blinddata,
-				 const Bool_t savemetadata, const TString & wsfilename)
-
+				 const TString & systfilename, const TString & datacardname, 
+				 const Bool_t blinddata)
   : fInFileName(infilename), fBinInfoName(bininfoname),
     fRatioInfoName(ratioinfoname), fBinRatioInfoName(binratioinfoname),
-    fSystFileName(systfilename), fWSName(wsname), 
-    fDatacardName(datacardname), fBlindData(blinddata),
-    fSaveMetaData(savemetadata), fWSFileName(wsfilename)
+    fSystFileName(systfilename), fDatacardName(datacardname),
+    fBlindData(blinddata)
 {
   std::cout << "Initializing CombinePreparer..." << std::endl;
 
@@ -28,21 +25,36 @@ CombinePreparer::CombinePreparer(const TString & infilename, const TString & bin
   const auto datahistname = Common::HistNameMap["Data"]+"_Plotted";
   DataHist = (TH2F*)fInFile->Get(datahistname.Data());
   Common::CheckValidHist(DataHist,datahistname,fInFileName);
+  
+  BkgdHist = (TH2F*)fInfile->Get(Common::BkgdHistName.Data());
+  Common::CheckValidHist(BkgdHist,Common::BkgdHistName,fInFileName);
+
+  // Get template file
+  const auto inTemplateFileName = Common::eosPreFix+"/"+Common::eosDir+"/"+Common::calibDir+"/"+Common::templateFileName;
+  fTemplateFile = TFile::Open(inTemplateFileName.Data());
+  Common::CheckValidFile(fTemplateFile,inTemplateFileName);
+  fTemplateFile->cd();
+
+  // Get template hists
+  TemplateHistX = (TH1D*)fTemplateFile->Get(Common::templateXHistName.Data());
+  Common::CheckValidHist(TemplateHistX,Common::templateXHistName,inTemplateFileName);
+
+  TemplateHistY = (TH1D*)fTemplateFile->Get(Common::templateYHistName.Data());
+  Common::CheckValidHist(TemplateHistY,Common::templateYHistName,inTemplateFileName);
 
   // Setup binning scheme
   ABCD::SetupNBins(DataHist);
-
-  // output root file for quick inspection
-  fOutFile = TFile::Open(Form("%s",fWSFileName.Data()),"RECREATE");
 }
 
 CombinePreparer::~CombinePreparer()
 {
   std::cout << "Tidying up in the destructor..." << std::endl;
 
-  // delete it all
-  if (fSaveMetaData) delete fConfigPave;
-  delete fOutFile;
+  delete TemplateHistY;
+  delete TemplateHistX;
+  delete fTemplateFile;
+
+  delete BkgdHist;
   delete DataHist;
   delete fInFile;
 }
@@ -51,6 +63,10 @@ void CombinePreparer::PrepareCombine()
 {
   std::cout << "Preparing inputs to combine" << std::endl;
 
+  // make norm + ratios once
+  CombinePreparer::MakeParameters();
+
+  // loop over all signals and make datacard for each signal
   for (const auto & HistNamePair : Common::HistNameMap)
   {
     const auto & sample = HistNamePair.first;
@@ -62,69 +78,50 @@ void CombinePreparer::PrepareCombine()
     // get signal hist
     auto SignHist = (TH2F*)fInFile->Get(histname.Data());
     Common::CheckValidHist(SignHist,histname,fInFileName);
-     
-    // WS name
-    const auto sample_wsname = fWSName+"_"+sample;
-
-    // Make the WS
-    CombinePreparer::MakeWS(sample,SignHist,sample_wsname);
 
     // Make the Datacard
-    CombinePreparer::MakeDatacard(sample,SignHist,sample_wsname);
+    CombinePreparer::MakeDatacard(sample,SignHist);
 
     // delete signal hist
     delete SignHist;
   }
-
-  // save meta data
-  if (fSaveMetaData) CombinePreparer::MakeConfigPave();
 }
 
-void CombinePreparer::MakeWS(const TString & sample, const TH2F * SignHist, const TString & sample_wsname)
+void CombinePreparer::MakeParameters()
 {
-  std::cout << "Making WS for: " << sample.Data() << std::endl;
+  std::cout << "Making parameters for background..." << std::endl;
 
-  // make output
-  fOutFile->cd();
-  auto workspace = new RooWorkspace(sample_wsname.Data(),sample_wsname.Data());
+  // bkg1 --> estimate from BbkgdHist * k-Factor
+  fParameterMap[ABCD::bkg1name] = std::max(BkgdHist->GetBinContent(1,1) * (DataHist->Integral() / BkgdHist->Integral()),0.0);
   
-  // bkg1
-  const auto in_bkg1 = std::max(DataHist->GetBinContent(1,1)-SignHist->GetBinContent(1,1),0.0);
-  RooRealVar bkg1(ABCD::bkg1name.Data(),ABCD::bkg1name.Data(),in_bkg1,0.0,10.0*in_bkg1); 
-  workspace->import(bkg1);
-  
-  // loop over all possible ratios and save them
+  // loop over all possible ratios and put in parameter map
   for (const auto & RatioPair : ABCD::RatioMap)
   {
     const auto ratio = RatioPair.first;
     const auto bin   = RatioPair.second;
 
-    // numerator bin (i)
+    // X or Y axis ratio?
+    const auto isX = (ratio%2==0);
+
+    // bin split in ABCD plot
     const auto binXY = ABCD::BinMap.at(bin);
-    const auto ibinX = binXY.ibinX;
-    const auto ibinY = binXY.ibinY;
+    const auto ibin  = (isX?binXY.ibinX:ibinXY.ibinY);
 
-    // denominator bin (j)
-    const auto jbinX = ((ratio%2==0)?ibinX-1:ibinX);
-    const auto jbinY = ((ratio%2==0)?ibinY:ibinY-1);
+    // which template to use
+    const auto & TemplateHist = (isX?TemplateHistX:TemplateHistY);
 
-    const auto ibkgd = std::max(DataHist->GetBinContent(ibinX,ibinY)-SignHist->GetBinContent(ibinX,ibinY),0.0);
-    const auto jbkgd = std::max(DataHist->GetBinContent(jbinX,jbinY)-SignHist->GetBinContent(jbinX,jbinY),0.0);
+    // template bin boundaries
+    const auto ibinLow = TemplateHist->FindBin(DataHist->GetBinLowEdge(ibin-1));
+    const auto ibinMid = TemplateHist->FindBin(DataHist->GetBinLowEdge(ibin));
+    const auto ibinUp  = TemplateHist->FindBin(DataHist->GetBinUpEdge (ibin));
 
-    // save ratio to workspace
-    RooRealVar c(Form("%s%d",ABCD::ratiobase.Data(),ratio),Form("%s%d",ABCD::ratiobase.Data(),ratio),checkNaN(ibkgd/jbkgd),0.0,100.0);
-    workspace->import(c);
+    // get ratio
+    const TString rationame = Form("%s%d",ABCD::ratiobase.Data(),ratio);
+    fParameterMap[rationame] = std::max(TemplateHist->Integral(ibinMid,ibinUp) / TemplateHist->Integral(ibinLow,ibinMid-1),0.0);
   }
-
-  // write ws
-  fOutFile->cd();
-  workspace->Write(workspace->GetName(),TObject::kWriteDelete);
-
-  // delete workspace
-  delete workspace;
 }
 
-void CombinePreparer::MakeDatacard(const TString & sample, const TH2F * SignHist, const TString & sample_wsname)
+void CombinePreparer::MakeDatacard(const TString & sample, const TH2F * SignHist)
 {
   std::cout << "Making datacard for: " << sample.Data() << std::endl;
 
@@ -147,7 +144,7 @@ void CombinePreparer::MakeDatacard(const TString & sample, const TH2F * SignHist
   CombinePreparer::FillSystematicsSection(datacard);
   datacard << filler.Data() << std::endl;
 
-  CombinePreparer::FillRateParamSection(datacard,sample_wsname);
+  CombinePreparer::FillRateParamSection(datacard);
 }
 
 void CombinePreparer::FillTopSection(std::ofstream & datacard)
@@ -247,10 +244,10 @@ void CombinePreparer::FillSystematicsSection(std::ofstream & datacard)
   }
 }
 
-void CombinePreparer::FillRateParamSection(std::ofstream & datacard, const TString & sample_wsname)
+void CombinePreparer::FillRateParamSection(std::ofstream & datacard)
 {
-  // bkg1 first
-  datacard << Form("%s rateParam %s1 bkg %s:%s",ABCD::bkg1name.Data(),ABCD::binbase.Data(),fWSFileName.Data(),sample_wsname.Data()) << std::endl;
+  // bkg1 first for bin1
+  datacard << Form("%s rateParam %s1 bkg %f",ABCD::bkg1name.Data(),ABCD::binbase.Data(),fParameterMap[ABCD::bkg1name]) << std::endl;
 
   // then remainder of bins
   for (const auto & BinRatioVecPair : ABCD::BinRatioVecMap)
@@ -258,56 +255,15 @@ void CombinePreparer::FillRateParamSection(std::ofstream & datacard, const TStri
     const auto bin = BinRatioVecPair.first;
     const auto RatioVec = BinRatioVecPair.second;
 
-    datacard << Form("%s rateParam %s%d bkg %s:%s",ABCD::bkg1name.Data(),ABCD::binbase.Data(),bin,fWSFileName.Data(),sample_wsname.Data()) << std::endl;
+    // add bkg1 first
+    datacard << Form("%s rateParam %s%d bkg %f",ABCD::bkg1name.Data(),ABCD::binbase.Data(),bin,fParmaterMap[ABCD::bkg1name]) << std::endl;
 
     for (const auto ratio : RatioVec)
     {
-      datacard << Form("%s%d rateParam %s%d bkg %s:%s",ABCD::ratiobase.Data(),ratio,ABCD::binbase.Data(),bin,fWSFileName.Data(),sample_wsname.Data()) << std::endl;
+      const TString rationame = Form("%s%d",ABCD::ratiobase.Data(),ratio);
+      datacard << Form("%s rateParam %s%d bkg %f",rationame.Data(),ABCD::binbase.Data(),bin,fParameterMap[rationame]) << std::endl;
     }
   }
-}
-
-void CombinePreparer::MakeConfigPave()
-{
-  std::cout << "Dumping config to a pave..." << std::endl;
-
-  // create the pave, copying in old info
-  fOutFile->cd();
-  fConfigPave = new TPaveText();
-  fConfigPave->SetName(Form("%s",Common::pavename.Data()));
-
-  // give grand title
-  fConfigPave->AddText("***** CombinePreparer Config *****");
-
-  // dump ABCD info
-  Common::AddTextFromInputConfig(fConfigPave,"BinInfo Config",fBinInfoName);
-  Common::AddTextFromInputConfig(fConfigPave,"RatioInfo Config",fRatioInfoName);
-  Common::AddTextFromInputConfig(fConfigPave,"BinRatioInfo Config",fBinRatioInfoName);
-
-  // padding
-  Common::AddPaddingToPave(fConfigPave,3);
-
-  // dump systematics
-  Common::AddTextFromInputConfig(fConfigPave,"Systematics Config",fSystFileName);
-
-  // padding
-  Common::AddPaddingToPave(fConfigPave,3);
-
-  // dump combine info
-  fConfigPave->AddText(Form("WS name: %s",fWSName.Data()));
-  fConfigPave->AddText(Form("Datacard name: %s",fDatacardName.Data()));
-  fConfigPave->AddText(Form("WS name: %s",fWSName.Data()));
-  fConfigPave->AddText(Form("Blind data: %s",Common::PrintBool(fBlindData).Data()));
-
-  // padding
-  Common::AddPaddingToPave(fConfigPave,3);
-
-  // save name of infile, redundant
-  fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
-  
-  // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
 }
 
 void CombinePreparer::SetupCommon()
@@ -333,7 +289,7 @@ void CombinePreparer::ReadSystematics()
 {
   std::cout << "Reading Systematics..." << std::endl;  
 
-  ifstream inconfig(fSystFileName.Data(),std::ios::in);
+  std::ifstream inconfig(fSystFileName.Data(),std::ios::in);
   TString name, type;
   Double_t val;
   Bool_t isSig, isBkg;

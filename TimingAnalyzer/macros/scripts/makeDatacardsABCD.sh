@@ -12,13 +12,11 @@ source scripts/common_variables.sh
 
 ## Command Line Input
 plotfilename=${1:-"met_vs_time.root"}
-wsfilename=${2:-"ws_final.root"}
-datacardname=${3:-"datacardABCD"}
-outdir=${4:-"madv2_v3/full_chain/ABCD/combine_input"}
-inlimitdir=${5:-"input"}
-is_blind=${6:-"true"}
-save_meta_data=${7:-0}
-do_cleanup=${8:-"true"}
+datacardname=${2:-"datacardABCD"}
+outdir=${3:-"madv2_v3/full_chain/ABCD/combine_input"}
+inlimitdir=${4:-"input"}
+is_blind=${5:-"true"}
+do_cleanup=${6:-"true"}
 
 ## ABCD info
 bininfoname="bininfo.${inTextExt}"
@@ -27,7 +25,6 @@ binratioinfoname="binratioinfo.${inTextExt}"
 
 ## datacard+ws ninfo
 systfilename="${systconfigdir}/systematics.${inTextExt}"
-wsname="workspace"
 
 ## derived config
 if [[ "${is_blind}" == "true" ]]
@@ -43,11 +40,11 @@ fi
 
 ./scripts/runABCDGenerator.sh "${plotfilename}" "${bininfoname}" "${ratioinfoname}" "${binratioinfoname}" "${outdir}"
 
-#####################################
-## Write Results to Datacards + WS ##
-#####################################
+################################
+## Write Results to Datacards ##
+################################
 
-./scripts/runCombinePreparer.sh "${plotfilename}" "${bininfoname}" "${ratioinfoname}" "${binratioinfoname}" "${systfilename}" "${wsname}" "${datacardname}" ${blind_data} ${save_meta_data} "${wsfilename}" "${outdir}"
+./scripts/runCombinePreparer.sh "${plotfilename}" "${bininfoname}" "${ratioinfoname}" "${binratioinfoname}" "${systfilename}" "${datacardname}" ${blind_data} "${outdir}"
 
 #######################################
 ## Move WS and Datacards to Tmp File ##

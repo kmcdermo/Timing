@@ -6,6 +6,7 @@
 
 #include "TFile.h"
 #include "TH2F.h"
+#include "TH1D.h"
 #include "TString.h"
 #include "TPaveText.h"
 
@@ -46,9 +47,8 @@ public:
   // internal calls
   CombinePreparer(const TString & infilename, const TString & bininfoname,
 		  const TString & ratioinfoname, const TString & binratioinfoname,
-		  const TString & systfilename, const TString & wsname,
-		  const TString & datacardname, const Bool_t blinddata,
-		  const Bool_t savemetadata, const TString & wsfilename);
+		  const TString & systfilename, const TString & datacardname, 
+		  const Bool_t blinddata);
   ~CombinePreparer();
   
   // config calls
@@ -58,15 +58,15 @@ public:
   
   // main calls
   void PrepareCombine();
-  void MakeWS(const TString & sample, const TH2F * SignHist, const TString & sample_wsname);
-  void MakeDatacard(const TString & sample, const TH2F * SignHist, const TString & sample_wsname);
+  void MakeParameters();
+  void MakeDatacard(const TString & sample, const TH2F * SignHist);
   
   // subroutines for datacard making
   void FillTopSection(std::ofstream & datacard);
   void FillObservationSection(std::ofstream & datacard);
   void FillProcessSection(std::ofstream & datacard, const TH2F * SignHist);
   void FillSystematicsSection(std::ofstream & datacard);
-  void FillRateParamSection(std::ofstream & datacard, const TString & sample_wsname);
+  void FillRateParamSection(std::ofstream & datacard);
 
   // meta data
   void MakeConfigPave();
@@ -77,19 +77,21 @@ private:
   const TString fRatioInfoName;
   const TString fBinRatioInfoName;
   const TString fSystFileName;
-  const TString fWSName;
   const TString fDatacardName;
   const Bool_t  fBlindData;
-  const Bool_t  fSaveMetaData;
-  const TString fWSFileName;
 
   // Input
   TFile * fInFile;
   TH2F * DataHist;
+  TH2F * BkgdHist;
 
-  // Output
-  TFile * fOutFile;
-  TPaveText * fConfigPave;
+  // Tmp Input
+  TFile * fTemplateFile;
+  TH1D * TemplateHistX;
+  TH1D * TemplateHistY;
+
+  // Tmp I/O
+  std::map<TString,Double_t> fParameterMap;
 
   // read in systematics
   std::vector<Systematic> fSystematics;
