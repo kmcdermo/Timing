@@ -48,7 +48,7 @@ done
 
 ## make templates
 echo "Making Templates from 2D"
-root -l -b -q generateTemplates.C\(\"${outfiletext}\",\"${plot}\",\"${misc}\",\"${x_label}\",\"${x_low}\",\"${x_high}\",\"${y_label}\",\"${y_low}\",\"${y_high}\"\)
+root -l -b -q generateTemplates.C\(\"${outfiletext}\",\"${misc}\",\"${x_label}\",\"${x_low}\",\"${x_high}\",\"${y_label}\",\"${y_low}\",\"${y_high}\"\)
 
 ## copy to calib dir
 cp "${outfiletext}.root" "${calibdir}"

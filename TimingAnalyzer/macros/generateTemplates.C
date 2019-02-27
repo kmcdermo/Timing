@@ -1,12 +1,10 @@
 #include "Common.cpp+"
 
-void setup(TStyle * tdrStyle, const TString & plotconfig, std::vector<BlockStruct> & blinds, const TString & miscconfig, std::vector<TString> & plotSignalVec);
+void setup(TStyle * tdrStyle, const TString & miscconfig, std::vector<TString> & plotSignalVec);
 void readHists(TFile * file, std::map<TString,TH2F*> & HistMap2D);
-void projectX(const std::map<TString,TH2F*> & HistMap2D, std::map<TString,TH1D*> & HistMapX,
-	      std::vector<BlockStruct> & blinds, const TString & x_label, 
+void projectX(const std::map<TString,TH2F*> & HistMap2D, std::map<TString,TH1D*> & HistMapX, const TString & x_label, 
 	      const TString & y_label, const TString & y_low, const TString & y_high);
-void projectY(const std::map<TString,TH2F*> & HistMap2D, std::map<TString,TH1D*> & HistMapY,
-	      std::vector<BlockStruct> & blinds, const TString & y_label,
+void projectY(const std::map<TString,TH2F*> & HistMap2D, std::map<TString,TH1D*> & HistMapY, const TString & y_label,
 	      const TString & x_label, const TString & x_low, const TString & x_high);
 void writeHistMap(TFile * file, std::map<TString,TH1D*> & HistMap1D, const TString & label);
 void writeSignalContamination(const std::map<TString,TH1D*> & HistMap1D, const std::vector<TString> & plotSignalVec, const TString & label);
@@ -14,15 +12,14 @@ void saveTemplates(TFile * file, std::map<TString,TH1D*> & HistMap1D, const TStr
 void drawHist(TH1D * hist, const TString & label);
 void drawHist(TH1D * hist, const TString & label, const Bool_t isLogy);
 
-void generateTemplates(const TString & outfiletext, const TString & plotconfig, const TString & miscconfig,
+void generateTemplates(const TString & outfiletext, const TString & miscconfig,
 		       const TString & x_label, const TString & x_low, const TString & x_high,
 		       const TString & y_label, const TString & y_low, const TString & y_high)
 {
   // setup everything
   auto tdrStyle = new TStyle("TDRStyle","Style for P-TDR");
-  std::vector<BlockStruct> blinds;
   std::vector<TString> plotSignalVec;
-  setup(tdrStyle,plotconfig,blinds,miscconfig,plotSignalVec);
+  setup(tdrStyle,miscconfig,plotSignalVec);
 
   // inputs
   const TString filename = outfiletext+".root";
@@ -39,8 +36,8 @@ void generateTemplates(const TString & outfiletext, const TString & plotconfig, 
   readHists(file,HistMap2D);
 
   // project out
-  projectX(HistMap2D,HistMapX,blinds,x_label,y_label,y_low,y_high);
-  projectY(HistMap2D,HistMapY,blinds,y_label,x_label,x_low,x_high);
+  projectX(HistMap2D,HistMapX,x_label,y_label,y_low,y_high);
+  projectY(HistMap2D,HistMapY,y_label,x_label,x_low,x_high);
 
   // write projections
   writeHistMap(file,HistMapX,"_projX");
@@ -63,7 +60,7 @@ void generateTemplates(const TString & outfiletext, const TString & plotconfig, 
   delete tdrStyle;
 }
 
-void setup(TStyle * tdrStyle, const TString & plotconfig, std::vector<BlockStruct> & blinds, const TString & miscconfig, std::vector<TString> & plotSignalVec)
+void setup(TStyle * tdrStyle, const TString & miscconfig, std::vector<TString> & plotSignalVec)
 {
   std::cout << "Setting up..." << std::endl;
 
@@ -75,18 +72,8 @@ void setup(TStyle * tdrStyle, const TString & plotconfig, std::vector<BlockStruc
   Common::SetupHistNames();
   Common::SetTDRStyle(tdrStyle);
 
-  std::ifstream plotfile(Form("%s",plotconfig.Data()),std::ios::in);
-  std::string str;
-  while (std::getline(plotfile,str))
-  {
-    if (str.find("blinding=") != std::string::npos)
-    {
-      str = Common::RemoveDelim(str,"blinding=");
-      Common::SetupBlockRanges(str,blinds);
-    }
-  }
-
   std::ifstream miscfile(Form("%s",miscconfig.Data()),std::ios::in);
+  std::string str;
   while (std::getline(miscfile,str))
   {
     if (str.find("signals_to_plot=") != std::string::npos)
@@ -101,10 +88,11 @@ void readHists(TFile * file, std::map<TString,TH2F*> & HistMap2D)
 {
   std::cout << "Reading hists from file..." << std::endl;
 
+  // load all bkgd MC, signal MC, data plotted
   for (const auto & HistNamePair : Common::HistNameMap)
   {
     const auto & sample   = HistNamePair.first;
-    const auto & histname = HistNamePair.second;
+    const auto & histname = ((Common::GroupMap[sample] == SampleGroup::isData) ? HistNamePair.second+"_Plotted" : HistNamePair.second); // use only plotted data!
     auto & hist = HistMap2D[sample];
 
     hist = (TH2F*)file->Get(histname.Data());
@@ -112,8 +100,7 @@ void readHists(TFile * file, std::map<TString,TH2F*> & HistMap2D)
   }
 }
 
-void projectX(const std::map<TString,TH2F*> & HistMap2D, std::map<TString,TH1D*> & HistMapX,
-	      std::vector<BlockStruct> & blinds, const TString & x_label, 
+void projectX(const std::map<TString,TH2F*> & HistMap2D, std::map<TString,TH1D*> & HistMapX, const TString & x_label, 
 	      const TString & y_label, const TString & y_low, const TString & y_high)
 {
   std::cout << "Projecting in X..." << std::endl;
@@ -132,27 +119,10 @@ void projectX(const std::map<TString,TH2F*> & HistMap2D, std::map<TString,TH1D*>
     histX->GetXaxis()->SetTitle(Form("%s {%s #leq %s < %s}",histX->GetXaxis()->GetTitle(),y_low.Data(),hist2D->GetYaxis()->GetTitle(),y_high.Data()));
     histX->GetYaxis()->SetTitle("Events");
     histX->SetTitle(histX->GetXaxis()->GetTitle());
-
-    // blind the data
-    if (Common::GroupMap[sample] == SampleGroup::isData)
-    {
-      for (const auto & blind : blinds)
-      {
-	const auto binXlow = histX->GetXaxis()->FindBin(blind.xlow);
-	const auto binXup  = histX->GetXaxis()->FindBin(blind.xup);
-	
-	for (auto ibinX = binXlow; ibinX <= binXup; ibinX++) 
-        {
-	  histX->SetBinContent(ibinX,0.f);
-	  histX->SetBinError  (ibinX,0.f);
-	}
-      }
-    }
   }
 }
 
-void projectY(const std::map<TString,TH2F*> & HistMap2D, std::map<TString,TH1D*> & HistMapY,
-	      std::vector<BlockStruct> & blinds, const TString & y_label,
+void projectY(const std::map<TString,TH2F*> & HistMap2D, std::map<TString,TH1D*> & HistMapY, const TString & y_label,
 	      const TString & x_label, const TString & x_low, const TString & x_high)
 {
   std::cout << "Projecting in Y..." << std::endl;
@@ -171,22 +141,6 @@ void projectY(const std::map<TString,TH2F*> & HistMap2D, std::map<TString,TH1D*>
     histY->GetXaxis()->SetTitle(Form("%s {%s #leq %s < %s}",histY->GetXaxis()->GetTitle(),x_low.Data(),hist2D->GetXaxis()->GetTitle(),x_high.Data()));
     histY->GetYaxis()->SetTitle("Events");
     histY->SetTitle(histY->GetXaxis()->GetTitle());
-
-    // blind the data
-    if (Common::GroupMap[sample] == SampleGroup::isData)
-    {
-      for (const auto & blind : blinds)
-      {
-	const auto binYlow = histY->GetXaxis()->FindBin(blind.ylow);
-	const auto binYup  = histY->GetXaxis()->FindBin(blind.yup);
-	
-	for (auto ibinY = binYlow; ibinY <= binYup; ibinY++) 
-        {
-	  histY->SetBinContent(ibinY,0.f);
-	  histY->SetBinError  (ibinY,0.f);
-	}
-      }
-    }
   }
 }
 
