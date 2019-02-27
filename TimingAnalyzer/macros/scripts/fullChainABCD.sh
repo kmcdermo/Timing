@@ -37,6 +37,12 @@ do
 	    do
 	    	echo "Making analysis plots + limits for ${xbin},${ybin}"
 		./scripts/makeAnalysisABCD.sh "${xbin}" "${xblind}" "${ybin}" "${yblind}" "${outdir}/x_${xbin}_y_${ybin}" "${is_blind}" "${use_obs}" ${save_meta_data} "${do_cleanup}"
+
+		## cleanup outputs
+		if [[ "${do_cleanup}" == "true" ]]
+		then
+		    ./scripts/cleanup.sh
+		fi
 	    done
 	done
     done

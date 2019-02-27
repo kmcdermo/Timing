@@ -297,6 +297,7 @@ namespace Common
   TString ReplaceDotWithP(TString tmp){return tmp.ReplaceAll(".","p");}
   TString ReplaceSlashWithUnderscore(TString tmp){return tmp.ReplaceAll("/","_");}
   TString ReplaceSpaceWithUnderscore(TString tmp){return tmp.ReplaceAll(" ","_");}
+  TString ReplaceMinusWithM(TString tmp){return tmp.ReplaceAll("-","m");}
   TString PrintBool(const Bool_t b){return (b ? "true" : "false");}
   Float_t Atof(const std::string & str){return std::atof(str.c_str());}
 
