@@ -1,32 +1,52 @@
 #!/bin/bash
 
-## source first
+##################
+## Source First ##
+##################
+
 source scripts/common_variables.sh
 
-## config
+###################
+## Configuration ##
+###################
+
+## Command Line Input
 outdir=${1:-"madv2_v3/full_chain"}
 is_blind=${2:-"true"}
 use_obs=${3:-"false"}
 save_meta_data=${4:-0}
 do_cleanup=${5:-"true"}
 
-## for safety
-echo "Compiling ahead of time"
-./scripts/compile.sh
-
-## make signal efficiencies
-echo "Making Signal Efficiencies"
-./scripts/makeSignalEffs.sh "${outdir}/sig_effs"
-
-## make Data/MC plots (no weights yet)
-echo "Making 1D Data/MC plots with no weights"
-./scripts/make1Dplots.sh "${outdir}/data_over_mc" "${reducedplotlist}" "false" ${save_meta_data}
-
-## xs, ys
+## xs, ys bin boundaries to test (boundary, blind)
 declare -a xs=("1.5 1.5")
 declare -a ys=("150 150")
 
-## loop over all bin combos
+x_log="xs.${outTextExt}"
+y_log="ys.${outTextExt}"
+
+## Limit Config
+outlimitdir="output"
+outlimitplotdir="limits"
+combinelogname="combine"
+outcombname="AsymLim"
+
+## Derived Config
+fulldir="${topdir}/${disphodir}/${outdir}"
+
+##################
+## Compile Code ##
+##################
+
+echo "Compiling ahead of time"
+./scripts/compile.sh
+
+#############################
+## Make All Analysis Tests ##
+#############################
+
+echo "Loop over all x,y boundary combos, run ABCD tests"
+
+## Loop over all bin combos
 for x in "${xs[@]}"
 do
     echo "${x}" | while read -r xbin xblind
@@ -36,7 +56,7 @@ do
 	    echo "${y}" | while read -r ybin yblind
 	    do
 	    	echo "Making analysis plots + limits for ${xbin},${ybin}"
-		./scripts/makeAnalysisABCD.sh "${xbin}" "${xblind}" "${ybin}" "${yblind}" "${outdir}/x_${xbin}_y_${ybin}" "${is_blind}" "${use_obs}" ${save_meta_data} "${do_cleanup}"
+		./scripts/makeAnalysisABCD.sh "${xbin}" "${xblind}" "${ybin}" "${yblind}" "${outlimitdir}" "${outlimitplotdir}" "${combinelogname}" "${outcombname}" "${outdir}/x_${xbin}_y_${ybin}" "${is_blind}" "${use_obs}" ${save_meta_data} "${do_cleanup}"
 
 		## cleanup outputs
 		if [[ "${do_cleanup}" == "true" ]]
@@ -48,9 +68,45 @@ do
     done
 done
 
-## final prep dir
-echo "Final prep outdir"
-PrepOutDir "${topdir}/${disphodir}/${outdir}"
+#####################################
+## Make Final Limit Plot From Scan ##
+#####################################
 
-## all done
+echo "Write x, y bins to tmp logs"
+
+## write X first
+> "${x_log}"
+for x in "${xs[@]}"
+do
+    echo "${x}" >> "${x_log}"
+done
+
+## write Y second
+> "${y_log}"
+for y in "${ys[@]}"
+do
+    echo "${y}" >> "${y_log}"
+done
+
+echo "Making Final Limit Plot From ABCD Scan"
+./scripts/makeLimitsFromScan.sh "${x_log}" "${y_log}" "${outlimitdir}" "${outlimitplotdir}" "${combinelogname}" "${outcombname}" "${outdir}" "${use_obs}" ${save_meta_data} "${do_cleanup}"
+
+## cleanup if requested
+if [[ "${do_cleanup}" == "true" ]]
+then
+    rm "${x_log}"
+    rm "${y_log}"
+fi
+
+####################
+## Final Prep Dir ##
+####################
+
+echo "Final prep outdir"
+PrepOutDir "${fulldir}"
+
+###################
+## Final Message ##
+###################
+
 echo "Finished full chain of analysis (ABCD)"

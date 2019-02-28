@@ -11,20 +11,19 @@ source scripts/common_variables.sh
 ###################
 
 ## Command Line Input
-outdir=${1:-"madv2_v3/full_chain/results_ABCD"}
-use_obs=${2:-"false"}
-save_meta_data=${3:-0}
-do_cleanup=${4:-"false"}
+outlimitdir=${1:-"output"}
+outlimitplotdir=${2:-"limits"}
+outcombname=${3:-"AsymLim"}
+outdir=${4:-"madv2_v3/full_chain/results_ABCD"}
 
-## Combine config
-outcombname="AsymLim"
-outlimitdir="output"
+use_obs=${5:-"false"}
+save_meta_data=${6:-0}
+do_cleanup=${7:-"false"}
 
 ## Limit plot config
 limit="limits2D"
 outlimit1D="limit1D"
 outlimit2D="limit2D"
-outlimitplotdir="limits" # for www
 
 ## derived input
 if [[ "use_obs" == "true" ]]
@@ -47,16 +46,6 @@ echo "Running limits 1D"
 
 echo "Running limits 2D"
 ./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" ${save_meta_data} "${outlimit2D}" "${outdir}/${outlimitplotdir}"
-
-###########################
-## Clean Up If Requested ##
-###########################
-
-if [[ "${do_cleanup}" == "true" ]]
-then
-    echo "Cleaning up tmp dirs: ${outlimitdir}"
-    rm -r "${outlimitdir}"
-fi
 
 ###################
 ## Final Message ##

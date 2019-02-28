@@ -14,7 +14,7 @@ source common_variables.sh
 lambda=${1:-"100"}
 datacardname=${2:-"datacardABCD"}
 combine_extra=${3:-""}
-logname=${4:-"combine"}
+combinelogname=${4:-"combine"}
 
 #################################################
 ## Loop over signals and run asymptotic limits ##
@@ -25,7 +25,7 @@ do
     sample="GMSB_L${lambda}_CTau${ctau}"
     echo "Running combine for: ${sample}"
     
-    log="${logname}_${sample}.${outTextExt}"
+    log="${combinelogname}_${sample}.${outTextExt}"
     
     combine -M AsymptoticLimits "${datacardname}_${sample}.${inTextExt}" "${combine_extra}" --name "${sample}" >& "${log}"
 done

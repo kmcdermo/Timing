@@ -26,7 +26,7 @@ CombinePreparer::CombinePreparer(const TString & infilename, const TString & bin
   DataHist = (TH2F*)fInFile->Get(datahistname.Data());
   Common::CheckValidHist(DataHist,datahistname,fInFileName);
   
-  BkgdHist = (TH2F*)fInfile->Get(Common::BkgdHistName.Data());
+  BkgdHist = (TH2F*)fInFile->Get(Common::BkgdHistName.Data());
   Common::CheckValidHist(BkgdHist,Common::BkgdHistName,fInFileName);
 
   // Get template file
@@ -105,15 +105,18 @@ void CombinePreparer::MakeParameters()
 
     // bin split in ABCD plot
     const auto binXY = ABCD::BinMap.at(bin);
-    const auto ibin  = (isX?binXY.ibinX:ibinXY.ibinY);
+    const auto ibin  = (isX ? binXY.ibinX : binXY.ibinY);
 
     // which template to use
-    const auto & TemplateHist = (isX?TemplateHistX:TemplateHistY);
+    const auto & TemplateHist = (isX ? TemplateHistX : TemplateHistY);
+
+    // which axis to use
+    const auto & DataAxis = (isX ? DataHist->GetXaxis() : DataHist->GetYaxis());
 
     // template bin boundaries
-    const auto ibinLow = TemplateHist->FindBin(DataHist->GetBinLowEdge(ibin-1));
-    const auto ibinMid = TemplateHist->FindBin(DataHist->GetBinLowEdge(ibin));
-    const auto ibinUp  = TemplateHist->FindBin(DataHist->GetBinUpEdge (ibin));
+    const auto ibinLow = TemplateHist->FindBin(DataAxis->GetBinLowEdge(ibin-1));
+    const auto ibinMid = TemplateHist->FindBin(DataAxis->GetBinLowEdge(ibin));
+    const auto ibinUp  = TemplateHist->FindBin(DataAxis->GetBinUpEdge (ibin));
 
     // get ratio
     const TString rationame = Form("%s%d",ABCD::ratiobase.Data(),ratio);
@@ -256,7 +259,7 @@ void CombinePreparer::FillRateParamSection(std::ofstream & datacard)
     const auto RatioVec = BinRatioVecPair.second;
 
     // add bkg1 first
-    datacard << Form("%s rateParam %s%d bkg %f",ABCD::bkg1name.Data(),ABCD::binbase.Data(),bin,fParmaterMap[ABCD::bkg1name]) << std::endl;
+    datacard << Form("%s rateParam %s%d bkg %f",ABCD::bkg1name.Data(),ABCD::binbase.Data(),bin,fParameterMap[ABCD::bkg1name]) << std::endl;
 
     for (const auto ratio : RatioVec)
     {

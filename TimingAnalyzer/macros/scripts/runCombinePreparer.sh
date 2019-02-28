@@ -23,7 +23,6 @@ PrepOutDir "${fulldir}"
 ## copy files
 echo "Copying output to ${fulldir}"
 cp "${datacardname}"*".${inTextExt}" "${fulldir}"
-cp "${wsfilename}" "${fulldir}"
 
 ## Final message
 echo "Finished PreparingCombine"

@@ -51,7 +51,6 @@ fi
 #######################################
 
 mv "${datacardname}"*".${inTextExt}" "${inlimitdir}"
-mv "${wsfilename}" "${inlimitdir}"
 
 ###########################
 ## Clean Up If Requested ##
@@ -68,4 +67,4 @@ fi
 ## Final Message ##
 ###################
 
-echo "Finished MakingWSsAndDatacards (ABCD)"
+echo "Finished MakingDatacards (ABCD)"

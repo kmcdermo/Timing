@@ -12,16 +12,13 @@ source scripts/common_variables.sh
 
 ## i/o params
 inlimitdir=${1:-"input"}
-wsfilename=${2:-"ws_final.root"}
-datacardname=${3:-"datacardABCD"}
-outdir=${4:-"limits"}
-outcombname=${5:-"AsymLim"}
-outlimitdir=${6:-"output"}
+datacardname=${2:-"datacardABCD"}
+outdir=${3:-"limits"}
+outcombname=${4:-"AsymLim"}
+outlimitdir=${5:-"output"}
+combinelogname=${6:-"combine"}
 use_obs=${7:-"false"}
 do_cleanup=${8:-"true"}
-
-## other global config
-logname="combine"
 
 ## derived params : run expected limits?
 if [[ "${use_obs}" == "true" ]]
@@ -36,7 +33,6 @@ fi
 ###########################################
 
 cp "${inlimitdir}/${datacardname}"*".${inTextExt}" "${combdir}"
-cp "${inlimitdir}/${wsfilename}" "${combdir}"
 cp "scripts/extractResultsABCDSub.sh" "${combdir}"
 cp "scripts/common_variables.sh" "${combdir}"
 
@@ -54,7 +50,7 @@ eval `scram runtime -sh`
 for lambda in 100 150 200 250 300 350 400 500 600
 do
     echo "Extracting results for lambda: ${lambda}"
-    ./extractResultsABCDSub.sh "${lambda}" "${datacardname}" "${combine_extra}" "${logname}" &
+    ./extractResultsABCDSub.sh "${lambda}" "${datacardname}" "${combine_extra}" "${combinelogname}" &
 done
 
 wait
@@ -97,7 +93,7 @@ cp "${combdir}/${outcombname}"*".root" "${outlimitdir}"
 ## make out dirs
 fulldir="${topdir}/${disphodir}/${outdir}"
 PrepOutDir "${fulldir}"
-cp "${combdir}/${logname}"*".${outTextExt}" "${fulldir}"
+cp "${combdir}/${combinelogname}"*".${outTextExt}" "${fulldir}"
 cp "${combdir}/${outcombname}"*".root" "${fulldir}"
 
 ###################
