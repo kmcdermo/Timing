@@ -80,7 +80,7 @@ namespace Combine
 
 	// 5(6) Entries in tree, one for each quantile 
 	const auto nentries = intree->GetEntries();
-	if (nentries == Int_t(Combine::RValVec.size()))
+	if (nentries >= Int_t(Combine::RValVec.size()))
 	{
 	  for (auto ientry = 0U; ientry < intree->GetEntries(); ientry++)
 	  {

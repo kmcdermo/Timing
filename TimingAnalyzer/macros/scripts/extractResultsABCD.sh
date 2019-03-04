@@ -20,14 +20,6 @@ combinelogname=${6:-"combine"}
 use_obs=${7:-"false"}
 do_cleanup=${8:-"true"}
 
-## derived params : run expected limits?
-if [[ "${use_obs}" == "true" ]]
-then
-    combine_extra=""
-else
-    combine_extra="--run=expected"
-fi
-
 ###########################################
 ## Ship things over to combine directory ##
 ###########################################
@@ -47,10 +39,10 @@ eval `scram runtime -sh`
 ## Loop over signals and run asymptotic limits ##
 #################################################
 
-for lambda in 100 150 200 250 300 350 400 500 600
+for lambda in 150 200 250 300 350 400
 do
     echo "Extracting results for lambda: ${lambda}"
-    ./extractResultsABCDSub.sh "${lambda}" "${datacardname}" "${combine_extra}" "${combinelogname}" &
+    ./extractResultsABCDSub.sh "${lambda}" "${datacardname}" "${combinelogname}" "${use_obs}" &
 done
 
 wait

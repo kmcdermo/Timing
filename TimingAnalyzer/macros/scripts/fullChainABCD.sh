@@ -18,8 +18,8 @@ save_meta_data=${4:-0}
 do_cleanup=${5:-"true"}
 
 ## xs, ys bin boundaries to test (boundary, blind)
-declare -a xs=("1.5 1.5")
-declare -a ys=("150 150")
+declare -a xs=("0 0" "0.5 0.5" "1 1" "1.5 1.5" "2 2" "3 3" "5 5")
+declare -a ys=("50 50" "100 100" "150 150" "200 200" "300 300" "500 500" "1000 1000")
 
 x_log="xs.${outTextExt}"
 y_log="ys.${outTextExt}"
@@ -96,6 +96,7 @@ if [[ "${do_cleanup}" == "true" ]]
 then
     rm "${x_log}"
     rm "${y_log}"
+    ./scripts/cleanup.sh
 fi
 
 ####################
