@@ -177,9 +177,13 @@ struct Event
   Float_t   vtxY;
   Float_t   vtxZ;
   Float_t   rho;
+
   Float_t   t1pfMETpt;
   Float_t   t1pfMETphi;
   Float_t   t1pfMETsumEt;
+  Float_t   t1pfMETptUncorr;
+  Float_t   t1pfMETphiUncorr;
+  Float_t   t1pfMETsumEtUncorr;
 
   Int_t     njets;
   Int_t     nelLowL;
@@ -251,6 +255,9 @@ struct Event
   std::string s_t1pfMETpt = "t1pfMETpt";
   std::string s_t1pfMETphi = "t1pfMETphi";
   std::string s_t1pfMETsumEt = "t1pfMETsumEt";
+  std::string s_t1pfMETptUncorr = "t1pfMETptUncorr";
+  std::string s_t1pfMETphiUncorr = "t1pfMETphiUncorr";
+  std::string s_t1pfMETsumEtUncorr = "t1pfMETsumEtUncorr";
   std::string s_njets = "njets";
   std::string s_nelLowL = "nelLowL";
   std::string s_nelLowM = "nelLowM";
@@ -315,6 +322,9 @@ struct Event
   TBranch * b_t1pfMETpt;
   TBranch * b_t1pfMETphi;
   TBranch * b_t1pfMETsumEt;
+  TBranch * b_t1pfMETptUncorr;
+  TBranch * b_t1pfMETphiUncorr;
+  TBranch * b_t1pfMETsumEtUncorr;
   TBranch * b_njets;
   TBranch * b_nelLowL;
   TBranch * b_nelLowM;

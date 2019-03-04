@@ -155,7 +155,7 @@ namespace oot
 
       // save the jets, and then store the ID
       jets.emplace_back(jet);
-      jets.back().addUserInt("jetID",jetID);
+      jets.back().addUserInt(Config::JetID,jetID);
       
       std::sort(jets.begin(),jets.end(),oot::sortByPt);
     }
@@ -186,22 +186,13 @@ namespace oot
   //                                             Photon Cross-Cleaning and MET Corrections                                                          //
   //                                                                                                                                                //
   // The photon cross-cleaning is applied to remove overlapping photon objects from the two photon collections (GED and OOT).                       //
-  // If a photon in one collection overlaps with a photon in the other collection, the one with higher pT is kept, and the other photon is dropped. //
+  // If photond in one collection overlaps with photons in the other collection, the one with higher pT is kept, and the other photons are dropped. //
   //                                                                                                                                                //
   // Since OOT photons are not used in the computation of the MET, we have to apply the appropriate correction to the MET when an OOT photon is     //
   // either completely unmatched or is matched to a GED photon and is higher in pT than the GED photon.                                             //
   //                                                                                                                                                //
-  // The vector of ints "oot_to_ged" has an entry for every OOT photon, with the index into the vector the position of the OOT photon in the vector //
-  // of OOT photons, and the same for "ged_to_oot" for GED photons. The values of each entry are explained below:                                   //
+  // Namely, we __subtract__ the 4-vector of any added OOT photons, and __add__ the 4-vector of any dropped GED photons.                            //
   //                                                                                                                                                //
-  //   oot_to_ged:                                                                                                                                  //
-  //     >= 0  Match between GED and OOT, with the OOT photon higher in pT. The value is the index of the GED photon in its photon vector.          //
-  //     == -1 OOT photon is completely unmatched.                                                                                                  //
-  //     == -2 Match between GED and OOT, with the OOT photon lower in pT. This photon will be ignored in the MET calcuation and then dropped.      //
-  //                                                                                                                                                //
-  //   ged_to_oot:                                                                                                                                  //
-  //     == -1 GED photon is completely unmatched, or is matched to an OOT photon with the GED photon higher in pT.                                 //
-  //     == -2 Match between GED and OOT, with the GED photon lower in pT. This photon will be removed from the MET and then dropped.               //
   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   void PrepPhotonsCorrectMET(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH, 
@@ -209,110 +200,149 @@ namespace oot
 			     std::vector<pat::Photon> & photons, pat::MET & t1pfMET, const float rho, 
 			     const float dRmin, const float phpTmin, const std::string & phIDmin)
   {
-    // store tmp sizes
-    const int nGED = gedPhotonsH->size();
-    const int nOOT = ootPhotonsH->size();
-
-    // matching indices --> assume unmatched to start!
-    std::vector<int> ged_to_oot(nGED,-1); // GED to OOT
-    std::vector<int> oot_to_ged(nOOT,-1); // OOT to GED
+    // container for which photons to keep/drop
+    std::vector<oot::ReducedPhoton> reducedPhotons;
 
     ///////////////////
     // Find overlaps //
     ///////////////////
 
-    oot::FindOverlapPhotons(gedPhotonsH,nGED,ged_to_oot,ootPhotonsH,nOOT,oot_to_ged,dRmin);
+    oot::FindOverlapPhotons(gedPhotonsH,ootPhotonsH,reducedPhotons,dRmin);
 
     ///////////////////////////////
     // Produce merged collection //
     ///////////////////////////////
 
-    oot::MergePhotons(gedPhotonsH,nGED,ged_to_oot,photons,false,rho,phpTmin,phIDmin);
-    oot::MergePhotons(ootPhotonsH,nOOT,oot_to_ged,photons,true ,rho,phpTmin,phIDmin);
-
-    ////////////////////////////
-    // Sort merged collection //
-    ////////////////////////////
-
-    oot::SortPhotonsByPt(photons);
+    oot::MergePhotons(gedPhotonsH,ootPhotonsH,reducedPhotons,photons,rho,phpTmin,phIDmin);
 
     /////////////////////
     // Correct the MET //
     /////////////////////
 
-    oot::CorrectMET(gedPhotonsH,nGED,ootPhotonsH,nOOT,oot_to_ged,t1pfMET);
+    oot::CorrectMET(gedPhotonsH,ootPhotonsH,reducedPhotons,t1pfMET);
   }
 
-  void FindOverlapPhotons(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH, const int nGED, std::vector<int> & ged_to_oot,
-			  const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH, const int nOOT, std::vector<int> & oot_to_ged,
-			  const float dRmin)
+  void FindOverlapPhotons(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH,
+			  const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
+			  std::vector<oot::ReducedPhoton> & reducedPhotons, const float dRmin)
   {
-    // loop over all OOT photons --> find overlaps via dR
-    for (auto iOOT = 0; iOOT < nOOT; iOOT++)
+    ///////////////////////////////////////////////////
+    // First, store all photons in single collection //
+    ///////////////////////////////////////////////////
+
+    // loop over all GED photons
+    const auto nGED = gedPhotonsH->size();
+    for (auto iGED = 0U; iGED < nGED; iGED++)
+    {
+      const auto & gedPhoton = (*gedPhotonsH)[iGED];
+      reducedPhotons.emplace_back(iGED,false,false);
+    }
+
+    // loop over all OOT photons
+    const auto nOOT = ootPhotonsH->size();
+    for (auto iOOT = 0U; iOOT < nOOT; iOOT++)
     {
       const auto & ootPhoton = (*ootPhotonsH)[iOOT];
-      auto matchedGED = -1; // tmp var to store index of matched GED photon
-      auto mindR = dRmin; // deltaR between OOT and GED --> can shrink!
-
-      // loop over all GED photons --> look for best match
-      for (auto iGED = 0; iGED < nGED; iGED++)
-      {
-	const auto & gedPhoton = (*gedPhotonsH)[iGED];
-	const auto dR = reco::deltaR(ootPhoton,gedPhoton);
-	
-	if (dR < mindR) // check if GED within OOT
-	{
-	  matchedGED = iGED; // tmp var for storing best match
-	  mindR = dR; // set mindR to dR to find best match
-	} // end check over mindR
-      } // end loop over gedPhotons
-      
-      if (matchedGED >= 0) // OOT matches GED
-      {
-	// first get GED photon
-	const auto & gedPhoton = (*gedPhotonsH)[matchedGED];
-
-	if (oot::GetPhotonPt(ootPhoton) > oot::GetPhotonPt(gedPhoton)) oot_to_ged[iOOT] = matchedGED; // OOT matches GED, and is greater than GED in pT
-	else                                                           oot_to_ged[iOOT] = -2;         // OOT matches GED, and is less than GED in pT
-      } // end check over matched OOT to GED
-    } // end loop over ootPhotons
-
-    // loop over all GED photons --> label overlaps with indices already set
-    for (auto iGED = 0; iGED < nGED; iGED++)
-    {
-      // loop overall OOT photons --> look for a match already made
-      for (auto iOOT = 0; iOOT < nOOT; iOOT++)
-      {
-	// check for a match
-	if (oot_to_ged[iOOT] == iGED) ged_to_oot[iGED] = -2; // OOT matches GED, and OOT is higher in pT, so drop the GED photon
-      }
+      reducedPhotons.emplace_back(iOOT,true ,false);
     }
+
+    ///////////////////////////////////
+    // Second, sort the vector by pT //
+    ///////////////////////////////////
+    
+    std::sort(reducedPhotons.begin(),reducedPhotons.end(),
+	      [&](const auto & i_reducedPhoton, const auto & j_reducedPhoton)
+	      {
+		// tmps
+		const auto i_idx = i_reducedPhoton.idx;
+		const auto j_idx = j_reducedPhoton.idx;
+
+		const auto i_isOOT = i_reducedPhoton.isOOT;
+		const auto j_isOOT = j_reducedPhoton.isOOT;
+
+		const auto & i_photon = (i_isOOT ? (*ootPhotonsH)[i_idx] : (*gedPhotonsH)[i_idx]);
+		const auto & j_photon = (j_isOOT ? (*ootPhotonsH)[j_idx] : (*gedPhotonsH)[j_idx]);
+
+		return oot::GetPhotonPt(i_photon) > oot::GetPhotonPt(j_photon);
+	      });
+
+    //////////////////////////////////////////////////////////
+    // Mark for removal overlaps from different collections //
+    //////////////////////////////////////////////////////////
+
+    // loop over full merged collection
+    const auto nPHO = reducedPhotons.size();
+    for (auto iPHO = 0U; iPHO < nPHO; iPHO++)
+    {
+      // get tmps for 1st photon
+      const auto & i_reducedPhoton = reducedPhotons[iPHO];
+      const auto i_idx = i_reducedPhoton.idx;
+      
+      // skip if already marked for removal!
+      if (i_reducedPhoton.toRemove) continue;
+
+      // get remainder of tmps for 1st photon
+      const auto i_isOOT = i_reducedPhoton.isOOT;
+      const auto & i_photon = (i_isOOT ? (*ootPhotonsH)[i_idx] : (*gedPhotonsH)[i_idx]);
+
+      // only check those that are lower in pT
+      for (auto jPHO = iPHO+1; jPHO < nPHO; jPHO++)
+      {
+	// get tmps for 2nd photon
+	auto & j_reducedPhoton = reducedPhotons[jPHO];
+	const auto j_idx = j_reducedPhoton.idx;
+
+	// skip if already marked for removal!
+	if (j_reducedPhoton.toRemove) continue;
+
+	// skip if from the same collection
+	const auto j_isOOT = j_reducedPhoton.isOOT;
+	if (i_isOOT == j_isOOT) continue;
+
+	// get 2nd photon
+	const auto & j_photon = (j_isOOT ? (*ootPhotonsH)[j_idx] : (*gedPhotonsH)[j_idx]);
+	
+	// if photons overlap, mark lower pT one for removal
+	if (reco::deltaR(i_photon,j_photon) < dRmin)
+	{
+	  j_reducedPhoton.toRemove = true;
+	} // end check over dR
+      } // end loop over lower pT photons
+    } // end loop over all photons
   }
 
-  void MergePhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, const int nPho, const std::vector<int> & pho_overlap_idxs,
-		    std::vector<pat::Photon> & photons, const bool isOOT, const float rho, const float phpTmin, const std::string & phIDmin)
+  void MergePhotons(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH,
+		    const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH, 
+		    const std::vector<oot::ReducedPhoton> & reducedPhotons,
+		    std::vector<pat::Photon> & photons, const float rho,
+		    const float phpTmin, const std::string & phIDmin)
   {
     // loop over all photons, check if it passes cuts, then save it
-    for (auto iPho = 0; iPho < nPho; iPho++)
+    for (const auto & reducedPhoton : reducedPhotons)
     {
-      // get the photon
-      const auto & photon = (*photonsH)[iPho];
+      // get tmps
+      const auto idx = reducedPhoton.idx;
+      const auto isOOT = reducedPhoton.isOOT;
 
-      // make sure it has no overlap that is higher in pt
-      if (pho_overlap_idxs[iPho] == -2) continue;
+      // get the photon
+      const auto & photon = (isOOT ? (*ootPhotonsH)[idx] : (*gedPhotonsH)[idx]);
+
+      // check to ensure it was not marked for removal!
+      if (reducedPhoton.toRemove) continue;
 
       // cut on low pt
       if (oot::GetPhotonPt(photon) < phpTmin) continue;
       
       // store the GED and OOT VID
-      std::vector<pat::Photon::IdPair> idpairs = {{"loose-ged",false}, {"medium-ged",false}, {"tight-ged",false}, {"loose-oot",false}, {"tight-oot",false}};
+      std::vector<pat::Photon::IdPair> idpairs = {{Config::LooseGED,false}, {Config::MediumGED,false}, {Config::TightGED,false},
+						  {Config::LooseOOT,false}, {Config::TightOOT,false}};
 
       oot::GetGEDPhoVID(photon,idpairs);      
       if (isOOT) oot::GetOOTPhoVID      (photon,idpairs);
       else       oot::GetOOTPhoVIDByHand(photon,idpairs,rho);
 
       // skip bad ID'ed photons
-      if (phIDmin != "none")
+      if (phIDmin != Config::EmptyVID)
       {
 	auto isGoodID = true;
 	for (const auto & idpair : idpairs) 
@@ -327,7 +357,7 @@ namespace oot
 	  }
 	}
 	if (!isGoodID) continue;
-      }
+      } // end check for bad ID
 
       // save it in the final vector!
       photons.emplace_back(photon);
@@ -335,13 +365,14 @@ namespace oot
       // and then modify it!
       auto & tmpphoton = photons.back();
       tmpphoton.setPhotonIDs(idpairs);
-      tmpphoton.addUserData<bool>("isOOT",isOOT);
+      tmpphoton.addUserData<bool>(Config::IsOOT,isOOT);
     } // end loop over photons
   }
 
-  void CorrectMET(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH, const int nGED,
-		  const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH, const int nOOT,
-		  const std::vector<int> & oot_to_ged, pat::MET & t1pfMET)
+  void CorrectMET(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH,
+		  const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
+		  const std::vector<ReducedPhoton> & reducedPhotons,
+		  pat::MET & t1pfMET)
   {
     ////////////////////////////////
     // Compute Correction Factors //
@@ -352,54 +383,51 @@ namespace oot
     auto t1pfMETpy    = t1pfMET.py();
     auto t1pfMETsumEt = t1pfMET.sumEt();
 
-    // loop over indices, modifying the MET where appropriate
-    for (auto iOOT = 0; iOOT < nOOT; iOOT++)
+    // loop over all photons, correct for DROPPED GED and STORED OOT
+    for (const auto & reducedPhoton : reducedPhotons)
     {
-      // first get index for matching
-      const auto matchedGED = oot_to_ged[iOOT];
+      // get tmps
+      const auto idx = reducedPhoton.idx;
+      const auto isOOT = reducedPhoton.isOOT;
+      const auto toRemove = reducedPhoton.toRemove;
 
-      // skip OOT photon that are matched to GED photon, but lower in pT than GED photon
-      if (matchedGED == -2) continue;
+      // get the photon
+      const auto & photon = (isOOT ? (*ootPhotonsH)[idx] : (*gedPhotonsH)[idx]);
 
-      // get ootPhoton info --> will use it regardless!
-      const auto & ootPhoton = (*ootPhotonsH)[iOOT];
-      const auto ootet  = oot::GetPhotonEt(ootPhoton);
-      const auto ootpt  = oot::GetPhotonPt(ootPhoton);
-      const auto ootphi = ootPhoton.phi();
-
-      // Modify the MET, sumET
-      if (matchedGED >= 0) // overlapping photons: subtract OOT vector then ADD BACK overlapping GED
+      // apply met corrections as needed
+      if (isOOT && !toRemove) // add the OOT photons if being stored!
       {
-	// get gedPhoton info
-	const auto & gedPhoton = (*gedPhotonsH)[matchedGED];
-	const auto gedet  = oot::GetPhotonEt(gedPhoton);
-	const auto gedpt  = oot::GetPhotonPt(gedPhoton);
-	const auto gedphi = gedPhoton.phi();
+	// get inputs
+	const auto pt  = oot::GetPhotonPt(photon);
+	const auto phi = photon.phi();
 
-	// set compnonents
-	t1pfMETpx += (gedpt*std::cos(gedphi) - ootpt*std::cos(ootphi));
-	t1pfMETpy += (gedpt*std::sin(gedphi) - ootpt*std::sin(ootphi));
+	// set MET
+	t1pfMETpx -= pt*std::cos(phi);
+	t1pfMETpy -= pt*std::sin(phi);
 	
-	// set sumET
-	t1pfMETsumEt += (ootet - gedet);
-      } // end check over overlapping OOT photons
-      else // unmatched OOT photons: simply subtract OOT vector from MET
+	t1pfMETsumEt += oot::GetPhotonEt(photon);
+      }
+      else if (!isOOT && toRemove) // subtract the GED photons if being dropped!
       {
-	// set compnonents
-	t1pfMETpx -= (ootpt*std::cos(ootphi));
-	t1pfMETpy -= (ootpt*std::sin(ootphi));
-      
-	// set sumET
-	t1pfMETsumEt += ootet;
-      } // end check over unmatched OOT photons
-    } // end loop over OOT photons
-    
-    ////////////////////////
-    // Set New MET Object //
-    ////////////////////////
+	// get inputs
+	const auto pt  = oot::GetPhotonPt(photon);
+	const auto phi = photon.phi();
 
-    t1pfMET.setP4(reco::ParticleState::LorentzVector(t1pfMETpx,t1pfMETpy,0,Config::hypo(t1pfMETpx,t1pfMETpy))); // set new p4
-    t1pfMET.addUserFloat("sumEt",t1pfMETsumEt); // no way to modify the old sumEt
+	// set MET
+	t1pfMETpx += pt*std::cos(phi);
+	t1pfMETpy += pt*std::sin(phi);
+
+	t1pfMETsumEt -= oot::GetPhotonEt(photon);
+      }
+    } // end loop over all photons
+    
+    ////////////////////
+    // Set MET Object //
+    ////////////////////
+
+    t1pfMET.addUserFloat(Config::OOTMETPt,Config::hypo(t1pfMETpx,t1pfMETpy));
+    t1pfMET.addUserFloat(Config::OOTMETPhi,Config::phi(t1pfMETpx,t1pfMETpy));
+    t1pfMET.addUserFloat(Config::OOTMETSumEt,t1pfMETsumEt);
   }
 
   ///////////////////////
@@ -705,7 +733,7 @@ namespace oot
     auto ipho = 0;
     for (const auto & photon : photons)
     {
-      (!*(photon.userData<bool>("isOOT")) ? gedphos : ootphos).emplace_back(ipho++);
+      (!*(photon.userData<bool>(Config::IsOOT)) ? gedphos : ootphos).emplace_back(ipho++);
     }
     
     std::vector<pat::Photon> tmpphotons;
@@ -735,7 +763,7 @@ namespace oot
       if (ipho >= nmax) break;
       ipho++;
 
-      if (*(photon.userData<bool>("isOOT")) == isOOT) tmpphotons.emplace_back(photon);
+      if (*(photon.userData<bool>(Config::IsOOT)) == isOOT) tmpphotons.emplace_back(photon);
     }
 
     photons.swap(tmpphotons);

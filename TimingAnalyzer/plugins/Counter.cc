@@ -233,7 +233,7 @@ void Counter::SetBaseToTestIndices(PhotonInfo & basePhotonInfo, const PhotonInfo
       const auto & basePhoton = basePhotons[ibase];
 
       // cut on baseVID
-      if (baseVID != "NONE") 
+      if (baseVID != Config::NoVID) 
 	if (!basePhoton.photonID(baseVID)) continue;
 
       // tmp variables for matching to tests
@@ -246,7 +246,7 @@ void Counter::SetBaseToTestIndices(PhotonInfo & basePhotonInfo, const PhotonInfo
 	const auto & testPhoton = testPhotons[itest];
 
 	// cut on VID
-	if (testVID != "NONE") 
+	if (testVID != Config::NoVID) 
 	  if (!testPhoton.photonID(testVID)) continue;
       
 	// check for delR match!
@@ -309,7 +309,7 @@ void Counter::SetBaseToBaseIndices(PhotonInfo & basePhotonInfo)
       const auto & basePhoton = basePhotons[ibase];
       
       // cut on ootVID
-      if (baseVID != "NONE")
+      if (baseVID != Config::NoVID)
 	if (!basePhoton.photonID(baseVID)) continue;
 
       // loop over base photons again, only looking for UNIQUE matches (no need to double count)
@@ -319,7 +319,7 @@ void Counter::SetBaseToBaseIndices(PhotonInfo & basePhotonInfo)
 	const auto & testPhoton = basePhotons[jbase];
 	
 	// cut on VID
-	if (baseVID != "NONE")
+	if (baseVID != Config::NoVID)
 	  if (!testPhoton.photonID(baseVID)) continue;
       
 	// check for delR match!
@@ -783,7 +783,7 @@ void Counter::DumpPhoton(const int i, const pat::Photon & photon, const std::str
   std::cout << prefix.c_str() << "i: " << i 
 	    << " phi: " << std::setprecision(3) << photon.phi()
 	    << " eta: " << std::setprecision(3) << photon.eta()
-	    << " pt: "  << std::setprecision(3) << photon.pt()
+	    << " pt: "  << std::setprecision(3) << oot::GetPhotonPt(photon)
 	    << suffix.c_str() << std::endl;
 }
 
@@ -794,22 +794,22 @@ void Counter::DumpPhoton(const int i, const pat::Photon & photon, const std::str
 void Counter::SetInternalInfo()
 {
   // GED
-  gedInfo.matchingInfoMap[IDType::N].baseVID = "NONE";
+  gedInfo.matchingInfoMap[IDType::N].baseVID = Config::NoVID;
   gedInfo.matchingInfoMap[IDType::L].baseVID = Config::GEDPhotonLooseVID;
   gedInfo.matchingInfoMap[IDType::T].baseVID = Config::GEDPhotonTightVID;
 
-  gedInfo.matchingInfoMap[IDType::N].testVID = "NONE";
-  gedInfo.matchingInfoMap[IDType::L].testVID = (useOOTVID?Config::OOTPhotonLooseVID:"NONE");
-  gedInfo.matchingInfoMap[IDType::T].testVID = (useOOTVID?Config::OOTPhotonTightVID:"NONE");
+  gedInfo.matchingInfoMap[IDType::N].testVID = Config::NoVID;
+  gedInfo.matchingInfoMap[IDType::L].testVID = (useOOTVID?Config::OOTPhotonLooseVID:Config::NoVID);
+  gedInfo.matchingInfoMap[IDType::T].testVID = (useOOTVID?Config::OOTPhotonTightVID:Config::NoVID);
 
   // OOT
-  ootInfo.matchingInfoMap[IDType::N].baseVID = "NONE";
+  ootInfo.matchingInfoMap[IDType::N].baseVID = Config::NoVID;
   ootInfo.matchingInfoMap[IDType::L].baseVID = Config::OOTPhotonLooseVID;
   ootInfo.matchingInfoMap[IDType::T].baseVID = Config::OOTPhotonTightVID;
 
-  ootInfo.matchingInfoMap[IDType::N].testVID = "NONE";
-  ootInfo.matchingInfoMap[IDType::L].testVID = (useGEDVID?Config::GEDPhotonLooseVID:"NONE");
-  ootInfo.matchingInfoMap[IDType::T].testVID = (useGEDVID?Config::GEDPhotonTightVID:"NONE");
+  ootInfo.matchingInfoMap[IDType::N].testVID = Config::NoVID;
+  ootInfo.matchingInfoMap[IDType::L].testVID = (useGEDVID?Config::GEDPhotonLooseVID:Config::NoVID);
+  ootInfo.matchingInfoMap[IDType::T].testVID = (useGEDVID?Config::GEDPhotonTightVID:Config::NoVID);
 
   // set labels
   Counter::SetLabels(gedInfo,"GED");

@@ -605,7 +605,7 @@ void DisPho::FillBlindSF()
 
 inline bool DisPho::ApplyBlindMET()
 {
-  return (t1pfMET.pt() > blindMET);
+  return (t1pfMET.userFloat(Config::OOTMETPt) > blindMET);
 }
 
 void DisPho::FillBlindMET()
@@ -662,10 +662,10 @@ bool DisPho::ApplyPreSelectionGoodPhoton()
     // const float sceta = std::abs(photon.superCluster()->eta());
     // if (sceta > Config::etaEBcutoff) continue;
     
-    if (phgoodIDmin != "none")
+    if (phgoodIDmin != Config::EmptyVID)
     {
-      if (!*(photon.userData<bool>("isOOT")) && !photon.photonID(phgoodIDmin+"-ged")) continue;
-      if ( *(photon.userData<bool>("isOOT")) && !photon.photonID(phgoodIDmin+"-oot")) continue;
+      if (!*(photon.userData<bool>(Config::IsOOT)) && !photon.photonID(phgoodIDmin+"-ged")) continue;
+      if ( *(photon.userData<bool>(Config::IsOOT)) && !photon.photonID(phgoodIDmin+"-oot")) continue;
     }
     
     isphgood = true; break;
@@ -1152,13 +1152,21 @@ void DisPho::InitializeMETBranches()
   t1pfMETpt    = -9999.f;
   t1pfMETphi   = -9999.f;
   t1pfMETsumEt = -9999.f;
+
+  t1pfMETptUncorr    = -9999.f;
+  t1pfMETphiUncorr   = -9999.f;
+  t1pfMETsumEtUncorr = -9999.f;
 }
 
 void DisPho::SetMETBranches()
 {
-  t1pfMETpt    = t1pfMET.pt();
-  t1pfMETphi   = t1pfMET.phi();
-  t1pfMETsumEt = t1pfMET.userFloat("sumEt");
+  t1pfMETpt    = t1pfMET.userFloat(Config::OOTMETPt);
+  t1pfMETphi   = t1pfMET.phi(Config::OOTMETPhi);
+  t1pfMETsumEt = t1pfMET.sumEt(Config::OOTMETSumEt);
+
+  t1pfMETptUncorr    = t1pfMET.pt();
+  t1pfMETphiUncorr   = t1pfMET.phi();
+  t1pfMETsumEtUncorr = t1pfMET.sumEt();
 }
 
 void DisPho::InitializeMETBranchesMC()
@@ -1235,7 +1243,7 @@ void DisPho::SetJetBranches()
     jetphi[ijet] = jet.phi();
     jeteta[ijet] = jet.eta();
 
-    jetID [ijet] = jet.userInt("jetID");
+    jetID [ijet] = jet.userInt(Config::JetID);
 
     jetNHF [ijet] = jet.neutralHadronEnergyFraction();
     jetNEMF[ijet] = jet.neutralEmEnergyFraction();
@@ -1702,7 +1710,7 @@ void DisPho::SetPhoBranches()
     auto & phoBranch = phoBranches[iphoton];
     
     // basic kinematic with v2: https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaMiniAODV2#Applying_the_Energy_Scale_and_sm
-    const auto phop4 = photon.p4() * (photon.userFloat("ecalEnergyPostCorr") / photon.energy());
+    const auto phop4 = photon.p4() * oot::GetCorrFactor(photon);
     phoBranch.E_   = phop4.energy();
     phoBranch.pt_  = phop4.pt();
     phoBranch.phi_ = phop4.phi();
@@ -1840,7 +1848,7 @@ void DisPho::SetPhoBranches()
     } // end check over if seed exists
     
     // some standard booleans
-    phoBranch.isOOT_ = *(photon.userData<bool>("isOOT"));
+    phoBranch.isOOT_ = *(photon.userData<bool>(Config::IsOOT));
     phoBranch.isEB_  = isEB;
 
     // HLT Matching!
@@ -1859,14 +1867,14 @@ void DisPho::SetPhoBranches()
   
     // 0 --> did not pass anything, 1 --> loose pass, 2 --> medium pass, 3 --> tight pass
     // GED first
-    if      (photon.photonID("tight-ged"))  {phoBranch.gedID_ = 3;}
-    else if (photon.photonID("medium-ged")) {phoBranch.gedID_ = 2;}
-    else if (photon.photonID("loose-ged"))  {phoBranch.gedID_ = 1;}
-    else                                    {phoBranch.gedID_ = 0;}
+    if      (photon.photonID(Config::TightGED))  {phoBranch.gedID_ = 3;}
+    else if (photon.photonID(Config::MediumGED)) {phoBranch.gedID_ = 2;}
+    else if (photon.photonID(Config::LooseGED))  {phoBranch.gedID_ = 1;}
+    else                                         {phoBranch.gedID_ = 0;}
     // OOT second
-    if      (photon.photonID("tight-oot"))  {phoBranch.ootID_ = 3;}
-    else if (photon.photonID("loose-oot"))  {phoBranch.ootID_ = 1;}
-    else                                    {phoBranch.ootID_ = 0;}
+    if      (photon.photonID(Config::TightOOT))  {phoBranch.ootID_ = 3;}
+    else if (photon.photonID(Config::LooseOOT))  {phoBranch.ootID_ = 1;}
+    else                                         {phoBranch.ootID_ = 0;}
   } // end loop over nPhotons
 }
 
@@ -1931,13 +1939,13 @@ void DisPho::SetPhoBranchesMC()
     const auto phoE = phoBranch.E_; // assumed this already set!!!
       
     // eval up/down, then save bigger one (diff is order of one of MeV's...
-    const auto down_scale = std::abs(phoE-photon.userFloat("energyScaleDown"));
-    const auto up_scale   = std::abs(photon.userFloat("energyScaleUp")-phoE);
+    const auto down_scale = std::abs(phoE-photon.userFloat(Config::EnergyScaleDown));
+    const auto up_scale   = std::abs(photon.userFloat(Config::EnergyScaleUp)-phoE);
     phoBranch.scaleAbs_   = (up_scale > down_scale ? up_scale : down_scale);
 
     // eval up/down, then save bigger one (diff is order of one of MeV's...
-    const auto down_smear = std::abs(phoE-photon.userFloat("energySigmaDown"));
-    const auto up_smear   = std::abs(photon.userFloat("energySigmaUp")-phoE);
+    const auto down_smear = std::abs(phoE-photon.userFloat(Config::EnergySigmaDown));
+    const auto up_smear   = std::abs(photon.userFloat(Config::EnergySigmaUp)-phoE);
     phoBranch.smearAbs_   = (up_smear > down_smear ? up_smear : down_smear);
   }
 }
@@ -2301,6 +2309,10 @@ void DisPho::MakeEventTree()
   disphotree->Branch("t1pfMETpt", &t1pfMETpt);
   disphotree->Branch("t1pfMETphi", &t1pfMETphi);
   disphotree->Branch("t1pfMETsumEt", &t1pfMETsumEt);
+
+  disphotree->Branch("t1pfMETptUncorr", &t1pfMETptUncorr);
+  disphotree->Branch("t1pfMETphiUncorr", &t1pfMETphiUncorr);
+  disphotree->Branch("t1pfMETsumEtUncorr", &t1pfMETsumEtUncorr);
 
   // GEN MET info
   if (isMC)

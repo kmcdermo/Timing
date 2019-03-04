@@ -123,6 +123,7 @@ namespace Config
   // VID Names //
   ///////////////
 
+  static const std::string NoVID = "NONE";
   static const std::string GEDPhotonLooseVID = "cutBasedPhotonID-Fall17-94X-V1-loose";
   static const std::string GEDPhotonMediumVID = "cutBasedPhotonID-Fall17-94X-V1-medium";
   static const std::string GEDPhotonTightVID = "cutBasedPhotonID-Fall17-94X-V1-tight";
@@ -131,6 +132,32 @@ namespace Config
   static const std::string ElectronLooseVID = "cutBasedElectronID-Fall17-94X-V1-loose";
   static const std::string ElectronMediumVID = "cutBasedElectronID-Fall17-94X-V1-medium";
   static const std::string ElectronTightVID = "cutBasedElectronID-Fall17-94X-V1-tight";
+
+  ///////////////////////////////
+  // Photon Internal VID Names //
+  ///////////////////////////////
+
+  static const std::string EmptyVID = "none";  
+  static const std::string LooseGED = "loose-ged"; 
+  static const std::string MediumGED = "medium-ged"; 
+  static const std::string TightGED = "tight-ged"; 
+  static const std::string LooseOOT = "loose-oot";
+  static const std::string TightOOT = "tight-oot";
+
+  //////////////////////
+  // User Float Names //
+  //////////////////////
+
+  static const std::string JetID = "jetID";
+  static const std::string IsOOT = "isOOT";
+  static const std::string OOTMETPt = "ootMETpt";
+  static const std::string OOTMETPhi = "ootMETphi";
+  static const std::string OOTMETSumEt = "ootMETsumEt";
+  static const std::string EcalEnergyPostCorr = "ecalEnergyPostCorr";
+  static const std::string EnergyScaleDown = "energyScaleDown";
+  static const std::string EnergyScaleUp = "energyScaleUp";
+  static const std::string EnergySigmaDown = "energySigmaDown";
+  static const std::string EnergySigmaUp = "energySigmaUp";
 
   ///////////////////////////
   // Inline Math Functions //
@@ -165,13 +192,29 @@ typedef std::map<std::string,bool> strBitMap; // Trigger Bit Map
 
 namespace oot
 {
+  ////////////////////////////////
+  // Special Struct For Photons //
+  ////////////////////////////////
+
+  struct ReducedPhoton
+  {
+    ReducedPhoton() {}
+    ReducedPhoton(const size_t idx, const bool isOOT, const bool toRemove)
+      : idx(idx), isOOT(isOOT), toRemove(toRemove) {}
+
+    size_t idx;
+    bool isOOT;
+    bool toRemove;
+  };
+
   //////////////////////////////
   // Special Photon Functions //
   //////////////////////////////
 
   // photon corrected et, pt
-  inline float GetPhotonEt(const pat::Photon & photon){return (photon.et()*(photon.userFloat("ecalEnergyPostCorr")/photon.energy()));}
-  inline float GetPhotonPt(const pat::Photon & photon){return (photon.pt()*(photon.userFloat("ecalEnergyPostCorr")/photon.energy()));}
+  inline float GetCorrFactor(const pat::Photon & photon){return photon.userFloat(Config::EcalEnergyPostCorr)/photon.energy();}
+  inline float GetPhotonEt(const pat::Photon & photon){return photon.et()*oot::GetCorrFactor(photon);}
+  inline float GetPhotonPt(const pat::Photon & photon){return photon.pt()*oot::GetCorrFactor(photon);}
 
   // sort by photon corrected pt
   inline void SortPhotonsByPt(std::vector<pat::Photon> & photons)
@@ -216,15 +259,19 @@ namespace oot
   void PrepPhotonsCorrectMET(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH, 
 			     const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
 			     std::vector<pat::Photon> & photons, pat::MET & t1pfMET, const float rho,
-			     const float dRmin = 0.f, const float phpTmin = 0.f, const std::string & phIDmin = "none");
-  void FindOverlapPhotons(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH, const int nGED, std::vector<int> & ged_to_oot,
-			  const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH, const int nOOT, std::vector<int> & oot_to_ged,
-			  const float dRmin);
-  void MergePhotons(const edm::Handle<std::vector<pat::Photon> > & photonsH, const int nPho, const std::vector<int> & pho_overlap_idxs,
-		    std::vector<pat::Photon> & photons, const bool isOOT, const float rho, const float phpTmin = 0.f, const std::string & phIDmin = "none");
-  void CorrectMET(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH, const int nGED,
-		  const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH, const int nOOT,
-		  const std::vector<int> & oot_to_ged, pat::MET & t1pfMET);
+			     const float dRmin = 0.f, const float phpTmin = 0.f, const std::string & phIDmin = Config::EmptyVID);
+  void FindOverlapPhotons(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH,
+			  const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
+			  std::vector<oot::ReducedPhoton> & reducedPhotons, const float dRmin);
+  void MergePhotons(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH,
+		    const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH, 
+		    const std::vector<oot::ReducedPhoton> & reducedPhotons,
+		    std::vector<pat::Photon> & photons, const float rho,
+		    const float phpTmin, const std::string & phIDmin);
+  void CorrectMET(const edm::Handle<std::vector<pat::Photon> > & gedPhotonsH,
+		  const edm::Handle<std::vector<pat::Photon> > & ootPhotonsH,
+		  const std::vector<ReducedPhoton> & reducedPhotons,
+		  pat::MET & t1pfMET);
 
   ///////////////////////
   // Pruning Functions //

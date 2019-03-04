@@ -546,6 +546,7 @@ private:
 
   // Type-1 PF MET
   float t1pfMETpt, t1pfMETphi, t1pfMETsumEt;
+  float t1pfMETptUncorr, t1pfMETphiUncorr, t1pfMETsumEtUncorr;
 
   // GEN MET
   float genMETpt, genMETphi;
