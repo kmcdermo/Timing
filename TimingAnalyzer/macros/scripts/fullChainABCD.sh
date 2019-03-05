@@ -13,9 +13,10 @@ source scripts/common_variables.sh
 ## Command Line Input
 outdir=${1:-"madv2_v3/full_chain"}
 is_blind=${2:-"true"}
-use_obs=${3:-"false"}
-save_meta_data=${4:-0}
-do_cleanup=${5:-"true"}
+use_obs=${3:-"true"}
+use_systematics=${4:-"false"}
+save_meta_data=${5:-0}
+do_cleanup=${6:-"true"}
 
 ## xs, ys bin boundaries to test (boundary, blind)
 declare -a xs=("0 0" "0.5 0.5" "1 1" "1.5 1.5" "2 2" "3 3" "5 5")
@@ -56,7 +57,7 @@ do
 	    echo "${y}" | while read -r ybin yblind
 	    do
 	    	echo "Making analysis plots + limits for ${xbin},${ybin}"
-		./scripts/makeAnalysisABCD.sh "${xbin}" "${xblind}" "${ybin}" "${yblind}" "${outlimitdir}" "${outlimitplotdir}" "${combinelogname}" "${outcombname}" "${outdir}/x_${xbin}_y_${ybin}" "${is_blind}" "${use_obs}" ${save_meta_data} "${do_cleanup}"
+		./scripts/makeAnalysisABCD.sh "${xbin}" "${xblind}" "${ybin}" "${yblind}" "${outlimitdir}" "${outlimitplotdir}" "${combinelogname}" "${outcombname}" "${outdir}/x_${xbin}_y_${ybin}" "${is_blind}" "${use_obs}" "${use_systematics}" ${save_meta_data} "${do_cleanup}"
 
 		## cleanup outputs
 		if [[ "${do_cleanup}" == "true" ]]

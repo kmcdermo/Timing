@@ -11,10 +11,11 @@ binratioinfoname=${4:-"binratioinfo.${inTextExt}"}
 systfilename=${5:-"${systconfigdir}/systematics.${inTextExt}"}
 datacardname=${6:-"datacardABCD"}
 blind_data=${7:-1}
+include_systematics=${8:-0}
 outdir=${8:-"madv2_v3/checks_v23"}
 
 ## run macro
-root -l -b -q runCombinePreparer.C\(\"${infilename}\",\"${bininfoname}\",\"${ratioinfoname}\",\"${binratioinfoname}\",\"${systfilename}\",\"${datacardname}\",${blind_data}\)
+root -l -b -q runCombinePreparer.C\(\"${infilename}\",\"${bininfoname}\",\"${ratioinfoname}\",\"${binratioinfoname}\",\"${systfilename}\",\"${datacardname}\",${blind_data},${include_systematics}\)
 
 ## make outdirs readable
 fulldir="${topdir}/${disphodir}/${outdir}"

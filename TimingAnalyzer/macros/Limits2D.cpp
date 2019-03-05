@@ -366,7 +366,7 @@ void Limits2D::DrawLimits()
   canv->SetName("Canvas");
 
   // Set range user for limits in z!
-  hist->GetZaxis()->SetRangeUser(1e-3,1e2);
+  hist->GetZaxis()->SetRangeUser(1e-3,1e3);
 
   // draw histogram + contours
   hist->Draw("COLZ");

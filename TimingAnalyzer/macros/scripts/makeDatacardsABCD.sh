@@ -15,8 +15,10 @@ plotfilename=${1:-"met_vs_time.root"}
 datacardname=${2:-"datacardABCD"}
 outdir=${3:-"madv2_v3/full_chain/ABCD/combine_input"}
 inlimitdir=${4:-"input"}
+
 is_blind=${5:-"true"}
-do_cleanup=${6:-"true"}
+use_systematics=${6:-"false"}
+do_cleanup=${7:-"true"}
 
 ## ABCD info
 bininfoname="bininfo.${inTextExt}"
@@ -34,6 +36,13 @@ else
     blind_data=0
 fi
 
+if [[ "${use_systematics}" == "true" ]]
+then
+    include_systematics=1
+else
+    include_systematics=0
+fi
+
 ######################
 ## Make ABCD Config ##
 ######################
@@ -44,7 +53,7 @@ fi
 ## Write Results to Datacards ##
 ################################
 
-./scripts/runCombinePreparer.sh "${plotfilename}" "${bininfoname}" "${ratioinfoname}" "${binratioinfoname}" "${systfilename}" "${datacardname}" ${blind_data} "${outdir}"
+./scripts/runCombinePreparer.sh "${plotfilename}" "${bininfoname}" "${ratioinfoname}" "${binratioinfoname}" "${systfilename}" "${datacardname}" ${blind_data} ${include_systematics} "${outdir}"
 
 #######################################
 ## Move WS and Datacards to Tmp File ##

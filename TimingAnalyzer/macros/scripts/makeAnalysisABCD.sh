@@ -22,9 +22,10 @@ outcombname=${8:-"AsymLim"}
 outdir=${9:-"madv2_v3/full_chain/results_ABCD"}
 
 is_blind=${10:-"true"}
-use_obs=${11:-"false"}
-save_meta_data=${12:-0}
-do_cleanup=${13:-"true"}
+use_obs=${11:-"true"}
+use_systematics=${12:-"false"}
+save_meta_data=${13:-0}
+do_cleanup=${14:-"true"}
 
 ## 2D Plot Name
 plotfiletext="met_vs_time"
@@ -69,7 +70,7 @@ echo "Making Plots for ABCD"
 ####################
 
 echo "Making Datacards ABCD"
-./scripts/makeDatacardsABCD.sh "${plotfilename}" "${datacardname}" "${outdir}/${incombdir}" "${inlimitdir}" "${is_blind}" "${do_cleanup}"
+./scripts/makeDatacardsABCD.sh "${plotfilename}" "${datacardname}" "${outdir}/${incombdir}" "${inlimitdir}" "${is_blind}" "${use_systematics}" "${do_cleanup}"
 
 ##################################################
 ## Extract Limits From Datacards : Run Combine! ##

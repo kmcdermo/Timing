@@ -3,44 +3,24 @@
 CombinePreparer::CombinePreparer(const TString & infilename, const TString & bininfoname,
 				 const TString & ratioinfoname, const TString & binratioinfoname,
 				 const TString & systfilename, const TString & datacardname, 
-				 const Bool_t blinddata)
+				 const Bool_t blinddata, const Bool_t includesystematics)
   : fInFileName(infilename), fBinInfoName(bininfoname),
     fRatioInfoName(ratioinfoname), fBinRatioInfoName(binratioinfoname),
     fSystFileName(systfilename), fDatacardName(datacardname),
-    fBlindData(blinddata)
+    fBlindData(blinddata), fIncludeSystematics(includesystematics)
 {
   std::cout << "Initializing CombinePreparer..." << std::endl;
 
   // Setup Config
   CombinePreparer::SetupCommon();
   CombinePreparer::SetupABCD();
-  CombinePreparer::ReadSystematics();
+  if (fIncludeSystematics) CombinePreparer::ReadSystematics();
   
-  // Get input file
-  fInFile = TFile::Open(Form("%s",fInFileName.Data()));
-  Common::CheckValidFile(fInFile,fInFileName);
-  fInFile->cd();
+  // Get inputs hists
+  CombinePreparer::SetupInputHists();
 
-  // Get input hists
-  const auto datahistname = Common::HistNameMap["Data"]+"_Plotted";
-  DataHist = (TH2F*)fInFile->Get(datahistname.Data());
-  Common::CheckValidHist(DataHist,datahistname,fInFileName);
-  
-  BkgdHist = (TH2F*)fInFile->Get(Common::BkgdHistName.Data());
-  Common::CheckValidHist(BkgdHist,Common::BkgdHistName,fInFileName);
-
-  // Get template file
-  const auto inTemplateFileName = Common::eosPreFix+"/"+Common::eosDir+"/"+Common::calibDir+"/"+Common::templateFileName;
-  fTemplateFile = TFile::Open(inTemplateFileName.Data());
-  Common::CheckValidFile(fTemplateFile,inTemplateFileName);
-  fTemplateFile->cd();
-
-  // Get template hists
-  TemplateHistX = (TH1D*)fTemplateFile->Get(Common::templateXHistName.Data());
-  Common::CheckValidHist(TemplateHistX,Common::templateXHistName,inTemplateFileName);
-
-  TemplateHistY = (TH1D*)fTemplateFile->Get(Common::templateYHistName.Data());
-  Common::CheckValidHist(TemplateHistY,Common::templateYHistName,inTemplateFileName);
+  // Get template input hists
+  CombinePreparer::SetupTemplateHists();
 
   // Setup binning scheme
   ABCD::SetupNBins(DataHist);
@@ -50,10 +30,13 @@ CombinePreparer::~CombinePreparer()
 {
   std::cout << "Tidying up in the destructor..." << std::endl;
 
+  if (fBlindData) delete PredHist;
+
   delete TemplateHistY;
   delete TemplateHistX;
   delete fTemplateFile;
 
+  Common::DeleteMap(SignHistMap);
   delete BkgdHist;
   delete DataHist;
   delete fInFile;
@@ -66,24 +49,17 @@ void CombinePreparer::PrepareCombine()
   // make norm + ratios once
   CombinePreparer::MakeParameters();
 
-  // loop over all signals and make datacard for each signal
-  for (const auto & HistNamePair : Common::HistNameMap)
-  {
-    const auto & sample = HistNamePair.first;
-    const auto & histname = HistNamePair.second;
+  // make prediction histogram: to be thrown away, and only used when blinding!
+  if (fBlindData) CombinePreparer::MakePredictionHistogram();
 
-    // loop over singals
-    if (Common::GroupMap[sample] != SampleGroup::isSignal) continue;
-    
-    // get signal hist
-    auto SignHist = (TH2F*)fInFile->Get(histname.Data());
-    Common::CheckValidHist(SignHist,histname,fInFileName);
+  // loop over all signals and make datacard for each signal
+  for (const auto & SignHistPair : SignHistMap)
+  {
+    const auto & sample   = SignHistPair.first;
+    const auto & SignHist = SignHistPair.second;
 
     // Make the Datacard
     CombinePreparer::MakeDatacard(sample,SignHist);
-
-    // delete signal hist
-    delete SignHist;
   }
 }
 
@@ -124,6 +100,43 @@ void CombinePreparer::MakeParameters()
   }
 }
 
+void CombinePreparer::MakePredictionHistogram()
+{
+  std::cout << "Making prediction histogram since data is blinded..." << std::endl;
+  
+  // first, clone data hist
+  PredHist = (TH2F*)DataHist->Clone("PredHist");
+
+  // second, set overall norm for bin1
+  PredHist->SetBinContent(1,1,fParameterMap[ABCD::bkg1name]);
+
+  // loop over bin settings and compute the contents for each bin based off multiplication of ratios
+  for (const auto & BinRatioVecPair : ABCD::BinRatioVecMap)
+  {
+    // get bin ratio settings
+    const auto bin = BinRatioVecPair.first;
+    const auto RatioVec = BinRatioVecPair.second;
+
+    // set norm first
+    auto bin_content = fParameterMap[ABCD::bkg1name];
+
+    // multiply by each ratio!
+    for (const auto ratio : RatioVec)
+    {
+      const TString rationame = Form("%s%d",ABCD::ratiobase.Data(),ratio);
+      bin_content *= fParameterMap[rationame];
+    }
+
+    // get bin idx settings
+    const auto binXY = ABCD::BinMap[bin];
+    const auto ibinX = binXY.ibinX;
+    const auto ibinY = binXY.ibinY;
+
+    // finally, set the bin content
+    PredHist->SetBinContent(ibinX,ibinY,bin_content);
+  }
+}
+
 void CombinePreparer::MakeDatacard(const TString & sample, const TH2F * SignHist)
 {
   std::cout << "Making datacard for: " << sample.Data() << std::endl;
@@ -144,8 +157,11 @@ void CombinePreparer::MakeDatacard(const TString & sample, const TH2F * SignHist
   CombinePreparer::FillProcessSection(datacard,SignHist);
   datacard << filler.Data() << std::endl;
 
-  CombinePreparer::FillSystematicsSection(datacard);
-  datacard << filler.Data() << std::endl;
+  if (fIncludeSystematics)
+  {
+    CombinePreparer::FillSystematicsSection(datacard);
+    datacard << filler.Data() << std::endl;
+  }
 
   CombinePreparer::FillRateParamSection(datacard);
 }
@@ -177,15 +193,13 @@ void CombinePreparer::FillObservationSection(std::ofstream & datacard)
     const auto ibinX = binXY.ibinX;
     const auto ibinY = binXY.ibinY;
 
-    if ((fBlindData && (ibinX != ABCD::nbinsX || ibinY != ABCD::nbinsY)) || (!fBlindData))
+    if (fBlindData)
+    {
+      datacard << Form("%f ",PredHist->GetBinContent(ibinX,ibinY));
+    }
+    else // unblinded, use the actual data histogram!!
     {
       datacard << Form("%d ",Int_t(DataHist->GetBinContent(ibinX,ibinY)));
-    }
-    else
-    {
-      // predict using surrounding bins the top right corner
-      const auto pred = checkNaN(DataHist->GetBinContent(ibinX-1,ibinY)*DataHist->GetBinContent(ibinX,ibinY-1)/DataHist->GetBinContent(ibinX-1,ibinY-1));
-      datacard << Form("%f ",pred);
     }
   }
   datacard << std::endl;
@@ -286,6 +300,7 @@ void CombinePreparer::SetupABCD()
   ABCD::SetupBinMap(fBinInfoName);
   ABCD::SetupRatioMap(fRatioInfoName);
   ABCD::SetupBinRatioVecMap(fBinRatioInfoName);
+
 }
 
 void CombinePreparer::ReadSystematics()
@@ -301,4 +316,55 @@ void CombinePreparer::ReadSystematics()
   {
     fSystematics.emplace_back(name,type,val,isSig,isBkg);
   };
+}
+
+void CombinePreparer::SetupInputHists()
+{
+  std::cout << "Reading input file for hists..." << std::endl;
+
+  // Get input file
+  fInFile = TFile::Open(Form("%s",fInFileName.Data()));
+  Common::CheckValidFile(fInFile,fInFileName);
+  fInFile->cd();
+
+  // Get data, bkgd input hists
+  const auto datahistname = Common::HistNameMap["Data"]+"_Plotted";
+  DataHist = (TH2F*)fInFile->Get(datahistname.Data());
+  Common::CheckValidHist(DataHist,datahistname,fInFileName);
+  
+  BkgdHist = (TH2F*)fInFile->Get(Common::BkgdHistName.Data());
+  Common::CheckValidHist(BkgdHist,Common::BkgdHistName,fInFileName);
+
+  // Get signal hists
+  for (const auto & HistNamePair : Common::HistNameMap)
+  {
+    const auto & sample = HistNamePair.first;
+    const auto & histname = HistNamePair.second;
+
+    // loop over singals
+    if (Common::GroupMap[sample] != SampleGroup::isSignal) continue;
+
+    // get signal hist
+    auto & SignHist = SignHistMap[sample];
+    SignHist = (TH2F*)fInFile->Get(histname.Data());
+    Common::CheckValidHist(SignHist,histname,fInFileName);
+  }
+}
+
+void CombinePreparer::SetupTemplateHists()
+{
+  std::cout << "Reading input file for templates..." << std::endl;
+
+  // Get template file
+  const auto inTemplateFileName = Common::eosPreFix+"/"+Common::eosDir+"/"+Common::calibDir+"/"+Common::templateFileName;
+  fTemplateFile = TFile::Open(inTemplateFileName.Data());
+  Common::CheckValidFile(fTemplateFile,inTemplateFileName);
+  fTemplateFile->cd();
+
+  // Get template hists
+  TemplateHistX = (TH1D*)fTemplateFile->Get(Common::templateXHistName.Data());
+  Common::CheckValidHist(TemplateHistX,Common::templateXHistName,inTemplateFileName);
+
+  TemplateHistY = (TH1D*)fTemplateFile->Get(Common::templateYHistName.Data());
+  Common::CheckValidHist(TemplateHistY,Common::templateYHistName,inTemplateFileName);
 }
