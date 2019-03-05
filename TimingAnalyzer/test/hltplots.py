@@ -35,7 +35,7 @@ options.register('inputFilters','/afs/cern.ch/user/k/kmcdermo/public/input/HLTfi
 options.register('inputFlags','/afs/cern.ch/user/k/kmcdermo/public/input/METflags.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input MET filter flags');
 
 ## GT to be used    
-options.register('globalTag','92X_dataRun2_v11',VarParsing.multiplicity.singleton,VarParsing.varType.string,'global tag to be used');
+options.register('globalTag','94X_dataRun2_v11',VarParsing.multiplicity.singleton,VarParsing.varType.string,'global tag to be used');
 
 ## do a demo run over only 1k events
 options.register('demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to run over only 1k events as a demo');
@@ -95,7 +95,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-        '/store/data/Run2017F/SingleMuon/MINIAOD/PromptReco-v1/000/305/040/00000/20B42404-12B2-E711-9A88-02163E012830.root'
+        '/store/user/kmcdermo/files/miniAOD/SPH_2017E_miniAODv2.root'
         ))
 
 ## How many events to process
@@ -183,7 +183,7 @@ process.tree = cms.EDAnalyzer("HLTPlots",
    triggerObjects = cms.InputTag("slimmedPatTrigger"),
    ## met filters
    inputFlags       = cms.string(options.inputFlags),
-   triggerFlags     = cms.InputTag("TriggerResults", "", triggerFlagsProcess),
+   triggerFlags     = cms.InputTag("TriggerResults", "", "RECO"),
    ecalBadCalibFlag = cms.InputTag("ecalBadCalibReducedMINIAODFilter"),			      
    ## tracks
    tracks = cms.InputTag("unpackedTracksAndVertices"),

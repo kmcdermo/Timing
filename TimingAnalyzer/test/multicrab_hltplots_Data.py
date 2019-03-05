@@ -97,7 +97,6 @@ def main():
             ['/SingleMuon/Run2017E-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v'],
             ['/SingleMuon/Run2017F-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v'],
 
-            ['/SinglePhoton/Run2017B-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v'],
             ['/SinglePhoton/Run2017C-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v'],
             ['/SinglePhoton/Run2017D-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v'],
             ['/SinglePhoton/Run2017E-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v'],
