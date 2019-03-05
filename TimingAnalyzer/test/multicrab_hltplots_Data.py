@@ -25,7 +25,7 @@ def getOptions():
 
     parser.add_option('-w', '--workArea',
                       dest = 'workArea',
-                      default = 'multicrab_hltplots_SP',
+                      default = 'multicrab_hltplots',
                       help = "work area directory (only if CMD != 'submit')",
                       metavar = 'WAD')
 
@@ -110,13 +110,14 @@ def main():
             config.General.requestName   = primaryDataset+"_"+runEra
 
             config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_v11','applyTriggerPS=True','psPath='+inDO[1],
-                                            'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlag='+inputFlags]
+                                            'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.
             try:
                 print "Submitting for input dataset %s" % (inDO[0])
                 crabCommand(options.crabCmd, config = config, *options.crabCmdOpts.split())
+                os.system("rm -rf %s/crab_%s/inputs" % (config.General.workArea, config.General.requestName))
             except HTTPException as hte:
                 print "Submission for input dataset %s failed: %s" % (inDO[0], hte.headers)
             except ClientException as cle:
