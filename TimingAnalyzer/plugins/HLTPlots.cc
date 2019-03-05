@@ -12,6 +12,10 @@ HLTPlots::HLTPlots(const edm::ParameterSet & iConfig) :
   phpTmin(iConfig.existsAs<double>("phpTmin") ? iConfig.getParameter<double>("phpTmin") : 20.0),
   phIDmin(iConfig.existsAs<std::string>("phIDmin") ? iConfig.getParameter<std::string>("phIDmin") : "loose"),
   
+  // object extra pruning cuts
+  seedTimemin(iConfig.existsAs<double>("seedTimemin") ? iConfig.getParameter<double>("seedTimemin") : -25.f),
+  nPhosmax(iConfig.existsAs<int>("nPhosmax") ? iConfig.getParameter<int>("nPhosmax") : 2),
+  
   // matching cuts
   dRmin(iConfig.existsAs<double>("dRmin") ? iConfig.getParameter<double>("dRmin") : 0.3),
   pTres(iConfig.existsAs<double>("pTres") ? iConfig.getParameter<double>("pTres") : 0.5),
@@ -85,9 +89,6 @@ void HLTPlots::ConsumeTokens()
 
   // tracks 
   tracksToken = consumes<std::vector<reco::Track> > (tracksTag);
-
-  // vertices
-  verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
 
   // rho
   rhoToken = consumes<double> (rhoTag);

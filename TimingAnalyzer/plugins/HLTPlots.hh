@@ -185,6 +185,10 @@ private:
   const float phpTmin;
   const std::string phIDmin;
   
+  // object extra pruning
+  const float seedTimemin;
+  const int nPhosmax;
+
   // trig dR matching criteria
   const float dRmin;
   const float pTres;
@@ -212,6 +216,7 @@ private:
 
   // output triggers
   std::map<std::string,std::vector<pat::TriggerObjectStandAlone> > triggerObjectsByFilterMap; // first index is filter label, second is trigger objects
+  std::map<std::string,TestStruct> effTestMap;
 
   // met filter inputs
   const std::string inputFlags;
@@ -276,6 +281,7 @@ private:
 
   // output photons
   std::vector<pat::Photon> photons;
+  std::vector<int> goodphs;
 
   // geometry (from ECAL ELF)
   edm::ESHandle<CaloGeometry> caloGeoH;

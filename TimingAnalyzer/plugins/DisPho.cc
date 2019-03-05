@@ -1164,8 +1164,8 @@ void DisPho::InitializeMETBranches()
 void DisPho::SetMETBranches()
 {
   t1pfMETpt    = t1pfMET.userFloat(Config::OOTMETPt);
-  t1pfMETphi   = t1pfMET.phi(Config::OOTMETPhi);
-  t1pfMETsumEt = t1pfMET.sumEt(Config::OOTMETSumEt);
+  t1pfMETphi   = t1pfMET.userFloat(Config::OOTMETPhi);
+  t1pfMETsumEt = t1pfMET.userFloat(Config::OOTMETSumEt);
 
   t1pfMETptUncorr    = t1pfMET.pt();
   t1pfMETphiUncorr   = t1pfMET.phi();

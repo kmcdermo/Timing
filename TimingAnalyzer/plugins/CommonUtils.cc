@@ -234,7 +234,6 @@ namespace oot
     const auto nGED = gedPhotonsH->size();
     for (auto iGED = 0U; iGED < nGED; iGED++)
     {
-      const auto & gedPhoton = (*gedPhotonsH)[iGED];
       reducedPhotons.emplace_back(iGED,false,false);
     }
 
@@ -242,7 +241,6 @@ namespace oot
     const auto nOOT = ootPhotonsH->size();
     for (auto iOOT = 0U; iOOT < nOOT; iOOT++)
     {
-      const auto & ootPhoton = (*ootPhotonsH)[iOOT];
       reducedPhotons.emplace_back(iOOT,true ,false);
     }
 

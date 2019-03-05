@@ -17,6 +17,10 @@ options.register('jetpTmin',15.0,VarParsing.multiplicity.singleton,VarParsing.va
 options.register('jetIDmin',1,VarParsing.multiplicity.singleton,VarParsing.varType.int,'jet ID minimum cut');
 options.register('jetEtamax',3.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'jet eta maximum cut');
 
+## object extra pruning cuts
+options.register('seedTimemin',-25.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon seed time minimum cut');
+options.register('nPhosmax',2,VarParsing.multiplicity.singleton,VarParsing.varType.int,'number of photons to clean jets');
+
 ## object matching
 options.register('dRmin',0.3,VarParsing.multiplicity.singleton,VarParsing.varType.float,'dR minimum cut');
 options.register('pTres',0.5,VarParsing.multiplicity.singleton,VarParsing.varType.float,'pT resolution cut');
@@ -54,6 +58,9 @@ print "phpTmin        : ",options.phpTmin
 print "jetpTmin       : ",options.jetpTmin
 print "jetIDmin       : ",options.jetIDmin
 print "jetEtamax      : ",options.jetEtamax
+print "     -- Extra Pruning --"
+print "seedTimemin    : ",options.seedTimemin
+print "nPhosmax       : ",options.nPhosmax
 print "        -- Matching --"
 print "dRmin          : ",options.dRmin
 print "pTres          : ",options.pTres
@@ -161,6 +168,9 @@ process.tree = cms.EDAnalyzer("HLTPlots",
    jetpTmin  = cms.double(options.jetpTmin),
    jetIDmin  = cms.int32(options.jetIDmin),
    jetEtamax = cms.double(options.jetEtamax),
+   ## extra object pruning
+   seedTimemin = cms.double(options.seedTimemin),
+   nPhosmax    = cms.int32(options.nPhosmax),
    ## object matching
    dRmin = cms.double(options.dRmin),
    pTres = cms.double(options.pTres),
