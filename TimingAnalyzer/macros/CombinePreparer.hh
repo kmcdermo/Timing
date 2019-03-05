@@ -88,6 +88,7 @@ private:
   TFile * fInFile;
   TH2F * DataHist;
   TH2F * BkgdHist;
+  std::map<TString,TH2F*> SignHistMap;
 
   // Template Input
   TFile * fTemplateFile;

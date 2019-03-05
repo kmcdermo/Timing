@@ -327,8 +327,8 @@ void CombinePreparer::SetupInputHists()
   Common::CheckValidFile(fInFile,fInFileName);
   fInFile->cd();
 
-  // Get data, bkgd input hists
-  const auto datahistname = Common::HistNameMap["Data"]+"_Plotted";
+  // Get data, bkgd input hists (even when blinded, do NOT use the _Plotted histogram, as it will screw up anything above the blinded region and therefore the kFactor)
+  const auto datahistname = Common::HistNameMap["Data"];
   DataHist = (TH2F*)fInFile->Get(datahistname.Data());
   Common::CheckValidHist(DataHist,datahistname,fInFileName);
   
