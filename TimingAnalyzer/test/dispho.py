@@ -78,7 +78,7 @@ options.register('filterEff',1.0,VarParsing.multiplicity.singleton,VarParsing.va
 options.register('BR',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'branching ratio of MC');
 
 ## GT to be used
-options.register('globalTag','94X_mc2017_realistic_v14',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
+options.register('globalTag','94X_mc2017_realistic_v17',VarParsing.multiplicity.singleton,VarParsing.varType.string,'gloabl tag to be used');
 
 ## do a demo run over only 1k events
 options.register('demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to run over only 1k events');
@@ -191,11 +191,11 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-		# reminiaod data: 94X_dataRun2_v6
+		# reminiaod data: 94X_dataRun2_v11
 		#'/store/user/kmcdermo/files/miniAOD/SPH_2017E_miniAODv2.root'
-		# reminiaod GJets, GT: 94X_mc2017_realistic_v14
+		# reminiaod GJets, GT: 94X_mc2017_realistic_v17
 		#'/store/user/kmcdermo/files/miniAOD/GJets_600toInf_miniAODv2.root'
-		# miniaodv2 GMSB, GT: 94X_mc2017_realistic_v14
+		# miniaodv2 GMSB, GT: 94X_mc2017_realistic_v17
 		'/store/user/kmcdermo/files/miniAOD/GMSB_L600TeV_Ctau400cm_miniAODv2.root'
 		))
 

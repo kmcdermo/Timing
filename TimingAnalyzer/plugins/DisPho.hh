@@ -119,6 +119,7 @@ public:
 
   explicit DisPho(const edm::ParameterSet & iConfig);
   void ConsumeTokens();
+  void SetupCutFlowLabels();
   ~DisPho();
   static void fillDescriptions(edm::ConfigurationDescriptions & descriptions);  
 

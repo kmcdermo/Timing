@@ -91,10 +91,8 @@ DisPho::DisPho(const edm::ParameterSet & iConfig) :
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
   recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE")),
 
-  // gedphotons
+  // photons
   gedPhotonsTag(iConfig.getParameter<edm::InputTag>("gedPhotons")),
-
-  // ootPhotons
   ootPhotonsTag(iConfig.getParameter<edm::InputTag>("ootPhotons")),
 
   // isMC
@@ -128,10 +126,8 @@ DisPho::DisPho(const edm::ParameterSet & iConfig) :
   // setup tokens
   DisPho::ConsumeTokens();
 
-  // labels for cut flow histogram
-  std::vector<std::string> cutflowLabelVec = {"All","nEvBlinding","METBlinding","Trigger","H_{T}","Good Photon"};
-  auto ibin = 0;
-  for (const auto & cutflowLabel : cutflowLabelVec) cutflowLabelMap[cutflowLabel] = ibin++;
+  // setup labels for cut flow histogram
+  DisPho::SetupCutFlowLabels();
 
   // read in from a stream the trigger paths for saving
   oot::ReadInTriggerNames(inputPaths,pathNames,triggerBitMap);
@@ -190,6 +186,13 @@ void DisPho::ConsumeTokens()
     genParticlesToken = consumes<std::vector<reco::GenParticle> > (genParticlesTag);
     genJetsToken      = consumes<std::vector<reco::GenJet> >      (genJetsTag);
   }
+}
+
+void DisPho::SetupCutFlowLabels()
+{
+  std::vector<std::string> cutflowLabelVec = {"All","nEvBlinding","METBlinding","Trigger","H_{T}","Good Photon"};
+  auto ibin = 0;
+  for (const auto & cutflowLabel : cutflowLabelVec) cutflowLabelMap[cutflowLabel] = ibin++;
 }
 
 DisPho::~DisPho() {}

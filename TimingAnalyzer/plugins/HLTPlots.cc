@@ -24,36 +24,38 @@ HLTPlots::HLTPlots(const edm::ParameterSet & iConfig) :
   triggerResultsTag(iConfig.getParameter<edm::InputTag>("triggerResults")),
   triggerObjectsTag(iConfig.getParameter<edm::InputTag>("triggerObjects")),
   
+  // MET flags
+  inputFlags         (iConfig.existsAs<std::string>("inputFlags") ? iConfig.getParameter<std::string>("inputFlags") : ""),
+  triggerFlagsTag    (iConfig.getParameter<edm::InputTag>("triggerFlags")),
+  ecalBadCalibFlagTag(iConfig.getParameter<edm::InputTag>("ecalBadCalibFlag")),
+
+  // tracks
+  tracksTag(iConfig.getParameter<edm::InputTag>("tracks")),
+  
   // rho
   rhoTag(iConfig.getParameter<edm::InputTag>("rho")),
-  
+
   // mets
-  metsTag(iConfig.getParameter<edm::InputTag>("mets")),  
+  metsTag(iConfig.getParameter<edm::InputTag>("mets")),
 
   // jets
-  jetsTag(iConfig.getParameter<edm::InputTag>("jets")),  
+  jetsTag(iConfig.getParameter<edm::InputTag>("jets")),
 
-  // photons
-  gedPhotonsTag(iConfig.getParameter<edm::InputTag>("gedPhotons")),  
-  
-  // ootPhotons
-  ootPhotonsTag(iConfig.getParameter<edm::InputTag>("ootPhotons")),  
-  
   // recHits
   recHitsEBTag(iConfig.getParameter<edm::InputTag>("recHitsEB")),  
   recHitsEETag(iConfig.getParameter<edm::InputTag>("recHitsEE")),
   
-  // tracks
-  tracksTag(iConfig.getParameter<edm::InputTag>("tracks"))  
+  // photons
+  gedPhotonsTag(iConfig.getParameter<edm::InputTag>("gedPhotons")),
+  ootPhotonsTag(iConfig.getParameter<edm::InputTag>("ootPhotons"))  
 {
   // internal setup
   usesResource();
   usesResource("TFileService");
   
-  // triggers
-  triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
-  triggerObjectsToken = consumes<std::vector<pat::TriggerObjectStandAlone> > (triggerObjectsTag);
-    
+  // setup tokens
+  HLTPlots::ConsumeTokens();
+  
   // store pre-selection path if it exists
   if (applyTriggerPS && psPath != "") triggerBitMap[psPath] = false;
   
@@ -63,7 +65,50 @@ HLTPlots::HLTPlots(const edm::ParameterSet & iConfig) :
   
   // read in from a stream the hlt objects/labels to match to
   oot::ReadInFilterNames(inputFilters,filterNames,triggerObjectsByFilterMap);
-  
+
+  // read in from a stream the trigger paths for saving
+  oot::ReadInTriggerNames(inputFlags,flagNames,triggerFlagMap);
+
+  // setup effTestMap
+  HLTPlots::SetupEffTestMap();
+}
+
+void HLTPlots::ConsumeTokens()
+{
+  // triggers
+  triggerResultsToken = consumes<edm::TriggerResults> (triggerResultsTag);
+  triggerObjectsToken = consumes<std::vector<pat::TriggerObjectStandAlone> > (triggerObjectsTag);
+
+  // MET flags
+  triggerFlagsToken     = consumes<edm::TriggerResults> (triggerFlagsTag);
+  ecalBadCalibFlagToken = consumes<bool> (ecalBadCalibFlagTag);
+
+  // tracks 
+  tracksToken = consumes<std::vector<reco::Track> > (tracksTag);
+
+  // vertices
+  verticesToken = consumes<std::vector<reco::Vertex> > (verticesTag);
+
+  // rho
+  rhoToken = consumes<double> (rhoTag);
+
+  // mets
+  metsToken = consumes<std::vector<pat::MET> > (metsTag);
+
+  // jets
+  jetsToken = consumes<std::vector<pat::Jet> > (jetsTag);
+
+  // rechits
+  recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
+  recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
+
+  // photons
+  gedPhotonsToken = consumes<std::vector<pat::Photon> > (gedPhotonsTag);
+  ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
+}
+
+void HLTPlots::SetupEffTestMap()
+{
   // set test options
   const TestResults initResults = {false,-1};
   effTestMap["L1"]      = {{""                     ,Config::L1Trigger      ,-1,-1},initResults};
@@ -83,26 +128,6 @@ HLTPlots::HLTPlots(const edm::ParameterSet & iConfig) :
       if (filterName == options.numerName) options.inumer = ifilter;
     }
   }
-
-  // rho
-  rhoToken = consumes<double> (rhoTag);
-
-  // mets
-  metsToken = consumes<std::vector<pat::MET> > (metsTag);
-
-  // jets
-  jetsToken = consumes<std::vector<pat::Jet> > (jetsTag);
-
-  // photons
-  gedPhotonsToken = consumes<std::vector<pat::Photon> > (gedPhotonsTag);
-  ootPhotonsToken = consumes<std::vector<pat::Photon> > (ootPhotonsTag);
-
-  // rechits
-  recHitsEBToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEBTag);
-  recHitsEEToken = consumes<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > (recHitsEETag);
-
-  // tracks 
-  tracksToken = consumes<std::vector<reco::Track> > (tracksTag);
 }
 
 HLTPlots::~HLTPlots() {}
@@ -182,6 +207,17 @@ bool HLTPlots::GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSe
   iEvent.getByToken(triggerObjectsToken,triggerObjectsH);
   if (oot::BadHandle(triggerObjectsH,"triggerObjects")) return false;
 
+  // MET FLAGS
+  iEvent.getByToken(triggerFlagsToken,triggerFlagsH);
+  if (oot::BadHandle(triggerFlagsH,"triggerFlags")) return false;
+
+  iEvent.getByToken(ecalBadCalibFlagToken,ecalBadCalibFlagH);
+  if (oot::BadHandle(ecalBadCalibFlagH,"ecalBadCalibFlag")) return false;
+
+  // Tracks
+  iEvent.getByToken(tracksToken,tracksH);
+  if (oot::BadHandle(tracksH,"tracks")) return false;
+
   // METS
   iEvent.getByToken(metsToken,metsH);
   if (oot::BadHandle(metsH,"mets")) return false;
@@ -190,14 +226,6 @@ bool HLTPlots::GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSe
   iEvent.getByToken(jetsToken,jetsH);
   if (oot::BadHandle(jetsH,"jets")) return false;
 
-  // GED PHOTONS
-  iEvent.getByToken(gedPhotonsToken,gedPhotonsH);
-  if (oot::BadHandle(gedPhotonsH,"gedPhotons")) return false;
-
-  // OOT PHOTONS
-  iEvent.getByToken(ootPhotonsToken,ootPhotonsH);
-  if (oot::BadHandle(ootPhotonsH,"ootPhotons")) return false;
-
   // RecHits
   iEvent.getByToken(recHitsEBToken,recHitsEBH);
   if (oot::BadHandle(recHitsEBH,"recHitsEB")) return false;
@@ -205,9 +233,13 @@ bool HLTPlots::GetObjects(const edm::Event & iEvent, const edm::EventSetup & iSe
   iEvent.getByToken(recHitsEEToken,recHitsEEH);
   if (oot::BadHandle(recHitsEEH,"recHitsEE")) return false;
 
-  // Tracks
-  iEvent.getByToken(tracksToken,tracksH);
-  if (oot::BadHandle(tracksH,"tracks")) return false;
+  // GED PHOTONS
+  iEvent.getByToken(gedPhotonsToken,gedPhotonsH);
+  if (oot::BadHandle(gedPhotonsH,"gedPhotons")) return false;
+
+  // OOT PHOTONS
+  iEvent.getByToken(ootPhotonsToken,ootPhotonsH);
+  if (oot::BadHandle(ootPhotonsH,"ootPhotons")) return false;
 
   // geometry (from ECAL ELF)
   iSetup.get<CaloGeometryRecord>().get(caloGeoH);
@@ -246,9 +278,13 @@ void HLTPlots::InitializeObjects()
 void HLTPlots::PrepObjects(const edm::Event & iEvent)
 {
   oot::PrepTriggerBits(triggerResultsH,iEvent,triggerBitMap);
+  oot::PrepTriggerBits(triggerFlagsH,iEvent,triggerFlagMap);
   oot::PrepTriggerObjects(triggerResultsH,triggerObjectsH,iEvent,triggerObjectsByFilterMap);
   oot::PrepJets(jetsH,jets,jetpTmin,jetEtamax,jetIDmin);
   oot::PrepPhotonsCorrectMET(gedPhotonsH,ootPhotonsH,photons,t1pfMET,rho,dRmin,phpTmin,phIDmin);
+
+  oot::PrunePhotons(photons,recHitsEB,recHitsEE,seedTimemin);
+  oot::PruneJets(jets,photons,nPhosmax,dRmin);
 }
 
 inline bool HLTPlots::ApplyPreSelection()
@@ -299,7 +335,7 @@ void HLTPlots::SetPhotonInfo()
   for (const auto & photon : photons)
   {
     // from ootPhoton collection
-    phisOOT[iph] = *(photon.userData<bool>("isOOT"));
+    phisOOT[iph] = *(photon.userData<bool>(Config::IsOOT));
     
     // standard photon branches
     phE  [iph] = photon.energy();

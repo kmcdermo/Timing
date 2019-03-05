@@ -27,8 +27,11 @@ options.register('trackdRmin',0.2,VarParsing.multiplicity.singleton,VarParsing.v
 options.register('inputPaths','/afs/cern.ch/user/k/kmcdermo/public/input/HLTpaths.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input signal paths');
 options.register('inputFilters','/afs/cern.ch/user/k/kmcdermo/public/input/HLTfilters.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input signal filters');
 
+## met filter input
+options.register('inputFlags','/afs/cern.ch/user/k/kmcdermo/public/input/METflags.txt',VarParsing.multiplicity.singleton,VarParsing.varType.string,'text file list of input MET filter flags');
+
 ## GT to be used    
-options.register('globalTag','92X_dataRun2_Prompt_v9',VarParsing.multiplicity.singleton,VarParsing.varType.string,'global tag to be used');
+options.register('globalTag','92X_dataRun2_v11',VarParsing.multiplicity.singleton,VarParsing.varType.string,'global tag to be used');
 
 ## do a demo run over only 1k events
 options.register('demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to run over only 1k events as a demo');
@@ -59,6 +62,8 @@ print "trackpTmin     : ",options.trackpTmin
 print "        -- Trigger --"
 print "inputPaths     : ",options.inputPaths
 print "inputFilters   : ",options.inputFilters
+print "       -- MET Filters --"
+print "inputFlags     : ",options.inputFlags
 print "           -- GT --"
 print "globalTag      : ",options.globalTag	
 print "         -- Output --"
@@ -107,9 +112,9 @@ process.unpackedTracksAndVertices = unpackedTracksAndVertices.clone()
 from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
 runMetCorAndUncFromMiniAOD (
         process,
-        isData = not options.isMC,
+        isData = True,
         fixEE2017 = True,
-	fixEE2017Params = {'userawPt':True, 'PtThreshold':50.0, 'MinEtaThreshold':2.65, 'MaxEtaThreshold':3.139},
+	fixEE2017Params = {'userawPt':True, 'ptThreshold':50.0, 'minEtaThreshold':2.65, 'maxEtaThreshold':3.139},
         postfix = "ModifiedMET"
 )
 
@@ -121,6 +126,30 @@ updateJetCollection (
    labelName = 'UpdatedJEC',
    jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']), 'None')
 )
+
+## Rerun one MET filter: https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETOptionalFiltersRun2#How_to_run_ecal_BadCalibReducedM
+baddetEcallist = cms.vuint32(
+    [872439604,872422825,872420274,872423218,
+     872423215,872416066,872435036,872439336,
+     872420273,872436907,872420147,872439731,
+     872436657,872420397,872439732,872439339,
+     872439603,872422436,872439861,872437051,
+     872437052,872420649,872422436,872421950,
+     872437185,872422564,872421566,872421695,
+     872421955,872421567,872437184,872421951,
+     872421694,872437056,872437057,872437313])
+
+process.ecalBadCalibReducedMINIAODFilter = cms.EDFilter("EcalBadCalibFilter",
+    EcalRecHitSource = cms.InputTag("reducedEgamma:reducedEERecHits"),
+    ecalMinEt        = cms.double(50.),
+    baddetEcal       = baddetEcallist, 
+    taggingMode      = cms.bool(True),
+    debug            = cms.bool(False)
+)
+
+## Apply Scale/Smearing + GED and OOT VID to ootPhotons
+from RecoEgamma.EgammaTools.OOTPhotonPostRecoTools import setupOOTPhotonPostRecoSeq
+setupOOTPhotonPostRecoSeq(process)
 
 # Make the tree 
 process.tree = cms.EDAnalyzer("HLTPlots",
@@ -142,20 +171,26 @@ process.tree = cms.EDAnalyzer("HLTPlots",
    inputFilters   = cms.string(options.inputFilters),
    triggerResults = cms.InputTag("TriggerResults", "", "HLT"),
    triggerObjects = cms.InputTag("slimmedPatTrigger"),
+   ## met filters
+   inputFlags       = cms.string(options.inputFlags),
+   triggerFlags     = cms.InputTag("TriggerResults", "", triggerFlagsProcess),
+   ecalBadCalibFlag = cms.InputTag("ecalBadCalibReducedMINIAODFilter"),			      
+   ## tracks
+   tracks = cms.InputTag("unpackedTracksAndVertices"),
+   ## vertices
+   vertices = cms.InputTag("offlineSlimmedPrimaryVertices"),
    ## rho
    rho = cms.InputTag("fixedGridRhoFastjetAll"), #fixedGridRhoAll
    ## METs
    mets = cms.InputTag("slimmedMETsModifiedMET"),
-   ## jets			    	
+   ## jets
    jets = cms.InputTag("updatedPatJetsUpdatedJEC"),
-   ## photons		
+   ## photons
    gedPhotons = cms.InputTag("slimmedPhotons"),
    ootPhotons = cms.InputTag("slimmedOOTPhotons"),
-   ## ecal recHits			      
+   ## ecal recHits
    recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
-   recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
-   ## tracks
-   tracks = cms.InputTag("unpackedTracksAndVertices"),
+   recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits")
 )
 
 # Set up the path
@@ -163,8 +198,8 @@ process.treePath = cms.Path(
 	process.patJetCorrFactorsUpdatedJEC +
 	process.updatedPatJetsUpdatedJEC +
 	process.fullPatMetSequenceModifiedMET +
+	process.ecalBadCalibReducedMINIAODFilter +
 	process.unpackedTracksAndVertices +
 	process.ootPhotonPostRecoSeq +
 	process.tree
 )
-

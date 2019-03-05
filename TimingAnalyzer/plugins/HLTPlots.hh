@@ -113,6 +113,8 @@ public:
   ////////////////////////
 
   explicit HLTPlots(const edm::ParameterSet & iConfig);
+  void ConsumeTokens();
+  void SetupEffTestMap();
   ~HLTPlots();
   static void fillDescriptions(edm::ConfigurationDescriptions & descriptions);
 
@@ -208,9 +210,27 @@ private:
   edm::EDGetTokenT<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsToken;
   edm::Handle<std::vector<pat::TriggerObjectStandAlone> > triggerObjectsH;
 
-  // trigger I/O
+  // output triggers
   std::map<std::string,std::vector<pat::TriggerObjectStandAlone> > triggerObjectsByFilterMap; // first index is filter label, second is trigger objects
-  std::map<std::string,TestStruct> effTestMap;
+
+  // met filter inputs
+  const std::string inputFlags;
+  std::vector<std::string> flagNames;
+  strBitMap triggerFlagMap;
+
+  // met filters
+  const edm::InputTag triggerFlagsTag;
+  edm::EDGetTokenT<edm::TriggerResults> triggerFlagsToken;
+  edm::Handle<edm::TriggerResults> triggerFlagsH;
+
+  const edm::InputTag ecalBadCalibFlagTag;
+  edm::EDGetTokenT<bool> ecalBadCalibFlagToken;
+  edm::Handle<bool> ecalBadCalibFlagH;
+
+  // Tracks
+  const edm::InputTag tracksTag;
+  edm::EDGetTokenT<std::vector<reco::Track> > tracksToken;
+  edm::Handle<std::vector<reco::Track> > tracksH;
 
   // rho
   const edm::InputTag rhoTag;
@@ -223,47 +243,39 @@ private:
   edm::EDGetTokenT<std::vector<pat::MET> > metsToken;
   edm::Handle<std::vector<pat::MET> > metsH;
 
-  // output met
+  // output MET
   pat::MET t1pfMET;
 
   // jets
   const edm::InputTag jetsTag;
   edm::EDGetTokenT<std::vector<pat::Jet> > jetsToken;
   edm::Handle<std::vector<pat::Jet> > jetsH;
-
-  // output jets
   std::vector<pat::Jet> jets;
 
-  // ged photons
-  const edm::InputTag gedPhotonsTag;
-  edm::EDGetTokenT<std::vector<pat::Photon> > gedPhotonsToken;
-  edm::Handle<std::vector<pat::Photon> > gedPhotonsH;
-
-  // oot photons
-  const edm::InputTag ootPhotonsTag;
-  edm::EDGetTokenT<std::vector<pat::Photon> > ootPhotonsToken;
-  edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
-  
-  // output photons
-  std::vector<pat::Photon> photons;
-  std::vector<int> goodphs;
-
-  // EB RecHits
+  // RecHits EB
   const edm::InputTag recHitsEBTag;
   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBToken;
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
   const edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > * recHitsEB;
 
-  // EE RecHits
+  // RecHits EE
   const edm::InputTag recHitsEETag;
   edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEToken;
   edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
   const edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > * recHitsEE;
 
-  // Tracks
-  const edm::InputTag tracksTag;
-  edm::EDGetTokenT<std::vector<reco::Track> > tracksToken;
-  edm::Handle<std::vector<reco::Track> > tracksH;
+  // gedPhotons
+  const edm::InputTag gedPhotonsTag;
+  edm::EDGetTokenT<std::vector<pat::Photon> > gedPhotonsToken;
+  edm::Handle<std::vector<pat::Photon> > gedPhotonsH;
+
+  // ootPhotons
+  const edm::InputTag ootPhotonsTag;
+  edm::EDGetTokenT<std::vector<pat::Photon> > ootPhotonsToken;
+  edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
+
+  // output photons
+  std::vector<pat::Photon> photons;
 
   // geometry (from ECAL ELF)
   edm::ESHandle<CaloGeometry> caloGeoH;

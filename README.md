@@ -4,8 +4,8 @@ Update to README: old 80X code removed, but still have GEN_SIM...
 
 Standard setup:
 ```
-cmsrel CMSSW_9_4_12
-cd CMSSW_9_4_12/src
+cmsrel CMSSW_9_4_13
+cd CMSSW_9_4_13/src
 cmsenv
 git cms-init
 
@@ -20,17 +20,40 @@ popd
 scram b -j 8
 ```
 
-N.B. The previous instruction to include: ```git cms-merge-topic cms-met:METFixEE2017_949_v2``` has been dropped as this code is merged in 9_4_12.
+Will also need to setup combine somewhere in a separate CMSSW release area (see links below). Change the relative path for the setup in ```scripts/common_variables.sh```. Currently using Higgs combine with CMSSW_8_1_0. 
 
-Will also need to setup combine somewhere in a separate CMSSW release area:
-https://cms-hcomb.gitbooks.io/combine/content/part1/#for-end-users-that-dont-need-to-commit-or-do-any-development
-
-Change the relative path for the setup in ```limits/scripts/common_variables.sh```. Currently using Higgs combine with CMSSW_8_1_0. 
+N.B. The previous instructions included: ```git cms-merge-topic cms-met:METFixEE2017_949_v2``` has been dropped as this code is merged in 9_4_12.
 
 Made ```kmcdermo:post_reco_OOT_AND_add_OOT_VID``` with the following:
 - ```kmcdermo:post_reco_OOT```: adds scale/smear + GED cut-based VID for OOT photons
 - combo of squashed commits from: ```lsoffi:CMSSW_10_1_1_OOT_PhotonID_wSMaj``` and ```kmcdermo:add_OOT_VID```
 - add commits for OOT VID for GED and OOT Photons
+
+Additional useful links:
+ - Analysis recipes for 2017: https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVAnalysisSummaryTable
+ - Object recommendations: https://twiki.cern.ch/twiki/bin/view/CMS/ExoObjectRecommendationsRun2#2017_AN1
+ - miniAOD 2017: https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookMiniAOD2017
+ - Setup combine: https://cms-hcomb.gitbooks.io/combine/content/part1/#for-end-users-that-dont-need-to-commit-or-do-any-development
+ - MET corrections+fixes: https://twiki.cern.ch/twiki/bin/view/CMS/MissingETUncertaintyPrescription#Instructions_for_9_4_X_X_9_for_2
+ - JECs : https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#CorrPatJets  
+ - MET Filters: https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETOptionalFiltersRun2#How_to_run_ecal_BadCalibReducedM
+ - Computing EGM Isolations
+   - https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedPhotonIdentificationRun2#Selection_implementation_details
+   - https://twiki.cern.ch/twiki/bin/view/CMS/EgammaPFBasedIsolationRun2#Recipe_for_accessing_PF_isol_AN1
+   - https://github.com/cms-sw/cmssw/blob/master/RecoEgamma/PhotonIdentification/plugins/PhotonIDValueMapProducer.cc#L338-L395
+ - PFJetID 2017: https://twiki.cern.ch/twiki/bin/view/CMS/JetID13TeVRun2017
+ - Accessors for handles
+   - ECAL geometry : https://gitlab.cern.ch/shervin/ECALELF
+   - Laser constants : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h
+   - Intercalibration constants : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h
+   - ADCToGeV : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h
+   - Pedestals : https://github.com/ferriff/usercode/blob/master/DBDump/plugins/DBDump.cc
+   - JERs : https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyResolution#Accessing_factors_from_Global_Ta
+ - JER procedure explanation from https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetResolution#Smearing_procedures
+ - JER implementation copied from https://github.com/cms-sw/cmssw/blob/master/PhysicsTools/PatUtils/interface/SmearedJetProducerT.h#L208-L215
+ - Muon ID: https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideMuonIdRun2#Muon_selectors_Since_9_4_X
+ - Computing adcToGeVInfo : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/src/EcalClusterLazyTools.cc#0204
+ - Basic EGM kinematic info in miniAODv2: https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaMiniAODV2#Applying_the_Energy_Scale_and_sm
 
 -----------------------
 
