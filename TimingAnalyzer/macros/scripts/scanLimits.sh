@@ -88,7 +88,7 @@ function GetBestDir ()
 ## Loop Over All Gridpoints To Get Best R ##
 ############################################
 
-for lambda in 150 200 250 300 350 400
+for lambda in 100 150 200 250 300 350 400
 do
     for ctau in 0p001 0p1 10 200 400 600 800 1000 1200 10000
     do
