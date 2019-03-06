@@ -24,8 +24,9 @@ outdir=${9:-"madv2_v3/full_chain/results_ABCD"}
 is_blind=${10:-"true"}
 use_obs=${11:-"true"}
 use_systematics=${12:-"false"}
-save_meta_data=${13:-0}
-do_cleanup=${14:-"true"}
+make_limit_plots=${13:-"false"}
+save_meta_data=${14:-0}
+do_cleanup=${15:-"true"}
 
 ## 2D Plot Name
 plotfiletext="met_vs_time"
@@ -79,19 +80,26 @@ echo "Making Datacards ABCD"
 echo "Extracting Results ABCD"
 ./scripts/extractResultsABCD.sh "${inlimitdir}" "${datacardname}" "${outdir}/${outlimitplotdir}" "${outcombname}" "${outlimitdir}" "${combinelogname}" "${use_obs}" "${do_cleanup}"
 
-#########################
-## Make 1D Limit Plots ##
-#########################
+######################
+## Exclusion curves ##
+######################
 
-echo "Running limits 1D"
-./scripts/runLimits1D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${MainEra}" "${outlimit1D}" "${outdir}/${outlimitplotdir}"
-
-#########################
-## Make 2D Limit Plots ##
-#########################
-
-echo "Running limits 2D"
-./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" ${save_meta_data} "${outlimit2D}" "${outdir}/${outlimitplotdir}"
+if [[ "${make_limit_plots}" == "true" ]]
+then
+    #########################
+    ## Make 1D Limit Plots ##
+    #########################
+    
+    echo "Running limits 1D"
+    ./scripts/runLimits1D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${MainEra}" "${outlimit1D}" "${outdir}/${outlimitplotdir}"
+    
+    #########################
+    ## Make 2D Limit Plots ##
+    #########################
+    
+    echo "Running limits 2D"
+    ./scripts/runLimits2D.sh "${outlimitdir}" "${outcombname}" ${doobs} "${limitconfigdir}/${limit}.${inTextExt}" "${MainEra}" ${save_meta_data} "${outlimit2D}" "${outdir}/${outlimitplotdir}"
+fi    
 
 ###########################
 ## Clean Up If Requested ##

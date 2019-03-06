@@ -39,7 +39,7 @@ eval `scram runtime -sh`
 ## Loop over signals and run asymptotic limits ##
 #################################################
 
-for lambda in 150 200 250 300 350 400
+for lambda in 100 150 200 250 300 350 400
 do
     echo "Extracting results for lambda: ${lambda}"
     ./extractResultsABCDSub.sh "${lambda}" "${datacardname}" "${combinelogname}" "${use_obs}" &

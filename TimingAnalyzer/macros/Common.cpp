@@ -213,7 +213,7 @@ namespace Common
   void SetupSignalSamples()
   {
     // GMSB
-    const std::vector<TString> lambdas = {"150","200","250","300","350","400"}; // TeV
+    const std::vector<TString> lambdas = {"100","150","200","250","300","350","400"}; // TeV
     const std::vector<TString> gctaus  = {"0p001","0p1","10","200","400","600","800","1000","1200","10000"}; // cm
 
     // loop over all possible GMSBs...

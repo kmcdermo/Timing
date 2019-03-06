@@ -38,6 +38,8 @@ namespace Combine
       const Int_t i_lambda = lambda.Atoi();
       const Float_t f_ctau = ctau.Atof();
 
+      if (lambda.EqualTo("100",TString::kExact)) continue;
+
       Combine::GMSBMap[name] = {lambda,i_lambda,s_ctau,f_ctau,gen_ctau,mass,width,br};
     }
   
@@ -49,6 +51,8 @@ namespace Combine
     {
       const TString s_ctau = Common::ReplaceDotWithP(ctau);
       const TString name = "GMSB_L"+lambda+"_CTau"+s_ctau;
+
+      if (lambda.EqualTo("100",TString::kExact)) continue;
      
       Combine::GMSBMap[name].xsec  = xsec;
       Combine::GMSBMap[name].exsec = exsec;
