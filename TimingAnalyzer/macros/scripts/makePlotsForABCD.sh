@@ -15,34 +15,14 @@ xbin=${1:-""}
 xblind=${2:-""}
 ybin=${3:-""}
 yblind=${4:-""}
-outfiletext=${5:-"met_vs_time"}
-outdir=${6:-"madv2_v3/full_chain/results_ABCD"}
-is_blind=${7:-"true"}
-save_meta_data=${8:-0}
-do_cleanup=${9:-"true"}
+outdir=${5:-"madv2_v3/full_chain/results_ABCD"}
+is_blind=${6:-"true"}
+save_meta_data=${7:-0}
+do_cleanup=${8:-"true"}
 
 ## other global config (derived)
-outplot2Ddir="plots2D"
 xboundary=$( echo "${xbin}" | sed -r 's/_/ /g' )
 yboundary=$( echo "${ybin}" | sed -r 's/_/ /g' )
-
-## make tmp misc config
-misc_config="misc_ABCD.${inTextExt}"
-> "${misc_config}"
-
-## fill tmp misc config
-#echo "skip_bkgd_mc=1" >> "${misc_config}"
-echo "scale_to_bin_widths=0" >> "${misc_config}"
-
-## set blinding
-if [[ "${is_blind}" == "true" ]]
-then
-    echo "blind_data=1" >> "${misc_config}"
-    blind_data=1
-else
-    echo "blind_data=0" >> "${misc_config}"
-    blind_data=0
-fi
 
 ## make tmp config for plotting
 plot_config="met_${ybin}_vs_time_${xbin}_config.${inTextExt}"
@@ -65,13 +45,30 @@ echo "y_bins=VARIABLE 0 ${yboundary} 3000" >> "${plot_config}"
 echo "z_title=Events/ns/GeV" >> "${plot_config}"
 echo "blinding=(${xblind},+Inf,${yblind},+Inf)" >> "${plot_config}"
 
+## make tmp misc config
+misc_config="misc_ABCD.${inTextExt}"
+> "${misc_config}"
+
+## fill tmp misc config
+echo "scale_to_bin_widths=0" >> "${misc_config}"
+
+## set blinding
+if [[ "${is_blind}" == "true" ]]
+then
+    echo "blind_data=1" >> "${misc_config}"
+    blind_data=1
+else
+    echo "blind_data=0" >> "${misc_config}"
+    blind_data=0
+fi
+
 ## use only SR
 echo "${SR}" | while read -r label infile insigfile sel
 do    
     ## make plot
     echo "Making 2D plot with ${label}"
 
-    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${plot_config}" "${misc_config}" "${MainEra}" ${save_meta_data} "${outfiletext}" "${outdir}/${outplot2Ddir}"
+    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cutconfigdir}/${sel}.${inTextExt}" "${plot_config}" "${misc_config}" "${MainEra}" ${save_meta_data} "${plotfiletext}" "${outdir}/${outplot2Ddir}"
 done
 
 ## delete tmp files

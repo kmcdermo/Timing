@@ -15,34 +15,14 @@ xbin=${1:-""}
 xblind=${2:-""}
 ybin=${3:-""}
 yblind=${4:-""}
-outlimitdir=${5:-"output"}
-outlimitplotdir=${6:-"limits"}
-combinelogname=${7:-"combine"}
-outcombname=${8:-"AsymLim"}
-outdir=${9:-"madv2_v3/full_chain/results_ABCD"}
+outdir=${5:-"madv2_v3/full_chain/results_ABCD"}
 
-is_blind=${10:-"true"}
-use_obs=${11:-"true"}
-use_systematics=${12:-"false"}
-make_limit_plots=${13:-"false"}
-save_meta_data=${14:-0}
-do_cleanup=${15:-"true"}
-
-## 2D Plot Name
-plotfiletext="met_vs_time"
-plotfilename="${plotfiletext}.root"
-
-## ABCD Config
-datacardname="datacardABCD"
-incombdir="combine_input" # for www
-
-## Combine config
-inlimitdir="input"
-
-## Limit plot config
-limit="limits2D"
-outlimit1D="limit1D"
-outlimit2D="limit2D"
+is_blind=${6:-"true"}
+use_obs=${7:-"true"}
+use_systematics=${8:-"false"}
+make_limit_plots=${9:-"false"}
+save_meta_data=${10:-0}
+do_cleanup=${11:-"true"}
 
 ## Derived Input
 if [[ "use_obs" == "true" ]]
@@ -64,21 +44,21 @@ mkdir -p "${outlimitdir}"
 ################################################
 
 echo "Making Plots for ABCD"
-./scripts/makePlotsForABCD.sh "${xbin}" "${xblind}" "${ybin}" "${yblind}" "${plotfiletext}" "${outdir}" "${is_blind}" ${save_meta_data} "${do_cleanup}"
+./scripts/makePlotsForABCD.sh "${xbin}" "${xblind}" "${ybin}" "${yblind}" "${outdir}" "${is_blind}" ${save_meta_data} "${do_cleanup}"
 
 ####################
 ## Make Datacards ##
 ####################
 
 echo "Making Datacards ABCD"
-./scripts/makeDatacardsABCD.sh "${plotfilename}" "${datacardname}" "${outdir}/${incombdir}" "${inlimitdir}" "${is_blind}" "${use_systematics}" "${do_cleanup}"
+./scripts/makeDatacardsABCD.sh "${outdir}" "${is_blind}" "${use_systematics}" "${do_cleanup}"
 
 ##################################################
 ## Extract Limits From Datacards : Run Combine! ##
 ##################################################
 
 echo "Extracting Results ABCD"
-./scripts/extractResultsABCD.sh "${inlimitdir}" "${datacardname}" "${outdir}/${outlimitplotdir}" "${outcombname}" "${outlimitdir}" "${combinelogname}" "${use_obs}" "${do_cleanup}"
+./scripts/extractResultsABCD.sh "${outdir}" "${use_obs}" "${do_cleanup}"
 
 ######################
 ## Exclusion curves ##

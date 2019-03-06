@@ -11,27 +11,18 @@ source scripts/common_variables.sh
 ###################
 
 ## Command Line Input
-x_log=${1:-"xs.${outTextExt}"}
-y_log=${2:-"ys.${outTextExt}"}
-outlimitdir=${3:-"output"}
-outlimitplotdir=${4:-"limits"}
-combinelogname=${5:-"combine"}
-outcombname=${6:-"AsymLim"}
-outdir=${7:-"madv2_v3/full_chain/results_ABCD"}
+outdir=${1:-"madv2_v3/full_chain/results_ABCD"}
 
-use_obs=${8:-"false"}
-save_meta_data=${9:-0}
-do_cleanup=${10:-"true"}
+use_obs=${2:-"false"}
+save_meta_data=${3:-0}
+do_cleanup=${4:-"true"}
 
-## Limit Scan Log File
-scan_log="abcd_scan_for_r.${outTextExt}"
-> "${scan_log}"
-
-######################
-## Make Directories ##
-######################
+################################
+## Make Directories and Files ##
+################################
 
 mkdir -p "${outlimitdir}"
+> "${scan_log}"
 
 ################################################
 ## Perform Scan For Best Expected R At Median ##
@@ -52,7 +43,7 @@ echo "Copying Best Limit File for Each Gridpoint"
 ######################
 
 echo "Produce 1D and 2D Limits from Scan"
-./scripts/onlyPlotLimits.sh "${outlimitdir}" "${outlimitplotdir}" "${outcombname}" "${outdir}" "${use_obs}" ${save_meta_data} "${do_cleanup}"
+./scripts/onlyPlotLimits.sh "${outdir}" "${use_obs}" ${save_meta_data} "${do_cleanup}"
 
 ###########################
 ## Clean Up If Requested ##

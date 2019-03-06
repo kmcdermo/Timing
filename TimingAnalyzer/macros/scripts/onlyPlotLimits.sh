@@ -11,19 +11,11 @@ source scripts/common_variables.sh
 ###################
 
 ## Command Line Input
-outlimitdir=${1:-"output"}
-outlimitplotdir=${2:-"limits"}
-outcombname=${3:-"AsymLim"}
-outdir=${4:-"madv2_v3/full_chain/results_ABCD"}
+outdir=${1:-"madv2_v3/full_chain/results_ABCD"}
 
-use_obs=${5:-"false"}
-save_meta_data=${6:-0}
-do_cleanup=${7:-"false"}
-
-## Limit plot config
-limit="limits2D"
-outlimit1D="limit1D"
-outlimit2D="limit2D"
+use_obs=${2:-"false"}
+save_meta_data=${3:-0}
+do_cleanup=${4:-"false"}
 
 ## derived input
 if [[ "use_obs" == "true" ]]

@@ -27,9 +27,26 @@ export disphodir="dispho/plots"
 ## combine info
 export combdir="/afs/cern.ch/work/k/kmcdermo/private/dispho/Analysis/combine/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit/working"
 
-## common derived output info
-export limitdir="limits"
+## common info for optimized ABCD scan
+export plotfiletext="met_vs_time" # 2D plot base name
+export scan_log="abcd_scan_for_r.${outTextExt}" # Limit Scan Log File
 
+export inlimitdir="input" # directory for datacards
+export outlimitdir="output" # directory for output root files from combine, limit plots
+
+export datacardname="datacardABCD" # datacard base name as input to combine
+export combinelogname="combine" # log file base name from running combine
+export outcombname="AsymLim" # root file base name from running combine
+
+export incombdir="combine_input" # for www: Datacards fed to combine, as well binning configuration info
+export outlimitplotdir="limits" # for www: ROOT and log files from running combine, and limit plots
+export outplot2Ddir="plots2D" # for www: Input 2D plots file for building datacards
+
+export limit="limits2D" # limit config used for 2D plot
+export outlimit1D="limit1D" # output base name for 1D limits
+export outlimit2D="limit2D" # output base name for 2D limits
+
+## plotting config
 declare -a exts=("png" "pdf")
 export exts
 

@@ -13,13 +13,13 @@ source scripts/common_variables.sh
 ## Command Line Config
 x_log=${1:-"xs.${outTextExt}"}
 y_log=${2:-"ys.${outTextExt}"}
-scan_log=${3:-"scan_for_best_r.${outTextExt}"}
+scan_log=${3:-"abcd_scan_for_r.${outTextExt}"}
 outlimitplotdir=${4:-"limits"}
 combinelogname=${5:-"combine"}
 outdir=${6:-"madv2_v3/full_chain/results_ABCD"}
 
 ## Max ratio between observed and expected
-max_ratio=20
+max_ratio=5
 
 ## Derived Config
 indir="${topdir}/${disphodir}/${outdir}"

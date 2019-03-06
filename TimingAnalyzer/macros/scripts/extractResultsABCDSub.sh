@@ -12,9 +12,7 @@ source common_variables.sh
 
 ## i/o params
 lambda=${1:-"100"}
-datacardname=${2:-"datacardABCD"}
-combinelogname=${3:-"combine"}
-use_obs=${4:-"false"}
+use_obs=${2:-"false"}
 
 ## derived params : run expected limits?
 if [[ "${use_obs}" == "true" ]]

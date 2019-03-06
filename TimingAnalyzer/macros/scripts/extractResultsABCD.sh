@@ -10,15 +10,11 @@ source scripts/common_variables.sh
 ## Configuration ##
 ###################
 
-## i/o params
-inlimitdir=${1:-"input"}
-datacardname=${2:-"datacardABCD"}
-outdir=${3:-"limits"}
-outcombname=${4:-"AsymLim"}
-outlimitdir=${5:-"output"}
-combinelogname=${6:-"combine"}
-use_obs=${7:-"false"}
-do_cleanup=${8:-"true"}
+## Command Line Input
+outdir=${1:-"madv2_v3/checks_v26"}
+
+use_obs=${2:-"false"}
+do_cleanup=${3:-"true"}
 
 ###########################################
 ## Ship things over to combine directory ##
@@ -42,7 +38,7 @@ eval `scram runtime -sh`
 for lambda in 100 150 200 250 300 350 400
 do
     echo "Extracting results for lambda: ${lambda}"
-    ./extractResultsABCDSub.sh "${lambda}" "${datacardname}" "${combinelogname}" "${use_obs}" &
+    ./extractResultsABCDSub.sh "${lambda}" "${use_obs}" &
 done
 
 wait
@@ -83,7 +79,7 @@ cp "${combdir}/${outcombname}"*".root" "${outlimitdir}"
 ##########################
 
 ## make out dirs
-fulldir="${topdir}/${disphodir}/${outdir}"
+fulldir="${topdir}/${disphodir}/${outdir}/${outlimitplotdir}"
 PrepOutDir "${fulldir}"
 cp "${combdir}/${combinelogname}"*".${outTextExt}" "${fulldir}"
 cp "${combdir}/${outcombname}"*".root" "${fulldir}"
