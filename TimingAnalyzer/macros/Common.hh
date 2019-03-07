@@ -295,6 +295,9 @@ namespace Common
   // color vector for special overplotting
   static const std::vector<Color_t> ColorVec = {kBlue,kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3,kPink-9}; 
 
+  // Hack to get combine to converge
+  Float_t ApplyCombineSF(const TString & sample);
+   
   // String formatting
   std::string RemoveDelim(std::string tmp, const std::string & delim){return tmp.erase(tmp.find(delim),delim.length());}
   TString ReplaceDelimWithSpace(TString tmp, const TString & delim){return tmp.ReplaceAll(delim," ");}

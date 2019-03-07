@@ -154,7 +154,7 @@ void CombinePreparer::MakeDatacard(const TString & sample, const TH2F * SignHist
   CombinePreparer::FillObservationSection(datacard);
   datacard << filler.Data() << std::endl;
 
-  CombinePreparer::FillProcessSection(datacard,SignHist);
+  CombinePreparer::FillProcessSection(datacard,sample,SignHist);
   datacard << filler.Data() << std::endl;
 
   if (fIncludeSystematics)
@@ -205,7 +205,7 @@ void CombinePreparer::FillObservationSection(std::ofstream & datacard)
   datacard << std::endl;
 }
 
-void CombinePreparer::FillProcessSection(std::ofstream & datacard, const TH2F * SignHist)
+void CombinePreparer::FillProcessSection(std::ofstream & datacard, const TString & sample, const TH2F * SignHist)
 {
   // process section : fill with signal!
   datacard << "bin ";
@@ -230,6 +230,9 @@ void CombinePreparer::FillProcessSection(std::ofstream & datacard, const TH2F * 
   }
   datacard << std::endl;
 
+  // get scale factor by sample to get combine to converge
+  const auto combine_sf = Common::ApplyCombineSF(sample);
+
   datacard << "rate ";
   for (const auto & BinPair : ABCD::BinMap)
   {
@@ -237,8 +240,8 @@ void CombinePreparer::FillProcessSection(std::ofstream & datacard, const TH2F * 
     const auto binXY = BinPair.second;
     const auto ibinX = binXY.ibinX;
     const auto ibinY = binXY.ibinY;
-
-    datacard << Form("%f 1 ",SignHist->GetBinContent(ibinX,ibinY));
+    
+    datacard << Form("%f 1 ",SignHist->GetBinContent(ibinX,ibinY)/combine_sf);
   }
   datacard << std::endl;
 }

@@ -38,8 +38,6 @@ namespace Combine
       const Int_t i_lambda = lambda.Atoi();
       const Float_t f_ctau = ctau.Atof();
 
-      if (lambda.EqualTo("100",TString::kExact)) continue;
-
       Combine::GMSBMap[name] = {lambda,i_lambda,s_ctau,f_ctau,gen_ctau,mass,width,br};
     }
   
@@ -52,18 +50,17 @@ namespace Combine
       const TString s_ctau = Common::ReplaceDotWithP(ctau);
       const TString name = "GMSB_L"+lambda+"_CTau"+s_ctau;
 
-      if (lambda.EqualTo("100",TString::kExact)) continue;
-     
       Combine::GMSBMap[name].xsec  = xsec;
       Combine::GMSBMap[name].exsec = exsec;
     }
 
-    // read in r-values...
+    // read in r-values... (and adjust by SFs!)
     for (auto & GMSBPair : Combine::GMSBMap)
     {
       const auto & name = GMSBPair.first;
       auto       & info = GMSBPair.second;
-      
+      const auto combine_sf = Common::ApplyCombineSF(name);
+
       // get file
       const TString filename = Form("%s/%s%s.root",indir.Data(),infilename.Data(),name.Data());
       auto isnull = Common::IsNullFile(filename);
@@ -89,7 +86,7 @@ namespace Combine
 	  for (auto ientry = 0U; ientry < intree->GetEntries(); ientry++)
 	  {
 	    b_limit->GetEntry(ientry);
-	    info.rvalmap[Combine::RValVec[ientry]] = limit;
+	    info.rvalmap[Combine::RValVec[ientry]] = limit/combine_sf;
 	  }
 	}
 	else

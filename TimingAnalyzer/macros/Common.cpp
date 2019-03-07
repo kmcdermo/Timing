@@ -489,6 +489,13 @@ namespace Common
     // HVDS Labels when we get some samples...
   }
 
+  // Hack to get combine to converge
+  Float_t ApplyCombineSF(const TString & sample)
+  {
+    if (sample.Contains("GMSB_L100")) return 100.f;
+    else                              return 1.f;
+  }
+
   void RemoveGroup(const SampleGroup isGroup)
   {
     // erase by key first

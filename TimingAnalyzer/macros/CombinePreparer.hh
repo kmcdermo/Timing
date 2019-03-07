@@ -67,7 +67,7 @@ public:
   // subroutines for datacard making
   void FillTopSection(std::ofstream & datacard);
   void FillObservationSection(std::ofstream & datacard);
-  void FillProcessSection(std::ofstream & datacard, const TH2F * SignHist);
+  void FillProcessSection(std::ofstream & datacard, const TString & sample, const TH2F * SignHist);
   void FillSystematicsSection(std::ofstream & datacard);
   void FillRateParamSection(std::ofstream & datacard);
 
