@@ -52,9 +52,8 @@ void doLimits()
 {
   std::map<TString,CoordVec> coordVecMap;
   setupCoordVecMap(coordVecMap,"input/old_gmsb.txt");
-  setupCoordVecMap(coordVecMap,"input/abcd_3x3.txt");
-  setupCoordVecMap(coordVecMap,"input/abcd_2x2.txt");
-  setupCoordVecMap(coordVecMap,"input/abcd_template.txt");
+  setupCoordVecMap(coordVecMap,"input/abcd_2x2_2016.txt");
+  setupCoordVecMap(coordVecMap,"input/abcd_2x2_2017.txt");
 
   std::map<TString,Opts> optsMap;
   setupOptsMap(optsMap);
