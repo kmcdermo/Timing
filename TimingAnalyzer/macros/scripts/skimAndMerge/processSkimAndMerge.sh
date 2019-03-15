@@ -15,7 +15,7 @@ usePUWeights=${5:-0}
 files="${text}_files.log"
 wgtfile="${text}_wgt.log"
 tmpfiles="tmp_${files}"
-timestamp=$(ls ${indir})
+timestamp=$( ls ${indir} )
 eosdir="${indir}/${timestamp}/0000"
 inskimconfig="skim_config/standard_nominal.txt"
 skimconfig="${text}_skim_config.log"
@@ -39,7 +39,7 @@ mkdir -p ${tmpdir}
 ## produce sum of weights
 echo "Getting sum of weights"
 ./scripts/computeSumWeights.sh ${eosprefix}/${eosdir} ${files} ${wgtfile}
-sumwgts=$(grep "Sum_of_weights: " ${wgtfile} | cut -d " " -f 2)
+sumwgts=$( grep "Sum_of_weights: " ${wgtfile} | cut -d " " -f 2 )
 echo "sum_wgts="${sumwgts} >> ${skimconfig}
 
 ## produce pu distribution
@@ -54,7 +54,7 @@ fi
 
 ## read in each file and skim
 echo "Running skimming macro"
-nfiles=$(wc -l ${files})
+nfiles=$( wc -l ${files} )
 counter="1"
 while IFS='' read -r line || [[ -n "${line}" ]]; do
     echo "Working on file" ${counter} "out of" ${nfiles} "[filename: ${line}]"

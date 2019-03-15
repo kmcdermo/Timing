@@ -78,7 +78,6 @@ def main():
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters , inputDir+inputFlags ]
 
-        config.Data.inputDBS     = None
         config.Data.inputDataset = None
         config.Data.splitting    = 'EventAwareLumiBased'
         config.Data.unitsPerJob  = None
@@ -91,28 +90,24 @@ def main():
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/GMSB_L200TeV_CTau400cm_930/kmcdermo-GMSB_L200TeV_CTau400cm_930_step3-23134fac048c68b5122d77328802e60f/USER', '0.04'  , '1', '0.81418', 'isGMSB', 10000 , 'phys03'],
-            ['/GJet_Pt-15To6000_TuneCP5-Flat_13TeV_pythia8/RunIIFall17MiniAOD-94X_mc2017_realistic_v10-v1/MINIAODSIM'     , '283200', '1', '1'      , 'isBkgd', 500000, 'global'],
-
-            ['/ADDmonoPhoton_MD-1_d-5_TuneCUETP8M1_13TeV-pythia8/RunIISummer17MiniAOD-NZSFlatPU28to62_92X_upgrade2017_realistic_v10-v1/MINIAODSIM', '0.9701', '1', '1', 'isADD', 10000, 'global'],
-            ['/ADDmonoPhoton_MD-1_d-3_TuneCUETP8M1_13TeV-pythia8/RunIISummer17MiniAOD-NZSFlatPU28to62_92X_upgrade2017_realistic_v10-v1/MINIAODSIM', '0.4108', '1', '1', 'isADD', 10000, 'global'],
-            
+            ['/GMSB_L-200TeV_Ctau-400cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM','0.0445','1','0.81418','isGMSB',10000],
+            ['/GJet_Pt-15To6000_TuneCP5-Flat_13TeV_pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM','283200','1','1','isBkgd',500000]
             ]
  
         for inDO in inputDataAndOpts:
             # inDO[0] is of the form /A/B/C. Since A is unique for each inDO for Monte Carlo, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[1]
-            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v17','storeRecHits=False','nThreads='+str(config.JobType.numCores),
+            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v17','nThreads='+str(config.JobType.numCores),
                                             'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],inDO[4]+'=True',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.unitsPerJob      = inDO[5]
-            config.Data.inputDBS         = inDO[6]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.
             try:
                 print "Submitting for input dataset %s" % (inDO[0])
                 crabCommand(options.crabCmd, config = config, *options.crabCmdOpts.split())
+                os.system("rm -rf %s/crab_%s/inputs" % (config.General.workArea, config.General.requestName))
             except HTTPException as hte:
                 print "Submission for input dataset %s failed: %s" % (inDO[0], hte.headers)
             except ClientException as cle:
