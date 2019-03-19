@@ -2,11 +2,11 @@
 #include "TString.h"
 
 // special enums
-enum FitType {Linear, Quadratic};
-enum CutType {none, eta1, eta2};
+enum FitType {Horizontal, Linear, Quadratic};
+enum CutType {none, eta_LT0p8, eta_GTE0p8_LT1p4442};
 enum XType {pt, rho};
 enum YType {ecalpfcliso, hcalpfcliso, trkiso};
-enum CorrType {uncorr, pt_quad_q0p5, pt_quad_q0p7, pt_quad_q0p9};
+enum CorrType {uncorr, pt_lin_q0p7, pt_quad_q0p7, rho_lin_q0p7_eta_LT0p8, rho_lin_q0p7_eta_GTE0p8_LT1p4442, pt_corrs, rho_corrs, pt_rho_corrs};
 
 // FitInfo
 struct FitInfo
@@ -58,22 +58,23 @@ namespace Config
 {
   static const TString commoncut = "(evtwgt*puwgt)*((phopt_0>70)&&(phoisEB_0==1)&&(phoisOOT_0==0)&&(phoisGen_0==1))";
   static const TString indir = Common::eosPreFix+"//eos/cms/store/user/kmcdermo/nTuples/skims/ootID/madv2_v4/MC";
-  static const TString subdir = "GMSB/L-200TeV_Ctau-400cm"; // "GJet/Pt-15To6000"
+  static const TString subdir = "GMSB/L-200TeV_Ctau-200cm"; // "GJet/Pt-15To6000"; 
   static const TString outdir = "/eos/user/k/kmcdermo/www/dispho/plots/ootVID";
 
   // fits
   static const std::map<FitType,FitInfo> fits =
   {
-    {FitType::Linear,{"[0]*x+[1]","mx+b",{"m","b"}}},
-    {FitType::Quadratic,{"[0]*x*x+[1]*x+[2]","ax^{2}+bx+c",{"a","b","c"}}}
+    {FitType::Horizontal,{"[0]","y=c",{"c"}}},
+    {FitType::Linear,{"[0]*x+[1]","y=mx+b",{"m","b"}}},
+    {FitType::Quadratic,{"[0]*x*x+[1]*x+[2]","y=ax^{2}+bx+c",{"a","b","c"}}}
   };
 
   // cuts
   static const std::map<CutType,TString> cuts =
   {
     {CutType::none,""},
-    {CutType::eta1,"&&(abs(phosceta_0)<0.8)"},
-    {CutType::eta2,"&&((abs(phosceta_0)>=0.8)&&(abs(phosceta_0)<1.4442))"},
+    {CutType::eta_LT0p8,"&&(abs(phosceta_0)<0.8)"},
+    {CutType::eta_GTE0p8_LT1p4442,"&&((abs(phosceta_0)>=0.8)&&(abs(phosceta_0)<1.4442))"},
   };
 
   // make xnames
@@ -107,7 +108,7 @@ namespace Config
   };
   
   // make corrections
-  static const std::map<CorrType,std::map<YType,TString> > yCorrectionsMap =
+  static std::map<CorrType,std::map<YType,TString> > yCorrectionsMap =
   {
     {CorrType::uncorr,
      {
@@ -116,37 +117,89 @@ namespace Config
        {YType::trkiso,""}
      }
     },
-    {CorrType::pt_quad_q0p5,
+    {CorrType::pt_lin_q0p7,
      {
-       {YType::ecalpfcliso,"-((5.742e-6*phopt_0*phopt_0)+(-0.00298*phopt_0))"},
-       {YType::hcalpfcliso,"-((1.503e-5*phopt_0*phopt_0)+(-0.003694*phopt_0))"},
-       {YType::trkiso,"-((1.51e-6*phopt_0*phopt_0)+(-0.000692*phopt_0))"}
+       {YType::ecalpfcliso,"-(0.001578*phopt_0)"},
+       {YType::hcalpfcliso,"-(0.007156*phopt_0)"},
+       {YType::trkiso,"-(0.0004748*phopt_0)"}
      }
     },
     {CorrType::pt_quad_q0p7,
      {
-       {YType::ecalpfcliso,"-((1.139e-5*phopt_0*phopt_0)+(-0.004931*phopt_0))"},
-       {YType::hcalpfcliso,"-((2.571e-5*phopt_0*phopt_0)+(-0.007202*phopt_0))"},
-       {YType::trkiso,"-((1.629e-5*phopt_0*phopt_0)+(-0.008355*phopt_0))"}
+       {YType::ecalpfcliso,"-((3.052e-6*phopt_0*phopt_0)+(-0.0001885*phopt_0))"},
+       {YType::hcalpfcliso,"-((1.691e-5*phopt_0*phopt_0)+(-0.002597*phopt_0))"},
+       {YType::trkiso,"-((3.068e-6*phopt_0*phopt_0)+(-0.001327*phopt_0))"}
      }
     },
-    {CorrType::pt_quad_q0p9,
+    {CorrType::rho_lin_q0p7_eta_LT0p8, // first apply pt_corrs!
      {
-       {YType::ecalpfcliso,"-((0.0001457*phopt_0*phopt_0)+(-0.0674*phopt_0))"},
-       {YType::hcalpfcliso,"-((0.00015*phopt_0*phopt_0)+(-0.03763*phopt_0))"},
-       {YType::trkiso,"-((0.0002049*phopt_0*phopt_0)+(-0.1092*phopt_0))"}
+       {YType::ecalpfcliso,"-(0.1073*rho)"},
+       {YType::hcalpfcliso,"-(0.073*rho)"},
+       {YType::trkiso,"-(0.01147*rho)"}
      }
-    }    
+    },
+    {CorrType::rho_lin_q0p7_eta_GTE0p8_LT1p4442, // first apply pt_corrs!
+     {
+       {YType::ecalpfcliso,"-(0.08317*rho)"},
+       {YType::hcalpfcliso,"-(0.07983*rho)"},
+       {YType::trkiso,"-(0.005256*rho)"}
+     }
+    }
+  };
+  
+  void setupComboCorrs()
+  {
+    // change cuts from && to *
+    auto cut_eta_LT0p8 = Config::cuts.at(CutType::eta_LT0p8);
+    cut_eta_LT0p8.ReplaceAll("&&","*");
+    
+    auto cut_eta_GTE0p8_LT1p4442 = Config::cuts.at(CutType::eta_GTE0p8_LT1p4442);
+    cut_eta_GTE0p8_LT1p4442.ReplaceAll("&&","*");
+
+    // pt corrections
+    Config::yCorrectionsMap[CorrType::pt_corrs] =
+    {
+      {YType::ecalpfcliso,Config::yCorrectionsMap[CorrType::pt_lin_q0p7][YType::ecalpfcliso]},
+      {YType::hcalpfcliso,Config::yCorrectionsMap[CorrType::pt_quad_q0p7][YType::hcalpfcliso]},
+      {YType::trkiso,""}
+    };
+
+    // rho corrections
+    Config::yCorrectionsMap[CorrType::rho_corrs] =
+    {
+      {YType::ecalpfcliso,
+       Config::yCorrectionsMap[CorrType::rho_lin_q0p7_eta_LT0p8][YType::ecalpfcliso]+cut_eta_LT0p8+
+       Config::yCorrectionsMap[CorrType::rho_lin_q0p7_eta_GTE0p8_LT1p4442][YType::ecalpfcliso]+cut_eta_GTE0p8_LT1p4442},
+
+      {YType::hcalpfcliso,
+       Config::yCorrectionsMap[CorrType::rho_lin_q0p7_eta_LT0p8][YType::hcalpfcliso]+cut_eta_LT0p8+
+       Config::yCorrectionsMap[CorrType::rho_lin_q0p7_eta_GTE0p8_LT1p4442][YType::hcalpfcliso]+cut_eta_GTE0p8_LT1p4442},
+
+      {YType::trkiso,
+       Config::yCorrectionsMap[CorrType::rho_lin_q0p7_eta_LT0p8][YType::trkiso]+cut_eta_LT0p8+
+       Config::yCorrectionsMap[CorrType::rho_lin_q0p7_eta_GTE0p8_LT1p4442][YType::trkiso]+cut_eta_GTE0p8_LT1p4442}
+    };
+
+    // pt and rho corrections
+    Config::yCorrectionsMap[CorrType::pt_rho_corrs] =
+    {
+      {YType::ecalpfcliso,
+       Config::yCorrectionsMap[CorrType::pt_corrs][YType::ecalpfcliso]+Config::yCorrectionsMap[CorrType::rho_corrs][YType::ecalpfcliso]},
+      {YType::hcalpfcliso,
+       Config::yCorrectionsMap[CorrType::pt_corrs][YType::hcalpfcliso]+Config::yCorrectionsMap[CorrType::rho_corrs][YType::hcalpfcliso]},
+      {YType::trkiso,
+       Config::yCorrectionsMap[CorrType::pt_corrs][YType::trkiso]+Config::yCorrectionsMap[CorrType::rho_corrs][YType::trkiso]}
+    };
   };
 
   // ybins
   std::vector<Double_t> ybins;
   void setupYbins()
   {
-    for (auto ibin = 0 ; ibin < 100; ibin++) ybins.emplace_back(  0.01 * ibin);
-    for (auto ibin = 10; ibin < 100; ibin++) ybins.emplace_back(  0.10 * ibin);
-    for (auto ibin = 10; ibin < 100; ibin++) ybins.emplace_back(  1.00 * ibin);
-    for (auto ibin = 10; ibin < 100; ibin++) ybins.emplace_back( 10.00 * ibin);
-    for (auto ibin = 10; ibin < 101; ibin++) ybins.emplace_back(100.00 * ibin);
+    for (auto ibin = 0 ; ibin < 100; ibin++) Config::ybins.emplace_back(  0.01 * ibin);
+    for (auto ibin = 10; ibin < 100; ibin++) Config::ybins.emplace_back(  0.10 * ibin);
+    for (auto ibin = 10; ibin < 100; ibin++) Config::ybins.emplace_back(  1.00 * ibin);
+    for (auto ibin = 10; ibin < 100; ibin++) Config::ybins.emplace_back( 10.00 * ibin);
+    for (auto ibin = 10; ibin < 101; ibin++) Config::ybins.emplace_back(100.00 * ibin);
   }
 };

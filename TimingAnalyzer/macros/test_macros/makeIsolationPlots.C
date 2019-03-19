@@ -1,4 +1,4 @@
-#include "test_macros/makeIsolationPlots.hh"
+#include "makeIsolationPlots.hh"
 
 // main function
 void makeIsolationPlots()
@@ -17,14 +17,17 @@ void makeIsolationPlots()
   // make output
   auto outfile = TFile::Open("isoplots.root","recreate");
 
+  // setup combo corrections
+  Config::setupComboCorrs();
+
   // setup isobins
   Config::setupYbins();
 
   // config
-  const auto fitType  = FitType::Quadratic;
+  const auto fitType  = FitType::Linear;
   const auto cutType  = CutType::none;
-  const auto xType    = XType::pt;
-  const auto corrType = CorrType::pt_quad_q0p7;
+  const auto xType    = XType::rho;
+  const auto corrType = CorrType::pt_rho_corrs;
   const auto & yCorrections = Config::yCorrectionsMap.at(corrType);
 
   // make plots!
@@ -73,7 +76,12 @@ void makePlots(TTree * tree, TFile * outfile,
 			 xbins.size()-1,binsX,Config::ybins.size()-1,binsY);
 
   // fill 2D hist
-  tree->Draw(Form("max(%s%s,0.0):%s>>%s",yvar.Data(),yCorrection.Data(),xvar.Data(),hist2D->GetName()),Config::commoncut+Config::cuts.at(cutType),"goff");
+  const TString draw = Form("max(%s%s,0.0):%s>>%s",yvar.Data(),yCorrection.Data(),xvar.Data(),hist2D->GetName());
+  const TString cut  = Config::commoncut+Config::cuts.at(cutType);
+  std::cout << draw.Data() << std::endl;
+  std::cout << cut .Data() << std::endl;
+
+  tree->Draw(draw.Data(),cut.Data(),"goff");
   
   // fill 1D hist (inclusive)
   outfile->cd();
