@@ -1256,6 +1256,37 @@ namespace Common
     }
   }
 
+  void Scale(TH1D *& hist, const Bool_t isUp)
+  {
+    std::cout << "Scaling " << (isUp?"up":"down") << " hist: " << hist->GetName() << std::endl;
+    
+    for (auto ibinX = 1; ibinX <= hist->GetXaxis()->GetNbins(); ibinX++)
+    {
+      // get width
+      const auto multiplier = hist->GetXaxis()->GetBinWidth(ibinX);
+      
+      // get content and errors
+      auto content = hist->GetBinContent(ibinX);
+      auto error   = hist->GetBinError  (ibinX);
+      
+      // scale up or down
+      if (isUp)
+      {
+	content *= multiplier;
+	error   *= multiplier;
+      }
+      else
+      {
+	content /= multiplier;
+	error   /= multiplier;
+      }
+      
+      // set values
+      hist->SetBinContent(ibinX,content);
+      hist->SetBinError  (ibinX,error);
+    }
+  }
+  
   void SaveAs(TCanvas *& canv, const TString & label)
   {
     canv->cd();

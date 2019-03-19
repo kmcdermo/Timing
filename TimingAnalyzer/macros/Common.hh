@@ -293,7 +293,7 @@ namespace Common
   constexpr Float_t bottom_margin = 0.35;
 
   // color vector for special overplotting
-  static const std::vector<Color_t> ColorVec = {kBlue,kRed+1,kGreen+1,kMagenta,kOrange+1,kYellow-7,kViolet-1,kAzure+10,kYellow+3,kPink-9}; 
+  static const std::vector<Color_t> ColorVec = {kBlue,kRed+1,kGreen+1,kMagenta,kOrange+1,kAzure+10,kYellow+3,kPink-9,kYellow-7,kViolet-1}; 
 
   // Hack to get combine to converge
   Float_t ApplyCombineSF(const TString & sample);
@@ -311,6 +311,7 @@ namespace Common
   // Scale hists/graphs up or down
   void Scale(TH2F *& hist, const Bool_t isUp, const Bool_t varBinsX, const Bool_t varBinsY);
   void Scale(TH1F *& hist, const Bool_t isUp);
+  void Scale(TH1D *& hist, const Bool_t isUp);
   void Scale(TGraphAsymmErrors *& graph, const std::vector<Double_t> & bins, const Bool_t isUp);
 
   // Check inputs
