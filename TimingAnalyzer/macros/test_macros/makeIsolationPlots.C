@@ -7,12 +7,13 @@ void makeIsolationPlots()
   gStyle->SetOptStat(0);
 
   // get inputs
-  const auto infile_name = Config::indir+"/"+Config::subdir+"/"+Common::tupleFileName;
-  auto infile = TFile::Open(infile_name);
+  const TString infile_name = "skims/v4/ootVID/gmsb.root";
+  auto infile = TFile::Open(infile_name.Data());
   Common::CheckValidFile(infile,infile_name);
   
-  auto tree = (TTree*)infile->Get(Common::disphotreename.Data());
-  Common::CheckValidTree(tree,Common::disphotreename,infile_name);
+  const TString tree_name = "GMSB_L200_CTau200_Tree";
+  auto tree = (TTree*)infile->Get(tree_name.Data());
+  Common::CheckValidTree(tree,tree_name,infile_name);
 
   // make output
   auto outfile = TFile::Open("isoplots.root","recreate");
@@ -24,10 +25,10 @@ void makeIsolationPlots()
   Config::setupYbins();
 
   // config
-  const auto fitType  = FitType::Linear;
+  const auto fitType  = FitType::Quadratic;
   const auto cutType  = CutType::none;
-  const auto xType    = XType::rho;
-  const auto corrType = CorrType::pt_rho_corrs;
+  const auto xType    = XType::pt;
+  const auto corrType = CorrType::uncorr;
   const auto & yCorrections = Config::yCorrectionsMap.at(corrType);
 
   // make plots!
@@ -98,7 +99,7 @@ void makePlots(TTree * tree, TFile * outfile,
   canv->cd();
   canv->SetLogx();
   hist1D_before->GetXaxis()->SetTitleOffset(1.1);
-  hist1D_before->GetYaxis()->SetTitle("Events / Iso");
+  hist1D_before->GetYaxis()->SetTitle("Events");
   hist1D_before->Draw("ep");
 
   // SaveAs: lin y

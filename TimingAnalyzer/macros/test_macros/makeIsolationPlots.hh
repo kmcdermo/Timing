@@ -57,9 +57,6 @@ void makeQuantiles(TCanvas * canv, TH2F * hist2D, TFile * outfile,
 namespace Config
 {
   static const TString commoncut = "(evtwgt*puwgt)*((phopt_0>70)&&(phoisEB_0==1)&&(phoisOOT_0==0)&&(phoisGen_0==1))";
-  static const TString indir = Common::eosPreFix+"//eos/cms/store/user/kmcdermo/nTuples/skims/ootID/madv2_v4/MC";
-  static const TString subdir = "GMSB/L-200TeV_Ctau-200cm"; // "GJet/Pt-15To6000"; 
-  static const TString outdir = "/eos/user/k/kmcdermo/www/dispho/plots/ootVID";
 
   // fits
   static const std::map<FitType,FitInfo> fits =

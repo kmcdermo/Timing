@@ -63,30 +63,21 @@ void plot_ootVID()
   auto bkgd_tree = (TTree*)bkgd_file->Get(bkgd_tree_name.Data());
   Common::CheckValidTree(bkgd_tree,Common::disphotreename,bkgd_file_name);
 
-  // make output
-  auto outfile = TFile::Open("plots.root","RECREATE");
-
   // make plots: isRatio, isLoose, isSig
-  make_plots(sign_tree,outfile,false,true,true);
-  make_plots(sign_tree,outfile,false,false,true);
-  make_plots(bkgd_tree,outfile,false,true,false);
-  make_plots(bkgd_tree,outfile,false,false,false);
+  auto outfile_nm1 = TFile::Open("plots_nm1.root","RECREATE");
+  make_plots(sign_tree,outfile_nm1,false,true,true);
+  make_plots(sign_tree,outfile_nm1,false,false,true);
+  delete outfile_nm1;
   gSystem->Exec("mv *png *pdf *root "+outdir+"/nm1");
 
-  // delete outfile
-  delete outfile;
-
   // make full vid (remake outfile)
-  outfile = TFile::Open("plots.root","RECREATE");
-  
-  make_plots(sign_tree,outfile,true,true,true);
-  make_plots(sign_tree,outfile,true,false,true);
-  make_plots(bkgd_tree,outfile,true,true,false);
-  make_plots(bkgd_tree,outfile,true,false,false);
+  auto outfile_vid = TFile::Open("plots_vid.root","RECREATE");
+  make_plots(sign_tree,outfile_vid,true,true,true);
+  make_plots(sign_tree,outfile_vid,true,false,true);
+  delete outfile_vid;
   gSystem->Exec("mv *png *pdf *root "+outdir+"/vid");
 
   // delete it all
-  delete outfile;
   delete bkgd_tree;
   delete bkgd_file;
   delete sign_tree;
@@ -186,7 +177,6 @@ void make_plots(TTree * tree, TFile * outfile, const Bool_t isRatios, const Bool
     auto leg = new TLegend(0.85,0.85,1.0,1.0);
 
     // make hists
-    outfile->cd();
     std::vector<TH1F*> hists;
     std::vector<TH1F*> ratios;
     for (auto icat = 0U; icat < categories.size(); icat++)
@@ -207,6 +197,7 @@ void make_plots(TTree * tree, TFile * outfile, const Bool_t isRatios, const Bool
       tree->Draw(plotinfo.var+">>numer",numer_cut.Data(),"goff");
 
       // make efficiency
+      outfile->cd();
       hists.emplace_back(new TH1F(category.name.Data(),title+" vs. "+plotinfo.title,nbins,bins));
       auto & hist = hists.back();
 
@@ -287,7 +278,7 @@ void make_plots(TTree * tree, TFile * outfile, const Bool_t isRatios, const Bool
     
     // also to root file
     outfile->cd();
-    for (auto & hist : hists) hist->Write(Form("%s_%s_%s",label.Data(),plotinfo.name.Data(),hist->GetName()));
+    for (auto & hist : hists) hist->Write(Form("%s_%s_%s",label.Data(),plotinfo.name.Data(),hist->GetName()),TObject::kWriteDelete);
 
     // delete it all
     for (auto & hist : hists) delete hist;
