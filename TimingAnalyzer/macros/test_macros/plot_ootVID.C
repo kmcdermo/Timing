@@ -27,67 +27,80 @@ struct Category
 struct PlotInfo
 {
   PlotInfo() {}
-  PlotInfo(const TString & var, const std::vector<Double_t> & bins, const TString & title)
-    : var(var), bins(bins), title(title) {}
+  PlotInfo(const TString & name, const TString & var, const std::vector<Double_t> & bins, const TString & title)
+    : name(name), var(var), bins(bins), title(title) {}
   
+  TString name;
   TString var;
   std::vector<Double_t> bins;
   TString title;
 };
 
-void make_plots(TTree * tree, const Bool_t isRatios, const Bool_t isLoose, const Bool_t isSig);
+void make_plots(TTree * tree, TFile * outfile, const Bool_t isRatios, const Bool_t isLoose, const Bool_t isSig);
 void plot_ootVID()
 {
   // style
   gStyle->SetOptStat(0);
 
   // i/o dirs
-  const TString indir  = Common::eosPreFix+"//eos/cms/store/user/kmcdermo/nTuples/skims/ootID/v2/MC";
-  const TString outdir = "/eos/user/k/kmcdermo/www/dispho/plots/ootVID";
+  const TString indir  = "skims/v4/ootVID";
+  const TString outdir = "/eos/user/k/kmcdermo/www/dispho/plots/ootVID/new_corrs/gen_matched";
 
   // get inputs
-  const auto sign_file_name = indir+"/GMSB/L200TeV_CTau400cm/"+Common::tupleFileName;
+  const auto sign_file_name = indir+"/gmsb.root";
   auto sign_file = TFile::Open(sign_file_name);
   Common::CheckValidFile(sign_file,sign_file_name);
   
-  auto sign_tree = (TTree*)sign_file->Get(Common::disphotreename.Data());
+  const TString sign_tree_name = "GMSB_L200_CTau200_Tree";  
+  auto sign_tree = (TTree*)sign_file->Get(sign_tree_name.Data());
   Common::CheckValidTree(sign_tree,Common::disphotreename,sign_file_name);
 
-  const auto bkgd_file_name = indir+"/GJetFlatPt/15To6000/"+Common::tupleFileName;
+  const auto bkgd_file_name = indir+"/gjet.root";
   auto bkgd_file = TFile::Open(bkgd_file_name);
   Common::CheckValidFile(bkgd_file,bkgd_file_name);
-  
-  auto bkgd_tree = (TTree*)bkgd_file->Get(Common::disphotreename.Data());
+
+  const TString bkgd_tree_name = "GJets_Tree";
+  auto bkgd_tree = (TTree*)bkgd_file->Get(bkgd_tree_name.Data());
   Common::CheckValidTree(bkgd_tree,Common::disphotreename,bkgd_file_name);
 
-  // make plots: isRatio, isLoose, isSig
-  make_plots(sign_tree,false,true,true);
-  make_plots(sign_tree,false,false,true);
-  make_plots(bkgd_tree,false,true,false);
-  make_plots(bkgd_tree,false,false,false);
-  gSystem->Exec("mv *png *pdf "+outdir+"/nm1");
+  // make output
+  auto outfile = TFile::Open("plots.root","RECREATE");
 
-  make_plots(sign_tree,true,true,true);
-  make_plots(sign_tree,true,false,true);
-  make_plots(bkgd_tree,true,true,false);
-  make_plots(bkgd_tree,true,false,false);
-  gSystem->Exec("mv *png *pdf "+outdir+"/vid");
+  // make plots: isRatio, isLoose, isSig
+  make_plots(sign_tree,outfile,false,true,true);
+  make_plots(sign_tree,outfile,false,false,true);
+  make_plots(bkgd_tree,outfile,false,true,false);
+  make_plots(bkgd_tree,outfile,false,false,false);
+  gSystem->Exec("mv *png *pdf *root "+outdir+"/nm1");
+
+  // delete outfile
+  delete outfile;
+
+  // make full vid (remake outfile)
+  outfile = TFile::Open("plots.root","RECREATE");
+  
+  make_plots(sign_tree,outfile,true,true,true);
+  make_plots(sign_tree,outfile,true,false,true);
+  make_plots(bkgd_tree,outfile,true,true,false);
+  make_plots(bkgd_tree,outfile,true,false,false);
+  gSystem->Exec("mv *png *pdf *root "+outdir+"/vid");
 
   // delete it all
+  delete outfile;
   delete bkgd_tree;
   delete bkgd_file;
   delete sign_tree;
   delete sign_file;
 }
 
-void make_plots(TTree * tree, const Bool_t isRatios, const Bool_t isLoose, const Bool_t isSig)
+void make_plots(TTree * tree, TFile * outfile, const Bool_t isRatios, const Bool_t isLoose, const Bool_t isSig)
 {
   // cut observables
   const auto hoe   = Observable("phoHoE_0","<",(isLoose?"0.0185":"0.0165"),"HoE","H/E");
   const auto sieie = Observable("phosieie_0","<",(isLoose?"0.0125":"0.011"),"sieie","#sigma_{i#eta i#eta}");
-  const auto ecal  = Observable("(phoEcalPFClIso_0-(0.0009*phopt_0)-(((abs(phosceta_0)<=0.8)*(rho*0.19 ))+((abs(phosceta_0)>0.8)*(rho*0.14))))","<",(isLoose?"8.0" :"5.0" ),"ecalpfcliso","ECAL PF Cluster Iso");
-  const auto hcal  = Observable("(phoHcalPFClIso_0-(0.0052*phopt_0)-(((abs(phosceta_0)<=0.8)*(rho*0.089))+((abs(phosceta_0)>0.8)*(rho*0.15))))","<",(isLoose?"12.0":"10.0"),"hcalpfcliso","HCAL PF Cluster Iso");
-  const auto trk   = Observable("(phoTrkIso_0-(0.0009*phopt_0)-(((abs(phosceta_0)<=0.8)*(rho*0.037))+((abs(phosceta_0)>0.8)*(rho*0.031))))","<",(isLoose?"8.5":"5.5"),"trkiso","Tracker Iso");
+  const auto ecal  = Observable("max(phoEcalPFClIso_0-(0.001578*phopt_0)-(0.1073*rho)*(abs(phosceta_0)<0.8)-(0.08317*rho)*((abs(phosceta_0)>=0.8)*(abs(phosceta_0)<1.4442)),0.0)","<",(isLoose?"8.0" :"5.0" ),"ecalpfcliso","ECAL PF Cluster Iso");
+  const auto hcal  = Observable("max(phoHcalPFClIso_0-((1.691e-5*phopt_0*phopt_0)+(-0.002597*phopt_0))-(0.073*rho)*(abs(phosceta_0)<0.8)-(0.07983*rho)*((abs(phosceta_0)>=0.8)*(abs(phosceta_0)<1.4442)),0.0)","<",(isLoose?"12.0":"10.0"),"hcalpfcliso","HCAL PF Cluster Iso");
+  const auto trk   = Observable("max(phoTrkIso_0-(0.01147*rho)*(abs(phosceta_0)<0.8)-(0.005256*rho)*((abs(phosceta_0)>=0.8)*(abs(phosceta_0)<1.4442)),0.0)","<",(isLoose?"8.5":"5.5"),"trkiso","Tracker Iso");
   const auto smaj  = Observable("phosmaj_0","<",(isLoose?"1.0":"0.5"),"smaj","S_{Major}");
 
   // min max
@@ -134,14 +147,14 @@ void make_plots(TTree * tree, const Bool_t isRatios, const Bool_t isLoose, const
   const std::vector<Double_t> ptbins = {0,20,40,60,80,100,125,150,200,250,300,400,500,750,1000,2000};
   const std::vector<Double_t> etabins = {-1.5,-1.4,-1.3,-1.2,-1.1,-1.0,-0.9,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5};
   const std::vector<Double_t> nvtxbins = {0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,35,40,45,50,60};
-  const std::vector<Double_t> timebins = {-2,-1,0,1,2,3,5,10,15,25};
+  const std::vector<Double_t> timebins = {-2,-1.5,-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1,1.5,2,3,5,10,15,25};
 
   std::vector<PlotInfo> plotinfos = 
   {
-    {"phopt_0",ptbins,"Leading Photon p_{T} [GeV]"},
-    {"phoeta_0",etabins,"Leading Photon #eta"},
-    {"nvtx",nvtxbins,"Number of Vertices"}
-    {"phoweightedtimeLT120_0",timebins,"Leading Photon Cluster Time [ns]"}
+    {"phopt_0","phopt_0",ptbins,"Leading Photon p_{T} [GeV]"},
+    {"phoeta_0","phoeta_0",etabins,"Leading Photon #eta"},
+    {"nvtx_0","nvtx",nvtxbins,"Number of Vertices"},
+    {"phoweightedtimeLT120_0","phoweightedtimeLT120_0+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0",timebins,"Leading Photon Cluster Time [ns]"}
   };
 
   // loop over plots
@@ -149,7 +162,7 @@ void make_plots(TTree * tree, const Bool_t isRatios, const Bool_t isLoose, const
   {
     std::cout << "Making " << (isSig?"Signal":"Background") 
 	      << " " << (isRatios?"VID Eff":"N-1") 
-	      << " [" << (isLoose?"Loose:Tight") << "]"
+	      << " [" << (isLoose?"Loose":"Tight") << "]"
 	      << " plot for: " << plotinfo.var.Data() << std::endl;
 
     // make canvas
@@ -173,6 +186,7 @@ void make_plots(TTree * tree, const Bool_t isRatios, const Bool_t isLoose, const
     auto leg = new TLegend(0.85,0.85,1.0,1.0);
 
     // make hists
+    outfile->cd();
     std::vector<TH1F*> hists;
     std::vector<TH1F*> ratios;
     for (auto icat = 0U; icat < categories.size(); icat++)
@@ -269,8 +283,12 @@ void make_plots(TTree * tree, const Bool_t isRatios, const Bool_t isLoose, const
     // save it
     canv->cd();
     leg->Draw("same");
-    Common::SaveAs(canv,label+"_"+plotinfo.var);
+    Common::SaveAs(canv,label+"_"+plotinfo.name);
     
+    // also to root file
+    outfile->cd();
+    for (auto & hist : hists) hist->Write(Form("%s_%s_%s",label.Data(),plotinfo.name.Data(),hist->GetName()));
+
     // delete it all
     for (auto & hist : hists) delete hist;
     delete leg;
