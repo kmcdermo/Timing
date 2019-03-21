@@ -899,12 +899,23 @@ void DisPho::SetGMSBBranches()
     
     for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
     {
+      // get photon and SC!
       const auto & photon = photons[iphoton];
-      
+      const auto & phosc  = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();      
+
+      // ensure pt's are reasonable!
       if (oot::GetPhotonPt(photon) < ((1.f-genpTres) * gmsbBranch.genphpt_)) continue;
       if (oot::GetPhotonPt(photon) > ((1.f+genpTres) * gmsbBranch.genphpt_)) continue;
       
-      const auto delR = reco::deltaR(genphoton,photon);
+      // compute eta/phi direction along line connecting photon SC to secondary vertex
+      const auto dx = phosc.x()-genphoton.x();
+      const auto dy = phosc.y()-genphoton.y();
+      const auto dz = phosc.z()-genphoton.z();
+      const auto phi = Config::phi(dx,dy);
+      const auto eta = Config::eta(dx,dy,dz);
+
+      // ensure momentum direction of photon from neutralino is pointed at ECAL SC deposit!
+      const auto delR = reco::deltaR(eta,phi,gmsbBranch.genpheta_,gmsbBranch.genphphi_);
       if (delR < mindR)
       {
 	mindR = delR;
@@ -991,25 +1002,46 @@ void DisPho::SetHVDSBranches()
     
     for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
     {
+      // get photon and SC (and tmp vars)
       const auto & photon = photons[iphoton];
+      const auto & phosc  = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();      
       const auto tmppt = oot::GetPhotonPt(photon);
+      const auto tmpx  = phosc.x();
+      const auto tmpy  = phosc.y();
+      const auto tmpz  = phosc.z();
 
-      // check gen photon 0
+      // check gen photon 0 first
       if (tmppt < ((1.f-genpTres) * hvdsBranch.genHVph0pt_)) continue;
       if (tmppt > ((1.f+genpTres) * hvdsBranch.genHVph0pt_)) continue;
 
-      const auto delR0 = reco::deltaR(genphoton0,photon);
+      // compute eta/phi of line connecting first photon from dark pion to SC
+      const auto dx0 = tmpx-genphoton0.x();
+      const auto dy0 = tmpy-genphoton0.y();
+      const auto dz0 = tmpz-genphoton0.z();
+      const auto phi0 = Config::phi(dx0,dy0);
+      const auto eta0 = Config::eta(dx0,dy0,dz0);
+
+      // ensure momentum direction of 1st photon from dark pion is pointed at ECAL SC deposit!
+      const auto delR0 = reco::deltaR(eta0,phi0,hvdsBranch.genHVph0eta_,hvdsBranch.genHVph0phi_);
       if (delR0 < mindR0) 
       {
 	mindR0 = delR0;
 	tmpph0 = iphoton;
       } // end check over deltaR
       
-      // check gen photon 1
+      // check gen photon 1 second
       if (tmppt < ((1.f-genpTres) * hvdsBranch.genHVph1pt_)) continue;
       if (tmppt > ((1.f+genpTres) * hvdsBranch.genHVph1pt_)) continue;
       
-      const auto delR1 = reco::deltaR(genphoton1,photon);
+      // compute eta/phi of line connecting second photon from dark pion to SC
+      const auto dx1 = tmpx-genphoton1.x();
+      const auto dy1 = tmpy-genphoton1.y();
+      const auto dz1 = tmpz-genphoton1.z();
+      const auto phi1 = Config::phi(dx1,dy1);
+      const auto eta1 = Config::eta(dx1,dy1,dz1);
+
+      // ensure momentum direction of 2nd photon from dark pion is pointed at ECAL SC deposit!
+      const auto delR1 = reco::deltaR(eta1,phi1,hvdsBranch.genHVph1eta_,hvdsBranch.genHVph1phi_);
       if (delR1 < mindR1) 
       {
 	mindR1 = delR1;
@@ -1061,8 +1093,17 @@ void DisPho::SetToyBranches()
     for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
     {
       const auto & photon = photons[iphoton];
+      const auto & phosc  = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();      
 
-      const auto delR = reco::deltaR(toy,photon);
+      // compute eta/phi direction along line connecting photon SC to secondary vertex
+      const auto dx = phosc.x()-toy.x();
+      const auto dy = phosc.y()-toy.y();
+      const auto dz = phosc.z()-toy.z();
+      const auto phi = Config::phi(dx,dy);
+      const auto eta = Config::eta(dx,dy,dz);
+
+      // ensure momentum direction of photon from neutralino is pointed at ECAL SC deposit!
+      const auto delR = reco::deltaR(eta,phi,toy.eta(),toy.phi());
       if (delR < mindR) 
       {
 	mindR = delR;
@@ -1071,19 +1112,17 @@ void DisPho::SetToyBranches()
       
       if ( (oot::GetPhotonPt(photon) >= ((1.f-genpTres) * toyBranch.genphpt_)) && (oot::GetPhotonPt(photon) <= ((1.f+genpTres) * toyBranch.genphpt_)) )
       {
-	const auto delR_ptres = reco::deltaR(toy,photon);
-	if (delR_ptres < mindR_ptres) 
+	if (delR < mindR_ptres) 
 	{
-	  mindR_ptres = delR_ptres;
+	  mindR_ptres = delR;
 	  toyBranch.genphmatch_ptres_ = iphoton; 
 	} // end check over deltaR
 	
 	if (toy.isPromptFinalState())
 	{
-	  const auto delR_status = reco::deltaR(toy,photon);
-	  if (delR_status < mindR_status) 
+	  if (delR < mindR_status) 
 	  {
-	    mindR_status = delR_status;
+	    mindR_status = delR;
 	    toyBranch.genphmatch_status_ = iphoton; 
 	  } // end check over deltaR
 	} // end check over final state
@@ -1936,7 +1975,7 @@ void DisPho::SetPhoBranchesMC()
     } // end block over is HVDS
   
     // standard dR matching
-    phoBranch.isGen_ = oot::GenToObjectMatching(genParticlesH,photon,genpTres,gendRmin);
+    phoBranch.isGen_ = oot::GenPhotonToObjectMatching(genParticlesH,photon,phosc,genpTres,gendRmin);
     
     // scale and smearing uncs
     const auto phoE = phoBranch.E_; // assumed this already set!!!

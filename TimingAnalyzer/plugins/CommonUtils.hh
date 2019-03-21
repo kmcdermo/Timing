@@ -167,10 +167,8 @@ namespace Config
   inline float hypo  (const float x, const float y, const float z = 0.f){return std::sqrt(Config::rad2(x,y,z));}
   inline float phi   (const float x, const float y){return std::atan2(y,x);}
   inline float theta (const float r, const float z){return std::atan2(r,z);}
-  inline float eta   (const float x, const float y, const float z)
-  {
-    return -1.0f*std::log(std::tan(Config::theta(Config::hypo(x,y),z)/2.f));
-  }
+  inline float eta   (const float r, const float z){return -1.0f*std::log(std::tan(Config::theta(r,z)/2.f));}
+  inline float eta   (const float x, const float y, const float z){return Config::eta(Config::hypo(x,y),z);}
 
   ////////////////////
   // Misc Functions //
@@ -343,7 +341,7 @@ namespace oot
     {
       if (lep.pt() < leppTmin) continue;
       
-      bool isMatched = false; // consider dR matching to photons only
+      auto isMatched = false; // consider dR matching to photons only
       for (const auto & photon : photons)
       {
 	if (reco::deltaR(lep,photon) < lepdRmin)
@@ -363,9 +361,9 @@ namespace oot
     std::sort(leps.begin(),leps.end(),sortByPt);
   }
 
-  ////////////////////////
-  // Matching Functions //
-  ////////////////////////
+  /////////////////////////////////
+  // Template Matching Functions //
+  /////////////////////////////////
 
   template <typename Obj>
   void HLTToObjectMatching(const std::map<std::string,std::vector<pat::TriggerObjectStandAlone> > & triggerObjectsByFilterMap, 
@@ -374,7 +372,7 @@ namespace oot
     for (const auto & triggerObjectsByFilterPair : triggerObjectsByFilterMap)
     {
       const auto & filterName = triggerObjectsByFilterPair.first;
-      const bool isL1T = (filterName == Config::L1Trigger.c_str());
+      const auto isL1T = (filterName == Config::L1Trigger.c_str());
 
       for (const auto & triggerObject : triggerObjectsByFilterPair.second)
       {
@@ -399,30 +397,37 @@ namespace oot
     for (const auto & track : *tracksH)
     {
       if (track.pt() < trackpTmin) continue;
-      if (reco::deltaR(obj,track) < trackdRmin)
-      {
-	return true;
-      } // end check over deltaR
+      if (reco::deltaR(obj,track) < trackdRmin) return true;
     } // end loop over tracks
     return false;
   }
 
-  template <typename Obj>
-  bool GenToObjectMatching(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, const Obj & obj,
-			   const float pTres = 1.f, const float dRmin = 100.f)
+  // obj1 and obj2 come from the same object (i.e. obj1 = photon, obj2 = SC of photon)
+  // obj11 provides pT info, obj2 provides position info
+  // in fact, they can be the same object if momentum and position info good for single object
+  template <typename Obj1, typename Obj2>
+  bool GenPhotonToObjectMatching(const edm::Handle<std::vector<reco::GenParticle> > & genparticlesH, 
+				 const Obj1 & obj1, const Obj2 & obj2,
+				 const float pTres = 1.f, const float dRmin = 100.f)
   {
     for (const auto & genpart : *genparticlesH)
     {
+      // ensure gen particle is a photon from hard scatter
       if (genpart.pdgId() != 22 || !genpart.isPromptFinalState()) continue;
       
-      if (genpart.pt() < ((1.f-pTres) * obj.pt())) continue;
-      if (genpart.pt() > ((1.f+pTres) * obj.pt())) continue;
+      // ensure pts are reasonable
+      if (genpart.pt() < ((1.f-pTres) * obj1.pt())) continue;
+      if (genpart.pt() > ((1.f+pTres) * obj1.pt())) continue;
       
-      const float dR = reco::deltaR(obj,genpart);
-      if (dR < dRmin) 
-      {
-	return true;
-      } // end check over dRmin
+      // compute eta/phi direction along line connecting object to gen particle
+      const auto dx = obj2.x()-genpart.x();
+      const auto dy = obj2.y()-genpart.y();
+      const auto dz = obj2.z()-genpart.z();
+      const auto phi = Config::phi(dx,dy);
+      const auto eta = Config::eta(dx,dy,dz);
+
+      // compare direction (momentum) of gen particle to direction of line connecting gen particle vertex to obj2
+      if (reco::deltaR(eta,phi,genpart.eta(),genpart.phi() < dRmin) return true;
     } // end loop over gen particles
     return false;      
   } 
