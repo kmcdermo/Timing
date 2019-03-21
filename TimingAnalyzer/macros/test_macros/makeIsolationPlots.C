@@ -27,7 +27,7 @@ void makeIsolationPlots()
   // config
   const auto fitType  = FitType::Quadratic;
   const auto cutType  = CutType::none;
-  const auto xType    = XType::pt;
+  const auto xType    = XType::sceta;
   const auto corrType = CorrType::uncorr;
   const auto & yCorrections = Config::yCorrectionsMap.at(corrType);
 

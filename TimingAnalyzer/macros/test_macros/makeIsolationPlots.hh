@@ -4,8 +4,8 @@
 // special enums
 enum FitType {Horizontal, Linear, Quadratic};
 enum CutType {none, eta_LT0p8, eta_GTE0p8_LT1p4442};
-enum XType {pt, rho};
-enum YType {ecalpfcliso, hcalpfcliso, trkiso};
+enum XType {pt, rho, eta, sceta};
+enum YType {ecalpfcliso, hcalpfcliso, trkiso, smaj};
 enum CorrType {uncorr, pt_lin_q0p7, pt_quad_q0p7, rho_lin_q0p7_eta_LT0p8, rho_lin_q0p7_eta_GTE0p8_LT1p4442, pt_corrs, rho_corrs, pt_rho_corrs};
 
 // FitInfo
@@ -78,14 +78,18 @@ namespace Config
   static const std::map<XType,TString> xNames = 
   {
     {XType::pt,"pt"},
-    {XType::rho,"rho"}
+    {XType::rho,"rho"},
+    {XType::eta,"eta"},
+    {XType::sceta,"sceta"}
   };
   
   // make xinfos: variables to correct for
   static const std::map<XType,XInfo> xInfos =
   {
     {XType::pt,{"phopt_0","Leading Photon p_{T} [GeV]",{0,10,20,30,40,50,60,70,80,90,100,120,140,160,180,200,250,300,350,400,500,600,800,1000}}},
-    {XType::rho,{"rho","#rho [GeV]",{0,5,10,12,14,16,18,20,22,24,26,28,30,35,40,45,50,70}}}
+    {XType::rho,{"rho","#rho [GeV]",{0,5,10,12,14,16,18,20,22,24,26,28,30,35,40,45,50,70}}},
+    {XType::eta,{"abs(phoeta_0)","Leading Photon #eta",{0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5}}},
+    {XType::sceta,{"abs(phosceta_0)","Leading Photon SC #eta",{0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5}}}
   };
 
   // make ynames
@@ -93,15 +97,17 @@ namespace Config
   {
     {YType::ecalpfcliso,"ecalpfcliso"},
     {YType::hcalpfcliso,"hcalpfcliso"},
-    {YType::trkiso,"trkiso"}
+    {YType::trkiso,"trkiso"},
+    {YType::smaj,"smajor"}
   };
   
   // make yinfos : isolations
   static const std::map<YType,YInfo> yInfos =
   {
-    {YType::ecalpfcliso,{"phoEcalPFClIso_0","Leading Photon ECAL PF Cluster Iso"}},
-    {YType::hcalpfcliso,{"phoHcalPFClIso_0","Leading Photon HCAL PF Cluster Iso"}},
-    {YType::trkiso,{"phoTrkIso_0","Leading Photon Tracker Iso"}}
+    // {YType::ecalpfcliso,{"phoEcalPFClIso_0","Leading Photon ECAL PF Cluster Iso"}},
+    // {YType::hcalpfcliso,{"phoHcalPFClIso_0","Leading Photon HCAL PF Cluster Iso"}},
+    // {YType::trkiso,{"phoTrkIso_0","Leading Photon Tracker Iso"}}
+    {YType::smaj,{"phosmaj_0","Leading Photon S_{Major}"}}
   };
   
   // make corrections
@@ -111,7 +117,8 @@ namespace Config
      {
        {YType::ecalpfcliso,""},
        {YType::hcalpfcliso,""},
-       {YType::trkiso,""}
+       {YType::trkiso,""},
+       {YType::smaj,""}
      }
     },
     {CorrType::pt_lin_q0p7,
