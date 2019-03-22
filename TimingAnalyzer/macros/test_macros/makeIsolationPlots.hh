@@ -2,11 +2,14 @@
 #include "TString.h"
 
 // special enums
-enum FitType {Horizontal, Linear, Quadratic};
-enum CutType {none, eta_LT0p8, eta_GTE0p8_LT1p4442};
+enum FitType {Horizontal, Linear, Quadratic, Exponential};
+enum CutType {none, eta_LT0p8, eta_GTE0p8_LT1p4442, eta_LT0p5, eta_GTE0p5_LT1p0, eta_GTE1p0_LT1p4442};
 enum XType {pt, rho, eta, sceta};
 enum YType {ecalpfcliso, hcalpfcliso, trkiso, smaj};
-enum CorrType {uncorr, pt_lin_q0p7, pt_quad_q0p7, rho_lin_q0p7_eta_LT0p8, rho_lin_q0p7_eta_GTE0p8_LT1p4442, pt_corrs, rho_corrs, pt_rho_corrs};
+enum CorrType {uncorr, pt_lin_q0p7, pt_quad_q0p7, pt_lin_q0p8, pt_quad_q0p8, 
+	       rho_lin_q0p7_eta_LT0p8, rho_lin_q0p7_eta_GTE0p8_LT1p4442, rho_lin_q0p8_eta_LT0p8, rho_lin_q0p8_eta_GTE0p8_LT1p4442, 
+	       pt_corrs, pt_corrs_v2, rho_corrs, rho_corrs_v2, pt_rho_corrs, pt_rho_corrs_v2,
+	       eta_lin_q0p7_eta_GTE0p8_LT1p4442, pt_exp_q0p7, eta_corrs, eta_pt_corrs};
 
 // FitInfo
 struct FitInfo
@@ -44,7 +47,7 @@ struct YInfo
 };
 
 // prototypes
-void makePlots(TTree * tree, TFile * outfile, 
+void makePlots(TTree * tree, const TString & commoncut, TFile * outfile, 
 	       const TString & xname, const XInfo & xInfo, 
 	       const TString & yname, const YInfo & yInfo, const TString & yCorrection,
 	       const FitType fitType, const CutType & cutType);
@@ -56,14 +59,13 @@ void makeQuantiles(TCanvas * canv, TH2F * hist2D, TFile * outfile,
 // config
 namespace Config
 {
-  static const TString commoncut = "(evtwgt*puwgt)*((phopt_0>70)&&(phoisEB_0==1)&&(phoisOOT_0==0)&&(phoisGen_0==1))";
-
   // fits
   static const std::map<FitType,FitInfo> fits =
   {
     {FitType::Horizontal,{"[0]","y=c",{"c"}}},
     {FitType::Linear,{"[0]*x+[1]","y=mx+b",{"m","b"}}},
-    {FitType::Quadratic,{"[0]*x*x+[1]*x+[2]","y=ax^{2}+bx+c",{"a","b","c"}}}
+    {FitType::Quadratic,{"[0]*x*x+[1]*x+[2]","y=ax^{2}+bx+c",{"a","b","c"}}},
+    {FitType::Exponential,{"[0]*exp([1]*x+[2])+[3]","y=ae^{bx+c}+d",{"a","b","c","d"}}}
   };
 
   // cuts
@@ -72,6 +74,9 @@ namespace Config
     {CutType::none,""},
     {CutType::eta_LT0p8,"&&(abs(phosceta_0)<0.8)"},
     {CutType::eta_GTE0p8_LT1p4442,"&&((abs(phosceta_0)>=0.8)&&(abs(phosceta_0)<1.4442))"},
+    {CutType::eta_LT0p5,"&&(abs(phosceta_0)<0.5)"},
+    {CutType::eta_GTE0p5_LT1p0,"&&((abs(phosceta_0)>=0.5)&&(abs(phosceta_0)<1.0))"},
+    {CutType::eta_GTE1p0_LT1p4442,"&&((abs(phosceta_0)>=1.0)&&(abs(phosceta_0)<1.4442))"}
   };
 
   // make xnames
@@ -102,11 +107,16 @@ namespace Config
   };
   
   // make yinfos : isolations
-  static const std::map<YType,YInfo> yInfos =
+  static const std::map<YType,YInfo> yIsos =
   {
-    // {YType::ecalpfcliso,{"phoEcalPFClIso_0","Leading Photon ECAL PF Cluster Iso"}},
-    // {YType::hcalpfcliso,{"phoHcalPFClIso_0","Leading Photon HCAL PF Cluster Iso"}},
-    // {YType::trkiso,{"phoTrkIso_0","Leading Photon Tracker Iso"}}
+    {YType::ecalpfcliso,{"phoEcalPFClIso_0","Leading Photon ECAL PF Cluster Iso"}},
+    {YType::hcalpfcliso,{"phoHcalPFClIso_0","Leading Photon HCAL PF Cluster Iso"}},
+    {YType::trkiso,{"phoTrkIso_0","Leading Photon Tracker Iso"}}
+  };
+
+  // for y -vars that are eta dependent
+  static const std::map<YType,YInfo> ySmaj =
+  {
     {YType::smaj,{"phosmaj_0","Leading Photon S_{Major}"}}
   };
   
@@ -121,6 +131,7 @@ namespace Config
        {YType::smaj,""}
      }
     },
+
     {CorrType::pt_lin_q0p7,
      {
        {YType::ecalpfcliso,"-(0.001578*phopt_0)"},
@@ -135,6 +146,22 @@ namespace Config
        {YType::trkiso,"-((3.068e-6*phopt_0*phopt_0)+(-0.001327*phopt_0))"}
      }
     },
+
+    {CorrType::pt_lin_q0p8,
+     {
+       {YType::ecalpfcliso,"-(0.003008*phopt_0)"},
+       {YType::hcalpfcliso,"-(0.01107*phopt_0)"},
+       {YType::trkiso,"-(0.001175*phopt_0)"}
+     }
+    },
+    {CorrType::pt_quad_q0p8,
+     {
+       {YType::ecalpfcliso,"-((6.612e-6*phopt_0*phopt_0)+(-0.0008183*phopt_0))"},
+       {YType::hcalpfcliso,"-((2.921e-5*phopt_0*phopt_0)+(-0.005802*phopt_0))"},
+       {YType::trkiso,"-((7.07e-6*phopt_0*phopt_0)+(-0.002976*phopt_0))"}
+     }
+    },
+
     {CorrType::rho_lin_q0p7_eta_LT0p8, // first apply pt_corrs!
      {
        {YType::ecalpfcliso,"-(0.1073*rho)"},
@@ -147,6 +174,32 @@ namespace Config
        {YType::ecalpfcliso,"-(0.08317*rho)"},
        {YType::hcalpfcliso,"-(0.07983*rho)"},
        {YType::trkiso,"-(0.005256*rho)"}
+     }
+    },
+
+    {CorrType::rho_lin_q0p8_eta_LT0p8, // first apply pt_corrs!
+     {
+       {YType::ecalpfcliso,"-(0.1324*rho)"},
+       {YType::hcalpfcliso,"-(0.1094*rho)"},
+       {YType::trkiso,"-(0.02276*rho)"}
+     }
+    },
+    {CorrType::rho_lin_q0p8_eta_GTE0p8_LT1p4442, // first apply pt_corrs!
+     {
+       {YType::ecalpfcliso,"-(0.08638*rho)"},
+       {YType::hcalpfcliso,"-(0.09392*rho)"},
+       {YType::trkiso,"-(0.00536*rho)"}
+     }
+    },
+
+    {CorrType::eta_lin_q0p7_eta_GTE0p8_LT1p4442,
+     {
+       {YType::smaj,"-(0.1407*(abs(phosceta_0)-0.8))"}
+     },
+    },
+    {CorrType::pt_exp_q0p7,
+     {
+       {YType::smaj,"-(0.1054*exp(-0.01662*phopt_0+1.333))"}
      }
     }
   };
@@ -168,6 +221,13 @@ namespace Config
       {YType::trkiso,""}
     };
 
+    Config::yCorrectionsMap[CorrType::pt_corrs_v2] =
+    {
+      {YType::ecalpfcliso,Config::yCorrectionsMap[CorrType::pt_lin_q0p8][YType::ecalpfcliso]},
+      {YType::hcalpfcliso,Config::yCorrectionsMap[CorrType::pt_quad_q0p8][YType::hcalpfcliso]},
+      {YType::trkiso,""}
+    };
+
     // rho corrections
     Config::yCorrectionsMap[CorrType::rho_corrs] =
     {
@@ -184,6 +244,21 @@ namespace Config
        Config::yCorrectionsMap[CorrType::rho_lin_q0p7_eta_GTE0p8_LT1p4442][YType::trkiso]+cut_eta_GTE0p8_LT1p4442}
     };
 
+    Config::yCorrectionsMap[CorrType::rho_corrs_v2] =
+    {
+      {YType::ecalpfcliso,
+       Config::yCorrectionsMap[CorrType::rho_lin_q0p8_eta_LT0p8][YType::ecalpfcliso]+cut_eta_LT0p8+
+       Config::yCorrectionsMap[CorrType::rho_lin_q0p8_eta_GTE0p8_LT1p4442][YType::ecalpfcliso]+cut_eta_GTE0p8_LT1p4442},
+
+      {YType::hcalpfcliso,
+       Config::yCorrectionsMap[CorrType::rho_lin_q0p8_eta_LT0p8][YType::hcalpfcliso]+cut_eta_LT0p8+
+       Config::yCorrectionsMap[CorrType::rho_lin_q0p8_eta_GTE0p8_LT1p4442][YType::hcalpfcliso]+cut_eta_GTE0p8_LT1p4442},
+
+      {YType::trkiso,
+       Config::yCorrectionsMap[CorrType::rho_lin_q0p8_eta_LT0p8][YType::trkiso]+cut_eta_LT0p8+
+       Config::yCorrectionsMap[CorrType::rho_lin_q0p8_eta_GTE0p8_LT1p4442][YType::trkiso]+cut_eta_GTE0p8_LT1p4442}
+    };
+
     // pt and rho corrections
     Config::yCorrectionsMap[CorrType::pt_rho_corrs] =
     {
@@ -193,6 +268,30 @@ namespace Config
        Config::yCorrectionsMap[CorrType::pt_corrs][YType::hcalpfcliso]+Config::yCorrectionsMap[CorrType::rho_corrs][YType::hcalpfcliso]},
       {YType::trkiso,
        Config::yCorrectionsMap[CorrType::pt_corrs][YType::trkiso]+Config::yCorrectionsMap[CorrType::rho_corrs][YType::trkiso]}
+    };
+
+    Config::yCorrectionsMap[CorrType::pt_rho_corrs_v2] =
+    {
+      {YType::ecalpfcliso,
+       Config::yCorrectionsMap[CorrType::pt_corrs_v2][YType::ecalpfcliso]+Config::yCorrectionsMap[CorrType::rho_corrs_v2][YType::ecalpfcliso]},
+      {YType::hcalpfcliso,
+       Config::yCorrectionsMap[CorrType::pt_corrs_v2][YType::hcalpfcliso]+Config::yCorrectionsMap[CorrType::rho_corrs_v2][YType::hcalpfcliso]},
+      {YType::trkiso,
+       Config::yCorrectionsMap[CorrType::pt_corrs_v2][YType::trkiso]+Config::yCorrectionsMap[CorrType::rho_corrs_v2][YType::trkiso]}
+    };
+
+    // eta corrections
+    Config::yCorrectionsMap[CorrType::eta_corrs] =
+    {
+      {YType::smaj,
+       Config::yCorrectionsMap[CorrType::eta_lin_q0p7_eta_GTE0p8_LT1p4442][YType::smaj]+cut_eta_GTE0p8_LT1p4442}
+    };
+
+    // eta pt corrections for smaj
+    Config::yCorrectionsMap[CorrType::eta_pt_corrs] =
+    {
+      {YType::smaj,
+       Config::yCorrectionsMap[CorrType::eta_corrs][YType::smaj]+Config::yCorrectionsMap[CorrType::pt_exp_q0p7][YType::smaj]}
     };
   };
 

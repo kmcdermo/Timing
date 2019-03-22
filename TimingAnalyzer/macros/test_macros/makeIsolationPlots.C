@@ -15,6 +15,9 @@ void makeIsolationPlots()
   auto tree = (TTree*)infile->Get(tree_name.Data());
   Common::CheckValidTree(tree,tree_name,infile_name);
 
+  // setup common cut based on input
+  const TString commoncut = "(puwgt)*((phopt_0>70)&&(phoisEB_0==1)&&(phoisOOT_0==0)&&(phoisGen_0==1))"; // could be evtwgt*, or isGen==0
+
   // make output
   auto outfile = TFile::Open("isoplots.root","recreate");
 
@@ -25,20 +28,21 @@ void makeIsolationPlots()
   Config::setupYbins();
 
   // config
-  const auto fitType  = FitType::Quadratic;
+  const auto fitType  = FitType::Horizontal;
   const auto cutType  = CutType::none;
-  const auto xType    = XType::sceta;
-  const auto corrType = CorrType::uncorr;
+  const auto xType    = XType::pt;
+  const auto corrType = CorrType::pt_rho_corrs_v2;
+  const auto & yInfos = Config::yIsos;
   const auto & yCorrections = Config::yCorrectionsMap.at(corrType);
 
   // make plots!
-  for (const auto & yInfoPair : Config::yInfos)
+  for (const auto & yInfoPair : yInfos)
   {
     const auto   yType = yInfoPair.first;
     const auto & yInfo = yInfoPair.second;
 
-    makePlots(tree,outfile,Config::xNames.at(xType),Config::xInfos.at(xType),Config::yNames.at(yType),
-	      yInfo,yCorrections.at(yType),fitType,cutType);
+    makePlots(tree,commoncut,outfile,Config::xNames.at(xType),Config::xInfos.at(xType),
+	      Config::yNames.at(yType),yInfo,yCorrections.at(yType),fitType,cutType);
   }
 
   // delete all
@@ -47,7 +51,7 @@ void makeIsolationPlots()
   delete infile;
 }
 
-void makePlots(TTree * tree, TFile * outfile, 
+void makePlots(TTree * tree, const TString & commoncut, TFile * outfile, 
 	       const TString & xname, const XInfo & xInfo, 
 	       const TString & yname, const YInfo & yInfo, const TString & yCorrection,
 	       const FitType fitType, const CutType & cutType)
@@ -78,7 +82,7 @@ void makePlots(TTree * tree, TFile * outfile,
 
   // fill 2D hist
   const TString draw = Form("max(%s%s,0.0):%s>>%s",yvar.Data(),yCorrection.Data(),xvar.Data(),hist2D->GetName());
-  const TString cut  = Config::commoncut+Config::cuts.at(cutType);
+  const TString cut  = commoncut+Config::cuts.at(cutType);
   std::cout << draw.Data() << std::endl;
   std::cout << cut .Data() << std::endl;
 
@@ -92,7 +96,9 @@ void makePlots(TTree * tree, TFile * outfile,
 
   // get quantile plots
   makeQuantiles(canv,hist2D,outfile,yname,fitType,"0.5");
+  makeQuantiles(canv,hist2D,outfile,yname,fitType,"0.6");
   makeQuantiles(canv,hist2D,outfile,yname,fitType,"0.7");
+  makeQuantiles(canv,hist2D,outfile,yname,fitType,"0.8");
   makeQuantiles(canv,hist2D,outfile,yname,fitType,"0.9");
 
   // draw before plot
@@ -153,6 +159,15 @@ void makeQuantiles(TCanvas * canv, TH2F * hist2D, TFile * outfile,
   // init params
   for (auto iname = 0U; iname < names.size(); iname++) fit_hist->SetParName(iname,names[iname]);
 
+  // because root is an utter piece of fucking trash
+  if (FitType::Exponential)
+  {
+    fit_hist->SetParameter(0,0.1);
+    fit_hist->SetParameter(1,-0.02);
+    fit_hist->SetParameter(2,1.3);
+    fit_hist->SetParameter(3,0.3);
+  }
+  
   // and then do da fit
   hist1D_quant->Fit(fitname.Data(),"Q");
 
@@ -162,6 +177,17 @@ void makeQuantiles(TCanvas * canv, TH2F * hist2D, TFile * outfile,
   pavetext->AddText("Fit: "+text);
   pavetext->AddText("Quantile: "+quantile);
 
+  // ensure plot can be seen
+  auto miny = 1e9, maxy = -1e9;
+  for (auto ibin = 1; ibin <= hist1D_quant->GetXaxis()->GetNbins(); ibin++)
+  {
+    const auto content = hist1D_quant->GetBinContent(ibin);
+    if (content > maxy) maxy = content;
+    if (content < miny && content > 0.0) miny = content;
+  }
+
+  if (miny/maxy > 0.5) hist1D_quant->GetYaxis()->SetRangeUser(miny/1.2,maxy*2.f);
+ 
   // draw it!
   canv->cd();
   hist1D_quant->Draw("ep");

@@ -7,7 +7,7 @@ void plot_ootVID()
 
   // i/o dirs
   const TString indir  = "skims/v4/ootVID";
-  const TString outdir = "/eos/user/k/kmcdermo/www/dispho/plots/ootVID/new_corrs_smaj";
+  const TString outdir = "/eos/user/k/kmcdermo/www/dispho/plots/ootVID_v2/quantile_0p8";
 
   // get inputs
   const auto sign_file_name = indir+"/gmsb.root";
@@ -26,25 +26,25 @@ void plot_ootVID()
   auto bkgd_tree = (TTree*)bkgd_file->Get(bkgd_tree_name.Data());
   Common::CheckValidTree(bkgd_tree,Common::disphotreename,bkgd_file_name);
 
-  // make plots: isRatio, isLoose, isSig
-  auto outfile_nm1 = TFile::Open("plots_nm1.root","RECREATE");
-  make_plots(sign_tree,outfile_nm1,false,true,true);
-  make_plots(sign_tree,outfile_nm1,false,false,true);
-  delete outfile_nm1;
-  gSystem->Exec("mv *png *pdf *root "+outdir+"/nm1");
-
-  // make full vid (remake outfile)
+  // make full efficiency plots: isRatio, isLoose, isSig
   auto outfile_vid = TFile::Open("plots_vid.root","RECREATE");
   make_plots(sign_tree,outfile_vid,true,true,true);
   make_plots(sign_tree,outfile_vid,true,false,true);
   delete outfile_vid;
   gSystem->Exec("mv *png *pdf *root "+outdir+"/vid");
 
+  // make n-1 plots (remake outfile)
+  auto outfile_nm1 = TFile::Open("plots_nm1.root","RECREATE");
+  make_plots(sign_tree,outfile_nm1,false,true,true);
+  make_plots(sign_tree,outfile_nm1,false,false,true);
+  delete outfile_nm1;
+  gSystem->Exec("mv *png *pdf *root "+outdir+"/nm1");
+
   // bkgd and signal inclusive effs
-  auto outfile_inc = TFile::Open("plots_inc.root","RECREATE");
-  make_inclusivePlots(bkgd_tree,sign_tree,outfile_inc);
-  delete outfile_inc;
-  gSystem->Exec("mv *png *pdf *root "+outdir+"/inc");
+  // auto outfile_inc = TFile::Open("plots_inc.root","RECREATE");
+  // make_inclusivePlots(bkgd_tree,sign_tree,outfile_inc);
+  // delete outfile_inc;
+  // gSystem->Exec("mv *png *pdf *root "+outdir+"/inc");
 
   // delete it all
   delete bkgd_tree;
@@ -134,11 +134,20 @@ void make_plots(TTree * tree, TFile * outfile, const Bool_t isRatios, const Bool
       upad = new TPad("upad","", Common::left_up, Common::bottom_up, Common::right_up, Common::top_up);
       upad->SetBottomMargin(Common::merged_margin);
       upad->Draw();
+      upad->SetTickx();
+      upad->SetTicky();
       
       lpad = new TPad("lpad", "", Common::left_lp, Common::bottom_lp, Common::right_lp, Common::top_lp);
       lpad->SetTopMargin(Common::merged_margin);
       lpad->SetBottomMargin(Common::bottom_margin);
       lpad->Draw();
+      lpad->SetTickx();
+      lpad->SetTicky();
+    }
+    else
+    {
+      canv->SetTickx();
+      canv->SetTicky();
     }
 
     // make legend
@@ -283,7 +292,9 @@ void make_inclusivePlots(TTree * bkgd_tree, TTree * sign_tree, TFile * outfile)
     // make canvas
     auto canv = new TCanvas();
     canv->cd();
-
+    canv->SetTickx();
+    canv->SetTicky();
+    
     // make legend
     auto leg = new TLegend(0.85,0.85,1.0,1.0);
 
