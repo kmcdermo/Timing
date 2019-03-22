@@ -31,11 +31,13 @@ Made ```kmcdermo:post_reco_OOT_AND_add_OOT_VID``` with the following:
 
 Additional useful links:
  - Analysis recipes for 2017: https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVAnalysisSummaryTable
+   - Old 2017 page: https://twiki.cern.ch/twiki/bin/view/CMS/PdmV2017Analysis
  - Object recommendations: https://twiki.cern.ch/twiki/bin/view/CMS/ExoObjectRecommendationsRun2#2017_AN1
  - miniAOD 2017: https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookMiniAOD2017
  - Setup combine: https://cms-hcomb.gitbooks.io/combine/content/part1/#for-end-users-that-dont-need-to-commit-or-do-any-development
+ - EGM cut-based VID: https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedPhotonIdentificationRun2
  - MET corrections+fixes: https://twiki.cern.ch/twiki/bin/view/CMS/MissingETUncertaintyPrescription#Instructions_for_9_4_X_X_9_for_2
- - JECs : https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#CorrPatJets  
+ - JECs: https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#CorrPatJets  
  - MET Filters: https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETOptionalFiltersRun2#How_to_run_ecal_BadCalibReducedM
  - Computing EGM Isolations
    - https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedPhotonIdentificationRun2#Selection_implementation_details
@@ -52,8 +54,29 @@ Additional useful links:
  - JER procedure explanation from https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetResolution#Smearing_procedures
  - JER implementation copied from https://github.com/cms-sw/cmssw/blob/master/PhysicsTools/PatUtils/interface/SmearedJetProducerT.h#L208-L215
  - Muon ID: https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideMuonIdRun2#Muon_selectors_Since_9_4_X
- - Computing adcToGeVInfo : http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/src/EcalClusterLazyTools.cc#0204
+ - Computing adcToGeVInfo: http://cmslxr.fnal.gov/source/RecoEcal/EgammaCoreTools/src/EcalClusterLazyTools.cc#0204
  - Basic EGM kinematic info in miniAODv2: https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaMiniAODV2#Applying_the_Energy_Scale_and_sm
+ - Brilcalc: https://cms-service-lumi.web.cern.ch/cms-service-lumi/brilwsdoc.html
+ - Lumi for 2017
+   - https://hypernews.cern.ch/HyperNews/CMS/get/luminosity/761/1.html
+   - https://hypernews.cern.ch/HyperNews/CMS/get/physics-validation/3067.html
+   - JSON: https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions17/13TeV/ReReco/
+ - Data PU distribution info
+   - Instructions: https://twiki.cern.ch/twiki/bin/view/CMS/PileupJSONFileforData
+   - JSON: https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions17/13TeV/PileUp/
+ - GenXSecTool: https://twiki.cern.ch/twiki/bin/viewauth/CMS/HowToGenXSecAnalyzer#Automated_scripts_to_compute_the
+ - Pub guidelines: https://twiki.cern.ch/twiki/bin/viewauth/CMS/Internal/PubGuidelines
+ - TDR processing: https://twiki.cern.ch/twiki/bin/viewauth/CMS/Internal/TdrProcessing
+ - HN Review of analysis: https://hypernews.cern.ch/HyperNews/CMS/get/EXO-19-005.html
+ - CADI line: http://cms.cern.ch/iCMS/analysisadmin/cadilines?line=EXO-19-005
+ - AN: http://cms.cern.ch/iCMS/jsp/db_notes/noteInfo.jsp?cmsnoteid=CMS%20AN-2018/306
+ - CMS Glossary: https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookGlossary
+ - LXR: http://cmslxr.fnal.gov/source
+ - Working group info
+  - Exotica Twiki: https://twiki.cern.ch/twiki/bin/viewauth/CMS/EXOTICA
+  - EXO Meetings: https://indico.cern.ch/category/5796/
+  - LLP Twiki: https://twiki.cern.ch/twiki/bin/view/CMS/ExoticaLongLived
+  - LLP Meetings: https://indico.cern.ch/category/5791/
 
 -----------------------
 
@@ -139,6 +162,7 @@ Produce ntuples with multicrab:
 - test/multicrab_dispho_HVDS.py
 
 N.B. XSecs taken from GenXSecAnalyzerTool (see fork of genproductions)
+--> Currently sitting here: /afs/cern.ch/work/k/kmcdermo/private/dispho/XSEC/CMSSW_9_4_10/src/genproductions/test/calculateXSectionAndFilterEfficiency
 
 Each script calls config: ```test/dispho.py```. Make sure to configure correctly! Plugins used:
 - NTuplizer  : plugins/Dispho.cc/hh and plugins/DisPhoTypes.hh
@@ -159,6 +183,22 @@ Output of ntuples end up in EOS group space: currently configured for /eos/cms/g
 - Finally, run 2D plots for fis: scripts/makeLimits.sh
 
 Plots outputted to lxplus eos user space: /eos/user/k/kmcdermo/www/dispho/plots
+
+-----------------------
+
+### Extracting lumi info
+
+Compute lumi for 2017: 
+
+```
+brilcalc lumi --normtag /cvmfs/cms-bril.cern.ch/cms-lumi-pog/Normtags/normtag_PHYSICS.json -u /fb -i /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions17/13TeV/ReReco/Cert_294927-306462_13TeV_EOY2017ReReco_Collisions17_JSON_v1.txt
+```
+
+Compute PU info for 2017 with 94X environment:
+
+```
+pileupCalc.py -i ~/public/input/golden2017.json --inputLumiJSON ~/private/bril/pu2017json.txt --calcMode true --minBiasXsec 69200 --maxPileupBin 200 --numPileupBins 200 MyDataPileupHistogram.root
+```
 
 --------------------------------
 
