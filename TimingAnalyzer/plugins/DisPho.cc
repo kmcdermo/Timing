@@ -901,16 +901,16 @@ void DisPho::SetGMSBBranches()
     {
       // get photon and SC!
       const auto & photon = photons[iphoton];
-      const auto & phosc  = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();      
+      const auto & phosc  = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
 
       // ensure pt's are reasonable!
       if (oot::GetPhotonPt(photon) < ((1.f-genpTres) * gmsbBranch.genphpt_)) continue;
       if (oot::GetPhotonPt(photon) > ((1.f+genpTres) * gmsbBranch.genphpt_)) continue;
       
       // compute eta/phi direction along line connecting photon SC to secondary vertex
-      const auto dx = phosc.x()-genphoton.x();
-      const auto dy = phosc.y()-genphoton.y();
-      const auto dz = phosc.z()-genphoton.z();
+      const auto dx = phosc->x()-gmsbBranch.genNdecayvx_;
+      const auto dy = phosc->y()-gmsbBranch.genNdecayvy_;
+      const auto dz = phosc->z()-gmsbBranch.genNdecayvz_;
       const auto phi = Config::phi(dx,dy);
       const auto eta = Config::eta(dx,dy,dz);
 
@@ -1004,20 +1004,20 @@ void DisPho::SetHVDSBranches()
     {
       // get photon and SC (and tmp vars)
       const auto & photon = photons[iphoton];
-      const auto & phosc  = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();      
+      const auto & phosc  = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
       const auto tmppt = oot::GetPhotonPt(photon);
-      const auto tmpx  = phosc.x();
-      const auto tmpy  = phosc.y();
-      const auto tmpz  = phosc.z();
+      const auto tmpx  = phosc->x();
+      const auto tmpy  = phosc->y();
+      const auto tmpz  = phosc->z();
 
       // check gen photon 0 first
       if (tmppt < ((1.f-genpTres) * hvdsBranch.genHVph0pt_)) continue;
       if (tmppt > ((1.f+genpTres) * hvdsBranch.genHVph0pt_)) continue;
 
       // compute eta/phi of line connecting first photon from dark pion to SC
-      const auto dx0 = tmpx-genphoton0.x();
-      const auto dy0 = tmpy-genphoton0.y();
-      const auto dz0 = tmpz-genphoton0.z();
+      const auto dx0 = tmpx-hvdsBranch.genvPiondecayvx_;
+      const auto dy0 = tmpy-hvdsBranch.genvPiondecayvy_;
+      const auto dz0 = tmpz-hvdsBranch.genvPiondecayvz_;
       const auto phi0 = Config::phi(dx0,dy0);
       const auto eta0 = Config::eta(dx0,dy0,dz0);
 
@@ -1034,9 +1034,9 @@ void DisPho::SetHVDSBranches()
       if (tmppt > ((1.f+genpTres) * hvdsBranch.genHVph1pt_)) continue;
       
       // compute eta/phi of line connecting second photon from dark pion to SC
-      const auto dx1 = tmpx-genphoton1.x();
-      const auto dy1 = tmpy-genphoton1.y();
-      const auto dz1 = tmpz-genphoton1.z();
+      const auto dx1 = tmpx-hvdsBranch.genvPiondecayvx_;
+      const auto dy1 = tmpy-hvdsBranch.genvPiondecayvy_;
+      const auto dz1 = tmpz-hvdsBranch.genvPiondecayvz_;
       const auto phi1 = Config::phi(dx1,dy1);
       const auto eta1 = Config::eta(dx1,dy1,dz1);
 
@@ -1066,7 +1066,10 @@ void DisPho::InitializeToyBranches()
     toyBranch.genphE_   = -9999.f;
     toyBranch.genphpt_  = -9999.f;
     toyBranch.genphphi_ = -9999.f;
-    toyBranch.genpheta_ = -9999.f;
+
+    toyBranch.genphvx_ = -9999.f;
+    toyBranch.genphvy_ = -9999.f;
+    toyBranch.genphvz_ = -9999.f;
 
     toyBranch.genphmatch_ = -9999;
     toyBranch.genphmatch_ptres_ = -9999;
@@ -1089,16 +1092,20 @@ void DisPho::SetToyBranches()
     toyBranch.genphphi_ = toy.phi();
     toyBranch.genpheta_ = toy.eta();
     
+    toyBranch.genphvx_  = toy.vx();
+    toyBranch.genphvy_  = toy.vy();
+    toyBranch.genphvz_  = toy.vz();
+
     auto mindR = gendRmin, mindR_ptres = gendRmin, mindR_status = gendRmin;
     for (auto iphoton = 0; iphoton < nPhotons; iphoton++)
     {
       const auto & photon = photons[iphoton];
-      const auto & phosc  = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();      
+      const auto & phosc  = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
 
       // compute eta/phi direction along line connecting photon SC to secondary vertex
-      const auto dx = phosc.x()-toy.x();
-      const auto dy = phosc.y()-toy.y();
-      const auto dz = phosc.z()-toy.z();
+      const auto dx = phosc->x()-toyBranch.genphvx_;
+      const auto dy = phosc->y()-toyBranch.genphvy_;
+      const auto dz = phosc->z()-toyBranch.genphvz_;
       const auto phi = Config::phi(dx,dy);
       const auto eta = Config::eta(dx,dy,dz);
 
@@ -1940,7 +1947,8 @@ void DisPho::SetPhoBranchesMC()
   {
     // get objects
     const auto & photon = photons[iphoton];
-    auto & phoBranch = phoBranches[iphoton];
+    const auto & phosc  = photon.superCluster().isNonnull() ? photon.superCluster() : photon.parentSuperCluster();
+    auto & phoBranch    = phoBranches[iphoton];
     
     // extra info for gen matching
     if (isGMSB)
@@ -1975,7 +1983,7 @@ void DisPho::SetPhoBranchesMC()
     } // end block over is HVDS
   
     // standard dR matching
-    phoBranch.isGen_ = oot::GenPhotonToObjectMatching(genParticlesH,photon,phosc,genpTres,gendRmin);
+    phoBranch.isGen_ = oot::GenPhotonToObjectMatching(genParticlesH,photon,*phosc,genpTres,gendRmin);
     
     // scale and smearing uncs
     const auto phoE = phoBranch.E_; // assumed this already set!!!
@@ -2303,6 +2311,10 @@ void DisPho::MakeEventTree()
       disphotree->Branch(Form("genphpt_%i",itoy), &toyBranch.genphpt_);
       disphotree->Branch(Form("genphphi_%i",itoy), &toyBranch.genphphi_);
       disphotree->Branch(Form("genpheta_%i",itoy), &toyBranch.genpheta_);
+
+      disphotree->Branch(Form("genphvx_%i",itoy), &toyBranch.genphvx_);
+      disphotree->Branch(Form("genphvy_%i",itoy), &toyBranch.genphvy_);
+      disphotree->Branch(Form("genphvz_%i",itoy), &toyBranch.genphvz_);
       
       disphotree->Branch(Form("genphmatch_%i",itoy), &toyBranch.genphmatch_);
       disphotree->Branch(Form("genphmatch_ptres_%i",itoy), &toyBranch.genphmatch_ptres_);

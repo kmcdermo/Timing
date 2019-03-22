@@ -420,14 +420,14 @@ namespace oot
       if (genpart.pt() > ((1.f+pTres) * obj1.pt())) continue;
       
       // compute eta/phi direction along line connecting object to gen particle
-      const auto dx = obj2.x()-genpart.x();
-      const auto dy = obj2.y()-genpart.y();
-      const auto dz = obj2.z()-genpart.z();
+      const auto dx = obj2.x()-genpart.vx();
+      const auto dy = obj2.y()-genpart.vy();
+      const auto dz = obj2.z()-genpart.vz();
       const auto phi = Config::phi(dx,dy);
       const auto eta = Config::eta(dx,dy,dz);
 
       // compare direction (momentum) of gen particle to direction of line connecting gen particle vertex to obj2
-      if (reco::deltaR(eta,phi,genpart.eta(),genpart.phi() < dRmin) return true;
+      if (reco::deltaR(eta,phi,genpart.eta(),genpart.phi()) < dRmin) return true;
     } // end loop over gen particles
     return false;      
   } 

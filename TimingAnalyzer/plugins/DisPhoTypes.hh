@@ -68,6 +68,10 @@ struct toyStruct
   float genphphi_;
   float genpheta_;
 
+  float genphvx_;
+  float genphvy_;
+  float genphvz_;
+
   int genphmatch_;
   int genphmatch_ptres_;
   int genphmatch_status_;
