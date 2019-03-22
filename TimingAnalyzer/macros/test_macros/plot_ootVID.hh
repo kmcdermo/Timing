@@ -52,6 +52,7 @@ void make_plots(TTree * tree, TFile * outfile, const Bool_t isRatios, const Bool
 void make_inclusivePlots(TTree * bkgd_tree, TTree * sign_tree, TFile * outfile);
 void set_eff(TH1F * hist, const TH1F * numer, const TH1F * denom);
 TString get_commoncut(const Bool_t isSig);
+void move_output(const TString & eosdir, const TString & outdir, const TString & dir);
 
 // Config namespace
 namespace Config
@@ -64,7 +65,7 @@ namespace Config
     {CutType::ecal,{"max(phoEcalPFClIso_0-(0.003008*phopt_0)-(0.1324*rho)*(abs(phosceta_0)<0.8)-(0.08638*rho)*((abs(phosceta_0)>=0.8)*(abs(phosceta_0)<1.4442)),0.0)","<","8.0","5.0","ecalpfcliso","ECAL PF Cluster Iso"}}, // old values are "8.0","5.0" (q80 = 1.0)
     {CutType::hcal,{"max(phoHcalPFClIso_0-((2.921e-5*phopt_0*phopt_0)+(-0.005802*phopt_0))-(0.1094*rho)*(abs(phosceta_0)<0.8)-(0.09392*rho)*((abs(phosceta_0)>=0.8)*(abs(phosceta_0)<1.4442)),0.0)","<","10.0","4.0","hcalpfcliso","HCAL PF Cluster Iso"}}, // old values are = "12.0","10.0" (q80 = 2.0)
     {CutType::trk,{"max(phoTrkIso_0-(0.02276*rho)*(abs(phosceta_0)<0.8)-(0.00536*rho)*((abs(phosceta_0)>=0.8)*(abs(phosceta_0)<1.4442)),0.0)","<","10.0","4.0","trkiso","Tracker Iso"}}, // old values are = "8.5","5.5" (q80 = 2.0)
-    {CutType::smaj,{"max(phosmaj_0-(0.1407*(abs(phosceta_0)-0.8))*((abs(phosceta_0)>=0.8)*(abs(phosceta_0)<1.4442))-(0.1054*exp(-0.01662*phopt_0+1.333)),0.0)","<","0.4","0.29","smaj","S_{Major}"}} // !!!! used to be 0.5 for tight !!!
+    {CutType::smaj,{"max(phosmaj_0-(0.311*(abs(phosceta_0)-0.8))*((abs(phosceta_0)>=0.8)*(abs(phosceta_0)<1.4442))-(0.1465*exp(-0.01775*phopt_0+1.948)),0.0)","<","1.0","0.25","smaj","S_{Major}"}} // old values are = "1.0","0.5"
   };
 
   // make plot vector

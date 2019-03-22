@@ -18,21 +18,23 @@ void makeIsolationPlots()
   // setup common cut based on input
   const TString commoncut = "(puwgt)*((phopt_0>70)&&(phoisEB_0==1)&&(phoisOOT_0==0)&&(phoisGen_0==1))"; // could be evtwgt*, or isGen==0
 
-  // make output
-  auto outfile = TFile::Open("isoplots.root","recreate");
-
   // setup combo corrections
   Config::setupComboCorrs();
 
   // setup isobins
   Config::setupYbins();
 
+  // make output
+  auto outfile = TFile::Open("isoplots.root","recreate");
+  const TString eosdir = "/eos/user/k/kmcdermo/www";
+  const TString outdir = "dispho/plots/ootVID_v2/smajor/pt_corrected";
+
   // config
   const auto fitType  = FitType::Horizontal;
   const auto cutType  = CutType::none;
   const auto xType    = XType::pt;
-  const auto corrType = CorrType::pt_rho_corrs_v2;
-  const auto & yInfos = Config::yIsos;
+  const auto corrType = CorrType::eta_pt_corrs_v2;
+  const auto & yInfos = Config::ySmaj;
   const auto & yCorrections = Config::yCorrectionsMap.at(corrType);
 
   // make plots!
@@ -44,6 +46,12 @@ void makeIsolationPlots()
     makePlots(tree,commoncut,outfile,Config::xNames.at(xType),Config::xInfos.at(xType),
 	      Config::yNames.at(yType),yInfo,yCorrections.at(yType),fitType,cutType);
   }
+
+  // move it all
+  const auto fulldir = eosdir+"/"+outdir;
+  gSystem->Exec("mkdir -p "+fulldir);
+  gSystem->Exec("mv *png *pdf *root "+fulldir);
+  gSystem->Exec("pushd "+eosdir+"; ./copyphp.sh "+outdir+"; popd;");
 
   // delete all
   delete outfile;

@@ -9,7 +9,8 @@ enum YType {ecalpfcliso, hcalpfcliso, trkiso, smaj};
 enum CorrType {uncorr, pt_lin_q0p7, pt_quad_q0p7, pt_lin_q0p8, pt_quad_q0p8, 
 	       rho_lin_q0p7_eta_LT0p8, rho_lin_q0p7_eta_GTE0p8_LT1p4442, rho_lin_q0p8_eta_LT0p8, rho_lin_q0p8_eta_GTE0p8_LT1p4442, 
 	       pt_corrs, pt_corrs_v2, rho_corrs, rho_corrs_v2, pt_rho_corrs, pt_rho_corrs_v2,
-	       eta_lin_q0p7_eta_GTE0p8_LT1p4442, pt_exp_q0p7, eta_corrs, eta_pt_corrs};
+	       eta_lin_q0p7_eta_GTE0p8_LT1p4442, pt_exp_q0p7, eta_corrs, eta_pt_corrs,
+	       eta_lin_q0p8_eta_GTE0p8_LT1p4442, pt_exp_q0p8, eta_corrs_v2, eta_pt_corrs_v2 };
 
 // FitInfo
 struct FitInfo
@@ -195,13 +196,25 @@ namespace Config
     {CorrType::eta_lin_q0p7_eta_GTE0p8_LT1p4442,
      {
        {YType::smaj,"-(0.1407*(abs(phosceta_0)-0.8))"}
-     },
+     }
     },
     {CorrType::pt_exp_q0p7,
      {
        {YType::smaj,"-(0.1054*exp(-0.01662*phopt_0+1.333))"}
      }
+    },
+    
+    {CorrType::eta_lin_q0p8_eta_GTE0p8_LT1p4442,
+     {
+       {YType::smaj,"-(0.311*(abs(phosceta_0)-0.8))"}
+     }
+    },
+    {CorrType::pt_exp_q0p8,
+     {
+       {YType::smaj,"-(0.1465*exp(-0.01775*phopt_0+1.948))"}
+     }
     }
+   
   };
   
   void setupComboCorrs()
@@ -287,11 +300,23 @@ namespace Config
        Config::yCorrectionsMap[CorrType::eta_lin_q0p7_eta_GTE0p8_LT1p4442][YType::smaj]+cut_eta_GTE0p8_LT1p4442}
     };
 
+    Config::yCorrectionsMap[CorrType::eta_corrs_v2] =
+    {
+      {YType::smaj,
+       Config::yCorrectionsMap[CorrType::eta_lin_q0p8_eta_GTE0p8_LT1p4442][YType::smaj]+cut_eta_GTE0p8_LT1p4442}
+    };
+
     // eta pt corrections for smaj
     Config::yCorrectionsMap[CorrType::eta_pt_corrs] =
     {
       {YType::smaj,
        Config::yCorrectionsMap[CorrType::eta_corrs][YType::smaj]+Config::yCorrectionsMap[CorrType::pt_exp_q0p7][YType::smaj]}
+    };
+
+    Config::yCorrectionsMap[CorrType::eta_pt_corrs_v2] =
+    {
+      {YType::smaj,
+       Config::yCorrectionsMap[CorrType::eta_corrs_v2][YType::smaj]+Config::yCorrectionsMap[CorrType::pt_exp_q0p8][YType::smaj]}
     };
   };
 

@@ -7,7 +7,8 @@ void plot_ootVID()
 
   // i/o dirs
   const TString indir  = "skims/v4/ootVID";
-  const TString outdir = "/eos/user/k/kmcdermo/www/dispho/plots/ootVID_v2/quantile_0p8";
+  const TString eosdir = "/eos/user/k/kmcdermo/www";
+  const TString outdir = "dispho/plots/ootVID_v2/efficiency/smajLT0p25";
 
   // get inputs
   const auto sign_file_name = indir+"/gmsb.root";
@@ -31,20 +32,23 @@ void plot_ootVID()
   make_plots(sign_tree,outfile_vid,true,true,true);
   make_plots(sign_tree,outfile_vid,true,false,true);
   delete outfile_vid;
-  gSystem->Exec("mv *png *pdf *root "+outdir+"/vid");
+  move_output(eosdir,outdir,"vid");
 
   // make n-1 plots (remake outfile)
   auto outfile_nm1 = TFile::Open("plots_nm1.root","RECREATE");
   make_plots(sign_tree,outfile_nm1,false,true,true);
   make_plots(sign_tree,outfile_nm1,false,false,true);
   delete outfile_nm1;
-  gSystem->Exec("mv *png *pdf *root "+outdir+"/nm1");
+  move_output(eosdir,outdir,"nm1");
 
   // bkgd and signal inclusive effs
-  // auto outfile_inc = TFile::Open("plots_inc.root","RECREATE");
-  // make_inclusivePlots(bkgd_tree,sign_tree,outfile_inc);
-  // delete outfile_inc;
-  // gSystem->Exec("mv *png *pdf *root "+outdir+"/inc");
+  auto outfile_inc = TFile::Open("plots_inc.root","RECREATE");
+  make_inclusivePlots(bkgd_tree,sign_tree,outfile_inc);
+  delete outfile_inc;
+  move_output(eosdir,outdir,"inc");
+
+  // copy index.php
+  gSystem->Exec("pushd "+eosdir+"; ./copyphp.sh "+outdir+"; popd;");
 
   // delete it all
   delete bkgd_tree;
@@ -382,4 +386,11 @@ void set_eff(TH1F * hist, const TH1F * numer, const TH1F * denom)
     hist->SetBinContent(ibin,prob);
     hist->SetBinError  (ibin,err);
   }
+}
+
+void move_output(const TString & eosdir, const TString & outdir, const TString & dir)
+{
+  const auto fulldir = eosdir+"/"+outdir+"/"+dir;
+  gSystem->Exec("mkdir -p "+fulldir);
+  gSystem->Exec("mv *png *pdf *root "+fulldir);
 }
