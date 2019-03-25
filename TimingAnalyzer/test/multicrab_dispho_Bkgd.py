@@ -74,14 +74,10 @@ def main():
 
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'dispho.py'
-        config.JobType.numCores    = 8
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters , inputDir+inputFlags ]
 
         config.Data.inputDataset = None
-        config.Data.splitting    = 'EventAwareLumiBased'
-        config.Data.unitsPerJob  = 500000
-
         config.Data.allowNonValidInputDataset = True
 
         config.Data.outputDatasetTag = None
@@ -171,7 +167,7 @@ def main():
             # if "_ext" in inDO[0] : datasetName += "_ext"
 
             config.General.requestName   = datasetName
-            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v17','nThreads='+str(config.JobType.numCores),
+            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v17',
                                             'xsec='+inDO[1],'filterEff=1','BR=1','isBkgd=True',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.inputDataset     = inDO[0]

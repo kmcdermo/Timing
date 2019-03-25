@@ -74,13 +74,10 @@ def main():
 
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'dispho.py'
-        config.JobType.numCores    = 8
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters , inputDir+inputFlags ]
 
         config.Data.inputDataset = None
-        config.Data.splitting    = 'EventAwareLumiBased'
-        config.Data.unitsPerJob  = None
 
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
@@ -90,17 +87,18 @@ def main():
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/GMSB_L-200TeV_Ctau-400cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM','0.0445','1','0.81418','isGMSB',10000],
-            ['/GJet_Pt-15To6000_TuneCP5-Flat_13TeV_pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM','283200','1','1','isBkgd',500000]
+            ['/GMSB_L-200TeV_Ctau-400cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM','0.0445','0.81418','isGMSB'],
+            ['/GMSB_L-200TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM','0.0445','0.81418','isGMSB'],
+            ['/GJet_Pt-15To6000_TuneCP5-Flat_13TeV_pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM','283200','1','isBkgd'],
+            ['/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/RunIIFall17MiniAODv2-PU2017RECOSIMstep_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM','5349','1','isBkgd'],
             ]
  
         for inDO in inputDataAndOpts:
             # inDO[0] is of the form /A/B/C. Since A is unique for each inDO for Monte Carlo, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[1]
-            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v17','nThreads='+str(config.JobType.numCores),
-                                            'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],inDO[4]+'=True',
+            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v17',
+                                            'xsec='+inDO[1],'filterEff=1','BR='+inDO[2],inDO[3]+'=True',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
-            config.Data.unitsPerJob      = inDO[5]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.

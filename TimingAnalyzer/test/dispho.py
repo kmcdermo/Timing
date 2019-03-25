@@ -90,7 +90,6 @@ options.register('processName','TREE',VarParsing.multiplicity.singleton,VarParsi
 options.register('outputFileName','dispho.root',VarParsing.multiplicity.singleton,VarParsing.varType.string,'output file name created by cmsRun');
 
 ## etra bits
-options.register('nThreads',8,VarParsing.multiplicity.singleton,VarParsing.varType.int,'number of threads per job');
 options.register('deleteEarly',True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'delete temp products early if not needed');
 options.register('runUnscheduled',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'run unscheduled for products');
 
@@ -168,9 +167,8 @@ print "demoMode       : ",options.demoMode
 print "processName    : ",options.processName	
 print "outputFileName : ",options.outputFileName	
 print "        -- Extra bits --"
-print "nThreads       : ",options.nThreads
-print "runUnscheduled : ",options.runUnscheduled
 print "deleteEarly    : ",options.deleteEarly
+print "runUnscheduled : ",options.runUnscheduled
 print "     #####################"
 
 ## Define the CMSSW process
@@ -196,7 +194,7 @@ process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
 		# reminiaod GJets, GT: 94X_mc2017_realistic_v17
 		#'/store/user/kmcdermo/files/miniAOD/GJets_600toInf_miniAODv2.root'
 		# miniaodv2 GMSB, GT: 94X_mc2017_realistic_v17
-		'/store/user/kmcdermo/files/miniAOD/GMSB_L600TeV_Ctau400cm_miniAODv2.root'
+		'/store/user/kmcdermo/files/miniAOD/GMSB_L200TeV_CTau200cm_miniAODv2.root'
 		))
 
 ## How many events to process
@@ -368,15 +366,12 @@ process.treePath = cms.Path(
 )
 
 ### Extra bits from other configs
-process.options = cms.untracked.PSet(
-	numberOfThreads=cms.untracked.uint32(options.nThreads),
-	numberOfStreams=cms.untracked.uint32(options.nThreads/2)
-)
-
-from FWCore.ParameterSet.Utilities import convertToUnscheduled
-if options.runUnscheduled : 
-	process = convertToUnscheduled(process)
+process.options = cms.untracked.PSet()
 
 from Configuration.StandardSequences.earlyDeleteSettings_cff import customiseEarlyDelete
 if options.deleteEarly:
 	process = customiseEarlyDelete(process)
+
+from FWCore.ParameterSet.Utilities import convertToUnscheduled
+if options.runUnscheduled : 
+	process = convertToUnscheduled(process)

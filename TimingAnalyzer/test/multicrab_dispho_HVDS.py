@@ -74,14 +74,10 @@ def main():
 
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'dispho.py'
-        config.JobType.numCores    = 8
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters , inputDir+inputFlags ]
 
         config.Data.inputDataset = None
-        config.Data.splitting    = 'EventAwareLumiBased'
-        config.Data.unitsPerJob  = 10000
-
         config.Data.allowNonValidInputDataset = True
 
         config.Data.outputDatasetTag = None
@@ -182,7 +178,7 @@ def main():
         for inDO in inputDataAndOpts:
             # inDO[0] is of the form /A/B/C. Since A is unique for each inDO for Monte Carlo, use this in the CRAB request name.
             config.General.requestName   = inDO[0].split('/')[1]
-            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v17','nThreads='+str(config.JobType.numCores),
+            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v17',
                                             'xsec='+inDO[1],'filterEff='+inDO[2],'BR='+inDO[3],'isHVDS=True',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.inputDataset     = inDO[0]

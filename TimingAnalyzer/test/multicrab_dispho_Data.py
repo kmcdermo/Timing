@@ -75,14 +75,11 @@ def main():
 
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'dispho.py'
-        config.JobType.numCores    = 8
         config.JobType.pyCfgParams = None
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters , inputDir+inputFlags ]
 
         config.Data.inputDataset = None
         config.Data.lumiMask     = inputDir+inputJSON
-        config.Data.splitting    = 'EventAwareLumiBased'
-        config.Data.unitsPerJob  = 200000
 
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
@@ -112,7 +109,7 @@ def main():
             runEra         = inDO[0].split('/')[2]
             config.General.requestName   = primaryDataset+"_"+runEra
 
-            config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_v11','nThreads='+str(config.JobType.numCores),
+            config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_v11',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
