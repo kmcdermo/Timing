@@ -147,13 +147,7 @@ void projectY(const std::map<TString,TH2F*> & HistMap2D, std::map<TString,TH1D*>
 void writeHistMap(TFile * file, std::map<TString,TH1D*> & HistMap1D, const TString & label)
 {
   std::cout << "Writing Hist Map for: " << label.Data() << std::endl;
-
-  file->cd();
-  for (auto & HistPair1D : HistMap1D)
-  {
-    auto & hist = HistPair1D.second;
-    hist->Write(hist->GetName(),TObject::kWriteDelete);
-  }
+  Common::WriteMap(file,HistMap1D);
 }
 
 void writeSignalContamination(const std::map<TString,TH1D*> & HistMap1D, const std::vector<TString> & plotSignalVec, const TString & label)
@@ -189,8 +183,7 @@ void saveTemplates(TFile * file, std::map<TString,TH1D*> & HistMap1D, const TStr
   auto & hist1D = HistMap1D["Data"];
   hist1D->Scale(1.f/hist1D->Integral());
 
-  file->cd();
-  hist1D->Write(Form("%s_Templates",hist1D->GetName()),TObject::kWriteDelete);
+  Common::Write(file,hist1D,Form("%s_Templates",hist1D->GetName()));
 
   drawHist(hist1D,label);
 }

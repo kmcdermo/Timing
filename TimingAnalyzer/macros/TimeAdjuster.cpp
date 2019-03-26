@@ -90,8 +90,8 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
   ////////////////////////////
 
   // variables for looping
-  Event ev;
-  std::vector<Photon> phos(Common::nPhotons);
+  ReducedEvent ev;
+  std::vector<ReducedPhoton> phos(Common::nPhotons);
 
   // get tree
   fSkimFile->cd();
@@ -187,7 +187,7 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
   //////////////
 
   // overwrite tree
-  tree->Write(tree->GetName(),TObject::kWriteDelete);
+  Common::Write(fSkimFile,tree);
   
   // delete it all
   delete tree;
@@ -233,8 +233,8 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
       ////////////////////////////
 
       // variables for looping
-      Event ev;
-      std::vector<Photon> phos(Common::nPhotons);
+      ReducedEvent ev;
+      std::vector<ReducedPhoton> phos(Common::nPhotons);
   
       // set input branches
       tree->SetBranchAddress(Form("%s",ev.s_nphotons.c_str()),&ev.nphotons,&ev.b_nphotons);
@@ -356,7 +356,7 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
       //////////////
       
       // overwrite tree
-      tree->Write(tree->GetName(),TObject::kWriteDelete);
+      Common::Write(SkimFile,tree);
   
       // delete it all
       delete tree;
@@ -494,8 +494,7 @@ void TimeAdjuster::MakeConfigPave(TFile *& SkimFile)
   }
 
   // save to output file
-  SkimFile->cd();
-  ConfigPave->Write(ConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(SkimFile,ConfigPave);
 
   // delete pave
   delete ConfigPave;

@@ -151,6 +151,6 @@ void plotCutFlows(const TString & infilename, const TString & cutflowconfig, con
   // delete
   delete Leg;
   delete Canv;
-  for (auto & HistPair : HistMap) delete HistPair.second;
+  Common::DeleteMap(HistMap);
   delete file;
 }

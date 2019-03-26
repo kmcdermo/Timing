@@ -111,8 +111,7 @@ void RescalePlotter::RescaleHist()
   TreePlotter::HistMap[fScaleSample] = RescaledHist;
 
   // save a copy as _scaled
-  fOutFile->cd();
-  RescaledHist->Write(RescaledHist->GetName(),TObject::kWriteDelete);
+  Common::Write(TreePlotter::fOutFile,RescaledHist);
 }
 
 void RescalePlotter::MakeConfigPave()
@@ -149,8 +148,7 @@ void RescalePlotter::MakeConfigPave()
   Common::AddTextFromInputPave(TreePlotter::fConfigPave,fInFile);
   
   // save to output file
-  TreePlotter::fOutFile->cd();
-  TreePlotter::fConfigPave->Write(TreePlotter::fConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(TreePlotter::fOutFile,TreePlotter::fConfigPave);
 }
 
 void RescalePlotter::DeleteMemory()
@@ -214,10 +212,5 @@ void RescalePlotter::SetupHists()
   }
 
   // save to output file
-  TreePlotter::fOutFile->cd();
-  for (const auto & HistPair : TreePlotter::HistMap)
-  { 
-    const auto & hist = HistPair.second;
-    hist->Write(hist->GetName(),TObject::kWriteDelete);
-  }
+  Common::WriteMap(TreePlotter::fOutFile,TreePlotter::HistMap);
 }

@@ -97,8 +97,7 @@ void EraPlotter::SetupBkgdHists()
   BkgdHist->SetMarkerSize(0);
 
   // output
-  fOutFile->cd();
-  BkgdHist->Write(BkgdHist->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,BkgdHist);
 
   // make a copy for plotting the errors
   BkgdHistErr = (TH1F*)BkgdHist->Clone(Form("%sErr",BkgdHist->GetName()));
@@ -106,8 +105,7 @@ void EraPlotter::SetupBkgdHists()
   BkgdHistErr->SetFillColor(kBlack);
 
   // output
-  fOutFile->cd();
-  BkgdHistErr->Write(BkgdHistErr->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,BkgdHistErr);
 }
 
 void EraPlotter::SetupDataHists()
@@ -129,8 +127,7 @@ void EraPlotter::SetupDataHists()
     datahist->SetMarkerColor(color);
 
     // output
-    fOutFile->cd();
-    datahist->Write(datahist->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,datahist);
   }
 }
 
@@ -147,8 +144,7 @@ void EraPlotter::SetupRatioOutput()
     ratiohist->Divide(BkgdHist);
 
     // output
-    fOutFile->cd();
-    ratiohist->Write(ratiohist->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,ratiohist);
   }
 
   // mc errors
@@ -156,8 +152,7 @@ void EraPlotter::SetupRatioOutput()
   BkgdHistErrRatio->Divide(BkgdHistErrRatio);
 
   // output
-  fOutFile->cd();
-  BkgdHistErrRatio->Write(BkgdHistErrRatio->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,BkgdHistErrRatio);
 
   // ratio line
   RatioLine = new TLine();
@@ -165,8 +160,7 @@ void EraPlotter::SetupRatioOutput()
   RatioLine->SetLineWidth(2);
 
   // output
-  fOutFile->cd();
-  RatioLine->Write("RatioLine",TObject::kWriteDelete);
+  Common::Write(fOutFile,RatioLine,"RatioLine");
 }
 
 void EraPlotter::SetupLegend()
@@ -188,8 +182,7 @@ void EraPlotter::SetupLegend()
   Legend->AddEntry(BkgdHistErr,Form("%s Unc.",Common::BkgdSampleName.Data()),"f");
 
   // output
-  fOutFile->cd();
-  Legend->Write(Legend->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,Legend);
 }
 
 void EraPlotter::InitOutputCanvPads()
@@ -309,8 +302,7 @@ void EraPlotter::SaveOutput()
   EraPlotter::PrintCanvas(false);
 
   // save to output file
-  fOutFile->cd();
-  OutCanv->Write(OutCanv->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,OutCanv);
 }  
 
 void EraPlotter::PrintCanvas(const Bool_t isLogy)
@@ -370,8 +362,7 @@ void EraPlotter::MakeConfigPave()
   }
 
   // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fConfigPave);
 }
 
 void EraPlotter::GetHistMinimum()

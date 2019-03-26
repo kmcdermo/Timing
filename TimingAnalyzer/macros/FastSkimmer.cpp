@@ -115,16 +115,15 @@ void FastSkimmer::MakeListFromTrees()
 	outhist->Fill((binlabels[label]*1.f)-0.5f,evtwgt);
       }
 
-      // Write out list
+      // Set list output info and write it out
       fOutFile->cd();
       list->SetDirectory(fOutFile);
       list->SetTitle("EntryList");
-      list->Write(list->GetName(),TObject::kWriteDelete);
+      Common::Write(fOutFile,list);
     }
 
     // Write out hist
-    fOutFile->cd();
-    outhist->Write(outhist->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,outhist);
     
     // delete everything
     delete outhist;
@@ -172,16 +171,14 @@ void FastSkimmer::MakeMergedSkims()
       auto OutTree = TTree::MergeTrees(TreeList);
       
       // write out merged tree
-      fOutFile->cd();
-      OutTree->Write(OutTree->GetName(),TObject::kWriteDelete);
+      Common::Write(fOutFile,OutTree);
 
       // delete to reduce memory footprint
       delete OutTree;
     }
 
     // write out cutflow histogram (then delete it)
-    fOutFile->cd();
-    OutHist->Write(OutHist->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,OutHist);
     delete OutHist;
 
     // delete other stuff to reduce memory footprint
@@ -289,8 +286,7 @@ void FastSkimmer::MakeConfigPave()
   fConfigPave->AddText(Form("Do skim bool: %s",Common::PrintBool(fDoSkim).Data()));
 
   // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fConfigPave);
 }
 
 void FastSkimmer::SetupCommon()

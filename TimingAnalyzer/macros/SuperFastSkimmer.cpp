@@ -123,24 +123,23 @@ void SuperFastSkimmer::MakeSkimsFromTrees()
     fOutFile->cd();
     auto outtree = intree->CopyTree("");
     outtree->SetName(Form("%s",iotreename.Data()));
-    outtree->Write(outtree->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,outtree);
 
     // Write out hist
-    fOutFile->cd();
-    outhist->Write(outhist->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,outhist);
 
-    // Write out lists
+    // Prep lists and write them out
     fOutFile->cd();
     for (auto & listpair : listmap)
     {
       auto & list = listpair.second;
       list->SetDirectory(fOutFile);
       list->SetTitle("EntryList");
-      list->Write(list->GetName(),TObject::kWriteDelete);
-      delete list;
     }
+    Common::WriteMap(fOutFile,listmap);
 
     // delete everything
+    Common::DeleteMap(listmap);
     delete outhist;
     delete outtree;
     delete inhist;
@@ -172,8 +171,7 @@ void SuperFastSkimmer::MakeConfigPave()
   Common::AddTextFromInputPave(fConfigPave,fInFile);
 
   // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fConfigPave);
 }
 
 void SuperFastSkimmer::SetupCommon()

@@ -52,12 +52,7 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
   }
 
   // save tmp output
-  outfile->cd();
-  for (const auto & mchistpair : mchistmap)
-  {
-    const auto & hist = mchistpair.second;
-    hist->Write(hist->GetName(),TObject::kWriteDelete);
-  }
+  Common::WriteMap(outfile,mchistmap);
 
   // input data file
   const TString indatafilename = Form("%s/%s/%s/%s.root",Common::eosPreFix.Data(),Common::eosDir.Data(),Common::calibDir.Data(),Common::dataPUFileName.Data());
@@ -80,8 +75,7 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
   }
   
   // save data
-  outfile->cd();
-  datahist->Write(datahist->GetName(),TObject::kWriteDelete);
+  Common::Write(outfile,datahist);
 
   // clone data hists
   std::map<TString,TH1F*> datahistmap;
@@ -114,19 +108,14 @@ void computePUWeights(const TString & indir, const TString & files, const TStrin
   }
 
   // save it
-  outfile->cd();
-  for (const auto & datahistpair : datahistmap)
-  {
-    const auto & hist = datahistpair.second;
-    hist->Write(hist->GetName(),TObject::kWriteDelete);
-  }
+  Common::WriteMap(outfile,datahistmap);
 
   // delete the rest
-  for (auto & datahistpair : datahistmap) delete datahistpair.second;
+  Common::DeleteMap(datahistmap);
   delete datahist;
   delete indatahist;
   delete indatafile;
-  for (auto & mchistpair : mchistmap) delete mchistpair.second;
+  Common::DeleteMap(mchistmap);
   delete outfile;
 }
 

@@ -115,12 +115,7 @@ void TreePlotter2D::MakeHistFromTrees(TFile *& inFile, TFile *& inSignalFile)
   }
 
   // save totals to output file
-  fOutFile->cd();
-  for (const auto & HistPair : HistMap)
-  { 
-    const auto & hist = HistPair.second;
-    hist->Write(hist->GetName(),TObject::kWriteDelete);
-  }
+  Common::WriteMap(fOutFile,HistMap);
 }
 
 void TreePlotter2D::MakeDataOutput()
@@ -151,7 +146,7 @@ void TreePlotter2D::MakeDataOutput()
     }
   }
 
-  DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,DataHist);
 }
 
 void TreePlotter2D::MakeBkgdOutput()
@@ -182,9 +177,8 @@ void TreePlotter2D::MakeBkgdOutput()
   }
 
   // save to output file
-  fOutFile->cd();
-  BkgdHist->Write(BkgdHist->GetName(),TObject::kWriteDelete);
-  EWKHist->Write(EWKHist->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,BkgdHist);
+  Common::Write(fOutFile,EWKHist);
 }
 
 void TreePlotter2D::MakeRatioOutput()
@@ -202,9 +196,8 @@ void TreePlotter2D::MakeRatioOutput()
   RatioMCErrs->Divide(BkgdHist);
 
   // save to output file
-  fOutFile->cd();
-  RatioHist->Write(RatioHist->GetName(),TObject::kWriteDelete);
-  RatioMCErrs->Write(RatioMCErrs->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,RatioHist);
+  Common::Write(fOutFile,RatioMCErrs);
 }
 
 void TreePlotter2D::MakeConfigPave()
@@ -244,8 +237,7 @@ void TreePlotter2D::MakeConfigPave()
   Common::AddTextFromInputPave(fConfigPave,fInSignalFile);
 
   // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fConfigPave);
 }
 
 void TreePlotter2D::DeleteMemory(const Bool_t deleteInternal)

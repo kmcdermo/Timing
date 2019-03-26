@@ -390,14 +390,9 @@ void Limits2D::DrawLimits()
   Common::SaveAs(canv,Form("%s_GMSB",fOutText.Data()));
 
   // write it all out!
-  fOutFile->cd();
-  for (const auto & HistPair : fHistMap)
-  {
-    const auto & hist = HistPair.second;
-    hist->Write(hist->GetName(),TObject::kWriteDelete);
-  }
-  leg->Write(leg->GetName(),TObject::kWriteDelete);
-  canv->Write(canv->GetName(),TObject::kWriteDelete);
+  Common::WriteMap(fOutFile,fHistMap);
+  Common::Write(fOutFile,leg);
+  Common::Write(fOutFile,canv);
 
   // delete everything
   delete canv;
@@ -429,8 +424,7 @@ void Limits2D::MakeConfigPave()
   fConfigPave->AddText(Form("Input filenames: %s",fInFileName.Data()));
 
   // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fConfigPave);
 }
 
 Float_t Limits2D::ZValue(const Float_t x, const Float_t x1, const Float_t x2, 

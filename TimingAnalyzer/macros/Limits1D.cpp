@@ -124,14 +124,13 @@ void Limits1D::MakeLimits1D()
     Common::SaveAs(canv,Form("%s_%s",fOutText.Data(),groupname.Data()));
       
     // write it!
-    fOutFile->cd();
-    theo_graph->Write(theo_graph->GetName(),TObject::kWriteDelete);
-    if (fDoObserved) obs_graph->Write(obs_graph->GetName(),TObject::kWriteDelete);
-    exp_graph->Write(exp_graph->GetName(),TObject::kWriteDelete);
-    sig1_graph->Write(sig1_graph->GetName(),TObject::kWriteDelete);
-    sig2_graph->Write(sig2_graph->GetName(),TObject::kWriteDelete);
-    leg->Write(leg->GetName(),TObject::kWriteDelete);
-    canv->Write(canv->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,theo_graph);
+    if (fDoObserved) Common::Write(fOutFile,obs_graph);
+    Common::Write(fOutFile,exp_graph);
+    Common::Write(fOutFile,sig1_graph);
+    Common::Write(fOutFile,sig2_graph);
+    Common::Write(fOutFile,leg);
+    Common::Write(fOutFile,canv);
 
     // delete it all for the next round
     delete canv;

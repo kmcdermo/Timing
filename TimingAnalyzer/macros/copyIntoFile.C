@@ -39,8 +39,7 @@ void copyIntoFile(const TString & sampleconfig, const TString & cutflowconfig, c
     std::cout << "Working on input: " << input.Data() << std::endl;
 
     const auto & hist = (TH1F*)infile->Get(Common::SampleCutFlowHistNameMap[input].Data());
-    outfile->cd();
-    hist->Write(hist->GetName(),TObject::kWriteDelete);
+    Common::Write(outfile,hist);
     delete hist;
 
     for (const auto & CutFlowPair : Common::CutFlowPairVec)
@@ -50,8 +49,7 @@ void copyIntoFile(const TString & sampleconfig, const TString & cutflowconfig, c
       std::cout << "Copying list for cut: " << label.Data() << std::endl;
 
       const auto & list = (TEntryList*)infile->Get(Form("%s_%s_EntryList",samplename.Data(),label.Data()));
-      outfile->cd();
-      list->Write(list->GetName(),TObject::kWriteDelete);
+      Common::Write(outfile,list);
       delete list;
     }
   }
@@ -65,14 +63,12 @@ void copyIntoFile(const TString & sampleconfig, const TString & cutflowconfig, c
     std::cout << "Working on group: " << sample.Data() << std::endl;
 
     const auto & hist = (TH1F*)infile->Get(Common::GroupCutFlowHistNameMap[sample].Data());
-    outfile->cd();
-    hist->Write(hist->GetName(),TObject::kWriteDelete);
+    Common::Write(outfile,hist);
     delete hist;
 
     const auto & intree = (TTree*)infile->Get(Common::TreeNameMap[sample].Data());
     const auto & outtree = intree->CopyTree("");
-    outfile->cd();
-    outtree->Write(outtree->GetName(),TObject::kWriteDelete);
+    Common::Write(outfile,outtree);
     delete outtree;
     delete intree;
   }

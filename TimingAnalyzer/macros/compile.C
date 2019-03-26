@@ -9,6 +9,8 @@
 #include "TreePlotter2D.cpp+"
 #include "SigEffPlotter.cpp+"
 
+#include "TimeAdjuster.cpp+"
+
 #include "ABCD.cpp+"
 #include "ABCDGenerator.cpp+"
 #include "CombinePreparer.cpp+"

@@ -152,8 +152,7 @@ void TimeFitter::GetInputHist(FitStruct & FitInfo)
   Hist2D = (TH2F*)fInFile->Get(inHistName.Data());
 
   // save to output
-  fOutFile->cd();
-  Hist2D->Write(Hist2D->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,Hist2D);
 }
 
 void TimeFitter::InitTimeFits(FitStruct & FitInfo)
@@ -211,10 +210,9 @@ void TimeFitter::Fit1DHists(FitStruct & FitInfo)
     TimeFit->DoFit();
 
     // save output
-    fOutFile->cd();
-    TimeFit->hist->Write(TimeFit->hist->GetName(),TObject::kWriteDelete);
-    TimeFit->form->Write(TimeFit->form->GetName(),TObject::kWriteDelete);
-    TimeFit->fit->Write(TimeFit->fit->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,TimeFit->hist);
+    Common::Write(fOutFile,TimeFit->form);
+    Common::Write(fOutFile,TimeFit->fit);
   }
 }
 
@@ -256,8 +254,7 @@ void TimeFitter::ExtractFitResults(FitStruct & FitInfo)
   }
 
   // save output
-  fOutFile->cd();
-  for (const auto & ResultsPair : ResultsMap) ResultsPair.second->Write(ResultsPair.second->GetName(),TObject::kWriteDelete);
+  Common::WriteMap(fOutFile,ResultsMap);
 }
 
 void TimeFitter::PrepSigmaFit(FitStruct & FitInfo)
@@ -293,8 +290,7 @@ void TimeFitter::PrepSigmaFit(FitStruct & FitInfo)
   fit->SetLineColor(hist->GetLineColor());
 
   // save form
-  fOutFile->cd();
-  form->Write(form->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,form);
 }
 
 void TimeFitter::FitSigmaHist(FitStruct & FitInfo)
@@ -310,8 +306,7 @@ void TimeFitter::FitSigmaHist(FitStruct & FitInfo)
   hist->Fit(fit->GetName(),"RBQ0");
 
   // save to output
-  fOutFile->cd();
-  fit->Write(fit->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fit);
 }
 
 void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t min, Float_t max, 
@@ -433,12 +428,11 @@ void TimeFitter::PrintCanvas(FitStruct & DataInfo, FitStruct & MCInfo, Float_t m
   // save output if lin
   if (!isLogy)
   {
-    fOutFile->cd();
-    Legend->Write(Legend->GetName(),TObject::kWriteDelete);
-    Canvas->Write(Canvas->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,Legend);
+    Common::Write(fOutFile,Canvas);
     if (doSigmaFit)
     {
-      FitText->Write(FitText->GetName(),TObject::kWriteDelete);
+      Common::Write(fOutFile,FitText);
     }
   }
 
@@ -499,8 +493,7 @@ void TimeFitter::MakeConfigPave()
   Common::AddTextFromInputPave(fConfigPave,fInFile);
 
   // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fConfigPave);
 }
 
 void TimeFitter::DumpFitInfo(FitStruct & DataInfo, FitStruct & MCInfo)

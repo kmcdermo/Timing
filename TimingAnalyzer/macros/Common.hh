@@ -367,7 +367,7 @@ namespace Common
   // extra textfile config info
   void AddPaddingToFile(std::ofstream & file, const Int_t lines);
 
-  // function to save multiple canvas inmages
+  // function to save multiple canvas images
   void SaveAs(TCanvas *& canv, const TString & label);
 
   // ROOT Formatting
@@ -518,12 +518,44 @@ namespace Common
     }
   }
 
+  ////////////////////////////
+  // Other common functions //
+  ////////////////////////////
+
   // common function for deleting map pairs that are dynamically allocated
   template <typename T>
   void DeleteMap(T & Map)
   {
     for (auto & Pair : Map) delete Pair.second;
     Map.clear();
+  }
+
+  // write to output file
+  template <typename T>
+  void Write(TFile * file, T & Obj)
+  {
+    file->cd();
+    Obj->Write(Obj->GetName(),TObject::kWriteDelete);
+  }
+
+  template <typename T>
+  void WriteVec(TFile * file, T & Vec)
+  {
+    for (auto & Obj : Vec) Common::Write(file,Obj);
+  }
+
+  template <typename T>
+  void WriteMap(TFile * file, T & Map)
+  {
+    for (auto & Pair : Map) Common::Write(file,Pair.second);
+  }
+
+  // write to output file with explicit label
+  template <typename T>
+  void Write(TFile * file, T & Obj, const TString & label)
+  {
+    file->cd();
+    Obj->Write(label.Data(),TObject::kWriteDelete);
   }
 
   // reorder a vector by a vector of indices

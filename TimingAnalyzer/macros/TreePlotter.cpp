@@ -136,12 +136,7 @@ void TreePlotter::MakeHistFromTrees(TFile *& inFile, TFile *& inSignalFile)
   }
 
   // save totals to output file
-  fOutFile->cd();
-  for (const auto & HistPair : HistMap)
-  { 
-    const auto & hist = HistPair.second;
-    hist->Write(hist->GetName(),TObject::kWriteDelete);
-  }
+  Common::WriteMap(fOutFile,HistMap);
 }
 
 void TreePlotter::MakeDataOutput()
@@ -171,11 +166,7 @@ void TreePlotter::MakeDataOutput()
   if (fScaleToUnity) DataHist->Scale(1.f/DataHist->Integral(fXVarBins?"width":""));
 
   // save to output file
-  if (!fSignalsOnly && !fSkipData)
-  {
-    fOutFile->cd();
-    DataHist->Write(DataHist->GetName(),TObject::kWriteDelete);
-  }
+  if (!fSignalsOnly && !fSkipData) Common::Write(fOutFile,DataHist);
 }
 
 void TreePlotter::MakeBkgdOutput()
@@ -244,20 +235,15 @@ void TreePlotter::MakeBkgdOutput()
     const auto & sample = HistPair.first;
     auto & hist = HistPair.second;
 
-    if (Common::GroupMap[sample] == SampleGroup::isBkgd)
-    {
-      fOutFile->cd();
-      hist->Write(Form("%s_Plotted",hist->GetName()),TObject::kWriteDelete);
-    }
+    if (Common::GroupMap[sample] == SampleGroup::isBkgd) Common::Write(fOutFile,hist,Form("%s_Plotted",hist->GetName()));
   }
 
   // save to outfile
   if (!fSignalsOnly)
   {
-    fOutFile->cd();
-    BkgdHist->Write(BkgdHist->GetName(),TObject::kWriteDelete);
-    EWKHist->Write(EWKHist->GetName(),TObject::kWriteDelete);
-    BkgdStack->Write(BkgdStack->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,BkgdHist);
+    Common::Write(fOutFile,EWKHist);
+    Common::Write(fOutFile,BkgdStack);
   }
 }
 
@@ -356,11 +342,7 @@ void TreePlotter::MakeRatioOutput()
   RatioLine->SetY2(1.0);
 
   // save to output file
-  if (!fSignalsOnly && !fSkipData)
-  {
-    fOutFile->cd();
-    RatioLine->Write("RatioLine",TObject::kWriteDelete);
-  }
+  if (!fSignalsOnly && !fSkipData) Common::Write(fOutFile,RatioLine,"RatioLine");
 }
 
 void TreePlotter::MakeLegend()

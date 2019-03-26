@@ -68,21 +68,14 @@ void SigEffPlotter::MakeInputGraphs()
     SigEffPlotter::MakeGraph(efficiency,groupname);
 
     // save efficiency object to outfile
-    fOutFile->cd();
-    efficiency->Write(efficiency->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,efficiency);
     
     // delete tmp efficiency 
     delete efficiency;
   }
 
   // write graphs to outfile (for good measure)
-  for (const auto & GraphPair : fGraphMap)
-  {
-    const auto & graph = GraphPair.second;
-
-    fOutFile->cd();
-    graph->Write(graph->GetName(),TObject::kWriteDelete);
-  }
+  Common::WriteMap(fOutFile,fGraphMap);
 }
 
 void SigEffPlotter::MakeLegend()
@@ -107,8 +100,7 @@ void SigEffPlotter::MakeLegend()
   }
 
   // write legend to outfile
-  fOutFile->cd();
-  fLegend->Write(fLegend->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fLegend);
 }
   
 void SigEffPlotter::MakeOutput()
@@ -129,8 +121,7 @@ void SigEffPlotter::MakeOutput()
   SigEffPlotter::DrawOutput(false);
 
   // write canv to outfile
-  fOutFile->cd();
-  fCanvas->Write(fCanvas->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fCanvas);
 }
 
 void SigEffPlotter::MakeConfigPave()
@@ -155,8 +146,7 @@ void SigEffPlotter::MakeConfigPave()
   Common::AddTextFromInputPave(fConfigPave,fInFile);
 
   // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fConfigPave);
 }
 
 TEfficiency * SigEffPlotter::MakeEfficiency(const TString & groupname)

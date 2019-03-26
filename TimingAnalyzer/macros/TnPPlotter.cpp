@@ -178,12 +178,7 @@ void TnPPlotter::EventLoop()
   } // end loop over tree names
   
   // save totals to output file
-  for (const auto & EffPair : EffMap)
-  { 
-    const auto & eff = EffPair.second;
-    fOutFile->cd();
-    eff->Write(eff->GetName(),TObject::kWriteDelete);
-  }
+  Common::WriteMap(fOutFile,EffMap);
 }
 
 void TnPPlotter::FillTnP(TnPStruct & info, const UInt_t entry, const TString & sample_label, const Float_t wgt)
@@ -274,8 +269,7 @@ void TnPPlotter::MakeRatioOutput()
     ratioline->SetY2(1.0);
     
     // save to output
-    fOutFile->cd();
-    ratio_hist->Write(ratio_hist->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,ratio_hist);
   }
 }
 
@@ -323,7 +317,7 @@ void TnPPlotter::MakeLegend()
     leg->AddEntry(mc_graph  ,"MC"  ,"epl");
 
     // save to output
-    leg->Write(leg->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,leg);
   }
 }
 
@@ -405,7 +399,7 @@ void TnPPlotter::DrawLowerPad()
     ratioline->SetX1(minmax.xmin);
     ratioline->SetX2(minmax.xmax);
     
-    // save to output
+    // save to output (lines do not have name function)
     fOutFile->cd();
     ratioline->Write("RatioLine_"+eta,TObject::kWriteDelete);
 
@@ -501,8 +495,7 @@ void TnPPlotter::MakeConfigPave()
   Common::AddTextFromInputPave(fConfigPave,fInFile);
 
   // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fConfigPave);
 
   // delete pave
   delete fConfigPave;

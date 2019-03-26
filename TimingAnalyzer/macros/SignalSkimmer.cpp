@@ -113,24 +113,23 @@ void SignalSkimmer::MakeSkimsFromTrees()
     fOutFile->cd();
     auto outtree = intree->CopyTree("");
     outtree->SetName(Form("%s",Common::TreeNameMap[sample].Data()));
-    outtree->Write(outtree->GetName(),TObject::kWriteDelete);
-
+    Common::Write(fOutFile,outtree);
+    
     // Write out hist
-    fOutFile->cd();
-    outhist->Write(outhist->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,outhist);
 
-    // Write out lists
+    // Setup output for lists
     fOutFile->cd();
     for (auto & listpair : listmap)
     {
       auto & list = listpair.second;
       list->SetDirectory(fOutFile);
       list->SetTitle("EntryList");
-      list->Write(list->GetName(),TObject::kWriteDelete);
-      delete list;
     }
+    Common::WriteMap(fOutFile,listmap);
 
     // delete everything
+    Common::DeleteMap(listmap);
     delete outhist;
     delete outtree;
     delete inhist;
@@ -154,8 +153,7 @@ void SignalSkimmer::MakeConfigPave()
   Common::AddTextFromInputConfig(fConfigPave,"SignalSkimmer Cut Config",fCutFlowConfig);
 
   // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fConfigPave);
 }
 
 void SignalSkimmer::SetupCommon()

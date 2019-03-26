@@ -406,12 +406,11 @@ void Skimmer::EventLoop()
   } // end loop over events
 
   // write out the output!
-  fOutFile->cd();
-  fOutCutFlow->Write();
-  fOutCutFlowWgt->Write();
-  fOutCutFlowScl->Write();
-  fOutConfigTree->Write();
-  fOutTree->Write();
+  Common::Write(fOutFile,fOutCutFlow);
+  Common::Write(fOutFile,fOutCutFlowWgt);
+  Common::Write(fOutFile,fOutCutFlowScl);
+  Common::Write(fOutFile,fOutConfigTree);
+  Common::Write(fOutFile,fOutTree);
 }
 
 void Skimmer::FillOutGMSBs(const UInt_t entry)

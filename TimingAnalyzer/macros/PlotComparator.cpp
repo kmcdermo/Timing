@@ -104,9 +104,8 @@ void PlotComparator::SetupInputs()
   fMaxY = ( maxY1 > maxY2 ? maxY1 : maxY2 );
 
   // save to output file
-  fOutFile->cd();
-  fHist1->Write(fHist1->GetName(),TObject::kWriteDelete);
-  fHist2->Write(fHist2->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fHist1);
+  Common::Write(fOutFile,fHist2);
 }
 
 void PlotComparator::MakeRatioOutputs()
@@ -164,9 +163,10 @@ void PlotComparator::MakeRatioOutputs()
   }
 
   // save to output file
-  fOutFile->cd();
-  fRatioHist->Write(fRatioHist->GetName(),TObject::kWriteDelete);
-  fRatioLine->Write("RatioLine",TObject::kWriteDelete);
+  Common::Write(fOutFile,fRatioHist);
+
+  // ratio line needs a bare call to write!
+  Common::Write(fOutFile,fRatioLine,"RatioLine");
 }
 
 void PlotComparator::MakeLegend()
@@ -184,8 +184,7 @@ void PlotComparator::MakeLegend()
   fLegend->AddEntry(fHist2,fLabel2.Data(),"lep");
 
   // save to output file
-  fOutFile->cd();
-  fLegend->Write(fLegend->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fLegend);
 }
 
 void PlotComparator::SetupCanvasAndPads()
@@ -263,8 +262,7 @@ void PlotComparator::SaveOutput()
   PlotComparator::PrintCanvas(false);
 
   // save to output file
-  fOutFile->cd();
-  fOutCanv->Write(fOutCanv->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fOutCanv);
 }  
 
 void PlotComparator::PrintCanvas(const Bool_t isLogy)
@@ -319,8 +317,7 @@ void PlotComparator::MakeConfigPave()
   Common::AddTextFromInputPave(fConfigPave,fFile2);
   
   // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fConfigPave);
 }
 
 void PlotComparator::SetupDefaults()

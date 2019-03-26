@@ -22,7 +22,7 @@
 // Common include
 #include "Common.hh"
 
-struct Event
+struct ReducedEvent
 {
   // vars
   UInt_t run;
@@ -37,7 +37,7 @@ struct Event
   TBranch * b_nphotons;
 };
 
-struct Photon
+struct ReducedPhoton
 {
   // old vars
   Float_t adjustvar;

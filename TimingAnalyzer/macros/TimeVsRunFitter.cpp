@@ -99,8 +99,7 @@ void TimeVsRunFitter::GetInputHist()
   Hist2D = (TH2F*)fInFile->Get(Common::HistNameMap["Data"]);
 
   // save to output
-  fOutFile->cd();
-  Hist2D->Write(Hist2D->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,Hist2D);
 }
 
 void TimeVsRunFitter::InitTimeFits()
@@ -147,10 +146,9 @@ void TimeVsRunFitter::Fit1DHists()
     TimeFit->DoFit();
 
     // save output
-    fOutFile->cd();
-    TimeFit->hist->Write(TimeFit->hist->GetName(),TObject::kWriteDelete);
-    TimeFit->form->Write(TimeFit->form->GetName(),TObject::kWriteDelete);
-    TimeFit->fit->Write(TimeFit->fit->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,TimeFit->hist);
+    Common::Write(fOutFile,TimeFit->form);
+    Common::Write(fOutFile,TimeFit->fit);
   }
 }
 
@@ -187,8 +185,7 @@ void TimeVsRunFitter::ExtractFitResults()
   }
 
   // save output
-  fOutFile->cd();
-  for (const auto & ResultsPair : ResultsMap) ResultsPair.second->Write(ResultsPair.second->GetName(),TObject::kWriteDelete);
+  Common::WriteMap(fOutFile,ResultsMap);
 }
 
 void TimeVsRunFitter::MakePlots()
@@ -270,11 +267,7 @@ void TimeVsRunFitter::PrintCanvas(Float_t min, Float_t max, const TString & key,
   Common::SaveAs(Canvas,Form("%s_%s_%s",key.Data(),fOutFileText.Data(),(isLogy?"log":"lin")));
 
   // save output if lin
-  if (!isLogy)
-  {
-    fOutFile->cd();
-    Canvas->Write(Canvas->GetName(),TObject::kWriteDelete);
-  }
+  if (!isLogy) Common::Write(fOutFile,Canvas);
 
   // delete all
   delete Canvas;
@@ -325,8 +318,7 @@ void TimeVsRunFitter::MakeConfigPave()
   Common::AddTextFromInputPave(fConfigPave,fInFile);
 
   // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fConfigPave);
 }
 
 void TimeVsRunFitter::DumpFitInfo()
