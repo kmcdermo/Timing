@@ -5,7 +5,7 @@ source scripts/common_variables.sh
 
 ## input from command line
 outfiletext=${1:-"met_vs_time_templates"}
-outdir=${2:-"madv2_v3/checks_v22"}
+outdir=${2:-"ootVID_v3/std/templates"}
 
 x_label=${3:-"Time"}
 x_low=${4:-"-1"} # Time ns
@@ -28,7 +28,7 @@ echo "scale_to_bin_widths=0" >> "${misc}"
 echo "blind_data=1" >> "${misc}"
 
 signals_to_plot="signals_to_plot="
-for lambda in 100 300 500
+for lambda in 100 200 300
 do 
     for ctau in 0p1 200 1000
     do

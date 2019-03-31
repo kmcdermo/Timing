@@ -1,0 +1,17 @@
+plot_title=p_{T}^{miss} [GeV] vs Leading Photon Weighted Cluster Time [ns]
+
+x_title=Leading Photon Weighted Cluster Time [ns]
+
+x_var=phoweightedtimeLT120_0
+x_var_data=+phoweightedtimeLT120SHIFT_0
+x_var_bkgd=+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0
+x_var_sign=+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0
+x_bins=CONSTANT 540 -2 25
+
+y_title=p_{T}^{miss} [GeV]
+y_var=t1pfMETpt
+y_bins=CONSTANT 600 0 3000
+
+z_title=Events
+
+blinding=(3,+Inf,200,+Inf)

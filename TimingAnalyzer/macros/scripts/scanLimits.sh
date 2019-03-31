@@ -56,12 +56,18 @@ function GetBestDir ()
 			local obs_r=$( grep "Observed Limit" "${infile}" | cut -d " " -f 5 )
 			local exp_r=$( grep "Expected 50.0%" "${infile}" | cut -d " " -f 5 )
 			
+			## ensure signal is in every bin!
+			if grep -q "Warning: Bin Bin[0-9]* has no signal processes contributing to it" "${infile}"
+			then
+			    continue
+			fi
+
 			## ensure it is not empty
 			if [[ "${obs_r}" == "" ]] || [[ "${exp_r}" == "" ]]
 			then
 			    continue
 			fi
-			
+
 			## check for sensible results
 			local ratio=$( echo "${exp_r} / ${obs_r}" | bc -l )
 			if (( $( echo "${ratio} > ${max_ratio}" | bc -l ) )) || (( $( echo "${ratio} < 1/${max_ratio}" | bc -l ) ))
