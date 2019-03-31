@@ -3,14 +3,20 @@
 
 // special enums
 enum FitType {Horizontal, Linear, Quadratic, Exponential};
-enum CutType {none, eta_LT0p8, eta_GTE0p8_LT1p4442, eta_LT0p5, eta_GTE0p5_LT1p0, eta_GTE1p0_LT1p4442};
-enum XType {pt, rho, eta, sceta};
-enum YType {ecalpfcliso, hcalpfcliso, trkiso, smaj};
+enum CutType {none, eta_LT0p8, eta_GTE0p8_LT1p4442, eta_LT0p5, eta_GTE0p5_LT1p0, eta_GTE1p0_LT1p4442,
+	      time_GTEn2p0_LT0p2, time_GTE0p2_LT1p0, time_GTE1p0_LT10p0,
+	      time_GTEn2p0_LT0p0, time_GTE0p0_LT3p0, time_GTE3p0_LT10p0,
+	      time_GTE0p0_LT1p2, time_GTE1p2_LT3p0};
+
+enum XType {pt, rho, eta, sceta, seedtime, clustertime};
+enum YType {ecalpfcliso, hcalpfcliso, trkiso, smaj, sieie};
 enum CorrType {uncorr, pt_lin_q0p7, pt_quad_q0p7, pt_lin_q0p8, pt_quad_q0p8, 
 	       rho_lin_q0p7_eta_LT0p8, rho_lin_q0p7_eta_GTE0p8_LT1p4442, rho_lin_q0p8_eta_LT0p8, rho_lin_q0p8_eta_GTE0p8_LT1p4442, 
 	       pt_corrs, pt_corrs_v2, rho_corrs, rho_corrs_v2, pt_rho_corrs, pt_rho_corrs_v2,
 	       eta_lin_q0p7_eta_GTE0p8_LT1p4442, pt_exp_q0p7, eta_corrs, eta_pt_corrs,
-	       eta_lin_q0p8_eta_GTE0p8_LT1p4442, pt_exp_q0p8, eta_corrs_v2, eta_pt_corrs_v2 };
+	       eta_lin_q0p8_eta_GTE0p8_LT1p4442, pt_exp_q0p8, eta_corrs_v2, eta_pt_corrs_v2,
+	       time_lin_q0p9_time_GTE0p2_LT1p0, time_lin_q0p9_time_GTE1p0_LT10p0, time_corrs,
+	       time_lin_q0p9_time_GTE0p0_LT3p0, time_lin_q0p9_time_GTE3p0_LT10p0, time_corrs_v2};
 
 // FitInfo
 struct FitInfo
@@ -73,11 +79,17 @@ namespace Config
   static const std::map<CutType,TString> cuts =
   {
     {CutType::none,""},
-    {CutType::eta_LT0p8,"&&(abs(phosceta_0)<0.8)"},
-    {CutType::eta_GTE0p8_LT1p4442,"&&((abs(phosceta_0)>=0.8)&&(abs(phosceta_0)<1.4442))"},
-    {CutType::eta_LT0p5,"&&(abs(phosceta_0)<0.5)"},
-    {CutType::eta_GTE0p5_LT1p0,"&&((abs(phosceta_0)>=0.5)&&(abs(phosceta_0)<1.0))"},
-    {CutType::eta_GTE1p0_LT1p4442,"&&((abs(phosceta_0)>=1.0)&&(abs(phosceta_0)<1.4442))"}
+    {CutType::eta_LT0p8,"*(abs(phosceta_0)<0.8)"},
+    {CutType::eta_GTE0p8_LT1p4442,"*((abs(phosceta_0)>=0.8)&&(abs(phosceta_0)<1.4442))"},
+    {CutType::eta_LT0p5,"*(abs(phosceta_0)<0.5)"},
+    {CutType::eta_GTE0p5_LT1p0,"*((abs(phosceta_0)>=0.5)&&(abs(phosceta_0)<1.0))"},
+    {CutType::eta_GTE1p0_LT1p4442,"*((abs(phosceta_0)>=1.0)&&(abs(phosceta_0)<1.4442))"},
+    {CutType::time_GTEn2p0_LT0p2,"*((phoseedtime_0>=-2.0)&&(phoseedtime_0<0.2))"},
+    {CutType::time_GTE0p2_LT1p0,"*((phoseedtime_0>=0.2)&&(phoseedtime_0<1.0))"},
+    {CutType::time_GTE1p0_LT10p0,"*((phoseedtime_0>=1.0)&&(phoseedtime_0<10.0))"},
+    {CutType::time_GTEn2p0_LT0p0,"*((phoseedtime_0>=-2.0)&&(phoseedtime_0<0.0))"},
+    {CutType::time_GTE0p0_LT3p0,"*((phoseedtime_0>=0.0)&&(phoseedtime_0<3.0))"},
+    {CutType::time_GTE3p0_LT10p0,"*((phoseedtime_0>=3.0)&&(phoseedtime_0<10.0))"}
   };
 
   // make xnames
@@ -86,7 +98,9 @@ namespace Config
     {XType::pt,"pt"},
     {XType::rho,"rho"},
     {XType::eta,"eta"},
-    {XType::sceta,"sceta"}
+    {XType::sceta,"sceta"},
+    {XType::seedtime,"seedtime"},
+    {XType::clustertime,"clustertime"}
   };
   
   // make xinfos: variables to correct for
@@ -95,7 +109,9 @@ namespace Config
     {XType::pt,{"phopt_0","Leading Photon p_{T} [GeV]",{0,10,20,30,40,50,60,70,80,90,100,120,140,160,180,200,250,300,350,400,500,600,800,1000}}},
     {XType::rho,{"rho","#rho [GeV]",{0,5,10,12,14,16,18,20,22,24,26,28,30,35,40,45,50,70}}},
     {XType::eta,{"abs(phoeta_0)","Leading Photon #eta",{0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5}}},
-    {XType::sceta,{"abs(phosceta_0)","Leading Photon SC #eta",{0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5}}}
+    {XType::sceta,{"abs(phosceta_0)","Leading Photon SC #eta",{0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5}}},
+    {XType::seedtime,{"phoseedtime_0","Leading Photon Seed Time [ns]",{-2,-1.8,-1.6,-1.4,-1.2,-1.0,-0.9,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.2,1.4,1.6,1.8,2.0,2.5,3.0,4.0,5.0,7.0,10.0}}},
+    {XType::clustertime,{"phoweightedtimeLT120_0+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0","Leading Photon Weighted Cluster Time [ns]",{-2,-1.8,-1.6,-1.4,-1.2,-1.0,-0.9,-0.8,-0.7,-0.6,-0.5,-0.4,-0.3,-0.2,-0.1,0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.2,1.4,1.6,1.8,2.0,2.5,3.0,4.0,5.0,7.0,10.0}}},
   };
 
   // make ynames
@@ -104,7 +120,8 @@ namespace Config
     {YType::ecalpfcliso,"ecalpfcliso"},
     {YType::hcalpfcliso,"hcalpfcliso"},
     {YType::trkiso,"trkiso"},
-    {YType::smaj,"smajor"}
+    {YType::smaj,"smajor"},
+    {YType::sieie,"sieie"}
   };
   
   // make yinfos : isolations
@@ -120,6 +137,12 @@ namespace Config
   {
     {YType::smaj,{"phosmaj_0","Leading Photon S_{Major}"}}
   };
+
+  // for y -vars that are time dependent!
+  static const std::map<YType,YInfo> ySieie =
+  {
+    {YType::sieie,{"phosieie_0","Leading Photon #sigma_{i#eta i#eta}"}}
+  };
   
   // make corrections
   static std::map<CorrType,std::map<YType,TString> > yCorrectionsMap =
@@ -129,7 +152,8 @@ namespace Config
        {YType::ecalpfcliso,""},
        {YType::hcalpfcliso,""},
        {YType::trkiso,""},
-       {YType::smaj,""}
+       {YType::smaj,""},
+       {YType::sieie,""}
      }
     },
 
@@ -213,7 +237,29 @@ namespace Config
      {
        {YType::smaj,"-(0.1465*exp(-0.01775*phopt_0+1.948))"}
      }
-    }
+    },
+
+    {CorrType::time_lin_q0p9_time_GTE0p2_LT1p0,
+     {
+       {YType::sieie,"-(0.008682*(phoseedtime_0-0.2))"}
+     }
+    },
+    {CorrType::time_lin_q0p9_time_GTE1p0_LT10p0,
+     {
+       {YType::sieie,"-((0.008682*0.8)+(0.0001855*(phoseedtime_0-1.0)))"}
+     }
+    },
+
+    {CorrType::time_lin_q0p9_time_GTE0p0_LT3p0,
+     {
+       {YType::sieie,"-(0.002684*phoseedtime_0)"}
+     }
+    },
+    {CorrType::time_lin_q0p9_time_GTE3p0_LT10p0,
+     {
+       {YType::sieie,"-(0.002684*3.0)"}
+     }
+    },
    
   };
   
@@ -225,6 +271,21 @@ namespace Config
     
     auto cut_eta_GTE0p8_LT1p4442 = Config::cuts.at(CutType::eta_GTE0p8_LT1p4442);
     cut_eta_GTE0p8_LT1p4442.ReplaceAll("&&","*");
+
+
+    auto cut_time_GTE0p2_LT1p0 = Config::cuts.at(CutType::time_GTE0p2_LT1p0);
+    cut_time_GTE0p2_LT1p0.ReplaceAll("&&","*");
+
+    auto cut_time_GTE1p0_LT10p0 = Config::cuts.at(CutType::time_GTE1p0_LT10p0);
+    cut_time_GTE1p0_LT10p0.ReplaceAll("&&","*");
+
+
+    auto cut_time_GTE0p0_LT3p0 = Config::cuts.at(CutType::time_GTE0p0_LT3p0);
+    cut_time_GTE0p0_LT3p0.ReplaceAll("&&","*");
+
+    auto cut_time_GTE3p0_LT10p0 = Config::cuts.at(CutType::time_GTE3p0_LT10p0);
+    cut_time_GTE3p0_LT10p0.ReplaceAll("&&","*");
+
 
     // pt corrections
     Config::yCorrectionsMap[CorrType::pt_corrs] =
@@ -318,16 +379,36 @@ namespace Config
       {YType::smaj,
        Config::yCorrectionsMap[CorrType::eta_corrs_v2][YType::smaj]+Config::yCorrectionsMap[CorrType::pt_exp_q0p8][YType::smaj]}
     };
+
+    // time corrections
+    Config::yCorrectionsMap[CorrType::time_corrs] =
+    {
+      {YType::sieie,
+       Config::yCorrectionsMap[CorrType::time_lin_q0p9_time_GTE0p2_LT1p0][YType::sieie]+cut_time_GTE0p2_LT1p0+
+       Config::yCorrectionsMap[CorrType::time_lin_q0p9_time_GTE1p0_LT10p0][YType::sieie]+cut_time_GTE1p0_LT10p0
+      },
+    };
+
+    Config::yCorrectionsMap[CorrType::time_corrs_v2] =
+    {
+      {YType::sieie,
+       Config::yCorrectionsMap[CorrType::time_lin_q0p9_time_GTE0p0_LT3p0][YType::sieie]+cut_time_GTE0p0_LT3p0+
+       Config::yCorrectionsMap[CorrType::time_lin_q0p9_time_GTE3p0_LT10p0][YType::sieie]+cut_time_GTE3p0_LT10p0
+      },
+    };
+
   };
 
   // ybins
   std::vector<Double_t> ybins;
   void setupYbins()
   {
-    for (auto ibin = 0 ; ibin < 100; ibin++) Config::ybins.emplace_back(  0.01 * ibin);
-    for (auto ibin = 10; ibin < 100; ibin++) Config::ybins.emplace_back(  0.10 * ibin);
-    for (auto ibin = 10; ibin < 100; ibin++) Config::ybins.emplace_back(  1.00 * ibin);
-    for (auto ibin = 10; ibin < 100; ibin++) Config::ybins.emplace_back( 10.00 * ibin);
-    for (auto ibin = 10; ibin < 101; ibin++) Config::ybins.emplace_back(100.00 * ibin);
+    for (auto ibin = 0 ; ibin < 100; ibin++) Config::ybins.emplace_back(  0.0001 * ibin);
+    for (auto ibin = 10; ibin < 100; ibin++) Config::ybins.emplace_back(  0.0010 * ibin);
+    for (auto ibin = 10; ibin < 100; ibin++) Config::ybins.emplace_back(  0.0100 * ibin);
+    for (auto ibin = 10; ibin < 101; ibin++) Config::ybins.emplace_back(  0.1000 * ibin);
+    for (auto ibin = 10; ibin < 100; ibin++) Config::ybins.emplace_back(  1.00  * ibin);
+    for (auto ibin = 10; ibin < 100; ibin++) Config::ybins.emplace_back( 10.00  * ibin);
+    for (auto ibin = 10; ibin < 101; ibin++) Config::ybins.emplace_back(100.00  * ibin);
   }
 };

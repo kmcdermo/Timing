@@ -7,7 +7,7 @@ void makeIsolationPlots()
   gStyle->SetOptStat(0);
 
   // get inputs
-  const TString infile_name = "skims/v4/ootVID/gmsb.root";
+  const TString infile_name = "skims/v4/ootVID/gmsb_isGen.root";
   auto infile = TFile::Open(infile_name.Data());
   Common::CheckValidFile(infile,infile_name);
   
@@ -16,7 +16,7 @@ void makeIsolationPlots()
   Common::CheckValidTree(tree,tree_name,infile_name);
 
   // setup common cut based on input
-  const TString commoncut = "(puwgt)*((phopt_0>70)&&(phoisEB_0==1)&&(phoisOOT_0==0)&&(phoisGen_0==1))"; // could be evtwgt*, or isGen==0
+  const TString commoncut = "(puwgt*evtwgt)*((phopt_0>70)&&(phoisEB_0==1)&&(phoisOOT_0==0)&&(phoisGen_0==1))"; // could be evtwgt*, or isGen==0
 
   // setup combo corrections
   Config::setupComboCorrs();
@@ -27,14 +27,14 @@ void makeIsolationPlots()
   // make output
   auto outfile = TFile::Open("isoplots.root","recreate");
   const TString eosdir = "/eos/user/k/kmcdermo/www";
-  const TString outdir = "dispho/plots/ootVID_v2/smajor/pt_corrected";
+  const TString outdir = "dispho/plots/ootVID_v3/quantiles/rho/eta_LT0p8";
 
   // config
-  const auto fitType  = FitType::Horizontal;
-  const auto cutType  = CutType::none;
-  const auto xType    = XType::pt;
-  const auto corrType = CorrType::eta_pt_corrs_v2;
-  const auto & yInfos = Config::ySmaj;
+  const auto fitType  = FitType::Linear;
+  const auto cutType  = CutType::eta_LT0p8;
+  const auto xType    = XType::rho;
+  const auto corrType = CorrType::pt_corrs_v2;
+  const auto & yInfos = Config::yIsos;
   const auto & yCorrections = Config::yCorrectionsMap.at(corrType);
 
   // make plots!
@@ -47,16 +47,17 @@ void makeIsolationPlots()
 	      Config::yNames.at(yType),yInfo,yCorrections.at(yType),fitType,cutType);
   }
 
+  // delete all
+  delete outfile;
+  delete tree;
+  delete infile;
+
   // move it all
   const auto fulldir = eosdir+"/"+outdir;
   gSystem->Exec("mkdir -p "+fulldir);
   gSystem->Exec("mv *png *pdf *root "+fulldir);
   gSystem->Exec("pushd "+eosdir+"; ./copyphp.sh "+outdir+"; popd;");
 
-  // delete all
-  delete outfile;
-  delete tree;
-  delete infile;
 }
 
 void makePlots(TTree * tree, const TString & commoncut, TFile * outfile, 
@@ -87,6 +88,7 @@ void makePlots(TTree * tree, const TString & commoncut, TFile * outfile,
   outfile->cd();
   auto hist2D = new TH2F(yname+"_vs_"+xname,ytitle+" vs. "+xtitle+";"+xtitle+";"+ytitle,
 			 xbins.size()-1,binsX,Config::ybins.size()-1,binsY);
+  hist2D->Sumw2();
 
   // fill 2D hist
   const TString draw = Form("max(%s%s,0.0):%s>>%s",yvar.Data(),yCorrection.Data(),xvar.Data(),hist2D->GetName());
@@ -167,7 +169,7 @@ void makeQuantiles(TCanvas * canv, TH2F * hist2D, TFile * outfile,
   // init params
   for (auto iname = 0U; iname < names.size(); iname++) fit_hist->SetParName(iname,names[iname]);
 
-  // because root is an utter piece of fucking trash
+  // because root is an utter piece of trash
   if (FitType::Exponential)
   {
     fit_hist->SetParameter(0,0.1);
@@ -195,7 +197,7 @@ void makeQuantiles(TCanvas * canv, TH2F * hist2D, TFile * outfile,
   }
 
   if (miny/maxy > 0.5) hist1D_quant->GetYaxis()->SetRangeUser(miny/1.2,maxy*2.f);
- 
+  
   // draw it!
   canv->cd();
   hist1D_quant->Draw("ep");

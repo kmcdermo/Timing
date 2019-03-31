@@ -8,10 +8,10 @@ void plot_ootVID()
   // i/o dirs
   const TString indir  = "skims/v4/ootVID";
   const TString eosdir = "/eos/user/k/kmcdermo/www";
-  const TString outdir = "dispho/plots/ootVID_v2/efficiency/smajLT0p25";
+  const TString outdir = "dispho/plots/ootVID_v3/efficiency";
 
   // get inputs
-  const auto sign_file_name = indir+"/gmsb.root";
+  const auto sign_file_name = indir+"/gmsb_isGen.root";
   auto sign_file = TFile::Open(sign_file_name);
   Common::CheckValidFile(sign_file,sign_file_name);
   
@@ -19,7 +19,7 @@ void plot_ootVID()
   auto sign_tree = (TTree*)sign_file->Get(sign_tree_name.Data());
   Common::CheckValidTree(sign_tree,Common::disphotreename,sign_file_name);
 
-  const auto bkgd_file_name = indir+"/gjet.root";
+  const auto bkgd_file_name = indir+"/bkgd.root";
   auto bkgd_file = TFile::Open(bkgd_file_name);
   Common::CheckValidFile(bkgd_file,bkgd_file_name);
 
@@ -27,25 +27,32 @@ void plot_ootVID()
   auto bkgd_tree = (TTree*)bkgd_file->Get(bkgd_tree_name.Data());
   Common::CheckValidTree(bkgd_tree,Common::disphotreename,bkgd_file_name);
 
-  // make full efficiency plots: isRatio, isLoose, isSig
-  auto outfile_vid = TFile::Open("plots_vid.root","RECREATE");
-  make_plots(sign_tree,outfile_vid,true,true,true);
-  make_plots(sign_tree,outfile_vid,true,false,true);
-  delete outfile_vid;
-  move_output(eosdir,outdir,"vid");
+  // make cut-flow efficiency plots: isGEDVID, isLoose, isSig
+  auto outfile_CutFlows = TFile::Open("plots_CutFlows.root","RECREATE");
+  
+  // GED VID
+  make_CutFlows(sign_tree,outfile_CutFlows,true,true,true);
+  make_CutFlows(bkgd_tree,outfile_CutFlows,true,true,false);
+  make_CutFlows(sign_tree,outfile_CutFlows,true,false,true);
+  make_CutFlows(bkgd_tree,outfile_CutFlows,true,false,false);
 
-  // make n-1 plots (remake outfile)
-  auto outfile_nm1 = TFile::Open("plots_nm1.root","RECREATE");
-  make_plots(sign_tree,outfile_nm1,false,true,true);
-  make_plots(sign_tree,outfile_nm1,false,false,true);
-  delete outfile_nm1;
-  move_output(eosdir,outdir,"nm1");
+  // OOT VID
+  make_CutFlows(sign_tree,outfile_CutFlows,false,true,true);
+  make_CutFlows(bkgd_tree,outfile_CutFlows,false,true,false);
+  make_CutFlows(sign_tree,outfile_CutFlows,false,false,true);
+  make_CutFlows(bkgd_tree,outfile_CutFlows,false,false,false);
 
-  // bkgd and signal inclusive effs
-  auto outfile_inc = TFile::Open("plots_inc.root","RECREATE");
-  make_inclusivePlots(bkgd_tree,sign_tree,outfile_inc);
-  delete outfile_inc;
-  move_output(eosdir,outdir,"inc");
+  delete outfile_CutFlows;
+  move_output(eosdir,outdir,"CutFlows");
+
+  // bkgd and signal inclusive effs: isGEDVID
+  auto outfile_InclusiveEffs = TFile::Open("plots_InclusiveEffs.root","RECREATE");
+
+  make_InclusiveEffs(bkgd_tree,sign_tree,outfile_InclusiveEffs,true);
+  make_InclusiveEffs(bkgd_tree,sign_tree,outfile_InclusiveEffs,false);
+
+  delete outfile_InclusiveEffs;
+  move_output(eosdir,outdir,"InclusiveEffs");
 
   // copy index.php
   gSystem->Exec("pushd "+eosdir+"; ./copyphp.sh "+outdir+"; popd;");
@@ -57,65 +64,38 @@ void plot_ootVID()
   delete sign_file;
 }
 
-void make_plots(TTree * tree, TFile * outfile, const Bool_t isRatios, const Bool_t isLoose, const Bool_t isSig)
+void make_CutFlows(TTree * tree, TFile * outfile, const Bool_t isGEDVID, const Bool_t isLoose, const Bool_t isSig)
 {
   // min max
-  const auto min = (isSig && !isRatios) ? 0.65 : 0.0;
-  const auto max = (isSig && !isRatios) ? 1.01 : 1.05;
+  const auto min = 0.0;
+  const auto max = 1.05;
 
   // label
-  const TString label = Form("%s_%s",(isSig?"sig":"bkg"),(isLoose?"loose":"tight"));
-  const TString title = Form("%s %s %s Efficiency",(isSig?"Signal":"Background"),(isLoose?"Loose":"Tight"),(isRatios?"VID":"N-1"));
+  const TString label = Form("%s_%s_%s",(isSig?"sig":"bkg"),(isLoose?"loose":"tight"),(isGEDVID?"ged":"oot"));
+  const TString title = Form("%s %s #sigma_{i#eta i#eta} %s VID Efficiency",(isSig?"Signal":"Background"),(isLoose?"Loose":"Tight"),(isGEDVID?"GED":"OOT"));
 
   // categories
   auto icolor = 0;
   std::vector<Category> categories;
-
-  if (isRatios)
+  if (isGEDVID)
   {
-    categories =
-    {
-      // hoe
-      {isSig,"1",Config::observables.at(CutType::hoe).cut(isLoose),Config::observables.at(CutType::hoe).name,Config::observables.at(CutType::hoe).label,Common::ColorVec[icolor++]},
-
-      // hoe + sieie
-      {isSig,"1",Config::observables.at(CutType::hoe).cut(isLoose)+"&&"+Config::observables.at(CutType::sieie).cut(isLoose),Config::observables.at(CutType::sieie).name,Config::observables.at(CutType::sieie).label,Common::ColorVec[icolor++]},
-
-      // hoe + sieie + ecal
-      {isSig,"1",Config::observables.at(CutType::hoe).cut(isLoose)+"&&"+Config::observables.at(CutType::sieie).cut(isLoose)+"&&"+Config::observables.at(CutType::ecal).cut(isLoose),Config::observables.at(CutType::ecal).name,Config::observables.at(CutType::ecal).label,Common::ColorVec[icolor++]},
-
-      // hoe + sieie + ecal + hcal
-      {isSig,"1",Config::observables.at(CutType::hoe).cut(isLoose)+"&&"+Config::observables.at(CutType::sieie).cut(isLoose)+"&&"+Config::observables.at(CutType::ecal).cut(isLoose)+"&&"+Config::observables.at(CutType::hcal).cut(isLoose),Config::observables.at(CutType::hcal).name,Config::observables.at(CutType::hcal).label,Common::ColorVec[icolor++]},
-
-      // hoe + sieie + ecal + hcal + trk
-      {isSig,"1",Config::observables.at(CutType::hoe).cut(isLoose)+"&&"+Config::observables.at(CutType::sieie).cut(isLoose)+"&&"+Config::observables.at(CutType::ecal).cut(isLoose)+"&&"+Config::observables.at(CutType::hcal).cut(isLoose)+"&&"+Config::observables.at(CutType::trk).cut(isLoose),Config::observables.at(CutType::trk).name,Config::observables.at(CutType::trk).label,Common::ColorVec[icolor++]},
-
-      // hoe + sieie + ecal + hcal + trk + smaj
-      {isSig,"1",Config::observables.at(CutType::hoe).cut(isLoose)+"&&"+Config::observables.at(CutType::sieie).cut(isLoose)+"&&"+Config::observables.at(CutType::ecal).cut(isLoose)+"&&"+Config::observables.at(CutType::hcal).cut(isLoose)+"&&"+Config::observables.at(CutType::trk).cut(isLoose)+"&&"+Config::observables.at(CutType::smaj).cut(isLoose),Config::observables.at(CutType::smaj).name,Config::observables.at(CutType::smaj).label,Common::ColorVec[icolor++]}
-    };
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::hoe,icolor++);
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::chghad,icolor++);
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::neuhad,icolor++);
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::pho,icolor++);
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::smaj,icolor++);
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::smin,icolor++);
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::sieie,icolor++);
   }
   else
   {
-    categories =
-    {
-      // hoe n-1
-      {isSig,Config::observables.at(CutType::sieie).cut(isLoose)+"&&"+Config::observables.at(CutType::ecal).cut(isLoose)+"&&"+Config::observables.at(CutType::hcal).cut(isLoose)+"&&"+Config::observables.at(CutType::trk).cut(isLoose)+"&&"+Config::observables.at(CutType::smaj).cut(isLoose),Config::observables.at(CutType::hoe).cut(isLoose),Config::observables.at(CutType::hoe).name,Config::observables.at(CutType::hoe).label,Common::ColorVec[icolor++]},
-
-      // sieie n-1
-      {isSig,Config::observables.at(CutType::hoe).cut(isLoose)+"&&"+Config::observables.at(CutType::ecal).cut(isLoose)+"&&"+Config::observables.at(CutType::hcal).cut(isLoose)+"&&"+Config::observables.at(CutType::trk).cut(isLoose)+"&&"+Config::observables.at(CutType::smaj).cut(isLoose),Config::observables.at(CutType::sieie).cut(isLoose),Config::observables.at(CutType::sieie).name,Config::observables.at(CutType::sieie).label,Common::ColorVec[icolor++]},
-
-      // ecal n-1
-      {isSig,Config::observables.at(CutType::hoe).cut(isLoose)+"&&"+Config::observables.at(CutType::sieie).cut(isLoose)+"&&"+Config::observables.at(CutType::hcal).cut(isLoose)+"&&"+Config::observables.at(CutType::trk).cut(isLoose)+"&&"+Config::observables.at(CutType::smaj).cut(isLoose),Config::observables.at(CutType::ecal).cut(isLoose),Config::observables.at(CutType::ecal).name,Config::observables.at(CutType::ecal).label,Common::ColorVec[icolor++]},
-
-      // hcal n-1
-      {isSig,Config::observables.at(CutType::hoe).cut(isLoose)+"&&"+Config::observables.at(CutType::sieie).cut(isLoose)+"&&"+Config::observables.at(CutType::ecal).cut(isLoose)+"&&"+Config::observables.at(CutType::trk).cut(isLoose)+"&&"+Config::observables.at(CutType::smaj).cut(isLoose),Config::observables.at(CutType::hcal).cut(isLoose),Config::observables.at(CutType::hcal).name,Config::observables.at(CutType::hcal).label,Common::ColorVec[icolor++]},
-
-      // trk n-1
-      {isSig,Config::observables.at(CutType::hoe).cut(isLoose)+"&&"+Config::observables.at(CutType::sieie).cut(isLoose)+"&&"+Config::observables.at(CutType::ecal).cut(isLoose)+"&&"+Config::observables.at(CutType::hcal).cut(isLoose)+"&&"+Config::observables.at(CutType::smaj).cut(isLoose),Config::observables.at(CutType::trk).cut(isLoose),Config::observables.at(CutType::trk).name,Config::observables.at(CutType::trk).label,Common::ColorVec[icolor++]},
-
-      // smaj n-1
-      {isSig,Config::observables.at(CutType::hoe).cut(isLoose)+"&&"+Config::observables.at(CutType::sieie).cut(isLoose)+"&&"+Config::observables.at(CutType::ecal).cut(isLoose)+"&&"+Config::observables.at(CutType::hcal).cut(isLoose)+"&&"+Config::observables.at(CutType::trk).cut(isLoose),Config::observables.at(CutType::smaj).cut(isLoose),Config::observables.at(CutType::smaj).name,Config::observables.at(CutType::smaj).label,Common::ColorVec[icolor++]}
-    };
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::hoe,icolor++);
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::ecal,icolor++);
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::hcal,icolor++);
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::trk,icolor++);
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::smaj,icolor++);
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::smin,icolor++);
+    setup_CutFlowCategories(categories,isLoose,isSig,CutType::sieie,icolor++);
   }
 
   // loop over plots
@@ -124,38 +104,29 @@ void make_plots(TTree * tree, TFile * outfile, const Bool_t isRatios, const Bool
     const auto & plotinfo = plotinfoPair.second;
 
     std::cout << "Making " << (isSig?"Signal":"Background") 
-	      << " " << (isRatios?"VID Eff":"N-1") 
-	      << " [" << (isLoose?"Loose":"Tight") << "]"
+	      << " " << (isLoose?"Loose":"Tight") << " Sieie"
+	      << " " << (isGEDVID?"GED":"OOT") << " VID cut-flow"
 	      << " plot for: " << plotinfo.var.Data() << std::endl;
 
     // make canvas
     auto canv = new TCanvas();
     canv->cd();
 
-    TPad * upad = NULL, * lpad = NULL;
-    if (isRatios)
-    {
-      upad = new TPad("upad","", Common::left_up, Common::bottom_up, Common::right_up, Common::top_up);
-      upad->SetBottomMargin(Common::merged_margin);
-      upad->Draw();
-      upad->SetTickx();
-      upad->SetTicky();
-      
-      lpad = new TPad("lpad", "", Common::left_lp, Common::bottom_lp, Common::right_lp, Common::top_lp);
-      lpad->SetTopMargin(Common::merged_margin);
-      lpad->SetBottomMargin(Common::bottom_margin);
-      lpad->Draw();
-      lpad->SetTickx();
-      lpad->SetTicky();
-    }
-    else
-    {
-      canv->SetTickx();
-      canv->SetTicky();
-    }
+    auto upad = new TPad("upad","",Common::left_up,Common::bottom_up,Common::right_up,Common::top_up);
+    upad->SetBottomMargin(Common::merged_margin);
+    upad->Draw();
+    upad->SetTickx();
+    upad->SetTicky();
+    
+    auto lpad = new TPad("lpad","",Common::left_lp,Common::bottom_lp,Common::right_lp,Common::top_lp);
+    lpad->SetTopMargin(Common::merged_margin);
+    lpad->SetBottomMargin(Common::bottom_margin);
+    lpad->Draw();
+    lpad->SetTickx();
+    lpad->SetTicky();
 
     // make legend
-    auto leg = new TLegend(0.85,0.85,1.0,1.0);
+    auto leg = new TLegend(0.85,0.75,1.0,1.0);
 
     // make hists
     std::vector<TH1F*> hists;
@@ -171,8 +142,8 @@ void make_plots(TTree * tree, TFile * outfile, const Bool_t isRatios, const Bool
       auto denom = new TH1F("denom","",nbins,bins); denom->Sumw2();
       auto numer = new TH1F("numer","",nbins,bins); numer->Sumw2();
 
-      const auto denom_cut = get_commoncut(isSig)+"*("+category.denom_cut+")";
-      const auto numer_cut = get_commoncut(isSig)+"*("+category.denom_cut+"&&"+category.numer_cut+")";
+      const auto denom_cut = get_commoncut(isSig,isGEDVID);
+      const auto numer_cut = denom_cut+"*("+category.cut+")";
 
       tree->Draw(plotinfo.var+">>denom",denom_cut.Data(),"goff");
       tree->Draw(plotinfo.var+">>numer",numer_cut.Data(),"goff");
@@ -195,25 +166,22 @@ void make_plots(TTree * tree, TFile * outfile, const Bool_t isRatios, const Bool
       hist->GetYaxis()->SetTitle("Efficiency");
       hist->GetYaxis()->SetRangeUser(min,max);
 
-      if (isRatios)
-      {
-	hist->GetXaxis()->SetLabelSize(0);
-	hist->GetXaxis()->SetTitleSize(0);
-	hist->GetYaxis()->SetLabelSize  (Common::LabelSize / Common::height_up); 
-	hist->GetYaxis()->SetTitleSize  (Common::TitleSize / Common::height_up);
-	hist->GetYaxis()->SetTitleOffset(Common::TitleYOffset * Common::height_up);
-      }
+      hist->GetXaxis()->SetLabelSize(0);
+      hist->GetXaxis()->SetTitleSize(0);
+      hist->GetYaxis()->SetLabelSize  (Common::LabelSize / Common::height_up); 
+      hist->GetYaxis()->SetTitleSize  (Common::TitleSize / Common::height_up);
+      hist->GetYaxis()->SetTitleOffset(Common::TitleYOffset * Common::height_up);
 
       // draw
       canv->cd();
-      if (isRatios) upad->cd();
+      upad->cd();
       hist->Draw(icat>0?"ep same":"ep");
 
       // add to legend
       leg->AddEntry(hist,category.label.Data(),"epl");
       
       // make ratio
-      if (icat>0 && isRatios)
+      if (icat>0)
       {
 	ratios.emplace_back((TH1F*)hist->Clone(Form("%s_ratio",hist->GetName())));
 	auto & ratio = ratios.back();
@@ -255,36 +223,26 @@ void make_plots(TTree * tree, TFile * outfile, const Bool_t isRatios, const Bool
     // delete it all
     for (auto & hist : hists) delete hist;
     delete leg;
-    if (isRatios) 
-    {
-      for (auto & ratio : ratios) delete ratio;
-      delete lpad;
-      delete upad;
-    }
+    for (auto & ratio : ratios) delete ratio;
+    delete lpad;
+    delete upad;
     delete canv;
   }
 }
 
-void make_inclusivePlots(TTree * bkgd_tree, TTree * sign_tree, TFile * outfile)
+void make_InclusiveEffs(TTree * bkgd_tree, TTree * sign_tree, TFile * outfile, const Bool_t isGEDVID)
 {
   // label config
   const TString ytitle = "Efficiency";
 
   // setup the different tests
-  const std::vector<Category> categories =
-  {
-    // sig loose
-    {true,"1",Config::observables.at(CutType::hoe).cut(true)+"&&"+Config::observables.at(CutType::sieie).cut(true)+"&&"+Config::observables.at(CutType::ecal).cut(true)+"&&"+Config::observables.at(CutType::hcal).cut(true)+"&&"+Config::observables.at(CutType::trk).cut(true)+"&&"+Config::observables.at(CutType::smaj).cut(true),"sig_loose","Signal Loose",kCyan},
-    
-    // sig tight
-    {true,"1",Config::observables.at(CutType::hoe).cut(false)+"&&"+Config::observables.at(CutType::sieie).cut(false)+"&&"+Config::observables.at(CutType::ecal).cut(false)+"&&"+Config::observables.at(CutType::hcal).cut(false)+"&&"+Config::observables.at(CutType::trk).cut(false)+"&&"+Config::observables.at(CutType::smaj).cut(false),"sig_tight","Signal Tight",kBlue},
-
-    // sig loose
-    {false,"1",Config::observables.at(CutType::hoe).cut(true)+"&&"+Config::observables.at(CutType::sieie).cut(true)+"&&"+Config::observables.at(CutType::ecal).cut(true)+"&&"+Config::observables.at(CutType::hcal).cut(true)+"&&"+Config::observables.at(CutType::trk).cut(true)+"&&"+Config::observables.at(CutType::smaj).cut(true),"bkg_loose","Bkgd Loose",kMagenta},
-    
-    // sig tight
-    {false,"1",Config::observables.at(CutType::hoe).cut(false)+"&&"+Config::observables.at(CutType::sieie).cut(false)+"&&"+Config::observables.at(CutType::ecal).cut(false)+"&&"+Config::observables.at(CutType::hcal).cut(false)+"&&"+Config::observables.at(CutType::trk).cut(false)+"&&"+Config::observables.at(CutType::smaj).cut(false),"bkg_tight","Bkgd Tight",kRed}
-  };
+  std::vector<Category> categories; 
+  
+  // isGEDVID, isLoose, isSig
+  setup_InclusiveEffCategories(categories,isGEDVID,true,true);
+  setup_InclusiveEffCategories(categories,isGEDVID,false,true);
+  setup_InclusiveEffCategories(categories,isGEDVID,true,false);
+  setup_InclusiveEffCategories(categories,isGEDVID,false,false);
 
   // make plots!!!
   for (const auto & plotinfoPair : Config::plotinfos)
@@ -292,7 +250,7 @@ void make_inclusivePlots(TTree * bkgd_tree, TTree * sign_tree, TFile * outfile)
     const auto & plotinfo = plotinfoPair.second;
 
     std::cout << "Making plot for: " << plotinfo.var.Data() << std::endl;
-
+    
     // make canvas
     auto canv = new TCanvas();
     canv->cd();
@@ -300,7 +258,7 @@ void make_inclusivePlots(TTree * bkgd_tree, TTree * sign_tree, TFile * outfile)
     canv->SetTicky();
     
     // make legend
-    auto leg = new TLegend(0.85,0.85,1.0,1.0);
+    auto leg = new TLegend(0.80,0.80,1.0,1.0);
 
     // make hists
     std::vector<TH1F*> hists;
@@ -309,15 +267,14 @@ void make_inclusivePlots(TTree * bkgd_tree, TTree * sign_tree, TFile * outfile)
       const auto & category = categories[icat];
       std::cout << "   working on category: " << category.name.Data() << std::endl;
       
-      
       const auto bins  = &plotinfo.bins[0];
       const auto nbins = plotinfo.bins.size()-1;
       
       auto denom = new TH1F("denom","",nbins,bins); denom->Sumw2();
       auto numer = new TH1F("numer","",nbins,bins); numer->Sumw2();
 
-      const auto denom_cut = get_commoncut(category.isSig)+"*("+category.denom_cut+")";
-      const auto numer_cut = get_commoncut(category.isSig)+"*("+category.denom_cut+"&&"+category.numer_cut+")";
+      const auto denom_cut = get_commoncut(category.isSig,isGEDVID);
+      const auto numer_cut = denom_cut+"*("+category.cut+")";
 
       const auto & tree = (category.isSig ? sign_tree : bkgd_tree);
       tree->Draw(plotinfo.var+">>denom",denom_cut.Data(),"goff");
@@ -369,9 +326,30 @@ void make_inclusivePlots(TTree * bkgd_tree, TTree * sign_tree, TFile * outfile)
   }
 }
 
-TString get_commoncut(const Bool_t isSig)
+TString get_commoncut(const Bool_t isSig, const Bool_t isGEDVID)
 {
-  return Form("((puwgt%s)*(phoisOOT_0==0)*(phoisEB_0==1)*(phopt_0>70)*(phoisGen_0==%i))",(isSig?"":"*evtwgt"),(isSig?1:0));
+  return Form("((puwgt%s)*(%s(phoisEB_0==1)&&(phopt_0>70)&&(phopt_0<500)&&(phoisGen_0==%i)))",(isSig?"":"*evtwgt"),(isGEDVID?"(phoisOOT_0==0)&&":""),(isSig?1:0));
+}
+
+void setup_CutFlowCategories(std::vector<Category> & categories, const Bool_t isLoose, const Bool_t isSig, const CutType cutType, const Int_t icolor)
+{
+  categories.emplace_back(isSig,Form("%s%s",(categories.size()>0?Form("%s&&",categories.back().cut.Data()):""),Config::observables.at(cutType).cut(isLoose).Data()),Config::observables.at(cutType).name,Config::observables.at(cutType).label,Common::ColorVec[icolor]);
+}
+
+void setup_InclusiveEffCategories(std::vector<Category> & categories, const Bool_t isGEDVID, const Bool_t isLoose, const Bool_t isSig)
+{
+  const TString name  = Form("%s_%s_%s",(isSig?"sig":"bkg"),(isLoose?"loose":"tight"),(isGEDVID?"ged":"oot"));
+  const TString label = Form("%s %s #sigma_{i#eta i#eta}",(isSig?"Signal":"Background"),(isLoose?"Loose":"Tight"));
+  const auto color = (isSig?(isLoose?kAzure+10:kBlue):(isLoose?kMagenta:kRed+1));
+
+  if (isGEDVID)
+  {
+    categories.emplace_back(isSig,Config::observables.at(CutType::hoe).cut(isLoose)+"&&"+Config::observables.at(CutType::chghad).cut(isLoose)+"&&"+Config::observables.at(CutType::neuhad).cut(isLoose)+"&&"+Config::observables.at(CutType::pho).cut(isLoose)+"&&"+Config::observables.at(CutType::smaj).cut(isLoose)+"&&"+Config::observables.at(CutType::smin).cut(isLoose)+"&&"+Config::observables.at(CutType::sieie).cut(isLoose),name,label,color);
+  }
+  else
+  {
+    categories.emplace_back(isSig,Config::observables.at(CutType::hoe).cut(isLoose)+"&&"+Config::observables.at(CutType::ecal).cut(isLoose)+"&&"+Config::observables.at(CutType::hcal).cut(isLoose)+"&&"+Config::observables.at(CutType::trk).cut(isLoose)+"&&"+Config::observables.at(CutType::smaj).cut(isLoose)+"&&"+Config::observables.at(CutType::smin).cut(isLoose)+"&&"+Config::observables.at(CutType::sieie).cut(isLoose),name,label,color);
+  }
 }
 
 void set_eff(TH1F * hist, const TH1F * numer, const TH1F * denom)
