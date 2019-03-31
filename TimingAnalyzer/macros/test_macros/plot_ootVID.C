@@ -27,7 +27,7 @@ void plot_ootVID()
   auto bkgd_tree = (TTree*)bkgd_file->Get(bkgd_tree_name.Data());
   Common::CheckValidTree(bkgd_tree,Common::disphotreename,bkgd_file_name);
 
-  // make cut-flow efficiency plots: isGEDVID, isLoose, isSig
+  //  make cut-flow efficiency plots: isGEDVID, isLoose, isSig
   auto outfile_CutFlows = TFile::Open("plots_CutFlows.root","RECREATE");
   
   // GED VID
@@ -313,7 +313,7 @@ void make_InclusiveEffs(TTree * bkgd_tree, TTree * sign_tree, TFile * outfile, c
     // save it
     canv->cd();
     leg->Draw("same");
-    Common::SaveAs(canv,plotinfo.name);
+    Common::SaveAs(canv,Form("%s_%s",plotinfo.name.Data(),(isGEDVID?"ged":"oot")));
     
     // also to root file
     outfile->cd();
