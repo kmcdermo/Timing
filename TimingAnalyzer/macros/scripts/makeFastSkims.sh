@@ -14,6 +14,9 @@ sampleconfig=${6:-""}
 ## derived config
 outfiletext_signal="signals_${outfiletext}"
 
+## compile first!
+./scripts/compile.sh
+ 
 ## produce slimmed skim (Data + Bkgd)
 nohup ./scripts/runFastSkimmer.sh "${cutflowconfig}" "${pdname}" "${inskimdir}" "${outfiletext}" ${doskim} "${sampleconfig}" >& "${outfiletext}.${outTextExt}" &
 
