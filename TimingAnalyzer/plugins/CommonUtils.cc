@@ -333,7 +333,7 @@ namespace oot
       
       // store the GED and OOT VID
       std::vector<pat::Photon::IdPair> idpairs = {{Config::LooseGED,false}, {Config::MediumGED,false}, {Config::TightGED,false},
-						  {Config::LooseOOT,false}, {Config::TightOOT,false}};
+						  {Config::TightOOT,false}};
 
       oot::GetGEDPhoVID(photon,idpairs);      
       if (isOOT) oot::GetOOTPhoVID      (photon,idpairs);
@@ -483,59 +483,59 @@ namespace oot
 
   float GetChargedHadronEA(const float eta)
   {
-    if      (eta <  1.0)                  return 0.0385;
-    else if (eta >= 1.0   && eta < 1.479) return 0.0468;
-    else if (eta >= 1.479 && eta < 2.0  ) return 0.0435;
-    else if (eta >= 2.0   && eta < 2.2  ) return 0.0378;
-    else if (eta >= 2.2   && eta < 2.3  ) return 0.0338;
-    else if (eta >= 2.3   && eta < 2.4  ) return 0.0314;
-    else if (eta >= 2.4)                  return 0.0269;
+    if      (eta <  1.0                 ) return 0.0112;
+    else if (eta >= 1.0   && eta < 1.479) return 0.0108;
+    else if (eta >= 1.479 && eta < 2.0  ) return 0.0106;
+    else if (eta >= 2.0   && eta < 2.2  ) return 0.01002;
+    else if (eta >= 2.2   && eta < 2.3  ) return 0.0098;
+    else if (eta >= 2.3   && eta < 2.4  ) return 0.0089;
+    else if (eta >= 2.4                 ) return 0.0087;
     else                                  return 0.;
   }
   
   float GetNeutralHadronEA(const float eta) 
   {
-    if      (eta <  1.0)                  return 0.0636;
-    else if (eta >= 1.0   && eta < 1.479) return 0.1103;
-    else if (eta >= 1.479 && eta < 2.0  ) return 0.0759;
-    else if (eta >= 2.0   && eta < 2.2  ) return 0.0236;
-    else if (eta >= 2.2   && eta < 2.3  ) return 0.0151;
-    else if (eta >= 2.3   && eta < 2.4  ) return 0.00007;
-    else if (eta >= 2.4)                  return 0.0132;
+    if      (eta <  1.0                 ) return 0.0668;
+    else if (eta >= 1.0   && eta < 1.479) return 0.1054;
+    else if (eta >= 1.479 && eta < 2.0  ) return 0.0786;
+    else if (eta >= 2.0   && eta < 2.2  ) return 0.0233;
+    else if (eta >= 2.2   && eta < 2.3  ) return 0.0078;
+    else if (eta >= 2.3   && eta < 2.4  ) return 0.0028;
+    else if (eta >= 2.4                 ) return 0.0137;
     else                                  return 0.;
   }
   
   float GetGammaEA(const float eta) 
   {
-    if      (eta <  1.0)                  return 0.1240;
-    else if (eta >= 1.0   && eta < 1.479) return 0.1093;
-    else if (eta >= 1.479 && eta < 2.0  ) return 0.0631;
-    else if (eta >= 2.0   && eta < 2.2  ) return 0.0779;
-    else if (eta >= 2.2   && eta < 2.3  ) return 0.0999;
-    else if (eta >= 2.3   && eta < 2.4  ) return 0.1155;
-    else if (eta >= 2.4)                  return 0.1373;
+    if      (eta <  1.0                 ) return 0.1113;
+    else if (eta >= 1.0   && eta < 1.479) return 0.0953;
+    else if (eta >= 1.479 && eta < 2.0  ) return 0.0619;
+    else if (eta >= 2.0   && eta < 2.2  ) return 0.0837;
+    else if (eta >= 2.2   && eta < 2.3  ) return 0.1070;
+    else if (eta >= 2.3   && eta < 2.4  ) return 0.1212;
+    else if (eta >= 2.4                 ) return 0.1466;
     else                                  return 0.;
   }
 
   float GetEcalPFClEA(const float eta)
   {
-    if      (eta < 0.8 ) return 0.19;
-    else if (eta < 1.44) return 0.14;
-    else                 return 0.f;
+    if      (eta <  0.8                ) return 0.1324;
+    else if (eta >= 0.8 && eta < 1.4422) return 0.08638;
+    else                                 return 0.f;
   }
 
   float GetHcalPFClEA(const float eta)
   {
-    if      (eta < 0.8 ) return 0.089;
-    else if (eta < 1.44) return 0.15;
-    else                 return 0.f;
+    if      (eta <  0.8                ) return 0.1094;
+    else if (eta >= 0.8 && eta < 1.4422) return 0.09392;
+    else                                 return 0.f;
   }
 
   float GetTrackEA(const float eta)
   {
-    if      (eta < 0.8 ) return 0.037;
-    else if (eta < 1.44) return 0.031;
-    else                 return 0.f;
+    if      (eta <  0.8                ) return 0.02276;
+    else if (eta >= 0.8 && eta < 1.4422) return 0.00536;
+    else                                 return 0.f;
   }
 
   //////////////////////////
@@ -544,34 +544,28 @@ namespace oot
 
   float GetNeutralHadronPtScale(const float eta, const float pt)
   {
-    if      (eta <  Config::etaEBcutoff)                           return 0.0126*pt+0.000026*pt*pt;
-    else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax) return 0.0119*pt+0.000025*pt*pt;
+    if      (eta <  Config::etaEBcutoff)                           return 0.01512*pt+0.00002259*pt*pt;
+    else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax) return 0.0117 *pt+0.00002305*pt*pt;
     else                                                           return 0.f;
   }
 
   float GetGammaPtScale(const float eta, const float pt)
   {
-    if      (eta <  Config::etaEBcutoff)                           return 0.0035*pt;
-    else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax) return 0.0040*pt;
+    if      (eta <  Config::etaEBcutoff)                           return 0.004017*pt;
+    else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax) return 0.0037  *pt;
     else                                                           return 0.f;
   }
 
   float GetEcalPFClPtScale(const float eta, const float pt)
   {
-    if   (eta < 1.44) return 0.00092*pt;
-    else              return 0.f;
+    if   (eta < 1.4442) return 0.003008*pt;
+    else                return 0.f;
   }
 
   float GetHcalPFClPtScale(const float eta, const float pt)
   {
-    if   (eta < 1.44) return 0.0052*pt;
-    else              return 0.f;
-  }
-
-  float GetTrackPtScale(const float eta, const float pt)
-  {
-    if   (eta < 1.44) return 0.00091*pt;
-    else              return 0.f;
+    if   (eta < 1.4442) return 0.00002921*pt*pt-0.005802*pt;
+    else                return 0.f;
   }
 
   //////////////////////////
@@ -589,34 +583,30 @@ namespace oot
   {
     // needed for cuts
     const auto eta = std::abs(photon.superCluster()->eta());
-    const auto pt  = photon.pt();
+    const auto pt  = photon.pt(); // uncorrected pt: https://twiki.cern.ch/twiki/bin/view/CMS/EgammaPostRecoRecipes#Advanced_usage_of_EgammaPostReco
     
     // cut variables
-    const auto HoverE = photon.hadTowOverEm();
-    const auto Sieie  = photon.full5x5_sigmaIetaIeta();
-    // Isolations are currently wrong! need to recompute them apparently : 
-    // https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedPhotonIdentificationRun2#Selection_implementation_details
-    // https://twiki.cern.ch/twiki/bin/view/CMS/EgammaPFBasedIsolationRun2#Recipe_for_accessing_PF_isol_AN1
-    // https://github.com/cms-sw/cmssw/blob/master/RecoEgamma/PhotonIdentification/plugins/PhotonIDValueMapProducer.cc#L338-L395
+    const auto HoverE    = photon.hadTowOverEm();
+    const auto Sieie     = photon.full5x5_sigmaIetaIeta();
     const auto ChgHadIso = std::max(photon.chargedHadronIso() - (rho * oot::GetChargedHadronEA(eta))                                         ,0.f);
     const auto NeuHadIso = std::max(photon.neutralHadronIso() - (rho * oot::GetNeutralHadronEA(eta)) - (oot::GetNeutralHadronPtScale(eta,pt)),0.f);
     const auto PhoIso    = std::max(photon.photonIso()        - (rho * oot::GetGammaEA        (eta)) - (oot::GetGammaPtScale        (eta,pt)),0.f);
     
     if (eta < Config::etaEBcutoff)
     {
-      if      ((HoverE < 0.020) && (Sieie < 0.0103) && (ChgHadIso < 1.158) && (NeuHadIso < 1.267) && (PhoIso < 2.065)) 
+      if      ((HoverE < 0.02148) && (Sieie < 0.0096) && (ChgHadIso < 0.65) && (NeuHadIso < 0.317) && (PhoIso < 2.044))
       {
 	idpairs[2].second = true;
 	idpairs[1].second = true;
 	idpairs[0].second = true;
       }
-      else if ((HoverE < 0.035) && (Sieie < 0.0103) && (ChgHadIso < 1.416) && (NeuHadIso < 2.491) && (PhoIso < 2.952)) 
+      else if ((HoverE < 0.02197) && (Sieie < 0.0105) && (ChgHadIso < 1.141) && (NeuHadIso < 1.189) && (PhoIso < 2.08))
       {
 	idpairs[2].second = false;
 	idpairs[1].second = true;
 	idpairs[0].second = true;
       }  
-      else if ((HoverE < 0.105) && (Sieie < 0.0103) && (ChgHadIso < 2.839) && (NeuHadIso < 9.188) && (PhoIso < 2.956)) 
+      else if ((HoverE < 0.04596) && (Sieie < 0.0106) && (ChgHadIso < 1.694) && (NeuHadIso < 24.032) && (PhoIso < 2.876))
       {
 	idpairs[2].second = false;
 	idpairs[1].second = false;
@@ -625,19 +615,19 @@ namespace oot
     }
     else if (eta >= Config::etaEBcutoff && eta < Config::etaEEmax)
     {
-      if      ((HoverE < 0.025) && (Sieie < 0.0271) && (ChgHadIso < 0.575) && (NeuHadIso < 8.916) && (PhoIso < 3.272)) 
+      if      ((HoverE < 0.0321) && (Sieie < 0.0271) && (ChgHadIso < 0.517) && (NeuHadIso < 2.716) && (PhoIso < 3.032))
       {
 	idpairs[2].second = true;
 	idpairs[1].second = true;
 	idpairs[0].second = true;
       }
-      else if ((HoverE < 0.027) && (Sieie < 0.0271) && (ChgHadIso < 1.012) && (NeuHadIso < 9.131) && (PhoIso < 4.095)) 
+      else if ((HoverE < 0.0326) && (Sieie < 0.0272) && (ChgHadIso < 1.051) && (NeuHadIso < 2.718) && (PhoIso < 3.867))
       {
 	idpairs[2].second = false;
 	idpairs[1].second = true;
 	idpairs[0].second = true;
       }   
-      else if ((HoverE < 0.029) && (Sieie < 0.0276) && (ChgHadIso < 2.150) && (NeuHadIso < 10.471) && (PhoIso < 4.895)) 
+      else if ((HoverE < 0.059) && (Sieie < 0.0272) && (ChgHadIso < 2.089) && (NeuHadIso < 19.722) && (PhoIso < 4.162))
       {
 	idpairs[2].second = false;
 	idpairs[1].second = false;
@@ -648,8 +638,7 @@ namespace oot
 
   void GetOOTPhoVID(const pat::Photon & photon, std::vector<pat::Photon::IdPair> & idpairs)
   {
-    idpairs[4].second = photon.photonID(Config::OOTPhotonTightVID);
-    idpairs[3].second = photon.photonID(Config::OOTPhotonLooseVID);
+    idpairs[3].second = photon.photonID(Config::OOTPhotonTightVID);
   }
 
   void GetOOTPhoVIDByHand(const pat::Photon & photon, std::vector<pat::Photon::IdPair> & idpairs, const float rho)
@@ -659,20 +648,14 @@ namespace oot
     const auto pt  = photon.pt();
 
     // cut variables
-    const auto HoverE = photon.hadTowOverEm();
-    const auto Sieie  = photon.full5x5_sigmaIetaIeta();
+    const auto HoverE      = photon.hadTowOverEm();
+    const auto Sieie       = photon.full5x5_sigmaIetaIeta();
     const auto EcalPFClIso = std::max(photon.ecalPFClusterIso() - (rho * oot::GetEcalPFClEA(eta)) - (oot::GetEcalPFClPtScale(eta,pt)),0.f);
     const auto HcalPFClIso = std::max(photon.hcalPFClusterIso() - (rho * oot::GetHcalPFClEA(eta)) - (oot::GetHcalPFClPtScale(eta,pt)),0.f);
-    const auto TrkIso      = std::max(photon.trackIso()         - (rho * oot::GetTrackEA   (eta)) - (oot::GetTrackPtScale   (eta,pt)),0.f);
+    const auto TrkIso      = std::max(photon.trackIso()         - (rho * oot::GetTrackEA   (eta))                                    ,0.f);
 
-    if      ((HoverE < 0.0165) && (Sieie < 0.011) && (EcalPFClIso < 5.f) && (HcalPFClIso < 10.f) && (TrkIso < 5.5f))
+    if      ((HoverE < 0.02148) && (Sieie < 0.014) && (EcalPFClIso < 5.f) && (HcalPFClIso < 4.f) && (TrkIso < 4.f))
     {
-      idpairs[4].second = true;
-      idpairs[3].second = true;
-    }   
-    else if ((HoverE < 0.185) && (Sieie < 0.0125) && (EcalPFClIso < 8.f) && (HcalPFClIso < 12.f) && (TrkIso < 8.5f)) 
-    {
-      idpairs[4].second = false;
       idpairs[3].second = true;
     }   
   }

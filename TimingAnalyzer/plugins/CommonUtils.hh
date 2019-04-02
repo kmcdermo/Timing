@@ -301,7 +301,6 @@ namespace oot
   float GetGammaPtScale(const float eta, const float pt);
   float GetEcalPFClPtScale(const float eta, const float pt);
   float GetHcalPFClPtScale(const float eta, const float pt);
-  float GetTrackPtScale(const float eta, const float pt);
 
   //////////////////////////
   // Object VID Functions //

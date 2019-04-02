@@ -1,8 +1,9 @@
 # Displaced Photon Analysis Framework
 
-Update to README: old 80X code removed, but still have GEN_SIM...
+## HUGE N.B.
+OOT and GED VIDs all messed up! Make sure to apply by hand (or with new VID producers)! If doing by hand, will need to compute Smajor/Sminor!
 
-Standard setup:
+### Standard Setup
 ```
 cmsrel CMSSW_9_4_13
 cd CMSSW_9_4_13/src
@@ -29,7 +30,7 @@ Made ```kmcdermo:post_reco_OOT_AND_add_OOT_VID``` with the following:
 - combo of squashed commits from: ```lsoffi:CMSSW_10_1_1_OOT_PhotonID_wSMaj``` and ```kmcdermo:add_OOT_VID```
 - add commits for OOT VID for GED and OOT Photons
 
-Additional useful links:
+### Additional useful links
  - Analysis recipes for 2017: https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmVAnalysisSummaryTable
    - Old 2017 page: https://twiki.cern.ch/twiki/bin/view/CMS/PdmV2017Analysis
  - Object recommendations: https://twiki.cern.ch/twiki/bin/view/CMS/ExoObjectRecommendationsRun2#2017_AN1
@@ -153,7 +154,7 @@ uncertainties:
 
 -----------------------
 
-### Core chain of analysis:
+### Core chain of analysis
 
 Produce ntuples with multicrab:
 - test/multicrab_dispho_Data.py

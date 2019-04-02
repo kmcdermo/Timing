@@ -8,7 +8,7 @@ DisPho::DisPho(const edm::ParameterSet & iConfig) :
   applyBlindMET(iConfig.existsAs<bool>("applyBlindMET") ? iConfig.getParameter<bool>("applyBlindMET") : false),
 
   // object prep cuts
-  jetpTmin(iConfig.existsAs<double>("jetpTmin") ? iConfig.getParameter<double>("jetpTmin") : 15.f),
+  jetpTmin(iConfig.existsAs<double>("jetpTmin") ? iConfig.getParameter<double>("jetpTmin") : 30.f),
   jetEtamax(iConfig.existsAs<double>("jetEtamax") ? iConfig.getParameter<double>("jetEtamax") : 3.f),
   jetIDmin(iConfig.existsAs<int>("jetIDmin") ? iConfig.getParameter<int>("jetIDmin") : 1),
   rhEmin(iConfig.existsAs<double>("rhEmin") ? iConfig.getParameter<double>("rhEmin") : 1.f),
@@ -1247,36 +1247,18 @@ void DisPho::InitializeJetBranches()
   jetNHM.clear();
   jetCHM.clear();
  
-  jetE.resize(nJets);
-  jetpt.resize(nJets);
-  jetphi.resize(nJets);
-  jeteta.resize(nJets);
-  jetID.resize(nJets);
-  jetNHF.resize(nJets);
-  jetNEMF.resize(nJets);
-  jetCHF.resize(nJets);
-  jetCEMF.resize(nJets);
-  jetMUF.resize(nJets);
-  jetNHM.resize(nJets);
-  jetCHM.resize(nJets);
-
-  for (auto i = 0; i < nJets; i++)
-  {
-    jetE  [i] = -9999.f;
-    jetpt [i] = -9999.f;
-    jetphi[i] = -9999.f;
-    jeteta[i] = -9999.f;
-
-    jetID [i] = -9999;
-
-    jetNHF [i] = -9999.f;
-    jetNEMF[i] = -9999.f;
-    jetCHF [i] = -9999.f;
-    jetCEMF[i] = -9999.f;
-    jetMUF [i] = -9999.f;
-    jetNHM [i] = -9999.f;
-    jetCHM [i] = -9999.f;
-  }
+  jetE.resize(nJets,-9999.f);
+  jetpt.resize(nJets,-9999.f);
+  jetphi.resize(nJets,-9999.f);
+  jeteta.resize(nJets,-9999.f);
+  jetID.resize(nJets,-9999);
+  jetNHF.resize(nJets,-9999.f);
+  jetNEMF.resize(nJets,-9999.f);
+  jetCHF.resize(nJets,-9999.f);
+  jetCEMF.resize(nJets,-9999.f);
+  jetMUF.resize(nJets,-9999.f);
+  jetNHM.resize(nJets,-9999.f);
+  jetCHM.resize(nJets,-9999.f);
 }
 
 void DisPho::SetJetBranches()
@@ -1312,22 +1294,11 @@ void DisPho::InitializeJetBranchesMC()
   jetsmearUpSF.clear();
   jetisGen.clear();
   
-  jetscaleRel.resize(nJets);
-  jetsmearSF.resize(nJets);
-  jetsmearDownSF.resize(nJets);
-  jetsmearUpSF.resize(nJets);
-  jetisGen.resize(nJets);
-
-  for (auto ijet = 0; ijet < nJets; ijet++)
-  {
-    jetscaleRel   [ijet] = -9999.f;
-
-    jetsmearSF    [ijet] = -9999.f;
-    jetsmearDownSF[ijet] = -9999.f;
-    jetsmearUpSF  [ijet] = -9999.f;
-
-    jetisGen[ijet] = -1;
-  }
+  jetscaleRel.resize(nJets,-9999.f);
+  jetsmearSF.resize(nJets,-9999.f);
+  jetsmearDownSF.resize(nJets,-9999.f);
+  jetsmearUpSF.resize(nJets,-9999.f);
+  jetisGen.resize(nJets,-1);
 }
 
 void DisPho::SetJetBranchesMC()
@@ -1549,52 +1520,24 @@ void DisPho::InitializeRecHitBranches()
   rhpedrms6.clear();
   rhpedrms1.clear();
 
-  rhX.resize(nRecHits);
-  rhY.resize(nRecHits);
-  rhZ.resize(nRecHits);
-  rhE.resize(nRecHits);
-  rhtime.resize(nRecHits);
-  rhtimeErr.resize(nRecHits);
-  rhTOF.resize(nRecHits);
-  rhID.resize(nRecHits);
-  rhisOOT.resize(nRecHits);
-  rhisGS6.resize(nRecHits);
-  rhisGS1.resize(nRecHits);
-  rhadcToGeV.resize(nRecHits);
-  rhped12.resize(nRecHits);
-  rhped6.resize(nRecHits);
-  rhped1.resize(nRecHits);
-  rhpedrms12.resize(nRecHits);
-  rhpedrms6.resize(nRecHits);
-  rhpedrms1.resize(nRecHits);
-
-  for (auto i = 0; i < nRecHits; i++)
-  {
-    rhX[i] = -9999.f;
-    rhY[i] = -9999.f;
-    rhZ[i] = -9999.f;
-    rhE[i] = -9999.f;
-
-    rhtime   [i] = -9999.f;
-    rhtimeErr[i] = -9999.f;
-    rhTOF    [i] = -9999.f;
-    
-    rhID[i] = 0; // non-ideal
-
-    rhisOOT[i] = false;
-    rhisGS6[i] = false;
-    rhisGS1[i] = false;
-
-    rhadcToGeV[i] = -9999.f;
-
-    rhped12[i] = -9999.f;
-    rhped6 [i] = -9999.f;
-    rhped1 [i] = -9999.f;
-
-    rhpedrms12[i] = -9999.f;
-    rhpedrms6 [i] = -9999.f;
-    rhpedrms1 [i] = -9999.f;
-  }
+  rhX.resize(nRecHits,-9999.f);
+  rhY.resize(nRecHits,-9999.f);
+  rhZ.resize(nRecHits,-9999.f);
+  rhE.resize(nRecHits,-9999.f);
+  rhtime.resize(nRecHits,-9999.f);
+  rhtimeErr.resize(nRecHits,-9999.f);
+  rhTOF.resize(nRecHits,-9999.f);
+  rhID.resize(nRecHits,0); // non-ideal
+  rhisOOT.resize(nRecHits,false);
+  rhisGS6.resize(nRecHits,false);
+  rhisGS1.resize(nRecHits,false);
+  rhadcToGeV.resize(nRecHits,-9999.f);
+  rhped12.resize(nRecHits,-9999.f);
+  rhped6.resize(nRecHits,-9999.f);
+  rhped1.resize(nRecHits,-9999.f);
+  rhpedrms12.resize(nRecHits,-9999.f);
+  rhpedrms6.resize(nRecHits,-9999.f);
+  rhpedrms1.resize(nRecHits,-9999.f);
 }
 
 void DisPho::SetRecHitBranches()
@@ -1797,7 +1740,7 @@ void DisPho::SetPhoBranches()
 
     phoBranch.EcalPFClIsoC_ = std::max(phoBranch.EcalPFClIso_ - (rho * oot::GetEcalPFClEA(scEta)) - (oot::GetEcalPFClPtScale(scEta,phoPt)),0.f);
     phoBranch.HcalPFClIsoC_ = std::max(phoBranch.HcalPFClIso_ - (rho * oot::GetHcalPFClEA(scEta)) - (oot::GetHcalPFClPtScale(scEta,phoPt)),0.f);
-    phoBranch.TrkIsoC_      = std::max(phoBranch.TrkIso_      - (rho * oot::GetTrackEA   (scEta)) - (oot::GetTrackPtScale   (scEta,phoPt)),0.f);
+    phoBranch.TrkIsoC_      = std::max(phoBranch.TrkIso_      - (rho * oot::GetTrackEA   (scEta))                                         ,0.f);
 
     // Shower Shape Objects
     const auto & phoshape = photon.full5x5_showerShapeVariables(); 
@@ -1922,7 +1865,6 @@ void DisPho::SetPhoBranches()
     else                                         {phoBranch.gedID_ = 0;}
     // OOT second
     if      (photon.photonID(Config::TightOOT))  {phoBranch.ootID_ = 3;}
-    else if (photon.photonID(Config::LooseOOT))  {phoBranch.ootID_ = 1;}
     else                                         {phoBranch.ootID_ = 0;}
   } // end loop over nPhotons
 }

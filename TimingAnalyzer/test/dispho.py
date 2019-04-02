@@ -12,7 +12,7 @@ options.register('blindMET',100.0,VarParsing.multiplicity.singleton,VarParsing.v
 options.register('applyBlindMET',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to apply event MET blinding');
 
 ## object prep cuts
-options.register('jetpTmin',15.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'jet pT minimum cut');
+options.register('jetpTmin',30.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'jet pT minimum cut');
 options.register('jetEtamax',3.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'jet eta maximum cut');
 options.register('jetIDmin',1,VarParsing.multiplicity.singleton,VarParsing.varType.int,'jet ID minimum cut');
 options.register('rhEmin',1.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'recHit energy minimum cut');

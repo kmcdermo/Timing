@@ -132,9 +132,6 @@ public:
 
   inline bool ApplyPreSelection();
 
-  void SetTriggerInfo();
-  void InitializeTriggerBranches();
-
   void SetJetInfo();
   void ClearJetBranches();
   void InitializeJetBranches();
@@ -218,20 +215,6 @@ private:
   std::map<std::string,std::vector<pat::TriggerObjectStandAlone> > triggerObjectsByFilterMap; // first index is filter label, second is trigger objects
   std::map<std::string,TestStruct> effTestMap;
 
-  // met filter inputs
-  const std::string inputFlags;
-  std::vector<std::string> flagNames;
-  strBitMap triggerFlagMap;
-
-  // met filters
-  const edm::InputTag triggerFlagsTag;
-  edm::EDGetTokenT<edm::TriggerResults> triggerFlagsToken;
-  edm::Handle<edm::TriggerResults> triggerFlagsH;
-
-  const edm::InputTag ecalBadCalibFlagTag;
-  edm::EDGetTokenT<bool> ecalBadCalibFlagToken;
-  edm::Handle<bool> ecalBadCalibFlagH;
-
   // Tracks
   const edm::InputTag tracksTag;
   edm::EDGetTokenT<std::vector<reco::Track> > tracksToken;
@@ -292,44 +275,30 @@ private:
   // Temp Internal Members //
   ///////////////////////////
 
-  // trigger info
-  std::vector<bool> triggerBits;
-
   // jets
   int njets;
-  std::vector<float> jetE, jetpt, jetphi, jeteta;
+  std::vector<float> jetpt, jeteta;
   float pfJetHT;
 
   // photon info
   int nphotons;
-  std::vector<int> phisOOT;
-  std::vector<float> phE, phpt, phphi, pheta;
+  std::vector<float> phpt, phphi, pheta;
   std::vector<float> phHoE, phr9;
-  std::vector<bool> phPixSeed, phEleVeto;
-  std::vector<float> phChgIso, phNeuIso, phIso;
+  std::vector<float> phChgIso, phNeuIso, phPhoIso;
   std::vector<float> phPFClEcalIso, phPFClHcalIso, phHollowTkIso;
-  std::vector<float> phsieie, phsipip, phsieip, phsmaj, phsmin, phalpha;
+  std::vector<float> phsieie, phsmaj, phsmin;
   std::vector<std::vector<int> > phIsHLTMatched; // first index is iph, second is for filter, true/false
-  std::vector<int> phIsTrack;
-
-  // supercluster info 
-  std::vector<float> phscE, phsceta, phscphi;
+  std::vector<int> phIsOOT, phIsEB, phIsTrack;
 
   // seed info
-  std::vector<float> phseedeta, phseedphi, phseedE, phseedtime;
-  std::vector<int> phseedID;
-  std::vector<int> phseedOOT;
+  std::vector<float> phseedtime;
   
-  // all rec hit info
-  std::vector<int> phnrh;
-
   ////////////////////
   // Output Members //
   ////////////////////
 
   // output hists
-  std::map<std::string,TEfficiency*> effETEBs;
-  std::map<std::string,TEfficiency*> effETEEs;
+  std::map<std::string,TEfficiency*> effETs;
   std::map<std::string,TEfficiency*> effetas;
   std::map<std::string,TEfficiency*> effphis;
   std::map<std::string,TEfficiency*> efftimes;

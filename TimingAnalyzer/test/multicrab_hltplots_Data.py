@@ -61,7 +61,6 @@ def main():
         inputDir     = '/afs/cern.ch/user/k/kmcdermo/public/input/'
         inputPaths   = 'HLTpaths.txt'
         inputFilters = 'HLTfilters.txt'
-        inputFlags   = 'METflags.txt'
         inputJSON    = 'golden2017.json'
 
         #--------------------------------------------------------
@@ -76,12 +75,11 @@ def main():
         config.JobType.pluginName  = 'Analysis'
         config.JobType.psetName    = 'hltplots.py'
         config.JobType.pyCfgParams = None
-        config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters , inputDir+inputFlags ]
+        config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
 
         config.Data.inputDataset = None
         config.Data.lumiMask     = inputDir+inputJSON
-        config.Data.splitting    = 'EventAwareLumiBased'
-        config.Data.unitsPerJob  = 1000000
+
 
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
@@ -91,26 +89,32 @@ def main():
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/SingleMuon/Run2017B-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v'],
-            ['/SingleMuon/Run2017C-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v'],
-            ['/SingleMuon/Run2017D-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v'],
-            ['/SingleMuon/Run2017E-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v'],
-            ['/SingleMuon/Run2017F-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v'],
+            ['/SingleMuon/Run2017B-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v', 'IsoMu27'],
+            ['/SingleMuon/Run2017C-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v', 'IsoMu27'],
+            ['/SingleMuon/Run2017D-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v', 'IsoMu27'],
+            ['/SingleMuon/Run2017E-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v', 'IsoMu27'],
+            ['/SingleMuon/Run2017F-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v', 'IsoMu27'],
 
-            ['/SinglePhoton/Run2017C-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v'],
-            ['/SinglePhoton/Run2017D-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v'],
-            ['/SinglePhoton/Run2017E-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v'],
-            ['/SinglePhoton/Run2017F-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v']
+            ['/SinglePhoton/Run2017C-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_v', 'PhoId'],
+            ['/SinglePhoton/Run2017D-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_v', 'PhoId'],
+            ['/SinglePhoton/Run2017E-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_v', 'PhoId'],
+            ['/SinglePhoton/Run2017F-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_v', 'PhoId'],
+
+            ['/SinglePhoton/Run2017C-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v', 'DispId'],
+            ['/SinglePhoton/Run2017D-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v', 'DispId'],
+            ['/SinglePhoton/Run2017E-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v', 'DispId'],
+            ['/SinglePhoton/Run2017F-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v', 'DispId'],
             ]
  
         for inDO in inputDataAndOpts:
             # inDO[0] is of the form /A/B/C. Since A+B is unique for each inDS, use this in the CRAB request name.
             primaryDataset = inDO[0].split('/')[1]
             runEra         = inDO[0].split('/')[2]
-            config.General.requestName   = primaryDataset+"_"+runEra
+            refPath        = inDO[2]
+            config.General.requestName   = primaryDataset+"_"+runEra+"_"+refPath
 
             config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_v11','applyTriggerPS=True','psPath='+inDO[1],
-                                            'inputPaths='+inputPaths,'inputFilters='+inputFilters,'inputFlags='+inputFlags]
+                                            'inputPaths='+inputPaths,'inputFilters='+inputFilters]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)
             # Submit.
