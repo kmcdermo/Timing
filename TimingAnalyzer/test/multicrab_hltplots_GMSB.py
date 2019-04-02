@@ -78,7 +78,7 @@ def main():
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters ]
 
         config.Data.inputDataset = None
-        config.Data.lumiMask     = inputDir+inputJSON
+        config.Data.allowNonValidInputDataset = True
 
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
@@ -88,31 +88,24 @@ def main():
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/SingleMuon/Run2017B-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v', 'IsoMu27'],
-            ['/SingleMuon/Run2017C-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v', 'IsoMu27'],
-            ['/SingleMuon/Run2017D-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v', 'IsoMu27'],
-            ['/SingleMuon/Run2017E-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v', 'IsoMu27'],
-            ['/SingleMuon/Run2017F-31Mar2018-v1/MINIAOD', 'HLT_IsoMu27_v', 'IsoMu27'],
+            ['/GMSB_L-100TeV_Ctau-10cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM'],
+            ['/GMSB_L-100TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM'],
+            ['/GMSB_L-100TeV_Ctau-1000cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM'],
 
-            ['/SinglePhoton/Run2017C-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_v', 'PhoId'],
-            ['/SinglePhoton/Run2017D-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_v', 'PhoId'],
-            ['/SinglePhoton/Run2017E-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_v', 'PhoId'],
-            ['/SinglePhoton/Run2017F-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_v', 'PhoId'],
+            ['/GMSB_L-200TeV_Ctau-10cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM'],
+            ['/GMSB_L-200TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM'],
+            ['/GMSB_L-200TeV_Ctau-1000cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM'],
 
-            ['/SinglePhoton/Run2017C-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v', 'DispId'],
-            ['/SinglePhoton/Run2017D-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v', 'DispId'],
-            ['/SinglePhoton/Run2017E-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v', 'DispId'],
-            ['/SinglePhoton/Run2017F-31Mar2018-v1/MINIAOD', 'HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v', 'DispId'],
+            ['/GMSB_L-300TeV_Ctau-10cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM'],
+            ['/GMSB_L-300TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM'],
+            ['/GMSB_L-300TeV_Ctau-1000cm_TuneCP5_13TeV-pythia8/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/MINIAODSIM']
             ]
  
         for inDO in inputDataAndOpts:
-            # inDO[0] is of the form /A/B/C. Since A+B is unique for each inDS, use this in the CRAB request name.
-            primaryDataset = inDO[0].split('/')[1]
-            runEra         = inDO[0].split('/')[2]
-            refPath        = inDO[2]
-            config.General.requestName   = primaryDataset+"_"+runEra+"_"+refPath
+            # inDO[0] is of the form /A/B/C. Since A is unique for each inDO for Monte Carlo, use this in the CRAB request name.
+            config.General.requestName   = inDO[0].split('/')[1]
 
-            config.JobType.pyCfgParams   = ['globalTag=94X_dataRun2_v11','applyTriggerPS=True','psPath='+inDO[1],
+            config.JobType.pyCfgParams   = ['globalTag=94X_mc2017_realistic_v17','applyTriggerPS=False','psPath=NONE',
                                             'inputPaths='+inputPaths,'inputFilters='+inputFilters]
             config.Data.inputDataset     = inDO[0]
             config.Data.outputDatasetTag = '%s_%s' % (config.General.workArea, config.General.requestName)

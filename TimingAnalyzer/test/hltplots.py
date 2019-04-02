@@ -46,6 +46,12 @@ options.register('outputFileName','hltplots.root',VarParsing.multiplicity.single
 ## parsing command line arguments
 options.parseArguments()
 
+## Set PSPath to empty string and to not apply PS if psPath='NONE' or applyTriggerPS=False
+if not options.applyTriggerPS or options.psPath == 'NONE' or options.psPath == 'none' or options.psPath == '' : 
+    options.applyTriggerPS = False
+    options.psPath = ''
+
+## Print configuration
 print "     ##### Settings ######"
 print "     -- Pre-Selection --"
 print "applyTriggerPS : ",options.applyTriggerPS
@@ -92,7 +98,14 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-        '/store/user/kmcdermo/files/miniAOD/SMU_2017D_miniAODv2.root'
+        ## Data: SingleMu miniAODv2, GT: 94X_dataRun2_v11, PSPath: HLT_IsoMu27_v
+        #'/store/user/kmcdermo/files/miniAOD/SMU_2017D_miniAODv2.root'
+
+        ## Data: SinglePh miniAODv2, GT: 94X_dataRun2_v11, PSPath: HLT_Photon60_R9Id90_CaloIdL_IsoL_v, HLT_Photon60_R9Id90_CaloIdL_IsoL_DisplacedIdL_v
+        #'/store/user/kmcdermo/files/miniAOD/SPH_2017E_miniAODv2.root'
+
+        ## GSMB: L: 200TeV CTau: 200cm miniAODv2, GT: 94X_mc2017_realistic_v17, PSPath: NONE
+        '/store/user/kmcdermo/files/miniAOD/GMSB_L200TeV_CTau200cm_miniAODv2.root'
         ))
 
 ## How many events to process
