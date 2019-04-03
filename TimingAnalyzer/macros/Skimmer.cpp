@@ -1187,12 +1187,12 @@ void Skimmer::CorrectMET()
     const UInt_t nJets = fOutJets.pt_f.size();
     for (auto ijet = 0U; ijet < nJets; ijet++)
     {
-      const auto metpt  = fOutEvent.t1pfMETpt;
-      const auto metphi = fOutEvent.t1pfMETphi;
-
       const auto ijetpt = (*fInJets.pt)[ijet];
       const auto ojetpt = fOutJets.pt_f[ijet];
       const auto jetphi = fOutJets.phi_f[ijet];
+
+      const auto metpt  = fOutEvent.t1pfMETpt;
+      const auto metphi = fOutEvent.t1pfMETphi;
 
       const Float_t x = (metpt * std::cos(metphi)) + ((ijetpt - ojetpt) * std::cos(jetphi));
       const Float_t y = (metpt * std::sin(metphi)) + ((ijetpt - ojetpt) * std::sin(jetphi));
@@ -1209,14 +1209,16 @@ void Skimmer::CorrectMET()
     {
       const auto & inpho  = fInPhos[fPhoList[ipho]];
       const auto & outpho = fOutPhos[ipho];
-      
-      const auto metpt  = fOutEvent.t1pfMETpt;
-      const auto metphi = fOutEvent.t1pfMETphi;
-      
+            
       const auto iphopt = inpho.pt;
+      if (iphopt < 0.f) continue;
+
       const auto ophopt = outpho.pt;
       const auto phophi = outpho.phi;
       
+      const auto metpt  = fOutEvent.t1pfMETpt;
+      const auto metphi = fOutEvent.t1pfMETphi;
+
       const Float_t x = (metpt * std::cos(metphi)) + ((iphopt - ophopt) * std::cos(phophi));
       const Float_t y = (metpt * std::sin(metphi)) + ((iphopt - ophopt) * std::sin(phophi));
       
