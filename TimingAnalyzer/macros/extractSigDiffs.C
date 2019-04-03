@@ -56,6 +56,10 @@ void extractSigDiffs(const TString & scan_log, const TString & plotfiletext, con
       output << sample.Data() << " " << per_diff << std::endl;
     }
   }
+
+  // delete hist maps
+  Common::DeleteMap(UncHistHap);
+  Common::DeleteMap(NomHistHap);
 }
 
 void readSampleInfo(const TString & scan_log, const TString & plotfiletext, const TString & nom2Ddir, const TString & unc2Ddir,

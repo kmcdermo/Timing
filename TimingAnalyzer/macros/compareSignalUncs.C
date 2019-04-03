@@ -13,11 +13,12 @@ struct PlotInfo
   TString unit;
 };
 
+void readSampleInfo(const TString & scan_log, std::vector<TString> & samples);
 void makePlot(const TString & sample, const PlotInfo & plotInfo, TTree * nom_tree, TTree * unc_tree, TFile * outfile, const TString & syst_unc_name, const TString & syst_unc_label);
 TH1F * setupPlot(const TString & name, const TString & title, const std::vector<Double_t> & bins, const Color_t color);
 void getMinMax(const TH1F * hist, Double_t & minY, Double_t & maxY);
 
-void compareSignalUncs(const TString & nom_file_name, const TString & unc_file_name, const TString & syst_unc_name, const TString & syst_unc_label)
+void compareSignalUncs(const TString & scan_log, const TString & nom_file_name, const TString & unc_file_name, const TString & syst_unc_name, const TString & syst_unc_label)
 {
   // style
   gStyle->SetOptStat(0);
@@ -32,13 +33,9 @@ void compareSignalUncs(const TString & nom_file_name, const TString & unc_file_n
   // output file
   auto outfile = TFile::Open(syst_unc_name+"_plots.root","RECREATE");
   
-  // loop samples
-  std::vector<TString> lambdas = {"100","200","300"};
-  std::vector<TString> ctaus = {"10","200","1000"};
+  // setup samples
   std::vector<TString> samples;
-  for (const auto & lambda : lambdas)
-    for (const auto & ctau : ctaus)
-      samples.emplace_back("GMSB_L"+lambda+"_CTau"+ctau);
+  readSampleInfo(scan_log,samples);
 
   // hist info
   const std::vector<PlotInfo> plotInfos = 
@@ -69,6 +66,18 @@ void compareSignalUncs(const TString & nom_file_name, const TString & unc_file_n
   delete outfile;
   delete unc_file;
   delete nom_file;
+}
+
+void readSampleInfo(const TString & scan_log, std::vector<TString> & samples)
+{
+  std::ifstream input(scan_log.Data(),std::ios::in);
+  TString sample, fulldir, xy;
+
+  while (input >> sample >> fulldir >> xy)
+  {
+    // emplace back sample
+    samples.emplace_back(sample);
+  }
 }
 
 void makePlot(const TString & sample, const PlotInfo & plotInfo, TTree * nom_tree, TTree * unc_tree, TFile * outfile, const TString & syst_unc_name, const TString & syst_unc_label)

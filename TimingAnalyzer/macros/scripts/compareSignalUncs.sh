@@ -4,17 +4,18 @@
 source scripts/common_variables.sh
 
 ## config
-nomfilename=${1:-"${skimdir}/signals_sr_nom.root"}
-uncfilename=${2:-"${skimdir/}signals_sr_unc.root"}
-systuncname=${3:-"phoscaleup"}
-systunclabel=${4:-"Photon_Scale_Up"}
-outdir=${5:-"test"}
+scan_log=${1:-"abcd_categories.log"}
+nomfilename=${2:-"${skimdir}/signals_sr_nom.root"}
+uncfilename=${3:-"${skimdir}/signals_sr_unc.root"}
+systuncname=${4:-"phoscaleup"}
+systunclabel=${5:-"Photon_Scale_Up"}
+outdir=${6:-"test"}
 
 ## replace _ with " "
 systunclabel=$( echo "${systunclabel}" | tr "_" " ")
 
 ## first make plots
-root -l -b -q compareSignalUncs.C\(\"${nomfilename}\",\"${uncfilename}\",\"${syst_unc_name}\",\"${syst_unc_label}\"\)
+root -l -b -q compareSignalUncs.C\(\"${scan_log}\",\"${nomfilename}\",\"${uncfilename}\",\"${syst_unc_name}\",\"${syst_unc_label}\"\)
 
 ## make out dirs
 fulldir="${topdir}/${disphodir}/${outdir}"
