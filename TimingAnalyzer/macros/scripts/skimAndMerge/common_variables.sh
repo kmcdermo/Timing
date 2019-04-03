@@ -10,3 +10,6 @@ export outbase="${eosbase}/skims/madv2_v4"
 ## filenames
 export infiles="dispho_*.root"
 export outfile="tree.root"
+
+## which skim to make
+export inskimconfig="skim_config/standard_nominal.txt"

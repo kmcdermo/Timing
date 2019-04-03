@@ -131,6 +131,8 @@ void Skimmer::EventLoop()
     // perform skim: standard
     if (fSkim == SkimType::Standard) // do not apply skim selection on toy config
     {
+
+
       // leading photon skim section
       fInEvent.b_nphotons->GetEntry(entry);
       if (fInEvent.nphotons <= 0) continue;
@@ -144,8 +146,24 @@ void Skimmer::EventLoop()
       fOutCutFlowWgt->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,wgt);
       fOutCutFlowScl->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,evtwgt);
 
+      // apply corrections to pt as needed
       fInPhos.front().b_pt->GetEntry(entry);
-      if (fInPhos.front().pt < 70.f) continue;
+      auto phopt_0 = fInPhos.front().pt;
+
+      if (fPhoSc == ECorr::Down || fPhoSc == ECorr::Up) 
+      {
+	fInPhos.front().b_scaleAbs->GetEntry(entry);
+	if (fPhoSc == ECorr::Down) phopt_0 -= fInPhos.front().scaleAbs;
+	if (fPhoSc == ECorr::Up  ) phopt_0 += fInPhos.front().scaleAbs;
+      }
+      if (fPhoSm == ECorr::Down || fPhoSm == ECorr::Up) 
+      {
+	fInPhos.front().b_smearAbs->GetEntry(entry);
+	if (fPhoSm == ECorr::Down) phopt_0 -= fInPhos.front().smearAbs;
+	if (fPhoSm == ECorr::Up  ) phopt_0 += fInPhos.front().smearAbs;
+      }
+
+      if (phopt_0 < 70.f) continue;
       fOutCutFlow   ->Fill((cutLabels["ph0pt70"]*1.f)-0.5f);
       fOutCutFlowWgt->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
       fOutCutFlowScl->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);

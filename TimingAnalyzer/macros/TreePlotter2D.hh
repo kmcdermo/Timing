@@ -90,6 +90,7 @@ protected:
   // other plotting config
   Bool_t fScaleToBinWidths;
   Bool_t fBlindData;
+  Bool_t fSkipData;
   Bool_t fSkipBkgdMC;
 
   // Style

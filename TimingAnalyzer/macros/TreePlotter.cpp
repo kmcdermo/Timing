@@ -262,8 +262,7 @@ void TreePlotter::MakeSignalOutput()
       if (fScaleToUnity) hist->Scale(1.f/hist->Integral(fXVarBins?"width":""));
 
       // save it regardless
-      fOutFile->cd();
-      hist->Write(Form("%s_Plotted",hist->GetName()),TObject::kWriteDelete);
+      Common::Write(fOutFile,hist,Form("%s_Plotted",hist->GetName()));
     }
   }
 }
@@ -325,9 +324,8 @@ void TreePlotter::MakeRatioOutput()
   // save to output file
   if (!fSignalsOnly && !fSkipData)
   {
-    fOutFile->cd();
-    RatioHist->Write(RatioHist->GetName(),TObject::kWriteDelete);
-    RatioMCErrs->Write(RatioMCErrs->GetName(),TObject::kWriteDelete);
+    Common::Write(fOutFile,RatioHist);
+    Common::Write(fOutFile,RatioMCErrs);
   }  
 
   // ratio line
@@ -381,8 +379,7 @@ void TreePlotter::MakeLegend()
   // Legend->AddEntry(BkgdHist,"MC Unc.","f");
 
   // save to output file
-  fOutFile->cd();
-  Legend->Write(Legend->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,Legend);
 }
 
 void TreePlotter::InitOutputCanvPads()
@@ -505,8 +502,7 @@ void TreePlotter::SaveOutput(const TString & outfiletext, const TString & era)
   TreePlotter::PrintCanvas(outfiletext,false);
 
   // save to output file
-  fOutFile->cd();
-  OutCanv->Write(OutCanv->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,OutCanv);
 }  
 
 void TreePlotter::PrintCanvas(const TString & outfiletext, const Bool_t isLogy)
@@ -575,8 +571,7 @@ void TreePlotter::MakeConfigPave()
   Common::AddTextFromInputPave(fConfigPave,fInSignalFile);
   
   // save to output file
-  fOutFile->cd();
-  fConfigPave->Write(fConfigPave->GetName(),TObject::kWriteDelete);
+  Common::Write(fOutFile,fConfigPave);
 }
 
 TString TreePlotter::DumpIntegrals(const TString & outfiletext)

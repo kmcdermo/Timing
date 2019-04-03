@@ -251,16 +251,7 @@ void CombinePreparer::FillSystematicsSection(std::ofstream & datacard)
   // systematics section
   for (const auto & systematic : fSystematics)
   {
-    const auto val   = systematic.val;
-    const auto isSig = systematic.isSig;
-    const auto isBkg = systematic.isBkg;
-  
-    datacard << Form("%s %s ",systematic.name.Data(),systematic.type.Data());
-    for (auto ibin = 1; ibin <= ABCD::nbinsXY; ibin++)
-    {
-      datacard << Form("%s %s ",(isSig?Form("%f",val):"-"),(isBkg?Form("%f",val):"-"));
-    }
-    datacard << std::endl;
+    datacard << systematic.Data() << std::endl;
   }
 }
 
@@ -311,13 +302,11 @@ void CombinePreparer::ReadSystematics()
   std::cout << "Reading Systematics..." << std::endl;  
 
   std::ifstream inconfig(fSystFileName.Data(),std::ios::in);
-  TString name, type;
-  Double_t val;
-  Bool_t isSig, isBkg;
+  std::string line;
 
-  while (inconfig >> name >> type >> val >> isSig >> isBkg)
+  while (std::getline(inconfig,line))
   {
-    fSystematics.emplace_back(name,type,val,isSig,isBkg);
+    fSystematics.emplace_back(line);
   };
 }
 

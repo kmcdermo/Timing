@@ -17,7 +17,6 @@ wgtfile="${text}_wgt.log"
 tmpfiles="tmp_${files}"
 timestamp=$( ls ${indir} )
 eosdir="${indir}/${timestamp}/0000"
-inskimconfig="skim_config/standard_nominal.txt"
 skimconfig="${text}_skim_config.log"
 
 ## make skim config

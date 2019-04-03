@@ -28,22 +28,8 @@ yboundary=$( echo "${ybin}" | sed -r 's/_/ /g' )
 plot_config="met_${ybin}_vs_time_${xbin}_config.${inTextExt}"
 > "${plot_config}"
 
-## common info for titles
-xtitle="Leading Photon Weighted Cluster Time [ns]"
-ytitle="p_{T}^{miss} [GeV]"
-
 ## fill tmp plot config
-echo "plot_title=${ytitle} vs. ${xtitle}" >> "${plot_config}"
-echo "x_title=${xtitle}" >> "${plot_config}"
-echo "x_var=phoweightedtimeLT120_0" >> "${plot_config}"
-echo "x_var_data=+phoweightedtimeLT120SHIFT_0" >> "${plot_config}"
-echo "x_var_sign=+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0" >> "${plot_config}"
-echo "x_bins=VARIABLE -2 ${xboundary} 25" >> "${plot_config}"
-echo "y_title=${ytitle}" >> "${plot_config}"
-echo "y_var=t1pfMETpt" >> "${plot_config}"
-echo "y_bins=VARIABLE 0 ${yboundary} 3000" >> "${plot_config}"
-echo "z_title=Events/ns/GeV" >> "${plot_config}"
-echo "blinding=(${xblind},+Inf,${yblind},+Inf)" >> "${plot_config}"
+./scripts/fill2DConfig.sh "${plot_config}" "${xboundary}" "${yboundary}" "${xblind}" "${yblind}"
 
 ## make tmp misc config
 misc_config="misc_ABCD.${inTextExt}"

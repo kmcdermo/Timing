@@ -46,6 +46,10 @@ export limit="limits2D" # limit config used for 2D plot
 export outlimit1D="limit1D" # output base name for 1D limits
 export outlimit2D="limit2D" # output base name for 2D limits
 
+## common info for systematic studies
+export nom2Ddir="nominal2D"
+export unc2Ddir="systunc2D"
+
 ## plotting config
 declare -a exts=("png" "pdf")
 export exts

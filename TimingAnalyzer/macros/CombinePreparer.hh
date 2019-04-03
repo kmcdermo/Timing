@@ -18,20 +18,6 @@
 #include <fstream>
 #include <iostream>
 
-// Structure to contain each systematic info
-struct Systematic
-{
-  Systematic () {}
-  Systematic (const TString & name, const TString & type, const Double_t val, const Bool_t isSig, const Bool_t isBkg)
-    : name(name), type(type), val(val), isSig(isSig), isBkg(isBkg) {}
-
-  TString name;
-  TString type;
-  Double_t val;
-  Bool_t isSig;
-  Bool_t isBkg;
-};
-
 // replace NaNs
 inline Double_t checkNaN(const Double_t n)
 {
@@ -100,7 +86,7 @@ private:
   std::map<TString,Double_t> fParameterMap;
 
   // read in systematics
-  std::vector<Systematic> fSystematics;
+  std::vector<TString> fSystematics;
 };
 
 #endif

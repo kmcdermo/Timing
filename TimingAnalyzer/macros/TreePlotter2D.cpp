@@ -14,14 +14,6 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insigna
   //            //
   ////////////////
 
-  // Get main input file
-  fInFile = TFile::Open(Form("%s",fInFileName.Data()));
-  Common::CheckValidFile(fInFile,fInFileName);
-
-  // Get signal input file
-  fInSignalFile = TFile::Open(Form("%s",fInSignalFileName.Data()));
-  Common::CheckValidFile(fInSignalFile,fInSignalFileName);
- 
   // set style
   fTDRStyle = new TStyle("TDRStyle","Style for P-TDR");
   Common::SetTDRStyle(fTDRStyle);
@@ -32,9 +24,21 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insigna
   TreePlotter2D::SetupCommon();
   TreePlotter2D::SetupPlotConfig(fPlotConfig);
   TreePlotter2D::SetupMiscConfig(fMiscConfig);
+  if (fSkipData)   Common::RemoveGroup(SampleGroup::isData);
   if (fSkipBkgdMC) Common::RemoveGroup(SampleGroup::isBkgd);
   TreePlotter2D::SetupHists();
 
+  // Get main input file
+  if (!fSkipData || !fSkipBkgdMC)
+  {
+    fInFile = TFile::Open(Form("%s",fInFileName.Data()));
+    Common::CheckValidFile(fInFile,fInFileName);
+  }
+
+  // Get signal input file
+  fInSignalFile = TFile::Open(Form("%s",fInSignalFileName.Data()));
+  Common::CheckValidFile(fInSignalFile,fInSignalFileName);
+ 
   // output root file
   fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
 }
@@ -45,7 +49,7 @@ void TreePlotter2D::MakeTreePlot2D()
   TreePlotter2D::MakeHistFromTrees(fInFile,fInSignalFile);
 
   // Make Data Output
-  TreePlotter2D::MakeDataOutput();
+  if (!fSkipData) TreePlotter2D::MakeDataOutput();
 
   if (!fSkipBkgdMC)
   {
@@ -53,7 +57,7 @@ void TreePlotter2D::MakeTreePlot2D()
     TreePlotter2D::MakeBkgdOutput();
     
     // Make Ratio Output
-    TreePlotter2D::MakeRatioOutput();
+    if (!fSkipData) TreePlotter2D::MakeRatioOutput();
   }
 
   // Write Out Config
@@ -139,8 +143,8 @@ void TreePlotter2D::MakeDataOutput()
       {
 	for (auto ibinY = binYlow; ibinY <= binYup; ibinY++) 
 	{
-	    DataHist->SetBinContent(ibinX,ibinY,0.f);
-	    DataHist->SetBinError  (ibinX,ibinY,0.f);
+	  DataHist->SetBinContent(ibinX,ibinY,0.f);
+	  DataHist->SetBinError  (ibinX,ibinY,0.f);
 	}
       }
     }
@@ -256,13 +260,14 @@ void TreePlotter2D::DeleteMemory(const Bool_t deleteInternal)
   Common::DeleteMap(HistMap);
 
   delete fOutFile;
-  delete fTDRStyle;
 
   if (deleteInternal)
   {
     delete fInSignalFile;
-    delete fInFile;
+    if (!fSkipData || !fSkipBkgdMC) delete fInFile;
   }
+
+  delete fTDRStyle;
 }
 
 void TreePlotter2D::SetupDefaults()
@@ -271,6 +276,7 @@ void TreePlotter2D::SetupDefaults()
   fXVarBins = false;
   fYVarBins = false;
   fBlindData = false;
+  fSkipData = false;
   fSkipBkgdMC = false;
   fSaveMetaData = false;
 }
@@ -438,6 +444,11 @@ void TreePlotter2D::SetupMiscConfig(const TString & miscconfig)
     {
       str = Common::RemoveDelim(str,"skip_bkgd_mc=");
       Common::SetupBool(str,fSkipBkgdMC);
+    }  
+    else if (str.find("skip_data=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"skip_data=");
+      Common::SetupBool(str,fSkipData);
     }  
     else 
     {
