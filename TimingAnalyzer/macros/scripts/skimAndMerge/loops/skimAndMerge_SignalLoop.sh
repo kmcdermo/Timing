@@ -34,6 +34,8 @@ function SignalLoopSub ()
 	nohup ./scripts/skimAndMerge/skimAndMerge_SignalGridPoint.sh ${label} ${group} ${gridpoint} ${tune} >& ${group}_${gridpoint}_Skim.log &
 	wait # submit one signal point at a time before doing the next one
     done
+
+    echo "Finished loop over ctaus!"
 }
 export -f SignalLoopSub
 
