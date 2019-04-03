@@ -255,7 +255,7 @@ void TreePlotter2D::DeleteMemory(const Bool_t deleteInternal)
     delete EWKHist;
     delete BkgdHist;
   }
-  delete DataHist; 
+  if (!fSkipData) delete DataHist; 
 
   Common::DeleteMap(HistMap);
 

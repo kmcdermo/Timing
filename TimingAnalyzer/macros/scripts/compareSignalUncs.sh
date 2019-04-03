@@ -15,7 +15,7 @@ outdir=${6:-"test"}
 systunclabel=$( echo "${systunclabel}" | tr "_" " ")
 
 ## first make plots
-root -l -b -q compareSignalUncs.C\(\"${scan_log}\",\"${nomfilename}\",\"${uncfilename}\",\"${syst_unc_name}\",\"${syst_unc_label}\"\)
+root -l -b -q compareSignalUncs.C\(\"${scan_log}\",\"${nomfilename}\",\"${uncfilename}\",\"${systuncname}\",\""${systunclabel}"\"\)
 
 ## make out dirs
 fulldir="${topdir}/${disphodir}/${outdir}"
@@ -24,7 +24,7 @@ PrepOutDir "${fulldir}"
 ## copy everything
 for ext in "${exts[@]}"
 do
-    cp "${systuncname}_*.${ext}" "${fulldir}"
+    cp "${systuncname}_"*".${ext}" "${fulldir}"
 done
 cp "${systuncname}_plots.root" "${fulldir}"
 

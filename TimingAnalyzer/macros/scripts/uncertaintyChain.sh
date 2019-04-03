@@ -11,9 +11,9 @@ source scripts/common_variables.sh
 ###################
 
 ## Command Line Input
-systnom=${1:-"SYST_NOM"} # needs to be defined in common vars!
-systunc=${2:-"PHO_SC_UP"} # needs to be defined in common vars!
-systuncname=${2:-"phoscaleup"}
+nominal=${1:-"SR"} # needs to be defined in common vars!
+systunc=${2:-"PHO_SCALE_UP"} # needs to be defined in common vars!
+systuncname=${3:-"phoscaleup"}
 systunclabel=${4:-"Photon_Scale_Up"}
 outdir=${5:-"madv2_v4/uncs/pho_scale_up"}
 
@@ -28,16 +28,12 @@ do_cleanup=${7:-"true"}
 fulldir="${topdir}/${disphodir}/${outdir}"
 
 ## nominal signal skim
-echo "${!systnom}" | while read -r label infile insigfile sel
-do    
-    nom_skim="${skimdir}/${insigfile}.root"
-done
+IFS=" " read -r nom_label nom_infile nom_insigfile nom_sel <<< "${!nominal}"
+nom_skim="${skimdir}/${nom_insigfile}.root"
 
 ## syst unc skim
-echo "${!systunc}" | while read -r label infile insigfile sel
-do    
-    unc_skim="${skimdir}/${insigfile}.root"
-done
+IFS=" " read -r unc_label unc_infile unc_insigfile unc_sel <<< "${!systunc}"
+unc_skim="${skimdir}/${unc_insigfile}.root"
 
 ####################################
 ## Configure which samples to use ##
@@ -75,7 +71,7 @@ echo "Compiling ahead of time"
 ###############
 
 echo "Making 1D plot comparisons"
-./scripts/compareSigUncs.sh "${scan_log}" "${nom_skim}" "${unc_skim}" "${systuncname}" "${systunclabel}" "${outdir}/plots1D"
+./scripts/compareSignalUncs.sh "${scan_log}" "${nom_skim}" "${unc_skim}" "${systuncname}" "${systunclabel}" "${outdir}/plots1D"
 
 #########################
 ## Make All ABCD Plots ##
@@ -103,7 +99,7 @@ done
 #########################
 
 echo "Extract Differences"
-./scripts/extractSigDiffs.sh "${scan_log}" "${systuncname}" "${outdir}/diffs"
+./scripts/extractSignalDiffs.sh "${scan_log}" "${systuncname}" "${outdir}/diffs"
 
 ###################
 ## Final Cleanup ##
