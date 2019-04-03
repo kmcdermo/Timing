@@ -2,9 +2,11 @@
 #include "TimeAdjuster.hh"
 
 TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig,
-			   const TString & sadjustvar, const TString & stime, const Bool_t doshift, const Bool_t dosmear, const Bool_t savemetadata)
+			   const TString & sadjustvar, const TString & stime, const Bool_t doshift, const Bool_t dosmear,
+			   const Bool_t skipdata, const Bool_t skipbkgdmc, const Bool_t savemetadata)
   : fSkimFileName(skimfilename), fSignalSkimFileName(signalskimfilename), fInFilesConfig(infilesconfig),
-    fSAdjustVar(sadjustvar), fSTime(stime), fDoShift(doshift), fDoSmear(dosmear), fSaveMetaData(savemetadata)
+    fSAdjustVar(sadjustvar), fSTime(stime), fDoShift(doshift), fDoSmear(dosmear),
+    fSkipData(skipdata), fSkipBkgdMC(skipbkgdmc), fSaveMetaData(savemetadata)
 {
   std::cout << "Initializing TimeAdjuster..." << std::endl;
 
@@ -16,12 +18,17 @@ TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signals
 
   // init configuration
   TimeAdjuster::SetupCommon();
+  if (fSkipData)   Common::RemoveGroup(SampleGroup::isData);
+  if (fSkipBkgdMC) Common::RemoveGroup(SampleGroup::isBkgd);
   TimeAdjuster::SetupInFilesConfig();
   TimeAdjuster::SetupStrings();
 
   // open skim file
-  fSkimFile = TFile::Open(Form("%s",fSkimFileName.Data()),"UPDATE");
-  Common::CheckValidFile(fSkimFile,fSkimFileName);
+  if (!fSkipData || !fSkipBkgdMC)
+  {
+    fSkimFile = TFile::Open(Form("%s",fSkimFileName.Data()),"UPDATE");
+    Common::CheckValidFile(fSkimFile,fSkimFileName);
+  }
 
   // open signal skim file
   fSignalSkimFile = TFile::Open(Form("%s",fSignalSkimFileName.Data()),"UPDATE");
@@ -35,7 +42,7 @@ TimeAdjuster::~TimeAdjuster()
   Common::DeleteMap(fInFileMap);
 
   delete fSignalSkimFile;
-  delete fSkimFile;
+  if (!fSkipData || !fSkipBkgdMC) delete fSkimFile;
 }
 
 void TimeAdjuster::AdjustTime()
@@ -50,8 +57,8 @@ void TimeAdjuster::AdjustTime()
   FitStruct MCInfo("MC");
   TimeAdjuster::PrepAdjustments(MCInfo);
 
-  // Correct data
-  if (fDoShift) TimeAdjuster::CorrectData(DataInfo);
+  // // Correct data
+  if (fDoShift && !fSkipData) TimeAdjuster::CorrectData(DataInfo);
 
   // Correct MC
   if (fDoShift || fDoSmear) TimeAdjuster::CorrectMC(DataInfo,MCInfo);

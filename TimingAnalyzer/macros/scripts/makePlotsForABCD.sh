@@ -29,6 +29,7 @@ plot_config="met_${ybin}_vs_time_${xbin}_config.${inTextExt}"
 > "${plot_config}"
 
 ## fill tmp plot config
+echo "Fill temp 2D config"
 ./scripts/fill2DConfig.sh "${plot_config}" "${xboundary}" "${yboundary}" "${xblind}" "${yblind}"
 
 ## make tmp misc config

@@ -11,7 +11,7 @@ source scripts/common_variables.sh
 ###################
 
 ## Command Line Input
-plot_config={$1:-"met_vs_time.txt"}
+plot_config=${1:-"met_vs_time.txt"}
 xboundary=${2:-""}
 yboundary=${3:-""}
 xblind=${4:-""}

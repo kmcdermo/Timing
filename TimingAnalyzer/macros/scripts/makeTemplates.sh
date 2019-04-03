@@ -39,7 +39,7 @@ done
 echo "${signals_to_plot}" >> "${misc}"
 
 ## make 2D Hist: use SR only
-echo "${SR}" | while read -r label infile insigfile sel varwgtmap
+echo "${SR}" | while read -r label infile insigfile sel
 do
     echo "Doing 2D plot for: ${label}"
     
