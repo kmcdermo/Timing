@@ -16,13 +16,22 @@ outdir=${1:-"madv2_v3/checks_v26"}
 use_obs=${2:-"false"}
 do_cleanup=${3:-"true"}
 
+## tmp log base
+tmp_log_base="tmp_lambda"
+
+## derived params : run expected limits?
+if [[ "${use_obs}" == "true" ]]
+then
+    combine_extra=""
+else
+    combine_extra="--run=expected"
+fi
+
 ###########################################
 ## Ship things over to combine directory ##
 ###########################################
 
 cp "${inlimitdir}/${datacardname}"*".${inTextExt}" "${combdir}"
-cp "scripts/extractResultsABCDSub.sh" "${combdir}"
-cp "scripts/common_variables.sh" "${combdir}"
 
 #####################
 ## Now work there! ##
@@ -31,6 +40,31 @@ cp "scripts/common_variables.sh" "${combdir}"
 pushd "${combdir}"
 eval `scram runtime -sh`
 
+###########################
+## Inner loop over ctaus ##
+###########################
+
+function extractResultsSub ()
+{
+    ## i/o params
+    local lambda=${1:-"100"}
+
+    ## perfom limits with combine!
+    for ctau in 0p001 0p1 10 200 400 600 800 1000 1200 10000
+    do
+	local sample="GMSB_L${lambda}_CTau${ctau}"
+	echo "Running combine for: ${sample}"
+	
+	local log="${combinelogname}_${sample}.${outTextExt}"
+    
+	combine -M AsymptoticLimits "${datacardname}_${sample}.${inTextExt}" ${combine_extra} --name "${sample}" >& "${log}" &
+
+	## wait for this ctau to finish before starting the next one!
+	wait
+    done
+}
+export -f extractResultsSub
+
 #################################################
 ## Loop over signals and run asymptotic limits ##
 #################################################
@@ -38,9 +72,10 @@ eval `scram runtime -sh`
 for lambda in 100 150 200 250 300 350 400
 do
     echo "Extracting results for lambda: ${lambda}"
-    ./extractResultsABCDSub.sh "${lambda}" "${use_obs}" &
+    extractResultsSub "${lambda}" &
 done
 
+## wait for all combine jobs to finish before moving onto the next steps
 wait
 
 ###########################
@@ -49,17 +84,6 @@ wait
 
 rename "higgsCombine" "${outcombname}" *".root"
 rename ".AsymptoticLimits.mH120" "" *".root"
-
-###########################
-## Clean Up If Requested ##
-###########################
-
-if [[ "${do_cleanup}" == "true" ]]
-then
-    echo "Cleaning up copied scripts"
-    rm "extractResultsABCDSub.sh"
-    rm "common_variables.sh"
-fi
 
 ################
 ## Move back! ##
