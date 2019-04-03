@@ -22,8 +22,9 @@ do
     else
 	sctau="${ctau}"
     fi
-    
     gridpoint="L-${lambda}TeV_Ctau-${sctau}cm"
-    nohup ./scripts/skimAndMerge/skimAndMerge_SignalGridPoint.sh ${label} ${group} ${gridpoint} ${tune} >& ${group}_${gridpoint}_Skim.log
-done
 
+    echo "Skimming in parallel for gridpoint: ${gridpoint}" 
+    nohup ./scripts/skimAndMerge/skimAndMerge_SignalGridPoint.sh ${label} ${group} ${gridpoint} ${tune} >& ${group}_${gridpoint}_Skim.log &
+    wait # submit one signal point at a time before doing the next one
+done
