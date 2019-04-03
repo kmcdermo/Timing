@@ -187,6 +187,19 @@ Plots outputted to lxplus eos user space: /eos/user/k/kmcdermo/www/dispho/plots
 
 -----------------------
 
+### Estimating Uncertainties
+
+"Nominal skims" are in ```skims/v4/unc_tests/signals_nominal.root```.
+To produced new skims, first set ```${outbase}``` in ```scripts/skimAndMerge/common_variables.sh``` and change the skim config input to the unc being tests.
+Then run the first Skimmer.
+
+Next, using the new ```${outbase}```, pass this to the SignalSkimmer, with the cuts_v2 nominal file. 
+Then, move the resulting file into ```skims/v4/unc_tests```, and add a new input line in ```scripts/common_variables.sh``` to where you placed the file.
+
+Finally, run the TimeAdjuster, skipping bkgd+data. uncertaintyChain.sh will do the rest.
+
+-----------------------
+
 ### Extracting lumi info
 
 Compute lumi for 2017: 
