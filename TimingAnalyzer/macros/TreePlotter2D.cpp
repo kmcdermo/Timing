@@ -26,6 +26,7 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insigna
   TreePlotter2D::SetupMiscConfig(fMiscConfig);
   if (fSkipData)   Common::RemoveGroup(SampleGroup::isData);
   if (fSkipBkgdMC) Common::RemoveGroup(SampleGroup::isBkgd);
+  if (fSkipSignal) Common::RemoveGroup(SampleGroup::isSignal);
   TreePlotter2D::SetupHists();
 
   // Get main input file
@@ -36,9 +37,12 @@ TreePlotter2D::TreePlotter2D(const TString & infilename, const TString & insigna
   }
 
   // Get signal input file
-  fInSignalFile = TFile::Open(Form("%s",fInSignalFileName.Data()));
-  Common::CheckValidFile(fInSignalFile,fInSignalFileName);
- 
+  if (!fSkipSignal)
+  {
+    fInSignalFile = TFile::Open(Form("%s",fInSignalFileName.Data()));
+    Common::CheckValidFile(fInSignalFile,fInSignalFileName);
+  }
+
   // output root file
   fOutFile = TFile::Open(Form("%s.root",fOutFileText.Data()),"UPDATE");
 }
@@ -263,7 +267,7 @@ void TreePlotter2D::DeleteMemory(const Bool_t deleteInternal)
 
   if (deleteInternal)
   {
-    delete fInSignalFile;
+    if (!fSkipSignal) delete fInSignalFile;
     if (!fSkipData || !fSkipBkgdMC) delete fInFile;
   }
 
@@ -278,6 +282,7 @@ void TreePlotter2D::SetupDefaults()
   fBlindData = false;
   fSkipData = false;
   fSkipBkgdMC = false;
+  fSkipSignal = false;
   fSaveMetaData = false;
 }
 
@@ -440,15 +445,20 @@ void TreePlotter2D::SetupMiscConfig(const TString & miscconfig)
     {
       std::cout << "signals_only not currently implemented in 2D plotter, skipping..." << std::endl;
     }
+    else if (str.find("skip_data=") != std::string::npos)
+    {
+      str = Common::RemoveDelim(str,"skip_data=");
+      Common::SetupBool(str,fSkipData);
+    }  
     else if (str.find("skip_bkgd_mc=") != std::string::npos)
     {
       str = Common::RemoveDelim(str,"skip_bkgd_mc=");
       Common::SetupBool(str,fSkipBkgdMC);
     }  
-    else if (str.find("skip_data=") != std::string::npos)
+    else if (str.find("skip_signal=") != std::string::npos)
     {
-      str = Common::RemoveDelim(str,"skip_data=");
-      Common::SetupBool(str,fSkipData);
+      str = Common::RemoveDelim(str,"skip_signal=");
+      Common::SetupBool(str,fSkipSignal);
     }  
     else 
     {

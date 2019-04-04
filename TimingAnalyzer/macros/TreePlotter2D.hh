@@ -92,6 +92,7 @@ protected:
   Bool_t fBlindData;
   Bool_t fSkipData;
   Bool_t fSkipBkgdMC;
+  Bool_t fSkipSignal;
 
   // Style
   TStyle * fTDRStyle;
