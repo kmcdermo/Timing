@@ -14,7 +14,7 @@ struct BinRange
 // subroutines
 void makeClosureDump(const TH2F * hist2D, const Double_t time_split, const Double_t met_split,
 		     const TString & label, std::ofstream & outtextfile);
-void make1DSlices(const TH2F * hist2D, const TString & label, const TString & outfiletext);
+void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, const TString & outfiletext);
 
 // main method
 void extractClosureUncertainty(const TString & label, const TString & outfiletext)
@@ -54,7 +54,7 @@ void extractClosureUncertainty(const TString & label, const TString & outfiletex
       makeClosureDump(hist2D,time_split,met_split,label,outtextfile);
 
   // make1D time slice plots
-  make1DSlices(hist2D,label,outfiletext);
+  make1DSlices(iofile,hist2D,label,outfiletext);
 
   // delete it all 
   delete hist2D;
@@ -106,7 +106,7 @@ void makeClosureDump(const TH2F * hist2D, const Double_t time_split, const Doubl
   ///////////
 
   const auto percent_diffC    = (1.f-(predC/obsC))*100.f;
-  const auto percent_diffCunc = percent_diffC*Common::hypot(obsCunc/obsC,predCunc,predC);
+  const auto percent_diffCunc = percent_diffC*Common::hypot(obsCunc/obsC,predCunc/predC);
   const auto pullC = (obsC-predC)/std::sqrt(std::pow(obsCunc,2)+std::pow(predCunc,2));
 
   // fill output file
@@ -120,7 +120,7 @@ void makeClosureDump(const TH2F * hist2D, const Double_t time_split, const Doubl
 	      << std::setprecision(3) << BovA << " +/- " << std::setprecision(3) << BovAunc << ","
 	      << std::setprecision(3) << DovA << " +/- " << std::setprecision(3) << DovAunc << ","
 	      << std::setprecision(3) << predC << " +/- " << std::setprecision(3) << predCunc << ","
-	      << std::setprecision(3) << percent_diffC << " +/- " << std::setprecision(3) << percent_diffC << ","
+	      << std::setprecision(3) << percent_diffC << " +/- " << std::setprecision(3) << percent_diffCunc << ","
 	      << std::setprecision(3) << pullC << "," << std::setprecision(3)
 	      << std::endl;
 }
@@ -142,6 +142,7 @@ void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, co
   const auto half = size/2;
   
   // met slices
+  iofile->cd();
   std::vector<TH1D*> hist1Ds(size);
 
   // log only output
@@ -151,7 +152,7 @@ void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, co
   canv->SetLogy();
 
   // legend
-  auto leg = new TLegend(0.6,0.6,1.0,1.0);
+  auto leg = new TLegend(0.55,0.6,0.825,0.92);
   leg->SetName("SliceLeg");
   leg->SetNColumns(2);
   
@@ -167,6 +168,7 @@ void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, co
     const auto up = ( (i == (size-1)) ? (bin_up) : (bin_up-1) );
 
     // project time hist
+    iofile->cd();
     hist1D = hist2D->ProjectionX(Form("%s_MET_Proj_%i_%i",hist2D->GetName(),low,up),low,up);
 
     // set style
@@ -177,6 +179,7 @@ void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, co
     hist1D->GetYaxis()->SetTitle("Fraction of Events");
     hist1D->Rebin(10);
     hist1D->Scale(1.0/hist1D->Integral());
+    hist1D->GetXaxis()->SetRangeUser(-2,10.f);
   }
 
   // get min and max of plot
