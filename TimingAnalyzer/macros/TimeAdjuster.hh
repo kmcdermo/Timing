@@ -72,7 +72,7 @@ class TimeAdjuster
 public:
   TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig,
 	       const TString & sadjustvar, const TString & stime, const Bool_t doshift, const Bool_t dosmear,
-	       const Bool_t skipdata, const Bool_t skipbkgdmc, const Bool_t savemetadata);
+	       const Bool_t skipdata, const Bool_t skipbkgdmc, const Bool_t skipsignal, const Bool_t savemetadata);
   ~TimeAdjuster();
 
   // Config
@@ -106,6 +106,7 @@ private:
   const Bool_t  fDoSmear;
   const Bool_t  fSkipData;
   const Bool_t  fSkipBkgdMC;
+  const Bool_t  fSkipSignal;
   const Bool_t  fSaveMetaData;
 
   // config strings

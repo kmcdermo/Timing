@@ -233,16 +233,22 @@ void TreePlotter2D::MakeConfigPave()
   Common::AddPaddingToPave(fConfigPave,3);
 
   // save name of infile, redundant
-  fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
-
-  // dump in old config
-  Common::AddTextFromInputPave(fConfigPave,fInFile);
+  if (!fSkipData || !fSkipBkgdMC)
+  {
+    fConfigPave->AddText(Form("InFile name: %s",fInFileName.Data()));
+    
+    // dump in old config
+    Common::AddTextFromInputPave(fConfigPave,fInFile);
+  }
 
   // save name of insignalfile, redundant
-  fConfigPave->AddText(Form("InSignalFile name: %s",fInSignalFileName.Data()));
-
-  // dump in old signal config
-  Common::AddTextFromInputPave(fConfigPave,fInSignalFile);
+  if (!fSkipSignal)
+  {
+    fConfigPave->AddText(Form("InSignalFile name: %s",fInSignalFileName.Data()));
+    
+    // dump in old signal config
+    Common::AddTextFromInputPave(fConfigPave,fInSignalFile);
+  }
 
   // save to output file
   Common::Write(fOutFile,fConfigPave);

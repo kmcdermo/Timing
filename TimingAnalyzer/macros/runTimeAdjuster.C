@@ -4,9 +4,9 @@
 
 void runTimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig, 
 		     const TString & sadjustvar, const TString & stime, const Bool_t doshift, const Bool_t dosmear, 
-		     const Bool_t skipdata, const Bool_t skipbkgdmc, const Bool_t savemetadata)
+		     const Bool_t skipdata, const Bool_t skipbkgdmc, const Bool_t skipsignal, const Bool_t savemetadata)
 {
   TimeAdjuster adjuster(skimfilename,signalskimfilename,infilesconfig,sadjustvar,stime,
-			doshift,dosmear,skipdata,skipbkgdmc,savemetadata);
+			doshift,dosmear,skipdata,skipbkgdmc,skipsignal,savemetadata);
   adjuster.AdjustTime();
 }

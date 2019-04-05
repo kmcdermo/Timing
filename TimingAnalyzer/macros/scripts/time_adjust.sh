@@ -11,7 +11,8 @@ source scripts/common_variables.sh
 
 skipdata=${1:-0}
 skipbkgdmc=${2:-0}
-savemetadata=${3:-0}
+skipsignal=${3:-0}
+savemetadata=${4:-0}
 filedump="tmp_infiles.${inTextExt}"
 
 ############################
@@ -27,7 +28,7 @@ for input in "${inputs[@]}"
 do echo ${!input} | while read -r label infile insigfile sel
     do
   	echo "Running time adjuster for computing shift corrections for: ${label}" 
-   	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" "${base_adjust_var}" "${base_time_var}" 1 0 ${skipdata} ${skipbkgdmc} ${savemetadata}
+   	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" "${base_adjust_var}" "${base_time_var}" 1 0 ${skipdata} ${skipbkgdmc} ${skipsignal} ${savemetadata}
     done
 done
 
@@ -47,7 +48,7 @@ for input in "${inputs[@]}"
 do echo ${!input} | while read -r label infile insigfile sel
     do
   	echo "Running time adjuster for computing smear corrections for: ${label}" 
-   	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" "${base_adjust_var}" "${base_time_var}" 0 1 ${skipdata} ${skipbkgdmc} ${savemetadata}
+   	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" "${base_adjust_var}" "${base_time_var}" 0 1 ${skipdata} ${skipbkgdmc} ${skipsignal} ${savemetadata}
     done
 done
 

@@ -14,7 +14,7 @@ source scripts/common_variables.sh
 outfiletext=${1:-"met_vs_time"}
 outdir=${2:-"madv2_v4/uncs/closure"}
 
-savemetadata=${3:-0}
+save_meta_data=${3:-0}
 do_cleanup=${4:-"true"}
 
 ## plot config
@@ -29,7 +29,7 @@ echo "skip_signal=1" >> "${misc_config}"
 ## output text file (used by all inputs)
 outtextfile="${outfiletext}.${outTextExt}"
 > "${outtextfile}"
-echo "Control Region [Data],Time Boundary [ns],MET Boundary [GeV],obsA,obsB,obsC,obsD,c1{obsB/obsA},c2{obsD/obsA},predC{obsA*c1*c2},Percent Diff (1-predC/obsC),pullC{(obsC-predC)/sqrt(obsCunc^2+predCunc^2)}" >> "${textfile}"
+echo "Control Region [Data],Time Boundary [ns],MET Boundary [GeV],obsA,obsB,obsC,obsD,c1{obsB/obsA},c2{obsD/obsA},predC{obsA*c1*c2},Percent Diff (1-predC/obsC),pullC{(obsC-predC)/sqrt(obsCunc^2+predCunc^2)}" >> "${outtextfile}"
 
 ###########################
 ## Main Loop Over Inputs ##
@@ -40,7 +40,7 @@ do
     echo "${!input}" | while read -r label infile insigfile sel
     do
 	## first make the 2D hist
-	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "NOSIGS.root" "${cutconfigdir}/always_true.${inTextExt}" "${plot_config}" "${misc_config}" "${MainEra}" ${save_meta_data} "${outfiletext}_${label}" "${outdir}"	
+	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "NOSIGNALS.root" "${cutconfigdir}/always_true.${inTextExt}" "${plot_config}" "${misc_config}" "${MainEra}" ${save_meta_data} "${outfiletext}_${label}" "${outdir}"
 
 	## run extractor
 	./scripts/extractClosureUncertainty.sh "${label}" "${outfiletext}" "${outdir}"

@@ -88,13 +88,12 @@ export base_adjust_var="phoE"
 export adjust_var="${base_adjust_var}_0"
 
 ## CR + SR info: label skim signal_skim additional_cuts
-export CR_GJets="cr_gjets_DEG v3/orig_2phosCR/gjets v3/orig_2phosCR/signals_gjets cuts_v1/lepveto"
-export CR_QCD="cr_qcd_DEG v3/orig_2phosCR/qcd v3/orig_2phosCR/signals_qcd cuts_v1/lepveto"
-export CR_DYLL="cr_dyll_DEG v3/orig_2phosCR/dyll v3/orig_2phosCR/signals_dyll always_true"
-export SR="sr_SPH v3/orig_2phosCR/sr v3/orig_2phosCR/signals_sr cuts_v1/lepveto"
+export CR_GJets="gjets v4/unc_tests/gjets NO_SKIM always_true"
+export CR_QCD="qcd v4/unc_tests/qcd NO_SKIM always_true"
+export CR_EWK="ewk v4/unc_tests/ewk NO_SKIM always_true"
+export CR_ZEE="zee v4/unc_tests/zee NO_SKIM always_true"
 
-#declare -a inputs=(CR_GJets CR_QCD SR)
-declare -a inputs=(SR)
+declare -a inputs=(CR_GJets CR_QCD CR_EWK CR_ZEE)
 
 ## Zee 
 #export Zee="Zee zee_TnP/skim zee_TnP/signals_skim always_true"

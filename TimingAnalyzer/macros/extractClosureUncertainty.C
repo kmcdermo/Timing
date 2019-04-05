@@ -1,9 +1,9 @@
 #include "Common.cpp+"
 
-struct Range
+struct BinRange
 {
-  Range() {}
-  Range(const Double_t low, const Double_t up, const Color_t color)
+  BinRange() {}
+  BinRange(const Double_t low, const Double_t up, const Color_t color)
     : low(low), up(up), color(color) {}
 
   Double_t low;
@@ -24,7 +24,7 @@ void extractClosureUncertainty(const TString & label, const TString & outfiletex
   Common::SetTDRStyle(tdrStyle);
   Common::SetupEras();
   Common::SetupSamples();
-  Common::SetupGroup();
+  Common::SetupGroups();
   Common::SetupHistNames();
 
   // i/o root file
@@ -34,11 +34,11 @@ void extractClosureUncertainty(const TString & label, const TString & outfiletex
 
   // need to use constant fine binning of MET vs time, otherwise comment out Rebin
   const TString hist2Dname = Common::HistNameMap["Data"]+"_Plotted";
-  auto hist2D = (TH2F*)infile->Get(hist2Dname.Data());
+  auto hist2D = (TH2F*)iofile->Get(hist2Dname.Data());
   Common::CheckValidHist(hist2D,hist2Dname,iofilename);
 
   // get text file
-  std::ofstream outtextfile(outfiletext+"."+Common::OutTextExt,std::ios_base::app);
+  std::ofstream outtextfile(outfiletext+"."+Common::outTextExt,std::ios_base::app);
 
   // dump input
   outtextfile << label.Data() << ","
@@ -51,7 +51,7 @@ void extractClosureUncertainty(const TString & label, const TString & outfiletex
   std::vector<Double_t> met_splits  = {100,150,200};
   for (const auto time_split : time_splits)
     for (const auto met_split : met_splits)
-      makeClosureDump(hist2D,time_split,met_split,label,outfiletext);
+      makeClosureDump(hist2D,time_split,met_split,label,outtextfile);
 
   // make1D time slice plots
   make1DSlices(hist2D,label,outfiletext);
@@ -129,7 +129,7 @@ void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, co
 {
   // met ranges
   auto icolor = 0;
-  const std::vector<Range> ranges = 
+  const std::vector<BinRange> ranges = 
   { 
     {0.0  , 50.0  , Common::ColorVec[icolor++]},
     {50.0 , 100.0 , Common::ColorVec[icolor++]},

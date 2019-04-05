@@ -3,10 +3,10 @@
 
 TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signalskimfilename, const TString & infilesconfig,
 			   const TString & sadjustvar, const TString & stime, const Bool_t doshift, const Bool_t dosmear,
-			   const Bool_t skipdata, const Bool_t skipbkgdmc, const Bool_t savemetadata)
+			   const Bool_t skipdata, const Bool_t skipbkgdmc, const Bool_t skipsignal, const Bool_t savemetadata)
   : fSkimFileName(skimfilename), fSignalSkimFileName(signalskimfilename), fInFilesConfig(infilesconfig),
     fSAdjustVar(sadjustvar), fSTime(stime), fDoShift(doshift), fDoSmear(dosmear),
-    fSkipData(skipdata), fSkipBkgdMC(skipbkgdmc), fSaveMetaData(savemetadata)
+    fSkipData(skipdata), fSkipBkgdMC(skipbkgdmc), fSkipSignal(skipsignal), fSaveMetaData(savemetadata)
 {
   std::cout << "Initializing TimeAdjuster..." << std::endl;
 
@@ -20,6 +20,7 @@ TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signals
   TimeAdjuster::SetupCommon();
   if (fSkipData)   Common::RemoveGroup(SampleGroup::isData);
   if (fSkipBkgdMC) Common::RemoveGroup(SampleGroup::isBkgd);
+  if (fSkipSignal) Common::RemoveGroup(SampleGroup::isSignal);
   TimeAdjuster::SetupInFilesConfig();
   TimeAdjuster::SetupStrings();
 
@@ -31,8 +32,11 @@ TimeAdjuster::TimeAdjuster(const TString & skimfilename, const TString & signals
   }
 
   // open signal skim file
-  fSignalSkimFile = TFile::Open(Form("%s",fSignalSkimFileName.Data()),"UPDATE");
-  Common::CheckValidFile(fSignalSkimFile,fSignalSkimFileName);
+  if (!fSkipSignal)
+  {
+    fSignalSkimFile = TFile::Open(Form("%s",fSignalSkimFileName.Data()),"UPDATE");
+    Common::CheckValidFile(fSignalSkimFile,fSignalSkimFileName);
+  }
 }
 
 TimeAdjuster::~TimeAdjuster()
@@ -41,7 +45,7 @@ TimeAdjuster::~TimeAdjuster()
 
   Common::DeleteMap(fInFileMap);
 
-  delete fSignalSkimFile;
+  if (!fSkipSignal) delete fSignalSkimFile;
   if (!fSkipData || !fSkipBkgdMC) delete fSkimFile;
 }
 
@@ -61,13 +65,13 @@ void TimeAdjuster::AdjustTime()
   if (fDoShift && !fSkipData) TimeAdjuster::CorrectData(DataInfo);
 
   // Correct MC
-  if (fDoShift || fDoSmear) TimeAdjuster::CorrectMC(DataInfo,MCInfo);
+  if ((fDoShift || fDoSmear) && (!fSkipBkgdMC || !fSkipSignal)) TimeAdjuster::CorrectMC(DataInfo,MCInfo);
 
   // dump meta info
   if (fSaveMetaData) 
   {
-    TimeAdjuster::MakeConfigPave(fSkimFile);
-    TimeAdjuster::MakeConfigPave(fSignalSkimFile);
+    if (!fSkipData || !fSkipBkgdMC) TimeAdjuster::MakeConfigPave(fSkimFile);
+    if (!fSkipSignal) TimeAdjuster::MakeConfigPave(fSignalSkimFile);
   }
 
   // delete info
