@@ -1,1 +1,8 @@
+Closure_C lnN - - - - - 1.035 - -
 CMS_lumi lnN 1.023 - 1.023 - 1.023 - 1.023 - 
+Pho_Scale lnN 1.02 - 1.02 - 1.02 - 1.02 -
+Pho_Smear lnN 1.01 - 1.01 - 1.01 - 1.01 -
+Jet_Scale lnN 1.02 - 1.02 - 1.02 - 1.02 -
+Jet_Resol lnN 1.015 - 1.015 - 1.015 - 1.015 -
+Time_Shift lnN 1.01 - 1.01 - 1.01 - 1.01 -
+Time_Smear lnN 1.005 - 1.005 - 1.005 - 1.005 -
