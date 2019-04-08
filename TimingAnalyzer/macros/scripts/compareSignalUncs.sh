@@ -10,12 +10,13 @@ uncfilename=${3:-"${skimdir}/signals_sr_unc.root"}
 systuncname=${4:-"phoscaleup"}
 systunclabel=${5:-"Photon_Scale_Up"}
 outdir=${6:-"test"}
+extra_shift=${7:-"0"} # ns for time unc tests
 
 ## replace _ with " "
 systunclabel=$( echo "${systunclabel}" | tr "_" " ")
 
 ## first make plots
-root -l -b -q compareSignalUncs.C\(\"${scan_log}\",\"${nomfilename}\",\"${uncfilename}\",\"${systuncname}\",\""${systunclabel}"\"\)
+root -l -b -q compareSignalUncs.C\(\"${scan_log}\",\"${nomfilename}\",\"${uncfilename}\",\"${systuncname}\",\""${systunclabel}"\",\"${extra_shift}\"\)
 
 ## make out dirs
 fulldir="${topdir}/${disphodir}/${outdir}"

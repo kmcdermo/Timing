@@ -3,11 +3,14 @@
 struct PlotInfo
 {
   PlotInfo() {}
-  PlotInfo(const TString & name, const TString & var, const std::vector<Double_t> & bins, const TString & title, const TString & unit)
-    : name(name), var(var), bins(bins), title(title), unit(unit) {}
+  PlotInfo(const TString & name, const TString & var, const TString & extra_shift, 
+	   const std::vector<Double_t> & bins, const TString & title, const TString & unit)
+    : name(name), var(var), extra_shift(extra_shift),
+      bins(bins), title(title), unit(unit) {}
   
   TString name;
   TString var;
+  TString extra_shift;
   std::vector<Double_t> bins;
   TString title;
   TString unit;
@@ -18,7 +21,7 @@ void makePlot(const TString & sample, const PlotInfo & plotInfo, TTree * nom_tre
 TH1F * setupPlot(const TString & name, const TString & title, const std::vector<Double_t> & bins, const Color_t color);
 void getMinMax(const TH1F * hist, Double_t & minY, Double_t & maxY);
 
-void compareSignalUncs(const TString & scan_log, const TString & nom_file_name, const TString & unc_file_name, const TString & syst_unc_name, const TString & syst_unc_label)
+void compareSignalUncs(const TString & scan_log, const TString & nom_file_name, const TString & unc_file_name, const TString & syst_unc_name, const TString & syst_unc_label, const TString & extra_shift)
 {
   // style
   gStyle->SetOptStat(0);
@@ -40,8 +43,8 @@ void compareSignalUncs(const TString & scan_log, const TString & nom_file_name, 
   // hist info
   const std::vector<PlotInfo> plotInfos = 
   {
-    {"phowgttime","phoweightedtimeLT120_0+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0",{-2,-1.5,-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1.0,1.5,2.0,3.0,5.0,10.0},"Leading Photon Weighted Cluster Time","ns"},
-    {"met","t1pfMETpt",{0,50,75,100,125,150,200,300,500,1000,3000},"p_{T}^{miss}","GeV"}
+    {"phowgttime","phoweightedtimeLT120_0+phoweightedtimeLT120SHIFT_0+phoweightedtimeLT120SMEAR_0",extra_shift,{-2,-1.5,-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1.0,1.5,2.0,3.0,5.0,10.0},"Leading Photon Weighted Cluster Time","ns"},
+    {"met","t1pfMETpt","-1",{0,50,75,100,125,150,200,300,500,1000,3000},"p_{T}^{miss}","GeV"}
   };
 
   // loop samples, hists
@@ -106,6 +109,7 @@ void makePlot(const TString & sample, const PlotInfo & plotInfo, TTree * nom_tre
   // get plotInfo
   const auto & name   = plotInfo.name;
   const auto & var    = plotInfo.var;
+  const auto & extra_shift = plotInfo.extra_shift;
   const auto & bins   = plotInfo.bins;
   const auto & unit   = plotInfo.unit;
   const auto & xtitle = plotInfo.title+" ["+unit+"]";
@@ -119,7 +123,7 @@ void makePlot(const TString & sample, const PlotInfo & plotInfo, TTree * nom_tre
   // fill hists
   const TString cutwgt = "(puwgt*evtwgt)";
   nom_tree->Draw(Form("%s>>%s",var.Data(),nom_hist->GetName()),cutwgt.Data(),"goff");
-  unc_tree->Draw(Form("%s>>%s",var.Data(),unc_hist->GetName()),cutwgt.Data(),"goff");
+  unc_tree->Draw(Form("%s%s>>%s",var.Data(),((extra_shift.Atof()>0.0)?("+"+extra_shift).Data():""),unc_hist->GetName()),cutwgt.Data(),"goff");
 
   // scale to bin widths
   Common::Scale(nom_hist,false);

@@ -16,9 +16,10 @@ systunc=${2:-"PHO_SCALE_UP"} # needs to be defined in common vars!
 systuncname=${3:-"phoscaleup"}
 systunclabel=${4:-"Photon_Scale_Up"}
 outdir=${5:-"madv2_v4/uncs_v3/pho_scale_up"}
+extra_shift=${6:-"0"} # ns for time uncertainty
 
-save_meta_data=${6:-0}
-do_cleanup=${7:-"true"}
+save_meta_data=${7:-0}
+do_cleanup=${8:-"true"}
 
 ####################
 ## Derived Config ##
@@ -71,7 +72,7 @@ echo "Compiling ahead of time"
 ###############
 
 echo "Making 1D plot comparisons"
-./scripts/compareSignalUncs.sh "${scan_log}" "${nom_skim}" "${unc_skim}" "${systuncname}" "${systunclabel}" "${outdir}/plots1D"
+./scripts/compareSignalUncs.sh "${scan_log}" "${nom_skim}" "${unc_skim}" "${systuncname}" "${systunclabel}" "${outdir}/plots1D" "${extra_shift}"
 
 #########################
 ## Make All ABCD Plots ##
@@ -90,7 +91,7 @@ do
 	plotlabel="x_${xbin}_y_${ybin}"
 
 	## run plotter
-	./scripts/makePlotsForUnc.sh "${nom_skim}" "${unc_skim}" "${xbin}" "${xblind}" "${ybin}" "${yblind}" "${plotlabel}" "${outdir}" ${save_meta_data} "${do_cleanup}"
+	./scripts/makePlotsForUnc.sh "${nom_skim}" "${unc_skim}" "${xbin}" "${xblind}" "${ybin}" "${yblind}" "${extra_shift}" "${plotlabel}" "${outdir}" ${save_meta_data} "${do_cleanup}"
     done
 done
 
