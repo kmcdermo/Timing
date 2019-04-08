@@ -16,7 +16,7 @@ fulldir="${topdir}/${disphodir}/${outdir}"
 PrepOutDir "${fulldir}"
 
 ## copy text files
-cp "${systuncname}_"*".${outTextExt}" "${fulldir}"
+cp "${systuncname}_bin"*".${outTextExt}" "${fulldir}"
 
 ## Final message
 echo "Finished Comparing Diffs in ABCD regions"

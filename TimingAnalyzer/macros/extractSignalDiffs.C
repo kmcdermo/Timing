@@ -21,8 +21,37 @@ struct BinInfo
   Int_t binY;
 };
 
+struct SumWgt
+{
+  SumWgt() 
+  {
+    percent = 0.f;
+    error2  = 0.f; 
+  }
+
+  Float_t percent;
+  Float_t error2;
+};
+
 void readSampleInfo(const TString & scan_log, const TString & plotfiletext, const TString & nom2Ddir, const TString & unc2Ddir,
 		    std::vector<TString> & samples, std::map<TString,TH2F*> & NomHistMap, std::map<TString,TH2F*> & UncHistMap);
+void setupSumWgtMap(std::map<TString,SumWgt> & sumWgtMap)
+{
+  const std::vector<TString> lambdas = {"100","150","200","250","300","350","400"};
+
+  for (const auto & lambda : lambdas) sumWgtMap[lambda];
+}
+TString getLambda(const TString & sample)
+{
+  const TString s_lambda = "_L";
+  auto i_lambda = sample.Index(s_lambda);
+  auto l_lambda = s_lambda.Length();
+    
+  const TString s_ctau = "_CTau";
+  auto i_ctau = sample.Index(s_ctau);
+    
+  return TString(sample(i_lambda+l_lambda,i_ctau-i_lambda-l_lambda));
+}
 
 void extractSignalDiffs(const TString & scan_log, const TString & plotfiletext, const TString & nom2Ddir, const TString & unc2Ddir, const TString & systuncname)
 {
@@ -52,9 +81,17 @@ void extractSignalDiffs(const TString & scan_log, const TString & plotfiletext, 
     std::ofstream output(outputfilename.Data(),std::ios::trunc);
     std::cout << "Writing to: " << outputfilename.Data() << std::endl;
 
+    // sums for totals
+    std::map<TString,SumWgt> sumWgtMap;
+    setupSumWgtMap(sumWgtMap);
+    
     // loop over samples
     for (const auto & sample : samples)
     {
+      // get lambda + sumWgt
+      const auto lambda = getLambda(sample);
+      auto & sumWgt = sumWgtMap[lambda];
+
       // get hists
       const auto & nom_hist = NomHistMap[sample]; 
       const auto & unc_hist = UncHistMap[sample]; 
@@ -67,21 +104,38 @@ void extractSignalDiffs(const TString & scan_log, const TString & plotfiletext, 
       const auto unc_int = unc_hist->GetBinContent(binX,binY);
       const auto unc_err = unc_hist->GetBinError  (binX,binY);
 
-      // compute percent diff
-      const auto per_diff     = (1.f - (unc_int/nom_int))*100.f;
-      const auto per_diff_err = per_diff*Common::hypot(nom_err/nom_int,unc_err/unc_int); 
+      // ensure both are filled
+      if (nom_int <= 0.0 || unc_int <= 0.0) continue;
 
+      // compute percent diff
+      const auto ratio         = (unc_int/nom_int)*100.f;
+      const auto per_diff      = (100.f - ratio);
+      const auto per_diff_err  = ratio*Common::hypot(nom_err/nom_int,unc_err/unc_int); 
+      const auto per_diff_err2 = per_diff_err*per_diff_err;
+
+      // sum it up
+      sumWgt.percent += (per_diff/per_diff_err2);
+      sumWgt.error2  += (1.0/per_diff_err2);
+    }
+
+    // compute final sum for this bin
+    for (const auto & sumWgtPair : sumWgtMap)
+    {
+      const auto & lambda = sumWgtPair.first;
+      const auto & sumWgt = sumWgtPair.second;
+      
+      const auto percent = (sumWgt.percent/sumWgt.error2);
+      const auto error   = std::sqrt(1.f/sumWgt.error2);
+      
       // write to output
-      output << std::setw(19)
-	     << sample.Data() 
-	     << " : "
-	     << std::setw(8) << per_diff
+      output << "Lambda: " << lambda.Data() << " "
+	     << std::setw(8) << percent
 	     << " +/- "
-	     << std::setw(8) << per_diff_err
+	     << std::setw(8) << error
 	     << std::endl;
     }
   }
-
+  
   // delete hist maps
   Common::DeleteMap(UncHistMap);
   Common::DeleteMap(NomHistMap);

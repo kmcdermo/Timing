@@ -15,7 +15,7 @@ nominal=${1:-"SR"} # needs to be defined in common vars!
 systunc=${2:-"PHO_SCALE_UP"} # needs to be defined in common vars!
 systuncname=${3:-"phoscaleup"}
 systunclabel=${4:-"Photon_Scale_Up"}
-outdir=${5:-"madv2_v4/uncs/pho_scale_up"}
+outdir=${5:-"madv2_v4/uncs_v3/pho_scale_up"}
 
 save_meta_data=${6:-0}
 do_cleanup=${7:-"true"}
@@ -43,21 +43,21 @@ echo "Making log file for which file to use"
 scan_log="abcd_categories.log"
 > "${scan_log}"
 
-for lambda in 100 200 300
+for lambda in 100 150 200 250 300 350 400
 do
-    for ctau in 10
-    do 
+    for ctau in 0p001 0p1 10
+    do
 	echo "GMSB_L${lambda}_CTau${ctau} ${fulldir} x_0.5_y_200" >> "${scan_log}"
     done
 
-    for ctau in 200 1000
+    for ctau in 200 400 600 800 1000 1200 10000
     do
 	echo "GMSB_L${lambda}_CTau${ctau} ${fulldir} x_1.5_y_200" >> "${scan_log}"
     done
 done
 
 ## xy boundaries to plot: from optimized scan
-declare -a xys=("1.5 1.5 500 500" "0.5 0.5 200 200" "1.5 1.5 200 200")
+declare -a xys=("0.5 0.5 200 200" "1.5 1.5 200 200")
 
 ##################
 ## Compile Code ##
