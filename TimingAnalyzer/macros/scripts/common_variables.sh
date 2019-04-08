@@ -92,7 +92,7 @@ export CR_GJets="gjets v4/unc_tests/gjets NO_SKIM always_true"
 export CR_QCD="qcd v4/unc_tests/qcd NO_SKIM always_true"
 export CR_EWK="ewk v4/unc_tests/ewk NO_SKIM always_true"
 export CR_ZEE="zee v4/unc_tests/zee NO_SKIM always_true"
-#declare -a inputs=(CR_GJets CR_QCD CR_EWK CR_ZEE)
+declare -a inputs=(CR_GJets CR_QCD CR_EWK CR_ZEE)
 
 ## Unc tests for signals
 export SR="sr_SPH v4/unc_tests/nominal v4/unc_tests/signals_nominal always_true"

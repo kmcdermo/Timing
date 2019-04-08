@@ -47,8 +47,8 @@ void extractClosureUncertainty(const TString & label, const TString & outfiletex
 	      << std::endl;
 
   // make dumps
-  std::vector<Double_t> time_splits = {0.5,1.0,1.5};
-  std::vector<Double_t> met_splits  = {100,150,200};
+  std::vector<Double_t> time_splits = {0.0,0.5,1.0,1.5};
+  std::vector<Double_t> met_splits  = {50,100,150,200};
   for (const auto time_split : time_splits)
     for (const auto met_split : met_splits)
       makeClosureDump(hist2D,time_split,met_split,label,outtextfile);
