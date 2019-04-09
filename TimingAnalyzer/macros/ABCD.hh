@@ -41,6 +41,7 @@ namespace ABCD
   static const TString bkg1name = "bkg1";
   static const TString ratiobase = "c";
   static const TString binbase = "Bin";
+  static const TString suffix = "_2017";
 
   // Setup Functions
   void SetupNBins(const TH2F * hist);

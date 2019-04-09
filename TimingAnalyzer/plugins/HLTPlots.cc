@@ -471,7 +471,7 @@ void HLTPlots::SetGoodPhotons()
     // common offline selection for GED and VID photons
     if (!phIsEB[iph])           continue;
     if (phIsTrack[iph])         continue;
-    if (phr9   [iph] < 0.94   ) continue;
+    if (phr9   [iph] < 0.90   ) continue;
     if (phHoE  [iph] > 0.02148) continue;
     if (phsmaj [iph] > 1.3    ) continue;
     if (phsmin [iph] > 0.4    ) continue;

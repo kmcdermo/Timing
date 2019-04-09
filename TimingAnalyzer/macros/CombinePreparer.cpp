@@ -68,7 +68,7 @@ void CombinePreparer::MakeParameters()
   std::cout << "Making parameters for background..." << std::endl;
 
   // bkg1 --> estimate from BbkgdHist * k-Factor
-  fParameterMap[ABCD::bkg1name] = std::max(BkgdHist->GetBinContent(1,1) * (DataHist->Integral() / BkgdHist->Integral()),0.0);
+  fParameterMap[ABCD::bkg1name+ABCD::suffix] = std::max(BkgdHist->GetBinContent(1,1) * (DataHist->Integral() / BkgdHist->Integral()),0.0);
   
   // loop over all possible ratios and put in parameter map
   for (const auto & RatioPair : ABCD::RatioMap)
@@ -95,7 +95,7 @@ void CombinePreparer::MakeParameters()
     const auto ibinUp  = TemplateHist->FindBin(DataAxis->GetBinUpEdge (ibin));
 
     // get ratio
-    const TString rationame = Form("%s%d",ABCD::ratiobase.Data(),ratio);
+    const TString rationame = Form("%s%d%s",ABCD::ratiobase.Data(),ratio,ABCD::suffix.Data());
     fParameterMap[rationame] = std::max(TemplateHist->Integral(ibinMid,ibinUp) / TemplateHist->Integral(ibinLow,ibinMid-1),0.0);
   }
 }
@@ -108,7 +108,7 @@ void CombinePreparer::MakePredictionHistogram()
   PredHist = (TH2F*)DataHist->Clone("PredHist");
 
   // second, set overall norm for bin1
-  PredHist->SetBinContent(1,1,fParameterMap[ABCD::bkg1name]);
+  PredHist->SetBinContent(1,1,fParameterMap[ABCD::bkg1name+ABCD::suffix]);
 
   // loop over bin settings and compute the contents for each bin based off multiplication of ratios
   for (const auto & BinRatioVecPair : ABCD::BinRatioVecMap)
@@ -118,12 +118,12 @@ void CombinePreparer::MakePredictionHistogram()
     const auto RatioVec = BinRatioVecPair.second;
 
     // set norm first
-    auto bin_content = fParameterMap[ABCD::bkg1name];
+    auto bin_content = fParameterMap[ABCD::bkg1name+ABCD::suffix];
 
     // multiply by each ratio!
     for (const auto ratio : RatioVec)
     {
-      const TString rationame = Form("%s%d",ABCD::ratiobase.Data(),ratio);
+      const TString rationame = Form("%s%d%s",ABCD::ratiobase.Data(),ratio,ABCD::suffix.Data());
       bin_content *= fParameterMap[rationame];
     }
 
@@ -258,7 +258,8 @@ void CombinePreparer::FillSystematicsSection(std::ofstream & datacard)
 void CombinePreparer::FillRateParamSection(std::ofstream & datacard)
 {
   // bkg1 first for bin1
-  datacard << Form("%s rateParam %s1 bkg %f",ABCD::bkg1name.Data(),ABCD::binbase.Data(),fParameterMap[ABCD::bkg1name]) << std::endl;
+  datacard << Form("%s%s rateParam %s1 bkg %f",ABCD::bkg1name.Data(),ABCD::suffix.Data(),ABCD::binbase.Data(),
+		   fParameterMap[ABCD::bkg1name+ABCD::suffix]) << std::endl;
 
   // then remainder of bins
   for (const auto & BinRatioVecPair : ABCD::BinRatioVecMap)
@@ -267,11 +268,12 @@ void CombinePreparer::FillRateParamSection(std::ofstream & datacard)
     const auto RatioVec = BinRatioVecPair.second;
 
     // add bkg1 first
-    datacard << Form("%s rateParam %s%d bkg %f",ABCD::bkg1name.Data(),ABCD::binbase.Data(),bin,fParameterMap[ABCD::bkg1name]) << std::endl;
+    datacard << Form("%s%s rateParam %s%d bkg %f",ABCD::bkg1name.Data(),ABCD::suffix.Data(),ABCD::binbase.Data(),bin,
+		     fParameterMap[ABCD::bkg1name+ABCD::suffix]) << std::endl;
 
     for (const auto ratio : RatioVec)
     {
-      const TString rationame = Form("%s%d",ABCD::ratiobase.Data(),ratio);
+      const TString rationame = Form("%s%d%s",ABCD::ratiobase.Data(),ratio,ABCD::suffix.Data());
       datacard << Form("%s rateParam %s%d bkg %f",rationame.Data(),ABCD::binbase.Data(),bin,fParameterMap[rationame]) << std::endl;
     }
   }
