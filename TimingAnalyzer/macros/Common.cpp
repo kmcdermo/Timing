@@ -140,67 +140,67 @@ namespace Common
   void SetupSamples()
   {
     // QCD HT binned
-    // Common::SampleMap["MC/QCD_HT/100to200"]   = "QCD";
-    // Common::SampleMap["MC/QCD_HT/200to300"]   = "QCD";
-    // Common::SampleMap["MC/QCD_HT/300to500"]   = "QCD";
-    // Common::SampleMap["MC/QCD_HT/500to700"]   = "QCD";
-    // Common::SampleMap["MC/QCD_HT/700to1000"]  = "QCD";
-    // Common::SampleMap["MC/QCD_HT/1000to1500"] = "QCD";
-    // Common::SampleMap["MC/QCD_HT/1500to2000"] = "QCD";
-    // Common::SampleMap["MC/QCD_HT/2000toInf"]  = "QCD";
+    Common::SampleMap["MC/QCD_HT/100to200"]   = "QCD";
+    Common::SampleMap["MC/QCD_HT/200to300"]   = "QCD";
+    Common::SampleMap["MC/QCD_HT/300to500"]   = "QCD";
+    Common::SampleMap["MC/QCD_HT/500to700"]   = "QCD";
+    Common::SampleMap["MC/QCD_HT/700to1000"]  = "QCD";
+    Common::SampleMap["MC/QCD_HT/1000to1500"] = "QCD";
+    Common::SampleMap["MC/QCD_HT/1500to2000"] = "QCD";
+    Common::SampleMap["MC/QCD_HT/2000toInf"]  = "QCD";
   
-    // // GJets HT binned
-    // Common::SampleMap["MC/GJets_HT/40To100"]  = "GJets";
-    // Common::SampleMap["MC/GJets_HT/100To200"] = "GJets";
-    // Common::SampleMap["MC/GJets_HT/200To400"] = "GJets";
-    // Common::SampleMap["MC/GJets_HT/400To600"] = "GJets";
-    // Common::SampleMap["MC/GJets_HT/600ToInf"] = "GJets";
+    // GJets HT binned
+    Common::SampleMap["MC/GJets_HT/40To100"]  = "GJets";
+    Common::SampleMap["MC/GJets_HT/100To200"] = "GJets";
+    Common::SampleMap["MC/GJets_HT/200To400"] = "GJets";
+    Common::SampleMap["MC/GJets_HT/400To600"] = "GJets";
+    Common::SampleMap["MC/GJets_HT/600ToInf"] = "GJets";
     
-    // // DYLL
-    // Common::SampleMap["MC/DYJetsToLL/base"] = "DYLL";
+    // DYLL
+    Common::SampleMap["MC/DYJetsToLL/base"] = "DYLL";
 
-    // // DiPhoBox
-    // Common::SampleMap["MC/DiPhotonJetsBox/M40_80"]  = "DiPho";
-    // Common::SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = "DiPho";
+    // DiPhoBox
+    Common::SampleMap["MC/DiPhotonJetsBox/M40_80"]  = "DiPho";
+    Common::SampleMap["MC/DiPhotonJetsBox/M80_Inf"] = "DiPho";
 
-    // // T+X
-    // Common::SampleMap["MC/TX/TTJets"]  = "TX";
-    // Common::SampleMap["MC/TX/TGJets"]  = "TX";
-    // Common::SampleMap["MC/TX/TTGJets"] = "TX";
-    // Common::SampleMap["MC/TX/TTWJets"] = "TX";
-    // Common::SampleMap["MC/TX/TTZJets"] = "TX";
-    // // Common::SampleMap["MC/TX/TGGJets"] = "TX"; // on tape recall
+    // T+X
+    Common::SampleMap["MC/TX/TTJets"]  = "TX";
+    Common::SampleMap["MC/TX/TGJets"]  = "TX";
+    Common::SampleMap["MC/TX/TTGJets"] = "TX";
+    Common::SampleMap["MC/TX/TTWJets"] = "TX";
+    Common::SampleMap["MC/TX/TTZJets"] = "TX";
+    // Common::SampleMap["MC/TX/TGGJets"] = "TX"; // on tape recall
 
-    // // W+X
-    // Common::SampleMap["MC/WJetsToLNu_HT/100To200"]   = "WX";
-    // Common::SampleMap["MC/WJetsToLNu_HT/200To400"]   = "WX";
-    // Common::SampleMap["MC/WJetsToLNu_HT/400To600"]   = "WX";
-    // Common::SampleMap["MC/WJetsToLNu_HT/600To800"]   = "WX";
-    // Common::SampleMap["MC/WJetsToLNu_HT/800To1200"]  = "WX";
-    // Common::SampleMap["MC/WJetsToLNu_HT/1200To2500"] = "WX";
-    // Common::SampleMap["MC/WJetsToLNu_HT/2500ToInf"]  = "WX";
+    // W+X
+    Common::SampleMap["MC/WJetsToLNu_HT/100To200"]   = "WX";
+    Common::SampleMap["MC/WJetsToLNu_HT/200To400"]   = "WX";
+    Common::SampleMap["MC/WJetsToLNu_HT/400To600"]   = "WX";
+    Common::SampleMap["MC/WJetsToLNu_HT/600To800"]   = "WX";
+    Common::SampleMap["MC/WJetsToLNu_HT/800To1200"]  = "WX";
+    Common::SampleMap["MC/WJetsToLNu_HT/1200To2500"] = "WX";
+    Common::SampleMap["MC/WJetsToLNu_HT/2500ToInf"]  = "WX";
 
-    // Common::SampleMap["MC/WX/WW"]      = "WX";
-    // Common::SampleMap["MC/WX/WZ"]      = "WX";
-    // Common::SampleMap["MC/WX/WGGJets"] = "WX";
-    // Common::SampleMap["MC/WX/WWG"]     = "WX";
-    // Common::SampleMap["MC/WX/WWW"]     = "WX";
-    // Common::SampleMap["MC/WX/WWZ"]     = "WX";
-    // Common::SampleMap["MC/WX/WZZ"]     = "WX";
-    // Common::SampleMap["MC/WX/WZG"]     = "WX";
+    Common::SampleMap["MC/WX/WW"]      = "WX";
+    Common::SampleMap["MC/WX/WZ"]      = "WX";
+    Common::SampleMap["MC/WX/WGGJets"] = "WX";
+    Common::SampleMap["MC/WX/WWG"]     = "WX";
+    Common::SampleMap["MC/WX/WWW"]     = "WX";
+    Common::SampleMap["MC/WX/WWZ"]     = "WX";
+    Common::SampleMap["MC/WX/WZZ"]     = "WX";
+    Common::SampleMap["MC/WX/WZG"]     = "WX";
 
-    // // Z+X
-    // Common::SampleMap["MC/ZJetsToNuNu_HT/100To200"]   = "ZX";
-    // Common::SampleMap["MC/ZJetsToNuNu_HT/200To400"]   = "ZX";
-    // Common::SampleMap["MC/ZJetsToNuNu_HT/400To600"]   = "ZX";
-    // Common::SampleMap["MC/ZJetsToNuNu_HT/600To800"]   = "ZX";
-    // Common::SampleMap["MC/ZJetsToNuNu_HT/800To1200"]  = "ZX";
-    // Common::SampleMap["MC/ZJetsToNuNu_HT/1200To2500"] = "ZX";
-    // Common::SampleMap["MC/ZJetsToNuNu_HT/2500ToInf"]  = "ZX";
+    // Z+X
+    Common::SampleMap["MC/ZJetsToNuNu_HT/100To200"]   = "ZX";
+    Common::SampleMap["MC/ZJetsToNuNu_HT/200To400"]   = "ZX";
+    Common::SampleMap["MC/ZJetsToNuNu_HT/400To600"]   = "ZX";
+    Common::SampleMap["MC/ZJetsToNuNu_HT/600To800"]   = "ZX";
+    Common::SampleMap["MC/ZJetsToNuNu_HT/800To1200"]  = "ZX";
+    Common::SampleMap["MC/ZJetsToNuNu_HT/1200To2500"] = "ZX";
+    Common::SampleMap["MC/ZJetsToNuNu_HT/2500ToInf"]  = "ZX";
 
-    // Common::SampleMap["MC/ZX/ZZ"] = "ZX";
-    // Common::SampleMap["MC/ZX/ZGGJets"] = "ZX";
-    // Common::SampleMap["MC/ZX/ZZZ"] = "ZX";
+    Common::SampleMap["MC/ZX/ZZ"] = "ZX";
+    Common::SampleMap["MC/ZX/ZGGJets"] = "ZX";
+    Common::SampleMap["MC/ZX/ZZZ"] = "ZX";
     
     // Data
     Common::SampleMap[Form("Data/%s/B/v1",Common::PrimaryDataset.Data())] = "Data";
@@ -214,7 +214,7 @@ namespace Common
   {
     // GMSB
     const std::vector<TString> lambdas = {"100","150","200","250","300","350","400"}; // TeV
-    const std::vector<TString> gctaus  = {"0p001","0p1","10","200","400","600","800","1000","1200","10000"}; // cm
+    const std::vector<TString> gctaus  = {"10","200","400","600","800","1000","1200","10000"}; // cm
 
     // loop over all possible GMSBs...
     for (const auto & lambda : lambdas)
@@ -404,16 +404,14 @@ namespace Common
   void SetupSignalSubGroupColors()
   {
     // GMSB
-    Common::SignalSubGroupColorMap["GMSB_CTau0p001cm"] = {kBlue,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau0p1cm"] = {kAzure,"Up"};
     Common::SignalSubGroupColorMap["GMSB_CTau10cm"]  = {kSpring,"Up"};
-    Common::SignalSubGroupColorMap["GMSB_CTau200cm"] = {kRed,"Up"};
-    Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kPink+10,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau200cm"] = {kRed+1,"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kBlue,"Down"};
     Common::SignalSubGroupColorMap["GMSB_CTau600cm"] = {kViolet+10,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau800cm"] = {kYellow,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau800cm"] = {kOrange,"Down"};
     Common::SignalSubGroupColorMap["GMSB_CTau1000cm"] = {kTeal,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau1200cm"] = {kOrange,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau10000cm"] = {kMagenta,"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau1200cm"] = {kMagenta,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau10000cm"] = {kAzure,"Up"};
 
     // HVDS
   }

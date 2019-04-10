@@ -30,7 +30,7 @@ echo "blind_data=1" >> "${misc}"
 signals_to_plot="signals_to_plot="
 for lambda in 100 200 300
 do 
-    for ctau in 0p1 200 1000
+    for ctau in 10 200 1000
     do
 	signals_to_plot+="GMSB_L${lambda}_CTau${ctau} "
     done
