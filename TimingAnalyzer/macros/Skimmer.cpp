@@ -834,6 +834,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
   {
     auto & inpho = fInPhos[ipho];
     
+    inpho.b_ECorrFactor->GetEntry(entry);
     inpho.b_E->GetEntry(entry);
     inpho.b_pt->GetEntry(entry);
     inpho.b_eta->GetEntry(entry);
@@ -942,6 +943,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     const auto & inpho = fInPhos[fPhoList[ipho]];
     auto & outpho = fOutPhos[ipho];
 
+    outpho.ECorrFactor = inpho.ECorrFactor;
     outpho.E = inpho.E;
     outpho.pt = inpho.pt;
     outpho.eta = inpho.eta;
@@ -1613,6 +1615,7 @@ void Skimmer::InitInBranches()
   for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
   {
     auto & pho = fInPhos[ipho];
+    fInTree->SetBranchAddress(Form("%s_%i",pho.s_ECorrFactor.c_str(),ipho), &pho.ECorrFactor, &pho.b_ECorrFactor);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_E.c_str(),ipho), &pho.E, &pho.b_E);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_pt.c_str(),ipho), &pho.pt, &pho.b_pt);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_eta.c_str(),ipho), &pho.eta, &pho.b_eta);
@@ -1995,6 +1998,7 @@ void Skimmer::InitOutBranches()
   for (auto ipho = 0; ipho < fNOutPhos; ipho++) 
   {
     auto & pho = fOutPhos[ipho];
+    fOutTree->Branch(Form("%s_%i",pho.s_ECorrFactor.c_str(),ipho), &pho.ECorrFactor);
     fOutTree->Branch(Form("%s_%i",pho.s_E.c_str(),ipho), &pho.E);
     fOutTree->Branch(Form("%s_%i",pho.s_pt.c_str(),ipho), &pho.pt);
     fOutTree->Branch(Form("%s_%i",pho.s_eta.c_str(),ipho), &pho.eta);

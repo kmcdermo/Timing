@@ -501,6 +501,7 @@ struct RecHits
 
 struct Pho
 {
+  Float_t ECorrFactor;
   Float_t E;
   Float_t pt;
   Float_t eta;
@@ -577,6 +578,7 @@ struct Pho
   Float_t weightedtimeLT120TOF;
   
   // branch names
+  std::string s_ECorrFactor = "phoECorrFactor";
   std::string s_E = "phoE";
   std::string s_pt = "phopt";
   std::string s_eta = "phoeta";
@@ -650,6 +652,7 @@ struct Pho
   std::string s_weightedtimeLT120TOF = "phoweightedtimeLT120TOF";
 
   // tbranches
+  TBranch * b_ECorrFactor;
   TBranch * b_E;
   TBranch * b_pt;
   TBranch * b_eta;
