@@ -530,6 +530,12 @@ namespace Common
     Map.clear();
   }
 
+  template <typename T>
+  void DeleteVec(T & Vec)
+  {
+    for (auto & Obj : Vec) delete Obj;
+  }
+
   // write to output file
   template <typename T>
   void Write(TFile * file, T & Obj)
