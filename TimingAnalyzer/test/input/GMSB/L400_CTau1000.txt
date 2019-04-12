@@ -1,0 +1,7 @@
+root://xrootd-cms.infn.it//store/mc/RunIIFall17MiniAODv2/GMSB_L-400TeV_Ctau-1000cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/80000/EE08EFC1-7DB3-E811-A5D9-001E67E5A38B.root
+root://xrootd-cms.infn.it//store/mc/RunIIFall17MiniAODv2/GMSB_L-400TeV_Ctau-1000cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/80000/A21A3CAF-7DB3-E811-9C21-0CC47AD98CF0.root
+root://xrootd-cms.infn.it//store/mc/RunIIFall17MiniAODv2/GMSB_L-400TeV_Ctau-1000cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/80000/9EF8EE9F-7DB3-E811-AFC7-509A4C748A3D.root
+root://xrootd-cms.infn.it//store/mc/RunIIFall17MiniAODv2/GMSB_L-400TeV_Ctau-1000cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/80000/602FEC8B-7DB3-E811-9625-0CC47A4DEDCC.root
+root://xrootd-cms.infn.it//store/mc/RunIIFall17MiniAODv2/GMSB_L-400TeV_Ctau-1000cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/80000/54737FA2-7DB3-E811-A342-484D7E8DF0ED.root
+root://xrootd-cms.infn.it//store/mc/RunIIFall17MiniAODv2/GMSB_L-400TeV_Ctau-1000cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/80000/466726D2-B0AF-E811-B7D1-0242AC130002.root
+root://xrootd-cms.infn.it//store/mc/RunIIFall17MiniAODv2/GMSB_L-400TeV_Ctau-1000cm_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/80000/2CA746AC-7DB3-E811-B56C-5065F37DA112.root

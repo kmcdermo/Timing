@@ -83,6 +83,9 @@ options.register('globalTag','94X_mc2017_realistic_v17',VarParsing.multiplicity.
 ## do a demo run over only 1k events
 options.register('demoMode',False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,'flag to run over only 1k events');
 
+## input list of files
+options.register('inputFileNames','',VarParsing.multiplicity.singleton,VarParsing.varType.string,'input list of files to process');
+
 ## processName
 options.register('processName','TREE',VarParsing.multiplicity.singleton,VarParsing.varType.string,'process name to be considered');
 
@@ -162,10 +165,12 @@ if options.isMC:
 	print "BR             : ",options.BR
 print "           -- GT --"
 print "globalTag      : ",options.globalTag	
+print "         -- Input --"
+print "inputFileNames : ",options.inputFileNames
 print "         -- Output --"
 print "demoMode       : ",options.demoMode
 print "processName    : ",options.processName	
-print "outputFileName : ",options.outputFileName	
+print "outputFileName : ",options.outputFileName
 print "        -- Extra bits --"
 print "deleteEarly    : ",options.deleteEarly
 print "runUnscheduled : ",options.runUnscheduled
@@ -188,14 +193,20 @@ process.MessageLogger.destinations = ['cout', 'cerr']
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ## Define the input source
-process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
-		# reminiaod data: 94X_dataRun2_v11
-		#'/store/user/kmcdermo/files/miniAOD/SPH_2017E_miniAODv2.root'
-		# reminiaod GJets, GT: 94X_mc2017_realistic_v17
-		#'/store/user/kmcdermo/files/miniAOD/GJets_600toInf_miniAODv2.root'
-		# miniaodv2 GMSB, GT: 94X_mc2017_realistic_v17
-		'/store/user/kmcdermo/files/miniAOD/GMSB_L200TeV_CTau200cm_miniAODv2.root'
-		))
+import FWCore.Utilities.FileUtils as FileUtils
+if options.inputFileNames == "" :
+	process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( 
+			# reminiaod data: 94X_dataRun2_v11
+			#'/store/user/kmcdermo/files/miniAOD/SPH_2017E_miniAODv2.root'
+			# reminiaod GJets, GT: 94X_mc2017_realistic_v17
+			#'/store/user/kmcdermo/files/miniAOD/GJets_600toInf_miniAODv2.root'
+			# miniaodv2 GMSB, GT: 94X_mc2017_realistic_v17
+			'/store/user/kmcdermo/files/miniAOD/GMSB_L200TeV_CTau200cm_miniAODv2.root'
+			))
+else :
+	fileList = FileUtils.loadListFromFile(options.inputFileNames)
+	readFiles = cms.untracked.vstring( *fileList)
+	process.source = cms.Source('PoolSource', fileNames = readFiles)
 
 ## How many events to process
 if   options.demoMode : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
