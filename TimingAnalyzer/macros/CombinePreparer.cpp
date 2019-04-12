@@ -37,7 +37,6 @@ CombinePreparer::~CombinePreparer()
   delete fTemplateFile;
 
   Common::DeleteMap(SignHistMap);
-  delete BkgdHist;
   delete DataHist;
   delete fInFile;
 }
@@ -67,8 +66,8 @@ void CombinePreparer::MakeParameters()
 {
   std::cout << "Making parameters for background..." << std::endl;
 
-  // bkg1 --> estimate from BbkgdHist * k-Factor
-  fParameterMap[ABCD::bkg1name+ABCD::suffix] = std::max(BkgdHist->GetBinContent(1,1) * (DataHist->Integral() / BkgdHist->Integral()),0.0);
+  // bkg1 --> estimate from data in bottom left corner
+  fParameterMap[ABCD::bkg1name+ABCD::suffix] = DataHist->GetBinContent(1,1);
   
   // loop over all possible ratios and put in parameter map
   for (const auto & RatioPair : ABCD::RatioMap)
@@ -107,10 +106,7 @@ void CombinePreparer::MakePredictionHistogram()
   // first, clone data hist
   PredHist = (TH2F*)DataHist->Clone("PredHist");
 
-  // second, set overall norm for bin1
-  PredHist->SetBinContent(1,1,fParameterMap[ABCD::bkg1name+ABCD::suffix]);
-
-  // loop over bin settings and compute the contents for each bin based off multiplication of ratios
+  // then, loop over bin settings and compute the contents for each bin based off multiplication of ratios
   for (const auto & BinRatioVecPair : ABCD::BinRatioVecMap)
   {
     // get bin ratio settings
@@ -321,14 +317,11 @@ void CombinePreparer::SetupInputHists()
   Common::CheckValidFile(fInFile,fInFileName);
   fInFile->cd();
 
-  // Get data, bkgd input hists (even when blinded, do NOT use the _Plotted histogram, as it will screw up anything above the blinded region and therefore the kFactor)
+  // Get data input hist (even when blinded, do NOT use the _Plotted histogram, as it will screw up anything above the blinded region
   const auto datahistname = Common::HistNameMap["Data"];
   DataHist = (TH2F*)fInFile->Get(datahistname.Data());
   Common::CheckValidHist(DataHist,datahistname,fInFileName);
   
-  BkgdHist = (TH2F*)fInFile->Get(Common::BkgdHistName.Data());
-  Common::CheckValidHist(BkgdHist,Common::BkgdHistName,fInFileName);
-
   // Get signal hists
   for (const auto & HistNamePair : Common::HistNameMap)
   {
