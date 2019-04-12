@@ -79,6 +79,7 @@ struct toyStruct
 
 struct phoStruct
 {
+  float ECorrFactor_;
   float E_;
   float pt_;
   float phi_;

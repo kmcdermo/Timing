@@ -1610,6 +1610,7 @@ void DisPho::InitializePhoBranches()
   {
     auto & phoBranch = phoBranches[iphoton];
 
+    phoBranch.ECorrFactor_ = -9999.f;
     phoBranch.E_ = -9999.f;
     phoBranch.pt_ = -9999.f;
     phoBranch.eta_ = -9999.f;
@@ -1702,7 +1703,8 @@ void DisPho::SetPhoBranches()
     auto & phoBranch = phoBranches[iphoton];
     
     // basic kinematic with v2: https://twiki.cern.ch/twiki/bin/viewauth/CMS/EgammaMiniAODV2#Applying_the_Energy_Scale_and_sm
-    const auto phop4 = photon.p4() * oot::GetCorrFactor(photon);
+    phoBranch.ECorrFactor_ = oot::GetCorrFactor(photon);
+    const auto phop4 = photon.p4() * phoBranch.ECorrFactor_;
     phoBranch.E_   = phop4.energy();
     phoBranch.pt_  = phop4.pt();
     phoBranch.phi_ = phop4.phi();
@@ -2391,6 +2393,7 @@ void DisPho::MakeEventTree()
   {
     auto & phoBranch = phoBranches[iphoton];
 
+    disphotree->Branch(Form("phoECorrFactor_%i",iphoton), &phoBranch.ECorrFactor_);
     disphotree->Branch(Form("phoE_%i",iphoton), &phoBranch.E_);
     disphotree->Branch(Form("phopt_%i",iphoton), &phoBranch.pt_);
     disphotree->Branch(Form("phoeta_%i",iphoton), &phoBranch.eta_);
