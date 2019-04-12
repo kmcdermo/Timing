@@ -17,7 +17,7 @@ void gencgrav()
   //  std::vector<int>   lambs = {1500,2000};
 
   // submitted points
-  std::vector<float> ctaus = {0.001,0.1,0.5,1,5,10,50,100,200,400,600,800,1000,1200,5000,10000};
+  std::vector<float> ctaus = {0.001,0.01,0.1,0.5,1,5,10,50,100,200,400,600,800,1000,1200,5000,10000};
   std::vector<int>   lambs = {100,150,200,250,300,350,400,500,600};
   
   // points for zchia
