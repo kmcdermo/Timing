@@ -349,9 +349,11 @@ void CombinePreparer::SetupTemplateHists()
   fTemplateFile->cd();
 
   // Get template hists
-  TemplateHistX = (TH1D*)fTemplateFile->Get(Common::templateXHistName.Data());
-  Common::CheckValidHist(TemplateHistX,Common::templateXHistName,inTemplateFileName);
+  const auto inTemplateXHistName = Common::templateXHistName+"_"+Common::templateSuffix;
+  TemplateHistX = (TH1D*)fTemplateFile->Get(inTemplateXHistName.Data());
+  Common::CheckValidHist(TemplateHistX,inTemplateXHistName,inTemplateFileName);
 
-  TemplateHistY = (TH1D*)fTemplateFile->Get(Common::templateYHistName.Data());
-  Common::CheckValidHist(TemplateHistY,Common::templateYHistName,inTemplateFileName);
+  const auto inTemplateYHistName = Common::templateYHistName+"_"+Common::templateSuffix;
+  TemplateHistY = (TH1D*)fTemplateFile->Get(inTemplateYHistName.Data());
+  Common::CheckValidHist(TemplateHistY,inTemplateYHistName,inTemplateFileName);
 }

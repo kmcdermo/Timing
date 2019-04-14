@@ -171,8 +171,9 @@ namespace Common
 
   // time and met template info
   static const TString templateFileName  = "met_vs_time_templates.root";
-  static const TString templateXHistName = "Data_Hist_Plotted_Time_for_MET_0_to_100_Templates";
-  static const TString templateYHistName = "Data_Hist_Plotted_MET_for_Time_m1_to_1_Templates";
+  static const TString templateSuffix    = "Templates";
+  static const TString templateXHistName = "Data_Hist_Plotted_Time_for_MET_0_to_100";
+  static const TString templateYHistName = "Data_Hist_Plotted_MET_for_Time_m1_to_1";
 
   // Sample Information
   extern TString PrimaryDataset;
