@@ -38,6 +38,7 @@ function make1DplotsSubRoutine
 	fi
     done < "${plotconfigdir}/${plotlist}.${inTextExt}"
 }
+export -f make1DplotsSubRoutine
 
 ## main loops
 for input in "${inputs[@]}"
@@ -45,7 +46,7 @@ do
     echo ${!input} | while read -r label infile insigfile sel
     do
 	echo "Making 1D plots for: ${label}"
-	nohup bash -c "make1DplotsSubRoutine ${input} ${label} ${infile} ${insigfile} ${sel}" >& "${input}_1Dplots.log" &
+	make1DplotsSubRoutine "${input}" "${label}" "${infile}" "${insigfile}" "${sel}" >& "${input}_1Dplots.log" &
     done
 done
 
