@@ -4,8 +4,6 @@
 #include "TStyle.h"
 #include "TFile.h"
 #include "TH1F.h"
-#include "TEfficiency.h"
-#include "TGraphAsymmErrors.h"
 #include "TCanvas.h"
 #include "TLegend.h"
 #include "TString.h"
@@ -29,7 +27,7 @@ public:
 
   // Main routines
   void MakeSigEffPlot();
-  void MakeInputGraphs();
+  void MakeInputHists();
   void MakeLegend();
   void MakeOutput();
 
@@ -37,9 +35,9 @@ public:
   void MakeConfigPave();
 
   // Helper functions for making graphs
-  TEfficiency * MakeEfficiency(const TString & groupname);
-  void MakeGraph(const TEfficiency * efficiency, const TString & groupname);
-
+  void MakeHist(const TString & groupname);
+  TString GetLambda(TString sample);
+  
   // Helper functions for plotting
   void DrawOutput(const Bool_t isLogY);
   void GetMinYMaxY();
@@ -55,7 +53,7 @@ private:
 
   // Outputs
   TFile * fOutFile;
-  std::map<TString,TGraphAsymmErrors*> fGraphMap;
+  std::map<TString,TH1F*> fEffMap;
   TStyle * fTDRStyle;
   TLegend * fLegend;
   TCanvas * fCanvas;

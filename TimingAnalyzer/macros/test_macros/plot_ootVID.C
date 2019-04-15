@@ -359,7 +359,7 @@ void set_eff(TH1F * hist, const TH1F * numer, const TH1F * denom)
     if ((denom->GetBinContent(ibin) <= 0.0) || (numer->GetBinContent(ibin) <= 0.0)) continue;
     
     const auto prob = numer->GetBinContent(ibin)/denom->GetBinContent(ibin);
-    const auto err  = std::sqrt(prob*(1.0-prob)/denom->GetBinContent(ibin));
+    const auto err  = 1.96*std::sqrt(prob*(1.0-prob)/denom->GetBinContent(ibin));
     
     hist->SetBinContent(ibin,prob);
     hist->SetBinError  (ibin,err);

@@ -236,7 +236,7 @@ void TnPPlotter::MakeRatioOutput()
 	const auto val     = eff->GetEfficiency(ibinX);
 	const auto err_low = eff->GetEfficiencyErrorLow(ibinX);
 	const auto err_up  = eff->GetEfficiencyErrorUp (ibinX);
-	const auto err     = ((err_low > err_up) ? err_low : err_up);
+	const auto err     = 1.96*((err_low > err_up) ? err_low : err_up);
 
 	hist->SetBinContent(ibinX,val);
 	hist->SetBinError  (ibinX,err);

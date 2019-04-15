@@ -25,8 +25,7 @@ SigEffPlotter::~SigEffPlotter()
 {
   std::cout << "Tidying up in destructor..." << std::endl;
   
-  for (auto & graph : fGraphMap) delete graph.second;
-
+  Common::DeleteMap(fEffMap);
   delete fLegend;
   delete fCanvas;
   delete fConfigPave;
@@ -39,8 +38,8 @@ void SigEffPlotter::MakeSigEffPlot()
 {
   std::cout << "Making Signal Efficiency Plot..." << std::endl;
 
-  // Make input graphs
-  SigEffPlotter::MakeInputGraphs();
+  // Make input hists
+  SigEffPlotter::MakeInputHists();
   
   // Make Legend
   SigEffPlotter::MakeLegend();
@@ -52,30 +51,21 @@ void SigEffPlotter::MakeSigEffPlot()
   SigEffPlotter::MakeConfigPave();
 }
 
-void SigEffPlotter::MakeInputGraphs()
+void SigEffPlotter::MakeInputHists()
 {
-  std::cout << "Making input graphs..." << std::endl;
+  std::cout << "Making input hists..." << std::endl;
 
   // loop over signal groups
   for (auto igroup = 0U; igroup < fSignalSubGroupVec.size(); igroup++)
   {
     const auto & groupname = fSignalSubGroupVec[igroup];
-
-    // make efficiency object
-    auto efficiency = SigEffPlotter::MakeEfficiency(groupname);
   
-    // make a graph so we mess with the labels, axis limits
-    SigEffPlotter::MakeGraph(efficiency,groupname);
-
-    // save efficiency object to outfile
-    Common::Write(fOutFile,efficiency);
-    
-    // delete tmp efficiency 
-    delete efficiency;
+    // make hists
+    SigEffPlotter::MakeHist(groupname);
   }
 
-  // write graphs to outfile (for good measure)
-  Common::WriteMap(fOutFile,fGraphMap);
+  // write hists to outfile (for good measure)
+  Common::WriteMap(fOutFile,fEffMap);
 }
 
 void SigEffPlotter::MakeLegend()
@@ -90,13 +80,13 @@ void SigEffPlotter::MakeLegend()
   for (const auto & groupname : fSignalSubGroupVec)
   {
     // get inputs
-    const auto & graph = fGraphMap[groupname];
+    const auto & eff = fEffMap[groupname];
     
     // and add to legend!
     auto label = groupname;
     label.ReplaceAll("GMSB_CTau","c#tau: ");
     label.ReplaceAll("p",".");
-    fLegend->AddEntry(graph,Form("%s",label.Data()),"lep");
+    fLegend->AddEntry(eff,Form("%s",label.Data()),"lep");
   }
 
   // write legend to outfile
@@ -149,73 +139,47 @@ void SigEffPlotter::MakeConfigPave()
   Common::Write(fOutFile,fConfigPave);
 }
 
-TEfficiency * SigEffPlotter::MakeEfficiency(const TString & groupname)
+void SigEffPlotter::MakeHist(const TString & groupname)
 {
-  std::cout << "Making TEfficiency for: " << groupname.Data() << std::endl;
-  
-  // get inputs
-  const auto & samples = Common::SignalSubGroupMap[groupname];
-  const auto nSamples  = samples.size();
-  
-  // new efficiency object
-  auto eff = new TEfficiency(Form("%s_Eff",groupname.Data()),"Signal Sample Efficiency;#Lambda [TeV];#epsilon",nSamples,0,nSamples);
+  std::cout << "Making Hist for: " << groupname.Data() << std::endl;
 
-  // loop over samples, get hists, and set the appropriate efficiency
-  for (auto isample = 0U; isample < nSamples; isample++)
-  {
-    // get input histname
-    const auto & histname = Common::SignalCutFlowHistNameMap[samples[isample]];
-
-    // get input hist
-    fInFile->cd();
-    auto hist = (TH1F*)fInFile->Get(Form("%s",histname.Data()));
-    Common::CheckValidHist(hist,histname,fInFileName);
-    
-    // set efficiency by bins!
-    eff->SetTotalEvents(isample+1,hist->GetBinContent(1));
-    eff->SetPassedEvents(isample+1,hist->GetBinContent(hist->GetXaxis()->GetNbins()));
-    
-    delete hist;
-  }
-
-  return eff;
-}
-
-void SigEffPlotter::MakeGraph(const TEfficiency * efficiency, const TString & groupname)
-{
-  std::cout << "Making Graph for: " << groupname.Data() << std::endl;
-
-  // first create the graph from the efficiency object
-  fGraphMap[groupname] = efficiency->CreateGraph();
-  auto & graph = fGraphMap[groupname];
-
-  // set names and colors
-  graph->SetName(Form("%s_Graph",groupname.Data()));
-  graph->SetLineColor(Common::SignalSubGroupColorMap[groupname].color);
-  graph->SetMarkerColor(Common::SignalSubGroupColorMap[groupname].color);
-  
   // need inputs for axis limits and labels
   const auto & samples = Common::SignalSubGroupMap[groupname];
   const auto nSamples  = samples.size();
-  
-  // absurdity from ROOT
-  graph->GetHistogram()->GetXaxis()->Set(nSamples,0,nSamples);
-  
-  // loop over samples, set Lambda for GMSB
+
+  // first create the eff hist
+  fOutFile->cd();
+  auto & eff = fEffMap[groupname];
+  eff = new TH1F(Form("%s_Eff",groupname.Data()),"Signal Sample Efficiency;#Lambda [TeV];#epsilon",nSamples,0,nSamples);
+  eff->SetLineColor(Common::SignalSubGroupColorMap[groupname].color);
+  eff->SetMarkerColor(Common::SignalSubGroupColorMap[groupname].color);
+    
+  // loop over samples, set Lambda for GMSB + values
   for (auto isample = 0U; isample < nSamples; isample++)
   {
-    auto sample = samples[isample];
+    // get sample
+    const auto sample = samples[isample];
+
+    // get input histname
+    const auto & histname = Common::SignalCutFlowHistNameMap[sample];
+
+    // get input hist
+    auto hist = (TH1F*)fInFile->Get(Form("%s",histname.Data()));
+    Common::CheckValidHist(hist,histname,fInFileName);
     
-    const TString s_lambda = "_L";
-    auto i_lambda = sample.Index(s_lambda);
-    auto l_lambda = s_lambda.Length();
-    
-    const TString s_ctau = "_CTau";
-    auto i_ctau = sample.Index(s_ctau);
-    
-    const TString lambda(sample(i_lambda+l_lambda,i_ctau-i_lambda-l_lambda));
-    
-    graph->GetHistogram()->GetXaxis()->SetBinLabel(isample+1,Form("%s",lambda.Data()));
+    // get eff
+    const auto denom = hist->GetBinContent(1);
+    const auto numer = hist->GetBinContent(hist->GetXaxis()->GetNbins());
+    const auto prob  = numer/denom;
+    const auto err   = 1.96*std::sqrt((prob*(1.f-prob)/denom));
+
+    // set efficiency by bins!
+    eff->SetBinContent(isample+1,prob);
+    eff->SetBinError  (isample+1,err);
+
+    // set label
+    const auto lambda = SigEffPlotter::GetLambda(sample);
+    eff->GetXaxis()->SetBinLabel(isample+1,Form("%s",lambda.Data()));
   }
 }
 
@@ -227,22 +191,22 @@ void SigEffPlotter::DrawOutput(const Bool_t isLogY)
   fCanvas->cd();
   fCanvas->SetLogy(isLogY);
 
-  // loop over groups and draw
+  // loop over hists and draw
   for (auto igroup = 0U; igroup < fSignalSubGroupVec.size(); igroup++)
   {
     const auto & groupname = fSignalSubGroupVec[igroup];
-    auto & graph = fGraphMap[groupname];
+    auto & eff = fEffMap[groupname];
 
     // set min/max
     if (igroup == 0)
     {
-      graph->GetHistogram()->SetMinimum( isLogY ? fMinY/1.5 : fMinY/1.05 );
-      graph->GetHistogram()->SetMaximum( isLogY ? fMaxY*1.5 : fMaxY*1.05 );
+      eff->SetMinimum( isLogY ? 1e-3 : fMinY/1.05 );
+      eff->SetMaximum( isLogY ? 1e0  : fMaxY*1.05 );
     }
 
-    // draw graph
+    // draw hists
     fCanvas->cd();
-    graph->Draw(igroup>0?"P same":"AP");
+    eff->Draw(igroup>0?"ep same":"ep");
   }
 
   // Draw legend and then save!
@@ -259,18 +223,17 @@ void SigEffPlotter::GetMinYMaxY()
   fMaxY = -1e9;
 
   // loop over all graphs
-  for (const auto & GraphPair : fGraphMap)
+  for (const auto & EffPair : fEffMap)
   {
-    const auto & graph = GraphPair.second;
+    const auto & eff = EffPair.second;
 
     // loop over all points to find min, max
-    for (auto ipoint = 0; ipoint < graph->GetN(); ipoint++)
+    for (auto ibinX = 1; ibinX <= eff->GetXaxis()->GetNbins(); ibinX++)
     {
-      Double_t x,y;
-      graph->GetPoint(ipoint,x,y);
-      
-      if (y < fMinY && y > 0.) fMinY = y;
-      if (y > fMaxY)           fMaxY = y;
+      const auto content = eff->GetBinContent(ibinX);
+
+      if (content < fMinY && content > 0.0) fMinY = content;
+      if (content > fMaxY && content > 0.0) fMaxY = content;
     }
   }
 }
@@ -323,4 +286,16 @@ void SigEffPlotter::SetupSignalSubGroups()
 	      
 	      return ctau1 < ctau2;
 	    });
+}
+
+TString SigEffPlotter::GetLambda(TString sample)
+{
+  const TString s_lambda = "_L";
+  auto i_lambda = sample.Index(s_lambda);
+  auto l_lambda = s_lambda.Length();
+  
+  const TString s_ctau = "_CTau";
+  auto i_ctau = sample.Index(s_ctau);
+  
+  return TString(sample(i_lambda+l_lambda,i_ctau-i_lambda-l_lambda));
 }

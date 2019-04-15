@@ -169,7 +169,7 @@ void makeEff(TH1F * eff, const TH1F * denom, const TH1F * numer)
     if ((denom->GetBinContent(ibin) <= 0.0) || (numer->GetBinContent(ibin) <= 0.0)) continue;
     
     const auto prob = numer->GetBinContent(ibin)/denom->GetBinContent(ibin);
-    const auto err  = std::sqrt(prob*(1.0-prob)/denom->GetBinContent(ibin));
+    const auto err  = 1.96*std::sqrt(prob*(1.0-prob)/denom->GetBinContent(ibin));
     
     eff->SetBinContent(ibin,prob);
     eff->SetBinError  (ibin,err);

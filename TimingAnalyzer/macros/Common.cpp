@@ -404,14 +404,14 @@ namespace Common
   void SetupSignalSubGroupColors()
   {
     // GMSB
-    Common::SignalSubGroupColorMap["GMSB_CTau10cm"]  = {kSpring,"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau10cm"]  = {kBlue,"Up"};
     Common::SignalSubGroupColorMap["GMSB_CTau200cm"] = {kRed+1,"Up"};
-    Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kBlue,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau600cm"] = {kViolet+10,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau800cm"] = {kOrange,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau1000cm"] = {kTeal,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau1200cm"] = {kMagenta,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau10000cm"] = {kAzure,"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kGreen+1,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau600cm"] = {kMagenta,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau800cm"] = {kOrange+1,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau1000cm"] = {kAzure+10,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau1200cm"] = {kYellow+3,"Down"};
+    Common::SignalSubGroupColorMap["GMSB_CTau10000cm"] = {kPink-9,"Up"};
 
     // HVDS
   }
