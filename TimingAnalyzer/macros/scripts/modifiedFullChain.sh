@@ -20,7 +20,7 @@ save_meta_data=${5:-0}
 do_cleanup=${6:-"true"}
 
 ## xy boundaries to plot: from optimized scan
-declare -a xys=("1.5 1.5 500 500" "0.5 0.5 200 200" "1.5 1.5 200 200")
+declare -a xys=("0.5 0.5 200 200" "1.5 1.5 200 200")
 
 ## scan log --> set below
 scan_log="abcd_categories.log"
@@ -66,11 +66,6 @@ echo "Making log file for best dirs"
 
 for lambda in 100 150 200 250 300 350 400
 do
-    for ctau in 0p001 0p1
-    do
-	echo "GMSB_L${lambda}_CTau${ctau} ${fulldir}/x_1.5_y_500" >> "${scan_log}"
-    done
-
     for ctau in 10
     do 
 	echo "GMSB_L${lambda}_CTau${ctau} ${fulldir}/x_0.5_y_200" >> "${scan_log}"

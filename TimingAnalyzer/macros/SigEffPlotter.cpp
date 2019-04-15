@@ -166,12 +166,21 @@ void SigEffPlotter::MakeHist(const TString & groupname)
     // get input hist
     auto hist = (TH1F*)fInFile->Get(Form("%s",histname.Data()));
     Common::CheckValidHist(hist,histname,fInFileName);
+
+    // get input tree for rescaling errors
+    const auto treename = Common::TreeNameMap[sample];
+    auto tree = (TTree*)fInFile->Get(treename.Data());
+    Common::CheckValidTree(tree,treename,fInFile->GetName());
+
+    // get scale factor
+    Float_t evtwgt; TBranch * b_evtwgt; tree->SetBranchAddress("evtwgt",&evtwgt,&b_evtwgt);
+    tree->GetEntry(0);
     
     // get eff
     const auto denom = hist->GetBinContent(1);
     const auto numer = hist->GetBinContent(hist->GetXaxis()->GetNbins());
     const auto prob  = numer/denom;
-    const auto err   = 1.96*std::sqrt((prob*(1.f-prob)/denom));
+    const auto err   = 1.96*std::sqrt((prob*(1.f-prob)/(denom/evtwgt)));
 
     // set efficiency by bins!
     eff->SetBinContent(isample+1,prob);
@@ -180,6 +189,10 @@ void SigEffPlotter::MakeHist(const TString & groupname)
     // set label
     const auto lambda = SigEffPlotter::GetLambda(sample);
     eff->GetXaxis()->SetBinLabel(isample+1,Form("%s",lambda.Data()));
+
+    // delete it all
+    delete tree;
+    delete hist;
   }
 }
 
@@ -248,6 +261,7 @@ void SigEffPlotter::SetupCommon()
 
   Common::SetupGroups();
   Common::SetupSignalGroups();
+  Common::SetupTreeNames();
   Common::SetupSignalCutFlowHistNames();
 
   Common::SetupSignalSubGroups();
