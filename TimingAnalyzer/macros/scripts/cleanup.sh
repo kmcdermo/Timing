@@ -11,8 +11,5 @@ do
     rm *".${ext}"
 done
 
-## clean-up combine info
-rm "${combdir}/"*".${inTextExt}" "${combdir}/"*".${outTextExt}" "${combdir}/"*".root"
-
 ## print out message
 echo "Finished cleaning up outputs!"

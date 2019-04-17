@@ -31,7 +31,7 @@ fi
 ## Ship things over to combine directory ##
 ###########################################
 
-cp "${inlimitdir}/${datacardname}"*".${inTextExt}" "${combdir}"
+cp -r "${inlimitdir}" "${combdir}"
 
 #####################
 ## Now work there! ##
@@ -56,7 +56,11 @@ function extractResultsSub ()
 	echo "Running combine for: ${sample}"
 	
 	local log="${combinelogname}_${sample}.${outTextExt}"
-    
+	
+	## first, combine cards
+	combineCards.py "${inlimitdir}/${ex1pho}/${datacardname}_${sample}.${inTextExt}" "${inlimitdir}/${in2pho}/${datacardname}_${sample}.${inTextExt}" > "${datacardname}_${sample}.${inTextExt}" 
+
+	## then, run combine over combined card
 	combine -M AsymptoticLimits "${datacardname}_${sample}.${inTextExt}" ${combine_extra} --name "${sample}" >& "${log}"
     done
 }
@@ -95,15 +99,18 @@ eval `scram runtime -sh`
 
 cp "${combdir}/${outcombname}"*".root" "${outlimitdir}"
 
-##########################
-## Store logs in outdir ##
-##########################
+################################
+## Move combine output to web ##
+################################
 
-## make out dirs
-fulldir="${topdir}/${disphodir}/${outdir}/${outlimitplotdir}"
-PrepOutDir "${fulldir}"
-cp "${combdir}/${combinelogname}"*".${outTextExt}" "${fulldir}"
-cp "${combdir}/${outcombname}"*".root" "${fulldir}"
+fullinputdir="${topdir}/${disphodir}/${outdir}/${incombdir}"
+PrepOutDir "${fullinputdir}"
+cp "${combdir}/${datacardname}"*".${inTextExt}" "${incombdir}"
+
+fulllimitdir="${topdir}/${disphodir}/${outdir}/${outlimitplotdir}"
+PrepOutDir "${fulllimitdir}"
+cp "${combdir}/${combinelogname}"*".${outTextExt}" "${fulllimitdir}"
+cp "${combdir}/${outcombname}"*".root" "${fulllimitdir}"
 
 ###########################
 ## Clean up if requested ##

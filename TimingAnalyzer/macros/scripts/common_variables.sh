@@ -27,6 +27,11 @@ export disphodir="dispho/plots"
 ## combine info
 export combdir="/afs/cern.ch/work/k/kmcdermo/private/dispho/Analysis/combine/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit/working"
 
+## category info
+export ex1pho="exclusive_1pho"
+export in2pho="inclusive_2pho"
+export categorydir="combined_categories"
+
 ## common info for optimized ABCD scan
 export plotfiletext="met_vs_time" # 2D plot base name
 export scan_log="abcd_scan_for_r.${outTextExt}" # Limit Scan Log File
@@ -88,14 +93,13 @@ export base_adjust_var="phoE"
 export adjust_var="${base_adjust_var}_0"
 
 ## CR + SR info: label skim signal_skim additional_cuts
-export CR_GJets="gjets v4/unc_tests/gjets NO_SKIM always_true"
-export CR_QCD="qcd v4/unc_tests/qcd NO_SKIM always_true"
-export CR_EWK="ewk v4/unc_tests/ewk NO_SKIM always_true"
-export CR_ZEE="zee v4/unc_tests/zee NO_SKIM always_true"
-declare -a inputs=(CR_GJets CR_QCD CR_EWK CR_ZEE)
+export CR_GJets="gjets v4/final/gjets v4/final/signals_gjets always_true"
+export CR_QCD="qcd v4/final/qcd v4/final/signals_qcd always_true"
+export CR_EWK="ewk v4/final/ewk_trk v4/final/signals_ewk_trk always_true"
+#export CR_EWK="ewk v4/final/ewk v4/final/signals_ewk always_true"
 
 ## Unc tests for signals
-export SR="sr_SPH v4/unc_tests/nominal v4/unc_tests/signals_nominal always_true"
+export SR="sr_SPH v4/categories/v1/inclusive_2pho v4/categories/v1/signals_inclusive_2pho always_true"
 export PHO_SCALE_UP="phoscaleup NO_DATA v4/unc_tests/signals_PhoScaleUp always_true"
 export PHO_SCALE_DOWN="phoscaledown NO_DATA v4/unc_tests/signals_PhoScaleDown always_true"
 export PHO_SMEAR_UP="phosmearup NO_DATA v4/unc_tests/signals_PhoSmearUp always_true"
@@ -104,6 +108,8 @@ export JET_SCALE_UP="jetscaleup NO_DATA v4/unc_tests/signals_JetScaleUp always_t
 export JET_SCALE_DOWN="jetscaledown NO_DATA v4/unc_tests/signals_JetScaleDown always_true"
 export JET_RESOL_UP="jetresolup NO_DATA v4/unc_tests/signals_JetResolUp always_true"
 export JET_RESOL_DOWN="jetresoldown NO_DATA v4/unc_tests/signals_JetResolDown always_true"
+
+declare -a inputs=(SR)
 
 ## Zee 
 #export Zee="Zee zee_TnP/skim zee_TnP/signals_skim always_true"
