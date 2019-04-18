@@ -105,7 +105,7 @@ cp "${combdir}/${outcombname}"*".root" "${outlimitdir}"
 
 fullinputdir="${topdir}/${disphodir}/${outdir}/${incombdir}"
 PrepOutDir "${fullinputdir}"
-cp "${combdir}/${datacardname}"*".${inTextExt}" "${incombdir}"
+cp "${combdir}/${datacardname}"*".${inTextExt}" "${fullinputdir}"
 
 fulllimitdir="${topdir}/${disphodir}/${outdir}/${outlimitplotdir}"
 PrepOutDir "${fulllimitdir}"

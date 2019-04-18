@@ -11,7 +11,7 @@ source scripts/common_variables.sh
 ###################
 
 ## Command Line Input
-outdir=${1:-"madv2_v4/categories/v1/full_chain"}
+outdir=${1:-"madv2_v4/categories/v1p1/full_chain"}
 
 use_obs=${2:-"true"}
 use_systematics=${3:-"false"}
@@ -25,6 +25,9 @@ then
 else
     doobs=0
 fi
+
+## Derived Config
+fulldir="${topdir}/${disphodir}/${outdir}"
 
 ######################
 ## Make Directories ##
