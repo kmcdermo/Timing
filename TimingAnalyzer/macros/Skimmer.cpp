@@ -66,7 +66,34 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
     Common::CheckValidHist(fInPUWgtHist,puhistname,fPUWgtFileName);
 
     Skimmer::GetPUWeights();
+
+    // open only for signals
+    if (fInConfig.isGMSB || fInConfig.isHVDS)
+    {
+      // GED VID
+      const auto gedSFFileName = Common::eosPreFix+"/"+Common::eosDir+Common::calibDir+"/"+Common::gedVIDSFFileName;
+      fInGEDSFFile = TFile::Open(gedSFFileName.Data());
+      Common::CheckValidFile(fInGEDSFFile,gedSFFileName);
+
+      fInGEDSFHist = (TH2F*)fInGEDSFFile->Get(Common::vidSFHistName.Data());
+      Common::CheckValidHist(fInGEDSFHist,vidSFHistname,gedSFFileName);
+      
+      // OOT VID
+      const auto ootSFFileName = Common::eosPreFix+"/"+Common::eosDir+Common::calibDir+"/"+Common::ootVIDSFFileName;
+      fInOOTSFFile = TFile::Open(ootSFFileName.Data());
+      Common::CheckValidFile(fInOOTSFFile,ootSFFileName);
+
+      fInOOTSFHist = (TH2F*)fInOOTSFFile->Get(Common::vidSFHistName.Data());
+      Common::CheckValidHist(fInOOTSFHist,vidSFHistname,ootSFFileName);
+    }
   }
+
+  ////////////////////////////////
+  // Set all transient products //
+  ////////////////////////////////
+  
+  fTimeFitN = (isMC ? Common::timeFitN_MC : Common::timeFitN_Data);
+  fTimeFitC = (isMC ? Common::timeFitC_MC : Common::timeFitC_Data);
 
   /////////////////////////
   // Set all the outputs //
@@ -93,6 +120,15 @@ Skimmer::~Skimmer()
   {
     delete fInPUWgtHist;
     delete fInPUWgtFile;
+    
+    if (fInConfig.isGMSB || fInConfig.isHVDS)
+    {
+      delete fInOOTSFHist;
+      delete fInOOTSFFile;
+
+      delete fInGEDSFHist;
+      delete fInGEDSFFile;
+    }
   }
 
   //  delete fInCutFlowWgt;
@@ -131,8 +167,6 @@ void Skimmer::EventLoop()
     // perform skim: standard
     if (fSkim == SkimType::Standard) // do not apply skim selection on toy config
     {
-
-
       // leading photon skim section
       fInEvent.b_nphotons->GetEntry(entry);
       if (fInEvent.nphotons <= 0) continue;
@@ -170,20 +204,15 @@ void Skimmer::EventLoop()
 
       // filter on MET Flags
       fInEvent.b_metPV->GetEntry(entry);
-      fInEvent.b_metBeamHalo->GetEntry(entry);
       fInEvent.b_metHBHENoise->GetEntry(entry);
       fInEvent.b_metHBHEisoNoise->GetEntry(entry);
       fInEvent.b_metECALTP->GetEntry(entry);
       fInEvent.b_metPFMuon->GetEntry(entry);
-      fInEvent.b_metPFChgHad->GetEntry(entry);
-      // fInEvent.b_metECALCalib->GetEntry(entry);
       fInEvent.b_metECALBadCalib->GetEntry(entry);
-      if (!fInEvent.metPV || !fInEvent.metBeamHalo || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || 
-	  // !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad || !fInEvent.metECALCalib) continue;
-       	  !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metPFChgHad || !fInEvent.metECALBadCalib) continue;
+      if (!fInEvent.metPV || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metECALBadCalib) continue;
 
-      fInEvent.b_metEESC->GetEntry(entry);
-      if (!fIsMC && !fInEvent.metEESC) continue;
+      fInEvent.b_metBeamHalo->GetEntry(entry);
+      if (!fIsMC && !fInEvent.metBeamHalo) continue;
       
       // fill cutflow for MET filters
       fOutCutFlow   ->Fill((cutLabels["METFlag"]*1.f)-0.5f);
@@ -220,6 +249,9 @@ void Skimmer::EventLoop()
 
 	inpho.b_isOOT->GetEntry(entry);
 	if (inpho.isOOT) continue;
+
+	inpho.b_isEB->GetEntry(entry);
+	if (!inpho.isEB) continue;
 
 	good_phos.emplace_back(ipho);
       }
@@ -418,6 +450,7 @@ void Skimmer::EventLoop()
       Skimmer::CorrectMET();
       Skimmer::ReorderJets();
     }
+    if (fOutConfig.isGMSB || fOutConfig.isHVDS) Skimmer::FillOutSFs();
 
     // fill the tree
     fOutTree->Fill();
@@ -1035,7 +1068,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	  const Float_t rh_E = (*fInRecHits.E)   [irh];
 	  const Float_t rh_T = (*fInRecHits.time)[irh];
 	  const Float_t rh_A = (rh_E/(*fInRecHits.adcToGeV)[irh])/(*fInRecHits.pedrms12)[irh]; // amplitude normalized by pedestal noise
-	  const Float_t inv_weight_2 = 1.f/(std::pow(Common::timefitN/rh_A,2)+2.f*std::pow(Common::timefitC,2));
+	  const Float_t inv_weight_2 = 1.f/(std::pow(fTimefitN/rh_A,2)+2.f*std::pow(fTimefitC,2));
 	  const Float_t rh_TOF = (*fInRecHits.TOF)[irh];
 
 	  outpho.nrechits++;
@@ -1179,6 +1212,24 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       }
     }
   }
+}
+
+void Skimmer::FillOutSFs()
+{
+  // use leading photon to set SF
+  const auto & photon = fOutPhos.front();
+  
+  // set pt for safety 
+  auto phopt = photon.pt;
+  if (phopt >= 500.f) phopt = 400.f;
+
+  // set sceta 
+  auto phosceta = photon.sceta;
+  if      (phosceta <= -1.444) phosceta = -1.4;
+  else if (phosceta >=  1.444) phosceta =  1.4;
+
+  // set SF
+  fOutEvent.vidSF = (photon.isOOT ? fInOOTSFHist->GetBinContent(fInOOTSFHist->FindBin(phosceta,phopt)) : fInGEDSFHist->GetBinContent(fInGEDSFHist->FindBin(phosceta,phopt)) );
 }
 
 void Skimmer::CorrectMET()
@@ -2084,6 +2135,12 @@ void Skimmer::InitOutBranches()
 
   // add event weight
   fOutTree->Branch(fOutEvent.s_evtwgt.c_str(), &fOutEvent.evtwgt);
+
+  // set signal branches: VID SFs
+  if (fInConfig.isGMSB || fInConfig.isHVDS)
+  {
+    fOutTree->Branch(fOutEvent.s_vidSF.c_str(), &fOutEvent.vidSF);
+  }
 } 
 
 void Skimmer::InitOutCutFlowHists()

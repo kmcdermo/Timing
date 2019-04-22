@@ -64,6 +64,9 @@ public:
   // Reordering functions
   void ReorderJets();
 
+  // Signal VID SFs
+  void FillOutSFs();
+
   // helper functions
   void FillPhoListStandard();
 
@@ -97,6 +100,10 @@ private:
   TH1F  * fInPUWgtHist;
   Float_t fSampleWeight;
   std::vector<Float_t> fPUWeights;
+  TFile * fInGEDSFFile;
+  TH2F  * fInGEDSFHist;
+  TFile * fInOOTSFFile;
+  TH2F  * fInOOTSFHist;
   
   GmsbVec fInGMSBs;
   HvdsVec fInHVDSs;
@@ -107,6 +114,10 @@ private:
   PhoVec  fInPhos;
 
   Configuration fInConfig;
+
+  // timefit weight constants
+  Float_t fTimeFitN;
+  Float_t fTimeFitC;
 
   // list of photon indices
   std::vector<Int_t> fPhoList;
