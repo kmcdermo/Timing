@@ -71,20 +71,20 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
     if (fInConfig.isGMSB || fInConfig.isHVDS)
     {
       // GED VID
-      const auto gedSFFileName = Common::eosPreFix+"/"+Common::eosDir+Common::calibDir+"/"+Common::gedVIDSFFileName;
+      const auto gedSFFileName = Common::eosPreFix+"/"+Common::eosDir+"/"+Common::calibDir+"/"+Common::gedVIDSFFileName;
       fInGEDSFFile = TFile::Open(gedSFFileName.Data());
       Common::CheckValidFile(fInGEDSFFile,gedSFFileName);
 
       fInGEDSFHist = (TH2F*)fInGEDSFFile->Get(Common::vidSFHistName.Data());
-      Common::CheckValidHist(fInGEDSFHist,vidSFHistname,gedSFFileName);
+      Common::CheckValidHist(fInGEDSFHist,Common::vidSFHistName,gedSFFileName);
       
       // OOT VID
-      const auto ootSFFileName = Common::eosPreFix+"/"+Common::eosDir+Common::calibDir+"/"+Common::ootVIDSFFileName;
+      const auto ootSFFileName = Common::eosPreFix+"/"+Common::eosDir+"/"+Common::calibDir+"/"+Common::ootVIDSFFileName;
       fInOOTSFFile = TFile::Open(ootSFFileName.Data());
       Common::CheckValidFile(fInOOTSFFile,ootSFFileName);
 
       fInOOTSFHist = (TH2F*)fInOOTSFFile->Get(Common::vidSFHistName.Data());
-      Common::CheckValidHist(fInOOTSFHist,vidSFHistname,ootSFFileName);
+      Common::CheckValidHist(fInOOTSFHist,Common::vidSFHistName,ootSFFileName);
     }
   }
 
@@ -92,8 +92,8 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
   // Set all transient products //
   ////////////////////////////////
   
-  fTimeFitN = (isMC ? Common::timeFitN_MC : Common::timeFitN_Data);
-  fTimeFitC = (isMC ? Common::timeFitC_MC : Common::timeFitC_Data);
+  fTimeFitN = (fIsMC ? Common::timefitN_MC : Common::timefitN_Data);
+  fTimeFitC = (fIsMC ? Common::timefitC_MC : Common::timefitC_Data);
 
   /////////////////////////
   // Set all the outputs //
@@ -867,7 +867,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
   {
     auto & inpho = fInPhos[ipho];
     
-    inpho.b_ECorrFactor->GetEntry(entry);
+    //    inpho.b_ECorrFactor->GetEntry(entry);
     inpho.b_E->GetEntry(entry);
     inpho.b_pt->GetEntry(entry);
     inpho.b_eta->GetEntry(entry);
@@ -976,7 +976,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     const auto & inpho = fInPhos[fPhoList[ipho]];
     auto & outpho = fOutPhos[ipho];
 
-    outpho.ECorrFactor = inpho.ECorrFactor;
+    //    outpho.ECorrFactor = inpho.ECorrFactor;
     outpho.E = inpho.E;
     outpho.pt = inpho.pt;
     outpho.eta = inpho.eta;
@@ -1068,7 +1068,7 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 	  const Float_t rh_E = (*fInRecHits.E)   [irh];
 	  const Float_t rh_T = (*fInRecHits.time)[irh];
 	  const Float_t rh_A = (rh_E/(*fInRecHits.adcToGeV)[irh])/(*fInRecHits.pedrms12)[irh]; // amplitude normalized by pedestal noise
-	  const Float_t inv_weight_2 = 1.f/(std::pow(fTimefitN/rh_A,2)+2.f*std::pow(fTimefitC,2));
+	  const Float_t inv_weight_2 = 1.f/(std::pow(fTimeFitN/rh_A,2)+2.f*std::pow(fTimeFitC,2));
 	  const Float_t rh_TOF = (*fInRecHits.TOF)[irh];
 
 	  outpho.nrechits++;
@@ -1666,7 +1666,7 @@ void Skimmer::InitInBranches()
   for (auto ipho = 0; ipho < Common::nPhotons; ipho++) 
   {
     auto & pho = fInPhos[ipho];
-    fInTree->SetBranchAddress(Form("%s_%i",pho.s_ECorrFactor.c_str(),ipho), &pho.ECorrFactor, &pho.b_ECorrFactor);
+    //    fInTree->SetBranchAddress(Form("%s_%i",pho.s_ECorrFactor.c_str(),ipho), &pho.ECorrFactor, &pho.b_ECorrFactor);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_E.c_str(),ipho), &pho.E, &pho.b_E);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_pt.c_str(),ipho), &pho.pt, &pho.b_pt);
     fInTree->SetBranchAddress(Form("%s_%i",pho.s_eta.c_str(),ipho), &pho.eta, &pho.b_eta);
@@ -2049,7 +2049,7 @@ void Skimmer::InitOutBranches()
   for (auto ipho = 0; ipho < fNOutPhos; ipho++) 
   {
     auto & pho = fOutPhos[ipho];
-    fOutTree->Branch(Form("%s_%i",pho.s_ECorrFactor.c_str(),ipho), &pho.ECorrFactor);
+    //    fOutTree->Branch(Form("%s_%i",pho.s_ECorrFactor.c_str(),ipho), &pho.ECorrFactor);
     fOutTree->Branch(Form("%s_%i",pho.s_E.c_str(),ipho), &pho.E);
     fOutTree->Branch(Form("%s_%i",pho.s_pt.c_str(),ipho), &pho.pt);
     fOutTree->Branch(Form("%s_%i",pho.s_eta.c_str(),ipho), &pho.eta);
