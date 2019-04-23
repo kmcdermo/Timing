@@ -1,5 +1,5 @@
-var=phoseedTOF
-title=Photon Seed TOF
+var=phoweightedtimeLT120TOF
+title=Photon Weighted TOF
 unit=[ns]
 bins=CONSTANT 30 -3 3
 ytitle=Events

@@ -109,7 +109,6 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
   auto tree = (TTree*)fSkimFile->Get(Form("%s",Common::TreeNameMap["Data"].Data()));
   
   // set input branches
-  //  tree->SetBranchAddress(Form("%s",ev.s_run.c_str()),&ev.run,&ev.b_run);
   tree->SetBranchAddress(Form("%s",ev.s_nphotons.c_str()),&ev.nphotons,&ev.b_nphotons);
   for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
   {
@@ -135,8 +134,12 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
     // dump status check
     if (entry%Common::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
 
-    const TString era = "Full";
+    // only need the entry for the single branches
+    ev.b_nphotons->GetEntry(entry);
 
+    // set era
+    const TString era = "Full";
+    
     // loop over nphotons
     const auto nphos = std::min(ev.nphotons,Common::nPhotons);
     for (auto ipho = 0; ipho < nphos; ipho++)

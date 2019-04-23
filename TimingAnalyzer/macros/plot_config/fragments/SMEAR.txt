@@ -1,5 +1,5 @@
-var=phoseedtimeSMEAR
-title=Photon Seed Time SMEAR Correction
+var=phoweightedtimeLT120SMEAR
+title=Photon Weighted Time SMEAR Correction
 unit=[ns]
 bins=CONSTANT 30 -3 3
 ytitle=Events
