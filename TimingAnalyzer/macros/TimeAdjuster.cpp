@@ -135,16 +135,6 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
     // dump status check
     if (entry%Common::nEvCheck == 0 || entry == 0) std::cout << "Processing Entry: " << entry << " out of " << nEntries << std::endl;
 
-    // only need the entry for the single branches
-    //    ev.b_run->GetEntry(entry);
-    ev.b_nphotons->GetEntry(entry);
-
-    // get era
-    // const auto & era = std::find_if(Common::EraMap.begin(),Common::EraMap.end(),
-    // 				    [=](const std::pair<TString,EraStruct> & EraPair)
-    // 				    {
-    // 				      return ( (EraPair.first != "Full") && ((ev.run >= EraPair.second.startRun) && (ev.run <= EraPair.second.endRun)) );
-    // 				    })->first;
     const TString era = "Full";
 
     // loop over nphotons
@@ -164,16 +154,16 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
       // get bin which corresponds to the pt of the object
       const auto bin = hist->FindBin(pho.adjustvar);
 
-      // set correction branch if bin is found, else no correction
-      if (bin != 0 && bin != hist->GetXaxis()->GetNbins()+1)
-      {
-	const auto shift = hist->GetBinContent(bin);
-	pho.timeSHIFT = -shift;
-      }
-      else
-      {
-	pho.timeSHIFT = 0.f;
-      }
+      // get the bin for the pt of the object
+      auto bin = hist->FindBin(pho.adjustvar);
+      
+      // if outside of range, set accordingly
+      if      (bin < 1) bin = 1;
+      else if (bin > hist->GetXaxis()->GetNbins()) bin = hist->GetXaxis()->GetNbins();
+      
+      // shift data
+      const auto shift = hist->GetBinContent(bin);
+      pho.timeSHIFT = -shift;
       
       // fill branch
       pho.b_timeSHIFT->Fill();
@@ -300,45 +290,38 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	    const auto & hist = MCInfo.MuHistMap[key];
 
 	    // get the bin for the pt of the object
-	    const auto bin = hist->FindBin(pho.adjustvar);
+	    auto bin = hist->FindBin(pho.adjustvar);
 	    
-	    // set correction branch if bin is found, else no correction
-	    if (bin != 0 && bin != hist->GetXaxis()->GetNbins()+1)
-	    {
-	      const auto shift = hist->GetBinContent(bin);
-	      pho.timeSHIFT = -shift;
-	    }
-	    else
-	    {
-	      pho.timeSHIFT = 0.f;
-	    }
+	    // if outside of range, set accordingly
+	    if      (bin < 1) bin = 1;
+	    else if (bin > hist->GetXaxis()->GetNbins()) bin = hist->GetXaxis()->GetNbins();
+
+	    // shift MC
+	    const auto shift = hist->GetBinContent(bin);
+	    pho.timeSHIFT = -shift;
 	  }
 
 	  // set smear correction branch
 	  if (fDoSmear)
 	  {
-	    // const auto & datafit = DataInfo.SigmaFitMap[key];
-	    // const auto & mcfit   = MCInfo  .SigmaFitMap[key];
-	    // const auto sigma     = std::sqrt(std::pow(datafit->Eval(pho.pt),2.f)-std::pow(mcfit->Eval(pho.pt),2.f));
-
 	    // get the right hists
 	    const auto & datahist = DataInfo.SigmaHistMap[key];
 	    const auto & mchist   = MCInfo  .SigmaHistMap[key];
 
 	    // get the right bins based on pt
-	    const auto & databin = datahist->FindBin(pho.adjustvar);
-	    const auto & mcbin   = mchist  ->FindBin(pho.adjustvar);
+	    auto databin = datahist->FindBin(pho.adjustvar);
+	    auto mcbin   = mchist  ->FindBin(pho.adjustvar);
 	    
-	    // make smear if bins within range
-	    if ( (databin != 0 && databin != datahist->GetXaxis()->GetNbins()+1) && (mcbin != 0 && mcbin != mchist->GetXaxis()->GetNbins()+1) )
-	    {
-	      const auto sigma  = std::sqrt(std::pow(datahist->GetBinContent(databin),2.f)-std::pow(mchist->GetBinContent(mcbin),2.f));
-	      pho.timeSMEAR = rand->Gaus(0.f,sigma);
-	    }
-	    else
-	    {
-	      pho.timeSMEAR = 0.f;
-	    }
+	    // adjust bins accordingly
+	    if      (databin < 1) databin = 1;
+	    else if (databin > datahist->GetXaxis()->GetNbins()) databin = datahist->GetXaxis()->GetNbins();
+
+	    if      (mcbin < 1) mcbin = 1;
+	    else if (mcbin > mchist->GetXaxis()->GetNbins()) mcbin = mchist->GetXaxis()->GetNbins();
+
+	    // smear MC
+	    const auto sigma  = std::sqrt(std::pow(datahist->GetBinContent(databin),2.f)-std::pow(mchist->GetBinContent(mcbin),2.f));
+	    pho.timeSMEAR = rand->Gaus(0.f,sigma);
 	  }
 
 	  // fill branches
