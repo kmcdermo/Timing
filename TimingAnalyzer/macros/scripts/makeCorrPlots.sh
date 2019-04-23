@@ -111,18 +111,16 @@ do echo ${!pho} | while read -r index pho_label
 	        ################################
 		## loop over inputs: Zee only ##
 		################################
-		for input in "${inputs[@]}"
-		do echo ${!input} | while read -r label infile insigfile sel
-		    do
-                 	## outfile names
-			outdir="${outdirbase}/${label}/${pho}/${eta}/${var}"
-			outfile="${x_var}_${label}_${eta}_${era}"
+		echo "${Zee}" | while read -r label infile insigfile sel
+		do
+                    ## outfile names
+		    outdir="${outdirbase}/${label}/${pho}/${eta}/${var}"
+		    outfile="${x_var}_${label}_${eta}_${era}"
+		    
+		    ## run 1D plotter
+		    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" ${savemetadata} "${outfile}" "${outdir}"
 			
-			## run 1D plotter
-			./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" ${savemetadata} "${outfile}" "${outdir}"
-			
-		    done ## read input
-		done ## loop over inputs
+		done ## read input
 	    done ## loop over eras
 
 	    ## remove tmp files

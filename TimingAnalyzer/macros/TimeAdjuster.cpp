@@ -151,10 +151,7 @@ void TimeAdjuster::CorrectData(FitStruct & DataInfo)
       const TString key = Form("%s_%s",(pho.isEB?"EB":"EE"),era.Data());
       const auto & hist = DataInfo.MuHistMap[key];
       
-      // get bin which corresponds to the pt of the object
-      const auto bin = hist->FindBin(pho.adjustvar);
-
-      // get the bin for the pt of the object
+      // get the bin for the var of the object
       auto bin = hist->FindBin(pho.adjustvar);
       
       // if outside of range, set accordingly
@@ -289,7 +286,7 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	    // get the right hist
 	    const auto & hist = MCInfo.MuHistMap[key];
 
-	    // get the bin for the pt of the object
+	    // get the bin for the var of the object
 	    auto bin = hist->FindBin(pho.adjustvar);
 	    
 	    // if outside of range, set accordingly
@@ -308,7 +305,7 @@ void TimeAdjuster::CorrectMC(FitStruct & DataInfo, FitStruct & MCInfo)
 	    const auto & datahist = DataInfo.SigmaHistMap[key];
 	    const auto & mchist   = MCInfo  .SigmaHistMap[key];
 
-	    // get the right bins based on pt
+	    // get the right bins based on the var
 	    auto databin = datahist->FindBin(pho.adjustvar);
 	    auto mcbin   = mchist  ->FindBin(pho.adjustvar);
 	    

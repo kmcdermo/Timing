@@ -41,13 +41,11 @@ echo "Making raw TOF plots"
 echo "Making time related plots with TOF corrections"
 ./scripts/makeTimePlots.sh "${outdirbase}/${tofdir}" ${savemetadata} "true" "false" "false" "true" "${filedump}"
 
-## launch time adjuster, over each input selection
-for input in "${inputs[@]}"
-do echo ${!input} | while read -r label infile insigfile sel
-    do
-  	echo "Running time adjuster for computing shift corrections for: ${label}" 
-   	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" "${base_adjust_var}" "${base_time_var}" 1 0 ${savemetadata}
-    done
+## launch time adjuster: use only Zee selection
+echo "${Zee}" | while read -r label infile insigfile sel
+do
+    echo "Running time adjuster for computing shift corrections for: ${label}" 
+    ./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" "${base_adjust_var}" "${base_time_var}" 1 0 ${savemetadata}
 done
 
 ## rm tmp file
@@ -65,13 +63,11 @@ echo "Making raw shift plots"
 echo "Making time related plots with TOF + SHIFT corrections"
 ./scripts/makeTimePlots.sh "${outdirbase}/${shiftdir}" ${savemetadata} "true" "true" "false" "true" "${filedump}"
 
-## launch time adjuster, over each input selection
-for input in "${inputs[@]}"
-do echo ${!input} | while read -r label infile insigfile sel
-    do
-  	echo "Running time adjuster for computing smear corrections for: ${label}" 
-   	./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" "${base_adjust_var}" "${base_time_var}" 0 1 ${savemetadata}
-    done
+## launch time adjuster: use only Zee selection
+echo "${Zee}" | while read -r label infile insigfile sel
+do
+    echo "Running time adjuster for computing smear corrections for: ${label}" 
+    ./scripts/runTimeAdjuster.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${filedump}" "${base_adjust_var}" "${base_time_var}" 0 1 ${savemetadata}
 done
 
 ## rm tmp file

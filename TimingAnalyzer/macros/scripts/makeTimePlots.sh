@@ -304,37 +304,35 @@ do echo ${!pho} | while read -r index pho_label
 		    ################################
 		    ## loop over inputs: Zee only ##
 		    ################################
-		    for input in "${inputs[@]}"
-		    do echo ${!input} | while read -r label infile insigfile sel
-			do
-                 	    ## outfile names
-			    outdir="${outdirbase}/${label}/${pho}/${eta}/${var}"
-			    outfile="${x_var}_${label}_${eta}_${era}"
+		    echo "${Zee}" | while read -r label infile insigfile sel
+		    do
+                 	## outfile names
+			outdir="${outdirbase}/${label}/${pho}/${eta}/${var}"
+			outfile="${x_var}_${label}_${eta}_${era}"
+			
+			## run 1D plotter
+			./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" ${savemetadata} "${outfile}" "${outdir}"
+			
+			## run 2D plotter, passing 2D plots to make fits for all vars except vs time
+			if [[ "${var}" != *"time"* ]]
+			then
+                 	    ## extra outfile names
+			    outfile2D="time_${index}_vs_${outfile}"
+			    timefile="timefit"
 			    
-			    ## run 1D plotter
-			    ./scripts/runTreePlotter.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${plot}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" ${savemetadata} "${outfile}" "${outdir}"
-
-			    ## run 2D plotter, passing 2D plots to make fits for all vars except vs time
-			    if [[ "${var}" != *"time"* ]]
+			    ## run 2D plotter
+			    ./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" ${savemetadata} "${outfile2D}" "${outdir}"
+			    
+			    ## run fitter, getting 2D plots from before
+			    ./scripts/runTimeFitter.sh "${outfile2D}.root" "${plot2D}" "${misc_fit}" "${timefit_config}" "${era}" ${savemetadata} "${outfile}_${timefile}" "${outdir}"
+			    
+			    ## write out time files for correction computations
+			    if [[ "${writefiles}" == "true" ]] && [[ "${x_var}" == "${adjust_var}" ]] && [[ "${eta}" != "Full" ]]
 			    then
-                 	        ## extra outfile names
-				outfile2D="time_${index}_vs_${outfile}"
-				timefile="timefit"
-
-				## run 2D plotter
-				./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "${skimdir}/${insigfile}.root" "${cut}" "${plot2D}" "${miscconfigdir}/${misc}.${inTextExt}" "${era}" ${savemetadata} "${outfile2D}" "${outdir}"
-
-				## run fitter, getting 2D plots from before
-				./scripts/runTimeFitter.sh "${outfile2D}.root" "${plot2D}" "${misc_fit}" "${timefit_config}" "${era}" ${savemetadata} "${outfile}_${timefile}" "${outdir}"
-				
-			        ## write out time files for correction computations
-				if [[ "${writefiles}" == "true" ]] && [[ "${x_var}" == "${adjust_var}" ]] && [[ "${eta}" != "Full" ]]
-				then
-				    echo "${eta}_${era}=${outfile}_${timefile}.root" >> "${filedump}"
-				fi
-			    fi ## end check over vars to fit
-			done ## read input
-		    done ## loop over inputs
+				echo "${eta}_${era}=${outfile}_${timefile}.root" >> "${filedump}"
+			    fi
+			fi ## end check over vars to fit
+		    done ## read input
 		done ## loop over eras
 
 		## remove tmp files
