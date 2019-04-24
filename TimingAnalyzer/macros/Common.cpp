@@ -761,7 +761,19 @@ namespace Common
       {
 	cutwgt += " * (evtwgt * puwgt)";
       }
-    }  
+    }
+    
+    // third, multiply signal by SFs (in principle, only for when leading photon !isTrk + tight ID)
+    for (auto & CutWgtPair : Common::CutWgtMap)
+    {
+      const auto & sample = CutWgtPair.first;
+      auto & cutwgt = CutWgtPair.second;
+    
+      if (Common::GroupMap[sample] == SampleGroup::isSignal)
+      {
+	cutwgt += " * (vidSF * isTrkSF)";
+      }
+    }
   }
 
   void SetupEraWeights(const TString & era)

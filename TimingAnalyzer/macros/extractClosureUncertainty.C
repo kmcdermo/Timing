@@ -15,6 +15,8 @@ struct BinRange
 void makeClosureDump(const TH2F * hist2D, const Double_t time_split, const Double_t met_split,
 		     const TString & label, std::ofstream & outtextfile);
 void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, const TString & outfiletext);
+void drawCanvas1D(std::vector<TH1F*> & hist1Ds, TLegend * leg, TCanvas * canv,
+		  const TString & outname, const Float_t xlow, const Float_t xhigh);
 
 // main method
 void extractClosureUncertainty(const TString & label, const TString & outfiletext)
@@ -127,6 +129,9 @@ void makeClosureDump(const TH2F * hist2D, const Double_t time_split, const Doubl
 
 void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, const TString & outfiletext)
 {
+  // outname
+  const auto outname = outfiletext+"_"+label;
+
   // met ranges
   auto icolor = 0;
   const std::vector<BinRange> ranges = 
@@ -179,7 +184,6 @@ void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, co
     hist1D->GetYaxis()->SetTitle("Fraction of Events");
     hist1D->Rebin(10);
     hist1D->Scale(1.0/hist1D->Integral());
-    hist1D->GetXaxis()->SetRangeUser(-2,10.f);
   }
 
   // get min and max of plot
@@ -197,7 +201,7 @@ void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, co
     }
   }
 
-  // set min/max and draw
+  // set min/max and write
   for (auto i = 0U; i < size; i++)
   {
     const auto & range = ranges[i];
@@ -205,8 +209,6 @@ void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, co
 
     hist1D->SetMinimum(min/1.5f);
     hist1D->SetMaximum(max*1.5f);
-
-    hist1D->Draw(i>0?"ep same":"ep");
 
     // save it
     Common::Write(iofile,hist1D);
@@ -225,17 +227,34 @@ void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, co
     leg->AddEntry(hist1D_R,Form("%4.0f #leq p_{T}^{miss} %s %4.0f",range_R.low,( ((i+half) == (size-1)) ? "#leq" : "<" ),range_R.up),"epl");
   }
 
-  // draw legend
-  leg->Draw("same");
+  // write legend
   Common::Write(iofile,leg);
 
+  // draw full x-range
+  drawCanvas1D(hist1Ds,leg,canv,outname+"_full",-25.f,25.f);
+
   // save it all
-  Common::CMSLumi(canv,0,"Full");
-  Common::SaveAs(canv,outfiletext+"_"+label);
   Common::Write(iofile,canv);
+
+  // draw full x-range
+  drawCanvas1D(hist1Ds,leg,canv,outname+"_zoom",-2.f,8.f);
 
   // delete things
   for (auto & hist1D : hist1Ds) delete hist1D;
   delete leg;
   delete canv;
+}
+
+void drawCanvas1D(std::vector<TH1F*> & hist1Ds, TLegend * leg, TCanvas * canv,
+		  const TString & outname, const Float_t xlow, const Float_t xhigh)
+{
+  for (auto i = 0U; i < hist1Ds.size(); i++)
+  {
+    auto & hist1D = hist1Ds[i];
+    hist1D->GetXaxis()->SetRangeUser(xlow,xhigh);
+    hist1D->Draw(i>0?"ep same":"ep");
+  }
+  leg->Draw("same");
+  Common::CMSLumi(canv,0,"Full");
+  Common::SaveAs(canv,outname);
 }

@@ -18,10 +18,10 @@ save_meta_data=${3:-0}
 do_cleanup=${4:-"true"}
 
 ## plot config
-plot_config="${plotconfigdir}/met_vs_time_fine.${inTextExt}"
+plot_config="${plotconfigdir}/met_vs_time_fine_extended.${inTextExt}"
 
 ## misc config
-misc_config="misc_time_met_fine.${inTextExt}"
+misc_config="misc_time_met_fine_extended.${inTextExt}"
 > "${misc_config}"
 echo "skip_bkgd_mc=1" >> "${misc_config}"
 echo "skip_signal=1" >> "${misc_config}"
@@ -35,9 +35,11 @@ echo "Control Region [Data],Time Boundary [ns],MET Boundary [GeV],obsA,obsB,obsC
 ## Main Loop Over Inputs ##
 ###########################
 
-for input in "${inputs[@]}"
+declare -a CRs=(CR_GJets CR_QCD)
+
+for CR in "${CRs[@]}"
 do
-    echo "${!input}" | while read -r label infile insigfile sel
+    echo "${!CR}" | while read -r label infile insigfile sel
     do
 	## first make the 2D hist
 	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "NOSIGNALS.root" "${cutconfigdir}/always_true.${inTextExt}" "${plot_config}" "${misc_config}" "${MainEra}" ${save_meta_data} "${outfiletext}_${label}" "${outdir}"
