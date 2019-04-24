@@ -1,99 +1,115 @@
-#include "Common.cpp+"
-
 struct TestInfo
 {
-  TString dir;
-  TString test;
+  TestInfo () {}
+  TestInfo (const TString & dataset, const TString & reftrig, const TString & leg)
+    : dataset(dataset), reftrig(reftrig), leg(leg) {}
+
+  TString dataset;
+  TString reftrig;
+  TString leg;
 };
 
-struct GroupInfo
-{
-  GroupInfo() {}
-  GroupInfo(const std::vecotr<TestInfo> & effs, const std::vector<TString> & eras)
-    : effs(effs), eras(eras) {}
-
-  std::vector<TestInfo> effs;
-  std::vector<TString>  eras;
-};
-
-void Overplot(const std::vector<TEfficiency*> & teffs, const std::vector<TString> & eras, const TString outname,
+void Overplot(const TString & lambda, const std::vector<TString> & ctaus, const std::vector<TEfficiency*> & teffs, const TString outname,
 	      const Bool_t isLogx, const Float_t xlow, const Float_t xhigh, const Float_t ylow, const Float_t yhigh);
 
 void overplot_EffHLTPlots()
 {
-  std::vector<GroupInfo> groups =
+  const TString indir = "hlt_inputs";
+
+  std::vector<TestInfo> testInfos =
   {
-    { { {"SM","L1"}, {"SM", "L1toHLT"}, {"SM","ET"}, {"SM","PhoID"}, {"SM","DispID"}, {"SM","HT"} }, {"2017B","2017C","2017D","2017E","2017F"} },
-    { { {"SP_PhoID","DispID"}, {"SP_DispID","HT"} }, { "2017C", "2017D","2017E","2017F"} }
+    {"SingleMuon","IsoMu27","L1"},
+    {"SingleMuon","IsoMu27","L1toHLT"},
+    {"SingleMuon","IsoMu27","ET"},
+    {"SingleMuon","IsoMu27","PhoID"},
+    {"SingleMuon","IsoMu27","DispID"},
+    {"SingleMuon","IsoMu27","HT"},
+    {"SinglePhoton","PhoID","DispID"},
+    {"SinglePhoton","DispID","HT"}
   };
 
-  for (const auto & group : groups)
+  const std::vector<TString> lambdas = {"100","200","300"};
+  const std::vector<TString> ctaus   = {"10","200","1000"};
+
+  std::map<TString,TFile*> signalFiles;
+  for (const auto & lambda : lambdas)
+    for (const auto & ctau : ctaus)
+      signalFiles["L"+lambda+"_CTau"+ctau] = TFile::Open(indir+"/GMSB_L-"+lambda+"TeV_Ctau-"+ctau+"cm.root");
+
+  for (const auto & testInfo : testInfos)
   {
-    const auto & effs = group.effs;
-    const auto & eras = group.eras;
+    const auto & dataset = testInfo.dataset;
+    const auto & reftrig = testInfo.reftrig;
+    const auto & leg = testInfo.leg;
+    const auto dataFile = TFile::Open(indir+"/"+dataset+"_"+reftrig+".root");
 
-    const auto N = eras.size();
-
-    for (auto & eff : effs)
+    for (const auto & lambda : lambdas)
     {
-      std::vector<TFile*> files(N); 
-      std::vector<TEffiency*> effETEBs(N); 
-      std::vector<TEffiency*> effETEEs(N); 
-      std::vector<TEffiency*> effetas(N); 
-      std::vector<TEffiency*> effphis(N); 
-      std::vector<TEffiency*> efftimes(N); 
-      std::vector<TEffiency*> effHTs(N);
+      const auto outname = dataset+"_and_L"+lambda+"_RefPath-"+reftrig+"_Leg-"+leg+"_vs_";
+
+      const auto N = ctaus.size()+1;
+      std::vector<TEfficiency*> effETs(N);
+      std::vector<TEfficiency*> effetas(N); 
+      std::vector<TEfficiency*> effphis(N); 
+      std::vector<TEfficiency*> efftimes(N); 
+      std::vector<TEfficiency*> effHTs(N);
     
       for (auto i = 0U; i < N; i++)
       {
-	files   [i] = TFile::Open(Form("input/%s/%s/hltplots-%s.root",eff.dir.Data(),eras[i].Data(),eras[i].Data()));
-	effETEBs[i] = (TEfficiency*)files[i]->Get(Form("tree/effETEB_%s",eff.test.Data()));
-	effETEEs[i] = (TEfficiency*)files[i]->Get(Form("tree/effETEE_%s",eff.test.Data()));
-	effetas [i] = (TEfficiency*)files[i]->Get(Form("tree/effeta_%s",eff.test.Data()));
-	effphis [i] = (TEfficiency*)files[i]->Get(Form("tree/effphi_%s",eff.test.Data()));
-	efftimes[i] = (TEfficiency*)files[i]->Get(Form("tree/efftime_%s",eff.test.Data()));
-	effHTs  [i] = (TEfficiency*)files[i]->Get(Form("tree/effHT_%s",eff.test.Data()));
+	auto & file = (i > 0 ? signalFiles["L"+lambda+"_CTau"+ctaus[i-1]] : dataFile);
+
+	effETs  [i] = (TEfficiency*)file->Get("tree/effET_"+leg);
+	effetas [i] = (TEfficiency*)file->Get("tree/effeta_"+leg);
+	effphis [i] = (TEfficiency*)file->Get("tree/effphi_"+leg);
+	efftimes[i] = (TEfficiency*)file->Get("tree/efftime_"+leg);
+	effHTs  [i] = (TEfficiency*)file->Get("tree/effHT_"+leg);
       }
-      
-      Overplot(effETEBs,eras,Form("%s_ETEB_%s",eff.dir.Data(),eff.test.Data()),true,1,2000,0.0,1.05);
-      Overplot(effETEEs,eras,Form("%s_ETEE_%s",eff.dir.Data(),eff.test.Data()),true,1,2000,0.0,1.05);
-      Overplot(effetas,eras,Form("%s_eta_%s",eff.dir.Data(),eff.test.Data()),false,-3.0,3,0.0,1.05);
-      Overplot(effphis,eras,Form("%s_phi_%s",eff.dir.Data(),eff.test.Data()),false,-3.5,3.5,0.0,1.05);
-      Overplot(efftimes,eras,Form("%s_time_%s",eff.dir.Data(),eff.test.Data()),false,-30,30,0.8,1.005);
-      Overplot(effHTs,eras,Form("%s_HT_%s",eff.dir.Data(),eff.test.Data()),true,100,3000,0.0,1.05);
+
+      Overplot(lambda,ctaus,effETs  ,outname+"ET"  ,true ,10  ,1000,0.0,1.05);
+      Overplot(lambda,ctaus,effetas ,outname+"eta" ,false,-1.5,1.5 ,0.0,1.05);
+      Overplot(lambda,ctaus,effphis ,outname+"phi" ,false,-3.2,3.2 ,0.0,1.05);
+      Overplot(lambda,ctaus,efftimes,outname+"time",false,-2  ,25  ,0.8,1.005);
+      Overplot(lambda,ctaus,effHTs  ,outname+"HT"  ,true ,100 ,3000,0.0,1.05);
       
       for (auto i = 0U; i < N; i++)
       {
-	delete files   [i];
-	delete effETEBs[i];
-	delete effETEEs[i];
+	delete effETs  [i];
 	delete effetas [i];
 	delete effphis [i];
 	delete efftimes[i];
 	delete effHTs  [i];
       }
     }
+    delete dataFile;
   }
+  
+  for (auto & signalFile : signalFiles) delete signalFile.second;
 }
 
-void Overplot(const std::vector<TEfficiency*> & teffs, const std::vector<TString> & eras, const TString outname,
+void Overplot(const TString & lambda, const std::vector<TString> & ctaus, const std::vector<TEfficiency*> & teffs, const TString outname,
 	      const Bool_t isLogx, const Float_t xlow, const Float_t xhigh, const Float_t ylow, const Float_t yhigh)
 {
+  const std::vector<Color_t> colors = {kBlack,kBlue,kRed+1,kGreen+1};
+
   auto canv = new TCanvas();
   canv->cd();
   canv->SetLogx(isLogx);
   canv->SetGrid(1,1);
 
-  auto leg = new TLegend(0.9,0.8,0.99,0.99);
-  for (auto i = 0U; i < eras.size(); i++)
+  auto leg = new TLegend(0.6,0.2,0.86,0.5);
+
+  for (auto i = 0U; i < teffs.size(); i++)
   {
-    const auto color = Common::ColorVec[i];
+    const auto color = colors[i];
 
     teffs[i]->SetLineColor(color);
+    //    teffs[i]->SetLineWidth(2);
     teffs[i]->SetMarkerColor(color);
-    teffs[i]->Draw(i>0?"P same":"AP");
+    teffs[i]->SetMarkerStyle(20);
+    teffs[i]->SetMarkerSize(0.6);
+    teffs[i]->Draw(i>0?"PZ same":"APZ");
 
-    leg->AddEntry(teffs[i],Form("%s",eras[i].Data()),"epl");
+    leg->AddEntry(teffs[i],(i>0?Form("#Lambda=%sTeV, c#tau=%scm",lambda.Data(),ctaus[i-1].Data()):"Data"),"epl");
   }
 
   gPad->Update(); 
@@ -104,6 +120,7 @@ void Overplot(const std::vector<TEfficiency*> & teffs, const std::vector<TString
 
   leg->Draw("same");
   canv->SaveAs(Form("%s.png",outname.Data()));
+  canv->SaveAs(Form("%s.pdf",outname.Data()));
 
   delete leg;
   delete canv;
