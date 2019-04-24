@@ -85,6 +85,14 @@ Skimmer::Skimmer(const TString & indir, const TString & outdir, const TString & 
 
       fInOOTSFHist = (TH2F*)fInOOTSFFile->Get(Common::vidSFHistName.Data());
       Common::CheckValidHist(fInOOTSFHist,Common::vidSFHistName,ootSFFileName);
+
+      // isTrk SF
+      const auto isTrkSFFileName = Common::eosPreFix+"/"+Common::eosDir+"/"+Common::calibDir+"/"+Common::isTrkBoolSFFileName;
+      fInIsTrkSFFile = TFile::Open(isTrkSFFileName.Data());
+      Common::CheckValidFile(fInIsTrkSFFile,isTrkSFFileName);
+
+      fInIsTrkSFHist = (TH2F*)fInIsTrkSFFile->Get(Common::isTrkBoolSFHistName.Data());
+      Common::CheckValidHist(fInIsTrkSFHist,Common::isTrkBoolSFHistName,isTrkSFFileName);
     }
   }
 
@@ -123,6 +131,9 @@ Skimmer::~Skimmer()
     
     if (fInConfig.isGMSB || fInConfig.isHVDS)
     {
+      delete fInIsTrkSFHist;
+      delete fInIsTrkSFFile;
+
       delete fInOOTSFHist;
       delete fInOOTSFFile;
 
@@ -1228,8 +1239,14 @@ void Skimmer::FillOutSFs()
   if      (phosceta <= -1.444) phosceta = -1.4;
   else if (phosceta >=  1.444) phosceta =  1.4;
 
-  // set SF
+  // set VID SF
   fOutEvent.vidSF = (photon.isOOT ? fInOOTSFHist->GetBinContent(fInOOTSFHist->FindBin(phosceta,phopt)) : fInGEDSFHist->GetBinContent(fInGEDSFHist->FindBin(phosceta,phopt)) );
+
+  // reset pt
+  phopt = photon.pt;
+  if (phopt >= 1000.f) phopt = 800.f;
+  
+  fOutEvent.isTrkSF = fInIsTrkSFHist->GetBinContent(fInIsTrkSFHist->FindBin(phopt));
 }
 
 void Skimmer::CorrectMET()
@@ -2136,10 +2153,11 @@ void Skimmer::InitOutBranches()
   // add event weight
   fOutTree->Branch(fOutEvent.s_evtwgt.c_str(), &fOutEvent.evtwgt);
 
-  // set signal branches: VID SFs
+  // set signal branches: VID + isTrk SFs
   if (fInConfig.isGMSB || fInConfig.isHVDS)
   {
     fOutTree->Branch(fOutEvent.s_vidSF.c_str(), &fOutEvent.vidSF);
+    fOutTree->Branch(fOutEvent.s_isTrkSF.c_str(), &fOutEvent.isTrkSF);
   }
 } 
 

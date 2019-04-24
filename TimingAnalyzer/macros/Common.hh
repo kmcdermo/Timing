@@ -170,6 +170,10 @@ namespace Common
   static const TString ootVIDSFFileName = "SF_OOTTightAbsSmajSminVLSieie94X.root";
   static const TString vidSFHistName    = "EGamma_SF2D";
 
+  // isTrk SF info
+  static const TString isTrkBoolSFFileName = "SF_isTrk_281118.root";
+  static const TString isTrkBoolSFHistName = "EB_Hist";
+
   // time adjust input files
   static const TString shiftFileName_EB = "phoE_0_Zee_EB_Full_ShiftInput_230419.root";
   static const TString shiftFileName_EE = "phoE_0_Zee_EB_Full_ShiftInput_230419.root";

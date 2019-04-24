@@ -222,6 +222,7 @@ struct Event
   Int_t     nToyPhs;
   // Signal Only
   Float_t   vidSF;
+  Float_t   isTrkSF;
 
   // branch names
   std::string s_run = "run";
@@ -290,6 +291,7 @@ struct Event
   std::string s_nvPions = "nvPions";
   std::string s_nToyPhs = "nToyPhs";
   std::string s_vidSF = "vidSF";
+  std::string s_isTrkSF = "isTrkSF";
 
   // tbranches
   TBranch * b_run;
@@ -358,6 +360,7 @@ struct Event
   TBranch * b_nvPions;
   TBranch * b_nToyPhs;
   TBranch * b_vidSF;
+  TBranch * b_isTrkSF;
 };
 
 struct Jet

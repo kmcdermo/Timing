@@ -104,6 +104,8 @@ private:
   TH2F  * fInGEDSFHist;
   TFile * fInOOTSFFile;
   TH2F  * fInOOTSFHist;
+  TFile * fInIsTrkSFFile;
+  TH2F  * fInIsTrkSFHist;
   
   GmsbVec fInGMSBs;
   HvdsVec fInHVDSs;
