@@ -1,11 +1,10 @@
+#include "Common.cpp+"
+
 void do_plot(const Bool_t is1Pho, const Bool_t isCut);
 void do_proj(TH2F * hist, TCanvas * canv, const TString & label, const Bool_t isX);
 
 void negative_time()
 {
-  // get 2D style
-  gStyle->SetNumberContours(255);
-
   do_plot(true,true);
   do_plot(true,false);
   do_plot(false,true);
@@ -14,15 +13,21 @@ void negative_time()
 
 void do_plot(const Bool_t is1Pho, const Bool_t isCut)
 {
-  // 2D style
-  gStyle->SetOptStat("eMRou");
-
-  // filename
-  const TString filename = (is1Pho ? "exclusive_1pho.root" : "inclusive_2pho.root");
+  Common::SetupEras();
+  auto tdrStyle = new TStyle("TDRStyle","Style for P-TDR");
+  Common::SetTDRStyle(tdrStyle);
+  tdrStyle->SetOptStat("eMRou");
 
   // file
-  auto file = TFile::Open(filename.Data()); 
-  auto tree = (TTree*)file->Get("Data_Tree");
+  const TString basefilename = (is1Pho ? "exclusive_1pho.root" : "inclusive_2pho.root");
+  const auto filename = "skims/v4/categories/v2/"+basefilename;
+  auto file = TFile::Open(filename.Data());
+  Common::CheckValidFile(file,filename);
+
+  // tree
+  const TString treename = "Data_Tree";
+  auto tree = (TTree*)file->Get(treename.Data());
+  Common::CheckValidTree(tree,treename,filename);
 
   // bins
   const std::vector<Double_t> xbins = {-25,-20,-18,-16,-14,-12,-10,-9,-8,-7,-6,-5,-4.5,-4,-3.5,-3,-2.5,-2};
@@ -49,26 +54,28 @@ void do_plot(const Bool_t is1Pho, const Bool_t isCut)
   canv->Update();
   
   // print text
-  auto text = new TPaveText(0.5,0.7,0.86,0.86,"NDC");
+  auto text = new TPaveText(0.5,0.7,0.825,0.86,"NDC");
   text->AddText(Form("Covariance: %.2f",hist2D->GetCovariance()));
   text->AddText(Form("Corr. Factor: %.3f",hist2D->GetCorrelationFactor()));
-  text->SetTextAlign(11);                                                                                                                                                    
-  text->SetFillColorAlpha(text->GetFillColor(),0);                                                                                                                        
+  text->SetTextAlign(11);                  
+  text->SetFillColorAlpha(text->GetFillColor(),0);
   text->Draw("same");
   
   // stats
   auto stats = (TPaveStats*)(hist2D->GetListOfFunctions()->FindObject("stats"));
-  stats->SetX1NDC(0.14);
-  stats->SetX2NDC(0.39);
-  stats->SetY1NDC(0.45); 
-  stats->SetY2NDC(0.86);
+  stats->SetX1NDC(0.21);
+  stats->SetX2NDC(0.46);
+  stats->SetY1NDC(0.51); 
+  stats->SetY2NDC(0.92);
   
   // save as
   const TString label = Form("neg_time_%sPho_nJ%s3",(is1Pho?"1":"2"),(isCut?"LT":"GTE"));
-  canv->SaveAs(label+".png");
-  canv->SaveAs(label+".pdf");
 
-  // new canv settings
+  Common::CMSLumi(canv,0);
+  Common::SaveAs(canv,label);
+
+  // new canv settings : 1D settings
+  tdrStyle->SetOptStat("MR");
   canv->SetGridy(0);
   delete text;
   delete stats;
@@ -82,13 +89,11 @@ void do_plot(const Bool_t is1Pho, const Bool_t isCut)
   delete hist2D;
   delete tree;
   delete file;
+  delete tdrStyle;
 }
 
 void do_proj(TH2F * hist2D, TCanvas * canv, const TString & label, const Bool_t isX)
 {
-  // 1D style
-  gStyle->SetOptStat("MR");
-
   // project
   TH1D * hist1D = NULL;
   if (isX) hist1D = (TH1D*)hist2D->ProjectionX("histX",1,hist2D->GetYaxis()->GetNbins());
@@ -119,15 +124,15 @@ void do_proj(TH2F * hist2D, TCanvas * canv, const TString & label, const Bool_t 
   // stats
   auto stats = (TPaveStats*)(hist1D->GetListOfFunctions()->FindObject("stats"));
   const auto widthX = 0.25;
-  stats->SetX1NDC(isX?0.14:0.61);
+  stats->SetX1NDC(isX?0.21:0.56);
   stats->SetX2NDC(stats->GetX1NDC()+widthX);
-  stats->SetY1NDC(0.75); 
-  stats->SetY2NDC(0.86);
+  stats->SetY1NDC(0.81); 
+  stats->SetY2NDC(0.92);
   
   // save
   canv->SetLogy();
-  canv->SaveAs(Form("%s_%s.png",label.Data(),(isX?"X":"Y")));
-  canv->SaveAs(Form("%s_%s.pdf",label.Data(),(isX?"X":"Y")));
+  Common::CMSLumi(canv,0);
+  Common::SaveAs(canv,Form("%s_%s",label.Data(),(isX?"X":"Y")));
 
   // delete
   delete stats;
