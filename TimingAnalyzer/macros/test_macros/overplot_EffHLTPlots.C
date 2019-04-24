@@ -124,8 +124,6 @@ void Overplot(const TString & lambda, const std::vector<TString> & ctaus, const 
     teffs[i]->SetLineColor(color);
     //    teffs[i]->SetLineWidth(2);
     teffs[i]->SetMarkerColor(color);
-    teffs[i]->SetMarkerStyle(20);
-    teffs[i]->SetMarkerSize(0.6);
     teffs[i]->Draw(i>0?"PZ same":"APZ");
 
     leg->AddEntry(teffs[i],(i>0?Form("#Lambda=%sTeV, c#tau=%scm",lambda.Data(),ctaus[i-1].Data()):"Data"),"epl");
