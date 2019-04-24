@@ -1,3 +1,7 @@
+#include "Common.cpp+"
+
+static const TString indir = "hlt_inputs";
+
 struct TestInfo
 {
   TestInfo () {}
@@ -9,12 +13,15 @@ struct TestInfo
   TString leg;
 };
 
+void GetEff(TEfficiency *& eff, const TString & histname, TFile * file);
 void Overplot(const TString & lambda, const std::vector<TString> & ctaus, const std::vector<TEfficiency*> & teffs, const TString outname,
 	      const Bool_t isLogx, const Float_t xlow, const Float_t xhigh, const Float_t ylow, const Float_t yhigh);
 
 void overplot_EffHLTPlots()
 {
-  const TString indir = "hlt_inputs";
+  Common::SetupEras();
+  auto tdrStyle = new TStyle("TDRStyle","Style for P-TDR");
+  Common::SetTDRStyle(tdrStyle);
 
   std::vector<TestInfo> testInfos =
   {
@@ -24,8 +31,8 @@ void overplot_EffHLTPlots()
     {"SingleMuon","IsoMu27","PhoID"},
     {"SingleMuon","IsoMu27","DispID"},
     {"SingleMuon","IsoMu27","HT"},
-    {"SinglePhoton","PhoID","DispID"},
-    {"SinglePhoton","DispID","HT"}
+    {"SinglePhoton","PhoId","DispID"},
+    {"SinglePhoton","DispId","HT"}
   };
 
   const std::vector<TString> lambdas = {"100","200","300"};
@@ -33,15 +40,25 @@ void overplot_EffHLTPlots()
 
   std::map<TString,TFile*> signalFiles;
   for (const auto & lambda : lambdas)
+  {
     for (const auto & ctau : ctaus)
-      signalFiles["L"+lambda+"_CTau"+ctau] = TFile::Open(indir+"/GMSB_L-"+lambda+"TeV_Ctau-"+ctau+"cm.root");
+    {
+      const auto filename = indir+"/GMSB_L-"+lambda+"TeV_Ctau-"+ctau+"cm.root";
+      const auto key = "L"+lambda+"_CTau"+ctau;
+      signalFiles[key] = TFile::Open(filename.Data());
+      Common::CheckValidFile(signalFiles[key],filename);
+    }
+  }
 
   for (const auto & testInfo : testInfos)
   {
     const auto & dataset = testInfo.dataset;
     const auto & reftrig = testInfo.reftrig;
     const auto & leg = testInfo.leg;
-    const auto dataFile = TFile::Open(indir+"/"+dataset+"_"+reftrig+".root");
+
+    const auto dataFileName = indir+"/"+dataset+"_"+reftrig+".root";
+    const auto dataFile = TFile::Open(dataFileName.Data());
+    Common::CheckValidFile(dataFile,dataFileName);
 
     for (const auto & lambda : lambdas)
     {
@@ -58,11 +75,11 @@ void overplot_EffHLTPlots()
       {
 	auto & file = (i > 0 ? signalFiles["L"+lambda+"_CTau"+ctaus[i-1]] : dataFile);
 
-	effETs  [i] = (TEfficiency*)file->Get("tree/effET_"+leg);
-	effetas [i] = (TEfficiency*)file->Get("tree/effeta_"+leg);
-	effphis [i] = (TEfficiency*)file->Get("tree/effphi_"+leg);
-	efftimes[i] = (TEfficiency*)file->Get("tree/efftime_"+leg);
-	effHTs  [i] = (TEfficiency*)file->Get("tree/effHT_"+leg);
+	GetEff(effETs[i],"tree/effET_"+leg,file);
+	GetEff(effetas[i],"tree/effeta_"+leg,file);
+	GetEff(effphis[i],"tree/effphi_"+leg,file);
+	GetEff(efftimes[i],"tree/efftime_"+leg,file);
+	GetEff(effHTs[i],"tree/effHT_"+leg,file);
       }
 
       Overplot(lambda,ctaus,effETs  ,outname+"ET"  ,true ,10  ,1000,0.0,1.05);
@@ -71,36 +88,38 @@ void overplot_EffHLTPlots()
       Overplot(lambda,ctaus,efftimes,outname+"time",false,-2  ,25  ,0.8,1.005);
       Overplot(lambda,ctaus,effHTs  ,outname+"HT"  ,true ,100 ,3000,0.0,1.05);
       
-      for (auto i = 0U; i < N; i++)
-      {
-	delete effETs  [i];
-	delete effetas [i];
-	delete effphis [i];
-	delete efftimes[i];
-	delete effHTs  [i];
-      }
+      Common::DeleteVec(effETs);
+      Common::DeleteVec(effetas);
+      Common::DeleteVec(effphis);
+      Common::DeleteVec(efftimes);
+      Common::DeleteVec(effHTs);
     }
     delete dataFile;
   }
   
-  for (auto & signalFile : signalFiles) delete signalFile.second;
+  Common::DeleteMap(signalFiles);
+  delete tdrStyle;
+}
+
+void GetEff(TEfficiency *& eff, const TString & histname, TFile * file)
+{
+  eff = (TEfficiency*)file->Get(histname.Data());
+  Common::CheckValidHist(eff,histname.Data(),file->GetName());
 }
 
 void Overplot(const TString & lambda, const std::vector<TString> & ctaus, const std::vector<TEfficiency*> & teffs, const TString outname,
 	      const Bool_t isLogx, const Float_t xlow, const Float_t xhigh, const Float_t ylow, const Float_t yhigh)
 {
-  const std::vector<Color_t> colors = {kBlack,kBlue,kRed+1,kGreen+1};
-
   auto canv = new TCanvas();
   canv->cd();
   canv->SetLogx(isLogx);
   canv->SetGrid(1,1);
 
-  auto leg = new TLegend(0.6,0.2,0.86,0.5);
+  auto leg = new TLegend(0.57,0.2,0.825,0.5);
 
   for (auto i = 0U; i < teffs.size(); i++)
   {
-    const auto color = colors[i];
+    const auto color = (i > 0 ? Common::ColorVec[i-1] : kBlack);
 
     teffs[i]->SetLineColor(color);
     //    teffs[i]->SetLineWidth(2);
@@ -119,8 +138,9 @@ void Overplot(const TString & lambda, const std::vector<TString> & ctaus, const 
   gPad->Update();
 
   leg->Draw("same");
-  canv->SaveAs(Form("%s.png",outname.Data()));
-  canv->SaveAs(Form("%s.pdf",outname.Data()));
+
+  Common::CMSLumi(canv);
+  Common::SaveAs(canv,outname);
 
   delete leg;
   delete canv;
