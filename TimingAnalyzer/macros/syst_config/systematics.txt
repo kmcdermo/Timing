@@ -1,8 +1,9 @@
-Closure_C lnN - - - - - 1.035 - -
-CMS_lumi lnN 1.023 - 1.023 - 1.023 - 1.023 - 
-Pho_Scale lnN 1.02 - 1.02 - 1.02 - 1.02 -
-Pho_Smear lnN 1.01 - 1.01 - 1.01 - 1.01 -
-Jet_Scale lnN 1.02 - 1.02 - 1.02 - 1.02 -
-Jet_Resol lnN 1.015 - 1.015 - 1.015 - 1.015 -
-Time_Shift lnN 1.01 - 1.01 - 1.01 - 1.01 -
-Time_Smear lnN 1.005 - 1.005 - 1.005 - 1.005 -
+CMSLumi_2017 lnN 1.023 - 1.023 - 1.023 - 1.023 - 
+PhoEScale lnN 1.02 - 1.02 - 1.02 - 1.02 -
+PhoESmear lnN 1.01 - 1.01 - 1.01 - 1.01 -
+EGMVID_SF lnN 1.03 - 1.03 - 1.03 - 1.03 -
+PhotonTimeShift lnN 1.01 - 1.01 - 1.01 - 1.01 -
+PhotonTimeSmear lnN 1.005 - 1.005 - 1.005 - 1.005 -
+JetECorrection lnN 1.02 - 1.02 - 1.02 - 1.02 -
+JetEResolution_2017 lnN 1.015 - 1.015 - 1.015 - 1.015 -
+ClosureC lnN - - - - - 1.035 - -
