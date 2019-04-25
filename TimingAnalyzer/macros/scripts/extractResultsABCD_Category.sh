@@ -58,7 +58,7 @@ function extractResultsSub ()
 	local log="${combinelogname}_${sample}.${outTextExt}"
 	
 	## first, combine cards
-	combineCards.py "${inlimitdir}/${ex1pho}/${datacardname}_${sample}.${inTextExt}" "${inlimitdir}/${in2pho}/${datacardname}_${sample}.${inTextExt}" > "${datacardname}_${sample}.${inTextExt}" 
+	combineCards.py "${ex1}=${inlimitdir}/${ex1pho}/${datacardname}_${sample}.${inTextExt}" "${in2}=${inlimitdir}/${in2pho}/${datacardname}_${sample}.${inTextExt}" > "${datacardname}_${sample}.${inTextExt}" 
 
 	## then, run combine over combined card
 	combine -M AsymptoticLimits "${datacardname}_${sample}.${inTextExt}" ${combine_extra} --name "${sample}" >& "${log}"

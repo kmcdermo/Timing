@@ -32,12 +32,9 @@ echo "Fixing datacards in ${ex1pho}"
 
 for file in "${ex1phodir}/"*".${inTextExt}"
 do
-    for bin in 1 2 3 4
-    do
-	sed -i 's/Bin'"${bin}"'/Bin'"${bin}"'\_ex1/g' "${file}"
-    done
-
-    sed -i 's/\_2017/\_ex1/g' "${file}"
+    sed -i 's/c1/'"${ex1}"'\_c1/g' "${file}"
+    sed -i 's/c2/'"${ex1}"'\_c2/g' "${file}"
+    sed -i 's/bkg1/'"${ex1}"'\_bkg1/g' "${file}"
 done
 
 # move in2 datacards
@@ -63,10 +60,7 @@ echo "Fixing datacards in ${in2pho}"
 
 for file in "${in2phodir}/"*".${inTextExt}"
 do
-    for bin in 1 2 3 4
-    do
-	sed -i 's/Bin'"${bin}"'/Bin'"${bin}"'\_in2/g' "${file}"
-    done
-
-    sed -i 's/\_2017/\_in2/g' "${file}"
+    sed -i 's/c1/'"${in2}"'\_c1/g' "${file}"
+    sed -i 's/c2/'"${in2}"'\_c2/g' "${file}"
+    sed -i 's/bkg1/'"${in2}"'\_bkg1/g' "${file}"
 done

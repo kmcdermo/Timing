@@ -177,7 +177,7 @@ void CombinePreparer::FillObservationSection(std::ofstream & datacard)
   for (const auto & BinPair : ABCD::BinMap)
   {
     const auto bin = BinPair.first;
-    datacard << Form("%s%d ",ABCD::binbase.Data(),bin);
+    datacard << Form("%s%d%s ",ABCD::binbase.Data(),bin,ABCD::suffix.Data());
   }
   datacard << std::endl;
 
@@ -208,7 +208,7 @@ void CombinePreparer::FillProcessSection(std::ofstream & datacard, const TString
   for (const auto & BinPair : ABCD::BinMap)
   {
     const auto bin = BinPair.first;
-    datacard << Form("%s%d %s%d ",ABCD::binbase.Data(),bin,ABCD::binbase.Data(),bin);
+    datacard << Form("%s%d%s %s%d%s ",ABCD::binbase.Data(),bin,ABCD::suffix.Data(),ABCD::binbase.Data(),bin,ABCD::suffix.Data());
   }
   datacard << std::endl;
 
@@ -254,7 +254,7 @@ void CombinePreparer::FillSystematicsSection(std::ofstream & datacard)
 void CombinePreparer::FillRateParamSection(std::ofstream & datacard)
 {
   // bkg1 first for bin1
-  datacard << Form("%s%s rateParam %s1 bkg %f",ABCD::bkg1name.Data(),ABCD::suffix.Data(),ABCD::binbase.Data(),
+  datacard << Form("%s%s rateParam %s1%s bkg %f",ABCD::bkg1name.Data(),ABCD::suffix.Data(),ABCD::binbase.Data(),ABCD::suffix.Data(),
 		   fParameterMap[ABCD::bkg1name+ABCD::suffix]) << std::endl;
 
   // then remainder of bins
@@ -264,7 +264,7 @@ void CombinePreparer::FillRateParamSection(std::ofstream & datacard)
     const auto RatioVec = BinRatioVecPair.second;
 
     // add bkg1 first
-    datacard << Form("%s%s rateParam %s%d bkg %f",ABCD::bkg1name.Data(),ABCD::suffix.Data(),ABCD::binbase.Data(),bin,
+    datacard << Form("%s%s rateParam %s%d%s bkg %f",ABCD::bkg1name.Data(),ABCD::suffix.Data(),ABCD::binbase.Data(),bin,ABCD::suffix.Data(),
 		     fParameterMap[ABCD::bkg1name+ABCD::suffix]) << std::endl;
 
     for (const auto ratio : RatioVec)

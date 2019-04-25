@@ -175,7 +175,7 @@ namespace Common
   static const TString isTrkBoolSFHistName = "EB_Hist";
 
   // time and met template info
-  static const TString templateFileName  = "met_vs_time_templates.root";
+  static const TString templateFileName  = "met_vs_time_templates_exclusive_1pho.root";
   static const TString templateSuffix    = "Templates";
   static const TString templateXHistName = "Data_Hist_Plotted_Time_for_MET_0_to_100";
   static const TString templateYHistName = "Data_Hist_Plotted_MET_for_Time_m1_to_1";
