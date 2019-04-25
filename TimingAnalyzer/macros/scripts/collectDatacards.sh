@@ -4,7 +4,7 @@
 source scripts/common_variables.sh
 
 # read dir
-indir=${1:-"madv2_v4/categories/v1/full_chain"}
+indir=${1:-"madv2_v4p1/categories/full_chain"}
 
 # derived
 fulldir="${topdir}/${disphodir}/${indir}"
@@ -15,20 +15,7 @@ mkdir -p "${ex1phodir}"
 
 echo "Copying locally datacards for ${ex1pho}" 
 
-for lambda in 100 150 200 250
-do
-    for ctau in 10
-    do
-	cp "${fulldir}/${ex1pho}/x_0.5_y_500/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${ex1phodir}"
-    done
-
-    for ctau in 200 400 600 800 1000 1200 10000
-    do
-	cp "${fulldir}/${ex1pho}/x_3_y_150/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${ex1phodir}"
-    done
-done
-
-for lambda in 300 350 400
+for lambda in 100 150 200 250 300 350 400
 do
     for ctau in 10
     do
@@ -37,7 +24,7 @@ do
 
     for ctau in 200 400 600 800 1000 1200 10000
     do
-	cp "${fulldir}/${ex1pho}/x_2_y_300/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${ex1phodir}"
+	cp "${fulldir}/${ex1pho}/x_1.5_y_200/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${ex1phodir}"
     done
 done
 
@@ -59,29 +46,16 @@ mkdir -p "${in2phodir}"
 
 echo "Copying locally datacards for ${in2pho}" 
 
-for lambda in 100 150 200 250
+for lambda in 100 150 200 250 300 350 400
 do
     for ctau in 10
     do
-	cp "${fulldir}/${in2pho}/x_1_y_100/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${in2phodir}"
+	cp "${fulldir}/${in2pho}/x_0.5_y_150/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${in2phodir}"
     done
 
     for ctau in 200 400 600 800 1000 1200 10000
     do
-	cp "${fulldir}/${in2pho}/x_2_y_100/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${in2phodir}"
-    done
-done
-
-for lambda in 300 350 400
-do
-    for ctau in 10
-    do
-	cp "${fulldir}/${in2pho}/x_1_y_50/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${in2phodir}"
-    done
-
-    for ctau in 200 400 600 800 1000 1200 10000
-    do
-	cp "${fulldir}/${in2pho}/x_2_y_150/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${in2phodir}"
+	cp "${fulldir}/${in2pho}/x_1.5_y_150/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${in2phodir}"
     done
 done
 

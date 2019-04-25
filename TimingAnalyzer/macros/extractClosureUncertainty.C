@@ -15,7 +15,7 @@ struct BinRange
 void makeClosureDump(const TH2F * hist2D, const Double_t time_split, const Double_t met_split,
 		     const TString & label, std::ofstream & outtextfile);
 void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, const TString & outfiletext);
-void drawCanvas1D(std::vector<TH1F*> & hist1Ds, TLegend * leg, TCanvas * canv,
+void drawCanvas1D(std::vector<TH1D*> & hist1Ds, TLegend * leg, TCanvas * canv,
 		  const TString & outname, const Float_t xlow, const Float_t xhigh);
 
 // main method
@@ -245,7 +245,7 @@ void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, co
   delete canv;
 }
 
-void drawCanvas1D(std::vector<TH1F*> & hist1Ds, TLegend * leg, TCanvas * canv,
+void drawCanvas1D(std::vector<TH1D*> & hist1Ds, TLegend * leg, TCanvas * canv,
 		  const TString & outname, const Float_t xlow, const Float_t xhigh)
 {
   for (auto i = 0U; i < hist1Ds.size(); i++)
