@@ -1,6 +1,6 @@
 PreFastSkim (1)
 ph0std (phopt_0>70&&phoisEB_0)
-ph0r9GT0p94 (phor9_0>0.94)
+ph0r9GT0p9 (phor9_0>0.9)
 ph0TrkVeto (phoisTrk_0==0)
 ph0HoELT0p02148 (phoHoE_0<0.02148)
 ph0SieieLoose (phosieie_0<0.014)
@@ -12,3 +12,5 @@ JetPh0DPhiGT2p1 (abs(TVector2::Phi_mpi_pi(jetphi[0]-phophi_0))>2.1)
 ph1ptGT25 (phopt_1>25)
 ph1HoELT0p12 (phoHoE_1<0.12)
 HLTdegbit (hltDiPho3022M90)
+
+

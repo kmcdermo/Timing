@@ -1,0 +1,4 @@
+common_cut=((Sum$(((jetpt>30)*(abs(jeteta)<2.25))+((jetpt>30)*(jetpt<100)*(abs(jeteta)>=2.25)))>=3)&&(Sum$(jetpt*(((jetpt>30)*(abs(jeteta)<2.25))+((jetpt>30)*(jetpt<100)*(abs(jeteta)>=2.25))))>400))
+bkgd_cut=
+sign_cut=
+data_cut=

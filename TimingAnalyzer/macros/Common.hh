@@ -174,12 +174,6 @@ namespace Common
   static const TString isTrkBoolSFFileName = "SF_isTrk_281118.root";
   static const TString isTrkBoolSFHistName = "EB_Hist";
 
-  // time adjust input files
-  static const TString shiftFileName_EB = "phoE_0_Zee_EB_Full_ShiftInput_230419.root";
-  static const TString shiftFileName_EE = "phoE_0_Zee_EB_Full_ShiftInput_230419.root";
-  static const TString smearFileName_EB = "phoE_0_Zee_EB_Full_SmearInput_230419.root";
-  static const TString smearFileName_EE = "phoE_0_Zee_EB_Full_SmearInput_230419.root";
-
   // time and met template info
   static const TString templateFileName  = "met_vs_time_templates.root";
   static const TString templateSuffix    = "Templates";

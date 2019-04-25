@@ -20,8 +20,8 @@ filedump="tmp_infiles.${inTextExt}"
 ############################
 
 > "${filedump}"
-echo "EB_Full=/eos/cms/store/group/phys_exotica/displacedPhotons/nTuples/2017/analysis/calib/phoE_0_Zee_EB_Full_ShiftInput_091018.root" >> "${filedump}"
-echo "EE_Full=/eos/cms/store/group/phys_exotica/displacedPhotons/nTuples/2017/analysis/calib/phoE_0_Zee_EE_Full_ShiftInput_091018.root" >> "${filedump}"
+echo "EB_Full=/eos/cms/store/group/phys_exotica/displacedPhotons/nTuples/2017/analysis/calib/phoE_0_Zee_EB_Full_ShiftInput_230419.root" >> "${filedump}"
+echo "EE_Full=/eos/cms/store/group/phys_exotica/displacedPhotons/nTuples/2017/analysis/calib/phoE_0_Zee_EB_Full_ShiftInput_230419.root" >> "${filedump}"
 
 ## launch time adjuster, over each input selection
 for input in "${inputs[@]}"
@@ -40,8 +40,8 @@ rm "${filedump}"
 ############################
 
 > "${filedump}"
-echo "EB_Full=/eos/cms/store/group/phys_exotica/displacedPhotons/nTuples/2017/analysis/calib/phoE_0_Zee_EB_Full_SmearInput_091018.root" >> "${filedump}"
-echo "EE_Full=/eos/cms/store/group/phys_exotica/displacedPhotons/nTuples/2017/analysis/calib/phoE_0_Zee_EE_Full_SmearInput_091018.root" >> "${filedump}"
+echo "EB_Full=/eos/cms/store/group/phys_exotica/displacedPhotons/nTuples/2017/analysis/calib/phoE_0_Zee_EB_Full_SmearInput_230419.root" >> "${filedump}"
+echo "EE_Full=/eos/cms/store/group/phys_exotica/displacedPhotons/nTuples/2017/analysis/calib/phoE_0_Zee_EB_Full_SmearInput_230419.root" >> "${filedump}"
 
 ## launch time adjuster, over each input selection
 for input in "${inputs[@]}"

@@ -1,6 +1,6 @@
 PreFastSkim (1)
 ph0std (phopt_0>70&&phoisEB_0)	
-ph0r94GTp9 (phor9_0>0.94)	
+ph0r9GT0p9 (phor9_0>0.9)
 ph0TrkVeto (phoisTrk_0==0)
 ph0HoELT0p02148 (phoHoE_0<0.02148)
 ph0SieieLoose (phosieie_0<0.014)
@@ -10,4 +10,4 @@ ph0IsoTight ((phoisOOT_0==0&&(((max(phoChgHadIso_0-((0.0112*rho)*(abs(phosceta_0
 nJetsGTE3 (Sum$(1*(jetpt>30))>=3)									
 HT400 (Sum$(jetpt*(jetpt>30))>400)									
 HLTbit (hltSignal)
-lepveto (nelLowM>0||nmuLowM>0)
+
