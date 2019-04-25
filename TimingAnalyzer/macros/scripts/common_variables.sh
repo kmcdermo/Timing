@@ -25,6 +25,8 @@ export topdir="/eos/user/k/kmcdermo/www"
 export disphodir="dispho/plots"
 
 ## category info
+export ex1="ex1"
+export in2="in2"
 export ex1pho="exclusive_1pho"
 export in2pho="inclusive_2pho"
 export categorydir="combined_categories"
