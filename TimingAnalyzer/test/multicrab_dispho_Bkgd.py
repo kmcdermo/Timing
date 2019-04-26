@@ -78,7 +78,6 @@ def main():
         config.JobType.inputFiles  = [ inputDir+inputPaths , inputDir+inputFilters , inputDir+inputFlags ]
 
         config.Data.inputDataset = None
-        config.Data.allowNonValidInputDataset = True
 
         config.Data.outputDatasetTag = None
         config.Data.publication      = False
