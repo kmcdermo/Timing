@@ -219,10 +219,10 @@ namespace Common
     // loop over all possible GMSBs...
     for (const auto & lambda : lambdas)
     {
-      for (auto ctau : gctaus)
+      for (const auto & ctau : gctaus)
       {
 	auto dir = "MC/GMSB/L-"+lambda+"TeV_Ctau-"+ctau+"cm";
-	if (ctau.EqualTo("1") || ctau.EqualTo("50") || ctau.EqualTo("100")) ctau.ReplaceAll("-","");
+	if (ctau.EqualTo("1") || ctau.EqualTo("50") || ctau.EqualTo("100")) dir.ReplaceAll("-","");
 	Common::SampleMap[dir] = "GMSB_L"+lambda+"_CTau"+ctau;
       }
     }
