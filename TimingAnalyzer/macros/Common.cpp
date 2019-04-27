@@ -214,16 +214,16 @@ namespace Common
   {
     // GMSB
     const std::vector<TString> lambdas = {"100","150","200","250","300","350","400"}; // TeV
-    const std::vector<TString> gctaus  = {"10","200","400","600","800","1000","1200","10000"}; // cm
+    const std::vector<TString> gctaus  = {"1","10","50","100","200","400","600","800","1000","1200","10000"}; // cm
 
     // loop over all possible GMSBs...
     for (const auto & lambda : lambdas)
     {
       for (const auto & ctau : gctaus)
       {
-	auto sctau = ctau;
-	if (ctau.EqualTo("0p1") && !(lambda.EqualTo("500") || lambda.EqualTo("600"))) sctau = "0_1";
-	Common::SampleMap["MC/GMSB/L-"+lambda+"TeV_Ctau-"+sctau+"cm"] = "GMSB_L"+lambda+"_CTau"+ctau;
+	auto dir = "MC/GMSB/L-"+lambda+"TeV_Ctau-"+ctau+"cm";
+	if (ctau.EqualTo("1") || ctau.EqualTo("50") || ctau.EqualTo("100")) ctau.ReplaceAll("-","");
+	Common::SampleMap[dir] = "GMSB_L"+lambda+"_CTau"+ctau;
       }
     }
 
@@ -404,14 +404,18 @@ namespace Common
   void SetupSignalSubGroupColors()
   {
     // GMSB
-    Common::SignalSubGroupColorMap["GMSB_CTau10cm"]  = {kBlue,"Up"};
-    Common::SignalSubGroupColorMap["GMSB_CTau200cm"] = {kRed+1,"Up"};
-    Common::SignalSubGroupColorMap["GMSB_CTau400cm"] = {kGreen+1,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau600cm"] = {kMagenta,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau800cm"] = {kOrange+1,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau1000cm"] = {kAzure+10,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau1200cm"] = {kYellow+3,"Down"};
-    Common::SignalSubGroupColorMap["GMSB_CTau10000cm"] = {kPink-9,"Up"};
+    auto icolor = 0;
+    Common::SignalSubGroupColorMap["GMSB_CTau1cm"]     = {Common::ColorVec[icolor++],"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau10cm"]    = {Common::ColorVec[icolor++],"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau50cm"]    = {Common::ColorVec[icolor++],"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau100cm"]   = {Common::ColorVec[icolor++],"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau200cm"]   = {Common::ColorVec[icolor++],"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau400cm"]   = {Common::ColorVec[icolor++],"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau600cm"]   = {Common::ColorVec[icolor++],"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau800cm"]   = {Common::ColorVec[icolor++],"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau1000cm"]  = {Common::ColorVec[icolor++],"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau1200cm"]  = {Common::ColorVec[icolor++],"Up"};
+    Common::SignalSubGroupColorMap["GMSB_CTau10000cm"] = {Common::ColorVec[icolor++],"Up"};
 
     // HVDS
   }

@@ -299,7 +299,7 @@ namespace Common
   constexpr Float_t bottom_margin = 0.35;
 
   // color vector for special overplotting
-  static const std::vector<Color_t> ColorVec = {kBlue,kRed+1,kGreen+1,kMagenta,kOrange+1,kAzure+10,kYellow+3,kPink-9,kYellow-7,kViolet-1}; 
+  static const std::vector<Color_t> ColorVec = {kBlue,kRed+1,kGreen+1,kMagenta,kOrange+1,kAzure+10,kYellow+3,kPink-9,kYellow-7,kViolet-1,kTeal+6}; 
 
   // Hack to get combine to converge
   Float_t ApplyCombineSF(const TString & sample);

@@ -17,12 +17,12 @@ echo "Copying locally datacards for ${ex1pho}"
 
 for lambda in 100 150 200 250 300
 do
-    for ctau in 10
+    for ctau in 1 10
     do
 	cp "${fulldir}/${ex1pho}/x_0.5_y_300/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${ex1phodir}"
     done
 
-    for ctau in 200 400 600 800 1000 1200 10000
+    for ctau in 50 100 200 400 600 800 1000 1200 10000
     do
 	cp "${fulldir}/${ex1pho}/x_1.5_y_200/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${ex1phodir}"
     done
@@ -30,12 +30,12 @@ done
 
 for lambda in 350 400
 do
-    for ctau in 10
+    for ctau in 1 10
     do
 	cp "${fulldir}/${ex1pho}/x_0.5_y_300/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${ex1phodir}"
     done
 
-    for ctau in 200 400 600 800 1000 1200 10000
+    for ctau in 50 100 200 400 600 800 1000 1200 10000
     do
 	cp "${fulldir}/${ex1pho}/x_1.5_y_300/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${ex1phodir}"
     done
@@ -58,12 +58,12 @@ echo "Copying locally datacards for ${in2pho}"
 
 for lambda in 100 150 200 250 300
 do
-    for ctau in 10
+    for ctau in 1 10
     do
 	cp "${fulldir}/${in2pho}/x_0.5_y_150/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${in2phodir}"
     done
 
-    for ctau in 200 400 600 800 1000 1200 10000
+    for ctau in 50 100 200 400 600 800 1000 1200 10000
     do
 	cp "${fulldir}/${in2pho}/x_1.5_y_150/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${in2phodir}"
     done
@@ -71,12 +71,12 @@ done
 
 for lambda in 350 400
 do
-    for ctau in 10
+    for ctau in 1 10
     do
 	cp "${fulldir}/${in2pho}/x_0.5_y_200/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${in2phodir}"
     done
 
-    for ctau in 200 400 600 800 1000 1200 10000
+    for ctau in 50 100 200 400 600 800 1000 1200 10000
     do
 	cp "${fulldir}/${in2pho}/x_1.5_y_200/${incombdir}/${datacardname}_GMSB_L${lambda}_CTau${ctau}.${inTextExt}" "${in2phodir}"
     done

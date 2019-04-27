@@ -66,12 +66,12 @@ echo "Making log file for best dirs"
 
 for lambda in 100 150 200 250 300 350 400
 do
-    for ctau in 10
+    for ctau in 1 10
     do 
 	echo "GMSB_L${lambda}_CTau${ctau} ${fulldir}/x_0.5_y_200" >> "${scan_log}"
     done
 
-    for ctau in 200 400 600 800 1000 1200 10000
+    for ctau in 50 100 200 400 600 800 1000 1200 10000
     do
 	echo "GMSB_L${lambda}_CTau${ctau} ${fulldir}/x_1.5_y_200" >> "${scan_log}"
     done
