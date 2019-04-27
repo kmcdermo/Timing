@@ -26,7 +26,7 @@ function SignalLoopExtendedSub ()
 
     echo "Finished loop over ctaus!"
 }
-export -f SignalLoopSub
+export -f SignalLoopExtendedSub
 
 ## GMSB Reduced Main Outer Loop
 for lambda in 100 150 200 250 300 350 400
