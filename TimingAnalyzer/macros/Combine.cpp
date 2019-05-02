@@ -17,7 +17,7 @@ namespace Combine
     // adjust for observed limit
     if (doObserved)
     {
-      Combine::RValVec.insert(Combine::RValVec.begin(),"robs");
+      Combine::RValVec.emplace_back("robs");
     }
   }
   
