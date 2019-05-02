@@ -488,8 +488,8 @@ namespace Common
   // Hack to get combine to converge
   Float_t ApplyCombineSF(const TString & sample)
   {
-    if (sample.Contains("GMSB_L100")) return 100.f;
-    else                              return 1.f;
+    if (sample.Contains("GMSB_L100") || sample.EqualTo("GMSB_L150_CTau10")) return 100.f;
+    else return 1.f;
   }
 
   void RemoveGroup(const SampleGroup isGroup)
