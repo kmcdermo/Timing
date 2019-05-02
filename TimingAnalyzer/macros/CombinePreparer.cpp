@@ -270,7 +270,7 @@ void CombinePreparer::FillRateParamSection(std::ofstream & datacard)
     for (const auto ratio : RatioVec)
     {
       const TString rationame = Form("%s%d%s",ABCD::ratiobase.Data(),ratio,ABCD::suffix.Data());
-      datacard << Form("%s rateParam %s%d bkg %f",rationame.Data(),ABCD::binbase.Data(),bin,fParameterMap[rationame]) << std::endl;
+      datacard << Form("%s rateParam %s%d%s bkg %f",rationame.Data(),ABCD::binbase.Data(),bin,ABCD::suffix.Data(),fParameterMap[rationame]) << std::endl;
     }
   }
 }

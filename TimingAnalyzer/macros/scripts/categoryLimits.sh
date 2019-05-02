@@ -19,7 +19,7 @@ save_meta_data=${4:-0}
 do_cleanup=${5:-"true"}
 
 ## Derived Input
-if [[ "use_obs" == "true" ]]
+if [[ "${use_obs}" == "true" ]]
 then
     doobs=1
 else
