@@ -50,7 +50,7 @@ function extractResultsSub ()
     local lambda=${1:-"100"}
 
     ## perfom limits with combine!
-    for ctau in 1 10 50 100 200 400 600 800 1000 1200 10000
+    for ctau in 10 50 100 200 400 600 800 1000 1200 10000
     do
 	local sample="GMSB_L${lambda}_CTau${ctau}"
 	echo "Running combine for: ${sample}"

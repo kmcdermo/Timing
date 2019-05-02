@@ -11,16 +11,16 @@ source scripts/common_variables.sh
 ###################
 
 ## Command Line Input
-outdir=${1:-"madv2_v3/full_chain"}
+outdir=${1:-"madv2_v4p1/unblinding/v1/inclusive_2pho/mod_full_chain"}
 
-is_blind=${2:-"true"}
+is_blind=${2:-"false"}
 use_obs=${3:-"true"}
-use_systematics=${4:-"false"}
+use_systematics=${4:-"true"}
 save_meta_data=${5:-0}
 do_cleanup=${6:-"true"}
 
 ## xy boundaries to plot: from optimized scan
-declare -a xys=("0.5 0.5 200 200" "1.5 1.5 200 200")
+declare -a xys=("0.5 0.5 150 150" "0.5 0.5 200 200" "1.5 1.5 150 150" "1.5 1.5 200 200")
 
 ## scan log --> set below
 scan_log="abcd_categories.log"
@@ -64,9 +64,22 @@ done
 echo "Making log file for best dirs"
 > "${scan_log}"
 
-for lambda in 100 150 200 250 300 350 400
+for lambda in 100 150 200 250 300
 do
-    for ctau in 1 10
+    for ctau in 10
+    do 
+	echo "GMSB_L${lambda}_CTau${ctau} ${fulldir}/x_0.5_y_150" >> "${scan_log}"
+    done
+
+    for ctau in 50 100 200 400 600 800 1000 1200 10000
+    do
+	echo "GMSB_L${lambda}_CTau${ctau} ${fulldir}/x_1.5_y_150" >> "${scan_log}"
+    done
+done
+
+for lambda in 350 400
+do
+    for ctau in 10
     do 
 	echo "GMSB_L${lambda}_CTau${ctau} ${fulldir}/x_0.5_y_200" >> "${scan_log}"
     done
