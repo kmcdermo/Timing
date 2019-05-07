@@ -74,50 +74,51 @@ void printDiagnostics(const TString & filename_stat = "", const TString & filena
   // compute yield: A
   const auto predA          = varMap_tot.at(Param::bkg1).val;
   const auto predA_unc_stat = varMap_stat.at(Param::bkg1).unc;
-  const auto predA_unc_tot  = varMap_tot.at(Param::bkg1).unc;
+  const auto predA_unc_tot  = varMap_tot .at(Param::bkg1).unc;
   const auto predA_unc_syst = std::sqrt(std::pow(predA_unc_tot,2)-std::pow(predA_unc_stat,2));
 
   // compute yield: B
   const auto predB          = varMap_tot.at(Param::bkg1).val*varMap_tot.at(Param::c1).val;
   const auto predB_unc_stat = varMap_stat.at(Param::bkg1).val*varMap_stat.at(Param::c1).val*
                               std::sqrt(std::pow(varMap_stat.at(Param::bkg1).unc/varMap_stat.at(Param::bkg1).val,2)+
-					std::pow(varMap_stat.at(Param::c1).unc/varMap_stat.at(Param::c1).val,2)+
+					std::pow(varMap_stat.at(Param::c1  ).unc/varMap_stat.at(Param::c1  ).val,2)+
 					(2*covMap_stat.at({Param::bkg1,Param::c1})/(varMap_stat.at(Param::bkg1).val*varMap_stat.at(Param::c1).val)));
-  const auto predB_unc_tot  = varMap_tot.at(Param::bkg1).val*varMap_tot.at(Param::c1).val*
-                              std::sqrt(std::pow(varMap_tot.at(Param::bkg1).unc/varMap_tot.at(Param::bkg1).val,2)+
-					std::pow(varMap_tot.at(Param::c1).unc/varMap_tot.at(Param::c1).val,2)+
-					(2*covMap_tot.at({Param::bkg1,Param::c1})/(varMap_tot.at(Param::bkg1).val*varMap_tot.at(Param::c1).val)));
+  const auto predB_unc_tot  = varMap_tot .at(Param::bkg1).val*varMap_tot.at(Param::c1).val*
+                              std::sqrt(std::pow(varMap_tot .at(Param::bkg1).unc/varMap_tot .at(Param::bkg1).val,2)+
+					std::pow(varMap_tot .at(Param::c1  ).unc/varMap_tot .at(Param::c1  ).val,2)+
+					(2*covMap_tot .at({Param::bkg1,Param::c1})/(varMap_tot .at(Param::bkg1).val*varMap_tot .at(Param::c1).val)));
   const auto predB_unc_syst = std::sqrt(std::pow(predB_unc_tot,2)-std::pow(predB_unc_stat,2));
 
-  // compute yield: D
-  const auto predD          = varMap_tot.at(Param::bkg1).val*varMap_tot.at(Param::c2).val;
-  const auto predD_unc_stat = varMap_stat.at(Param::bkg1).val*varMap_stat.at(Param::c2).val*
-                              std::sqrt(std::pow(varMap_stat.at(Param::bkg1).unc/varMap_stat.at(Param::bkg1).val,2)+
-					std::pow(varMap_stat.at(Param::c2).unc/varMap_stat.at(Param::c2).val,2)+
-					(2*covMap_stat.at({Param::bkg1,Param::c2})/(varMap_stat.at(Param::bkg1).val*varMap_stat.at(Param::c2).val)));
-  const auto predD_unc_tot  = varMap_tot.at(Param::bkg1).val*varMap_tot.at(Param::c2).val*
-                              std::sqrt(std::pow(varMap_tot.at(Param::bkg1).unc/varMap_tot.at(Param::bkg1).val,2)+
-					std::pow(varMap_tot.at(Param::c2).unc/varMap_tot.at(Param::c2).val,2)+
-					(2*covMap_tot.at({Param::bkg1,Param::c2})/(varMap_tot.at(Param::bkg1).val*varMap_tot.at(Param::c2).val)));
-  const auto predD_unc_syst = std::sqrt(std::pow(predD_unc_tot,2)-std::pow(predD_unc_stat,2));
 
   // compute yield: C
   const auto predC          = varMap_tot.at(Param::bkg1).val*varMap_tot.at(Param::c1).val*varMap_tot.at(Param::c2).val;
   const auto predC_unc_stat = varMap_stat.at(Param::bkg1).val*varMap_stat.at(Param::c1).val*varMap_stat.at(Param::c2).val*
                               std::sqrt(std::pow(varMap_stat.at(Param::bkg1).unc/varMap_stat.at(Param::bkg1).val,2)+
-					std::pow(varMap_stat.at(Param::c1).unc/varMap_stat.at(Param::c1).val,2)+
-					std::pow(varMap_stat.at(Param::c2).unc/varMap_stat.at(Param::c2).val,2)+
+					std::pow(varMap_stat.at(Param::c1  ).unc/varMap_stat.at(Param::c1  ).val,2)+
+					std::pow(varMap_stat.at(Param::c2  ).unc/varMap_stat.at(Param::c2  ).val,2)+
 					(2*covMap_stat.at({Param::bkg1,Param::c1})/(varMap_stat.at(Param::bkg1).val*varMap_stat.at(Param::c1).val))+
 					(2*covMap_stat.at({Param::bkg1,Param::c2})/(varMap_stat.at(Param::bkg1).val*varMap_stat.at(Param::c2).val))+
-					(2*covMap_stat.at({Param::c1  ,Param::c2})/(varMap_stat.at(Param::c1).val*varMap_stat.at(Param::c2).val)));
-  const auto predC_unc_tot  = varMap_tot.at(Param::bkg1).val*varMap_tot.at(Param::c1).val*varMap_tot.at(Param::c2).val*
-                              std::sqrt(std::pow(varMap_tot.at(Param::bkg1).unc/varMap_tot.at(Param::bkg1).val,2)+
-					std::pow(varMap_tot.at(Param::c1).unc/varMap_tot.at(Param::c1).val,2)+
-					std::pow(varMap_tot.at(Param::c2).unc/varMap_tot.at(Param::c2).val,2)+
-					(2*covMap_tot.at({Param::bkg1,Param::c1})/(varMap_tot.at(Param::bkg1).val*varMap_tot.at(Param::c1).val))+
-					(2*covMap_tot.at({Param::bkg1,Param::c2})/(varMap_tot.at(Param::bkg1).val*varMap_tot.at(Param::c2).val))+
-					(2*covMap_tot.at({Param::c1  ,Param::c2})/(varMap_tot.at(Param::c1).val*varMap_tot.at(Param::c2).val)));
+					(2*covMap_stat.at({Param::c1  ,Param::c2})/(varMap_stat.at(Param::c1  ).val*varMap_stat.at(Param::c2).val)));
+  const auto predC_unc_tot  = varMap_tot .at(Param::bkg1).val*varMap_tot .at(Param::c1).val*varMap_tot .at(Param::c2).val*
+                              std::sqrt(std::pow(varMap_tot .at(Param::bkg1).unc/varMap_tot .at(Param::bkg1).val,2)+
+					std::pow(varMap_tot .at(Param::c1  ).unc/varMap_tot .at(Param::c1  ).val,2)+
+					std::pow(varMap_tot .at(Param::c2  ).unc/varMap_tot .at(Param::c2  ).val,2)+
+					(2*covMap_tot .at({Param::bkg1,Param::c1})/(varMap_tot .at(Param::bkg1).val*varMap_tot .at(Param::c1).val))+
+					(2*covMap_tot .at({Param::bkg1,Param::c2})/(varMap_tot .at(Param::bkg1).val*varMap_tot .at(Param::c2).val))+
+					(2*covMap_tot .at({Param::c1  ,Param::c2})/(varMap_tot .at(Param::c1  ).val*varMap_tot .at(Param::c2).val)));
   const auto predC_unc_syst = std::sqrt(std::pow(predC_unc_tot,2)-std::pow(predC_unc_stat,2));
+
+  // compute yield: D
+  const auto predD          = varMap_tot.at(Param::bkg1).val*varMap_tot.at(Param::c2).val;
+  const auto predD_unc_stat = varMap_stat.at(Param::bkg1).val*varMap_stat.at(Param::c2).val*
+                              std::sqrt(std::pow(varMap_stat.at(Param::bkg1).unc/varMap_stat.at(Param::bkg1).val,2)+
+					std::pow(varMap_stat.at(Param::c2  ).unc/varMap_stat.at(Param::c2  ).val,2)+
+					(2*covMap_stat.at({Param::bkg1,Param::c2})/(varMap_stat.at(Param::bkg1).val*varMap_stat.at(Param::c2).val)));
+  const auto predD_unc_tot  = varMap_tot .at(Param::bkg1).val*varMap_tot .at(Param::c2).val*
+                              std::sqrt(std::pow(varMap_tot .at(Param::bkg1).unc/varMap_tot .at(Param::bkg1).val,2)+
+					std::pow(varMap_tot .at(Param::c2  ).unc/varMap_tot .at(Param::c2  ).val,2)+
+					(2*covMap_tot .at({Param::bkg1,Param::c2})/(varMap_tot .at(Param::bkg1).val*varMap_tot .at(Param::c2).val)));
+  const auto predD_unc_syst = std::sqrt(std::pow(predD_unc_tot,2)-std::pow(predD_unc_stat,2));
   
   // print it out
   std::ofstream output(label+".txt",std::ios::trunc);
