@@ -122,7 +122,7 @@ void printDiagnostics(const TString & filename_stat = "", const TString & filena
   
   // print it out
   std::ofstream output(label+".txt",std::ios::trunc);
-  output << "bin: val +/- stat +/- syst" << std::endl;
+  output << "bin: val +/- stat unc. +/- syst unc. = tot unc." << std::endl;
   output << "A: " << predA << " +/- " << predA_unc_stat << " +/- " << predA_unc_syst << " = " << predA_unc_tot << std::endl;
   output << "B: " << predB << " +/- " << predB_unc_stat << " +/- " << predB_unc_syst << " = " << predB_unc_tot << std::endl;
   output << "C: " << predC << " +/- " << predC_unc_stat << " +/- " << predC_unc_syst << " = " << predC_unc_tot << std::endl;
