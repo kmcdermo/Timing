@@ -125,7 +125,7 @@ void printDiagnostics(const TString & filename_stat = "", const TString & filena
   output << "A: " << predA << " +/- " << predA_unc_stat << " +/- " << predA_unc_syst << " = " << predA_unc_tot << std::endl;
   output << "B: " << predB << " +/- " << predB_unc_stat << " +/- " << predB_unc_syst << " = " << predB_unc_tot << std::endl;
   output << "C: " << predC << " +/- " << predC_unc_stat << " +/- " << predC_unc_syst << " = " << predC_unc_tot << std::endl;
-  output << "D: " << predD << " +/- " << predD_unc_stat << " +/- " << predA_unc_syst << " = " << predD_unc_tot << std::endl;
+  output << "D: " << predD << " +/- " << predD_unc_stat << " +/- " << predD_unc_syst << " = " << predD_unc_tot << std::endl;
 
   // delete it all
   delete file_tot;
