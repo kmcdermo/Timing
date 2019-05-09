@@ -19,9 +19,9 @@ void dumpSignalYields(const TString & infiletext, const TString & outfiletext)
   const std::vector<BinInfo> binInfos = 
   {
     {"A",1,1},
-    {"B",2,1},
+    {"B",1,2},
     {"C",2,2},
-    {"D",1,2}
+    {"D",2,1}
   };
 
   const std::vector<TString> lambdas = {"100","150","200","250","300","350","400"};
