@@ -4,7 +4,7 @@ input=${1}
 output=${2}
 
 > "${output}"
-for ctau in 10 200 400 600 800 1000 1200 10000
+for ctau in 10 50 100 200 400 600 800 1000 1200 10000
 do
     string="${ctau}"
     for lambda in 100 150 200 250 300 350 400
