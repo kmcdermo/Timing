@@ -98,8 +98,8 @@ export adjust_var="${base_adjust_var}_0"
 export CR_GJets="gjets_DEG v4p1/final/gjets v4p1/final/signals_gjets always_true"
 export CR_QCD="qcd_DEG v4p1/final/qcd v4p1/final/signals_qcd always_true"
 #export SR="sr_SPH v4p1/final/sr v4p1/final/signals_sr always_true"
-export SR_ex1pho="sr_SPH v4p1/final/categories/${ex1pho} v4p1/final/categories/signals_${ex1pho} always_true"
-export SR_in2pho="sr_SPH v4p1/final/categories/${in2pho} v4p1/final/categories/signals_${in2pho} always_true"
+export SR_ex1pho="sr_ex1pho_SPH v4p1/final/categories/${ex1pho} v4p1/final/categories/signals_${ex1pho} always_true"
+export SR_in2pho="sr_in2pho_SPH v4p1/final/categories/${in2pho} v4p1/final/categories/signals_${in2pho} always_true"
 #export SR="sr_SPH v4p1/final/categories/inclusive_2pho v4p1/final/categories/signals_inclusive_2pho always_true"
 
 ## Unc tests for signals
@@ -112,7 +112,7 @@ export JET_SCALE_DOWN="jetscaledown NO_DATA v4/unc_tests/signals_JetScaleDown al
 export JET_RESOL_UP="jetresolup NO_DATA v4/unc_tests/signals_JetResolUp always_true"
 export JET_RESOL_DOWN="jetresoldown NO_DATA v4/unc_tests/signals_JetResolDown always_true"
 
-declare -a inputs=(SR_ex1pho SR_in1pho)
+declare -a inputs=(CR_GJets CR_QCD SR_ex1pho SR_in2pho)
 
 ## Zee 
 #export Zee="Zee zee_TnP/skim zee_TnP/signals_skim always_true"
@@ -161,14 +161,6 @@ function GetMisc ()
     local plot=${2}
 
     local misc="misc"
-
-    if [[ "${input}" == *"SR"* ]] 
-    then
-	if [[ "${plot}" == *"met"* ]] || [[ "${plot}" == *"time"* ]] 
-	then
-	    misc="misc_blind"
-	fi
-    fi
 
     if [[ "${input}" == "ZEE" ]] 
     then

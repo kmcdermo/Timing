@@ -37,6 +37,8 @@ function make1DplotsSubRoutine
 	    wait
 	fi
     done < "${plotconfigdir}/${plotlist}.${inTextExt}"
+
+    echo "Finished make1DplotsSubRoutine for: ${input}" 
 }
 export -f make1DplotsSubRoutine
 

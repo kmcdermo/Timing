@@ -6,7 +6,7 @@ source scripts/common_variables.sh
 ## config
 outdir=${1:-"plots2D"}
 savemetadata=${2:-0}
-plot="met_vs_time"
+plot="met_vs_time_fine"
 misc="empty"
 
 ## main loop
