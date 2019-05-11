@@ -73,7 +73,8 @@ void SigEffPlotter::MakeLegend()
   std::cout << "Making Legend..." << std::endl;
 
   // make new legend
-  fLegend = new TLegend(0.2,0.75,0.4,0.92);
+  fLegend = new TLegend(0.2,0.75,0.5,0.92);
+  fLegend->SetNColumns(2);
   fLegend->SetBorderSize(1);
   fLegend->SetLineColor(kBlack);
 
@@ -86,7 +87,7 @@ void SigEffPlotter::MakeLegend()
     auto label = groupname;
     label.ReplaceAll("GMSB_CTau","c#tau: ");
     label.ReplaceAll("p",".");
-    fLegend->AddEntry(eff,Form("%s",label.Data()),"lep");
+    fLegend->AddEntry(eff,Form("%s cm",label.Data()),"lep");
   }
 
   // write legend to outfile

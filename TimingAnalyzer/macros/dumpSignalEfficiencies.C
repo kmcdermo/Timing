@@ -5,12 +5,12 @@
 
 void dumpSignalEfficiencies()
 {
-  const TString filename = "skims/v4/final/signals_sr.root";
+  const TString filename = "skims/v4p1/final/categories/signals_inclusive_2pho.root";
   auto file = TFile::Open(filename.Data());
   Common::CheckValidFile(file,filename);
 
   const std::vector<TString> lambdas = {"100","150","200","250","300","350","400"};
-  const std::vector<TString> ctaus = {"10","200","400","600","800","1000","1200","10000"};
+  const std::vector<TString> ctaus = {"10","50","100","200","400","600","800","1000","1200","10000"};
 
   std::ofstream output("sig_effs."+Common::outTextExt,std::ios::trunc);
   

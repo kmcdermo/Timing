@@ -3,13 +3,13 @@
 void dumpDetailedEffs()
 {
   // get files
-  const TString indir = "skims/v4/final";
+  const TString indir = "skims/v4p1/final/categories";
 
-  const auto data_file_name = indir+"/"+"sr.root";
+  const auto data_file_name = indir+"/"+"inclusive_2pho.root";
   auto data_file = TFile::Open(data_file_name);
   Common::CheckValidFile(data_file,data_file_name);
 
-  const auto sign_file_name = indir+"/"+"signals_sr.root";
+  const auto sign_file_name = indir+"/"+"signals_inclusive_2pho.root";
   auto sign_file = TFile::Open(sign_file_name);
   Common::CheckValidFile(sign_file,sign_file_name);
   

@@ -311,7 +311,7 @@ namespace Common
 	auto l_ctau = s_ctau.Length();
 	
 	const TString ctau(sample(i_ctau+l_ctau,sample.Length()-i_ctau-l_ctau));
-	Common::SignalSubGroupMap["GMSB_CTau"+ctau+"cm"].emplace_back(sample);
+	Common::SignalSubGroupMap["GMSB_CTau"+ctau].emplace_back(sample);
       }
       // else if (group == "HVDS")
       // {
@@ -404,10 +404,24 @@ namespace Common
   void SetupSignalSubGroupColors()
   {
     // GMSB
-    auto icolor = 0;
+    std::vector<TString> gctaus;
     for (const auto & SignalSubGroupPair : Common::SignalSubGroupMap)
     {
       const auto & subgroup = SignalSubGroupPair.first;
+
+      const TString s_ctau = "_CTau";
+      auto i_ctau = subgroup.Index(s_ctau);
+      auto l_ctau = s_ctau.Length();
+      
+      const TString ctau(subgroup(i_ctau+l_ctau,subgroup.Length()-i_ctau-l_ctau));
+      gctaus.emplace_back(ctau);
+    }
+    std::sort(gctaus.begin(),gctaus.end(),[](const auto & gctau1, const auto & gctau2){return gctau1.Atof() < gctau2.Atof();});
+    
+    auto icolor = 0;
+    for (const auto & gctau : gctaus)
+    {
+      const auto & subgroup = "GMSB_CTau"+gctau;
       Common::SignalSubGroupColorMap[subgroup] = {Common::ColorVec[icolor++],"Up"};
     }
 

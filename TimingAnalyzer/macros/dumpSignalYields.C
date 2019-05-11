@@ -25,7 +25,7 @@ void dumpSignalYields(const TString & infiletext, const TString & outfiletext)
   };
 
   const std::vector<TString> lambdas = {"100","150","200","250","300","350","400"};
-  const std::vector<TString> ctaus = {"10","200","400","600","800","1000","1200","10000"};
+  const std::vector<TString> ctaus = {"10","50","100","200","400","600","800","1000","1200","10000"};
 
   for (const auto & lambda : lambdas)
   {
@@ -34,7 +34,18 @@ void dumpSignalYields(const TString & infiletext, const TString & outfiletext)
 
     for (const auto & ctau : ctaus)
     {
-      const TString indir = (ctau.EqualTo("10") ? "x_0.5_y_200" : "x_1.5_y_200");
+      TString indir;
+      if (ctau.EqualTo("10"))
+      {
+	if (lambda.EqualTo("350") || lambda.EqualTo("400")) indir = "x_0.5_y_200"; //"x_0.5_y_300";
+	else                                                indir = "x_0.5_y_150"; //"x_0.5_y_300";
+      }
+      else
+      {
+	if (lambda.EqualTo("350") || lambda.EqualTo("400")) indir = "x_1.5_y_200"; // "x_1.5_y_300";
+	else                                                indir = "x_1.5_y_150"; // "x_1.5_y_200";
+      }
+
       outfile << ctau.Data();
 
       const auto filename = infiletext+"/"+indir+"/plots2D/met_vs_time.root";
