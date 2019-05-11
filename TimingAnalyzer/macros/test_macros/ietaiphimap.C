@@ -22,8 +22,13 @@ void ietaiphimap()
   Common::SetupDetIDs();
 
   // initialize tree and file + options
-  auto file = TFile::Open("tmp_in/dispho_2.root");
-  auto tree = (TTree*)file->Get("tree/disphotree");
+  const auto filename = Common::eosPreFix+"/"+Common::eosDir+"/unskimmed/GMSB_L-200TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/gmsb_GMSB_L-200TeV_Ctau-200cm_TuneCP5_13TeV-pythia8/190305_061616/0000/test/dispho.root";
+  auto file = TFile::Open(filename.Data());
+  Common::CheckValidFile(file,filename);
+
+  const TString treename = "tree/disphotree";
+  auto tree = (TTree*)file->Get(treename.Data());
+  Common::CheckValidTree(tree,treename,filename);
 
   // initialize branches
   std::vector<Float_t> * rhtime_t = 0; tree->SetBranchAddress("rhtime", &rhtime_t);
@@ -34,10 +39,8 @@ void ietaiphimap()
   std::vector<Int_t> * phorecHits_0_t = 0; tree->SetBranchAddress("phorecHits_0", &phorecHits_0_t);
   Int_t phoseed_0 = 0; tree->SetBranchAddress("phoseed_0", &phoseed_0);
 
-  // tree info:  disphotree->Scan("@phorecHits_0.size():phoseed_0:phoE_0","phohasPixSeed_0&&phohasPixSeed_1&&phoisEB_0&&phoisEB_1&&phogedID_0>=3&&phogedID_1>=3&&(sqrt(pow(phoE_0+phoE_1,2)-pow(phopt_0*cos(phophi_0)+phopt_1*cos(phophi_1),2)-pow(phopt_0*sin(phophi_0)+phopt_1*sin(phophi_1),2)-pow(phopt_0*sinh(phoeta_0)+phopt_1*sinh(phoeta_1),2))>60)&&(sqrt(pow(phoE_0+phoE_1,2)-pow(phopt_0*cos(phophi_0)+phopt_1*cos(phophi_1),2)-pow(phopt_0*sin(phophi_0)+phopt_1*sin(phophi_1),2)-pow(phopt_0*sinh(phoeta_0)+phopt_1*sinh(phoeta_1),2))<150)")
-
   // get entry
-  UInt_t entry = 6892;
+  UInt_t entry = 74423; // delayed // 10558 // prompt 
   tree->GetEntry(entry);
 
   // make vecs
@@ -82,6 +85,10 @@ void ietaiphimap()
     if (tmpE > maxE) maxE = tmpE;
   }
 
+  // create buffer of 1 cell all around
+  miniphi-=1; minieta-=1;
+  maxiphi+=1; maxieta+=1;
+
   // make hists
   const auto MakeHist = [=](const TString & name, const TString & title, const TString & ztitle, const Float_t minz, const Float_t maxz)
   {
@@ -110,10 +117,6 @@ void ietaiphimap()
   auto h_T = MakeHist("h_T","RecHit Time in SC","[ns]",minT,maxT);
   auto h_E = MakeHist("h_E","RecHit Energy in SC","[GeV]",minE,maxE);
 
-  // compute weighted time + fill hists
-  Float_t wgtT = 0.0f;
-  Float_t sumS = 0.0f;
-
   for (const auto irh : phorecHits_0)
   {
     const auto tmpID   = rhID[irh];
@@ -125,17 +128,7 @@ void ietaiphimap()
 
     h_T->Fill(tmpieta,tmpiphi,tmpT);
     h_E->Fill(tmpieta,tmpiphi,tmpE);
-
-    if (tmpE > 120.f) continue;
-
-    const auto inv_weight_2 = 1.f/(std::pow(Common::timefitN/tmpE,2)+2.f*std::pow(Common::timefitC,2));
-    
-    wgtT += tmpT*inv_weight_2;
-    sumS += inv_weight_2;
   }
-  // divide time weighted by weights to normalize
-  wgtT /= sumS;
-  std::cout << "seedtime: " << rhtime[phoseed_0] << " weighted time: " << wgtT << std::endl;
   
   // set zero content bins to -1e9.f;
   const auto FixHist = [](TH2F *& hist)
@@ -151,28 +144,18 @@ void ietaiphimap()
   };
 
   FixHist(h_T);
-  FixHist(h_E);
+  //  FixHist(h_E);
   
   auto canv = new TCanvas();
   canv->cd();
 
   // draw time
   h_T->Draw("colz"); // "box"
-  Common::CMSLumi(canv,0,"Full");
+  Common::CMSLumi(canv);
   Common::SaveAs(canv,h_T->GetName());
 
   // draw energy
-  h_E->Draw("colz"); // "box"
-  Common::CMSLumi(canv,0,"Full");
+  h_E->Draw("box"); // "box"
+  Common::CMSLumi(canv);
   Common::SaveAs(canv,h_E->GetName());
 }
-
-
-// TOF Info
-//   std::vector<Float_t> * rhphi_t  = 0; tree->SetBranchAddress("rhphi", &rhphi_t);
-//   std::vector<Float_t> * rheta_t  = 0; tree->SetBranchAddress("rheta", &rheta_t);
-//   Float_t vtxX = 0.f; tree->SetBranchAddress("vtxX", &vtxX);
-//   Float_t vtxY = 0.f; tree->SetBranchAddress("vtxY", &vtxY);
-//   Float_t vtxZ = 0.f; tree->SetBranchAddress("vtxZ", &vtxZ);
-//   const auto rhphi = *rhphi_t;
-//   const auto rheta = *rheta_t;
