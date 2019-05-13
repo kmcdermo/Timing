@@ -9,7 +9,38 @@
 #include <vector>
 #include <map>
 
-void ietaiphimap()
+void drawHists(TH2F * h_T, TH2F * h_E, TFile * outfile, const TString & outtext, const TString & option)
+{
+  auto canv = new TCanvas();
+  canv->cd();
+  canv->SetGridx();
+  canv->SetGridy();
+
+  // draw time
+  h_T->Draw(option.Data());
+  Common::CMSLumi(canv);
+  Common::SaveAs(canv,outtext+"_T_"+option);
+  Common::Write(outfile,h_T,outtext+"_h_T_"+option);
+  Common::Write(outfile,canv,outtext+"_canv_T_"+option);
+
+  // draw energy
+  if (option == "colz") 
+  {
+    canv->SetLogz();
+    h_E->GetZaxis()->SetRangeUser(1,500); // 100
+  }
+  else h_E->GetZaxis()->SetRangeUser(0.5,500); // 100
+  h_E->Draw(option.Data());
+  Common::CMSLumi(canv);
+  Common::SaveAs(canv,outtext+"_E_"+option);
+  Common::Write(outfile,h_E,outtext+"_h_E_"+option);
+  Common::Write(outfile,canv,outtext+"_canv_E_"+option);
+
+  // delete it all
+  delete canv;
+}
+
+void ietaiphimap(const TString & outtext = "prompt")
 {
   // always set style
   auto tdrStyle = new TStyle("tdrStyle","Style for P-TDR");
@@ -40,8 +71,12 @@ void ietaiphimap()
   Int_t phoseed_0 = 0; tree->SetBranchAddress("phoseed_0", &phoseed_0);
 
   // get entry
-  UInt_t entry = 74423; // delayed // 10558 // prompt 
+  UInt_t entry = 10558; // v1 good: delayed (ev = 88424, row = 74423), prompt (ev = 558, row = 10558) // v2 bad: delayed (ev = 96140, row = 134), prompt (ev = 96082, row = 91)
   tree->GetEntry(entry);
+
+  // outfile
+  auto outfile = TFile::Open(outtext+".root","UPDATE");
+  outfile->cd();
 
   // make vecs
   const auto rhtime = *rhtime_t;
@@ -114,8 +149,8 @@ void ietaiphimap()
     return hist;
   };
 
-  auto h_T = MakeHist("h_T","RecHit Time in SC","[ns]",minT,maxT);
-  auto h_E = MakeHist("h_E","RecHit Energy in SC","[GeV]",minE,maxE);
+  auto h_T = MakeHist("h_T","RecHit Time in SC","RecHit Time [ns]",minT,maxT);
+  auto h_E = MakeHist("h_E","RecHit Energy in SC","RecHit Energy [GeV]",minE,maxE);
 
   for (const auto irh : phorecHits_0)
   {
@@ -143,19 +178,17 @@ void ietaiphimap()
     }
   };
 
-  FixHist(h_T);
+  //  FixHist(h_T);
   //  FixHist(h_E);
   
-  auto canv = new TCanvas();
-  canv->cd();
+  drawHists(h_T,h_E,outfile,outtext,"box");
+  drawHists(h_T,h_E,outfile,outtext,"colz");
 
-  // draw time
-  h_T->Draw("colz"); // "box"
-  Common::CMSLumi(canv);
-  Common::SaveAs(canv,h_T->GetName());
-
-  // draw energy
-  h_E->Draw("box"); // "box"
-  Common::CMSLumi(canv);
-  Common::SaveAs(canv,h_E->GetName());
+  // delete it all 
+  delete h_E;
+  delete h_T;
+  delete outfile;
+  delete tree;
+  delete file;
+  delete tdrStyle;
 }
