@@ -29,20 +29,25 @@ void signal_comp()
   // signal name
   const TString signal = "GMSB_L200_CTau200";
 
-  // in file
-  const auto infilename = "skims/v4p1/sig_comp/"+signal+".root";
-  auto infile = TFile::Open(infilename.Data());
-  Common::CheckValidFile(infile,infilename);
+  // central file
+  const TString centralfilename = "skims/v4p1/sig_comp/central.root";
+  auto centralfile = TFile::Open(centralfilename.Data());
+  Common::CheckValidFile(centralfile,centralfilename);
   
   // central tree
-  const auto centtreename = signal+"_Central_Tree";
-  auto centtree = (TTree*)infile->Get(centtreename.Data());
-  Common::CheckValidTree(centtree,centtreename,infilename);
+  const auto centraltreename = signal+"_Tree";
+  auto centraltree = (TTree*)centralfile->Get(centraltreename.Data());
+  Common::CheckValidTree(centraltree,centraltreename,centralfilename);
 
+  // private file
+  const TString privatefilename = "skims/v4p1/sig_comp/private.root";
+  auto privatefile = TFile::Open(privatefilename.Data());
+  Common::CheckValidFile(privatefile,privatefilename);
+  
   // private tree
-  const auto privtreename = signal+"_Private_Tree";
-  auto privtree = (TTree*)infile->Get(privtreename.Data());
-  Common::CheckValidTree(privtree,privtreename,infilename);
+  const auto privatetreename = signal+"_Tree";
+  auto privatetree = (TTree*)privatefile->Get(privatetreename.Data());
+  Common::CheckValidTree(privatetree,privatetreename,privatefilename);
 
   // out file
   auto outfile = TFile::Open(outfiletext+".root","recreate");
@@ -61,9 +66,7 @@ void signal_comp()
     {"genMETphi","#phi^{Gen miss}","genMETphi",{-3.2,-2.8,-2.4,-2.0,-1.6,-1.2,-0.8,-0.4,0.0,0.4,0.8,1.2,1.6,2.0,2.4,2.8,3.2}},
     {"residualMETpt","#Delta(p_{T}^{reco miss}-p_{T}^{gen miss}) [GeV]","t1pfMETpt-genMETpt",{-1000,-700,-500,-300,-250,-200,-150,-100,-80,-60,-40,-20,0.0,20,40,60,80,100,150,200,250,300,500,700,1000}},
     {"gendist","Gen Distance","(sqrt(pow(genNdecayvx_0-genNprodvx_0,2)+pow(genNdecayvy_0-genNprodvy_0,2)+pow(genNdecayvz_0-genNprodvz_0,2))*genNmass_0)/(genphpt_0*abs(cosh(genpheta_0)))*(genphpt_0>0)+(genphpt_0*(genphpt_0<0))",{0,1000,2000,3000,4000,5000,6000,7000,8000,9000,10000}}
-
-
- };
+  };
 
   // ytitle
   const TString ytitle = "Fraction of Events";
@@ -85,59 +88,60 @@ void signal_comp()
     outfile->cd();
     
     // make hists
-    auto centhist = new TH1F("cent_"+name,title+";"+title+";"+ytitle,nbinsX,binsX);
-    setupHist(centhist,kBlue);
+    auto centralhist = new TH1F("central_"+name,title+";"+title+";"+ytitle,nbinsX,binsX);
+    setupHist(centralhist,kBlue);
 
-    auto privhist = new TH1F("priv_"+name,title+";"+title+";"+ytitle,nbinsX,binsX);
-    setupHist(privhist,kRed+1);    
+    auto privatehist = new TH1F("private_"+name,title+";"+title+";"+ytitle,nbinsX,binsX);
+    setupHist(privatehist,kRed+1);    
 
     // fill hists
-    centtree->Draw(Form("%s>>%s",var.Data(),centhist->GetName()),cut.Data(),"goff");
-    privtree->Draw(Form("%s>>%s",var.Data(),privhist->GetName()),cut.Data(),"goff");
+    centraltree->Draw(Form("%s>>%s",var.Data(),centralhist->GetName()),cut.Data(),"goff");
+    privatetree->Draw(Form("%s>>%s",var.Data(),privatehist->GetName()),cut.Data(),"goff");
 
     // scale
     const auto isUp = false;
-    Common::Scale(centhist,isUp);
-    Common::Scale(privhist,isUp);
+    Common::Scale(centralhist,isUp);
+    Common::Scale(privatehist,isUp);
     
     // fraction of events
-    centhist->Scale(1.f/centhist->Integral());
-    privhist->Scale(1.f/privhist->Integral());
+    centralhist->Scale(1.f/centralhist->Integral());
+    privatehist->Scale(1.f/privatehist->Integral());
 
     // ratio hist
-    auto ratiohist = (TH1F*)privhist->Clone("ratio_"+name);
-    ratiohist->Divide(centhist);
+    auto ratiohist = (TH1F*)privatehist->Clone("ratio_"+name);
+    ratiohist->Divide(centralhist);
     setupRatioHist(ratiohist);
 
     // get min,max
     auto minY = 1e9, maxY = -1e9;
-    getMinYMaxY(centhist,minY,maxY);
-    getMinYMaxY(privhist,minY,maxY);
+    getMinYMaxY(centralhist,minY,maxY);
+    getMinYMaxY(privatehist,minY,maxY);
 
     // legend
     auto leg = new TLegend(0.7,0.8,0.82,0.91);
     leg->SetName("leg_"+name);
     leg->SetBorderSize(1);
     leg->SetLineColor(kBlack);
-    leg->AddEntry(centhist,"Central","epl");
-    leg->AddEntry(privhist,"Private","epl");
+    leg->AddEntry(centralhist,"Centralral","epl");
+    leg->AddEntry(privatehist,"Privateate","epl");
 
     // draw and save
-    drawCanv(leg,centhist,privhist,ratiohist,outfile,name,minY,maxY,false);
-    drawCanv(leg,centhist,privhist,ratiohist,outfile,name,minY,maxY,true);
+    drawCanv(leg,centralhist,privatehist,ratiohist,outfile,name,minY,maxY,false);
+    drawCanv(leg,centralhist,privatehist,ratiohist,outfile,name,minY,maxY,true);
 
     // delete it all
     delete leg;
     delete ratiohist;
-    delete privhist;
-    delete centhist;
+    delete privatehist;
+    delete centralhist;
   }
 
   // delete it all
   delete outfile;
-  delete privtree;
-  delete centtree;
-  delete infile;
+  delete privatetree;
+  delete centraltree;
+  delete privatefile;
+  delete centralfile;
   delete tdrStyle;
 }
 
@@ -157,7 +161,7 @@ void setupHist(TH1F * hist, const Color_t color)
 void setupRatioHist(TH1F * ratiohist)
 {
   // set style for ratio plot
-  ratiohist->GetYaxis()->SetTitle("Priv/Cent");
+  ratiohist->GetYaxis()->SetTitle("Private/Central");
   ratiohist->SetMinimum(-0.1); // Define Y ..
   ratiohist->SetMaximum( 2.1); // .. range
   ratiohist->SetLineColor(kBlack);
@@ -187,15 +191,15 @@ void getMinYMaxY(const TH1F * hist, Double_t & minY, Double_t & maxY)
   }
 }
 
-void drawCanv(TLegend * leg, TH1F * centhist, TH1F * privhist, TH1F * ratiohist, TFile * outfile,
+void drawCanv(TLegend * leg, TH1F * centralhist, TH1F * privatehist, TH1F * ratiohist, TFile * outfile,
 	      const TString & name, const Double_t minY, const Double_t maxY, const Bool_t isLogY)
 {
   // set min / max
   const auto min = (isLogY ? minY / 2.f : minY / 1.2f);
   const auto max = (isLogY ? maxY * 2.f : maxY * 1.2f);
 
-  centhist->GetYaxis()->SetRangeUser(min,max);
-  privhist->GetYaxis()->SetRangeUser(min,max);
+  centralhist->GetYaxis()->SetRangeUser(min,max);
+  privatehist->GetYaxis()->SetRangeUser(min,max);
 
   // make ratio line
   auto ratioline = new TLine();
@@ -223,8 +227,8 @@ void drawCanv(TLegend * leg, TH1F * centhist, TH1F * privhist, TH1F * ratiohist,
   upperpad->cd();
   upperpad->SetLogy(isLogY);
 
-  centhist->Draw("ep");
-  privhist->Draw("ep same");
+  centralhist->Draw("ep");
+  privatehist->Draw("ep same");
   leg->Draw("same");
   
   // draw lower
@@ -239,8 +243,8 @@ void drawCanv(TLegend * leg, TH1F * centhist, TH1F * privhist, TH1F * ratiohist,
   // save if log only
   if (isLogY)
   {
-    Common::Write(outfile,centhist);
-    Common::Write(outfile,privhist);
+    Common::Write(outfile,centralhist);
+    Common::Write(outfile,privatehist);
     Common::Write(outfile,ratiohist);
     Common::Write(outfile,leg);
     Common::Write(outfile,canv);

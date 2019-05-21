@@ -88,35 +88,35 @@ def main():
 
         # Will submit one task for each of these input datasets.
         inputDataAndOpts = [
-            ['/GMSB_L100TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L100TeV_Ctau1cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '2.31724', '1', '9.44338560E-01'],
-            ['/GMSB_L100TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L100TeV_Ctau50cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '2.30837', '1', '9.44338560E-01'],
-            ['/GMSB_L100TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L100TeV_Ctau100cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '2.31168', '1', '9.44338441E-01'],
+            ['/GMSB_L100TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L100TeV_Ctau1cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'    , '1.866', '1', '9.44338560E-01'],
+            ['/GMSB_L100TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L100TeV_Ctau50cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'  , '1.876', '1', '9.44338560E-01'],
+            ['/GMSB_L100TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L100TeV_Ctau100cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '1.879', '1', '9.44338441E-01'],
 
-            ['/GMSB_L150TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L150TeV_Ctau1cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.22839', '1', '8.57347310E-01'],
-            ['/GMSB_L150TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L150TeV_Ctau50cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.228395', '1', '8.57347310E-01'],
-            ['/GMSB_L150TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L150TeV_Ctau100cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.228522', '1', '8.57347369E-01'],
+            ['/GMSB_L150TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L150TeV_Ctau1cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'    , '0.2014', '1', '8.57347310E-01'],
+            ['/GMSB_L150TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L150TeV_Ctau50cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'  , '0.2012', '1', '8.57347310E-01'],
+            ['/GMSB_L150TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L150TeV_Ctau100cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.2022', '1', '8.57347369E-01'],
             
-            ['/GMSB_L200TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L200TeV_Ctau1cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.0410632', '1', '8.14181864E-01'],
-            ['/GMSB_L200TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L200TeV_Ctau50cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.0410061', '1', '8.14181864E-01'],
-            ['/GMSB_L200TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L200TeV_Ctau100cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.0411391', '1', '8.14181805E-01'],
+            ['/GMSB_L200TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L200TeV_Ctau1cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'    , '4.024e-2', '1', '8.14181864E-01'],
+            ['/GMSB_L200TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L200TeV_Ctau50cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'  , '4.037e-2', '1', '8.14181864E-01'],
+            ['/GMSB_L200TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L200TeV_Ctau100cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '4.028e-2', '1', '8.14181805E-01'],
             
-            ['/GMSB_L250TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L250TeV_Ctau1cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.0110806', '1', '7.92750955E-01'],
-            ['/GMSB_L250TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L250TeV_Ctau50cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.0110433', '1', '7.92751014E-01'],
-            ['/GMSB_L250TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L250TeV_Ctau100cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.0110536', '1', '7.92751074E-01'],
+            ['/GMSB_L250TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L250TeV_Ctau1cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'    , '1.159e-2', '1', '7.92750955E-01'],
+            ['/GMSB_L250TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L250TeV_Ctau50cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'  , '1.161e-2', '1', '7.92751014E-01'],
+            ['/GMSB_L250TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L250TeV_Ctau100cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '1.163e-2', '1', '7.92751074E-01'],
             
-            ['/GMSB_L300TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L300TeV_Ctau1cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.00388367', '1', '7.80865729E-01'],
-            ['/GMSB_L300TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L300TeV_Ctau50cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.00388684', '1', '7.80865729E-01'],
-            ['/GMSB_L300TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L300TeV_Ctau100cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.00388049', '1', '7.80865729E-01'],
+            ['/GMSB_L300TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L300TeV_Ctau1cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'    , '4.184e-3', '1', '7.80865729E-01'],
+            ['/GMSB_L300TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L300TeV_Ctau50cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'  , '4.193e-3', '1', '7.80865729E-01'],
+            ['/GMSB_L300TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L300TeV_Ctau100cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '4.189e-3', '1', '7.80865729E-01'],
             
-            ['/GMSB_L350TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L350TeV_Ctau1cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.00161502', '1', '7.73663223E-01'],
-            ['/GMSB_L350TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L350TeV_Ctau50cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.00161881', '1', '7.73663223E-01 '],
-            ['/GMSB_L350TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L350TeV_Ctau100cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.00161884', '1', '7.73663223E-01'],
+            ['/GMSB_L350TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L350TeV_Ctau1cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'    , '1.713e-3', '1', '7.73663223E-01'],
+            ['/GMSB_L350TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L350TeV_Ctau50cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'  , '1.726e-3', '1', '7.73663223E-01'],
+            ['/GMSB_L350TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L350TeV_Ctau100cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '1.713e-3', '1', '7.73663223E-01'],
             
-            ['/GMSB_L400TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L400TeV_Ctau1cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.000731887', '1', '7.68983364E-01 '],
-            ['/GMSB_L400TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L400TeV_Ctau50cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.000731771', '1', '7.68983364E-01'],
-            ['/GMSB_L400TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L400TeV_Ctau100cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '0.000730971', '1', '7.68983364E-01'],
-            
-            ['/GMSB_L200TeV_Ctau200cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L200TeV_Ctau200cm_MINIAODSIM_CaltechT2_10Apr2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '4.445e-02', '1', '8.14181864E-01'], 
+            ['/GMSB_L400TeV_Ctau1cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L400TeV_Ctau1cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'    , '7.494e-4', '1', '7.68983364E-01'],
+            ['/GMSB_L400TeV_Ctau50cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L400TeV_Ctau50cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER'  , '7.474e-4', '1', '7.68983364E-01'],
+            ['/GMSB_L400TeV_Ctau100cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L400TeV_Ctau100cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '7.503e-4', '1', '7.68983364E-01'],
+
+            ['/GMSB_L200TeV_Ctau200cm_13TeV-pythia8/zhicaiz-crab_CMSSW_9_4_7_GMSB_L200TeV_Ctau200cm_MINIAODSIM_CaltechT2_10May2019-5f646ecd4e1c7a39ab0ed099ff55ceb9/USER', '4.0014e-2', '1', '8.14181864E-01']
             ]
 
         for inDO in inputDataAndOpts:
