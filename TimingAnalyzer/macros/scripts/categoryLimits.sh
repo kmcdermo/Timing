@@ -14,7 +14,7 @@ source scripts/common_variables.sh
 outdir=${1:-"madv2_v4/categories/v1p1/full_chain"}
 
 use_obs=${2:-"true"}
-use_systematics=${3:-"false"}
+use_systematics=${3:-"true"}
 save_meta_data=${4:-0}
 do_cleanup=${5:-"true"}
 

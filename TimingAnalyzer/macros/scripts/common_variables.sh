@@ -100,7 +100,6 @@ export CR_QCD="qcd_DEG v4p1/final/qcd v4p1/final/signals_qcd always_true"
 #export SR="sr_SPH v4p1/final/sr v4p1/final/signals_sr always_true"
 export SR_ex1pho="sr_ex1pho_SPH v4p1/final/categories/${ex1pho} v4p1/final/categories/signals_${ex1pho} always_true"
 export SR_in2pho="sr_in2pho_SPH v4p1/final/categories/${in2pho} v4p1/final/categories/signals_${in2pho} always_true"
-#export SR="sr_SPH v4p1/final/categories/inclusive_2pho v4p1/final/categories/signals_inclusive_2pho always_true"
 
 ## Unc tests for signals
 export PHO_SCALE_UP="phoscaleup NO_DATA v4/unc_tests/signals_PhoScaleUp always_true"
