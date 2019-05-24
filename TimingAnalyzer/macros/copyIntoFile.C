@@ -13,6 +13,7 @@ void SetupConfig(const TString & sampleconfig, const TString & cutflowconfig)
   std::vector<TString> samples;
 
   Common::SetupSamples();
+  Common::SetupSignalSamples();
   Common::SetupWhichSamples(sampleconfig,samples);
   Common::KeepOnlySamples(samples);
   Common::SetupGroups();
@@ -26,8 +27,12 @@ void copyIntoFile(const TString & sampleconfig, const TString & cutflowconfig, c
 {
   SetupConfig(sampleconfig,cutflowconfig);
 
+  // check inputs
   const auto & infile  = TFile::Open(Form("%s",infilename.Data()));
+  Common::CheckValidFile(infile,infilename);
+
   auto outfile = TFile::Open(Form("%s",outfilename.Data()),"UPDATE");
+  Common::CheckValidFile(outfile,outfilename);
 
   // samples
   std::cout << "Copying sample lists and hists first..." << std::endl; 
@@ -38,7 +43,10 @@ void copyIntoFile(const TString & sampleconfig, const TString & cutflowconfig, c
 
     std::cout << "Working on input: " << input.Data() << std::endl;
 
-    const auto & hist = (TH1F*)infile->Get(Common::SampleCutFlowHistNameMap[input].Data());
+    const auto & histname = Common::SampleCutFlowHistNameMap[input];
+    const auto & hist = (TH1F*)infile->Get(histname.Data());
+    Common::CheckValidHist(hist,histname,infilename);
+
     Common::Write(outfile,hist);
     delete hist;
 
@@ -48,9 +56,12 @@ void copyIntoFile(const TString & sampleconfig, const TString & cutflowconfig, c
 
       std::cout << "Copying list for cut: " << label.Data() << std::endl;
 
-      const auto & list = (TEntryList*)infile->Get(Form("%s_%s_EntryList",samplename.Data(),label.Data()));
-      Common::Write(outfile,list);
-      delete list;
+      const auto & entrylistname = samplename+"_"+label+"%_EntryList";
+      const auto & entrylist = (TEntryList*)infile->Get(entrylistname.Data());
+      Common::CheckValidEntryList(entrylist,entrylistname,infilename);
+
+      Common::Write(outfile,entrylist);
+      delete entrylist;
     }
   }
 
@@ -62,11 +73,17 @@ void copyIntoFile(const TString & sampleconfig, const TString & cutflowconfig, c
 
     std::cout << "Working on group: " << sample.Data() << std::endl;
 
-    const auto & hist = (TH1F*)infile->Get(Common::GroupCutFlowHistNameMap[sample].Data());
+    const auto & histname = Common::GroupCutFlowHistNameMap[sample];
+    const auto & hist = (TH1F*)infile->Get(histname.Data());
+    Common::CheckValidHist(hist,histname,infilename);
+
     Common::Write(outfile,hist);
     delete hist;
 
-    const auto & intree = (TTree*)infile->Get(Common::TreeNameMap[sample].Data());
+    const auto & intreename = Common::TreeNameMap[sample];
+    const auto & intree = (TTree*)infile->Get(intreename.Data());
+    Common::CheckValidTree(intree,intreename,infilename);
+
     const auto & outtree = intree->CopyTree("");
     Common::Write(outfile,outtree);
     delete outtree;

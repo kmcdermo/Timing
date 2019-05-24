@@ -1,6 +1,5 @@
 #include "Common.hh"
 #include "TLatex.h"
-#include "TColor.h"
 
 namespace Common
 {
@@ -1053,6 +1052,15 @@ namespace Common
     if (f1 == (TF1*) NULL) // check if valid tf1
     {
       std::cerr << "Input TF1 is bad pointer: " << f1name.Data() << " in input file: " << filename.Data() << " ...exiting..." << std::endl;
+      exit(1);
+    }
+  }
+
+  void CheckValidEntryList(const TEntryList * entrylist, const TString & entrylistname, const TString & filename)
+  {
+    if (entrylist == (TEntryList*) NULL) // check if valid tentrylist
+    {
+      std::cerr << "Input TEntryList is bad pointer: " << entrylistname.Data() << " in input file: " << filename.Data() << " ...exiting..." << std::endl;
       exit(1);
     }
   }
