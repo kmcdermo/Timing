@@ -9,6 +9,7 @@
 #include "TH2F.h"
 #include "TGraphAsymmErrors.h"
 #include "TF1.h"
+#include "TEntryList.h"
 #include "TMath.h"
 #include "TCanvas.h"
 #include "TROOT.h"
@@ -334,6 +335,7 @@ namespace Common
     }
   }
   void CheckValidF1(const TF1 * f1, const TString & f1name, const TString & filename);
+  void CheckValidEntryList(const TEntryList * entrylist, const TString & entrylistname, const TString & filename);
   void CheckIfConfigEmpty(const TString & param, const TString & label);
 
   // Check samples
