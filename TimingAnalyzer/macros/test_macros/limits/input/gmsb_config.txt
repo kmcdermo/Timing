@@ -1,7 +1,9 @@
-ATLAS_8_TeV_#gamma#gamma 10 3 417
-CMS_8_TeV_#gamma 1 0 600
-CMS_8_TeV_#gamma#gamma 1 0 923
-CMS_7_TeV_#gamma 1 0 633
-CMS_13_TeV_#gamma#gamma_(2016) 7 3 434
-CMS_13_TeV_#gamma_(2017) 3 3 616
+2017_[Standard] 1 3 417
+2017_[#gamma_Category] 9 3 633
+2017_[#gamma#gamma_Category] 9 3 600 
+2017_[Combined_Categories] 1 3 877
+
+2017_[#gamma_Category_Syst] 9 3 800
+2017_[#gamma#gamma_Category_Syst] 9 3 432
+2017_[Combined_Categories_Syst] 1 3 612
 

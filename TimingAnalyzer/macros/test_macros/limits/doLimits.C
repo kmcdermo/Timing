@@ -37,7 +37,7 @@ struct Opts
   TString draw;
 };
 
-void setupOptsMap(std::map<TString,Opts> & optsMap)
+void setupOptsMap(std::map<TString,Opts> & optsMap, std::vector<TString> & optsOrderVec)
 {
   std::ifstream infile("input/gmsb_config.txt",std::ios::in);
   TString label; short style, width, color;
@@ -45,18 +45,18 @@ void setupOptsMap(std::map<TString,Opts> & optsMap)
   while (infile >> label >> style >> width >> color)
   {
     optsMap[label] = {style,width,color};
+    optsOrderVec.emplace_back(label);
   }
 }
 
 void doLimits()
 {
   std::map<TString,CoordVec> coordVecMap;
-  setupCoordVecMap(coordVecMap,"input/old_gmsb.txt");
-  setupCoordVecMap(coordVecMap,"input/abcd_2x2_2016.txt");
-  setupCoordVecMap(coordVecMap,"input/abcd_2x2_2017.txt");
+  setupCoordVecMap(coordVecMap,"input/split_categories.txt");
 
   std::map<TString,Opts> optsMap;
-  setupOptsMap(optsMap);
+  std::vector<TString> optsOrderVec;
+  setupOptsMap(optsMap,optsOrderVec);
   
   std::map<TString,TGraph*> graphMap;
   for (const auto & coordVecPair : coordVecMap)
@@ -97,12 +97,11 @@ void doLimits()
   canv->SetTickx();
   canv->SetTicky();
 
-  auto leg = new TLegend(0.7,0.7,1.0,1.0);
+  auto leg = new TLegend(0.53,0.63,0.86,0.86);
   auto i = 0;
-  for (auto & graphPair : graphMap)
+  for (auto & label : optsOrderVec)
   {
-    auto label = graphPair.first;
-    auto & graph = graphPair.second;
+    auto & graph = graphMap[label];
     const auto & draw = optsMap[label].draw;
 
     label.ReplaceAll("_"," ");
@@ -113,7 +112,7 @@ void doLimits()
     graph->GetYaxis()->SetTitle("c#tau [cm]");
 
     graph->GetXaxis()->SetLimits(75,375);
-    graph->GetHistogram()->SetMinimum(1e-2);
+    graph->GetHistogram()->SetMinimum(1e0);
     graph->GetHistogram()->SetMaximum(1e5);
 
     i++;
@@ -122,7 +121,7 @@ void doLimits()
   leg->Draw("same");
 
   // draw mass axis
-  auto axis = new TGaxis(100,0.1,350,0.1,139.7,503.4,505,"");
+  auto axis = new TGaxis(100,5,350,5,139.7,503.4,505,"");
   axis->SetTitle("M_{#tilde{#chi}^{0}_{1}} [GeV]");
   axis->SetTitleSize(0.035);
   axis->SetLabelSize(0.035);
