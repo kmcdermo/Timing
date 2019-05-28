@@ -15,8 +15,6 @@ struct BinRange
 void makeClosureDump(const TH2F * hist2D, const Double_t time_split, const Double_t met_split,
 		     const TString & label, std::ofstream & outtextfile);
 void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, const TString & outfiletext);
-void drawCanvas1D(std::vector<TH1D*> & hist1Ds, TLegend * leg, TCanvas * canv,
-		  const TString & outname, const Float_t xlow, const Float_t xhigh);
 
 // main method
 void extractClosureUncertainty(const TString & label, const TString & outfiletext)
@@ -49,8 +47,8 @@ void extractClosureUncertainty(const TString & label, const TString & outfiletex
 	      << std::endl;
 
   // make dumps
-  std::vector<Double_t> time_splits = {0.0,0.5,1.0,1.5};
-  std::vector<Double_t> met_splits  = {50,100,150,200};
+  std::vector<Double_t> time_splits = {0.0,0.5,1.0,1.5,2.0};
+  std::vector<Double_t> met_splits  = {50,100,150,200,300,500};
   for (const auto time_split : time_splits)
     for (const auto met_split : met_splits)
       makeClosureDump(hist2D,time_split,met_split,label,outtextfile);
@@ -230,31 +228,20 @@ void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, co
   // write legend
   Common::Write(iofile,leg);
 
-  // draw full x-range
-  drawCanvas1D(hist1Ds,leg,canv,outname+"_full",-25.f,25.f);
+  // draw all hists + legend
+  for (auto i = 0U; i < hist1Ds.size(); i++)
+  {
+    auto & hist1D = hist1Ds[i];
+    hist1D->Draw(i>0?"ep same":"ep");
+  }
+  leg->Draw("same");
 
-  // save it all
-  Common::Write(iofile,canv);
-
-  // draw full x-range
-  drawCanvas1D(hist1Ds,leg,canv,outname+"_zoom",-2.f,8.f);
+  // make the canvas pretty, save it
+  Common::CMSLumi(canv,0,"Full");
+  Common::SaveAs(canv,outname);
 
   // delete things
   for (auto & hist1D : hist1Ds) delete hist1D;
   delete leg;
   delete canv;
-}
-
-void drawCanvas1D(std::vector<TH1D*> & hist1Ds, TLegend * leg, TCanvas * canv,
-		  const TString & outname, const Float_t xlow, const Float_t xhigh)
-{
-  for (auto i = 0U; i < hist1Ds.size(); i++)
-  {
-    auto & hist1D = hist1Ds[i];
-    hist1D->GetXaxis()->SetRangeUser(xlow,xhigh);
-    hist1D->Draw(i>0?"ep same":"ep");
-  }
-  leg->Draw("same");
-  Common::CMSLumi(canv,0,"Full");
-  Common::SaveAs(canv,outname);
 }

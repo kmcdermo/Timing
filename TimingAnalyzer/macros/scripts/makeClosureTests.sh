@@ -12,40 +12,57 @@ source scripts/common_variables.sh
 
 ## Command Line Config
 outfiletext=${1:-"met_vs_time"}
-outdir=${2:-"madv2_v4/uncs/closure"}
+outdir=${2:-"madv2_v4p1/closure/v2"}
 
 save_meta_data=${3:-0}
 do_cleanup=${4:-"true"}
 
-## plot config
-plot_config="${plotconfigdir}/met_vs_time_fine_extended.${inTextExt}"
-
-## misc config
-misc_config="misc_time_met_fine_extended.${inTextExt}"
-> "${misc_config}"
-echo "skip_bkgd_mc=1" >> "${misc_config}"
-echo "skip_signal=1" >> "${misc_config}"
-
-## output text file (used by all inputs)
-outtextfile="${outfiletext}.${outTextExt}"
-> "${outtextfile}"
-echo "Control Region [Data],Time Boundary [ns],MET Boundary [GeV],obsA,obsB,obsC,obsD,c1{obsB/obsA},c2{obsD/obsA},predC{obsA*c1*c2},Percent Diff (1-predC/obsC),pullC{(obsC-predC)/sqrt(obsCunc^2+predCunc^2)}" >> "${outtextfile}"
-
-###########################
-## Main Loop Over Inputs ##
-###########################
-
+## Input Control Regions Used
 declare -a CRs=(CR_GJets CR_QCD)
 
-for CR in "${CRs[@]}"
-do
-    echo "${!CR}" | while read -r label infile insigfile sel
-    do
-	## first make the 2D hist
-	./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "NOSIGNALS.root" "${cutconfigdir}/always_true.${inTextExt}" "${plot_config}" "${misc_config}" "${MainEra}" ${save_meta_data} "${outfiletext}_${label}" "${outdir}"
+## plot configs
+plot_config_zoom="${plotconfigdir}/met_vs_time_fine_zoom.${inTextExt}"
+plot_config_full="${plotconfigdir}/met_vs_time_fine_full.${inTextExt}"
 
-	## run extractor
-	./scripts/extractClosureUncertainty.sh "${label}" "${outfiletext}" "${outdir}"
+## misc config
+misc_config="misc_closure_tests.${inTextExt}"
+> "${misc_config}"
+echo "skip_bkgd_mc=1" >> "${misc_config}"
+echo "skip_signal=1"  >> "${misc_config}"
+
+## output text files (used by all CR inputs)
+outtextfile_zoom="${outfiletext}_zoom.${outTextExt}"
+outtextfile_full="${outfiletext}_full.${outTextExt}"
+declare -a outtextfiles=("${outtextfile_zoom}" "${outtextfile_full}")
+
+for outtextfile in "${outtextfiles[@]}"
+do
+    > "${outtextfile}"
+    echo "Control Region [Data],Time Boundary [ns],MET Boundary [GeV],obsA,obsB,obsC,obsD,c1{obsB/obsA},c2{obsD/obsA},predC{obsA*c1*c2},Percent Diff (1-predC/obsC),pullC{(obsC-predC)/sqrt(obsCunc^2+predCunc^2)}" >> "${outtextfile}"
+done
+
+## combine group info
+declare -a group_infos=("zoom ${plot_config_zoom} ${outtextfile_zoom}" "full ${plot_config_full} ${outtextfile_full}")
+
+#######################################
+## Main Loops Over Binnings + Inputs ##
+#######################################
+
+for group_info in "${group_infos[@]}"
+do 
+    echo "${group_info}" | while read -r group plot_config outtextfile
+    do
+	for CR in "${CRs[@]}"
+	do
+	    echo "${!CR}" | while read -r label infile insigfile sel
+	    do
+		## first make the 2D hist
+		./scripts/runTreePlotter2D.sh "${skimdir}/${infile}.root" "NOSIGNALS.root" "${cutconfigdir}/always_true.${inTextExt}" "${plot_config}" "${misc_config}" "${MainEra}" ${save_meta_data} "${outfiletext}_${group}_${label}" "${outdir}"
+		
+		## run extractor
+		./scripts/extractClosureUncertainty.sh "${label}" "${outfiletext}_${group}" "${outdir}"
+	    done
+	done
     done
 done
 
@@ -57,8 +74,11 @@ done
 fulldir="${topdir}/${disphodir}/${outdir}"
 PrepOutDir "${fulldir}"
 
-## copy log file!
-cp "${outtextfile}" "${fulldir}"
+## copy log files!
+for outtextfile in "${outtextfiles[@]}"
+do
+    cp "${outtextfile}" "${fulldir}"
+done
 
 ###################
 ## Final Cleanup ##

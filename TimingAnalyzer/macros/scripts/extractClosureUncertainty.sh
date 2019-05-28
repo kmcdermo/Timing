@@ -18,8 +18,7 @@ PrepOutDir "${fulldir}"
 ## copy everything
 for ext in "${exts[@]}"
 do
-    cp "${outfiletext}_${label}_full.${ext}" "${fulldir}"
-    cp "${outfiletext}_${label}_zoom.${ext}" "${fulldir}"
+    cp "${outfiletext}_${label}.${ext}" "${fulldir}"
 done
 cp "${outfiletext}_${label}.root" "${fulldir}"
 
