@@ -1,0 +1,6 @@
+PreSuperFastSkim (1)
+ph1ptGT40 (phopt_1>40)
+ph1SCeta ((abs(phosceta_1)<1.4442)||((abs(phosceta_1)>1.566)&&(abs(phosceta_1)<2.5)))
+ph1sieieLT0p03 (phosieie_1<0.03)
+ph1HoELT0p1 (phoHoE_1<0.1)
+ph1IsoLT30 ((phoisOOT_1==0&&(phoChgHadIso_1<30)&&(phoNeuHadIso_1<30)&&(phoPhoIso_1<30))||(phoisOOT_1==1&&(phoEcalPFClIso_1<30.0)&&(phoHcalPFClIso_1<30)&&(phoTrkIso_1<30)))

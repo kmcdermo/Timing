@@ -98,8 +98,8 @@ export adjust_var="${base_adjust_var}_0"
 export CR_GJets="gjets_DEG v4p1/final/gjets v4p1/final/signals_gjets always_true"
 export CR_QCD="qcd_DEG v4p1/final/qcd v4p1/final/signals_qcd always_true"
 #export SR="sr_SPH v4p1/final/sr v4p1/final/signals_sr always_true"
-export SR_ex1pho="sr_ex1pho_SPH v4p1/final/categories/${ex1pho} v4p1/final/categories/signals_${ex1pho} always_true"
-export SR_in2pho="sr_in2pho_SPH v4p1/final/categories/${in2pho} v4p1/final/categories/signals_${in2pho} always_true"
+export SR_ex1pho="sr_ex1pho_SPH v4p1/final/categories_v2p1/${ex1pho} v4p1/final/categories_v2p1/signals_${ex1pho} always_true"
+export SR_in2pho="sr_in2pho_SPH v4p1/final/categories_v2p1/${in2pho} v4p1/final/categories_v2p1/signals_${in2pho} always_true"
 
 ## Unc tests for signals
 export PHO_SCALE_UP="phoscaleup NO_DATA v4/unc_tests/signals_PhoScaleUp always_true"
