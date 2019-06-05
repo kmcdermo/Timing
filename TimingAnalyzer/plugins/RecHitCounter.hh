@@ -15,6 +15,18 @@
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 
+// Ecal RecHits
+#include "DataFormats/EcalRecHit/interface/EcalRecHit.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
+#include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
+
+// Geometry
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
+#include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
+#include "DataFormats/GeometryVector/interface/GlobalPoint.h"
+
 // ROOT
 #include "TTree.h"
 
@@ -25,6 +37,19 @@
 
 // Common Utilities
 #include "Timing/TimingAnalyzer/plugins/CommonUtils.hh"
+
+///////////////////////
+// Struct Definition //
+///////////////////////
+
+struct rhStruct
+{
+  rhStruct () {}
+
+  std::vector<float> x, y, z, E, T;
+  std::vector<unsigned int> ID;
+  std::vector<bool> isOOT;
+};
 
 //////////////////////
 // Class Definition //
@@ -39,6 +64,7 @@ public:
   ////////////////////////
 
   explicit RecHitCounter(const edm::ParameterSet & iConfig);
+  void ConsumeTokens();
   ~RecHitCounter();
   static void fillDescriptions(edm::ConfigurationDescriptions & descriptions);
 
@@ -47,15 +73,19 @@ public:
   ///////////////////////////
 
   void MakeTree();
+  void MakeVectorBranches(const std::string & label, rhStruct & rhInfo);
 
   //////////////////////////
   // Event Prep Functions //
   //////////////////////////
 
   bool GetObjects(const edm::Event & iEvent);
+  bool GetCalibrationConstants(const edm::EventSetup & iSetup);
   void InitializeObjects();
   void PrepObjects();
   void ResetRecHitMaps();
+  void ResetStructs();
+  void ResetStruct(rhStruct & rhInfo);
 
   ////////////////////
   // Main Functions //
@@ -73,7 +103,8 @@ public:
   void SetRecHitMaps();
 
   void AppendPhotonRecHits(const pat::Photon & photon, uiiumap & recHitMap);
-  void SetSharedHits(int & nRH);
+  void SetSharedHits(int & nRH, rhStruct & rhInfo);
+  EcalRecHit GetRecHit(const uint32_t rawID, const EcalRecHitCollection * recHits);
 
 private:
 
@@ -103,6 +134,11 @@ private:
   edm::Handle<double> rhoH;
   float rho;
 
+  // geometry
+  edm::ESHandle<CaloGeometry> caloGeoH;
+  const CaloSubdetectorGeometry * barrelGeometry;
+  const CaloSubdetectorGeometry * endcapGeometry;
+
   // mets
   const edm::InputTag metsTag;
   edm::EDGetTokenT<std::vector<pat::MET> > metsToken;
@@ -118,6 +154,18 @@ private:
   edm::EDGetTokenT<std::vector<pat::Photon> > ootPhotonsToken;
   edm::Handle<std::vector<pat::Photon> > ootPhotonsH;
 
+  // RecHits EB
+  const edm::InputTag recHitsEBTag;
+  edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBToken;
+  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEBH;
+  const edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > * recHitsEB;
+
+  // RecHits EE
+  const edm::InputTag recHitsEETag;
+  edm::EDGetTokenT<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEToken;
+  edm::Handle<edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > > recHitsEEH;
+  const edm::SortedCollection<EcalRecHit,edm::StrictWeakOrdering<EcalRecHit> > * recHitsEE;
+
   //////////////////////
   // Temp I/O Members //
   //////////////////////
@@ -131,6 +179,10 @@ private:
   // rechit maps
   uiiumap gedRecHitMap;
   uiiumap ootRecHitMap;
+
+  // vector of rechit structs
+  rhStruct rhInfo_Pre;
+  rhStruct rhInfo_Post;
 
   ////////////////////
   // Output Members //

@@ -7,7 +7,7 @@ options = VarParsing('python')
 
 ## matching cuts
 options.register('dRmin',0.3,VarParsing.multiplicity.singleton,VarParsing.varType.float,'dR minimum cut');
-options.register('phpTmin',20.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon pT minimum cut');
+options.register('phpTmin',10.0,VarParsing.multiplicity.singleton,VarParsing.varType.float,'photon pT minimum cut');
 options.register('phIDmin','none',VarParsing.multiplicity.singleton,VarParsing.varType.string,'photon ID minimum cut');
 
 ## data or MC options
@@ -92,7 +92,7 @@ else :
 	process.source = cms.Source('PoolSource', fileNames = readFiles)
 
 ## How many events to process
-if   options.demoMode : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
+if   options.demoMode : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(500000))
 else                  : process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(options.maxEvents))
 
 # Set the global tag depending on the sample type
@@ -121,6 +121,9 @@ process.tree = cms.EDAnalyzer("RecHitCounter",
    ## photons
    gedPhotons = cms.InputTag("slimmedPhotons"),
    ootPhotons = cms.InputTag("slimmedOOTPhotons"),
+   ## ecal recHits
+   recHitsEB = cms.InputTag("reducedEgamma", "reducedEBRecHits"),
+   recHitsEE = cms.InputTag("reducedEgamma", "reducedEERecHits"),
 )
 
 # Set up the path
