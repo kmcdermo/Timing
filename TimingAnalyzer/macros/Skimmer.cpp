@@ -309,7 +309,7 @@ void Skimmer::EventLoop()
 
       // sort the mass structs
       std::sort(phopairs.begin(),phopairs.end(),
-		[=](const auto & phopair1, const auto & phopair2)
+		[=](const MassStruct & phopair1, const MassStruct & phopair2)
 		{
 		  const auto diff1 = std::abs(phopair1.mass-Common::Zmass);
 		  const auto diff2 = std::abs(phopair2.mass-Common::Zmass);
@@ -404,7 +404,7 @@ void Skimmer::EventLoop()
 
       // sort pairs by highest energy for E1
       std::sort(good_pairs.begin(),good_pairs.end(),
-		[&](const auto & pair1, const auto & pair2)
+		[&](const DiXtalInfo & pair1, const DiXtalInfo & pair2)
 		{
 		  return ((*fInRecHits.E)[pair1.rh1] > (*fInRecHits.E)[pair2.rh2]);
 		});
@@ -1308,7 +1308,7 @@ void Skimmer::ReorderJets()
   std::vector<UInt_t> ijets(fInJets.E->size());
   std::iota(ijets.begin(),ijets.end(),0);
   std::sort(ijets.begin(),ijets.end(),
-	    [&](const auto ijet1, const auto ijet2)
+	    [&](const UInt_t ijet1, const UInt_t ijet2)
 	    {
 	      return fOutJets.pt_f[ijet1]>fOutJets.pt_f[ijet2];
 	    });

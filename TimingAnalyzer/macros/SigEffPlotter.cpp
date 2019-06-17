@@ -284,7 +284,7 @@ void SigEffPlotter::SetupSignalSubGroups()
 
   // then sort them by ctau
   std::sort(fSignalSubGroupVec.begin(),fSignalSubGroupVec.end(),
-	    [](const auto & group1, const auto & group2)
+	    [](const TString & group1, const TString & group2)
 	    {
 	      const TString s_ctau = "_CTau";
 	      auto i_ctau = group1.Index(s_ctau);

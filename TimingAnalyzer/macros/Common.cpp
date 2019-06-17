@@ -415,7 +415,7 @@ namespace Common
       const TString ctau(subgroup(i_ctau+l_ctau,subgroup.Length()-i_ctau-l_ctau));
       gctaus.emplace_back(ctau);
     }
-    std::sort(gctaus.begin(),gctaus.end(),[](const auto & gctau1, const auto & gctau2){return gctau1.Atof() < gctau2.Atof();});
+    std::sort(gctaus.begin(),gctaus.end(),[](const TString & gctau1, const TString & gctau2){return gctau1.Atof() < gctau2.Atof();});
     
     auto icolor = 0;
     for (const auto & gctau : gctaus)

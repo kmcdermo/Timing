@@ -44,7 +44,7 @@ struct Bin2D
   std::map<TString,Float_t> rvalmap;
 };
 
-const auto sortPairs = [](const auto & obj1, const auto & obj2){return obj1.second < obj2.second;};
+const auto sortPairs = [](const std::pair<TString,Float_t> & obj1, const std::pair<TString,Float_t> & obj2){return obj1.second < obj2.second;};
 
 class Limits2D
 {

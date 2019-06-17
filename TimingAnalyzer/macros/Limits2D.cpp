@@ -271,7 +271,7 @@ void Limits2D::DumpAllBins()
   
   // sort bins first (first in x, then y)
   std::sort(fAllBins.begin(),fAllBins.end(),
-	    [](const auto & bin1, const auto & bin2)
+	    [](const Bin2D & bin1, const Bin2D & bin2)
 	    {
 	      if (bin1.xcenter == bin2.xcenter) return bin1.ycenter < bin2.ycenter;
 	      return bin1.xcenter < bin2.xcenter;

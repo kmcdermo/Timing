@@ -220,7 +220,7 @@ void TreePlotter::MakeBkgdOutput()
     }
   }
   std::sort(StackOrder.begin(),StackOrder.end(),
-	    [&](const auto & sample1, const auto & sample2)
+	    [&](const TString & sample1, const TString & sample2)
 	    { return HistMap[sample1]->Integral() < HistMap[sample2]->Integral(); });
   
   // add hists to stack from smallest to biggest
