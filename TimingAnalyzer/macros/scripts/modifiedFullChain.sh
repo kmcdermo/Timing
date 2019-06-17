@@ -11,7 +11,7 @@ source scripts/common_variables.sh
 ###################
 
 ## Command Line Input
-outdir=${1:-"madv2_v4p1/unblinding/v1/inclusive_2pho/mod_full_chain"}
+outdir=${1:-"madv2_v4p1/smear_2gaus/${in2pho}"}
 
 is_blind=${2:-"false"}
 use_obs=${3:-"true"}
@@ -20,7 +20,7 @@ save_meta_data=${5:-0}
 do_cleanup=${6:-"true"}
 
 ## xy boundaries to plot: from optimized scan
-declare -a xys=("0.5 0.5 150 150" "0.5 0.5 200 200" "1.5 1.5 150 150" "1.5 1.5 200 200")
+declare -a xys=("0.5 0.5 150 150" "0.5 0.5 200 200" "0.5 0.5 300 300" "1.5 1.5 150 150" "1.5 1.5 200 200" "1.5 1.5 300 300")
 
 ## scan log --> set below
 scan_log="abcd_categories.log"

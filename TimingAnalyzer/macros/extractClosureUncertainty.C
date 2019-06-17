@@ -43,9 +43,11 @@ void extractClosureUncertainty(const TString & label, const TString & outfiletex
   // dump input
   const auto covariance = hist2D->GetCovariance();
   const auto corrfactor = hist2D->GetCorrelationFactor();
-  const auto corrfactor_unc = (1.0-corrfactor*corrfactor)/std::sqrt(hist2D->Integral());
+  const auto integral   = hist2D->Integral();
+  const auto corrfactor_unc = (1.0-corrfactor*corrfactor)/std::sqrt(integral);
 
   outtextfile << label.Data() << ","
+	      << "integral: " << integral << ","
 	      << "covar: " << covariance << ","
     	      << "corr. factor: " << corrfactor << ","
     	      << "corr. factor unc.: " << corrfactor_unc << ","
