@@ -1,0 +1,10 @@
+plot_title=p_{T}^{miss} [GeV]
+
+x_title=p_{T}^{miss} [GeV]
+x_scale=LIN
+x_var=t1pfMETpt
+x_bins=VARIABLE 0 20 40 60 80 100 150 200 250 300 400 500 750 1000 3000
+
+y_title=Events/GeV
+y_scale=LOG
+
