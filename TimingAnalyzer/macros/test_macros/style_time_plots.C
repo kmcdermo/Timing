@@ -1,6 +1,7 @@
 // config
 const std::vector<Double_t> xbins = {75,100,125,150,175,225,275,325,375,475,600,750,1700,2250};
 const auto nGoodBins = 12;
+const auto sigmaN = 0.0887; // GeV
 const TString data_hist_name = "Data_sigma";
 const TString mc_hist_name = "MC_sigma";
 
@@ -62,7 +63,7 @@ void setupBinMap()
 void makePlots(const TString & label, const TString & pavelabel)
 {
   // get file
-  const auto filename = "inputfiles/"+label+".root";
+  const auto filename = "test_macros/inputfiles/"+label+".root";
   auto file = TFile::Open(filename.Data());
   CheckValidFile(file,filename);
 
@@ -114,8 +115,7 @@ void makePlots(const TString & label, const TString & pavelabel)
   leg->AddEntry(mc_hist,"Simulation","epl");
 
   // set upper axis
-  auto axis_tf1 = new TF1("axis_fit","log10(x)",1,101);
-  auto top_axis = new TGaxis(xbins.front(),1,xbins.back(),1,axis_tf1->GetName(),505,"-");
+  auto top_axis = new TGaxis(xbins.front(),1,xbins.back(),1,xbins.front()*sigmaN,xbins.back()*sigmaN,505,"-G");
   top_axis->SetNoExponent(1);
   top_axis->SetTitle("E in EB [GeV]");
   top_axis->SetTitleSize(0.035);
@@ -185,7 +185,6 @@ void makePlots(const TString & label, const TString & pavelabel)
 
   // delete it all
   delete top_axis;
-  delete axis_tf1;
   delete leg;
   delete fit_pave;
   delete label_pave;
