@@ -1,29 +1,19 @@
 // config
-const std::vector<Double_t> xbins = {75,100,125,150,175,225,275,325,375,475,600,750,1700,2250};
-const auto nGoodBins = 12;
+const auto zee_low = 99.0;
+const auto dixal_low = 75.0;
+const auto x_up = 2250;
 const auto sigmaN = 0.0887; // GeV
-const TString data_hist_name = "Data_sigma";
-const TString mc_hist_name = "MC_sigma";
-
-struct Bin
-{
-  Bin () {}
-  Bin (const Float_t val, const Float_t err) : val(val), err(err) {}
-
-  Float_t val;
-  Float_t err;
-};
-std::map<TString,Bin> binMap;
+const TString data_base_name = "Data_sigma";
+const TString mc_base_name = "MC_sigma";
+const TString dir = "test_macros/extra_fits/inputfiles";
 
 // functions
 void SetTDRStyle(TStyle * tdrStyle);
-void setupBinMap();
 void makePlots(const TString & label, const TString & pavelabel);
-TH1F * makeMergedHist(TH1F * input, const Bin & bin);
 void SaveAs(TCanvas * canv, const TString & label);
 void CheckValidFile(const TFile * file, const TString & filename);
 void CheckValidF1(const TF1 * f1, const TString & f1name, const TString & filename);
-void CheckValidHist(const TH1F * hist, const TString & histname, const TString & filename);
+void CheckValidGraph(const TGraphErrors * graph, const TString & graphname, const TString & filename);
 
 // main call
 void style_time_plots()
@@ -31,9 +21,6 @@ void style_time_plots()
   // make style
   auto tdrStyle = new TStyle("TDRStyle","Style for P-TDR");
   SetTDRStyle(tdrStyle);
-
-  // setup values for merged bins histogram
-  setupBinMap();
 
   // make plots
   makePlots("dixtal_inclusive","EB");
@@ -45,56 +32,53 @@ void style_time_plots()
   delete tdrStyle;
 }
 
-void setupBinMap()
-{
-  binMap["dixtal_inclusive_"+data_hist_name] = {0.137996,0.000676859};
-  binMap["dixtal_inclusive_"+mc_hist_name  ] = {0.156907, 0.00876678};
-
-  binMap["dixtal_sameTT_"+data_hist_name] = {0.129849,0.000678997};
-  binMap["dixtal_sameTT_"+mc_hist_name  ] = {0.155851,0.00894815};
-
-  binMap["dixtal_diffTT_"+data_hist_name] = {0.23868,0.00468409};
-  binMap["dixtal_diffTT_"+mc_hist_name  ] = {0.153607,0.0415417};
-
-  binMap["zee_"+data_hist_name] = {0.2774,0.00735598};
-  binMap["zee_"+mc_hist_name  ] = {0.171635,0.0111146};
-}
-
 void makePlots(const TString & label, const TString & pavelabel)
 {
+  // get x_low
+  auto x_low = (label.EqualTo("zee") ? zee_low : dixal_low);
+
   // get file
-  const auto filename = "test_macros/inputfiles/"+label+".root";
+  const auto filename = dir+"/"+label+".root";
   auto file = TFile::Open(filename.Data());
   CheckValidFile(file,filename);
 
-  // get hists
-  auto input_data_hist = (TH1F*)file->Get(data_hist_name.Data());
-  CheckValidHist(input_data_hist,data_hist_name,file->GetName());
-  auto data_hist = makeMergedHist(input_data_hist,binMap[label+"_"+data_hist_name]);
+  // get graphs
+  const auto data_graph_name = data_base_name+"_graph";
+  auto data_graph = (TGraphErrors*)file->Get(data_graph_name.Data());
+  CheckValidGraph(data_graph,data_graph_name,file->GetName());
 
-  auto input_mc_hist = (TH1F*)file->Get(mc_hist_name.Data());
-  CheckValidHist(input_mc_hist,mc_hist_name,file->GetName());
-  auto mc_hist = makeMergedHist(input_mc_hist,binMap[label+"_"+mc_hist_name]);
+  const auto mc_graph_name = mc_base_name+"_graph";
+  auto mc_graph = (TGraphErrors*)file->Get(mc_graph_name.Data());
+  CheckValidGraph(mc_graph,mc_graph_name,file->GetName());
 
   // get fits
-  const auto data_fit_name = data_hist_name+"_fit";
+  const auto data_fit_name = data_base_name+"_fit_graph";
   auto data_fit = (TF1*)file->Get(data_fit_name.Data());
   CheckValidF1(data_fit,data_fit_name,file->GetName());
 
-  const auto mc_fit_name = mc_hist_name+"_fit";
+  const auto mc_fit_name = mc_base_name+"_fit_graph";
   auto mc_fit = (TF1*)file->Get(mc_fit_name.Data());
   CheckValidF1(mc_fit,mc_fit_name,file->GetName());
+
+  // remove fits from tgraphs
+  data_graph->GetFunction(data_fit_name.Data())->SetBit(TF1::kNotDraw);
+  mc_graph  ->GetFunction(mc_fit_name  .Data())->SetBit(TF1::kNotDraw);
 
   // make canvas
   auto canv = new TCanvas();
 
   // set cms pave
-  auto cms_pave = new TPaveText(0.18,0.85,0.6,0.885,"NDC");
+  auto cms_pave = new TPaveText(0.18,0.86,0.6,0.90,"NDC");
   cms_pave->SetFillColorAlpha(0,0);
   cms_pave->AddText("CMS Preliminary - Run2 (2017)");
-  
+
+  // set lumi pave
+  auto lumi_pave = new TPaveText(0.18,0.788,0.4,0.823,"NDC");
+  lumi_pave->SetFillColorAlpha(0,0);
+  lumi_pave->AddText("#int Ldt = 41.53 fb^{-1}");
+
   // set label pave
-  auto label_pave = new TPaveText(0.6,0.855,0.8,0.885,"NDC");
+  auto label_pave = new TPaveText(0.6,0.86,0.8,0.895,"NDC");
   label_pave->SetFillColorAlpha(0,0);
   label_pave->AddText(pavelabel.Data());
 
@@ -103,37 +87,36 @@ void makePlots(const TString & label, const TString & pavelabel)
   fit_pave->SetFillColorAlpha(0,0);
   fit_pave->SetTextAlign(11);
   fit_pave->AddText("#sigma(t)=#frac{N}{A_{eff}/#sigma_{n}} #oplus #sqrt{2}C");
-  fit_pave->AddText(Form("N^{Data} = %4.1f #pm %4.2f [ns]",data_fit->GetParameter(0),data_fit->GetParError(0)));
-  fit_pave->AddText(Form("C^{Data} = %6.4f #pm %6.4f [ns]",data_fit->GetParameter(1),data_fit->GetParError(1)));
-  fit_pave->AddText(Form("N^{MC}   = %4.1f #pm %4.2f [ns]",mc_fit  ->GetParameter(0),mc_fit  ->GetParError(0)));
-  fit_pave->AddText(Form("C^{MC}   = %6.4f #pm %6.4f [ns]",mc_fit  ->GetParameter(1),mc_fit  ->GetParError(1)));
+  fit_pave->AddText(Form("N^{Data} = %4.1f #pm %3.1f [ns]",data_fit->GetParameter(0),data_fit->GetParError(0)));
+  fit_pave->AddText(Form("C^{Data} = %5.3f #pm %5.3f [ns]",data_fit->GetParameter(1),data_fit->GetParError(1)));
+  fit_pave->AddText(Form("N^{MC}   = %4.1f #pm %3.1f [ns]",mc_fit  ->GetParameter(0),mc_fit  ->GetParError(0)));
+  fit_pave->AddText(Form("C^{MC}   = %5.3f #pm %5.3f [ns]",mc_fit  ->GetParameter(1),mc_fit  ->GetParError(1)));
 
-  // legend
-  auto leg = new TLegend(0.21,0.745,0.5,0.845);
+  // make legend
+  auto leg = new TLegend(0.21,0.68,0.45,0.78);
   leg->SetFillColorAlpha(0,0);
-  leg->AddEntry(data_hist,"Data","epl");
-  leg->AddEntry(mc_hist,"Simulation","epl");
 
   // set upper axis
-  auto top_axis = new TGaxis(xbins.front(),1,xbins.back(),1,xbins.front()*sigmaN,xbins.back()*sigmaN,505,"-G");
+  auto top_axis = new TGaxis(x_low,1,x_up,1,x_low*sigmaN,x_up*sigmaN,505,"-G");
   top_axis->SetNoExponent(1);
   top_axis->SetTitle("E in EB [GeV]");
   top_axis->SetTitleSize(0.035);
   top_axis->SetLabelSize(0.035);
 
-  // set range
-  data_hist->GetYaxis()->SetRangeUser(7e-2,1);
-
-  // set titles
-  data_hist->GetXaxis()->SetTitle("A_{eff}/#sigma_{n}");
+  // draph to get axes and such
+  data_graph->Draw("apz");
 
   // set markers
-  data_hist->SetMarkerColor(kRed+1);
-  mc_hist  ->SetMarkerColor(kBlue);
+  data_graph->SetMarkerColor(kRed);
+  mc_graph  ->SetMarkerColor(kBlue);
 
   // set lines
-  data_hist->SetLineColor(kRed+1);
-  mc_hist  ->SetLineColor(kBlue);
+  data_graph->SetLineColor(kRed);
+  mc_graph  ->SetLineColor(kBlue);
+
+  // set line width
+  data_graph->SetLineWidth(2);
+  mc_graph  ->SetLineWidth(2);
 
   // set fit color
   data_fit->SetLineColor(kBlack);
@@ -143,40 +126,53 @@ void makePlots(const TString & label, const TString & pavelabel)
   data_fit->SetLineWidth(2);
   mc_fit  ->SetLineWidth(2);
 
-  // draw it all  
-  data_hist ->Draw("ep");
+  // set legend
+  leg->AddEntry(data_graph,"Data","epl");
+  leg->AddEntry(mc_graph,"Simulation","epl");
+
+  // draw it all
   data_fit  ->Draw("same");
-  data_hist ->Draw("ep same");
-  mc_hist   ->Draw("ep same");
+  data_graph->Draw("pz same");
+  mc_graph  ->Draw("pz same");
   mc_fit    ->Draw("same");
   cms_pave  ->Draw("same");
+  lumi_pave ->Draw("same");
   label_pave->Draw("same");
   fit_pave  ->Draw("same");
   leg       ->Draw("same");
   top_axis  ->Draw("same");
 
+  // set range
+  data_graph->GetXaxis()->SetLimits(x_low,x_up);
+  data_graph->GetYaxis()->SetRangeUser(7e-2,1);
+
+  // set titles
+  data_graph->GetXaxis()->SetTitle("A_{eff}/#sigma_{n}");
+  data_graph->GetYaxis()->SetTitle("#sigma(t_{1}-t_{2}) [ns]");
+
   // save as
   SaveAs(canv,"datamc_"+label);
 
-  // now make the data only hist
+  // now make the data only graph
   delete fit_pave;
   fit_pave = new TPaveText(0.5,0.60,0.85,0.81,"NDC");
   fit_pave->SetFillColorAlpha(0,0);
   fit_pave->SetTextAlign(11);
   fit_pave->AddText("#sigma(t)=#frac{N}{A_{eff}/#sigma_{n}} #oplus #sqrt{2}C");
-  fit_pave->AddText(Form("N = %4.1f #pm %4.2f [ns]",data_fit->GetParameter(0),data_fit->GetParError(0)));
-  fit_pave->AddText(Form("C = %6.4f #pm %6.4f [ns]",data_fit->GetParameter(1),data_fit->GetParError(1)));
+  fit_pave->AddText(Form("N = %4.1f #pm %3.1f [ns]",data_fit->GetParameter(0),data_fit->GetParError(0)));
+  fit_pave->AddText(Form("C = %5.3f #pm %5.3f [ns]",data_fit->GetParameter(1),data_fit->GetParError(1)));
   
   // set colors
-  data_hist->SetLineColor(kBlack);
-  data_hist->SetMarkerColor(kBlack);
+  data_graph->SetLineColor(kBlack);
+  data_graph->SetMarkerColor(kBlack);
   data_fit ->SetLineColor(kRed+1);
 
-  data_hist ->Draw("ep");
+  data_graph->Draw("apz");
   data_fit  ->Draw("same");
-  data_hist ->Draw("ep same");
+  data_graph->Draw("pz same");
   cms_pave  ->Draw("same");
   label_pave->Draw("same");
+  lumi_pave ->Draw("same");
   fit_pave  ->Draw("same");
   top_axis  ->Draw("same");
   
@@ -188,33 +184,14 @@ void makePlots(const TString & label, const TString & pavelabel)
   delete leg;
   delete fit_pave;
   delete label_pave;
+  delete lumi_pave;
   delete cms_pave;
   delete canv;
   delete mc_fit;
   delete data_fit;
-  delete mc_hist;
-  delete input_mc_hist;
-  delete data_hist;
-  delete input_data_hist;
+  delete mc_graph;
+  delete data_graph;
   delete file;
-}
-
-TH1F * makeMergedHist(TH1F * input, const Bin & bin)
-{
-  auto hist = new TH1F(Form("%s_merged",input->GetName()),
-		       Form("%s;%s;%s",input->GetTitle(),input->GetXaxis()->GetTitle(),input->GetYaxis()->GetTitle()),
-		       xbins.size()-1,&xbins[0]);
-  
-  for (auto ibin = 1; ibin < nGoodBins; ibin++) 
-  {
-    hist->SetBinContent(ibin,input->GetBinContent(ibin));
-    hist->SetBinError  (ibin,input->GetBinError  (ibin));
-  }
-
-  hist->SetBinContent(nGoodBins,bin.val);
-  hist->SetBinError  (nGoodBins,bin.err);
-
-  return hist;
 }
 
 void SaveAs(TCanvas * canv, const TString & label)
@@ -250,11 +227,11 @@ void CheckValidF1(const TF1 * f1, const TString & f1name, const TString & filena
     }
 }
 
-void CheckValidHist(const TH1F * hist, const TString & histname, const TString & filename)
+void CheckValidGraph(const TGraphErrors * graph, const TString & graphname, const TString & filename)
 {
-  if (hist == (TH1F*) NULL) // check if valid hist
+  if (graph == (TGraphErrors*) NULL) // check if valid graph
   {
-    std::cerr << "Input Hist is bad pointer: " << histname.Data() << " in input file: " << filename.Data() << " ...exiting..." << std::endl;
+    std::cerr << "Input Graph is bad pointer: " << graphname.Data() << " in input file: " << filename.Data() << " ...exiting..." << std::endl;
     exit(1);
   }
 }

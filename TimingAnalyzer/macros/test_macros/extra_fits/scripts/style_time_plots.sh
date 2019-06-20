@@ -4,13 +4,13 @@
 source scripts/common_variables.sh
 
 ## config
-outdir=${1:-"madv2_v4p1/time_style_plots"}
+outdir=${1:-"madv2_v4p1/time_style_plots_v2"}
 declare -a outnames=("dixtal_inclusive" "dixtal_sameTT" "dixtal_diffTT" "zee")
 declare -a plotnames=("datamc" "dataonly")
 
 ## run macro
 echo "Running macro"
-root -l -b -q test_macros/style_time_plots.C
+root -l -b -q test_macros/extra_fits/style_time_plots.C
 
 ## make out dirs
 fulldir="${topdir}/${disphodir}/${outdir}"
