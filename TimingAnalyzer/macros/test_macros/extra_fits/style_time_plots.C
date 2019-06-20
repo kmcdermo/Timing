@@ -122,9 +122,6 @@ void makePlots(const TString & label, const TString & pavelabel)
   top_axis->SetTitleSize(0.035);
   top_axis->SetLabelSize(0.035);
 
-  // draph to get axes and such
-  data_graph->Draw("apz");
-
   // set marker color
   data_graph->SetMarkerColor(kRed);
   mc_graph  ->SetMarkerColor(kBlue);
@@ -154,6 +151,7 @@ void makePlots(const TString & label, const TString & pavelabel)
   leg->AddEntry(mc_graph,"Simulation","epl");
 
   // draw it all
+  data_graph ->Draw("apz");
   data_fit   ->Draw("same");
   data_graph ->Draw("pz same");
   mc_graph   ->Draw("pz same");
