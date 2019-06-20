@@ -4,7 +4,7 @@
 source scripts/common_variables.sh
 
 ## config
-outdir=${1:-"madv2_v4p1/time_style_plots_v2"}
+outdir=${1:-"madv2_v4p1/time_style_plots/v3"}
 declare -a outnames=("dixtal_inclusive" "dixtal_sameTT" "dixtal_diffTT" "zee")
 declare -a plotnames=("datamc" "dataonly")
 

@@ -68,36 +68,55 @@ void makePlots(const TString & label, const TString & pavelabel)
   auto canv = new TCanvas();
 
   // set cms pave
-  auto cms_pave = new TPaveText(0.18,0.86,0.6,0.90,"NDC");
+  auto cms_pave = new TPaveText(0.20,0.855,0.3,0.895,"NDC");
   cms_pave->SetFillColorAlpha(0,0);
-  cms_pave->AddText("CMS Preliminary - Run2 (2017)");
+  cms_pave->SetTextFont(61);
+  cms_pave->AddText("CMS");
 
-  // set lumi pave
-  auto lumi_pave = new TPaveText(0.18,0.788,0.4,0.823,"NDC");
-  lumi_pave->SetFillColorAlpha(0,0);
-  lumi_pave->AddText("#int Ldt = 41.53 fb^{-1}");
-
-  // set label pave
-  auto label_pave = new TPaveText(0.6,0.86,0.8,0.895,"NDC");
-  label_pave->SetFillColorAlpha(0,0);
-  label_pave->AddText(pavelabel.Data());
-
-  // set fit pave
-  auto fit_pave = new TPaveText(0.5,0.57,0.85,0.84,"NDC");
-  fit_pave->SetFillColorAlpha(0,0);
-  fit_pave->SetTextAlign(11);
-  fit_pave->AddText("#sigma(t)=#frac{N}{A_{eff}/#sigma_{n}} #oplus #sqrt{2}C");
-  fit_pave->AddText(Form("N^{Data} = %4.1f #pm %3.1f [ns]",data_fit->GetParameter(0),data_fit->GetParError(0)));
-  fit_pave->AddText(Form("C^{Data} = %5.3f #pm %5.3f [ns]",data_fit->GetParameter(1),data_fit->GetParError(1)));
-  fit_pave->AddText(Form("N^{MC}   = %4.1f #pm %3.1f [ns]",mc_fit  ->GetParameter(0),mc_fit  ->GetParError(0)));
-  fit_pave->AddText(Form("C^{MC}   = %5.3f #pm %5.3f [ns]",mc_fit  ->GetParameter(1),mc_fit  ->GetParError(1)));
+  // set prelim pave
+  auto prelim_pave = new TPaveText(0.25,0.855,0.45,0.89,"NDC");
+  prelim_pave->SetFillColorAlpha(0,0);
+  prelim_pave->SetTextFont(52);
+  prelim_pave->AddText("Preliminary");
 
   // make legend
-  auto leg = new TLegend(0.21,0.68,0.45,0.78);
+  auto leg = new TLegend(0.215,0.715,0.415,0.80);
+  leg->SetTextFont(42);
   leg->SetFillColorAlpha(0,0);
+
+  // set lumi pave
+  auto lumi_pave = new TPaveText(0.218,0.80,0.418,0.86,"NDC");
+  lumi_pave->SetFillColorAlpha(0,0);
+  lumi_pave->SetTextFont(42);
+  lumi_pave->AddText("41.53 fb^{-1} (13 TeV)");
+
+  // set label pave
+  auto label_pave = new TPaveText(0.6,0.855,0.8,0.895,"NDC");
+  label_pave->SetFillColorAlpha(0,0);
+  label_pave->SetTextFont(42);
+  label_pave->AddText(pavelabel.Data());
+
+  // set form pave
+  auto form_pave = new TPaveText(0.55,0.73,0.8,0.85,"NDC");
+  form_pave->SetFillColorAlpha(0,0);
+  form_pave->SetTextFont(42);
+  form_pave->SetTextAlign(11);
+  form_pave->AddText("#sigma(t)=#frac{N}{A_{eff}/#sigma_{n}} #oplus #sqrt{2}C");
+
+  // set form pave
+  auto fit_pave = new TPaveText(0.55,0.565,0.8,0.735,"NDC");
+  fit_pave->SetFillColorAlpha(0,0);
+  fit_pave->SetTextFont(42);
+  fit_pave->SetTextAlign(11);
+  fit_pave->AddText(Form("N^{Data} = %4.1f #pm %3.1f [ns]",data_fit->GetParameter(0),data_fit->GetParError(0)));
+  fit_pave->AddText(Form("C^{Data} = %5.3f #pm %5.3f [ns]",data_fit->GetParameter(1),data_fit->GetParError(1)));
+  fit_pave->AddText(Form("N^{Sim}  = %4.1f #pm %3.1f [ns]",mc_fit  ->GetParameter(0),mc_fit  ->GetParError(0)));
+  fit_pave->AddText(Form("C^{Sim}  = %5.3f #pm %5.3f [ns]",mc_fit  ->GetParameter(1),mc_fit  ->GetParError(1)));
 
   // set upper axis
   auto top_axis = new TGaxis(x_low,1,x_up,1,x_low*sigmaN,x_up*sigmaN,505,"-G");
+  top_axis->SetTextFont(42);
+  top_axis->SetLabelFont(42);
   top_axis->SetNoExponent(1);
   top_axis->SetTitle("E in EB [GeV]");
   top_axis->SetTitleSize(0.035);
@@ -106,17 +125,21 @@ void makePlots(const TString & label, const TString & pavelabel)
   // draph to get axes and such
   data_graph->Draw("apz");
 
-  // set markers
+  // set marker color
   data_graph->SetMarkerColor(kRed);
   mc_graph  ->SetMarkerColor(kBlue);
+
+  // set markers
+  data_graph->SetMarkerStyle(20);
+  mc_graph  ->SetMarkerStyle(21);
 
   // set lines
   data_graph->SetLineColor(kRed);
   mc_graph  ->SetLineColor(kBlue);
 
   // set line width
-  data_graph->SetLineWidth(2);
-  mc_graph  ->SetLineWidth(2);
+  data_graph->SetLineWidth(1);
+  mc_graph  ->SetLineWidth(1);
 
   // set fit color
   data_fit->SetLineColor(kBlack);
@@ -131,16 +154,18 @@ void makePlots(const TString & label, const TString & pavelabel)
   leg->AddEntry(mc_graph,"Simulation","epl");
 
   // draw it all
-  data_fit  ->Draw("same");
-  data_graph->Draw("pz same");
-  mc_graph  ->Draw("pz same");
-  mc_fit    ->Draw("same");
-  cms_pave  ->Draw("same");
-  lumi_pave ->Draw("same");
-  label_pave->Draw("same");
-  fit_pave  ->Draw("same");
-  leg       ->Draw("same");
-  top_axis  ->Draw("same");
+  data_fit   ->Draw("same");
+  data_graph ->Draw("pz same");
+  mc_graph   ->Draw("pz same");
+  mc_fit     ->Draw("same");
+  cms_pave   ->Draw("same");
+  prelim_pave->Draw("same");
+  lumi_pave  ->Draw("same");
+  label_pave ->Draw("same");
+  form_pave  ->Draw("same");
+  fit_pave   ->Draw("same");
+  leg        ->Draw("same");
+  top_axis   ->Draw("same");
 
   // set range
   data_graph->GetXaxis()->SetLimits(x_low,x_up);
@@ -155,10 +180,10 @@ void makePlots(const TString & label, const TString & pavelabel)
 
   // now make the data only graph
   delete fit_pave;
-  fit_pave = new TPaveText(0.5,0.60,0.85,0.81,"NDC");
+  fit_pave = new TPaveText(0.55,0.650,0.8,0.735,"NDC");
   fit_pave->SetFillColorAlpha(0,0);
+  fit_pave->SetTextFont(42);
   fit_pave->SetTextAlign(11);
-  fit_pave->AddText("#sigma(t)=#frac{N}{A_{eff}/#sigma_{n}} #oplus #sqrt{2}C");
   fit_pave->AddText(Form("N = %4.1f #pm %3.1f [ns]",data_fit->GetParameter(0),data_fit->GetParError(0)));
   fit_pave->AddText(Form("C = %5.3f #pm %5.3f [ns]",data_fit->GetParameter(1),data_fit->GetParError(1)));
   
@@ -167,14 +192,16 @@ void makePlots(const TString & label, const TString & pavelabel)
   data_graph->SetMarkerColor(kBlack);
   data_fit ->SetLineColor(kRed+1);
 
-  data_graph->Draw("apz");
-  data_fit  ->Draw("same");
-  data_graph->Draw("pz same");
-  cms_pave  ->Draw("same");
-  label_pave->Draw("same");
-  lumi_pave ->Draw("same");
-  fit_pave  ->Draw("same");
-  top_axis  ->Draw("same");
+  data_graph ->Draw("apz");
+  data_fit   ->Draw("same");
+  data_graph ->Draw("pz same");
+  cms_pave   ->Draw("same");
+  prelim_pave->Draw("same");
+  label_pave ->Draw("same");
+  lumi_pave  ->Draw("same");
+  form_pave  ->Draw("same");
+  fit_pave   ->Draw("same");
+  top_axis   ->Draw("same");
   
   // save as
   SaveAs(canv,"dataonly_"+label);
@@ -183,8 +210,10 @@ void makePlots(const TString & label, const TString & pavelabel)
   delete top_axis;
   delete leg;
   delete fit_pave;
+  delete form_pave;
   delete label_pave;
   delete lumi_pave;
+  delete prelim_pave;
   delete cms_pave;
   delete canv;
   delete mc_fit;
