@@ -243,6 +243,9 @@ void Skimmer::EventLoop()
       fOutCutFlowWgt->Fill((cutLabels["diEleHLT"]*1.f)-0.5f,wgt);
       fOutCutFlowScl->Fill((cutLabels["diEleHLT"]*1.f)-0.5f,evtwgt);
 
+      // get rechits
+      fInRecHits.b_E->GetEntry(entry);
+
       // build list of "good electrons"
       std::vector<Int_t> good_phos;
       for (auto ipho = 0; ipho < Common::nPhotons; ipho++)
@@ -264,6 +267,13 @@ void Skimmer::EventLoop()
 	inpho.b_isEB->GetEntry(entry);
 	if (!inpho.isEB) continue;
 
+	inpho.b_seed->GetEntry(entry);
+	if (inpho.seed < 0) continue;
+
+	// skip E < 10, E > 120
+	const auto seedE = (*fInRecHits.E)[inpho.seed];
+	if ((seedE < 10) || (seedE > 120)) continue;
+	
 	good_phos.emplace_back(ipho);
       }
       
@@ -360,6 +370,11 @@ void Skimmer::EventLoop()
 	inpho.b_isOOT->GetEntry(entry);
 	if (inpho.isOOT) continue;
 	
+	// skip EE
+	inpho.b_isEB->GetEntry(entry);
+	if (!inpho.isEB) continue;
+
+	// make sure is a good cluster
 	inpho.b_smin->GetEntry(entry);
 	inpho.b_smaj->GetEntry(entry);
 
@@ -378,12 +393,18 @@ void Skimmer::EventLoop()
 	  const auto E_i  = (*fInRecHits.E) [rh_i];
 	  const auto id_i = (*fInRecHits.ID)[rh_i];
 
+	  // skip E < 1, E > 120
+	  if ((E_i < 1) || (E_i > 120)) continue;
+
 	  for (auto j = i+1; j < n; j++)
 	  {
 	    const auto rh_j = (*inpho.recHits)[j]; // position within event rec hits vector
 	    const auto E_j  = (*fInRecHits.E) [rh_j];
 	    const auto id_j = (*fInRecHits.ID)[rh_j];
 
+	    // skip E < 1, E > 120
+	    if ((E_j < 1) || (E_j > 120)) continue;
+	    
 	    if (E_i > (1.2f * E_j)) break; // need to be within 20% of energy
 	    if (Common::IsCrossNeighbor(id_i,id_j)) // neighboring crystals
 	    {
@@ -972,6 +993,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     // fInRecHits.b_isOOT->GetEntry(entry);
     fInRecHits.b_isGS6->GetEntry(entry);
     fInRecHits.b_isGS1->GetEntry(entry);
+    fInRecHits.b_Laser->GetEntry(entry);
+    fInRecHits.b_InterCalib->GetEntry(entry);
     fInRecHits.b_adcToGeV->GetEntry(entry);
     fInRecHits.b_ped12->GetEntry(entry);
     fInRecHits.b_ped6->GetEntry(entry);
@@ -1053,6 +1076,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 
 	outpho.seedisGS6 = (*fInRecHits.isGS6)[seed];
 	outpho.seedisGS1 = (*fInRecHits.isGS1)[seed];
+	outpho.seedLaser = (*fInRecHits.Laser)[seed];
+	outpho.seedInterCalib = (*fInRecHits.InterCalib)[seed];
 	outpho.seedadcToGeV = (*fInRecHits.adcToGeV)[seed];
 
 	outpho.seedped12 = (*fInRecHits.ped12)[seed];
@@ -1149,6 +1174,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 
 	outpho.seedisGS6 = -1;
 	outpho.seedisGS1 = -1;
+	outpho.seedLaser = -9999.f;
+	outpho.seedInterCalib = -9999.f;
 	outpho.seedadcToGeV = -9999.f;
 	outpho.seedped12 = -9999.f;
 	outpho.seedped6  = -9999.f;
@@ -1181,6 +1208,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       outpho.seedTT = Common::GetTriggerTower(inpho.seedID);
       outpho.seedisGS6 = inpho.seedisGS1;
       outpho.seedisGS1 = inpho.seedisGS6;
+      outpho.seedLaser = inpho.seedLaser;
+      outpho.seedInterCalib = inpho.seedInterCalib;
       outpho.seedadcToGeV = inpho.seedadcToGeV;
       outpho.seedped12 = inpho.seedped12;
       outpho.seedped6 = inpho.seedped6;
@@ -1471,6 +1500,8 @@ void Skimmer::InitInBranchVecs()
     // fInRecHits.isOOT = 0;
     fInRecHits.isGS6 = 0;
     fInRecHits.isGS1 = 0;
+    fInRecHits.Laser = 0;
+    fInRecHits.InterCalib = 0;
     fInRecHits.adcToGeV = 0;
     fInRecHits.ped12 = 0;
     fInRecHits.ped6 = 0;
@@ -1670,6 +1701,8 @@ void Skimmer::InitInBranches()
     // fInTree->SetBranchAddress(fInRecHits.s_isOOT.c_str(), &fInRecHits.isOOT, &fInRecHits.b_isOOT);
     fInTree->SetBranchAddress(fInRecHits.s_isGS6.c_str(), &fInRecHits.isGS6, &fInRecHits.b_isGS6);
     fInTree->SetBranchAddress(fInRecHits.s_isGS1.c_str(), &fInRecHits.isGS1, &fInRecHits.b_isGS1);
+    fInTree->SetBranchAddress(fInRecHits.s_Laser.c_str(), &fInRecHits.Laser, &fInRecHits.b_Laser);
+    fInTree->SetBranchAddress(fInRecHits.s_InterCalib.c_str(), &fInRecHits.InterCalib, &fInRecHits.b_InterCalib);
     fInTree->SetBranchAddress(fInRecHits.s_adcToGeV.c_str(), &fInRecHits.adcToGeV, &fInRecHits.b_adcToGeV);
     fInTree->SetBranchAddress(fInRecHits.s_ped12.c_str(), &fInRecHits.ped12, &fInRecHits.b_ped12);
     fInTree->SetBranchAddress(fInRecHits.s_ped6.c_str(), &fInRecHits.ped6, &fInRecHits.b_ped6);
@@ -1732,6 +1765,8 @@ void Skimmer::InitInBranches()
       // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT, &pho.b_seedisOOT);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisGS6.c_str(),ipho), &pho.seedisGS6, &pho.b_seedisGS6);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisGS1.c_str(),ipho), &pho.seedisGS1, &pho.b_seedisGS1);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedLaser.c_str(),ipho), &pho.seedLaser, &pho.b_seedLaser);
+      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedInterCalib.c_str(),ipho), &pho.seedInterCalib, &pho.b_seedInterCalib);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedadcToGeV.c_str(),ipho), &pho.seedadcToGeV, &pho.b_seedadcToGeV);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped12.c_str(),ipho), &pho.seedped12, &pho.b_seedped12);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped6.c_str(),ipho), &pho.seedped6, &pho.b_seedped6);
@@ -2109,6 +2144,8 @@ void Skimmer::InitOutBranches()
     // fOutTree->Branch(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT);
     fOutTree->Branch(Form("%s_%i",pho.s_seedisGS6.c_str(),ipho), &pho.seedisGS6);
     fOutTree->Branch(Form("%s_%i",pho.s_seedisGS1.c_str(),ipho), &pho.seedisGS1);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedLaser.c_str(),ipho), &pho.seedLaser);
+    fOutTree->Branch(Form("%s_%i",pho.s_seedInterCalib.c_str(),ipho), &pho.seedInterCalib);
     fOutTree->Branch(Form("%s_%i",pho.s_seedadcToGeV.c_str(),ipho), &pho.seedadcToGeV);
     fOutTree->Branch(Form("%s_%i",pho.s_seedped12.c_str(),ipho), &pho.seedped12);
     fOutTree->Branch(Form("%s_%i",pho.s_seedped6.c_str(),ipho), &pho.seedped6);
