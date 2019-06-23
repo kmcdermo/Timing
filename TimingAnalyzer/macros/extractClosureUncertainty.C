@@ -11,9 +11,33 @@ struct BinRange
   Color_t color;
 };
 
+struct ValPair
+{
+  void ValPair() {}
+  void ValPair(const Float_t val, const Float_t unc)
+    : val(val), unc(unc) {}
+
+  Float_t val;
+  Float_t unc;
+};
+
 // subroutines
+inline Float_t GetRatioUnc(const Float_t ratio, const std::vector<ValPair> & valPairs)
+{
+  Float_t unc = 0;
+  for (const auto & valPair : valPairs)
+  {
+    unc += std::pow(valPair.unc/valPair.val,2);
+  }
+  return (ratio*std::sqrt(unc));
+}
 void makeClosureDump(const TH2F * hist2D, const Double_t time_split, const Double_t met_split,
-		     const TString & label, std::ofstream & outtextfile);
+		     const TString & label, std::ofstream & outtextfile,
+		     std::map<TString,TGraphErrors*> & BovA_graphs, std::map<TString,TGraphErrors*> & CovD_graphs,
+		     std::map<TString,TGraphErrors*> & DovA_graphs, std::map<TString,TGraphErrors*> & CovB_graphs);
+void makeGraphCanvas(TFile * iofile, TGraphErrors * A_graph, const TString & A_label, TGraphErrors * C_graph, const TString & C_label,
+		     const TString & x_title, const TString & split, const TString & y_prefix, const TString & y_suffix, 
+		     const TString & splittext, const TString & label, const TString & outfiletext);
 void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, const TString & outfiletext);
 
 // main method
@@ -37,6 +61,13 @@ void extractClosureUncertainty(const TString & label, const TString & outfiletex
   auto hist2D = (TH2F*)iofile->Get(hist2Dname.Data());
   Common::CheckValidHist(hist2D,hist2Dname,iofilename);
 
+  // make map of ratios
+  iofile->cd();
+  std::map<TString,TGraphErrors*> BovA_graphs;
+  std::map<TString,TGraphErrors*> CovD_graphs;
+  std::map<TString,TGraphErrors*> DovA_graphs;
+  std::map<TString,TGraphErrors*> CovB_graphs;
+
   // get text file
   std::ofstream outtextfile(outfiletext+"."+Common::outTextExt,std::ios_base::app);
 
@@ -53,28 +84,105 @@ void extractClosureUncertainty(const TString & label, const TString & outfiletex
     	      << "corr. factor unc.: " << corrfactor_unc << ","
 	      << std::endl;
 
+  // make splits
+  std::vector<TString> time_splits = {"0p0","0p25","0p5","0p75","1p0","1p5","2p0"};
+  std::vector<TString> met_splits  = {"50","75","100","125","150","200","300","500"};
+
+  // init graphs (B/A, C/D)
+  iofile->cd();
+  for (const auto & met_split : met_splits)
+  {
+    auto & BovA_graph = BovA_graphs[met_split];
+    BovA_graph = new TGraphErrors();
+    BovA_graph->SetName("BovA_MET"+met_split);
+    BovA_graph->SetLineColor  (kRed+1);
+    BovA_graph->SetMarkerColor(kRed+1);
+
+    auto & CovD_graph = CovD_graphs[met_split];
+    CovD_graph = new TGraphErrors();
+    CovD_graph->SetName("CovD_MET"+met_split);
+    CovD_graph->SetLineColor  (kBlue);
+    CovD_graph->SetMarkerColor(kBlue);
+  }
+
+  // init graphs (D/A, C/B)
+  iofile->cd();
+  for (const auto & time_split : time_splits)
+  {
+    auto & DovA_graph = DovA_graphs[time_split];
+    DovA_graph = new TGraphErrors();
+    DovA_graph->SetName("DovA_Time"+time_split);
+    DovA_graph->SetLineColor  (kRed+1);
+    DovA_graph->SetMarkerColor(kRed+1);
+
+    auto & CovB_graph = CovB_graphs[time_split];
+    CovB_graph = new TGraphErrors();
+    CovB_graph->SetName("CovB_Time"+time_split);
+    CovB_graph->SetLineColor  (kBlue);
+    CovB_graph->SetMarkerColor(kBlue);
+  }
+
   // make dumps
-  std::vector<Double_t> time_splits = {0.0,0.5,1.0,1.5,2.0};
-  std::vector<Double_t> met_splits  = {50,100,150,200,300,500};
   for (const auto time_split : time_splits)
     for (const auto met_split : met_splits)
-      makeClosureDump(hist2D,time_split,met_split,label,outtextfile);
+      makeClosureDump(hist2D,time_split,met_split,label,outtextfile,
+		      BovA_graphs,CovD_graphs,DovA_graphs,CovB_graphs);
+
+  // make graph canvases
+  for (const auto & met_split : met_splits)
+  {
+    auto & BovA_graph = BovA_graphs[met_split];
+    auto & CovD_graph = CovD_graphs[met_split];
+
+    makeGraphCanvas(iofile,BovA_graph,"B/A",CovD_graph,C/D,"Photon Cluster Time Split (ns) [A|D,B|C]",
+		    met_split,"#p_{T}^{miss} Split = "," (GeV) [A|B,D|C]","MET",label,outfiletext);
+  }
+
+  for (const auto & time_split : time_splits)
+  {
+    auto & DovA_graph = DovA_graphs[time_split];
+    auto & CovB_graph = CovB_graphs[time_split];
+
+    makeGraphCanvas(iofile,DovA_graph,"D/A",CovB_graph,"C/B","#p_{T}^{miss} Split (Gev) [A|B,D|C]",
+		    time_split,"Photon Cluster Time Split = "," (ns) [A|D,B|C]","Time",label,outfiletext);
+  }
 
   // make1D time slice plots
   make1DSlices(iofile,hist2D,label,outfiletext);
 
-  // delete it all 
+  // write graphs out
+  Common::WriteMap(iofile,BovA_graphs);
+  Common::WriteMap(iofile,CovD_graphs);
+  Common::WriteMap(iofile,DovA_graphs);
+  Common::WriteMap(iofile,CovB_graphs);
+
+  // delete it all
+  Common::DeleteMap(CovB_graphs);
+  Common::DeleteMap(DovA_graphs);
+  Common::DeleteMap(CovD_graphs);
+  Common::DeleteMap(BovA_graphs);
   delete hist2D;
   delete iofile;
   delete tdrStyle;
 }
 
-void makeClosureDump(const TH2F * hist2D, const Double_t time_split, const Double_t met_split,
-		     const TString & label, std::ofstream & outtextfile)
+void makeClosureDump(const TH2F * hist2D, const TString & time_split, const TString & met_split,
+		     const TString & label, std::ofstream & outtextfile,
+		     std::map<TString,TGraphErrors*> & BovA_graphs, std::map<TString,TGraphErrors*> & CovD_graphs,
+		     std::map<TString,TGraphErrors*> & DovA_graphs, std::map<TString,TGraphErrors*> & CovB_graphs)
 {
+  // make atof
+  TString time_split_tmp = time_split;
+  TString met_split_tmp  = met_split;
+  time_split_tmp.ReplaceAll("p",".");
+  met_split_tmp.ReplaceAll("p",".");
+
+  const auto time_split_val = time_split_tmp.Atof();
+  const auto met_split_val  = met_split_tmp .Atof();
+
   // get bin assignments
-  const auto ibinX = hist2D->GetXaxis()->FindBin(time_split);
-  const auto ibinY = hist2D->GetYaxis()->FindBin(met_split);
+  const auto ibinX = hist2D->GetXaxis()->FindBin(time_split_val);
+  const auto ibinY = hist2D->GetYaxis()->FindBin(met_split_val);
 
   const auto nbinsX = hist2D->GetXaxis()->GetNbins();
   const auto nbinsY = hist2D->GetYaxis()->GetNbins();
@@ -100,13 +208,26 @@ void makeClosureDump(const TH2F * hist2D, const Double_t time_split, const Doubl
   ////////////
 
   const auto BovA    = obsB/obsA;
-  const auto BovAunc = BovA*std::sqrt(std::pow(obsBunc/obsB,2)+std::pow(obsAunc/obsA,2));
+  const auto BovAunc = GetRatioUnc(BovA,{{obsA,obsAunc},{obsB,obsBunc}});
 
   const auto DovA    = obsD/obsA;
-  const auto DovAunc = DovA*std::sqrt(std::pow(obsDunc/obsD,2)+std::pow(obsAunc/obsA,2));
+  const auto DovAunc = GetRatioUnc(DovA,{{obsA,obsAunc},{obsD,obsDunc}});
 
   const auto predC    = obsB*obsD/obsA;
-  const auto predCunc = predC*std::sqrt(std::pow(obsBunc/obsB,2)+std::pow(obsDunc/obsD,2)+std::pow(obsAunc/obsA,2));
+  const auto predCunc = GetRatioUnc(predC,{{obsA,obsAunc},{obsB,obsBunc},{obsD,obsDunc}});
+
+  //////////////////
+  // other ratios //
+  //////////////////
+
+  const auto CovD    = obsC/obsD;
+  const auto CovDunc = GetRatioUnc(CovD,{{obsC,obsCunc},{obsD,obsDunc}});
+
+  const auto DovA    = obsD/obsA;
+  const auto DovAunc = GetRatioUnc(DovA,{{obsA,obsAunc},{obsD,obsDunc}});
+
+  const auto CovB    = obsC/obsB;
+  const auto CovBunc = GetRatioUnc(CovB,{{obsB,obsBunc},{obsC,obsCunc}});
 
   ///////////
   // diffs //
@@ -119,7 +240,7 @@ void makeClosureDump(const TH2F * hist2D, const Double_t time_split, const Doubl
   // fill output file
   std::cout << "Filling text file..." << std::endl;
 
-  outtextfile << label.Data() << "," << time_split << "," << met_split << ","
+  outtextfile << label.Data() << "," << time_split_val << "," << met_split_val << ","
 	      << std::setprecision(3) << obsA << " +/- " << std::setprecision(3) << obsAunc << ","
 	      << std::setprecision(3) << obsB << " +/- " << std::setprecision(3) << obsBunc << ","
 	      << std::setprecision(3) << obsC << " +/- " << std::setprecision(3) << obsCunc << ","
@@ -128,8 +249,80 @@ void makeClosureDump(const TH2F * hist2D, const Double_t time_split, const Doubl
 	      << std::setprecision(3) << DovA << " +/- " << std::setprecision(3) << DovAunc << ","
 	      << std::setprecision(3) << predC << " +/- " << std::setprecision(3) << predCunc << ","
 	      << std::setprecision(3) << percent_diffC << " +/- " << std::setprecision(3) << percent_diffCunc << ","
-	      << std::setprecision(3) << pullC << "," << std::setprecision(3)
+	      << std::setprecision(3) << pullC << "," << std::setprecision(3) << ","
+	      << std::setprecision(3) << BovA << " +/- " << std::setprecision(3) << BovAunc << ","
+	      << std::setprecision(3) << CovD << " +/- " << std::setprecision(3) << CovDunc << ","
+	      << std::setprecision(3) << DovA << " +/- " << std::setprecision(3) << DovAunc << ","
+	      << std::setprecision(3) << CovB << " +/- " << std::setprecision(3) << CovBunc << ","
 	      << std::endl;
+
+  // make tgraph points : B/A
+  auto & BovA_graph = BovA_graphs[met_split];
+  const auto BovA_point = BovA_graph->GetN()
+  BovA_graph->SetPoint(BovA_point,time_split_val,BovA);
+  BovA_graph->SetPointError(BovA_point,0,BovAunc);
+
+  // make tgraph points : C/D
+  auto & CovD_graph = CovD_graphs[met_split];
+  const auto CovD_point = CovD_graph->GetN()
+  CovD_graph->SetPoint(CovD_point,time_split_val,CovD);
+  CovD_graph->SetPointError(CovD_point,0,CovDunc);
+
+  // make tgraph points : D/A
+  auto & DovA_graph = DovA_graphs[time_split];
+  const auto DovA_point = DovA_graph->GetN()
+  DovA_graph->SetPoint(DovA_point,time_split_val,DovA);
+  DovA_graph->SetPointError(DovA_point,0,DovAunc);
+
+  // make tgraph points : C/B
+  auto & CovB_graph = CovB_graphs[time_split];
+  const auto CovB_point = CovB_graph->GetN()
+  CovB_graph->SetPoint(CovB_point,time_split_val,CovB);
+  CovB_graph->SetPointError(CovB_point,0,CovBunc);
+}
+
+void makeGraphCanvas(TFile * iofile, TGraphErrors * A_graph, const TString & A_label, TGraphErrors * C_graph, const TString & C_label,
+		     const TString & x_title, const TString & split, const TString & y_prefix, const TString & y_suffix, 
+		     const TString & splittext, const TString & label, const TString & outfiletext)
+{
+  // make labels
+  TString split_tmp = split;
+  split_tmp.ReplaceAll("p",".");
+  const auto splitlabel = splittext+split;
+
+  // make legend
+  auto leg = new TLegend(0.55,0.6,0.825,0.92);
+  leg->SetName("SplitLeg_"+splitlabel);
+  leg->AddEntry(A_graph,A_label.Data(),"ep");
+  leg->AddEntry(C_graph,C_label.Data(),"ep");
+  
+  // make canvas
+  auto canv = new TCanvas();
+  canv->SetName("SplitCanv_"+splitlabel);
+  canv->cd();
+
+  // draw graphs
+  A_graph->Draw("APZ");
+  C_graph->Draw("PZ SAME");
+
+  // set titles
+  A_graph->GetXaxis()->SetTitle(xtitle.Data());
+  A_graph->GetYaxis()->SetTitle("Ratio for "+y_prefix+split_tmp+y_suffix);
+
+  // modify the canvas
+  const auto outname = outfiletext+"_"+label+"_"+splitlabel;
+  Common::CMSLumi(canv,0,"Full");
+  Common::SaveAs(canv,outname);
+  
+  // write it out
+  Common::Write(outfile,A_graph);
+  Common::Write(outfile,C_graph);
+  Common::Write(outfile,leg);
+  Common::Write(outfile,canv);
+
+  // delete it all
+  delete canv;
+  delete leg;
 }
 
 void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, const TString & outfiletext)
@@ -248,7 +441,7 @@ void make1DSlices(TFile * iofile, const TH2F * hist2D, const TString & label, co
   Common::SaveAs(canv,outname);
 
   // delete things
-  for (auto & hist1D : hist1Ds) delete hist1D;
+  Common::DeleteVec(hist1Ds);
   delete leg;
   delete canv;
 }

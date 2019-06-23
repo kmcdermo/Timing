@@ -38,7 +38,7 @@ declare -a outtextfiles=("${outtextfile_zoom}" "${outtextfile_full}")
 for outtextfile in "${outtextfiles[@]}"
 do
     > "${outtextfile}"
-    echo "Control Region [Data],Time Boundary [ns],MET Boundary [GeV],obsA,obsB,obsC,obsD,c1{obsB/obsA},c2{obsD/obsA},predC{obsA*c1*c2},Percent Diff (1-predC/obsC),pullC{(obsC-predC)/sqrt(obsCunc^2+predCunc^2)}" >> "${outtextfile}"
+    echo "Control Region [Data],Time Boundary [ns],MET Boundary [GeV],obsA,obsB,obsC,obsD,c1{obsB/obsA},c2{obsD/obsA},predC{obsA*c1*c2},Percent Diff (1-predC/obsC),pullC{(obsC-predC)/sqrt(obsCunc^2+predCunc^2)},obsB/obsA,obsC/obsD,obsD/obsA,obsC/obsB" >> "${outtextfile}"
 done
 
 ## combine group info

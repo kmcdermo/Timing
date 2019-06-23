@@ -19,6 +19,8 @@ PrepOutDir "${fulldir}"
 for ext in "${exts[@]}"
 do
     cp "${outfiletext}_${label}.${ext}" "${fulldir}"
+    cp "${outfiletext}_${label}_Time"*".${ext}" "${fulldir}"
+    cp "${outfiletext}_${label}_MET"*".${ext}" "${fulldir}"
 done
 cp "${outfiletext}_${label}.root" "${fulldir}"
 
