@@ -7,7 +7,7 @@ const auto nBins = 15;
 const auto sigmaN = 0.0887; // GeV
 const TString data_hist_name = "Data_sigma";
 const TString mc_hist_name = "MC_sigma";
-const TString dir = "test_macros/extra_fits/inputfiles";
+const TString dir = "test_macros/extra_fits/inputfiles/v2/no_IC_LC";
 
 struct Bin
 {
@@ -69,7 +69,8 @@ void makeGraphAndFit(const TH1F * input, const TString & histname, const TString
   std::cout << "  Generating graph and fit from hist: " << histname.Data() << std::endl;
 
   // first make the merged histogram
-  auto hist = makeMergedHist(input,label+"_"+histname);
+  //  auto hist = makeMergedHist(input,label+"_"+histname);
+  auto hist = (TH1F*)input->Clone("clone_hist");
 
   // then make graph
   auto graph = new TGraphErrors(hist);

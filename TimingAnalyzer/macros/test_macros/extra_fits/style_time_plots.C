@@ -5,7 +5,7 @@ const auto x_up = 2250;
 const auto sigmaN = 0.0887; // GeV
 const TString data_base_name = "Data_sigma";
 const TString mc_base_name = "MC_sigma";
-const TString dir = "test_macros/extra_fits/inputfiles";
+const TString dir = "test_macros/extra_fits/inputfiles/v2/no_IC_LC";
 
 // functions
 void SetTDRStyle(TStyle * tdrStyle);
@@ -85,10 +85,10 @@ void makePlots(const TString & label, const TString & pavelabel)
   leg->SetFillColorAlpha(0,0);
 
   // set lumi pave
-  auto lumi_pave = new TPaveText(0.218,0.80,0.418,0.86,"NDC");
+  auto lumi_pave = new TPaveText(0.218,0.80,0.478,0.86,"NDC");
   lumi_pave->SetFillColorAlpha(0,0);
   lumi_pave->SetTextFont(42);
-  lumi_pave->AddText("41.53 fb^{-1} (13 TeV)");
+  lumi_pave->AddText("2017: 41.5 fb^{-1} (13 TeV)");
 
   // set label pave
   auto label_pave = new TPaveText(0.6,0.855,0.8,0.895,"NDC");
@@ -101,26 +101,28 @@ void makePlots(const TString & label, const TString & pavelabel)
   form_pave->SetFillColorAlpha(0,0);
   form_pave->SetTextFont(42);
   form_pave->SetTextAlign(11);
-  form_pave->AddText("#sigma(t)=#frac{N}{A_{eff}/#sigma_{n}} #oplus #sqrt{2}C");
+  form_pave->AddText("#sigma(#Deltat)=#frac{N}{A_{eff}/#sigma_{n}} #oplus #sqrt{2}C");
 
   // set form pave
   auto fit_pave = new TPaveText(0.55,0.565,0.8,0.735,"NDC");
   fit_pave->SetFillColorAlpha(0,0);
   fit_pave->SetTextFont(42);
   fit_pave->SetTextAlign(11);
-  fit_pave->AddText(Form("N^{Data} = %4.1f #pm %3.1f [ns]",data_fit->GetParameter(0),data_fit->GetParError(0)));
-  fit_pave->AddText(Form("C^{Data} = %5.3f #pm %5.3f [ns]",data_fit->GetParameter(1),data_fit->GetParError(1)));
-  fit_pave->AddText(Form("N^{Sim}  = %4.1f #pm %3.1f [ns]",mc_fit  ->GetParameter(0),mc_fit  ->GetParError(0)));
-  fit_pave->AddText(Form("C^{Sim}  = %5.3f #pm %5.3f [ns]",mc_fit  ->GetParameter(1),mc_fit  ->GetParError(1)));
+  fit_pave->AddText(Form("N^{Data} = %4.1f #pm %3.1f ns",data_fit->GetParameter(0),data_fit->GetParError(0)));
+  fit_pave->AddText(Form("C^{Data} = %5.3f #pm %5.3f ns",data_fit->GetParameter(1),data_fit->GetParError(1)));
+  fit_pave->AddText(Form("N^{Sim}  = %4.1f #pm %3.1f ns",mc_fit  ->GetParameter(0),mc_fit  ->GetParError(0)));
+  fit_pave->AddText(Form("C^{Sim}  = %5.3f #pm %5.3f ns",mc_fit  ->GetParameter(1),mc_fit  ->GetParError(1)));
 
   // set upper axis
   auto top_axis = new TGaxis(x_low,1,x_up,1,x_low*sigmaN,x_up*sigmaN,505,"-G");
   top_axis->SetTextFont(42);
   top_axis->SetLabelFont(42);
+  top_axis->SetLabelOffset(0.00001);
+  top_axis->SetTitleOffset(0.8);
   top_axis->SetNoExponent(1);
-  top_axis->SetTitle("E in EB [GeV]");
+  top_axis->SetTitle("E (GeV)");
   top_axis->SetTitleSize(0.035);
-  top_axis->SetLabelSize(0.035);
+  top_axis->SetLabelSize(0.03);
 
   // set marker color
   data_graph->SetMarkerColor(kRed);
@@ -170,8 +172,12 @@ void makePlots(const TString & label, const TString & pavelabel)
   data_graph->GetYaxis()->SetRangeUser(7e-2,1);
 
   // set titles
-  data_graph->GetXaxis()->SetTitle("A_{eff}/#sigma_{n}");
-  data_graph->GetYaxis()->SetTitle("#sigma(t_{1}-t_{2}) [ns]");
+  data_graph->GetXaxis()->SetTitle("Normalized Effective Amplitude (A_{eff}/#sigma_{n})");
+  data_graph->GetYaxis()->SetTitle("#sigma(#Deltat) (ns)");
+
+  // set title offset
+  data_graph->GetXaxis()->SetTitleOffset(1.3);
+  data_graph->GetYaxis()->SetTitleOffset(0.9);
 
   // save as
   SaveAs(canv,"datamc_"+label);
@@ -182,8 +188,8 @@ void makePlots(const TString & label, const TString & pavelabel)
   fit_pave->SetFillColorAlpha(0,0);
   fit_pave->SetTextFont(42);
   fit_pave->SetTextAlign(11);
-  fit_pave->AddText(Form("N = %4.1f #pm %3.1f [ns]",data_fit->GetParameter(0),data_fit->GetParError(0)));
-  fit_pave->AddText(Form("C = %5.3f #pm %5.3f [ns]",data_fit->GetParameter(1),data_fit->GetParError(1)));
+  fit_pave->AddText(Form("N = %4.1f #pm %3.1f ns",data_fit->GetParameter(0),data_fit->GetParError(0)));
+  fit_pave->AddText(Form("C = %5.3f #pm %5.3f ns",data_fit->GetParameter(1),data_fit->GetParError(1)));
   
   // set colors
   data_graph->SetLineColor(kBlack);
@@ -344,7 +350,7 @@ void SetTDRStyle(TStyle * tdrStyle)
   tdrStyle->SetLabelColor(1, "XYZ");
   tdrStyle->SetLabelFont(42, "XYZ");
   tdrStyle->SetLabelOffset(0.007, "XYZ");
-  tdrStyle->SetLabelSize(0.04, "XYZ");
+  tdrStyle->SetLabelSize(0.03, "XYZ");
   
   // For the axis:
   tdrStyle->SetAxisColor(1, "XYZ");
