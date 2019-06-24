@@ -12,7 +12,7 @@ source scripts/common_variables.sh
 
 ## Command Line Config
 outfiletext=${1:-"met_vs_time"}
-outdir=${2:-"madv2_v4p1/closure/v2"}
+outdir=${2:-"madv2_v4p1/closure/v3"}
 
 save_meta_data=${3:-0}
 do_cleanup=${4:-"true"}
