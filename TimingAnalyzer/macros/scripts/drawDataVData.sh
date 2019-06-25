@@ -11,7 +11,7 @@ split=${4:-"1"}
 cut_unit=${5:-"unit"}
 signal=${6:-"GMSB_L200_CTau200"}
 finalname=${7:-"final"}
-outdir=${8:-"madv2_v4p1/data_v_data"}
+outdir=${8:-"madv2_v4p1/data_v_data/v2"}
 
 ## first make plot
 root -l -b -q drawDataVData.C\(\"${leftname}\",\"${rightname}\",\"${cut_label}\",\"${split}\",\"${cut_unit}\",\"${signal}\",\"${finalname}\"\)
@@ -30,7 +30,9 @@ do
 	do
 	    cp "${finalname}_${scale}_${canvscale}.${ext}" "${fulldir}"
 	done
+	mv "${finalname}_${scale}_${canvscale}.C" "${fulldir}"
     done
+    mv "${finalname}_${scale}.${outTextExt}" "${fulldir}"
 done
 cp "${finalname}.root" "${fulldir}"
 

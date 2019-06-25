@@ -132,6 +132,9 @@ void TreePlotter::MakeHistFromTrees(TFile *& inFile, TFile *& inSignalFile)
     {
       auto & hist = HistPair.second;
       Common::Scale(hist,isUp);
+      // const auto nBinsX = hist->GetXaxis()->GetNbins();
+      // hist->SetBinContent(nBinsX,hist->GetBinContent(nBinsX)+hist->GetBinContent(nBinsX+1));
+      // hist->SetBinError(nBinsX,std::sqrt(std::pow(hist->GetBinContent(nBinsX),2)+std::pow(hist->GetBinContent(nBinsX+1),2)));
     }
   }
 

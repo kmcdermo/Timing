@@ -1337,7 +1337,7 @@ namespace Common
 
     const TString writeLumiText = !(Common::extraText.EqualTo("Simulation",TString::kExact));
     TString lumiText = "(13 TeV)";
-    if (writeLumiText) lumiText.Prepend(Form("%5.2f fb^{-1} ",Common::EraMap[era].lumi));
+    if (writeLumiText) lumiText.Prepend(Form("%4.1f fb^{-1} ",Common::EraMap[era].lumi));
   
     // text sizes and text offsets with respect to the top frame
     // in unit of the top margin size

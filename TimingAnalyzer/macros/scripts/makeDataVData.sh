@@ -10,12 +10,12 @@ source scripts/common_variables.sh
 ## Config ##
 ############
 
-region=${1:-"SR_ex1pho"}
+region=${1:-"SR_in2pho"}
 time_split=${2:-"1.0"}
 met_split=${3:-"100"}
 signal=${4:-"GMSB_L200_CTau200"}
 savemetadata=${5:-0}
-outdir=${6:-"madv2_v4p1/data_v_data"}
+outdir=${6:-"madv2_v4p1/data_v_data/v2"} # MET final 500-1000 for v3
 cleanup=${7:-"true"}
 
 ###########################
