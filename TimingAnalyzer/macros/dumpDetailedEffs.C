@@ -1,63 +1,79 @@
 #include "Common.cpp+"
 
-void dumpDetailedEffs()
+void dumpDetailedEffs(const TString & category, const TString ctau)
 {
   // get files
-  const TString indir = "skims/v4p1/final/categories";
+  const TString indir = "skims/v4p3/signals";
 
-  const auto data_file_name = indir+"/"+"inclusive_2pho.root";
-  auto data_file = TFile::Open(data_file_name);
-  Common::CheckValidFile(data_file,data_file_name);
-
-  const auto sign_file_name = indir+"/"+"signals_inclusive_2pho.root";
+  const auto sign_file_name = indir+"/"+category+".root";
   auto sign_file = TFile::Open(sign_file_name);
   Common::CheckValidFile(sign_file,sign_file_name);
   
+  std::vector<TString> names = {"GMSB_L100_CTau"+ctau,"GMSB_L200_CTau"+ctau,"GMSB_L300_CTau"+ctau,"GMSB_L400_CTau"+ctau};
+  const auto nnames = names.size();
+
   // vector of hist names
-  std::vector<TString> histnames = {"Data","GMSB_L200_CTau10","GMSB_L200_CTau200","GMSB_L200_CTau1200"};
+  std::vector<TString> histnames = names;
   for (auto & histname : histnames) histname += "_"+Common::h_cutflow_scaledname;
-  const auto nhists = histnames.size();
 
   // vector of hists
-  std::vector<TH1F*> hists(nhists);
-  for (auto ihist = 0U; ihist < nhists; ihist++)
+  std::vector<TH1F*> hists(nnames);
+  for (auto iname = 0U; iname < nnames; iname++)
   {
-    const auto & histname = histnames[ihist];
-    auto & file = (ihist > 0 ? sign_file : data_file);
-    auto & hist = hists[ihist];
-    hist = (TH1F*)file->Get(histname.Data());
-    Common::CheckValidHist(hist,histname,file->GetName());
+    const auto & histname = histnames[iname];
+    auto & hist = hists[iname];
+    hist = (TH1F*)sign_file->Get(histname.Data());
+    Common::CheckValidHist(hist,histname,sign_file_name);
   }
 
+  // vector of tree names
+  std::vector<TString> treenames = names;
+  for (auto & treename : treenames) treename += "_Tree";
+
+  std::vector<TTree*> trees(nnames);
+  for (auto iname = 0U; iname < nnames; iname++)
+  {
+    const auto & treename = treenames[iname];
+    auto & tree = trees[iname];
+    tree = (TTree*)sign_file->Get(treename.Data());
+    Common::CheckValidTree(tree,treename,sign_file->GetName());
+  }  
+
   // output
-  std::ofstream output("detailed_effs."+Common::outTextExt,std::ios::trunc);
+  std::ofstream output(category+"_"+ctau+"cm."+Common::outTextExt,std::ios::trunc);
 
   // loop over nbins
   const auto nbins = hists.front()->GetXaxis()->GetNbins();
   for (auto ibin = 1; ibin <= nbins; ibin++)
   {
     std::cout << "working on bin: " << ibin << std::endl;
-    for (auto ihist = 0U; ihist < nhists; ihist++)
+    for (auto iname = 0U; iname < nnames; iname++)
     {
-      const auto & hist = hists[ihist];
+      // get scale factor
+      auto & tree = trees[iname];
+      Float_t evtwgt; TBranch * b_evtwgt; tree->SetBranchAddress("evtwgt",&evtwgt,&b_evtwgt);
+      tree->GetEntry(0);
+
+      const auto & hist = hists[iname];
       const auto denom = hist->GetBinContent(1);
       const auto numer = hist->GetBinContent(ibin);
-      const auto percent = 100.f * (numer / denom);
+      const auto ratio = numer / denom;
+      const auto error = 1.96*std::sqrt((ratio*(1-ratio))/(denom/evtwgt));
 
-      if (ihist == 0) 
+      if (iname == 0) 
       {
-	output << Form("%s & %i (%.2f\\%%)",hist->GetXaxis()->GetBinLabel(ibin),Int_t(numer),percent);
+	output << Form("%s & %s",hist->GetXaxis()->GetBinLabel(ibin),Common::PrintValueAndError(100*ratio,100*error).Data());
       }
       else
       {
-	output << Form(" & %.2f (%.2f\\%%)",numer,percent);
+	output << Form(" & %s",Common::PrintValueAndError(100*ratio,100*error).Data());
       }
     }
     output << " \\\\" << std::endl;
   }
 
   // delete it all
+  Common::DeleteVec(trees);
   Common::DeleteVec(hists);
   delete sign_file;
-  delete data_file;
 }

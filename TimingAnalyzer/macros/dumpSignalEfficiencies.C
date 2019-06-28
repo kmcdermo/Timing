@@ -5,7 +5,7 @@
 
 void dumpSignalEfficiencies()
 {
-  const TString filename = "skims/v4p1/final/categories/signals_inclusive_2pho.root";
+  const TString filename = "skims/v4p1/final/categories/signals_exclusive_1pho.root";
   auto file = TFile::Open(filename.Data());
   Common::CheckValidFile(file,filename);
 
@@ -39,7 +39,7 @@ void dumpSignalEfficiencies()
       const auto prob  = numer/denom;
       const auto err   = 1.96*std::sqrt((prob*(1-prob))/(denom/evtwgt));
       
-      output << Form(" & $%.2f \\pm %.2f$",100.f*prob,100.f*err);
+      output << Form(" & %s",Common::PrintValueAndError(100.f*prob,100.f*err).Data());
 
       // delete it all
       delete tree;

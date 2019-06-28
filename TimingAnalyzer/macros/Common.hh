@@ -366,6 +366,9 @@ namespace Common
   void CheckNegativeBins(std::map<TString,TH1F*> & HistMap);
   void CheckNegativeBins(std::map<TString,TH2F*> & HistMap);
 
+  // dumping functions
+  TString PrintValueAndError(const Double_t val, const Double_t err);
+
   // saving config info
   void AddEraInfoToPave(TPaveText *& outpave,const TString & era);
   void AddTextFromInputConfig(TPaveText *& outpave, const TString & label, const TString & configname);

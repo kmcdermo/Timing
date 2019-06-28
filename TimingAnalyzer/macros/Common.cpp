@@ -1088,6 +1088,49 @@ namespace Common
   {
     return (f1 == (TF1*) NULL);
   }
+
+  TString PrintValueAndError(const Double_t val, const Double_t err)
+  {
+    TString output = "";
+
+    if      (err >= 5.0)               output = Form("$%i \\pm %i$",Int_t(val),Int_t(err));
+    else if (err <  5.0 && err >= 1.0) output = Form("$%.1f \\pm %.1f$",val,err);
+    else
+    {
+      const TString tmp_err = Form("%.10f",err);
+      Bool_t is_decimal = false;
+      Int_t precision = 0;
+      
+      for (auto i = 0; i < tmp_err.Length(); i++)
+      {
+	const TString tmp = tmp_err[i];
+	if (!is_decimal)
+	{
+	  if (tmp.EqualTo(".")) is_decimal = true;
+	  continue;
+	}
+
+	if (is_decimal)
+	{ 
+	  precision++;
+	  if (!tmp.EqualTo("0"))
+	  {
+	    const auto x = tmp.Atoi();
+	    if (x >= 5) break;
+	    else
+	    {
+	      precision += 1;
+	      break;
+	    }
+	  }
+	}
+      }
+      
+      output = Form("$%.*f \\pm %.*f$",precision,val,precision,err);
+    }
+
+    return output;
+  }
   
   void CheckNegativeBins(std::map<TString,TH1F*> & HistMap)
   {

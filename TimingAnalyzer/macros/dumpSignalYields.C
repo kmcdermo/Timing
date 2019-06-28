@@ -62,7 +62,7 @@ void dumpSignalYields(const TString & infiletext, const TString & outfiletext)
 	const auto yield = hist->GetBinContent(binInfo.ibinX,binInfo.ibinY);
 	const auto error = hist->GetBinError  (binInfo.ibinX,binInfo.ibinY);
 	
-	outfile << Form(" & $%.3f \\pm %.3f$",yield,error);
+	outfile << Form(" & %s",Common::PrintValueAndError(yield,error).Data());
       }
       outfile << " \\\\" << std::endl;
 
