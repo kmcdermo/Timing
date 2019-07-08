@@ -18,14 +18,14 @@ struct Var
 void dumpBackgrounds(const TString & fitname, const TString & fitlabel, TFile * file_tot, TFile * file_stat, std::ofstream & output);
 void prepVars(const TString & fitname, TFile * file, std::map<Param,Var> & varMap, std::map<std::pair<Param,Param>,Double_t> & covMap);
 
-void printDiagnostics(const TString & filename_stat = "", const TString & filename_tot = "", const TString & label = "")
+void printDiagnostics(const TString & filename_stat = "", const TString & filename_tot = "", const TString & label = "", const Bool_t maskC = false)
 {
   // initialize it all
   auto file_stat = TFile::Open(filename_stat.Data());
   auto file_tot  = TFile::Open(filename_tot .Data());
 
   // output file
-  std::ofstream output(label+".txt",std::ios::trunc);
+  std::ofstream output(Form("%s_%s.txt",label.Data(),(maskC?"maskC":"fullC")),std::ios::trunc);
   output << "bin: val +/- stat +/- syst" << std::endl << std::endl;
 
   // do bkgd-only
