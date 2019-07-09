@@ -112,7 +112,7 @@ namespace Common
   constexpr Float_t etaEBcutoff = 1.479;
   constexpr Float_t etaEEmax    = 2.5;
   constexpr Float_t radEB       = 129.f;
-  constexpr Float_t zEE         = 314.f;
+  constexpr Float_t zEB         = 258.f;
   extern std::map<UInt_t,DetIDStruct> DetIDMap;
   static const TString DetIDConfig   = "ecal_config/reducedinfo_detids.txt";
   static const TString DetIDConfigEB = "ecal_config/fullinfo_detids_EB.txt";

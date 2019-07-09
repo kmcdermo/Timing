@@ -156,6 +156,13 @@ Skimmer::~Skimmer()
   delete fOutFile;
 }
 
+void Skimmer::FillHists(const std::string & label, const Float_t wgt, const Float_t evtwgt)
+{
+  fOutCutFlow   ->Fill((cutLabels[label]*1.f)-0.5f);
+  fOutCutFlowWgt->Fill((cutLabels[label]*1.f)-0.5f,wgt);
+  fOutCutFlowScl->Fill((cutLabels[label]*1.f)-0.5f,evtwgt);
+}
+
 void Skimmer::EventLoop()
 {
   // do loop over events, reading in branches as needed, skimming, filling output trees and hists
@@ -171,65 +178,103 @@ void Skimmer::EventLoop()
     const auto evtwgt = fSampleWeight * wgt; // sample weight for data == 1
 
     // always fill to ensure no data was lost
-    fOutCutFlow   ->Fill((cutLabels["PreSkim"]*1.f)-0.5f);
-    fOutCutFlowWgt->Fill((cutLabels["PreSkim"]*1.f)-0.5f,wgt);
-    fOutCutFlowScl->Fill((cutLabels["PreSkim"]*1.f)-0.5f,evtwgt);
+    Skimmer::FillHists("PreSkim",wgt,evtwgt);
 
     // perform skim: standard
     if (fSkim == SkimType::Standard) // do not apply skim selection on toy config
     {
+      // signal trigger 
+      fInEvent.b_hltSignal->GetEntry(entry);
+      //      if (!fInEvent.hltSignal) continue;
+      Skimmer::FillHists("hltSignal",wgt,evtwgt);
+
       // leading photon skim section
       fInEvent.b_nphotons->GetEntry(entry);
       if (fInEvent.nphotons <= 0) continue;
-      fOutCutFlow   ->Fill((cutLabels["nPhotons"]*1.f)-0.5f);
-      fOutCutFlowWgt->Fill((cutLabels["nPhotons"]*1.f)-0.5f,wgt);
-      fOutCutFlowScl->Fill((cutLabels["nPhotons"]*1.f)-0.5f,evtwgt);
+      Skimmer::FillHists("nPhotons",wgt,evtwgt);
       
-      fInPhos.front().b_isEB->GetEntry(entry);
-      if (!fInPhos.front().isEB) continue;
-      fOutCutFlow   ->Fill((cutLabels["ph0isEB"]*1.f)-0.5f);
-      fOutCutFlowWgt->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,wgt);
-      fOutCutFlowScl->Fill((cutLabels["ph0isEB"]*1.f)-0.5f,evtwgt);
+      // get first photon
+      const auto & pho0 = fInPhos.front();
 
-      // apply corrections to pt as needed
-      fInPhos.front().b_pt->GetEntry(entry);
-      auto phopt_0 = fInPhos.front().pt;
-
+      // photon pT: apply corrections to pt as needed
+      pho0.b_pt->GetEntry(entry);
+      auto phopt_0 = pho0.pt;
       if (fPhoSc == ECorr::Down || fPhoSc == ECorr::Up) 
       {
-	fInPhos.front().b_scaleAbs->GetEntry(entry);
+	pho0.b_scaleAbs->GetEntry(entry);
 	if (fPhoSc == ECorr::Down) phopt_0 -= fInPhos.front().scaleAbs;
 	if (fPhoSc == ECorr::Up  ) phopt_0 += fInPhos.front().scaleAbs;
       }
       if (fPhoSm == ECorr::Down || fPhoSm == ECorr::Up) 
       {
-	fInPhos.front().b_smearAbs->GetEntry(entry);
+	pho0.b_smearAbs->GetEntry(entry);
 	if (fPhoSm == ECorr::Down) phopt_0 -= fInPhos.front().smearAbs;
 	if (fPhoSm == ECorr::Up  ) phopt_0 += fInPhos.front().smearAbs;
       }
+      //if (phopt_0 < 70.f) continue;
+      Skimmer::FillHists("ph0pt70",wgt,evtwgt);
 
-      if (phopt_0 < 70.f) continue;
-      fOutCutFlow   ->Fill((cutLabels["ph0pt70"]*1.f)-0.5f);
-      fOutCutFlowWgt->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,wgt);
-      fOutCutFlowScl->Fill((cutLabels["ph0pt70"]*1.f)-0.5f,evtwgt);
+      // photon isEB
+      pho0.b_isEB->GetEntry(entry);
+      //if (!pho0.isEB) continue;
+      Skimmer::FillHists("ph0isEB",wgt,evtwgt);
 
-      // filter on MET Flags
-      fInEvent.b_metPV->GetEntry(entry);
-      fInEvent.b_metHBHENoise->GetEntry(entry);
-      fInEvent.b_metHBHEisoNoise->GetEntry(entry);
-      fInEvent.b_metECALTP->GetEntry(entry);
-      fInEvent.b_metPFMuon->GetEntry(entry);
-      fInEvent.b_metECALBadCalib->GetEntry(entry);
-      if (!fInEvent.metPV || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metECALBadCalib) continue;
+      // photon tight ID
+      pho0.b_r9->GetEntry(entry);
+      //      if (pho0.r9 <= 0.9) continue;
+      Skimmer::FillHists("ph0r9GT0p9",wgt,evtwgt);
 
-      fInEvent.b_metBeamHalo->GetEntry(entry);
-      if (!fIsMC && !fInEvent.metBeamHalo) continue;
+      pho0.b_HoE->GetEntry(entry);
+      //      if (pho0.HoE >= 0.02148) continue;
+      Skimmer::FillHists("ph0HoELT0p02148",wgt,evtwgt);
+
+      pho0.b_sieie->GetEntry(entry);
+      //if (pho0.sieie >= 0.014) continue;
+      Skimmer::FillHists("ph0SieieLoose",wgt,evtwgt);
       
-      // fill cutflow for MET filters
-      fOutCutFlow   ->Fill((cutLabels["METFlag"]*1.f)-0.5f);
-      fOutCutFlowWgt->Fill((cutLabels["METFlag"]*1.f)-0.5f,wgt);
-      fOutCutFlowScl->Fill((cutLabels["METFlag"]*1.f)-0.5f,evtwgt);
+      pho0.b_smin->GetEntry(entry);
+      //if (pho0.smin >= 0.4) continue;
+      Skimmer::FillHists("ph0sminLT0p4",wgt,evtwgt);
 
+      pho0.b_smaj->GetEntry(entry);
+      //      if (pho0.smaj >= 1.3) continue;
+      Skimmer::FillHists("ph0smajLT1p3",wgt,evtwgt);
+      
+      pho0.b_isOOT->GetEntry(entry);
+      pho0.b_sceta->GetEntry(entry);
+      fInEvent.b_rho->GetEntry(entry);
+
+      const auto phosceta_0 = std::abs(pho0.sceta);
+      const auto rho = fInEvent.rho;
+
+      if (pho0.isOOT)
+      {
+	pho0.b_EcalPFClIso->GetEntry(entry);
+	//if (std::max(pho0.EcalPFClIso-(0.003008*phopt_0)-(0.1324*rho)*(phosceta_0<0.8)-(0.08638*rho)*((phosceta_0>=0.8)*(phosceta_0<1.4442)),0.0)>=5.0) continue;
+
+	pho0.b_HcalPFClIso->GetEntry(entry);
+	//if (std::max(pho0.HcalPFClIso-((2.921e-5*phopt_0*phopt_0)+(-0.005802*phopt_0))-(0.1094*rho)*(phosceta_0<0.8)-(0.09392*rho)*((phosceta_0>=0.8)*(phosceta_0<1.4442)),0.0)>=4.0) continue;
+
+	pho0.b_TrkIso->GetEntry(entry);
+	//if (std::max(pho0.TrkIso-(0.02276*rho)*(phosceta_0<0.8)-(0.00536*rho)*((phosceta_0>=0.8)*(phosceta_0<1.4442)),0.0)>=4.0) continue;
+      }
+      else
+      {
+	pho0.b_ChgHadIso->GetEntry(entry);
+	//if (std::max(pho0.ChgHadIso-((0.0112*rho)*(phosceta_0<1.0))-((0.0108*rho)*((phosceta_0>=1.0)*(phosceta_0<1.479))),0.0)>=0.65) continue;
+
+	pho0.b_NeuHadIso->GetEntry(entry);
+	//	if (std::max(pho0.NeuHadIso-((0.01512*phopt_0)+(2.259e-5*phopt_0*phopt_0))-((0.0668*rho)*(phosceta_0<1.0))-((0.01054*rho)*((phosceta_0>=1.0)*(phosceta_0<1.479))),0.0)>=0.317) continue;
+
+	pho0.b_PhoIso->GetEntry(entry);
+	//if (std::max(pho0.PhoIso-(0.004017*phopt_0)-((0.1113*rho)*(phosceta_0<1.0))-((0.0953*rho)*((phosceta_0>=1.0)*(phosceta_0<1.479))),0.0)>=2.044) continue;
+      }
+      Skimmer::FillHists("ph0TightIso",wgt,evtwgt);
+	
+      pho0.b_isTrk->GetEntry(entry);
+      //if (pho0.isTrk) continue;
+      Skimmer::FillHists("ph0isTrk",wgt,evtwgt);
+      
       // fill photon list in standard fashion
       Skimmer::FillPhoListStandard();
     }
@@ -465,11 +510,9 @@ void Skimmer::EventLoop()
       }
 
       // fill cutflow
-      fOutCutFlow   ->Fill((cutLabels["badPU"]*1.f)-0.5f);
-      fOutCutFlowWgt->Fill((cutLabels["badPU"]*1.f)-0.5f,wgt);
-      fOutCutFlowScl->Fill((cutLabels["badPU"]*1.f)-0.5f,evtwgt);
+      Skimmer::FillHists("badPU",wgt,evtwgt);
     }
-    
+        
     // end of skim, now copy... dropping rechits
     if (fOutConfig.isGMSB) Skimmer::FillOutGMSBs(entry);
     if (fOutConfig.isHVDS) Skimmer::FillOutHVDSs(entry);
@@ -483,6 +526,27 @@ void Skimmer::EventLoop()
       Skimmer::ReorderJets();
     }
     if (fOutConfig.isGMSB || fOutConfig.isHVDS) Skimmer::FillOutSFs();
+
+    // count nJets
+    const auto nJets = std::count_if(fOutJets.E_f.begin(), fOutJets.E_f.end(), [](const auto jetE){return jetE > 30.0;});
+    //    if (nJets < 3) continue;
+    Skimmer::FillHists("nJetsGTE3",wgt,evtwgt);
+
+    // filter on MET Flags
+    fInEvent.b_metPV->GetEntry(entry);
+    fInEvent.b_metBeamHalo->GetEntry(entry);
+    fInEvent.b_metHBHENoise->GetEntry(entry);
+    fInEvent.b_metHBHEisoNoise->GetEntry(entry);
+    fInEvent.b_metECALTP->GetEntry(entry);
+    fInEvent.b_metPFMuon->GetEntry(entry);
+    fInEvent.b_metECALBadCalib->GetEntry(entry);
+    //    if (!fInEvent.metPV || !fInEvent.metHBHENoise || !fInEvent.metHBHEisoNoise || !fInEvent.metECALTP || !fInEvent.metPFMuon || !fInEvent.metECALBadCalib || !fInEvent.metBeamHalo) continue;
+    
+    fInEvent.b_metEESC->GetEntry(entry);
+    //    if (!fIsMC && !fInEvent.metEESC) continue;
+    
+    // fill cutflow for MET filters
+    Skimmer::FillHists("METFlag",wgt,evtwgt);
 
     // fill the tree
     fOutTree->Fill();
@@ -552,6 +616,27 @@ void Skimmer::FillOutGMSBs(const UInt_t entry)
     outgmsb.gengrpt = ingmsb.gengrpt;
     outgmsb.gengrphi = ingmsb.gengrphi;
     outgmsb.gengreta = ingmsb.gengreta;
+
+    // compute arrival time for assholes
+    const auto gendecayvr = Common::hypot(outgmsb.genNdecayvx,outgmsb.genNdecayvy);
+    const auto gendecayvz = outgmsb.genNdecayvz;
+    if ((gendecayvr < Common::radEB) && (std::abs(gendecayvz) < Common::zEB))
+    {
+      const auto genNtraveld = Common::hypot(outgmsb.genNdecayvx-outgmsb.genNprodvx,outgmsb.genNdecayvy-outgmsb.genNprodvy,outgmsb.genNdecayvz-outgmsb.genNprodvz);
+      TLorentzVector genN_lorvec; genN_lorvec.SetPtEtaPhiE(outgmsb.genNpt,outgmsb.genNeta,outgmsb.genNphi,outgmsb.genNE);
+      const auto genNp  = Common::hypot(genN_lorvec.Px(),genN_lorvec.Py(),genN_lorvec.Pz());
+      const auto genNbg = std::abs(genNp/outgmsb.genNmass);
+      const auto genNg  = std::sqrt(1.f+std::pow(genNbg,2));
+      const auto genNctau = genNtraveld/genNbg;
+
+      const auto genpharrivalz = gendecayvz + ( (Common::radEB - gendecayvr) / Common::uneta(outgmsb.genpheta) );
+      if (std::abs(genpharrivalz) < Common::zEB) 
+      {
+	auto genphtime = (Common::hypot(Common::radEB-gendecayvr,genpharrivalz-gendecayvz)-Common::hypot(Common::radEB,genpharrivalz))/Common::sol;
+	outgmsb.genphtime = genphtime + (genNctau * genNg / Common::sol);
+      }
+    }
+    else outgmsb.genphtime = -9999.f;
   }
 }
 
@@ -720,6 +805,23 @@ void Skimmer::FillOutEvent(const UInt_t entry, const Float_t evtwgt)
       fInEvent.b_nToyPhs->GetEntry(entry);
     }
   }
+  
+  fInEvent.b_metPV->GetEntry(entry);
+  fInEvent.b_metBeamHalo->GetEntry(entry);
+  fInEvent.b_metHBHENoise->GetEntry(entry);
+  fInEvent.b_metHBHEisoNoise->GetEntry(entry);
+  fInEvent.b_metECALTP->GetEntry(entry);
+  fInEvent.b_metPFMuon->GetEntry(entry);
+  fInEvent.b_metECALBadCalib->GetEntry(entry);
+
+  fOutEvent.metPV = fOutEvent.metPV;
+  fOutEvent.metBeamHalo = fOutEvent.metBeamHalo;
+  fOutEvent.metHBHENoise=  fOutEvent.metHBHENoise;
+  fOutEvent.metHBHEisoNoise=  fOutEvent.metHBHEisoNoise;
+  fOutEvent.metECALTP=  fOutEvent.metECALTP;
+  fOutEvent.metPFMuon=  fOutEvent.metPFMuon;
+  fOutEvent.metECALBadCalib=  fOutEvent.metECALBadCalib;
+  
 
   // set output branches
   fOutEvent.run = fInEvent.run;
@@ -993,8 +1095,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
     // fInRecHits.b_isOOT->GetEntry(entry);
     fInRecHits.b_isGS6->GetEntry(entry);
     fInRecHits.b_isGS1->GetEntry(entry);
-    fInRecHits.b_Laser->GetEntry(entry);
-    fInRecHits.b_InterCalib->GetEntry(entry);
+    // fInRecHits.b_Laser->GetEntry(entry);
+    // fInRecHits.b_InterCalib->GetEntry(entry);
     fInRecHits.b_adcToGeV->GetEntry(entry);
     fInRecHits.b_ped12->GetEntry(entry);
     fInRecHits.b_ped6->GetEntry(entry);
@@ -1076,8 +1178,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 
 	outpho.seedisGS6 = (*fInRecHits.isGS6)[seed];
 	outpho.seedisGS1 = (*fInRecHits.isGS1)[seed];
-	outpho.seedLaser = (*fInRecHits.Laser)[seed];
-	outpho.seedInterCalib = (*fInRecHits.InterCalib)[seed];
+	// outpho.seedLaser = (*fInRecHits.Laser)[seed];
+	// outpho.seedInterCalib = (*fInRecHits.InterCalib)[seed];
 	outpho.seedadcToGeV = (*fInRecHits.adcToGeV)[seed];
 
 	outpho.seedped12 = (*fInRecHits.ped12)[seed];
@@ -1174,8 +1276,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
 
 	outpho.seedisGS6 = -1;
 	outpho.seedisGS1 = -1;
-	outpho.seedLaser = -9999.f;
-	outpho.seedInterCalib = -9999.f;
+	// outpho.seedLaser = -9999.f;
+	// outpho.seedInterCalib = -9999.f;
 	outpho.seedadcToGeV = -9999.f;
 	outpho.seedped12 = -9999.f;
 	outpho.seedped6  = -9999.f;
@@ -1208,8 +1310,8 @@ void Skimmer::FillOutPhos(const UInt_t entry)
       outpho.seedTT = Common::GetTriggerTower(inpho.seedID);
       outpho.seedisGS6 = inpho.seedisGS1;
       outpho.seedisGS1 = inpho.seedisGS6;
-      outpho.seedLaser = inpho.seedLaser;
-      outpho.seedInterCalib = inpho.seedInterCalib;
+      // outpho.seedLaser = inpho.seedLaser;
+      // outpho.seedInterCalib = inpho.seedInterCalib;
       outpho.seedadcToGeV = inpho.seedadcToGeV;
       outpho.seedped12 = inpho.seedped12;
       outpho.seedped6 = inpho.seedped6;
@@ -1500,8 +1602,8 @@ void Skimmer::InitInBranchVecs()
     // fInRecHits.isOOT = 0;
     fInRecHits.isGS6 = 0;
     fInRecHits.isGS1 = 0;
-    fInRecHits.Laser = 0;
-    fInRecHits.InterCalib = 0;
+    // fInRecHits.Laser = 0;
+    // fInRecHits.InterCalib = 0;
     fInRecHits.adcToGeV = 0;
     fInRecHits.ped12 = 0;
     fInRecHits.ped6 = 0;
@@ -1632,7 +1734,7 @@ void Skimmer::InitInBranches()
   fInTree->SetBranchAddress(fInEvent.s_metHBHEisoNoise.c_str(), &fInEvent.metHBHEisoNoise, &fInEvent.b_metHBHEisoNoise);
   fInTree->SetBranchAddress(fInEvent.s_metECALTP.c_str(), &fInEvent.metECALTP, &fInEvent.b_metECALTP);
   fInTree->SetBranchAddress(fInEvent.s_metPFMuon.c_str(), &fInEvent.metPFMuon, &fInEvent.b_metPFMuon);
-  fInTree->SetBranchAddress(fInEvent.s_metPFChgHad.c_str(), &fInEvent.metPFChgHad, &fInEvent.b_metPFChgHad);
+  // fInTree->SetBranchAddress(fInEvent.s_metPFChgHad.c_str(), &fInEvent.metPFChgHad, &fInEvent.b_metPFChgHad);
   fInTree->SetBranchAddress(fInEvent.s_metEESC.c_str(), &fInEvent.metEESC, &fInEvent.b_metEESC);
   // fInTree->SetBranchAddress(fInEvent.s_metECALCalib.c_str(), &fInEvent.metECALCalib, &fInEvent.b_metECALCalib);
   fInTree->SetBranchAddress(fInEvent.s_metECALBadCalib.c_str(), &fInEvent.metECALBadCalib, &fInEvent.b_metECALBadCalib);
@@ -1701,8 +1803,8 @@ void Skimmer::InitInBranches()
     // fInTree->SetBranchAddress(fInRecHits.s_isOOT.c_str(), &fInRecHits.isOOT, &fInRecHits.b_isOOT);
     fInTree->SetBranchAddress(fInRecHits.s_isGS6.c_str(), &fInRecHits.isGS6, &fInRecHits.b_isGS6);
     fInTree->SetBranchAddress(fInRecHits.s_isGS1.c_str(), &fInRecHits.isGS1, &fInRecHits.b_isGS1);
-    fInTree->SetBranchAddress(fInRecHits.s_Laser.c_str(), &fInRecHits.Laser, &fInRecHits.b_Laser);
-    fInTree->SetBranchAddress(fInRecHits.s_InterCalib.c_str(), &fInRecHits.InterCalib, &fInRecHits.b_InterCalib);
+    // fInTree->SetBranchAddress(fInRecHits.s_Laser.c_str(), &fInRecHits.Laser, &fInRecHits.b_Laser);
+    // fInTree->SetBranchAddress(fInRecHits.s_InterCalib.c_str(), &fInRecHits.InterCalib, &fInRecHits.b_InterCalib);
     fInTree->SetBranchAddress(fInRecHits.s_adcToGeV.c_str(), &fInRecHits.adcToGeV, &fInRecHits.b_adcToGeV);
     fInTree->SetBranchAddress(fInRecHits.s_ped12.c_str(), &fInRecHits.ped12, &fInRecHits.b_ped12);
     fInTree->SetBranchAddress(fInRecHits.s_ped6.c_str(), &fInRecHits.ped6, &fInRecHits.b_ped6);
@@ -1765,8 +1867,8 @@ void Skimmer::InitInBranches()
       // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT, &pho.b_seedisOOT);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisGS6.c_str(),ipho), &pho.seedisGS6, &pho.b_seedisGS6);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedisGS1.c_str(),ipho), &pho.seedisGS1, &pho.b_seedisGS1);
-      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedLaser.c_str(),ipho), &pho.seedLaser, &pho.b_seedLaser);
-      fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedInterCalib.c_str(),ipho), &pho.seedInterCalib, &pho.b_seedInterCalib);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedLaser.c_str(),ipho), &pho.seedLaser, &pho.b_seedLaser);
+      // fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedInterCalib.c_str(),ipho), &pho.seedInterCalib, &pho.b_seedInterCalib);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedadcToGeV.c_str(),ipho), &pho.seedadcToGeV, &pho.b_seedadcToGeV);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped12.c_str(),ipho), &pho.seedped12, &pho.b_seedped12);
       fInTree->SetBranchAddress(Form("%s_%i",pho.s_seedped6.c_str(),ipho), &pho.seedped6, &pho.b_seedped6);
@@ -1984,6 +2086,7 @@ void Skimmer::InitOutBranches()
 	fOutTree->Branch(Form("%s_%i",gmsb.s_gengrpt.c_str(),igmsb), &gmsb.gengrpt);
 	fOutTree->Branch(Form("%s_%i",gmsb.s_gengrphi.c_str(),igmsb), &gmsb.gengrphi);
 	fOutTree->Branch(Form("%s_%i",gmsb.s_gengreta.c_str(),igmsb), &gmsb.gengreta);
+	fOutTree->Branch(Form("%s_%i",gmsb.s_genphtime.c_str(),igmsb), &gmsb.genphtime);
       } // end loop over neutralinos
     } // end block over gmsb
 
@@ -2051,6 +2154,17 @@ void Skimmer::InitOutBranches()
   fOutTree->Branch(fOutEvent.s_hltEle32WPT.c_str(), &fOutEvent.hltEle32WPT);
   fOutTree->Branch(fOutEvent.s_hltDiEle33MW.c_str(), &fOutEvent.hltDiEle33MW);
   fOutTree->Branch(fOutEvent.s_hltJet500.c_str(), &fOutEvent.hltJet500);
+
+  fOutTree->Branch(fOutEvent.s_metPV.c_str(), &fOutEvent.metPV);
+  fOutTree->Branch(fOutEvent.s_metBeamHalo.c_str(), &fOutEvent.metBeamHalo);
+  fOutTree->Branch(fOutEvent.s_metHBHENoise.c_str(), &fOutEvent.metHBHENoise);
+  fOutTree->Branch(fOutEvent.s_metHBHEisoNoise.c_str(), &fOutEvent.metHBHEisoNoise);
+  fOutTree->Branch(fOutEvent.s_metECALTP.c_str(), &fOutEvent.metECALTP);
+  fOutTree->Branch(fOutEvent.s_metPFMuon.c_str(), &fOutEvent.metPFMuon);
+  // fOutTree->Branch(fOutEvent.s_metPFChgHad.c_str(), &fOutEvent.metPFChgHad, &fOutEvent.b_metPFChgHad);
+  fOutTree->Branch(fOutEvent.s_metEESC.c_str(), &fOutEvent.metEESC);
+  // fOutTree->Branch(fOutEvent.s_metECALCalib.c_str(), &fOutEvent.metECALCalib, &fOutEvent.b_metECALCalib);
+  fOutTree->Branch(fOutEvent.s_metECALBadCalib.c_str(), &fOutEvent.metECALBadCalib);
 
   fOutTree->Branch(fOutEvent.s_nvtx.c_str(), &fOutEvent.nvtx);
   fOutTree->Branch(fOutEvent.s_vtxX.c_str(), &fOutEvent.vtxX);
@@ -2144,8 +2258,8 @@ void Skimmer::InitOutBranches()
     // fOutTree->Branch(Form("%s_%i",pho.s_seedisOOT.c_str(),ipho), &pho.seedisOOT);
     fOutTree->Branch(Form("%s_%i",pho.s_seedisGS6.c_str(),ipho), &pho.seedisGS6);
     fOutTree->Branch(Form("%s_%i",pho.s_seedisGS1.c_str(),ipho), &pho.seedisGS1);
-    fOutTree->Branch(Form("%s_%i",pho.s_seedLaser.c_str(),ipho), &pho.seedLaser);
-    fOutTree->Branch(Form("%s_%i",pho.s_seedInterCalib.c_str(),ipho), &pho.seedInterCalib);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedLaser.c_str(),ipho), &pho.seedLaser);
+    // fOutTree->Branch(Form("%s_%i",pho.s_seedInterCalib.c_str(),ipho), &pho.seedInterCalib);
     fOutTree->Branch(Form("%s_%i",pho.s_seedadcToGeV.c_str(),ipho), &pho.seedadcToGeV);
     fOutTree->Branch(Form("%s_%i",pho.s_seedped12.c_str(),ipho), &pho.seedped12);
     fOutTree->Branch(Form("%s_%i",pho.s_seedped6.c_str(),ipho), &pho.seedped6);
@@ -2226,9 +2340,19 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
   // labels for each skim
   if (fSkim == SkimType::Standard)
   {
+    cutLabels["hltSignal"] = ++inNbinsX_new;
     cutLabels["nPhotons"] = ++inNbinsX_new;
-    cutLabels["ph0isEB"] = ++inNbinsX_new;
     cutLabels["ph0pt70"] = ++inNbinsX_new;
+    cutLabels["ph0isEB"] = ++inNbinsX_new;
+    cutLabels["ph0r9GT0p9"] = ++inNbinsX_new;
+    cutLabels["ph0HoELT0p02148"] = ++inNbinsX_new;
+    cutLabels["ph0SieieLoose"] = ++inNbinsX_new;
+    cutLabels["ph0sminLT0p4"] = ++inNbinsX_new;
+    cutLabels["ph0smajLT1p3"] = ++inNbinsX_new;
+    cutLabels["ph0TightIso"] = ++inNbinsX_new;
+    cutLabels["ph0isTrk"] = ++inNbinsX_new;
+    cutLabels["badPU"] = ++inNbinsX_new;
+    cutLabels["nJetsGTE3"] = ++inNbinsX_new;
     cutLabels["METFlag"] = ++inNbinsX_new;
   }
   else if (fSkim == SkimType::Zee)
@@ -2249,7 +2373,7 @@ void Skimmer::InitOutCutFlowHist(const TH1F * inh_cutflow, TH1F *& outh_cutflow,
   }
 
   // common skim
-  cutLabels["badPU"] = ++inNbinsX_new;
+
 
   // make new cut flow
   outh_cutflow = new TH1F(Form("%s",histname.Data()),inh_cutflow->GetTitle(),cutLabels.size(),0,cutLabels.size());

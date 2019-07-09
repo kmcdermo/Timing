@@ -770,6 +770,7 @@ struct Gmsb
   Float_t gengrpt;
   Float_t gengrphi;
   Float_t gengreta;
+  Float_t genphtime;
 
   std::string s_genNmass = "genNmass";
   std::string s_genNE = "genNE";
@@ -792,6 +793,7 @@ struct Gmsb
   std::string s_gengrpt = "gengrpt";
   std::string s_gengrphi = "gengrphi";
   std::string s_gengreta = "gengreta";
+  std::string s_genphtime = "genphtime";
 
   TBranch * b_genNmass;
   TBranch * b_genNE;

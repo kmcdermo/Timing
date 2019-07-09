@@ -70,6 +70,9 @@ public:
   // helper functions
   void FillPhoListStandard();
 
+  // Fill cut flow hists
+  void FillHists(const std::string & label, const Float_t wgt, const Float_t evtwgt);
+
 private:
   // I/O
   const TString fInDir;
