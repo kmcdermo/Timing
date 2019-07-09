@@ -20,6 +20,7 @@
 #include "TText.h"
 
 // STL includes
+#include <cmath>
 #include <map>
 #include <vector>
 #include <string>

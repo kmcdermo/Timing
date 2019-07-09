@@ -51,7 +51,7 @@ TString PrintValueAndError(const Double_t val, const Double_t err)
 {
   TString output = "";
   
-  if      (err >= 5.0)               output = Form("$%i \\pm %i$",Int_t(val),Int_t(err));
+  if      (err >= 5.0)               output = Form("$%i \\pm %i$",Int_t(std::round(val)),Int_t(std::round(err)));
   else if (err <  5.0 && err >= 1.0) output = Form("$%.1f \\pm %.1f$",val,err);
   else
   {
